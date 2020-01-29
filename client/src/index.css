@@ -1,0 +1,476 @@
+#root {
+  background-color: #2b2b2b;
+}
+
+body {
+  background-color: #2b2b2b;
+}
+
+.nada {
+  color: rgb(139, 138, 231);
+  color: #5654df;
+  color: #3b39ac;
+
+  color: #39fae0;
+  color: #13d7bc;
+  color: #01a790;
+
+  color: #202020;
+  color: #7574c03b;
+}
+
+.btn:hover, .btn:focus, .btn.focus { transform: scale(1.05); transition: 0.3s; }
+
+#root .site_wrapper {
+  height: 100vh;
+  background: url('/img/bg.png');
+  background-size: cover;
+  background-size: 90px;
+  background-color: #33271f;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
+}
+
+.copyright {
+  color: white;
+  font-size: 18px;
+  text-align: center;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  margin-bottom: 0;
+  position: fixed;
+  z-index: 1000;
+}
+
+#root .site_wrapper .login_wrapper {
+  height: 100vh;
+  display: flex;
+  align-content: center;
+  padding-bottom: 5%;
+}
+
+#root .site_wrapper .login_wrapper .login_form {
+  background-color: rgba(0,0,0,0.5);
+  font-size: 20px;
+  font-weight: 700;
+  padding: 25px;
+  color: white;
+  width: 40%;
+  min-width: 700px;
+  margin: auto;
+}
+
+.login_form input[type=text],
+.login_form input[type=password]{
+  font-size: 20px;
+  height: 50px;
+  padding: 5px 15px;
+}
+
+.login_form input[type=checkbox] {
+  /* Double-sized Checkboxes */
+  transform: scale(2);
+  -ms-transform: scale(2); /* IE */
+  -moz-transform: scale(2); /* FF */
+  -webkit-transform: scale(2); /* Safari and Chrome */
+  -o-transform: scale(2); /* Opera */
+  margin: 10px;
+}
+
+.login_form img.logo{
+  height: 50px;
+  margin: auto;
+}
+
+.login_form .btn {
+  font-size: 20px;
+  text-transform: uppercase;
+  border-radius: 100px;
+  height: initial;
+}
+
+.login_form #btn_signup {
+  background-color: white;
+  color: #337ab7;
+  margin: 10px auto;
+  text-align: center;
+  text-decoration: initial;
+}
+
+.login_form #resetpwd {
+  color: white;
+  margin: auto;
+}
+
+.game_header {
+  position: fixed;
+  width: 100%;
+  z-index: 1;
+}
+
+.main_header {
+  background-color: black;
+  height: 50px;
+  padding: 5px;
+}
+
+.main_header .game_logo {
+  width: 100px;
+}
+
+.main_header a {
+  color: #d5d5d5 !important;
+}
+
+.main_header a#btn_how_to_play,
+.main_header a#btn_logout {
+  padding: 10px 20px;
+}
+
+.main_header span {
+  font-size: 36px;
+  font-weight: 900;
+  color: aliceblue;
+  border-top: 10px solid #f6b229;
+  border-bottom: 10px solid #f6b229;
+  line-height: 40px;
+  margin-top: -5px;
+  position: absolute;
+  left: 50%;
+}
+
+.game_logo img {
+  height: 100%;
+  width: auto;
+}
+
+.sub_header {
+  background-color: #f7f1ea;
+  height: 55px;
+  border-top: 10px solid #C83228;
+  border-bottom: 5px solid #C83228;
+  padding: 0 15px;
+}
+
+.sub_header {
+  line-height: 40px;
+  font-weight: 800;
+  font-size: 15px;
+  text-transform: uppercase;
+}
+
+.sub_header span.welcome {
+  font-style: italic;
+}
+
+.sub_header span.user_name {
+  color: #C83228;
+  margin-left: 10px;
+  font-size: 18px;
+}
+
+.sub_header a {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #C83228 !important;
+  border-radius: 50%;
+  background: #C83228;
+  padding: 12.5px;
+  margin: 12px 10px 0;
+}
+
+.sub_header a img {
+  height: 100%;
+}
+
+.sub_header a#btn_avatar {
+  border-radius: 50%;
+  padding: 2px;
+  background: aliceblue;
+  border: 3px solid #C83228 !important;
+}
+
+.sub_header a#btn_avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.1);
+}
+
+.game_wrapper {
+  background: #f2e8dc;
+  position: absolute;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.game_wrapper .left_sidebar {
+  padding: 0 !important;
+  position: sticky;
+  margin-top: 105px;
+}
+
+.game_wrapper .left_sidebar a {
+  border-radius: 0 !important;
+  border: none;
+  width: 100%;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.game_wrapper .left_sidebar a img {
+  max-width: 100px;
+  margin: 15px auto 35px;
+}
+
+#btn_create_game, #btn_join_game {
+  height: 30vh;
+}
+
+#btn_create_game {
+  background-color: #33271f;
+  color: white;
+}
+
+#btn_join_game {
+  background-color: white;
+  color: #333;
+}
+
+#btn_my_game {
+  height: calc(40vh - 120px);
+  line-height: calc(40vh - 120px);
+  background: #C83228;
+  color: #fff;
+}
+
+.game_footer {
+  background: #33271f;
+  color: #b78b3dbb;
+  font-size: 18px !important;
+  bottom: 0;
+  margin-bottom: 0;
+  border-width: 1px 0 0;
+  border-radius: 0;
+  position: fixed;
+  right: 0;
+  left: 0;
+}
+
+.contents_wrapper {
+  height: 100vh;
+  padding-top: 105px;
+  padding-bottom: 50px;
+  overflow-y: auto;
+}
+
+.main_title {
+  text-align: center;
+  font-size: 40px;
+  color: #c83228cc;
+  border: 3px solid #c83228cc;
+  border-radius: 30px;
+  width: 50%;
+  margin: 30px auto 20px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+hr {
+  margin-top: 15px;
+  margin-bottom: 0px;
+  border: 0;
+  border-top: 5px solid #333;
+  border-radius: 30px;
+}
+
+label.lbl_game_option {
+  background: #f6b22a;
+  padding: 10px;
+  margin-bottom: 15px;
+  margin-right: 5px;
+  border-bottom-right-radius: 30px;
+  display: block;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+label.radio-inline {
+  display: inline-block;
+  margin: 5px !important;
+  padding: 0px 10px !important;
+  border: 5px solid #C83228 !important;
+  color: #C83228;
+  background: #ffffff99;
+  font-weight: 700;
+  border-radius: 30px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+label.radio-inline.checked {
+  color: white;
+  background: #C83228;
+}
+
+.input-sm, .bet-input, #room_password {
+  height: 50px;
+  padding: 5px 15px;
+  font-size: 20px;
+  line-height: 1.5;
+  border-radius: 3px;
+}
+
+#room_password {
+  width: 200px;
+  display: inline-block;
+}
+
+#room_password.hidden {
+  display: none;
+}
+
+.drinkcard-cc {
+  cursor: pointer;
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: inline-block;
+  margin-bottom: 15px;
+  width: 150px;
+  height: 80px;
+  -webkit-transition: all 100ms ease-in;
+  -moz-transition: all 100ms ease-in;
+  transition: all 100ms ease-in;
+  -webkit-filter: brightness(1.8) grayscale(1) opacity(.7);
+  -moz-filter: brightness(1.8) grayscale(1) opacity(.7);
+  filter: brightness(1.8) grayscale(1) opacity(.7);
+}
+
+.drinkcard-cc:hover {
+  -webkit-filter: brightness(1.2) grayscale(.5) opacity(.9);
+  -moz-filter: brightness(1.2) grayscale(.5) opacity(.9);
+  filter: brightness(1.2) grayscale(.5) opacity(.9);
+}
+
+.drinkcard-cc.checked {
+  -webkit-filter: none;
+  -moz-filter: none;
+  filter: none;
+}
+
+.drinkcard-cc.rock {
+  background-image: url(/img/rock.png);
+}
+
+.drinkcard-cc.paper {
+  background-image: url(/img/paper.png);
+}
+
+.drinkcard-cc.scissors {
+  background-image: url(/img/scissors.png);
+}
+
+input.form-control[readonly] {
+  background-color: #333;
+  color: white;
+}
+
+.btn-advanced {
+  display: block;
+  margin: 25px auto;
+  height: 70px;
+  background: #999;
+  width: 100%;
+  color: #fff;
+  font-size: 36px;
+}
+
+#advanced_panel{
+  margin-left: 0;
+  width: 100%;
+  height: 100%;
+  transition: margin-left 0.5s 0.1s ease-in;
+}
+ 
+#advanced_panel.hidden {
+  margin-left: 100%;
+  height: 1px;
+  transition: margin-left 0.5s ease-out,
+              height 0.1s 0.5s;
+  overflow: hidden;
+}
+
+#btn_bet {
+  margin-top: 15px;
+  color: #fff;
+  background-color: #000 !important;
+  border: 3px solid #000 !important;
+  font-size: 36px;
+  width: 95%;
+  padding: 10px 16px;
+  border-radius: 100px;
+  font-weight: 800;
+  height: initial;
+  line-height: 1.33;
+}
+
+.tbl_title {
+    background: #f6b229;
+    color: #fff;
+    width: 40%;
+    padding-left: 15px;
+    padding: 10px;
+    border-top-right-radius: 500px;
+    text-align: left;
+    margin: 15px 0 0 15px;
+    text-transform: uppercase;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+table.normal_table thead {
+  background: #C83228;
+  color: #ffffff99;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+}
+
+table tbody td {
+  font-weight: 600;
+}
+
+table.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f9f9f9;
+}
+
+table.table-striped tbody tr:nth-child(even) {
+  background: #eadbc8;
+}
+
+table button.btn_join {
+  color: #fff;
+  background-color: #000 !important;
+  border: 3px solid #000 !important;
+  border-radius: 100px;
+  font-weight: 800;
+  padding: 2.5px 15px;
+}
+
+table button.btn_join:hover {
+  color: white;
+}
+
+@media (max-width: 992px) {
+  #root .site_wrapper {
+    background-size: 150px !important; 
+  }
+
+  #root .site_wrapper .login_wrapper .login_form {
+    width: 100%;
+    min-width: initial;
+  }
+}
