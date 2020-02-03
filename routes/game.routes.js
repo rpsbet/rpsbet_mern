@@ -47,63 +47,78 @@ router.get('/room/:id', async (req, res) => {
     }
 });
 
+getRoomList = async (pagination, page) => {
+    const rooms = await Room.find({})
+        .populate({path: 'creator', model: User})
+        .populate({path: 'game_type', model: GameType})
+        .sort({created_at: 'desc'})
+        .skip(pagination * page - pagination)
+        .limit(pagination);
+    const count = await Room.countDocuments({});
+    let result = [];
+    let index = count - (page - 1) * pagination;
+    rooms.forEach(room => {
+        let temp = {
+            _id : room['_id'],
+            creator : room['is_anonymous'] === true ? 'Anonymous' : room['creator']['username'],
+            game_type : room['game_type'],
+            bet_amount : room['bet_amount'],
+            pr : "£" + (room['bet_amount'] * 2), 
+            winnings : "£" + (room['bet_amount'] * 2) + " * 0.95",
+            is_anonymous : room['is_anonymous'],
+            is_private : room['is_private'],
+            status: room['status'],
+            index: index,
+            created_at : moment(room['created_at']).format('YYYY-MM-DD HH:mm'),
+        };
+        index--;
+        result.push(temp);
+    });
+
+    return {
+        rooms: result,
+        count: count
+    }
+}
+
 // /api/rooms call
 router.get('/rooms', async (req, res) => {
     const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
     const page = req.query.page ? parseInt(req.query.page) : 1;
     try {
-        const rooms = await Room.find({})
-            .populate({path: 'creator', model: User})
-            .populate({path: 'game_type', model: GameType})
-            .sort({created_at: 'desc'})
-            .skip(pagination * page - pagination)
-            .limit(pagination);
-        const count = await Room.countDocuments({});
-        let result = [];
-        let index = count - (page - 1) * pagination;
-        rooms.forEach(room => {
-            let temp = {
-                _id : room['_id'],
-                creator : room['is_anonymous'] === true ? 'Anonymous' : room['creator']['username'],
-                game_type : room['game_type'],
-                bet_amount : room['bet_amount'],
-                pr : "£" + (room['bet_amount'] * 2), 
-                winnings : "£" + (room['bet_amount'] * 2) + " * 0.95",
-                is_anonymous : room['is_anonymous'],
-                is_private : room['is_private'],
-                status: room['status'],
-                index: index,
-                created_at : moment(room['created_at']).format('YYYY-MM-DD HH:mm'),
-            };
-            index--;
-            result.push(temp);
-        });
+        const rooms = await getRoomList(pagination, page);
         res.json({
             success: true,
             query: req.query,
-            total: count,
-            roomList: result,
-            pages: Math.ceil(count / pagination)
+            total: rooms.count,
+            roomList: rooms.rooms,
+            pages: Math.ceil(rooms.count / pagination)
         });
     } catch (err) {
         res.json({
             success: false,
-            err: message
+            err: err
         });
     }
 });
 
 router.post('/rooms', auth, async (req, res) => {
     try {
-        if (!req.body._id) {
-            gameType = await GameType.findOne({game_type_id: parseInt(req.body.game_type)});
-            newRoom = new Room({ ...req.body, creator: req.user, game_type: gameType, status: 'open' });
-            await newRoom.save();
-            res.json({
-                success: true,
-                message: 'room create'
-            });
-        }
+        gameType = await GameType.findOne({game_type_id: parseInt(req.body.game_type)});
+        newRoom = new Room({ ...req.body, creator: req.user, game_type: gameType, status: 'open' });
+        await newRoom.save();
+
+        const rooms = await getRoomList(10, 1);
+        req.io.sockets.emit('UPDATED_ROOM_LIST', {
+            total: rooms.count,
+            roomList: rooms.rooms,
+            pages: Math.ceil(rooms.count / 10)
+        });
+
+        res.json({
+            success: true,
+            message: 'room create'
+        });
     } catch (err) {
         res.json({
             success: false,
@@ -128,16 +143,28 @@ router.post('/bet', auth, async (req, res) => {
             });
 
             if (roomInfo['game_type']['game_type_name'] === 'Classic RPS') {
+                // let creator = User.findOne({_id: roomInfo['creator']['_id']});
+                // let joiner = User.findOne({_id: roomInfo['creator']['_id']});
+                roomInfo['creator']['balance'] -= roomInfo['bet_amount'];
+                req.user['balance'] -= roomInfo['bet_amount'];
+
                 newGameLog.selected_rps = req.body.selected_rps;
                 newGameLog.is_anonymous = req.body.is_anonymous;
 
                 if (roomInfo.selected_rps % 3 === req.body.selected_rps - 1) {
                     newGameLog.game_result = 1;
+                    req.user['balance'] += roomInfo['bet_amount'] * 2 * 0.95
                 } else if (roomInfo.selected_rps === req.body.selected_rps) {
                     newGameLog.game_result = 0;
+                    req.user['balance'] += roomInfo['bet_amount'] * 0.95
+                    roomInfo['creator']['balance'] += roomInfo['bet_amount'] * 0.95
                 } else {
                     newGameLog.game_result = -1;
+                    roomInfo['creator']['balance'] += roomInfo['bet_amount'] * 2 * 0.95
                 }
+
+                await roomInfo['creator'].save();
+                await req.user.save();
 
                 roomInfo.status = 'finished';
             }
@@ -145,6 +172,13 @@ router.post('/bet', auth, async (req, res) => {
             await newGameLog.save();
             await roomInfo.save();
 
+            const rooms = await getRoomList(10, 1);
+            req.io.sockets.emit('UPDATED_ROOM_LIST', {
+                total: rooms.count,
+                roomList: rooms.rooms,
+                pages: Math.ceil(rooms.count / 10)
+            });
+    
             res.json({
                 success: true,
                 message: 'room create',

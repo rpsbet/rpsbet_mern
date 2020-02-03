@@ -43,8 +43,8 @@ class SiteWrapper extends Component {
     e.preventDefault();
     this.props.socket.emit('DISCONNECT', {a:'a'});
 
-    // console.log(this.props);
-    // this.props.userSignOut();
+    console.log(this.props);
+    this.props.userSignOut();
   }
   
   render() {

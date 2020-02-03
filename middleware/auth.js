@@ -14,6 +14,7 @@ module.exports = async function(req, res, next) {
       message: 'No token, authorization denied'
     });
   }
+  
   // Verify token
   try {
     const { id, is_admin } = jwt.verify(token, process.env.SECRET_OR_KEY);

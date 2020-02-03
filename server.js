@@ -4,8 +4,20 @@ const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
+const socketContoller =require('./socketController.js');
 
 const app = express();
+
+const server = app.listen(process.env.PORT, () =>
+  console.log(`server running on port ${process.env.PORT}`)
+);
+
+const io = socketContoller.socketio(server, {origins: '*:*'});
+
+app.use(function(req,res,next){
+  req.io = io;
+  next();
+});
 
 var corsOptions = {
   origin: "*",
@@ -52,7 +64,3 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
 }
-
-app.listen(process.env.PORT, () =>
-  console.log(`server running on port ${process.env.PORT}`)
-);
