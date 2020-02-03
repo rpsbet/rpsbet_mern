@@ -102,6 +102,10 @@ import {
     }
   };
 
+  export const setRoomList = (data) => dispatch => {
+    dispatch({ type: ROOMS_LOADED, payload: data });
+  }
+
   export const setGameMode = game_mode => dispatch => {
     dispatch({ type: SET_GAME_MODE, payload: game_mode });
   };

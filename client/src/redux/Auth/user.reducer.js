@@ -1,4 +1,5 @@
 import {
+  SET_SOCKET,
   REGISTER_FAIL,
   USER_LOADED,
   AUTH_ERROR,
@@ -9,11 +10,13 @@ import {
 } from '../types';
 
 const initialState = {
+  socket: null,
   token: localStorage.getItem('token'),
   isAuthenticated: localStorage.getItem('isAuthenticated'),
   isAdmin: false,
   loading: true,
   user: null,
+  balance: 0,
   userName: '',
   liveUrl: null
 };
@@ -22,6 +25,10 @@ export default function(state = initialState, action) {
   const { type, payload } = action;
 
   switch (type) {
+    case SET_SOCKET:
+      return {
+        ...state, socket: payload
+      };
     case USER_LOADED:
       return {
         ...state,
@@ -29,7 +36,8 @@ export default function(state = initialState, action) {
         userName: payload.username,
         isAuthenticated: true,
         loading: false,
-        user: payload
+        user: payload,
+        balance: payload.balance
       };
     case LOGIN_SUCCESS:
       localStorage.setItem('token', payload.token);

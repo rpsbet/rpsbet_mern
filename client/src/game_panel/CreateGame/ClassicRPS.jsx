@@ -10,12 +10,23 @@ class ClassicRPS extends Component {
             advanced_status: 'hidden',
             is_private: false,
             is_anonymous: false,
-            room_password: ''
+            room_password: '',
+            balance: this.props.balance
         };
         this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
         this.onChangeRoomPassword = this.onChangeRoomPassword.bind(this);
         this.onCreateGame = this.onCreateGame.bind(this);
+    }
+
+    static getDerivedStateFromProps(props, current_state) {
+        if (current_state.balance !== props.balance) {
+            return {
+                ...current_state,
+                balance: props.balance
+            };
+        }
+        return null;
     }
 
     onChangeBetAmount(e) {
@@ -39,6 +50,11 @@ class ClassicRPS extends Component {
         e.preventDefault();
         if (this.state.bet_amount === 0) {
             alert("Please input the bet amount!");
+            return;
+        }
+
+        if (this.state.bet_amount > this.state.balance / 100.0) {
+            alert("Not enough balance!");
             return;
         }
 
@@ -103,7 +119,8 @@ class ClassicRPS extends Component {
 }
 
 const mapStateToProps = state => ({
-  auth: state.auth.isAuthenticated,
+    auth: state.auth.isAuthenticated,
+    balance: state.auth.balance,
 });
 
 const mapDispatchToProps = {

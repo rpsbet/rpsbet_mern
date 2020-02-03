@@ -1,4 +1,5 @@
 import {
+  SET_SOCKET,
   REGISTER_FAIL,
   USER_LOADED,
   AUTH_ERROR,
@@ -16,7 +17,7 @@ import setAuthToken from '../../util/setAuthToken';
 import history from '../history';
 
 // Load User
-export const getUser = () => async dispatch => {
+export const getUser = (is_reload) => async dispatch => {
   if (localStorage.token) {
     setAuthToken(localStorage.token);
   }
@@ -24,7 +25,9 @@ export const getUser = () => async dispatch => {
     const res = await axios.get('/auth/user');
     if (res.data.success) {
       dispatch({ type: USER_LOADED, payload: res.data.user });
-      dispatch({ type: MSG_INFO, payload: res.data.message });
+      if (!is_reload) {
+        dispatch({ type: MSG_INFO, payload: res.data.message });
+      }
     } else {
       dispatch({ type: AUTH_ERROR });
     }
@@ -92,6 +95,10 @@ export const userSignOut = body => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
+
+export const setSocket = socket => dispatch => {
+  dispatch({ type: SET_SOCKET, payload: socket });
+}
 
 export const setUrl = url => dispatch => {
   dispatch({ type: SET_URL, payload: url });

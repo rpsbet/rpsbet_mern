@@ -1,18 +1,50 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { userSignOut } from '../redux/Auth/user.actions';
+import { setSocket, userSignOut, getUser } from '../redux/Auth/user.actions';
+import { setRoomList } from '../redux/Logic/logic.actions';
 import history from '../redux/history';
+import socketIOClient from 'socket.io-client';
 
 class SiteWrapper extends Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      endpoint: "localhost:5000",
+      userName: this.props.userName,
+      balance: this.props.balance
+    }
+
     this.handleLogout = this.handleLogout.bind(this);
   }
 
+  static getDerivedStateFromProps(props, current_state) {
+    if (current_state.balance !== props.balance) {
+        return {
+          ...current_state,
+          balance: props.balance,
+          userName: props.userName
+        };
+    }
+    return null;
+  }
+
+  componentDidMount() {
+    const socket = socketIOClient(this.state.endpoint);
+    socket.on('UPDATED_ROOM_LIST', (data) => {
+      this.props.setRoomList(data);
+      this.props.getUser(true);
+    });
+    this.props.setSocket(socket);
+    // this.props.getUser();
+  }
+
   handleLogout(e) {
-    console.log(this.props);
-    this.props.userSignOut();
+    e.preventDefault();
+    this.props.socket.emit('DISCONNECT', {a:'a'});
+
+    // console.log(this.props);
+    // this.props.userSignOut();
   }
   
   render() {
@@ -25,11 +57,11 @@ class SiteWrapper extends Component {
             </a>
             <a href="/" id="btn_how_to_play">HOW TO PLAY</a>
             <a href="/" id="btn_logout" className="ml-auto" onClick={this.handleLogout}>LOGOUT<i className="glyphicon glyphicon-off"></i></a>
-            <span>£842.25</span>
+            <span>£{this.state.balance / 100.0}</span>
           </div>
           <div className="sub_header d-flex">
             <span className="welcome">Welcome back </span>
-            <span className="user_name mr-auto">Jin</span>
+            <span className="user_name mr-auto">{this.state.userName}</span>
             <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a>
             <a href="/" id="btn_avatar" className="btn"><img src="/img/avatar.png" alt="" /></a>
           </div>
@@ -64,10 +96,17 @@ class SiteWrapper extends Component {
   }
 }
 
-const mapStateToProps = state => ({});
+const mapStateToProps = state => ({
+  socket: state.auth.socket,
+  balance: state.auth.balance,
+  userName: state.auth.userName
+});
 
 const mapDispatchToProps = {
-  userSignOut
+  setSocket,
+  userSignOut,
+  setRoomList,
+  getUser
 };
 
 export default connect(

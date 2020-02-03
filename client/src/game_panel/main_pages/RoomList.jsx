@@ -8,8 +8,19 @@ class RoomList extends Component {
         super(props);
         this.state = {
             pageNumber: props.pageNumber,
+            balance: this.props.balance
         };
         this.joinRoom = this.joinRoom.bind(this);
+    }
+
+    static getDerivedStateFromProps(props, current_state) {
+        if (current_state.balance !== props.balance) {
+            return {
+                ...current_state,
+                balance: props.balance
+            };
+        }
+        return null;
     }
 
     componentDidMount() {
@@ -27,6 +38,12 @@ class RoomList extends Component {
     };
 
     joinRoom(e) {
+        const bet_amount = e.target.getAttribute('bet_amount');
+        if (bet_amount > this.state.balance / 100.0) {
+            alert("Not enough balance!");
+            return;
+        }
+
         if (e.target.getAttribute('room_status') === 'finished') {
             alert("You can't join the game. This game has been finished.");
             return;
@@ -35,7 +52,7 @@ class RoomList extends Component {
         this.props.setCurRoomInfo({
             _id: room_id,
             game_type: e.target.getAttribute('game_type'),
-            bet_amount: e.target.getAttribute('bet_amount')
+            bet_amount: bet_amount
         });
         history.push('/join/' + room_id);
     }
@@ -80,7 +97,8 @@ const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
     roomList: state.logic.roomList,
     roomCount: state.logic.roomCount,
-    pageNumber: state.logic.pageNumber
+    pageNumber: state.logic.pageNumber,
+    balance: state.auth.balance
 });
 
 const mapDispatchToProps = {

@@ -8,7 +8,7 @@ class CreateGame extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            game_mode : this.props.game_mode
+            game_mode : this.props.game_mode,
         }
         this.onCreateRoom = this.onCreateRoom.bind(this);
     }
@@ -62,7 +62,8 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   landingItemList: state.landingReducer.landingItemList,
   gameTypeList: state.logic.gameTypeList,
-  game_mode: state.logic.game_mode
+  game_mode: state.logic.game_mode,
+  socket: state.auth.socket
 });
 
 const mapDispatchToProps = {
