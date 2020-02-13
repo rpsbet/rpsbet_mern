@@ -217,10 +217,10 @@ router.post('/bet', auth, async (req, res) => {
                 }
             }
 
-            roomInfo['creator'].save();
-            req.user.save();
-            newGameLog.save();
-            roomInfo.save();
+            await roomInfo['creator'].save();
+            await req.user.save();
+            await newGameLog.save();
+            await roomInfo.save();
 
             const rooms = await getRoomList(10, 1);
             req.io.sockets.emit('UPDATED_ROOM_LIST', {
