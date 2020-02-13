@@ -23,6 +23,10 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
+  spleesh_bet_unit: {
+    type: Number,
+    default: 1
+  },
   pr: {
     type: Number,
     default: 0
@@ -32,6 +36,10 @@ const RoomSchema = new Schema({
     default: false
   },
   end_game_type: {
+    type: Boolean,
+    default: false
+  },
+  end_game_amount: {
     type: Number,
     default: 0
   },

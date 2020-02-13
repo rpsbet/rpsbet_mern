@@ -48,11 +48,14 @@ class RoomList extends Component {
             alert("You can't join the game. This game has been finished.");
             return;
         }
+
         const room_id = e.target.getAttribute('_id');
         this.props.setCurRoomInfo({
             _id: room_id,
             game_type: e.target.getAttribute('game_type'),
-            bet_amount: bet_amount
+            bet_amount: bet_amount,
+            spleesh_bet_unit: parseInt(e.target.getAttribute('spleesh_bet_unit')),
+            game_log_list: []
         });
         history.push('/join/' + room_id);
     }
@@ -79,10 +82,10 @@ class RoomList extends Component {
                             <tr key={key}>
                                 <td>{row.game_type.game_type_name + ' ' + row.index}</td>
                                 <td>{row.creator}</td>
-                                <td>{"£" + row.bet_amount + " / " + row.pr}</td>
+                                <td>{"£" + row.bet_amount + " / £" + row.pr}</td>
                                 <td>{row.winnings}</td>
                                 <td>{row.status}</td>
-                                <td><button className="btn btn_join" onClick={this.joinRoom} _id={row._id} room_status={row.status} game_type={row.game_type.game_type_name} bet_amount={row.bet_amount}>JOIN GAME</button></td>
+                                <td><button className="btn btn_join" onClick={this.joinRoom} _id={row._id} room_status={row.status} game_type={row.game_type.game_type_name} bet_amount={row.bet_amount} spleesh_bet_unit={row.spleesh_bet_unit}>JOIN GAME</button></td>
                             </tr>
                         ), this)}
                         </tbody>

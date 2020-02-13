@@ -14,14 +14,22 @@ import {
 const initialState = {
   socket: null,
   game_mode: 'Classic RPS',
+  // game_mode: 'Spleesh!',
   roomList: [],
   roomCount: 0,
   pageNumber: 1,
-  gameTypeList: [],
+  gameTypeList: [
+    { game_type_name: 'Classic RPS' },
+    { game_type_name: 'Spleesh!' },
+    { game_type_name: 'Brain Game' },
+    { game_type_name: 'Mystery Box' },
+  ],
   curRoomInfo: {
     _id: 0,
     game_type: '',
-    bet_amount: 0
+    bet_amount: 0,
+    spleesh_bet_unit: 1,
+    game_log_list: []
   },
   betResult: 0
 };

@@ -89,7 +89,7 @@ class ClassicRPS extends Component {
                 </div>
                 <hr/>
                 <label className="lbl_game_option">Max Return</label>
-                <input type="text" readOnly name="potential" id="potential" className="form-control input-sm" value={this.state.bet_amount === 0 ? "" : "£" + this.state.bet_amount + " * 0.95"} />
+                <input type="text" readOnly name="potential" id="potential" className="form-control input-sm" value={this.state.bet_amount === 0 ? "" : "£" + (this.state.bet_amount * 2) + " * 0.95"} />
                 <div>This will be the most you and your opponent(s) can make with your chosen game settings. (Winnings)</div>
                 <button className="btn-advanced" onClick={this.onShowButtonClicked}>Show/Hide Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
