@@ -236,7 +236,6 @@ router.post('/bet', auth, async (req, res) => {
             });
         }
     } catch (err) {
-        console.log(err);
         res.json({
             success: false,
             message: err
@@ -245,4 +244,3 @@ router.post('/bet', auth, async (req, res) => {
 });
   
 module.exports = router;
-  
