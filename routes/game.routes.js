@@ -92,6 +92,7 @@ getRoomList = async (pagination, page) => {
             temp.winnings = "(£" + room['pr'] + " + £" + room['bet_amount'] + ") * 0.9";
         } else if (temp.game_type.game_type_id === 4) {
             temp.winnings = "£" + room['pr'] + " * 0.95";
+            temp.bet_amount = room['box_price'];
         }
 
         index--;
@@ -248,19 +249,25 @@ router.post('/bet', auth, async (req, res) => {
                 req.user['balance'] += selected_box.box_prize * 95;
                 roomInfo['creator']['balance'] += req.body.bet_amount * 95;
 
-                if (roomInfo['end_game_type']) {
-                    opened_amount = 0;
-                    opened_box_list = await RoomBoxPrize.find({room: roomInfo, status: 'opened'});
+                opened_amount = 0;
+                box_list = await RoomBoxPrize.find({room: roomInfo});
+                newPR = 0;
 
-                    opened_box_list.forEach(box => {
+                box_list.forEach(box => {
+                    if (box.status === 'opened') {
                         opened_amount += (box.box_prize >= roomInfo.box_price ? box.box_prize : roomInfo.box_price - box.box_prize);
-                    });                
-
-                    if (opened_amount >= roomInfo.end_game_amount) {
-                        roomInfo.status = 'finished';
+                    } else {
+                        if (newPR < box.box_prize) {
+                            newPR = box.box_prize;
+                        }
                     }
+                });
+
+                if (roomInfo['end_game_type'] && opened_amount >= roomInfo.end_game_amount) {
+                    roomInfo.status = 'finished';
                 }
 
+                roomInfo.pr = newPR;
                 newGameLog.selected_box = selected_box;
             }
 
