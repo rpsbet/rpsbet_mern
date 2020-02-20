@@ -6,9 +6,10 @@ const RoomBoxPrizeSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Room'
     },
-    box_index: {
-        type: Number,
-        default: 0
+    joiner: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
     },
     box_prize: {
         type: Number,

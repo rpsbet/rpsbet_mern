@@ -2,8 +2,8 @@ import {
     GAMETYPE_LOADED,
     ROOMINFO_LOADED,
     ROOMS_LOADED,
-    BET_SUCCESS,
     BET_FAIL,
+    BET_SUCCESS,
     MSG_CREATE_ROOM_FAIL,
     MSG_CREATE_ROOM_SUCCESS,
     MSG_ROOMS_LOAD_FAILED,
@@ -38,15 +38,19 @@ import {
     try {
       const res = await axios.post('/game/bet', body);
       if (res.data.success) {
-        // dispatch({ type: BET_SUCCESS, payload: res.data });
-        if (res.data.betResult === 1) {
-          alert('Nice, You Win!');
-        } else if (res.data.betResult === 0) {
-          alert('Draw, No Winner!');
+        console.log(bet_info.game_type);
+        if (bet_info.game_type === 'Mystery Box') {
+          dispatch({ type: BET_SUCCESS, payload: res.data });
         } else {
-          alert('Oops, You Lost!');
+          if (res.data.betResult === 1) {
+            alert('Nice, You Win!');
+          } else if (res.data.betResult === 0) {
+            alert('Draw, No Winner!');
+          } else {
+            alert('Oops, You Lost!');
+          }
+          history.push('/join');
         }
-        history.push('/join');
       } else {
         dispatch({ type: BET_FAIL });
       }
@@ -61,6 +65,8 @@ import {
     try {
       const res = await axios.get('/game/room/' + room_id);
       if (res.data.success) {
+        console.log(res.data);
+
         dispatch({ type: ROOMINFO_LOADED, payload: res.data });
       } else {
         dispatch({ type: MSG_ROOMS_LOAD_FAILED });
@@ -112,6 +118,9 @@ import {
 
   export const setCurRoomInfo = room_info => dispatch => {
     dispatch({ type: SET_CUR_ROOM_INFO, payload: room_info });
+    if (room_info.game_type === 'Mystery Box') {
+      dispatch({ type: BET_SUCCESS, payload: {betResult: -1} });
+    }
   };
 
   export const setUrl = url => dispatch => {

@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import history from '../../redux/history';
 import ClassicRPS from '../CreateGame/ClassicRPS';
 import Spleesh from '../CreateGame/Spleesh';
+import MysteryBox from '../CreateGame/MysteryBox';
 import { createRoom, getGameTypeList, setGameMode, getRoomList } from "../../redux/Logic/logic.actions";
 
 class CreateGame extends Component {
@@ -55,6 +56,7 @@ class CreateGame extends Component {
                 </div>
                 {this.state.game_mode === 'Classic RPS' && <ClassicRPS createRoom={this.onCreateRoom} />}
                 {this.state.game_mode === 'Spleesh!' && <Spleesh createRoom={this.onCreateRoom} />}
+                {this.state.game_mode === 'Mystery Box' && <MysteryBox createRoom={this.onCreateRoom} />}
             </>
         );
     }

@@ -68,7 +68,7 @@ export class RegistrationForm extends Component {
             <input type="text" className="form-control" placeholder="Bio" name="bio" value={bio} onChange={this.handleInputChange} />
           </div>
           <div className="form-group">
-            <button className="btn btn-info btn-block">Register</button>
+            <button className={"btn btn-info btn-block " + disable}>Register</button>
             <a href="/signin" className="btn btn-block" id="btn_signup">Login</a>
           </div>
         </form>

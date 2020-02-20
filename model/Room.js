@@ -31,6 +31,10 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
+  box_price: {
+    type: Number,
+    default: 0
+  },
   is_anonymous: {
     type: Boolean,
     default: false

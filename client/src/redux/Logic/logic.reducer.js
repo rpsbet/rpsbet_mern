@@ -3,7 +3,6 @@ import {
   ROOMINFO_LOADED,
   ROOMS_LOADED,
   BET_SUCCESS,
-  BET_FAIL,
   MSG_CREATE_ROOM_FAIL,
   MSG_CREATE_ROOM_SUCCESS,
   SET_GAME_MODE,
@@ -29,14 +28,15 @@ const initialState = {
     game_type: '',
     bet_amount: 0,
     spleesh_bet_unit: 1,
-    game_log_list: []
+    box_price: 0,
+    game_log_list: [],
+    box_list: []
   },
-  betResult: 0
+  betResult: -1
 };
   
 export default function(state = initialState, action) {
   const { type, payload } = action;
-  console.log(type, payload);
   switch (type) {
     case BET_SUCCESS:
       return {

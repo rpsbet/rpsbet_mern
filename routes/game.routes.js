@@ -1,3 +1,4 @@
+var ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
 
 const router = express.Router();
@@ -5,6 +6,7 @@ const Room = require('../model/Room');
 const User = require('../model/User');
 const GameType = require('../model/GameType');
 const GameLog = require('../model/GameLog');
+const RoomBoxPrize = require('../model/RoomBoxPrize');
 const moment = require('moment');
 const auth = require('../middleware/auth');
 
@@ -31,6 +33,7 @@ router.get('/room/:id', async (req, res) => {
         const room = await Room.findOne({_id: req.params.id})
                         .populate({path: 'game_type', model: GameType});
         const gameLogList = await GameLog.find({room: room});
+        const boxPrizeList = await RoomBoxPrize.find({room: room}).sort({_id : 'asc'});
 
         res.json({
             success: true,
@@ -40,7 +43,9 @@ router.get('/room/:id', async (req, res) => {
                 game_type: room['game_type']['game_type_name'],
                 bet_amount: room['bet_amount'],
                 spleesh_bet_unit: room['spleesh_bet_unit'],
-                game_log_list: gameLogList
+                game_log_list: gameLogList,
+                box_list: boxPrizeList,
+                box_price: room['box_price']
             }
         });
     } catch (err) {
@@ -72,6 +77,7 @@ getRoomList = async (pagination, page) => {
             spleesh_bet_unit: room['spleesh_bet_unit'],
             is_anonymous : room['is_anonymous'],
             is_private : room['is_private'],
+            box_price: room['box_price'], 
             status: room['status'],
             index: index,
             created_at : moment(room['created_at']).format('YYYY-MM-DD HH:mm'),
@@ -103,8 +109,6 @@ router.get('/rooms', async (req, res) => {
     const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
     const page = req.query.page ? parseInt(req.query.page) : 1;
 
-
-
     try {
         const rooms = await getRoomList(pagination, page);
         res.json({
@@ -129,10 +133,23 @@ router.post('/rooms', auth, async (req, res) => {
         pr = 0;
         if (req.body.game_type === 1) {
             pr = req.body.bet_amount * 2;
+        } else if (req.body.game_type == 4) {
+            pr = req.body.pr;
         }
         
         newRoom = new Room({ ...req.body, creator: req.user, game_type: gameType, pr: pr, status: 'open' });
         await newRoom.save();
+
+        if (gameType.game_type_name === "Mystery Box") {
+            req.body.box_list.forEach(box => {
+                newBox = new RoomBoxPrize({
+                    room: newRoom,
+                    box_prize: box,
+                    status: 'init'
+                });
+                newBox.save();
+            });
+        }
 
         if (req.body.is_anonymous === true) {
             req.user['balance'] -= 10;
@@ -161,7 +178,7 @@ router.post('/rooms', auth, async (req, res) => {
 });
   
 router.post('/bet', auth, async (req, res) => {
-    try {
+    // try {
         if (req.body._id) {
             roomInfo = await Room.findOne({_id: req.body._id})
                         .populate({path: 'creator', model: User})
@@ -215,6 +232,36 @@ router.post('/bet', auth, async (req, res) => {
                         roomInfo['creator']['balance'] += (roomInfo['pr'] + roomInfo['bet_amount']) * 90;
                     }
                 }
+            } else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
+                newGameLog.bet_amount = req.body.bet_amount;
+                req.user['balance'] -= req.body.bet_amount * 100;
+
+                let selected_box = await RoomBoxPrize.findOne({_id: new ObjectId(req.body.selected_id)})
+                    .populate({path: 'room', model: Room})
+                    .populate({path: 'joiner', model: User});
+                selected_box.status = 'opened';
+                selected_box.joiner = req.user;
+                await selected_box.save();
+
+                newGameLog.game_result = selected_box.box_prize;
+
+                req.user['balance'] += selected_box.box_prize * 95;
+                roomInfo['creator']['balance'] += req.body.bet_amount * 95;
+
+                if (roomInfo['end_game_type']) {
+                    opened_amount = 0;
+                    opened_box_list = await RoomBoxPrize.find({room: roomInfo, status: 'opened'});
+
+                    opened_box_list.forEach(box => {
+                        opened_amount += (box.box_prize >= roomInfo.box_price ? box.box_prize : roomInfo.box_price - box.box_prize);
+                    });                
+
+                    if (opened_amount >= roomInfo.end_game_amount) {
+                        roomInfo.status = 'finished';
+                    }
+                }
+
+                newGameLog.selected_box = selected_box;
             }
 
             await roomInfo['creator'].save();
@@ -231,16 +278,16 @@ router.post('/bet', auth, async (req, res) => {
     
             res.json({
                 success: true,
-                message: 'room create',
+                message: 'successful bet',
                 betResult: newGameLog.game_result
             });
         }
-    } catch (err) {
-        res.json({
-            success: false,
-            message: err
-        });
-    }
+    // } catch (err) {
+    //     res.json({
+    //         success: false,
+    //         message: err
+    //     });
+    // }
 });
   
 module.exports = router;

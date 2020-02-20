@@ -8,6 +8,7 @@ class Spleesh extends Component {
             bet_amount: this.props.spleesh_bet_unit,
             advanced_status: '',
             is_anonymous: false,
+            balance: this.props.balance
         };
         this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onBtnBetClick = this.onBtnBetClick.bind(this);
@@ -54,7 +55,7 @@ class Spleesh extends Component {
     render() {
         let previous_guesses = '';
         for (let i = 0; i < this.props.game_log_list.length; i++) {
-            previous_guesses += (i == 0 ? '' : ', ') + this.props.game_log_list[i].bet_amount;
+            previous_guesses += (i === 0 ? '' : ', ') + this.props.game_log_list[i].bet_amount;
         };
 
         return (
@@ -89,6 +90,7 @@ class Spleesh extends Component {
 
 const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
+    balance: state.auth.balance
 });
 
 const mapDispatchToProps = {

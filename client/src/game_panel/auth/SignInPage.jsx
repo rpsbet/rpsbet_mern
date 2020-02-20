@@ -47,7 +47,7 @@ function SignInSide(props) {
               <input type="password" className="form-control" placeholder="Password" name="password" value={password} onChange={e => setPassword(e.target.value)} />
             </div>
             <div className="form-group">
-              <button className="btn btn-info btn-block">Login</button>
+              <button className={"btn btn-info btn-block " + disable}>Login</button>
               <a href="/signup" className="btn btn-block" id="btn_signup">Register</a>
             </div>
             <div>

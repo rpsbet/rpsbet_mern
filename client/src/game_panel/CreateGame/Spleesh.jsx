@@ -142,7 +142,7 @@ class Spleesh extends Component {
                     <div>Choose 'Private' to force users to require a password to Join your game.</div>
 
                     <hr/>
-                    <label className="lbl_game_option">Status:</label>
+                    <label className="lbl_game_option">END Game Type:</label>
                     <div>
                         <label className={"radio-inline" + (this.state.endgame_type === false ? ' checked' : '')} onClick={() => { this.setState({endgame_type: false}); }}>Manual</label>
                         <label className={"radio-inline" + (this.state.endgame_type === true ? ' checked' : '')} onClick={() => { this.setState({endgame_type: true}); }}>Automatic</label>
