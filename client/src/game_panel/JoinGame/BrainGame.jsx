@@ -7,16 +7,9 @@ class BrainGame extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            selected_rps: 1,
-            bet_amount: 0,
             brain_game_type: this.props.brain_game_type,
-            game_type_list: this.props.game_type_list,
             advanced_status: '',
-            is_private: false,
-            endgame_type: false,
-            endgame_amount: '',
             is_anonymous: false,
-            room_password: '',
             is_started: false,
             remaining_time: 10,
             score: 0,
@@ -29,28 +22,24 @@ class BrainGame extends Component {
         };
         this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onCountDown = this.onCountDown.bind(this);
-        this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
-        this.onChangeRoomPassword = this.onChangeRoomPassword.bind(this);
-        this.onChangeEndgameAmount = this.onChangeEndgameAmount.bind(this);
-        this.onCreateGame = this.onCreateGame.bind(this);
+        this.onStartGame = this.onStartGame.bind(this);
         this.onClickAnswer = this.onClickAnswer.bind(this);
         this.getNextQuestion = this.getNextQuestion.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.balance !== props.balance || current_state.brain_game_type !== props.brain_game_type) {
+        if (current_state.balance !== props.balance) {
             return {
                 ...current_state,
                 balance: props.balance,
-                brain_game_type: props.brain_game_type
             };
         }
         return null;
     }
 
-    async getNextQuestion(brain_game_type) {
+    async getNextQuestion() {
         try {
-            const res = await axios.get('/game/question/' + brain_game_type);
+            const res = await axios.get('/game/question/' + this.state.brain_game_type._id);
             if (res.data.success) {
                 this.setState({
                     next_question: res.data.question,
@@ -63,15 +52,7 @@ class BrainGame extends Component {
     }
 
     componentDidMount() {
-        this.getNextQuestion(this.state.brain_game_type);
-    }
-
-    onChangeBetAmount(e) {
-        this.setState({bet_amount: e.target.value});
-    }
-
-    onChangeRoomPassword(e) {
-        this.setState({room_password: e.target.value});
+        this.getNextQuestion();
     }
 
     onShowButtonClicked(e) {
@@ -83,11 +64,7 @@ class BrainGame extends Component {
         }
     }
 
-    onChangeEndgameAmount(e) {
-        this.setState({endgame_amount: e.target.value});
-    }
-
-    onCreateGame(e) {
+    onStartGame(e) {
         e.preventDefault();
         if (this.state.bet_amount === 0) {
             alert("Please input the bet amount!");
@@ -96,11 +73,6 @@ class BrainGame extends Component {
 
         if (this.state.bet_amount > this.state.balance / 100.0) {
             alert("Not enough balance!");
-            return;
-        }
-
-        if (this.state.is_private === true && this.state.room_password === "") {
-            alert("You have selected the private mode. Please input the password!");
             return;
         }
 
@@ -113,7 +85,7 @@ class BrainGame extends Component {
             remaining_time: 10
         });
 
-        this.getNextQuestion(this.state.brain_game_type);
+        this.getNextQuestion();
     }
 
     onCountDown() {
@@ -123,28 +95,20 @@ class BrainGame extends Component {
         if (remaining_time === 0) {
             clearInterval(this.state.intervalId);
             this.setState({
-                // is_started: false,
                 intervalId: null,
                 remaining_time: 'FIN'
             });
 
-            this.props.createRoom({
-                game_type: 3,
-                brain_game_type: this.state.brain_game_type,
-                brain_game_score: this.state.score,
+            this.props.join({
                 bet_amount: this.state.bet_amount,
-                is_private: this.state.is_private,
-                is_anonymous: this.state.is_anonymous,
-                room_password: this.state.room_password
+                brain_game_score: this.state.score,
+                is_anonymous: this.state.is_anonymous
             });
         }
     }
 
     async onClickAnswer(e) {
         try {
-            if (this.state.remaining_time === 'FIN') {
-                return;
-            }
             const data = {
                 question_id: this.state.question._id,
                 answer_id: e.target.getAttribute('_id')
@@ -164,11 +128,12 @@ class BrainGame extends Component {
         } catch (err) {
             console.log('err***', err);
         }
-        this.getNextQuestion(this.state.brain_game_type);
+        this.getNextQuestion();
     }
 
     render() {
         const { is_started } = this.state;
+
         return is_started === true ? 
             (
                 <>
@@ -194,49 +159,19 @@ class BrainGame extends Component {
             )
             :
             (
-                <form onSubmit={this.onCreateGame}>
+                <form onSubmit={this.onStartGame}>
+                    <h1 className="main_title" style={{textTransform: 'initial'}}>Click START to begin BRAIN GAME: 60 secs</h1>
                     <hr/>
-                    <label className="lbl_game_option">Game Type</label>
-                    {this.state.game_type_list.map((game_type, index) => (
-                        <label className={"radio-inline" + (this.state.brain_game_type === game_type._id ? ' checked' : '')} 
-                            onClick={(e) => { 
-                                this.props.setCurrentQuestionInfo({brain_game_type: game_type._id}); 
-                                this.getNextQuestion(game_type._id);
-                            }} key={index}>
-                            {game_type.game_type_name}
-                        </label>
-                    ))}
-                    <div>The amount you want to bet with, your opponent must match this.</div>
+                    <label className="lbl_game_option">Bet Amount:</label>
+                    <div style={{fontSize: 36, paddingLeft: 10}}>£{this.props.bet_amount}</div>
                     <hr/>
-                    <label className="lbl_game_option">Bet Amount</label>
-                    <input type="number" name="betamount" id="betamount" value={this.state.bet_amount} onChange={this.onChangeBetAmount} className="form-control col-md-6 input-sm bet-input" placeholder="Bet Amount" />
-                    <div>The amount you want to bet with, your opponent must match this.</div>
+                    <label className="lbl_game_option">Game Type:</label>
+                    <div style={{fontSize: 36, paddingLeft: 10}}>{this.props.brain_game_type.game_type_name}</div>
                     <hr/>
-                    <label className="lbl_game_option">Max Return</label>
-                    <input type="text" readOnly name="potential" id="potential" className="form-control input-sm" value="∞ * 0.9" />
-                    <div>This will be the most you and your opponent(s) can make with your chosen game settings. (Winnings)</div>
+                    <label className="lbl_game_option">Score to BEAT:</label>
+                    <div style={{color: '#C83228', fontSize: 36, paddingLeft: 10}}>{this.props.brain_game_score}</div>
                     <button className="btn-advanced" onClick={this.onShowButtonClicked}>Show/Hide Advanced Settings</button>
                     <div id="advanced_panel" className={this.state.advanced_status}>
-                        <hr/>
-                        <label className="lbl_game_option">Status:</label>
-                        <div>
-                            <label className={"radio-inline" + (this.state.is_private === false ? ' checked' : '')} onClick={() => { this.setState({is_private: false, room_password: ''}); }}>Public</label>
-                            <label className={"radio-inline" + (this.state.is_private === true ? ' checked' : '')} onClick={() => { this.setState({is_private: true}); }}>Private</label>
-                            <input type="password" id="room_password" value={this.state.room_password} onChange={this.onChangeRoomPassword} className={"form-control" + (this.state.is_private === true ? "" : " hidden")} />
-                        </div>
-                        <div>Choose 'Private' to force users to require a password to Join your game.</div>
-
-                        <hr/>
-                        <label className="lbl_game_option">END Game Type:</label>
-                        <div>
-                            <label className={"radio-inline" + (this.state.endgame_type === false ? ' checked' : '')} onClick={() => { this.setState({endgame_type: false}); }}>Manual</label>
-                            <label className={"radio-inline" + (this.state.endgame_type === true ? ' checked' : '')} onClick={() => { this.setState({endgame_type: true}); }}>Automatic</label>
-                            <label className={"lbl_endgame_type" + (this.state.endgame_type === true ? "" : " hidden")}>
-                                Amount: £<input type="text" id="endgame_amount" value={this.state.endgame_amount} onChange={this.onChangeEndgameAmount} className="col-md-6 form-control bet-input endgame_amount" />
-                            </label>
-                        </div>
-                        <div>Make your game END automatically when the PR reaches a set amount. This will put a cap on your Winnings but at least keep them safe.</div>
-
                         <hr/>
                         <label className="lbl_game_option">Anonymous Bet:</label>
                         <div>
@@ -244,12 +179,9 @@ class BrainGame extends Component {
                             <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
                         </div>
                         <div>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
-
-                        <hr/>
-                        <label style={{fontSize: 20, fontWeight: 700}}>You will have 60 seconds to answer as many questions as correctly. You will only have 1 attempt.</label>
                     </div>
                     <div className="text-center">
-                        <button className="btn btn_secondary" id="btn_bet">START</button>
+                        <button className="btn btn_secondary" id="btn_bet">Start</button>
                     </div>
                 </form>
             );
@@ -259,8 +191,6 @@ class BrainGame extends Component {
 const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
     balance: state.auth.balance,
-    brain_game_type: state.questionReducer.brain_game_type,
-    game_type_list: state.questionReducer.game_type_list
 });
 
 const mapDispatchToProps = {

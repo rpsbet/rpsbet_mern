@@ -24,12 +24,10 @@ const App = props => {
   const { isAdminAuthenticated } = props.admin_auth;
 
   useEffect(() => {
-    if (isAuthenticated) {
-      props.getUser();
-    }
-
     if (isAdminAuthenticated) {
       props.getAdmin();
+    } else if (isAuthenticated) {
+      props.getUser();
     }
   }, []);
 

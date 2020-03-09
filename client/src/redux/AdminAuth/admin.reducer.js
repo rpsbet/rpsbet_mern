@@ -5,6 +5,7 @@ import {
   ADMIN_LOGIN_SUCCESS,
   ADMIN_LOGIN_FAIL,
   ADMIN_LOGOUT,
+  SET_URL
 } from '../types';
 
 const initialState = {
@@ -56,6 +57,10 @@ export default function(state = initialState, action) {
         isAdminAuthenticated: false,
         loading: false
       };
+    case SET_URL:
+      return {
+        ...state, liveUrl: payload
+      }
     default:
       return state;
   }

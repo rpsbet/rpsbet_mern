@@ -30,20 +30,14 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0
     },
-    room_question: {
-        type: Schema.Types.ObjectId,
-        ref: 'RoomQuestion',
-        default: null
-    },
-    answer: {
-        type: Schema.Types.ObjectId,
-        ref: 'Answer',
-        default: null
-    },
     selected_box: {
         type: Schema.Types.ObjectId,
         ref: 'RoomBoxPrize',
         default: null
+    },
+    brain_game_score: {
+        type: Number,
+        default: 0
     },
     is_anonymous: {
         type: Number,

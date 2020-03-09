@@ -16,7 +16,6 @@ import RedeemIcon from '@material-ui/icons/Redeem';
 import PeopleAlt from '@material-ui/icons/PeopleAlt';
 import Person from '@material-ui/icons/Person';
 import TimeLine from '@material-ui/icons/Timeline';
-import Publish from '@material-ui/icons/Publish';
 import ExitToApp from '@material-ui/icons/ExitToApp';
 import VpnKey from '@material-ui/icons/VpnKey';
 
@@ -24,6 +23,8 @@ import history from '../../redux/history';
 import { connect } from 'react-redux';
 import { adminSignOut } from '../../redux/AdminAuth/admin.actions';
 import { setCurrentProductId, setCurrentProductInfo } from '../../redux/Item/item.action';
+import styled from 'styled-components';
+import { styleColor } from '../../Styles/styleThem';
 
 const drawerWidth = 240;
 
@@ -84,40 +85,23 @@ function ClippedDrawer(props) {
         </ListSubheader>
       }
     >
-      <ListItem button onClick={() => navPush('/admin/product')}>
+      <ListItem button onClick={() => navPush('/admin/question')}>
         <ListItemIcon>
-          <RedeemIcon color={activeUrl === '/admin/product' ? 'secondary' : 'inherit'} />
+          <RedeemIcon color={activeUrl.includes('/admin/question') ? 'secondary' : 'inherit'} />
         </ListItemIcon>
-        <ListItemText inputcolor={activeUrl === '/admin/product' ? 'secondary' : 'inherit'} primary="Manage Rooms" />
-      </ListItem>
-      <ListItem button onClick={() => {
-        setCurrentProductId(''); 
-        setCurrentProductInfo({ 
-          _id: '',
-          productName: '',
-          price: '',
-          image: '',
-          startDateTime: new Date(),
-          expireDateTime: new Date(),
-        }); 
-        navPush('/admin/product/new');
-      }}>
-        <ListItemIcon>
-          <Publish color={activeUrl === '/admin/product/new' ? 'secondary' : 'inherit'} />
-        </ListItemIcon>
-        <ListItemText inputcolor={activeUrl === '/admin/product/new' ? 'secondary' : 'inherit'} primary="New Post" />
+        <ListItemTextEl inputcolor={activeUrl.includes('/admin/question') ? 'true' : 'false'} primary="Manage Questions" />
       </ListItem>
       <ListItem button onClick={() => navPush('/admin/customers')}>
         <ListItemIcon>
           <PeopleAlt color={activeUrl === '/admin/customers' ? 'secondary' : 'inherit'} />
         </ListItemIcon>
-        <ListItemText inputcolor={activeUrl === '/admin/customers' ? 'secondary' : 'inherit'} primary="Customers" />
+        <ListItemTextEl inputcolor={activeUrl === '/admin/customers' ? 'true' : 'false'} primary="Customers" />
       </ListItem>
       <ListItem button onClick={() => navPush('/admin/statistics')}>
         <ListItemIcon>
           <TimeLine color={activeUrl === '/admin/statistics' ? 'secondary' : 'inherit'} />
         </ListItemIcon>
-        <ListItemText inputcolor={activeUrl === '/admin/statistics' ? 'secondary' : 'inherit'} primary="Statistics" />
+        <ListItemTextEl inputcolor={activeUrl === '/admin/statistics' ? 'true' : 'false'} primary="Statistics" />
       </ListItem>
     </List>
   );
@@ -205,3 +189,11 @@ export default connect(
     mapStateToProps,
     mapDispatchToProps
 )(ClippedDrawer);
+
+const ListItemTextEl = styled(ListItemText)`
+  color: ${props => (props.inputcolor === "true" ? styleColor.secondary.dark : 'white')};
+  transition: all 0.2s ease-in-out;
+  &:hover {
+    color: ${styleColor.secondary.lite};
+  }
+`;

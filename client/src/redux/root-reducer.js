@@ -6,13 +6,15 @@ import itemReducer from './Item/item.reducer';
 import landingReducer from './Landing/landing.reducer';
 import AdminAuth from './AdminAuth/admin.reducer';
 import Logic from './Logic/logic.reducer'
+import questionReducer from './Question/question.reducer'
 
 export default combineReducers({
   auth: Auth,
   admin_auth: AdminAuth,
   snackbar,
   customerReducer,
+  questionReducer,
   itemReducer,
   landingReducer,
-  logic: Logic
+  logic: Logic,
 });

@@ -7,8 +7,12 @@ const AnswerSchema = new Schema({
         ref: 'Question'
     },
     answer: {
+        type: String,
+        default: ''
+    },
+    brain_game_type: {
         type: Schema.Types.ObjectId,
-        ref: 'Answer',
+        ref: 'BrainGameType',
         default: null
     },
     created_at: {

@@ -14,9 +14,13 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
-  game_level: {
+  brain_game_type: {
+    type: Schema.Types.ObjectId,
+    ref: 'BrainGameType',
+    default: null
+  },
+  brain_game_score: {
     type: Number,
-    required: true,
     default: 0
   },
   bet_amount: {

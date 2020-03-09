@@ -7,6 +7,9 @@ const User = require('../model/User');
 const GameType = require('../model/GameType');
 const GameLog = require('../model/GameLog');
 const RoomBoxPrize = require('../model/RoomBoxPrize');
+const Question = require('../model/Question');
+const Answer = require('../model/Answer');
+const BrainGameType = require('../model/BrainGameType');
 const moment = require('moment');
 const auth = require('../middleware/auth');
 
@@ -31,7 +34,8 @@ router.get('/game_types', async (req, res) => {
 router.get('/room/:id', async (req, res) => {
     try {
         const room = await Room.findOne({_id: req.params.id})
-                        .populate({path: 'game_type', model: GameType});
+                        .populate({path: 'game_type', model: GameType})
+                        .populate({path: 'brain_game_type', model: BrainGameType});
         const gameLogList = await GameLog.find({room: room});
         const boxPrizeList = await RoomBoxPrize.find({room: room}).sort({_id : 'asc'});
 
@@ -43,6 +47,8 @@ router.get('/room/:id', async (req, res) => {
                 game_type: room['game_type']['game_type_name'],
                 bet_amount: room['bet_amount'],
                 spleesh_bet_unit: room['spleesh_bet_unit'],
+                brain_game_type: room['brain_game_type'],
+                brain_game_score: room['brain_game_score'],
                 game_log_list: gameLogList,
                 box_list: boxPrizeList,
                 box_price: room['box_price']
@@ -56,10 +62,83 @@ router.get('/room/:id', async (req, res) => {
     }
 });
 
+router.get('/question/:brain_game_type', async (req, res) => {
+    try {
+        const question = await Question.aggregate([
+            {
+                $match: {brain_game_type: new ObjectId(req.params.brain_game_type)}
+            }, {
+                $sample: {size: 1}
+            }
+        ]);
+
+        const correct_answer = await Answer.aggregate([
+            {
+                $match: {question: new ObjectId(question[0]._id)}
+            }, {
+                $sample: {size: 1}
+            }
+        ]);
+
+        const wrong_answers = await Answer.aggregate([
+            {
+                $match: {
+                    question:           {$nin : [new ObjectId(question[0]._id)]},
+                    answer:             {$nin : [correct_answer[0].answer]},
+                    brain_game_type:    new ObjectId(req.params.brain_game_type)
+                }
+            }, {
+                $sample: {size: 3}
+            }
+        ]);
+
+        let answers = [{_id: correct_answer[0]._id, answer: correct_answer[0].answer}];
+
+        wrong_answers.forEach(answer => {
+            answers.push({
+                _id: answer._id,
+                answer: answer.answer
+            });
+        });
+
+        answers.sort(() => Math.random() - 0.5);
+
+        res.json({
+            success: true,
+            question: {_id: question[0]._id, question: question[0].question},
+            answers
+        });
+    } catch (err) {
+        res.json({
+            success: false,
+            err: err
+        });
+    }
+});
+
+router.post('/answer', async (req, res) => {
+    try {
+        const count = await Answer.countDocuments({
+            _id: req.body.answer_id,
+            question: new ObjectId(req.body.question_id)
+        });
+        res.json({
+            success: true,
+            answer_result: count > 0 ? 1 : -1
+        });
+    } catch (err) {
+        res.json({
+            success: false,
+            err: err
+        });
+    }
+});
+
 getRoomList = async (pagination, page) => {
     const rooms = await Room.find({})
         .populate({path: 'creator', model: User})
         .populate({path: 'game_type', model: GameType})
+        .populate({path: 'brain_game_type', model: BrainGameType})
         .sort({created_at: 'desc'})
         .skip(pagination * page - pagination)
         .limit(pagination);
@@ -69,7 +148,7 @@ getRoomList = async (pagination, page) => {
     rooms.forEach(room => {
         let temp = {
             _id : room['_id'],
-            creator : room['is_anonymous'] === true ? 'Anonymous' : room['creator']['username'],
+            creator : room['is_anonymous'] === true ? 'Anonymous' : (room['creator'] ? room['creator']['username'] : ''),
             game_type : room['game_type'],
             bet_amount : room['bet_amount'],
             pr : room['pr'], 
@@ -78,6 +157,8 @@ getRoomList = async (pagination, page) => {
             is_anonymous : room['is_anonymous'],
             is_private : room['is_private'],
             box_price: room['box_price'], 
+            brain_game_type: room['brain_game_type'],
+            brain_game_score: room['brain_game_score'],
             status: room['status'],
             index: index,
             created_at : moment(room['created_at']).format('YYYY-MM-DD HH:mm'),
@@ -177,9 +258,9 @@ router.post('/rooms', auth, async (req, res) => {
         });
     }
 });
-  
+
 router.post('/bet', auth, async (req, res) => {
-    // try {
+    try {
         if (req.body._id) {
             roomInfo = await Room.findOne({_id: req.body._id})
                         .populate({path: 'creator', model: User})
@@ -269,6 +350,29 @@ router.post('/bet', auth, async (req, res) => {
 
                 roomInfo.pr = newPR;
                 newGameLog.selected_box = selected_box;
+            } else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
+                newGameLog.bet_amount = roomInfo['bet_amount'];
+                newGameLog.brain_game_score = req.body.brain_game_score;
+
+                req.user['balance'] -= roomInfo['bet_amount'] * 100;
+                
+                if (roomInfo.brain_game_score == req.body.brain_game_score) {   //draw          Draw, No Winner! PR will be split.
+                    req.user['balance'] += (roomInfo['pr'] + roomInfo['bet_amount']) * 45;
+                    roomInfo['creator']['balance'] += (roomInfo['pr'] + roomInfo['bet_amount']) * 45;
+                    roomInfo.status = 'finished';
+                    newGameLog.game_result = 0;
+                } else if (roomInfo.brain_game_score < req.body.brain_game_score) { //win       WOW, What a BRAIN BOX - You WIN!
+                    req.user['balance'] += (roomInfo['pr'] + roomInfo['bet_amount']) * 90;
+                    newGameLog.game_result = 1;
+                    roomInfo.status = 'finished';
+                } else {    //failed    Oops, back to school for you loser!!
+                    roomInfo['pr'] += roomInfo['bet_amount'];
+                    newGameLog.game_result = -1;
+                    if (roomInfo['end_game_type'] && roomInfo['pr'] >= roomInfo['end_game_amount']) {
+                        roomInfo.status = 'finished';
+                        roomInfo['creator']['balance'] += roomInfo['pr'] * 90;
+                    }
+                }
             }
 
             await roomInfo['creator'].save();
@@ -289,12 +393,12 @@ router.post('/bet', auth, async (req, res) => {
                 betResult: newGameLog.game_result
             });
         }
-    // } catch (err) {
-    //     res.json({
-    //         success: false,
-    //         message: err
-    //     });
-    // }
+    } catch (err) {
+        res.json({
+            success: false,
+            message: err
+        });
+    }
 });
   
 module.exports = router;

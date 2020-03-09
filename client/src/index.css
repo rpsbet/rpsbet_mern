@@ -601,6 +601,17 @@ input.new_box_prize {
   line-height: 1.33;
 }
 
+#btn_bet.btn_secondary {
+  background-color: #C83228 !important;
+  border: 3px solid aliceblue !important;
+  color: aliceblue !important;
+}
+
+#btn_bet.btn_secondary:hover {
+  background-color: #449d44 !important;
+  border-color: #398439 !important;
+}
+
 .tbl_title {
     background: #f6b229;
     color: #fff;
@@ -665,7 +676,69 @@ p.lbl_previous_guesses {
   font-size: 25px;
 }
 
+div.timer {
+  width: 20%;
+  margin: 15px auto 0px auto;
+  border: 3px solid #333;
+  background: #33271e;
+  padding: 15px 30px;
+  color: #fff;
+  line-height: 30px;
+  border-radius: 20px;
+  text-align: center;
+}
 
+div.timer .timer_title {
+  font-size: 34px;
+  font-weight: 700;
+}
+
+div.timer .countdown {
+  font-size: 40px;
+  font-weight: 800;
+  color: #C83228;
+  margin: 10px;
+}
+
+div.brain_score {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 34px !important;
+  background: #33271d;
+  color: white;
+  padding: 10px 30px;
+  border-top-left-radius: 30px;
+  border-bottom-left-radius: 30px;
+  border-bottom-right-radius: 30px;
+  font-weight: 700;
+}
+
+div.brain_score label {
+  color: #02c526;
+  font-size: 34px;
+  margin: 0;
+}
+
+div.question_panel {
+  font-size: 34px;
+  color: #33271d;
+  background: #fff;
+  border-bottom: 3px solid;
+  border-color: #dedede;
+  padding: 7.5px;
+  margin: 15px 0;
+  border-top-right-radius: 30px;
+  border-bottom-left-radius: 30px;
+  text-align: center;
+  font-weight: bolder;
+}
+
+label.answer {
+  margin: 5px 0 !important;
+  text-align: center;
+  font-size: 34px;
+}
 
 @media (max-width: 992px) {
   #root .site_wrapper {

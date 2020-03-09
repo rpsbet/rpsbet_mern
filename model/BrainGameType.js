@@ -1,15 +1,10 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const QuestionSchema = new Schema({
-    question: {
+const BrainGameTypeSchema = new Schema({
+    game_type_name: {
         type: String,
         default: ''
-    },
-    brain_game_type: {
-        type: Schema.Types.ObjectId,
-        ref: 'BrainGameType',
-        default: null
     },
     created_at: {
         type: Date,
@@ -21,4 +16,4 @@ const QuestionSchema = new Schema({
     }
 });
 
-module.exports = Question = mongoose.model('rps_questions', QuestionSchema);
+module.exports = BrainGameType = mongoose.model('rps_brain_game_types', BrainGameTypeSchema);

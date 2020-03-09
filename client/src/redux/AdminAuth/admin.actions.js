@@ -18,6 +18,7 @@ import history from '../history';
 // Load Admin
 export const getAdmin = () => async dispatch => {
   if (localStorage.admin_token) {
+    localStorage.removeItem('isAuthenticated');
     setAuthToken(localStorage.admin_token);
   }
   try {
@@ -67,6 +68,7 @@ export const adminSignIn = body => async dispatch => {
       dispatch({ type: MSG_INFO, payload: res.data.message });
       dispatch(getAdmin());
     } else {
+      console.log('error');
       dispatch({ type: ADMIN_LOGIN_FAIL });
       dispatch({ type: MSG_ERROR, payload: res.data.error });
     }

@@ -21,6 +21,9 @@ import {
     try {
       const res = await axios.post('/game/rooms', body);
       if (res.data.success) {
+        if (room_info.game_type === 3) {
+          alert('Time is Up!');
+        }
         history.push('/join');
         dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
       } else {
@@ -41,6 +44,15 @@ import {
         console.log(bet_info.game_type);
         if (bet_info.game_type === 'Mystery Box') {
           dispatch({ type: BET_SUCCESS, payload: res.data });
+        } else if (bet_info.game_type === 'Brain Game') {
+          if (res.data.betResult === 1) {
+            alert('WOW, What a BRAIN BOX - You WIN!');
+          } else if (res.data.betResult === 0) {
+            alert('Draw, No Winner! PR will be split.');
+          } else {
+            alert('Oops, back to school for you loser!!');
+          }
+          history.push('/join');
         } else {
           if (res.data.betResult === 1) {
             alert('Nice, You Win!');
@@ -76,7 +88,7 @@ import {
       dispatch({ type: MSG_ROOMS_LOAD_FAILED, payload: err });
     }
   };
-  
+
   // GetRoomList
   export const getRoomList = (search_condition) => async dispatch => {
     const body = JSON.stringify(search_condition);

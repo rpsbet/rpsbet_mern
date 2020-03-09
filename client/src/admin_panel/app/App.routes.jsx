@@ -6,19 +6,40 @@ import StatisticsPage from './StatisticsPage/StatisticsPage';
 import ProductPage from '../app/ProductPages/ProductSerchPage/ProductPage';
 import ProductCreatePage from './ProductPages/ProductCreactPage/ProductCreatePage';
 import CustomersPage from './Customer/CustomerPage';
+import QuestionPage from './Question/QuestionPage';
+import QuestionEditPage from './Question/QuestionEditPage';
 
 export class AppMainRoute extends Component {
   render() {
     const { match } = this.props;
 
-    console.log('Admin Route', match.path);
     return (
       <LayoutCop>
         <Switch>
           <Route 
             exact
             path={`${match.path}`}
-            component={ProductPage}
+            component={CustomersPage}
+          />
+          <Route
+            exact
+            path={`${match.path}/customers`}
+            component={CustomersPage}
+          />
+          <Route 
+            exact
+            path={`${match.path}/question`}
+            component={QuestionPage}
+          />
+          <Route 
+            exact
+            path={`${match.path}/question/new`}
+            component={QuestionEditPage}
+          />
+          <Route 
+            exact
+            path={`${match.path}/question/:_id`}
+            component={QuestionEditPage}
           />
           <Route 
             exact
@@ -34,11 +55,6 @@ export class AppMainRoute extends Component {
             exact
             path={`${match.path}/product/:_id`}
             component={ProductCreatePage}
-          />
-          <Route
-            exact
-            path={`${match.path}/customers`}
-            component={CustomersPage}
           />
           <Route
             exact

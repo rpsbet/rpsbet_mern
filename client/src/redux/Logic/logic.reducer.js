@@ -32,7 +32,8 @@ const initialState = {
     game_log_list: [],
     box_list: []
   },
-  betResult: -1
+  betResult: -1,
+  isPlayingBrain: false
 };
   
 export default function(state = initialState, action) {

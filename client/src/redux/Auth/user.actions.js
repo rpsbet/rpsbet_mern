@@ -19,6 +19,7 @@ import history from '../history';
 // Load User
 export const getUser = (is_reload) => async dispatch => {
   if (localStorage.token) {
+    localStorage.removeItem('isAdminAuthenticated');
     setAuthToken(localStorage.token);
   }
   try {
