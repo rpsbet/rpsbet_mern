@@ -15,6 +15,10 @@ const AnswerSchema = new Schema({
         ref: 'BrainGameType',
         default: null
     },
+    is_correct_answer: {
+        type: Boolean,
+        default: true
+    },
     created_at: {
         type: Date,
         default: Date.now

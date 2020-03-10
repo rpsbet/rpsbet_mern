@@ -30,7 +30,7 @@ router.post('/delete', async (req, res) => {
 
 router.post('/', async (req, res) => {
 	try {
-		const { _id, question, brain_game_type, answers } = req.body;
+		const { _id, question, brain_game_type, answers, incorrect_answers } = req.body;
 
 		if ( !question || answers.length === 0 ) {
 			return res.json({
@@ -59,7 +59,19 @@ router.post('/', async (req, res) => {
 			const newAnswer = new Answer({
 				question: questionObj,
 				answer: answer,
-				brain_game_type: new ObjectId(brain_game_type)
+				brain_game_type: new ObjectId(brain_game_type),
+				is_correct_answer: true
+			});
+	
+			newAnswer.save();
+		});
+		
+		incorrect_answers.forEach(answer => {
+			const newAnswer = new Answer({
+				question: questionObj,
+				answer: answer,
+				brain_game_type: new ObjectId(brain_game_type),
+				is_correct_answer: false
 			});
 	
 			newAnswer.save();
@@ -81,11 +93,17 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
 	try {
 			const question = await Question.findOne({_id: req.params.id});
-			const answers = await Answer.find({question: question});
+			const answers = await Answer.find({question: question, is_correct_answer: true});
+			const incorrectAnswers = await Answer.find({question: question, is_correct_answer: false});
 
 			let answerList = [];
 			answers.forEach(answer => {
 				answerList.push(answer.answer);
+			});
+
+			let incorrectAnswerList = [];
+			incorrectAnswers.forEach(answer => {
+				incorrectAnswerList.push(answer.answer);
 			});
 
 			res.json({
@@ -95,7 +113,8 @@ router.get('/:id', async (req, res) => {
 						_id: question._id,
 						question: question.question,
 						brain_game_type: question.brain_game_type,
-						answers : answerList
+						answers : answerList,
+						incorrect_answers: incorrectAnswerList
 					}
 			});
 	} catch (err) {

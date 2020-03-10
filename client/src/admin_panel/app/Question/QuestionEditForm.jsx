@@ -30,6 +30,8 @@ function QuestionEditForm({
   new_brain_game_type,
   answers,
   new_answer,
+  incorrect_answers,
+  new_incorrect_answer,
   onSubmitFrom,
   updateTextField,
   handleChange,
@@ -81,10 +83,51 @@ function QuestionEditForm({
                 <Typography variant="h6">Question</Typography>
                 <TextField autoFocus={true} label="Question" name="question" margin="normal" fullWidth type="text" value={question} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
               </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6">Answers</Typography>
+              <Grid item xs={12} style={{marginTop: 50}}>
+                <Grid item xs={6}>
+                  <Typography variant="h6">Correct Answers</Typography>
+                  <List>
+                    {answers.map((row, index) => (
+                      <React.Fragment key={index}>
+                        <ListItem key={index}>
+                          <ListItemAvatar>
+                            <Avatar>
+                              <CommentIcon />
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText primary={row} />
+                          <ListItemSecondaryAction>
+                            <IconButtonEl edge="end" aria-label="delete" onClick={ e => {
+                              answers.splice(index, 1);
+                              handleChange('answers', answers.slice(0));
+                            }}>
+                              <DeleteIcon />
+                            </IconButtonEl>
+                          </ListItemSecondaryAction>
+                        </ListItem>
+                        <Divider />
+                      </React.Fragment>
+                    ))}
+                    <ListItem>
+                      <TextField label="New Answer" name="new_answer" margin="normal" fullWidth type="text" value={new_answer} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
+                      <ListItemSecondaryAction>
+                        <IconButtonEl edge="end" aria-label="add" onClick={ e => {
+                          if (new_answer !== '') {
+                            answers.push(new_answer)
+                            handleChange('answers', answers)
+                            handleChange('new_answer', '');
+                          }
+                        }}>
+                          <AddIcon />
+                        </IconButtonEl>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  </List>
+                </Grid>
+                <Grid item xs={6}>
+                <Typography variant="h6">Incorrect Answers</Typography>
                 <List>
-                  {answers.map((row, index) => (
+                  {incorrect_answers.map((row, index) => (
                     <React.Fragment key={index}>
                       <ListItem key={index}>
                         <ListItemAvatar>
@@ -95,8 +138,8 @@ function QuestionEditForm({
                         <ListItemText primary={row} />
                         <ListItemSecondaryAction>
                           <IconButtonEl edge="end" aria-label="delete" onClick={ e => {
-                            answers.splice(index, 1);
-                            handleChange('answers', answers.slice(0));
+                            incorrect_answers.splice(index, 1);
+                            handleChange('incorrect_answers', incorrect_answers.slice(0));
                           }}>
                             <DeleteIcon />
                           </IconButtonEl>
@@ -106,13 +149,13 @@ function QuestionEditForm({
                     </React.Fragment>
                   ))}
                   <ListItem>
-                    <TextField label="New Answer" name="new_answer" margin="normal" fullWidth type="text" value={new_answer} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
+                    <TextField label="New Incorrect Answer" name="new_incorrect_answer" margin="normal" fullWidth type="text" value={new_incorrect_answer} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
                     <ListItemSecondaryAction>
                       <IconButtonEl edge="end" aria-label="add" onClick={ e => {
-                        if (new_answer !== '') {
-                          answers.push(new_answer)
-                          handleChange('answers', answers)
-                          handleChange('new_answer', '');
+                        if (new_incorrect_answer !== '') {
+                          incorrect_answers.push(new_incorrect_answer)
+                          handleChange('incorrect_answers', incorrect_answers)
+                          handleChange('new_incorrect_answer', '');
                         }
                       }}>
                         <AddIcon />
@@ -120,6 +163,7 @@ function QuestionEditForm({
                     </ListItemSecondaryAction>
                   </ListItem>
                 </List>
+              </Grid>
               </Grid>
             </Grid>
           </Grid>
@@ -147,6 +191,8 @@ const mapStateToProps = state => ({
   new_brain_game_type: state.questionReducer.new_brain_game_type,
   answers: state.questionReducer.answers,
   new_answer: state.questionReducer.new_answer,
+  incorrect_answers: state.questionReducer.incorrect_answers,
+  new_incorrect_answer: state.questionReducer.new_incorrect_answer,
   game_type_list: state.questionReducer.game_type_list
 });
 

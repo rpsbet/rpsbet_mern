@@ -18,7 +18,7 @@ class BrainGame extends Component {
             is_anonymous: false,
             room_password: '',
             is_started: false,
-            remaining_time: 10,
+            remaining_time: 60,
             score: 0,
             intervalId: null,
             balance: this.props.balance,
@@ -110,7 +110,7 @@ class BrainGame extends Component {
             intervalId,
             question: this.state.next_question,
             answers: this.state.next_answers,
-            remaining_time: 10
+            remaining_time: 60
         });
 
         this.getNextQuestion(this.state.brain_game_type);

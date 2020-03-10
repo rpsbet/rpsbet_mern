@@ -12,6 +12,7 @@ class QuestionEditPage extends Component {
     _id: '',
     question: '',
     answers: [],
+    incorrect_answers: [],
     brain_game_type: 1,
     buttonDisable: true,
     game_type_list: [],
@@ -22,6 +23,7 @@ class QuestionEditPage extends Component {
       _id: props._id,
       question: props.question,
       answers: props.answers,
+      incorrect_answers: props.incorrect_answers,
       brain_game_type: props.brain_game_type,
       game_type_list: props.game_type_list
     };
@@ -59,7 +61,6 @@ class QuestionEditPage extends Component {
 
   onSubmitFrom = async e => {
     e.preventDefault();
-    console.log(this.state);
     this.props.infoMsgBar(`question created`);
     await this.props.createQuestion(this.state);
     this.handelCancel();
@@ -67,7 +68,6 @@ class QuestionEditPage extends Component {
 
   onSaveForm = async e => {
     e.preventDefault();
-    console.log(this.state);
     this.props.infoMsgBar(`question saved`);
     await this.props.updateQuestion(this.state);
     this.handelCancel();
@@ -96,7 +96,7 @@ class QuestionEditPage extends Component {
   handleChange = (name, value) => {
     if (name === 'answers') {
       this.buttonChange(this.state.question, value);
-    } else if (name === 'brain_game_type') {
+    } else if (name === 'brain_game_type' || name === 'incorrect_answers') {
       this.buttonChange(this.state.question, this.state.answers);
     }
     this.props.setCurrentQuestionInfo({ [name]: value });
@@ -128,6 +128,7 @@ const mapStateToProps = state => ({
   _id: state.questionReducer._id,
   question: state.questionReducer.question,
   answers: state.questionReducer.answers,
+  incorrect_answers: state.questionReducer.incorrect_answers,
   brain_game_type: state.questionReducer.brain_game_type,
   game_type_list: state.questionReducer.game_type_list
 });

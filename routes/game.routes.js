@@ -72,29 +72,10 @@ router.get('/question/:brain_game_type', async (req, res) => {
             }
         ]);
 
-        const correct_answer = await Answer.aggregate([
-            {
-                $match: {question: new ObjectId(question[0]._id)}
-            }, {
-                $sample: {size: 1}
-            }
-        ]);
+        const answerList = await Answer.find({question: question});
+        let answers = [];
 
-        const wrong_answers = await Answer.aggregate([
-            {
-                $match: {
-                    question:           {$nin : [new ObjectId(question[0]._id)]},
-                    answer:             {$nin : [correct_answer[0].answer]},
-                    brain_game_type:    new ObjectId(req.params.brain_game_type)
-                }
-            }, {
-                $sample: {size: 3}
-            }
-        ]);
-
-        let answers = [{_id: correct_answer[0]._id, answer: correct_answer[0].answer}];
-
-        wrong_answers.forEach(answer => {
+        answerList.forEach(answer => {
             answers.push({
                 _id: answer._id,
                 answer: answer.answer
@@ -120,7 +101,8 @@ router.post('/answer', async (req, res) => {
     try {
         const count = await Answer.countDocuments({
             _id: req.body.answer_id,
-            question: new ObjectId(req.body.question_id)
+            question: new ObjectId(req.body.question_id),
+            is_correct_answer: true
         });
         res.json({
             success: true,
