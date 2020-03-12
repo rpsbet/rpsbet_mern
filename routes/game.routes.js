@@ -71,11 +71,27 @@ router.get('/question/:brain_game_type', async (req, res) => {
                 $sample: {size: 1}
             }
         ]);
+        // const question = await Question.findOne({_id: new ObjectId('5e6407de9457394254bd8a01')});
 
-        const answerList = await Answer.find({question: question});
-        let answers = [];
+        const correctAnswer = await Answer.aggregate([
+            {
+                $match: {question: new ObjectId(question[0]._id), is_correct_answer: true}
+            }, {
+                $sample: {size: 1}
+            }
+        ]);
 
-        answerList.forEach(answer => {
+        const wrongAnswers = await Answer.aggregate([
+            {
+                $match: {question: new ObjectId(question[0]._id), is_correct_answer: false}
+            }, {
+                $sample: {size: 3}
+            }
+        ]);
+
+        let answers = [{_id: correctAnswer[0]._id, answer: correctAnswer[0].answer}];
+
+        wrongAnswers.forEach(answer => {
             answers.push({
                 _id: answer._id,
                 answer: answer.answer
@@ -83,10 +99,12 @@ router.get('/question/:brain_game_type', async (req, res) => {
         });
 
         answers.sort(() => Math.random() - 0.5);
+        console.log(answers);
 
         res.json({
             success: true,
             question: {_id: question[0]._id, question: question[0].question},
+            // question: {_id: question._id, question: question.question},
             answers
         });
     } catch (err) {
