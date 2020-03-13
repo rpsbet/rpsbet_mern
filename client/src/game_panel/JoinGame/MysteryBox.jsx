@@ -6,6 +6,7 @@ class MysteryBox extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            bet_amount: 0,
             selected_id: '',
             box_list: this.props.box_list,
             advanced_status: '',
@@ -53,7 +54,8 @@ class MysteryBox extends Component {
         }
 
         const _id = e.target.getAttribute('_id');
-        this.setState({selected_id: _id});
+        const box_price = e.target.getAttribute('box_price');
+        this.setState({selected_id: _id, bet_amount: box_price});
     }
 
     onBtnBetClick(e) {
@@ -64,12 +66,12 @@ class MysteryBox extends Component {
             return;
         }
 
-        if (this.props.box_price > this.state.balance / 100.0) {
+        if (this.state.bet_amount > this.state.balance / 100.0) {
             alert("Not enough balance!");
             return;
         }
 
-        this.props.join({bet_amount: this.props.box_price, selected_id: this.state.selected_id, is_anonymous: this.state.is_anonymous});
+        this.props.join({bet_amount: this.state.bet_amount, selected_id: this.state.selected_id, is_anonymous: this.state.is_anonymous});
 
         this.setState({
             box_list: this.state.box_list.map(el => (el._id === this.state.selected_id ? {...el, status: 'opened'} : el))
@@ -91,7 +93,6 @@ class MysteryBox extends Component {
             return true;
         });
         prizes.sort((a, b) => a.price - b.price);
-        const box_price = this.props.box_price;
 
         return (
             <form onSubmit={this.onBtnBetClick}>
@@ -113,7 +114,17 @@ class MysteryBox extends Component {
                 <label className="lbl_game_option">Select a Box</label>
                 <div className="select_box_panel">
                     {this.state.box_list.map((row, key) => (
-                        <div className={"box box_" + row.status + (row._id === this.state.selected_id ? " selected": "")} status={row.status} _id={row._id} index={key} key={key} onClick={this.onBoxClicked}>£{box_price}</div>
+                        <div 
+                            className={"box box_" + row.status + (row._id === this.state.selected_id ? " selected": "")} 
+                            status={row.status} 
+                            _id={row._id} 
+                            box_price={row.box_price} 
+                            index={key} 
+                            key={key} 
+                            onClick={this.onBoxClicked}
+                        >
+                            £{row.box_price}
+                        </div>
                     ))}
                 </div>
                 <div>Each box will open one of the Prizes above.</div>

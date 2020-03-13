@@ -15,6 +15,10 @@ const RoomBoxPrizeSchema = new Schema({
         type: Number,
         default: 0
     },
+    box_price: {
+        type: Number,
+        default: 0
+    },
     status: {
         type: String,
         defalut: ''

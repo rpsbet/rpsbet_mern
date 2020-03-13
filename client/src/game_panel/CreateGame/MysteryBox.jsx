@@ -7,8 +7,8 @@ class MysteryBox extends Component {
         this.state = {
             box_list: [],
             new_box_price: '',
+            new_box_prize: '',
             bet_amount: 0,
-            box_price: 0,
             advanced_status: '',
             is_private: false,
             is_anonymous: false,
@@ -23,7 +23,7 @@ class MysteryBox extends Component {
         };
         this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onChangeNewBoxPrize = this.onChangeNewBoxPrize.bind(this);
-        this.onChangeBoxPrice = this.onChangeBoxPrice.bind(this);
+        this.onChangeNewBoxPrice = this.onChangeNewBoxPrice.bind(this);
         this.onAddBox = this.onAddBox.bind(this);
         this.onRemoveBox = this.onRemoveBox.bind(this);
         this.onEmptyBoxes = this.onEmptyBoxes.bind(this);
@@ -43,36 +43,30 @@ class MysteryBox extends Component {
     }
 
     onChangeNewBoxPrize(e) {
-        this.setState({new_box_price: e.target.value});
+        this.setState({new_box_prize: e.target.value});
     }
 
-    onChangeBoxPrice(e) {
-        const max_return = this.calcMaxReturn(this.state.box_list, e.target.value);
-        this.setState({
-            box_price: e.target.value,
-            your_max_return: max_return['your_max_return'],
-            public_max_return: max_return['public_max_return'],
-            endgame_amount: max_return['your_max_return']
-        });
+    onChangeNewBoxPrice(e) {
+        this.setState({new_box_price: e.target.value});
     }
 
     onChangeEndgameAmount(e) {
         this.setState({endgame_amount: e.target.value});
     }
 
-    calcMaxReturn = (box_list, box_price) => {
+    calcMaxReturn = (box_list) => {
         let your_max_return = 0;
         let public_max_return = 0;
 
         box_list.map((row) => {
-            if (row >= box_price) {
-                your_max_return += row;
+            if (row.box_prize >= row.box_price) {
+                your_max_return += row.box_prize;
             } else {
-                your_max_return += box_price - row;
+                your_max_return += row.box_price - row.box_prize;
             }
 
-            if (public_max_return < row) {
-                public_max_return = row;
+            if (public_max_return < row.box_prize) {
+                public_max_return = row.box_prize;
             }
 
             return true;
@@ -85,15 +79,18 @@ class MysteryBox extends Component {
         e.preventDefault();
 
         let new_box_price = parseFloat(this.state.new_box_price);
+        let new_box_prize = parseFloat(this.state.new_box_prize);
         new_box_price = isNaN(new_box_price) ? 0 : new_box_price;
+        new_box_prize = isNaN(new_box_prize) ? 0 : new_box_prize;
 
-        const box_list = this.state.box_list.concat(new_box_price);
-        const bet_amount = box_list.reduce((totalAmount, box) => totalAmount + box, 0);
-        const max_return = this.calcMaxReturn(box_list, this.state.box_price);
+        const box_list = this.state.box_list.concat({box_price: new_box_price, box_prize: new_box_prize});
+        const bet_amount = box_list.reduce((totalAmount, box) => totalAmount + box.box_prize, 0);
+        const max_return = this.calcMaxReturn(box_list);
 
         this.setState({
             box_list: box_list,
             new_box_price: '',
+            new_box_prize: '',
             bet_amount: bet_amount,
             your_max_return: max_return['your_max_return'],
             public_max_return: max_return['public_max_return'],
@@ -105,8 +102,8 @@ class MysteryBox extends Component {
         e.preventDefault();
         let box_list = this.state.box_list;
         box_list.splice(e.target.getAttribute('index'), 1);
-        const bet_amount = box_list.reduce((totalAmount, box) => totalAmount + box, 0);
-        const max_return = this.calcMaxReturn(box_list, this.state.box_price);
+        const bet_amount = box_list.reduce((totalAmount, box) => totalAmount + box.box_prize, 0);
+        const max_return = this.calcMaxReturn(box_list);
 
         this.setState({
             box_list: box_list,
@@ -143,11 +140,6 @@ class MysteryBox extends Component {
             return;
         }
 
-        if (this.state.box_price === 0) {
-            alert("Please enter box price more than 0.");
-            return;
-        }
-
         if (this.state.bet_amount > this.state.balance / 100.0) {
             alert("Not enough balance!");
             return;
@@ -181,7 +173,7 @@ class MysteryBox extends Component {
                     {this.state.box_list.map((row, key) => (
                         <div className={"box " + (row === 0 ? "empty_box" : "priced_box")} key={key}>
                             <img src="/img/close.png" title="Delete Box?" className="btn_box_close" onClick={this.onRemoveBox} index={key} alt="" />
-                            {row === 0 ? '' : '£' + row}
+                            {row === 0 ? '' : '£' + row.box_prize} / {row === 0 ? '' : '£' + row.box_price}
                         </div>
                     ), this)}
                 </div>
@@ -192,7 +184,8 @@ class MysteryBox extends Component {
                     </div>
                 </div>
                 <div>
-                    <input type="text" className="form-control bet-input new_box_prize" maxLength="6" id="new_box_prize" name="new_box_prize" value={this.state.new_box_price} onChange={this.onChangeNewBoxPrize} placeholder="0" />
+                    <input type="text" className="form-control bet-input new_box_prize" maxLength="6" id="new_box_prize" name="new_box_prize" value={this.state.new_box_prize} onChange={this.onChangeNewBoxPrize} placeholder="Box Prize" />
+                    <input type="text" className="form-control bet-input new_box_prize" maxLength="6" id="new_box_price" name="new_box_price" value={this.state.new_box_price} onChange={this.onChangeNewBoxPrice} placeholder="Box Price" />
                     <button className="btn btn_add_box" onClick={this.onAddBox}>ADD BOX</button>
                 </div>
 
@@ -200,11 +193,6 @@ class MysteryBox extends Component {
                 <label className="lbl_game_option">Total Bet Amount</label>
                 <input type="text" value={"£" + this.state.bet_amount} className="form-control input-sm bet-input" placeholder="Bet Amount" readOnly />
                 <div>Your total bet amount you'll pay to start this game. (Game Cost = Sum of all Mystery Boxes)</div>
-
-                <hr/>
-                <label className="lbl_game_option">Box Price</label>
-                <input type="text" id="box_price" name="box_price" className="form-control input-sm" value={this.state.box_price} onChange={this.onChangeBoxPrice} />
-                <div>This will be the fixed cost players will be charged to open one of your boxes. Keep a low BP compared with your highest prize to attract users to Join.</div>
 
                 <hr/>
                 <label className="lbl_game_option">Your Max Return</label>
