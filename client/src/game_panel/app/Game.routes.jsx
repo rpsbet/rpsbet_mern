@@ -6,6 +6,8 @@ import CreateGame from '../main_pages/CreateGame';
 import SiteWrapper from '../SiteWrapper';
 import RoomList from '../main_pages/RoomList';
 import JoinGame from '../main_pages/JoinGame';
+import MyGamesPage from '../main_pages/MyGamesPage';
+import ChatPage from '../MyGames/ChatPage';
 
 export class GameMainRoute extends Component {
   render() {
@@ -33,6 +35,16 @@ export class GameMainRoute extends Component {
             exact
             path={`${match.path}join/:id`}
             component={JoinGame}
+          />
+          <Route 
+            exact
+            path={`${match.path}mygames`}
+            component={MyGamesPage}
+          />
+          <Route 
+            exact
+            path={`${match.path}chat/:id`}
+            component={ChatPage}
           />
         </Switch>
       </SiteWrapper>

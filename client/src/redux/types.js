@@ -44,6 +44,11 @@ export const SET_CURRENT_QUESTION_INFO = 'SET_CURRENT_QUESTION_INFO';
 export const BRAIN_GAME_TYPE_QUERY = 'BRAIN_GAME_TYPE_QUERY';
 export const SET_SCORE = 'SET_SCORE';
 
+// action mygames
+export const MY_GAMES_LOADED = 'MY_GAMES_LOADED';
+export const MY_HISTORY_LOADED = 'MY_HISTORY_LOADED';
+export const SET_CHAT_ROOM_INFO = 'SET_CHAT_ROOM_INFO';
+
 // action item
 export const ITEM_QUERY_ONE = 'ITEM_QUERY_ONE';
 export const ITEM_QUERY = 'ITEM-QUERY';

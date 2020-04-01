@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setSocket, userSignOut, getUser } from '../redux/Auth/user.actions';
-import { setRoomList } from '../redux/Logic/logic.actions';
+import { setRoomList, addChatLog } from '../redux/Logic/logic.actions';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
 
@@ -31,10 +31,20 @@ class SiteWrapper extends Component {
 
   componentDidMount() {
     const socket = socketIOClient(this.state.endpoint);
+
+    socket.on('CONNECTED', (data) => {
+      socket.emit('STORE_CLIENT_USER_ID', {user_id: this.props.user._id});
+    });
+
     socket.on('UPDATED_ROOM_LIST', (data) => {
       this.props.setRoomList(data);
       this.props.getUser(true);
     });
+
+    socket.on('SEND_CHAT', (data) => {
+      this.props.addChatLog(data);
+    });
+
     this.props.setSocket(socket);
     // this.props.getUser();
   }
@@ -81,7 +91,7 @@ class SiteWrapper extends Component {
                   </div>
                   Join Game
                 </a>
-                <a href="/" className="btn" id="btn_my_game">My Games</a>
+                <a href="/mygames" className="btn" id="btn_my_game">My Games</a>
               </div>
             <div className="contents_wrapper col-md-10 col-sm-10 col-xs-10">
               {this.props.children}
@@ -99,14 +109,16 @@ class SiteWrapper extends Component {
 const mapStateToProps = state => ({
   socket: state.auth.socket,
   balance: state.auth.balance,
-  userName: state.auth.userName
+  userName: state.auth.userName,
+  user: state.auth.user
 });
 
 const mapDispatchToProps = {
   setSocket,
   userSignOut,
   setRoomList,
-  getUser
+  getUser,
+  addChatLog
 };
 
 export default connect(

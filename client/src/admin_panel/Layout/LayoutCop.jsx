@@ -54,7 +54,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function ClippedDrawer(props) {
-  const { activeUrl, isAdmin, userName, setCurrentProductId, setCurrentProductInfo } = props;
+  const { activeUrl, isAdmin, userName } = props;
   const classes = useStyles();
 
   const [mobileOpen, setMobileOpen] = React.useState(false);

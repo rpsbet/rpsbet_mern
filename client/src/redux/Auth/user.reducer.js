@@ -15,7 +15,7 @@ const initialState = {
   isAuthenticated: localStorage.getItem('isAuthenticated'),
   isAdmin: false,
   loading: true,
-  user: null,
+  user: {_id:null},
   balance: 0,
   userName: '',
   liveUrl: null

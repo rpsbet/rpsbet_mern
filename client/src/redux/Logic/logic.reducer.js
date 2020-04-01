@@ -7,7 +7,10 @@ import {
   MSG_CREATE_ROOM_SUCCESS,
   SET_GAME_MODE,
   SET_CUR_ROOM_INFO,
-  SET_URL
+  SET_URL,
+  MY_GAMES_LOADED,
+  MY_HISTORY_LOADED,
+  SET_CHAT_ROOM_INFO
 } from '../types';
   
 const initialState = {
@@ -33,7 +36,15 @@ const initialState = {
     box_list: []
   },
   betResult: -1,
-  isPlayingBrain: false
+  isPlayingBrain: false,
+  myGames: [],
+  myHistory: [],
+  chatRoomInfo: {
+    user_id: '',
+    avatar: '',
+    username: '',
+    chatLogs: []
+  }
 };
   
 export default function(state = initialState, action) {
@@ -51,6 +62,10 @@ export default function(state = initialState, action) {
       return {
         ...state, curRoomInfo: payload
       }
+    case SET_CHAT_ROOM_INFO:
+      return {
+        ...state, chatRoomInfo: payload
+      }
     case GAMETYPE_LOADED:
       let firstGameType = '';
       if (payload.gameTypeList && payload.gameTypeList.length > 0) {
@@ -66,6 +81,14 @@ export default function(state = initialState, action) {
     case ROOMS_LOADED:
       return {
         ...state, ...payload
+      };
+    case MY_GAMES_LOADED:
+      return {
+        ...state, myGames: payload
+      };
+    case MY_HISTORY_LOADED:
+      return {
+        ...state, myHistory: payload
       };
     case MSG_CREATE_ROOM_SUCCESS:
       return {
