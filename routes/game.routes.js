@@ -330,6 +330,14 @@ getMyRooms = async (user_id) => {
 
 router.get('/my_games', auth, async (req, res) => {
     try {
+        // Question.update(
+        //     {"brain_game_type": new ObjectId('5e8496ddd1e76819fcb875fb')}, 
+        //     {"$set":{"brain_game_type": new ObjectId('5e86207c7e53873644fba8da')}}, 
+        //     {"multi": true}, 
+        //     (err, writeResult) => {
+        //         console.log(err, writeResult);
+        //     });
+
         const rooms = await getMyRooms(req.user._id);
         res.json({
             success: true,

@@ -8,7 +8,7 @@ router.post('/delete', async (req, res) => {
 	try {
 		const { _id } = req.body;
 
-		await BrainGameType.remove({_id: _id});
+		// await BrainGameType.remove({_id: _id});
         const brain_game_types = await BrainGameType.find({}).sort({game_type_name: 'asc'});
 	
 		res.json({
