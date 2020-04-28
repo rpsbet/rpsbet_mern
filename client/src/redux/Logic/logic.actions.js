@@ -143,7 +143,11 @@ export const endGame = (room_id) => async dispatch => {
     if (res.data.success) {
       dispatch({ type: MY_GAMES_LOADED, payload: res.data.myGames });
     } else {
-      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+      if (res.data.already_finished) {
+        alert(res.data.message);
+      } else {
+        dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+      }
     }
   } catch (err) {
     console.log('err***', err);

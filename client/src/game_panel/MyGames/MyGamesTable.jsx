@@ -12,13 +12,10 @@ class MyGamesTable extends Component {
     }
 
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.myRoomList.length !== props.myGames.length) {
-            return {
-                ...current_state,
-                myRoomList: props.myGames
-            };
-        }
-        return null;
+        return {
+            ...current_state,
+            myRoomList: props.myGames
+        };
     }
 
     endRoom(e) {
