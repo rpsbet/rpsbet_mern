@@ -9,6 +9,7 @@ class MysteryBox extends Component {
             new_box_price: '',
             new_box_prize: '',
             bet_amount: 0,
+            lowest_box_price: 0,
             advanced_status: '',
             is_private: false,
             is_anonymous: false,
@@ -57,12 +58,17 @@ class MysteryBox extends Component {
     calcMaxReturn = (box_list) => {
         let your_max_return = 0;
         let public_max_return = 0;
+        let lowest_box_price = -1;
 
         box_list.map((row) => {
+            if (lowest_box_price === -1 || lowest_box_price > row.box_price) {
+                lowest_box_price = row.box_price;
+            }
+
             if (row.box_prize >= row.box_price) {
                 your_max_return += row.box_prize;
             } else {
-                your_max_return += row.box_price - row.box_prize;
+                your_max_return += row.box_price;
             }
 
             if (public_max_return < row.box_prize) {
@@ -72,7 +78,7 @@ class MysteryBox extends Component {
             return true;
         }, this);
 
-        return { your_max_return, public_max_return };
+        return { your_max_return, public_max_return, lowest_box_price };
     }
 
     onAddBox(e) {
@@ -94,7 +100,8 @@ class MysteryBox extends Component {
             bet_amount: bet_amount,
             your_max_return: max_return['your_max_return'],
             public_max_return: max_return['public_max_return'],
-            endgame_amount: max_return['your_max_return']
+            endgame_amount: max_return['your_max_return'],
+            lowest_box_price: max_return['lowest_box_price']
         });
     }
 
@@ -110,7 +117,8 @@ class MysteryBox extends Component {
             bet_amount: bet_amount,
             your_max_return: max_return['your_max_return'],
             public_max_return: max_return['public_max_return'],
-            endgame_amount: max_return['your_max_return']
+            endgame_amount: max_return['your_max_return'],
+            lowest_box_price: max_return['lowest_box_price']
         });
     }
 
@@ -150,18 +158,21 @@ class MysteryBox extends Component {
             return;
         }
 
-        this.props.createRoom({
-            game_type: 4,
-            box_list: this.state.box_list,
-            bet_amount: this.state.bet_amount,
-            box_price: this.state.box_price,
-            pr: this.state.public_max_return,
-            is_private: this.state.is_private,
-            is_anonymous: this.state.is_anonymous,
-            room_password: this.state.room_password,
-            end_game_type: this.state.endgame_type,
-            end_game_amount: this.state.endgame_amount,
-        });
+        if (window.confirm('Do you want to create new game now?')) {
+            this.props.createRoom({
+                game_type: 4,
+                box_list: this.state.box_list,
+                bet_amount: this.state.bet_amount,
+                box_price: this.state.box_price,
+                max_prize: this.state.public_max_return,
+                lowest_box_price: this.state.lowest_box_price,
+                is_private: this.state.is_private,
+                is_anonymous: this.state.is_anonymous,
+                room_password: this.state.room_password,
+                end_game_type: this.state.endgame_type,
+                end_game_amount: this.state.endgame_amount,
+            });
+        }
     }
 
     render() {

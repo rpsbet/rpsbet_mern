@@ -104,16 +104,18 @@ class BrainGame extends Component {
             return;
         }
 
-        const intervalId = setInterval(this.onCountDown, 1000);
-        this.setState({
-            is_started: true,
-            intervalId,
-            question: this.state.next_question,
-            answers: this.state.next_answers,
-            remaining_time: 60
-        });
+        if (window.confirm('Do you want to create new game now?')) {
+            const intervalId = setInterval(this.onCountDown, 1000);
+            this.setState({
+                is_started: true,
+                intervalId,
+                question: this.state.next_question,
+                answers: this.state.next_answers,
+                remaining_time: 60
+            });
 
-        this.getNextQuestion(this.state.brain_game_type);
+            this.getNextQuestion(this.state.brain_game_type);
+        }
     }
 
     onCountDown() {

@@ -89,7 +89,7 @@ class RoomList extends Component {
                             <tr key={key}>
                                 <td>{row.game_type.game_type_name + ' ' + row.index}</td>
                                 <td>{row.creator}</td>
-                                <td>{"£" + row.bet_amount + " / £" + row.pr}</td>
+                                <td>{"£" + row.user_bet + " / £" + row.pr}</td>
                                 <td>{row.winnings}</td>
                                 <td>{row.status}</td>
                                 <td>
@@ -99,7 +99,7 @@ class RoomList extends Component {
                                         _id={row._id} 
                                         room_status={row.status} 
                                         game_type={row.game_type.game_type_name} 
-                                        bet_amount={row.bet_amount} 
+                                        bet_amount={row.user_bet} 
                                         spleesh_bet_unit={row.spleesh_bet_unit} 
                                         box_price={row.box_price}
                                         brain_game_type_id={row.brain_game_type ? row.brain_game_type._id : ''}

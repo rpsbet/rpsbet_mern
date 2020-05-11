@@ -63,14 +63,16 @@ class ClassicRPS extends Component {
             return;
         }
 
-        this.props.createRoom({
-            game_type: 1,
-            selected_rps: this.state.selected_rps,
-            bet_amount: this.state.bet_amount,
-            is_private: this.state.is_private,
-            is_anonymous: this.state.is_anonymous,
-            room_password: this.state.room_password
-        });
+        if (window.confirm('Do you want to create new game now?')) {
+            this.props.createRoom({
+                game_type: 1,
+                selected_rps: this.state.selected_rps,
+                bet_amount: this.state.bet_amount,
+                is_private: this.state.is_private,
+                is_anonymous: this.state.is_anonymous,
+                room_password: this.state.room_password
+            });
+        }
     }
 
     render() {

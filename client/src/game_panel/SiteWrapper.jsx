@@ -40,7 +40,6 @@ class SiteWrapper extends Component {
       this.props.setRoomList(data);
       this.props.getUser(true);
       this.props.getMyGames();
-      console.log(123123123);
     });
 
     socket.on('SEND_CHAT', (data) => {

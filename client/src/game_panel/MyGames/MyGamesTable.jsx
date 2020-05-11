@@ -19,7 +19,9 @@ class MyGamesTable extends Component {
     }
 
     endRoom(e) {
-        this.props.endGame(e.target.getAttribute('_id'));
+        if (window.confirm('Do you want to end this game now?')) {
+            this.props.endGame(e.target.getAttribute('_id'));
+        }
     }
 
     render() {

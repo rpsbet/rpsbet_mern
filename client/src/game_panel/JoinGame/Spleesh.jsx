@@ -33,7 +33,9 @@ class Spleesh extends Component {
             return;
         }
 
-        this.props.join({bet_amount: this.state.bet_amount, is_anonymous: this.state.is_anonymous});
+        if (window.confirm('Do you want to bet on this game now?')) {
+            this.props.join({bet_amount: this.state.bet_amount, is_anonymous: this.state.is_anonymous});
+        }
     }
 
     createNumberPanel() {

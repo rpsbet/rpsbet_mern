@@ -24,7 +24,9 @@ class ClassicRPS extends Component {
 
     onBtnBetClick(e) {
         e.preventDefault();
-        this.props.join({selected_rps: this.state.selected_rps, is_anonymous: this.state.is_anonymous});
+        if (window.confirm('Do you want to bet on this game now?')) {
+            this.props.join({selected_rps: this.state.selected_rps, is_anonymous: this.state.is_anonymous});
+        }
     }
 
     render() {

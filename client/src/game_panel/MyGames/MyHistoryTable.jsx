@@ -51,18 +51,18 @@ class MyHistoryTable extends Component {
                             this.state.myHistory.length === 0 ? 
                                 <tr><td colSpan="4"></td></tr> 
                                 : 
-                                this.state.myHistory.map((row, key) => (
+                                Object.keys(this.state.myHistory).map((row, key) => (
                                     <tr key={key}>
-                                        <td><img src={row.from.avatar} alt="" style={{width: '50px', height: '50px', borderRadius: '50%'}} /></td>
-                                        <td style={{textAlign: 'left'}}>{row.from.username}<br/>{row.message}</td>
-                                        <td>{row.created_at}</td>
+                                        <td><img src={this.state.myHistory[row].avatar} alt="" style={{width: '50px', height: '50px', borderRadius: '50%'}} /></td>
+                                        <td style={{textAlign: 'left'}}>{this.state.myHistory[row].username}<br/>{this.state.myHistory[row].message}</td>
+                                        <td>{this.state.myHistory[row].created_at_str}</td>
                                         <td>
                                             <button 
                                                 className="btn btn_join" 
                                                 onClick={this.openChat}
-                                                _id={row.from._id} 
-                                                avatar={row.from.avatar} 
-                                                username={row.from.username} 
+                                                _id={this.state.myHistory[row]._id} 
+                                                avatar={this.state.myHistory[row].avatar} 
+                                                username={this.state.myHistory[row].username} 
                                             >
                                                 Open
                                             </button>

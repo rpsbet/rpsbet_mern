@@ -45,6 +45,12 @@ export const bet = (bet_info) => async dispatch => {
     const res = await axios.post('/game/bet', body);
     if (res.data.success) {
       console.log(bet_info.game_type);
+      if (res.data.betResult === -100) {
+        alert(res.data.message);
+        history.push('/join');
+        return;
+      }
+
       if (bet_info.game_type === 'Mystery Box') {
         dispatch({ type: BET_SUCCESS, payload: res.data });
       } else if (bet_info.game_type === 'Brain Game') {

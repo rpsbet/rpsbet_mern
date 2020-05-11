@@ -71,11 +71,13 @@ class MysteryBox extends Component {
             return;
         }
 
-        this.props.join({bet_amount: this.state.bet_amount, selected_id: this.state.selected_id, is_anonymous: this.state.is_anonymous});
+        if (window.confirm('Do you want to bet on this game now?')) {
+            this.props.join({bet_amount: this.state.bet_amount, selected_id: this.state.selected_id, is_anonymous: this.state.is_anonymous});
 
-        this.setState({
-            box_list: this.state.box_list.map(el => (el._id === this.state.selected_id ? {...el, status: 'opened'} : el))
-        });
+            this.setState({
+                box_list: this.state.box_list.map(el => (el._id === this.state.selected_id ? {...el, status: 'opened'} : el))
+            });
+        }
     }
 
     onBtnGoToMainGamesClicked(e) {

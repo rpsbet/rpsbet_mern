@@ -31,11 +31,19 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
+  user_bet: {
+    type: String,
+    default: ''
+  },
   spleesh_bet_unit: {
     type: Number,
     default: 1
   },
   pr: {
+    type: Number,
+    default: 0
+  },
+  host_pr: {
     type: Number,
     default: 0
   },

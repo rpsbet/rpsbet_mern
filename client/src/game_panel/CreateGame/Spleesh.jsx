@@ -73,16 +73,18 @@ class Spleesh extends Component {
             return;
         }
 
-        this.props.createRoom({
-            game_type: 2,
-            bet_amount: this.state.bet_amount,
-            is_private: this.state.is_private,
-            is_anonymous: this.state.is_anonymous,
-            room_password: this.state.room_password,
-            end_game_type: this.state.endgame_type,
-            end_game_amount: this.state.endgame_amount,
-            spleesh_bet_unit: this.state.game_type
-        });
+        if (window.confirm('Do you want to create new game now?')) {
+            this.props.createRoom({
+                game_type: 2,
+                bet_amount: this.state.bet_amount,
+                is_private: this.state.is_private,
+                is_anonymous: this.state.is_anonymous,
+                room_password: this.state.room_password,
+                end_game_type: this.state.endgame_type,
+                end_game_amount: this.state.endgame_amount,
+                spleesh_bet_unit: this.state.game_type
+            });
+        }
     }
 
     createNumberPanel() {
