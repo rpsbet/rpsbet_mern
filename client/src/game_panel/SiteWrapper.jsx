@@ -29,10 +29,12 @@ class SiteWrapper extends Component {
     return null;
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    await this.props.getUser(true);
     const socket = socketIOClient(this.state.endpoint);
 
     socket.on('CONNECTED', (data) => {
+      console.log('connected');
       socket.emit('STORE_CLIENT_USER_ID', {user_id: this.props.user._id});
     });
 
@@ -44,12 +46,13 @@ class SiteWrapper extends Component {
     });
 
     socket.on('SEND_CHAT', (data) => {
-      console.log(123123123);
+      console.log('received chat: ', data);
       this.props.addChatLog(data);
     });
 
+    console.log('init socket');
+
     this.props.setSocket(socket);
-    // this.props.getUser();
   }
 
   handleLogout(e) {
