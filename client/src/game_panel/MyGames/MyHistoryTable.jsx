@@ -30,6 +30,10 @@ class MyHistoryTable extends Component {
     }
 
     render() {
+        const history_keys = Object.keys(this.state.myHistory).sort((a, b) => { 
+            return this.state.myHistory[a].created_at < this.state.myHistory[b].created_at ? 1 : -1;
+        });
+
         return (
             <>
                 <label className="tbl_title">MY HISTORY</label>
@@ -48,7 +52,7 @@ class MyHistoryTable extends Component {
                             this.state.myHistory.length === 0 ? 
                                 <tr><td colSpan="4"></td></tr> 
                                 : 
-                                Object.keys(this.state.myHistory).sort((a, b) => (this.state.myHistory[a].created_at < this.state.myHistory[b].created_at)).map((row, key) => (
+                                history_keys.map((row, key) => (
                                     <tr key={key}>
                                         <td><img src={this.state.myHistory[row].avatar} alt="" style={{width: '50px', height: '50px', borderRadius: '50%'}} /></td>
                                         <td style={{textAlign: 'left'}}>{this.state.myHistory[row].username}<br/>{this.state.myHistory[row].message}</td>
