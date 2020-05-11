@@ -30,6 +30,8 @@ class SiteWrapper extends Component {
   }
 
   async componentDidMount() {
+    this.audio = new Audio('/sounds/sound.mp3');
+
     await this.props.getUser(true);
     const socket = socketIOClient(this.state.endpoint);
 
@@ -47,6 +49,8 @@ class SiteWrapper extends Component {
 
     socket.on('SEND_CHAT', (data) => {
       console.log('received chat: ', data);
+      this.audio.play();
+      console.log(this.audio);
       this.props.addChatLog(data);
     });
 

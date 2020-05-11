@@ -420,27 +420,29 @@ router.get('/my_history', auth, async (req, res) => {
 
         myHistory = {};
         for (let message of messages1) {
-            if (!myHistory[message.to._id] || myHistory[message.to._id]['created_at'] < message.created_at) {
+            if (!myHistory[message.to._id] || myHistory[message.to._id]['updated_at'] < message.updated_at) {
                 myHistory[message.to._id] = {
                     _id: message.to._id,
                     message: message.message,
                     username: message.to.username,
                     avatar: message.to.avatar,
                     created_at: message.created_at,
-                    created_at_str: moment(message.created_at).format('LLL')
+                    created_at_str: moment(message.created_at).format('LLL'),
+                    updated_at: message.updated_at
                 }
             }
         }
 
         for (let message of messages2) {
-            if (!myHistory[message.from._id] || myHistory[message.from._id]['created_at'] < message.created_at) {
+            if (!myHistory[message.from._id] || myHistory[message.from._id]['updated_at'] < message.updated_at) {
                 myHistory[message.from._id] = {
                     _id: message.from._id,
                     message: message.message,
                     username: message.from.username,
                     avatar: message.from.avatar,
                     created_at: message.created_at,
-                    created_at_str: moment(message.created_at).format('LLL')
+                    created_at_str: moment(message.created_at).format('LLL'),
+                    updated_at: message.updated_at
                 }
             }
         }

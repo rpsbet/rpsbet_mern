@@ -40,11 +40,10 @@ class ChatPage extends Component {
                 to: this.props.user_id,
                 from: this.state.my_info._id,
                 message: text,
-                created_at: moment(new Date()).format('LLL')
+                created_at: moment(new Date()).format('LLL'),
             };
-
-            this.state.socket.emit('SEND_CHAT', chatLog);
             this.props.addChatLog(chatLog);
+            this.state.socket.emit('SEND_CHAT', chatLog);
             this.setState({text : ''});
         }
     }

@@ -31,7 +31,7 @@ class MyHistoryTable extends Component {
 
     render() {
         const history_keys = Object.keys(this.state.myHistory).sort((a, b) => { 
-            return this.state.myHistory[a].created_at < this.state.myHistory[b].created_at ? 1 : -1;
+            return this.state.myHistory[a].updated_at < this.state.myHistory[b].updated_at ? 1 : -1;
         });
 
         return (

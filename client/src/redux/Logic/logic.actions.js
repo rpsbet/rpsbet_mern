@@ -208,9 +208,37 @@ export const setChatRoomInfo = room_info => dispatch => {
   dispatch({ type: SET_CHAT_ROOM_INFO, payload: room_info });
 };
 
+const getNow = () => {
+  const date = new Date();
+
+  const year = date.getFullYear();
+  const month = "0" + (date.getMonth() + 1);
+  const day = "0" + date.getDate();
+  const seconds = "0" + date.getSeconds();
+  const minutes = "0" + date.getMinutes();
+  const hours = "0" + date.getHours();
+
+  return `${year}-${month.substr(-2)}-${day.substr(-2)}T${hours.substr(-2)}:${minutes.substr(-2)}:${seconds.substr(-2)}.000Z`;
+}
+
 export const addChatLog = chatLog => (dispatch, getState) => {
+  const myId = getState().auth.user._id;
+  let newHistory = JSON.parse(JSON.stringify(getState().logic.myHistory));
+
+  const otherId = myId === chatLog.from ? chatLog.to : chatLog.from;
+
+  newHistory[otherId] = {
+    ...newHistory[otherId],
+    _id: otherId,
+    message: chatLog.message,
+    created_at_str: chatLog.created_at,
+    updated_at: getNow()
+  };
+  
+  dispatch({ type: MY_HISTORY_LOADED, payload: newHistory });
+
   let chatRoomInfo = JSON.parse(JSON.stringify(getState().logic.chatRoomInfo));
-  if (chatRoomInfo.user_id === chatLog.from || chatRoomInfo.user_id === chatLog.to) {
+  if (chatRoomInfo.user_id === otherId) {
     chatRoomInfo.chatLogs.push(chatLog);
     dispatch({ type: SET_CHAT_ROOM_INFO, payload: chatRoomInfo });
   }
