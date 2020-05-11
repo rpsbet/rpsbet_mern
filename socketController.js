@@ -17,8 +17,11 @@ module.exports.socketio = (server) => {
     });
 
     socket.on ('SEND_CHAT', async function (data) {
+      console.log('asdfasdfasdf');
+
       if (sockets.hasOwnProperty(data.to)) {
         sockets[data.to].emit('SEND_CHAT', data);
+        console.log(123123123);
       }
       const message = new Message(data);
       await message.save();

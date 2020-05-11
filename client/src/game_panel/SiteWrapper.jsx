@@ -43,6 +43,7 @@ class SiteWrapper extends Component {
     });
 
     socket.on('SEND_CHAT', (data) => {
+      console.log(123123123);
       this.props.addChatLog(data);
     });
 

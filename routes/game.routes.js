@@ -359,7 +359,12 @@ router.post('/end_game', auth, async (req, res) => {
         if (gameLogCount === 0) {
             roomInfo['creator']['balance'] += roomInfo['bet_amount'] * 100;
         } else {
-            roomInfo['creator']['balance'] += roomInfo['pr'] * 90;
+            if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
+                roomInfo['creator']['balance'] += roomInfo['pr'] * 100;
+            } else {
+                roomInfo['creator']['balance'] += roomInfo['pr'] * 90;
+            }
+
         }
         
         await roomInfo['creator'].save();
