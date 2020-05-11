@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setSocket, userSignOut, getUser } from '../redux/Auth/user.actions';
-import { setRoomList, addChatLog, getMyGames } from '../redux/Logic/logic.actions';
+import { setRoomList, addChatLog, getMyGames, getMyHistory } from '../redux/Logic/logic.actions';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
 
@@ -40,6 +40,7 @@ class SiteWrapper extends Component {
       this.props.setRoomList(data);
       this.props.getUser(true);
       this.props.getMyGames();
+      this.props.getMyHistory();
     });
 
     socket.on('SEND_CHAT', (data) => {
@@ -121,7 +122,8 @@ const mapDispatchToProps = {
   setRoomList,
   getUser,
   addChatLog,
-  getMyGames
+  getMyGames,
+  getMyHistory
 };
 
 export default connect(

@@ -23,13 +23,10 @@ class MyHistoryTable extends Component {
     }
 
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.myHistory.length !== props.myHistory.length) {
-            return {
-                ...current_state,
-                myHistory: props.myHistory
-            };
-        }
-        return null;
+        return {
+            ...current_state,
+            myHistory: props.myHistory
+        };
     }
 
     render() {
