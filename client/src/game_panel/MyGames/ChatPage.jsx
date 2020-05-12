@@ -35,6 +35,8 @@ class ChatPage extends Component {
     sendMessage(e) {
         const text = this.state.text.trim();
 
+        console.log(this.state.socket);
+
         if (text !== '') {
             const chatLog = {
                 to: this.props.user_id,
@@ -56,15 +58,12 @@ class ChatPage extends Component {
     }
 
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.chatLogs.length !== props.chatLogs.length || current_state.my_info._id !== props.my_info._id) {
-            return {
-                ...current_state,
-                chatLogs: props.chatLogs,
-                my_info: props.my_info,
-                socket: props.socket
-            };
-        }
-        return null;
+        return {
+            ...current_state,
+            chatLogs: props.chatLogs,
+            my_info: props.my_info,
+            socket: props.socket
+        };
     }
 
     componentDidMount() {

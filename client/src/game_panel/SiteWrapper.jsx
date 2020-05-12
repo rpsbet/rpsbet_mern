@@ -50,12 +50,14 @@ class SiteWrapper extends Component {
     socket.on('SEND_CHAT', (data) => {
       console.log('received chat: ', data);
       this.audio.play();
-      console.log(this.audio);
       this.props.addChatLog(data);
+
+      if (history.location.pathname.substr(0, 5) === '/chat') {
+        socket.emit('READ_MESSAGE', {to: this.props.user._id, from: data.from});
+      }
     });
 
     console.log('init socket');
-
     this.props.setSocket(socket);
   }
 

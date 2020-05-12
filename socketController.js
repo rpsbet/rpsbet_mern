@@ -1,7 +1,18 @@
+const ObjectId = require('mongoose').Types.ObjectId;
 const socket_io = require ('socket.io');
 const Message = require('./model/Message');
 
 let sockets = {};
+
+const send = (to_id, data) => {
+  if (sockets.hasOwnProperty(to_id)) {
+    sockets[to_id].emit('SEND_CHAT', data);
+  }
+}
+
+module.exports.sendMessage = (to_user_id, data) => {
+  send(to_user_id, data);
+};
 
 module.exports.socketio = (server) => {
   const io = socket_io (server);
@@ -16,12 +27,21 @@ module.exports.socketio = (server) => {
       
     });
 
-    socket.on ('SEND_CHAT', async function (data) {
-      console.log(Object.keys(sockets));
+    socket.on ('READ_MESSAGE', async (data) => {
+      await Message.updateMany(
+        {
+          is_read: false,
+          from: new ObjectId(data.from),
+          to: new ObjectId(data.to)
+        }, 
+        {$set:{is_read: true}}, 
+        (err, writeResult) => { console.log('set messages as read via socket', err); }
+      );
+    });
 
-      if (sockets.hasOwnProperty(data.to)) {
-        sockets[data.to].emit('SEND_CHAT', data);
-      }
+    socket.on ('SEND_CHAT', async (data) => {
+      send(data.to, data);
+
       const message = new Message(data);
       await message.save();
     });

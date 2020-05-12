@@ -1,5 +1,6 @@
-var ObjectId = require('mongoose').Types.ObjectId;
+const ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
+const socket = require('../socketController.js');
 
 const router = express.Router();
 const Room = require('../model/Room');
@@ -306,14 +307,6 @@ getMyRooms = async (user_id) => {
 
 router.get('/my_games', auth, async (req, res) => {
     try {
-        // Question.update(
-        //     {"brain_game_type": new ObjectId('5e8496ddd1e76819fcb875fb')}, 
-        //     {"$set":{"brain_game_type": new ObjectId('5e86207c7e53873644fba8da')}}, 
-        //     {"multi": true}, 
-        //     (err, writeResult) => {
-        //         console.log(err, writeResult);
-        //     });
-
         const rooms = await getMyRooms(req.user._id);
         res.json({
             success: true,
@@ -360,7 +353,7 @@ router.post('/end_game', auth, async (req, res) => {
             to: roomInfo['creator'],
             message: '',
             is_anonymous: req.body.is_anonymous,
-            is_read: false
+            is_read: true
         });
 
         if (gameLogCount === 0) {
@@ -389,6 +382,31 @@ router.post('/end_game', auth, async (req, res) => {
         await roomInfo['creator'].save();
         await roomInfo.save();
         await message.save();
+
+        let joiners = {};
+        const gameLogList = await GameLog.find({room: new ObjectId(roomInfo._id)});
+        const now = moment(new Date()).format('LLL');
+
+        gameLogList.forEach(log => {
+            if (log.joined_user === roomInfo['creator']._id || joiners[log.joined_user]) {
+                return;
+            }
+            joiners[log.joined_user] = 1;
+            const temp = new Message({
+                from: req.user,
+                to: new ObjectId(log.joined_user),
+                message: message.message,
+                is_anonymous: roomInfo.is_anonymous,
+                is_read: false
+            });
+            temp.save();
+            socket.sendMessage(log.joined_user, {
+                from: temp.from._id,
+                to: log.joined_user,
+                message: message.message,
+                created_at: now
+            });
+        });
 
         const rooms = await getMyRooms(req.user._id);
         
@@ -422,20 +440,27 @@ router.get('/my_history', auth, async (req, res) => {
         for (let message of messages1) {
             if (!myHistory[message.to._id] || myHistory[message.to._id]['updated_at'] < message.updated_at) {
                 myHistory[message.to._id] = {
+                    ...myHistory[message.to._id],
                     _id: message.to._id,
                     message: message.message,
                     username: message.to.username,
                     avatar: message.to.avatar,
                     created_at: message.created_at,
                     created_at_str: moment(message.created_at).format('LLL'),
-                    updated_at: message.updated_at
+                    updated_at: message.updated_at,
+                    unread_message_count: 0
                 }
             }
         }
 
         for (let message of messages2) {
+            if (message.from._id === message.to) {
+                continue;
+            }
+
             if (!myHistory[message.from._id] || myHistory[message.from._id]['updated_at'] < message.updated_at) {
                 myHistory[message.from._id] = {
+                    ...myHistory[message.from._id],
                     _id: message.from._id,
                     message: message.message,
                     username: message.from.username,
@@ -444,6 +469,14 @@ router.get('/my_history', auth, async (req, res) => {
                     created_at_str: moment(message.created_at).format('LLL'),
                     updated_at: message.updated_at
                 }
+            }
+
+            if (!myHistory[message.from._id].unread_message_count) {
+                myHistory[message.from._id].unread_message_count = 0;
+            }
+
+            if (!message.is_read) {
+                myHistory[message.from._id].unread_message_count++;
             }
         }
 
@@ -462,6 +495,17 @@ router.get('/my_history', auth, async (req, res) => {
 router.post('/get_chat_room_info', auth, async (req, res) => {
     try {
         const user = await User.findOne({_id: new ObjectId(req.body.user_id)});
+        
+        await Message.updateMany(
+            {
+                is_read: false,
+                from: new ObjectId(req.body.user_id),
+                to: new ObjectId(req.user._id)
+            }, 
+            {$set:{is_read: true}}, 
+            (err, writeResult) => { console.log('set messages as read (open chat room)', err); }
+        );
+
         const chatLogs = await Message.find(
             {$or:[
                 {from: new ObjectId(req.body.user_id), to: new ObjectId(req.user._id)},
@@ -689,6 +733,13 @@ router.post('/bet', auth, async (req, res) => {
                 total: rooms.count,
                 roomList: rooms.rooms,
                 pages: Math.ceil(rooms.count / 10)
+            });
+
+            socket.sendMessage(message.to._id, {
+                from: message.from._id,
+                to: message.to_id,
+                message: message.message,
+                created_at: moment(new Date()).format('LLL')
             });
     
             res.json({

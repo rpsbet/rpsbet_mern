@@ -649,6 +649,20 @@ table.normal_table tbody td button.btn_finish {
   font-weight: 800;
 }
 
+table.normal_table tbody td span.unread_message_badge {
+  background-color: #C83228 !important;
+  color: aliceblue !important;
+  min-width: 35px;
+  min-height: 35px;
+  text-align: center;
+  line-height: 35px;
+  border-radius: 100px;
+  font-weight: 800;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+}
+
 table.table-striped tbody tr:nth-of-type(odd) {
   background-color: #f9f9f9;
 }
