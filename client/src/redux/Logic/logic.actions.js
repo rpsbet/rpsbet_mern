@@ -229,7 +229,7 @@ export const addChatLog = chatLog => (dispatch, getState) => {
 
   newHistory[otherId] = {
     ...newHistory[otherId],
-    unread_message_count: newHistory[otherId].unread_message_count,
+    unread_message_count: newHistory[otherId].unread_message_count + 1,
     _id: otherId,
     message: chatLog.message,
     created_at_str: chatLog.created_at,

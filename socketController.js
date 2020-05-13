@@ -41,7 +41,7 @@ module.exports.socketio = (server) => {
 
     socket.on ('REQUEST_UNREAD_MESSAGE_COUNT', async (data) => {
       const count = await Message.countDocuments({
-        to: req.user,
+        to: data.to,
         is_read: false
       });
       socket.emit('SET_UNREAD_MESSAGE_COUNT', count);
