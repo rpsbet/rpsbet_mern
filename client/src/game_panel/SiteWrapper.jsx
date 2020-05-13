@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { setSocket, userSignOut, getUser } from '../redux/Auth/user.actions';
+import { setSocket, userSignOut, getUser, setUnreadMessageCount } from '../redux/Auth/user.actions';
 import { setRoomList, addChatLog, getMyGames, getMyHistory } from '../redux/Logic/logic.actions';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
@@ -19,14 +19,11 @@ class SiteWrapper extends Component {
   }
 
   static getDerivedStateFromProps(props, current_state) {
-    if (current_state.balance !== props.balance) {
-        return {
-          ...current_state,
-          balance: props.balance,
-          userName: props.userName
-        };
-    }
-    return null;
+    return {
+      ...current_state,
+      balance: props.balance,
+      userName: props.userName,
+    };
   }
 
   async componentDidMount() {
@@ -36,7 +33,7 @@ class SiteWrapper extends Component {
     const socket = socketIOClient(this.state.endpoint);
 
     socket.on('CONNECTED', (data) => {
-      console.log('connected');
+      console.log('connected', this.props.user._id);
       socket.emit('STORE_CLIENT_USER_ID', {user_id: this.props.user._id});
     });
 
@@ -54,7 +51,14 @@ class SiteWrapper extends Component {
 
       if (history.location.pathname.substr(0, 5) === '/chat') {
         socket.emit('READ_MESSAGE', {to: this.props.user._id, from: data.from});
+      } else {
+        socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {to: this.props.user._id});
       }
+    });
+
+    socket.on('SET_UNREAD_MESSAGE_COUNT', (data) => {
+      console.log(data);
+      this.props.setUnreadMessageCount(data);
     });
 
     console.log('init socket');
@@ -70,6 +74,8 @@ class SiteWrapper extends Component {
   }
   
   render() {
+    const messageCount = this.props.unreadMessageCount;
+    console.log(messageCount);
     return (
       <div className="site_wrapper">
         <div className="game_header">
@@ -103,7 +109,9 @@ class SiteWrapper extends Component {
                   </div>
                   Join Game
                 </a>
-                <a href="/mygames" className="btn" id="btn_my_game">My Games</a>
+                <a href="/mygames" className="btn" id="btn_my_game">
+                  My Games, Messages{messageCount === 0 ? '' : '(' + messageCount + ')'}
+                </a>
               </div>
             <div className="contents_wrapper col-md-10 col-sm-10 col-xs-10">
               {this.props.children}
@@ -122,7 +130,8 @@ const mapStateToProps = state => ({
   socket: state.auth.socket,
   balance: state.auth.balance,
   userName: state.auth.userName,
-  user: state.auth.user
+  user: state.auth.user,
+  unreadMessageCount: state.auth.unreadMessageCount
 });
 
 const mapDispatchToProps = {
@@ -132,7 +141,8 @@ const mapDispatchToProps = {
   getUser,
   addChatLog,
   getMyGames,
-  getMyHistory
+  getMyHistory,
+  setUnreadMessageCount
 };
 
 export default connect(

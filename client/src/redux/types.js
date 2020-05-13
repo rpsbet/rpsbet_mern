@@ -8,6 +8,7 @@ export const AUTH_ERROR = 'AUTH_ERROR';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGIN_FAIL = 'LOGIN_FAIL';
 export const LOGOUT = 'LOGOUT';
+export const SET_UNREAD_MESSAGE_COUNT = 'SET_UNREAD_MESSAGE_COUNT';
 
 // admin
 export const ADMIN_REGISTER_SUCCESS = 'ADMIN_REGISTER_SUCCESS';

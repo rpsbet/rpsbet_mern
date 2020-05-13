@@ -39,6 +39,14 @@ module.exports.socketio = (server) => {
       );
     });
 
+    socket.on ('REQUEST_UNREAD_MESSAGE_COUNT', async (data) => {
+      const count = await Message.countDocuments({
+        to: req.user,
+        is_read: false
+      });
+      socket.emit('SET_UNREAD_MESSAGE_COUNT', count);
+    });
+
     socket.on ('SEND_CHAT', async (data) => {
       send(data.to, data);
 

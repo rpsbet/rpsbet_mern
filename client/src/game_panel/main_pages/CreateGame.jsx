@@ -40,9 +40,8 @@ class CreateGame extends Component {
         }
     };
 
-    onCreateRoom(game_info) {
-        this.props.createRoom(game_info);
-        this.props.getRoomList({});
+    async onCreateRoom(game_info) {
+        await this.props.createRoom(game_info);
     }
 
     createPanelHeader() {

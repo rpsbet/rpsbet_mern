@@ -66,9 +66,10 @@ class ChatPage extends Component {
         };
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         this.IsAuthenticatedReroute();
-        this.props.getChatRoomInfo(this.props.match.params.id);
+        this.state.socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {to: this.state.my_info._id});
+        await this.props.getChatRoomInfo(this.props.match.params.id);
     }
 
     componentDidUpdate() {

@@ -10,6 +10,7 @@ import {
   MSG_INFO,
   MSG_SUCCESS,
   MSG_WARNING,
+  SET_UNREAD_MESSAGE_COUNT,
   SET_URL
 } from '../types';
 import axios from '../../util/Api';
@@ -26,6 +27,8 @@ export const getUser = (is_reload) => async dispatch => {
     const res = await axios.get('/auth/user');
     if (res.data.success) {
       dispatch({ type: USER_LOADED, payload: res.data.user });
+      dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: res.data.unread_message_count });
+      
       if (!is_reload) {
         dispatch({ type: MSG_INFO, payload: res.data.message });
       }
@@ -99,6 +102,10 @@ export const userSignOut = body => async dispatch => {
 
 export const setSocket = socket => dispatch => {
   dispatch({ type: SET_SOCKET, payload: socket });
+}
+
+export const setUnreadMessageCount = messageCount => dispatch => {
+  dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: messageCount });
 }
 
 export const setUrl = url => dispatch => {

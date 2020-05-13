@@ -38,6 +38,12 @@ class RoomList extends Component {
     };
 
     joinRoom(e) {
+        const creator_id = e.target.getAttribute('creator_id');
+        if (creator_id === this.props.user._id) {
+            alert(`Oop! This game is yours. You can't join this game.`);
+            return;
+        }
+
         const bet_amount = e.target.getAttribute('bet_amount');
         if (bet_amount > this.state.balance / 100.0) {
             alert("Not enough balance!");
@@ -96,7 +102,8 @@ class RoomList extends Component {
                                     <button 
                                         className="btn btn_join" 
                                         onClick={this.joinRoom} 
-                                        _id={row._id} 
+                                        _id={row._id}
+                                        creator_id={row.creator_id}
                                         room_status={row.status} 
                                         game_type={row.game_type.game_type_name} 
                                         bet_amount={row.user_bet} 
@@ -124,7 +131,8 @@ const mapStateToProps = state => ({
     roomList: state.logic.roomList,
     roomCount: state.logic.roomCount,
     pageNumber: state.logic.pageNumber,
-    balance: state.auth.balance
+    balance: state.auth.balance,
+    user: state.auth.user
 });
 
 const mapDispatchToProps = {

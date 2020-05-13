@@ -137,7 +137,10 @@ router.post('/answer', async (req, res) => {
 });
 
 getRoomList = async (pagination, page) => {
+    const start = new Date();
+
     const rooms = await Room.find({ status: 'open' })
+        .select('_id is_anonymous bet_amount creator game_type user_bet pr spleesh_bet_unit is_private brain_game_type status room_number created_at')
         .populate({path: 'creator', model: User})
         .populate({path: 'game_type', model: GameType})
         .populate({path: 'brain_game_type', model: BrainGameType})
@@ -150,6 +153,7 @@ getRoomList = async (pagination, page) => {
         let temp = {
             _id : room['_id'],
             creator : room['is_anonymous'] === true ? 'Anonymous' : (room['creator'] ? room['creator']['username'] : ''),
+            creator_id: room['creator']['_id'],
             game_type : room['game_type'],
             user_bet : room['user_bet'],
             pr : room['pr'],
@@ -158,7 +162,6 @@ getRoomList = async (pagination, page) => {
             is_anonymous : room['is_anonymous'],
             is_private : room['is_private'],
             brain_game_type: room['brain_game_type'],
-            // brain_game_score: room['brain_game_score'],
             status: room['status'],
             index: room['room_number'],
             created_at : moment(room['created_at']).format('YYYY-MM-DD HH:mm'),
@@ -176,6 +179,10 @@ getRoomList = async (pagination, page) => {
 
         result.push(temp);
     }
+
+    const end = new Date();
+
+    console.log('getRoomList: ', end-start, 'ms');
 
     return {
         rooms: result,
@@ -207,11 +214,12 @@ router.get('/rooms', async (req, res) => {
 
 router.post('/rooms', auth, async (req, res) => {
     try {
+        const start = new Date();
         gameType = await GameType.findOne({game_type_id: parseInt(req.body.game_type)});
 
         if (req.body.game_type === 1) { // Classic RPS
             pr = req.body.bet_amount * 2;
-            host_pr = req.body.bet_amount * 2;
+            host_pr = req.body.bet_amount;
             user_bet = req.body.bet_amount;
         } else if (req.body.game_type === 2) { // Spleesh!
             user_bet = "??";
@@ -258,6 +266,9 @@ router.post('/rooms', auth, async (req, res) => {
             pages: Math.ceil(rooms.count / 10)
         });
 
+        const end = new Date();
+
+        console.log('bet: ', end-start, 'ms');
         res.json({
             success: true,
             message: 'room create'
@@ -271,8 +282,10 @@ router.post('/rooms', auth, async (req, res) => {
 });
 
 getMyRooms = async (user_id) => {
+    const start = new Date();
     const rooms = await Room.find({creator: new ObjectId(user_id), status: 'open'})
         .populate({path: 'game_type', model: GameType})
+        .populate({path: 'brain_game_type', model: BrainGameType})
         .populate({path: 'brain_game_type', model: BrainGameType})
         .sort({created_at: 'desc'});
     let result = [];
@@ -286,21 +299,31 @@ getMyRooms = async (user_id) => {
             index: room['room_number'],
             end_game_amount: room['end_game_amount'],
         };
+        
+        const gameLogCount = await GameLog.countDocuments({ room: new ObjectId(room._id) });
 
         if (temp.game_type.game_type_id === 1) { // Classic RPS
+            temp.pr = (temp.pr * 2) + " * 0.95";
+        }
+
+        if (gameLogCount === 0) {
+            temp.winnings = "£" + temp.bet_amount;
+        } else if (temp.game_type.game_type_id === 1) { // Classic RPS
             temp.winnings = "£" + (room['bet_amount'] * 2);
         } else if (temp.game_type.game_type_id === 2) { // Spleesh!
-            // temp.bet_amount = '??';
             temp.pr = temp.pr === 0 ? temp.bet_amount : temp.pr;
             temp.winnings = "£" + temp.pr;
         } else if (temp.game_type.game_type_id === 3) { // Brain Game
             temp.winnings = "(£" + room['pr'] + " + £" + room['bet_amount'] + ") * 0.9";
         } else if (temp.game_type.game_type_id === 4) { //Mytery Box
-            temp.winnings = "£" + temp.pr + " * 0.95";
+            temp.winnings = "£" + temp.pr;
         }
 
         result.push(temp);
     }
+    const end = new Date();
+
+    console.log('getMyRooms: ', end - start, 'ms');
 
     return result;
 }
@@ -381,7 +404,6 @@ router.post('/end_game', auth, async (req, res) => {
         
         await roomInfo['creator'].save();
         await roomInfo.save();
-        await message.save();
 
         let joiners = {};
         const gameLogList = await GameLog.find({room: new ObjectId(roomInfo._id)});
@@ -431,6 +453,7 @@ router.post('/end_game', auth, async (req, res) => {
 
 router.get('/my_history', auth, async (req, res) => {
     try {
+        const start = new Date();
         messages1 = await Message.find({from: new ObjectId(req.user._id)})
                         .populate({path: 'to', model: User});
         messages2 = await Message.find({to: new ObjectId(req.user._id)})
@@ -479,6 +502,9 @@ router.get('/my_history', auth, async (req, res) => {
                 myHistory[message.from._id].unread_message_count++;
             }
         }
+
+        const end = new Date();
+        console.log('getMyHistory: ', end - start, 'ms');
 
         res.json({
             success: true,
@@ -549,6 +575,7 @@ function check_access_time(user_id) {
 
 router.post('/bet', auth, async (req, res) => {
     try {
+        const start = new Date();
         if (req.body._id) {
             if (!check_access_time(req.user._id)) {
                 res.json({
@@ -563,6 +590,16 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo = await Room.findOne({_id: req.body._id})
                         .populate({path: 'creator', model: User})
                         .populate({path: 'game_type', model: GameType});
+
+            if (roomInfo['creator']._id === req.user._id) {
+                res.json({
+                    success: true,
+                    message: 'Sorry, this game is yours. You can\'t join this game.',
+                    betResult: -101
+                });
+                
+                return;
+            }
 
             if (roomInfo['status'] === 'finished') {
                 res.json({
@@ -725,7 +762,6 @@ router.post('/bet', auth, async (req, res) => {
             await req.user.save();
             newGameLog.save();
             await roomInfo.save();
-            message.save();
 
             const rooms = await getRoomList(10, 1);
             req.io.sockets.emit('UPDATED_ROOM_LIST', {
@@ -735,12 +771,15 @@ router.post('/bet', auth, async (req, res) => {
                 pages: Math.ceil(rooms.count / 10)
             });
 
-            socket.sendMessage(message.to._id, {
-                from: message.from._id,
-                to: message.to_id,
-                message: message.message,
-                created_at: moment(new Date()).format('LLL')
-            });
+            if (message.from._id !== message.to._id) {
+                message.save();
+                socket.sendMessage(message.to._id, {
+                    from: message.from._id,
+                    to: message.to_id,
+                    message: message.message,
+                    created_at: moment(new Date()).format('LLL')
+                });
+            }
     
             res.json({
                 success: true,
@@ -748,6 +787,8 @@ router.post('/bet', auth, async (req, res) => {
                 betResult: newGameLog.game_result
             });
         }
+        const end = new Date();
+        console.log('join: ', end-start, 'ms');
     } catch (err) {
         res.json({
             success: false,

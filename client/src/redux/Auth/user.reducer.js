@@ -2,6 +2,7 @@ import {
   SET_SOCKET,
   REGISTER_FAIL,
   USER_LOADED,
+  SET_UNREAD_MESSAGE_COUNT,
   AUTH_ERROR,
   LOGIN_SUCCESS,
   LOGIN_FAIL,
@@ -16,6 +17,7 @@ const initialState = {
   isAdmin: false,
   loading: true,
   user: {_id:null},
+  unreadMessageCount: 0,
   balance: 0,
   userName: '',
   liveUrl: null
@@ -29,6 +31,10 @@ export default function(state = initialState, action) {
       return {
         ...state, socket: payload
       };
+    case SET_UNREAD_MESSAGE_COUNT:
+      return {
+        ...state, unreadMessageCount: payload
+      }
     case USER_LOADED:
       return {
         ...state,

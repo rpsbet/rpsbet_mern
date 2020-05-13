@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 // User Model
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
+const Message = require('../model/Message');
 
 const auth = require('../middleware/auth');
 
@@ -61,10 +62,16 @@ router.post('/', (req, res) => {
 // @access  Private
 router.get('/user', auth, async (req, res) => {
   try {
+    const count = await Message.countDocuments({
+      to: req.user,
+      is_read: false
+    });
+
     res.json({
       success: true,
       message: 'User has been authenticated',
-      user: req.user
+      user: req.user,
+      unread_message_count: count
     });
   } catch (error) {
     res.json({ success: false, error });
