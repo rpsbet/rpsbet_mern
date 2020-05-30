@@ -175,7 +175,8 @@ body {
   font-size: 18px;
 }
 
-.sub_header a {
+.sub_header a,
+.sub_header button {
   width: 60px;
   height: 60px;
   border: 3px solid #C83228 !important;
@@ -185,22 +186,64 @@ body {
   margin: 12px 10px 0;
 }
 
-.sub_header a img {
+.sub_header a img,
+.sub_header button img {
   height: 100%;
 }
 
-.sub_header a#btn_avatar {
+.sub_header button#btn_avatar {
   border-radius: 50%;
   padding: 2px;
   background: aliceblue;
   border: 3px solid #C83228 !important;
 }
 
-.sub_header a#btn_avatar img {
+.sub_header button#btn_avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transform: scale(1.1);
+}
+
+.btn_modal_close {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background-color: transparent;
+  color: black;
+  width: 30px;
+  height: 30px;
+  border: 1px solid black;
+  text-align: center;
+  padding: 0;
+}
+
+.profile_info_panel,
+.modal_action_panel {
+  display: grid;
+  grid-template-columns: auto auto;
+}
+
+.modal_action_panel {
+  border-top: 1px solid gray;
+  padding-top: 20px;
+  margin-top: 10px;
+  column-gap: 10px;
+  row-gap: 10px;
+}
+
+.payment_action_panel {
+  border-top: 1px solid gray;
+  padding-top: 20px;
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 30px;
+  row-gap: 10px;
+}
+
+.payment_action_panel h5 {
+  text-align: center;
 }
 
 .game_wrapper {
@@ -921,4 +964,19 @@ label.answer {
     width: 100%;
     min-width: initial;
   }
+}
+
+.StripeElement {
+  display: block;
+  margin: 0 0 10px 0;
+  max-width: 500px;
+  padding: 10px 14px;
+  font-size: 1em;
+  font-family: "Source Code Pro", monospace;
+  box-shadow: rgba(50, 50, 93, 0.14902) 0px 1px 3px,
+    rgba(0, 0, 0, 0.0196078) 0px 1px 0px;
+  border: 0;
+  outline: 0;
+  border-radius: 4px;
+  background: white;
 }

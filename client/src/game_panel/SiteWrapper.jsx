@@ -4,6 +4,7 @@ import { setSocket, userSignOut, getUser, setUnreadMessageCount } from '../redux
 import { setRoomList, addChatLog, getMyGames, getMyHistory } from '../redux/Logic/logic.actions';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
+import ProfileModal from './modal/ProfileModal'
 
 class SiteWrapper extends Component {
   constructor(props) {
@@ -12,10 +13,13 @@ class SiteWrapper extends Component {
     this.state = {
       endpoint: "localhost:5000",
       userName: this.props.userName,
-      balance: this.props.balance
+      balance: this.props.balance,
+      showProfileModal: false
     }
 
     this.handleLogout = this.handleLogout.bind(this);
+    this.handleOpenProfileModal = this.handleOpenProfileModal.bind(this);
+    this.handleCloseProfileModal = this.handleCloseProfileModal.bind(this);
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -33,7 +37,6 @@ class SiteWrapper extends Component {
     const socket = socketIOClient(this.state.endpoint);
 
     socket.on('CONNECTED', (data) => {
-      console.log('connected', this.props.user._id);
       socket.emit('STORE_CLIENT_USER_ID', {user_id: this.props.user._id});
     });
 
@@ -45,7 +48,6 @@ class SiteWrapper extends Component {
     });
 
     socket.on('SEND_CHAT', (data) => {
-      console.log('received chat: ', data);
       this.audio.play();
       this.props.addChatLog(data);
 
@@ -57,11 +59,9 @@ class SiteWrapper extends Component {
     });
 
     socket.on('SET_UNREAD_MESSAGE_COUNT', (data) => {
-      console.log(data);
       this.props.setUnreadMessageCount(data);
     });
 
-    console.log('init socket');
     this.props.setSocket(socket);
   }
 
@@ -72,10 +72,18 @@ class SiteWrapper extends Component {
     console.log(this.props);
     this.props.userSignOut();
   }
+
+  handleOpenProfileModal () {
+    console.log('showmodal');
+    this.setState({ showProfileModal: true });
+  }
+  
+  handleCloseProfileModal () {
+    this.setState({ showProfileModal: false });
+  }
   
   render() {
     const messageCount = this.props.unreadMessageCount;
-    console.log(messageCount);
     return (
       <div className="site_wrapper">
         <div className="game_header">
@@ -91,7 +99,7 @@ class SiteWrapper extends Component {
             <span className="welcome">Welcome back </span>
             <span className="user_name mr-auto">{this.state.userName}</span>
             <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a>
-            <a href="/" id="btn_avatar" className="btn"><img src="/img/avatar.png" alt="" /></a>
+            <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src="/img/avatar.png" alt="" /></button>
           </div>
         </div>
         <div className="game_wrapper">
@@ -121,6 +129,7 @@ class SiteWrapper extends Component {
         <div className="game_footer text-center">
           Copyright © 2019 RPS Bet, rpsbet.com
         </div>
+        <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
       </div>
     );
   }

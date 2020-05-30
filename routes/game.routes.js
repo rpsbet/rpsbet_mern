@@ -285,8 +285,6 @@ getMyRooms = async (user_id) => {
     const start = new Date();
     const rooms = await Room.find({creator: new ObjectId(user_id), status: 'open'})
         .populate({path: 'game_type', model: GameType})
-        .populate({path: 'brain_game_type', model: BrainGameType})
-        .populate({path: 'brain_game_type', model: BrainGameType})
         .sort({created_at: 'desc'});
     let result = [];
     for (const room of rooms) {
@@ -678,7 +676,6 @@ router.post('/bet', auth, async (req, res) => {
                 newGameLog.bet_amount = req.body.bet_amount;
 
                 let selected_box = await RoomBoxPrize.findOne({_id: new ObjectId(req.body.selected_id)})
-                    .populate({path: 'room', model: Room})
                     .populate({path: 'joiner', model: User});
                 selected_box.status = 'opened';
                 selected_box.joiner = req.user;

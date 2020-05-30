@@ -7,7 +7,8 @@ import {
   LOGIN_SUCCESS,
   LOGIN_FAIL,
   LOGOUT,
-  SET_URL
+  SET_URL,
+  SET_BALANCE
 } from '../types';
 
 const initialState = {
@@ -70,6 +71,11 @@ export default function(state = initialState, action) {
         isAuthenticated: false,
         loading: false
       };
+    case SET_BALANCE:
+      return {
+        ...state,
+        balance: payload
+      }
     case SET_URL:
       return {
         ...state,

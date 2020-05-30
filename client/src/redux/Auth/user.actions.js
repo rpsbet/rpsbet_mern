@@ -11,6 +11,7 @@ import {
   MSG_SUCCESS,
   MSG_WARNING,
   SET_UNREAD_MESSAGE_COUNT,
+  SET_BALANCE,
   SET_URL
 } from '../types';
 import axios from '../../util/Api';
@@ -111,3 +112,7 @@ export const setUnreadMessageCount = messageCount => dispatch => {
 export const setUrl = url => dispatch => {
   dispatch({ type: SET_URL, payload: url });
 };
+
+export const setBalance = balance => dispatch => {
+  dispatch({ type: SET_BALANCE, payload: balance });
+}
