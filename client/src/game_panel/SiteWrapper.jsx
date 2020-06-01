@@ -5,6 +5,7 @@ import { setRoomList, addChatLog, getMyGames, getMyHistory } from '../redux/Logi
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
 import ProfileModal from './modal/ProfileModal'
+import HowToPlayModal from './modal/HowToPlayModal'
 
 class SiteWrapper extends Component {
   constructor(props) {
@@ -14,12 +15,15 @@ class SiteWrapper extends Component {
       endpoint: "localhost:5000",
       userName: this.props.userName,
       balance: this.props.balance,
-      showProfileModal: false
+      showProfileModal: false,
+      showHowToPlayModal: false
     }
 
     this.handleLogout = this.handleLogout.bind(this);
     this.handleOpenProfileModal = this.handleOpenProfileModal.bind(this);
     this.handleCloseProfileModal = this.handleCloseProfileModal.bind(this);
+    this.handleOpenHowToPlayModal = this.handleOpenHowToPlayModal.bind(this);
+    this.handleCloseHowToPlayModal = this.handleCloseHowToPlayModal.bind(this);
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -81,6 +85,15 @@ class SiteWrapper extends Component {
   handleCloseProfileModal () {
     this.setState({ showProfileModal: false });
   }
+
+  handleOpenHowToPlayModal () {
+    console.log('showmodal');
+    this.setState({ showHowToPlayModal: true });
+  }
+  
+  handleCloseHowToPlayModal () {
+    this.setState({ showHowToPlayModal: false });
+  }
   
   render() {
     const messageCount = this.props.unreadMessageCount;
@@ -91,12 +104,12 @@ class SiteWrapper extends Component {
             <a className="game_logo" href="/">
               <img src="/img/Logo.png" alt="" />
             </a>
-            <a href="/" id="btn_how_to_play">HOW TO PLAY</a>
+            <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play">HOW TO PLAY</a>
             <a href="/" id="btn_logout" className="ml-auto" onClick={this.handleLogout}>LOGOUT<i className="glyphicon glyphicon-off"></i></a>
             <span>£{this.state.balance / 100.0}</span>
           </div>
           <div className="sub_header d-flex">
-            <span className="welcome">Welcome back </span>
+            <span className="welcome">Welcome </span>
             <span className="user_name mr-auto">{this.state.userName}</span>
             <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a>
             <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src="/img/avatar.png" alt="" /></button>
@@ -108,17 +121,17 @@ class SiteWrapper extends Component {
                 <a href="/create" className="btn" id="btn_create_game" onClick={(e) => {e.preventDefault(); history.push('/create')}}>
                   <div>
                     <img src="/img/new-bet.png" alt="" />
+                    <span>Create New Game</span>
                   </div>
-                  Create New Game
                 </a>
                 <a href="/join" className="btn" id="btn_join_game" onClick={(e) => {e.preventDefault(); history.push('/join')}}>
                   <div>
                     <img src="/img/my-bets.png" alt="" />
+                    <span>Join Game</span>
                   </div>
-                  Join Game
                 </a>
                 <a href="/mygames" className="btn" id="btn_my_game">
-                  My Games, Messages{messageCount === 0 ? '' : '(' + messageCount + ')'}
+                  My Activities {messageCount === 0 ? '' : '(' + messageCount + ')'}
                 </a>
               </div>
             <div className="contents_wrapper col-md-10 col-sm-10 col-xs-10">
@@ -127,9 +140,10 @@ class SiteWrapper extends Component {
           </div>
         </div>
         <div className="game_footer text-center">
-          Copyright © 2019 RPS Bet, rpsbet.com
+          Copyright © 2020 RPS Bet, rpsbet.com
         </div>
         <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
+        <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
       </div>
     );
   }

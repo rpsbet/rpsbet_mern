@@ -39,8 +39,8 @@ class MyHistoryTable extends Component {
         return (
             <>
                 <label className="tbl_title">MY HISTORY</label>
-                <div className="col-md-12">
-                    <table className="table table-striped table-hover text-center normal_table">
+                <div className="history">
+                    <table className="table table-striped with-ellipsis table-hover text-center normal_table" cellpadding="2" cellspacing="0">
                         <thead>
                             <tr>
                                 <th></th>
@@ -58,7 +58,7 @@ class MyHistoryTable extends Component {
                                 history_keys.map((row, key) => (
                                     <tr key={key}>
                                         <td><img src={this.state.myHistory[row].avatar} alt="" style={{width: '50px', height: '50px', borderRadius: '50%'}} /></td>
-                                        <td style={{textAlign: 'left'}}>{this.state.myHistory[row].username}<br/>{this.state.myHistory[row].message}</td>
+                                        <td  id="prevMsg" style={{textAlign: 'left'}}>{this.state.myHistory[row].username}<br/>{this.state.myHistory[row].message}</td>
                                         <td>{this.state.myHistory[row].unread_message_count === 0 ? <></> : <span className="unread_message_badge">{this.state.myHistory[row].unread_message_count}</span>}</td>
                                         <td>{this.state.myHistory[row].created_at_str}</td>
                                         <td>

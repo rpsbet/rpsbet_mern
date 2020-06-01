@@ -19,10 +19,53 @@ class LandingPage extends Component {
   render() {
     return (
       <>
-        <h1 className="main_title">LEADERBOARD (TOP 10)</h1>
-        <h2>TRIAL 4 STARTS xth SEPTEMBER!</h2>
-        <div>
-          Our final trial is almost here, click the information icon ('i') and scroll down to see which prizes are available. Or visit Our Facebook Page as we're posting all winners there! Don't miss out on winning millions (actually our biggest prize is £75...but we still have £500 worth in prizes!) so get playing. Don't feel like you're starting too late either as user balances fluctuate like UK Politics. So if there's still prizes available - go for it! Trial ENDs once all prizes have been claimed - then we're switching over to real money...uh oh! Thanks for joining us.
+        <h1 className="main_title">INFORMATION</h1>
+        <div style={{height: "88%", overflowY: "scroll"}} class="latest_updates">
+        <div class="single_update">
+          <h4>Update June 8th 2020</h4>
+          <ul>
+          <li>Real-money beta release</li>
+          </ul>
+          </div>
+        <div class="single_update">
+          <h4>Update December 2019</h4>
+          <ul>
+          <li>Entire site is re-written in<br />React.js for real-time improvements.</li>
+          </ul>
+          </div>
+        <div class="single_update">
+          <h4>Update July 2019 > November 2019</h4>
+          <ul>
+          <li>User Profiles</li>
+          <li>Messaging System</li>
+          <li>Added Mystery Box</li>
+          </ul>
+          </div>
+        <div class="single_update">
+          <h4>Update May 31st 2019</h4>
+          <ul><li>Third Trial</li></ul>
+          </div>
+        <div class="single_update">
+          <h4>Update May 26th 2019</h4>
+          <ul><li> Added 'Brain Game'</li></ul>
+          </div>
+        <div class="single_update">
+          <h4>Update April 30th 2019</h4>
+          <ul>
+          <li>Added 'PR'</li>
+          <li>Second Trial</li>
+          </ul>
+          </div>
+
+        <div class="single_update">
+          <h4>Update April 21st 2019</h4>
+          <ul><li>Added 'My GAMES'</li>
+          <li>First trial</li></ul>
+          </div>
+        <div class="single_update">
+          <h4>Update April 11th 2019</h4>
+          <ul><li>Added '<i>Spleesh!</i>'</li></ul>
+          </div>
         </div>
       </>
     );

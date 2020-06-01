@@ -40,7 +40,7 @@ export default function MediaCard() {
             <Typography variant="body2" color="textSecondary" component="p">
               Must contact supervisor or admin and informed your application has
               been Completed so they can process and put you in this system,For
-              more information please contact lenny@gmail.com
+              more information please contact online@rpsbet.com
             </Typography>
           </CardContent>
         </CardActionArea>

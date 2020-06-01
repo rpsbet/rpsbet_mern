@@ -78,7 +78,7 @@ class RoomList extends Component {
             <>
                 <h1 className="main_title">Join a game</h1>
                 <label className="tbl_title">Open Games</label>
-                <div className="col-md-12">
+                <div className="overflowX">
                     <table className="table table-striped table-hover text-center normal_table">
                         <thead>
                             <tr>

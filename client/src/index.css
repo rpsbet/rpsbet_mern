@@ -12,6 +12,29 @@ body {
   background-color: #2b2b2b;
 }
 
+.row {
+  margin: 0 !important;
+}
+
+/** INFO **/
+.single_update {
+    color: #fff;
+    padding: 20px 20px 10px 40px;
+    font-weight: 500;
+}
+.single_update h4 {
+  font-weight: 600;
+    color: #28c739;
+}
+.single_update:nth-child(odd) {
+  background: #495057;
+}
+.single_update:nth-child(even) {
+  background: #5653df;
+}
+
+/*******/
+
 .nada {
   color: rgb(139, 138, 231);
   color: #5654df;
@@ -28,7 +51,6 @@ body {
 .btn:hover, .btn:focus, .btn.focus { transform: scale(1.05); transition: 0.3s; }
 
 #root .site_wrapper {
-  height: 100vh;
   background: url('/img/bg.png');
   background-size: cover;
   background-size: 90px;
@@ -218,14 +240,86 @@ body {
   padding: 0;
 }
 
+.modal-body {
+  height: 70vh;
+  overflow-y: scroll;
+}
+.modal-body span {
+    color: #C83228;
+}
+.modal-body h4 {
+  color: #ebddca;
+    border-bottom: 5px solid #fff !important;
+    padding: 20px;
+    margin: 20px 0;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    text-align: center;
+    white-space: nowrap;
+    background: #33271f;
+    border: none !important;
+    font-family: 'Prototype';
+}
+.modal-body h5 {
+  font-size: 24px;
+    text-align: center;
+    margin: 25px auto 10px;
+    border: 3px solid;
+    border-radius: 30px;
+    padding: 10px;
+    width: 50%;
+}
+
+.modal-body table {
+    border-collapse: separate;
+    border-spacing: 20px 0;
+    width: 100% !important;
+}
+
 .profile_info_panel,
 .modal_action_panel {
   display: grid;
   grid-template-columns: auto auto;
 }
 
+.modal_action_panel button, .payment_action_panel button {
+  font-weight: 600 !important;
+  border-radius: 30px !important;
+  background: #5654df !important;
+}
+
+.profile_info_panel {
+  background: #333;
+  box-shadow: -10px 0px 10px 0px #aaa;
+  padding: 20px;
+}
+
+.profile_info_panel span:nth-child(odd),.profile_info_panel label {
+  background-color: #fff;
+  color: #333;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 15px;
+  margin-bottom: 0;
+}
+
+.profile_info_panel span:nth-child(even),.profile_info_panel input {
+  text-align: center;
+    background: #C83228;
+    box-shadow: -5px 0px 8px 0px #aaa;
+    padding: 10px 15px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.ReactModal__Body--open h2 {
+      font-family: 'Prototype';
+    font-size: 42px !important;
+    color: #000;
+    letter-spacing: 0.05em;
+}
+
 .modal_action_panel {
-  border-top: 1px solid gray;
   padding-top: 20px;
   margin-top: 10px;
   column-gap: 10px;
@@ -233,7 +327,6 @@ body {
 }
 
 .payment_action_panel {
-  border-top: 1px solid gray;
   padding-top: 20px;
   margin-top: 10px;
   display: grid;
@@ -248,26 +341,24 @@ body {
 
 .game_wrapper {
   background: #f2e8dc;
-  position: absolute;
-  width: 100%;
-  padding-right: 15px;
-  padding-left: 15px;
-  margin-right: auto;
-  margin-left: auto;
 }
 
 .game_wrapper .left_sidebar {
   padding: 0 !important;
-  position: sticky;
-  margin-top: 105px;
+  position: relative;
+  margin-top: 105px; 
 }
 
 .game_wrapper .left_sidebar a {
   border-radius: 0 !important;
   border: none;
   width: 100%;
+  height: 30vh;
   font-weight: 800;
   text-transform: uppercase;
+  display: flex;
+  align-items: center !important;
+  justify-content: center;
 }
 
 .game_wrapper .left_sidebar a img {
@@ -275,8 +366,9 @@ body {
   margin: 15px auto 35px;
 }
 
-#btn_create_game, #btn_join_game {
-  height: 30vh;
+.game_wrapper .left_sidebar a span {
+  display: block;
+  width: 100%;
 }
 
 #btn_create_game {
@@ -290,10 +382,9 @@ body {
 }
 
 #btn_my_game {
-  height: calc(40vh - 120px);
-  line-height: calc(40vh - 120px);
   background: #C83228;
   color: #fff;
+  height: calc(40vh - 135px) !important;
 }
 
 .game_footer {
@@ -313,7 +404,10 @@ body {
   height: 100vh;
   padding-top: 105px;
   padding-bottom: 50px;
+  padding-left: 15px;
+    padding-right: 15px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .main_title {
@@ -655,15 +749,27 @@ input.new_box_prize {
   border-color: #398439 !important;
 }
 
+/* What you need: */
+.history table td#prevMsg {
+    width: 150px;
+    overflow: hidden;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.history table.with-ellipsis td {   
+    text-overflow: ellipsis;
+}
+
 .tbl_title {
     background: #f6b229;
     color: #fff;
-    width: 40%;
+    width: 50%;
     padding-left: 15px;
     padding: 10px;
     border-top-right-radius: 500px;
     text-align: left;
-    margin: 15px 0 0 15px;
+    margin: 15px 0 0 0;
     text-transform: uppercase;
     font-size: 30px;
     font-weight: 700;
@@ -675,12 +781,16 @@ table.normal_table thead {
   color: #ffffff99;
   font-size: 18px;
   letter-spacing: 0.03em;
+  white-space: nowrap;
 }
+
+.overflowX { overflow-x: scroll; }
 
 table.normal_table tbody td {
   font-weight: 600;
   padding: 8px;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 table.normal_table tbody td button.btn_finish {
@@ -955,6 +1065,26 @@ label.answer {
   color: #75b1e8;
 }
 
+
+/* 
+  ##Device = Desktops
+  ##Screen = 1281px to higher resolution desktops
+*/
+
+@media (min-width: 1281px) {
+  
+  
+}
+
+/* 
+  ##Device = Laptops, Desktops
+  ##Screen = B/w 1025px to 1280px
+*/
+
+@media (min-width: 1025px) and (max-width: 1280px) {
+  
+  
+}
 @media (max-width: 992px) {
   #root .site_wrapper {
     background-size: 150px !important; 
@@ -964,6 +1094,134 @@ label.answer {
     width: 100%;
     min-width: initial;
   }
+}
+
+/* 
+  ##Device = Tablets, Ipads (portrait)
+  ##Screen = B/w 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  
+  
+}
+
+/* 
+  ##Device = Tablets, Ipads (landscape)
+  ##Screen = B/w 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  
+  
+}
+
+/* 
+  ##Device = Low Resolution Tablets, Mobiles (Landscape)
+  ##Screen = B/w 481px to 767px
+*/
+
+@media (min-width: 481px) and (max-width: 767px) {
+  
+  
+}
+
+/* 
+  ##Device = Most of the Smartphones Mobiles (Portrait)
+  ##Screen = B/w 320px to 479px
+*/
+
+@media (min-width: 320px) and (max-width: 480px) {
+  
+  .left_sidebar a.btn {
+    width: 50% !important;
+  }
+  #btn_my_game {
+    width: 100% !important;
+    height: calc(20vh - 100px) !important;
+  }
+
+  #btn_create_game {
+    float: left;
+  }
+
+  .contents_wrapper {
+    padding: 0 10px;
+  }
+
+.main_header { height: 40px; }
+
+  .game_wrapper .left_sidebar a img {
+    max-width: 50px;
+    margin: 5px auto 15px;
+}
+
+.game_wrapper .left_sidebar a {
+  height: 17vh;
+}
+
+.sub_header {
+      border-top: 5px solid #C83228;
+}
+
+.main_header span {
+    font-size: 20px;
+    line-height: 35px;
+    border-top: 5px solid #f6b229;
+    border-bottom: 5px solid #f6b229;
+}
+.game_wrapper .left_sidebar {margin-top: 94px;}
+
+label.radio-inline {
+    margin: 0px 2.5px 5px !important;
+    padding: 0px 10px !important;
+    border: 2px solid #C83228 !important;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+.profile_info_panel {
+    font-size: 13px;
+}
+.payment_action_panel {
+      grid-template-columns: 1fr;
+}
+
+.payment_action_panel h5 { display: none; }
+
+.main_header a#btn_how_to_play, .main_header a#btn_logout { padding: 3px; }
+
+.ReactModal__Content.ReactModal__Content--after-open { min-width: unset !important; width: 97% !important; }
+
+.btn-advanced {
+  height: 40px; 
+  font-size: 20px;
+}
+
+#btn_bet {
+    margin: 15px 0 60px;
+    font-size: 20px;
+    padding: 10px 16px;
+}
+
+.tbl_title { font-size: 16px; }
+  
+  .drinkcard-cc {
+    width: 110px;
+  }
+
+  .copyright {
+    font-size: 16px;
+  }
+
+  .main_title {
+    font-size: 22px;
+  }
+
+  .history { overflow-x: scroll; }
+  .ReactModal__Content.ReactModal__Content--after-open { max-width: 97%; }
+
 }
 
 .StripeElement {
