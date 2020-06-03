@@ -784,7 +784,7 @@ table.normal_table thead {
   white-space: nowrap;
 }
 
-.overflowX { overflow-x: scroll; }
+.overflowX { overflow-x: auto; }
 
 table.normal_table tbody td {
   font-weight: 600;
@@ -1237,4 +1237,16 @@ label.radio-inline {
   outline: 0;
   border-radius: 4px;
   background: white;
+}
+
+.table-black {
+  border-radius: 5px;
+}
+
+.table-black thead,
+.table-black tbody {
+  background-color: #33271e;
+  color: white;
+  text-align: center;
+  font-weight: 600;
 }

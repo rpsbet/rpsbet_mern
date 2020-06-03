@@ -10,7 +10,8 @@ import {
   SET_URL,
   MY_GAMES_LOADED,
   MY_HISTORY_LOADED,
-  SET_CHAT_ROOM_INFO
+  SET_CHAT_ROOM_INFO,
+  HISTORY_LOADED
 } from '../types';
   
 const initialState = {
@@ -18,6 +19,7 @@ const initialState = {
   game_mode: 'Classic RPS',
   // game_mode: 'Spleesh!',
   roomList: [],
+  history: [],
   roomCount: 0,
   pageNumber: 1,
   gameTypeList: [
@@ -54,6 +56,10 @@ export default function(state = initialState, action) {
       return {
         ...state, betResult: payload.betResult
       };
+    case HISTORY_LOADED:
+      return {
+        ...state, history: payload
+      }
     case SET_GAME_MODE:
       return {
         ...state, game_mode: payload

@@ -136,17 +136,92 @@ router.post('/answer', async (req, res) => {
     }
 });
 
+getHistory = async () => {
+    try {
+        const gameLogList = await GameLog.find()
+            .sort({created_at: 'desc'})
+            .limit(10)
+            .populate({path: 'room', model: Room})
+            .populate({path: 'game_type', model: GameType})
+            .populate({path: 'creator', model: User})
+            .populate({path: 'joined_user', model: User});
+
+        let result = [];
+
+        gameLogList.forEach(gameLog => {
+            let temp = {
+                room_name: gameLog['game_type']['game_type_name'] + gameLog['room']['room_number'],
+                history: '',
+                created_at: moment(gameLog['created_at']).fromNow()
+            };
+            if (gameLog['game_type']['game_type_name'] === 'Classic RPS') {
+                if (gameLog.game_result === 1) {
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] won [<span style='color: #02c526;'>£" + (gameLog['room']['bet_amount'] * 2) 
+                        + " * 0.95</span>] against [" + gameLog['creator']['username'] + "] in [<span style='color: #C83228;'>ClassicRPS" 
+                        + gameLog['room']['room_number'] + "</span>]";
+                } else if (gameLog.game_result === 0) {
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] split [<span style='color: #02c526;'>£" + (gameLog['room']['bet_amount'] * 2) 
+                        + " * 0.95</span>] with [" + gameLog['creator']['username'] + "] in [<span style='color: #C83228;'>ClassicRPS" 
+                        + gameLog['room']['room_number'] + "</span>]";
+                } else {
+                    temp.history = "[" + gameLog['creator']['username'] + "] won [<span style='color: #02c526;'>£" + (gameLog['room']['bet_amount'] * 2) 
+                        + " * 0.95</span>] against [" + gameLog['joined_user']['username'] + "] in [<span style='color: #C83228;'>ClassicRPS" 
+                        + gameLog['room']['room_number'] + "</span>]";
+                }
+            } else if (gameLog['game_type']['game_type_name'] === 'Spleesh!') {
+                if (gameLog.game_result === 1) {
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] guessed [<span style='color: #02c526;'>" + gameLog['bet_amount'] 
+                        + "</span>] and won [<span style='color: #02c526;'>£" + (gameLog['room']['host_pr'] + gameLog['room']['bet_amount']) 
+                        + " * 0.9</span>] in [<span style='color: #C83228;'>Spleesh" + gameLog['room']['room_number'] + "</span>]";
+                } else {
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] guessed [<span style='color: #02c526;'>" + gameLog['bet_amount'] 
+                        + "</span>] and lost in [<span style='color: #C83228;'>Spleesh" + gameLog['room']['room_number'] + "</span>]";
+                }
+            } else if (gameLog['game_type']['game_type_name'] === 'Mystery Box') {
+                if (gameLog.game_result === 0) {
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] opened a box [<span style='color: #02c526;'>£" + (gameLog['bet_amount']) 
+                        + "</span>] and won [<span style='color: #02c526;'>Nothing</span>] in [<span style='color: #C83228;'>MysteryBox" 
+                        + gameLog['room']['room_number'] + "</span>]";
+                } else {
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] opened a box [<span style='color: #02c526;'>£" + (gameLog['bet_amount']) 
+                        + "</span>] and won [<span style='color: #02c526;'>£" + (gameLog['bet_amount']) 
+                        + " * 0.95</span>] in [<span style='color: #C83228;'>MysteryBox" + gameLog['room']['room_number'] + "</span>]";
+                }
+            } else if (gameLog['game_type']['game_type_name'] === 'Brain Game') {
+                if (gameLog.game_result === 0) {   //draw          Draw, No Winner! PR will be split.
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] bet [<span style='color: #02c526;'>£" + gameLog['bet_amount'] 
+                        + "</span>] and split [<span style='color: #02c526;'>£" + (gameLog['room']['pr'] + gameLog['room']['bet_amount']) 
+                        + " * 0.9</span>] in [<span style='color: #C83228;'>BrainGame" + gameLog['room']['room_number'] + "</span>]";
+                } else if (gameLog.game_result === 1) { //win       WOW, What a BRAIN BOX - You WIN!
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] bet [<span style='color: #02c526;'>£" + gameLog['bet_amount'] 
+                        + "</span>] and won [<span style='color: #02c526;'>£" + (gameLog['room']['pr'] + gameLog['room']['bet_amount']) 
+                        + " * 0.9</span>] in [<span style='color: #C83228;'>BrainGame" + gameLog['room']['room_number'] + "</span>]";
+                } else {    //failed    Oops, back to school for you loser!!
+                    temp.history = "[" + gameLog['joined_user']['username'] + "] bet [<span style='color: #02c526;'>£" + gameLog['bet_amount'] 
+                        + "</span>] and lost in [<span style='color: #C83228;'>BrainGame" + gameLog['room']['room_number'] + "</span>]";
+                }
+            }
+            result.push(temp);
+        });
+
+        return result;
+    } catch (err) {
+        return false;
+    }
+};
+
 getRoomList = async (pagination, page) => {
     const start = new Date();
 
     const rooms = await Room.find({ status: 'open' })
         .select('_id is_anonymous bet_amount creator game_type user_bet pr spleesh_bet_unit is_private brain_game_type status room_number created_at')
+        .sort({created_at: 'desc'})
+        .skip(pagination * page - pagination)
+        .limit(pagination)
         .populate({path: 'creator', model: User})
         .populate({path: 'game_type', model: GameType})
         .populate({path: 'brain_game_type', model: BrainGameType})
-        .sort({created_at: 'desc'})
-        .skip(pagination * page - pagination)
-        .limit(pagination);
+        
     const count = await Room.countDocuments({});
     let result = [];
     for (const room of rooms) {
@@ -189,6 +264,21 @@ getRoomList = async (pagination, page) => {
         count: count
     }
 }
+
+router.get('/history', async (req, res) => {
+    try {
+        const history = await getHistory();
+        res.json({
+            success: true,
+            history: history
+        });
+    } catch (err) {
+        res.json({
+            success: false,
+            err: err
+        });
+    }
+});
 
 // /api/rooms call
 router.get('/rooms', async (req, res) => {

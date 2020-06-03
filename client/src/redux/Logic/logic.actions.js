@@ -13,7 +13,8 @@ import {
   SET_URL,
   MY_GAMES_LOADED,
   MY_HISTORY_LOADED,
-  SET_CHAT_ROOM_INFO
+  SET_CHAT_ROOM_INFO,
+  HISTORY_LOADED
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -105,12 +106,21 @@ export const getRoomList = (search_condition) => async dispatch => {
     const res = await axios.get('/game/rooms', body);
     if (res.data.success) {
       dispatch({ type: ROOMS_LOADED, payload: res.data });
-    } else {
-      dispatch({ type: MSG_ROOMS_LOAD_FAILED });
     }
   } catch (err) {
     console.log('err***', err);
-    dispatch({ type: MSG_ROOMS_LOAD_FAILED, payload: err });
+  }
+};
+
+// GetHistory
+export const getHistory = () => async dispatch => {
+  try {
+    const res = await axios.get('/game/history');
+    if (res.data.success) {
+      dispatch({ type: HISTORY_LOADED, payload: res.data.history });
+    }
+  } catch (err) {
+    console.log('err***', err);
   }
 };
 

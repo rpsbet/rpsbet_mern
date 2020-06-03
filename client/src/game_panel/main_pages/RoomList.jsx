@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { getRoomList, setCurRoomInfo } from '../../redux/Logic/logic.actions'
+import { getRoomList, getHistory, setCurRoomInfo } from '../../redux/Logic/logic.actions'
 
 class RoomList extends Component {
     constructor(props) {
@@ -29,6 +29,7 @@ class RoomList extends Component {
         this.props.getRoomList({
             page: this.state.pageNumber,
         });
+        this.props.getHistory();
     }
     
     IsAuthenticatedReroute = () => {
@@ -121,6 +122,26 @@ class RoomList extends Component {
                         </tbody>
                     </table>
                 </div>
+                <div className="overflowX">
+                    <table className="table table-black">
+                        <thead>
+                            <tr>
+                                <th>Room ID</th>
+                                <th>History</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {this.props.history.map((row, key) => (
+                            <tr key={key}>
+                                <td>{row.room_name}</td>
+                                <td dangerouslySetInnerHTML={{ __html: row.history }}></td>
+                                <td>{row.created_at}</td>
+                            </tr>
+                        ), this)}
+                        </tbody>
+                    </table>
+                </div>
             </>
         );
     }
@@ -129,6 +150,7 @@ class RoomList extends Component {
 const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
     roomList: state.logic.roomList,
+    history: state.logic.history,
     roomCount: state.logic.roomCount,
     pageNumber: state.logic.pageNumber,
     balance: state.auth.balance,
@@ -137,6 +159,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
     getRoomList,
+    getHistory,
     setCurRoomInfo
 };
 
