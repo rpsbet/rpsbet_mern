@@ -20,20 +20,20 @@ class LandingPage extends Component {
     return (
       <>
         <h1 className="main_title">INFORMATION</h1>
-        <div style={{height: "88%", overflowY: "scroll"}} class="latest_updates">
-        <div class="single_update">
+        <div style={{height: "88%", overflowY: "scroll"}} className="latest_updates">
+        <div className="single_update">
           <h4>Update June 8th 2020</h4>
           <ul>
           <li>Real-money beta release</li>
           </ul>
           </div>
-        <div class="single_update">
+        <div className="single_update">
           <h4>Update December 2019</h4>
           <ul>
           <li>Entire site is re-written in<br />React.js for real-time improvements.</li>
           </ul>
           </div>
-        <div class="single_update">
+        <div className="single_update">
           <h4>Update July 2019 > November 2019</h4>
           <ul>
           <li>User Profiles</li>
@@ -41,15 +41,15 @@ class LandingPage extends Component {
           <li>Added Mystery Box</li>
           </ul>
           </div>
-        <div class="single_update">
+        <div className="single_update">
           <h4>Update May 31st 2019</h4>
           <ul><li>Third Trial</li></ul>
           </div>
-        <div class="single_update">
+        <div className="single_update">
           <h4>Update May 26th 2019</h4>
           <ul><li> Added 'Brain Game'</li></ul>
           </div>
-        <div class="single_update">
+        <div className="single_update">
           <h4>Update April 30th 2019</h4>
           <ul>
           <li>Added 'PR'</li>
@@ -57,12 +57,12 @@ class LandingPage extends Component {
           </ul>
           </div>
 
-        <div class="single_update">
+        <div className="single_update">
           <h4>Update April 21st 2019</h4>
           <ul><li>Added 'My GAMES'</li>
           <li>First trial</li></ul>
           </div>
-        <div class="single_update">
+        <div className="single_update">
           <h4>Update April 11th 2019</h4>
           <ul><li>Added '<i>Spleesh!</i>'</li></ul>
           </div>
