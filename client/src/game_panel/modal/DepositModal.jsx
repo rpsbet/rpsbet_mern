@@ -70,7 +70,7 @@ class StripeCheckoutForm extends React.Component {
         } else {
             // The payment has been processed!
             if (result.paymentIntent.status === 'succeeded') {
-                const newBalanceInfo = await axios.post('/stripe/deposit_successed/', {amount: this.props.amount});
+                const newBalanceInfo = await axios.post('/stripe/deposit_successed/', {amount: this.props.amount, payment_method: 'Stripe'});
                 const {success, balance} = newBalanceInfo.data;
 
                 if (success) {
@@ -146,7 +146,7 @@ class DepositModal extends Component {
                     onSuccess={async (details, data) => {
                         // alert("Transaction completed by " + details.payer.name.given_name);
                         console.log(data);
-                        const newBalanceInfo = await axios.post('/stripe/deposit_successed/', {amount: this.state.amount});
+                        const newBalanceInfo = await axios.post('/stripe/deposit_successed/', {amount: this.state.amount, payment_method: 'PayPal'});
                         const {success, balance} = newBalanceInfo.data;
 
                         if (success) {

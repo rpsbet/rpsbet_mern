@@ -8,8 +8,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
 const Message = require('../model/Message');
+const ChangePasswordRequest = require('../model/ChangePasswordRequest');
 
 const auth = require('../middleware/auth');
+const sendgrid = require('../helper/sendgrid');
 
 // @route   POST api/auth
 // @desc    Auth user
@@ -73,6 +75,70 @@ router.get('/user', auth, async (req, res) => {
       user: req.user,
       unread_message_count: count
     });
+  } catch (error) {
+    res.json({ success: false, error });
+  }
+});
+
+router.post('/sendResetPasswordEmail', async (req, res) => {
+  try {
+    User.findOne({ email: req.body.email }).then(async user => {
+      if (!user)
+        return res.json({
+          success: false,
+          error: 'User Does not exist'
+        });
+
+      const request = new ChangePasswordRequest({ user: user });
+      await request.save();
+      
+      sendgrid.sendResetPasswordEmail(user.email, user.username, request._id + '-' + user._id);
+
+      return res.json({
+        success: true,
+      });
+    });
+
+  } catch (error) {
+    res.json({ success: false, error });
+  }
+});
+
+router.post('/resetPassword', async (req, res) => {
+  try {
+    const params = req.body.params.split('-');
+    if (params.length !== 2) {
+      return res.json({
+        success: false,
+        error: 'Invalid Params'
+      });
+    }
+    console.log(1);
+
+    const request = await ChangePasswordRequest.findOne({_id: params[0]})
+            .populate({path: 'user', model: User});
+    console.log(request);
+
+    if (request.user._id != params[1]) {
+      return res.json({
+        success: false,
+        error: 'Invalid Params'
+      });
+    }
+
+    console.log(123123123);
+
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(req.body.password, salt, (err, hash) => {
+        if (err) throw err;
+        request.user.password = hash;
+        request.user.save();
+        return res.json({
+          success: true,
+        });
+      });
+    });
+
   } catch (error) {
     res.json({ success: false, error });
   }

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
-const socketContoller =require('./socketController.js');
+const socketContoller = require('./socketController.js');
 
 const app = express();
 

@@ -7,6 +7,8 @@ import { getAdmin } from './redux/AdminAuth/admin.actions';
 
 import SignInPage from './game_panel/auth/SignInPage';
 import SignUpPage from './game_panel/auth/SignUpPage';
+import ResetPasswordPage from './game_panel/auth/ResetPasswordPage';
+import ChangePasswordPage from './game_panel/auth/ChangePasswordPage';
 import GameMainRoute from './game_panel/app/Game.routes';
 
 import AdminSignInPage from './admin_panel/auth/SignInPage';
@@ -84,6 +86,14 @@ const App = props => {
             <SignUpPage {...routeProps} />
           )
         }
+      />
+      <Route
+        path="/resetPassword"
+        render={routeProps => <ResetPasswordPage {...routeProps} />}
+      />
+      <Route
+        path="/changePassword"
+        render={routeProps => <ChangePasswordPage {...routeProps} />}
       />
       <Route
         path="/"

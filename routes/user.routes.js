@@ -6,6 +6,7 @@ const gravatar = require('gravatar');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const auth = require('../middleware/auth');
+const sendgrid = require('../helper/sendgrid');
 
 // User Model
 const User = require('../model/User');
@@ -95,6 +96,8 @@ router.post('/', (req, res) => {
         newUser.password = hash;
         newUser.save().then(user => {
           jwt.sign({ user: user, is_admin: 0 }, process.env.SECRET_OR_KEY, (err, token) => {
+            sendgrid.sendWelcomeEmail(email, username);
+
             res.json({
               success: true,
               message: 'new user created',

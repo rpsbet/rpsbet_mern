@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import DepositModal from './DepositModal';
+import WithdrawModal from './WithdrawModal';
 
 Modal.setAppElement('#root')
 
@@ -26,11 +27,14 @@ class ProfileModal extends Component {
         super(props);
     
         this.state = {
-            showDepositModal: false
+            showDepositModal: false,
+            showWithdrawModal: false,
         }
     
         this.handleOpenDepositModal = this.handleOpenDepositModal.bind(this);
         this.handleCloseDepositModal = this.handleCloseDepositModal.bind(this);
+        this.handleOpenWithdrawModal = this.handleOpenWithdrawModal.bind(this);
+        this.handleCloseWithdrawModal = this.handleCloseWithdrawModal.bind(this);
     }
 
     handleOpenDepositModal () {
@@ -39,6 +43,14 @@ class ProfileModal extends Component {
       
     handleCloseDepositModal () {
         this.setState({ showDepositModal: false });
+    }
+
+    handleOpenWithdrawModal () {
+        this.setState({ showWithdrawModal: true });
+    }
+      
+    handleCloseWithdrawModal () {
+        this.setState({ showWithdrawModal: false });
     }
 
     componentDidMount() {
@@ -81,10 +93,11 @@ class ProfileModal extends Component {
             <div className="modal_action_panel">
                 <button>EDIT ACCOUNT</button>
                 <button>EDIT PROFILE</button>
-                <button>WITHDRAW</button>
+                <button onClick={this.handleOpenWithdrawModal}>WITHDRAW</button>
                 <button onClick={this.handleOpenDepositModal}>DEPOSIT</button>
             </div>
             <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} playerName={this.props.player_name} />
+            <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} playerName={this.props.player_name} />
         </Modal>;
     }
 }
