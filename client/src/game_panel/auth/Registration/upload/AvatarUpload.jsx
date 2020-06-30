@@ -48,23 +48,25 @@ class Upload extends Component {
       let filename = uniqid('IMG_') + '.' + file_ext;
 
       req.upload.addEventListener("progress", event => {
-        // console.log((event.loaded / event.total) * 100, '%');
+        console.log((event.loaded / event.total) * 100, '%');
       });
 
       req.upload.addEventListener("load", event => {
-        // console.log('Done. 100%');
-        this.props.setCurrentProductInfo({image: '/img/uploads/' + filename});
+        console.log('Done. 100%', this.props);
+        this.props.setImageFilename('/img/uploads/' + filename);
       });
 
       req.upload.addEventListener("error", event => {
-        // console.log(req.response);
+        console.log(req.response);
       });
 
       const formData = new FormData();
   
       formData.append("file", file, filename);
 
-      req.open("POST", "http://localhost:5000/api/upload");
+      console.log(formData);
+      req.open("POST", "/api/upload/");
+      // req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       req.send(formData);
     });
   }
@@ -77,6 +79,8 @@ class Upload extends Component {
             <Dropzone
               onFileAdded={this.onFileAdded}
               disabled={this.state.uploading && this.state.successfullUploaded}
+              minSize={0}
+              maxSize={2097152}
             />
           </div>
         </div>

@@ -28,8 +28,13 @@ router.post('/', (req, res) => {
   }
 
   // Check for existing user
-  User.findOne({ email }).then(user => {
-    if (!user)
+  User.findOne({ 
+    $or: [
+      {email: email},
+      {username: email}
+    ]
+  }).then(user => {
+    if (!user || user.is_deleted === true)
       return res.json({
         success: false,
         error: 'User does not exist'
@@ -80,10 +85,11 @@ router.get('/user', auth, async (req, res) => {
   }
 });
 
+// Forgot Password
 router.post('/sendResetPasswordEmail', async (req, res) => {
   try {
     User.findOne({ email: req.body.email }).then(async user => {
-      if (!user)
+      if (!user || user.is_deleted === true)
         return res.json({
           success: false,
           error: 'Email does not exist in our database'
@@ -104,6 +110,7 @@ router.post('/sendResetPasswordEmail', async (req, res) => {
   }
 });
 
+// Forgot Password
 router.post('/resetPassword', async (req, res) => {
   try {
     const params = req.body.params.split('-');
@@ -113,11 +120,9 @@ router.post('/resetPassword', async (req, res) => {
         error: 'Invalid Params'
       });
     }
-    console.log(1);
 
     const request = await ChangePasswordRequest.findOne({_id: params[0]})
             .populate({path: 'user', model: User});
-    console.log(request);
 
     if (request.user._id != params[1]) {
       return res.json({
@@ -125,8 +130,6 @@ router.post('/resetPassword', async (req, res) => {
         error: 'Invalid Params'
       });
     }
-
-    console.log(123123123);
 
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(req.body.password, salt, (err, hash) => {
@@ -139,6 +142,51 @@ router.post('/resetPassword', async (req, res) => {
       });
     });
 
+  } catch (error) {
+    res.json({ success: false, error });
+  }
+});
+
+// Change Password in EditAccountModal
+router.post('/changePassword', auth, async (req, res) => {
+  try {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(req.body.new_password, salt, (err, hash) => {
+        if (err) throw err;
+        req.user.password = hash;
+        req.user.save();
+        return res.json({
+          success: true,
+        });
+      });
+    });
+
+  } catch (error) {
+    res.json({ success: false, error });
+  }
+});
+
+// Delete Account
+router.post('/deleteAccount', auth, async (req, res) => {
+  try {
+    req.user.is_deleted = true;
+    req.user.save();
+    return res.json({
+      success: true,
+    });
+  } catch (error) {
+    res.json({ success: false, error });
+  }
+});
+
+// Change Avatar in EditProfileModal
+router.post('/changeAvatar', auth, async (req, res) => {
+  try {
+    req.user.avatar = req.body.new_avatar;
+    req.user.save();
+    return res.json({
+      success: true,
+    });
   } catch (error) {
     res.json({ success: false, error });
   }

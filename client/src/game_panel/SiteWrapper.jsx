@@ -16,7 +16,7 @@ class SiteWrapper extends Component {
     super(props);
 
     this.state = {
-      endpoint: "localhost:5000",
+      endpoint: "",
       userName: this.props.userName,
       balance: this.props.balance,
       showProfileModal: false,
@@ -51,6 +51,7 @@ class SiteWrapper extends Component {
     const socket = socketIOClient(this.state.endpoint);
 
     socket.on('CONNECTED', (data) => {
+      console.log(123123123);
       socket.emit('STORE_CLIENT_USER_ID', {user_id: this.props.user._id});
     });
 
@@ -141,7 +142,7 @@ class SiteWrapper extends Component {
             <span className="welcome">Welcome </span>
             <span className="user_name mr-auto">{this.state.userName}</span>
             {/* <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a> */}
-            <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src="/img/avatar.png" alt="" /></button>
+            <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src={this.props.user.avatar} alt="" /></button>
           </div>
         </div>
         <div className="game_wrapper">

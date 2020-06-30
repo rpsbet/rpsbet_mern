@@ -45,7 +45,7 @@ class MyGamesTable extends Component {
                                 : 
                                 this.state.myRoomList.map((row, key) => (
                                     <tr key={key}>
-                                        <td>{row.game_type.game_type_name + ' ' + row.index}</td>
+                                        <td>{row.game_type.short_name + ' ' + row.index}</td>
                                         <td><span>{"£" + row.bet_amount + " / £" + row.pr}</span> <span style={{marginLeft: '20px', color: 'red'}}>{"£" + row.end_game_amount}</span></td>
                                         <td><span style={{color: '#02c526'}}>{row.winnings}</span></td>
                                         <td>

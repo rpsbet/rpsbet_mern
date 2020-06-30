@@ -5,7 +5,7 @@ import { PaperEl } from '../../../Styles/Elements/ToolsEl';
 import Paper from '@material-ui/core/Paper';
 import { centerEl } from '../../../Styles/Mixins';
 import { styleColor } from '../../../Styles/styleThem';
-// import history from '../../../redux/history';
+import history from '../../../redux/history';
 import {
   warningMsgBar,
   infoMsgBar
@@ -57,7 +57,7 @@ function CustomerTable({
           data.map((row, index) => (
             <BottomRowEl
               key={row._id}
-              // onClick={() => history.push(`/admin/customer/${row._id}`)}
+              onClick={() => history.push(`/admin/customer/${row._id}`)}
             >
               <ItemEl>{(page - 1) * 10 + index + 1}</ItemEl>
               <ItemEl>{row.username}</ItemEl>

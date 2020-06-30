@@ -10,6 +10,10 @@ const GameTypeSchema = new Schema({
     type: String,
     default: ''
   },
+  short_name: {
+    type: String,
+    default: ''
+  },
   created_at: {
     type: Date,
     default: Date.now

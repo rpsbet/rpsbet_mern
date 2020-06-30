@@ -8,6 +8,7 @@ import { queryCustomer } from '../../../redux/Customer/customer.action';
 class CustomerPage extends Component {
   componentDidMount() {
     this.props.setUrl(this.props.match.path);
+    console.log(123);
     this.props.queryCustomer(10, 1);
   }
 

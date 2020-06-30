@@ -64,7 +64,7 @@ class Upload extends Component {
   
       formData.append("file", file, filename);
 
-      req.open("POST", "http://localhost:5000/api/upload");
+      req.open("POST", "/api/upload");
       req.send(formData);
     });
   }

@@ -66,6 +66,12 @@ class BrainGame extends Component {
 
     onStartGame(e) {
         e.preventDefault();
+
+        if (this.props.creator_id === this.props.user_id) {
+            alert(`Oop! This game is yours. You can't join this game.`);
+            return;
+        }
+
         if (this.state.bet_amount === 0) {
             alert("Please input the bet amount!");
             return;

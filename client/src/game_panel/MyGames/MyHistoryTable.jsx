@@ -34,13 +34,11 @@ class MyHistoryTable extends Component {
             return this.state.myHistory[a].updated_at < this.state.myHistory[b].updated_at ? 1 : -1;
         });
 
-        console.log(this.state.myHistory);
-
         return (
             <>
                 <label className="tbl_title">MY HISTORY</label>
                 <div className="history">
-                    <table className="table table-striped with-ellipsis table-hover text-center normal_table" cellpadding="2" cellspacing="0">
+                    <table className="table table-striped with-ellipsis table-hover text-center normal_table" cellPadding="2" cellSpacing="0">
                         <thead>
                             <tr>
                                 <th></th>

@@ -245,6 +245,7 @@ input[type="password"] {
   height: 100%;
   object-fit: cover;
   transform: scale(1.1);
+  border-radius: 50%;
 }
 
 .btn_modal_close {
@@ -321,6 +322,18 @@ input[type="password"] {
   text-align: left;
   padding: 10px 15px;
   margin-bottom: 0;
+}
+
+.profile_info_panel span.radio_panel {
+  background-color: white !important;
+  box-shadow: none !important;
+  text-align: center;
+}
+
+.profile_info_panel span.radio_panel input[type="radio"], .profile_info_panel span.radio_panel label {
+  margin: 0;
+  padding: 0 10px;
+  background: white;
 }
 
 .profile_info_panel span:nth-child(even),.profile_info_panel input {
@@ -1394,4 +1407,16 @@ label.radio-inline {
   color: white;
   text-align: center;
   font-weight: 600;
+}
+
+.hidden {
+  display: none;
+}
+
+table td img.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  /* border: 2px solid #c83228cc; */
+  margin-right: 5px;
 }

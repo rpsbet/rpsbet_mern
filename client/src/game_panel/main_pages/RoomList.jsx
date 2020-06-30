@@ -24,7 +24,6 @@ class RoomList extends Component {
     }
 
     componentDidMount() {
-        console.log(this.props);
         this.IsAuthenticatedReroute();
         this.props.getRoomList({
             page: this.state.pageNumber,
@@ -40,12 +39,8 @@ class RoomList extends Component {
 
     joinRoom(e) {
         const creator_id = e.target.getAttribute('creator_id');
-        if (creator_id === this.props.user._id) {
-            alert(`Oops! You can't join your own game.`);
-            return;
-        }
-
         const bet_amount = e.target.getAttribute('bet_amount');
+
         if (bet_amount > this.state.balance / 100.0) {
             alert("Not enough balance!");
             return;
@@ -61,6 +56,7 @@ class RoomList extends Component {
             _id: room_id,
             game_type: e.target.getAttribute('game_type'),
             bet_amount: bet_amount,
+            creator_id: creator_id,
             spleesh_bet_unit: parseInt(e.target.getAttribute('spleesh_bet_unit')),
             box_price: parseFloat(e.target.getAttribute('box_price')),
             game_log_list: [],
@@ -94,8 +90,8 @@ class RoomList extends Component {
                         <tbody>
                         {this.props.roomList.map((row, key) => (
                             <tr key={key}>
-                                <td>{row.game_type.game_type_name + ' ' + row.index}</td>
-                                <td>{row.creator}</td>
+                                <td>{row.game_type.short_name + '-' + row.index}</td>
+                                <td><img className="avatar" src={row.creator_avatar} alt="" />{row.creator}</td>
                                 <td>{"£" + row.user_bet + " / £" + row.pr}</td>
                                 <td style={{color: "rgb(2, 197, 38)"}}>{row.winnings}</td>
                                 <td>{row.status}</td>

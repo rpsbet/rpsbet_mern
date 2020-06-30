@@ -11,9 +11,6 @@ const sendgrid = require('../helper/sendgrid');
 // User Model
 const User = require('../model/User');
 
-// @route   POST api/user
-// @desc    Register new user
-// @access  Public
 router.get('/', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
@@ -52,8 +49,8 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-router.post('/', (req, res) => {
-  const { username, email, password, bio } = req.body;
+router.post('/', async (req, res) => {
+  const { username, email, password, bio, avatar } = req.body;
 
   // Simple validation
   if (!username || !email || !password) {
@@ -64,51 +61,87 @@ router.post('/', (req, res) => {
   }
 
   // Check for existing user
-  User.findOne({ email }).then(async user => {
-    if (user)
-      return res.json({
-        success: false,
-        error: 'User already exists'
-      });
+  let user = await User.findOne({ email });
 
-    const avatar = gravatar.url(email, {
-      s: '200',
-      r: 'r',
-      d: 'mm'
+  if (user)
+    return res.json({
+      success: false,
+      error: 'Email already exists'
     });
 
-    clearance = ['not_certified'];
+  user = await User.findOne({ username: email });
 
-    const newUser = new User({
-      username,
-      email,
-      password,
-      bio,
-      balance: 0,
-      status: 'off',
-      avatar
+  if (user)
+    return res.json({
+      success: false,
+      error: 'Username already exists'
     });
 
-    // Create salt & hash
-    bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(newUser.password, salt, (err, hash) => {
-        if (err) throw err;
-        newUser.password = hash;
-        newUser.save().then(user => {
-          jwt.sign({ user: user, is_admin: 0 }, process.env.SECRET_OR_KEY, (err, token) => {
-            sendgrid.sendWelcomeEmail(email, username);
+  const newUser = new User({
+    username,
+    email,
+    password,
+    bio,
+    balance: 0,
+    status: 'off',
+    avatar
+  });
 
-            res.json({
-              success: true,
-              message: 'new user created',
-              token,
-              user
-            });
+  // Create salt & hash
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(newUser.password, salt, (err, hash) => {
+      if (err) throw err;
+      newUser.password = hash;
+      newUser.save().then(user => {
+        jwt.sign({ user: user, is_admin: 0 }, process.env.SECRET_OR_KEY, (err, token) => {
+          sendgrid.sendWelcomeEmail(email, username);
+
+          res.json({
+            success: true,
+            message: 'new user created',
+            token,
+            user
           });
         });
       });
     });
   });
+});
+
+router.post('/get-info', async (req, res) => {
+  try {
+    const user = await User.findOne({_id: req.body._id});
+
+    res.json({
+      success: true,
+      query: req.query,
+      user: user,
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      err: message
+    });
+  }
+});
+
+router.post('/updateCustomer', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({_id: req.body._id});
+    user.balance = req.body.balance * 100;
+    await user.save();
+
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      err: message
+    });
+  }
 });
 
 module.exports = router;
