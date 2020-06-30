@@ -34,7 +34,6 @@ export const createRoom = (room_info) => async dispatch => {
       dispatch({ type: MSG_CREATE_ROOM_FAIL });
     }
   } catch (err) {
-    console.log('err***', err);
     dispatch({ type: MSG_CREATE_ROOM_FAIL, payload: err });
   }
 };
@@ -45,7 +44,6 @@ export const bet = (bet_info) => async dispatch => {
   try {
     const res = await axios.post('/game/bet', body);
     if (res.data.success) {
-      console.log(bet_info.game_type);
       if (res.data.betResult === -100) {
         alert(res.data.message);
         history.push('/join');
@@ -77,7 +75,6 @@ export const bet = (bet_info) => async dispatch => {
       dispatch({ type: BET_FAIL });
     }
   } catch (err) {
-    console.log('err***', err);
     dispatch({ type: BET_FAIL, payload: err });
   }
 };
@@ -87,14 +84,11 @@ export const getRoomInfo = (room_id) => async dispatch => {
   try {
     const res = await axios.get('/game/room/' + room_id);
     if (res.data.success) {
-      console.log(res.data);
-
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
     } else {
       dispatch({ type: MSG_ROOMS_LOAD_FAILED });
     }
   } catch (err) {
-    console.log('err***', err);
     dispatch({ type: MSG_ROOMS_LOAD_FAILED, payload: err });
   }
 };
@@ -108,7 +102,6 @@ export const getRoomList = (search_condition) => async dispatch => {
       dispatch({ type: ROOMS_LOADED, payload: res.data });
     }
   } catch (err) {
-    console.log('err***', err);
   }
 };
 
@@ -120,7 +113,6 @@ export const getHistory = () => async dispatch => {
       dispatch({ type: HISTORY_LOADED, payload: res.data.history });
     }
   } catch (err) {
-    console.log('err***', err);
   }
 };
 
@@ -134,7 +126,6 @@ export const getGameTypeList = () => async dispatch => {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
   } catch (err) {
-    console.log('err***', err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
@@ -148,7 +139,6 @@ export const getMyGames = () => async dispatch => {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
   } catch (err) {
-    console.log('err***', err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
@@ -166,7 +156,6 @@ export const endGame = (room_id) => async dispatch => {
       }
     }
   } catch (err) {
-    console.log('err***', err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 }
@@ -180,7 +169,6 @@ export const getMyHistory = () => async dispatch => {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
   } catch (err) {
-    console.log('err***', err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 }
@@ -194,7 +182,6 @@ export const getChatRoomInfo = (user_id) => async dispatch => {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
   } catch (err) {
-    console.log('err***', err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 }

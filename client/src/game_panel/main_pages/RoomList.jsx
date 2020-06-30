@@ -24,7 +24,6 @@ class RoomList extends Component {
     }
 
     componentDidMount() {
-        console.log(this.props);
         this.IsAuthenticatedReroute();
         this.props.getRoomList({
             page: this.state.pageNumber,

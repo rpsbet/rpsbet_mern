@@ -38,7 +38,6 @@ class JoinGame extends Component {
     };
 
     join(betInfo) {
-        console.log(this.state.roomInfo._id, betInfo);
         this.props.bet({
             _id: this.state.roomInfo._id,
             game_type: this.props.roomInfo.game_type,

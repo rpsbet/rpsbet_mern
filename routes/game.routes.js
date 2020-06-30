@@ -765,7 +765,7 @@ router.post('/bet', auth, async (req, res) => {
                     newGameLog.game_result = -1;
                     if (roomInfo['end_game_type'] && roomInfo['host_pr'] >= roomInfo['end_game_amount']) {
                         roomInfo.status = 'finished';
-                        roomInfo['creator']['balance'] += roomInfo['host_pr'];
+                        roomInfo['creator']['balance'] += roomInfo['host_pr'] * 100;
                     }
                 }
             } else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
