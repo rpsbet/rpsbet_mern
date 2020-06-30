@@ -8,7 +8,8 @@ import {
   LOGIN_FAIL,
   LOGOUT,
   SET_URL,
-  SET_BALANCE
+  SET_BALANCE,
+  SET_AVATAR
 } from '../types';
 
 const initialState = {
@@ -32,6 +33,10 @@ export default function(state = initialState, action) {
       return {
         ...state, socket: payload
       };
+    case SET_AVATAR:
+      return {
+        ...state, user: {...state.user, avatar: payload}
+      }
     case SET_UNREAD_MESSAGE_COUNT:
       return {
         ...state, unreadMessageCount: payload

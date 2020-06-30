@@ -12,7 +12,7 @@ class SiteWrapper extends Component {
     super(props);
 
     this.state = {
-      endpoint: "localhost:5000",
+      endpoint: "",
       userName: this.props.userName,
       balance: this.props.balance,
       showProfileModal: false,
@@ -112,7 +112,7 @@ class SiteWrapper extends Component {
             <span className="welcome">Welcome </span>
             <span className="user_name mr-auto">{this.state.userName}</span>
             <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a>
-            <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src="/img/avatar.png" alt="" /></button>
+            <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src={this.props.user.avatar} alt="" /></button>
           </div>
         </div>
         <div className="game_wrapper">
@@ -142,7 +142,7 @@ class SiteWrapper extends Component {
         <div className="game_footer text-center">
           Copyright © 2020 RPS Bet, rpsbet.com
         </div>
-        <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
+        <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} email={this.props.user.email} />
         <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
       </div>
     );

@@ -62,6 +62,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
             user_id: req.user._id,
             email: req.body.email,
             payment_method: req.body.payment_method,
+            bank_account_number: req.body.bank_account_number,
+            bank_short_code: req.body.bank_short_code,
             payment_type: 'Withdraw',
             amount: req.body.amount * 100,
         });

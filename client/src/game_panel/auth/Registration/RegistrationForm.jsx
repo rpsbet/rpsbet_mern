@@ -3,12 +3,13 @@ import { connect } from 'react-redux';
 import { userSignUp } from '../../../redux/Auth/user.actions';
 import AvatarUpload from './upload/AvatarUpload';
 
-export class RegistrationForm extends Component {
+class RegistrationForm extends Component {
   state = {
     userName: '',
     password: '',
     email: '',
     bio: '',
+    avatar: '',
     disable: true
   };
 
@@ -49,7 +50,9 @@ export class RegistrationForm extends Component {
         </div>
         <form onSubmit={this.handleSubmit}>
           <div className="form-group">
-            <AvatarUpload />
+            <AvatarUpload setImageFilename={(filename) => {
+              this.setState({avatar: filename});
+            }} />
           </div>
           <div className="form-group">
             <label>Your Username?!</label>

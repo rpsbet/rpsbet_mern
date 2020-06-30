@@ -14,6 +14,14 @@ const ReceiptSchema = new Schema({
     type: String,
     default: ''
   },
+  bank_account_number: {
+    type: String,
+    default: ''
+  },
+  bank_short_code: {
+    type: String,
+    default: ''
+  },
   payment_type: {
     type: String,
     default: 'Deposit'

@@ -10,6 +10,7 @@ export const LOGIN_FAIL = 'LOGIN_FAIL';
 export const LOGOUT = 'LOGOUT';
 export const SET_UNREAD_MESSAGE_COUNT = 'SET_UNREAD_MESSAGE_COUNT';
 export const SET_BALANCE = 'SET_BALANCE';
+export const SET_AVATAR = 'SET_AVATAR';
 
 // admin
 export const ADMIN_REGISTER_SUCCESS = 'ADMIN_REGISTER_SUCCESS';

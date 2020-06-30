@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import DepositModal from './DepositModal';
 import WithdrawModal from './WithdrawModal';
+import EditAccountModal from './EditAccountModal';
+import EditProfileModal from './EditProfileModal';
 
 Modal.setAppElement('#root')
 
@@ -29,12 +31,18 @@ class ProfileModal extends Component {
         this.state = {
             showDepositModal: false,
             showWithdrawModal: false,
+            showEditAccountModal: false,
+            showEditProfileModal: false,
         }
     
         this.handleOpenDepositModal = this.handleOpenDepositModal.bind(this);
         this.handleCloseDepositModal = this.handleCloseDepositModal.bind(this);
         this.handleOpenWithdrawModal = this.handleOpenWithdrawModal.bind(this);
         this.handleCloseWithdrawModal = this.handleCloseWithdrawModal.bind(this);
+        this.handleOpenEditAccountModal = this.handleOpenEditAccountModal.bind(this);
+        this.handleCloseEditAccountModal = this.handleCloseEditAccountModal.bind(this);
+        this.handleOpenEditProfileModal = this.handleOpenEditProfileModal.bind(this);
+        this.handleCloseEditProfileModal = this.handleCloseEditProfileModal.bind(this);
     }
 
     handleOpenDepositModal () {
@@ -43,6 +51,22 @@ class ProfileModal extends Component {
       
     handleCloseDepositModal () {
         this.setState({ showDepositModal: false });
+    }
+
+    handleOpenEditAccountModal () {
+        this.setState({ showEditAccountModal: true });
+    }
+      
+    handleCloseEditAccountModal () {
+        this.setState({ showEditAccountModal: false });
+    }
+
+    handleOpenEditProfileModal () {
+        this.setState({ showEditProfileModal: true });
+    }
+      
+    handleCloseEditProfileModal () {
+        this.setState({ showEditProfileModal: false });
     }
 
     handleOpenWithdrawModal () {
@@ -91,13 +115,15 @@ class ProfileModal extends Component {
                 <span>2 hours ago</span> */}
             </div> 
             <div className="modal_action_panel">
-                <button>EDIT ACCOUNT</button>
-                <button>EDIT PROFILE</button>
+                <button onClick={this.handleOpenEditAccountModal}>EDIT ACCOUNT</button>
+                <button onClick={this.handleOpenEditProfileModal}>EDIT PROFILE</button>
                 <button onClick={this.handleOpenWithdrawModal}>WITHDRAW</button>
                 <button onClick={this.handleOpenDepositModal}>DEPOSIT</button>
             </div>
             <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} playerName={this.props.player_name} />
             <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} playerName={this.props.player_name} />
+            <EditAccountModal modalIsOpen={this.state.showEditAccountModal} closeModal={this.handleCloseEditAccountModal} playerName={this.props.player_name} email={this.props.email} />
+            <EditProfileModal modalIsOpen={this.state.showEditProfileModal} closeModal={this.handleCloseEditProfileModal} playerName={this.props.player_name} email={this.props.email} />
         </Modal>;
     }
 }

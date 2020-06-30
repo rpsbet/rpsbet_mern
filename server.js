@@ -38,6 +38,7 @@ const stripeRoutes = require('./routes/stripe.routes');
 // app.use(bodyParser.json());
 
 app.use(express.json({ extended: false }));
+app.use(fileUpload());
 
 // Connect Database
 mongoose
@@ -59,7 +60,6 @@ app.use('/api/brain_game_type', brainGameTypeRoutes);
 app.use('/api/stripe', stripeRoutes);
 
 app.use(cors(corsOptions));
-app.use(fileUpload());
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {

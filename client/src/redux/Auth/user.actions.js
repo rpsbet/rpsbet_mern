@@ -12,7 +12,8 @@ import {
   MSG_WARNING,
   SET_UNREAD_MESSAGE_COUNT,
   SET_BALANCE,
-  SET_URL
+  SET_URL,
+  SET_AVATAR
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -47,12 +48,14 @@ export const userSignUp = ({
   userName,
   email,
   password,
-  bio
+  bio,
+  avatar
 }) => async dispatch => {
-  const body = JSON.stringify({ username: userName, email, password, bio });
+  const body = JSON.stringify({ username: userName, email, password, bio, avatar });
   try {
     const res = await axios.post('/user', body);
     if (res.data.success) {
+      alert('Successfully registered.');
       history.push('/signin');
       dispatch({ type: MSG_SUCCESS, payload: res.data.message });
     } else {
@@ -81,6 +84,54 @@ export const userSignIn = body => async dispatch => {
   } catch (err) {
     console.log('err', err);
     dispatch({ type: MSG_WARNING, payload: err });
+  }
+};
+
+// Edit Profile
+export const changePassword = new_password => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/changePassword', {new_password});
+    if (data.success) {
+      alert('Password changed successfully. Please login again.');
+      dispatch({ type: LOGOUT });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+
+// Edit Profile
+export const changeAvatar = new_avatar => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/changeAvatar', {new_avatar});
+    if (data.success) {
+      alert('Avatar changed successfully.');
+      dispatch({ type: SET_AVATAR, payload: new_avatar });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+
+// Delete Account
+export const deleteAccount = () => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/deleteAccount');
+    if (data.success) {
+      alert('Your account has been deleted.');
+      dispatch({ type: LOGOUT });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: error });
   }
 };
 

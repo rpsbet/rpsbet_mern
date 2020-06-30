@@ -28,6 +28,11 @@ class Spleesh extends Component {
     onBtnBetClick(e) {
         e.preventDefault();
 
+        if (this.props.creator_id === this.props.user_id) {
+            alert(`Oop! This game is yours. You can't join this game.`);
+            return;
+        }
+
         if (this.state.bet_amount > this.state.balance / 100.0) {
             alert("Not enough balance!");
             return;

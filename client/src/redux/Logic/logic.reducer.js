@@ -30,6 +30,7 @@ const initialState = {
   ],
   curRoomInfo: {
     _id: 0,
+    creator_id: '',
     game_type: '',
     bet_amount: 0,
     spleesh_bet_unit: 1,
