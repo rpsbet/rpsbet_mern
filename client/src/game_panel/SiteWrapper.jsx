@@ -41,6 +41,7 @@ class SiteWrapper extends Component {
     const socket = socketIOClient(this.state.endpoint);
 
     socket.on('CONNECTED', (data) => {
+      console.log(123123123);
       socket.emit('STORE_CLIENT_USER_ID', {user_id: this.props.user._id});
     });
 
