@@ -5,13 +5,13 @@ import { connect } from 'react-redux';
 import { userSignIn } from '../../redux/Auth/user.actions';
 
 function SignInSide(props) {
-  const [username, setusername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [disable, setDisable] = useState(true);
 
   useEffect(() => {
     const handleDisableButton = () => {
-      if (username.length >= 4) {
+      if (email.length >= 4) {
         if (password.length >= 3) {
           setDisable(false);
         } else {
@@ -22,11 +22,11 @@ function SignInSide(props) {
       }
     };
     handleDisableButton();
-  }, [username, password]);
+  }, [email, password]);
 
   const handleSubmit = event => {
     event.preventDefault();
-    const payload = { username, password };
+    const payload = { email, password };
     props.userSignIn(payload);
   };
 
@@ -39,8 +39,8 @@ function SignInSide(props) {
           </div>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>username Address</label>
-              <input type="text" className="form-control" placeholder="username Address" name="username" value={username} onChange={e => setusername(e.target.value)} />
+              <label>Username / Email</label>
+              <input type="text" className="form-control" placeholder="Username / Email" name="email" value={email} onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="form-group">
               <label>Password</label>
