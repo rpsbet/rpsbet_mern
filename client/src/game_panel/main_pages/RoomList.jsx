@@ -41,7 +41,7 @@ class RoomList extends Component {
     joinRoom(e) {
         const creator_id = e.target.getAttribute('creator_id');
         if (creator_id === this.props.user._id) {
-            alert(`Oop! This game is yours. You can't join this game.`);
+            alert(`Oops! You can't join your own game.`);
             return;
         }
 
@@ -52,7 +52,7 @@ class RoomList extends Component {
         }
 
         if (e.target.getAttribute('room_status') === 'finished') {
-            alert("You can't join the game. This game has been finished.");
+            alert("You can't join the game. This game has finished.");
             return;
         }
 
@@ -97,7 +97,7 @@ class RoomList extends Component {
                                 <td>{row.game_type.game_type_name + ' ' + row.index}</td>
                                 <td>{row.creator}</td>
                                 <td>{"£" + row.user_bet + " / £" + row.pr}</td>
-                                <td>{row.winnings}</td>
+                                <td style={{color: "rgb(2, 197, 38)"}}>{row.winnings}</td>
                                 <td>{row.status}</td>
                                 <td>
                                     <button 

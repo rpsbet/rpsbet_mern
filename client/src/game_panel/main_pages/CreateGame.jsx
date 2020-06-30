@@ -7,6 +7,7 @@ import MysteryBox from '../CreateGame/MysteryBox';
 import BrainGame from '../CreateGame/BrainGame';
 import { createRoom, getGameTypeList, setGameMode, getRoomList } from "../../redux/Logic/logic.actions";
 import { getBrainGameType } from '../../redux/Question/question.action';
+import { FaRegQuestionCircle } from 'react-icons/fa';
 
 class CreateGame extends Component {
     constructor(props) {
@@ -58,14 +59,14 @@ class CreateGame extends Component {
                 <>
                     <h1 className="main_title">Create a bet</h1>
                     <hr/>
-                    <label className="lbl_game_option">Game Mode:</label>
+                    <label className="lbl_game_option">Game Mode</label>
                     <div>
                         {this.props.gameTypeList.map((gameType, index) => (
                             <label className={"radio-inline" + (this.state.game_mode === gameType.game_type_name? " checked" : "")} onClick={() => { this.props.setGameMode(gameType.game_type_name); }} key={index}>{gameType.game_type_name}</label>
                         ))}
                     </div>
                     <div>
-                        Start by choosing which game, you can find instructions for each game by clicking 'How To Play' in the top left.
+                        Click the '<FaRegQuestionCircle />' in the top bar to see How To Play
                     </div>
                 </>
             );

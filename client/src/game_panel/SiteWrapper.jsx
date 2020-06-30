@@ -4,8 +4,12 @@ import { setSocket, userSignOut, getUser, setUnreadMessageCount } from '../redux
 import { setRoomList, addChatLog, getMyGames, getMyHistory } from '../redux/Logic/logic.actions';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
-import ProfileModal from './modal/ProfileModal'
-import HowToPlayModal from './modal/HowToPlayModal'
+import ProfileModal from './modal/ProfileModal';
+import HowToPlayModal from './modal/HowToPlayModal';
+import PrivacyModal from './modal/PrivacyModal';
+import TermsModal from './modal/TermsModal';
+import { FaRegQuestionCircle } from 'react-icons/fa';
+import { IoMdLogOut } from 'react-icons/io';
 
 class SiteWrapper extends Component {
   constructor(props) {
@@ -16,12 +20,18 @@ class SiteWrapper extends Component {
       userName: this.props.userName,
       balance: this.props.balance,
       showProfileModal: false,
-      showHowToPlayModal: false
+      showHowToPlayModal: false,
+      showPrivacyModal: false,
+      showTermsModal: false
     }
 
     this.handleLogout = this.handleLogout.bind(this);
     this.handleOpenProfileModal = this.handleOpenProfileModal.bind(this);
+    this.handleOpenPrivacyModal = this.handleOpenPrivacyModal.bind(this);
+    this.handleOpenTermsModal = this.handleOpenTermsModal.bind(this);
     this.handleCloseProfileModal = this.handleCloseProfileModal.bind(this);
+    this.handleClosePrivacyModal = this.handleClosePrivacyModal.bind(this);
+    this.handleCloseTermsModal = this.handleCloseTermsModal.bind(this);
     this.handleOpenHowToPlayModal = this.handleOpenHowToPlayModal.bind(this);
     this.handleCloseHowToPlayModal = this.handleCloseHowToPlayModal.bind(this);
   }
@@ -86,6 +96,24 @@ class SiteWrapper extends Component {
     this.setState({ showProfileModal: false });
   }
 
+  handleOpenTermsModal () {
+    console.log('showmodal');
+    this.setState({ showTermsModal: true });
+  }
+
+  handleCloseTermsModal () {
+    this.setState({ showTermsModal: false });
+  }
+
+   handleOpenPrivacyModal () {
+    console.log('showmodal');
+    this.setState({ showPrivacyModal: true });
+  }
+
+  handleClosePrivacyModal () {
+    this.setState({ showPrivacyModal: false });
+  }
+
   handleOpenHowToPlayModal () {
     console.log('showmodal');
     this.setState({ showHowToPlayModal: true });
@@ -98,20 +126,21 @@ class SiteWrapper extends Component {
   render() {
     const messageCount = this.props.unreadMessageCount;
     return (
+    
       <div className="site_wrapper">
         <div className="game_header">
           <div className="main_header d-flex">
             <a className="game_logo" href="/">
               <img src="/img/Logo.png" alt="" />
             </a>
-            <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play">HOW TO PLAY</a>
-            <a href="/" id="btn_logout" className="ml-auto" onClick={this.handleLogout}>LOGOUT<i className="glyphicon glyphicon-off"></i></a>
-            <span>£{this.state.balance / 100.0}</span>
+            <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HOW TO PLAY </span><FaRegQuestionCircle /></a>
+            <a href="/" id="btn_logout" className="ml-auto" onClick={this.handleLogout}><span>LOGOUT </span><IoMdLogOut /></a>
+            <span id="balance">£{this.state.balance / 100.0}</span>
           </div>
           <div className="sub_header d-flex">
             <span className="welcome">Welcome </span>
             <span className="user_name mr-auto">{this.state.userName}</span>
-            <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a>
+            {/* <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a> */}
             <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src="/img/avatar.png" alt="" /></button>
           </div>
         </div>
@@ -140,8 +169,10 @@ class SiteWrapper extends Component {
           </div>
         </div>
         <div className="game_footer text-center">
-          Copyright © 2020 RPS Bet, rpsbet.com
+          <span>All Rights Reserved, </span>rpsbet.com © 2020 RPS Bet Ltd. 12175962, <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
         </div>
+        <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
+        <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
         <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
         <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
       </div>

@@ -46,10 +46,9 @@ export const getUser = (is_reload) => async dispatch => {
 export const userSignUp = ({
   userName,
   email,
-  password,
-  bio
+  password
 }) => async dispatch => {
-  const body = JSON.stringify({ username: userName, email, password, bio });
+  const body = JSON.stringify({ username: userName, email, password });
   try {
     const res = await axios.post('/user', body);
     if (res.data.success) {

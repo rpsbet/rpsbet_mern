@@ -32,7 +32,7 @@ router.post('/', (req, res) => {
     if (!user)
       return res.json({
         success: false,
-        error: 'User Does not exist'
+        error: 'User does not exist'
       });
 
     // Validate password
@@ -86,7 +86,7 @@ router.post('/sendResetPasswordEmail', async (req, res) => {
       if (!user)
         return res.json({
           success: false,
-          error: 'User Does not exist'
+          error: 'Email does not exist in our database'
         });
 
       const request = new ChangePasswordRequest({ user: user });
@@ -153,7 +153,7 @@ router.post('/logout', auth, async (req, res) => {
     req.user.save();
     res.json({
       success: true,
-      message: 'User has been  logout'
+      message: 'User has been logged out'
     });
   } catch (error) {
     res.json({ success: false, error });

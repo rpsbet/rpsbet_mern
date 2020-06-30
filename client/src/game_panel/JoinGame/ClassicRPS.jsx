@@ -43,12 +43,12 @@ class ClassicRPS extends Component {
                 <button className="btn-advanced" onClick={this.onShowButtonClicked}>Show/Hide Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
                     <hr/>
-                    <label className="lbl_game_option">Anonymous Bet:</label>
-                    <div>
+                    <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
+                    <div style={{pointerEvents: "none", opacity: "0.6"}}>
                         <label className={"radio-inline" + (this.state.is_anonymous === true ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: true}); }}>Yes</label>
                         <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
                     </div>
-                    <div>By selecting 'Yes', your bet will be anonymous. £0.10 will be deducted from your balance and added to the PR</div>
+                    <div style={{pointerEvents: "none", opacity: "0.6"}}>By selecting 'Yes', your bet will be anonymous. £0.10 will be deducted from your balance and added to the PR</div>
                 </div>
                 <div className="text-center">
                     <button className="btn" id="btn_bet">PLACE BET</button>

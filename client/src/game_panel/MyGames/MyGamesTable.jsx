@@ -28,7 +28,7 @@ class MyGamesTable extends Component {
         return (
             <>
                 <label className="tbl_title">MY OPEN GAMES</label>
-                <div className="">
+                <div className="my-open-games">
                     <table className="table table-striped table-hover text-center normal_table">
                         <thead>
                             <tr>

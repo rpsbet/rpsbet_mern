@@ -89,7 +89,7 @@ class StripeCheckoutForm extends React.Component {
             <form onSubmit={this.handleSubmit}>
                 <CardElement />
                 <button type="submit" style={{width: '100%'}} disabled={!stripe || this.state.btnLock}>
-                    Pay
+                    PAY
                 </button>
             </form>
         );
@@ -137,6 +137,7 @@ class DepositModal extends Component {
                 <label>Deposit Amount (£):</label>
                 <input type="number" value={this.state.amount} onChange={this.handleAmountChange} />
             </div>
+            <h5 style={{textAlign: "center", margin: "10px auto -20px"}}><i>Choose payment method:</i></h5>
             <div className="payment_action_panel">
                 <h5>PayPal</h5>
                 <h5>Stripe</h5>

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { FaPoundSign } from 'react-icons/fa';
 
 class MysteryBox extends Component {
     constructor(props) {
@@ -144,7 +145,7 @@ class MysteryBox extends Component {
         e.preventDefault();
 
         if (this.state.bet_amount === 0) {
-            alert("Your amount is 0. Please add the box!");
+            alert("Your bet amount is £0. Please add a prize!");
             return;
         }
 
@@ -154,7 +155,7 @@ class MysteryBox extends Component {
         }
 
         if (this.state.is_private === true && this.state.room_password === "") {
-            alert("You have selected the private mode. Please input the password!");
+            alert("You have set the Privacy to 'Private'. Please create a password!");
             return;
         }
 
@@ -189,61 +190,63 @@ class MysteryBox extends Component {
                     ), this)}
                 </div>
                 <div className="empty_button_panel">
-                    <div className="btn_empty_boxes" onClick={this.onEmptyBoxes} title="Empty all of the boxes?">
-                        <span>&nbsp;</span>
-                        EMPTY
+                    <div style={{textDecoration: "underline"}} className="btn_empty_boxes" onClick={this.onEmptyBoxes} title="Empty all of the boxes?">
+                        RESET
                     </div>
                 </div>
-                <div>
-                    <input type="text" className="form-control bet-input new_box_prize" maxLength="6" id="new_box_prize" name="new_box_prize" value={this.state.new_box_prize} onChange={this.onChangeNewBoxPrize} placeholder="Box Prize" />
-                    <input type="text" className="form-control bet-input new_box_prize" maxLength="6" id="new_box_price" name="new_box_price" value={this.state.new_box_price} onChange={this.onChangeNewBoxPrice} placeholder="Box Price" />
+                <div class="creat-a-box">
+                <span class="pound-symbol"><FaPoundSign />
+                    <input pattern="[0-9]*" type="text" className="form-control bet-input new_box_prize" maxLength="5" id="new_box_prize" name="new_box_prize" value={this.state.new_box_prize} onChange={this.onChangeNewBoxPrize} placeholder="Box Prize" /></span>
+                    <span class="pound-symbol"><FaPoundSign />
+                    <input pattern="[0-9]*" type="text" className="form-control bet-input new_box_prize" maxLength="5" id="new_box_price" name="new_box_price" value={this.state.new_box_price} onChange={this.onChangeNewBoxPrice} placeholder="Box Price" /></span>
                     <button className="btn btn_add_box" onClick={this.onAddBox}>ADD BOX</button>
+                    <div>Boxes will be displayed to the public in the order you have added them</div>
                 </div>
 
                 <hr/>
                 <label className="lbl_game_option">Total Bet Amount</label>
                 <input type="text" value={"£" + this.state.bet_amount} className="form-control input-sm bet-input" placeholder="Bet Amount" readOnly />
-                <div>Your total bet amount you'll pay to start this game. (Game Cost = Sum of all Mystery Boxes)</div>
+                <div>Your total cost to create this game (Game Cost = Sum of all Prizes)</div>
 
                 <hr/>
                 <label className="lbl_game_option">Your Max Return</label>
                 <input type="text" readOnly className="form-control input-sm" value={"£" + this.state.your_max_return + " * 0.95"} />
-                <div>This will be the most you can make with your chosen game settings. (Winnings)</div>
+                <div>Your max return with the chosen settings</div>
 
                 <hr/>
                 <label className="lbl_game_option">Public Max Return</label>
                 <input type="text" readOnly className="form-control input-sm" value={"£" + this.state.public_max_return + " * 0.95"} />
-                <div>This will be the most your opponent(s) can make with your chosen game settings. (Winnings)</div>
+                <div>The public max return with the chosen settings</div>
 
                 <button className="btn-advanced" onClick={this.onShowButtonClicked}>Show/Hide Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
                     <hr/>
-                    <label className="lbl_game_option">Status:</label>
+                    <label className="lbl_game_option">Privacy</label>
                     <div>
                         <label className={"radio-inline" + (this.state.is_private === false ? ' checked' : '')} onClick={() => { this.setState({is_private: false, room_password: ''}); }}>Public</label>
                         <label className={"radio-inline" + (this.state.is_private === true ? ' checked' : '')} onClick={() => { this.setState({is_private: true}); }}>Private</label>
                         <input type="password" id="room_password" value={this.state.room_password} onChange={this.onChangeRoomPassword} className={"form-control" + (this.state.is_private === true ? "" : " hidden")} />
                     </div>
-                    <div>Choose 'Private' to force users to require a password to Join your game.</div>
+                    <div>Set to 'Private' to require a password to Join</div>
 
                     <hr/>
-                    <label className="lbl_game_option">END Game Type:</label>
+                    <label className="lbl_game_option">END Game Type</label>
                     <div>
                         <label className={"radio-inline" + (this.state.endgame_type === false ? ' checked' : '')} onClick={() => { this.setState({endgame_type: false}); }}>Manual</label>
                         <label className={"radio-inline" + (this.state.endgame_type === true ? ' checked' : '')} onClick={() => { this.setState({endgame_type: true}); }}>Automatic</label>
                         <label className={"lbl_endgame_type" + (this.state.endgame_type === true ? "" : " hidden")}>
-                            Amount: £<input type="text" id="endgame_amount" value={this.state.endgame_amount} onChange={this.onChangeEndgameAmount} className="col-md-6 form-control bet-input endgame_amount" />
+                            <span class="pound-symbol"><FaPoundSign /><input type="text" id="endgame_amount" value={this.state.endgame_amount} onChange={this.onChangeEndgameAmount} className="col-md-6 form-control bet-input endgame_amount" /></span>
                         </label>
                     </div>
-                    <div>Make your game END automatically when the PR reaches a set amount. This will put a cap on your Winnings but at least keep them safe.</div>
+                    <div>Make your game END automatically when your PR reaches an amount. This will put a cap on your Winnings but at least keep them safe.</div>
 
                     <hr/>
-                    <label className="lbl_game_option">Anonymous Bet:</label>
-                    <div>
+                    <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet</label>
+                    <div style={{pointerEvents: "none", opacity: "0.6"}}>
                         <label className={"radio-inline" + (this.state.is_anonymous === true ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: true}); }}>Yes</label>
                         <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
                     </div>
-                    <div>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
+                    <div style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
                 </div>
                 <div className="text-center">
                     <button className="btn" id="btn_bet">PLACE BET GAME</button>

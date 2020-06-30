@@ -50,8 +50,8 @@ class WithdrawModal extends Component {
     }
 
     async sendWithdrawEmail() {
-        if (this.state.amount < 100) {
-            alert('Sorry, you can withdraw a minimum of £100.');
+        if (this.state.amount < 5) {
+            alert('Sorry, you can withdraw a minimum of £5.');
             return;
         }
 
@@ -66,7 +66,7 @@ class WithdrawModal extends Component {
             alert('email is sent');
             this.props.closeModal();
         } else {
-            alert('something is wrong. please try again in a few minutes.');
+            alert('Something went wrong. Please try again in a few minutes.');
         }
     }
 
@@ -81,14 +81,16 @@ class WithdrawModal extends Component {
         
             <h2 style={{borderBottom: "1px solid gray"}}>Withdraw</h2>
             <button className="btn_modal_close" onClick={this.props.closeModal}>x</button>
+            <h4><i>No withdrawal fees!</i></h4>
             <div className="profile_info_panel">
                 <label>Withdraw Amount (£):</label>
                 <input type="number" value={this.state.amount} onChange={this.handleAmountChange} />
                 <label>PayPal email address:</label>
                 <input type="email" value={this.state.email} onChange={this.handleEmailChange} />
             </div>
+            <h6 style={{margin: "20px auto -5px", textAlign: "center"}}>The amount will be deducted from your current balance and paid into your account within 1-3 hours.</h6>
             <div className="payment_action_panel">
-                <button onClick={this.sendWithdrawEmail}>OKAY</button>
+                <button onClick={this.sendWithdrawEmail}>WITHDRAW</button>
                 <button onClick={this.props.closeModal}>CANCEL</button>
             </div>
         </Modal>;

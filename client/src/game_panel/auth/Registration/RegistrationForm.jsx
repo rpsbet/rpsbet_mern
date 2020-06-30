@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { userSignUp } from '../../../redux/Auth/user.actions';
 import AvatarUpload from './upload/AvatarUpload';
+import { BsCaretDown } from 'react-icons/bs';
 
 export class RegistrationForm extends Component {
   state = {
@@ -41,7 +42,7 @@ export class RegistrationForm extends Component {
   };
 
   render() {
-    const { userName, password, bio, disable, email } = this.state;
+    const { userName, password, disable, email } = this.state;
     return (
       <div className="login_form">
         <div className="row">
@@ -52,24 +53,28 @@ export class RegistrationForm extends Component {
             <AvatarUpload />
           </div>
           <div className="form-group">
-            <label>Your Username?!</label>
-            <input type="text" className="form-control" placeholder="Username" name="userName" value={userName} onChange={this.handleInputChange} />
+            <label>Pick a Username</label>
+            <input maxLength="15" type="text" className="form-control" placeholder="Username" name="userName" value={userName} onChange={this.handleInputChange} />
           </div>
           <div className="form-group">
-            <label>Your Email?!</label>
-            <input type="text" className="form-control" placeholder="Email Address" name="email" value={email} onChange={this.handleInputChange} />
+            <label>Real Email</label>
+            <input type="email" className="form-control" placeholder="Email Address" name="email" value={email} onChange={this.handleInputChange} />
           </div>
           <div className="form-group">
-            <label>Your Password?!</label>
-            <input type="password" className="form-control" placeholder="Password" name="password" value={password} onChange={this.handleInputChange} />
+            <label>Secure Password</label>
+            <input type="password" className="form-control" placeholder="password" name="password" value={password} onChange={this.handleInputChange} />
           </div>
+          {/*
           <div className="form-group">
             <label>Your Biography (92 char)</label>
             <input type="text" className="form-control" placeholder="Bio" name="bio" value={bio} onChange={this.handleInputChange} />
-          </div>
+          </div> */}
           <div className="form-group">
             <button className={"btn btn-info btn-block " + disable}>Register</button>
             <a href="/signin" className="btn btn-block" id="btn_signup">Login</a>
+          </div>
+          <div class="disclaimer">
+          <p>You must be <span>18+</span> years to register. By registering, you agree to our site's explicit and coherent Policies and Terms <BsCaretDown /></p>
           </div>
         </form>
       </div>

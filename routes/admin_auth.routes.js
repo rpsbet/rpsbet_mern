@@ -29,7 +29,7 @@ router.post('/', (req, res) => {
     if (!user)
       return res.json({
         success: false,
-        error: 'User Does not exist'
+        error: 'User does not exist'
       });
 
     // Validate password
@@ -80,7 +80,7 @@ router.post('/logout', auth, async (req, res) => {
     req.user.save();
     res.json({
       success: true,
-      message: 'AdminUser has been  logout'
+      message: 'AdminUser has been logged out'
     });
   } catch (error) {
     res.json({ success: false, error });

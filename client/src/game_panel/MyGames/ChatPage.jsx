@@ -4,6 +4,7 @@ import history from '../../redux/history';
 import { getChatRoomInfo, addChatLog } from '../../redux/Logic/logic.actions';
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { RiArrowGoBackLine } from 'react-icons/ri';
 const moment = require('moment');
 
 class ChatPage extends Component {
@@ -87,7 +88,7 @@ class ChatPage extends Component {
         return (
             <>
                 <div className="chat_header row">
-                    <a href="/mygames">Go Back</a>
+                    <a href="/mygames"><span>Go Back</span><RiArrowGoBackLine /></a>
                     <img src={this.props.avatar} alt="" />
                     <span className="chat_header_username">{this.props.username}</span>
                 </div>

@@ -55,7 +55,7 @@ class HowToPlayModal extends Component {
             contentLabel="How To Play Modal"
         >
         
-        <div class="modal-header">
+        <div className="modal-header">
             <h2 style={{borderBottom: "1px solid gray"}}>How To Play <span style={{color: "#c33626"}}>RPS</span> <span style={{color: "#ebddca"}}>Bet</span></h2>
             <button className="btn_modal_close" onClick={this.props.closeModal}>×</button>
             </div>

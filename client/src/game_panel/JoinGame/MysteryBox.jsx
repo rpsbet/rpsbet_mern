@@ -134,12 +134,12 @@ class MysteryBox extends Component {
                 <button className="btn-advanced" onClick={this.onShowButtonClicked}>Show/Hide Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
                     <hr/>
-                    <label className="lbl_game_option">Anonymous Bet:</label>
-                    <div>
+                    <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
+                    <div style={{pointerEvents: "none", opacity: "0.6"}}>
                         <label className={"radio-inline" + (this.state.is_anonymous === true ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: true}); }}>Yes</label>
                         <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
                     </div>
-                    <div>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
+                    <div style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
                 </div>
                 <div className="text-center">
                     <button className="btn" id="btn_bet">PLACE BET</button>
@@ -162,7 +162,7 @@ class MysteryBox extends Component {
         return (
             <>
                 <div className="mystery_result_title">Prize</div>
-                <div className="mystery_result_message">{this.state.betResult === 0 ? "Sorry!! you’ve opened an EMPTY box :(" : "Noice!!! You've won:"}</div>
+                <div className="mystery_result_message">{this.state.betResult === 0 ? "Sorry :/<br />This box is EMPTY! :(" : "Nice!!<br />You won a PRIZE!:"}</div>
                 <div className="mystery_result_amount">£{this.state.betResult}</div>
                 <div className="mystery_result_prizes_title">Prizes:</div>
                 <table className="mystery_table">
