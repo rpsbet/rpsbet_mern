@@ -90,9 +90,14 @@ class ProfileModal extends Component {
             contentLabel="Profile Modal"
         >
         
-            <h2 style={{borderBottom: "1px solid gray"}}>{this.props.player_name}'s Card</h2>
+            <h2 style={{borderBottom: "1px solid gray"}}>
+                {this.props.player_name}'s Card
+            </h2>
+            <div className="profile_info_panel_image_wrapper">
+                <img src={this.props.avatar} alt="" />
+            </div>
             <button className="btn_modal_close" onClick={this.props.closeModal}>×</button>
-          <div className="profile_info_panel">
+            <div className="profile_info_panel">
                 <span>Date Joined:</span>
                 <span>01/01/2020</span>
               {/*  <span>Current Balance:</span>

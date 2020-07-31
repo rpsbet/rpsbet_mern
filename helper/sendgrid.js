@@ -32,18 +32,19 @@ const sendEmail = (to, content, subject, template_id) => {
 
     request(options, function (error, response, body) {
         if (error) throw new Error(error);
-        console.log(body);
+        console.log(123123123, body);
     });
 }
 
-module.exports.sendWelcomeEmail = (email, name) => {
+module.exports.sendWelcomeEmail = (email, name, verification_code) => {
     sendEmail(
         [
             {email, name},
         ],
         {
             name,
-            username: name, 
+            username: name,
+            verification_code,
             action_url: 'https://rpsbet.com'
         }, 
         'Welcome to RPSBET', 

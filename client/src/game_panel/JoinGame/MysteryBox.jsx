@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
+import { openAlert } from '../../redux/Notification/notification.actions'
 
 class MysteryBox extends Component {
     constructor(props) {
@@ -62,17 +63,17 @@ class MysteryBox extends Component {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
-            alert(`Oop! This game is yours. You can't join this game.`);
+            this.props.openAlert('warning', 'Warning!', `Oop! This game is yours. You can't join this game.`);
             return;
         }
 
         if (this.state.selected_id === '') {
-            alert("Please select a box!");
+            this.props.openAlert('warning', 'Warning!', `Please select a box!`);
             return;
         }
 
         if (this.state.bet_amount > this.state.balance / 100.0) {
-            alert("Not enough balance!");
+            this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
             return;
         }
 
@@ -167,7 +168,7 @@ class MysteryBox extends Component {
         return (
             <>
                 <div className="mystery_result_title">Prize</div>
-                <div className="mystery_result_message">{this.state.betResult === 0 ? "Sorry :/<br />This box is EMPTY! :(" : "Nice!!<br />You won a PRIZE!:"}</div>
+                <div className="mystery_result_message" dangerouslySetInnerHTML={{__html: this.state.betResult === 0 ? "Sorry :/<br />This box is EMPTY! :(" : "Nice!!<br />You won a PRIZE!:"}}></div>
                 <div className="mystery_result_amount">£{this.state.betResult}</div>
                 <div className="mystery_result_prizes_title">Prizes:</div>
                 <table className="mystery_table">
@@ -202,6 +203,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
+    openAlert
 };
 
 export default connect(

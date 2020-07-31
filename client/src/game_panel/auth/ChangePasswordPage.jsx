@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { HepperLink } from '../../components/HepperLink';
 import history from '../../redux/history';
 import axios from '../../util/Api';
+import { connect } from 'react-redux';
+import { openAlert } from '../../redux/Notification/notification.actions';
 
 function ChangePasswordPage(props) {
   const [password, setPassword] = useState('');
@@ -31,22 +33,22 @@ function ChangePasswordPage(props) {
     const result = await axios.post('/auth/resetPassword/', payload);
 
     if (password === '') {
-        alert('please input new password.');
-        return;
+      props.openAlert('warning', 'RPS Bet', 'please input new password.');
+      return;
     }
 
     if (password !== confirm_password) {
-        alert('Invalid value. Please try again.');
-        setPassword('');
-        setConfirmPassword('');
-        return;
+      props.openAlert('warning', 'RPS Bet', 'Invalid value. Please try again.');
+      setPassword('');
+      setConfirmPassword('');
+      return;
     }
     
     if (result.data.success) {
-        alert('Password has been changed. Please log in now.');
-        history.push('/signin');
+      props.openAlert('warning', 'RPS Bet', 'Password has been changed. Please log in now.');
+      history.push('/signin');
     } else {
-        alert(result.data.error);
+      props.openAlert('warning', 'Warning!', result.data.error);
     }
   };
 
@@ -84,4 +86,11 @@ function ChangePasswordPage(props) {
   );
 }
 
-export default ChangePasswordPage;
+const mapDispatchToProps = {
+  openAlert
+};
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(ChangePasswordPage);

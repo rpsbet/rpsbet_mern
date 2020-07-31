@@ -3,7 +3,9 @@ import {
   MSG_ERROR,
   MSG_INFO,
   MSG_SUCCESS,
-  MSG_WARNING
+  MSG_WARNING,
+  OPEN_ALERT_MODAL,
+  CLOSE_ALERT_MODAL
 } from '../types';
 
 export const closeMsgBar = () => dispatch => {
@@ -25,4 +27,12 @@ export const successMsgBar = text => dispatch => {
 
 export const warningMsgBar = text => dispatch => {
   dispatch({ type: MSG_WARNING, payload: text });
+};
+
+export const openAlert = (alert_type, title, message) => dispatch => {
+  dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type, title, message} });
+};
+
+export const closeAlert = () => dispatch => {
+  dispatch({ type: CLOSE_ALERT_MODAL });
 };

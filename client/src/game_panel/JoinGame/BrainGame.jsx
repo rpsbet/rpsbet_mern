@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
+import { openAlert } from '../../redux/Notification/notification.actions';
 
 class BrainGame extends Component {
     constructor(props) {
@@ -68,17 +69,17 @@ class BrainGame extends Component {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
-            alert(`Oop! This game is yours. You can't join this game.`);
+            this.props.openAlert('warning', 'Warning!', `Oop! This game is yours. You can't join this game.`);
             return;
         }
 
         if (this.state.bet_amount === 0) {
-            alert("Please input the bet amount!");
+            this.props.openAlert('warning', 'Warning!', `Please input the bet amount!`);
             return;
         }
 
         if (this.state.bet_amount > this.state.balance / 100.0) {
-            alert("Not enough balance!");
+            this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
             return;
         }
 
@@ -202,7 +203,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-    setCurrentQuestionInfo
+    setCurrentQuestionInfo,
+    openAlert
 };
 
 export default connect(

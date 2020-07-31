@@ -14,6 +14,7 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 
 import RedeemIcon from '@material-ui/icons/Redeem';
 import PeopleAlt from '@material-ui/icons/PeopleAlt';
+import SportsFootball from '@material-ui/icons/SportsFootball';
 import Person from '@material-ui/icons/Person';
 import TimeLine from '@material-ui/icons/Timeline';
 import ExitToApp from '@material-ui/icons/ExitToApp';
@@ -96,6 +97,12 @@ function ClippedDrawer(props) {
           <PeopleAlt color={activeUrl === '/admin/customers' ? 'secondary' : 'inherit'} />
         </ListItemIcon>
         <ListItemTextEl inputcolor={activeUrl === '/admin/customers' ? 'true' : 'false'} primary="Customers" />
+      </ListItem>
+      <ListItem button onClick={() => navPush('/admin/activities')}>
+        <ListItemIcon>
+          <SportsFootball color={activeUrl === '/admin/activities' ? 'secondary' : 'inherit'} />
+        </ListItemIcon>
+        <ListItemTextEl inputcolor={activeUrl === '/admin/activities' ? 'true' : 'false'} primary="Customer Activities" />
       </ListItem>
       <ListItem button onClick={() => navPush('/admin/statistics')}>
         <ListItemIcon>

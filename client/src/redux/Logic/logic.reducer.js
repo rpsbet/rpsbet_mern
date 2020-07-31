@@ -1,6 +1,8 @@
 import {
   GAMETYPE_LOADED,
   ROOMINFO_LOADED,
+  START_LOADING,
+  END_LOADING,
   ROOMS_LOADED,
   BET_SUCCESS,
   MSG_CREATE_ROOM_FAIL,
@@ -15,6 +17,7 @@ import {
 } from '../types';
   
 const initialState = {
+  isActiveLoadingOverlay: false,
   socket: null,
   game_mode: 'Classic RPS',
   // game_mode: 'Spleesh!',
@@ -60,6 +63,16 @@ export default function(state = initialState, action) {
     case HISTORY_LOADED:
       return {
         ...state, history: payload
+      }
+    case START_LOADING:
+      console.log('START_LOADING');
+      return {
+        ...state, isActiveLoadingOverlay: true
+      }
+    case END_LOADING:
+      console.log('END_LOADING');
+      return {
+        ...state, isActiveLoadingOverlay: false
       }
     case SET_GAME_MODE:
       return {

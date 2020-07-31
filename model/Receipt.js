@@ -14,6 +14,10 @@ const ReceiptSchema = new Schema({
     type: String,
     default: ''
   },
+  payee_name: {
+    type: String,
+    default: ''
+  },
   bank_account_number: {
     type: String,
     default: ''

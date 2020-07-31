@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { openAlert } from '../../redux/Notification/notification.actions'
 
 class ClassicRPS extends Component {
     constructor(props) {
@@ -26,7 +27,7 @@ class ClassicRPS extends Component {
         e.preventDefault();
         
         if (this.props.creator_id === this.props.user_id) {
-            alert(`Oop! This game is yours. You can't join this game.`);
+            this.props.openAlert('warning', 'Warning!', `Oop! This game is yours. You can't join this game.`);
             return;
         }
 
@@ -69,6 +70,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
+    openAlert
 };
 
 export default connect(

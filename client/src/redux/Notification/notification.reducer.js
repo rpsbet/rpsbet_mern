@@ -3,13 +3,19 @@ import {
   MSG_ERROR,
   MSG_INFO,
   MSG_SUCCESS,
-  MSG_WARNING
+  MSG_WARNING,
+  OPEN_ALERT_MODAL,
+  CLOSE_ALERT_MODAL
 } from '../types';
 
 const initialState = {
   openSk: false,
   message: '',
-  status: null
+  status: null,
+  showAlert: false,
+  title: '',
+  alertMessage: '',
+  alertType: ''
 };
 
 export default function(state = initialState, action) {
@@ -49,6 +55,22 @@ export default function(state = initialState, action) {
         message: payload,
         status: MSG_WARNING
       };
+    case OPEN_ALERT_MODAL:
+      return {
+        ...state,
+        showAlert: true,
+        alertMessage: payload.message,
+        alertType: payload.alert_type,
+        title: payload.title,
+      }
+    case CLOSE_ALERT_MODAL:
+      return {
+        ...state,
+        showAlert: false,
+        alertMessage: '',
+        alertType: '',
+        title: '',
+      }
     default:
       return state;
   }

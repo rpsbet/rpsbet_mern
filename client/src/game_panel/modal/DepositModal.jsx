@@ -6,6 +6,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { CardElement, Elements, ElementsConsumer } from '@stripe/react-stripe-js';
 import axios from '../../util/Api';
 import { setBalance } from '../../redux/Auth/user.actions';
+import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { openAlert } from '../../redux/Notification/notification.actions';
 
 Modal.setAppElement('#root')
 
@@ -48,7 +50,7 @@ class StripeCheckoutForm extends React.Component {
         const {success, clientSecret, message} = secretInfo.data;
 
         if (!success) {
-            alert(message.raw.message);
+            this.props.openAlert('warning', 'Warning!', message.raw.message);
             this.setState({btnLock: false});
             return;
         }
@@ -71,10 +73,11 @@ class StripeCheckoutForm extends React.Component {
             // The payment has been processed!
             if (result.paymentIntent.status === 'succeeded') {
                 const newBalanceInfo = await axios.post('/stripe/deposit_successed/', {amount: this.props.amount, payment_method: 'Stripe'});
-                const {success, balance} = newBalanceInfo.data;
+                const {success, balance, newTransaction} = newBalanceInfo.data;
 
                 if (success) {
                     this.props.setBalance(balance);
+                    this.props.addNewTransaction(newTransaction);
                 }
                 this.props.closeModal();
             }
@@ -145,13 +148,13 @@ class DepositModal extends Component {
                     amount={this.state.amount}
                     // shippingPreference="NO_SHIPPING" // default is "GET_FROM_FILE"
                     onSuccess={async (details, data) => {
-                        // alert("Transaction completed by " + details.payer.name.given_name);
                         console.log(data);
                         const newBalanceInfo = await axios.post('/stripe/deposit_successed/', {amount: this.state.amount, payment_method: 'PayPal'});
-                        const {success, balance} = newBalanceInfo.data;
+                        const {success, balance, newTransaction} = newBalanceInfo.data;
 
                         if (success) {
                             this.props.setBalance(balance);
+                            this.props.addNewTransaction(newTransaction);
                         }
                         this.props.closeModal();
                     }}
@@ -173,7 +176,9 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  setBalance
+  setBalance,
+  addNewTransaction,
+  openAlert
 };
 
 export default connect(

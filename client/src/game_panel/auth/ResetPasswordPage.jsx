@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { HepperLink } from '../../components/HepperLink';
 import axios from '../../util/Api';
+import { connect } from 'react-redux';
+import { openAlert } from '../../redux/Notification/notification.actions';
 
 function ResetPasswordPage(props) {
   const [email, setemail] = useState('');
@@ -23,9 +25,9 @@ function ResetPasswordPage(props) {
     const result = await axios.post('/auth/sendResetPasswordEmail/', payload);
     
     if (result.data.success) {
-        alert('Please check your email.');
+      props.openAlert('warning', 'RPS Bet', 'Please check your email.');
     } else {
-        alert(result.data.error);
+      props.openAlert('warning', result.data.error);
     }
   };
 
@@ -60,4 +62,11 @@ function ResetPasswordPage(props) {
   );
 }
 
-export default ResetPasswordPage;
+const mapDispatchToProps = {
+  openAlert
+};
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(ResetPasswordPage);

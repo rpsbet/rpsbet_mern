@@ -2,33 +2,56 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { getRoomList, getHistory, setCurRoomInfo } from '../../redux/Logic/logic.actions'
+import Moment from 'moment';
+import { openAlert } from '../../redux/Notification/notification.actions';
+
+function updateFromNow(history) {
+    const result = JSON.parse(JSON.stringify(history));
+    for (let i=0; i<result.length; i++) {
+        result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
+    }
+    return result;
+}
 
 class RoomList extends Component {
     constructor(props) {
         super(props);
         this.state = {
             pageNumber: props.pageNumber,
-            balance: this.props.balance
+            balance: this.props.balance,
+            history: this.props.history
         };
         this.joinRoom = this.joinRoom.bind(this);
     }
 
+
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.balance !== props.balance) {
+        if (current_state.balance !== props.balance || 
+            (current_state.history.length === 0 || current_state.history[0]['created_at'] !== props.history[0]['created_at'])) {
             return {
                 ...current_state,
-                balance: props.balance
+                balance: props.balance,
+                history: updateFromNow(props.history)
             };
         }
         return null;
     }
 
-    componentDidMount() {
+    updateReminderTime() {
+        this.setState({ history: updateFromNow(this.state.history) });
+    }
+
+    async componentDidMount() {
         this.IsAuthenticatedReroute();
         this.props.getRoomList({
             page: this.state.pageNumber,
         });
-        this.props.getHistory();
+        await this.props.getHistory();
+        this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.interval);
     }
     
     IsAuthenticatedReroute = () => {
@@ -42,12 +65,12 @@ class RoomList extends Component {
         const bet_amount = e.target.getAttribute('bet_amount');
 
         if (bet_amount > this.state.balance / 100.0) {
-            alert("Not enough balance!");
+            this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
             return;
         }
 
         if (e.target.getAttribute('room_status') === 'finished') {
-            alert("You can't join the game. This game has finished.");
+            this.props.openAlert('warning', 'Warning!', `You can't join the game. This game has finished.`);
             return;
         }
 
@@ -128,11 +151,11 @@ class RoomList extends Component {
                             </tr>
                         </thead>
                         <tbody>
-                        {this.props.history.map((row, key) => (
+                        {this.state.history.map((row, key) => (
                             <tr key={key}>
                                 <td>{row.room_name}</td>
                                 <td dangerouslySetInnerHTML={{ __html: row.history }}></td>
-                                <td>{row.created_at}</td>
+                                <td>{row.from_now}</td>
                             </tr>
                         ), this)}
                         </tbody>
@@ -156,7 +179,8 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
     getRoomList,
     getHistory,
-    setCurRoomInfo
+    setCurRoomInfo,
+    openAlert
 };
 
 export default connect(

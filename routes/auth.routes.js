@@ -8,6 +8,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
 const Message = require('../model/Message');
+const Transaction = require('../model/Transaction');
 const ChangePasswordRequest = require('../model/ChangePasswordRequest');
 
 const auth = require('../middleware/auth');
@@ -74,11 +75,14 @@ router.get('/user', auth, async (req, res) => {
       is_read: false
     });
 
+    const transactions = await Transaction.find({user: req.user}).sort({created_at: 'desc'}).limit(4);
+
     res.json({
       success: true,
       message: 'User has been authenticated',
       user: req.user,
-      unread_message_count: count
+      unread_message_count: count,
+      transactions
     });
   } catch (error) {
     res.json({ success: false, error });
@@ -169,8 +173,13 @@ router.post('/changePassword', auth, async (req, res) => {
 // Delete Account
 router.post('/deleteAccount', auth, async (req, res) => {
   try {
+    if (req.user.balance > 0) {
+      return res.json({ success: false, error: "Oops! Please withdraw all funds first." });
+    }
+
     req.user.is_deleted = true;
     req.user.save();
+
     return res.json({
       success: true,
     });
@@ -203,6 +212,44 @@ router.post('/logout', auth, async (req, res) => {
       success: true,
       message: 'User has been logged out'
     });
+  } catch (error) {
+    res.json({ success: false, error });
+  }
+});
+
+router.post('/resend_verification_email', auth, async (req, res) => {
+  try {
+    const verification_code = Math.floor(Math.random() * 8999) + 1000;
+    req.user.verification_code = verification_code;
+    req.user.save();
+
+    sendgrid.sendWelcomeEmail(req.user.email, req.user.username, verification_code);
+
+    res.json({
+      success: true,
+      message: 'Email has been sent. Please check your inbox.'
+    });
+  } catch (error) {
+    res.json({ success: false, error });
+  }
+});
+
+router.post('/verify_email', auth, async (req, res) => {
+  try {
+    if (req.user.verification_code === req.body.verification_code) {
+      req.user.is_activated = true;
+      req.user.save();
+ 
+      res.json({
+        success: true,
+        message: ''
+      });
+    } else {
+      res.json({
+        success: false,
+        error: 'Wrong Verification Code'
+      });
+    }
   } catch (error) {
     res.json({ success: false, error });
   }

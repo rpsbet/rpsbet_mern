@@ -20,7 +20,7 @@ function EditCustomerForm({
   buttonDisable,
   handleCancel,
   onSaveForm,
-  setOnDelete
+  onDelete
 }) {
   return (
     <PaperEl elevation={12}>
@@ -74,7 +74,7 @@ function EditCustomerForm({
             <EditColumn>
               <DeleteButtonEl
                 color="primary"
-                onClick={setOnDelete}
+                onClick={onDelete}
                 variant="contained"
               >
                 delete

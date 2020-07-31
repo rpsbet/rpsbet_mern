@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
 import { changePassword, deleteAccount } from '../../redux/Auth/user.actions';
+import { openAlert } from '../../redux/Notification/notification.actions';
 
 Modal.setAppElement('#root')
 
@@ -48,12 +49,12 @@ class EditAccountModal extends Component {
         e.preventDefault();
 
         if (this.state.new_password === '') {
-            alert("Please input new password.");
+            this.props.openAlert('warning', 'Warning!', `Please input new password.`);
             return;
         }
 
         if (this.state.new_password !== this.state.password_confirm) {
-            alert("Wrong password confirmation.");
+            this.props.openAlert('warning', 'Warning!', `Wrong password confirmation.`);
             return;
         }
 
@@ -101,7 +102,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
     changePassword,
-    deleteAccount
+    deleteAccount,
+    openAlert
 };
 
 export default connect(

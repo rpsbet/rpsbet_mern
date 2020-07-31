@@ -4,15 +4,19 @@ const Message = require('./model/Message');
 
 let sockets = {};
 
-const send = (to_id, data) => {
+const send = (msg_type, to_id, data) => {
   if (sockets.hasOwnProperty(to_id)) {
-    sockets[to_id].emit('SEND_CHAT', data);
+    sockets[to_id].emit(msg_type, data);
   }
 }
 
 module.exports.sendMessage = (to_user_id, data) => {
-  send(to_user_id, data);
+  send('SEND_CHAT', to_user_id, data);
 };
+
+module.exports.newTransaction = (transaction) => {
+  send('NEW_TRANSACTION', transaction['user']['_id'], transaction);
+}
 
 module.exports.socketio = (server) => {
   const io = socket_io (server);
@@ -48,7 +52,7 @@ module.exports.socketio = (server) => {
     });
 
     socket.on ('SEND_CHAT', async (data) => {
-      send(data.to, data);
+      send('SEND_CHAT', data.to, data);
 
       const message = new Message(data);
       await message.save();

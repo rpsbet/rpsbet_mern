@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { FaPoundSign } from 'react-icons/fa';
+import { openAlert } from '../../redux/Notification/notification.actions'
 
 class MysteryBox extends Component {
     constructor(props) {
@@ -145,17 +146,17 @@ class MysteryBox extends Component {
         e.preventDefault();
 
         if (this.state.bet_amount === 0) {
-            alert("Your bet amount is £0. Please add a prize!");
+            this.props.openAlert('warning', 'Warning!', "Your bet amount is £0. Please add a prize!");
             return;
         }
 
         if (this.state.bet_amount > this.state.balance / 100.0) {
-            alert("Not enough balance!");
+            this.props.openAlert('warning', 'Warning!', "Not enough balance!");
             return;
         }
 
         if (this.state.is_private === true && this.state.room_password === "") {
-            alert("You have set the Privacy to 'Private'. Please create a password!");
+            this.props.openAlert('warning', 'Warning!', "You have set the Privacy to 'Private'. Please create a password!");
             return;
         }
 
@@ -194,10 +195,10 @@ class MysteryBox extends Component {
                         RESET
                     </div>
                 </div>
-                <div class="creat-a-box">
-                <span class="pound-symbol"><FaPoundSign />
+                <div className="creat-a-box">
+                <span className="pound-symbol"><FaPoundSign />
                     <input pattern="[0-9]*" type="text" className="form-control bet-input new_box_prize" maxLength="5" id="new_box_prize" name="new_box_prize" value={this.state.new_box_prize} onChange={this.onChangeNewBoxPrize} placeholder="Box Prize" /></span>
-                    <span class="pound-symbol"><FaPoundSign />
+                    <span className="pound-symbol"><FaPoundSign />
                     <input pattern="[0-9]*" type="text" className="form-control bet-input new_box_prize" maxLength="5" id="new_box_price" name="new_box_price" value={this.state.new_box_price} onChange={this.onChangeNewBoxPrice} placeholder="Box Price" /></span>
                     <button className="btn btn_add_box" onClick={this.onAddBox}>ADD BOX</button>
                     <div>Boxes will be displayed to the public in the order you have added them</div>
@@ -235,7 +236,7 @@ class MysteryBox extends Component {
                         <label className={"radio-inline" + (this.state.endgame_type === false ? ' checked' : '')} onClick={() => { this.setState({endgame_type: false}); }}>Manual</label>
                         <label className={"radio-inline" + (this.state.endgame_type === true ? ' checked' : '')} onClick={() => { this.setState({endgame_type: true}); }}>Automatic</label>
                         <label className={"lbl_endgame_type" + (this.state.endgame_type === true ? "" : " hidden")}>
-                            <span class="pound-symbol"><FaPoundSign /><input type="text" id="endgame_amount" value={this.state.endgame_amount} onChange={this.onChangeEndgameAmount} className="col-md-6 form-control bet-input endgame_amount" /></span>
+                            <span className="pound-symbol"><FaPoundSign /><input type="text" id="endgame_amount" value={this.state.endgame_amount} onChange={this.onChangeEndgameAmount} className="col-md-6 form-control bet-input endgame_amount" /></span>
                         </label>
                     </div>
                     <div>Make your game END automatically when your PR reaches an amount. This will put a cap on your Winnings but at least keep them safe.</div>
@@ -262,6 +263,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
+    openAlert
 };
 
 export default connect(

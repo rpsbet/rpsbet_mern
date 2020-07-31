@@ -119,7 +119,7 @@ class HowToPlayModal extends Component {
                         <th>Withdrawal Fees</th>
                       </tr>
                       <tr>
-                        <td class="gamemode">Mystery Box</td>
+                        <td className="gamemode">Mystery Box</td>
                         <td>
                           <ul>
                           <li>5% when <span style={{color: "#C83228"}}>Host</span> ENDs game.</li>
@@ -132,14 +132,14 @@ class HowToPlayModal extends Component {
                       </tr>
                       <tr>
                       </tr><tr>
-                        <td class="gamemode">Brain Game</td>
+                        <td className="gamemode">Brain Game</td>
                         <td><ul>
                           <li>10% from <span style={{color:"#02c526"}}>Winnings.</span></li>
                         </ul>
                         </td>
                       </tr>
                       <tr>
-                        <td class="gamemode"><i>Spleesh!</i></td>
+                        <td className="gamemode"><i>Spleesh!</i></td>
                         <td><ul>
                           <li><u>NO Fees</u> when <span style={{color: "#C83228"}}>Host</span> ENDs game</li>
                           <li>10% when <span style={{color: "#C83228"}}>Player</span> JOINs game and guesses <span style={{color: "#02c526"}}>Number.</span></li>
@@ -147,7 +147,7 @@ class HowToPlayModal extends Component {
                         </td>
                       </tr>
                       <tr>
-                        <td class="gamemode">RPS</td>
+                        <td className="gamemode">RPS</td>
                         <td>5% from <span style={{color: "#02c526"}}>Winnings.</span></td>
                       </tr>
                     </tbody></table>

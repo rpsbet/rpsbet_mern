@@ -6,6 +6,7 @@ import StatisticsPage from './StatisticsPage/StatisticsPage';
 import ProductPage from '../app/ProductPages/ProductSerchPage/ProductPage';
 import ProductCreatePage from './ProductPages/ProductCreatePage/ProductCreatePage';
 import CustomersPage from './Customer/CustomerPage';
+import ActivityPage from './Activity/ActivityPage';
 import EditCustomerPage from './Customer/EditCustomerPage/EditCustomerPage';
 import QuestionPage from './Question/QuestionPage';
 import QuestionEditPage from './Question/QuestionEditPage';
@@ -31,6 +32,11 @@ export class AppMainRoute extends Component {
             exact
             path={`${match.path}/customer/:_id`}
             component={EditCustomerPage}
+          />
+          <Route
+            exact
+            path={`${match.path}/activities`}
+            component={ActivityPage}
           />
           <Route 
             exact

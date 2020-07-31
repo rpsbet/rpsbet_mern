@@ -44,12 +44,26 @@ class EditCustomerPage extends Component {
 
   onSaveForm = e => {
     e.preventDefault();
-    console.log(this.state);
     this.props.updateCustomer({
       _id: this.state._id,
       balance: this.state.balance
     })
   };
+
+
+  onDelete = e => {
+    e.preventDefault();
+    console.log(this.state);
+
+    if (!window.confirm('Do you want to delete this customer? Balance: £' + this.state.balance)) {
+      return;
+    }
+
+    this.props.updateCustomer({
+      _id: this.state._id,
+      is_deleted: true
+    });
+  }
 
   render() {
     return (
@@ -69,6 +83,7 @@ class EditCustomerPage extends Component {
           email={this.state.email}
           bio={this.state.bio}
           avatar={this.state.avatar}
+          onDelete={this.onDelete}
         />
       </>
     );

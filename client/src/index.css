@@ -184,7 +184,40 @@ input[type="password"] {
   line-height: 40px;
   margin-top: -5px;
   position: absolute;
-  left: 50%;
+  width: 160px;
+  left: calc(50% - 80px);
+  cursor: pointer;
+  text-align: center;
+}
+
+.main_header div#game_logs {
+  position: absolute;
+  margin-top: 60px;
+  left: calc(50% - 120px);
+  background-color: #33271f;
+  width: 240px;
+  min-height: 50px;
+  text-align: center;
+  color: white;
+  padding: 10px;
+}
+
+.main_header div#game_logs table {
+  width: 100%;
+}
+
+.main_header div#game_logs table tr td {
+  text-align: center;
+  font-weight: 600;
+  padding: 2px 5px;
+}
+
+.main_header div#game_logs table tr td.amount.green {
+  color: #28c739;
+}
+
+.main_header div#game_logs table tr td.amount.red {
+  color: red;
 }
 
 .game_logo img {
@@ -297,6 +330,18 @@ input[type="password"] {
     width: 100% !important;
 }
 
+.profile_info_panel_image_wrapper {
+  padding: 10px;
+  text-align: center;
+}
+
+.profile_info_panel_image_wrapper img {
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  border: 3px solid #f6b229;
+}
+
 .profile_info_panel,
 .modal_action_panel {
   display: grid;
@@ -307,6 +352,34 @@ input[type="password"] {
   font-weight: 600 !important;
   border-radius: 30px !important;
   background: #5654df !important;
+}
+
+.alert_panel {
+  display: flex;
+}
+
+.alert_panel .alert_image_wrapper {
+  width: 100px;
+}
+
+.alert_panel .alert_message_panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding-right: 10px;
+  height: 150px;
+}
+
+.alert_panel img {
+  width: 100%;
+}
+
+.alert_panel button {
+  font-weight: 600 !important;
+  border-radius: 30px !important;
+  background: #5654df !important;
+  width: 100px;
 }
 
 .profile_info_panel {
@@ -436,8 +509,8 @@ input[type="password"] {
 }
 
 .contents_wrapper {
-  height: 100vh;
-  padding-top: 105px;
+  height: calc(100vh - 105px);
+  margin-top: 105px;
   padding-bottom: 50px;
   padding-left: 5px !important;
     padding-right: 5px !important;
@@ -1294,6 +1367,7 @@ label.answer {
   }
 
   .contents_wrapper {
+    margin: 0;
     padding: 0;
   }
 
@@ -1317,6 +1391,12 @@ label.answer {
     line-height: 35px;
     border-top: 5px solid #f6b229;
     border-bottom: 5px solid #f6b229;
+    cursor: pointer;
+    left: calc(50% - 50px);
+    width: 100px;
+}
+.main_header div#game_logs {
+  margin-top: 45px;
 }
 .game_wrapper .left_sidebar {margin-top: 94px;}
 

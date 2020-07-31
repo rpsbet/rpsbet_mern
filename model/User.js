@@ -30,6 +30,14 @@ const UserSchema = new Schema({
     type: Boolean,
     default: false
   },
+  verification_code: {
+    type: String,
+    default: ''
+  },
+  is_activated: {
+    type: Boolean,
+    default: false
+  },
   created_at: {
     type: Date,
     default: Date.now

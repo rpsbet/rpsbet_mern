@@ -13,7 +13,10 @@ import {
   SET_UNREAD_MESSAGE_COUNT,
   SET_BALANCE,
   SET_URL,
-  SET_AVATAR
+  SET_AVATAR,
+  TRANSACTION_LOADED,
+  VERIFICATION_SUCCESS,
+  OPEN_ALERT_MODAL
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -30,6 +33,7 @@ export const getUser = (is_reload) => async dispatch => {
     if (res.data.success) {
       dispatch({ type: USER_LOADED, payload: res.data.user });
       dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: res.data.unread_message_count });
+      dispatch({ type: TRANSACTION_LOADED, payload: res.data.transactions });
       
       if (!is_reload) {
         dispatch({ type: MSG_INFO, payload: res.data.message });
@@ -55,7 +59,7 @@ export const userSignUp = ({
   try {
     const res = await axios.post('/user', body);
     if (res.data.success) {
-      alert('Successfully registered.');
+      dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: 'You have registered, please login.'} });
       history.push('/signin');
       dispatch({ type: MSG_SUCCESS, payload: res.data.message });
     } else {
@@ -71,7 +75,6 @@ export const userSignUp = ({
 export const userSignIn = body => async dispatch => {
   try {
     const res = await axios.post('/auth', body);
-    console.log(res);
     if (res.data.success) {
       setAuthToken(res.data.token);
       dispatch({ type: LOGIN_SUCCESS, payload: res.data });
@@ -92,7 +95,7 @@ export const changePassword = new_password => async dispatch => {
   try {
     const { data } = await axios.post('/auth/changePassword', {new_password});
     if (data.success) {
-      alert('Password changed successfully. Please login again.');
+      dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: 'Password changed successfully. Please login again.'} });
       dispatch({ type: LOGOUT });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });
@@ -108,7 +111,7 @@ export const changeAvatar = new_avatar => async dispatch => {
   try {
     const { data } = await axios.post('/auth/changeAvatar', {new_avatar});
     if (data.success) {
-      alert('Avatar changed successfully.');
+      dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: 'Avatar changed successfully.'} });
       dispatch({ type: SET_AVATAR, payload: new_avatar });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });
@@ -124,10 +127,11 @@ export const deleteAccount = () => async dispatch => {
   try {
     const { data } = await axios.post('/auth/deleteAccount');
     if (data.success) {
-      alert('Your account has been deleted.');
+      dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: 'Your account has been deleted.'} });
       dispatch({ type: LOGOUT });
     } else {
-      dispatch({ type: MSG_ERROR, payload: data.error });
+      dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: data.error} });
+      // dispatch({ type: MSG_ERROR, payload: data.error });
     }
   } catch (error) {
     console.log('error', error);
@@ -142,6 +146,35 @@ export const userSignOut = body => async dispatch => {
     const { data } = await axios.post('/auth/logout');
     if (data.success) {
       setAuthToken();
+      dispatch({ type: MSG_INFO, payload: data.message });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+
+export const verifyEmail = verification_code => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/verify_email', {verification_code});
+    if (data.success) {
+      dispatch({ type: VERIFICATION_SUCCESS, payload: true });
+      history.push('/');
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+
+export const resendVerificationEmail = () => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/resend_verification_email');
+    if (data.success) {
       dispatch({ type: MSG_INFO, payload: data.message });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });

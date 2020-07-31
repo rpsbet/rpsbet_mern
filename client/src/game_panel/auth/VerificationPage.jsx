@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
-// import Avatar from '@material-ui/core/Avatar';
-import { HepperLink } from '../../components/HepperLink';
 import { connect } from 'react-redux';
-import { userSignIn } from '../../redux/Auth/user.actions';
+import { verifyEmail, resendVerificationEmail } from '../../redux/Auth/user.actions';
 import PrivacyModal from '../modal/PrivacyModal';
 import TermsModal from '../modal/TermsModal';
 
-function SignInSide(props) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+function VerificationPage(props) {
+  const [verificationCode, setVerificationCode] = useState('');
   const [disable, setDisable] = useState(true);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -35,24 +32,24 @@ function SignInSide(props) {
 
   useEffect(() => {
     const handleDisableButton = () => {
-      if (email.length >= 4) {
-        if (password.length >= 3) {
+      if (verificationCode.length == 4) {
           setDisable(false);
-        } else {
-          setDisable(true);
-        }
       } else {
         setDisable(true);
       }
     };
     handleDisableButton();
-  }, [email, password]);
+  }, [verificationCode]);
 
   const handleSubmit = event => {
     event.preventDefault();
-    const payload = { email, password };
-    props.userSignIn(payload);
+    props.verifyEmail(verificationCode);
   };
+
+  const resendEmail = event => {
+    event.preventDefault();
+    props.resendVerificationEmail();
+  }
 
   return (
     <div className="site_wrapper">
@@ -63,22 +60,14 @@ function SignInSide(props) {
           </div>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Username / Email</label>
-              <input type="text" className="form-control" placeholder="Username / Email" name="email" value={email} onChange={e => setEmail(e.target.value)} />
+              <label>Verification Code</label>
+              <input type="text" className="form-control" placeholder="Verification Code" name="verification_code" value={verificationCode} onChange={e => setVerificationCode(e.target.value)} />
             </div>
             <div className="form-group">
-              <label>Password</label>
-              <input type="password" className="form-control" placeholder="password" name="password" value={password} onChange={e => setPassword(e.target.value)} />
-            </div>
-            <div className="form-group">
-              <button className={"btn btn-info btn-block " + disable}>Login</button>
-              <a href="/signup" className="btn btn-block" id="btn_signup">Register</a>
-            </div>
-            <div>
-              <input type="checkbox" name="keep" id="keep"/><label htmlFor="keep">Keep Me Signed In</label>
+              <button className={"btn btn-info btn-block " + disable}>Confirm</button>
             </div>
             <div className="text-center">
-              <a href="/resetPassword" id="resetpwd"><u>Forgot your Password?</u></a>
+              <a href="#" onClick={resendEmail} id="resend"><u>Resend Verification Email</u></a>
             </div>
           </form>
 
@@ -94,10 +83,11 @@ function SignInSide(props) {
 }
 
 const mapDispatchToProps = {
-  userSignIn
+  verifyEmail,
+  resendVerificationEmail
 };
 
 export default connect(
   null,
   mapDispatchToProps
-)(SignInSide);
+)(VerificationPage);

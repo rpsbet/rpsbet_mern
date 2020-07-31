@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { FaPoundSign } from 'react-icons/fa';
+import { openAlert } from '../../redux/Notification/notification.actions'
 
 class Spleesh extends Component {
     constructor(props) {
@@ -60,17 +61,17 @@ class Spleesh extends Component {
     onCreateGame(e) {
         e.preventDefault();
         if (this.state.bet_amount > this.state.balance / 100.0) {
-            alert("Not enough balance!");
+            this.props.openAlert('warning', 'Warning!', "Not enough balance!");
             return;
         }
 
         if (this.state.is_private === true && this.state.room_password === "") {
-            alert("You have set the Privacy to 'Private'. Please create a password!");
+            this.props.openAlert('warning', 'Warning!', "You have set the Privacy to 'Private'. Please create a password!");
             return;
         }
 
         if (this.state.endgame_type === true && this.state.endgame_amount === 0) {
-            alert("You have set the End Game Type to 'Automatic'. Please enter an amount when the game should automatically end!");
+            this.props.openAlert('warning', 'Warning!', "You have set the End Game Type to 'Automatic'. Please enter an amount when the game should automatically end!");
             return;
         }
 
@@ -112,12 +113,12 @@ class Spleesh extends Component {
             <form onSubmit={this.onCreateGame}>
                 <hr/>
                 <div className="row">
-                    <div style={{padding: "0"}} className="col-md-10 col-sm-10 col-xs-10">
+                    <div style={{padding: "0"}} className="col-md-6 col-sm-10 col-xs-10">
                         <label className="lbl_game_option">Game Type</label>
                         <label className={"radio-inline" + (this.state.game_type === 1 ? ' checked' : '')} onClick={() => { this.setState({game_type: 1, bet_amount: 1}); }}>£1 - £10</label>
                         <label className={"radio-inline" + (this.state.game_type === 10 ? ' checked' : '')} onClick={() => { this.setState({game_type: 10, bet_amount: 10}); }}>£10 - £100</label>
                     </div>
-                    <div style={{padding: "0"}} className="col-md-10 col-sm-10 col-xs-10">
+                    <div style={{padding: "0"}} className="col-md-6 col-sm-10 col-xs-10">
                         <label className="lbl_game_option">Your Number</label>
                         {this.createNumberPanel()}
                         <div>Pick a number for players to guess (Your Bet Amount)</div>
@@ -151,7 +152,7 @@ class Spleesh extends Component {
                         <label className={"radio-inline" + (this.state.endgame_type === false ? ' checked' : '')} onClick={() => { this.setState({endgame_type: false}); }}>Manual</label>
                         <label className={"radio-inline" + (this.state.endgame_type === true ? ' checked' : '')} onClick={() => { this.setState({endgame_type: true}); }}>Automatic</label>
                         <label className={"lbl_endgame_type" + (this.state.endgame_type === true ? "" : " hidden")}>
-                        <span class="pound-symbol"><FaPoundSign />
+                        <span className="pound-symbol"><FaPoundSign />
                             <input pattern="[0-9]*" type="number" maxLength="4" id="endgame_amount" value={this.state.endgame_amount} onChange={this.onChangeEndgameAmount} className="col-md-6 form-control bet-input endgame_amount" /></span>
                         </label>
                     </div>
@@ -179,6 +180,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
+    openAlert
 };
 
 export default connect(

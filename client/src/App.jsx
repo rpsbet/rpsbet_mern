@@ -16,13 +16,14 @@ import AdminSignInPage from './admin_panel/auth/SignInPage';
 import Error404Page from './admin_panel/Error404Page';
 import AdminMainRoute from './admin_panel/app/App.routes';
 import setAuthToken from './util/setAuthToken';
+import VerificationPage from './game_panel/auth/VerificationPage';
 
 if (localStorage.token) {
   setAuthToken(localStorage.token);
 }
 
 const App = props => {
-  const { isAuthenticated } = props.auth;
+  const { isAuthenticated, isActivated } = props.auth;
   const { isAdminAuthenticated } = props.admin_auth;
 
   useEffect(() => {
@@ -35,7 +36,6 @@ const App = props => {
 
   return (
     <Switch>
-      {/* <Route exact path="/" component={LandingPage} /> */}
       <Route
         path="/admin/signin"
         render={routeProps =>
@@ -71,7 +71,7 @@ const App = props => {
         path="/signin"
         render={routeProps =>
           isAuthenticated ? (
-            <Redirect to="/" />
+            isActivated ? <Redirect to="/" /> : <VerificationPage {...routeProps} />
           ) : (
             <SignInPage {...routeProps} />
           )
@@ -81,7 +81,7 @@ const App = props => {
         path="/signup"
         render={routeProps =>
           isAuthenticated ? (
-            <Redirect to="/" />
+            isActivated ? <Redirect to="/" /> : <VerificationPage {...routeProps} />
           ) : (
             <SignUpPage {...routeProps} />
           )
@@ -101,7 +101,7 @@ const App = props => {
           !isAuthenticated ? (
             <Redirect to="/signin" />
           ) : (
-            <GameMainRoute {...routeProps} />
+            isActivated ? <GameMainRoute {...routeProps} /> : <VerificationPage {...routeProps} />
           )
         }
       />

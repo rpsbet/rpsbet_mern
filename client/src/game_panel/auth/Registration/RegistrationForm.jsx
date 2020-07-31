@@ -76,7 +76,7 @@ class RegistrationForm extends Component {
             <button className={"btn btn-info btn-block " + disable}>Register</button>
             <a href="/signin" className="btn btn-block" id="btn_signup">Login</a>
           </div>
-          <div class="disclaimer">
+          <div className="disclaimer">
           <p>You must be <span>18+</span> years to register. By registering, you agree to our site's explicit and coherent Policies and Terms <BsCaretDown /></p>
           </div>
         </form>

@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { setBalance } from '../../redux/Auth/user.actions';
+import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import Modal from 'react-modal';
 import axios from '../../util/Api';
+import { openAlert } from '../../redux/Notification/notification.actions';
 
 Modal.setAppElement('#root')
 
@@ -28,17 +32,26 @@ class WithdrawModal extends Component {
         this.state = {
             amount: 0,
             email: '',
+            payee_name: '',
             bank_account_number: '',
             bank_short_code: '',
             payment_method: 'PayPal'
         };
 
         this.handleAmountChange = this.handleAmountChange.bind(this);
+        this.handlePayeeNameChange = this.handlePayeeNameChange.bind(this);
         this.handleEmailChange = this.handleEmailChange.bind(this);
         this.sendWithdrawEmail = this.sendWithdrawEmail.bind(this);
         this.handlePaymentMethodChange = this.handlePaymentMethodChange.bind(this);
         this.handleBankAccountNumberChange = this.handleBankAccountNumberChange.bind(this);
         this.handleBankShortCodeChange = this.handleBankShortCodeChange.bind(this);
+    }
+
+    handlePayeeNameChange(e) {
+        e.preventDefault();
+        this.setState({
+            payee_name: e.target.value
+        })
     }
 
     handleBankAccountNumberChange(e) {
@@ -77,17 +90,17 @@ class WithdrawModal extends Component {
 
     async sendWithdrawEmail() {
         if (this.state.amount < 5) {
-            alert('Sorry, you can withdraw a minimum of £5.');
+            this.props.openAlert('warning', 'Warning!', `Sorry, you can withdraw a minimum of £5.`);
             return;
         }
 
         if (this.state.payment_method === 'paypal' && this.state.email === '') {
-            alert('Please input your paypal email address');
+            this.props.openAlert('warning', 'Warning!', `Please input your paypal email address`);
             return;
         }
 
-        if (this.state.payment_method === 'Bank' && (this.state.bank_account_number === '' || this.state.bank_short_code === '')) {
-            alert('Please input your bank account information');
+        if (this.state.payment_method === 'Bank' && (this.state.payee_name === '' || this.state.bank_account_number === '' || this.state.bank_short_code === '')) {
+            this.props.openAlert('warning', 'Warning!', `Please input your bank account information`);
             return;
         }
 
@@ -95,15 +108,18 @@ class WithdrawModal extends Component {
             amount: this.state.amount, 
             payment_method: this.state.payment_method, 
             email: this.state.email,
+            payee_name: this.state.payee_name,
             bank_account_number: this.state.bank_account_number,
             bank_short_code: this.state.bank_short_code,
         });
 
         if (result.data.success) {
-            alert('email is sent');
+            this.props.openAlert('warning', 'Information', result.data.message);
+            this.props.setBalance(result.data.balance);
+            this.props.addNewTransaction(result.data.newTransaction);
             this.props.closeModal();
         } else {
-            alert('Something went wrong. Please try again in a few minutes.');
+            this.props.openAlert('warning', 'Warning!', `Something went wrong. Please try again in a few minutes.`);
         }
     }
 
@@ -132,6 +148,8 @@ class WithdrawModal extends Component {
                 <input type="number" value={this.state.amount} onChange={this.handleAmountChange} />
                 <label className={this.state.payment_method === 'PayPal' ? '' : 'hidden'}>PayPal email address:</label>
                 <input type="email" value={this.state.email} onChange={this.handleEmailChange} className={this.state.payment_method === 'PayPal' ? '' : 'hidden'} />
+                <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Payee Name:</label>
+                <input type="text" value={this.state.payee_name} onChange={this.handlePayeeNameChange} className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
                 <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Bank Account Number:</label>
                 <input type="text" value={this.state.bank_account_number} onChange={this.handleBankAccountNumberChange} maxLength="8" className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
                 <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Short Code:</label>
@@ -146,4 +164,16 @@ class WithdrawModal extends Component {
     }
 }
 
-export default WithdrawModal;
+const mapStateToProps = state => ({
+});
+  
+const mapDispatchToProps = {
+    setBalance,
+    addNewTransaction,
+    openAlert
+};
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(WithdrawModal);

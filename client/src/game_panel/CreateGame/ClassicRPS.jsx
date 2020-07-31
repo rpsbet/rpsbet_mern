@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { FaPoundSign } from 'react-icons/fa';
+import { openAlert } from '../../redux/Notification/notification.actions';
 
 class ClassicRPS extends Component {
     constructor(props) {
@@ -50,17 +51,17 @@ class ClassicRPS extends Component {
     onCreateGame(e) {
         e.preventDefault();
         if (this.state.bet_amount === 0) {
-            alert("Please input the bet amount!");
+            this.props.openAlert('warning', 'Warning!', 'Please input the bet amount!');
             return;
         }
 
         if (this.state.bet_amount > this.state.balance / 100.0) {
-            alert("Not enough balance!");
+            this.props.openAlert('warning', 'Warning!', 'Not enough balance!');
             return;
         }
 
         if (this.state.is_private === true && this.state.room_password === "") {
-            alert("You have set the Privacy to 'Private'. Please create a password!");
+            this.props.openAlert('warning', 'Warning!', "You have set the Privacy to 'Private'. Please create a password!");
             return;
         }
 
@@ -81,7 +82,7 @@ class ClassicRPS extends Component {
             <form onSubmit={this.onCreateGame}>
                 <hr/>
                 <label className="lbl_game_option">Bet Amount</label>
-                <span class="pound-symbol"><FaPoundSign />
+                <span className="pound-symbol"><FaPoundSign />
                 <input type="text" pattern="[0-9]*" name="betamount" id="betamount" value={this.state.bet_amount} onChange={this.onChangeBetAmount} className="form-control col-md-6 input-sm bet-input" placeholder="Bet Amount" /></span>
                 <div>The global cost to play this game</div>
                 <hr/>
@@ -128,6 +129,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
+    openAlert
 };
 
 export default connect(

@@ -9,7 +9,10 @@ import {
   LOGOUT,
   SET_URL,
   SET_BALANCE,
-  SET_AVATAR
+  SET_AVATAR,
+  TRANSACTION_LOADED,
+  NEW_TRANSACTION,
+  VERIFICATION_SUCCESS
 } from '../types';
 
 const initialState = {
@@ -21,8 +24,10 @@ const initialState = {
   user: {_id:null},
   unreadMessageCount: 0,
   balance: 0,
+  isActivated: true,
   userName: '',
-  liveUrl: null
+  liveUrl: null,
+  transactions: []
 };
 
 export default function(state = initialState, action) {
@@ -33,6 +38,15 @@ export default function(state = initialState, action) {
       return {
         ...state, socket: payload
       };
+    case TRANSACTION_LOADED:
+      return {
+        ...state, transactions: payload
+      };
+    case NEW_TRANSACTION:
+      const newTransactions = [payload].concat(JSON.parse(JSON.stringify(state.transactions))).slice(0, 4);
+      return {
+        ...state, transactions: newTransactions
+      }
     case SET_AVATAR:
       return {
         ...state, user: {...state.user, avatar: payload}
@@ -47,6 +61,7 @@ export default function(state = initialState, action) {
         isAdmin: 0,
         userName: payload.username,
         isAuthenticated: true,
+        isActivated: payload.is_activated,
         loading: false,
         user: payload,
         balance: payload.balance
@@ -59,8 +74,14 @@ export default function(state = initialState, action) {
         ...payload,
         isAdmin: 0,
         userName: payload.user.username,
+        isActivated: payload.user.is_activated,
         isAuthenticated: true,
         loading: false
+      };
+    case VERIFICATION_SUCCESS:
+      return {
+        ...state,
+        isActivated: payload,
       };
     case REGISTER_FAIL:
     case AUTH_ERROR:

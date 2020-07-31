@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
+import { openAlert } from '../../redux/Notification/notification.actions';
 import axios from '../../util/Api';
 import { FaPoundSign } from 'react-icons/fa';
 
@@ -91,17 +92,17 @@ class BrainGame extends Component {
     onCreateGame(e) {
         e.preventDefault();
         if (this.state.bet_amount === 0) {
-            alert("Please input the bet amount!");
+            this.props.openAlert('warning', 'Warning!', 'Please input the bet amount!');
             return;
         }
 
         if (this.state.bet_amount > this.state.balance / 100.0) {
-            alert("Not enough balance!");
+            this.props.openAlert('warning', 'Warning!', 'Not enough balance!');
             return;
         }
 
         if (this.state.is_private === true && this.state.room_password === "") {
-            alert("You have set the Privacy to 'Private'. Please input the password!");
+            this.props.openAlert('warning', 'Warning!', "You have set the Privacy to 'Private'. Please input the password!");
             return;
         }
 
@@ -211,7 +212,7 @@ class BrainGame extends Component {
                     ))}
                     <hr/>
                     <label className="lbl_game_option">Bet Amount</label>
-                    <span class="pound-symbol"><FaPoundSign />
+                    <span className="pound-symbol"><FaPoundSign />
                     <input type="number" pattern="[0-9]*" name="betamount" id="betamount" value={this.state.bet_amount} onChange={this.onChangeBetAmount} className="form-control col-md-6 input-sm bet-input" placeholder="Bet Amount" /></span>
                     <div>The global cost to play this game</div>
                     <hr/>
@@ -235,7 +236,7 @@ class BrainGame extends Component {
                             <label className={"radio-inline" + (this.state.endgame_type === false ? ' checked' : '')} onClick={() => { this.setState({endgame_type: false}); }}>Manual</label>
                             <label className={"radio-inline" + (this.state.endgame_type === true ? ' checked' : '')} onClick={() => { this.setState({endgame_type: true}); }}>Automatic</label>
                             <label className={"lbl_endgame_type" + (this.state.endgame_type === true ? "" : " hidden")}>
-                                <span class="pound-symbol"><FaPoundSign /><input pattern="[0-9]*" type="text" id="endgame_amount" value={this.state.endgame_amount} onChange={this.onChangeEndgameAmount} className="col-md-6 form-control bet-input endgame_amount" /></span>
+                                <span className="pound-symbol"><FaPoundSign /><input pattern="[0-9]*" type="text" id="endgame_amount" value={this.state.endgame_amount} onChange={this.onChangeEndgameAmount} className="col-md-6 form-control bet-input endgame_amount" /></span>
                             </label>
                         </div>
                         <div>Make your game END automatically when your PR reaches an amount. This will put a cap on your Winnings but at least keep them safe.</div>
@@ -267,7 +268,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-    setCurrentQuestionInfo
+    setCurrentQuestionInfo,
+    openAlert
 };
 
 export default connect(

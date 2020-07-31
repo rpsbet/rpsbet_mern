@@ -20,7 +20,7 @@ class LandingPage extends Component {
     return (
       <>
         <h1 className="main_title">INFORMATION</h1>
-        <div style={{height: "88%", overflowY: "scroll"}} className="latest_updates">
+        <div style={{height: "calc(100vh - 260px)", overflowY: "scroll"}} className="latest_updates">
         <div className="single_update">
           <h4>Update June 8th 2020</h4>
           <ul>
@@ -34,7 +34,7 @@ class LandingPage extends Component {
           </ul>
           </div>
         <div className="single_update">
-          <h4>Update July 2019 > November 2019</h4>
+          <h4>Update July 2019 &#62; November 2019</h4>
           <ul>
           <li>User Profiles</li>
           <li>Messaging System</li>

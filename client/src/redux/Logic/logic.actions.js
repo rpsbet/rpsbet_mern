@@ -1,6 +1,8 @@
 import {
   GAMETYPE_LOADED,
   ROOMINFO_LOADED,
+  START_LOADING,
+  END_LOADING,
   ROOMS_LOADED,
   BET_FAIL,
   BET_SUCCESS,
@@ -14,7 +16,9 @@ import {
   MY_GAMES_LOADED,
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
-  HISTORY_LOADED
+  HISTORY_LOADED,
+  NEW_TRANSACTION,
+  OPEN_ALERT_MODAL
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -23,16 +27,22 @@ import history from '../history';
 export const createRoom = (room_info) => async dispatch => {
   const body = JSON.stringify(room_info);
   try {
+    dispatch({ type: START_LOADING });
     const res = await axios.post('/game/rooms', body);
+
     if (res.data.success) {
       if (room_info.game_type === 3) {
-        alert('Time is Up!');
+        dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: 'Time is Up!'} });
       }
       history.push('/join');
       dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
     } else {
       dispatch({ type: MSG_CREATE_ROOM_FAIL });
     }
+
+    dispatch({ type: END_LOADING });
+
   } catch (err) {
     dispatch({ type: MSG_CREATE_ROOM_FAIL, payload: err });
   }
@@ -42,32 +52,36 @@ export const createRoom = (room_info) => async dispatch => {
 export const bet = (bet_info) => async dispatch => {
   const body = JSON.stringify(bet_info);
   try {
+    dispatch({ type: START_LOADING });
     const res = await axios.post('/game/bet', body);
+    dispatch({ type: END_LOADING });
+
     if (res.data.success) {
       if (res.data.betResult === -100) {
-        alert(res.data.message);
+        dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
         history.push('/join');
         return;
       }
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
 
       if (bet_info.game_type === 'Mystery Box') {
         dispatch({ type: BET_SUCCESS, payload: res.data });
       } else if (bet_info.game_type === 'Brain Game') {
         if (res.data.betResult === 1) {
-          alert('WOW, What a BRAIN BOX - You WIN!');
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'WOW, What a BRAIN BOX - You WIN!'} });
         } else if (res.data.betResult === 0) {
-          alert('Draw, No Winner! PR will be split.');
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner! PR will be split.'} });
         } else {
-          alert('Oops, back to school for you loser!!');
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, back to school for you loser!!'} });
         }
         history.push('/join');
       } else {
         if (res.data.betResult === 1) {
-          alert('Nice, You Win!');
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'Nice, You Win!'} });
         } else if (res.data.betResult === 0) {
-          alert('Draw, No Winner!');
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner!'} });
         } else {
-          alert('Oops, You Lost!');
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, You Lost!'} });
         }
         history.push('/join');
       }
@@ -148,9 +162,11 @@ export const endGame = (room_id) => async dispatch => {
     const res = await axios.post('/game/end_game', {room_id});
     if (res.data.success) {
       dispatch({ type: MY_GAMES_LOADED, payload: res.data.myGames });
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+
     } else {
       if (res.data.already_finished) {
-        alert(res.data.message);
+        dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
       } else {
         dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
       }
@@ -245,6 +261,10 @@ export const addChatLog = chatLog => (dispatch, getState) => {
     dispatch({ type: SET_CHAT_ROOM_INFO, payload: chatRoomInfo });
   }
 }
+
+export const addNewTransaction = data => dispatch => {
+  dispatch({ type: NEW_TRANSACTION, payload: data });
+};
 
 export const setUrl = url => dispatch => {
   dispatch({ type: SET_URL, payload: url });
