@@ -50,18 +50,18 @@ class RegistrationForm extends Component {
           <img className="logo" src="/img/logo.png" alt="RPS Bet Logo"/>
         </div>
         <form onSubmit={this.handleSubmit}>
-          <div className="form-group">
+          <div style={{display: "none"}} className="form-group">
             <AvatarUpload setImageFilename={(filename) => {
               this.setState({avatar: filename});
             }} />
           </div>
           <div className="form-group">
             <label>Pick a Username</label>
-            <input maxLength="15" type="text" className="form-control" placeholder="Username" name="userName" value={userName} onChange={this.handleInputChange} />
+            <input maxLength="15" type="text" className="form-control" placeholder="cAse_SeNsItIvE" name="userName" value={userName} onChange={this.handleInputChange} />
           </div>
           <div className="form-group">
             <label>Real Email</label>
-            <input type="email" className="form-control" placeholder="Email Address" name="email" value={email} onChange={this.handleInputChange} />
+            <input maxLength="60" type="email" className="form-control" placeholder="example@mail.com" name="email" value={email} onChange={this.handleInputChange} />
           </div>
           <div className="form-group">
             <label>Secure Password</label>

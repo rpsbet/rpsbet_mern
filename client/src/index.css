@@ -93,26 +93,39 @@ input,textarea { border-radius: 0 !important; }
 }
 
 #root .site_wrapper .login_wrapper .login_form {
-  background-color: rgba(0,0,0,0.5);
-  font-size: 20px;
-  font-weight: 700;
-  padding: 25px;
-  color: white;
-  width: 40%;
-  min-width: 700px;
-  margin: auto;
+  text-align: center;
+    background-image: url(/img/rps_characters.png);
+    background-size: 120%;
+    background-position: 40% 45%;
+    background-repeat: no-repeat;
+    background-color: #f8f9fa2b;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 25px;
+    color: #f5b22d;
+    width: 40%;
+    min-width: 700px;
+    max-width: 97% !important;
+    max-height: 97% !important;
+    overflow-y: scroll;
+    margin: auto;
+}
+
+.login_form label {
+  background: #000;
+  padding: 0 5px;
+}
+
+.login_form .form-control {
+  background-color: #fffc;
+      color: #333;
 }
 
 .login_form input[type=text],
 .login_form input[type=password]{
   font-size: 20px;
   height: 50px;
-  text-transform: lowercase;
   padding: 5px 15px;
-}
-
-input[type="password"] {
-  text-transform: unset !important;
 }
 
 .login_form input[type=checkbox] {
@@ -126,8 +139,8 @@ input[type="password"] {
 }
 
 .login_form img.logo{
-  height: 50px;
-  margin: auto;
+  height: 80px;
+  margin: 0 auto 20px;
 }
 
 .login_form .btn {
@@ -137,9 +150,23 @@ input[type="password"] {
   height: initial;
 }
 
+.btn-info {
+    color: #fff;
+    background-color: #c73128;
+    border: none;
+}
+.btn-info:hover, .btn-info:not(:disabled):not(.disabled).active, .btn-info:not(:disabled):not(.disabled):active, .show>.btn-info.dropdown-toggle {
+    background-color: #f5b22d;
+}
+
+.MuiPaper-root {
+    color: white;
+    background-color: #5653df !important;
+}
+
 .login_form #btn_signup {
   background-color: white;
-  color: #337ab7;
+  color: #3339;
   margin: 10px auto;
   text-align: center;
   text-decoration: initial;
@@ -276,9 +303,37 @@ input[type="password"] {
 .sub_header button#btn_avatar img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transform: scale(1.1);
   border-radius: 50%;
+}
+
+div[aria-label="How To Play Modal"] th {
+    color: #ebddca;
+    border-bottom: 5px solid #fff !important;
+    padding: 5px 20px;
+    margin: 20px 0;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    text-align: center;
+        background: #33271f;
+    font-family: 'Prototype';
+  }
+  div[aria-label="How To Play Modal"] td {
+    border: 1px solid #fff;
+    padding: 5px 15px;
+    text-align: center;
+  }
+div[aria-label="How To Play Modal"] ul {
+  margin-left: 1rem;
+  margin-bottom: 0;
+}
+
+.gamemode {
+    color: #C83228;
+    background: #33271f;
+    border: none !important;
+    font-family: 'Prototype';
 }
 
 .btn_modal_close {
@@ -337,9 +392,10 @@ input[type="password"] {
 
 .profile_info_panel_image_wrapper img {
   width: 200px;
-  height: 200px;
-  border-radius: 10px;
-  border: 3px solid #f6b229;
+    height: 200px;
+    object-fit: contain;
+    border-radius: 100px;
+    border: 3px solid #f6b229;
 }
 
 .profile_info_panel,
@@ -401,6 +457,8 @@ input[type="password"] {
   background-color: white !important;
   box-shadow: none !important;
   text-align: center;
+  display: flex;
+  align-items: center;
 }
 
 .profile_info_panel span.radio_panel input[type="radio"], .profile_info_panel span.radio_panel label {
@@ -425,7 +483,9 @@ input[type="password"] {
     color: #000;
     letter-spacing: 0.05em;
 }
-
+.scroll-txt {
+    display: none;
+}
 .modal_action_panel {
   padding-top: 20px;
   margin-top: 10px;
@@ -528,7 +588,8 @@ input[type="password"] {
   color: #c83228cc;
   border: 3px solid #c83228cc;
   border-radius: 30px;
-  width: 50%;
+  width: 80%;
+  padding: 5px 15px;
   margin: 30px auto 20px;
   text-transform: uppercase;
   font-family: 'Prototype';
@@ -625,6 +686,11 @@ label.radio-inline.checked {
   -webkit-filter: none;
   -moz-filter: none;
   filter: none;
+}
+
+#rps_radio {
+  display: flex;
+  justify-content: center;
 }
 
 .drinkcard-cc.rock {
@@ -1144,7 +1210,10 @@ label.answer {
 
 .contents_wrapper .chat_input_panel {
   bottom: 0;
-  left: 0;
+    left: 0;
+    padding: 10px;
+    background: #fff;
+    margin-bottom: -20px !important;
 }
 
 .contents_wrapper .chat_input_panel .emoticon_panel {
@@ -1155,7 +1224,7 @@ label.answer {
 .contents_wrapper .chat_input_panel .emoticon_panel span {
   width: 33.33%;
   font-size: 30px;
-  text-align: center;
+  text-align: right;
   float: left;
   cursor: pointer;
   margin-bottom: 2px;
@@ -1166,7 +1235,7 @@ label.answer {
 .contents_wrapper .chat_input_panel textarea {
   width: 80%;
   border: 0;
-  padding: 10px 20px;
+  padding: 10px 10px;
   font-size: 35px;
   color: #555;
   resize: none;
@@ -1287,12 +1356,15 @@ label.answer {
     display: flex;
     align-items: center;
   }
+
   .contents_wrapper .chat_input_panel .emoticon_panel {
     width: 20%;
   }
   .contents_wrapper .chat_input_panel textarea { width: 70%; }
   .contents_wrapper .chat_input_panel .btn_send_message { font-size: 30px; }
-  .contents_wrapper .chat_log_panel { height: calc(100vh - 260px); }
+  .contents_wrapper .chat_log_panel {
+    height: calc(100vh - 260px);
+  }
 
   #btn_my_game { height: calc(50vh - 132px) !important; }
   .game_wrapper .left_sidebar a { height: 25vh; font-size: 0.6em;}
@@ -1326,6 +1398,38 @@ label.answer {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+#rps_radio {
+  justify-content: space-between;
+}
+
+  .scroll-txt {
+    text-align: center;
+    padding-top: 20px;
+    display: block !important;
+}
+
+div[aria-label="How To Play Modal"] table {
+display: block !important;
+    overflow-x: scroll;
+}
+div[aria-label="How To Play Modal"] table td, div[aria-label="How To Play Modal"] table th {
+    white-space: nowrap;
+    font-size: 1em;
+}
+.profile_info_panel span:nth-child(even), .profile_info_panel input {
+  width: 100%;
+}
+  .modal-body h4 { font-size: 1.3em; }
+  .modal-body h5 {
+    font-size: 1.1em;
+    padding: 5px;
+    width: 60%;
+}
+
+  .table-black td img.avatar {
+  width: 20px !important;
+  height: 20px !important;
+}
   div.question_panel { font-size: 1.2em; }
   div.timer { width: 50%;padding: 5px 10px !important; }
   div.timer_title,
@@ -1346,10 +1450,15 @@ label.answer {
   .contents_wrapper .chat_input_panel .emoticon_panel {
     width: 30%;
   }
-  .contents_wrapper .chat_input_panel .btn_send_message { width: 20%; }
+  .contents_wrapper .chat_input_panel .btn_send_message { width: 18%; }
   .contents_wrapper .chat_input_panel textarea { width: 50%; }
   .contents_wrapper .chat_input_panel .btn_send_message { font-size: 30px; }
     .contents_wrapper .chat_log_panel { height: calc(100vh - 260px); }
+    .contents_wrapper .chat_input_panel {
+    padding: 0px;
+    margin-bottom: 0px !important;
+  }
+
     .contents_wrapper .chat_input_panel textarea { font-size: 1.2em; }
   .contents_wrapper .chat_log_panel .my_message .message_content:after {
     left: 85%;
@@ -1368,7 +1477,7 @@ label.answer {
 
   .contents_wrapper {
     margin: 0;
-    padding: 0;
+    padding: 0 0 20px !important;
   }
 
 .main_header { height: 40px; }
@@ -1418,7 +1527,7 @@ label.radio-inline {
 }
 
 .profile_info_panel {
-    font-size: 13px;
+    font-size: 20px;
 }
 .payment_action_panel {
       grid-template-columns: 1fr;
@@ -1428,7 +1537,9 @@ label.radio-inline {
 
 .main_header a#btn_how_to_play, .main_header a#btn_logout { padding: 3px; }
 
-.ReactModal__Content.ReactModal__Content--after-open { min-width: unset !important; width: 97% !important; }
+.ReactModal__Content.ReactModal__Content--after-open {
+  min-width: unset !important; width: 97% !important; max-width: unset !important; max-height: 97% !important;
+}
 
 .btn-advanced {
   height: 40px; 
@@ -1450,8 +1561,6 @@ label.radio-inline {
   .copyright, .game_footer {
     font-size: 0.8em;
   }
-
-  .game_footer span { display: none; }
 
   .main_title {
     font-size: 22px;
@@ -1497,6 +1606,7 @@ table td img.avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  object-fit: contain;
   /* border: 2px solid #c83228cc; */
   margin-right: 5px;
 }

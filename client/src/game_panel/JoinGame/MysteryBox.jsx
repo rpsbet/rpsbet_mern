@@ -63,7 +63,7 @@ class MysteryBox extends Component {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
-            this.props.openAlert('warning', 'Warning!', `Oop! This game is yours. You can't join this game.`);
+            this.props.openAlert('warning', 'Warning!', `Oops! This game is yours. You can't join this game.`);
             return;
         }
 

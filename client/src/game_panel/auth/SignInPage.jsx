@@ -64,7 +64,7 @@ function SignInSide(props) {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Username / Email</label>
-              <input type="text" className="form-control" placeholder="Username / Email" name="email" value={email} onChange={e => setEmail(e.target.value)} />
+              <input type="text" className="form-control" placeholder="cAse_SeNsItIvE" name="email" value={email} onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="form-group">
               <label>Password</label>
@@ -75,7 +75,7 @@ function SignInSide(props) {
               <a href="/signup" className="btn btn-block" id="btn_signup">Register</a>
             </div>
             <div>
-              <input type="checkbox" name="keep" id="keep"/><label htmlFor="keep">Keep Me Signed In</label>
+              <input type="checkbox" name="keep" id="keep" defaultChecked/><label htmlFor="keep" >Keep Me Signed In</label>
             </div>
             <div className="text-center">
               <a href="/resetPassword" id="resetpwd"><u>Forgot your Password?</u></a>
@@ -84,7 +84,7 @@ function SignInSide(props) {
 
         </div>
         <div className="copyright">
-                rpsbet.com © 2020 RPS Bet Ltd. 12175962, <a href="#privacy" onClick={handleOpenPrivacyModal} id="privacy">Privacy</a> | <a href="#terms" onClick={handleOpenTermsModal} id="terms">Terms</a>
+                All Rights Reserved, rpsbet.com © 2020 <a href="#privacy" onClick={handleOpenPrivacyModal} id="privacy">Privacy</a> | <a href="#terms" onClick={handleOpenTermsModal} id="terms">Terms</a>
         </div>
         <TermsModal modalIsOpen={showTermsModal} closeModal={handleCloseTermsModal} />
         <PrivacyModal modalIsOpen={showPrivacyModal} closeModal={handleClosePrivacyModal} />

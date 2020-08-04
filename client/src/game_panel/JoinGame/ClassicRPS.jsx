@@ -27,7 +27,7 @@ class ClassicRPS extends Component {
         e.preventDefault();
         
         if (this.props.creator_id === this.props.user_id) {
-            this.props.openAlert('warning', 'Warning!', `Oop! This game is yours. You can't join this game.`);
+            this.props.openAlert('warning', 'Warning!', `Oops! This game is yours. You can't join this game.`);
             return;
         }
 
@@ -42,7 +42,7 @@ class ClassicRPS extends Component {
                 <h1 className="main_title">Choose: Rock - Paper - Scissors</h1>
                 <hr/>
                 <label className="lbl_game_option">Select: Rock - Paper - Scissors!</label>
-                <div>
+                <div id="rps_radio">
                     <label className={"drinkcard-cc rock" + (this.state.selected_rps === 1 ? " checked" : "")} onClick={() => { this.setState({selected_rps: 1}); }}></label>
                     <label className={"drinkcard-cc paper" + (this.state.selected_rps === 2 ? " checked" : "")} onClick={() => { this.setState({selected_rps: 2}); }}></label>
                     <label className={"drinkcard-cc scissors" + (this.state.selected_rps === 3 ? " checked" : "")} onClick={() => { this.setState({selected_rps: 3}); }}></label>

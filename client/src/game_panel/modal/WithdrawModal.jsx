@@ -134,7 +134,7 @@ class WithdrawModal extends Component {
         
             <h2 style={{borderBottom: "1px solid gray"}}>Withdraw</h2>
             <button className="btn_modal_close" onClick={this.props.closeModal}>x</button>
-            <h4><i>No withdrawal fees!</i></h4>
+            <h4 style={{textAlign: "center"}}><i>No withdrawal fees!</i></h4>
             <div className="profile_info_panel">
                 <span className="radio_panel">
                     <input type="radio" id="r_paypal" name="payment_method" value="PayPal" onChange={this.handlePaymentMethodChange} checked={this.state.payment_method === 'PayPal'} />
@@ -145,15 +145,15 @@ class WithdrawModal extends Component {
                     <label htmlFor="r_bank">Bank</label>
                 </span>
                 <label>Withdraw Amount (£):</label>
-                <input type="number" value={this.state.amount} onChange={this.handleAmountChange} />
+                <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} />
                 <label className={this.state.payment_method === 'PayPal' ? '' : 'hidden'}>PayPal email address:</label>
                 <input type="email" value={this.state.email} onChange={this.handleEmailChange} className={this.state.payment_method === 'PayPal' ? '' : 'hidden'} />
                 <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Payee Name:</label>
                 <input type="text" value={this.state.payee_name} onChange={this.handlePayeeNameChange} className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
                 <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Bank Account Number:</label>
-                <input type="text" value={this.state.bank_account_number} onChange={this.handleBankAccountNumberChange} maxLength="8" className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
-                <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Short Code:</label>
-                <input type="text" value={this.state.bank_short_code} onChange={this.handleBankShortCodeChange} maxLength="6" className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
+                <input pattern="[0-9]*" type="text" value={this.state.bank_account_number} onChange={this.handleBankAccountNumberChange} maxLength="8" className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
+                <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Sort Code:</label>
+                <input pattern="[0-9]*" type="text" value={this.state.bank_short_code} onChange={this.handleBankShortCodeChange} maxLength="6" className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
             </div>
             <h6 style={{margin: "20px auto -5px", textAlign: "center"}}>The amount will be deducted from your current balance and paid into your account within 1-3 hours.</h6>
             <div className="payment_action_panel">

@@ -59,7 +59,7 @@ export const userSignUp = ({
   try {
     const res = await axios.post('/user', body);
     if (res.data.success) {
-      dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: 'You have registered, please login.'} });
+      dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'tutorial', title: 'Get Started', message: 'Welcome...so you wanna make a bit of money? Click your Profile icon in the Top Right and click DEPOSIT.'} });
       history.push('/signin');
       dispatch({ type: MSG_SUCCESS, payload: res.data.message });
     } else {
