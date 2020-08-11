@@ -178,7 +178,7 @@ class SiteWrapper extends Component {
         <div className="game_header">
           <div className="main_header d-flex">
             <a className="game_logo" href="/">
-              <img src="/img/Logo.png" alt="" />
+              <img src="/img/logo.png" alt="" />
             </a>
             <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HOW TO PLAY </span><FaRegQuestionCircle /></a>
             <a href="/" id="btn_logout" className="ml-auto" onClick={this.handleLogout}><span>LOGOUT </span><IoMdLogOut /></a>
