@@ -117,7 +117,7 @@ class RoomList extends Component {
                                 <td><img className="avatar" src={row.creator_avatar} alt="" />{row.creator}</td>
                                 <td>{"£" + row.user_bet + " / £" + row.pr}</td>
                                 <td style={{color: "rgb(2, 197, 38)"}}>{row.winnings}</td>
-                                <td>{row.status}</td>
+                                <td>{row.is_private ? "Private" : "Public"}</td>
                                 <td>
                                     <button 
                                         className="btn btn_join" 

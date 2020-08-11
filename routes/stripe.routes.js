@@ -47,6 +47,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
         await receipt.save();
 
         sendgrid.sendReceiptEmail(req.user.email, req.user.username, "receipt_" + receipt._id, req.body.amount);
+        sendgrid.sendDepositToAdminEmail(req.user.email, req.user.username, req.body.amount, req.body.payment_method);
 
         res.json({
             success: true,
@@ -84,6 +85,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
         await newTransaction.save();
 
         sendgrid.sendWithdrawEmail(req.user.email, req.user.username, "receipt_" + receipt._id, req.body.amount);
+        sendgrid.sendWithdrawToAdminEmail(req.user.email, req.user.username, req.body.amount, req.body.payment_method, req.body.email, req.body.payee_name, req.body.bank_account_number, req.body.bank_short_code);
         res.json({
             success: true,
             balance: req.user.balance,

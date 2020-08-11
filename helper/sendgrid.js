@@ -6,7 +6,9 @@ const template_id_list = {
     receipt:            'd-2e46508d7bbb4df0b4c8863ebfd5465d',
     password_reset:     'd-8947b6812b1b424a98fe62c67fe2178a',
     email_verification: 'd-2bdf07a55afd4b9e9ea665b763147e40',
-    withdraw:           'd-24d9431cb36247aaa7da19d1efa981ae'
+    withdraw:           'd-24d9431cb36247aaa7da19d1efa981ae',
+    withdraw_to_admin:  'd-8280dd1a33a44e18b44b34dce8bb9f5c',
+    receipt_to_admin:   'd-87e9be9e30ae4c0c89b2b06753be7921',
 };
 
 const sendEmail = (to, content, subject, template_id) => {
@@ -32,7 +34,7 @@ const sendEmail = (to, content, subject, template_id) => {
 
     request(options, function (error, response, body) {
         if (error) throw new Error(error);
-        console.log(123123123, body);
+        console.log("SendGrid: ", error, body);
     });
 }
 
@@ -110,6 +112,44 @@ module.exports.sendReceiptEmail = (email, name, receipt_id, amount) => {
         },
         'Receipt', 
         template_id_list.receipt
+    );
+};
+
+module.exports.sendWithdrawToAdminEmail = (email, username, amount, payment_method, paypal_email, bank_payee_name, bank_account_number, short_code) => {
+    sendEmail(
+        [
+            {email: 'payments@rpsbet.com', name: 'Rpsbet'},
+        ],
+        {
+            email,
+            username,
+            amount,
+            is_paypal: payment_method == 'PayPal',
+            paypal_email,
+            bank_payee_name,
+            bank_account_number,
+            short_code,
+            action_url: 'https://rpsbet.com'
+        }, 
+        'New Withdrawal Request From [' + username + ']', 
+        template_id_list.withdraw_to_admin
+    );
+};
+
+module.exports.sendDepositToAdminEmail = (email, username, amount, payment_method) => {
+    sendEmail(
+        [
+            {email: 'payments@rpsbet.com', name: 'Rpsbet'},
+        ],
+        {
+            email,
+            username,
+            amount,
+            is_paypal: payment_method == 'PayPal',
+            action_url: 'https://rpsbet.com'
+        }, 
+        'New Deposit From [' + username + ']', 
+        template_id_list.receipt_to_admin
     );
 };
 

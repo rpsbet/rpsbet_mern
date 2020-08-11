@@ -20,6 +20,7 @@ const sendgrid = require('../helper/sendgrid');
 // eslint-disable-next-line consistent-return
 router.post('/', (req, res) => {
   const { email, password } = req.body;
+  console.log(email, password)
   //  Simple validation
   if (!email || !password) {
     return res.json({

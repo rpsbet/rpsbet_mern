@@ -68,7 +68,7 @@ class StripeCheckoutForm extends React.Component {
 
         if (result.error) {
             // Show error to your customer (e.g., insufficient funds)
-            console.log(result.error.message);
+            this.props.openAlert('warning', 'Warning!', result.error.message);
         } else {
             // The payment has been processed!
             if (result.paymentIntent.status === 'succeeded') {
@@ -102,7 +102,7 @@ class StripeCheckoutForm extends React.Component {
 const InjectedCheckoutForm = (props) => (
     <ElementsConsumer>
         {({stripe, elements}) => (
-            <StripeCheckoutForm stripe={stripe} elements={elements} amount={props.amount} setBalance={props.setBalance} closeModal={props.closeModal} />
+            <StripeCheckoutForm stripe={stripe} elements={elements} amount={props.amount} setBalance={props.setBalance} closeModal={props.closeModal} openAlert={props.openAlert} addNewTransaction={props.addNewTransaction} />
         )}
     </ElementsConsumer>
 );
@@ -165,7 +165,7 @@ class DepositModal extends Component {
                 />
 
                 <Elements stripe={stripePromise}>
-                    <InjectedCheckoutForm amount={this.state.amount} setBalance={this.props.setBalance} closeModal={this.props.closeModal} />
+                    <InjectedCheckoutForm amount={this.state.amount} setBalance={this.props.setBalance} closeModal={this.props.closeModal} openAlert={this.props.openAlert} addNewTransaction={this.props.addNewTransaction} />
                 </Elements>
             </div>
         </Modal>;
