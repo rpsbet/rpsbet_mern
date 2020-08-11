@@ -87,7 +87,7 @@ class ClassicRPS extends Component {
                 <div>The global cost to play this game</div>
                 <hr/>
                 <label className="lbl_game_option">Select: Rock - Paper - Scissors!</label>
-                <div>
+                <div id="rps_radio">
                     <label className={"drinkcard-cc rock" + (this.state.selected_rps === 1 ? " checked" : "")} onClick={() => { this.setState({selected_rps: 1}); }}></label>
                     <label className={"drinkcard-cc paper" + (this.state.selected_rps === 2 ? " checked" : "")} onClick={() => { this.setState({selected_rps: 2}); }}></label>
                     <label className={"drinkcard-cc scissors" + (this.state.selected_rps === 3 ? " checked" : "")} onClick={() => { this.setState({selected_rps: 3}); }}></label>

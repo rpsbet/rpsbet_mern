@@ -73,7 +73,7 @@ function VerificationPage(props) {
 
         </div>
         <div className="copyright">
-                rpsbet.com © 2020 RPS Bet Ltd. 12175962, <a href="#privacy" onClick={handleOpenPrivacyModal} id="privacy">Privacy</a> | <a href="#terms" onClick={handleOpenTermsModal} id="terms">Terms</a>
+                All Rights Reserved, rpsbet.com © 2020 <a href="#privacy" onClick={handleOpenPrivacyModal} id="privacy">Privacy</a> | <a href="#terms" onClick={handleOpenTermsModal} id="terms">Terms</a>
         </div>
         <TermsModal modalIsOpen={showTermsModal} closeModal={handleCloseTermsModal} />
         <PrivacyModal modalIsOpen={showPrivacyModal} closeModal={handleClosePrivacyModal} />

@@ -18,7 +18,8 @@ const customStyles = {
         bottom      : 'auto',
         marginRight : '-50%',
         transform   : 'translate(-50%, -50%)',
-        backgroundColor: '#f8f9fa'
+        backgroundColor: '#333',
+        color       : '#fff'
     }
 }
 
@@ -56,8 +57,8 @@ class HowToPlayModal extends Component {
         >
         
         <div className="modal-header">
-            <h2 style={{borderBottom: "1px solid gray"}}>How To Play <span style={{color: "#c33626"}}>RPS</span> <span style={{color: "#ebddca"}}>Bet</span></h2>
-            <button className="btn_modal_close" onClick={this.props.closeModal}>×</button>
+            <h2 style={{color: "#fff", paddingBottom: "0"}}>How To Play <span style={{color: "#c33626"}}>RPS</span> <span style={{color: "#ebddca"}}>Bet</span></h2>
+            <button style={{color: "#fff", borderColor: "#fff"}} className="btn_modal_close" onClick={this.props.closeModal}>×</button>
             </div>
 
 <div className="modal-body">
@@ -151,7 +152,7 @@ class HowToPlayModal extends Component {
                         <td>5% from <span style={{color: "#02c526"}}>Winnings.</span></td>
                       </tr>
                     </tbody></table>
-
+<p class="scroll-txt">Scroll ⇨</p>
 <h5>For All Enquiries</h5>
 <p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>. We thank you for playing!</p>
 </div>

@@ -231,7 +231,7 @@ class SiteWrapper extends Component {
           </div>
         </div>
         <div className="game_footer text-center">
-          <span>All Rights Reserved, </span>rpsbet.com © 2020 RPS Bet Ltd. 12175962, <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
+          <span>All Rights Reserved, </span>rpsbet.com © 2020 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
         </div>
         <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} />
         <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} />

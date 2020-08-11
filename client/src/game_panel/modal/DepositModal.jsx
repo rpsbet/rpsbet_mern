@@ -138,7 +138,7 @@ class DepositModal extends Component {
             <button className="btn_modal_close" onClick={this.props.closeModal}>x</button>
             <div className="profile_info_panel">
                 <label>Deposit Amount (£):</label>
-                <input type="number" value={this.state.amount} onChange={this.handleAmountChange} />
+                <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} />
             </div>
             <h5 style={{textAlign: "center", margin: "10px auto -20px"}}><i>Choose payment method:</i></h5>
             <div className="payment_action_panel">

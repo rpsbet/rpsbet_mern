@@ -34,6 +34,8 @@ class AlertModal extends Component {
         console.log(this.props.alertType);
         if (this.props.alertType === 'warning') {
             img_filename = 'error.png';
+        } else if (this.props.alertType === 'tutorial') {
+            img_filename = 'tutorial.png';
         } else if (this.props.alertType === 'win') {
             img_filename = 'win.png';
         } else if (this.props.alertType === 'lost') {
