@@ -278,7 +278,7 @@ class CreateGame extends Component {
             <>
                 <hr/>
                 <div className="action_panel">
-                    {this.state.step > 1 ? <button id="btn_prev" className="btn" onClick={() => { this.setState({step: this.state.step > 1 ? this.state.step - 1 : this.state.step}) }}>Previous</button> : <label>&nbsp;</label>}
+                    {this.state.step > 1 && this.state.step < 5 ? <button id="btn_prev" className="btn" onClick={() => { this.setState({step: this.state.step > 1 ? this.state.step - 1 : this.state.step}) }}>Previous</button> : <label>&nbsp;</label>}
                     {this.state.step === 3 && <button id="btn_skip" className="btn" onClick={this.onSkipButtonClicked}>Skip</button>}
                     {this.state.step === 4 && this.state.game_mode === "Brain Game" && <button id="btn_bet" className="btn btn_secondary" onClick={this.onStartBrainGame}>Start</button>}
                     {this.state.step === 4 && this.state.game_mode !== "Brain Game" && <button id="btn_bet" className="btn" onClick={this.onCreateRoom}>Place Bet Game</button>}
@@ -305,7 +305,7 @@ class CreateGame extends Component {
                         room_password={this.state.room_password}
                     />
                 }
-                {this.action_panel()}
+                {this.state.step !== 5 && this.action_panel()}
             </>
         );
     }
