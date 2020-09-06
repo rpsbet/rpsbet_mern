@@ -112,7 +112,7 @@ class HowToPlayModal extends Component {
 
 <p>e.g. Host creates a game and with a bet amount of £25. If a player JOINs and loses, the Host receives <span style={{color:"#02c526"}}>[£50 * 0.95]</span>.</p>
 <br />
-<p>Check your <a data-toggle="modal" data-dismiss="modal" data-target="#editModal" href="" style={{color: "#B5862D"}}><b>Balance</b></a> at the end of each game.<br /> We introduce Fees to cover transactional costs from the payment provider and development costs for the website:</p>
+<p>Check your <a data-toggle="modal" data-dismiss="modal" data-target="#editModal" href="#editModal" style={{color: "#B5862D"}}><b>Balance</b></a> at the end of each game.<br /> We introduce Fees to cover transactional costs from the payment provider and development costs for the website:</p>
 <table>
  <tbody><tr>
                         <th>Game Modes</th>

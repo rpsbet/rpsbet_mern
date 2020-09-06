@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 // import Avatar from '@material-ui/core/Avatar';
-import { HepperLink } from '../../components/HepperLink';
 import { connect } from 'react-redux';
 import { userSignIn } from '../../redux/Auth/user.actions';
 import PrivacyModal from '../modal/PrivacyModal';

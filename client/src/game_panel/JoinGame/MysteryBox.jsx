@@ -40,11 +40,11 @@ class MysteryBox extends Component {
 
     onShowButtonClicked(e) {
         e.preventDefault();
-        if (this.state.advanced_status === "") {
-            this.setState({advanced_status: "hidden"});
-        } else {
-            this.setState({advanced_status: ""});
-        }
+        // if (this.state.advanced_status === "") {
+        //     this.setState({advanced_status: "hidden"});
+        // } else {
+        //     this.setState({advanced_status: ""});
+        // }
     }
 
     onBoxClicked(e) {
@@ -137,7 +137,7 @@ class MysteryBox extends Component {
                 </div>
                 <div>Each box will open one of the Prizes above.</div>
 
-                <button className="btn-advanced" onClick={this.onShowButtonClicked}>Show/Hide Advanced Settings</button>
+                <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
                     <hr/>
                     <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>

@@ -22,16 +22,11 @@ const customStyles = {
 }
 
 class AlertModal extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     componentDidMount() {
     }
 
     render() {
         let img_filename = '';
-        console.log(this.props.alertType);
         if (this.props.alertType === 'warning') {
             img_filename = 'error.png';
         } else if (this.props.alertType === 'tutorial') {

@@ -9,7 +9,6 @@ import {
   PAGINATION_FOR_ACTIVITY,
   LOADING_CUSTOMER_TABLE,
   ACTIVITY_QUERY,
-  ADD_MAIN_INFO
 } from '../types';
 
 export const acPaginationCustomer = (pagination, page) => async (

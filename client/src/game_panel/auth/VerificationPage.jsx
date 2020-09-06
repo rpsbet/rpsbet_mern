@@ -32,7 +32,7 @@ function VerificationPage(props) {
 
   useEffect(() => {
     const handleDisableButton = () => {
-      if (verificationCode.length == 4) {
+      if (verificationCode.length === 4) {
           setDisable(false);
       } else {
         setDisable(true);
@@ -67,7 +67,7 @@ function VerificationPage(props) {
               <button className={"btn btn-info btn-block " + disable}>Confirm</button>
             </div>
             <div className="text-center">
-              <a href="#" onClick={resendEmail} id="resend"><u>Resend Verification Email</u></a>
+              <a href="#resend" onClick={resendEmail} id="resend"><u>Resend Verification Email</u></a>
             </div>
           </form>
 

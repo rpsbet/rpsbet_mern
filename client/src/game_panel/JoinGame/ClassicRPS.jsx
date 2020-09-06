@@ -7,7 +7,7 @@ class ClassicRPS extends Component {
         super(props);
         this.state = {
             selected_rps: 1,
-            advanced_status: 'hidden',
+            advanced_status: '',
             is_anonymous: false,
         };
         this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
@@ -16,11 +16,11 @@ class ClassicRPS extends Component {
 
     onShowButtonClicked(e) {
         e.preventDefault();
-        if (this.state.advanced_status === "") {
-            this.setState({advanced_status: "hidden"});
-        } else {
-            this.setState({advanced_status: ""});
-        }
+        // if (this.state.advanced_status === "") {
+        //     this.setState({advanced_status: "hidden"});
+        // } else {
+        //     this.setState({advanced_status: ""});
+        // }
     }
 
     onBtnBetClick(e) {
@@ -47,7 +47,7 @@ class ClassicRPS extends Component {
                     <label className={"drinkcard-cc paper" + (this.state.selected_rps === 2 ? " checked" : "")} onClick={() => { this.setState({selected_rps: 2}); }}></label>
                     <label className={"drinkcard-cc scissors" + (this.state.selected_rps === 3 ? " checked" : "")} onClick={() => { this.setState({selected_rps: 3}); }}></label>
                 </div>
-                <button className="btn-advanced" onClick={this.onShowButtonClicked}>Show/Hide Advanced Settings</button>
+                <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
                     <hr/>
                     <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>

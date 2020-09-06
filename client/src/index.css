@@ -211,7 +211,7 @@ input,textarea { border-radius: 0 !important; }
   line-height: 40px;
   margin-top: -5px;
   position: absolute;
-  width: 160px;
+  min-width: 160px;
   left: calc(50% - 80px);
   cursor: pointer;
   text-align: center;
@@ -614,6 +614,58 @@ label.lbl_game_option {
   font-size: 20px;
 }
 
+.summary_panel > label.lbl_game_option {
+  background: #C83228;
+  color: white;
+}
+
+div.summary_item {
+  color: #C83228;
+  font-weight: 700;
+  font-size: 25px;
+  padding: 10px;
+}
+
+div.game_types {
+  justify-content: center;
+}
+
+div.game_type {
+  background-size: contain;
+  cursor: pointer;
+  width: 320px;
+  -webkit-transition: all 100ms ease-in;
+  -moz-transition: all 100ms ease-in;
+  transition: all 100ms ease-in;
+  -webkit-filter: brightness(1.8) grayscale(1) opacity(.7);
+  -moz-filter: brightness(1.8) grayscale(1) opacity(.7);
+  filter: brightness(1.8) grayscale(1) opacity(.7);
+  margin: 20px;
+  text-align: center;
+  color: black;
+  font-weight: 700;
+}
+
+div.game_type:hover {
+  -webkit-filter: brightness(1.2) grayscale(.5) opacity(.9);
+  -moz-filter: brightness(1.2) grayscale(.5) opacity(.9);
+  filter: brightness(1.2) grayscale(.5) opacity(.9);
+}
+
+div.game_type.checked {
+  filter: none;
+  -moz-filter: none;
+}
+
+div.game_type img {
+  width: 100%;
+  background-color: white;
+}
+
+div.game_type img {
+  background-color: #C83228;
+}
+
 #advanced_panel label.lbl_game_option {
   background: #ddd;
 }
@@ -690,7 +742,7 @@ label.radio-inline.checked {
 
 #rps_radio {
   display: flex;
-  justify-content: center;
+  padding-left: 20px;
 }
 
 .drinkcard-cc.rock {
@@ -899,8 +951,6 @@ input.new_box_prize {
 #advanced_panel {
   margin-left: 0;
   width: 100%;
-  height: 100%;
-  transition: margin-left 0.5s 0.1s ease-in;
 }
  
 #advanced_panel.hidden {
@@ -911,13 +961,18 @@ input.new_box_prize {
   overflow: hidden;
 }
 
+.action_panel {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
 #btn_bet {
-  margin-top: 15px;
   color: #fff;
   background-color: #000 !important;
   border: 3px solid #000 !important;
   font-size: 36px;
-  width: 95%;
+  width: 50%;
   padding: 10px 16px;
   border-radius: 100px;
   font-weight: 800;
@@ -934,6 +989,20 @@ input.new_box_prize {
 #btn_bet.btn_secondary:hover {
   background-color: #449d44 !important;
   border-color: #398439 !important;
+}
+
+#btn_prev, #btn_next, #btn_skip {
+  color: #C83228;
+  background-color: transparent !important;
+  border: 3px solid #C83228 !important;
+  font-size: 25px;
+  border-radius: 100px;
+  font-weight: 800;
+  height: 50px;
+}
+
+button, button.btn {
+  outline: none !important;
 }
 
 /* What you need: */
@@ -1093,6 +1162,7 @@ div.question_panel {
   border-bottom: 3px solid;
   border-color: #dedede;
   padding: 7.5px;
+  min-height: 75px;
   margin: 15px 0;
   border-top-right-radius: 30px;
   border-bottom-left-radius: 30px;
@@ -1103,6 +1173,7 @@ div.question_panel {
 label.answer {
   margin: 5px 0 !important;
   text-align: center;
+  height: 55px;
   font-size: 34px;
 }
 

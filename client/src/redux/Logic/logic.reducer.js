@@ -42,7 +42,6 @@ const initialState = {
     box_list: []
   },
   betResult: -1,
-  isPlayingBrain: false,
   myGames: [],
   myHistory: [],
   chatRoomInfo: {

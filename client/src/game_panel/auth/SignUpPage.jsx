@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 // import Avatar from '@material-ui/core/Avatar';
-import { HepperLink } from '../../components/HepperLink';
 import RegistrationForm from './Registration/RegistrationForm';
 import PrivacyModal from '../modal/PrivacyModal';
 import TermsModal from '../modal/TermsModal';
