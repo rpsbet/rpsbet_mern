@@ -68,22 +68,20 @@ export const bet = (bet_info) => async dispatch => {
         dispatch({ type: BET_SUCCESS, payload: res.data });
       } else if (bet_info.game_type === 'Brain Game') {
         if (res.data.betResult === 1) {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'WOW, What a BRAIN BOX - You WIN!'} });
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'WOW, What a BRAIN BOX - You WIN!', roomStatus: res.data.roomStatus} });
         } else if (res.data.betResult === 0) {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner! PR will be split.'} });
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner! PR will be split.', roomStatus: res.data.roomStatus} });
         } else {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, back to school for you loser!!'} });
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, back to school for you loser!!', roomStatus: res.data.roomStatus} });
         }
-        history.push('/join');
       } else {
         if (res.data.betResult === 1) {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'Nice, You Win!'} });
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'Nice, You Win!', roomStatus: res.data.roomStatus} });
         } else if (res.data.betResult === 0) {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner!'} });
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner!', roomStatus: res.data.roomStatus} });
         } else {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, You Lost!'} });
+          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, You Lost!', roomStatus: res.data.roomStatus} });
         }
-        history.push('/join');
       }
     } else {
       dispatch({ type: BET_FAIL });
@@ -109,9 +107,9 @@ export const getRoomInfo = (room_id) => async dispatch => {
 
 // GetRoomList
 export const getRoomList = (search_condition) => async dispatch => {
-  const body = JSON.stringify(search_condition);
+  // const body = JSON.stringify(search_condition);
   try {
-    const res = await axios.get('/game/rooms', body);
+    const res = await axios.get('/game/rooms', {params: search_condition});
     if (res.data.success) {
       dispatch({ type: ROOMS_LOADED, payload: res.data });
     }
@@ -120,9 +118,9 @@ export const getRoomList = (search_condition) => async dispatch => {
 };
 
 // GetHistory
-export const getHistory = () => async dispatch => {
+export const getHistory = (search_condition) => async dispatch => {
   try {
-    const res = await axios.get('/game/history');
+    const res = await axios.get('/game/history', {params: search_condition});
     if (res.data.success) {
       dispatch({ type: HISTORY_LOADED, payload: res.data.history });
     }
@@ -269,3 +267,11 @@ export const addNewTransaction = data => dispatch => {
 export const setUrl = url => dispatch => {
   dispatch({ type: SET_URL, payload: url });
 };
+
+export const startLoading = () => dispatch => {
+  dispatch({ type: START_LOADING });
+}
+
+export const endLoading = () => dispatch => {
+  dispatch({ type: END_LOADING });
+}

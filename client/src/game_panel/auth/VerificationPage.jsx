@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { verifyEmail, resendVerificationEmail } from '../../redux/Auth/user.actions';
+import { verifyEmail, resendVerificationEmail, userSignOut } from '../../redux/Auth/user.actions';
 import PrivacyModal from '../modal/PrivacyModal';
 import TermsModal from '../modal/TermsModal';
 
@@ -65,6 +65,7 @@ function VerificationPage(props) {
             </div>
             <div className="form-group">
               <button className={"btn btn-info btn-block " + disable}>Confirm</button>
+              <button id="btn_goback" className={"btn btn-block " + disable} onClick={props.userSignOut}>Go Back</button>
             </div>
             <div className="text-center">
               <a href="#resend" onClick={resendEmail} id="resend"><u>Resend Verification Email</u></a>
@@ -84,7 +85,8 @@ function VerificationPage(props) {
 
 const mapDispatchToProps = {
   verifyEmail,
-  resendVerificationEmail
+  resendVerificationEmail,
+  userSignOut
 };
 
 export default connect(

@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { getRoomList, getHistory, setCurRoomInfo } from '../../redux/Logic/logic.actions'
+import { getRoomList, getHistory, setCurRoomInfo, startLoading, endLoading } from '../../redux/Logic/logic.actions'
 import Moment from 'moment';
 import { openAlert } from '../../redux/Notification/notification.actions';
+import { FaSearch } from 'react-icons/fa';
 
 function updateFromNow(history) {
     const result = JSON.parse(JSON.stringify(history));
@@ -19,9 +20,13 @@ class RoomList extends Component {
         this.state = {
             pageNumber: props.pageNumber,
             balance: this.props.balance,
-            history: this.props.history
+            history: this.props.history,
+            search_room_text: '',
+            search_history_text: '',
         };
         this.joinRoom = this.joinRoom.bind(this);
+        this.searchRoom = this.searchRoom.bind(this);
+        this.searchHistory = this.searchHistory.bind(this);
     }
 
 
@@ -45,8 +50,9 @@ class RoomList extends Component {
         this.IsAuthenticatedReroute();
         this.props.getRoomList({
             page: this.state.pageNumber,
+            keyword: this.state.search_room_text
         });
-        await this.props.getHistory();
+        await this.props.getHistory({keyword: this.state.search_history_text});
         this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
     }
 
@@ -59,6 +65,23 @@ class RoomList extends Component {
             history.push('/');
         }
     };
+
+    async searchRoom(e) {
+        e.preventDefault();
+        this.props.startLoading();
+        await this.props.getRoomList({
+            page: this.state.pageNumber,
+            keyword: this.state.search_room_text
+        });
+        this.props.endLoading();
+    }
+
+    async searchHistory(e) {
+        e.preventDefault();
+        this.props.startLoading();
+        await this.props.getHistory({keyword: this.state.search_history_text});
+        this.props.endLoading();
+    }
 
     joinRoom(e) {
         const creator_id = e.target.getAttribute('creator_id');
@@ -97,7 +120,13 @@ class RoomList extends Component {
         return (
             <>
                 <h1 className="main_title">Join a game</h1>
-                <label className="tbl_title">Open Games</label>
+                <div className="table_title_with_search">
+                    <label className="tbl_title">Open Games</label>
+                    <form className="search_panel" onSubmit={this.searchRoom}>
+                        <input type="text" className="search_text" value={this.state.search_room_text} onChange={(e)=>{this.setState({search_room_text: e.target.value})}} />
+                        <button className="btn"><FaSearch /></button>
+                    </form>
+                </div>
                 <div className="overflowX">
                     <table className="table table-striped table-hover text-center normal_table">
                         <thead>
@@ -114,7 +143,7 @@ class RoomList extends Component {
                         {this.props.roomList.map((row, key) => (
                             <tr key={key}>
                                 <td>{row.game_type.short_name + '-' + row.index}</td>
-                                <td><img className="avatar" src={row.creator_avatar} alt="" />{row.creator}</td>
+                                <td><img className="avatar" src={`${row.creator_avatar} `} alt="" />{row.creator}</td>
                                 <td>{"£" + row.user_bet + " / £" + row.pr}</td>
                                 <td style={{color: "rgb(2, 197, 38)"}}>{row.winnings}</td>
                                 <td>{row.is_private ? "Private" : "Public"}</td>
@@ -140,6 +169,13 @@ class RoomList extends Component {
                         ), this)}
                         </tbody>
                     </table>
+                </div>
+                <div className="table_title_with_search">
+                    <label className="tbl_title black">History</label>
+                    <form className="search_panel" onSubmit={this.searchHistory}>
+                        <input type="text" className="search_text" value={this.state.search_history_text} onChange={(e)=>{this.setState({search_history_text: e.target.value})}} />
+                        <button className="btn"><FaSearch /></button>
+                    </form>
                 </div>
                 <div className="overflowX">
                     <table className="table table-black">
@@ -180,7 +216,9 @@ const mapDispatchToProps = {
     getRoomList,
     getHistory,
     setCurRoomInfo,
-    openAlert
+    openAlert,
+    startLoading,
+    endLoading
 };
 
 export default connect(

@@ -6,8 +6,8 @@ import PrivacyModal from '../modal/PrivacyModal';
 import TermsModal from '../modal/TermsModal';
 
 function SignInSide(props) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(props.email);
+  const [password, setPassword] = useState(props.password);
   const [disable, setDisable] = useState(true);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -92,11 +92,16 @@ function SignInSide(props) {
   );
 }
 
+const mapStateToProps = state => ({
+  email: state.auth.user.email,
+  password: state.auth.user.password,
+});
+
 const mapDispatchToProps = {
   userSignIn
 };
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(SignInSide);

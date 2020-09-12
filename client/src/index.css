@@ -107,7 +107,7 @@ input,textarea { border-radius: 0 !important; }
     min-width: 700px;
     max-width: 97% !important;
     max-height: 97% !important;
-    overflow-y: scroll;
+    overflow-y: auto;
     margin: auto;
 }
 
@@ -164,7 +164,8 @@ input,textarea { border-radius: 0 !important; }
     background-color: #5653df !important;
 }
 
-.login_form #btn_signup {
+.login_form #btn_signup,
+.login_form #btn_goback {
   background-color: white;
   color: #3339;
   margin: 10px auto;
@@ -619,6 +620,17 @@ label.lbl_game_option {
   color: white;
 }
 
+.pre_summary_panel {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-gap: 30px;
+}
+
+.pre_summary_panel .lbl_game_option {
+  background: #F85933;
+  color: #333333;
+}
+
 div.summary_item {
   color: #C83228;
   font-weight: 700;
@@ -991,7 +1003,7 @@ input.new_box_prize {
   border-color: #398439 !important;
 }
 
-#btn_prev, #btn_next, #btn_skip {
+#btn_prev, #btn_next, #btn_skip, #btn_play_again {
   color: #C83228;
   background-color: transparent !important;
   border: 3px solid #C83228 !important;
@@ -1017,6 +1029,35 @@ button, button.btn {
     text-overflow: ellipsis;
 }
 
+.search_panel {
+  background: #fff;
+  color: #333;
+  padding-left: 30px;
+  border-top-left-radius: 500px;
+  text-transform: uppercase;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.search_panel input.search_text{
+  border: 0;
+  outline: 0;
+}
+
+.search_panel button {
+  color: #888;
+}
+
+.search_panel button:hover {
+  color: #333;
+}
+
+.table_title_with_search {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
 .tbl_title {
     background: #f6b229;
     color: #fff;
@@ -1031,6 +1072,11 @@ button, button.btn {
     font-weight: 700;
     line-height: 1.1;
 }
+
+.tbl_title.black {
+  background-color: #33271e;
+}
+
 .my-open-games { overflow-x: scroll; }
 
 table.normal_table thead {

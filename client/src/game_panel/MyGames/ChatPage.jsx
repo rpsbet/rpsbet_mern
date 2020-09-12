@@ -89,7 +89,7 @@ class ChatPage extends Component {
             <>
                 <div className="chat_header row">
                     <a href="/mygames"><span>Go Back</span><RiArrowGoBackLine /></a>
-                    <img src={this.props.avatar} alt="" />
+                    <img src={`${this.props.avatar} `} alt="" />
                     <span className="chat_header_username">{this.props.username}</span>
                 </div>
                 <div className="chat_log_panel" id="chat_log_panel">

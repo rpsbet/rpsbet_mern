@@ -163,6 +163,13 @@ class SiteWrapper extends Component {
   handleBalanceClick() {
     this.setState({ showGameLog: !this.state.showGameLog });
   }
+
+  number2dp(num) {
+    if (num - parseInt(num) === 0) {
+      return num;
+    }
+    return num.toFixed(2);
+  }
   
   render() {
     const messageCount = this.props.unreadMessageCount;
@@ -190,7 +197,7 @@ class SiteWrapper extends Component {
                   <tr><td>...</td></tr> :
                   this.state.transactions.map((row, key) => (
                     <tr key={key}>
-                      <td className={"amount " + (row.amount > 0 ? "green" : "red")}>{row.amount > 0 ? '+ £' + row.amount / 100.0 : '- £' + Math.abs(row.amount / 100.0)}</td>
+                      <td className={"amount " + (row.amount > 0 ? "green" : "red")}>{row.amount > 0 ? '+ £' + this.number2dp(row.amount / 100.0) : '- £' + this.number2dp(Math.abs(row.amount / 100.0))}</td>
                       <td className="fromNow">{row.from_now}</td>
                     </tr>
                   ))
@@ -203,7 +210,7 @@ class SiteWrapper extends Component {
             <span className="welcome">Welcome </span>
             <span className="user_name mr-auto">{this.state.userName}</span>
             {/* <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a> */}
-            <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src={this.props.user.avatar} alt="" /></button>
+            <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src={`${this.props.user.avatar} `} alt="" /></button>
           </div>
         </div>
         <div className="game_wrapper">

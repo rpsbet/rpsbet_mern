@@ -96,7 +96,7 @@ class Dropzone extends Component {
         />
         <CloudUpload />
         <span>Upload Image</span>
-        {this.state.imagePreviewUrl ? <img className="AvatarPreviewPanel" alt="" src={this.state.imagePreviewUrl} /> : null}
+        {this.state.imagePreviewUrl ? <img className="AvatarPreviewPanel" alt="" src={`${this.state.imagePreviewUrl} `} /> : null}
       </div>
     );
   }

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { closeAlert } from '../../redux/Notification/notification.actions';
+import history from '../../redux/history';
 
 Modal.setAppElement('#root')
 
@@ -22,7 +23,26 @@ const customStyles = {
 }
 
 class AlertModal extends Component {
+    constructor(props) {
+        super(props);
+
+        this.onBtnOkClicked = this.onBtnOkClicked.bind(this);
+        this.onBtnPlayAgainClicked = this.onBtnPlayAgainClicked.bind(this);
+    }
+
     componentDidMount() {
+    }
+
+    onBtnOkClicked(e) {
+        if (this.props.alertType === 'win' || this.props.alertType === 'lost' || this.props.alertType === 'draw') {
+            history.push('/join');
+        }
+
+        this.props.closeAlert();
+    }
+
+    onBtnPlayAgainClicked(e) {
+        window.location.reload();
     }
 
     render() {
@@ -55,7 +75,8 @@ class AlertModal extends Component {
                 </div>
                 <div className="alert_message_panel">
                     {this.props.alertMessage}
-                    <button onClick={this.props.closeAlert}>Okay</button>
+                    <button onClick={this.onBtnOkClicked}>Okay</button>
+                    {(this.props.alertType === 'lost' || this.props.alertType === 'draw') && this.props.roomStatus !== 'finished' && <button onClick={this.onBtnPlayAgainClicked}>Play Again</button>}
                 </div>
             </div> 
         </Modal>;
@@ -65,6 +86,7 @@ class AlertModal extends Component {
 const mapStateToProps = state => ({
     isOpen: state.snackbar.showAlert,
     title: state.snackbar.title,
+    roomStatus: state.snackbar.roomStatus,
     alertMessage: state.snackbar.alertMessage,
     alertType: state.snackbar.alertType,
     socket: state.auth.socket,

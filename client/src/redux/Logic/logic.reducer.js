@@ -42,6 +42,7 @@ const initialState = {
     box_list: []
   },
   betResult: -1,
+  roomStatus: '',
   myGames: [],
   myHistory: [],
   chatRoomInfo: {
@@ -57,19 +58,17 @@ export default function(state = initialState, action) {
   switch (type) {
     case BET_SUCCESS:
       return {
-        ...state, betResult: payload.betResult
+        ...state, betResult: payload.betResult, roomStatus: payload.roomStatus
       };
     case HISTORY_LOADED:
       return {
         ...state, history: payload
       }
     case START_LOADING:
-      console.log('START_LOADING');
       return {
         ...state, isActiveLoadingOverlay: true
       }
     case END_LOADING:
-      console.log('END_LOADING');
       return {
         ...state, isActiveLoadingOverlay: false
       }

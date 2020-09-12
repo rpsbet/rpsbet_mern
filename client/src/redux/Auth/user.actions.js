@@ -16,7 +16,8 @@ import {
   SET_AVATAR,
   TRANSACTION_LOADED,
   VERIFICATION_SUCCESS,
-  OPEN_ALERT_MODAL
+  OPEN_ALERT_MODAL,
+  SET_USERNAME_PASSWORD
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -60,6 +61,7 @@ export const userSignUp = ({
     const res = await axios.post('/user', body);
     if (res.data.success) {
       dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'tutorial', title: 'Get Started', message: 'Welcome...so you wanna make a bit of money? Click your Profile icon in the Top Right and click DEPOSIT.'} });
+      dispatch({ type: SET_USERNAME_PASSWORD, payload: {email, password} });
       history.push('/signin');
       dispatch({ type: MSG_SUCCESS, payload: res.data.message });
     } else {

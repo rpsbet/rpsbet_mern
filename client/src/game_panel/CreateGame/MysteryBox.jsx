@@ -27,10 +27,15 @@ class MysteryBox extends Component {
         let max_return = 0;
         let max_prize = 0;
         let lowest_box_price = -1;
+        let highest_box_price = 0;
 
         box_list.map((row) => {
             if (lowest_box_price === -1 || lowest_box_price > row.box_price) {
                 lowest_box_price = row.box_price;
+            }
+
+            if (highest_box_price < row.box_price) {
+                highest_box_price = row.box_price;
             }
 
             if (row.box_prize >= row.box_price) {
@@ -46,7 +51,7 @@ class MysteryBox extends Component {
             return true;
         }, this);
 
-        return { max_return, max_prize, lowest_box_price };
+        return { max_return, max_prize, lowest_box_price, highest_box_price };
     }
 
     onAddBox(e) {
@@ -72,7 +77,8 @@ class MysteryBox extends Component {
             max_return: max_return['max_return'] + " * 0.95",
             max_prize: max_return['max_prize'],
             endgame_amount: max_return['max_return'],
-            lowest_box_price: max_return['lowest_box_price']
+            lowest_box_price: max_return['lowest_box_price'],
+            public_bet_amount: (max_return['lowest_box_price'] === max_return['highest_box_price'] ? `£${max_return['lowest_box_price']}` : `£${max_return['lowest_box_price']} - £${max_return['highest_box_price']}`)
         });
     }
 
@@ -89,7 +95,8 @@ class MysteryBox extends Component {
             max_return: max_return['max_return'] + " * 0.95",
             max_prize: max_return['max_prize'],
             endgame_amount: max_return['max_return'],
-            lowest_box_price: max_return['lowest_box_price']
+            lowest_box_price: max_return['lowest_box_price'],
+            public_bet_amount: (max_return['lowest_box_price'] === max_return['highest_box_price'] ? `£${max_return['lowest_box_price']}` : `£${max_return['lowest_box_price']} - £${max_return['highest_box_price']}`)
         });
     }
 
@@ -124,7 +131,7 @@ class MysteryBox extends Component {
                     <button className="btn btn_add_box" onClick={this.onAddBox}>ADD BOX</button>
                     <div>Boxes will be displayed to the public in the order you have added them</div>
                 </div>
-
+{/* 
                 <hr/>
                 <label className="lbl_game_option">Total Bet Amount</label>
                 <input type="text" value={"£" + this.props.bet_amount} className="form-control input-sm bet-input" placeholder="Bet Amount" readOnly />
@@ -138,7 +145,7 @@ class MysteryBox extends Component {
                 <hr/>
                 <label className="lbl_game_option">Public Max Return</label>
                 <input type="text" readOnly className="form-control input-sm" value={"£" + this.props.max_prize + " * 0.95"} />
-                <div>The public max return with the chosen settings</div>
+                <div>The public max return with the chosen settings</div> */}
             </form>
         );
     }

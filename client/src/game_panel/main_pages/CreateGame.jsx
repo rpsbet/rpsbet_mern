@@ -6,33 +6,38 @@ import Spleesh from '../CreateGame/Spleesh';
 import MysteryBox from '../CreateGame/MysteryBox';
 import BrainGame from '../CreateGame/BrainGame';
 import PlayBrainGame from '../CreateGame/PlayBrainGame';
-import { createRoom, getGameTypeList, setGameMode, getRoomList } from "../../redux/Logic/logic.actions";
+import Summary from '../CreateGame/Summary';
+import { createRoom, getGameTypeList, setGameMode } from "../../redux/Logic/logic.actions";
 import { getBrainGameType } from '../../redux/Question/question.action';
-import { FaRegQuestionCircle, FaPoundSign } from 'react-icons/fa';
+import { FaRegQuestionCircle } from 'react-icons/fa';
 import { openAlert } from '../../redux/Notification/notification.actions';
+import AdvancedSettings from '../CreateGame/AdvancedSettings';
 
 class CreateGame extends Component {
     constructor(props) {
         super(props);
         this.state = {
             step: 1,
+            child_step: 1,
             game_type: 1,
             game_mode : this.props.game_mode,
             isPlayingBrain: false,
             selected_rps: 1,
             bet_amount: 0,
+            endgame_amount: 0,
+            max_return: 0,
+            max_prize: 0,
+            lowest_box_price: 0,
+            public_bet_amount: "£0",
             is_private: false,
             is_anonymous: false,
             room_password: '',
             endgame_type: true,
-            endgame_amount: 0,
             box_list: [],
-            max_return: 0,
-            max_prize: 0,
-            lowest_box_price: 0,
             brain_game_type: this.props.brain_game_type,
         }
 
+        this.onPrevButtonClicked = this.onPrevButtonClicked.bind(this);
         this.onNextButtonClicked = this.onNextButtonClicked.bind(this);
         this.onSkipButtonClicked = this.onSkipButtonClicked.bind(this);
         this.onCreateRoom = this.onCreateRoom.bind(this);
@@ -88,19 +93,62 @@ class CreateGame extends Component {
         console.log(123123123);
     }
 
+    onPrevButtonClicked() {
+        if (this.state.game_mode !== 'Mystery Box' && this.state.step < 4) {
+            if (this.state.step === 3 && this.state.child_step === 1) {
+                this.setState({
+                    step: 2,
+                    child_step: 2
+                });
+                return;
+            } else if (this.state.child_step > 1) {
+                this.setState({
+                    child_step: this.state.child_step - 1
+                });
+        
+                return;
+            }
+        }
+
+        this.setState({
+            step: this.state.step > 1 ? this.state.step - 1 : this.state.step
+        });
+    }
+
     onNextButtonClicked() {
         if (this.state.step === 1) {
+            let newState = { 
+                child_step: 1, 
+                bet_amount: 0,
+                endgame_amount: 0,
+                max_return: 0,
+                max_prize: 0,
+                lowest_box_price: 0,
+                public_bet_amount: "£0",
+            };
+
             if (this.state.game_mode === "Spleesh!") {
-                this.setState({
+                newState = {
+                    ...newState,
                     bet_amount: 1,
                     endgame_amount: 54,
                     max_return: 54,
-                });
+                };
+            } else if (this.state.game_mode === "Classic RPS") {
+                newState = {
+                    ...newState,
+                    bet_amount: 1,
+                    max_return: "2 * 0.95"
+                };
             } else if (this.state.game_mode === "Brain Game") {
-                this.setState({
+                newState = {
+                    ...newState,
+                    bet_amount: 1,
                     max_return: "∞ * 0.9"
-                });
+                };
             }
+
+            this.setState(newState);
         } else if (this.state.step === 2) {
             if (this.state.bet_amount === 0) {
                 this.props.openAlert('warning', 'Warning!', 'Please input the bet amount!');
@@ -111,6 +159,19 @@ class CreateGame extends Component {
                 this.props.openAlert('warning', 'Warning!', 'Not enough balance!');
                 return;
             }
+
+            if (this.state.game_mode !== 'Mystery Box' && this.state.child_step === 1) {
+                this.setState({
+                    child_step: this.state.child_step + 1
+                });
+                return;
+            } else {
+                this.setState({
+                    step: 3,
+                    child_step: 1
+                });
+                return;
+            }
         } else if (this.state.step === 3) {
             if (this.state.is_private === true && this.state.room_password === "") {
                 this.props.openAlert('warning', 'Warning!', "You have set the Privacy to 'Private'. Please create a password!");
@@ -119,6 +180,13 @@ class CreateGame extends Component {
 
             if (this.state.endgame_amount === 0) {
                 this.setState({endgame_type: false});
+            }
+
+            if (this.state.game_mode !== 'Classic RPS' && this.state.child_step === 1) {
+                this.setState({
+                    child_step: this.state.child_step + 1
+                });
+                return;
             }
         }
 
@@ -176,6 +244,7 @@ class CreateGame extends Component {
                         is_private={this.state.is_private} 
                         is_anonymous={this.state.is_anonymous} 
                         room_password={this.state.room_password} 
+                        step={this.state.child_step}
                     />
                 }
                 {this.state.game_mode === 'Spleesh!' && 
@@ -187,7 +256,7 @@ class CreateGame extends Component {
                         room_password={this.state.room_password}
                         endgame_type={this.state.endgame_type}
                         endgame_amount={this.state.endgame_amount}
-            
+                        step={this.state.child_step}
                     />
                 }
                 {this.state.game_mode === 'Mystery Box' && 
@@ -205,71 +274,10 @@ class CreateGame extends Component {
                         onChangeState={this.onChangeState}
                         bet_amount = {this.state.bet_amount}
                         brain_game_type = {this.state.brain_game_type}
+                        step={this.state.child_step}
                     />
                 }
             </>
-        )
-    }
-
-    step3() {
-        return (
-            <div id="advanced_panel" className={this.state.advanced_status}>
-                <hr/>
-                <label className="lbl_game_option">Privacy</label>
-                <div>
-                    <label className={"radio-inline" + (this.state.is_private === false ? ' checked' : '')} onClick={() => { this.setState({is_private: false, room_password: ''}); }}>Public</label>
-                    <label className={"radio-inline" + (this.state.is_private === true ? ' checked' : '')} onClick={() => { this.setState({is_private: true}); }}>Private</label>
-                    <input type="password" id="room_password" value={this.state.room_password} onChange={(e) => {this.setState({room_password: e.target.value})}} className={"form-control" + (this.state.is_private === true ? "" : " hidden")} />
-                </div>
-                <div>Set to 'Private' to require a password to Join</div>
-
-                { this.state.game_mode !== 'Classic RPS' && <>
-                    <hr/>
-                    <label className="lbl_game_option">END Game Type</label>
-                    <div>
-                        <label className={"radio-inline" + (this.state.endgame_type === false ? ' checked' : '')} onClick={() => { this.setState({endgame_type: false}); }}>Manual</label>
-                        <label className={"radio-inline" + (this.state.endgame_type === true ? ' checked' : '')} onClick={() => { this.setState({endgame_type: true}); }}>Automatic</label>
-                        <label className={"lbl_endgame_type" + (this.state.endgame_type === true ? "" : " hidden")}>
-                            <span className="pound-symbol"><FaPoundSign /><input type="text" id="endgame_amount" value={this.state.endgame_amount} onChange={(e)=>{this.setState({endgame_amount: e.target.value})}} className="col-md-6 form-control bet-input endgame_amount" /></span>
-                        </label>
-                    </div>
-                    <div>Make your game END automatically when your PR reaches an amount. This will put a cap on your Winnings but at least keep them safe.</div>
-                </>
-                }
-
-                <hr/>
-                <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet</label>
-                <div style={{pointerEvents: "none", opacity: "0.6"}}>
-                    <label className={"radio-inline" + (this.state.is_anonymous === true ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: true}); }}>Yes</label>
-                    <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
-                </div>
-                <div style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
-            </div>
-        )
-    }
-
-    step4() {
-        return (
-            <div className="summary_panel">
-                <hr/>
-                <label className="lbl_game_option">Game Summary</label>
-                <div className="summary_item row">
-                    <div className="col-md-3 col-sm-6">Bet Amount</div>
-                    <div className="col-md-3 col-sm-6">£{this.state.bet_amount}</div>
-                </div>
-                <div className="summary_item row">
-                    <div className="col-md-3 col-sm-6">Max Return Amount</div>
-                    <div className="col-md-3 col-sm-6">£{this.state.max_return}</div>
-                </div>
-                {this.state.endgame_type && <div className="summary_item row">
-                    <div className="col-md-3 col-sm-6">End Game Amount</div>
-                    <div className="col-md-3 col-sm-6">£{this.state.endgame_amount}</div>
-                </div>}
-                <div className="summary_item row">
-                    <div className="col-md-3 col-sm-6">Status</div>
-                    <div className="col-md-3 col-sm-6">{this.state.is_private ? "Private" : "Public"}</div>
-                </div>
-            </div>
         )
     }
 
@@ -278,7 +286,7 @@ class CreateGame extends Component {
             <>
                 <hr/>
                 <div className="action_panel">
-                    {this.state.step > 1 && this.state.step < 5 ? <button id="btn_prev" className="btn" onClick={() => { this.setState({step: this.state.step > 1 ? this.state.step - 1 : this.state.step}) }}>Previous</button> : <label>&nbsp;</label>}
+                    {this.state.step > 1 && this.state.step < 5 ? <button id="btn_prev" className="btn" onClick={this.onPrevButtonClicked}>Previous</button> : <label>&nbsp;</label>}
                     {this.state.step === 3 && <button id="btn_skip" className="btn" onClick={this.onSkipButtonClicked}>Skip</button>}
                     {this.state.step === 4 && this.state.game_mode === "Brain Game" && <button id="btn_bet" className="btn btn_secondary" onClick={this.onStartBrainGame}>Start</button>}
                     {this.state.step === 4 && this.state.game_mode !== "Brain Game" && <button id="btn_bet" className="btn" onClick={this.onCreateRoom}>Place Bet Game</button>}
@@ -292,10 +300,34 @@ class CreateGame extends Component {
         return (
             <>
                 {this.header()}
+                {
+                    <Summary 
+                        bet_amount={this.state.bet_amount}
+                        max_return={this.state.max_return}
+                        endgame_type={this.state.endgame_type}
+                        endgame_amount={this.state.endgame_amount}
+                        is_private={this.state.is_private}
+                        step={this.state.step}
+                        child_step={this.state.child_step}
+                        game_mode={this.state.game_mode}
+                        max_prize={this.state.max_prize}
+                        public_bet_amount={this.state.public_bet_amount}
+                    />
+                }
                 {this.state.step === 1 && this.step1()}
                 {this.state.step === 2 && this.step2()}
-                {this.state.step === 3 && true && this.step3()}
-                {this.state.step === 4 && this.step4()}
+                {this.state.step === 3 && 
+                    <AdvancedSettings 
+                        onChangeState={this.onChangeState}
+                        is_private={this.state.is_private}
+                        room_password={this.state.room_password}
+                        game_mode={this.state.game_mode}
+                        endgame_type={this.state.endgame_type}
+                        endgame_amount={this.state.endgame_amount}
+                        is_anonymous={this.state.is_anonymous}
+                        step={this.state.child_step}
+                    />
+                }
                 {this.state.step === 5 && this.state.game_mode === "Brain Game" && this.state.isPlayingBrain && 
                     <PlayBrainGame 
                         brain_game_type={this.state.brain_game_type}
@@ -325,7 +357,6 @@ const mapDispatchToProps = {
     createRoom,
     getGameTypeList,
     setGameMode,
-    getRoomList,
     getBrainGameType,
     openAlert
 };

@@ -94,7 +94,7 @@ class ProfileModal extends Component {
                 {this.props.player_name}'s Card
             </h2>
             <div className="profile_info_panel_image_wrapper">
-                <img src={this.props.avatar} alt="" />
+                <img src={`${this.props.avatar} `} alt="" />
             </div>
             <button className="btn_modal_close" onClick={this.props.closeModal}>×</button>
             <div className="profile_info_panel">

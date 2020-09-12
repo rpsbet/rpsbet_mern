@@ -12,7 +12,8 @@ import {
   SET_AVATAR,
   TRANSACTION_LOADED,
   NEW_TRANSACTION,
-  VERIFICATION_SUCCESS
+  VERIFICATION_SUCCESS,
+  SET_USERNAME_PASSWORD,
 } from '../types';
 
 const initialState = {
@@ -21,7 +22,7 @@ const initialState = {
   isAuthenticated: localStorage.getItem('isAuthenticated'),
   isAdmin: false,
   loading: true,
-  user: {_id:null},
+  user: {_id:null, email:'', password:''},
   unreadMessageCount: 0,
   balance: 0,
   isActivated: true,
@@ -50,6 +51,10 @@ export default function(state = initialState, action) {
     case SET_AVATAR:
       return {
         ...state, user: {...state.user, avatar: payload}
+      }
+    case SET_USERNAME_PASSWORD:
+      return {
+        ...state, user: {...state.user, ...payload}
       }
     case SET_UNREAD_MESSAGE_COUNT:
       return {

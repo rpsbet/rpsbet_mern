@@ -15,7 +15,8 @@ const initialState = {
   showAlert: false,
   title: '',
   alertMessage: '',
-  alertType: ''
+  alertType: '',
+  roomStatus: '',
 };
 
 export default function(state = initialState, action) {
@@ -62,6 +63,7 @@ export default function(state = initialState, action) {
         alertMessage: payload.message,
         alertType: payload.alert_type,
         title: payload.title,
+        roomStatus: payload.roomStatus
       }
     case CLOSE_ALERT_MODAL:
       return {

@@ -19,6 +19,7 @@ class MysteryBox extends Component {
         this.onBoxClicked = this.onBoxClicked.bind(this);
         this.onBtnBetClick = this.onBtnBetClick.bind(this);
         this.onBtnGoToMainGamesClicked = this.onBtnGoToMainGamesClicked.bind(this);
+        this.onBtnPlayAgainClicked = this.onBtnPlayAgainClicked.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -154,6 +155,11 @@ class MysteryBox extends Component {
         )
     }
 
+    onBtnPlayAgainClicked(e) {
+        // history.push('/join/' + this.props.room_id);
+        window.location.reload();
+    }
+
     getBetResultForm = () => {
         let prizes = [];
         this.state.box_list.map((row) => {
@@ -184,6 +190,9 @@ class MysteryBox extends Component {
                 <div className="text-center">
                     <button className="btn" id="btn_bet" onClick={this.onBtnGoToMainGamesClicked}>GO TO MAIN GAMES</button>
                 </div>
+                <div className="text-center mt-4">
+                    {this.props.roomStatus !== 'finished' && <button className="btn" id="btn_play_again" onClick={this.onBtnPlayAgainClicked}>PLAY AGAIN</button>}
+                </div>
             </>
         );
     }
@@ -200,6 +209,8 @@ const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
     balance: state.auth.balance,
     betResult: state.logic.betResult,
+    roomStatus: state.logic.roomStatus,
+    // room_id: state.logic.curRoomInfo._id,
 });
 
 const mapDispatchToProps = {

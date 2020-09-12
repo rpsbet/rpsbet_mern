@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Route, Switch } from 'react-router-dom';
-import LandingPage from '../main_pages/LandingPage';
+// import LandingPage from '../main_pages/LandingPage';
 import CreateGame from '../main_pages/CreateGame';
 import SiteWrapper from '../SiteWrapper';
 import RoomList from '../main_pages/RoomList';
@@ -19,7 +19,8 @@ export class GameMainRoute extends Component {
           <Route 
             exact
             path={`${match.path}`}
-            component={LandingPage}
+            // component={LandingPage}
+            component={RoomList}
           />
           <Route 
             exact
