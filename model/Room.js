@@ -18,6 +18,14 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
+  selected_qs_position: {
+    type: Number,
+    default: 0
+  },
+  qs_game_type: {
+    type: Number,
+    default: 2
+  },
   brain_game_type: {
     type: Schema.Types.ObjectId,
     ref: 'BrainGameType',

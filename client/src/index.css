@@ -710,6 +710,33 @@ label.radio-inline.checked {
   border-radius: 3px;
 }
 
+.qs_image_panel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+div.qs_image_panel > img {
+  width: 500px;
+}
+
+div.qs_image_panel > button {
+  color: #C83228;
+  background-color: transparent;
+  border: 2px solid #C83228;
+  border-radius: 100%;
+}
+
+.qs_image_panel label.qs_game_type {
+  color: #C83228;
+  width: 250px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 30px;
+  margin: 0 20px;
+}
+
 .pound-symbol {
   display: flex;
   align-items: center;
@@ -1543,59 +1570,61 @@ div[aria-label="How To Play Modal"] table td, div[aria-label="How To Play Modal"
     width: 60%;
 }
 
-  .table-black td img.avatar {
+.table-black td img.avatar {
   width: 20px !important;
   height: 20px !important;
 }
-  div.question_panel { font-size: 1.2em; }
-  div.timer { width: 50%;padding: 5px 10px !important; }
-  div.timer_title,
-  div.brain_score {
 
-    font-size: 1.4em !important;
-  }
+div.question_panel { font-size: 1.2em; }
+div.timer { width: 50%;padding: 5px 10px !important; }
+div.timer_title,
+div.brain_score {
 
-  div.brain_score {
-    word-break: break-all;
-    width: 90px;
-    text-align: center;
-    padding: 5px;
-    line-height: 1.6em;
-    border-radius: 15px !important;
-  }
-  .table { margin-bottom: 2em; }
-  .contents_wrapper .chat_input_panel .emoticon_panel {
-    width: 30%;
-  }
-  .contents_wrapper .chat_input_panel .btn_send_message { width: 18%; }
-  .contents_wrapper .chat_input_panel textarea { width: 50%; }
-  .contents_wrapper .chat_input_panel .btn_send_message { font-size: 30px; }
-    .contents_wrapper .chat_log_panel { height: calc(100vh - 260px); }
-    .contents_wrapper .chat_input_panel {
-    padding: 0px;
-    margin-bottom: 0px !important;
-  }
+  font-size: 1.4em !important;
+}
 
-    .contents_wrapper .chat_input_panel textarea { font-size: 1.2em; }
-  .contents_wrapper .chat_log_panel .my_message .message_content:after {
-    left: 85%;
-  }
-  .left_sidebar a.btn {
-    width: 50% !important;
-  }
-  #btn_my_game {
-    width: 100% !important;
-    height: calc(20vh - 100px) !important;
-  }
+div.brain_score {
+  word-break: break-all;
+  width: 90px;
+  text-align: center;
+  padding: 5px;
+  line-height: 1.6em;
+  border-radius: 15px !important;
+}
+.table { margin-bottom: 2em; }
+.contents_wrapper .chat_input_panel .emoticon_panel {
+  width: 30%;
+}
+.contents_wrapper .chat_input_panel .btn_send_message { width: 18%; }
+.contents_wrapper .chat_input_panel textarea { width: 50%; }
+.contents_wrapper .chat_input_panel .btn_send_message { font-size: 30px; }
+  .contents_wrapper .chat_log_panel { height: calc(100vh - 260px); }
+  .contents_wrapper .chat_input_panel {
+  padding: 0px;
+  margin-bottom: 0px !important;
+}
 
-  #btn_create_game {
-    float: left;
-  }
+.contents_wrapper .chat_input_panel textarea { font-size: 1.2em; }
+.contents_wrapper .chat_log_panel .my_message .message_content:after {
+  left: 85%;
+}
+.left_sidebar a.btn {
+  width: 50% !important;
+}
 
-  .contents_wrapper {
-    margin: 0;
-    padding: 0 0 20px !important;
-  }
+#btn_my_game {
+  width: 100% !important;
+  height: calc(20vh - 100px) !important;
+}
+
+#btn_create_game {
+  float: left;
+}
+
+.contents_wrapper {
+  margin: 0;
+  padding: 0 0 20px !important;
+}
 
 .main_header { height: 40px; }
 

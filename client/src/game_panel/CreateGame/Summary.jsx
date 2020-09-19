@@ -15,6 +15,8 @@ class Summary extends Component {
                 public_bet_amount = "£10 - £100";
                 public_max_return = "£560 * 0.9";
             }
+        } else if (this.props.game_mode === 'Quick Shoot') {
+            public_max_return = "£" + this.props.max_return;
         }
 
         return (
@@ -25,7 +27,7 @@ class Summary extends Component {
                     <input type="text" readOnly className="form-control input-sm" value={"£" + (this.props.bet_amount)} />
                 </div>
                 {
-                    (this.props.game_mode === 'Mystery Box' || this.props.game_mode === 'Spleesh!') && 
+                    (this.props.game_mode === 'Mystery Box' || this.props.game_mode === 'Spleesh!' || this.props.game_mode === 'Quick Shoot') && 
                     <div>
                         <hr/>
                         <label className="lbl_game_option">Public Bet Amount</label>
@@ -38,7 +40,7 @@ class Summary extends Component {
                     <input type="text" readOnly className="form-control input-sm" value={"£" + (this.props.max_return)} />
                 </div>
                 {
-                    (this.props.game_mode === 'Mystery Box' || this.props.game_mode === 'Spleesh!') && 
+                    (this.props.game_mode === 'Mystery Box' || this.props.game_mode === 'Spleesh!' || this.props.game_mode === 'Quick Shoot') && 
                     <div>
                         <hr/>
                         <label className="lbl_game_option">Public Max Return</label>

@@ -51,10 +51,11 @@ router.get('/room/:id', async (req, res) => {
                 _id: room['_id'],
                 creator_id: room['creator'],
                 game_type: room['game_type']['game_type_name'],
-                bet_amount: room['bet_amount'],
+                bet_amount: room['user_bet'],
                 spleesh_bet_unit: room['spleesh_bet_unit'],
                 brain_game_type: room['brain_game_type'],
                 brain_game_score: room['brain_game_score'],
+                qs_game_type: room['qs_game_type'],
                 game_log_list: gameLogList,
                 box_list: boxPrizeList
             }
@@ -176,6 +177,17 @@ getHistory = async (keyword) => {
                             + " * 0.95</span>] against <img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' />[" + gameLog['joined_user']['username'] + "] in [<span style='color: #C83228;'>" 
                             + gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
                     }
+                } else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
+                    if (gameLog.game_result === 1) {
+                        temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' />[" + gameLog['joined_user']['username'] 
+                            + "] scored a goal and won [<span style='color: #02c526;'>£" + (gameLog['room']['bet_amount'] * gameLog['room']['qs_game_type']) 
+                            + " * 0.95</span>] in [<span style='color: #C83228;'>" 
+                            + gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
+                    } else {
+                        temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' />[" + gameLog['joined_user']['username']
+                            + "] missed his shot and lost [<span style='color: #02c526;'>£" + gameLog['room']['user_bet'] + "</span>] in [<span style='color: #C83228;'>" 
+                            + gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
+                    }
                 } else if (gameLog['game_type']['game_type_name'] === 'Spleesh!') {
                     if (gameLog.game_result === 1) {
                         temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' />[" + gameLog['joined_user']['username'] + "] guessed [<span style='color: #02c526;'>" + gameLog['bet_amount'] 
@@ -274,6 +286,8 @@ getRoomList = async (pagination, page, keyword) => {
                 temp.winnings = "(£" + room['pr'] + " + £" + room['bet_amount'] + ") * 0.9";
             } else if (temp.game_type.game_type_id === 4) {
                 temp.winnings = "£" + room['pr'] + " * 0.95";
+            } else if (temp.game_type.game_type_id === 5) {
+                temp.winnings = "£" + room['pr'] + " * 0.95";
             }
     
             result.push(temp);
@@ -352,6 +366,10 @@ router.post('/rooms', auth, async (req, res) => {
             pr = req.body.max_prize;
             host_pr = req.body.bet_amount;
             user_bet = req.body.lowest_box_price;
+        } else if (req.body.game_type == 5) {   // Quick Shoot
+            pr = req.body.max_return;
+            host_pr = req.body.max_return;
+            user_bet = req.body.max_return - req.body.bet_amount;
         }
 
         const roomCount = await Room.countDocuments({});
@@ -803,6 +821,25 @@ router.post('/bet', auth, async (req, res) => {
                     newTransactionC.amount += roomInfo['bet_amount'] * 200 * 0.95;
 
                     message.message = "I lost £" + roomInfo['bet_amount'] + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+                }
+
+                roomInfo.status = 'finished';
+            } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
+                newTransactionJ.amount -= roomInfo['user_bet'] * 100;
+
+                newGameLog.selected_qs_position = req.body.selected_qs_position;
+
+                console.log(roomInfo.selected_qs_position, req.body.selected_qs_position);
+
+                if (roomInfo.selected_qs_position !== req.body.selected_qs_position) {
+                    newGameLog.game_result = 1;
+                    newTransactionJ.amount += roomInfo['bet_amount'] * roomInfo['qs_game_type'] * 95;
+                    message.message = "Your not the best keeper are you? I just won £" + (roomInfo['bet_amount'] * roomInfo['qs_game_type']) + " * 0.95 in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+                } else {
+                    newGameLog.game_result = -1;
+                    newTransactionC.amount += roomInfo['bet_amount'] * roomInfo['qs_game_type'] * 95;
+
+                    message.message = "The boots suck, I just lost £" + roomInfo['user_bet'] + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
                 }
 
                 roomInfo.status = 'finished';

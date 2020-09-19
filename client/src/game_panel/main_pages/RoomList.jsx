@@ -29,7 +29,6 @@ class RoomList extends Component {
         this.searchHistory = this.searchHistory.bind(this);
     }
 
-
     static getDerivedStateFromProps(props, current_state) {
         if (current_state.balance !== props.balance || 
             (current_state.history.length === 0 || current_state.history[0]['created_at'] !== props.history[0]['created_at'])) {

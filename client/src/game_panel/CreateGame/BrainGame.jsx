@@ -18,7 +18,7 @@ class BrainGame extends Component {
                     <label className="lbl_game_option">Bet Amount</label>
 
                     <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 1 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 1}); }}>£1</label>
-                    <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 2.5 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 2.5}); }}>£2.5</label>
+                    <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 2.5 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 2.5}); }}>£2.50</label>
                     <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 5 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 5}); }}>£5</label>
                     <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 10 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 10}); }}>£10</label>
                     <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 25 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 25}); }}>£25</label>

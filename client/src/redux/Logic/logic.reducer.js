@@ -39,7 +39,8 @@ const initialState = {
     spleesh_bet_unit: 1,
     box_price: 0,
     game_log_list: [],
-    box_list: []
+    box_list: [],
+    qs_game_type: 2
   },
   betResult: -1,
   roomStatus: '',

@@ -16,7 +16,7 @@ class ClassicRPS extends Component {
                 <label className="lbl_game_option">Bet Amount</label>
 
                 <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 1 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 1, max_return: '2 * 0.95'}); }}>£1</label>
-                <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 2.5 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 2.5, max_return: '5 * 0.95'}); }}>£2.5</label>
+                <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 2.5 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 2.5, max_return: '5 * 0.95'}); }}>£2.50</label>
                 <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 5 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 5, max_return: '10 * 0.95'}); }}>£5</label>
                 <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 10 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 10, max_return: '20 * 0.95'}); }}>£10</label>
                 <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 25 ? ' checked' : '')} onClick={() => { this.setState({is_other: "hidden"}); this.props.onChangeState({bet_amount: 25, max_return: '50 * 0.95'}); }}>£25</label>

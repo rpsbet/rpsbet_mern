@@ -1,25 +1,18 @@
 import React, { Component } from 'react';
 
 class Spleesh extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            spleesh_game_type: 1,
-        };
-    }
-
     createNumberPanel() {
         let panel = [];
         for (let i = 1; i <= 10; i++) {
             panel.push( <label 
-                            className={"radio-inline" + (this.props.bet_amount / this.state.spleesh_game_type === i ? ' checked' : '')} 
+                            className={"radio-inline" + (this.props.bet_amount / this.props.spleesh_bet_unit === i ? ' checked' : '')} 
                             onClick={() => { this.props.onChangeState({
-                                bet_amount: i * this.state.spleesh_game_type,
-                                endgame_amount: this.state.spleesh_game_type * (55 - i),
-                                max_return: this.state.spleesh_game_type * (55 - i)
+                                bet_amount: i * this.props.spleesh_bet_unit,
+                                endgame_amount: this.props.spleesh_bet_unit * (55 - i),
+                                max_return: this.props.spleesh_bet_unit * (55 - i)
                             }); }} key={i}
                         >
-                            £{i * this.state.spleesh_game_type}
+                            £{i * this.props.spleesh_bet_unit}
                         </label>);
             if (i % 4 === 0) {
                 panel.push(<br key={'br_' + i}/>);
@@ -37,19 +30,17 @@ class Spleesh extends Component {
                         <div style={{padding: "0"}} className="col-md-6 col-sm-10 col-xs-10">
                             <label className="lbl_game_option">Game Type</label>
                             <label 
-                                className={"radio-inline" + (this.state.spleesh_game_type === 1 ? ' checked' : '')} 
+                                className={"radio-inline" + (this.props.spleesh_bet_unit === 1 ? ' checked' : '')} 
                                 onClick={() => { 
-                                    this.setState({spleesh_game_type: 1}); 
-                                    this.props.onChangeState({bet_amount: 1, max_return: 54}); 
+                                    this.props.onChangeState({spleesh_bet_unit: 1, bet_amount: 1, max_return: 54, endgame_amount: 54}); 
                                 }}
                             >
                                     £1 - £10
                             </label>
                             <label 
-                                className={"radio-inline" + (this.state.spleesh_game_type === 10 ? ' checked' : '')} 
+                                className={"radio-inline" + (this.props.spleesh_bet_unit === 10 ? ' checked' : '')} 
                                 onClick={() => { 
-                                    this.setState({spleesh_game_type: 10}); 
-                                    this.props.onChangeState({bet_amount: 10, max_return: 540}); 
+                                    this.props.onChangeState({spleesh_bet_unit: 10, bet_amount: 10, max_return: 540, endgame_amount: 540}); 
                                 }}
                             >
                                 £10 - £100

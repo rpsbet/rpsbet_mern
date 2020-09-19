@@ -6,6 +6,7 @@ import Spleesh from '../CreateGame/Spleesh';
 import MysteryBox from '../CreateGame/MysteryBox';
 import BrainGame from '../CreateGame/BrainGame';
 import PlayBrainGame from '../CreateGame/PlayBrainGame';
+import QuickShoot from '../CreateGame/QuickShoot';
 import Summary from '../CreateGame/Summary';
 import { createRoom, getGameTypeList, setGameMode } from "../../redux/Logic/logic.actions";
 import { getBrainGameType } from '../../redux/Question/question.action';
@@ -23,8 +24,11 @@ class CreateGame extends Component {
             game_mode : this.props.game_mode,
             isPlayingBrain: false,
             selected_rps: 1,
+            qs_game_type: 2,
+            selected_qs_position: 0,
             bet_amount: 0,
             endgame_amount: 0,
+            spleesh_bet_unit: 1, 
             max_return: 0,
             max_prize: 0,
             lowest_box_price: 0,
@@ -96,10 +100,17 @@ class CreateGame extends Component {
     onPrevButtonClicked() {
         if (this.state.game_mode !== 'Mystery Box' && this.state.step < 4) {
             if (this.state.step === 3 && this.state.child_step === 1) {
-                this.setState({
-                    step: 2,
-                    child_step: 2
-                });
+                if (this.state.game_mode === "Quick Shoot") {
+                    this.setState({
+                        step: 2,
+                        child_step: 3
+                    });
+                } else {
+                    this.setState({
+                        step: 2,
+                        child_step: 2
+                    });
+                }
                 return;
             } else if (this.state.child_step > 1) {
                 this.setState({
@@ -146,6 +157,13 @@ class CreateGame extends Component {
                     bet_amount: 1,
                     max_return: "∞ * 0.9"
                 };
+            } else if (this.state.game_mode === "Quick Shoot") {
+                newState = {
+                    ...newState,
+                    bet_amount: 1,
+                    public_bet_amount: "£1",
+                    max_return: "1"
+                };
             }
 
             this.setState(newState);
@@ -160,7 +178,13 @@ class CreateGame extends Component {
                 return;
             }
 
-            if (this.state.game_mode !== 'Mystery Box' && this.state.child_step === 1) {
+
+            if (this.state.game_mode === 'Quick Shoot' && this.state.child_step < 3) {
+                this.setState({
+                    child_step: this.state.child_step + 1
+                });
+                return;
+            }else if (this.state.game_mode !== 'Mystery Box' && this.state.child_step === 1) {
                 this.setState({
                     child_step: this.state.child_step + 1
                 });
@@ -182,7 +206,7 @@ class CreateGame extends Component {
                 this.setState({endgame_type: false});
             }
 
-            if (this.state.game_mode !== 'Classic RPS' && this.state.child_step === 1) {
+            if (this.state.game_mode !== 'Classic RPS' && this.state.game_mode !== 'Quick Shoot' && this.state.child_step === 1) {
                 this.setState({
                     child_step: this.state.child_step + 1
                 });
@@ -251,6 +275,7 @@ class CreateGame extends Component {
                     <Spleesh 
                         onChangeState={this.onChangeState} 
                         bet_amount={this.state.bet_amount}
+                        spleesh_bet_unit={this.state.spleesh_bet_unit}
                         is_private={this.state.is_private}
                         is_anonymous={this.state.is_anonymous}
                         room_password={this.state.room_password}
@@ -274,6 +299,20 @@ class CreateGame extends Component {
                         onChangeState={this.onChangeState}
                         bet_amount = {this.state.bet_amount}
                         brain_game_type = {this.state.brain_game_type}
+                        step={this.state.child_step}
+                    />
+                }
+                {this.state.game_mode === 'Quick Shoot' && 
+                    <QuickShoot 
+                        onChangeState={this.onChangeState} 
+                        bet_amount={this.state.bet_amount}
+                        is_private={this.state.is_private}
+                        is_anonymous={this.state.is_anonymous}
+                        room_password={this.state.room_password}
+                        endgame_type={this.state.endgame_type}
+                        endgame_amount={this.state.endgame_amount}
+                        qs_game_type={this.state.qs_game_type}
+                        selected_qs_position={this.state.selected_qs_position}
                         step={this.state.child_step}
                     />
                 }
