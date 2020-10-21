@@ -28,7 +28,7 @@ class BrainGame extends Component {
                         <span className="pound-symbol"><FaPoundSign />
                         <input type="number" pattern="[0-9]*" value={this.props.bet_amount} onChange={(e)=>{this.props.onChangeState({bet_amount: e.target.value})}} className="form-control col-md-6 input-sm bet-input" placeholder="Bet Amount" /></span>
                     </div>
-                    <div>The global cost to play this game</div>
+                    <div className="tip">The global cost to play this game</div>
                 </>
                 :
                 <>

@@ -23,7 +23,7 @@ class Summary extends Component {
             <div className="pre_summary_panel">
                 <div>
                     <hr/>
-                    <label className="lbl_game_option">Your Bet Amount</label>
+                    <label style={{background: "#f6b22a"}} className="lbl_game_option">Your Bet Amount</label>
                     <input type="text" readOnly className="form-control input-sm" value={"£" + (this.props.bet_amount)} />
                 </div>
                 {
@@ -36,7 +36,7 @@ class Summary extends Component {
                 }
                 <div>
                     <hr/>
-                    <label className="lbl_game_option">Your Max Return</label>
+                    <label style={{background: "#f6b22a"}} className="lbl_game_option">Your Max Return</label>
                     <input type="text" readOnly className="form-control input-sm" value={"£" + (this.props.max_return)} />
                 </div>
                 {
