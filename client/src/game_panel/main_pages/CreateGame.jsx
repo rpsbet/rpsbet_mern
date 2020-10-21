@@ -250,7 +250,7 @@ class CreateGame extends Component {
                         </div>
                     ))}
                 </div>
-                <div>
+                <div class="tip">
                     Click the '<FaRegQuestionCircle />' in the top bar to see How To Play
                 </div>
             </>
@@ -328,7 +328,7 @@ class CreateGame extends Component {
                     {this.state.step > 1 && this.state.step < 5 ? <button id="btn_prev" className="btn" onClick={this.onPrevButtonClicked}>Previous</button> : <label>&nbsp;</label>}
                     {this.state.step === 3 && <button id="btn_skip" className="btn" onClick={this.onSkipButtonClicked}>Skip</button>}
                     {this.state.step === 4 && this.state.game_mode === "Brain Game" && <button id="btn_bet" className="btn btn_secondary" onClick={this.onStartBrainGame}>Start</button>}
-                    {this.state.step === 4 && this.state.game_mode !== "Brain Game" && <button id="btn_bet" className="btn" onClick={this.onCreateRoom}>Place Bet Game</button>}
+                    {this.state.step === 4 && this.state.game_mode !== "Brain Game" && <button id="btn_bet" className="btn" onClick={this.onCreateRoom}>Place Bet</button>}
                     {this.state.step < 4 && <button id="btn_next" className="btn" onClick={this.onNextButtonClicked}>Next</button>}
                 </div>
             </>

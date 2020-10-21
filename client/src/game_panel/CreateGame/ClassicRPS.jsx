@@ -29,7 +29,7 @@ class ClassicRPS extends Component {
                         onChange={(e) => {this.props.onChangeState({bet_amount: e.target.value, max_return: (e.target.value * 2) + " * 0.95"})}} 
                         className="form-control col-md-6 input-sm bet-input" placeholder="Bet Amount" />
                 </span>
-                <div>The global cost to play this game</div>
+                <div className="tip">The global cost to play this game</div>
             </>
             :
             <>

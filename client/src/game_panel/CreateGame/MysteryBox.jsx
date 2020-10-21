@@ -129,13 +129,13 @@ class MysteryBox extends Component {
                     <span className="pound-symbol"><FaPoundSign />
                     <input pattern="[0-9]*" type="text" className="form-control bet-input new_box_prize" maxLength="5" id="new_box_price" name="new_box_price" value={this.state.new_box_price} onChange={this.onChangeNewBoxPrice} placeholder="Box Price" /></span>
                     <button className="btn btn_add_box" onClick={this.onAddBox}>ADD BOX</button>
-                    <div>Boxes will be displayed to the public in the order you have added them</div>
+                    <div className="tip">Boxes will be displayed to the public in the order you have added them</div>
                 </div>
 {/* 
                 <hr/>
                 <label className="lbl_game_option">Total Bet Amount</label>
                 <input type="text" value={"£" + this.props.bet_amount} className="form-control input-sm bet-input" placeholder="Bet Amount" readOnly />
-                <div>Your total cost to create this game (Game Cost = Sum of all Prizes)</div>
+                <div className="tip">Your total cost to create this game (Game Cost = Sum of all Prizes)</div>
 
                 <hr/>
                 <label className="lbl_game_option">Your Max Return</label>
@@ -145,7 +145,7 @@ class MysteryBox extends Component {
                 <hr/>
                 <label className="lbl_game_option">Public Max Return</label>
                 <input type="text" readOnly className="form-control input-sm" value={"£" + this.props.max_prize + " * 0.95"} />
-                <div>The public max return with the chosen settings</div> */}
+                <div className="tip">The public max return with the chosen settings</div> */}
             </form>
         );
     }

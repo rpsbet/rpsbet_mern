@@ -51,7 +51,7 @@ class Spleesh extends Component {
                         <div style={{padding: "0"}} className="col-md-6 col-sm-10 col-xs-10">
                             <label className="lbl_game_option">Your Number</label>
                             {this.createNumberPanel()}
-                            <div>Pick a number for players to guess (Your Bet Amount)</div>
+                            <div className="tip">Pick a number for players to guess (Your Bet Amount)</div>
                         </div>
                     }
                 </div>

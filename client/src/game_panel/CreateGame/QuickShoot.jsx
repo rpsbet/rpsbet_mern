@@ -146,7 +146,7 @@ class QuickShoot extends Component {
                                     }}
                                 className="form-control col-md-6 input-sm bet-input" placeholder="Bet Amount" />
                         </span>
-                        <div>The global cost to play this game</div>
+                        <div className="tip">The global cost to play this game</div>
                     </>
                 }
                 {this.props.step === 3 && 

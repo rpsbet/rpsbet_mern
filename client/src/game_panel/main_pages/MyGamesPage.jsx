@@ -21,7 +21,7 @@ class MyGamesPage extends Component {
     render() {
         return (
             <>
-                <h1 className="main_title">My Games</h1>
+                <h1 style={{ background: "#f6b22a" }} className="main_title">My Games</h1>
                 <MyGamesTable />
                 <MyHistoryTable />
             </>

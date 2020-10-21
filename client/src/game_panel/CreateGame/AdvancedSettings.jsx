@@ -14,7 +14,7 @@ class AdvancedSettings extends Component {
                         <label className={"radio-inline" + (this.props.is_private === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_private: true}); }}>Private</label>
                         <input type="password" id="room_password" value={this.props.room_password} onChange={(e) => {this.props.onChangeState({room_password: e.target.value})}} className={"form-control" + (this.props.is_private === true ? "" : " hidden")} />
                     </div>
-                    <div>Set to 'Private' to require a password to Join</div>
+                    <div className="tip">Set to 'Private' to require a password to Join</div>
                 </>
                 }
 
@@ -29,7 +29,7 @@ class AdvancedSettings extends Component {
                             <span className="pound-symbol"><FaPoundSign /><input type="text" id="endgame_amount" value={this.props.endgame_amount} onChange={(e)=>{this.props.onChangeState({endgame_amount: e.target.value})}} className="col-md-6 form-control bet-input endgame_amount" /></span>
                         </label>
                     </div>
-                    <div>Make your game END automatically when your PR reaches an amount. This will put a cap on your Winnings but at least keep them safe.</div>
+                    <div className="tip">Make your game END automatically when your PR reaches an amount. This will put a cap on your Winnings but at least keep them safe.</div>
                 </>
                 }
 
@@ -39,7 +39,7 @@ class AdvancedSettings extends Component {
                     <label className={"radio-inline" + (this.props.is_anonymous === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: true}); }}>Yes</label>
                     <label className={"radio-inline" + (this.props.is_anonymous === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: false}); }}>No</label>
                 </div>
-                <div style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div> */}
+                <div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div> */}
             </div>
         );
     }

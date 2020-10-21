@@ -119,7 +119,7 @@ class PlayBrainGame extends Component {
                             Score: <label>{this.state.score}</label>
                         </div>
                     </div>
-                    <div className="row" style={{justifyContent: 'center'}}>
+                    <div className="row" style={{marginBottom: '15px', justifyContent: 'center'}}>
                         <div className="col-md-offset-2 col-md-8 clearfix question_panel">
                             {this.state.question.question}
                         </div>

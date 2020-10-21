@@ -57,7 +57,7 @@ function SignInSide(props) {
     <div className="site_wrapper">
       <div className="login_wrapper">
         <div className="login_form">
-          <div className="row">
+          <div className="row login_container">
             <img className="logo" src="/img/logo.png" alt="RPS Bet Logo"/>
           </div>
           <form onSubmit={handleSubmit}>
