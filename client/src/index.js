@@ -16,6 +16,7 @@ import App from './App';
 import GlobalStyle from './Styles/global.styles';
 import history from './redux/history';
 import MessageBar from './components/MessugeBar';
+import AnimatedCusror from './components/AnimatedCursor';
 
 const theme = createMuiTheme({
   palette: {
@@ -27,17 +28,20 @@ const theme = createMuiTheme({
 });
 
 ReactDOM.render(
-  <Provider store={store}>
-    <GlobalStyle />
-    <MuiThemeProvider theme={theme}>
-      <BrowserRouter>
-        <Router history={history}>
-          <App />
-        </Router>
-        <MessageBar />
-      </BrowserRouter>
-    </MuiThemeProvider>
-  </Provider>,
+  <React.Fragment>
+    <AnimatedCusror />
+    <Provider store={store}>
+      <GlobalStyle />
+      <MuiThemeProvider theme={theme}>
+        <BrowserRouter>
+          <Router history={history}>
+            <App />
+          </Router>
+          <MessageBar />
+        </BrowserRouter>
+      </MuiThemeProvider>
+    </Provider>
+  </React.Fragment>,
   document.getElementById('root')
 );
 

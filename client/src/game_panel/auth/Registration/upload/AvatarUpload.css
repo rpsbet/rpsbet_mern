@@ -72,7 +72,6 @@ button {
   vertical-align: middle;
   -ms-touch-action: manipulation;
   touch-action: manipulation;
-  cursor: pointer;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -86,5 +85,4 @@ button {
 
 button:disabled {
   background: rgb(189, 189, 189);
-  cursor: default;
 }
