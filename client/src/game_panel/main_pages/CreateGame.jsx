@@ -149,7 +149,7 @@ class CreateGame extends Component {
                 newState = {
                     ...newState,
                     bet_amount: 1,
-                    max_return: "2 * 0.95"
+                    max_return: 2 * 0.95
                 };
             } else if (this.state.game_mode === "Brain Game") {
                 newState = {
@@ -161,14 +161,14 @@ class CreateGame extends Component {
                 newState = {
                     ...newState,
                     bet_amount: 1,
-                    public_bet_amount: "£1",
-                    max_return: "1"
+                    public_bet_amount: "£2",
+                    max_return: "2"
                 };
             }
 
             this.setState(newState);
         } else if (this.state.step === 2) {
-            if (this.state.bet_amount === 0) {
+            if (parseFloat(this.state.bet_amount) === 0) {
                 this.props.openAlert('warning', 'Warning!', 'Please input the bet amount!');
                 return;
             }

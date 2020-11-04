@@ -1,22 +1,27 @@
 import React, { Component } from 'react';
 
+function updateDigitToPoint2(number) {
+    if (parseFloat(number) - parseInt(number) > 0) {
+        return number.toFixed(2);
+    }
+    return number;
+}
+
 class Summary extends Component {
     pre_summery() {
-        let public_max_return = "£" + this.props.max_prize + " * 0.95";
+        let public_max_return = "£" + updateDigitToPoint2(this.props.max_prize * 0.95);
         let public_bet_amount = this.props.public_bet_amount;
 
-        
         if (this.props.game_mode === 'Spleesh!') {
             if (this.props.max_return < 100) {
-                console.log(this.props.max_return);
                 public_bet_amount = "£1 - £10";
-                public_max_return = "£56 * 0.9";
+                public_max_return = "£" + updateDigitToPoint2(56 * 0.9);
             } else {
                 public_bet_amount = "£10 - £100";
-                public_max_return = "£560 * 0.9";
+                public_max_return = "£" + updateDigitToPoint2(560 * 0.9);
             }
         } else if (this.props.game_mode === 'Quick Shoot') {
-            public_max_return = "£" + this.props.max_return;
+            public_max_return = "£" + updateDigitToPoint2(this.props.max_return);
         }
 
         return (
@@ -24,7 +29,7 @@ class Summary extends Component {
                 <div>
                     <hr/>
                     <label style={{background: "#f6b22a"}} className="lbl_game_option">Your Bet Amount</label>
-                    <input type="text" readOnly className="form-control input-sm" value={"£" + (this.props.bet_amount)} />
+                    <input type="text" readOnly className="form-control input-sm" value={"£" + updateDigitToPoint2(this.props.bet_amount)} />
                 </div>
                 {
                     (this.props.game_mode === 'Mystery Box' || this.props.game_mode === 'Spleesh!' || this.props.game_mode === 'Quick Shoot') && 
@@ -37,7 +42,7 @@ class Summary extends Component {
                 <div>
                     <hr/>
                     <label style={{background: "#f6b22a"}} className="lbl_game_option">Your Max Return</label>
-                    <input type="text" readOnly className="form-control input-sm" value={"£" + (this.props.max_return)} />
+                    <input type="text" readOnly className="form-control input-sm" value={"£" + updateDigitToPoint2(this.props.max_return)} />
                 </div>
                 {
                     (this.props.game_mode === 'Mystery Box' || this.props.game_mode === 'Spleesh!' || this.props.game_mode === 'Quick Shoot') && 
@@ -52,21 +57,48 @@ class Summary extends Component {
     }
     
     total_summery() {
+        let public_bet_amount = this.props.public_bet_amount;
+        let public_max_return = "£" + updateDigitToPoint2(this.props.max_prize * 0.95);
+        
+        if (this.props.game_mode === 'Spleesh!') {
+            if (this.props.max_return < 100) {
+                public_bet_amount = "£1 - £10";
+            } else {
+                public_bet_amount = "£10 - £100";
+            }
+        } else if (this.props.game_mode === 'Quick Shoot') {
+            public_max_return = "£" + updateDigitToPoint2(this.props.max_return);
+        }
+
         return (
             <div className="summary_panel">
                 <hr/>
                 <label className="lbl_game_option">Game Summary</label>
                 <div className="summary_item row">
                     <div className="col-md-3 col-sm-6">Bet Amount</div>
-                    <div className="col-md-3 col-sm-6">£{this.props.bet_amount}</div>
+                    <div className="col-md-3 col-sm-6">£{updateDigitToPoint2(this.props.bet_amount)}</div>
                 </div>
+                {
+                    (this.props.game_mode === 'Spleesh!' || this.props.game_mode === 'Quick Shoot') && 
+                    <div className="summary_item row">
+                        <div className="col-md-3 col-sm-6">Public Bet Amount</div>
+                        <div className="col-md-3 col-sm-6">{public_bet_amount}</div>
+                    </div>
+                }
+                {
+                    (this.props.game_mode === 'Quick Shoot') && 
+                    <div className="summary_item row">
+                        <div className="col-md-3 col-sm-6">Public Max Return</div>
+                        <div className="col-md-3 col-sm-6">{public_max_return}</div>
+                    </div>
+                }
                 <div className="summary_item row">
                     <div className="col-md-3 col-sm-6">Max Return Amount</div>
-                    <div className="col-md-3 col-sm-6">£{this.props.max_return}</div>
+                    <div className="col-md-3 col-sm-6">£{updateDigitToPoint2(this.props.max_return)}</div>
                 </div>
                 {this.props.endgame_type && <div className="summary_item row">
                     <div className="col-md-3 col-sm-6">End Game Amount</div>
-                    <div className="col-md-3 col-sm-6">£{this.props.endgame_amount}</div>
+                    <div className="col-md-3 col-sm-6">£{updateDigitToPoint2(this.props.endgame_amount)}</div>
                 </div>}
                 <div className="summary_item row">
                     <div className="col-md-3 col-sm-6">Status</div>

@@ -71,8 +71,12 @@ class SiteWrapper extends Component {
   }
 
   async componentDidMount() {
-    this.audio = new Audio('/sounds/sound.mp3');
-    this.audio.load();
+    try {
+      this.audio = new Audio('/sounds/sound.mp3');
+      this.audio.load();
+    } catch (e) {
+      console.log(e)
+    }
 
     await this.props.getUser(true);
     const socket = socketIOClient(this.state.endpoint);
@@ -89,13 +93,17 @@ class SiteWrapper extends Component {
     });
 
     socket.on('SEND_CHAT', (data) => {
-      this.audio.play();
-      this.props.addChatLog(data);
+      try {
+        this.audio.play();
+        this.props.addChatLog(data);
 
-      if (history.location.pathname.substr(0, 5) === '/chat') {
-        socket.emit('READ_MESSAGE', {to: this.props.user._id, from: data.from});
-      } else {
-        socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {to: this.props.user._id});
+        if (history.location.pathname.substr(0, 5) === '/chat') {
+          socket.emit('READ_MESSAGE', {to: this.props.user._id, from: data.from});
+        } else {
+          socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {to: this.props.user._id});
+        }
+      } catch (e) {
+        console.log(e)
       }
     });
 
@@ -110,18 +118,20 @@ class SiteWrapper extends Component {
 
     this.props.setSocket(socket);
     this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
+
+    // window.addEventListener('beforeunload', (e) => {this.handleLogout(false)});
   }
 
   componentWillUnmount() {
     clearInterval(this.interval);
+    // window.removeEventListener('beforeunload', (e) => {this.handleLogout(false)});
   }
 
-  handleLogout(e) {
-    e.preventDefault();
+  handleLogout(clear_token) {
     if (this.props.socket) {
       this.props.socket.emit('DISCONNECT', {a:'a'});
     }
-    this.props.userSignOut();
+    this.props.userSignOut(clear_token);
   }
 
   handleOpenProfileModal () {
@@ -188,8 +198,8 @@ class SiteWrapper extends Component {
               <img src="/img/logo.png" alt="" />
             </a>
             <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HOW TO PLAY </span><FaRegQuestionCircle /></a>
-            <a href="/" id="btn_logout" className="ml-auto" onClick={this.handleLogout}><span>LOGOUT </span><IoMdLogOut /></a>
-            <span id="balance" onClick={this.handleBalanceClick}>£{this.state.balance / 100.0}</span>
+            <a href="/" id="btn_logout" className="ml-auto" onClick={(e) => {this.handleLogout(true)}}><span>LOGOUT </span><IoMdLogOut /></a>
+            <span id="balance" onClick={this.handleBalanceClick}>£{parseInt(this.state.balance) / 100.0}</span>
             <div id="game_logs" className={this.state.showGameLog ? '' : 'hidden'}>
               <table>
                 <tbody>

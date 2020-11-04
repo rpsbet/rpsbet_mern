@@ -12,7 +12,7 @@ class AdvancedSettings extends Component {
                     <div>
                         <label className={"radio-inline" + (this.props.is_private === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_private: false, room_password: ''}); }}>Public</label>
                         <label className={"radio-inline" + (this.props.is_private === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_private: true}); }}>Private</label>
-                        <input type="password" id="room_password" value={this.props.room_password} onChange={(e) => {this.props.onChangeState({room_password: e.target.value})}} className={"form-control" + (this.props.is_private === true ? "" : " hidden")} />
+                        <input type="text" id="room_password" value={this.props.room_password} onChange={(e) => {this.props.onChangeState({room_password: e.target.value})}} className={"form-control" + (this.props.is_private === true ? "" : " hidden")} />
                     </div>
                     <div className="tip">Set to 'Private' to require a password to Join</div>
                 </>

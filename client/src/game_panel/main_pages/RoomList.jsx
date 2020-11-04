@@ -134,18 +134,16 @@ class RoomList extends Component {
                                 <th>Host</th>
                                 <th>Bet / PR</th>
                                 <th>Winnings</th>
-                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                         {this.props.roomList.map((row, key) => (
-                            <tr key={key}>
-                                <td>{row.game_type.short_name + '-' + row.index}</td>
+                            <tr className={row.creator_status === 'on' ? 'logged_in_users_game' : ''} key={key}>
+                                <td><img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="td_icon" /> {row.game_type.short_name + '-' + row.index} {row.is_private && <img src="/img/icon-lock.png" alt="" className="td_icon" />}</td>
                                 <td><img className="avatar" src={`${row.creator_avatar} `} alt="" />{row.creator}</td>
                                 <td>{"£" + row.user_bet + " / £" + row.pr}</td>
                                 <td style={{color: "rgb(2, 197, 38)"}}>{row.winnings}</td>
-                                <td>{row.is_private ? "Private" : "Public"}</td>
                                 <td>
                                     <button 
                                         className="btn btn_join" 

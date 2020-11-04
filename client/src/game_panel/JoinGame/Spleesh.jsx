@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openAlert } from '../../redux/Notification/notification.actions';
+import { updateDigitToPoint2 } from '../../util/helper'
 
 class Spleesh extends Component {
     constructor(props) {
@@ -62,8 +63,10 @@ class Spleesh extends Component {
 
     render() {
         let previous_guesses = '';
+        let pot = 0;
         for (let i = 0; i < this.props.game_log_list.length; i++) {
             previous_guesses += (i === 0 ? '' : ', ') + this.props.game_log_list[i].bet_amount;
+            pot += this.props.game_log_list[i].bet_amount;
         };
 
         return (
@@ -78,7 +81,13 @@ class Spleesh extends Component {
                 <label className="lbl_game_option">Your Guess</label>
                 {this.createNumberPanel()}
 
-                <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
+                <div className="join_summary_panel">
+                    <label>Game Type: {this.props.spleesh_bet_unit === 1 ? '£1.0 - £10.0' : '£10 - £100'}</label>
+                    <label>Pot: £{pot}</label>
+                    <label>Bet Amount: £{this.state.bet_amount}</label>
+                    <label>Potential Return: £{updateDigitToPoint2((pot + (this.state.bet_amount * 2)) * 0.9)}</label>
+                </div>
+                {/* <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
                     <hr/>
                     <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
@@ -87,7 +96,7 @@ class Spleesh extends Component {
                         <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
                     </div>
                     <div style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
-                </div>
+                </div> */}
                 <div className="text-center">
                     <button className="btn" id="btn_bet">PLACE BET</button>
                 </div>

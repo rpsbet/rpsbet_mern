@@ -62,11 +62,11 @@ function ChangePasswordPage(props) {
           <form onSubmit={handleSubmit}>
           <div className="form-group">
               <label>Password</label>
-              <input type="password" className="form-control" placeholder="Password" name="password" value={password} onChange={e => setPassword(e.target.value)} />
+              <input type="password" className="form-control" autoComplete="off" placeholder="Password" name="password" value={password} onChange={e => setPassword(e.target.value)} />
             </div>
             <div className="form-group">
               <label>Confirm Password</label>
-              <input type="password" className="form-control" placeholder="Confirm Password" name="confirm_password" value={confirm_password} onChange={e => setConfirmPassword(e.target.value)} />
+              <input type="password" className="form-control" autoComplete="off" placeholder="Confirm Password" name="confirm_password" value={confirm_password} onChange={e => setConfirmPassword(e.target.value)} />
             </div>
             <div className="form-group">
               <button className={"btn btn-info btn-block " + disable}>Set Password</button>

@@ -32,7 +32,7 @@ export const createRoom = (room_info) => async dispatch => {
 
     if (res.data.success) {
       if (room_info.game_type === 3) {
-        dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: 'Time is Up!'} });
+        dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: `You scored [${room_info.brain_game_score}]!`} });
       }
       history.push('/join');
       dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
@@ -93,6 +93,7 @@ export const bet = (bet_info) => async dispatch => {
 
 // GetRoomInfo
 export const getRoomInfo = (room_id) => async dispatch => {
+  dispatch({ type: START_LOADING });
   try {
     const res = await axios.get('/game/room/' + room_id);
     if (res.data.success) {
@@ -103,6 +104,7 @@ export const getRoomInfo = (room_id) => async dispatch => {
   } catch (err) {
     dispatch({ type: MSG_ROOMS_LOAD_FAILED, payload: err });
   }
+  dispatch({ type: END_LOADING });
 };
 
 // GetRoomList

@@ -142,12 +142,12 @@ export const deleteAccount = () => async dispatch => {
 };
 
 // Logout / Clear Profile
-export const userSignOut = body => async dispatch => {
+export const userSignOut = clear_token => async dispatch => {
   dispatch({ type: LOGOUT });
   try {
     const { data } = await axios.post('/auth/logout');
     if (data.success) {
-      setAuthToken();
+      if (clear_token) setAuthToken();
       dispatch({ type: MSG_INFO, payload: data.message });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });

@@ -1,6 +1,13 @@
 import React, { Component } from 'react';
 import { FaArrowLeft, FaArrowRight, FaPoundSign } from 'react-icons/fa';
 
+function updateDigitToPoint2(number) {
+    if (parseFloat(number) - parseInt(number) > 0) {
+        return number.toFixed(2);
+    }
+    return number;
+}
+
 class QuickShoot extends Component {
     constructor(props) {
         super(props);
@@ -105,7 +112,7 @@ class QuickShoot extends Component {
                                 this.setState({is_other: "hidden"}); 
                                 this.props.onChangeState({
                                     bet_amount: 2.5, 
-                                    public_bet_amount: "£" + (this.props.qs_game_type - 1) * 2.5, 
+                                    public_bet_amount: "£" + updateDigitToPoint2((this.props.qs_game_type - 1) * 2.5), 
                                     max_return: this.props.qs_game_type * 2.5 }); 
                                 }}>£2.50</label>
                         <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 5 ? ' checked' : '')} 
@@ -141,7 +148,7 @@ class QuickShoot extends Component {
                                 onChange={(e) => {
                                     this.props.onChangeState({
                                         bet_amount: e.target.value, 
-                                        public_bet_amount: "£" + (this.props.qs_game_type - 1) * e.target.value,
+                                        public_bet_amount: "£" + updateDigitToPoint2((this.props.qs_game_type - 1) * e.target.value),
                                         max_return: this.props.qs_game_type * e.target.value }); 
                                     }}
                                 className="form-control col-md-6 input-sm bet-input" placeholder="Bet Amount" />

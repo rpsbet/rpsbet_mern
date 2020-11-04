@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openAlert } from '../../redux/Notification/notification.actions'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import { updateDigitToPoint2 } from '../../util/helper'
 
 class QuickShoot extends Component {
     constructor(props) {
@@ -74,6 +75,8 @@ class QuickShoot extends Component {
             position_short_name = ["tl", "tr", "bl", "br"];
         }
 
+        const host_bet = this.props.bet_amount / (this.props.qs_game_type - 1);
+
         return (
             <form onSubmit={this.onBtnBetClick}>
                 <h1 className="main_title">Quick Shoot</h1>
@@ -89,7 +92,13 @@ class QuickShoot extends Component {
                     <label className="qs_game_type">{position_name[this.state.selected_qs_position]}</label>
                     <button onClick={this.onRightPositionButtonClicked}><FaArrowRight /></button>
                 </div>
-                <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
+                <div className="join_summary_panel">
+                    <label>Game Type: {this.props.qs_game_type}</label>
+                    <label></label>
+                    <label>Bet Amount: £{updateDigitToPoint2(this.props.bet_amount)}</label>
+                    <label>Potential Return: £{updateDigitToPoint2(host_bet * this.props.qs_game_type * 0.95)}</label>
+                </div>
+                {/* <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
                     <hr/>
                     <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
@@ -98,7 +107,7 @@ class QuickShoot extends Component {
                         <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
                     </div>
                     <div style={{pointerEvents: "none", opacity: "0.6"}}>By selecting 'Yes', your bet will be anonymous. £0.10 will be deducted from your balance and added to the PR</div>
-                </div>
+                </div> */}
                 <div className="text-center">
                     <button className="btn" id="btn_bet">PLACE BET</button>
                 </div>

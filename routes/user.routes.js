@@ -15,12 +15,13 @@ const Transaction = require('../model/Transaction');
 router.get('/', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
+  const is_banned = req.query.is_banned;
   try {
-    const users = await User.find({is_deleted: false}, { _id: 1, username: 1, email: 1, created_at: 1 })
+    const users = await User.find({is_deleted: is_banned}, { _id: 1, username: 1, email: 1, created_at: 1 })
       .sort({date: 'desc'})
       .skip(pagination * page - pagination)
       .limit(pagination);
-    const count = await User.countDocuments({is_deleted: false});
+    const count = await User.countDocuments({is_deleted: is_banned});
 
     let result = [];
     
@@ -110,7 +111,7 @@ router.post('/', async (req, res) => {
       error: 'Email already exists'
     });
 
-  user = await User.findOne({ username: email });
+  user = await User.findOne({ username });
 
   if (user)
     return res.json({

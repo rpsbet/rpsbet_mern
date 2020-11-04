@@ -16,6 +16,7 @@ class EditCustomerPage extends Component {
     avatar: '',
     bio: '',
     buttonDisable: true,
+    is_banned: false
   };
 
   async componentDidMount() {
@@ -31,7 +32,8 @@ class EditCustomerPage extends Component {
         username: user.username,
         email: user.email,
         avatar: user.avatar,
-        bio: user.bio
+        bio: user.bio,
+        is_banned: user.is_deleted
       });
   }
 
@@ -83,6 +85,7 @@ class EditCustomerPage extends Component {
           email={this.state.email}
           bio={this.state.bio}
           avatar={this.state.avatar}
+          is_banned={this.state.is_banned}
           onDelete={this.onDelete}
         />
       </>

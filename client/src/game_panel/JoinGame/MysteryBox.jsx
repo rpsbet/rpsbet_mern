@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { openAlert } from '../../redux/Notification/notification.actions'
+import { updateDigitToPoint2 } from '../../util/helper'
 
 class MysteryBox extends Component {
     constructor(props) {
@@ -94,11 +95,14 @@ class MysteryBox extends Component {
 
     getBetForm = () => {
         let prizes = [];
+        let pr = 0;
         this.state.box_list.map((row) => {
             prizes.push({
                 price: row.box_prize,
                 status: row.status
             });
+
+            pr = pr < row.box_prize ? row.box_prize : pr;
             return true;
         });
         prizes.sort((a, b) => a.price - b.price);
@@ -138,7 +142,11 @@ class MysteryBox extends Component {
                 </div>
                 <div>Each box will open one of the Prizes above.</div>
 
-                <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
+                <div className="join_summary_panel">
+                    <label>Bet Amount: £{updateDigitToPoint2(this.state.bet_amount)}</label>
+                    <label>Potential Return: £{updateDigitToPoint2(pr * 0.95)}</label>
+                </div>
+                {/* <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
                 <div id="advanced_panel" className={this.state.advanced_status}>
                     <hr/>
                     <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
@@ -147,7 +155,7 @@ class MysteryBox extends Component {
                         <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
                     </div>
                     <div style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
-                </div>
+                </div> */}
                 <div className="text-center">
                     <button className="btn" id="btn_bet">PLACE BET</button>
                 </div>

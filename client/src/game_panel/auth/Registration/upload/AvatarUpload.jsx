@@ -22,6 +22,8 @@ class Upload extends Component {
   }
 
   onFileAdded(file) {
+    if (file.size / 1024 / 1024 > 2) //file size > 2MB
+      return;
     this.setState({ file: file });
     this.uploadFiles(file);
   }

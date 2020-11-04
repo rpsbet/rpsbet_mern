@@ -265,6 +265,7 @@ getRoomList = async (pagination, page, keyword) => {
                 creator : room['is_anonymous'] === true ? 'Anonymous' : (room['creator'] ? room['creator']['username'] : ''),
                 creator_id: room['creator']['_id'],
                 creator_avatar: room['creator']['avatar'],
+                creator_status: room['creator']['status'],
                 game_type : room['game_type'],
                 user_bet : room['user_bet'],
                 pr : room['pr'],
@@ -441,6 +442,7 @@ getMyRooms = async (user_id) => {
             winnings : '',
             index: room['room_number'],
             end_game_amount: room['end_game_amount'],
+            is_private: room['is_private'],
         };
         
         const gameLogCount = await GameLog.countDocuments({ room: new ObjectId(room._id) });
@@ -452,10 +454,12 @@ getMyRooms = async (user_id) => {
         if (gameLogCount === 0) {
             temp.winnings = "£" + temp.bet_amount;
         } else if (temp.game_type.game_type_id === 1) { // Classic RPS
-            temp.winnings = "£" + (room['bet_amount'] * 2);
+            temp.winnings = "£" + temp.pr + " * 0.95";
+            // temp.winnings = "£" + (room['bet_amount'] * 2);
         } else if (temp.game_type.game_type_id === 2) { // Spleesh!
             temp.pr = temp.pr === 0 ? temp.bet_amount : temp.pr;
-            temp.winnings = "£" + temp.pr;
+            temp.winnings = "£" + temp.pr + " * 0.9";
+            // temp.winnings = "£" + temp.pr;
         } else if (temp.game_type.game_type_id === 3) { // Brain Game
             temp.winnings = "(£" + room['pr'] + " + £" + room['bet_amount'] + ") * 0.9";
         } else if (temp.game_type.game_type_id === 4) { //Mytery Box
@@ -953,8 +957,10 @@ router.post('/bet', auth, async (req, res) => {
                 if (roomInfo.brain_game_score == req.body.brain_game_score) {   //draw          Draw, No Winner! PR will be split.
                     message.message = "We split £" + (roomInfo['pr'] + roomInfo['bet_amount']) + " * 0.9 in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
-                    newTransactionJ.amount += (roomInfo['pr'] + roomInfo['bet_amount']) * 45;
-                    newTransactionC.amount += (roomInfo['pr'] + roomInfo['bet_amount']) * 45;
+                    // newTransactionJ.amount += (roomInfo['pr'] + roomInfo['bet_amount']) * 45;
+                    // newTransactionC.amount += (roomInfo['pr'] + roomInfo['bet_amount']) * 45;
+                    newTransactionJ.amount += roomInfo['pr'] * 90;
+                    newTransactionC.amount += roomInfo['pr'] * 90;
 
                     roomInfo.status = 'finished';
                     newGameLog.game_result = 0;

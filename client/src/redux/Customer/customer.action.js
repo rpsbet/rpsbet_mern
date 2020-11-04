@@ -40,16 +40,17 @@ export const acPaginationCustomer = (pagination, page) => async (
   }
 };
 
-export const queryCustomer = (pagination, page) => async (dispatch, getState) => {
+export const queryCustomer = (pagination, page, is_banned) => async (dispatch, getState) => {
   dispatch({ type: LOADING_CUSTOMER_TABLE, payload: true });
   let payload = {
     pagination,
-    page
+    page,
   };
   dispatch({ type: PAGINATION_FOR_CUSTOMER, payload });
   let body = {};
   body.pagination = getState().customerReducer.pagination;
   body.page = getState().customerReducer.page;
+  body.is_banned = is_banned;
   try {
     const { data } = await api.get('user', { params: body });
     if (data.success) {

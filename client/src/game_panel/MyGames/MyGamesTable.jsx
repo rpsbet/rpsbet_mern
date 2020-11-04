@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { endGame } from '../../redux/Logic/logic.actions';
+import { updateDigitToPoint2 } from '../../util/helper';
 
 class MyGamesTable extends Component {
     constructor(props) {
@@ -18,9 +19,9 @@ class MyGamesTable extends Component {
         };
     }
 
-    endRoom(e) {
-        if (window.confirm('Do you want to end this game now?')) {
-            this.props.endGame(e.target.getAttribute('_id'));
+    endRoom(winnings, room_id) {
+        if (window.confirm(`Do you want to end this game now? You will take [${winnings}]`)) {
+            this.props.endGame(room_id);
         }
     }
 
@@ -45,13 +46,13 @@ class MyGamesTable extends Component {
                                 : 
                                 this.state.myRoomList.map((row, key) => (
                                     <tr key={key}>
-                                        <td>{row.game_type.short_name + ' ' + row.index}</td>
-                                        <td><span>{"£" + row.bet_amount + " / £" + row.pr}</span> <span style={{marginLeft: '20px', color: 'red'}}>{"£" + row.end_game_amount}</span></td>
+                                        <td><img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="td_icon" /> {row.game_type.short_name + '-' + row.index} {row.is_private && <img src="/img/icon-lock.png" alt="" className="td_icon" />}</td>
+                                        <td><span>{"£" + updateDigitToPoint2(row.bet_amount) + " / £" + updateDigitToPoint2(row.pr)}</span> <span style={{marginLeft: '20px', color: 'red'}}>{"£" + updateDigitToPoint2(row.end_game_amount)}</span></td>
                                         <td><span style={{color: '#02c526'}}>{row.winnings}</span></td>
                                         <td>
                                             <button 
                                                 className="btn btn_finish btn_secondary" 
-                                                onClick={this.endRoom}
+                                                onClick={(e) => {this.endRoom(row.winnings, e.target.getAttribute('_id'))}}
                                                 _id={row._id} 
                                             >
                                                 END

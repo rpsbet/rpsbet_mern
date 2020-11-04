@@ -27,6 +27,7 @@ module.exports = async function(req, res, next) {
     if (!user)
       return res.json({ success: false, error: 'user token not valid' });
     user.status = 'on';
+    await user.save();
     req.user = user;
     next();
   } catch (err) {

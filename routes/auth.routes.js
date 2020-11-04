@@ -30,10 +30,10 @@ router.post('/', (req, res) => {
   }
 
   // Check for existing user
-  User.findOne({ 
-    $or: [
-      {email: email},
-      {username: email}
+  User.findOne({
+    $and: [
+      { is_deleted: false },
+      { $or: [{ email: email }, { username: email }] }
     ]
   }).then(user => {
     if (!user || user.is_deleted === true)

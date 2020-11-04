@@ -123,7 +123,7 @@ input,textarea { border-radius: 0 !important; }
   text-align: center;
   background: #00000099;
   padding: 10px;
-  height: 50px;
+  /* height: 50px; */
   overflow-y: scroll;
   border-bottom-left-radius: 10% 50%;
 }
@@ -244,7 +244,7 @@ input,textarea { border-radius: 0 !important; }
 */
 .MuiPaper-root {
     color: white;
-    background-color: #5653df !important;
+    background-color: #5653df;
 }
 
 .login_form #btn_signup,
@@ -840,6 +840,14 @@ div.game_type img {
   background: #ddd;
 }
 
+.join_summary_panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  text-align: center;
+  font-size: 30px;
+  padding: 20px;
+}
+
 div.tip {
   text-align: center;
   font-weight: 600;
@@ -872,7 +880,6 @@ label.radio-inline, #btn_prev, #btn_next, #btn_skip, .qs_image_panel button {
   box-shadow: 0px 0px 2px 1px #b52c22;
   height: fit-content;
 }
-
 
 label.radio-inline.checked {
   color: white;
@@ -1470,6 +1477,14 @@ button, button.btn {
 
 .table.table-black td, .table.table-black th {
   padding: 0.25rem !important;
+}
+
+.table.normal_table tbody tr.logged_in_users_game {
+  background-color: #f6b228;
+}
+
+.table.normal_table img.td_icon {
+  height: 25px;
 }
 
 .table.normal_table tbody td {

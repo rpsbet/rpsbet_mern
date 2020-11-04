@@ -65,7 +65,7 @@ class RegistrationForm extends Component {
           </div>
           <div className="form-group">
             <label>Secure Password</label>
-            <input type="password" className="form-control" placeholder="password" name="password" value={password} onChange={this.handleInputChange} />
+            <input type="password" className="form-control" placeholder="password" name="password" value={password} onChange={this.handleInputChange} autoComplete="off" />
           </div>
           {/*
           <div className="form-group">

@@ -19,6 +19,7 @@ function EditCustomerForm({
   handleChange,
   buttonDisable,
   handleCancel,
+  is_banned,
   onSaveForm,
   onDelete
 }) {
@@ -70,7 +71,7 @@ function EditCustomerForm({
             >
               Submit
             </ButtonEl>
-          ) : (
+          ) : !is_banned && (
             <EditColumn>
               <DeleteButtonEl
                 color="primary"
