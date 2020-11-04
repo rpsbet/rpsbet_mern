@@ -49,6 +49,11 @@ class Dropzone extends Component {
     if (this.props.disabled) return;
     const file = evt.target.files[0];
 
+    if (file.size / 1024 / 1024 > 2) {//file size > 2MB
+      alert("The file size is more than 2 MB. Please select another file to upload.");
+      return;
+    }
+
     this.previewImage(file);
 
     if (this.props.onFileAdded) {
