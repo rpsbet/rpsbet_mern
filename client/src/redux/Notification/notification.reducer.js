@@ -5,7 +5,9 @@ import {
   MSG_SUCCESS,
   MSG_WARNING,
   OPEN_ALERT_MODAL,
-  CLOSE_ALERT_MODAL
+  CLOSE_ALERT_MODAL,
+  OPEN_GAME_PASSWORD_MODAL,
+  CLOSE_GAME_PASSWORD_MODAL
 } from '../types';
 
 const initialState = {
@@ -13,6 +15,7 @@ const initialState = {
   message: '',
   status: null,
   showAlert: false,
+  showGamePasswordModal: false,
   title: '',
   alertMessage: '',
   alertType: '',
@@ -72,6 +75,16 @@ export default function(state = initialState, action) {
         alertMessage: '',
         alertType: '',
         title: '',
+      }
+    case OPEN_GAME_PASSWORD_MODAL:
+      return {
+        ...state,
+        showGamePasswordModal: true
+      }
+    case CLOSE_GAME_PASSWORD_MODAL:
+      return {
+        ...state,
+        showGamePasswordModal: false
       }
     default:
       return state;

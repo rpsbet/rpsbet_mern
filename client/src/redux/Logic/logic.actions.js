@@ -18,7 +18,9 @@ import {
   SET_CHAT_ROOM_INFO,
   HISTORY_LOADED,
   NEW_TRANSACTION,
-  OPEN_ALERT_MODAL
+  OPEN_ALERT_MODAL,
+  SET_BALANCE,
+  OPEN_GAME_PASSWORD_MODAL
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -98,6 +100,9 @@ export const getRoomInfo = (room_id) => async dispatch => {
     const res = await axios.get('/game/room/' + room_id);
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
+      if (res.data.roomInfo.is_private) {
+        dispatch({ type: OPEN_GAME_PASSWORD_MODAL });
+      }
     } else {
       dispatch({ type: MSG_ROOMS_LOAD_FAILED });
     }
@@ -106,6 +111,20 @@ export const getRoomInfo = (room_id) => async dispatch => {
   }
   dispatch({ type: END_LOADING });
 };
+
+export const checkGamePassword = (data) => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.post('/game/checkGamePassword/', data);
+    dispatch({ type: END_LOADING });
+    if (res.data.success) {
+      return true;
+    }
+  } catch (err) {
+    // dispatch({ type: MSG_ROOMS_LOAD_FAILED, payload: err });
+  }
+  return false;
+}
 
 // GetRoomList
 export const getRoomList = (search_condition) => async dispatch => {
@@ -199,6 +218,23 @@ export const getChatRoomInfo = (user_id) => async dispatch => {
     }
   } catch (err) {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+  }
+}
+
+export const deductBalanceWhenStartBrainGame = (data) => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.post('/game/start_brain_game', data);
+    dispatch({ type: END_LOADING });
+
+    if (res.data.success) {
+      dispatch({ type: SET_BALANCE, payload: res.data.balance });
+      return true;
+    }
+
+    return false;
+  } catch (err) {
+    return false;
   }
 }
 

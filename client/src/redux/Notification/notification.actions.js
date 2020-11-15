@@ -5,7 +5,9 @@ import {
   MSG_SUCCESS,
   MSG_WARNING,
   OPEN_ALERT_MODAL,
-  CLOSE_ALERT_MODAL
+  CLOSE_ALERT_MODAL,
+  OPEN_GAME_PASSWORD_MODAL,
+  CLOSE_GAME_PASSWORD_MODAL
 } from '../types';
 
 export const closeMsgBar = () => dispatch => {
@@ -35,4 +37,12 @@ export const openAlert = (alert_type, title, message) => dispatch => {
 
 export const closeAlert = () => dispatch => {
   dispatch({ type: CLOSE_ALERT_MODAL });
+};
+
+export const openGamePasswordModal = () => dispatch => {
+  dispatch({ type: OPEN_GAME_PASSWORD_MODAL });
+};
+
+export const closeGamePasswordModal = () => dispatch => {
+  dispatch({ type: CLOSE_GAME_PASSWORD_MODAL });
 };

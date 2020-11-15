@@ -1,11 +1,5 @@
 import React, { Component } from 'react';
-
-function updateDigitToPoint2(number) {
-    if (parseFloat(number) - parseInt(number) > 0) {
-        return number.toFixed(2);
-    }
-    return number;
-}
+import { updateDigitToPoint2 } from '../../util/helper';
 
 class Summary extends Component {
     pre_summery() {

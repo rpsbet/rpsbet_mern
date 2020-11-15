@@ -21,7 +21,8 @@ function EditCustomerForm({
   handleCancel,
   is_banned,
   onSaveForm,
-  onDelete
+  onDelete,
+  onRestore
 }) {
   return (
     <PaperEl elevation={12}>
@@ -71,7 +72,7 @@ function EditCustomerForm({
             >
               Submit
             </ButtonEl>
-          ) : !is_banned && (
+          ) : (!is_banned ? (
             <EditColumn>
               <DeleteButtonEl
                 color="primary"
@@ -88,7 +89,17 @@ function EditCustomerForm({
                 Save
               </ButtonEl>
             </EditColumn>
-          )}
+          ) : (
+            <EditColumn>
+              <ButtonEl
+                onClick={onRestore}
+                variant="contained"
+                color="secondary"
+              >
+                Restore
+              </ButtonEl>
+            </EditColumn>
+          ))}
         </ButtonDiv>
       </FormEl>
     </PaperEl>

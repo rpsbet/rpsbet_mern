@@ -11,7 +11,7 @@ import {
   ACTIVITY_QUERY,
 } from '../types';
 
-export const acPaginationCustomer = (pagination, page) => async (
+export const acPaginationCustomer = (pagination, page, is_banned) => async (
   dispatch,
   getState
 ) => {
@@ -24,10 +24,9 @@ export const acPaginationCustomer = (pagination, page) => async (
   let body = {};
   body.pagination = getState().customerReducer.pagination;
   body.page = getState().customerReducer.page;
+  body.is_banned = is_banned;
   try {
-    const { data } = await api.get('user', {
-      params: body
-    });
+    const { data } = await api.get('user', { params: body });
     if (data.success) {
       dispatch({ type: CUSTOMER_QUERY, payload: data });
     } else {

@@ -17,7 +17,8 @@ import {
   TRANSACTION_LOADED,
   VERIFICATION_SUCCESS,
   OPEN_ALERT_MODAL,
-  SET_USERNAME_PASSWORD
+  SET_USERNAME_PASSWORD,
+  SET_DARK_MODE
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -201,4 +202,8 @@ export const setUrl = url => dispatch => {
 
 export const setBalance = balance => dispatch => {
   dispatch({ type: SET_BALANCE, payload: balance });
+}
+
+export const setDarkMode = isDarkMode => dispatch => {
+  dispatch({ type: SET_DARK_MODE, payload: isDarkMode });
 }

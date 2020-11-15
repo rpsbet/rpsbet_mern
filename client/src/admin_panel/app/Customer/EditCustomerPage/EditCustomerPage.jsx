@@ -67,6 +67,18 @@ class EditCustomerPage extends Component {
     });
   }
 
+  onRestore = e => {
+    e.preventDefault();
+    if (!window.confirm('Do you want to restore this customer?')) {
+      return;
+    }
+
+    this.props.updateCustomer({
+      _id: this.state._id,
+      is_deleted: false
+    });
+  }
+
   render() {
     return (
       <>
@@ -87,6 +99,7 @@ class EditCustomerPage extends Component {
           avatar={this.state.avatar}
           is_banned={this.state.is_banned}
           onDelete={this.onDelete}
+          onRestore={this.onRestore}
         />
       </>
     );

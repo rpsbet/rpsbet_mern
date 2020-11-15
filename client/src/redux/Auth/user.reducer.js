@@ -14,12 +14,14 @@ import {
   NEW_TRANSACTION,
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
+  SET_DARK_MODE
 } from '../types';
 
 const initialState = {
   socket: null,
   token: localStorage.getItem('token'),
   isAuthenticated: localStorage.getItem('isAuthenticated'),
+  isDarkMode: localStorage.getItem('darkMode'),
   isAdmin: false,
   loading: true,
   user: {_id:null, email:'', password:''},
@@ -35,6 +37,11 @@ export default function(state = initialState, action) {
   const { type, payload } = action;
 
   switch (type) {
+    case SET_DARK_MODE:
+      localStorage.setItem('darkMode', payload);
+      return {
+        ...state, isDarkMode: payload
+      }
     case SET_SOCKET:
       return {
         ...state, socket: payload

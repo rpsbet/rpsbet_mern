@@ -9,10 +9,12 @@ import ProfileModal from './modal/ProfileModal';
 import HowToPlayModal from './modal/HowToPlayModal';
 import PrivacyModal from './modal/PrivacyModal';
 import TermsModal from './modal/TermsModal';
+import GamePasswordModal from './modal/GamePasswordModal';
 import { FaRegQuestionCircle } from 'react-icons/fa';
 import { IoMdLogOut } from 'react-icons/io';
 import Moment from 'moment';
 import AlertModal from './modal/AlertModal';
+import { updateDigitToPoint2 } from '../util/helper'
 
 function updateFromNow(transactions) {
   const result = JSON.parse(JSON.stringify(transactions));
@@ -135,7 +137,6 @@ class SiteWrapper extends Component {
   }
 
   handleOpenProfileModal () {
-    console.log('showmodal');
     this.setState({ showProfileModal: true });
   }
   
@@ -144,7 +145,6 @@ class SiteWrapper extends Component {
   }
 
   handleOpenTermsModal () {
-    console.log('showmodal');
     this.setState({ showTermsModal: true });
   }
 
@@ -153,7 +153,6 @@ class SiteWrapper extends Component {
   }
 
    handleOpenPrivacyModal () {
-    console.log('showmodal');
     this.setState({ showPrivacyModal: true });
   }
 
@@ -162,7 +161,6 @@ class SiteWrapper extends Component {
   }
 
   handleOpenHowToPlayModal () {
-    console.log('showmodal');
     this.setState({ showHowToPlayModal: true });
   }
   
@@ -184,7 +182,7 @@ class SiteWrapper extends Component {
   render() {
     const messageCount = this.props.unreadMessageCount;
     return (
-      <div className="site_wrapper">
+      <div className={`site_wrapper ${this.props.isDarkMode ? 'dark_mode' : ''}`}>
         <LoadingOverlay
           active={this.state.isActiveLoadingOverlay}
           spinner
@@ -199,7 +197,7 @@ class SiteWrapper extends Component {
             </a>
             <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HOW TO PLAY </span><FaRegQuestionCircle /></a>
             <a href="/" id="btn_logout" className="ml-auto" onClick={(e) => {this.handleLogout(true)}}><span>LOGOUT </span><IoMdLogOut /></a>
-            <span id="balance" onClick={this.handleBalanceClick}>£{parseInt(this.state.balance) / 100.0}</span>
+            <span id="balance" onClick={this.handleBalanceClick}>£{updateDigitToPoint2(parseInt(this.state.balance) / 100.0)}</span>
             <div id="game_logs" className={this.state.showGameLog ? '' : 'hidden'}>
               <table>
                 <tbody>
@@ -254,6 +252,7 @@ class SiteWrapper extends Component {
         <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} />
         <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} avatar={this.props.user.avatar} email={this.props.user.email} />
         <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
+        <GamePasswordModal />
         <AlertModal />
       </div>
     );
@@ -262,13 +261,15 @@ class SiteWrapper extends Component {
 
 const mapStateToProps = state => ({
   showAlert: state.snackbar.showAlert,
+  showGamePasswordModal: state.snackbar.showGamePasswordModal,
   socket: state.auth.socket,
   balance: state.auth.balance,
   userName: state.auth.userName,
   user: state.auth.user,
   unreadMessageCount: state.auth.unreadMessageCount,
   isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
-  transactions: state.auth.transactions
+  transactions: state.auth.transactions,
+  isDarkMode: state.auth.isDarkMode
 });
 
 const mapDispatchToProps = {

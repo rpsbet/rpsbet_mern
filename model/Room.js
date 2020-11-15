@@ -59,11 +59,11 @@ const RoomSchema = new Schema({
     type: Boolean,
     default: false
   },
-  end_game_type: {
+  endgame_type: {
     type: Boolean,
     default: false
   },
-  end_game_amount: {
+  endgame_amount: {
     type: Number,
     default: 0
   },

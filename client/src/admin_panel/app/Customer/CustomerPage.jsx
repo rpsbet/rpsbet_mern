@@ -81,7 +81,7 @@ class CustomerPage extends Component {
             </Grid>
           </Typography>
         </PaperEl>
-        <CustomerTable />
+        <CustomerTable is_banned={this.state.is_banned} />
       </>
     );
   }

@@ -3,7 +3,8 @@ import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
 import { openAlert } from '../../redux/Notification/notification.actions';
-import { updateDigitToPoint2 } from '../../util/helper'
+import { updateDigitToPoint2 } from '../../util/helper';
+import { deductBalanceWhenStartBrainGame } from '../../redux/Logic/logic.actions';
 
 class BrainGame extends Component {
     constructor(props) {
@@ -66,7 +67,7 @@ class BrainGame extends Component {
         // }
     }
 
-    onStartGame(e) {
+    async onStartGame(e) {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
@@ -74,27 +75,29 @@ class BrainGame extends Component {
             return;
         }
 
-        if (this.state.bet_amount === 0) {
+        if (this.props.bet_amount === 0) {
             this.props.openAlert('warning', 'Warning!', `Please input the bet amount!`);
             return;
         }
 
-        if (this.state.bet_amount > this.state.balance / 100.0) {
+        if (this.props.bet_amount > this.state.balance / 100.0) {
             this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
             return;
         }
 
         if (window.confirm('Do you want to bet on this game now?')) {
-            const intervalId = setInterval(this.onCountDown, 1000);
-            this.setState({
-                is_started: true,
-                intervalId,
-                question: this.state.next_question,
-                answers: this.state.next_answers,
-                remaining_time: 60
-            });
-
-            this.getNextQuestion();
+            if (this.props.deductBalanceWhenStartBrainGame({bet_amount: this.props.bet_amount})) {
+                const intervalId = setInterval(this.onCountDown, 1000);
+                this.setState({
+                    is_started: true,
+                    intervalId,
+                    question: this.state.next_question,
+                    answers: this.state.next_answers,
+                    remaining_time: 60
+                });
+    
+                this.getNextQuestion();
+            }
         }
     }
 
@@ -110,7 +113,7 @@ class BrainGame extends Component {
             });
 
             this.props.join({
-                bet_amount: this.state.bet_amount,
+                bet_amount: this.props.bet_amount,
                 brain_game_score: this.state.score,
                 is_anonymous: this.state.is_anonymous
             });
@@ -179,7 +182,7 @@ class BrainGame extends Component {
                     <div style={{fontSize: 22, paddingLeft: 10}}>£{updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)}</div>
                     <hr/>
                     <label className="lbl_game_option">Potential Return:</label>
-                    <div style={{fontSize: 22, paddingLeft: 10}}>£{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 1) * 0.95)}</div>
+                    <div style={{fontSize: 22, paddingLeft: 10}}>£{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) * 0.95)}</div>
                     <hr/>
                     <label className="lbl_game_option">Game Type:</label>
                     <div style={{fontSize: 22, paddingLeft: 10}}>{this.props.brain_game_type.game_type_name}</div>
@@ -211,7 +214,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
     setCurrentQuestionInfo,
-    openAlert
+    openAlert,
+    deductBalanceWhenStartBrainGame
 };
 
 export default connect(

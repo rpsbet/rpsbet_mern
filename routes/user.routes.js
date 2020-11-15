@@ -178,7 +178,7 @@ router.post('/updateCustomer', auth, async (req, res) => {
       user.balance = req.body.balance * 100;
     }
 
-    if (req.body.is_deleted) {
+    if (req.body.is_deleted === true || req.body.is_deleted === false) {
       user.is_deleted = req.body.is_deleted;
     }
 

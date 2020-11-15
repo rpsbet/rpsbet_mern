@@ -4,7 +4,9 @@ import history from '../../redux/history';
 import { getRoomList, getHistory, setCurRoomInfo, startLoading, endLoading } from '../../redux/Logic/logic.actions'
 import Moment from 'moment';
 import { openAlert } from '../../redux/Notification/notification.actions';
+import { setDarkMode } from '../../redux/Auth/user.actions';
 import { FaSearch } from 'react-icons/fa';
+import DarkModeToggle from 'react-dark-mode-toggle';
 
 function updateFromNow(history) {
     const result = JSON.parse(JSON.stringify(history));
@@ -24,6 +26,7 @@ class RoomList extends Component {
             search_room_text: '',
             search_history_text: '',
         };
+
         this.joinRoom = this.joinRoom.bind(this);
         this.searchRoom = this.searchRoom.bind(this);
         this.searchHistory = this.searchHistory.bind(this);
@@ -31,7 +34,7 @@ class RoomList extends Component {
 
     static getDerivedStateFromProps(props, current_state) {
         if (current_state.balance !== props.balance || 
-            (current_state.history.length === 0 || current_state.history[0]['created_at'] !== props.history[0]['created_at'])) {
+            (current_state.history.length === 0 || (props.history && current_state.history[0]['created_at'] !== props.history[0]['created_at']))) {
             return {
                 ...current_state,
                 balance: props.balance,
@@ -118,7 +121,16 @@ class RoomList extends Component {
     render() {
         return (
             <>
-                <h1 className="main_title">Join a game</h1>
+                <div>
+                    <DarkModeToggle
+                        onChange={this.props.setDarkMode}
+                        checked={this.props.isDarkMode}
+                        size={80}
+                        className="dark_mode_toggle"
+                    />
+
+                    <h1 className="main_title">Join a game</h1>
+                </div>
                 <div className="table_title_with_search">
                     <label style={{background: "linear-gradient(90deg, rgb(200 50 41) -20%, rgb(255, 255, 255) 100%)"}} className="tbl_title">Open Games</label>
                     <form className="search_panel" onSubmit={this.searchRoom}>
@@ -132,17 +144,17 @@ class RoomList extends Component {
                             <tr>
                                 <th>Room ID</th>
                                 <th>Host</th>
-                                <th>Bet / PR</th>
+                                <th>Bet</th>
                                 <th>Winnings</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                         {this.props.roomList.map((row, key) => (
-                            <tr className={row.creator_status === 'on' ? 'logged_in_users_game' : ''} key={key}>
+                            <tr className={row.creator_id === this.props.user._id ? 'logged_in_users_game' : ''} key={key}>
                                 <td><img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="td_icon" /> {row.game_type.short_name + '-' + row.index} {row.is_private && <img src="/img/icon-lock.png" alt="" className="td_icon" />}</td>
                                 <td><img className="avatar" src={`${row.creator_avatar} `} alt="" />{row.creator}</td>
-                                <td>{"£" + row.user_bet + " / £" + row.pr}</td>
+                                <td>{"£" + row.user_bet /*+ " / £" + row.pr*/}</td>
                                 <td style={{color: "rgb(2, 197, 38)"}}>{row.winnings}</td>
                                 <td>
                                     <button 
@@ -206,7 +218,8 @@ const mapStateToProps = state => ({
     roomCount: state.logic.roomCount,
     pageNumber: state.logic.pageNumber,
     balance: state.auth.balance,
-    user: state.auth.user
+    user: state.auth.user,
+    isDarkMode: state.auth.isDarkMode
 });
 
 const mapDispatchToProps = {
@@ -215,7 +228,8 @@ const mapDispatchToProps = {
     setCurRoomInfo,
     openAlert,
     startLoading,
-    endLoading
+    endLoading,
+    setDarkMode
 };
 
 export default connect(

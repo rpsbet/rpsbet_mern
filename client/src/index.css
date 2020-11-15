@@ -424,6 +424,11 @@ div[aria-label="How To Play Modal"] ul {
   margin-bottom: 0;
 }
 
+.dark_mode_toggle {
+  float: left;
+  margin: 10px;
+}
+
 .gamemode {
     color: #C83228;
     background: #33271f;

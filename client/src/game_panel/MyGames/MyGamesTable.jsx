@@ -47,7 +47,7 @@ class MyGamesTable extends Component {
                                 this.state.myRoomList.map((row, key) => (
                                     <tr key={key}>
                                         <td><img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="td_icon" /> {row.game_type.short_name + '-' + row.index} {row.is_private && <img src="/img/icon-lock.png" alt="" className="td_icon" />}</td>
-                                        <td><span>{"£" + updateDigitToPoint2(row.bet_amount) + " / £" + updateDigitToPoint2(row.pr)}</span> <span style={{marginLeft: '20px', color: 'red'}}>{"£" + updateDigitToPoint2(row.end_game_amount)}</span></td>
+                                        <td><span>{"£" + updateDigitToPoint2(row.bet_amount) + " / £" + updateDigitToPoint2(row.pr)}</span> <span style={{marginLeft: '20px', color: 'red'}}>{"£" + updateDigitToPoint2(row.endgame_amount)}</span></td>
                                         <td><span style={{color: '#02c526'}}>{row.winnings}</span></td>
                                         <td>
                                             <button 

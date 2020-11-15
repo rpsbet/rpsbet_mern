@@ -94,7 +94,6 @@ class CreateGame extends Component {
                 isPlayingBrain: true
             });
         }
-        console.log(123123123);
     }
 
     onPrevButtonClicked() {
@@ -244,13 +243,13 @@ class CreateGame extends Component {
                 <label className="lbl_game_option">Choose a Game Mode</label>
                 <div className="row game_types">
                     {this.props.gameTypeList.map((gameType, index) => (
-                        <div className={`game_type ${gameType.short_name} ${(this.state.game_mode === gameType.game_type_name? " checked" : "")}`} onClick={() => { this.setState({game_type: index + 1}); this.props.setGameMode(gameType.game_type_name); }} key={index}>
+                        <div className={`game_type ${gameType.short_name} ${(this.state.game_mode === gameType.game_type_name? " checked" : "")}`} onClick={() => { this.setState({game_type: index + 1}); this.props.setGameMode(gameType.game_type_name); this.onNextButtonClicked(); }} key={index}>
                             <img src={`/img/gametype/${gameType.short_name ? gameType.short_name : 'blank'}.png`} alt="" />
                             {gameType.game_type_name}
                         </div>
                     ))}
                 </div>
-                <div class="tip">
+                <div className="tip">
                     Click the '<FaRegQuestionCircle />' in the top bar to see How To Play
                 </div>
             </>
@@ -329,7 +328,7 @@ class CreateGame extends Component {
                     {this.state.step === 3 && <button id="btn_skip" className="btn" onClick={this.onSkipButtonClicked}>Skip</button>}
                     {this.state.step === 4 && this.state.game_mode === "Brain Game" && <button id="btn_bet" className="btn btn_secondary" onClick={this.onStartBrainGame}>Start</button>}
                     {this.state.step === 4 && this.state.game_mode !== "Brain Game" && <button id="btn_bet" className="btn" onClick={this.onCreateRoom}>Place Bet</button>}
-                    {this.state.step < 4 && <button id="btn_next" className="btn" onClick={this.onNextButtonClicked}>Next</button>}
+                    {this.state.step < 4 && this.state.step !== 1 && <button id="btn_next" className="btn" onClick={this.onNextButtonClicked}>Next</button>}
                 </div>
             </>
         )

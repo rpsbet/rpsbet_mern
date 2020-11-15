@@ -25,7 +25,8 @@ function CustomerTable({
   pages,
   page,
   total,
-  loading
+  loading,
+  is_banned
 }) {
   return (
     <PaperEl elevation={3}>
@@ -41,7 +42,7 @@ function CustomerTable({
           offset={page - 1}
           total={pages}
           onClick={(e, offset) => {
-            acPaginationCustomer(10, offset + 1);
+            acPaginationCustomer(10, offset + 1, is_banned);
           }}
         />
       </TopTopHeaderEl>

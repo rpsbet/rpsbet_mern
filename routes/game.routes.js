@@ -35,6 +35,27 @@ router.get('/game_types', async (req, res) => {
     }
 });
 
+router.post('/checkGamePassword', async (req, res) => {
+    try {
+        console.log(req.body);
+        const room = await Room.findOne({_id: req.body.room_id});
+        if (room.room_password === req.body.password) {
+            res.json({
+                success: true
+            });
+        } else {
+            res.json({
+                success: false,
+            });
+        }
+    } catch (err) {
+        res.json({
+            success: false,
+            err: message
+        });
+    }
+});
+
 // /api/room/:id call
 router.get('/room/:id', async (req, res) => {
     try {
@@ -57,7 +78,8 @@ router.get('/room/:id', async (req, res) => {
                 brain_game_score: room['brain_game_score'],
                 qs_game_type: room['qs_game_type'],
                 game_log_list: gameLogList,
-                box_list: boxPrizeList
+                box_list: boxPrizeList,
+                is_private: room['is_private']
             }
         });
     } catch (err) {
@@ -441,7 +463,7 @@ getMyRooms = async (user_id) => {
             pr : room['host_pr'], 
             winnings : '',
             index: room['room_number'],
-            end_game_amount: room['end_game_amount'],
+            endgame_amount: room['endgame_amount'],
             is_private: room['is_private'],
         };
         
@@ -534,9 +556,9 @@ router.post('/end_game', auth, async (req, res) => {
             message.message = "I made £" + roomInfo['bet_amount'] + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
         } else {
             if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
-                newTransaction.amount += roomInfo['host_pr'] * 100;
+                newTransaction.amount += roomInfo['host_pr'] * 90;
 
-                message.message = "I made £" + roomInfo['host_pr'] + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+                message.message = "I made £" + roomInfo['host_pr'] + " * 0.9 from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
             } else if (roomInfo['game_type']['game_type_name'] === 'Classic RPS') {
                 newTransaction.amount += roomInfo['host_pr'] * 95;
@@ -603,7 +625,7 @@ router.get('/my_history', auth, async (req, res) => {
 
         myHistory = {};
         for (let message of messages1) {
-            if (!myHistory[message.to._id] || myHistory[message.to._id]['updated_at'] < message.updated_at) {
+            if (message.to && (!myHistory[message.to._id] || myHistory[message.to._id]['updated_at'] < message.updated_at)) {
                 myHistory[message.to._id] = {
                     ...myHistory[message.to._id],
                     _id: message.to._id,
@@ -619,11 +641,11 @@ router.get('/my_history', auth, async (req, res) => {
         }
 
         for (let message of messages2) {
-            if (message.from._id === message.to) {
+            if (message.from && message.from._id === message.to) {
                 continue;
             }
 
-            if (!myHistory[message.from._id] || myHistory[message.from._id]['updated_at'] < message.updated_at) {
+            if (message.from && (!myHistory[message.from._id] || myHistory[message.from._id]['updated_at'] < message.updated_at)) {
                 myHistory[message.from._id] = {
                     ...myHistory[message.from._id],
                     _id: message.from._id,
@@ -636,11 +658,11 @@ router.get('/my_history', auth, async (req, res) => {
                 }
             }
 
-            if (!myHistory[message.from._id].unread_message_count) {
+            if (message.from && !myHistory[message.from._id].unread_message_count) {
                 myHistory[message.from._id].unread_message_count = 0;
             }
 
-            if (!message.is_read) {
+            if (message.from && !message.is_read) {
                 myHistory[message.from._id].unread_message_count++;
             }
         }
@@ -651,6 +673,25 @@ router.get('/my_history', auth, async (req, res) => {
         res.json({
             success: true,
             myHistory,
+        });
+    } catch (err) {
+        console.log(err);
+        res.json({
+            success: false,
+            message: err
+        });
+    }
+});
+
+router.post('/start_brain_game', auth, async (req, res) => {
+    try {
+        const user = await User.findOne({_id: new ObjectId(req.user._id)});
+        user.balance -= req.body.bet_amount * 100;
+        await user.save();
+
+        res.json({
+            success: true,
+            balance: user.balance
         });
     } catch (err) {
         res.json({
@@ -865,7 +906,7 @@ router.post('/bet', auth, async (req, res) => {
                     message.message = "I lost £" + req.body.bet_amount + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
                     
                     newGameLog.game_result = -1;
-                    if (roomInfo['end_game_type'] && roomInfo['host_pr'] >= roomInfo['end_game_amount']) {
+                    if (roomInfo['endgame_type'] && roomInfo['host_pr'] >= roomInfo['endgame_amount']) {
                         roomInfo.status = 'finished';
                         newTransactionC.amount += roomInfo['host_pr'] * 100;
                         const newGameLogC = new GameLog({
@@ -897,7 +938,7 @@ router.post('/bet', auth, async (req, res) => {
                 if (selected_box.box_prize === 0) {
                     message.message = "I won NOTHING in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
                 } else {
-                    message.message = "I won £" + (req.body.bet_amount) + " * 0.95 in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+                    message.message = "I won £" + (selected_box.box_prize) + " * 0.95 in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
                 }
 
                 opened_amount = 0;
@@ -922,7 +963,7 @@ router.post('/bet', auth, async (req, res) => {
                     }
                 });
 
-                if ((roomInfo['end_game_type'] && new_host_pr >= roomInfo.end_game_amount) || max_prize === 0) {
+                if ((roomInfo['endgame_type'] && new_host_pr >= roomInfo.endgame_amount) || max_prize === 0) {
                     roomInfo.status = 'finished';
                     newTransactionC.amount += roomInfo['host_pr'] * 95;
                     
@@ -949,7 +990,7 @@ router.post('/bet', auth, async (req, res) => {
                 newGameLog.bet_amount = roomInfo['bet_amount'];
                 newGameLog.brain_game_score = req.body.brain_game_score;
 
-                newTransactionJ.amount -= roomInfo['bet_amount'] * 100;
+                // newTransactionJ.amount -= roomInfo['bet_amount'] * 100;
                 
                 roomInfo['pr'] += roomInfo['bet_amount'];
                 roomInfo['host_pr'] += roomInfo['bet_amount'];
@@ -975,7 +1016,7 @@ router.post('/bet', auth, async (req, res) => {
                     message.message = "I lost £" + (roomInfo['bet_amount']) + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
                     newGameLog.game_result = -1;
-                    if (roomInfo['end_game_type'] && roomInfo['host_pr'] >= roomInfo['end_game_amount']) {
+                    if (roomInfo['endgame_type'] && roomInfo['host_pr'] >= roomInfo['endgame_amount']) {
                         roomInfo.status = 'finished';
                         newTransactionC.amount += roomInfo['host_pr'] * 90;
                     }

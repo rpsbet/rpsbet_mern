@@ -14,7 +14,7 @@ export const hpGoToInput = id => {
 
 export function updateDigitToPoint2(number) {
   if (parseFloat(number) - parseInt(number) > 0) {
-      return number.toFixed(2);
+      return parseFloat(number).toFixed(2);
   }
   return number;
 }

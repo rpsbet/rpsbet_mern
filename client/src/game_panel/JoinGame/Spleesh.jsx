@@ -16,6 +16,16 @@ class Spleesh extends Component {
         this.onBtnBetClick = this.onBtnBetClick.bind(this);
     }
 
+    static getDerivedStateFromProps(props, current_state) {
+        if (current_state.balance !== props.balance) {
+            return {
+                ...current_state,
+                balance: props.balance
+            };
+        }
+        return null;
+    }
+
     onShowButtonClicked(e) {
         e.preventDefault();
         // if (this.state.advanced_status === "") {
@@ -35,6 +45,7 @@ class Spleesh extends Component {
             return;
         }
 
+        console.log(this.state);
         if (this.state.bet_amount > this.state.balance / 100.0) {
             this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
             return;
