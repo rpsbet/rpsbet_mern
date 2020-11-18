@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { closeGamePasswordModal } from '../../redux/Notification/notification.actions';
+import { setPasswordCorrect, closeGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { checkGamePassword } from '../../redux/Logic/logic.actions';
-import history from '../../redux/history';
 
 Modal.setAppElement('#root')
 
@@ -39,13 +38,13 @@ class GamePasswordModal extends Component {
         const response = await this.props.checkGamePassword({room_id: this.props.roomId, password: this.state.password});
         if (response === true) {
             this.props.closeGamePasswordModal();
+            this.props.setPasswordCorrect(true);
         } else {
             alert("Invalid password! Please try again.");
         }
     }
 
     onBtnCancelClicked(e) {
-        history.push('/');
         this.props.closeGamePasswordModal();
     }
 
@@ -86,7 +85,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
     closeGamePasswordModal,
-    checkGamePassword
+    checkGamePassword,
+    setPasswordCorrect
 };
 
 export default connect(

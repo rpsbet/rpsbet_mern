@@ -7,7 +7,8 @@ import {
   OPEN_ALERT_MODAL,
   CLOSE_ALERT_MODAL,
   OPEN_GAME_PASSWORD_MODAL,
-  CLOSE_GAME_PASSWORD_MODAL
+  CLOSE_GAME_PASSWORD_MODAL,
+  SET_PASSWORD_CORRECT
 } from '../types';
 
 export const closeMsgBar = () => dispatch => {
@@ -45,4 +46,8 @@ export const openGamePasswordModal = () => dispatch => {
 
 export const closeGamePasswordModal = () => dispatch => {
   dispatch({ type: CLOSE_GAME_PASSWORD_MODAL });
+};
+
+export const setPasswordCorrect = (data) => dispatch => {
+  dispatch({ type: SET_PASSWORD_CORRECT, payload: data })
 };

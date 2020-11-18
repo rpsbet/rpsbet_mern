@@ -21,7 +21,7 @@ const initialState = {
   socket: null,
   token: localStorage.getItem('token'),
   isAuthenticated: localStorage.getItem('isAuthenticated'),
-  isDarkMode: localStorage.getItem('darkMode'),
+  isDarkMode: localStorage.getItem('darkMode') === 'true' ? true : false,
   isAdmin: false,
   loading: true,
   user: {_id:null, email:'', password:''},

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
-import { openAlert } from '../../redux/Notification/notification.actions';
+import { openAlert, openGamePasswordModal } from '../../redux/Notification/notification.actions'
 import { updateDigitToPoint2 } from '../../util/helper';
 import { deductBalanceWhenStartBrainGame } from '../../redux/Logic/logic.actions';
 
@@ -21,7 +21,8 @@ class BrainGame extends Component {
             question: { _id: '', question: '' },
             answers: [],
             next_question: null,
-            next_answers: []
+            next_answers: [],
+            isPasswordCorrect: this.props.isPasswordCorrect
         };
         this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onCountDown = this.onCountDown.bind(this);
@@ -31,9 +32,10 @@ class BrainGame extends Component {
     }
 
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.balance !== props.balance) {
+        if (current_state.balance !== props.balance || current_state.isPasswordCorrect !== props.isPasswordCorrect) {
             return {
                 ...current_state,
+                isPasswordCorrect: props.isPasswordCorrect,
                 balance: props.balance,
             };
         }
@@ -67,6 +69,23 @@ class BrainGame extends Component {
         // }
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.isPasswordCorrect !== this.state.isPasswordCorrect && this.state.isPasswordCorrect === true) {
+            if (this.props.deductBalanceWhenStartBrainGame({bet_amount: this.props.bet_amount})) {
+                const intervalId = setInterval(this.onCountDown, 1000);
+                this.setState({
+                    is_started: true,
+                    intervalId,
+                    question: this.state.next_question,
+                    answers: this.state.next_answers,
+                    remaining_time: 60
+                });
+    
+                this.getNextQuestion();
+            }
+        }
+    }
+
     async onStartGame(e) {
         e.preventDefault();
 
@@ -86,17 +105,22 @@ class BrainGame extends Component {
         }
 
         if (window.confirm('Do you want to bet on this game now?')) {
-            if (this.props.deductBalanceWhenStartBrainGame({bet_amount: this.props.bet_amount})) {
-                const intervalId = setInterval(this.onCountDown, 1000);
-                this.setState({
-                    is_started: true,
-                    intervalId,
-                    question: this.state.next_question,
-                    answers: this.state.next_answers,
-                    remaining_time: 60
-                });
-    
-                this.getNextQuestion();
+            if (this.props.is_private === true) {
+                this.props.openGamePasswordModal();
+            } else {
+                const response = await this.props.deductBalanceWhenStartBrainGame({bet_amount: this.props.bet_amount});
+                if (response) {
+                    const intervalId = setInterval(this.onCountDown, 1000);
+                    this.setState({
+                        is_started: true,
+                        intervalId,
+                        question: this.state.next_question,
+                        answers: this.state.next_answers,
+                        remaining_time: 60
+                    });
+        
+                    this.getNextQuestion();
+                }
             }
         }
     }
@@ -209,12 +233,14 @@ class BrainGame extends Component {
 
 const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
+    isPasswordCorrect: state.snackbar.isPasswordCorrect,
     balance: state.auth.balance,
 });
 
 const mapDispatchToProps = {
     setCurrentQuestionInfo,
     openAlert,
+    openGamePasswordModal,
     deductBalanceWhenStartBrainGame
 };
 

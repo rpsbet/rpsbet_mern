@@ -6,6 +6,8 @@ class Summary extends Component {
         let public_max_return = "£" + updateDigitToPoint2(this.props.max_prize * 0.95);
         let public_bet_amount = this.props.public_bet_amount;
 
+        console.log(public_bet_amount, this.props.game_mode)
+
         if (this.props.game_mode === 'Spleesh!') {
             if (this.props.max_return < 100) {
                 public_bet_amount = "£1 - £10";

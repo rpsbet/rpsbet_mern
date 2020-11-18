@@ -264,21 +264,22 @@ getHistory = async (keyword) => {
 };
 
 getRoomList = async (pagination, page, keyword) => {
+    console.log(pagination, page, keyword)
     const start = new Date();
 
     const rooms = await Room.find({ status: 'open' })
         .select('_id is_anonymous bet_amount creator game_type user_bet pr spleesh_bet_unit is_private brain_game_type status room_number created_at')
         .sort({created_at: 'desc'})
-        // .skip(pagination * page - pagination)
-        // .limit(pagination)
+        .skip(pagination * page - pagination)
+        .limit(pagination)
         .populate({path: 'creator', model: User})
         .populate({path: 'game_type', model: GameType})
         .populate({path: 'brain_game_type', model: BrainGameType})
         
-    let count = 0; //await Room.countDocuments({});
+    let count = await Room.countDocuments({ status: 'open' });
     let result = [];
     for (const room of rooms) {
-        if (count >= pagination) break;
+        // if (count >= pagination) break;
 
         const room_id = room['game_type']['short_name'] + '-' + room['room_number'];
         if (keyword === '' || room_id.toLowerCase().includes(keyword.toLowerCase()) || room['creator']['username'].toLowerCase().includes(keyword.toLowerCase())) {
@@ -314,18 +315,15 @@ getRoomList = async (pagination, page, keyword) => {
             }
     
             result.push(temp);
-
-            count++;
         }
     }
 
-    const end = new Date();
-
-    console.log('getRoomList: ', end-start, 'ms');
+    console.log(result.length, count)
 
     return {
         rooms: result,
-        count: count
+        count: count,
+        page: page
     }
 }
 

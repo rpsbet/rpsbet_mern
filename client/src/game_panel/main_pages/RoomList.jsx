@@ -7,6 +7,7 @@ import { openAlert } from '../../redux/Notification/notification.actions';
 import { setDarkMode } from '../../redux/Auth/user.actions';
 import { FaSearch } from 'react-icons/fa';
 import DarkModeToggle from 'react-dark-mode-toggle';
+import { updateDigitToPoint2 } from '../../util/helper'
 
 function updateFromNow(history) {
     const result = JSON.parse(JSON.stringify(history));
@@ -119,6 +120,23 @@ class RoomList extends Component {
     }
 
     render() {
+        const pageNumbers = [];
+
+        for (let i = 1; i <= this.props.totalPage; i++) {
+            pageNumbers.push(
+                <button 
+                    key={i}
+                    className={`btn_main_table_page_number ${i === this.props.pageNumber ? 'active' : ''}`}
+                    onClick={(e)=>{
+                        this.props.getRoomList({
+                            page: i,
+                            keyword: this.state.search_room_text
+                        });}
+                    }>
+                    {i}
+                </button>);
+        }
+
         return (
             <>
                 <div>
@@ -154,7 +172,7 @@ class RoomList extends Component {
                             <tr className={row.creator_id === this.props.user._id ? 'logged_in_users_game' : ''} key={key}>
                                 <td><img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="td_icon" /> {row.game_type.short_name + '-' + row.index} {row.is_private && <img src="/img/icon-lock.png" alt="" className="td_icon" />}</td>
                                 <td><img className="avatar" src={`${row.creator_avatar} `} alt="" />{row.creator}</td>
-                                <td>{"£" + row.user_bet /*+ " / £" + row.pr*/}</td>
+                                <td>{"£" + updateDigitToPoint2(row.user_bet) /*+ " / £" + row.pr*/}</td>
                                 <td style={{color: "rgb(2, 197, 38)"}}>{row.winnings}</td>
                                 <td>
                                     <button 
@@ -178,6 +196,9 @@ class RoomList extends Component {
                         ), this)}
                         </tbody>
                     </table>
+                    <div className="main_table_pagination">
+                        {pageNumbers}
+                    </div>
                 </div>
                 <div className="table_title_with_search">
                     <label style={{background: "linear-gradient(90deg, rgb(200 50 41) -20%, rgb(255, 255, 255) 100%)"}} className="tbl_title black">History</label>
@@ -217,6 +238,7 @@ const mapStateToProps = state => ({
     history: state.logic.history,
     roomCount: state.logic.roomCount,
     pageNumber: state.logic.pageNumber,
+    totalPage: state.logic.totalPage,
     balance: state.auth.balance,
     user: state.auth.user,
     isDarkMode: state.auth.isDarkMode

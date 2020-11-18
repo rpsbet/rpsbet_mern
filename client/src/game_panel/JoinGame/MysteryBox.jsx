@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { openAlert } from '../../redux/Notification/notification.actions'
+import { openAlert, openGamePasswordModal } from '../../redux/Notification/notification.actions'
 import { updateDigitToPoint2 } from '../../util/helper'
 
 class MysteryBox extends Component {
@@ -15,6 +15,7 @@ class MysteryBox extends Component {
             is_anonymous: false,
             balance: this.props.balance,
             betResult: this.props.betResult,
+            isPasswordCorrect: false
         };
         this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onBoxClicked = this.onBoxClicked.bind(this);
@@ -24,19 +25,19 @@ class MysteryBox extends Component {
     }
 
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.box_list.length !== props.box_list.length) {
+        if (current_state.isPasswordCorrect !== props.isPasswordCorrect || 
+            current_state.box_list.length !== props.box_list.length || 
+            current_state.betResult !== props.betResult || 
+            current_state.balance !== props.balance ) {
             return {
                 ...current_state,
-                box_list: props.box_list
-            };
+                balance: props.balance,
+                box_list: props.box_list,
+                isPasswordCorrect: props.isPasswordCorrect,
+                betResult: props.betResult
+            }
         }
 
-        if (current_state.betResult !== props.betResult) {
-            return {
-                ...current_state,
-                betResult: props.betResult
-            };
-        }
         return null;
     }
 
@@ -61,6 +62,16 @@ class MysteryBox extends Component {
         this.setState({selected_id: _id, bet_amount: box_price});
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.isPasswordCorrect !== this.state.isPasswordCorrect && this.state.isPasswordCorrect === true) {
+            this.props.join({bet_amount: this.state.bet_amount, selected_id: this.state.selected_id, is_anonymous: this.state.is_anonymous});
+
+            this.setState({
+                box_list: this.state.box_list.map(el => (el._id === this.state.selected_id ? {...el, status: 'opened'} : el))
+            });
+        }
+    }
+
     onBtnBetClick(e) {
         e.preventDefault();
 
@@ -80,11 +91,15 @@ class MysteryBox extends Component {
         }
 
         if (window.confirm('Do you want to bet on this game now?')) {
-            this.props.join({bet_amount: this.state.bet_amount, selected_id: this.state.selected_id, is_anonymous: this.state.is_anonymous});
+            if (this.props.is_private === true) {
+                this.props.openGamePasswordModal();
+            } else {
+                this.props.join({bet_amount: this.state.bet_amount, selected_id: this.state.selected_id, is_anonymous: this.state.is_anonymous});
 
-            this.setState({
-                box_list: this.state.box_list.map(el => (el._id === this.state.selected_id ? {...el, status: 'opened'} : el))
-            });
+                this.setState({
+                    box_list: this.state.box_list.map(el => (el._id === this.state.selected_id ? {...el, status: 'opened'} : el))
+                });
+            }
         }
     }
 
@@ -218,11 +233,13 @@ const mapStateToProps = state => ({
     balance: state.auth.balance,
     betResult: state.logic.betResult,
     roomStatus: state.logic.roomStatus,
+    isPasswordCorrect: state.snackbar.isPasswordCorrect,
     // room_id: state.logic.curRoomInfo._id,
 });
 
 const mapDispatchToProps = {
-    openAlert
+    openAlert,
+    openGamePasswordModal
 };
 
 export default connect(

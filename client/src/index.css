@@ -1549,6 +1549,27 @@ table.table-striped tbody tr:nth-child(even) {
 
 }
 
+.main_table_pagination {
+  text-align: center;
+}
+
+.main_table_pagination button.btn_main_table_page_number {
+  margin: 5px;
+  color: gray;
+  border: 5px solid gray;
+  background: white;
+  font-weight: 700;
+  font-size: 25px;
+  padding: 0 10px;
+  height: initial;
+}
+
+.main_table_pagination button.btn_main_table_page_number.active {
+  color: black;
+  border: 5px solid black;
+  background: #b52c22;
+}
+
 .my-open-games table.table-striped tbody tr:nth-child(even) {
   color: #000;
 }

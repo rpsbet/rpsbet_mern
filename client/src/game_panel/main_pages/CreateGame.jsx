@@ -157,10 +157,11 @@ class CreateGame extends Component {
                     max_return: "∞ * 0.9"
                 };
             } else if (this.state.game_mode === "Quick Shoot") {
+                console.log(this.state)
                 newState = {
                     ...newState,
                     bet_amount: 1,
-                    public_bet_amount: "£2",
+                    public_bet_amount: "£1",
                     max_return: "2"
                 };
             }
@@ -243,7 +244,8 @@ class CreateGame extends Component {
                 <label className="lbl_game_option">Choose a Game Mode</label>
                 <div className="row game_types">
                     {this.props.gameTypeList.map((gameType, index) => (
-                        <div className={`game_type ${gameType.short_name} ${(this.state.game_mode === gameType.game_type_name? " checked" : "")}`} onClick={() => { this.setState({game_type: index + 1}); this.props.setGameMode(gameType.game_type_name); this.onNextButtonClicked(); }} key={index}>
+                        <div className={`game_type ${gameType.short_name} ${(this.state.game_mode === gameType.game_type_name? " checked" : "")}`} 
+                            onClick={ async () => { await this.setState({game_type: index + 1}); await this.props.setGameMode(gameType.game_type_name); this.onNextButtonClicked(); }} key={index}>
                             <img src={`/img/gametype/${gameType.short_name ? gameType.short_name : 'blank'}.png`} alt="" />
                             {gameType.game_type_name}
                         </div>

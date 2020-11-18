@@ -7,7 +7,8 @@ import {
   OPEN_ALERT_MODAL,
   CLOSE_ALERT_MODAL,
   OPEN_GAME_PASSWORD_MODAL,
-  CLOSE_GAME_PASSWORD_MODAL
+  CLOSE_GAME_PASSWORD_MODAL,
+  SET_PASSWORD_CORRECT
 } from '../types';
 
 const initialState = {
@@ -20,6 +21,7 @@ const initialState = {
   alertMessage: '',
   alertType: '',
   roomStatus: '',
+  isPasswordCorrect: false,
 };
 
 export default function(state = initialState, action) {
@@ -76,10 +78,16 @@ export default function(state = initialState, action) {
         alertType: '',
         title: '',
       }
+    case SET_PASSWORD_CORRECT:
+      return {
+        ...state,
+        isPasswordCorrect: payload
+      }
     case OPEN_GAME_PASSWORD_MODAL:
       return {
         ...state,
-        showGamePasswordModal: true
+        showGamePasswordModal: true,
+        isPasswordCorrect: false,
       }
     case CLOSE_GAME_PASSWORD_MODAL:
       return {

@@ -20,7 +20,6 @@ import {
   NEW_TRANSACTION,
   OPEN_ALERT_MODAL,
   SET_BALANCE,
-  OPEN_GAME_PASSWORD_MODAL
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -100,9 +99,6 @@ export const getRoomInfo = (room_id) => async dispatch => {
     const res = await axios.get('/game/room/' + room_id);
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
-      if (res.data.roomInfo.is_private) {
-        dispatch({ type: OPEN_GAME_PASSWORD_MODAL });
-      }
     } else {
       dispatch({ type: MSG_ROOMS_LOAD_FAILED });
     }
@@ -130,8 +126,11 @@ export const checkGamePassword = (data) => async dispatch => {
 export const getRoomList = (search_condition) => async dispatch => {
   // const body = JSON.stringify(search_condition);
   try {
+    dispatch({ type: START_LOADING });
     const res = await axios.get('/game/rooms', {params: search_condition});
+    dispatch({ type: END_LOADING });
     if (res.data.success) {
+      res.data.page = search_condition.page;
       dispatch({ type: ROOMS_LOADED, payload: res.data });
     }
   } catch (err) {
@@ -239,6 +238,7 @@ export const deductBalanceWhenStartBrainGame = (data) => async dispatch => {
 }
 
 export const setRoomList = (data) => dispatch => {
+  data.page = 1;
   dispatch({ type: ROOMS_LOADED, payload: data });
 }
 

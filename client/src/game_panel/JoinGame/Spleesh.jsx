@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { openAlert } from '../../redux/Notification/notification.actions';
+import { openAlert, openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper'
 
 class Spleesh extends Component {
@@ -10,19 +10,22 @@ class Spleesh extends Component {
             bet_amount: this.props.spleesh_bet_unit,
             advanced_status: '',
             is_anonymous: false,
-            balance: this.props.balance
+            balance: this.props.balance,
+            isPasswordCorrect: false
         };
         this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onBtnBetClick = this.onBtnBetClick.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.balance !== props.balance) {
+        if (current_state.isPasswordCorrect !== props.isPasswordCorrect || current_state.balance !== props.balance) {
             return {
                 ...current_state,
-                balance: props.balance
-            };
+                balance: props.balance,
+                isPasswordCorrect: props.isPasswordCorrect
+            }
         }
+
         return null;
     }
 
@@ -37,6 +40,12 @@ class Spleesh extends Component {
         // console.log(this.state.advanced_status);
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.isPasswordCorrect !== this.state.isPasswordCorrect && this.state.isPasswordCorrect === true) {
+            this.props.join({bet_amount: this.state.bet_amount, is_anonymous: this.state.is_anonymous});
+        }
+    }
+
     onBtnBetClick(e) {
         e.preventDefault();
 
@@ -45,14 +54,17 @@ class Spleesh extends Component {
             return;
         }
 
-        console.log(this.state);
         if (this.state.bet_amount > this.state.balance / 100.0) {
             this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
             return;
         }
 
         if (window.confirm('Do you want to bet on this game now?')) {
-            this.props.join({bet_amount: this.state.bet_amount, is_anonymous: this.state.is_anonymous});
+            if (this.props.is_private === true) {
+                this.props.openGamePasswordModal();
+            } else {
+                this.props.join({bet_amount: this.state.bet_amount, is_anonymous: this.state.is_anonymous});
+            }
         }
     }
 
@@ -118,11 +130,13 @@ class Spleesh extends Component {
 
 const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
+    isPasswordCorrect: state.snackbar.isPasswordCorrect,
     balance: state.auth.balance
 });
 
 const mapDispatchToProps = {
-    openAlert
+    openAlert,
+    openGamePasswordModal
 };
 
 export default connect(

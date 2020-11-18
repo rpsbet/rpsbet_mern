@@ -24,6 +24,7 @@ const initialState = {
   roomList: [],
   history: [],
   roomCount: 0,
+  totalPage: 0,
   pageNumber: 1,
   gameTypeList: [
     { game_type_name: 'Classic RPS' },
@@ -99,7 +100,7 @@ export default function(state = initialState, action) {
       };
     case ROOMS_LOADED:
       return {
-        ...state, ...payload
+        ...state, roomList: payload.roomList, totalPage: payload.pages, roomCount: payload.total, pageNumber: payload.page
       };
     case MY_GAMES_LOADED:
       return {
