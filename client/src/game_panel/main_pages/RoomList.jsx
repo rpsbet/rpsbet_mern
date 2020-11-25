@@ -4,9 +4,8 @@ import history from '../../redux/history';
 import { getRoomList, getHistory, setCurRoomInfo, startLoading, endLoading } from '../../redux/Logic/logic.actions'
 import Moment from 'moment';
 import { openAlert } from '../../redux/Notification/notification.actions';
-import { setDarkMode } from '../../redux/Auth/user.actions';
 import { FaSearch } from 'react-icons/fa';
-import DarkModeToggle from 'react-dark-mode-toggle';
+
 import { updateDigitToPoint2 } from '../../util/helper'
 
 function updateFromNow(history) {
@@ -140,17 +139,11 @@ class RoomList extends Component {
         return (
             <>
                 <div>
-                    <DarkModeToggle
-                        onChange={this.props.setDarkMode}
-                        checked={this.props.isDarkMode}
-                        size={80}
-                        className="dark_mode_toggle"
-                    />
 
                     <h1 className="main_title">Join a game</h1>
                 </div>
                 <div className="table_title_with_search">
-                    <label style={{background: "linear-gradient(90deg, rgb(200 50 41) -20%, rgb(255, 255, 255) 100%)"}} className="tbl_title">Open Games</label>
+                    <label className="tbl_title">Open Games</label>
                     <form className="search_panel" onSubmit={this.searchRoom}>
                         <input type="text" className="search_text" value={this.state.search_room_text} onChange={(e)=>{this.setState({search_room_text: e.target.value})}} />
                         <button className="btn"><FaSearch /></button>
@@ -201,7 +194,7 @@ class RoomList extends Component {
                     </div>
                 </div>
                 <div className="table_title_with_search">
-                    <label style={{background: "linear-gradient(90deg, rgb(200 50 41) -20%, rgb(255, 255, 255) 100%)"}} className="tbl_title black">History</label>
+                    <label className="tbl_title black">History</label>
                     <form className="search_panel" onSubmit={this.searchHistory}>
                         <input type="text" className="search_text" value={this.state.search_history_text} onChange={(e)=>{this.setState({search_history_text: e.target.value})}} />
                         <button className="btn"><FaSearch /></button>
@@ -250,8 +243,7 @@ const mapDispatchToProps = {
     setCurRoomInfo,
     openAlert,
     startLoading,
-    endLoading,
-    setDarkMode
+    endLoading
 };
 
 export default connect(

@@ -67,7 +67,7 @@ class ClassicRPS extends Component {
 
     render() {
         return (
-            <form onSubmit={this.onBtnBetClick}>
+            <form className="marginBottom" onSubmit={this.onBtnBetClick}>
                 <h1 className="main_title">Choose: Rock - Paper - Scissors</h1>
                 <hr/>
                 <label className="lbl_game_option">Select: Rock - Paper - Scissors!</label>

@@ -62,99 +62,112 @@ class HowToPlayModal extends Component {
             </div>
 
 <div className="modal-body">
-<h4><b><span>Mystery Box</span> Game Mode</b></h4>
+<div className="modal-img-header"> <h4><b><span>Quick shoot</span><img width="60px" src={'/img/gametype/QS.png'}/> Game Mode</b></h4>
+</div>
+
 <h5>HOST GAME</h5>
 <ol>
-                        <li>Create a mix of Prize boxes and EMPTY boxes. These will be positioned randomly for your opponent(s).</li>
-                        <li>Set the cost to open one of your boxes. Everytime an opponent opens a box, the money is added to the <u>PR</u>.</li>
-                        <li>The aim is to hope everyone opens your EMPTY boxes to build your game <u>PR</u> and then END it before somebody opens a Prize box <i>(you can now END games automatically in advanced game settings).</i></li>
+                        <li>Set the Game Type (Returns Multiplier e.g. 2x, 3x etc.)</li>
+                        <li>Set your Bet Amount</li>
+                        <li>Choose Where to Save when a player Shoots</li>
                     </ol>
 <h5>JOIN GAME</h5>
 <ol>
-                        <li>Open a box and hope to win a Prize, all losses will be added to the <u>PR</u>.</li>
+                        <li>Choose Where to Shoot</li>
                     </ol>
 <h5 style={{color: "#02c526"}}>WINNINGS</h5>
-<p>e.g. Host creates a game with these boxes: £25, £0, £0, £0 and charges £7.50 to open a box (box price), the game is also set to END <u>automatically</u> at <span style={{color: "red"}}>£47.50</span>.<br/> If 3 of the EMPTY boxes are opened, the game ends and the Host receives <span style={{color:"#02c526"}}>[£47.50 * 0.95]</span>. If 2 EMPTY boxes are opened and the 3rd box that's opened is the Prize box (£25), they'll receive <span style={{color:"#02c526"}}>[£25 * 0.95]</span> after paying £7.50 to play and the Host will receive <span style={{color:"#02c526"}}>[£22.50 * 0.95]</span> upon ENDing the game (since there's no longer a £25 box but there's money in the <u>PR</u> since 3 boxes have been opened).</p>
+<p>e.g.<br />Your Bet Amount = <span style={{color: "#f6b22a"}}>£50</span><br/>Game Type = <u>5 (5x)</u><br />Public Bet Amount = <span style={{color:"#b52c22"}}>£200 [£50 * 0.95]</span><br />Winnings = <span style={{color:"#02c526"}}>£237.50 [£250 * 0.95]</span></p>
 
-<h4><b><span>Brain Game</span> Game Mode</b></h4>
+<div className="modal-img-header"> <h4><b><span>Brain Game</span><img width="60px" src={'/img/gametype/BG.png'}/> Game Mode</b></h4>
+</div>
 <h5>HOST GAME</h5>
 <ol>
-                        <li>Set a Score for opponent(s) to try and beat by clicking START and answer as many questions as you can in a minute.</li>
-                        <li>When a player loses, their bet will be added to your game <u>PR</u>.</li>
-                        <li>The aim is to END your game before somebody beats your Score <i>(you can now END games automatically in advanced game settings).</i></li>
+                        <li>Set a global Bet Amount</li>
+                        <li>Set Payout to Automatic to cash out at some point. (optional)</li>
+                        <li>Set a score for players to try beat</li>
                     </ol>
 <h5>JOIN GAME</h5>
 <ol>
-                        <li>Try beat the Host's score before they end their game, all losses will be added to the <u>PR</u>.</li>
+                        <li>Try beat the Host's score</li>
                     </ol>
 <h5 style={{color: "#02c526"}}>WINNINGS</h5>
-<p>e.g. Host creates a game for £25, this will be the cost to JOIN the game too.<br /> If 4 players lose (score lower than the Host), the <u>PR</u> becomes £100. If the Host ENDs their game now, they'll receive <span style={{color:"#02c526"}}>[£125 * 0.95]</span> in winnings (including their original bet amount). However if another player JOINs and beats the Host, they'll receive  <span style={{color:"#02c526"}}>[£150 * 0.95]</span> in winnings (including their bet amount to JOIN that game).</p>
+<p>e.g.<br />Bet Amount = <span style={{color:"#02c526"}}>£5</span><br />Payout = Automatic(£30)<br />Winnings = <span style={{color:"#02c526"}}>£27 [£30 * 0.9]</span></p>
 
-
-<h4><b><span><i>Spleesh!</i></span> Game Mode</b></h4>
+<div className="modal-img-header"> <h4><b><span>Mystery Box</span><img width="60px" src={'/img/gametype/MB.png'}/> Game Mode</b></h4>
+</div>
 <h5>HOST GAME</h5>
 <ol>
-                        <li>Pick Your Number: 1-10 or 10-100. This will be the amount you'll bet with.</li>
-                        <li>Players must guess your bet, incorrect guesses will be added to the <u>PR</u>.</li>
-                        <li><i>Don't</i> END your game until your <u>PR</u> is higher than your initial bet (Your Number), otherwise you'll make a loss! <i>You can now END games automatically in advanced game settings.</i></li>
+                        <li>Add boxes by setting the <u>Prize</u> (or Empty) and <u>Price</u> <i>to open. Check the Order of the boxes as the boxes will <u>NOT</u> be randomized.</i></li>
+                        <li>Set Payout to Automatic to cash out at some point. (optional)</li>
                     </ol>
 <h5>JOIN GAME</h5>
 <ol>
-    <li>Guess the Host's Number correctly to Win the <u>PR</u>.</li>
+                        <li>Open a box and hope to win a Prize</li>
+                    </ol>
+<h5 style={{color: "#02c526"}}>WINNINGS</h5>
+<p>e.g.<br />The following boxes are set (Prize/Price): £25/£4, £0/£6, £0/£10<br />Payout = Automatic(£41) [£25 + £6 + £10]<br />Host Winnings = <span style={{color:"#02c526"}}>£38.95 [£41 * 0.95]</span><br /><i>If the £25 Prize box is opened, the host still receives the £4 (Price).</i></p>
+
+<div className="modal-img-header"> <h4><b><span><i>Spleesh!</i></span><img width="60px" src={'/img/gametype/S!.png'}/> Game Mode</b></h4>
+</div>
+<h5>HOST GAME</h5>
+<ol>
+                        <li>Pick Your Number (Your Bet Amount): 1-10 or 10-100</li>
+                        <li>Set Payout to Automatic to cash out at some point. (optional)</li>
+                    </ol>
+<h5>JOIN GAME</h5>
+<ol>
+    <li>Guess the Host's Number</li>
 </ol>
 <h5 style={{color: "#02c526"}}>WINNINGS</h5>
-<p>e.g. Host creates a game and picks £7, the game is also set to END <u>automatically</u> at <span style={{color: "red"}}>£30</span>.<br /> If players JOIN and make the following guesses in total: £1, £2, £3, £4, £5, £9, £10 the game ENDs and the Host receives <span style={{color:"#02c526"}}>[£34]</span>. If instead of £10, a player guesses the correct number (£7), then they'd receive <span style={{color:"#02c526"}}>[£38 * 0.9]</span> this includes both the Host's bet amount and their own.</p>
+<p>e.g.<br />Host's Number (Bet Amount) = <span style={{color: "red"}}>£7</span><br />Payout = Automatic(£30)<br />Guesses (in order): <u> 1, 2,10,9,5,8- <i>Game ENDs automatically</i><br />Host Winnings = <span style={{color:"#02c526"}}>£37.80 [£42 * 0.9]</span></u></p>
 
 
-<h4><b><span>Classic RPS</span> Game Mode</b></h4>
-<p>Rock BEATS Scissors, Paper BEATS Rock, Scissors BEATS Paper - it's as simple as that.</p>
+<div className="modal-img-header"> <h4><b><span>Classic RPS</span><img width="60px" src={'/img/gametype/RPS.png'}/> Game Mode</b></h4>
+</div>
+<p>Rock BEATS Scissors, Paper BEATS Rock, Scissors BEATS Paper!</p>
 <h5 style={{color: "#02c526"}}>WINNINGS</h5>
 
-<p>e.g. Host creates a game and with a bet amount of £25. If a player JOINs and loses, the Host receives <span style={{color:"#02c526"}}>[£50 * 0.95]</span>.</p>
-<br />
-<p>Check your <a data-toggle="modal" data-dismiss="modal" data-target="#editModal" href="#editModal" style={{color: "#B5862D"}}><b>Balance</b></a> at the end of each game.<br /> We introduce Fees to cover transactional costs from the payment provider and development costs for the website:</p>
+<p>e.g.<br />Bet Amount = <span style={{color: "#f6b22a"}}>£50</span><br/>Winnings = <span style={{color:"#02c526"}}>£95 [£100 * 0.95]</span></p>
+<hr />
+<p>We introduce Winnings Tax to cover transactional costs from the payment provider and development costs for the website, we hope to lower these as soon as we can!</p>
 <table>
  <tbody><tr>
                         <th>Game Modes</th>
-                        <th>Winnings Fees</th>
+                        <th>Winnings Tax</th>
                         <th>Withdrawal Fees</th>
                       </tr>
                       <tr>
-                        <td className="gamemode">Mystery Box</td>
-                        <td>
-                          <ul>
-                          <li>5% when <span style={{color: "#C83228"}}>Host</span> ENDs game.</li>
-                          <li>5% when <span style={{color: "#C83228"}}>Player</span> JOINs game and wins a <span style={{color: "#02c526"}}>Prize.</span></li>
-                        </ul>
+                        <td className="gamemode">Quick Shoot</td>
+                        <td>5%
                         </td>
-                        <td rowspan="5">
+                        <td rowspan="6">
                           <u>NO withdrawal Fees.</u>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="gamemode">Mystery Box</td>
+                        <td>5%
                         </td>
                       </tr>
                       <tr>
                       </tr><tr>
                         <td className="gamemode">Brain Game</td>
-                        <td><ul>
-                          <li>10% from <span style={{color:"#02c526"}}>Winnings.</span></li>
-                        </ul>
+                        <td>10%
                         </td>
                       </tr>
                       <tr>
                         <td className="gamemode"><i>Spleesh!</i></td>
-                        <td><ul>
-                          <li><u>NO Fees</u> when <span style={{color: "#C83228"}}>Host</span> ENDs game</li>
-                          <li>10% when <span style={{color: "#C83228"}}>Player</span> JOINs game and guesses <span style={{color: "#02c526"}}>Number.</span></li>
-                        </ul>
+                        <td>10%
                         </td>
                       </tr>
                       <tr>
                         <td className="gamemode">RPS</td>
-                        <td>5% from <span style={{color: "#02c526"}}>Winnings.</span></td>
+                        <td>5%</td>
                       </tr>
                     </tbody></table>
 <p class="scroll-txt">Scroll ⇨</p>
 <h5>For All Enquiries</h5>
-<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>. We thank you for playing!</p>
+<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u> OR send us a message to our <a href="https://www.facebook.com/rpsbet/">Facebook Page</a>. We love feedback and we thank you for playing!</p>
 </div>
             <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} playerName={this.props.player_name} />
         </Modal>;

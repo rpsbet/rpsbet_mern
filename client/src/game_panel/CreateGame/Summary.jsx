@@ -31,7 +31,7 @@ class Summary extends Component {
                     (this.props.game_mode === 'Mystery Box' || this.props.game_mode === 'Spleesh!' || this.props.game_mode === 'Quick Shoot') && 
                     <div>
                         <hr/>
-                        <label className="lbl_game_option">Public Bet Amount</label>
+                        <label className="lbl_public lbl_game_option">Public Bet Amount</label>
                         <input type="text" readOnly className="form-control input-sm" value={public_bet_amount} />
                     </div>
                 }
@@ -44,7 +44,7 @@ class Summary extends Component {
                     (this.props.game_mode === 'Mystery Box' || this.props.game_mode === 'Spleesh!' || this.props.game_mode === 'Quick Shoot') && 
                     <div>
                         <hr/>
-                        <label className="lbl_game_option">Public Max Return</label>
+                        <label className="lbl_public  lbl_game_option">Public Max Return</label>
                         <input type="text" readOnly className="form-control input-sm" value={public_max_return} />
                     </div>
                 }

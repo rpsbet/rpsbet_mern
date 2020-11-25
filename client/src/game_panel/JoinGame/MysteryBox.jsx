@@ -123,7 +123,7 @@ class MysteryBox extends Component {
         prizes.sort((a, b) => a.price - b.price);
 
         return (
-            <form onSubmit={this.onBtnBetClick}>
+            <form className="marginBottom" onSubmit={this.onBtnBetClick}>
                 <h1 className="main_title">Buy a Mystery Box?</h1>
 
                 <hr/>
@@ -155,7 +155,7 @@ class MysteryBox extends Component {
                         </div>
                     ))}
                 </div>
-                <div>Each box will open one of the Prizes above.</div>
+                <div class="tip">Each box will open one of the Prizes above.</div>
 
                 <div className="join_summary_panel">
                     <label>Bet Amount: £{updateDigitToPoint2(this.state.bet_amount)}</label>
@@ -197,9 +197,9 @@ class MysteryBox extends Component {
         return (
             <>
                 <div className="mystery_result_title">Prize</div>
-                <div className="mystery_result_message" dangerouslySetInnerHTML={{__html: this.state.betResult === 0 ? "Sorry :/<br />This box is EMPTY! :(" : "Nice!!<br />You won a PRIZE!:"}}></div>
+                <div className="mystery_result_message" dangerouslySetInnerHTML={{__html: this.state.betResult === 0 ? "Wrong ❌📦<br />This box is Empty!" : "Nice!<br />You won a Prize!"}}></div>
                 <div className="mystery_result_amount">£{this.state.betResult}</div>
-                <div className="mystery_result_prizes_title">Prizes:</div>
+                <div className="mystery_result_prizes_title">Prizes</div>
                 <table className="mystery_table">
                     <tbody><tr>
                         {prizes.map((item, key) => (
@@ -211,10 +211,10 @@ class MysteryBox extends Component {
                     </tr></tbody>
                 </table>
                 <div className="text-center">
-                    <button className="btn" id="btn_bet" onClick={this.onBtnGoToMainGamesClicked}>GO TO MAIN GAMES</button>
+                    <button className="btn" id="btn_bet" onClick={this.onBtnGoToMainGamesClicked}>All Games</button>
                 </div>
-                <div className="text-center mt-4">
-                    {this.props.roomStatus !== 'finished' && <button className="btn" id="btn_play_again" onClick={this.onBtnPlayAgainClicked}>PLAY AGAIN</button>}
+                <div className="text-center mt-2">
+                    {this.props.roomStatus !== 'finished' && <button className="btn" id="btn_play_again" onClick={this.onBtnPlayAgainClicked}>Play Again</button>}
                 </div>
             </>
         );

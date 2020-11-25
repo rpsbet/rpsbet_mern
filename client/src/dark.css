@@ -1,16 +1,105 @@
 .dark_mode .game_wrapper,
 .dark_mode .sub_header,
 .dark_mode .overflowX,
-.dark_mode .tbl_title,
 .dark_mode .game_wrapper .left_sidebar a,
 .dark_mode .table thead th,
-.dark_mode .table tbody td {
-    background-color: #333;
-    color: #CCC;
+.dark_mode .table tbody td,
+.dark_mode table.table-striped tbody tr:nth-of-type(odd),
+.dark_mode .my-open-games table.table-striped tbody tr:nth-child(even) {
+    background-color: #343a40;
+    color: #fff;
     
 }
 
+.dark_mode table.table-striped tbody tr:nth-child(even) {
+	background: unset;
+}
+
+.dark_mode table.table-striped tbody tr:nth-child(even) td{
+	color: #b52c22 !important;
+}
+
+.dark_mode .my-open-games table.table-striped tbody tr:nth-child(even) td {
+	color: #f6b229 !important;
+}
+
 .dark_mode .table thead th,
-.dark_mode .table tbody td {
-    box-shadow: 1px 2px 2px 1px rgb(0 0 0 / 0.3);
+.dark_mode .table tbody td,
+.dark_mode .game_wrapper .left_sidebar a,
+.dark_mode .search_panel {
+    box-shadow: 0px 0px 8px 2px #212529;
+    -webkit-box-shadow: 0px 0px 8px 2px #212529;
+  -moz-box-shadow: inset 0px 0px 8px 2px #212529;
+}
+
+.dark_mode .overflowX,
+.dark_mode .contents_wrapper,
+.dark_mode div.game_types {
+	box-shadow: 0px 0px 30px 0px #212529;
+	 -webkit-box-shadow: 0px 0px 30px 0px #212529;
+  -moz-box-shadow: inset 0px 0px 30px 0px #212529;
+}
+
+.dark_mode .sub_header button#btn_avatar {
+	box-shadow: 0px 0px 6px 4px #343a40;
+	 -webkit-box-shadow: 0px 0px 6px 4px #343a40;
+  -moz-box-shadow: inset 0px 0px 6px 4px #343a40;
+}
+
+.dark_mode .sub_header {
+	box-shadow: inset 0 -10px 10px -10px #212529;
+	-webkit-box-shadow: inset 0 -10px 10px -10px #212529;
+  -moz-box-shadow: inset 0 -10px 10px -10px #212529;
+}
+
+.dark_mode .main_title {
+	box-shadow: 0px 0px 6px 4px #212529;
+	-webkit-box-shadow: 0px 0px 6px 4px #212529;
+  -moz-box-shadow: 0px 0px 6px 4px #212529;
+}
+
+.dark_mode .tbl_title {
+	box-shadow: 0 0px 12px 0px #212529;
+	-webkit-box-shadow: 0 0px 12px 0px #212529;
+  -moz-box-shadow: 0 0px 12px 0px #212529;
+}
+.dark_mode .contents_wrapper hr {
+	border-top: 10px solid #343a40;
+}
+
+.dark_mode div.game_type {
+	color: #f6b229;
+}
+
+.dark_mode .lbl_public {
+	color: #c83228 !important;
+}
+
+.dark_mode label.lbl_game_option {
+	background: transparent !important;
+}
+
+.dark_mode .table-black thead,.dark_mode .table-black tbody {
+	background-color: #343a40;
+}
+
+.dark_mode .input.form-control[readonly] {
+	box-shadow: 4px 4px 8px 0px #212529;
+}
+
+.dark_mode label.lbl_game_option,
+.dark_mode .tbl_title {
+	font-size: 17px;
+    box-shadow: 0 -10px 12px 0px #212529;
+    background: transparent;
+    border-top: unset;
+    border-right: unset;
+    color: #f6b229;
+}
+
+.dark_mode .mystery_result_title,
+.dark_mode .mystery_result_prizes_title {
+	background: #212529;
+    box-shadow: 0 0 4px 2px black;
+    text-shadow: 4px 4px 4px black;
 }

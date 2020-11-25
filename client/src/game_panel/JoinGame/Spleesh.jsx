@@ -93,7 +93,7 @@ class Spleesh extends Component {
         };
 
         return (
-            <form onSubmit={this.onBtnBetClick}>
+            <form className="marginBottom" onSubmit={this.onBtnBetClick}>
                 <h1 className="main_title">Guess The Host's Number:</h1>
 
                 <hr/>

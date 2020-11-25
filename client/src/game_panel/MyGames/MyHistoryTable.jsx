@@ -36,7 +36,7 @@ class MyHistoryTable extends Component {
 
         return (
             <>
-                <label className="tbl_title">MY HISTORY</label>
+                <label className="tbl_title my_games">MY HISTORY</label>
                 <div className="history">
                     <table className="table table-striped with-ellipsis table-hover text-center normal_table" cellPadding="2" cellSpacing="0">
                         <thead>

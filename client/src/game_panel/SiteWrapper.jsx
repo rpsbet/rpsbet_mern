@@ -14,6 +14,8 @@ import { FaRegQuestionCircle } from 'react-icons/fa';
 import { IoMdLogOut } from 'react-icons/io';
 import Moment from 'moment';
 import AlertModal from './modal/AlertModal';
+import { setDarkMode } from '../redux/Auth/user.actions';
+import DarkModeToggle from 'react-dark-mode-toggle';
 import { updateDigitToPoint2 } from '../util/helper'
 
 function updateFromNow(transactions) {
@@ -218,6 +220,12 @@ class SiteWrapper extends Component {
             <span className="welcome">Welcome </span>
             <span className="user_name mr-auto">{this.state.userName}</span>
             {/* <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a> */}
+            <DarkModeToggle
+                        onChange={this.props.setDarkMode}
+                        checked={this.props.isDarkMode}
+                        size={50}
+                        className="dark_mode_toggle"
+                    />
             <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src={`${this.props.user.avatar} `} alt="" /></button>
           </div>
         </div>
@@ -281,7 +289,8 @@ const mapDispatchToProps = {
   getMyGames,
   getMyHistory,
   setUnreadMessageCount,
-  addNewTransaction
+  addNewTransaction,
+  setDarkMode
 };
 
 export default connect(

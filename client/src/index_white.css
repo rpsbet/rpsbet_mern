@@ -77,10 +77,6 @@ input,textarea { border-radius: 0 !important; }
   background: #5653df;
 }
 
-.marginBottom {
-  margin-bottom: 30px;
-}
-
 /*******/
 
 .nada {
@@ -316,8 +312,7 @@ input,textarea { border-radius: 0 !important; }
   text-align: center;
   color: white;
   padding: 10px;
-  background: #00000070;
-  z-index: 1;
+  background: linear-gradient(0deg, rgba(51,39,31,50%), rgba(51,39,31,1) 100%);
 }
 
 .main_header div#game_logs table {
@@ -371,7 +366,7 @@ input,textarea { border-radius: 0 !important; }
 }
 
 .sub_header a,
-.sub_header #btn_avatar {
+.sub_header button {
   width: 60px;
   height: 60px;
   border: 3px solid #C83228 !important;
@@ -429,11 +424,6 @@ div[aria-label="How To Play Modal"] ul {
   margin-bottom: 0;
 }
 
-.dark_mode_toggle {
-  float: left;
-  margin: 10px;
-}
-
 .gamemode {
     color: #C83228;
     background: #33271f;
@@ -461,22 +451,16 @@ div[aria-label="How To Play Modal"] ul {
 .modal-body span {
     color: #C83228;
 }
-.modal-img-header {
-background: #33271f;
-       border-bottom: 5px solid #fff !important;
-        border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-        padding: 10px;
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 .modal-body h4 {
   color: #ebddca;
-
+    border-bottom: 5px solid #fff !important;
+    padding: 20px;
+    margin: 20px 0;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
     text-align: center;
     white-space: nowrap;
+    background: #33271f;
     border: none !important;
     font-family: 'Prototype';
 }
@@ -592,7 +576,7 @@ background: #33271f;
 
 .ReactModal__Body--open h2 {
       font-family: 'Prototype';
-    font-size: 1.4em !important;
+    font-size: 1.5em !important;
     padding-bottom: 10px;
     color: #000;
     letter-spacing: 0.05em;
@@ -729,7 +713,7 @@ label.lbl_game_option {
   border-right: 10px solid #fff;
   display: block;
   font-weight: 700;
-  font-size: 1.44em;
+  font-size: 1.8em;
   box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
   font-family: 'Prototype';
   color: #fff;
@@ -776,9 +760,9 @@ div.game_types {
 
 div.game_type {
   font-size: 1.4em;
-  line-height: 3.6em;
+  line-height: 2.4em;
   background-size: contain;
-  width: 17%;
+  width: 320px;
   -webkit-transition: all 100ms ease-in;
   -moz-transition: all 100ms ease-in;
   transition: all 100ms ease-in;
@@ -828,7 +812,7 @@ div.game_type img {
   cursor: pointer;
   font-size: 1.2em;
   opacity: 0.9;
-  border-radius: 1em;
+  border-radius: 50%;
 }
 
 div.game_type img:active {
@@ -860,20 +844,14 @@ div.game_type img {
   display: grid;
   grid-template-columns: 1fr 1fr;
   text-align: center;
-  font-size: 1.6em;
+  font-size: 30px;
   padding: 20px;
 }
 
-.join_summary_panel  label {
-  font-family: 'Prototype';
-}
-
-
-
 div.tip {
-  text-align: left;
+  text-align: center;
   font-weight: 600;
-  padding: 0.75rem 20px 0;
+  padding: 0.75rem 0 0;
   font-style: italic;
 }
 
@@ -885,7 +863,7 @@ label.radio-inline {
   border-right: 7.5px solid #b52c22 !important;
   border-bottom: 7.5px solid #b52c22 !important;
   color: #C83228;
-  background: transparent;
+  background: #ffffff99;
   font-weight: 700;
   border-radius: 300px;
   font-size: 30px;
@@ -1013,7 +991,6 @@ input.form-control[readonly] {
   color: white;
   text-shadow: 0px 0px 3px #fefefe;
   box-shadow: 4px 4px 8px 0px rgb(92 92 92 / 50%);
-  border: none;
 }
 
 .btn-advanced {
@@ -1078,15 +1055,12 @@ input.form-control[readonly] {
   font-weight: 700;
   color: #02c526;
   text-align: center;
-  font-size: 1.4em;
-  letter-spacing: 1px;
+  font-size: 25px;
+  letter-spacing: 3px;
 }
 
 .mystery_table td {
   position: relative;
-  position: relative;
-  padding: 0 8px;
-  display: inline-block;
 }
 
 .mystery_table td.opened img {
@@ -1172,12 +1146,11 @@ input.new_box_prize {
 }
 
 .mystery_result_title {
+  margin-top: 20px;
   margin-bottom: 10px;
   font-size: 24px;
   font-weight: 500;
   line-height: 1.1;
-    font-family: 'Prototype';
-    padding: 6px 20px;
 }
 
 .mystery_result_message {
@@ -1190,19 +1163,16 @@ input.new_box_prize {
   color: rgb(2, 197, 38);
   font-size: 96px;
   font-weight: 800;
+  padding-left: 50px;
   height: 230px;
   text-align: center;
   background: url(/img/empty-open-box.png) bottom center no-repeat;
   background-size: 200px;
 }
-.mystery_result_prizes_title,
-.mystery_result_title {
-  font-family: 'Prototype';
-}
+
 .mystery_result_prizes_title {
   font-size: 26px;
   font-weight: 700;
-  padding: 0 20px;
 }
 
 #advanced_panel {
@@ -1332,18 +1302,13 @@ button, button.btn {
     font-size: 30px;
     font-weight: 700;
     line-height: 1.1;
-    -webkit-box-shadow: 0 0 12px 0px rgba(200, 200, 200, 0.4);
-    -moz-box-shadow: 0 0 12px 0px rgba(200, 200, 200, 0.4);
-    background: #b52c22;
-   /* background: linear-gradient(90deg, #f6b229 -20%, #fff 100%); */
-    box-shadow: 0 0px 12px 0px rgba(200, 200, 200, 0.4);
+    background: #fff;
+    -webkit-box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
+    -moz-box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
+    background: linear-gradient(90deg, #f6b229 -20%, #fff 100%);
+    box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
     border-top: 10px solid #fff;
     border-right: 10px solid #fff;
-}
-
-
-.tbl_title.my_games {
-  background: #f6b229;
 }
 
 .my-open-games { overflow-x: scroll;}
@@ -1373,7 +1338,7 @@ button, button.btn {
 }
 
 .table-black thead, .table-black tbody {
-  background-color: #f8f9fa; 
+  background-color: #f8f9fa !important; 
 }
 
 .table {
@@ -1483,7 +1448,10 @@ button, button.btn {
     transform: translateY(-2px);
   }
 }
-
+.table tr {
+  -webkit-transform: perspective(.1px) translateZ(0);
+  transform: perspective(.1px) translateZ(0);
+}
 .table tr:hover td, .table tr:focus td, .table tr.bob-on-hover:active td {
   -webkit-animation-name: bob-on-hover-float, bob-on-hover;
   animation-name: bob-on-hover-float, bob-on-hover;
@@ -1511,8 +1479,8 @@ button, button.btn {
   padding: 0.25rem !important;
 }
 
-.table.normal_table tbody tr.logged_in_users_game td {
-  background: #f6b228 !important;
+.table.normal_table tbody tr.logged_in_users_game {
+  background-color: #f6b228;
 }
 
 .table.normal_table img.td_icon {
@@ -1574,36 +1542,6 @@ table.table-striped tbody tr:nth-child(even) {
   background: #ffffff;
   color: #b52c22;
 
-}
-
-.main_table_pagination {
-  text-align: center;
-}
-
-.main_table_pagination button.btn_main_table_page_number {
-  margin: 5px;
-  color: #b52c22d6;
-  border: 5px solid #b52c22c4;
-  background: #ffffff00;
-  font-weight: 700;
-  font-size: 25px;
-  padding: 0 10px;
-  height: initial;
-}
-.main_table_pagination button.btn_main_table_page_number {
-  margin: -10px 5px 30px;
-  font-size: 1em;
-}
-.main_table_pagination button.btn_main_table_page_number:hover {
-  opacity: 1;
-  transition: 0.2s;
-  transform: scale(1.15);
-}
-.main_table_pagination button.btn_main_table_page_number.active {
-  color: #b52c22;
-  border: 5px solid #c83228;
-  background: #b52c2200;
-  transform: scale(1.25);
 }
 
 .my-open-games table.table-striped tbody tr:nth-child(even) {
@@ -1966,10 +1904,6 @@ label.answer {
 */
 
 @media (min-width: 481px) and (max-width: 767px) {
-  .pre_summary_panel {
-    grid-gap: 10px;
-  }
-
   #btn_my_game {
     min-height: 60px;
     box-shadow: inset 0px -6px #bd8616;
@@ -2026,14 +1960,6 @@ label.answer {
     height: 20px;
   }
 
-  div.game_type img {
-    padding: .5em 1em;
-  }
-
-  div.game_type {
-   margin: 9px;
-  }
-
 }
 
 /* 
@@ -2042,9 +1968,6 @@ label.answer {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
-  .pre_summary_panel {
-    grid-gap: 10px;
-  }
 
   div.summary_item {
     font-size: 18px;
@@ -2084,9 +2007,9 @@ div[aria-label="How To Play Modal"] table td, div[aria-label="How To Play Modal"
 .profile_info_panel span:nth-child(even), .profile_info_panel input {
   width: 100%;
 }
-  .modal-body h4 { font-size: 1.1em; }
+  .modal-body h4 { font-size: 1.3em; }
   .modal-body h5 {
-    font-size: 1em;
+    font-size: 1.1em;
     padding: 5px;
     width: 60%;
 }
@@ -2168,11 +2091,6 @@ div.brain_score {
 .sub_header {
       border-top: 5px solid #C83228;
 }
-
-.sub_header span {
-  font-size: 12px !important;
-}
-
 .main_header a span,.chat_header a span { display: none; }
 .main_header span#balance {
     font-size: 20px;
@@ -2188,22 +2106,17 @@ div.brain_score {
 .game_wrapper .left_sidebar {margin-top: 94px;}
 
 label.radio-inline {
-  margin: 10px 14px 2px !important;
-  padding: 5px 10px !important;
+  margin: 10px 6px 2px !important;
+  padding: 5px 20px !important;
   border: 2px solid #C83228 !important;
   font-weight: 500;
   font-size: 20px;
   line-height: 1.3;
 }
 
-.join_summary_panel {
-  font-size: 0.84em;
-}
-
 div.game_type {
-  font-size: 0.8em !important;
-  margin: 10px 20px 10px !important;
-  width: 16%;
+  font-size: 1em !important;
+  margin: 20px 20px -10px !important;
 }
 
 div.game_type:last-child {
@@ -2211,12 +2124,10 @@ div.game_type:last-child {
 }
 
 div.game_types>div {
-  flex: 0 1 22%;
+  flex: 0 38%;
 }
 div.tip {
-  text-align: center;
-  font-size: 12px;
-  padding: 0.75rem 10px 0;
+  font-size: 14px;
 }
 div.game_type img {
   padding: 0.5em 0.25em !important;
@@ -2241,8 +2152,9 @@ label.lbl_game_option {
 }
 
 .profile_info_panel {
-    font-size:12px;
+    font-size:18px;
     overflow-x: scroll;
+    margin-right: 24px;
 }
 .payment_action_panel {
       grid-template-columns: 1fr;
@@ -2262,12 +2174,9 @@ label.lbl_game_option {
 }
 
 #btn_bet {
-    margin: 15px 0 0;
+    margin: 15px 0 60px;
     font-size: 20px;
     padding: 10px 16px;
-}
-#btn_play_again {
-  margin-bottom: 30px;
 }
 
 .tbl_title {
@@ -2327,6 +2236,7 @@ label.lbl_game_option {
 
 .table-black thead,
 .table-black tbody {
+  background-color: #33271e;
   color: white;
   text-align: center;
   font-weight: 600;

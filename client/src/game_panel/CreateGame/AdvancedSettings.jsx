@@ -21,7 +21,7 @@ class AdvancedSettings extends Component {
                 { this.props.step === 2 && 
                 <>
                     <hr/>
-                    <label className="lbl_game_option">END Game Type</label>
+                    <label className="lbl_game_option">Payout</label>
                     <div>
                         <label className={"radio-inline" + (this.props.endgame_type === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({endgame_type: false}); }}>Manual</label>
                         <label className={"radio-inline" + (this.props.endgame_type === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({endgame_type: true}); }}>Automatic</label>
@@ -29,7 +29,7 @@ class AdvancedSettings extends Component {
                             <span className="pound-symbol"><FaPoundSign /><input type="text" id="endgame_amount" value={this.props.endgame_amount} onChange={(e)=>{this.props.onChangeState({endgame_amount: e.target.value})}} className="col-md-6 form-control bet-input endgame_amount" /></span>
                         </label>
                     </div>
-                    <div className="tip">Make your game END automatically when your PR reaches an amount. This will put a cap on your Winnings but at least keep them safe.</div>
+                    <div className="tip">Choose Automatic to cashout at a set amount.</div>
                 </>
                 }
 

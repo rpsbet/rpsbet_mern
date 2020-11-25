@@ -196,7 +196,7 @@ class BrainGame extends Component {
             )
             :
             (
-                <form onSubmit={this.onStartGame}>
+                <form className="marginBottom" onSubmit={this.onStartGame}>
                     <h1 className="main_title" style={{textTransform: 'initial'}}>Click START to begin BRAIN GAME: 60 secs</h1>
                     <hr/>
                     <label className="lbl_game_option">Bet Amount:</label>

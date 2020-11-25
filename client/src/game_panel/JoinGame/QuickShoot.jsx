@@ -101,7 +101,7 @@ class QuickShoot extends Component {
         const host_bet = this.props.bet_amount / (this.props.qs_game_type - 1);
 
         return (
-            <form onSubmit={this.onBtnBetClick}>
+            <form className="marginBottom" onSubmit={this.onBtnBetClick}>
                 <h1 className="main_title">Quick Shoot</h1>
                 <hr/>
                 <div style={{padding: "0"}}>
