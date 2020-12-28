@@ -44,6 +44,7 @@ module.exports.socketio = (server) => {
       Object.keys(sockets).forEach(
         (key, index) => {
           if (sockets[key].id === socket.id) {
+            io.sockets.emit('USER_DISCONNECTED', {user_id: key});
             delete sockets[key];
           }
         }

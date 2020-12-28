@@ -148,6 +148,10 @@ class SiteWrapper extends Component {
       this.props.setUnreadMessageCount(data);
     });
 
+    socket.on('USER_DISCONNECTED', (data) => {
+      console.log(data);
+    })
+
     this.props.setSocket(socket);
     this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
   }

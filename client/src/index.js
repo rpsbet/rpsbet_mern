@@ -17,7 +17,7 @@ import App from './App';
 import GlobalStyle from './Styles/global.styles';
 import history from './redux/history';
 import MessageBar from './components/MessugeBar';
-import AnimatedCusror from './components/AnimatedCursor';
+// import AnimatedCusror from './components/AnimatedCursor';
 
 const theme = createMuiTheme({
   palette: {
@@ -30,7 +30,7 @@ const theme = createMuiTheme({
 
 ReactDOM.render(
   <React.Fragment>
-    <AnimatedCusror />
+    {/* <AnimatedCusror /> */}
     <Provider store={store}>
       <GlobalStyle />
       <MuiThemeProvider theme={theme}>

@@ -148,6 +148,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 .create-game-panel .btn-create-game {
     margin-right: 20px;
     text-align: center;
+    cursor: pointer;
 }
 .create-game-panel .btn-create-game .game-type-icon {
     display: inline-block;
