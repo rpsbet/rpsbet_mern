@@ -1,8 +1,16 @@
 import React, { Component } from 'react';
+import { withStyles, createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setSocket, userSignOut, getUser, setUnreadMessageCount } from '../redux/Auth/user.actions';
 import { setRoomList, addChatLog, getMyGames, getMyHistory, addNewTransaction } from '../redux/Logic/logic.actions';
+
+import { Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@material-ui/core';
+import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import PersonOutlineIcon from '@material-ui/icons/PersonOutline';
+import PaymentIcon from '@material-ui/icons/Payment';
+
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
 import ProfileModal from './modal/ProfileModal';
@@ -10,13 +18,24 @@ import HowToPlayModal from './modal/HowToPlayModal';
 import PrivacyModal from './modal/PrivacyModal';
 import TermsModal from './modal/TermsModal';
 import GamePasswordModal from './modal/GamePasswordModal';
-import { FaRegQuestionCircle } from 'react-icons/fa';
-import { IoMdLogOut } from 'react-icons/io';
 import Moment from 'moment';
 import AlertModal from './modal/AlertModal';
 import { setDarkMode } from '../redux/Auth/user.actions';
 import DarkModeToggle from 'react-dark-mode-toggle';
-import { updateDigitToPoint2 } from '../util/helper'
+import { updateDigitToPoint2 } from '../util/helper';
+import './SiteWrapper.css'
+
+const mainTheme = createMuiTheme({
+  palette: {
+    type: 'light'
+  }
+});
+
+const darkTheme = createMuiTheme({
+  palette: {
+    type: 'dark'
+  }
+});
 
 function updateFromNow(transactions) {
   const result = JSON.parse(JSON.stringify(transactions));
@@ -40,7 +59,8 @@ class SiteWrapper extends Component {
       showTermsModal: false,
       isActiveLoadingOverlay: this.props.isActiveLoadingOverlay,
       showGameLog: false,
-      transactions: updateFromNow(this.props.transactions)
+      transactions: updateFromNow(this.props.transactions),
+      anchorEl: null,
     }
 
     this.handleLogout = this.handleLogout.bind(this);
@@ -68,6 +88,14 @@ class SiteWrapper extends Component {
       isActiveLoadingOverlay: props.isActiveLoadingOverlay,
       transactions: updateFromNow(props.transactions)
     };
+  }
+
+  handleClickMenu = (e) => {
+    this.setState({anchorEl: e.currentTarget});
+  }
+
+  handleCloseMenu = () => {
+    this.setState({anchorEl: null});
   }
 
   updateReminderTime() {
@@ -122,19 +150,16 @@ class SiteWrapper extends Component {
 
     this.props.setSocket(socket);
     this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
-
-    // window.addEventListener('beforeunload', (e) => {this.handleLogout(false)});
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
-    // window.removeEventListener('beforeunload', (e) => {this.handleLogout(false)});
-  }
-
-  handleLogout(clear_token) {
     if (this.props.socket) {
       this.props.socket.emit('DISCONNECT', {a:'a'});
     }
+    clearInterval(this.interval);
+  }
+
+  handleLogout(clear_token) {
     this.props.userSignOut(clear_token);
   }
 
@@ -184,85 +209,100 @@ class SiteWrapper extends Component {
   render() {
     const messageCount = this.props.unreadMessageCount;
     return (
-      <div className={`site_wrapper ${this.props.isDarkMode ? 'dark_mode' : ''}`}>
-        <LoadingOverlay
-          active={this.state.isActiveLoadingOverlay}
-          spinner
-          text='Please wait...'
-          styles={{wrapper: {position: "fixed", width: "100%", height: "100vh", zIndex: this.state.isActiveLoadingOverlay ? 2 : 0}, }}
-          >
-        </LoadingOverlay>
-        <div className="game_header">
-          <div className="main_header d-flex">
-            <a className="game_logo" href="/">
-              <img src="/img/logo.png" alt="" />
-            </a>
-            <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HOW TO PLAY </span><FaRegQuestionCircle /></a>
-            <a href="/" id="btn_logout" className="ml-auto" onClick={(e) => {this.handleLogout(true)}}><span>LOGOUT </span><IoMdLogOut /></a>
-            <span id="balance" onClick={this.handleBalanceClick}>£{updateDigitToPoint2(parseInt(this.state.balance) / 100.0)}</span>
-            <div id="game_logs" className={this.state.showGameLog ? '' : 'hidden'}>
-              <table>
-                <tbody>
-                {this.state.transactions.length === 0 ?
-                  <tr><td>...</td></tr> :
-                  this.state.transactions.map((row, key) => (
-                    <tr key={key}>
-                      <td className={"amount " + (row.amount > 0 ? "green" : "red")}>{row.amount > 0 ? '+ £' + this.number2dp(row.amount / 100.0) : '- £' + this.number2dp(Math.abs(row.amount / 100.0))}</td>
-                      <td className="fromNow">{row.from_now}</td>
-                    </tr>
-                  ))
-                }
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="sub_header d-flex">
-            <span className="welcome">Welcome </span>
-            <span className="user_name mr-auto">{this.state.userName}</span>
-            {/* <a href="/" id="btn_info" className="btn"><img src="/img/i.png" alt="" /></a> */}
-            <DarkModeToggle
-                        onChange={this.props.setDarkMode}
-                        checked={this.props.isDarkMode}
-                        size={50}
-                        className="dark_mode_toggle"
+      <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
+        <div className={`site_wrapper row ${this.props.isDarkMode ? 'dark_mode' : ''}`}>
+          <LoadingOverlay
+            active={this.state.isActiveLoadingOverlay}
+            spinner
+            text='Please wait...'
+            styles={{wrapper: {position: "fixed", width: "100%", height: "100vh", zIndex: this.state.isActiveLoadingOverlay ? 3 : 0}, }}
+            >
+          </LoadingOverlay>
+          <div className="game_header">
+            <div className="main_header">
+              <a className="game_logo" href="/"></a>
+              <div className="header_action_panel">
+                <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play">HOW TO PLAY</a>
+                <span id="balance" onClick={this.handleBalanceClick}>£{updateDigitToPoint2(parseInt(this.state.balance) / 100.0)}</span>
+                <Button area-constrols="profile-menu" aria-haspopup="true" onClick={this.handleClickMenu} className="profile-menu">
+                  <img src={`${this.props.user.avatar} `} alt="" className="avatar" onError={(e)=>{e.target.src='../img/avatar.png'}} />
+                  <span className="username">{this.state.userName}</span>
+                  <ArrowDropDownIcon />
+                </Button>
+                <Menu id="profile-menu" 
+                  anchorEl={this.state.anchorEl} 
+                  getContentAnchorEl={null}
+                  open={Boolean(this.state.anchorEl)} 
+                  onClose={this.handleCloseMenu}
+                  anchorOrigin={{vertical: 'bottom', horizontal: 'center'}}
+                  transformOrigin={{vertical: 'top', horizontal: 'center'}}
+                >
+                  <MenuItem onClick={this.handleOpenProfileModal}>
+                    <ListItemIcon><PersonOutlineIcon /></ListItemIcon>
+                    <ListItemText>Profile</ListItemText>
+                  </MenuItem>
+                  <MenuItem>
+                    <ListItemIcon><PaymentIcon /></ListItemIcon>
+                    <ListItemText>Withdraw</ListItemText>
+                  </MenuItem>
+                  <MenuItem>
+                    <ListItemIcon><PaymentIcon /></ListItemIcon>
+                    <ListItemText>Deposit</ListItemText>
+                  </MenuItem>
+                  <MenuItem onClick={(e) => {this.handleLogout(true)}}>
+                    <ListItemIcon><ExitToAppIcon size="small" /></ListItemIcon>
+                    <ListItemText>Logout</ListItemText>
+                  </MenuItem>
+                  <Divider />
+                  <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
+                    <ListItemText>Dark theme</ListItemText>
+                    <DarkModeToggle
+                      onChange={this.props.setDarkMode}
+                      checked={this.props.isDarkMode}
+                      size={50}
+                      speed={5}
+                      className="dark_mode_toggle"
                     />
-            <button onClick={this.handleOpenProfileModal} id="btn_avatar" className="btn"><img src={`${this.props.user.avatar} `} alt="" /></button>
-          </div>
-        </div>
-        <div className="game_wrapper">
-          <div className="row">
-            <div className="left_sidebar col-md-2 col-sm-2 col-xs-2">
-                <a href="/create" className="btn" id="btn_create_game" onClick={(e) => {e.preventDefault(); history.push('/create')}}>
-                  <div>
-                    <img src="/img/new-bet.png" alt="" />
-                    <span>Create New Game</span>
-                  </div>
-                </a>
-                <a href="/join" className="btn" id="btn_join_game" onClick={(e) => {e.preventDefault(); history.push('/join')}}>
-                  <div>
-                    <img src="/img/my-bets.png" alt="" />
-                    <span>Join Game</span>
-                  </div>
-                </a>
-                <a href="/mygames" className="btn" id="btn_my_game">
-                  My Activities {messageCount === 0 ? '' : '(' + messageCount + ')'}
-                </a>
+                  </MenuItem>
+                </Menu>
               </div>
-            <div className="contents_wrapper col-md-10 col-sm-10 col-xs-10">
-              {this.props.children}
+            </div>
+            <div id="game_logs" className={this.state.showGameLog ? '' : 'hidden'} onClick={this.handleBalanceClick}>
+              <div className="arrow-up"></div>
+              <div className="game_logs_contents">
+                <h2>BALANCE HISTORY</h2>
+                <table>
+                  <tbody>
+                  {this.state.transactions.length === 0 ?
+                    <tr><td>...</td></tr> :
+                    this.state.transactions.map((row, key) => (
+                      <tr key={key}>
+                        <td className={"amount " + (row.amount > 0 ? "green" : "red")}>{row.amount > 0 ? '+ £' + this.number2dp(row.amount / 100.0) : '- £' + this.number2dp(Math.abs(row.amount / 100.0))}</td>
+                        <td className="fromNow">{row.from_now}</td>
+                      </tr>
+                    ))
+                  }
+                  </tbody>
+                </table>
+                </div>
             </div>
           </div>
+          <div className="game_wrapper">
+              <div className="contents_wrapper">
+                {this.props.children}
+              </div>
+          </div>
+          {/* <div className="game_footer text-center">
+            <span>All Rights Reserved, </span>rpsbet.com © 2020 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
+          </div> */}
+          <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} />
+          <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} />
+          <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} avatar={this.props.user.avatar} email={this.props.user.email} />
+          <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
+          <GamePasswordModal />
+          <AlertModal />
         </div>
-        <div className="game_footer text-center">
-          <span>All Rights Reserved, </span>rpsbet.com © 2020 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
-        </div>
-        <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} />
-        <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} />
-        <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} avatar={this.props.user.avatar} email={this.props.user.email} />
-        <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
-        <GamePasswordModal />
-        <AlertModal />
-      </div>
+      </MuiThemeProvider>
     );
   }
 }

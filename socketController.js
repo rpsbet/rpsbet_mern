@@ -19,17 +19,41 @@ module.exports.newTransaction = (transaction) => {
 }
 
 module.exports.socketio = (server) => {
-  const io = socket_io (server);
+  const io = socket_io (server, {
+    'pingTimeout': 5000,
+    'pingInterval': 5000,
+  });
+
   io.on ('connection', (socket) => {
     socket.emit('CONNECTED', {});
 
+    socket.on('upgrade', () => { console.log(123123); })
+
     socket.on ('STORE_CLIENT_USER_ID', (data) => {
       sockets[data.user_id] = socket;
+      console.log("SocketId:", socket.id);
+      console.log("added: ", Object.keys(sockets));
     })
 
-    socket.on ('DISCONNECT', (data) => {
-      
+    socket.on ('heartbeat', () => {
+      console.log('heartbeat');
+    })
+
+    socket.on ('DISCONNECT', (reason) => {
+      console.log(reason);
+      Object.keys(sockets).forEach(
+        (key, index) => {
+          if (sockets[key].id === socket.id) {
+            delete sockets[key];
+          }
+        }
+      )
+      console.log("removed: ", Object.keys(sockets));
     });
+
+    socket.on ('error', (err) => {
+      console.log(err.stack);
+    })
 
     socket.on ('READ_MESSAGE', async (data) => {
       await Message.updateMany(

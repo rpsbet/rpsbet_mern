@@ -9,7 +9,6 @@
   background-color: #2b2b2b;
 }
 
-
 svg {
     font-size: 1.3em;
 }
@@ -99,11 +98,6 @@ input,textarea { border-radius: 0 !important; }
 .btn:hover, .btn:focus, .btn.focus { transform: scale(1.05); transition: 0.3s; }
 
 #root .site_wrapper {
-  /*background: url('/img/bg.png');
-  background-size: cover;
-  background-size: 90px; 
-  background-color: #33271f; */
-  background-color: #f8f9fa;
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
 }
 
@@ -267,172 +261,27 @@ input,textarea { border-radius: 0 !important; }
   text-shadow: 1px 1px 1px #AAAAAA;
 }
 
-.game_header {
-  position: fixed;
-  width: 100%;
-  z-index: 1;
-}
-
-.main_header {
-  background-color: black;
-  height: 50px;
-  padding: 5px;
-}
-
-.main_header .game_logo {
-  width: 5em;
-}
-
-.main_header a {
-  color: #d5d5d5 !important;
-}
-
-.main_header a#btn_how_to_play,
-.main_header a#btn_logout {
-  padding: 10px 20px;
-}
-
-.main_header span#balance {
-  font-size: 36px;
-  font-weight: 900;
-  color: aliceblue;
-  border-top: 10px solid #f6b229;
-  border-bottom: 10px solid #f6b229;
-  line-height: 40px;
-  margin-top: -5px;
-  position: absolute;
-  min-width: 160px;
-  left: calc(50% - 80px);
-  text-align: center;
-}
-
-.main_header div#game_logs {
-  position: absolute;
-  margin-top: 60px;
-  left: calc(50% - 120px);
-  background-color: #33271f;
-  width: 240px;
-  min-height: 50px;
-  text-align: center;
-  color: white;
-  padding: 10px;
-  background: #00000070;
-  z-index: 1;
-}
-
-.main_header div#game_logs table {
-  width: 100%;
-}
-
-.main_header div#game_logs table tr td {
-  text-align: center;
-  font-weight: 600;
-  padding: 2px 5px;
-}
-
-.main_header div#game_logs table tr td.amount.green {
-  color: #28c739;
-}
-
-.main_header div#game_logs table tr td.amount.red {
-  color: red;
-}
-
-.game_logo img {
-  height: 100%;
-  width: 100%;
-}
-
-.sub_header {
-  background-color: #fff;
-  height: 55px;
-  border-top: 10px solid #C83228;
-  padding: 0 10px;
-  -moz-box-shadow: inset 0 -10px 10px -10px #adb5bdaa;
-  -webkit-box-shadow: inset 0 -10px 10px -10px #adb5bdaa;
-  box-shadow: inset 0 -10px 10px -10px #adb5bdaa;
-}
-
-.sub_header {
-  line-height: 40px;
-  font-weight: 800;
-  font-size: 15px;
-  text-transform: uppercase;
-}
-
-.sub_header span.welcome {
-  font-style: italic;
-}
-
-.sub_header span.user_name {
-  color: #C83228;
-  margin-left: 10px;
-  font-size: 18px;
-}
-
-.sub_header a,
-.sub_header #btn_avatar {
-  width: 60px;
-  height: 60px;
-  border: 3px solid #C83228 !important;
-  border-radius: 50%;
-  background: #C83228;
-  padding: 12.5px;
-  margin: 12px 10px 0;
-}
-
-.sub_header a img,
-.sub_header button img {
-  height: 100%;
-}
-
-.sub_header button#btn_avatar {
-  border-radius: 50%;
-  padding: 0px;
-  background: aliceblue;
-  border: 10px solid #f6b229 !important;
-  display: flex;
-  justify-content: center;
-  vertical-align: middle;
-  align-items: center;
-  box-shadow: 0px 0px 6px 4px rgb(200 200 200 / 0.6);
-  box-shadow: 0px 0px 6px 4px rgb(200 200 200 / 0.6), /*bottom external highlight*/ 0 -1px 1px #ccc, /*top external shadow*/ inset 0 -1px 1px rgba(0,0,0,0.5), /*bottom internal shadow*/ inset 0 1px 1px rgba(255,255,255,0.8);
-  align-content: center;
-}
-
-.sub_header button#btn_avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transform: scale(1.1);
-  border-radius: 50%;
-}
-
 div[aria-label="How To Play Modal"] th {
-    color: #ebddca;
-    border-bottom: 5px solid #fff !important;
-    padding: 5px 20px;
-    margin: 20px 0;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    text-align: center;
-        background: #33271f;
-    font-family: 'Prototype';
-  }
-  div[aria-label="How To Play Modal"] td {
-    border: 1px solid #fff;
-    padding: 5px 15px;
-    text-align: center;
-  }
+  color: #ebddca;
+  border-bottom: 5px solid #fff !important;
+  padding: 5px 20px;
+  margin: 20px 0;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  text-align: center;
+      background: #33271f;
+  font-family: 'Prototype';
+}
+div[aria-label="How To Play Modal"] td {
+  border: 1px solid #fff;
+  padding: 5px 15px;
+  text-align: center;
+}
 div[aria-label="How To Play Modal"] ul {
   margin-left: 1rem;
   margin-bottom: 0;
 }
 
-.dark_mode_toggle {
-  float: left;
-  margin: 10px;
-}
 
 .gamemode {
     color: #C83228;
@@ -664,31 +513,7 @@ background: #33271f;
   height: calc(40vh - 132px) !important;
 }
 
-.game_footer {
-  background: #33271f;
-  color: #b78b3dbb;
-  font-size: 1em;
-  bottom: 0;
-  margin-bottom: 0;
-  border-width: 1px 0 0;
-  border-radius: 0;
-  position: fixed;
-  right: 0;
-  left: 0;
-}
 
-.contents_wrapper {
-  height: calc(100vh - 105px);
-  margin-top: 105px;
-  padding-bottom: 50px;
-  padding-left: 5px !important;
-    padding-right: 5px !important;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-box-shadow: 0px 0px 30px 0px rgb(200 200 200 / 0.6);
-  -moz-box-shadow: 0px 0px 30px 0px rgb(200 200 200 / 0.6);
-  box-shadow: 0px 0px 30px 0px rgb(200 200 200 / 0.6);
-}
 .chat_header.row, .chat_input_panel.row {
   margin-left: -5px !important;
     margin-right: -5px !important;
@@ -1286,65 +1111,6 @@ button, button.btn {
     text-overflow: ellipsis;
 }
 
-.search_panel {
-  background: #fff;
-  color: #333;
-  padding-left: 30px;
-  border-top-left-radius: 500px;
-  text-transform: uppercase;
-  font-size: 20px;
-  font-weight: 700;
-  border: 3px solid #fff;
-  border-right: 0 !important;
-  -webkit-box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.2);
-  -moz-box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.2);
-  box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.2);
-}
-
-.search_panel input.search_text{
-  border: 0;
-  outline: 0;
-}
-
-.search_panel button {
-  color: #888;
-}
-
-.search_panel button:hover {
-  color: #333;
-}
-
-.table_title_with_search {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.tbl_title {
-    color: #fff;
-    width: 50%;
-    padding-left: 15px;
-    padding: 10px;
-    border-top-right-radius: 500px;
-    text-align: left;
-    margin: 15px 0 0 0;
-    text-transform: uppercase;
-    font-size: 30px;
-    font-weight: 700;
-    line-height: 1.1;
-    -webkit-box-shadow: 0 0 12px 0px rgba(200, 200, 200, 0.4);
-    -moz-box-shadow: 0 0 12px 0px rgba(200, 200, 200, 0.4);
-    background: #b52c22;
-   /* background: linear-gradient(90deg, #f6b229 -20%, #fff 100%); */
-    box-shadow: 0 0px 12px 0px rgba(200, 200, 200, 0.4);
-    border-top: 10px solid #fff;
-    border-right: 10px solid #fff;
-}
-
-
-.tbl_title.my_games {
-  background: #f6b229;
-}
 
 .my-open-games { overflow-x: scroll;}
 .my-open-games::-webkit-scrollbar {
@@ -1364,21 +1130,8 @@ button, button.btn {
   white-space: nowrap;
 }
 
-.overflowX {
-  background: #ffffff;
-  overflow-x: auto;
-  -webkit-box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.4);
-  -moz-box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.4);
-  box-shadow: 0px 0px 30px 0px rgb(200 200 200 / 0.6);
-}
-
 .table-black thead, .table-black tbody {
   background-color: #f8f9fa; 
-}
-
-.table {
-  border-spacing: 10px;
-  border-collapse: separate;
 }
 
 /* The fast, new way! */
@@ -1574,36 +1327,6 @@ table.table-striped tbody tr:nth-child(even) {
   background: #ffffff;
   color: #b52c22;
 
-}
-
-.main_table_pagination {
-  text-align: center;
-}
-
-.main_table_pagination button.btn_main_table_page_number {
-  margin: 5px;
-  color: #b52c22d6;
-  border: 5px solid #b52c22c4;
-  background: #ffffff00;
-  font-weight: 700;
-  font-size: 25px;
-  padding: 0 10px;
-  height: initial;
-}
-.main_table_pagination button.btn_main_table_page_number {
-  margin: -10px 5px 30px;
-  font-size: 1em;
-}
-.main_table_pagination button.btn_main_table_page_number:hover {
-  opacity: 1;
-  transition: 0.2s;
-  transform: scale(1.15);
-}
-.main_table_pagination button.btn_main_table_page_number.active {
-  color: #b52c22;
-  border: 5px solid #c83228;
-  background: #b52c2200;
-  transform: scale(1.25);
 }
 
 .my-open-games table.table-striped tbody tr:nth-child(even) {
@@ -1873,439 +1596,6 @@ label.answer {
 }
 
 
-/* 
-  ##Device = Desktops
-  ##Screen = 1281px to higher resolution desktops
-*/
-
-@media (min-width: 1281px) {
-  
-  
-}
-
-/* 
-  ##Device = Laptops, Desktops
-  ##Screen = B/w 1025px to 1280px
-*/
-
-@media (min-width: 1025px) and (max-width: 1280px) {
-  
-  
-}
-@media (max-width: 992px) {
-  #root .site_wrapper {
-    background-size: 150px !important; 
-  }
-
-  #root .site_wrapper .login_wrapper .login_form {
-    width: 100%;
-    min-width: initial;
-    overflow-y: scroll;
-    min-height: initial;
-  }
-
-  #root .site_wrapper .login_wrapper .login_form::-webkit-scrollbar {
-    display: none;
-  }
-
-}
-
-/* 
-  ##Device = Tablets, Ipads (portrait)
-  ##Screen = B/w 768px to 1024px
-*/
-
-@media (min-width: 768px) and (max-width: 1024px) {
-  
-  .contents_wrapper .chat_log_panel .my_message .message_content:after {
-    left: 90%;
-  }
-
-  .contents_wrapper .chat_input_panel .emoticon_panel {
-    width: 20%;
-  }
-  .contents_wrapper .chat_input_panel textarea { width: 70%; }
-  .contents_wrapper .chat_input_panel .btn_send_message { font-size: 30px; }
-}
-
-/* 
-  ##Device = Tablets, Ipads (landscape)
-  ##Screen = B/w 768px to 1024px
-*/
-
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-  
-  #btn_my_game { height: calc(50vh - 132px) !important; }
-  .game_wrapper .left_sidebar a { height: 25vh; font-size: 0.6em;}
-
-  .game_wrapper .left_sidebar a img {
-    max-width: 40px !important;
-    margin: 0 auto 10px !important
-  }
-  .main_title {
-    margin: 20px auto 10px;
-    font-size: 1.5em;
-  }
-  .tbl_title,table button.btn_join { font-size: 1em; }
-  table.normal_table tbody td {
-    font-size: 0.8em;
-  }
-  table.normal_table thead { font-size:1em; }
-  table button.btn_join {
-   padding: 0 10px;
-  }
-  table td, .table th {
-    padding: .15rem;
-  }
-  .contents_wrapper .chat_header { height: 25vh; }
-}
-
-/* 
-  ##Device = Low Resolution Tablets, Mobiles (Landscape)
-  ##Screen = B/w 481px to 767px
-*/
-
-@media (min-width: 481px) and (max-width: 767px) {
-  .pre_summary_panel {
-    grid-gap: 10px;
-  }
-
-  #btn_my_game {
-    min-height: 60px;
-    box-shadow: inset 0px -6px #bd8616;
-  }
-
-  #btn_my_game:hover, #btn_my_game:active,#btn_my_game:focus {
-    transform: unset !important;
-    border-top: 3px solid transparent;
-    box-shadow: inset -2px -2px #bd8616;
-  }
-
-  .main_title {
-    margin: 20px auto 10px;
-    font-size: 1.5em;
-  }
-  .tbl_title { font-size: 16px; }
-
-  /*** CHAT **/
-  .chat_header.row {
-    display: flex;
-    align-items: center;
-  }
-
-  .contents_wrapper .chat_input_panel .emoticon_panel {
-    width: 20%;
-  }
-  .contents_wrapper .chat_input_panel textarea { width: 70%; }
-  .contents_wrapper .chat_input_panel .btn_send_message { font-size: 30px; }
-  .contents_wrapper .chat_log_panel {
-    height: calc(100vh - 260px);
-  }
-
-  #btn_my_game { height: calc(50vh - 132px) !important; }
-  .game_wrapper .left_sidebar a { height: 25vh; font-size: 0.6em;}
-
-  .game_wrapper .left_sidebar a img {
-    max-width: 40px !important;
-    margin: 0 auto 10px !important
-  }
-  .tbl_title,table button.btn_join { font-size: 1em; }
-  table.normal_table tbody td {
-    font-size: 0.8em;
-  }
-  table.normal_table thead { font-size:1em; }
-  table button.btn_join {
-   padding: 0 10px;
-  }
-  table td, .table th {
-    padding: .15rem;
-  }
-  .contents_wrapper .chat_header { height: 25vh; }
-  .contents_wrapper .chat_input_panel .emoticon_panel span {
-    font-size: 1em;
-    height: 20px;
-  }
-
-  div.game_type img {
-    padding: .5em 1em;
-  }
-
-  div.game_type {
-   margin: 9px;
-  }
-
-}
-
-/* 
-  ##Device = Most of the Smartphones Mobiles (Portrait)
-  ##Screen = B/w 320px to 479px
-*/
-
-@media (min-width: 320px) and (max-width: 480px) {
-  .pre_summary_panel {
-    grid-gap: 10px;
-  }
-
-  div.summary_item {
-    font-size: 18px;
-  }
-
-  .game_wrapper .left_sidebar a span { font-size: 14px; }
-
-  #btn_my_game {
-    min-height: 60px;
-    box-shadow: inset 0px -6px #bd8616;
-  }
-
-  #btn_my_game:hover, #btn_my_game:active,#btn_my_game:focus {
-    transform: unset !important;
-    border-top: 3px solid transparent;
-    box-shadow: inset -2px -2px #bd8616;
-  }
-
-#rps_radio {
-  justify-content: space-between;
-}
-
-  .scroll-txt {
-    text-align: center;
-    padding-top: 20px;
-    display: block !important;
-}
-
-div[aria-label="How To Play Modal"] table {
-display: block !important;
-    overflow-x: scroll;
-}
-div[aria-label="How To Play Modal"] table td, div[aria-label="How To Play Modal"] table th {
-    white-space: nowrap;
-    font-size: 1em;
-}
-.profile_info_panel span:nth-child(even), .profile_info_panel input {
-  width: 100%;
-}
-  .modal-body h4 { font-size: 1.1em; }
-  .modal-body h5 {
-    font-size: 1em;
-    padding: 5px;
-    width: 60%;
-}
-
-.table-black td img.avatar {
-  width: 20px !important;
-  height: 20px !important;
-}
-
-div.question_panel { font-size: 1.2em; }
-div.timer { width: 50%;padding: 5px 10px !important; }
-div.timer_title,
-div.brain_score {
-
-  font-size: 1.4em !important;
-}
-
-div.brain_score {
-  word-break: break-all;
-  width: 90px;
-  text-align: center;
-  padding: 5px;
-  line-height: 1.6em;
-  border-radius: 15px !important;
-}
-.table { margin-bottom: 2em; }
-.contents_wrapper .chat_input_panel .emoticon_panel {
-  width: 30%;
-}
-.contents_wrapper .chat_input_panel .btn_send_message { width: 18%; }
-.contents_wrapper .chat_input_panel textarea { width: 50%; }
-.contents_wrapper .chat_input_panel .btn_send_message { font-size: 30px; }
-  .contents_wrapper .chat_log_panel { height: calc(100vh - 260px); }
-  .contents_wrapper .chat_input_panel {
-  padding: 0px;
-  margin-bottom: 0px !important;
-}
-
-.contents_wrapper .chat_input_panel textarea { font-size: 1.2em; }
-.contents_wrapper .chat_log_panel .my_message .message_content:after {
-  left: 85%;
-}
-.left_sidebar a.btn {
-  width: 50% !important;
-}
-
-#btn_my_game {
-  width: 100% !important;
-  height: calc(20vh - 100px) !important;
-}
-#btn_prev, #btn_next, #btn_skip, #btn_play_again {
-  font-size: 22px;
-}
-#btn_create_game {
-  float: left;
-}
-
-.pound-symbol {
-  margin: 20px auto 0;
-  width: 90%;
-}
-
-.contents_wrapper {
-  margin: 0;
-  padding: 0 0 20px !important;
-}
-
-.main_header { height: 40px; }
-
-  .game_wrapper .left_sidebar a img {
-    max-width: 50px;
-    margin: 5px auto 15px;
-}
-
-.game_wrapper .left_sidebar a {
-  height: 17vh;
-}
-
-.sub_header {
-      border-top: 5px solid #C83228;
-}
-
-.sub_header span {
-  font-size: 12px !important;
-}
-
-.main_header a span,.chat_header a span { display: none; }
-.main_header span#balance {
-    font-size: 20px;
-    line-height: 35px;
-    border-top: 5px solid #f6b229;
-    border-bottom: 5px solid #f6b229;
-    left: calc(50% - 50px);
-    width: 100px;
-}
-.main_header div#game_logs {
-  margin-top: 45px;
-}
-.game_wrapper .left_sidebar {margin-top: 94px;}
-
-label.radio-inline {
-  margin: 10px 14px 2px !important;
-  padding: 5px 10px !important;
-  border: 2px solid #C83228 !important;
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 1.3;
-}
-
-.join_summary_panel {
-  font-size: 0.84em;
-}
-
-div.game_type {
-  font-size: 0.8em !important;
-  margin: 10px 20px 10px !important;
-  width: 16%;
-}
-
-div.game_type:last-child {
-  margin-bottom: 10px !important;
-}
-
-div.game_types>div {
-  flex: 0 1 22%;
-}
-div.tip {
-  text-align: center;
-  font-size: 12px;
-  padding: 0.75rem 10px 0;
-}
-div.game_type img {
-  padding: 0.5em 0.25em !important;
-}
-
-#room_password {
-  display: block;
-  margin: 10px auto !important;
-}
-
-label.lbl_game_option {
-  font-size: 0.9em !important;
-}
-
-.btn_add_box {
-  float: right;
-    margin-top: -35px;
-    margin-right: 10px
-}
-.creat-a-box {
-  display: unset;
-}
-
-.profile_info_panel {
-    font-size:12px;
-    overflow-x: scroll;
-}
-.payment_action_panel {
-      grid-template-columns: 1fr;
-}
-
-.payment_action_panel h5 { display: none; }
-
-.main_header a#btn_how_to_play, .main_header a#btn_logout { padding: 3px; }
-
-.ReactModal__Content.ReactModal__Content--after-open {
-  min-width: unset !important; width: 97% !important; max-width: unset !important; max-height: 97% !important;
-}
-
-.btn-advanced {
-  height: 40px; 
-  font-size: 20px;
-}
-
-#btn_bet {
-    margin: 15px 0 0;
-    font-size: 20px;
-    padding: 10px 16px;
-}
-#btn_play_again {
-  margin-bottom: 30px;
-}
-
-.tbl_title {
-  font-size: 16px;
-  border-top: 4px solid #fff;
-  border-right: 4px solid #fff;
-  }
-
-.search_panel {
-  display: flex;
-  width: 50% !important;
-  border: none !important;
-  font-size: 18px !important;
-}
-
-.search_panel input.search_text {
-  overflow-x: scroll;
-  border-top-left-radius: 300px !important;
-}
-
-  .drinkcard-cc {
-    width: 110px;
-    height: 60px;
-  }
-
-  .copyright, .game_footer {
-    font-size: 0.8em;
-  }
-
-  .main_title {
-    font-size: 22px;
-  }
-
-  .history { overflow-x: scroll; }
-  .ReactModal__Content.ReactModal__Content--after-open { max-width: 97%; }
-
-}
-
 .StripeElement {
   display: block;
   margin: 0 0 10px 0;
@@ -2321,26 +1611,51 @@ label.lbl_game_option {
   background: white;
 }
 
-.table-black {
-  border-radius: 5px;
-}
-
-.table-black thead,
-.table-black tbody {
-  color: white;
-  text-align: center;
-  font-weight: 600;
-}
-
 .hidden {
   display: none;
 }
 
-table td img.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: contain;
-  /* border: 2px solid #c83228cc; */
-  margin-right: 5px;
+/* 
+  ##Device = Desktops
+  ##Screen = 1281px to higher resolution desktops
+*/
+
+@media (min-width: 1281px) {
+  
+}
+
+/* 
+  ##Device = Laptops, Desktops
+  ##Screen = B/w 1025px to 1280px
+*/
+
+@media (min-width: 1025px) and (max-width: 1280px) {
+  
+}
+@media (max-width: 992px) {
+}
+
+/* 
+  ##Device = Tablets, Ipads (portrait)
+  ##Screen = B/w 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) {
+}
+
+/* 
+  ##Device = Low Resolution Tablets, Mobiles (Landscape)
+  ##Screen = B/w 481px to 767px
+*/
+
+@media (min-width: 481px) and (max-width: 767px) {
+}
+
+/* 
+  ##Device = Most of the Smartphones Mobiles (Portrait)
+  ##Screen = B/w 320px to 479px
+*/
+
+@media (min-width: 320px) and (max-width: 480px) {
+
 }

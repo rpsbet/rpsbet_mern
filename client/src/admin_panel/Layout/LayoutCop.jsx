@@ -153,7 +153,7 @@ function ClippedDrawer(props) {
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
           <Typography variant="h6" noWrap align="left" onClick={() => navPush('/app')}>
-            For Lenny
+            RPSBet Admin
           </Typography>
           <div className={classes.grow}></div>
           <Typography noWrap align="right">
