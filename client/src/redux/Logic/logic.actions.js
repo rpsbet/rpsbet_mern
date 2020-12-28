@@ -20,6 +20,7 @@ import {
   NEW_TRANSACTION,
   OPEN_ALERT_MODAL,
   SET_BALANCE,
+  ONLINE_USER_LIST_UPDATED,
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -312,4 +313,8 @@ export const startLoading = () => dispatch => {
 
 export const endLoading = () => dispatch => {
   dispatch({ type: END_LOADING });
+}
+
+export const updateOnlineUserList = (user_list) => dispatch => {
+  dispatch({ type: ONLINE_USER_LIST_UPDATED, payload: user_list });
 }

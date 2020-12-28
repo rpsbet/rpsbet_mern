@@ -19,10 +19,7 @@ module.exports.newTransaction = (transaction) => {
 }
 
 module.exports.socketio = (server) => {
-  const io = socket_io (server, {
-    'pingTimeout': 5000,
-    'pingInterval': 5000,
-  });
+  const io = socket_io (server);
 
   io.on ('connection', (socket) => {
     socket.emit('CONNECTED', {});
@@ -33,23 +30,20 @@ module.exports.socketio = (server) => {
       sockets[data.user_id] = socket;
       console.log("SocketId:", socket.id);
       console.log("added: ", Object.keys(sockets));
+      io.sockets.emit('ONLINE_STATUS_UPDATED', {user_list: Object.keys(sockets)});
     })
 
-    socket.on ('heartbeat', () => {
-      console.log('heartbeat');
-    })
-
-    socket.on ('DISCONNECT', (reason) => {
+    socket.on ('disconnect', (reason) => {
       console.log(reason);
       Object.keys(sockets).forEach(
         (key, index) => {
           if (sockets[key].id === socket.id) {
-            io.sockets.emit('USER_DISCONNECTED', {user_id: key});
             delete sockets[key];
           }
         }
       )
       console.log("removed: ", Object.keys(sockets));
+      io.sockets.emit('ONLINE_STATUS_UPDATED', {user_list: Object.keys(sockets)});
     });
 
     socket.on ('error', (err) => {

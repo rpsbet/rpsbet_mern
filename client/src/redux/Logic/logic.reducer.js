@@ -13,7 +13,8 @@ import {
   MY_GAMES_LOADED,
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
-  HISTORY_LOADED
+  HISTORY_LOADED,
+  ONLINE_USER_LIST_UPDATED
 } from '../types';
   
 const initialState = {
@@ -52,7 +53,8 @@ const initialState = {
     avatar: '',
     username: '',
     chatLogs: []
-  }
+  },
+  onlineUserList: []
 };
   
 export default function(state = initialState, action) {
@@ -122,6 +124,10 @@ export default function(state = initialState, action) {
       return {
         ...state,
       };
+    case ONLINE_USER_LIST_UPDATED:
+      return {
+        ...state, onlineUserList: payload
+      }
     default:
       return state;
   }

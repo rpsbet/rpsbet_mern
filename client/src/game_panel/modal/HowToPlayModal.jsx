@@ -62,7 +62,7 @@ class HowToPlayModal extends Component {
             </div>
 
 <div className="modal-body">
-<div className="modal-img-header"> <h4><b><span>Quick shoot</span><img width="60px" src={'/img/gametype/QS.png'}/> Game Mode</b></h4>
+<div className="modal-img-header"> <h4><b><span>Quick shoot</span><img width="60px" src={'/img/gametype/QS.png'} alt='' /> Game Mode</b></h4>
 </div>
 
 <h5>HOST GAME</h5>
@@ -78,7 +78,7 @@ class HowToPlayModal extends Component {
 <h5 style={{color: "#02c526"}}>WINNINGS</h5>
 <p>e.g.<br />Your Bet Amount = <span style={{color: "#f6b22a"}}>£50</span><br/>Game Type = <u>5 (5x)</u><br />Public Bet Amount = <span style={{color:"#b52c22"}}>£200 [£50 * 0.95]</span><br />Winnings = <span style={{color:"#02c526"}}>£237.50 [£250 * 0.95]</span></p>
 
-<div className="modal-img-header"> <h4><b><span>Brain Game</span><img width="60px" src={'/img/gametype/BG.png'}/> Game Mode</b></h4>
+<div className="modal-img-header"> <h4><b><span>Brain Game</span><img width="60px" src={'/img/gametype/BG.png'} alt='' /> Game Mode</b></h4>
 </div>
 <h5>HOST GAME</h5>
 <ol>
@@ -93,7 +93,7 @@ class HowToPlayModal extends Component {
 <h5 style={{color: "#02c526"}}>WINNINGS</h5>
 <p>e.g.<br />Bet Amount = <span style={{color:"#02c526"}}>£5</span><br />Payout = Automatic(£30)<br />Winnings = <span style={{color:"#02c526"}}>£27 [£30 * 0.9]</span></p>
 
-<div className="modal-img-header"> <h4><b><span>Mystery Box</span><img width="60px" src={'/img/gametype/MB.png'}/> Game Mode</b></h4>
+<div className="modal-img-header"> <h4><b><span>Mystery Box</span><img width="60px" src={'/img/gametype/MB.png'} alt='' /> Game Mode</b></h4>
 </div>
 <h5>HOST GAME</h5>
 <ol>
@@ -107,7 +107,7 @@ class HowToPlayModal extends Component {
 <h5 style={{color: "#02c526"}}>WINNINGS</h5>
 <p>e.g.<br />The following boxes are set (Prize/Price): £25/£4, £0/£6, £0/£10<br />Payout = Automatic(£41) [£25 + £6 + £10]<br />Host Winnings = <span style={{color:"#02c526"}}>£38.95 [£41 * 0.95]</span><br /><i>If the £25 Prize box is opened, the host still receives the £4 (Price).</i></p>
 
-<div className="modal-img-header"> <h4><b><span><i>Spleesh!</i></span><img width="60px" src={'/img/gametype/S!.png'}/> Game Mode</b></h4>
+<div className="modal-img-header"> <h4><b><span><i>Spleesh!</i></span><img width="60px" src={'/img/gametype/S!.png'} alt='' /> Game Mode</b></h4>
 </div>
 <h5>HOST GAME</h5>
 <ol>
@@ -122,7 +122,7 @@ class HowToPlayModal extends Component {
 <p>e.g.<br />Host's Number (Bet Amount) = <span style={{color: "red"}}>£7</span><br />Payout = Automatic(£30)<br />Guesses (in order): <u> 1, 2,10,9,5,8- <i>Game ENDs automatically</i><br />Host Winnings = <span style={{color:"#02c526"}}>£37.80 [£42 * 0.9]</span></u></p>
 
 
-<div className="modal-img-header"> <h4><b><span>Classic RPS</span><img width="60px" src={'/img/gametype/RPS.png'}/> Game Mode</b></h4>
+<div className="modal-img-header"> <h4><b><span>Classic RPS</span><img width="60px" src={'/img/gametype/RPS.png'} alt='' /> Game Mode</b></h4>
 </div>
 <p>Rock BEATS Scissors, Paper BEATS Rock, Scissors BEATS Paper!</p>
 <h5 style={{color: "#02c526"}}>WINNINGS</h5>

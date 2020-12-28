@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { withStyles, createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
+import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setSocket, userSignOut, getUser, setUnreadMessageCount } from '../redux/Auth/user.actions';
-import { setRoomList, addChatLog, getMyGames, getMyHistory, addNewTransaction } from '../redux/Logic/logic.actions';
+import { setRoomList, addChatLog, getMyGames, getMyHistory, addNewTransaction, updateOnlineUserList } from '../redux/Logic/logic.actions';
 
 import { Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@material-ui/core';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
@@ -148,9 +148,9 @@ class SiteWrapper extends Component {
       this.props.setUnreadMessageCount(data);
     });
 
-    socket.on('USER_DISCONNECTED', (data) => {
-      console.log(data);
-    })
+    socket.on('ONLINE_STATUS_UPDATED', (data) => {
+      this.props.updateOnlineUserList(data.user_list);
+    });
 
     this.props.setSocket(socket);
     this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
@@ -158,7 +158,7 @@ class SiteWrapper extends Component {
 
   componentWillUnmount() {
     if (this.props.socket) {
-      this.props.socket.emit('DISCONNECT', {a:'a'});
+      this.props.socket.disconnect();
     }
     clearInterval(this.interval);
   }
@@ -211,7 +211,6 @@ class SiteWrapper extends Component {
   }
   
   render() {
-    const messageCount = this.props.unreadMessageCount;
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
         <div className={`site_wrapper row ${this.props.isDarkMode ? 'dark_mode' : ''}`}>
@@ -224,7 +223,7 @@ class SiteWrapper extends Component {
           </LoadingOverlay>
           <div className="game_header">
             <div className="main_header">
-              <a className="game_logo" href="/"></a>
+              <a className="game_logo" href="/"> </a>
               <div className="header_action_panel">
                 <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play">HOW TO PLAY</a>
                 <span id="balance" onClick={this.handleBalanceClick}>£{updateDigitToPoint2(parseInt(this.state.balance) / 100.0)}</span>
@@ -321,7 +320,7 @@ const mapStateToProps = state => ({
   unreadMessageCount: state.auth.unreadMessageCount,
   isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
   transactions: state.auth.transactions,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
 });
 
 const mapDispatchToProps = {
@@ -334,7 +333,8 @@ const mapDispatchToProps = {
   getMyHistory,
   setUnreadMessageCount,
   addNewTransaction,
-  setDarkMode
+  setDarkMode,
+  updateOnlineUserList
 };
 
 export default connect(

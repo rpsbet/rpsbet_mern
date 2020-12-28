@@ -11,7 +11,6 @@ import SearchIcon from '@material-ui/icons/Search';
 
 import { updateDigitToPoint2 } from '../../util/helper'
 
-import { makeStyles, withStyles } from '@material-ui/core/styles';
 import { Tabs, Tab, Button } from '@material-ui/core';
 
 import './MainPages.css';
@@ -224,7 +223,7 @@ class RoomList extends Component {
 													<div className="table-cell desktop-only cell-user-name">
 														<img className="avatar" src={`${row.creator_avatar} `} alt="" onError={(e)=>{e.target.src='../img/avatar.png'}} />
 														<span>{row.creator}</span>
-														<i className="online-status online"></i>
+														<i className={`online-status ${this.props.onlineUserList.indexOf(row.creator_id) >= 0 ? 'online' : ''}`}></i>
 													</div>
 													<div className="table-cell desktop-only cell-amount-info">{"£" + updateDigitToPoint2(row.user_bet) /*+ " / £" + row.pr*/} / {row.winnings}</div>
 													<div className="table-cell cell-action">
@@ -355,7 +354,8 @@ const mapStateToProps = state => ({
 	totalPage: state.logic.totalPage,
 	balance: state.auth.balance,
 	user: state.auth.user,
-	isDarkMode: state.auth.isDarkMode
+	isDarkMode: state.auth.isDarkMode,
+  onlineUserList: state.logic.onlineUserList
 });
 
 const mapDispatchToProps = {
