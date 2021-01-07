@@ -2,47 +2,53 @@ import React, { Component } from 'react';
 import { FaPoundSign } from 'react-icons/fa';
 
 class AdvancedSettings extends Component {
-    render() {
-        return (
-            <div id="advanced_panel">
-                { this.props.step === 1 && 
-                <>
-                    <hr/>
-                    <label className="lbl_game_option">Privacy</label>
-                    <div>
-                        <label className={"radio-inline" + (this.props.is_private === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_private: false, room_password: ''}); }}>Public</label>
-                        <label className={"radio-inline" + (this.props.is_private === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_private: true}); }}>Private</label>
-                        <input type="text" id="room_password" value={this.props.room_password} onChange={(e) => {this.props.onChangeState({room_password: e.target.value})}} className={"form-control" + (this.props.is_private === true ? "" : " hidden")} />
-                    </div>
-                    <div className="tip">Set to 'Private' to require a password to Join</div>
-                </>
-                }
+	render() {
+		return (
+			<div id="advanced_panel">
+				{ this.props.step === 1 && 
+				<div className="game-privacy-panel game-info-panel">
+					<h3 className="game-sub-title">Privacy</h3>
+					<div className="radio-button-group">
+						<button className={"radio-button" + (!this.props.is_private ? ' selected' : '')} onClick={() => { this.props.onChangeState({is_private: false, room_password: ''}); }}>
+							Public
+						</button>
+						<button className={"radio-button" + (this.props.is_private ? ' selected' : '')} onClick={() => { this.props.onChangeState({is_private: true}); }}>
+							Private
+						</button>
+						<input type="text" value={this.props.room_password} onChange={(e) => {this.props.onChangeState({room_password: e.target.value})}} className={(this.props.is_private === true ? "" : " hidden")} />
+					</div>
+					<p>Set to 'Private' to require a password to Join</p>
+				</div>
+				}
 
-                { this.props.step === 2 && 
-                <>
-                    <hr/>
-                    <label className="lbl_game_option">Payout</label>
-                    <div>
-                        <label className={"radio-inline" + (this.props.endgame_type === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({endgame_type: false}); }}>Manual</label>
-                        <label className={"radio-inline" + (this.props.endgame_type === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({endgame_type: true}); }}>Automatic</label>
-                        <label className={"lbl_endgame_type" + (this.props.endgame_type === true ? "" : " hidden")}>
-                            <span className="pound-symbol"><FaPoundSign /><input type="text" id="endgame_amount" value={this.props.endgame_amount} onChange={(e)=>{this.props.onChangeState({endgame_amount: e.target.value})}} className="col-md-6 form-control bet-input endgame_amount" /></span>
-                        </label>
-                    </div>
-                    <div className="tip">Choose Automatic to cashout at a set amount.</div>
-                </>
-                }
+				{ this.props.step === 2 && 
+				<div className="game-info-panel payout-info-panel">
+					<h3 className="game-sub-title">Payout</h3>
+					<div className="select-buttons-panel">
+						<button className={(!this.props.endgame_type ? ' active' : '')} onClick={() => { this.props.onChangeState({endgame_type: false}); }}>Manual</button>
+						<button className={(this.props.endgame_type ? ' active' : '')} onClick={() => { this.props.onChangeState({endgame_type: true}); }}>Automatic</button>
+						<div className={`edit-amount-panel ${this.props.endgame_type ? '' : 'hidden'}`}>
+							<span>£</span>
+							<input type="text" pattern="[0-9]*" name="endgame_amount" id="endgame_amount" 
+								value={this.props.endgame_amount} 
+								onChange={(e) => {this.props.onChangeState({endgame_amount: e.target.value})}} 
+								placeholder="End Game Amount" />
+						</div>
+					</div>
+					<p className="tip">Choose Automatic to cashout at a set amount.</p>
+				</div>
+				}
 
-                {/* <hr/>
-                <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet</label>
-                <div style={{pointerEvents: "none", opacity: "0.6"}}>
-                    <label className={"radio-inline" + (this.props.is_anonymous === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: true}); }}>Yes</label>
-                    <label className={"radio-inline" + (this.props.is_anonymous === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: false}); }}>No</label>
-                </div>
-                <div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div> */}
-            </div>
-        );
-    }
+				{/* <hr/>
+				<label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet</label>
+				<div style={{pointerEvents: "none", opacity: "0.6"}}>
+					<label className={"radio-inline" + (this.props.is_anonymous === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: true}); }}>Yes</label>
+					<label className={"radio-inline" + (this.props.is_anonymous === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: false}); }}>No</label>
+				</div>
+				<div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div> */}
+			</div>
+		);
+	}
 }
 
 export default AdvancedSettings;

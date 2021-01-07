@@ -1,12 +1,7 @@
 import React, { Component } from 'react';
-import { FaArrowLeft, FaArrowRight, FaPoundSign } from 'react-icons/fa';
-
-function updateDigitToPoint2(number) {
-    if (parseFloat(number) - parseInt(number) > 0) {
-        return number.toFixed(2);
-    }
-    return number;
-}
+import DefaultBetAmountPanel from './DefaultBetAmountPanel';
+import { getQsLottieAnimation } from '../../util/helper'
+import Lottie from 'react-lottie'
 
 class QuickShoot extends Component {
     constructor(props) {
@@ -74,103 +69,40 @@ class QuickShoot extends Component {
             position_short_name = ["tl", "tr", "bl", "br"];
         }
 
-        console.log(position_name[this.props.selected_qs_position], position_short_name[this.props.selected_qs_position]);
-
         return (
             <>
                 {this.props.step === 1 && 
-                    <>
-                        <hr/>
-                        <div style={{padding: "0"}}>
-                            <label className="lbl_game_option">Choose a Game Type</label>
-                        </div>
-                        <div className="qs_image_panel">
+                    <div className="game-info-panel">
+                        <h3 className="game-sub-title">Choose a Game Type</h3>
+                        <div className="qs-image-panel">
                             <img src={`/img/gametype/quick_shoot/qs-type-${this.props.qs_game_type}.png`} alt="" />
                         </div>
-                        <div className="qs_image_panel">
-                            <button onClick={this.onLeftButtonClicked}><FaArrowLeft /></button>
-                            <label className="qs_game_type">{this.props.qs_game_type}</label>
-                            <button onClick={this.onRightButtonClicked}><FaArrowRight /></button>
+                        <div className="qs-action-panel">
+                            <button className="btn-left" onClick={this.onLeftButtonClicked}></button>
+                            <label>{this.props.qs_game_type}</label>
+                            <button className="btn-right" onClick={this.onRightButtonClicked}></button>
                         </div>
-                    </>
+                    </div>
                 }
-                {this.props.step === 2 && 
-                    <>
-                        <hr/>
-                        <label className="lbl_game_option">Choose a Bet Amount</label>
-        
-                        <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 1 ? ' checked' : '')} 
-                            onClick={() => { 
-                                this.setState({is_other: "hidden"}); 
-                                this.props.onChangeState({
-                                    bet_amount: 1, 
-                                    public_bet_amount: "£" + (this.props.qs_game_type - 1), 
-                                    max_return: this.props.qs_game_type }); 
-                                }}>£1</label>
-                        <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 2.5 ? ' checked' : '')} 
-                            onClick={() => { 
-                                this.setState({is_other: "hidden"}); 
-                                this.props.onChangeState({
-                                    bet_amount: 2.5, 
-                                    public_bet_amount: "£" + updateDigitToPoint2((this.props.qs_game_type - 1) * 2.5), 
-                                    max_return: this.props.qs_game_type * 2.5 }); 
-                                }}>£2.50</label>
-                        <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 5 ? ' checked' : '')} 
-                            onClick={() => { 
-                                this.setState({is_other: "hidden"}); 
-                                this.props.onChangeState({
-                                    bet_amount: 5, 
-                                    public_bet_amount: "£" + (this.props.qs_game_type - 1) * 5,
-                                    max_return: this.props.qs_game_type * 5 }); 
-                                }}>£5</label>
-                        <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 10 ? ' checked' : '')} 
-                            onClick={() => { 
-                                this.setState({is_other: "hidden"}); 
-                                this.props.onChangeState({
-                                    bet_amount: 10, 
-                                    public_bet_amount: "£" + (this.props.qs_game_type - 1) * 10,
-                                    max_return: this.props.qs_game_type * 10 }); 
-                                }}>£10</label>
-                        <label className={"radio-inline" + (this.state.is_other !== "" && this.props.bet_amount === 25 ? ' checked' : '')} 
-                            onClick={() => { 
-                                this.setState({is_other: "hidden"}); 
-                                this.props.onChangeState({
-                                    bet_amount: 25, 
-                                    public_bet_amount: "£" + (this.props.qs_game_type - 1) * 25,
-                                    max_return: this.props.qs_game_type * 25 }); 
-                                }}>£25</label>
-                        <label className={"radio-inline" + (this.state.is_other === "" ? ' checked' : '')} onClick={() => { this.setState({is_other: ""}); }}>Other</label>
-        
-                        <span className={`pound-symbol ${this.state.is_other}`}>
-                            <FaPoundSign />
-                            <input type="text" pattern="[0-9]*" name="betamount" id="betamount" 
-                                value={this.props.bet_amount} 
-                                onChange={(e) => {
-                                    this.props.onChangeState({
-                                        bet_amount: e.target.value, 
-                                        public_bet_amount: "£" + updateDigitToPoint2((this.props.qs_game_type - 1) * e.target.value),
-                                        max_return: this.props.qs_game_type * e.target.value }); 
-                                    }}
-                                className="form-control col-md-6 input-sm bet-input" placeholder="Bet Amount" />
-                        </span>
-                        <div className="tip">The global cost to play this game</div>
-                    </>
-                }
+                {this.props.step === 2 && <DefaultBetAmountPanel game_type="Quick Shoot" qs_game_type={this.props.qs_game_type} onChangeState={this.props.onChangeState} bet_amount={this.props.bet_amount} />}
                 {this.props.step === 3 && 
-                    <>
-                        <hr/>
-                        <div style={{padding: "0"}}>
-                            <label className="lbl_game_option">Choose WHERE TO SAVE</label>
+                    <div className="game-info-panel">
+                        <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
+                        <div className="qs-image-panel">
+                            <Lottie options={{
+                                    loop: true,
+                                    autoplay: true, 
+                                    animationData: getQsLottieAnimation(this.props.qs_nation, position_short_name[this.props.selected_qs_position])
+                                }}
+                                style={{maxWidth: '100%', width: '600px'}}
+                            />
                         </div>
-                        <div className="qs_image_panel">
-                            <img src={`/img/gametype/quick_shoot/qs-create-${position_short_name[this.props.selected_qs_position]}2.png`} alt="" />
+                        <div className="qs-action-panel">
+                            <button className="btn-left" onClick={this.onLeftPositionButtonClicked}></button>
+                            <label>{position_name[this.props.selected_qs_position]}</label>
+                            <button className="btn-right" onClick={this.onRightPositionButtonClicked}></button>
                         </div>
-                        <div className="qs_image_panel">
-                            <button onClick={this.onLeftPositionButtonClicked}><FaArrowLeft /></button>
-                            <label className="qs_game_type">{position_name[this.props.selected_qs_position]}</label>
-                            <button onClick={this.onRightPositionButtonClicked}><FaArrowRight /></button>
-                        </div>
-                    </>
+                    </div>
                 }
             </>
         );

@@ -478,79 +478,6 @@ background: #33271f;
     margin-right: -5px !important;
   }
 
-.main_title {
-  text-align: center;
-  font-size: 36px;
-  color: #fff;
-  background: #c83228;
-  border-radius: 30px;
-  width: 80%;
-  padding: 5px 15px;
-  margin: 30px auto 10px;
-  text-transform: uppercase;
-  font-family: 'Prototype';
-  -webkit-box-shadow: 0px 0px 6px 4px rgb(200 200 200 / 0.6);
-  -moz-box-shadow: 0px 0px 6px 4px rgb(200 200 200 / 0.6);
-  box-shadow: 0px 0px 6px 4px rgb(200 200 200 / 0.6);
-}
-
-hr {
-  margin-top: 15px;
-  margin-bottom: 0px;
-  border: 0;
-  border-top: 10px solid #f8f9fa;
-  border-radius: 30px;
-}
-
-
-label.lbl_game_option {
-  background: #f6b22a;
-  padding: 10px;
-  margin-bottom: 0px;
-  margin-right: 5px;
-  border-top-right-radius: 500px;
-  border-top: 10px solid #fff;
-  border-right: 10px solid #fff;
-  display: block;
-  font-weight: 700;
-  font-size: 1.44em;
-  box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
-  font-family: 'Prototype';
-  color: #fff;
-  background: linear-gradient(90deg, #f6b229 -20%, #fff 100%);
-}
-
-.summary_panel .summary_item div:last-child{
-  color: rgb(2, 197, 38);
-}
-
-.summary_panel > label.lbl_game_option {
-  background: #C83228;
-  color: white;
-}
-
-.pre_summary_panel {
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-gap: 30px;
-}
-
-.pre_summary_panel .lbl_game_option {
-  background: #F85933;
-  color: #333333;
-  border-top: 10px solid #333;
-  border-right: 10px solid #333;
-  box-shadow: 4px 0px 0px 0px #000000;
-  text-shadow: 0px 0px 1px #333333;
-}
-
-div.summary_item {
-  color: #C83228;
-  font-weight: 700;
-  font-size: 25px;
-  padding: 10px;
-}
-
 div.game_types {
   display: flex;
   flex-wrap: wrap;
@@ -679,7 +606,7 @@ label.radio-inline {
   box-shadow: 0px 0px 2px 1px #b52c22;
 }
 
-label.radio-inline, #btn_prev, #btn_next, #btn_skip, .qs_image_panel button {
+label.radio-inline {
   border: 5px solid #b52c22 !important;
   border-right: 7.5px solid #b52c22 !important;
   border-bottom: 7.5px solid #b52c22 !important;
@@ -745,51 +672,6 @@ div.qs_image_panel > button {
 
 #room_password.hidden {
   display: none;
-}
-
-.drinkcard-cc {
-  background-size: contain;
-  background-repeat: no-repeat;
-  display: inline-block;
-  margin: 20px auto !important;
-  margin-bottom: 15px;
-  width: 250px;
-  height: 130px;
-  -webkit-transition: all 100ms ease-in;
-  -moz-transition: all 100ms ease-in;
-  transition: all 100ms ease-in;
-  -webkit-filter: brightness(1.8) grayscale(1) opacity(.7);
-  -moz-filter: brightness(1.8) grayscale(1) opacity(.7);
-  filter: brightness(1.8) grayscale(1) opacity(.7);
-}
-
-.drinkcard-cc:hover {
-  -webkit-filter: brightness(1.2) grayscale(.5) opacity(.9);
-  -moz-filter: brightness(1.2) grayscale(.5) opacity(.9);
-  filter: brightness(1.2) grayscale(.5) opacity(.9);
-}
-
-.drinkcard-cc.checked {
-  -webkit-filter: none;
-  -moz-filter: none;
-  filter: none;
-}
-
-#rps_radio {
-  display: flex;
-  padding-left: 20px;
-}
-
-.drinkcard-cc.rock {
-  background-image: url(/img/rock.png);
-}
-
-.drinkcard-cc.paper {
-  background-image: url(/img/paper.png);
-}
-
-.drinkcard-cc.scissors {
-  background-image: url(/img/scissors.png);
 }
 
 input.form-control[readonly] {
@@ -911,49 +793,6 @@ input.form-control[readonly] {
   background-size: contain;
 }
 
-.empty_button_panel {
-  width: 25%;
-  display: inline-block;
-  padding: 0 15px;
-}
-
-.empty_button_panel .btn_empty_boxes {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.empty_button_panel .btn_empty_boxes span {
-  width: 20px;
-  height: 20px;
-  background: #3ea0e5;
-  float: left;
-  margin-right: 5px;
-}
-
-input.new_box_prize {
-  width: 200px;
-  display: inline-block;
-  margin-right: 10px;
-}
-
-.btn_add_box {
-  background: #C83228;
-  border: 3px solid aliceblue;
-  color: aliceblue;
-  font-weight: 800;
-  font-size: 14px;
-  line-height: 1.4;
-
-}
-.creat-a-box {
-  display: flex;
-}
-.btn_add_box:hover {
-  color: aliceblue;
-}
 
 .mystery_result_title {
   margin-bottom: 10px;
@@ -1000,51 +839,6 @@ input.new_box_prize {
   transition: margin-left 0.5s ease-out,
               height 0.1s 0.5s;
   overflow: hidden;
-}
-
-.action_panel {
-  display: flex;
-  justify-content: space-between;
-  padding: 20px;
-  align-items: baseline;
-}
-button#btn_bet { font-size: 26px !important; }
-#btn_bet {
-  color: #fff;
-  background-color: #000 !important;
-  border: 3px solid #000 !important;
-  font-size: 36px;
-  width: 50%;
-  padding: 10px 16px;
-  border-radius: 100px;
-  font-weight: 800;
-  height: initial;
-  line-height: 1.33;
-}
-
-#btn_bet.btn_secondary {
-  background-color: #C83228 !important;
-  border: 3px solid aliceblue !important;
-  color: aliceblue !important;
-}
-
-#btn_bet.btn_secondary:hover {
-  background-color: #449d44 !important;
-  border-color: #398439 !important;
-}
-
-#btn_prev, #btn_next, #btn_skip, #btn_play_again {
-  color: #C83228;
-  background-color: transparent !important;
-  border: 3px solid #C83228 !important;
-  font-size: 25px;
-  border-radius: 100px;
-  font-weight: 800;
-  height: 50px;
-}
-
-button, button.btn {
-  outline: none !important;
 }
 
 .history .table.normal_table tbody td, .history table button.btn_join {
@@ -1332,44 +1126,7 @@ p.lbl_previous_guesses {
   font-size: 25px;
 }
 
-div.timer {
-  width: 20%;
-  margin: 15px auto 0px auto;
-  border: 3px solid #333;
-  background: #33271e;
-  padding: 15px 30px;
-  color: #fff;
-  line-height: 30px;
-  border-radius: 20px;
-  text-align: center;
-}
 
-div.timer .timer_title {
-  font-size: 34px;
-  font-weight: 700;
-}
-
-div.timer .countdown {
-  font-size: 40px;
-  font-weight: 800;
-  color: #C83228;
-  margin: 10px;
-}
-
-div.brain_score {
-  position: absolute;
-  right: 0;
-  top: 0;
-  font-size: 34px !important;
-  background: #33271d;
-  color: white;
-  padding: 10px 30px;
-  border-top-left-radius: 30px;
-  border-bottom-left-radius: 30px;
-  border-bottom-right-radius: 30px;
-  font-weight: 700;
-  margin-right: 4px;
-}
 
 div.brain_score label {
   color: #02c526;

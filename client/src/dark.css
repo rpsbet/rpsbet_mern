@@ -1,3 +1,8 @@
+.dark_mode input {
+	border: 0;
+	background-color: #2f3136;
+	color: white;
+}
 .dark_mode .game_header {
 	background-color: #2f3136;
 }
@@ -46,14 +51,10 @@
 	background: rgba(47, 49, 54, 1);
 	border-color: rgba(47, 49, 54, 0.5);
 }
-.dark_mode .search_panel input.search_text {
-	background: rgba(47, 49, 54, 0.5);
-}
-.dark_mode .create-game-panel .btn-create-game .game-type-icon {
+.dark_mode .search_panel input.search_text,
+.dark_mode .create-game-panel .btn-create-game .game-type-icon,
+.dark_mode .game-page .page-title > .pre-summary-panel	{
 	background-color: rgba(47, 49, 54, 0.5);
-}
-.dark_mode .create-game-panel .btn-create-game:hover .game-type-name {
-	color: white;
 }
 .dark_mode #game_logs {
 	background: rgba(0, 0, 0, 0.5);
@@ -61,14 +62,82 @@
 .dark_mode #game_logs .game_logs_contents {
 	background: #2f3136;
 }
-.dark_mode #game_logs .game_logs_contents h2 {
+.dark_mode #game_logs .game_logs_contents h2,
+.dark_mode .game-page .game-contents h3.game-sub-title,
+.dark_mode .game-page .game-contents .summary-panel .summary-info .summary-item .summary-item-name,
+.dark_mode .game-page .pre-summary-panel,
+.dark_mode .game-page .game-contents .game-info-panel .edit-amount-panel span,
+.dark_mode .create-game-panel .btn-create-game:hover .game-type-name {
 	color: white;
 }
-.dark_mode #game_logs .game_logs_contents table td.fromNow {
+.dark_mode #game_logs .game_logs_contents table td.fromNow,
+.dark_mode .game-page .game-contents p {
 	color: #8e9297;
 }
 .dark_mode #game_logs .arrow-up {
 	border-bottom: 10px solid #2f3136;
+}
+.dark_mode .contents_wrapper .game-page .page-title h2 {
+	color: white;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' fill='none' viewBox='0 0 40 40'%3E%3Cpath fill='%23fff' fill-rule='evenodd' d='M2.25 14.821c0-3.905 3.166-7.071 7.071-7.071H30.18c3.905 0 7.071 3.166 7.071 7.071v6.143c.58.504 1.085 1.09 1.5 1.74v-7.883c0-4.733-3.838-8.571-8.571-8.571H9.32C4.588 6.25.75 10.088.75 14.821v11.805c0 3.974 3.221 7.195 7.195 7.195 2.726 0 5.217-1.54 6.436-3.977l.618-1.237h9.162c-.099-.485-.154-.987-.16-1.5h-9.465c-.284 0-.544.16-.671.415l-.826 1.651c-.965 1.93-2.937 3.148-5.094 3.148-3.145 0-5.695-2.55-5.695-5.695V14.821zm8.929-1.303v3.16H8.018v1.5h3.16v3.161h1.5v-3.16h3.161v-1.5h-3.16v-3.161h-1.5zm12.482 7.268h2.607v-1.5H23.66v1.5zm5.214-5.215h2.607v-1.5h-2.607v1.5z' clip-rule='evenodd'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M32.75 25L29.75 34M28 29.25L38 29.25'/%3E%3C/svg%3E%0A");
+}
+.dark_mode .contents_wrapper .game-page .page-title span {
+	color: #72767d;
+}
+.dark_mode .game-page .game-contents {
+	color: white;
+	background-color: rgba(47, 49, 54, 0.5);
+}
+.dark_mode .game-page hr {
+	border-color: #36393f;
+}
+.dark_mode .game-page .game-contents .game-info-panel button,
+.dark_mode .game-page .game-contents .action-panel button:disabled {
+	color: white;
+	border-color: white;
+	background-color: transparent;
+}
+.dark_mode .game-page .game-contents .radio-button-group button.radio-button {
+	background-color: #202225;
+	color: white;
+}
+.dark_mode .game-page .game-contents .radio-button-group button.radio-button::before {
+	border-color: white;
+}
+.dark_mode .game-page .game-contents .radio-button-group button.radio-button.selected::before {
+	box-shadow: 0 0 0px 7px #202225 inset;
+}
+.dark_mode #rps-radio span {
+	background-color: #202225;
+    border: 2px solid #4f545c;
+}
+.dark_mode .game-page .game-contents .summary-panel .summary-info {
+	background-color: #202225;
+}
+.dark_mode .game-page .game-contents .game-info-panel .edit-amount-panel {
+	border: 0;
+	background-color: #2f3136;
+}
+.dark_mode .brain-game-play-panel .play-panel-header .timer {
+	background: #2f3136;
+	color: white;
+}
+.dark_mode .brain-game-play-panel .play-panel-header .brain-score {
+	background: #202225;
+	color: white;
+}
+.dark_mode .brain-game-play-panel .quiz-panel .answer-panel button {
+	background: #36393f;
+	border: 0;
+}
+.dark_mode .game-page .game-contents .game-info-panel .qs-action-panel button.btn-left {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='31' height='30' fill='none' viewBox='0 0 31 30'%3E%3Cpath fill='%23fff' d='M18.03 20.47l.53.53-1.06 1.06-.53-.53 1.06-1.06zM11.5 15l-.53.53-.53-.53.53-.53.53.53zm5.47-6.53l.53-.53L18.56 9l-.53.53-1.06-1.06zm0 13.06l-6-6 1.06-1.06 6 6-1.06 1.06zm-6-7.06l6-6 1.06 1.06-6 6-1.06-1.06zM15.5 1.75C8.182 1.75 2.25 7.682 2.25 15H.75C.75 6.854 7.354.25 15.5.25v1.5zM28.75 15c0-7.318-5.932-13.25-13.25-13.25V.25C23.646.25 30.25 6.854 30.25 15h-1.5zM15.5 28.25c7.318 0 13.25-5.932 13.25-13.25h1.5c0 8.146-6.604 14.75-14.75 14.75v-1.5zm0 1.5C7.354 29.75.75 23.146.75 15h1.5c0 7.318 5.932 13.25 13.25 13.25v1.5z'/%3E%3C/svg%3E%0A");
+}
+.dark_mode .game-page .game-contents .game-info-panel .qs-action-panel button.btn-right {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='31' height='30' fill='none' viewBox='0 0 31 30'%3E%3Cpath fill='%23fff' d='M12.97 20.47l-.53.53 1.06 1.06.53-.53-1.06-1.06zM19.5 15l.53.53.53-.53-.53-.53-.53.53zm-5.47-6.53l-.53-.53L12.44 9l.53.53 1.06-1.06zm0 13.06l6-6-1.06-1.06-6 6 1.06 1.06zm6-7.06l-6-6-1.06 1.06 6 6 1.06-1.06zM15.5 1.75c7.318 0 13.25 5.932 13.25 13.25h1.5C30.25 6.854 23.646.25 15.5.25v1.5zM2.25 15c0-7.318 5.932-13.25 13.25-13.25V.25C7.354.25.75 6.854.75 15h1.5zM15.5 28.25C8.182 28.25 2.25 22.318 2.25 15H.75c0 8.146 6.604 14.75 14.75 14.75v-1.5zm0 1.5c8.146 0 14.75-6.604 14.75-14.75h-1.5c0 7.318-5.932 13.25-13.25 13.25v1.5z'/%3E%3C/svg%3E%0A");
+}
+.dark_mode .game-page .game-contents .game-info-panel .qs-action-panel label {
+	color: white;
 }
 @media (max-width: 768px) {
     .dark_mode .game_header .main_header a.game_logo {
@@ -82,6 +151,12 @@
 	.dark_mode div.main-page-nav-button-group button:hover,
 	.dark_mode div.main-page-nav-button-group button.active {
 		background-color: #202225;
+		color: white;
+	}
+	.dark_mode .contents_wrapper .game-page .page-title h2 {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M15.474 17.705l-.67.336.67-.336zm-.495-.99l.67-.336c-.127-.254-.386-.415-.67-.415v.75zm-6.258 0v-.75c-.284 0-.543.16-.67.414l.67.335zM22.05 8.893v7.083h1.5V8.893h-1.5zm-5.905 8.477l-.496-.99-1.341.67.495.99 1.342-.67zm-1.166-1.406H8.72v1.5h6.258v-1.5zm-6.928.415l-.496.99 1.342.672.495-.991-1.341-.67zm-6.401-.403V8.893H.15v7.083h1.5zM5.593 4.95h12.514v-1.5H5.593v1.5zm-.826 14.143c-1.722 0-3.117-1.395-3.117-3.117H.15c0 2.55 2.067 4.617 4.617 4.617v-1.5zm14.166 0c-1.18 0-2.26-.667-2.788-1.723l-1.342.67c.782 1.565 2.38 2.553 4.13 2.553v-1.5zm3.117-3.117c0 1.722-1.396 3.117-3.117 3.117v1.5c2.55 0 4.617-2.067 4.617-4.617h-1.5zM7.555 17.37c-.528 1.056-1.607 1.723-2.788 1.723v1.5c1.749 0 3.348-.988 4.13-2.552l-1.342-.671zM23.55 8.893c0-3.006-2.437-5.443-5.443-5.443v1.5c2.178 0 3.943 1.765 3.943 3.943h1.5zm-21.9 0c0-2.178 1.765-3.943 3.943-3.943v-1.5C2.587 3.45.15 5.887.15 8.893h1.5zm3.16 2.314h4.693v-1.5H4.811v1.5zm1.597-3.096v4.693h1.5V8.11h-1.5zm10.918 1.532h1.564v-1.5h-1.564v1.5zm-3.129 3.129h1.565v-1.5h-1.565v1.5z'/%3E%3C/svg%3E%0A");
+	}
+	.dark_mode .game-page .game-contents .game-info-panel .edit-amount-panel span {
 		color: white;
 	}
 }

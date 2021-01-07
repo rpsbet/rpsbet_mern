@@ -107,46 +107,38 @@ class MysteryBox extends Component {
 
     render() {
         return (
-            <form>
-                <hr/>
-                <label className="lbl_game_option">Create a box</label>
-                <div className="boxes_panel">
+            <div className="game-info-panel">
+                <h3 className="game-sub-title">Create a box</h3>
+                <div className="boxes-panel">
                     {this.props.box_list.map((row, key) => (
-                        <div className={"box " + (row === 0 ? "empty_box" : "priced_box")} key={key}>
-                            <img src="/img/close.png" title="Delete Box?" className="btn_box_close" onClick={this.onRemoveBox} index={key} alt="" />
-                            {row === 0 ? '' : '£' + row.box_prize} / {row === 0 ? '' : '£' + row.box_price}
+                        <div className="box" key={key}>
+                            <i title="Delete Box?" onClick={this.onRemoveBox} index={key} >-</i>
+                            <span>{'£' + row.box_prize} / {'£' + row.box_price}</span>
                         </div>
                     ), this)}
                 </div>
-                <div className="empty_button_panel">
-                    <div style={{textDecoration: "underline"}} className="btn_empty_boxes" onClick={this.onEmptyBoxes} title="Empty all of the boxes?">
-                        RESET
+                <div className="create-box-panel">
+                    <div className="amounts-panel">
+                        <div className="edit-amount-panel">
+                            <span>£</span>
+                            <input type="text" pattern="[0-9]*" name="new_box_prize" id="new_box_prize"  maxLength="5"
+                                value={this.state.new_box_prize} 
+                                onChange={this.onChangeNewBoxPrize}
+                                placeholder="Box Prize" />
+                        </div>
+                        <div className="edit-amount-panel">
+                            <span>£</span>
+                            <input type="text" pattern="[0-9]*" name="new_box_price" id="new_box_price"  maxLength="5"
+                                value={this.state.new_box_price} 
+                                onChange={this.onChangeNewBoxPrice}
+                                placeholder="Box Price" />
+                        </div>
                     </div>
+                    <button className="other" onClick={this.onAddBox}>Add another box</button>
+                    <a className="btn-empty-boxes" onClick={this.onEmptyBoxes} title="Empty all of the boxes?">Reset</a>
                 </div>
-                <div className="creat-a-box">
-                <span className="pound-symbol"><FaPoundSign />
-                    <input pattern="[0-9]*" type="text" className="form-control bet-input new_box_prize" maxLength="5" id="new_box_prize" name="new_box_prize" value={this.state.new_box_prize} onChange={this.onChangeNewBoxPrize} placeholder="Box Prize" /></span>
-                    <span className="pound-symbol"><FaPoundSign />
-                    <input pattern="[0-9]*" type="text" className="form-control bet-input new_box_prize" maxLength="5" id="new_box_price" name="new_box_price" value={this.state.new_box_price} onChange={this.onChangeNewBoxPrice} placeholder="Box Price" /></span>
-                    <button className="btn btn_add_box" onClick={this.onAddBox}>ADD BOX</button>
-                    <div className="tip">Boxes will be displayed to the public in the order you have added them</div>
-                </div>
-{/* 
-                <hr/>
-                <label className="lbl_game_option">Total Bet Amount</label>
-                <input type="text" value={"£" + this.props.bet_amount} className="form-control input-sm bet-input" placeholder="Bet Amount" readOnly />
-                <div className="tip">Your total cost to create this game (Game Cost = Sum of all Prizes)</div>
-
-                <hr/>
-                <label className="lbl_game_option">Your Max Return</label>
-                <input type="text" readOnly className="form-control input-sm" value={"£" + this.props.max_return} />
-                <div>Your max return with the chosen settings</div>
-
-                <hr/>
-                <label className="lbl_game_option">Public Max Return</label>
-                <input type="text" readOnly className="form-control input-sm" value={"£" + this.props.max_prize + " * 0.95"} />
-                <div className="tip">The public max return with the chosen settings</div> */}
-            </form>
+                <p className="tip">Boxes will be displayed to the public in the order you have added them</p>
+            </div>
         );
     }
 }

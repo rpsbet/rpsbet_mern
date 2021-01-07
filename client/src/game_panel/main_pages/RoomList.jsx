@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { getRoomList, getHistory, setCurRoomInfo, startLoading, endLoading, getMyGames, getMyHistory } from '../../redux/Logic/logic.actions'
+import { getRoomList, getHistory, setCurRoomInfo, startLoading, endLoading, getMyGames, getMyHistory, getGameTypeList } from '../../redux/Logic/logic.actions'
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 
@@ -66,6 +66,7 @@ class RoomList extends Component {
 		});
 		this.props.getMyGames();
 		this.props.getMyHistory();
+		this.props.getGameTypeList();
 		await this.props.getHistory({keyword: this.state.search_history_text});
 		this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
 	}
@@ -156,6 +157,20 @@ class RoomList extends Component {
 				</button>);
 		}
 
+		const gameTypeStyleClass = {
+			'RPS': 'classic-rps',
+			'S!': 'spleesh',
+			'MB': 'mystery-box',
+			'BG': 'brain-game',
+			'QS': 'quick-shoot',
+		}
+		const createGamePanel = this.props.gameTypeList.map((gameType, index) => (
+			<div className="btn-create-game" key={index} onClick={(e) => { history.push(`/create/${gameType.game_type_name}`) }}>
+				<i className={`game-type-icon ${gameTypeStyleClass[gameType.short_name]}`}></i>
+				<div className="game-type-name">{gameType.game_type_name}</div>
+			</div>
+		))
+
 		return (
 			<div className="main-game">
 				{ this.state.mobile_show_panel !== 'my_activity' &&
@@ -164,26 +179,7 @@ class RoomList extends Component {
 							<h2 className="main-title">Create New Game <span>- Higher chances of Earning!</span></h2>
 							<div className="create-game-panel-parent">
 								<div className="create-game-panel">
-									<div className="btn-create-game">
-										<i className="game-type-icon classic-rps"></i>
-										<div className="game-type-name">Classic RPS</div>
-									</div>
-									<div className="btn-create-game">
-										<i className="game-type-icon spleesh"></i>
-										<div className="game-type-name">Spleesh</div>
-									</div>
-									<div className="btn-create-game">
-										<i className="game-type-icon brain-game"></i>
-										<div className="game-type-name">Brain Game</div>
-									</div>
-									<div className="btn-create-game">
-										<i className="game-type-icon mystery-box"></i>
-										<div className="game-type-name">Mystery Box</div>
-									</div>
-									<div className="btn-create-game">
-										<i className="game-type-icon quick-shoot"></i>
-										<div className="game-type-name">Quick Shoot</div>
-									</div>
+									{ createGamePanel }
 								</div>
 							</div>
 						</div>
@@ -299,26 +295,7 @@ class RoomList extends Component {
 							<h2 className="main-title">Create New Game <span>- Higher chances of Earning!</span></h2>
 							<div className="create-game-panel-parent">
 								<div className="create-game-panel">
-									<div className="btn-create-game">
-										<i className="game-type-icon classic-rps"></i>
-										<div className="game-type-name">Classic RPS</div>
-									</div>
-									<div className="btn-create-game">
-										<i className="game-type-icon spleesh"></i>
-										<div className="game-type-name">Spleesh</div>
-									</div>
-									<div className="btn-create-game">
-										<i className="game-type-icon brain-game"></i>
-										<div className="game-type-name">Brain Game</div>
-									</div>
-									<div className="btn-create-game">
-										<i className="game-type-icon mystery-box"></i>
-										<div className="game-type-name">Mystery Box</div>
-									</div>
-									<div className="btn-create-game">
-										<i className="game-type-icon quick-shoot"></i>
-										<div className="game-type-name">Quick Shoot</div>
-									</div>
+									{ createGamePanel }
 								</div>
 							</div>
 						</div>
@@ -355,7 +332,8 @@ const mapStateToProps = state => ({
 	balance: state.auth.balance,
 	user: state.auth.user,
 	isDarkMode: state.auth.isDarkMode,
-  onlineUserList: state.logic.onlineUserList
+	onlineUserList: state.logic.onlineUserList,
+  gameTypeList: state.logic.gameTypeList,
 });
 
 const mapDispatchToProps = {
@@ -366,7 +344,8 @@ const mapDispatchToProps = {
 	startLoading,
 	endLoading,
 	getMyGames, 
-	getMyHistory
+	getMyHistory,
+	getGameTypeList
 };
 
 export default connect(

@@ -90,6 +90,10 @@
     background-color: #f2f3f5;
 }
 
+.hidden {
+    display: none !important;
+}
+
 @media (max-width: 768px) {
     .game_header .main_header {
         padding: 14px 16px;
@@ -109,5 +113,6 @@
     }
     .contents_wrapper {
         height: initial;
+        min-height: calc(100vh - 64px);
     }
 }

@@ -23,7 +23,7 @@ export class GameMainRoute extends Component {
           />
           <Route 
             exact
-            path={`${match.path}create`}
+            path={`${match.path}create/:game_type_name`}
             component={CreateGame}
           />
           <Route 
