@@ -7,7 +7,7 @@ import { CardElement, Elements, ElementsConsumer } from '@stripe/react-stripe-js
 import axios from '../../util/Api';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
-import { openAlert } from '../../redux/Notification/notification.actions';
+import { alertModal } from '../modal/ConfirmAlerts';
 
 Modal.setAppElement('#root')
 
@@ -16,18 +16,18 @@ const stripePromise = loadStripe('pk_test_DA6F4LKIFm6bEmm9YT9RvoHU00zAPJJJNA');
 
 const customStyles = {
     overlay: {
-        zIndex: 2,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)'
+        zIndex: 3,
+        backgroundColor: 'rgba(47, 49, 54, 0.8)'
     },
     content: {
-        minWidth    : '600px',
         top         : '50%',
         left        : '50%',
         right       : 'auto',
         bottom      : 'auto',
-        marginRight : '-50%',
         transform   : 'translate(-50%, -50%)',
-        backgroundColor: '#f8f9fa'
+        padding: 0,
+        background: 'transparent',
+        border: 0
     }
 }
 
@@ -50,7 +50,7 @@ class StripeCheckoutForm extends React.Component {
         const {success, clientSecret, message} = secretInfo.data;
 
         if (!success) {
-            this.props.openAlert('warning', 'Warning!', message.raw.message);
+            alertModal(this.props.isDarkMode, message.raw.message)
             this.setState({btnLock: false});
             return;
         }
@@ -68,7 +68,7 @@ class StripeCheckoutForm extends React.Component {
 
         if (result.error) {
             // Show error to your customer (e.g., insufficient funds)
-            this.props.openAlert('warning', 'Warning!', result.error.message);
+            alertModal(this.props.isDarkMode, result.error.message)
         } else {
             // The payment has been processed!
             if (result.paymentIntent.status === 'succeeded') {
@@ -91,7 +91,7 @@ class StripeCheckoutForm extends React.Component {
         return (
             <form onSubmit={this.handleSubmit}>
                 <CardElement />
-                <button type="submit" style={{width: '100%'}} disabled={!stripe || this.state.btnLock}>
+                <button type="submit" disabled={!stripe || this.state.btnLock} className="btn-stripe-pay">
                     PAY
                 </button>
             </form>
@@ -102,7 +102,7 @@ class StripeCheckoutForm extends React.Component {
 const InjectedCheckoutForm = (props) => (
     <ElementsConsumer>
         {({stripe, elements}) => (
-            <StripeCheckoutForm stripe={stripe} elements={elements} amount={props.amount} setBalance={props.setBalance} closeModal={props.closeModal} openAlert={props.openAlert} addNewTransaction={props.addNewTransaction} />
+            <StripeCheckoutForm stripe={stripe} elements={elements} amount={props.amount} setBalance={props.setBalance} closeModal={props.closeModal} addNewTransaction={props.addNewTransaction} />
         )}
     </ElementsConsumer>
 );
@@ -128,57 +128,64 @@ class DepositModal extends Component {
     render() {
         return <Modal
             isOpen={this.props.modalIsOpen}
-            // onAfterOpen={afterOpenModal}
             onRequestClose={this.props.closeModal}
             style={customStyles}
             contentLabel="Deposit Modal"
         >
-        
-            <h2 style={{borderBottom: "1px solid gray"}}>Deposit</h2>
-            <button className="btn_modal_close" onClick={this.props.closeModal}>x</button>
-            <div className="profile_info_panel">
-                <label>Deposit Amount (£):</label>
-                <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} />
-            </div>
-            <h5 style={{textAlign: "center", margin: "10px auto -20px"}}><i>Choose payment method:</i></h5>
-            <div className="payment_action_panel">
-                <h5>PayPal</h5>
-                <h5>Stripe</h5>
-                <PayPalButton
-                    amount={this.state.amount}
-                    // shippingPreference="NO_SHIPPING" // default is "GET_FROM_FILE"
-                    onSuccess={async (details, data) => {
-                        console.log(data);
-                        const newBalanceInfo = await axios.post('/stripe/deposit_successed/', {amount: this.state.amount, payment_method: 'PayPal'});
-                        const {success, balance, newTransaction} = newBalanceInfo.data;
+            <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+				<div className="modal-body edit-modal-body deposit-modal-body">
+                    <button className="btn-close" onClick={this.props.closeModal}>×</button>
+                    <h2>Deposit</h2>
+                    <div className="modal-content-wrapper">
+						<div className="modal-content-panel">
+                            <p>Deposit Amount (£):</p>
+                            <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} className="form-control" />
+                            <h5 className="mt-5">Choose payment method:</h5>
+                            <div className="payment-action-panel">
+                                <div>
+                                    <p>PayPal</p>
+                                    <PayPalButton
+                                        amount={this.state.amount}
+                                        // shippingPreference="NO_SHIPPING" // default is "GET_FROM_FILE"
+                                        onSuccess={async (details, data) => {
+                                            console.log(data);
+                                            const newBalanceInfo = await axios.post('/stripe/deposit_successed/', {amount: this.state.amount, payment_method: 'PayPal'});
+                                            const {success, balance, newTransaction} = newBalanceInfo.data;
 
-                        if (success) {
-                            this.props.setBalance(balance);
-                            this.props.addNewTransaction(newTransaction);
-                        }
-                        this.props.closeModal();
-                    }}
-                    options={{
-                        clientId: paypalClientId,
-                        currency: "GBP"
-                    }}
-                />
-
-                <Elements stripe={stripePromise}>
-                    <InjectedCheckoutForm amount={this.state.amount} setBalance={this.props.setBalance} closeModal={this.props.closeModal} openAlert={this.props.openAlert} addNewTransaction={this.props.addNewTransaction} />
-                </Elements>
+                                            if (success) {
+                                                this.props.setBalance(balance);
+                                                this.props.addNewTransaction(newTransaction);
+                                            }
+                                            this.props.closeModal();
+                                        }}
+                                        options={{
+                                            clientId: paypalClientId,
+                                            currency: "GBP"
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <p>Stripe</p>
+                                    <Elements stripe={stripePromise}>
+                                        <InjectedCheckoutForm amount={this.state.amount} setBalance={this.props.setBalance} closeModal={this.props.closeModal} addNewTransaction={this.props.addNewTransaction} />
+                                    </Elements>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </Modal>;
     }
 }
 
 const mapStateToProps = state => ({
+  isDarkMode: state.auth.isDarkMode,
 });
 
 const mapDispatchToProps = {
   setBalance,
   addNewTransaction,
-  openAlert
 };
 
 export default connect(

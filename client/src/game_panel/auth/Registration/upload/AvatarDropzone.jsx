@@ -3,6 +3,7 @@ import CloudUpload from '@material-ui/icons/CloudUpload';
 import { connect } from 'react-redux';
 import { setCurrentProductInfo } from '../../../../redux/Item/item.action';
 import "./AvatarDropzone.css";
+import { alertModal } from '../../../modal/ConfirmAlerts';
 
 class Dropzone extends Component {
   constructor(props) {
@@ -21,9 +22,12 @@ class Dropzone extends Component {
   }
 
   static getDerivedStateFromProps(props, state) {
-    return {
-      imagePreviewUrl: props.imagePreviewUrl,
-    };
+    if (state.imagePreviewUrl != props.imagePreviewUrl) {
+      return {
+        imagePreviewUrl: props.imagePreviewUrl,
+      };
+    }
+    return null;
   }
 
   openFileDialog() {
@@ -50,7 +54,7 @@ class Dropzone extends Component {
     const file = evt.target.files[0];
 
     if (file.size / 1024 / 1024 > 2) {//file size > 2MB
-      alert("The file size is more than 2 MB. Please select another file to upload.");
+      alertModal(this.props.isDarkMode, "The file size is more than 2 MB. Please select another file to upload.");
       return;
     }
 
@@ -107,6 +111,7 @@ class Dropzone extends Component {
 }
 
 const mapStateToProps = state => ({
+  isDarkMode: state.auth.isDarkMode,
   imagePreviewUrl: state.itemReducer.image
 });
 

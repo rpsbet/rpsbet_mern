@@ -5,10 +5,6 @@ import { Route, Switch, Redirect } from 'react-router-dom';
 import { getUser } from './redux/Auth/user.actions';
 import { getAdmin } from './redux/AdminAuth/admin.actions';
 
-import SignInPage from './game_panel/auth/SignInPage';
-import SignUpPage from './game_panel/auth/SignUpPage';
-import ResetPasswordPage from './game_panel/auth/ResetPasswordPage';
-import ChangePasswordPage from './game_panel/auth/ChangePasswordPage';
 import GameMainRoute from './game_panel/app/Game.routes';
 
 import AdminSignInPage from './admin_panel/auth/SignInPage';
@@ -16,21 +12,21 @@ import AdminSignInPage from './admin_panel/auth/SignInPage';
 import Error404Page from './admin_panel/Error404Page';
 import AdminMainRoute from './admin_panel/app/App.routes';
 import setAuthToken from './util/setAuthToken';
-import VerificationPage from './game_panel/auth/VerificationPage';
 
 if (localStorage.token) {
   setAuthToken(localStorage.token);
 }
 
 const App = props => {
-  const { isAuthenticated, isActivated } = props.auth;
+  const { isAuthenticated } = props.auth;
   const { isAdminAuthenticated } = props.admin_auth;
 
   useEffect(() => {
     if (isAdminAuthenticated) {
       props.getAdmin();
     } else if (isAuthenticated) {
-      props.getUser();
+      // console.log('App.jsx');
+      // props.getUser();
     }
   }, []);
 
@@ -67,7 +63,7 @@ const App = props => {
         }
       />
 
-      <Route
+      {/* <Route
         path="/signin"
         render={routeProps =>
           isAuthenticated ? (
@@ -94,16 +90,10 @@ const App = props => {
       <Route
         path="/changePassword"
         render={routeProps => <ChangePasswordPage {...routeProps} />}
-      />
+      /> */}
       <Route
         path="/"
-        render={routeProps =>
-          !isAuthenticated ? (
-            <Redirect to="/signin" />
-          ) : (
-            isActivated ? <GameMainRoute {...routeProps} /> : <VerificationPage {...routeProps} />
-          )
-        }
+        render={routeProps => <GameMainRoute {...routeProps} />}
       />
 
       <Route component={Error404Page} />

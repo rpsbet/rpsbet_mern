@@ -4,24 +4,24 @@ import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import Modal from 'react-modal';
 import axios from '../../util/Api';
-import { openAlert } from '../../redux/Notification/notification.actions';
+import { alertModal } from '../modal/ConfirmAlerts';
 
 Modal.setAppElement('#root')
 
 const customStyles = {
     overlay: {
-        zIndex: 2,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)'
+        zIndex: 3,
+        backgroundColor: 'rgba(47, 49, 54, 0.8)'
     },
     content: {
-        minWidth    : '600px',
         top         : '50%',
         left        : '50%',
         right       : 'auto',
         bottom      : 'auto',
-        marginRight : '-50%',
         transform   : 'translate(-50%, -50%)',
-        backgroundColor: '#f8f9fa'
+        padding: 0,
+        background: 'transparent',
+        border: 0
     }
 }
 
@@ -68,9 +68,9 @@ class WithdrawModal extends Component {
         })
     }
 
-    handlePaymentMethodChange(e) {
+    handlePaymentMethodChange(method) {
         this.setState({
-            payment_method: e.target.value
+            payment_method: method
         });
     }
 
@@ -90,17 +90,17 @@ class WithdrawModal extends Component {
 
     async sendWithdrawEmail() {
         if (this.state.amount < 5) {
-            this.props.openAlert('warning', 'Warning!', `Sorry, you can withdraw a minimum of £5.`);
+            alertModal(this.props.isDarkMode, `Sorry, you can withdraw a minimum of £5.`)
             return;
         }
 
         if (this.state.payment_method === 'paypal' && this.state.email === '') {
-            this.props.openAlert('warning', 'Warning!', `Please input your paypal email address`);
+            alertModal(this.props.isDarkMode, `Please input your paypal email address.`)
             return;
         }
 
         if (this.state.payment_method === 'Bank' && (this.state.payee_name === '' || this.state.bank_account_number === '' || this.state.bank_short_code === '')) {
-            this.props.openAlert('warning', 'Warning!', `Please input your bank account information`);
+            alertModal(this.props.isDarkMode, `Please input your bank account information.`)
             return;
         }
 
@@ -114,12 +114,12 @@ class WithdrawModal extends Component {
         });
 
         if (result.data.success) {
-            this.props.openAlert('warning', 'Information', result.data.message);
+            alertModal(this.props.isDarkMode, result.data.message)
             this.props.setBalance(result.data.balance);
             this.props.addNewTransaction(result.data.newTransaction);
             this.props.closeModal();
         } else {
-            this.props.openAlert('warning', 'Warning!', `Something went wrong. Please try again in a few minutes.`);
+            alertModal(this.props.isDarkMode, `Something went wrong. Please try again in a few minutes.`)
         }
     }
 
@@ -131,46 +131,76 @@ class WithdrawModal extends Component {
             style={customStyles}
             contentLabel="Withdraw Modal"
         >
-        
-            <h2 style={{borderBottom: "1px solid gray"}}>Withdraw</h2>
-            <button className="btn_modal_close" onClick={this.props.closeModal}>x</button>
-            <h4 style={{textAlign: "center"}}><i>No withdrawal fees!</i></h4>
-            <div className="profile_info_panel">
-                <span className="radio_panel">
-                    <input type="radio" id="r_paypal" name="payment_method" value="PayPal" onChange={this.handlePaymentMethodChange} checked={this.state.payment_method === 'PayPal'} />
-                    <label htmlFor="r_paypal">PayPal</label>
-                </span>
-                <span className="radio_panel">
-                    <input type="radio" id="r_bank" name="payment_method" value="Bank" onChange={this.handlePaymentMethodChange} checked={this.state.payment_method === 'Bank'} />
-                    <label htmlFor="r_bank">Bank</label>
-                </span>
-                <label>Withdraw Amount (£):</label>
-                <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} />
-                <label className={this.state.payment_method === 'PayPal' ? '' : 'hidden'}>PayPal email address:</label>
-                <input type="email" value={this.state.email} onChange={this.handleEmailChange} className={this.state.payment_method === 'PayPal' ? '' : 'hidden'} />
-                <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Payee Name:</label>
-                <input type="text" value={this.state.payee_name} onChange={this.handlePayeeNameChange} className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
-                <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Bank Account Number:</label>
-                <input pattern="[0-9]*" type="text" value={this.state.bank_account_number} onChange={this.handleBankAccountNumberChange} maxLength="8" className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
-                <label className={this.state.payment_method === 'Bank' ? '' : 'hidden'}>Sort Code:</label>
-                <input pattern="[0-9]*" type="text" value={this.state.bank_short_code} onChange={this.handleBankShortCodeChange} maxLength="6" className={this.state.payment_method === 'Bank' ? '' : 'hidden'} />
-            </div>
-            <h6 style={{margin: "20px auto -5px", textAlign: "center"}}>The amount will be deducted from your current balance and paid into your account within 1-3 hours.</h6>
-            <div className="payment_action_panel">
-                <button onClick={this.sendWithdrawEmail}>WITHDRAW</button>
-                <button onClick={this.props.closeModal}>CANCEL</button>
+            <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+				<div className="modal-body edit-modal-body deposit-modal-body">
+                    <button className="btn-close" onClick={this.props.closeModal}>×</button>
+                    <h2>Withdraw</h2>
+                    <div className="withdraw-modal-tabs">
+                        <button className={this.state.payment_method === 'PayPal' ? 'active btn-paypal' : 'btn-paypal'} onClick={(e)=>{this.handlePaymentMethodChange('PayPal')}}>
+                            PayPal
+                        </button>
+                        <button className={this.state.payment_method === 'Bank' ? 'active btn-bank' : 'btn-bank'} onClick={(e)=>{this.handlePaymentMethodChange('Bank')}}>
+                            Bank
+                        </button>
+                    </div>
+                    <div className="modal-content-wrapper">
+						<div className="modal-content-panel">
+                            <div className="payment-action-panel">
+                                <div>
+                                    <p>Withdraw Amount (£):</p>
+                                    <input className="form-control" pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} />
+                                </div>
+                                <div>
+                                    {this.state.payment_method === 'PayPal' &&
+                                        <>
+                                            <p>PayPal email address:</p>
+                                            <input type="email" value={this.state.email} onChange={this.handleEmailChange} className='form-control' />
+                                        </>
+                                    }
+                                    {this.state.payment_method === 'Bank' &&
+                                        <>
+                                            <p>Payee Name:</p>
+                                            <input type="text" value={this.state.payee_name} onChange={this.handlePayeeNameChange} className='form-control' />
+                                        </>
+                                    }
+                                </div>
+                                <div>
+                                    {this.state.payment_method === 'Bank' &&
+                                        <>
+                                            <p>Bank Account Number:</p>
+                                            <input pattern="[0-9]*" type="text" value={this.state.bank_account_number} onChange={this.handleBankAccountNumberChange} maxLength="8" className="form-control" />
+                                        </>
+                                    }
+                                </div>
+                                <div>
+                                    {this.state.payment_method === 'Bank' &&
+                                        <>
+                                            <p>Sort Code:</p>
+                                            <input pattern="[0-9]*" type="text" value={this.state.bank_short_code} onChange={this.handleBankShortCodeChange} maxLength="6" className="form-control" />
+                                        </>
+                                    }
+                                </div>
+                            </div>
+                            <p>The amount will be deducted from your current balance and paid into your account within 1-3 hours.</p>
+                            <div className="modal-action-panel">
+                                <button className="btn-submit" onClick={this.sendWithdrawEmail}>WITHDRAW</button>
+                                <button className="btn-back" onClick={this.props.closeModal}>CANCEL</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </Modal>;
     }
 }
 
 const mapStateToProps = state => ({
+  isDarkMode: state.auth.isDarkMode,
 });
   
 const mapDispatchToProps = {
     setBalance,
     addNewTransaction,
-    openAlert
 };
 
 export default connect(

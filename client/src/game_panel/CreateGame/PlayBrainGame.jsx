@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { createRoom } from "../../redux/Logic/logic.actions";
-import { openAlert } from '../../redux/Notification/notification.actions';
 import axios from '../../util/Api';
 
 class PlayBrainGame extends Component {
@@ -114,6 +113,7 @@ class PlayBrainGame extends Component {
 						<div className="timer-title">Timer :</div>
 						<div className="countdown">{this.state.remaining_time}</div>
 						<div className="timer-footer">seconds left</div>
+						<div className="timer-footer2">S</div>
 					</div>
 					<div className="brain-score">
 						Score: <span>{this.state.score}</span>
@@ -139,7 +139,6 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
 	createRoom,
-	openAlert
 };
 
 export default connect(

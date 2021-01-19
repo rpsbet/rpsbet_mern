@@ -4,7 +4,6 @@ import {
   MSG_INFO,
   MSG_SUCCESS,
   MSG_WARNING,
-  OPEN_ALERT_MODAL,
   CLOSE_ALERT_MODAL,
   OPEN_GAME_PASSWORD_MODAL,
   CLOSE_GAME_PASSWORD_MODAL,
@@ -32,22 +31,8 @@ export const warningMsgBar = text => dispatch => {
   dispatch({ type: MSG_WARNING, payload: text });
 };
 
-export const openAlert = (alert_type, title, message) => dispatch => {
-  dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type, title, message} });
-};
+export const openGamePasswordModal = () => dispatch => { dispatch({ type: OPEN_GAME_PASSWORD_MODAL }); };
 
-export const closeAlert = () => dispatch => {
-  dispatch({ type: CLOSE_ALERT_MODAL });
-};
-
-export const openGamePasswordModal = () => dispatch => {
-  dispatch({ type: OPEN_GAME_PASSWORD_MODAL });
-};
-
-export const closeGamePasswordModal = () => dispatch => {
-  dispatch({ type: CLOSE_GAME_PASSWORD_MODAL });
-};
-
-export const setPasswordCorrect = (data) => dispatch => {
-  dispatch({ type: SET_PASSWORD_CORRECT, payload: data })
-};
+export const closeGamePasswordModal = () => dispatch => { dispatch({ type: CLOSE_GAME_PASSWORD_MODAL }); };
+export const closeAlert = () => dispatch => { dispatch({ type: CLOSE_ALERT_MODAL }); };
+export const setPasswordCorrect = (data) => dispatch => { dispatch({ type: SET_PASSWORD_CORRECT, payload: data }) };

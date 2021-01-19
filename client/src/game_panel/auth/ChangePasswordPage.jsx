@@ -3,7 +3,7 @@ import { HepperLink } from '../../components/HepperLink';
 import history from '../../redux/history';
 import axios from '../../util/Api';
 import { connect } from 'react-redux';
-import { openAlert } from '../../redux/Notification/notification.actions';
+import { alertModal } from '../modal/ConfirmAlerts';
 
 function ChangePasswordPage(props) {
   const [password, setPassword] = useState('');
@@ -33,22 +33,22 @@ function ChangePasswordPage(props) {
     const result = await axios.post('/auth/resetPassword/', payload);
 
     if (password === '') {
-      props.openAlert('warning', 'RPS Bet', 'please input new password.');
+      alertModal(this.props.isDarkMode, `Please input new password.`)
       return;
     }
 
     if (password !== confirm_password) {
-      props.openAlert('warning', 'RPS Bet', 'Invalid value. Please try again.');
+      alertModal(this.props.isDarkMode, `Invalid value. Please try again.`)
       setPassword('');
       setConfirmPassword('');
       return;
     }
     
     if (result.data.success) {
-      props.openAlert('warning', 'RPS Bet', 'Password has been changed. Please log in now.');
+      alertModal(this.props.isDarkMode, `Password has been changed. Please log in now.`)
       history.push('/signin');
     } else {
-      props.openAlert('warning', 'Warning!', result.data.error);
+      alertModal(this.props.isDarkMode, result.data.error)
     }
   };
 
@@ -86,11 +86,14 @@ function ChangePasswordPage(props) {
   );
 }
 
+const mapStateToProps = state => ({
+  isDarkMode: state.auth.isDarkMode,
+});
+
 const mapDispatchToProps = {
-  openAlert
 };
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(ChangePasswordPage);

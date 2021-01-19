@@ -10,8 +10,6 @@ class QuickShoot extends Component {
             is_other: 'hidden'
         };
 
-        this.onLeftButtonClicked = this.onLeftButtonClicked.bind(this);
-        this.onRightButtonClicked = this.onRightButtonClicked.bind(this);
         this.onLeftPositionButtonClicked = this.onLeftPositionButtonClicked.bind(this);
         this.onRightPositionButtonClicked = this.onRightPositionButtonClicked.bind(this);
     }
@@ -27,30 +25,6 @@ class QuickShoot extends Component {
         e.preventDefault();
         if (this.props.selected_qs_position < this.props.qs_game_type - 1) {
             this.props.onChangeState({selected_qs_position: this.props.selected_qs_position + 1});
-        }
-    }
-
-    onLeftButtonClicked(e) {
-        e.preventDefault();
-        if (this.props.qs_game_type > 2) {
-            this.props.onChangeState({
-                qs_game_type: this.props.qs_game_type - 1,
-                max_return: this.props.bet_amount * (this.props.qs_game_type - 1),
-                public_bet_amount: "£" + this.props.bet_amount * (this.props.qs_game_type - 2),
-                selected_qs_position: 0
-            });
-        }
-    }
-
-    onRightButtonClicked(e) {
-        e.preventDefault();
-        if (this.props.qs_game_type < 5) {
-            this.props.onChangeState({
-                qs_game_type: this.props.qs_game_type + 1,
-                max_return: this.props.bet_amount * (this.props.qs_game_type + 1),
-                public_bet_amount: "£" + this.props.bet_amount * this.props.qs_game_type,
-                selected_qs_position: 0
-            });
         }
     }
 
@@ -74,13 +48,11 @@ class QuickShoot extends Component {
                 {this.props.step === 1 && 
                     <div className="game-info-panel">
                         <h3 className="game-sub-title">Choose a Game Type</h3>
-                        <div className="qs-image-panel">
-                            <img src={`/img/gametype/quick_shoot/qs-type-${this.props.qs_game_type}.png`} alt="" />
-                        </div>
-                        <div className="qs-action-panel">
-                            <button className="btn-left" onClick={this.onLeftButtonClicked}></button>
-                            <label>{this.props.qs_game_type}</label>
-                            <button className="btn-right" onClick={this.onRightButtonClicked}></button>
+                        <div className="qs-game-type-panel">
+                            <button className={(this.props.qs_game_type === 2 ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: 2, max_return: this.props.bet_amount * 2, public_bet_amount: "£" + this.props.bet_amount * 1, selected_qs_position: 0 }); }}>2</button>
+                            <button className={(this.props.qs_game_type === 3 ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: 3, max_return: this.props.bet_amount * 3, public_bet_amount: "£" + this.props.bet_amount * 2, selected_qs_position: 0 }); }}>3</button>
+                            <button className={(this.props.qs_game_type === 4 ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: 4, max_return: this.props.bet_amount * 4, public_bet_amount: "£" + this.props.bet_amount * 3, selected_qs_position: 0 }); }}>4</button>
+                            <button className={(this.props.qs_game_type === 5 ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: 5, max_return: this.props.bet_amount * 5, public_bet_amount: "£" + this.props.bet_amount * 4, selected_qs_position: 0 }); }}>5</button>
                         </div>
                     </div>
                 }

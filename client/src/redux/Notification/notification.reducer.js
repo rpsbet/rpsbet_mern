@@ -4,7 +4,6 @@ import {
   MSG_INFO,
   MSG_SUCCESS,
   MSG_WARNING,
-  OPEN_ALERT_MODAL,
   CLOSE_ALERT_MODAL,
   OPEN_GAME_PASSWORD_MODAL,
   CLOSE_GAME_PASSWORD_MODAL,
@@ -15,6 +14,9 @@ const initialState = {
   openSk: false,
   message: '',
   status: null,
+  showLogin: false,
+  showSignup: false,
+  showVerification: false,
   showAlert: false,
   showGamePasswordModal: false,
   title: '',
@@ -61,15 +63,6 @@ export default function(state = initialState, action) {
         message: payload,
         status: MSG_WARNING
       };
-    case OPEN_ALERT_MODAL:
-      return {
-        ...state,
-        showAlert: true,
-        alertMessage: payload.message,
-        alertType: payload.alert_type,
-        title: payload.title,
-        roomStatus: payload.roomStatus
-      }
     case CLOSE_ALERT_MODAL:
       return {
         ...state,

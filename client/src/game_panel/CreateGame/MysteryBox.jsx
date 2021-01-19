@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { FaPoundSign } from 'react-icons/fa';
 
 class MysteryBox extends Component {
     constructor(props) {
@@ -135,7 +134,7 @@ class MysteryBox extends Component {
                         </div>
                     </div>
                     <button className="other" onClick={this.onAddBox}>Add another box</button>
-                    <a className="btn-empty-boxes" onClick={this.onEmptyBoxes} title="Empty all of the boxes?">Reset</a>
+                    <a href="/#" className="btn-empty-boxes" onClick={this.onEmptyBoxes} title="Empty all of the boxes?">Reset</a>
                 </div>
                 <p className="tip">Boxes will be displayed to the public in the order you have added them</p>
             </div>

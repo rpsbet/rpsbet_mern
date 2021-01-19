@@ -1,0 +1,50 @@
+.AvatarDropzone {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.AvatarPreviewPanel {
+  height: 80px;
+  width: 80px;
+  border-radius: 50%;
+}
+
+.AvatarHighlight {
+  background-color: rgb(188, 185, 236);
+}
+
+.AvatarIcon {
+  opacity: 0.3;
+  height: 64px;
+  width: 64px;
+}
+
+.AvatarFileInput {
+  display: none;
+}
+
+.AvatarControlPanel {
+  margin-left: 24px;
+}
+
+.AvatarButtonPanel button {
+  height: 31px;
+  background: transparent;
+  color: #747f8d;
+  border: 1px solid #d3d7db;
+  border-radius: 40px;
+  padding: 0 20px;
+  font-weight: 600;
+  margin-right: 20px;
+}
+
+@media (max-width: 768px) {
+  .AvatarDropzone {
+    align-items: normal;
+  }
+  .AvatarButtonPanel button:first-child {
+    margin-right: 0;
+    margin-bottom: 16px;
+  }
+}

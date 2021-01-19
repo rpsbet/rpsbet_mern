@@ -17,19 +17,8 @@ export class GameMainRoute extends Component {
         <Switch>
           <Route 
             exact
-            path={`${match.path}`}
-            // component={LandingPage}
-            component={RoomList}
-          />
-          <Route 
-            exact
             path={`${match.path}create/:game_type_name`}
             component={CreateGame}
-          />
-          <Route 
-            exact
-            path={`${match.path}join`}
-            component={RoomList}
           />
           <Route 
             exact
@@ -40,6 +29,10 @@ export class GameMainRoute extends Component {
             exact
             path={`${match.path}chat/:id`}
             component={ChatPage}
+          />
+          <Route 
+            path={`${match.path}`}
+            component={RoomList}
           />
         </Switch>
       </SiteWrapper>

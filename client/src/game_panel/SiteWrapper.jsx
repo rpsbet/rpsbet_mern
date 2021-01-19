@@ -2,10 +2,11 @@ import React, { Component } from 'react';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
-import { setSocket, userSignOut, getUser, setUnreadMessageCount } from '../redux/Auth/user.actions';
+import { setSocket, userSignOut, getUser, setUnreadMessageCount, setDarkMode } from '../redux/Auth/user.actions';
 import { setRoomList, addChatLog, getMyGames, getMyHistory, addNewTransaction, updateOnlineUserList } from '../redux/Logic/logic.actions';
 
 import { Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@material-ui/core';
+
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import PersonOutlineIcon from '@material-ui/icons/PersonOutline';
@@ -13,17 +14,23 @@ import PaymentIcon from '@material-ui/icons/Payment';
 
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
+
 import ProfileModal from './modal/ProfileModal';
 import HowToPlayModal from './modal/HowToPlayModal';
 import PrivacyModal from './modal/PrivacyModal';
 import TermsModal from './modal/TermsModal';
 import GamePasswordModal from './modal/GamePasswordModal';
+import LoginModal from './modal/LoginModal';
+import SignupModal from './modal/SignupModal';
+import VerificationModal from './modal/VerificationModal';
+import DepositModal from './modal/DepositModal';
+import WithdrawModal from './modal/WithdrawModal';
+
 import Moment from 'moment';
-import AlertModal from './modal/AlertModal';
-import { setDarkMode } from '../redux/Auth/user.actions';
 import DarkModeToggle from 'react-dark-mode-toggle';
 import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css'
+import Avatar from "../components/Avatar";
 
 const mainTheme = createMuiTheme({
   palette: {
@@ -57,6 +64,11 @@ class SiteWrapper extends Component {
       showHowToPlayModal: false,
       showPrivacyModal: false,
       showTermsModal: false,
+      showLoginModal: false,
+      showSignupModal: false,
+      showVerificationModal: false,
+      showWithdrawModal: false,
+      showDepositModal: false,
       isActiveLoadingOverlay: this.props.isActiveLoadingOverlay,
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
@@ -64,6 +76,15 @@ class SiteWrapper extends Component {
     }
 
     this.handleLogout = this.handleLogout.bind(this);
+
+    this.handleOpenLoginModal = this.handleOpenLoginModal.bind(this);
+    this.handleCloseLoginModal = this.handleCloseLoginModal.bind(this);
+
+    this.handleOpenSignupModal = this.handleOpenSignupModal.bind(this);
+    this.handleCloseSignupModal = this.handleCloseSignupModal.bind(this);
+
+    this.handleOpenVerificationModal = this.handleOpenVerificationModal.bind(this);
+    this.handleCloseVerificationModal = this.handleCloseVerificationModal.bind(this);
 
     this.handleOpenProfileModal = this.handleOpenProfileModal.bind(this);
     this.handleCloseProfileModal = this.handleCloseProfileModal.bind(this);
@@ -77,17 +98,27 @@ class SiteWrapper extends Component {
     this.handleOpenHowToPlayModal = this.handleOpenHowToPlayModal.bind(this);
     this.handleCloseHowToPlayModal = this.handleCloseHowToPlayModal.bind(this);
 
+    this.handleOpenDepositModal = this.handleOpenDepositModal.bind(this);
+    this.handleCloseDepositModal = this.handleCloseDepositModal.bind(this);
+
+    this.handleOpenWithdrawModal = this.handleOpenWithdrawModal.bind(this);
+    this.handleCloseWithdrawModal = this.handleCloseWithdrawModal.bind(this);
+
     this.handleBalanceClick = this.handleBalanceClick.bind(this);
   }
 
   static getDerivedStateFromProps(props, current_state) {
-    return {
-      ...current_state,
-      balance: props.balance,
-      userName: props.userName,
-      isActiveLoadingOverlay: props.isActiveLoadingOverlay,
-      transactions: updateFromNow(props.transactions)
-    };
+    if (current_state.balance !== props.balance || current_state.userName !== props.userName || current_state.isActiveLoadingOverlay !== props.isActiveLoadingOverlay) {
+      return {
+        ...current_state,
+        balance: props.balance,
+        userName: props.userName,
+        isActiveLoadingOverlay: props.isActiveLoadingOverlay,
+        transactions: updateFromNow(props.transactions)
+      };
+    }
+
+    return null;
   }
 
   handleClickMenu = (e) => {
@@ -110,7 +141,10 @@ class SiteWrapper extends Component {
       console.log(e)
     }
 
-    await this.props.getUser(true);
+    const result = await this.props.getUser(true);
+    if (result.status === 'success' && !result.user.is_activated) {
+      this.handleOpenVerificationModal();
+    }
     const socket = socketIOClient(this.state.endpoint);
 
     socket.on('CONNECTED', (data) => {
@@ -164,51 +198,41 @@ class SiteWrapper extends Component {
   }
 
   handleLogout(clear_token) {
+    this.setState({ anchorEl: null });
+    if (this.props.socket) {
+      this.props.socket.disconnect();
+    }
     this.props.userSignOut(clear_token);
   }
 
-  handleOpenProfileModal () {
-    this.setState({ showProfileModal: true });
-  }
-  
-  handleCloseProfileModal () {
-    this.setState({ showProfileModal: false });
-  }
+  handleOpenLoginModal () { this.setState({ showLoginModal: true }); }
+  handleCloseLoginModal () { this.setState({ showLoginModal: false }); }
 
-  handleOpenTermsModal () {
-    this.setState({ showTermsModal: true });
-  }
+  handleOpenSignupModal () { this.setState({ showSignupModal: true }); }
+  handleCloseSignupModal () { this.setState({ showSignupModal: false }); }
 
-  handleCloseTermsModal () {
-    this.setState({ showTermsModal: false });
-  }
+  handleOpenVerificationModal () { this.setState({ showVerificationModal: true }); }
+  handleCloseVerificationModal () { this.setState({ showVerificationModal: false }); }
 
-   handleOpenPrivacyModal () {
-    this.setState({ showPrivacyModal: true });
-  }
+  handleOpenProfileModal () { this.setState({ showProfileModal: true, anchorEl: null }); }
+  handleCloseProfileModal () { this.setState({ showProfileModal: false }); }
 
-  handleClosePrivacyModal () {
-    this.setState({ showPrivacyModal: false });
-  }
+  handleOpenTermsModal () { this.setState({ showTermsModal: true }); }
+  handleCloseTermsModal () { this.setState({ showTermsModal: false }); }
 
-  handleOpenHowToPlayModal () {
-    this.setState({ showHowToPlayModal: true });
-  }
-  
-  handleCloseHowToPlayModal () {
-    this.setState({ showHowToPlayModal: false });
-  }
+  handleOpenPrivacyModal () { this.setState({ showPrivacyModal: true }); }
+  handleClosePrivacyModal () { this.setState({ showPrivacyModal: false }); }
 
-  handleBalanceClick() {
-    this.setState({ showGameLog: !this.state.showGameLog });
-  }
+  handleOpenHowToPlayModal () { this.setState({ showHowToPlayModal: true }); }
+  handleCloseHowToPlayModal () { this.setState({ showHowToPlayModal: false }); }
 
-  number2dp(num) {
-    if (num - parseInt(num) === 0) {
-      return num;
-    }
-    return num.toFixed(2);
-  }
+  handleOpenDepositModal () { this.setState({ showDepositModal: true, anchorEl: null }); }
+  handleCloseDepositModal () { this.setState({ showDepositModal: false }); }
+
+  handleOpenWithdrawModal () { this.setState({ showWithdrawModal: true, anchorEl: null }); }
+  handleCloseWithdrawModal () { this.setState({ showWithdrawModal: false }); }
+
+  handleBalanceClick() { this.setState({ showGameLog: !this.state.showGameLog }); }
   
   render() {
     return (
@@ -226,48 +250,57 @@ class SiteWrapper extends Component {
               <a className="game_logo" href="/"> </a>
               <div className="header_action_panel">
                 <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play">HOW TO PLAY</a>
-                <span id="balance" onClick={this.handleBalanceClick}>£{updateDigitToPoint2(parseInt(this.state.balance) / 100.0)}</span>
-                <Button area-constrols="profile-menu" aria-haspopup="true" onClick={this.handleClickMenu} className="profile-menu">
-                  <img src={`${this.props.user.avatar} `} alt="" className="avatar" onError={(e)=>{e.target.src='../img/avatar.png'}} />
-                  <span className="username">{this.state.userName}</span>
-                  <ArrowDropDownIcon />
-                </Button>
-                <Menu id="profile-menu" 
-                  anchorEl={this.state.anchorEl} 
-                  getContentAnchorEl={null}
-                  open={Boolean(this.state.anchorEl)} 
-                  onClose={this.handleCloseMenu}
-                  anchorOrigin={{vertical: 'bottom', horizontal: 'center'}}
-                  transformOrigin={{vertical: 'top', horizontal: 'center'}}
-                >
-                  <MenuItem onClick={this.handleOpenProfileModal}>
-                    <ListItemIcon><PersonOutlineIcon /></ListItemIcon>
-                    <ListItemText>Profile</ListItemText>
-                  </MenuItem>
-                  <MenuItem>
-                    <ListItemIcon><PaymentIcon /></ListItemIcon>
-                    <ListItemText>Withdraw</ListItemText>
-                  </MenuItem>
-                  <MenuItem>
-                    <ListItemIcon><PaymentIcon /></ListItemIcon>
-                    <ListItemText>Deposit</ListItemText>
-                  </MenuItem>
-                  <MenuItem onClick={(e) => {this.handleLogout(true)}}>
-                    <ListItemIcon><ExitToAppIcon size="small" /></ListItemIcon>
-                    <ListItemText>Logout</ListItemText>
-                  </MenuItem>
-                  <Divider />
-                  <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
-                    <ListItemText>Dark theme</ListItemText>
-                    <DarkModeToggle
-                      onChange={this.props.setDarkMode}
-                      checked={this.props.isDarkMode}
-                      size={50}
-                      speed={5}
-                      className="dark_mode_toggle"
-                    />
-                  </MenuItem>
-                </Menu>
+                { this.props.isAuthenticated ? 
+                  <>
+                    <span id="balance" onClick={this.handleBalanceClick}>£{updateDigitToPoint2(parseInt(this.state.balance) / 100.0)}</span>
+                    <Button area-constrols="profile-menu" aria-haspopup="true" onClick={this.handleClickMenu} className="profile-menu">
+                      <Avatar src={this.props.user.avatar} alt="" className="avatar" darkMode={this.props.isDarkMode} />
+                      <span className="username">{this.state.userName}</span>
+                      <ArrowDropDownIcon />
+                    </Button>
+                    <Menu id="profile-menu" 
+                      anchorEl={this.state.anchorEl} 
+                      getContentAnchorEl={null}
+                      open={Boolean(this.state.anchorEl)} 
+                      onClose={this.handleCloseMenu}
+                      anchorOrigin={{vertical: 'bottom', horizontal: 'center'}}
+                      transformOrigin={{vertical: 'top', horizontal: 'center'}}
+                    >
+                      <MenuItem onClick={this.handleOpenProfileModal}>
+                        <ListItemIcon><PersonOutlineIcon /></ListItemIcon>
+                        <ListItemText>Profile</ListItemText>
+                      </MenuItem>
+                      <MenuItem onClick={this.handleOpenWithdrawModal}>
+                        <ListItemIcon><PaymentIcon /></ListItemIcon>
+                        <ListItemText>Withdraw</ListItemText>
+                      </MenuItem>
+                      <MenuItem onClick={this.handleOpenDepositModal}>
+                        <ListItemIcon><PaymentIcon /></ListItemIcon>
+                        <ListItemText>Deposit</ListItemText>
+                      </MenuItem>
+                      <MenuItem onClick={(e) => {this.handleLogout(true)}}>
+                        <ListItemIcon><ExitToAppIcon size="small" /></ListItemIcon>
+                        <ListItemText>Logout</ListItemText>
+                      </MenuItem>
+                      <Divider />
+                      <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
+                        <ListItemText>Dark theme</ListItemText>
+                        <DarkModeToggle
+                          onChange={this.props.setDarkMode}
+                          checked={this.props.isDarkMode}
+                          size={50}
+                          speed={5}
+                          className="dark_mode_toggle"
+                        />
+                      </MenuItem>
+                    </Menu>
+                  </>
+                  :
+                  <>
+                    <button id="btn-login" onClick={this.handleOpenLoginModal}>Login</button>
+                    <button id="btn-signup" onClick={this.handleOpenSignupModal}>Sign up</button>
+                  </>
+                }
               </div>
             </div>
             <div id="game_logs" className={this.state.showGameLog ? '' : 'hidden'} onClick={this.handleBalanceClick}>
@@ -280,7 +313,7 @@ class SiteWrapper extends Component {
                     <tr><td>...</td></tr> :
                     this.state.transactions.map((row, key) => (
                       <tr key={key}>
-                        <td className={"amount " + (row.amount > 0 ? "green" : "red")}>{row.amount > 0 ? '+ £' + this.number2dp(row.amount / 100.0) : '- £' + this.number2dp(Math.abs(row.amount / 100.0))}</td>
+                        <td className={"amount " + (row.amount > 0 ? "green" : "red")}>{row.amount > 0 ? '+ £' + updateDigitToPoint2(row.amount / 100.0) : '- £' + updateDigitToPoint2(Math.abs(row.amount / 100.0))}</td>
                         <td className="fromNow">{row.from_now}</td>
                       </tr>
                     ))
@@ -298,12 +331,16 @@ class SiteWrapper extends Component {
           {/* <div className="game_footer text-center">
             <span>All Rights Reserved, </span>rpsbet.com © 2020 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
           </div> */}
-          <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} />
-          <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} />
-          <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} avatar={this.props.user.avatar} email={this.props.user.email} />
-          <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} />
+          {this.state.showTermsModal && <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} />}
+          {this.state.showPrivacyModal && <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} />}
+          {this.state.showProfileModal && <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} avatar={this.props.user.avatar} email={this.props.user.email} />}
+          {this.state.showHowToPlayModal && <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} isDarkMode={this.props.isDarkMode} />}
+          {this.state.showLoginModal && <LoginModal modalIsOpen={this.state.showLoginModal} closeModal={this.handleCloseLoginModal} openSignupModal={this.handleOpenSignupModal} openVerificationModal={this.handleOpenVerificationModal} />}
+          {this.state.showSignupModal && <SignupModal modalIsOpen={this.state.showSignupModal} closeModal={this.handleCloseSignupModal} openLoginModal={this.handleOpenLoginModal} />}
+          {this.state.showVerificationModal && <VerificationModal modalIsOpen={this.state.showVerificationModal} closeModal={this.handleCloseVerificationModal} />}
+          {this.state.showDepositModal && <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} />}
+          {this.state.showWithdrawModal && <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} />}
           <GamePasswordModal />
-          <AlertModal />
         </div>
       </MuiThemeProvider>
     );
@@ -311,7 +348,7 @@ class SiteWrapper extends Component {
 }
 
 const mapStateToProps = state => ({
-  showAlert: state.snackbar.showAlert,
+	isAuthenticated: state.auth.isAuthenticated,
   showGamePasswordModal: state.snackbar.showGamePasswordModal,
   socket: state.auth.socket,
   balance: state.auth.balance,

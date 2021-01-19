@@ -98,6 +98,10 @@ div.table .table-cell button.btn_join {
     width: 114px;
     height: 32px;
 }
+div.table .table-cell button.btn_join img {
+    width: 12px;
+    margin-right: 4px;
+}
 div.table .table-cell button.btn_end {
     width: 64px;
     height: 32px;
@@ -217,11 +221,17 @@ div.table.my-open-game-table .table-row .table-cell.winnings span {
 div.table.my-open-game-table .table-row .table-cell.room-id {
     text-align: left;
     color: #060607;
+    position: relative;
+}
+div.table.my-open-game-table .table-row .table-cell.room-id img.lock-icon {
+    width: 16px;
+    position: absolute;
+    left: -8px;
+    top: -8px;
 }
 div.table.my-open-game-table .table-row .table-cell.bet-info span.bet-pr {
     color: #ffb000;
     font-weight: bold;
-
 }
 div.table.my-open-game-table .table-row .table-cell.bet-info span.end-amount {
     color: #d81719;
@@ -611,6 +621,12 @@ input {
     font-size: 14px;
     font-weight: 500;
 }
+.brain-game-play-panel .play-panel-header .timer .timer-footer2 {
+    font-size: 14px;
+    font-weight: 500;
+    align-self: flex-end;
+    display: none;
+}
 .brain-game-play-panel .play-panel-header .brain-score {
     padding: 16px 32px;
     height: 60px;
@@ -815,6 +831,8 @@ input {
     }
     #rps-radio span {
         width: 311px;
+        margin: 0;
+        max-width: 100%;
     }
     .game-page .game-contents .game-info-panel button {
         margin: 0 16px 16px 0;
@@ -868,5 +886,19 @@ input {
         height: 35px;
         font-size: 16px;
         width: 100%;
+    }
+}
+@media (max-width: 400px) {
+    .brain-game-play-panel .play-panel-header .brain-score {
+        padding: 16px;
+    }
+    .brain-game-play-panel .play-panel-header .timer .countdown {
+        margin-right: 5px;
+    }
+    .brain-game-play-panel .play-panel-header .timer .timer-footer {
+        display: none;
+    }
+    .brain-game-play-panel .play-panel-header .timer .timer-footer2 {
+        display: block;
     }
 }

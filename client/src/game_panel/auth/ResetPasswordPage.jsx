@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { HepperLink } from '../../components/HepperLink';
 import axios from '../../util/Api';
 import { connect } from 'react-redux';
-import { openAlert } from '../../redux/Notification/notification.actions';
+import { alertModal } from '../modal/ConfirmAlerts';
 
 function ResetPasswordPage(props) {
   const [email, setemail] = useState('');
@@ -25,9 +25,9 @@ function ResetPasswordPage(props) {
     const result = await axios.post('/auth/sendResetPasswordEmail/', payload);
     
     if (result.data.success) {
-      props.openAlert('warning', 'RPS Bet', 'Please check your email.');
+      alertModal(this.props.isDarkMode, `Please check your email.`)
     } else {
-      props.openAlert('warning', result.data.error);
+      alertModal(this.props.isDarkMode, result.data.error)
     }
   };
 
@@ -62,11 +62,14 @@ function ResetPasswordPage(props) {
   );
 }
 
+const mapStateToProps = state => ({
+  isDarkMode: state.auth.isDarkMode,
+});
+
 const mapDispatchToProps = {
-  openAlert
 };
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(ResetPasswordPage);

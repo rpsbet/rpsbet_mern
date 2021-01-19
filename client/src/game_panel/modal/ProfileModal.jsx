@@ -1,26 +1,26 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
-import DepositModal from './DepositModal';
-import WithdrawModal from './WithdrawModal';
-import EditAccountModal from './EditAccountModal';
-import EditProfileModal from './EditProfileModal';
+import { connect } from 'react-redux';
+import AvatarUpload from './upload/AvatarUpload';
+import { setUserInfo, changePasswordAndAvatar, getUser } from '../../redux/Auth/user.actions';
+import { alertModal } from './ConfirmAlerts';
 
 Modal.setAppElement('#root')
 
 const customStyles = {
     overlay: {
-        zIndex: 2,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)'
+        zIndex: 3,
+        backgroundColor: 'rgba(47, 49, 54, 0.8)'
     },
     content: {
-        minWidth    : '500px',
         top         : '50%',
         left        : '50%',
         right       : 'auto',
         bottom      : 'auto',
-        marginRight : '-50%',
         transform   : 'translate(-50%, -50%)',
-        backgroundColor: '#f8f9fa'
+        background: 'transparent',
+        padding: 0,
+        border: 0
     }
 }
 
@@ -29,108 +29,120 @@ class ProfileModal extends Component {
         super(props);
     
         this.state = {
-            showDepositModal: false,
-            showWithdrawModal: false,
-            showEditAccountModal: false,
-            showEditProfileModal: false,
+            username: this.props.userInfo.username,
+            email: this.props.userInfo.email,
+            password: '',
+            passwordConfirmation: '',
+            avatar: this.props.userInfo.avatar,
         }
-    
-        this.handleOpenDepositModal = this.handleOpenDepositModal.bind(this);
-        this.handleCloseDepositModal = this.handleCloseDepositModal.bind(this);
-        this.handleOpenWithdrawModal = this.handleOpenWithdrawModal.bind(this);
-        this.handleCloseWithdrawModal = this.handleCloseWithdrawModal.bind(this);
-        this.handleOpenEditAccountModal = this.handleOpenEditAccountModal.bind(this);
-        this.handleCloseEditAccountModal = this.handleCloseEditAccountModal.bind(this);
-        this.handleOpenEditProfileModal = this.handleOpenEditProfileModal.bind(this);
-        this.handleCloseEditProfileModal = this.handleCloseEditProfileModal.bind(this);
+        this.handleAvatarLoaded = this.handleAvatarLoaded.bind(this);
+        this.saveUserInfo = this.saveUserInfo.bind(this);
+        this.handleCloseModal = this.handleCloseModal.bind(this);
+        this.handleChangePassword = this.handleChangePassword.bind(this);
+        this.handleChangePasswordConfirmation = this.handleChangePasswordConfirmation.bind(this);
     }
 
-    handleOpenDepositModal () {
-        this.setState({ showDepositModal: true });
-    }
-      
-    handleCloseDepositModal () {
-        this.setState({ showDepositModal: false });
-    }
-
-    handleOpenEditAccountModal () {
-        this.setState({ showEditAccountModal: true });
-    }
-      
-    handleCloseEditAccountModal () {
-        this.setState({ showEditAccountModal: false });
-    }
-
-    handleOpenEditProfileModal () {
-        this.setState({ showEditProfileModal: true });
-    }
-      
-    handleCloseEditProfileModal () {
-        this.setState({ showEditProfileModal: false });
-    }
-
-    handleOpenWithdrawModal () {
-        this.setState({ showWithdrawModal: true });
-    }
-      
-    handleCloseWithdrawModal () {
-        this.setState({ showWithdrawModal: false });
+    static getDerivedStateFromProps(props, current_state) {
+        if (current_state.avatar !== props.avatar || current_state.username !== props.username || current_state.email !== props.email ) {
+            return {
+                ...current_state,
+                avatar: props.userInfo.avatar,
+                username: props.userInfo.username,
+                email: props.userInfo.email,
+            };
+        }
+        return null;
     }
 
     componentDidMount() {
     }
 
+    handleAvatarLoaded(filename) {
+        console.log(filename)
+        this.props.setUserInfo({ ...this.props.userInfo, avatar: filename });
+    }
+
+    handleChangePassword(e) {
+        e.preventDefault();
+        this.setState({ password: e.target.value });
+    }
+
+    handleChangePasswordConfirmation(e) {
+        e.preventDefault();
+        this.setState({ passwordConfirmation: e.target.value });
+    }
+
+    async saveUserInfo(e) {
+        e.preventDefault();
+        if (this.state.password !== this.state.passwordConfirmation) {
+            alertModal(this.props.isDarkMode, `Password confirmation doesn't match the password.`);
+            return;
+        }
+
+        const is_success = await this.props.changePasswordAndAvatar(this.state.password, this.state.avatar);
+        if (is_success) {
+            this.props.closeModal();
+        }
+    }
+
+    handleCloseModal() {
+        this.props.getUser(true);
+        this.props.closeModal();
+    }
+
     render() {
         return <Modal
             isOpen={this.props.modalIsOpen}
-            // onAfterOpen={afterOpenModal}
-            onRequestClose={this.props.closeModal}
+            onRequestClose={this.handleCloseModal}
             style={customStyles}
-            // style={customStyles}
             contentLabel="Profile Modal"
         >
-        
-            <h2 style={{borderBottom: "1px solid gray"}}>
-                {this.props.player_name}'s Card
-            </h2>
-            <div className="profile_info_panel_image_wrapper">
-                <img src={`${this.props.avatar} `} alt="" />
+            <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                <div className="modal-body edit-modal-body">
+                    <button className="btn-close" onClick={this.handleCloseModal}>×</button>
+                    <h2 className="modal-title">Your Profile</h2>
+                    <div className="edit-avatar-panel">
+                        <AvatarUpload setImageFilename={this.handleAvatarLoaded} darkMode={this.props.isDarkMode} avatar={this.state.avatar} />
+                    </div>
+                    <div className="modal-edit-panel">
+                        <div>
+                            <p>User Name</p>
+                            <input className="form-control" value={this.state.username} readOnly />
+                        </div>
+                        <div>
+                            <p>Email</p>
+                            <input className="form-control" value={this.state.email} readOnly />
+                        </div>    
+                        <div>
+                            <p>New Password</p>
+                            <input type="password" className="form-control" value={this.state.password} onChange={this.handleChangePassword} />
+                        </div>
+                        <div>
+                            <p>Password Confirmation</p>
+                            <input type="password" className="form-control" value={this.state.passwordConfirmation} onChange={this.handleChangePasswordConfirmation} />
+                        </div>    
+                    </div>
+                    <div className="modal-action-panel">
+                        <button className="btn-submit" onClick={this.saveUserInfo}>Save</button>
+                    </div>
+                </div>
             </div>
-            <button className="btn_modal_close" onClick={this.props.closeModal}>×</button>
-            <div className="profile_info_panel">
-                <span>Date Joined:</span>
-                <span>01/01/2020</span>
-              {/*  <span>Current Balance:</span>
-                <span>£{this.props.balance}</span>
-                <span>RPS Balance:</span>
-                <span>£0</span>
-                <span>Spleesh Balance:</span>
-                <span>£0</span>
-                <span>BrainGame Balance:</span>
-                <span>£0</span>
-                <span>MysteryBox Balance:</span>
-                <span>£0</span>
-                <span>Game Hosted:</span>
-                <span>£0</span>
-                <span>Game Joined:</span>
-                <span>£0</span>
-                <span>Total Rivals:</span>
-                <span>£0</span>
-                <span>Last logged in:</span>
-                <span>2 hours ago</span> */}
-            </div> 
-            <div className="modal_action_panel">
-                <button onClick={this.handleOpenEditAccountModal}>EDIT ACCOUNT</button>
-                <button onClick={this.handleOpenEditProfileModal}>EDIT PROFILE</button>
-                <button onClick={this.handleOpenWithdrawModal}>WITHDRAW</button>
-                <button onClick={this.handleOpenDepositModal}>DEPOSIT</button>
-            </div>
-            <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} playerName={this.props.player_name} />
-            <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} playerName={this.props.player_name} />
-            <EditAccountModal modalIsOpen={this.state.showEditAccountModal} closeModal={this.handleCloseEditAccountModal} playerName={this.props.player_name} email={this.props.email} />
-            <EditProfileModal modalIsOpen={this.state.showEditProfileModal} closeModal={this.handleCloseEditProfileModal} playerName={this.props.player_name} email={this.props.email} />
         </Modal>;
     }
 }
 
-export default ProfileModal;
+const mapStateToProps = state => ({
+    isDarkMode: state.auth.isDarkMode,
+    userInfo: state.auth.user,
+});
+
+const mapDispatchToProps = {
+    setUserInfo,
+    changePasswordAndAvatar,
+    getUser
+};
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ProfileModal);

@@ -153,12 +153,15 @@ router.post('/resetPassword', async (req, res) => {
 });
 
 // Change Password in EditAccountModal
-router.post('/changePassword', auth, async (req, res) => {
+router.post('/changePasswordAndAvatar', auth, async (req, res) => {
   try {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(req.body.new_password, salt, (err, hash) => {
         if (err) throw err;
-        req.user.password = hash;
+        if (req.body.new_password !== '') {
+          req.user.password = hash;
+        }
+        req.user.avatar = req.body.new_avatar;
         req.user.save();
         return res.json({
           success: true,
@@ -181,19 +184,6 @@ router.post('/deleteAccount', auth, async (req, res) => {
     req.user.is_deleted = true;
     req.user.save();
 
-    return res.json({
-      success: true,
-    });
-  } catch (error) {
-    res.json({ success: false, error });
-  }
-});
-
-// Change Avatar in EditProfileModal
-router.post('/changeAvatar', auth, async (req, res) => {
-  try {
-    req.user.avatar = req.body.new_avatar;
-    req.user.save();
     return res.json({
       success: true,
     });

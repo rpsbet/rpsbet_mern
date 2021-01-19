@@ -263,6 +263,13 @@ getHistory = async (keyword) => {
     }
 };
 
+updateDigitToPoint2 = (number) => {
+    if (parseFloat(number) - parseInt(number) > 0) {
+        return parseFloat(number).toFixed(2);
+    }
+    return number;
+}
+
 getRoomList = async (pagination, page, keyword) => {
     console.log(pagination, page, keyword)
     const start = new Date();
@@ -303,22 +310,32 @@ getRoomList = async (pagination, page, keyword) => {
             };
     
             if (temp.game_type.game_type_id === 1) {
-                temp.winnings = "£" + (room['bet_amount'] * 2) + " * 0.95";
+                // temp.winnings = "£" + (room['bet_amount'] * 2) + " * 0.95";
+                temp.winnings = "£" + updateDigitToPoint2(room['bet_amount'] * 2 * 0.95);
             } else if (temp.game_type.game_type_id === 2) {
-                temp.winnings = "(£" + room['pr'] + " + £??) * 0.9";
+                // temp.winnings = "(£" + room['pr'] + " + £??) * 0.9";
+                const gameLog = await GameLog.findOne({room: room}).sort({bet_amount: 'desc'});
+                if (!gameLog) {
+                    temp.winnings = temp.spleesh_bet_unit * 10;
+                } else if (gameLog.bet_amount === temp.spleesh_bet_unit * 10) {
+                    temp.winnings = temp.spleesh_bet_unit * 9;
+                } else {
+                    temp.winnings = gameLog.bet_amount + temp.spleesh_bet_unit;
+                }
             } else if (temp.game_type.game_type_id === 3) {
-                temp.winnings = "(£" + room['pr'] + " + £" + room['bet_amount'] + ") * 0.9";
+                // temp.winnings = "(£" + room['pr'] + " + £" + room['bet_amount'] + ") * 0.9";
+                temp.winnings = "£" + updateDigitToPoint2((room['pr'] + room['bet_amount']) * 0.9);
             } else if (temp.game_type.game_type_id === 4) {
-                temp.winnings = "£" + room['pr'] + " * 0.95";
+                // temp.winnings = "£" + room['pr'] + " * 0.95";
+                temp.winnings = "£" + updateDigitToPoint2(room['pr'] * 0.95);
             } else if (temp.game_type.game_type_id === 5) {
-                temp.winnings = "£" + room['pr'] + " * 0.95";
+                // temp.winnings = "£" + room['pr'] + " * 0.95";
+                temp.winnings = "£" + updateDigitToPoint2(room['pr'] * 0.95);
             }
     
             result.push(temp);
         }
     }
-
-    console.log(result.length, count)
 
     return {
         rooms: result,
@@ -468,21 +485,23 @@ getMyRooms = async (user_id) => {
         const gameLogCount = await GameLog.countDocuments({ room: new ObjectId(room._id) });
 
         if (temp.game_type.game_type_id === 1) { // Classic RPS
-            temp.pr = (temp.pr * 2) + " * 0.95";
+            temp.pr = updateDigitToPoint2(temp.pr * 2 * 0.95);
         }
 
         if (gameLogCount === 0) {
             temp.winnings = "£" + temp.bet_amount;
-        } else if (temp.game_type.game_type_id === 1) { // Classic RPS
-            temp.winnings = "£" + temp.pr + " * 0.95";
-            // temp.winnings = "£" + (room['bet_amount'] * 2);
         } else if (temp.game_type.game_type_id === 2) { // Spleesh!
             temp.pr = temp.pr === 0 ? temp.bet_amount : temp.pr;
-            temp.winnings = "£" + temp.pr + " * 0.9";
-            // temp.winnings = "£" + temp.pr;
+            // temp.winnings = "£" + temp.pr + " * 0.9";
+            temp.winnings = "£" + updateDigitToPoint2(temp.pr  * 0.9);
         } else if (temp.game_type.game_type_id === 3) { // Brain Game
-            temp.winnings = "(£" + room['pr'] + " + £" + room['bet_amount'] + ") * 0.9";
+            // temp.winnings = "(£" + room['pr'] + " + £" + room['bet_amount'] + ") * 0.9";
+            temp.winnings = "£" + updateDigitToPoint2((room['pr'] + room['bet_amount']) * 0.9);
         } else if (temp.game_type.game_type_id === 4) { //Mytery Box
+            // temp.winnings = "£" + temp.pr + " * 0.95";
+            temp.winnings = "£" + updateDigitToPoint2(temp.pr * 0.95);
+        } else if (temp.game_type.game_type_id === 5) { // Quick Shoot
+            // temp.winnings = "£" + temp.pr + " * 0.95";
             temp.winnings = "£" + temp.pr + " * 0.95";
         }
 

@@ -10,8 +10,7 @@ import QuickShoot from '../CreateGame/QuickShoot';
 import Summary from '../CreateGame/Summary';
 import { createRoom, setGameMode } from "../../redux/Logic/logic.actions";
 import { getBrainGameType } from '../../redux/Question/question.action';
-import { FaRegQuestionCircle } from 'react-icons/fa';
-import { openAlert } from '../../redux/Notification/notification.actions';
+import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
 
 class CreateGame extends Component {
@@ -88,22 +87,26 @@ class CreateGame extends Component {
 		if (gameTypeName === "Spleesh!") {
 			newState = {
 				...newState,
+				game_type: 2,
 				endgame_amount: 54,
 				max_return: 54,
 			};
 		} else if (gameTypeName === "Classic RPS") {
 			newState = {
 				...newState,
+				game_type: 1,
 				max_return: 2 * 0.95
 			};
 		} else if (gameTypeName === "Brain Game") {
 			newState = {
 				...newState,
+				game_type: 3,
 				max_return: "∞ * 0.9"
 			};
 		} else if (gameTypeName === "Quick Shoot") {
 			newState = {
 				...newState,
+				game_type: 5,
 				public_bet_amount: "£1",
 				max_return: "2",
 				qs_nation: Math.floor(Math.random() * 5)
@@ -111,6 +114,7 @@ class CreateGame extends Component {
 		} else if (gameTypeName === "Mystery Box") {
 			newState = {
 				...newState,
+				game_type: 4,
 				bet_amount: 0
 			};
 		}
@@ -135,12 +139,12 @@ class CreateGame extends Component {
 
 	onStartBrainGame(e) {
 		e.preventDefault();
-		if (window.confirm('Do you want to create new game now?')) {
+		confirmModalCreate(this.props.isDarkMode, 'Do you want to create new game now?', 'Okay', 'Cancel', ()=>{
 			this.setState({
 				step: 5,
 				isPlayingBrain: true
 			});
-		}
+		})
 	}
 
 	onPrevButtonClicked() {
@@ -174,16 +178,15 @@ class CreateGame extends Component {
 
 	onNextButtonClicked() {
 		if (this.state.step === 2) {
-			if (parseFloat(this.state.bet_amount) === 0) {
-				this.props.openAlert('warning', 'Warning!', 'Please input the bet amount!');
+			if (parseFloat(this.state.bet_amount) === 0 || isNaN(parseFloat(this.state.bet_amount))) {
+				alertModal(this.props.isDarkMode, 'Please input the bet amount!')
 				return;
 			}
 	
 			if (this.state.bet_amount > this.state.balance / 100.0) {
-				this.props.openAlert('warning', 'Warning!', 'Not enough balance!');
+				alertModal(this.props.isDarkMode, 'Not enough balance!')
 				return;
 			}
-
 
 			if (this.state.game_mode === 'Quick Shoot' && this.state.child_step < 3) {
 				this.setState({
@@ -204,7 +207,7 @@ class CreateGame extends Component {
 			}
 		} else if (this.state.step === 3) {
 			if (this.state.is_private === true && this.state.room_password === "") {
-				this.props.openAlert('warning', 'Warning!', "You have set the Privacy to 'Private'. Please create a password!");
+				alertModal(this.props.isDarkMode, `You have set the Privacy to 'Private'. Please create a password!`)
 				return;
 			}
 
@@ -224,9 +227,10 @@ class CreateGame extends Component {
 	}
 
 	async onCreateRoom() {
-		if (window.confirm('Do you want to create new game now?')) {
+		console.log("CreateRoom");
+		confirmModalCreate(this.props.isDarkMode, 'Do you want to create new game now?', 'Okay', 'Cancel', async ()=>{
 			await this.props.createRoom(this.state);
-		}
+		})
 	}
 
 	step2() {
@@ -333,13 +337,13 @@ const mapStateToProps = state => ({
   socket: state.auth.socket,
   balance: state.auth.balance,
   brain_game_type: state.questionReducer.brain_game_type,
+  isDarkMode: state.auth.isDarkMode,
 });
 
 const mapDispatchToProps = {
 	createRoom,
 	setGameMode,
 	getBrainGameType,
-	openAlert
 };
 
 export default connect(

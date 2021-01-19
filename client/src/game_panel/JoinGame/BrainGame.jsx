@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
-import { openAlert, openGamePasswordModal } from '../../redux/Notification/notification.actions'
+import { openGamePasswordModal } from '../../redux/Notification/notification.actions'
 import { updateDigitToPoint2 } from '../../util/helper';
 import { deductBalanceWhenStartBrainGame } from '../../redux/Logic/logic.actions';
+import { alertModal } from '../modal/ConfirmAlerts';
 
 class BrainGame extends Component {
     constructor(props) {
@@ -90,17 +91,17 @@ class BrainGame extends Component {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
-            this.props.openAlert('warning', 'Warning!', `Oops! This game is yours. You can't join this game.`);
+            alertModal(this.props.isDarkMode, `Oops! This game is yours. You can't join this game.`)
             return;
         }
 
         if (this.props.bet_amount === 0) {
-            this.props.openAlert('warning', 'Warning!', `Please input the bet amount!`);
+            alertModal(this.props.isDarkMode, `Please input the bet amount!`)
             return;
         }
 
         if (this.props.bet_amount > this.state.balance / 100.0) {
-            this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
+            alertModal(this.props.isDarkMode, `Not enough balance!`)
             return;
         }
 
@@ -213,16 +214,6 @@ class BrainGame extends Component {
                     <hr/>
                     <label className="lbl_game_option">Score to BEAT:</label>
                     <div style={{color: '#C83228', fontSize: 22, paddingLeft: 10}}>{this.props.brain_game_score}</div>
-                    {/* <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
-                    <div id="advanced_panel" className={this.state.advanced_status}>
-                        <hr/>
-                        <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
-                        <div style={{pointerEvents: "none", opacity: "0.6"}}>
-                            <label className={"radio-inline" + (this.state.is_anonymous === true ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: true}); }}>Yes</label>
-                            <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
-                        </div>
-                        <div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
-                    </div> */}
                     <div className="text-center">
                         <button className="btn btn_secondary" id="btn_bet">Start</button>
                     </div>
@@ -235,11 +226,11 @@ const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
     isPasswordCorrect: state.snackbar.isPasswordCorrect,
     balance: state.auth.balance,
+    isDarkMode: state.auth.isDarkMode,
 });
 
 const mapDispatchToProps = {
     setCurrentQuestionInfo,
-    openAlert,
     openGamePasswordModal,
     deductBalanceWhenStartBrainGame
 };

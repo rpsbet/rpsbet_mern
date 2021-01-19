@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { openAlert, openGamePasswordModal } from '../../redux/Notification/notification.actions'
+import { openGamePasswordModal } from '../../redux/Notification/notification.actions'
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { updateDigitToPoint2 } from '../../util/helper'
+import { alertModal } from '../modal/ConfirmAlerts';
 
 class QuickShoot extends Component {
     constructor(props) {
@@ -65,12 +66,12 @@ class QuickShoot extends Component {
         e.preventDefault();
         
         if (this.props.creator_id === this.props.user_id) {
-            this.props.openAlert('warning', 'Warning!', `Oops! This game is yours. You can't join this game.`);
+            alertModal(this.props.isDarkMode, `Oops! This game is yours. You can't join this game.`)
             return;
         }
 
         if (this.state.bet_amount > this.state.balance / 100.0) {
-            this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
+            alertModal(this.props.isDarkMode, `Not enough balance!`)
             return;
         }
 
@@ -142,11 +143,11 @@ class QuickShoot extends Component {
 const mapStateToProps = state => ({
     auth: state.auth.isAuthenticated,
     isPasswordCorrect: state.snackbar.isPasswordCorrect,
-    balance: state.auth.balance
+    balance: state.auth.balance,
+    isDarkMode: state.auth.isDarkMode,
 });
 
 const mapDispatchToProps = {
-    openAlert,
     openGamePasswordModal
 };
 

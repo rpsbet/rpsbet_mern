@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { endGame } from '../../redux/Logic/logic.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
+import { confirmModalClosed } from '../modal/ConfirmAlerts';
 
 class MyGamesTable extends Component {
 	constructor(props) {
@@ -13,16 +14,19 @@ class MyGamesTable extends Component {
 	}
 
 	static getDerivedStateFromProps(props, current_state) {
-		return {
-			...current_state,
-			myRoomList: props.myGames
-		};
+		if (current_state.myRoomList.length !== props.myGames.length) {
+			return {
+				...current_state,
+				myRoomList: props.myGames
+			};
+		}
+		return null;
 	}
 
 	endRoom(winnings, room_id) {
-		if (window.confirm(`Do you want to end this game now? You will take [${winnings}]`)) {
+		confirmModalClosed(this.props.isDarkMode, `Do you want to end this game now? You will take [${winnings}]`, 'Okay', 'Cancel', () => {
 			this.props.endGame(room_id);
-		}
+		});
 	}
 
 	render() {
@@ -42,8 +46,14 @@ class MyGamesTable extends Component {
 							this.state.myRoomList.map((row, key) => (
 								<div className="table-row" key={key}>
 									<div>
-										<div className="table-cell room-id"><img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="game-type-icon" /> {row.game_type.short_name + '-' + row.index} {row.is_private && <img src="/img/icon-lock.png" alt="" className="td_icon" />}</div>
-										<div className="table-cell bet-info"><span className="bet-pr">{"£" + updateDigitToPoint2(row.bet_amount) + " / £" + updateDigitToPoint2(row.pr)}</span> <span className="end-amount">{"£" + updateDigitToPoint2(row.endgame_amount)}</span></div>
+										<div className="table-cell room-id">
+											<img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="game-type-icon" />
+											{row.game_type.short_name + '-' + row.index} 
+											{row.is_private && <img src="/img/icon-lock.png" alt="" className="lock-icon" />}
+										</div>
+										<div className="table-cell bet-info">
+											<span className="bet-pr">{"£" + updateDigitToPoint2(row.bet_amount) + " / £" + updateDigitToPoint2(row.pr)}</span>
+											<span className="end-amount">{"£" + updateDigitToPoint2(row.endgame_amount)}</span></div>
 										<div className="table-cell winnings"><span>{row.winnings}</span></div>
 										<div className="table-cell action desktop-only">
 											<button 
@@ -77,7 +87,8 @@ class MyGamesTable extends Component {
 }
 
 const mapStateToProps = state => ({
-	myGames: state.logic.myGames
+  isDarkMode: state.auth.isDarkMode,
+  myGames: state.logic.myGames
 });
 
 const mapDispatchToProps = {

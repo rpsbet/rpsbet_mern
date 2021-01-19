@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { setChatRoomInfo } from '../../redux/Logic/logic.actions';
+import Avatar from "../../components/Avatar";
 
 class MyHistoryTable extends Component {
 	constructor(props) {
@@ -44,7 +45,7 @@ class MyHistoryTable extends Component {
 							history_keys.map((row, key) => (
 								<div className="table-row" key={key}>
 									<div>
-										<div className="table-cell"><img src={`${this.state.myHistory[row].avatar} `} alt="" className="avatar" onError={(e)=>{e.target.src='../img/avatar.png'}} /></div>
+										<div className="table-cell"><Avatar src={this.state.myHistory[row].avatar} alt="" className="avatar" darkMode={this.props.isDarkMode} /></div>
 										<div className="table-cell desktop-only">{this.state.myHistory[row].username}<br/>{this.state.myHistory[row].message}</div>
 										<div className="table-cell desktop-only">{this.state.myHistory[row].unread_message_count === 0 ? <></> : <span className="unread_message_badge">{this.state.myHistory[row].unread_message_count}</span>}</div>
 										<div className="table-cell">{this.state.myHistory[row].created_at_str}</div>
@@ -84,6 +85,7 @@ class MyHistoryTable extends Component {
 }
 
 const mapStateToProps = state => ({
+	isDarkMode: state.auth.isDarkMode,
 	myHistory: state.logic.myHistory
 });
 

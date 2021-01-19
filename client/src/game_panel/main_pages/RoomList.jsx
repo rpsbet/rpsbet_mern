@@ -6,12 +6,13 @@ import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 
 import Moment from 'moment';
-import { openAlert } from '../../redux/Notification/notification.actions';
+import { alertModal } from '../modal/ConfirmAlerts';
 import SearchIcon from '@material-ui/icons/Search';
 
 import { updateDigitToPoint2 } from '../../util/helper'
 
 import { Tabs, Tab, Button } from '@material-ui/core';
+import Avatar from "../../components/Avatar";
 
 import './MainPages.css';
 
@@ -59,7 +60,6 @@ class RoomList extends Component {
 	}
 
 	async componentDidMount() {
-		this.IsAuthenticatedReroute();
 		this.props.getRoomList({
 			page: this.state.pageNumber,
 			keyword: this.state.search_room_text
@@ -74,12 +74,6 @@ class RoomList extends Component {
 	componentWillUnmount() {
 		clearInterval(this.interval);
 	}
-	
-	IsAuthenticatedReroute = () => {
-		if (!this.props.auth) {
-			history.push('/');
-		}
-	};
 
 	async searchRoom(e) {
 		e.preventDefault();
@@ -103,12 +97,12 @@ class RoomList extends Component {
 		const bet_amount = e.target.getAttribute('bet_amount');
 
 		if (bet_amount > this.state.balance / 100.0) {
-			this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
+            alertModal(this.props.isDarkMode, `Oops! This game is yours. You can't join this game.`)
 			return;
 		}
 
 		if (e.target.getAttribute('room_status') === 'finished') {
-			this.props.openAlert('warning', 'Warning!', `You can't join the game. This game has finished.`);
+            alertModal(this.props.isDarkMode, `You can't join the game. This game has finished.`)
 			return;
 		}
 
@@ -217,11 +211,13 @@ class RoomList extends Component {
 														</div>
 													</div>
 													<div className="table-cell desktop-only cell-user-name">
-														<img className="avatar" src={`${row.creator_avatar} `} alt="" onError={(e)=>{e.target.src='../img/avatar.png'}} />
+														<Avatar className="avatar" src={row.creator_avatar} alt="" darkMode={this.props.isDarkMode} />
 														<span>{row.creator}</span>
 														<i className={`online-status ${this.props.onlineUserList.indexOf(row.creator_id) >= 0 ? 'online' : ''}`}></i>
 													</div>
-													<div className="table-cell desktop-only cell-amount-info">{"£" + updateDigitToPoint2(row.user_bet) /*+ " / £" + row.pr*/} / {row.winnings}</div>
+													<div className="table-cell desktop-only cell-amount-info">
+														{row.game_type.game_type_name === "Spleesh!" ? "£" + row.spleesh_bet_unit + " - £" + row.spleesh_bet_unit * 10 : "£" + updateDigitToPoint2(row.user_bet)} / {row.winnings}
+													</div>
 													<div className="table-cell cell-action">
 														<button 
 															className="btn_join" 
@@ -237,14 +233,14 @@ class RoomList extends Component {
 															brain_game_type_name={row.brain_game_type ? row.brain_game_type.game_type_name : ''}
 															brain_game_score={row.brain_game_score ? row.brain_game_score : 0}
 														>
-															{row.is_private && <img src="/img/icon-lock.png" alt="" className="td_icon" />}
+															{row.is_private && <img src="/img/icon-lock.png" alt="" className="lock-icon" />}
 															Join Game
 														</button>
 													</div>
 												</div>
 												<div className="mobile-only">
 													<div className="table-cell cell-user-name">
-														<img className="avatar" src={`${row.creator_avatar} `} alt="" onError={(e)=>{e.target.src='../img/avatar.png'}} />
+														<Avatar className="avatar" src={row.creator_avatar} alt="" darkMode={this.props.isDarkMode} />
 														<span>{row.creator}</span>
 														<i className="online-status online"></i>
 													</div>
@@ -323,7 +319,6 @@ class RoomList extends Component {
 }
 
 const mapStateToProps = state => ({
-	auth: state.auth.isAuthenticated,
 	roomList: state.logic.roomList,
 	history: state.logic.history,
 	roomCount: state.logic.roomCount,
@@ -333,14 +328,13 @@ const mapStateToProps = state => ({
 	user: state.auth.user,
 	isDarkMode: state.auth.isDarkMode,
 	onlineUserList: state.logic.onlineUserList,
-  gameTypeList: state.logic.gameTypeList,
+  	gameTypeList: state.logic.gameTypeList,
 });
 
 const mapDispatchToProps = {
 	getRoomList,
 	getHistory,
 	setCurRoomInfo,
-	openAlert,
 	startLoading,
 	endLoading,
 	getMyGames, 

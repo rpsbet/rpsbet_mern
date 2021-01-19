@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { openAlert, openGamePasswordModal } from '../../redux/Notification/notification.actions'
+import { openGamePasswordModal } from '../../redux/Notification/notification.actions'
 import { updateDigitToPoint2 } from '../../util/helper'
+import { alertModal } from '../modal/ConfirmAlerts';
 
 class MysteryBox extends Component {
     constructor(props) {
@@ -76,17 +77,17 @@ class MysteryBox extends Component {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
-            this.props.openAlert('warning', 'Warning!', `Oops! This game is yours. You can't join this game.`);
+            alertModal(this.props.isDarkMode, `Oops! This game is yours. You can't join this game.`)
             return;
         }
 
         if (this.state.selected_id === '') {
-            this.props.openAlert('warning', 'Warning!', `Please select a box!`);
+            alertModal(this.props.isDarkMode, `Please select a box!`)
             return;
         }
 
         if (this.state.bet_amount > this.state.balance / 100.0) {
-            this.props.openAlert('warning', 'Warning!', `Not enough balance!`);
+            alertModal(this.props.isDarkMode, `Not enough balance!`)
             return;
         }
 
@@ -234,11 +235,10 @@ const mapStateToProps = state => ({
     betResult: state.logic.betResult,
     roomStatus: state.logic.roomStatus,
     isPasswordCorrect: state.snackbar.isPasswordCorrect,
-    // room_id: state.logic.curRoomInfo._id,
+    isDarkMode: state.auth.isDarkMode,
 });
 
 const mapDispatchToProps = {
-    openAlert,
     openGamePasswordModal
 };
 

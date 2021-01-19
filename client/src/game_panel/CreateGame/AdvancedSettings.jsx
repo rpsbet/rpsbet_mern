@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { FaPoundSign } from 'react-icons/fa';
 
 class AdvancedSettings extends Component {
 	render() {

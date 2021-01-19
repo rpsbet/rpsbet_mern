@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { FaPoundSign } from 'react-icons/fa';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 
 class ClassicRPS extends Component {
@@ -11,7 +10,6 @@ class ClassicRPS extends Component {
     }
 
     render() {
-        const defaultBetAmounts = [1, 2.5, 5, 10, 25];
         return (this.props.step === 1 ? 
             <DefaultBetAmountPanel bet_amount={this.props.bet_amount} onChangeState={this.props.onChangeState} game_type="Classic RPS" />
             :

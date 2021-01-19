@@ -18,7 +18,6 @@ import {
   SET_CHAT_ROOM_INFO,
   HISTORY_LOADED,
   NEW_TRANSACTION,
-  OPEN_ALERT_MODAL,
   SET_BALANCE,
   ONLINE_USER_LIST_UPDATED,
 } from '../types';
@@ -34,7 +33,7 @@ export const createRoom = (room_info) => async dispatch => {
 
     if (res.data.success) {
       if (room_info.game_type === 3) {
-        dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: `You scored [${room_info.brain_game_score}]!`} });
+        // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: `You scored [${room_info.brain_game_score}]!`} });
       }
       history.push('/join');
       dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
@@ -60,7 +59,7 @@ export const bet = (bet_info) => async dispatch => {
 
     if (res.data.success) {
       if (res.data.betResult === -100) {
-        dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
+        // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
         history.push('/join');
         return;
       }
@@ -70,19 +69,19 @@ export const bet = (bet_info) => async dispatch => {
         dispatch({ type: BET_SUCCESS, payload: res.data });
       } else if (bet_info.game_type === 'Brain Game') {
         if (res.data.betResult === 1) {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'WOW, What a BRAIN BOX - You WIN!', roomStatus: res.data.roomStatus} });
+          // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'WOW, What a BRAIN BOX - You WIN!', roomStatus: res.data.roomStatus} });
         } else if (res.data.betResult === 0) {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner! PR will be split.', roomStatus: res.data.roomStatus} });
+          // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner! PR will be split.', roomStatus: res.data.roomStatus} });
         } else {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, back to school for you loser!!', roomStatus: res.data.roomStatus} });
+          // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, back to school for you loser!!', roomStatus: res.data.roomStatus} });
         }
       } else {
         if (res.data.betResult === 1) {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'Nice, You Win!', roomStatus: res.data.roomStatus} });
+          // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'win', title: 'Congratulations!', message: 'Nice, You Win!', roomStatus: res.data.roomStatus} });
         } else if (res.data.betResult === 0) {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner!', roomStatus: res.data.roomStatus} });
+          // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'draw', title: 'Draw', message: 'Draw, No Winner!', roomStatus: res.data.roomStatus} });
         } else {
-          dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, You Lost!', roomStatus: res.data.roomStatus} });
+          // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, You Lost!', roomStatus: res.data.roomStatus} });
         }
       }
     } else {
@@ -185,7 +184,7 @@ export const endGame = (room_id) => async dispatch => {
 
     } else {
       if (res.data.already_finished) {
-        dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
+        // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
       } else {
         dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
       }

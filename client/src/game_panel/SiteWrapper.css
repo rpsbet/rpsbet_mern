@@ -3,6 +3,7 @@
     width: 100%;
     z-index: 2;
     background-color: white;
+    height: 62px;
 }
   
 .game_header .main_header {
@@ -60,6 +61,26 @@
     margin-right: 10px;
 }
 
+.game_header .main_header .header_action_panel button#btn-login {
+    height: 31px;
+    background: transparent;
+    color: #747f8d;
+    border: 1px solid #d3d7db;
+    border-radius: 40px;
+    padding: 0 20px;
+    font-weight: 600;
+    margin: 0 20px;
+}
+
+.game_header .main_header .header_action_panel button#btn-signup {
+    height: 31px;
+    background-image: linear-gradient(to top, #ff409a, #c438ef);
+    color: white;
+    border-radius: 40px;
+    padding: 0 20px;
+    font-weight: 600;
+}
+
 .dark_mode_toggle {
     margin: 10px;
 }
@@ -84,8 +105,8 @@
 }
 
 .contents_wrapper {
-    height: calc(100vh - 64px);
-    margin-top: 64px;
+    height: calc(100vh - 62px);
+    margin-top: 62px;
     overflow-y: auto;
     background-color: #f2f3f5;
 }
@@ -106,6 +127,9 @@
     .game_header .main_header #btn_how_to_play {
         display: none;
     }
+    .game_header .main_header span#balance {
+        margin: 0 20px;
+    }
     .game_header .main_header .header_action_panel button span.username
     /* ,.game_header .main_header .header_action_panel button svg  */
     {
@@ -113,6 +137,6 @@
     }
     .contents_wrapper {
         height: initial;
-        min-height: calc(100vh - 64px);
+        min-height: calc(100vh - 62px);
     }
 }

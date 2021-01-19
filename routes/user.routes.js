@@ -108,7 +108,7 @@ router.post('/', async (req, res) => {
   if (user)
     return res.json({
       success: false,
-      error: 'Email already exists'
+      error: 'Email already exists.'
     });
 
   user = await User.findOne({ username });
@@ -116,7 +116,7 @@ router.post('/', async (req, res) => {
   if (user)
     return res.json({
       success: false,
-      error: 'Username already exists'
+      error: 'Username already exists.'
     });
 
   const verification_code = Math.floor(Math.random() * 8999) + 1000;
