@@ -1030,7 +1030,7 @@ router.post('/bet', auth, async (req, res) => {
 				newGameLog.bet_amount = roomInfo['bet_amount'];
 				newGameLog.brain_game_score = req.body.brain_game_score;
 
-				// newTransactionJ.amount -= roomInfo['bet_amount'] * 100;
+				newTransactionJ.amount -= roomInfo['bet_amount'] * 100;
 				
 				roomInfo['pr'] += roomInfo['bet_amount'];
 				roomInfo['host_pr'] += roomInfo['bet_amount'];
@@ -1066,7 +1066,9 @@ router.post('/bet', auth, async (req, res) => {
 			roomInfo['creator']['balance'] += newTransactionC.amount;
 			roomInfo['creator'].save();
 
-			req.user['balance'] += newTransactionJ.amount;
+			if (roomInfo['game_type']['game_type_name'] !== 'Brain Game') {
+				req.user['balance'] += newTransactionJ.amount;
+			}
 			await req.user.save();
 
 			newGameLog.save();

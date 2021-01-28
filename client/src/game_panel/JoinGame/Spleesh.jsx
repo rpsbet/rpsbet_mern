@@ -96,7 +96,7 @@ class Spleesh extends Component {
 						endgame_amount: this.props.spleesh_bet_unit * (55 - i),
 					}); }} key={i}
 				>
-					£{i * this.props.spleesh_bet_unit}{this.props.spleesh_bet_unit === 1 ? '.0' : ''}
+					£{updateDigitToPoint2(i * this.props.spleesh_bet_unit)}
 				</button>);
 		}
 		return panel;

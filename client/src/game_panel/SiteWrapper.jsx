@@ -257,7 +257,7 @@ class SiteWrapper extends Component {
           </LoadingOverlay>
           <div className="game_header">
             <div className="main_header">
-              <a className="game_logo" href="/"> </a>
+              <a className="game_logo" href='' onClick={(e)=>{history.push('/')}}> </a>
               <div className="header_action_panel">
                 <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play">HOW TO PLAY</a>
                 { this.props.isAuthenticated ? 

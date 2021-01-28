@@ -88,6 +88,16 @@ class BrainGame extends Component {
         }
     }
 
+    componentWillUnmount() {
+        if (this.state.is_started) {
+            this.props.join({
+                bet_amount: this.props.bet_amount,
+                brain_game_score: -1000,
+                is_anonymous: this.state.is_anonymous
+            });
+        }
+    }
+
     async onStartGame(e) {
         e.preventDefault();
 

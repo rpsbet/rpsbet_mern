@@ -30,7 +30,7 @@ class DefaultBetAmountPanel extends Component {
 							} else {
 								this.props.onChangeState({bet_amount: amount, max_return: amount * 2 * 0.95}); 
 							}
-						}} key={index} >£{amount}</button>
+						}} key={index} >£{updateDigitToPoint2(amount)}</button>
 					))}
 					<button className={(this.state.is_other ? 'other active' : 'other')} onClick={() => { this.setState({is_other: true}); }}>Other</button>
 				</div>
