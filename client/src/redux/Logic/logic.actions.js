@@ -4,7 +4,6 @@ import {
   START_LOADING,
   END_LOADING,
   ROOMS_LOADED,
-  BET_FAIL,
   BET_SUCCESS,
   MSG_CREATE_ROOM_FAIL,
   MSG_CREATE_ROOM_SUCCESS,
@@ -20,6 +19,7 @@ import {
   NEW_TRANSACTION,
   SET_BALANCE,
   ONLINE_USER_LIST_UPDATED,
+  MSG_WARNING,
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -60,8 +60,11 @@ export const bet = (bet_info) => async dispatch => {
     if (res.data.success) {
       if (res.data.betResult === -100) {
         // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
-        history.push('/join');
-        return;
+        history.push('/');
+        return {
+          status: 'failed',
+          message: 'Sorry, this game is already finished.'
+        };
       }
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
 
@@ -84,12 +87,22 @@ export const bet = (bet_info) => async dispatch => {
           // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'lost', title: 'Oops!', message: 'Oops, You Lost!', roomStatus: res.data.roomStatus} });
         }
       }
+      return {
+        status: 'success',
+        betResult: res.data.betResult,
+        roomStatus: res.data.roomStatus
+      };
     } else {
-      dispatch({ type: BET_FAIL });
+      dispatch({ type: MSG_WARNING, payload: 'Something went wrong. Please try again in a few minutes.' });
     }
   } catch (err) {
-    dispatch({ type: BET_FAIL, payload: err });
+    console.log(err)
+    dispatch({ type: MSG_WARNING, payload: 'Something went wrong. Please try again in a few minutes.' });
   }
+
+  return {
+    status: 'failed'
+  };
 };
 
 // GetRoomInfo
@@ -162,11 +175,13 @@ export const getGameTypeList = () => async dispatch => {
   }
 };
 
-export const getMyGames = () => async dispatch => {
+export const getMyGames = (page) => async dispatch => {
   try {
-    const res = await axios.get('/game/my_games');
+    dispatch({ type: START_LOADING });
+    const res = await axios.get('/game/my_games', {params: {page}});
+    dispatch({ type: END_LOADING });
     if (res.data.success) {
-      dispatch({ type: MY_GAMES_LOADED, payload: res.data.myGames });
+      dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data, pageNumber: page } });
     } else {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }

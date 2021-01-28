@@ -38,12 +38,14 @@ class JoinGame extends Component {
         }
     };
 
-    join(betInfo) {
-        this.props.bet({
+    async join(betInfo) {
+        const result = await this.props.bet({
             _id: this.state.roomInfo._id,
             game_type: this.props.roomInfo.game_type,
             ...betInfo
         });
+
+        return result;
     }
 
     render() {

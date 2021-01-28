@@ -47,6 +47,8 @@ const initialState = {
   betResult: -1,
   roomStatus: '',
   myGames: [],
+  myGamesTotalPage: 0,
+  myGamesPageNumber: 1,
   myHistory: [],
   chatRoomInfo: {
     user_id: '',
@@ -106,7 +108,7 @@ export default function(state = initialState, action) {
       };
     case MY_GAMES_LOADED:
       return {
-        ...state, myGames: payload
+        ...state, myGames: payload.myGames, myGamesTotalPage: payload.pages, myGamesPageNumber: payload.pageNumber
       };
     case MY_HISTORY_LOADED:
       return {

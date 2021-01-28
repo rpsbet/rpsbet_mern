@@ -1,26 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { endGame } from '../../redux/Logic/logic.actions';
+import { endGame, getMyGames } from '../../redux/Logic/logic.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { confirmModalClosed } from '../modal/ConfirmAlerts';
 
 class MyGamesTable extends Component {
 	constructor(props) {
 		super(props);
-		this.state = {
-			myRoomList: this.props.myGames
-		}
 		this.endRoom = this.endRoom.bind(this);
-	}
-
-	static getDerivedStateFromProps(props, current_state) {
-		if (current_state.myRoomList.length !== props.myGames.length) {
-			return {
-				...current_state,
-				myRoomList: props.myGames
-			};
-		}
-		return null;
 	}
 
 	endRoom(winnings, room_id) {
@@ -30,6 +17,18 @@ class MyGamesTable extends Component {
 	}
 
 	render() {
+		const pageNumbers = [];
+
+		for (let i = 1; i <= this.props.myGamesTotalPage; i++) {
+			pageNumbers.push(
+				<button 
+					key={i}
+					className={`btn btn_main_table_page_number ${i === this.props.pageNumber ? 'active' : ''}`}
+					onClick={(e)=>{ this.props.getMyGames(i); } }>
+					{i}
+				</button>);
+		}
+
 		return (
 			<div className="my-open-games">
 				<div className="table my-open-game-table">
@@ -40,10 +39,10 @@ class MyGamesTable extends Component {
 						<div className="table-cell action desktop-only">Action</div>
 					</div>
 					{
-						this.state.myRoomList.length === 0 ? 
+						this.props.myGames.length === 0 ? 
 							<div></div>
 							: 
-							this.state.myRoomList.map((row, key) => (
+							this.props.myGames.map((row, key) => (
 								<div className="table-row" key={key}>
 									<div>
 										<div className="table-cell room-id">
@@ -81,18 +80,24 @@ class MyGamesTable extends Component {
 							), this)
 					}
 				</div>
+				<div className="main_table_pagination">
+					{pageNumbers}
+				</div>
 			</div>
 		);
 	}
 }
 
 const mapStateToProps = state => ({
-  isDarkMode: state.auth.isDarkMode,
-  myGames: state.logic.myGames
+  	isDarkMode: state.auth.isDarkMode,
+  	myGames: state.logic.myGames,
+	myGamesTotalPage: state.logic.myGamesTotalPage,
+	pageNumber: state.logic.myGamesPageNumber,
 });
 
 const mapDispatchToProps = {
-	endGame
+	endGame,
+	getMyGames
 };
 
 export default connect(

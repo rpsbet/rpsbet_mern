@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions'
 import { updateDigitToPoint2 } from '../../util/helper'
-import { alertModal } from '../modal/ConfirmAlerts';
+import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 
 class MysteryBox extends Component {
     constructor(props) {
@@ -18,7 +18,6 @@ class MysteryBox extends Component {
             betResult: this.props.betResult,
             isPasswordCorrect: false
         };
-        this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onBoxClicked = this.onBoxClicked.bind(this);
         this.onBtnBetClick = this.onBtnBetClick.bind(this);
         this.onBtnGoToMainGamesClicked = this.onBtnGoToMainGamesClicked.bind(this);
@@ -27,28 +26,17 @@ class MysteryBox extends Component {
 
     static getDerivedStateFromProps(props, current_state) {
         if (current_state.isPasswordCorrect !== props.isPasswordCorrect || 
-            current_state.box_list.length !== props.box_list.length || 
             current_state.betResult !== props.betResult || 
             current_state.balance !== props.balance ) {
             return {
                 ...current_state,
                 balance: props.balance,
-                box_list: props.box_list,
                 isPasswordCorrect: props.isPasswordCorrect,
                 betResult: props.betResult
             }
         }
 
         return null;
-    }
-
-    onShowButtonClicked(e) {
-        e.preventDefault();
-        // if (this.state.advanced_status === "") {
-        //     this.setState({advanced_status: "hidden"});
-        // } else {
-        //     this.setState({advanced_status: ""});
-        // }
     }
 
     onBoxClicked(e) {
@@ -91,7 +79,7 @@ class MysteryBox extends Component {
             return;
         }
 
-        if (window.confirm('Do you want to bet on this game now?')) {
+        confirmModalCreate(this.props.isDarkMode, 'Do you want to bet on this game now?', 'Okay', 'Cancel', async ()=>{
             if (this.props.is_private === true) {
                 this.props.openGamePasswordModal();
             } else {
@@ -101,12 +89,12 @@ class MysteryBox extends Component {
                     box_list: this.state.box_list.map(el => (el._id === this.state.selected_id ? {...el, status: 'opened'} : el))
                 });
             }
-        }
+        })
     }
 
     onBtnGoToMainGamesClicked(e) {
         e.preventDefault();
-        history.push('/join');
+        history.push('/');
     }
 
     getBetForm = () => {
@@ -122,66 +110,49 @@ class MysteryBox extends Component {
             return true;
         });
         prizes.sort((a, b) => a.price - b.price);
-
         return (
-            <form className="marginBottom" onSubmit={this.onBtnBetClick}>
-                <h1 className="main_title">Buy a Mystery Box?</h1>
-
-                <hr/>
-                <label className="lbl_game_option">Prizes:</label>
-                <table className="mystery_table">
-                    <tbody><tr>
-                        {prizes.map((item, key) => (
-                            <td className={item.status} key={key}>
-                                {item.status === 'opened' ? <img src="/img/cross-24-512.png" alt="" /> : ""}
-                                £{item.price}
-                            </td>
-                        ))}
-                    </tr></tbody>
-                </table>
-                <hr/>
-                <label className="lbl_game_option">Select a Box</label>
-                <div className="select_box_panel">
-                    {this.state.box_list.map((row, key) => (
-                        <div 
-                            className={"box box_" + row.status + (row._id === this.state.selected_id ? " selected": "")} 
-                            status={row.status} 
-                            _id={row._id} 
-                            box_price={row.box_price} 
-                            index={key} 
-                            key={key} 
-                            onClick={this.onBoxClicked}
-                        >
-                            £{row.box_price}
-                        </div>
-                    ))}
+            <div className="game-page">
+                <div className="page-title">
+                    <h2>Join Game - Mystery Box</h2>
                 </div>
-                <div class="tip">Each box will open one of the Prizes above.</div>
-
-                <div className="join_summary_panel">
-                    <label>Bet Amount: £{updateDigitToPoint2(this.state.bet_amount)}</label>
-                    <label>Potential Return: £{updateDigitToPoint2(pr * 0.95)}</label>
-                </div>
-                {/* <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
-                <div id="advanced_panel" className={this.state.advanced_status}>
-                    <hr/>
-                    <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
-                    <div style={{pointerEvents: "none", opacity: "0.6"}}>
-                        <label className={"radio-inline" + (this.state.is_anonymous === true ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: true}); }}>Yes</label>
-                        <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
+				<div className="game-contents">
+                    <div className="pre-summary-panel">
+                        <div className="your-bet-amount">Bet Amount : £{updateDigitToPoint2(this.state.bet_amount)}</div>
+                        <div className="your-max-return">Potential Return : £{updateDigitToPoint2(pr * 0.95)}</div>
                     </div>
-                    <div style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
-                </div> */}
-                <div className="text-center">
-                    <button className="btn" id="btn_bet">PLACE BET</button>
+                    <div className="game-info-panel">
+                        <h3 className="game-sub-title">Prizes:</h3>
+                        <p className="box-prizes">{prizes.map((item, key) => (<span className={item.status} key={key}>£{item.price}</span>))}</p>
+                        <h3 className="game-sub-title">Select a Box</h3>
+                        <div className="boxes-panel boxes-join">
+                            {this.state.box_list.map((row, key) => (
+                                <div className={"box box-" + row.status + (row._id === this.state.selected_id ? " active": "")} status={row.status} _id={row._id} 
+                                    box_price={row.box_price} index={key} key={key} onClick={this.onBoxClicked}
+                                >
+                                    <span>£{row.box_price}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <p>Each box will open one of the Prizes above.</p>
+                    </div>
+                    <hr/>
+                    <div className="action-panel">
+                        <span></span>
+                        <button id="btn_bet" onClick={this.onBtnBetClick}>Place Bet</button>
+                    </div>
                 </div>
-            </form>
+            </div>
         )
     }
 
     onBtnPlayAgainClicked(e) {
-        // history.push('/join/' + this.props.room_id);
-        window.location.reload();
+        e.preventDefault();
+        if (this.props.roomStatus === 'finished') {
+            alertModal(this.props.isDarkMode, 'This game is already finished.');
+            history.go('/');
+        } else {
+            history.go(0);
+        }
     }
 
     getBetResultForm = () => {
@@ -196,28 +167,22 @@ class MysteryBox extends Component {
         prizes.sort((a, b) => a.price - b.price);
 
         return (
-            <>
-                <div className="mystery_result_title">Prize</div>
-                <div className="mystery_result_message" dangerouslySetInnerHTML={{__html: this.state.betResult === 0 ? "Wrong ❌📦<br />This box is Empty!" : "Nice!<br />You won a Prize!"}}></div>
-                <div className="mystery_result_amount">£{this.state.betResult}</div>
-                <div className="mystery_result_prizes_title">Prizes</div>
-                <table className="mystery_table">
-                    <tbody><tr>
-                        {prizes.map((item, key) => (
-                            <td className={item.status} key={key}>
-                                {item.status === 'opened' ? <img src="/img/cross-24-512.png" alt="" /> : ""}
-                                £{item.price}
-                            </td>
-                        ))}
-                    </tr></tbody>
-                </table>
-                <div className="text-center">
-                    <button className="btn" id="btn_bet" onClick={this.onBtnGoToMainGamesClicked}>All Games</button>
+            <div className="game-page">
+				<div className="game-contents mystery-box-result-contents">
+                    <div className="game-info-panel">
+                        <div className={`mystery-box-result ${this.state.betResult === 0 ? 'failed' : 'success'}`}>£{this.state.betResult}</div>
+                        <h4 className="game-sub-title">{this.state.betResult === 0 ? `Opps! Wrong Box` : `Nice! it's Money box`}</h4>
+                        <p>{this.state.betResult === 0 ? `This box is Empty` : `You won a Prize`}</p>
+                        <h3 className="game-sub-title">ALL GAMES</h3>
+                        <p className="box-prizes">{prizes.map((item, key) => (<span className={item.status} key={key}>£{item.price}</span>))}</p>
+                    </div>
+                    <hr/>
+                    <div className="action-panel">
+                        <button id="btn-back" onClick={this.onBtnGoToMainGamesClicked}>All Games</button>
+                        <button id="btn-submit" onClick={this.onBtnPlayAgainClicked}>Play Again</button>
+                    </div>
                 </div>
-                <div className="text-center mt-2">
-                    {this.props.roomStatus !== 'finished' && <button className="btn" id="btn_play_again" onClick={this.onBtnPlayAgainClicked}>Play Again</button>}
-                </div>
-            </>
+            </div>
         );
     }
 

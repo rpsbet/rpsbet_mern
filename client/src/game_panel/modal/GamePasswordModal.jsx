@@ -9,16 +9,17 @@ Modal.setAppElement('#root')
 const customStyles = {
     overlay: {
         zIndex: 3,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)'
+        backgroundColor: 'rgba(47, 49, 54, 0.8)'
     },
     content: {
-        top         : '30%',
+        top         : '50%',
         left        : '50%',
         right       : 'auto',
         bottom      : 'auto',
-        marginRight : '-50%',
         transform   : 'translate(-50%, -50%)',
-        backgroundColor: '#f8f9fa'
+        padding: 0,
+        background: 'transparent',
+        border: 0
     }
 }
 
@@ -54,26 +55,25 @@ class GamePasswordModal extends Component {
             style={customStyles}
             contentLabel="Password"
         >
-        
+            <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                <div className='modal-body alert-body password-modal-body'>
+                    <button className="btn-close" onClick={this.props.closeGamePasswordModal}>×</button>
+                    <div className={`modal-icon result-icon-password`}></div>
+                    <h5>This game requires a password!<br/>Enter the game's password.</h5>
+                    <input type="password" id="game_password" value={this.state.password} onChange={(e) => {this.setState({password: e.target.value})}} className="form-control" />
+                    <button className="btn-submit" onClick={this.onBtnOkClicked}>Okay</button>
+                    <button className="btn-back" onClick={this.props.closeGamePasswordModal}>Cancel</button>
+                </div>
+            </div>
             <h2 style={{borderBottom: "1px solid gray"}}>
                 Password
             </h2>
-            <button className="btn_modal_close" onClick={this.onBtnCancelClicked}>×</button>
-            <div className="alert_panel">
-                <div className="alert_image_wrapper">
-                    <img src={"/img/tutorial.png"} alt="" />
-                </div>
-                <div className="alert_message_panel">
-                    <input type="password" id="game_password" value={this.state.password} onChange={(e) => {this.setState({password: e.target.value})}} />
-                    <button onClick={this.onBtnOkClicked}>Okay</button>
-                    <button onClick={this.onBtnCancelClicked}>Cancel</button>
-                </div>
-            </div> 
         </Modal>;
     }
 }
 
 const mapStateToProps = state => ({
+    isDarkMode: state.auth.isDarkMode,
     isOpen: state.snackbar.showGamePasswordModal,
     title: state.snackbar.title,
     roomStatus: state.snackbar.roomStatus,

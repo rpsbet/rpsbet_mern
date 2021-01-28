@@ -9,7 +9,7 @@ router.post('/', async (req, res) => {
     }
 
     let file = req.files.file;
-    file.mv('./client/public/img/uploads/' + file.name, function(err) {
+    file.mv('./client/build/img/uploads/' + file.name, function(err) {
         if (err)
             return res.status(500).send(err);
 

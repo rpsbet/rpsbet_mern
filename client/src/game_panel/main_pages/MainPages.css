@@ -446,6 +446,11 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     font-size: 16px;
     color: #060607;
 }
+.game-page .game-contents .game-info-panel .previous-guesses {
+    color: #d81718;
+    font-size: 16px;
+    font-weight: 600;
+}
 .game-page .game-contents .game-info-panel .edit-amount-panel input {
     height: 33px;
     line-height: 32px;
@@ -540,6 +545,7 @@ input {
     display: inline-block;
     text-align: center;
     padding-top: 45px;
+    background-repeat: no-repeat;
 }
 .boxes-panel .box i {
     width: 20px;
@@ -568,6 +574,50 @@ input {
     border-radius: 20px;
     padding: 4px 8px;
 }
+.boxes-panel.boxes-join .box {
+    background-color: #f2f3f5;
+    width: 100px;
+    height: 130px;
+    background-position: center 15px;
+    padding-top: 95px;
+    border-radius: 8px;
+    border: 2px dashed #4f5660;
+    cursor: pointer;
+}
+.boxes-panel.boxes-join .box.active {
+    border-color: #ffb000;
+}
+.boxes-panel.boxes-join .box.box-opened {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='74' height='72' fill='none' viewBox='0 0 74 72'%3E%3Cpath fill='%23A5A5A5' d='M47.956 72L0 61.182V9.23l47.956 7.2v55.57z'/%3E%3Cpath fill='%23696969' d='M74 55.237L47.956 72V16.43L74 5.133v50.105z'/%3E%3Cpath fill='%23E4E4E4' d='M74 5.132L27.962 0 0 9.23l47.956 7.2L74 5.133z'/%3E%3Cpath fill='%23686867' d='M27.15 24.148l-9.48-1.514V11.926l9.48 1.44v10.782z'/%3E%3Cpath fill='%23686867' d='M27.15 13.366l-9.48-1.44 26.191-10.19 8.928 1.033L27.15 13.366z'/%3E%3Cpath fill='%23515151' d='M64.888 19.163l-5.976 2.77V11.704l5.976-2.585v10.043zM64.888 61.145l-5.976 3.84V54.091l5.976-3.212v10.264z'/%3E%3Cpath fill='%23686867' d='M64.888 9.12L18.408 3.14 11.583 5.39l47.33 6.314 5.975-2.585zM27.15 67.31l-9.48-2.067V54.5l9.48 1.44V67.31z'/%3E%3Cpath fill='%23515151' d='M0 9.231s3.726.148 6.825.554c4.574.59 11.03 2.141 11.03 2.141L0 9.231zM27.298 13.255s3.32.333 4.464.443c7.968.776 16.194 2.696 16.194 2.696l-20.658-3.139z'/%3E%3C/svg%3E%0A");
+    cursor: auto;
+}
+.game-page .game-contents .game-info-panel .box-prizes {
+    font-size: 16px;
+    font-weight: 600;
+    background-color: #f2f3f5;
+    padding: 20px;
+    border-radius: 4px;
+    word-break: break-all;
+    line-height: 24px;
+}
+.game-page .game-contents .game-info-panel .box-prizes span {
+    color: #43b581;
+    margin-right: 16px;
+    padding: 5px;
+    border-radius: 3px;
+}
+.game-page .game-contents .game-info-panel .box-prizes span.opened {
+    position: relative;
+    background-color: #898a8d;
+}
+.game-page .game-contents .game-info-panel .box-prizes span.opened::before {
+    content: '❌';
+    position: absolute;
+    font-size: 12px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
 .game-page .game-contents .game-info-panel .create-box-panel {
     display: flex;
     align-items: center;
@@ -588,6 +638,27 @@ input {
     color: #ffb000;
     cursor: pointer;
     text-decoration: underline;
+}
+.game-page .game-contents.mystery-box-result-contents {
+    width: 550px;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+.game-page .game-contents.mystery-box-result-contents .mystery-box-result {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='138' height='148' fill='none' viewBox='0 0 138 148'%3E%3Cpath fill='%23845838' d='M62.742 40l-50.6 12.84 2.265 31.72h109.51V46.796L62.742 40z'/%3E%3Cpath fill='%23663D1F' d='M62.743 103.441V40l61.174 6.797v26.434l-61.174 30.21z'/%3E%3Cpath fill='url(%23paint0_linear)' d='M30 8c0-4.418 3.582-8 8-8h62c4.418 0 8 3.582 8 8v69H30V8z'/%3E%3Cpath fill='%23FEBE7E' d='M84.578 148l-72.437-16.341V53.188l72.437 10.875V148z'/%3E%3Cpath fill='%23C47D49' d='M123.917 122.68L84.578 148V64.063l39.339-17.066v75.683z'/%3E%3Cpath fill='%23FEDC98' d='M71.05 90.6L0 78.318l12.141-25.13 72.437 10.876L71.05 90.601z'/%3E%3Cpath fill='%23FEDC98' d='M132.98 70.21L96.729 91.356 84.349 64.21l39.568-17.412 9.063 23.413z'/%3E%3Cpath fill='%23A37452' d='M110.154 131.603l-9.026 5.8V120.95l9.026-4.852v15.505z'/%3E%3Cpath fill='%23BA835D' d='M53.152 140.916l-14.32-3.123v-16.23l14.32 2.176v17.177z'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear' x1='69' x2='69' y1='0' y2='77' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23fff'/%3E%3Cstop offset='1' stop-color='%23EAEAEA'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E%0A");
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 150px;
+    font-size: 40px;
+    font-weight: bold;
+}
+.game-page .game-contents.mystery-box-result-contents .mystery-box-result.failed {
+    color: #f04747;
+}
+.game-page .game-contents.mystery-box-result-contents .mystery-box-result.success {
+    color: #43b581;
 }
 .game-page .game-contents .game-info-panel.brain-game-play-panel .play-panel-header {
     display: flex;

@@ -5,7 +5,8 @@ import axios from '../../util/Api';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions'
 import { updateDigitToPoint2 } from '../../util/helper';
 import { deductBalanceWhenStartBrainGame } from '../../redux/Logic/logic.actions';
-import { alertModal } from '../modal/ConfirmAlerts';
+import { alertModal, confirmModalCreate, gameResultModal } from '../modal/ConfirmAlerts';
+import history from '../../redux/history';
 
 class BrainGame extends Component {
     constructor(props) {
@@ -105,7 +106,7 @@ class BrainGame extends Component {
             return;
         }
 
-        if (window.confirm('Do you want to bet on this game now?')) {
+        confirmModalCreate(this.props.isDarkMode, 'Do you want to bet on this game now?', 'Okay', 'Cancel', async ()=>{
             if (this.props.is_private === true) {
                 this.props.openGamePasswordModal();
             } else {
@@ -123,10 +124,10 @@ class BrainGame extends Component {
                     this.getNextQuestion();
                 }
             }
-        }
+        })
     }
 
-    onCountDown() {
+    async onCountDown() {
         const remaining_time = this.state.remaining_time - 1;
         this.setState({ remaining_time });
 
@@ -137,11 +138,31 @@ class BrainGame extends Component {
                 remaining_time: 'FIN'
             });
 
-            this.props.join({
+            const result = await this.props.join({
                 bet_amount: this.props.bet_amount,
                 brain_game_score: this.state.score,
                 is_anonymous: this.state.is_anonymous
             });
+
+            if (result.status === 'success') {
+                let text = 'Oops, You Lost!';
+                
+                if (result.betResult === 1) {
+                    text = 'Nice, You Won!';
+                } else if (result.betResult === 0) {
+                    text = 'Draw, No Winner!';
+                }
+    
+                if (result.roomStatus === 'finished') {
+                    gameResultModal(this.props.isDarkMode, text, result.betResult, 'Okay', null, () => { history.push('/'); }, ()=>{})
+                } else {
+                    gameResultModal(this.props.isDarkMode, text, result.betResult, 'Try again', 'Close', () => { history.go(0); }, ()=>{ history.push('/'); })
+                }
+            } else {
+                if (result.message) {
+                    alertModal(this.props.isDarkMode, result.message);
+                }
+            }
         }
     }
 
@@ -174,50 +195,59 @@ class BrainGame extends Component {
 
         return is_started === true ? 
             (
-                <>
-                    <div className="col-md-12">
-                        <div className="timer">
-                            <div className="timer_title">Timer:</div>
-                            <div className="countdown">{this.state.remaining_time}</div>
-                            <div className="timer_footer">seconds left</div>
-                        </div>
-                        <div className="brain_score">
-                            Score: <label>{this.state.score}</label>
+                <div className="game-page">
+                    <div className="game-contents">
+                        <div className="game-info-panel brain-game-play-panel">
+                            <div className="play-panel-header">
+                                <div className="timer">
+                                    <div className="timer-title">Timer :</div>
+                                    <div className="countdown">{this.state.remaining_time}</div>
+                                    <div className="timer-footer">seconds left</div>
+                                    <div className="timer-footer2">S</div>
+                                </div>
+                                <div className="brain-score">
+                                    Score: <span>{this.state.score}</span>
+                                </div>
+                            </div>
+                            <div className="quiz-panel">
+                                <div className="question">
+                                    {this.state.question.question}
+                                </div>
+                                <div className="answer-panel">
+                                    {this.state.answers.map((answer, index) => (
+                                        <button key={index} className="answer other" onClick={this.onClickAnswer} _id={answer._id}>{answer.answer}</button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="row" style={{justifyContent: 'center'}}>
-                        <div className="col-md-offset-2 col-md-8 clearfix question_panel">
-                            {this.state.question.question}
-                        </div>
-                        {this.state.answers.map((answer, index) => (
-                            <label key={index} className="answer col-md-8 radio-inline checked" onClick={this.onClickAnswer} _id={answer._id}>{answer.answer}</label>
-                        ))}
-                    </div>
-                </>
+                </div>
             )
             :
             (
-                <form className="marginBottom" onSubmit={this.onStartGame}>
-                    <h1 className="main_title" style={{textTransform: 'initial'}}>Click START to begin BRAIN GAME: 60 secs</h1>
-                    <hr/>
-                    <label className="lbl_game_option">Bet Amount:</label>
-                    <div style={{fontSize: 22, paddingLeft: 10}}>£{updateDigitToPoint2(this.props.bet_amount)}</div>
-                    <hr/>
-                    <label className="lbl_game_option">Pot:</label>
-                    <div style={{fontSize: 22, paddingLeft: 10}}>£{updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)}</div>
-                    <hr/>
-                    <label className="lbl_game_option">Potential Return:</label>
-                    <div style={{fontSize: 22, paddingLeft: 10}}>£{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) * 0.95)}</div>
-                    <hr/>
-                    <label className="lbl_game_option">Game Type:</label>
-                    <div style={{fontSize: 22, paddingLeft: 10}}>{this.props.brain_game_type.game_type_name}</div>
-                    <hr/>
-                    <label className="lbl_game_option">Score to BEAT:</label>
-                    <div style={{color: '#C83228', fontSize: 22, paddingLeft: 10}}>{this.props.brain_game_score}</div>
-                    <div className="text-center">
-                        <button className="btn btn_secondary" id="btn_bet">Start</button>
+                <div className="game-page">
+                    <div className="page-title">
+                        <h2>Join Game - Brain Game</h2>
                     </div>
-                </form>
+                    <div className="game-contents">
+                        <div className="pre-summary-panel">
+                            <div className="your-bet-amount">Bet Amount : £{updateDigitToPoint2(this.props.bet_amount)}</div>
+                            <div className="public-max-return">Pot : £{updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)}</div>
+                            <div className="your-max-return">Potential Return : £{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) * 0.95)}</div>
+                        </div>
+                        <div className="game-info-panel">
+                            <h3 className="game-sub-title">Game Type:</h3>
+                            <p>{this.props.brain_game_type.game_type_name}</p>
+                            <h3 className="game-sub-title">Score to BEAT:</h3>
+                            <p>{this.props.brain_game_score}</p>
+                        </div>
+                        <hr/>
+                        <div className="action-panel">
+                            <span></span>
+                            <button id="btn_bet" onClick={this.onStartGame}>Start</button>
+                        </div>
+                    </div>
+                </div>
             );
     }
 }

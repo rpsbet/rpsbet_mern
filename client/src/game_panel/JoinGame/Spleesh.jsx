@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper'
-import { alertModal } from '../modal/ConfirmAlerts';
+import { alertModal, confirmModalCreate, gameResultModal } from '../modal/ConfirmAlerts';
+import history from '../../redux/history';
 
 class Spleesh extends Component {
     constructor(props) {
@@ -40,6 +41,29 @@ class Spleesh extends Component {
         }
     }
 
+    async joinGame() {
+        const result = await this.props.join({bet_amount: this.state.bet_amount, is_anonymous: this.state.is_anonymous});
+        if (result.status === 'success') {
+            let text = 'Oops, You Lost!';
+            
+            if (result.betResult === 1) {
+                text = 'Nice, You Won!';
+            } else if (result.betResult === 0) {
+                text = 'Draw, No Winner!';
+            }
+
+            if (result.roomStatus === 'finished') {
+                gameResultModal(this.props.isDarkMode, text, result.betResult, 'Okay', null, () => { history.push('/'); }, ()=>{})
+            } else {
+                gameResultModal(this.props.isDarkMode, text, result.betResult, 'Try again', 'Close', () => { history.go(0); }, ()=>{ history.push('/'); })
+            }
+        } else {
+            if (result.message) {
+                alertModal(this.props.isDarkMode, result.message);
+            }
+        }
+    }
+
     onBtnBetClick(e) {
         e.preventDefault();
 
@@ -53,71 +77,64 @@ class Spleesh extends Component {
             return;
         }
 
-        if (window.confirm('Do you want to bet on this game now?')) {
+        confirmModalCreate(this.props.isDarkMode, 'Do you want to bet on this game now?', 'Okay', 'Cancel', async ()=>{
             if (this.props.is_private === true) {
                 this.props.openGamePasswordModal();
             } else {
-                this.props.join({bet_amount: this.state.bet_amount, is_anonymous: this.state.is_anonymous});
+                this.joinGame();
             }
-        }
+        })
     }
 
     createNumberPanel() {
-        let panel = [];
-        for (let i = 1; i <= 10; i++) {
-            panel.push( <label 
-                            className={"radio-inline" + (this.state.bet_amount / this.props.spleesh_bet_unit === i ? ' checked' : '')} 
-                            onClick={() => { this.setState({
-                                bet_amount: i * this.props.spleesh_bet_unit,
-                                endgame_amount: this.props.spleesh_bet_unit * (55 - i)
-                            }); }} key={i}
-                        >
-                            £{i * this.props.spleesh_bet_unit}{this.props.spleesh_bet_unit === 1 ? '.0' : ''}
-                        </label>);
-        }
-        return panel;
-    }
+		let panel = [];
+		for (let i = 1; i <= 10; i++) {
+			panel.push( <button
+					className={(this.state.bet_amount / this.props.spleesh_bet_unit === i ? ' active' : '')}
+					onClick={() => { this.setState({
+						bet_amount: i * this.props.spleesh_bet_unit,
+						endgame_amount: this.props.spleesh_bet_unit * (55 - i),
+					}); }} key={i}
+				>
+					£{i * this.props.spleesh_bet_unit}{this.props.spleesh_bet_unit === 1 ? '.0' : ''}
+				</button>);
+		}
+		return panel;
+	}
 
     render() {
         let previous_guesses = '';
         let pot = 0;
         for (let i = 0; i < this.props.game_log_list.length; i++) {
-            previous_guesses += (i === 0 ? '' : ', ') + this.props.game_log_list[i].bet_amount;
+            previous_guesses += (i === 0 ? '' : ', ') + '£' + this.props.game_log_list[i].bet_amount;
             pot += this.props.game_log_list[i].bet_amount;
         };
 
         return (
-            <form className="marginBottom" onSubmit={this.onBtnBetClick}>
-                <h1 className="main_title">Guess The Host's Number:</h1>
-
-                <hr/>
-                <label className="lbl_game_option">Previous Guesses</label>
-                <p className="lbl_previous_guesses">{previous_guesses}&nbsp;</p>
-
-                <hr/>
-                <label className="lbl_game_option">Your Guess</label>
-                {this.createNumberPanel()}
-
-                <div className="join_summary_panel">
-                    <label>Game Type: {this.props.spleesh_bet_unit === 1 ? '£1.0 - £10.0' : '£10 - £100'}</label>
-                    <label>Pot: £{pot}</label>
-                    <label>Bet Amount: £{this.state.bet_amount}</label>
-                    <label>Potential Return: £{updateDigitToPoint2((pot + (this.state.bet_amount * 2)) * 0.9)}</label>
+            <div className="game-page">
+                <div className="page-title">
+                    <h2>Join Game - <i>Spleesh!</i></h2>
                 </div>
-                {/* <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
-                <div id="advanced_panel" className={this.state.advanced_status}>
-                    <hr/>
-                    <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
-                    <div style={{pointerEvents: "none", opacity: "0.6"}}>
-                        <label className={"radio-inline" + (this.state.is_anonymous === true ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: true}); }}>Yes</label>
-                        <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
+				<div className="game-contents">
+                    <div className="pre-summary-panel">
+                        <div className="your-bet-amount">Bet Amount : £{this.state.bet_amount}</div>
+                        <div className="your-max-return">Potential Return : £{updateDigitToPoint2((pot + (this.state.bet_amount * 2)) * 0.9)}</div>
                     </div>
-                    <div style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div>
-                </div> */}
-                <div className="text-center">
-                    <button className="btn" id="btn_bet">PLACE BET</button>
+                    <div className="game-info-panel">
+                        <h3 className="game-sub-title">Previous Guesses</h3>
+                        <p className="previous-guesses">{previous_guesses === '' ? `There aren't bets yet in this game. Please try the very first bet.` : previous_guesses}</p>
+                        <h3 className="game-sub-title">Your Number</h3>
+                        <div id="select-buttons-panel">
+                            {this.createNumberPanel()}
+                        </div>
+                    </div>
+                    <hr/>
+                    <div className="action-panel">
+                        <span></span>
+                        <button id="btn_bet" onClick={this.onBtnBetClick}>Place Bet</button>
+                    </div>
                 </div>
-            </form>
+            </div>
         );
     }
 }

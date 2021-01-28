@@ -69,6 +69,8 @@ class LoginModal extends Component {
             result = await this.props.getUser(true);
             if (!result.user.is_activated) {
                 this.handleOpenVerificationModal();
+            } else {
+                this.props.initSocket();
             }
         }
     }

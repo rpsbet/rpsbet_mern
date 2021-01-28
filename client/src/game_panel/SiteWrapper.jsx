@@ -105,6 +105,8 @@ class SiteWrapper extends Component {
     this.handleCloseWithdrawModal = this.handleCloseWithdrawModal.bind(this);
 
     this.handleBalanceClick = this.handleBalanceClick.bind(this);
+
+    this.initSocket = this.initSocket.bind(this);
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -133,18 +135,7 @@ class SiteWrapper extends Component {
     this.setState({ transactions: updateFromNow(this.state.transactions) });
   }
 
-  async componentDidMount() {
-    try {
-      this.audio = new Audio('/sounds/sound.mp3');
-      this.audio.load();
-    } catch (e) {
-      console.log(e)
-    }
-
-    const result = await this.props.getUser(true);
-    if (result.status === 'success' && !result.user.is_activated) {
-      this.handleOpenVerificationModal();
-    }
+  initSocket() {
     const socket = socketIOClient(this.state.endpoint);
 
     socket.on('CONNECTED', (data) => {
@@ -154,7 +145,7 @@ class SiteWrapper extends Component {
     socket.on('UPDATED_ROOM_LIST', (data) => {
       this.props.setRoomList(data);
       this.props.getUser(true);
-      this.props.getMyGames();
+      this.props.getMyGames(1);
       this.props.getMyHistory();
     });
 
@@ -187,6 +178,25 @@ class SiteWrapper extends Component {
     });
 
     this.props.setSocket(socket);
+  }
+
+  async componentDidMount() {
+    try {
+      this.audio = new Audio('/sounds/sound.mp3');
+      this.audio.load();
+    } catch (e) {
+      console.log(e)
+    }
+
+    const result = await this.props.getUser(true);
+    if (result.status === 'success') {
+      if (result.user.is_activated) {
+        this.initSocket();
+      } else {
+        this.handleOpenVerificationModal();
+      }
+    }
+    
     this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
   }
 
@@ -335,7 +345,7 @@ class SiteWrapper extends Component {
           {this.state.showPrivacyModal && <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} />}
           {this.state.showProfileModal && <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} avatar={this.props.user.avatar} email={this.props.user.email} />}
           {this.state.showHowToPlayModal && <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} isDarkMode={this.props.isDarkMode} />}
-          {this.state.showLoginModal && <LoginModal modalIsOpen={this.state.showLoginModal} closeModal={this.handleCloseLoginModal} openSignupModal={this.handleOpenSignupModal} openVerificationModal={this.handleOpenVerificationModal} />}
+          {this.state.showLoginModal && <LoginModal modalIsOpen={this.state.showLoginModal} closeModal={this.handleCloseLoginModal} openSignupModal={this.handleOpenSignupModal} openVerificationModal={this.handleOpenVerificationModal} initSocket={this.initSocket} />}
           {this.state.showSignupModal && <SignupModal modalIsOpen={this.state.showSignupModal} closeModal={this.handleCloseSignupModal} openLoginModal={this.handleOpenLoginModal} />}
           {this.state.showVerificationModal && <VerificationModal modalIsOpen={this.state.showVerificationModal} closeModal={this.handleCloseVerificationModal} />}
           {this.state.showDepositModal && <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} />}

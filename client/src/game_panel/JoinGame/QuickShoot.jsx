@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions'
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { updateDigitToPoint2 } from '../../util/helper'
-import { alertModal } from '../modal/ConfirmAlerts';
+import { alertModal, confirmModalCreate, gameResultModal } from '../modal/ConfirmAlerts';
+import history from '../../redux/history';
 
 class QuickShoot extends Component {
     constructor(props) {
@@ -15,7 +15,6 @@ class QuickShoot extends Component {
             balance: this.props.balance,
             isPasswordCorrect: this.props.isPasswordCorrect
         };
-        this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
         this.onBtnBetClick = this.onBtnBetClick.bind(this);
         this.onLeftPositionButtonClicked = this.onLeftPositionButtonClicked.bind(this);
         this.onRightPositionButtonClicked = this.onRightPositionButtonClicked.bind(this);
@@ -47,18 +46,33 @@ class QuickShoot extends Component {
         }
     }
 
-    onShowButtonClicked(e) {
-        e.preventDefault();
-        // if (this.state.advanced_status === "") {
-        //     this.setState({advanced_status: "hidden"});
-        // } else {
-        //     this.setState({advanced_status: ""});
-        // }
-    }
-
     componentDidUpdate(prevProps, prevState) {
         if (prevState.isPasswordCorrect !== this.state.isPasswordCorrect && this.state.isPasswordCorrect === true) {
-            this.props.join({selected_qs_position: this.state.selected_qs_position, is_anonymous: this.state.is_anonymous});
+            this.joinGame()
+        }
+    }
+
+    async joinGame() {
+        const result = await this.props.join({selected_qs_position: this.state.selected_qs_position, is_anonymous: this.state.is_anonymous});
+
+        if (result.status === 'success') {
+            let text = 'Oops, You Lost!';
+            
+            if (result.betResult === 1) {
+                text = 'Nice, You Won!';
+            } else if (result.betResult === 0) {
+                text = 'Draw, No Winner!';
+            }
+
+            if (result.roomStatus === 'finished') {
+                gameResultModal(this.props.isDarkMode, text, result.betResult, 'Okay', null, () => { history.push('/'); }, ()=>{})
+            } else {
+                gameResultModal(this.props.isDarkMode, text, result.betResult, 'Try again', 'Close', () => { history.go(0); }, ()=>{ history.push('/'); })
+            }
+        } else {
+            if (result.message) {
+                alertModal(this.props.isDarkMode, result.message);
+            }
         }
     }
 
@@ -75,25 +89,25 @@ class QuickShoot extends Component {
             return;
         }
 
-        if (window.confirm('Do you want to bet on this game now?')) {
+        confirmModalCreate(this.props.isDarkMode, 'Do you want to bet on this game now?', 'Okay', 'Cancel', async ()=>{
             if (this.props.is_private === true) {
                 this.props.openGamePasswordModal();
             } else {
-                this.props.join({selected_qs_position: this.state.selected_qs_position, is_anonymous: this.state.is_anonymous});
+                this.joinGame();
             }
-        }
+        })
     }
 
     render() {
         let position_name = ["Center", "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right"];
-        let position_short_name = ["center", "tl", "tr", "bl", "br"];
+        let position_short_name = ["c", "tl", "tr", "bl", "br"];
 
         if (this.props.qs_game_type === 2) {
             position_name = ["Left", "Right"];
             position_short_name = ["bl", "br"];
         } else if (this.props.qs_game_type === 3) {
             position_name = ["Bottom-Left", "Center", "Bottom-Right"];
-            position_short_name = ["bl", "center", "br"];
+            position_short_name = ["bl", "c", "br"];
         } else if (this.props.qs_game_type === 4) {
             position_name = ["Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right"];
             position_short_name = ["tl", "tr", "bl", "br"];
@@ -102,40 +116,33 @@ class QuickShoot extends Component {
         const host_bet = this.props.bet_amount / (this.props.qs_game_type - 1);
 
         return (
-            <form className="marginBottom" onSubmit={this.onBtnBetClick}>
-                <h1 className="main_title">Quick Shoot</h1>
-                <hr/>
-                <div style={{padding: "0"}}>
-                    <label className="lbl_game_option">Choose WHERE TO SHOOT</label>
+            <div className="game-page">
+                <div className="page-title">
+                    <h2>Join Game - <i>Spleesh!</i></h2>
                 </div>
-                <div className="qs_image_panel">
-                    <img src={`/img/gametype/quick_shoot/qs-join-${position_short_name[this.state.selected_qs_position]}.png`} alt="" />
-                </div>
-                <div className="qs_image_panel">
-                    <button onClick={this.onLeftPositionButtonClicked}><FaArrowLeft /></button>
-                    <label className="qs_game_type">{position_name[this.state.selected_qs_position]}</label>
-                    <button onClick={this.onRightPositionButtonClicked}><FaArrowRight /></button>
-                </div>
-                <div className="join_summary_panel">
-                    <label>Game Type: {this.props.qs_game_type}</label>
-                    <label></label>
-                    <label>Bet Amount: £{updateDigitToPoint2(this.props.bet_amount)}</label>
-                    <label>Potential Return: £{updateDigitToPoint2(host_bet * this.props.qs_game_type * 0.95)}</label>
-                </div>
-                {/* <button className="btn-advanced" onClick={this.onShowButtonClicked}>Advanced Settings</button>
-                <div id="advanced_panel" className={this.state.advanced_status}>
-                    <hr/>
-                    <label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet:</label>
-                    <div style={{pointerEvents: "none", opacity: "0.6"}}>
-                        <label className={"radio-inline" + (this.state.is_anonymous === true ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: true}); }}>Yes</label>
-                        <label className={"radio-inline" + (this.state.is_anonymous === false ? ' checked' : '')} onClick={() => { this.setState({is_anonymous: false}); }}>No</label>
+				<div className="game-contents">
+                    <div className="pre-summary-panel">
+                        <div className="your-bet-amount">Bet Amount : £{updateDigitToPoint2(this.props.bet_amount)}</div>
+                        <div className="your-max-return">Potential Return : £{updateDigitToPoint2(host_bet * this.props.qs_game_type * 0.95)}</div>
                     </div>
-                    <div style={{pointerEvents: "none", opacity: "0.6"}}>By selecting 'Yes', your bet will be anonymous. £0.10 will be deducted from your balance and added to the PR</div>
-                </div> */}
-                <div className="text-center">
-                    <button className="btn" id="btn_bet">PLACE BET</button>
+                    <div className="game-info-panel">
+                        <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
+                        <div className="qs-image-panel">
+                            <img src={`/img/gametype/quick_shoot/gametype${this.props.qs_game_type}/type${this.props.qs_game_type}-${position_short_name[this.state.selected_qs_position]}.png`} alt="" style={{width: '600px', maxWidth: '100%'}} />
+                        </div>
+                        <div className="qs-action-panel">
+                            <button className="btn-left" onClick={this.onLeftPositionButtonClicked}></button>
+                            <label>{position_name[this.state.selected_qs_position]}</label>
+                            <button className="btn-right" onClick={this.onRightPositionButtonClicked}></button>
+                        </div>
+                    </div>
+                    <hr/>
+                    <div className="action-panel">
+                        <span></span>
+                        <button id="btn_bet" onClick={this.onBtnBetClick}>Place Bet</button>
+                    </div>
                 </div>
-            </form>
+            </div>
         );
     }
 }

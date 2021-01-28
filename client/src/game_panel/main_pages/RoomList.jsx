@@ -64,7 +64,7 @@ class RoomList extends Component {
 			page: this.state.pageNumber,
 			keyword: this.state.search_room_text
 		});
-		this.props.getMyGames();
+		this.props.getMyGames(1);
 		this.props.getMyHistory();
 		this.props.getGameTypeList();
 		await this.props.getHistory({keyword: this.state.search_history_text});
@@ -96,13 +96,18 @@ class RoomList extends Component {
 		const creator_id = e.target.getAttribute('creator_id');
 		const bet_amount = e.target.getAttribute('bet_amount');
 
+		if (!this.props.isAuthenticated) {
+            alertModal(this.props.isDarkMode, `Please login to join this game!`)
+			return;
+		}
+
 		if (bet_amount > this.state.balance / 100.0) {
-            alertModal(this.props.isDarkMode, `Oops! This game is yours. You can't join this game.`)
+            alertModal(this.props.isDarkMode, `Not enough balance!`)
 			return;
 		}
 
 		if (e.target.getAttribute('room_status') === 'finished') {
-            alertModal(this.props.isDarkMode, `You can't join the game. This game has finished.`)
+            alertModal(this.props.isDarkMode, `You can't join the game. This game has been finished.`)
 			return;
 		}
 
@@ -319,6 +324,7 @@ class RoomList extends Component {
 }
 
 const mapStateToProps = state => ({
+	isAuthenticated: state.auth.isAuthenticated,
 	roomList: state.logic.roomList,
 	history: state.logic.history,
 	roomCount: state.logic.roomCount,
