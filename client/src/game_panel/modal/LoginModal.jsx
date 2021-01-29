@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import './Modals.css';
 
 import { userSignIn, getUser } from '../../redux/Auth/user.actions';
+import { getMyGames, getMyHistory } from '../../redux/Logic/logic.actions';
 import VerificationModal from './VerificationModal';
 
 Modal.setAppElement('#root')
@@ -71,6 +72,8 @@ class LoginModal extends Component {
                 this.handleOpenVerificationModal();
             } else {
                 this.props.initSocket();
+                this.props.getMyGames();
+                this.props.getMyHistory();
             }
         }
     }
@@ -113,7 +116,9 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
     userSignIn,
-    getUser
+    getUser,
+    getMyGames,
+    getMyHistory
 };
 
 export default connect(

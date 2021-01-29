@@ -4,7 +4,8 @@ import history from '../../redux/history';
 import { getChatRoomInfo, addChatLog } from '../../redux/Logic/logic.actions';
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { RiArrowGoBackLine } from 'react-icons/ri';
+import Avatar from "../../components/Avatar";
+
 const moment = require('moment');
 
 class ChatPage extends Component {
@@ -15,7 +16,8 @@ class ChatPage extends Component {
             chatLogs: this.props.chatLogs,
             my_info: this.props.my_info,
             text: '',
-            socket: this.props.socket
+            socket: this.props.socket,
+            showEmojiPanel: false,
         };
 
         this.insertEmoji = this.insertEmoji.bind(this);
@@ -36,8 +38,6 @@ class ChatPage extends Component {
     sendMessage(e) {
         const text = this.state.text.trim();
 
-        console.log(this.state.socket);
-
         if (text !== '') {
             const chatLog = {
                 to: this.props.user_id,
@@ -47,7 +47,7 @@ class ChatPage extends Component {
             };
             this.props.addChatLog(chatLog);
             this.state.socket.emit('SEND_CHAT', chatLog);
-            this.setState({text : ''});
+            this.setState({text : '', showEmojiPanel: false});
         }
     }
 
@@ -74,8 +74,7 @@ class ChatPage extends Component {
     }
 
     componentDidUpdate() {
-        const chat_log_panel = document.getElementById('chat_log_panel');
-        chat_log_panel.scrollTop = chat_log_panel.scrollHeight;
+        this.chat_log_panel.scrollTop = this.chat_log_panel.scrollHeight;
     }
     
     IsAuthenticatedReroute = () => {
@@ -86,28 +85,31 @@ class ChatPage extends Component {
 
     render() {
         return (
-            <>
-                <div className="chat_header row">
-                    <a href="/mygames"><span>Go Back</span><RiArrowGoBackLine /></a>
+			<div className="chat-page">
+                <div className="chat-header">
+                    <button className="btn-back" onClick={()=>{history.push('/')}}>Go Back</button>
                     <img src={`${this.props.avatar} `} alt="" />
-                    <span className="chat_header_username">{this.props.username}</span>
+                    <span>{this.props.username}</span>
                 </div>
-                <div className="chat_log_panel" id="chat_log_panel">
+                <div className="chat-log-panel" ref={(elem) => {this.chat_log_panel = elem}}>
                     {this.state.chatLogs.map((row, key) => (
-                        <div className={row.from === this.state.my_info._id ? 'my_message row': 'other_message row'} key={key}>
-                            <div className="message_header">
-                                {row.from !== this.state.my_info._id ? <span className="message_username">{this.props.username}</span> : ''}
-                                <span className="message_time">{row.created_at}</span>
-                                {row.from === this.state.my_info._id ? <span className="message_username">{this.state.my_info.username}</span> : ''}
-                            </div>
-                            <div className="message_content">
+                        <div className={row.from === this.state.my_info._id ? 'my-message': 'other-message'} key={key}>
+                            <div className="message-content">
                                 {row.message}
+                            </div>
+                            <div className="message-header">
+                                {row.from !== this.state.my_info._id && <Avatar src={this.props.avatar} className="avatar" />}
+                                <div>
+                                    <div className="message-time">{row.created_at}</div>
+                                    <div className="message_username">{row.from === this.state.my_info._id ? this.state.my_info.username : this.props.username}</div>
+                                </div>
+                                {row.from === this.state.my_info._id && <Avatar src={this.state.my_info.avatar} className="avatar" />}
                             </div>
                         </div>
                     ))}
                 </div>
-                <div className="chat_input_panel row">
-                    <div className="emoticon_panel">
+                <div className={`chat-input-panel ${this.state.showEmojiPanel ? 'show-emoji' : ''}`}>
+                    <div className={`emoticon-panel ${this.state.showEmojiPanel ? 'active' : ''}`}>
                         <span role="img" aria-label="" onClick={this.insertEmoji}>🤬</span>
                         <span role="img" aria-label="" onClick={this.insertEmoji}>🖕</span>
                         <span role="img" aria-label="" onClick={this.insertEmoji}>😭</span>
@@ -118,10 +120,11 @@ class ChatPage extends Component {
                         <span role="img" aria-label="" onClick={this.insertEmoji}>😏</span>
                         <span role="img" aria-label="" onClick={this.insertEmoji}>🤝</span>
                     </div>
-                    <textarea placeholder="Type Something..." onKeyDown={this.onTextAreaKeyDown} onChange={this.onChangeText} value={this.state.text} ref={(elem) => {this.textarea = elem}}></textarea>
-                    <button className="btn_send_message" onClick={this.sendMessage}><FontAwesomeIcon icon={faPaperPlane} /></button>
+                    <button className="btn-show-emoticon" onClick={() => {this.setState({showEmojiPanel: !this.state.showEmojiPanel})}}></button>
+                    <input type="text" className="form-control" placeholder="Type Something..." onKeyDown={this.onTextAreaKeyDown} onChange={this.onChangeText} value={this.state.text} ref={(elem) => {this.textarea = elem}} />
+                    <button className="btn-send-message" onClick={this.sendMessage}><FontAwesomeIcon icon={faPaperPlane} /></button>
                 </div>
-            </>
+            </div>
         );
     }
 }
