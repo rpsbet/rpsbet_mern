@@ -98,14 +98,14 @@ class SignupModal extends Component {
                         <h4>Welcome!</h4>
                         <h2>Join the Community</h2>
                         <form onSubmit={this.onSubmitForm}>
-                            <p>User Name</p>
-                            <input type="text" className="form-control" value={this.state.userName} onChange={this.onChangeUserName}  />
-                            <p>E-Mail Address</p>
-                            <input type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail}  />
-                            <p>Password</p>
-                            <input type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword}  />
+                            <p>Your username</p>
+                            <input placeholder="Pick a username (case sensitive)" type="text" className="form-control" value={this.state.userName} onChange={this.onChangeUserName}  />
+                            <p>Your email address</p>
+                            <input placeholder="Enter an email for verification" type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail}  />
+                            <p>Your password</p>
+                            <input placeholder="Create a secure password" type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword}  />
                             <button className="btn-submit">Sign Up</button>
-                            <p className="m-0 sm-text-center">Already a memeber? <button onClick={(e) => { this.props.closeModal(); this.props.openLoginModal(); }}>Login here →</button></p>
+                            <p className="m-0 sm-text-center">Already a member? <button onClick={(e) => { this.props.closeModal(); this.props.openLoginModal(); }}>Login here →</button></p>
                         </form>
                     </div>
                 </div>

@@ -122,7 +122,7 @@ class Spleesh extends Component {
                     </div>
                     <div className="game-info-panel">
                         <h3 className="game-sub-title">Previous Guesses</h3>
-                        <p className="previous-guesses">{previous_guesses === '' ? `There aren't bets yet in this game. Please try the very first bet.` : previous_guesses}</p>
+                        <p className="previous-guesses">{previous_guesses === '' ? `There are no guesses in this game yet. Be the first to guess the Host's number?` : previous_guesses}</p>
                         <h3 className="game-sub-title">Your Number</h3>
                         <div id="select-buttons-panel">
                             {this.createNumberPanel()}

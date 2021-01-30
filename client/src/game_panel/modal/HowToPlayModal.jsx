@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
+import PrivacyModal from './PrivacyModal';
+import TermsModal from './TermsModal';
 
 Modal.setAppElement('#root')
 
@@ -52,8 +54,8 @@ class HowToPlayModal extends Component {
 						<div className="modal-content-panel">
 							<h5 style={{color: "#02c526"}}>WINNINGS</h5>
 							<p>e.g.</p>
-							<p>Your Bet Amount = <span style={{color: "#f6b22a"}}>£50</span></p>
-							<p>Game Type = <u>5 (5x)</u></p>
+							<p>Your Bet Amount = <span style={{color: "#b52c22"}}>£50</span></p>
+							<p>Game Type = <span style={{color: "#f6b22a"}}><u>5 (5x)</u></span></p>
 							<p>Public Bet Amount = <span style={{color:"#b52c22"}}>£200 [£50 * 0.95]</span></p>
 							<p>Winnings = <span style={{color:"#02c526"}}>£237.50 [£250 * 0.95]</span></p>
 						</div>
@@ -78,8 +80,8 @@ class HowToPlayModal extends Component {
 						<div className="modal-content-panel">
 							<h5 style={{color: "#02c526"}}>WINNINGS</h5>
 							<p>e.g.</p>
-							<p>Bet Amount = <span style={{color:"#02c526"}}>£5</span></p>
-							<p>Payout = Automatic(£30)</p>
+							<p>Bet Amount = <span style={{color:"#b52c22"}}>£5</span></p>
+							<p>Payout = <span style={{color: "#f6b22a"}}>Automatic(£30)</span></p>
 							<p>Winnings = <span style={{color:"#02c526"}}>£27 [£30 * 0.9]</span></p>
 						</div>
 					</div>
@@ -102,8 +104,8 @@ class HowToPlayModal extends Component {
 						<div className="modal-content-panel">
 							<h5 style={{color: "#02c526"}}>WINNINGS</h5>
 							<p>e.g.</p>
-							<p>The following boxes are set (Prize/Price): £25/£4, £0/£6, £0/£10</p>
-							<p>Payout = Automatic(£41) [£25 + £6 + £10]</p>
+							<p>The following boxes are set (Prize/Price): <span style={{color:"#b52c22"}}>£25/£4, £0/£6, £0/£10</span></p>
+							<p>Payout = <span style={{color: "#f6b22a"}}>Automatic(£41) [£25 + £6 + £10]</span></p>
 							<p>Host Winnings = <span style={{color:"#02c526"}}>£38.95 [£41 * 0.95]</span></p>
 							<p><i>If the £25 Prize box is opened, the host still receives the £4 (Price).</i></p>
 						</div>
@@ -127,10 +129,10 @@ class HowToPlayModal extends Component {
 						<div className="modal-content-panel">
 							<h5 style={{color: "#02c526"}}>WINNINGS</h5>
 							<p>e.g.</p>
-							<p>Host's Number (Bet Amount) = <span style={{color: "red"}}>£7</span></p>
-							<p>Payout = Automatic(£30)</p>
-							<p>Guesses (in order): <u> 1, 2,10,9,5,8- <i>Game ENDs automatically</i></u></p>
-							<p><u>Host Winnings = <span style={{color:"#02c526"}}>£37.80 [£42 * 0.9]</span></u></p>
+							<p>Host's Number (Bet Amount) = <span style={{color: "#b52c22"}}>£7</span></p>
+							<p>Payout = <span style={{color: "#f6b22a"}}>Automatic(£30)</span></p>
+							<p>Guesses (in order):  1, 2,10,9,5,8- <i>*Game ENDs automatically*</i></p>
+							<p>Host Winnings = <span style={{color:"#02c526"}}>£37.80 [£42 * 0.9]</span></p>
 						</div>
 					</div>
 
@@ -141,14 +143,15 @@ class HowToPlayModal extends Component {
 							<h5 style={{color: "#02c526"}}>WINNINGS</h5>
 
 							<p>e.g.</p>
-							<p>Bet Amount = <span style={{color: "#f6b22a"}}>£50</span></p>
+							<p>Bet Amount = <span style={{color: "#b52c22"}}>£50</span></p>
 							<p>Winnings = <span style={{color:"#02c526"}}>£95 [£100 * 0.95]</span></p>
 						</div>
 					</div>
 
 					<hr />
-					<p>We introduce Winnings Tax to cover transactional costs from the payment provider and development costs for the website, we hope to lower these as soon as we can!</p>
-					<table>
+					<h5>Winnings Tax</h5>
+					<p>We introduce <u>Winnings Tax</u> to cover transactional costs from the payment provider and development costs for the website, we hope to lower these as soon as we can!!!</p>
+					<table id="howto-modal">
 						<tbody>
 							<tr><th>Game Modes</th><th>Winnings Tax</th><th>Withdrawal Fees</th></tr>
 							<tr><td className="gamemode">Quick Shoot</td><td>5%</td><td rowSpan="6"><u>NO withdrawal Fees.</u></td></tr>
@@ -158,10 +161,18 @@ class HowToPlayModal extends Component {
 							<tr><td className="gamemode">RPS</td><td>5%</td></tr>
 						</tbody>
 					</table>
+					<hr />
 					<h5>For All Enquiries</h5>
-					<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u> OR send us a message to our <a href="https://www.facebook.com/rpsbet/">Facebook Page</a>. We love feedback and we thank you for playing!</p>
+					<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>. We love feedback and we thank you for playing!</p><br /><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>&#9679;&#9679;&#9679;<span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>
+					<p>To learn more about RPSBet and its values, follow our official accounts below and keep up with updates.</p>
+					<a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://twitter.com/rpsbet">TWITTER</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">YOUTUBE</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.reddit.com/user/RPSBet">REDDIT</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.facebook.com/rpsbet">FACEBOOK</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://rpsbet.itch.io/">ITCH</a>
+					<br />
+					<div className="game_footer text-center">
+            <span>All Rights Reserved, </span>rpsbet.com © 2021 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
+          </div>
 				</div>
 			</div>
+
 		</Modal>;
 	}
 }

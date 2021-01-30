@@ -175,7 +175,7 @@ class RoomList extends Component {
 				{ this.state.mobile_show_panel !== 'my_activity' &&
 					<div className="main-panel col-md-7 col-sm-12">
 						<div className="create-game mobile-only">
-							<h2 className="main-title">Create New Game <span>- Higher chances of Earning!</span></h2>
+							<h2 className="main-title">Create New Game <span>- For greater Winnings!</span></h2>
 							<div className="create-game-panel-parent">
 								<div className="create-game-panel">
 									{ createGamePanel }
@@ -293,7 +293,7 @@ class RoomList extends Component {
 				{ this.state.mobile_show_panel !== 'join_game' &&
 					<div className="sub-panel col-md-5 col-sm-12">
 						<div className="create-game">
-							<h2 className="main-title">Create New Game <span>- Higher chances of Earning!</span></h2>
+							<h2 className="main-title">Create New Game <span>- For greater Winnings!</span></h2>
 							<div className="create-game-panel-parent">
 								<div className="create-game-panel">
 									{ createGamePanel }

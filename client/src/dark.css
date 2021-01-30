@@ -19,6 +19,11 @@
 .dark_mode .main-game h2.main-title {
 	color: white;
 }
+
+.dark_mode #howto-modal th {
+	color: #ffffff !important;
+}
+
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: rgba(47, 49, 54, 0.2);
 }

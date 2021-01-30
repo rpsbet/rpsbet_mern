@@ -91,9 +91,9 @@
 }
 
 .game_footer {
-    background: #33271f;
-    color: #b78b3dbb;
-    font-size: 1em;
+    background: linear-gradient(to bottom, #ff409a, #c438ef77);
+    color: #f2f3f5;
+    font-size: 14px;
     bottom: 0;
     margin-bottom: 0;
     border-width: 1px 0 0;
@@ -102,6 +102,11 @@
     right: 0;
     left: 0;
     z-index: 2;
+}
+
+.game_footer a {
+    text-decoration: underline;
+    color: #fff !important;
 }
 
 .contents_wrapper {
