@@ -11,8 +11,8 @@ import { alertModal } from '../modal/ConfirmAlerts';
 
 Modal.setAppElement('#root')
 
-const paypalClientId = "ASlqdxUMpil1inLxe4OkRKBgdu-UZ5DSyZPUrSeeHwJRTgc4T9Uy_0i35EJll7dt5RHv5IR6dWf3-Lt_";
-const stripePromise = loadStripe('pk_test_DA6F4LKIFm6bEmm9YT9RvoHU00zAPJJJNA');
+const paypalClientId = "AStkb68As4hkX4mS9uwLSnLuPP3j72OQDMiyOpmStqWZtjCOXB458I5M73peFcf7VaWfPGypNPdKehUJ";
+const stripePromise = loadStripe('pk_live_vO1IbeoHkodzX6wEKrPZZaKK00pt9mOGOu');
 
 const customStyles = {
     overlay: {
