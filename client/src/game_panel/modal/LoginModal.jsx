@@ -94,7 +94,7 @@ class LoginModal extends Component {
                             <form onSubmit={this.onSubmitForm}>
                                 <p>User Name or E-Mail Address</p>
                                 <input type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail} />
-                                <p>Password</p>
+                                <p className="has-forgot-password">Password <button onClick={() => {}}>Forgot password?</button></p>
                                 <input type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword} />
                                 <button className="btn-submit">Sign In</button>
                                 <p className="m-0 sm-text-center">Not a member? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>Sign up now →</button></p>

@@ -182,6 +182,7 @@ export const resendVerificationEmail = () => async dispatch => {
     const { data } = await axios.post('/auth/resend_verification_email');
     if (data.success) {
       dispatch({ type: MSG_INFO, payload: data.message });
+      return true;
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });
     }
@@ -189,7 +190,21 @@ export const resendVerificationEmail = () => async dispatch => {
     console.log('error', error);
     dispatch({ type: MSG_WARNING, payload: error });
   }
+  return false;
 };
+
+export const sendResetPasswordEmail = (email) => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/sendResetPasswordEmail', { email });
+    if (data.success) {
+      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has benn sent. Please check your mail box.'})
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error })
+    }
+  } catch (e) {
+    console.log('error', e)
+  }
+}
 
 export const setSocket = socket => dispatch => {
   dispatch({ type: SET_SOCKET, payload: socket });

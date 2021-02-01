@@ -97,7 +97,7 @@ router.post('/sendResetPasswordEmail', async (req, res) => {
       if (!user || user.is_deleted === true)
         return res.json({
           success: false,
-          error: 'Email does not exist in our database'
+          error: 'Email does not exist in our community.'
         });
 
       const request = new ChangePasswordRequest({ user: user });
@@ -122,7 +122,7 @@ router.post('/resetPassword', async (req, res) => {
     if (params.length !== 2) {
       return res.json({
         success: false,
-        error: 'Invalid Params'
+        error: 'Invalid Action'
       });
     }
 
@@ -132,7 +132,7 @@ router.post('/resetPassword', async (req, res) => {
     if (request.user._id != params[1]) {
       return res.json({
         success: false,
-        error: 'Invalid Params'
+        error: 'Invalid Action'
       });
     }
 

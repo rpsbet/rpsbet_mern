@@ -7,6 +7,7 @@ import SiteWrapper from '../SiteWrapper';
 import RoomList from '../main_pages/RoomList';
 import JoinGame from '../main_pages/JoinGame';
 import ChatPage from '../MyGames/ChatPage';
+import ChangePasswordPage from '../main_pages/ChangePasswordPage';
 
 export class GameMainRoute extends Component {
   render() {
@@ -29,6 +30,11 @@ export class GameMainRoute extends Component {
             exact
             path={`${match.path}chat/:id`}
             component={ChatPage}
+          />
+          <Route
+            exact
+            path={`${match.path}changePassword/:passId-:userId`}
+            component={ChangePasswordPage}
           />
           <Route 
             path={`${match.path}`}

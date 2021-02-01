@@ -164,7 +164,13 @@ class RoomList extends Component {
 			'QS': 'quick-shoot',
 		}
 		const createGamePanel = this.props.gameTypeList.map((gameType, index) => (
-			<div className="btn-create-game" key={index} onClick={(e) => { history.push(`/create/${gameType.game_type_name}`) }}>
+			<div className="btn-create-game" key={index} onClick={(e) => { 
+				if (this.props.isAuthenticated) {
+					history.push(`/create/${gameType.game_type_name}`) 
+				} else {
+					alertModal(this.props.isDarkMode, 'Please login to create a new game room.')
+				}
+			}}>
 				<i className={`game-type-icon ${gameTypeStyleClass[gameType.short_name]}`}></i>
 				<div className="game-type-name">{gameType.game_type_name}</div>
 			</div>
