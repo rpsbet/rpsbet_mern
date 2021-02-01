@@ -23,6 +23,7 @@ import {
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
+import { alertModal } from '../../game_panel/modal/ConfirmAlerts';
 
 // CreateRoom
 export const createRoom = (room_info) => async dispatch => {
@@ -194,9 +195,8 @@ export const endGame = (room_id) => async dispatch => {
   try {
     const res = await axios.post('/game/end_game', {room_id});
     if (res.data.success) {
-      dispatch({ type: MY_GAMES_LOADED, payload: res.data.myGames });
+      dispatch({ type: MY_GAMES_LOADED, payload: { myGames: res.data.myGames, pages: res.data.pages, pageNumber: 1 } });
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-
     } else {
       if (res.data.already_finished) {
         // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
@@ -290,10 +290,6 @@ export const addChatLog = chatLog => (dispatch, getState) => {
   let newHistory = JSON.parse(JSON.stringify(getState().logic.myHistory));
 
   const otherId = myId === chatLog.from ? chatLog.to : chatLog.from;
-
-  console.log(chatLog);
-  console.log(otherId);
-  console.log(newHistory);
 
   newHistory[otherId] = {
     ...newHistory[otherId],

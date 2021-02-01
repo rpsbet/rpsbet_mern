@@ -71,7 +71,6 @@ export const userSignUp = ({
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
-      // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'tutorial', title: 'Get Started', message: 'Welcome...so you wanna make a bit of money? Click your Profile icon in the Top Right and click DEPOSIT.'} });
       dispatch({ type: SET_USERNAME_PASSWORD, payload: {email, password} });
       return { status: 'success' };
     } else {

@@ -43,7 +43,7 @@ class MyGamesTable extends Component {
 							<div></div>
 							: 
 							this.props.myGames.map((row, key) => (
-								<div className="table-row" key={key}>
+								<div className="table-row" key={row._id}>
 									<div>
 										<div className="table-cell room-id">
 											<img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="game-type-icon" />

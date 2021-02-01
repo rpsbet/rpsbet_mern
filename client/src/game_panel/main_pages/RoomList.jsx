@@ -212,7 +212,7 @@ class RoomList extends Component {
 								<div className="overflowX">
 									<div className="table main-game-table">
 										{this.props.roomList.map((row, key) => (
-											<div className="table-row" key={key}>
+											<div className="table-row" key={row._id}>
 												<div>
 													<div className="table-cell cell-room-info">
 														<img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="game-type-icon" /> 
@@ -279,7 +279,7 @@ class RoomList extends Component {
 								<div className="overflowX">
 									<div className="table main-history-table">
 										{this.state.history.map((row, key) => (
-											<div className="table-row" key={key}>
+											<div className="table-row" key={row._id}>
 												<div>
 													<div className="table-cell">{row.room_name}</div>
 													<div className="table-cell desktop-only" dangerouslySetInnerHTML={{ __html: row.history }}></div>
