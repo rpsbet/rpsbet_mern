@@ -6,6 +6,7 @@ import './Modals.css';
 import { userSignIn, getUser } from '../../redux/Auth/user.actions';
 import { getMyGames, getMyHistory } from '../../redux/Logic/logic.actions';
 import VerificationModal from './VerificationModal';
+import history from '../../redux/history';
 
 Modal.setAppElement('#root')
   
@@ -74,6 +75,7 @@ class LoginModal extends Component {
                 this.props.initSocket();
                 this.props.getMyGames();
                 this.props.getMyHistory();
+                history.push('/');
             }
         }
     }
@@ -94,7 +96,7 @@ class LoginModal extends Component {
                             <form onSubmit={this.onSubmitForm}>
                                 <p>Username or email address</p>
                                 <input type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail} />
-                                <p className="has-forgot-password">Password <button onClick={() => {}}>Forgot password?</button></p>
+                                <p className="has-forgot-password">Password <button onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>Forgot password?</button></p>
                                 <input type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword} />
                                 <button className="btn-submit">Sign In</button>
                                 <p className="m-0 sm-text-center">Not a member? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>Sign Up now →</button></p>

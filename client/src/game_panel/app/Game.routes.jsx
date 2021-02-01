@@ -33,7 +33,7 @@ export class GameMainRoute extends Component {
           />
           <Route
             exact
-            path={`${match.path}changePassword/:passId-:userId`}
+            path={`${match.path}changePassword/:code`}
             component={ChangePasswordPage}
           />
           <Route 

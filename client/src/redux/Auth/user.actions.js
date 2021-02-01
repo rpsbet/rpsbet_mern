@@ -197,13 +197,28 @@ export const sendResetPasswordEmail = (email) => async dispatch => {
   try {
     const { data } = await axios.post('/auth/sendResetPasswordEmail', { email });
     if (data.success) {
-      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has benn sent. Please check your mail box.'})
+      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has been sent. Please check your mail box.'})
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error })
     }
   } catch (e) {
     console.log('error', e)
   }
+}
+
+export const resetPassword = (params) => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/resetPassword', params);
+    if (data.success) {
+      dispatch({ type: MSG_INFO, payload: 'Password has been changed.'})
+      return true;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error })
+    }
+  } catch (e) {
+    console.log('error', e)
+  }
+  return false;
 }
 
 export const setSocket = socket => dispatch => {

@@ -35,7 +35,7 @@ class RoomList extends Component {
 			search_history_text: '',
 			selected_main_tab_index: 0,
 			selected_sub_tab_index: 0,
-			mobile_show_panel: window.innerWidth < 768 ? 'join_game' : '',
+			mobile_show_panel: window.innerWidth < 1024 ? 'join_game' : '',
 		};
 
 		this.joinRoom = this.joinRoom.bind(this);
@@ -179,7 +179,7 @@ class RoomList extends Component {
 		return (
 			<div className="main-game">
 				{ this.state.mobile_show_panel !== 'my_activity' &&
-					<div className="main-panel col-md-7 col-sm-12">
+					<div className="main-panel">
 						<div className="create-game mobile-only">
 							<h2 className="main-title">Create New Game <span>- For greater Winnings!</span></h2>
 							<div className="create-game-panel-parent">
@@ -297,7 +297,7 @@ class RoomList extends Component {
 					</div>
 				}
 				{ this.state.mobile_show_panel !== 'join_game' &&
-					<div className="sub-panel col-md-5 col-sm-12">
+					<div className="sub-panel">
 						<div className="create-game">
 							<h2 className="main-title">Create New Game <span>- For greater Winnings!</span></h2>
 							<div className="create-game-panel-parent">

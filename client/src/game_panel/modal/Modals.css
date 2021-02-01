@@ -12,6 +12,9 @@
     overflow-y: auto;
     overflow-x: hidden;
 }
+.modal-body.edit-modal-body.terms-modal-body {
+    width: 1000px;
+}
 .modal-body.edit-modal-body.deposit-modal-body {
     padding: 24px;
 }
