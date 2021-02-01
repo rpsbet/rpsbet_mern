@@ -165,7 +165,7 @@ class HowToPlayModal extends Component {
 					<h5>For All Enquiries</h5>
 					<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>. We love feedback and we thank you!</p><br /><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>&#9679;&#9679;&#9679;<span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>
 					<p>To learn more about RPSBet and its values, follow our official accounts below and keep up with updates:</p>
-					<div style={{textAlign:"center"}}>
+					<div id="game_footer_howto">
 					<a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://twitter.com/rpsbet">TWITTER</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">YOUTUBE</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.reddit.com/user/RPSBet">REDDIT</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.facebook.com/rpsbet">FACEBOOK</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://rpsbet.itch.io/">ITCH</a>
 					<br />
 					</div>
