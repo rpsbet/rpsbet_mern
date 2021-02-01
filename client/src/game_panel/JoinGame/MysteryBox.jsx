@@ -171,9 +171,9 @@ class MysteryBox extends Component {
 				<div className="game-contents mystery-box-result-contents">
                     <div className="game-info-panel">
                         <div className={`mystery-box-result ${this.state.betResult === 0 ? 'failed' : 'success'}`}>£{this.state.betResult}</div>
-                        <h4 className="game-sub-title">{this.state.betResult === 0 ? `Opps! Wrong Box` : `Nice! it's Money box`}</h4>
-                        <p>{this.state.betResult === 0 ? `This box is Empty` : `You won a Prize`}</p>
-                        <h3 className="game-sub-title">ALL GAMES</h3>
+                        <h4 className="game-sub-title">{this.state.betResult === 0 ? `Opps! Wrong Box` : `Nice 😎 It's a Money Box`}</h4>
+                        <p>{this.state.betResult === 0 ? `This box is Empty` : `You won a Prize!`}</p>
+                        <h3 className="game-sub-title">ALL BOXES</h3>
                         <p className="box-prizes">{prizes.map((item, key) => (<span className={item.status} key={key}>£{item.price}</span>))}</p>
                     </div>
                     <hr/>

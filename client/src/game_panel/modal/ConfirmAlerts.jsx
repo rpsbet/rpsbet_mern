@@ -39,7 +39,7 @@ const showConfirm = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle,
                 </div>
             );
         }
-    });
+    }); 
 }
 export const confirmModalClosed = (isDarkMode, text, okayButtonTitle, cancelButtonTitle, callback) => {
     showConfirm(isDarkMode, text, '-closed', okayButtonTitle, cancelButtonTitle, callback);

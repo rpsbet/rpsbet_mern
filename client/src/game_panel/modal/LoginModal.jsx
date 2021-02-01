@@ -89,15 +89,15 @@ class LoginModal extends Component {
                     <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                         <div className="modal-body">
                             <button className="btn-close" onClick={this.props.closeModal}>×</button>
-                            <h4>Welcome back!</h4>
-                            <h2>Sign in to RPSbet</h2>
+                            <h4>Welcome back! 🔫🤠</h4>
+                            <h2>Sign In to RPSBet</h2>
                             <form onSubmit={this.onSubmitForm}>
-                                <p>User Name or E-Mail Address</p>
+                                <p>Username or email address</p>
                                 <input type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail} />
                                 <p className="has-forgot-password">Password <button onClick={() => {}}>Forgot password?</button></p>
                                 <input type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword} />
                                 <button className="btn-submit">Sign In</button>
-                                <p className="m-0 sm-text-center">Not a member? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>Sign up now →</button></p>
+                                <p className="m-0 sm-text-center">Not a member? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>Sign Up now →</button></p>
                             </form>
                         </div>
                     </div>

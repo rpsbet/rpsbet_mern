@@ -220,17 +220,20 @@ input,textarea { border-radius: 0 !important; }
   text-shadow: 1px 1px 1px #AAAAAA;
 }
 
+#howto-modal {
+  width: 100%;
+}
+
 div[aria-label="How To Play Modal"] th {
-  color: #ebddca;
+  color: #343a40;
   border-bottom: 5px solid #fff !important;
   padding: 5px 20px;
   margin: 20px 0;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   text-align: center;
-      background: #33271f;
-  font-family: 'Prototype';
 }
+
 div[aria-label="How To Play Modal"] td {
   border: 1px solid #fff;
   padding: 5px 15px;
@@ -244,9 +247,7 @@ div[aria-label="How To Play Modal"] ul {
 
 .gamemode {
     color: #C83228;
-    background: #33271f;
     border: none !important;
-    font-family: 'Prototype';
 }
 
 .profile_info_panel_image_wrapper {
@@ -349,6 +350,22 @@ div[aria-label="How To Play Modal"] ul {
   row-gap: 10px;
 }
 
+div.table .table-row .table-cell img.game-type-icon {
+  padding: 6px;
+}
+
+.game-page .game-contents .game-info-panel button.other {
+  height: auto;
+  white-space: pre-wrap;
+  display: inline-block;
+  word-break: break-word;
+}
+
+.table-cell.cell-room-info .cell-game-type, div.table.my-open-game-table .table-row .table-cell.room-id {
+  display: flex;
+  align-items: center;
+  
+}
 
 
 .contents_wrapper .chat_header {
@@ -527,6 +544,28 @@ div[aria-label="How To Play Modal"] ul {
 @media (min-width: 1281px) {
   
 }
+
+/* iPad Pro */
+@media only screen and
+(min-width: 1024px) and
+(max-height: 1366px) and
+(orientation: portrait) and
+(-webkit-min-device-pixel-ratio: 1.5) {
+  div.table.main-game-table .table-row .table-cell.cell-user-name {
+        width: 34%;
+        margin-left: 60px;
+        margin-right: -60px;
+  }
+
+  .create-game-panel .btn-create-game {
+    margin-right: 14px !important;
+  }
+
+  .create-game-panel .btn-create-game .game-type-name {
+    font-size: 11px !important;
+  }
+ }
+
 
 /* 
   ##Device = Laptops, Desktops

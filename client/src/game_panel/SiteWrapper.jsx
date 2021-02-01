@@ -317,7 +317,7 @@ class SiteWrapper extends Component {
                   :
                   <>
                     <button id="btn-login" onClick={this.handleOpenLoginModal}>Login</button>
-                    <button id="btn-signup" onClick={this.handleOpenSignupModal}>Sign up</button>
+                    <button id="btn-signup" onClick={this.handleOpenSignupModal}>Sign Up</button>
                   </>
                 }
               </div>
