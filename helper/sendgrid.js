@@ -62,7 +62,7 @@ module.exports.sendResetPasswordEmail = (email, name, changePasswordId) => {
         {
             name,
             username: name, 
-            action_url: 'https://localhost:3000/changePassword/' + changePasswordId
+            action_url: 'https://rpsbet.com/changePassword/' + changePasswordId
         }, 
         'Reset Password',
         template_id_list.password_reset
