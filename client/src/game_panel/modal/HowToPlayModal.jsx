@@ -42,7 +42,7 @@ class HowToPlayModal extends Component {
 							<ol>
 								<li>Set the Game Type (Returns Multiplier e.g. 2x, 3x etc.)</li>
 								<li>Set your Bet Amount</li>
-								<li>Choose Where to Save when a player Shoots</li>
+								<li>Choose Where to Save</li>
 							</ol>
 						</div>
 						<div className="modal-content-panel">
@@ -67,14 +67,14 @@ class HowToPlayModal extends Component {
 							<h5>HOST GAME</h5>
 							<ol>
 								<li>Set a global Bet Amount</li>
-								<li>Set Payout to Automatic to cash out at some point. (optional)</li>
+								<li>Set Payout for an Automatic cash out (optional)</li>
 								<li>Set a score for players to try beat</li>
 							</ol>
 						</div>
 						<div className="modal-content-panel">
 							<h5>JOIN GAME</h5>
 							<ol>
-								<li>Try beat the Host's score</li>
+								<li>Try to Win</li>
 							</ol>
 						</div>
 						<div className="modal-content-panel">
@@ -92,7 +92,7 @@ class HowToPlayModal extends Component {
 							<h5>HOST GAME</h5>
 							<ol>
 								<li>Add boxes by setting the <u>Prize</u> (or Empty) and <u>Price</u> <i>to open. Check the Order of the boxes as the boxes will <u>NOT</u> be randomized.</i></li>
-								<li>Set Payout to Automatic to cash out at some point. (optional)</li>
+								<li>Set Payout for an Automatic cash out (optional)</li>
 							</ol>
 						</div>
 						<div className="modal-content-panel">
@@ -117,7 +117,7 @@ class HowToPlayModal extends Component {
 							<h5>HOST GAME</h5>
 							<ol>
 								<li>Pick Your Number (Your Bet Amount): 1-10 or 10-100</li>
-								<li>Set Payout to Automatic to cash out at some point. (optional)</li>
+								<li>Set Payout for an Automatic cash out (optional)</li>
 							</ol>
 						</div>
 						<div className="modal-content-panel">
@@ -150,7 +150,7 @@ class HowToPlayModal extends Component {
 
 					<hr />
 					<h5>Winnings Tax</h5>
-					<p>We introduce <u>Winnings Tax</u> to cover transactional costs from the payment provider and development costs for the website, we hope to lower these as soon as we can!!!</p>
+					<p>We introduced <u>Winnings Tax</u> to cover transactional costs from the payment provider and development costs for the website, we hope to lower these as soon as we can!!!</p>
 					<table id="howto-modal">
 						<tbody>
 							<tr><th>Game Modes</th><th>Winnings Tax</th><th>Withdrawal Fees</th></tr>
@@ -163,12 +163,14 @@ class HowToPlayModal extends Component {
 					</table>
 					<hr />
 					<h5>For All Enquiries</h5>
-					<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>. We love feedback and we thank you for playing!</p><br /><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>&#9679;&#9679;&#9679;<span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>
-					<p>To learn more about RPSBet and its values, follow our official accounts below and keep up with updates.</p>
+					<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>. We love feedback and we thank you!</p><br /><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>&#9679;&#9679;&#9679;<span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>
+					<p>To learn more about RPSBet and its values, follow our official accounts below and keep up with updates:</p>
+					<div style={{textAlign:"center"}}>
 					<a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://twitter.com/rpsbet">TWITTER</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">YOUTUBE</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.reddit.com/user/RPSBet">REDDIT</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.facebook.com/rpsbet">FACEBOOK</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://rpsbet.itch.io/">ITCH</a>
 					<br />
+					</div>
 					<div className="game_footer text-center">
-            <span>All Rights Reserved, </span>rpsbet.com © 2021 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
+            <span>All Rights Reserved, </span>RPSBet © 2021 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
           </div>
 				</div>
 			</div>

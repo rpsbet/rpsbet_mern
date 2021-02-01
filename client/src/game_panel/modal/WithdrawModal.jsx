@@ -181,7 +181,7 @@ class WithdrawModal extends Component {
                                     }
                                 </div>
                             </div>
-                            <p>The amount will be deducted from your current balance and paid into your account within 1-3 hours.</p>
+                            <p>The amount will be deducted from your current balance and paid into your account within 3 hours. Please note in rare cases it may take up to 24 hours to process.</p>
                             <div className="modal-action-panel">
                                 <button className="btn-submit" onClick={this.sendWithdrawEmail}>WITHDRAW</button>
                                 <button className="btn-back" onClick={this.props.closeModal}>CANCEL</button>
