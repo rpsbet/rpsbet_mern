@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
-import PrivacyModal from './PrivacyModal';
-import TermsModal from './TermsModal';
 
 Modal.setAppElement('#root')
 

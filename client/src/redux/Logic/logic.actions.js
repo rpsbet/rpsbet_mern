@@ -23,7 +23,6 @@ import {
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
-import { alertModal } from '../../game_panel/modal/ConfirmAlerts';
 
 // CreateRoom
 export const createRoom = (room_info) => async dispatch => {
