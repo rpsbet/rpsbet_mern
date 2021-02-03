@@ -71,7 +71,6 @@ export const userSignUp = ({
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
-      // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'tutorial', title: 'Get Started', message: 'Welcome...so you wanna make a bit of money? Click your Profile icon in the Top Right and click DEPOSIT.'} });
       dispatch({ type: SET_USERNAME_PASSWORD, payload: {email, password} });
       return { status: 'success' };
     } else {
@@ -182,6 +181,7 @@ export const resendVerificationEmail = () => async dispatch => {
     const { data } = await axios.post('/auth/resend_verification_email');
     if (data.success) {
       dispatch({ type: MSG_INFO, payload: data.message });
+      return true;
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });
     }
@@ -189,7 +189,36 @@ export const resendVerificationEmail = () => async dispatch => {
     console.log('error', error);
     dispatch({ type: MSG_WARNING, payload: error });
   }
+  return false;
 };
+
+export const sendResetPasswordEmail = (email) => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/sendResetPasswordEmail', { email });
+    if (data.success) {
+      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has been sent. Please check your mail box.'})
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error })
+    }
+  } catch (e) {
+    console.log('error', e)
+  }
+}
+
+export const resetPassword = (params) => async dispatch => {
+  try {
+    const { data } = await axios.post('/auth/resetPassword', params);
+    if (data.success) {
+      dispatch({ type: MSG_INFO, payload: 'Password has been changed.'})
+      return true;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error })
+    }
+  } catch (e) {
+    console.log('error', e)
+  }
+  return false;
+}
 
 export const setSocket = socket => dispatch => {
   dispatch({ type: SET_SOCKET, payload: socket });

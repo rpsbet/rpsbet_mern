@@ -7,11 +7,13 @@ button, button.btn {
 }
 .contents_wrapper .main-game .main-panel {
     padding: 32px;
+    width: 60%;
 }
 .contents_wrapper .main-game .sub-panel {
     padding: 32px 24px 8px;
     background-color: rgba(235, 237, 239, 0.5);
     position: initial;
+    width: 40%;
 }
 .main-game h2.main-title {
     font-size: 18px;
@@ -343,6 +345,10 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     border-radius: 8px;
     padding: 24px;
     margin-top: 40px;
+}
+.game-page.reset-password-page .game-contents {
+    width: 700px;
+    max-width: 100%;
 }
 .game-page .pre-summary-panel {
     display: flex;
@@ -915,12 +921,12 @@ input {
     line-height: 24px;
     height: 24px;
 }
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .mobile-only {
         display: none !important;
     }
 }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .contents_wrapper .main-game {
         flex-direction: column;
         margin-bottom: 60px;
@@ -950,6 +956,7 @@ input {
     .contents_wrapper .main-game .main-panel,
     .contents_wrapper .main-game .sub-panel {
         padding: 24px 16px;
+        width: 100%;
     }
 
     div.table div.table-row div.table-cell {

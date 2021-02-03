@@ -253,7 +253,7 @@ class CreateGame extends Component {
 			<>
 				<hr/>
 				<div className="action-panel">
-					<button id="btn_prev" onClick={this.onPrevButtonClicked} disabled={(this.state.step < 3 || this.state.step > 4) && this.state.child_step === 1}>Previous</button>
+					{(this.state.step < 3 || this.state.step > 4) && this.state.child_step === 1 ? <span></span> : <button id="btn_prev" onClick={this.onPrevButtonClicked}>Previous</button>}
 					{this.state.step === 3 && <button id="btn_skip" onClick={this.onSkipButtonClicked}>Skip</button>}
 					{this.state.step === 4 && this.state.game_mode === "Brain Game" && <button id="btn_bet" onClick={this.onStartBrainGame}>Start</button>}
 					{this.state.step === 4 && this.state.game_mode !== "Brain Game" && <button id="btn_bet" onClick={this.onCreateRoom}>Place Bet</button>}

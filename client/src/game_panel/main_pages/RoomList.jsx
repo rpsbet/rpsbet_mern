@@ -35,7 +35,7 @@ class RoomList extends Component {
 			search_history_text: '',
 			selected_main_tab_index: 0,
 			selected_sub_tab_index: 0,
-			mobile_show_panel: window.innerWidth < 768 ? 'join_game' : '',
+			mobile_show_panel: window.innerWidth < 1024 ? 'join_game' : '',
 		};
 
 		this.joinRoom = this.joinRoom.bind(this);
@@ -164,7 +164,13 @@ class RoomList extends Component {
 			'QS': 'quick-shoot',
 		}
 		const createGamePanel = this.props.gameTypeList.map((gameType, index) => (
-			<div className="btn-create-game" key={index} onClick={(e) => { history.push(`/create/${gameType.game_type_name}`) }}>
+			<div className="btn-create-game" key={index} onClick={(e) => { 
+				if (this.props.isAuthenticated) {
+					history.push(`/create/${gameType.game_type_name}`) 
+				} else {
+					alertModal(this.props.isDarkMode, 'Please login to create a new game room.')
+				}
+			}}>
 				<i className={`game-type-icon ${gameTypeStyleClass[gameType.short_name]}`}></i>
 				<div className="game-type-name">{gameType.game_type_name}</div>
 			</div>
@@ -173,7 +179,7 @@ class RoomList extends Component {
 		return (
 			<div className="main-game">
 				{ this.state.mobile_show_panel !== 'my_activity' &&
-					<div className="main-panel col-md-7 col-sm-12">
+					<div className="main-panel">
 						<div className="create-game mobile-only">
 							<h2 className="main-title">Create New Game <span>- For greater Winnings!</span></h2>
 							<div className="create-game-panel-parent">
@@ -206,7 +212,7 @@ class RoomList extends Component {
 								<div className="overflowX">
 									<div className="table main-game-table">
 										{this.props.roomList.map((row, key) => (
-											<div className="table-row" key={key}>
+											<div className="table-row" key={row._id}>
 												<div>
 													<div className="table-cell cell-room-info">
 														<img src={`/img/gametype/i${row.game_type.short_name}.png `} alt="" className="game-type-icon" /> 
@@ -273,7 +279,7 @@ class RoomList extends Component {
 								<div className="overflowX">
 									<div className="table main-history-table">
 										{this.state.history.map((row, key) => (
-											<div className="table-row" key={key}>
+											<div className="table-row" key={row._id}>
 												<div>
 													<div className="table-cell">{row.room_name}</div>
 													<div className="table-cell desktop-only" dangerouslySetInnerHTML={{ __html: row.history }}></div>
@@ -291,7 +297,7 @@ class RoomList extends Component {
 					</div>
 				}
 				{ this.state.mobile_show_panel !== 'join_game' &&
-					<div className="sub-panel col-md-5 col-sm-12">
+					<div className="sub-panel">
 						<div className="create-game">
 							<h2 className="main-title">Create New Game <span>- For greater Winnings!</span></h2>
 							<div className="create-game-panel-parent">

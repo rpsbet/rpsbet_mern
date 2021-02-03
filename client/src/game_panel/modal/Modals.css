@@ -12,6 +12,9 @@
     overflow-y: auto;
     overflow-x: hidden;
 }
+.modal-body.edit-modal-body.terms-modal-body {
+    width: 1000px;
+}
 .modal-body.edit-modal-body.deposit-modal-body {
     padding: 24px;
 }
@@ -105,8 +108,17 @@
     cursor: pointer;
     background: transparent;
     font-size: 12px;
+    height: 16px;
+    padding: 0;
 }
-
+.modal-body p.has-forgot-password {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-body p.has-forgot-password button {
+    margin: 0;
+}
 .react-confirm-alert-overlay {
     background: rgba(47, 49, 54, 0.8) !important;
 }

@@ -1,8 +1,10 @@
 .dark_mode .modal-body .modal-content-wrapper div.modal-content-panel input,
-.dark_mode input {
+.dark_mode input,
+.dark_mode input:focus {
 	border: 0;
 	background-color: #2f3136;
 	color: white;
+	box-shadow: none;
 }
 .dark_mode .game_header {
 	background-color: #2f3136;

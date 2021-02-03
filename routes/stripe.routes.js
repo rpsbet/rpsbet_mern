@@ -7,7 +7,7 @@ const sendgrid = require('../helper/sendgrid');
 const Receipt = require('../model/Receipt');
 const { newTransaction } = require('../socketController');
 
-const stripe = require('stripe')('sk_test_K5M4s7GThvVc9agmF34w3RuM00cTsYB54b');
+const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 
 router.post('/secret', auth, async (req, res) => {
     try {

@@ -633,13 +633,16 @@ router.post('/end_game', auth, async (req, res) => {
 
 		sendEndedMessageToJoiners(roomInfo._id, roomInfo['creator']['_id'], message.message, roomInfo.is_anonymous);
 
-		const rooms = await getMyRooms(req.user._id);
+		const myRooms = await getMyRooms(req.user._id);
 		
 		res.json({
 			success: true,
-			myGames: rooms,
+			myGames: myRooms.rooms,
+			pages: Math.ceil(myRooms.count / 8),
 			newTransaction
 		});
+
+		const rooms = await getRoomList(10, 1, '');
 
 		req.io.sockets.emit('UPDATED_ROOM_LIST', {
 			total: rooms.count,

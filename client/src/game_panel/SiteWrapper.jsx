@@ -25,6 +25,7 @@ import SignupModal from './modal/SignupModal';
 import VerificationModal from './modal/VerificationModal';
 import DepositModal from './modal/DepositModal';
 import WithdrawModal from './modal/WithdrawModal';
+import ResetPasswordModal from './modal/ResetPasswordModal';
 
 import Moment from 'moment';
 import DarkModeToggle from 'react-dark-mode-toggle';
@@ -69,6 +70,7 @@ class SiteWrapper extends Component {
       showVerificationModal: false,
       showWithdrawModal: false,
       showDepositModal: false,
+      showResetPasswordModal: false,
       isActiveLoadingOverlay: this.props.isActiveLoadingOverlay,
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
@@ -103,6 +105,10 @@ class SiteWrapper extends Component {
 
     this.handleOpenWithdrawModal = this.handleOpenWithdrawModal.bind(this);
     this.handleCloseWithdrawModal = this.handleCloseWithdrawModal.bind(this);
+
+    this.handleOpenResetPasswordModal = this.handleOpenResetPasswordModal.bind(this);
+    this.handleCloseResetPasswordModal = this.handleCloseResetPasswordModal.bind(this);
+  
 
     this.handleBalanceClick = this.handleBalanceClick.bind(this);
 
@@ -242,6 +248,9 @@ class SiteWrapper extends Component {
   handleOpenWithdrawModal () { this.setState({ showWithdrawModal: true, anchorEl: null }); }
   handleCloseWithdrawModal () { this.setState({ showWithdrawModal: false }); }
 
+  handleOpenResetPasswordModal () { this.setState({ showResetPasswordModal: true }); }
+  handleCloseResetPasswordModal () { this.setState({ showResetPasswordModal: false }); }
+
   handleBalanceClick() { this.setState({ showGameLog: !this.state.showGameLog }); }
   
   render() {
@@ -259,7 +268,7 @@ class SiteWrapper extends Component {
             <div className="main_header">
               <a className="game_logo" href='' onClick={(e)=>{history.push('/')}}> </a>
               <div className="header_action_panel">
-                <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play">HOW TO PLAY</a>
+                <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HOW TO PLAY</span></a>
                 { this.props.isAuthenticated ? 
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>£{updateDigitToPoint2(parseInt(this.state.balance) / 100.0)}</span>
@@ -341,15 +350,16 @@ class SiteWrapper extends Component {
           {/* <div className="game_footer text-center">
             <span>All Rights Reserved, </span>rpsbet.com © 2020 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
           </div> */}
-          {this.state.showTermsModal && <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} />}
-          {this.state.showPrivacyModal && <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} />}
+          {this.state.showTermsModal && <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} isDarkMode={this.props.isDarkMode} />}
+          {this.state.showPrivacyModal && <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} isDarkMode={this.props.isDarkMode} />}
           {this.state.showProfileModal && <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} avatar={this.props.user.avatar} email={this.props.user.email} />}
-          {this.state.showHowToPlayModal && <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} isDarkMode={this.props.isDarkMode} />}
-          {this.state.showLoginModal && <LoginModal modalIsOpen={this.state.showLoginModal} closeModal={this.handleCloseLoginModal} openSignupModal={this.handleOpenSignupModal} openVerificationModal={this.handleOpenVerificationModal} initSocket={this.initSocket} />}
+          {this.state.showHowToPlayModal && <HowToPlayModal modalIsOpen={this.state.showHowToPlayModal} closeModal={this.handleCloseHowToPlayModal} player_name={this.state.userName} balance={this.state.balance / 100.0} isDarkMode={this.props.isDarkMode} openTermsModal={this.handleOpenTermsModal} openPrivacyModal={this.handleOpenPrivacyModal} />}
+          {this.state.showLoginModal && <LoginModal modalIsOpen={this.state.showLoginModal} closeModal={this.handleCloseLoginModal} openSignupModal={this.handleOpenSignupModal} openVerificationModal={this.handleOpenVerificationModal} initSocket={this.initSocket} openResetPasswordModal={this.handleOpenResetPasswordModal} />}
           {this.state.showSignupModal && <SignupModal modalIsOpen={this.state.showSignupModal} closeModal={this.handleCloseSignupModal} openLoginModal={this.handleOpenLoginModal} />}
           {this.state.showVerificationModal && <VerificationModal modalIsOpen={this.state.showVerificationModal} closeModal={this.handleCloseVerificationModal} />}
           {this.state.showDepositModal && <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} />}
           {this.state.showWithdrawModal && <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} />}
+          {this.state.showResetPasswordModal && <ResetPasswordModal modalIsOpen={this.state.showResetPasswordModal} closeModal={this.handleCloseResetPasswordModal} openLoginModal={this.handleOpenLoginModal} />}
           <GamePasswordModal />
         </div>
       </MuiThemeProvider>

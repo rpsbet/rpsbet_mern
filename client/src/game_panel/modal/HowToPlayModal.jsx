@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
-import PrivacyModal from './PrivacyModal';
-import TermsModal from './TermsModal';
 
 Modal.setAppElement('#root')
 
@@ -170,8 +168,8 @@ class HowToPlayModal extends Component {
 					<br />
 					</div>
 					<div className="game_footer text-center">
-            <span>All Rights Reserved, </span>RPSBet © 2021 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
-          </div>
+					<span>All Rights Reserved, </span>RPSBet © 2021 <a href="#privacy" id="privacy" onClick={this.props.openPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.props.openTermsModal}>Terms</a>
+				</div>
 				</div>
 			</div>
 
