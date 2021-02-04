@@ -85,6 +85,7 @@ export default function(state = initialState, action) {
         ...state,
         ...payload,
         user: { ...payload.user, password: '' },
+        balance: payload.user.balance,
         isAdmin: 0,
         userName: payload.user.username,
         isActivated: payload.user.is_activated,

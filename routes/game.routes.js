@@ -187,25 +187,25 @@ getHistory = async (keyword) => {
 				if (gameLog['game_type']['game_type_name'] === 'Classic RPS') {
 					if (gameLog.game_result === 1) {
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
-							+ gameLog['joined_user']['username'] + "] won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['bet_amount'] * 2) 
-							+ " * 0.95</span>] against <img class='avatar' src='" + gameLog['creator']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
+							+ gameLog['joined_user']['username'] + "] won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['bet_amount'] * 2 * 0.95) 
+							+ "</span>] against <img class='avatar' src='" + gameLog['creator']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['creator']['username'] + "] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
 					} else if (gameLog.game_result === 0) {
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
-							+ gameLog['joined_user']['username'] + "] split [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['bet_amount'] * 2) 
-							+ " * 0.95</span>] with <img class='avatar' src='" + gameLog['creator']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
+							+ gameLog['joined_user']['username'] + "] split [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['bet_amount'] * 2 * 0.95) 
+							+ "</span>] with <img class='avatar' src='" + gameLog['creator']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['creator']['username'] + "] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
 					} else {
 						temp.history = "<img class='avatar' src='" + gameLog['creator']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
-							+ gameLog['creator']['username'] + "] won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['bet_amount'] * 2) 
-							+ " * 0.95</span>] against <img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
+							+ gameLog['creator']['username'] + "] won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['bet_amount'] * 2 * 0.95) 
+							+ "</span>] against <img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['joined_user']['username'] + "] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
 					}
 				} else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
 					if (gameLog.game_result === 1) {
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" + gameLog['joined_user']['username'] 
-							+ "] scored a goal and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['bet_amount'] * gameLog['room']['qs_game_type']) 
-							+ " * 0.95</span>] in [<span style='color: #C83228;'>" 
+							+ "] scored a goal and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['bet_amount'] * gameLog['room']['qs_game_type'] * 0.95) 
+							+ "</span>] in [<span style='color: #C83228;'>" 
 							+ gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
 					} else {
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" + gameLog['joined_user']['username']
@@ -216,8 +216,8 @@ getHistory = async (keyword) => {
 					if (gameLog.game_result === 1) {
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['joined_user']['username'] + "] guessed [<span style='color: #02c526;'>" + updateDigitToPoint2(gameLog['bet_amount']) 
-							+ "</span>] and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['host_pr'] + gameLog['room']['bet_amount']) 
-							+ " * 0.90</span>] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
+							+ "</span>] and won [<span style='color: #02c526;'>£" + updateDigitToPoint2((gameLog['room']['host_pr'] + gameLog['room']['bet_amount']) * 0.90) 
+							+ "</span>] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
 					} else if (gameLog.game_result === 4) { //end game
 						temp.history = "<img class='avatar' src='" + gameLog['creator']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['creator']['username'] + "] ended [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] 
@@ -236,25 +236,25 @@ getHistory = async (keyword) => {
 					} else if (gameLog.game_result === -1) { //end game
 						temp.history = "<img class='avatar' src='" + gameLog['creator']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['creator']['username'] + "] ended [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] 
-							+ '-' + gameLog['room']['room_number'] + "</span>] and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['bet_amount']) + " * 0.95</span>]";
+							+ '-' + gameLog['room']['room_number'] + "</span>] and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['bet_amount'] * 0.95) + "</span>]";
 					} else {
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['joined_user']['username'] + "] opened a box [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['bet_amount']) 
-							+ "</span>] and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['game_result']) + " * 0.95</span>] in [<span style='color: #C83228;'>" 
+							+ "</span>] and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['game_result'] * 0.95) + "</span>] in [<span style='color: #C83228;'>" 
 							+ gameLog['game_type']['short_name'] + '-' + gameLog['room']['room_number'] + "</span>]";
 					}
 				} else if (gameLog['game_type']['game_type_name'] === 'Brain Game') {
 					if (gameLog.game_result === 0) {   //draw          Draw, No Winner! PR will be split.
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['joined_user']['username'] + "] bet [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['bet_amount']) 
-							+ "</span>] and split [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['pr']) 
-							+ " * 0.90</span>] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] + '-' 
+							+ "</span>] and split [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['pr'] * 0.90) 
+							+ "</span>] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] + '-' 
 							+ gameLog['room']['room_number'] + "</span>]";
 					} else if (gameLog.game_result === 1) { //win       WOW, What a BRAIN BOX - You WIN!
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
 							+ gameLog['joined_user']['username'] + "] bet [<span style='color: #02c526;'>£" + gameLog['bet_amount'] 
-							+ "</span>] and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['pr']) 
-							+ " * 0.90</span>] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] 
+							+ "</span>] and won [<span style='color: #02c526;'>£" + updateDigitToPoint2(gameLog['room']['pr'] * 0.90) 
+							+ "</span>] in [<span style='color: #C83228;'>" + gameLog['game_type']['short_name'] 
 							+ '-' + gameLog['room']['room_number'] + "</span>]";
 					} else {    //failed    Oops, back to school for you loser!!
 						temp.history = "<img class='avatar' src='" + gameLog['joined_user']['avatar'] + " ' alt='' onerror='this.src=\"../img/profile-thumbnail.svg\"' />[" 
@@ -410,6 +410,13 @@ router.get('/rooms', async (req, res) => {
 router.post('/rooms', auth, async (req, res) => {
 	try {
 		const start = new Date();
+		if (req.body.bet_amount * 100 > req.user.balance) {
+			return res.json({
+				success: false,
+				message: 'Not enough balance!'
+			});
+		}
+
 		gameType = await GameType.findOne({game_type_id: parseInt(req.body.game_type)});
 
 		if (req.body.game_type === 1) { // Classic RPS
