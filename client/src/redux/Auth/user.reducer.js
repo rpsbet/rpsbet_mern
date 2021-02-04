@@ -75,7 +75,7 @@ export default function(state = initialState, action) {
         isAuthenticated: true,
         isActivated: payload.is_activated,
         loading: false,
-        user: payload,
+        user: { ...payload, password: '' },
         balance: payload.balance
       };
     case LOGIN_SUCCESS:
@@ -84,6 +84,7 @@ export default function(state = initialState, action) {
       return {
         ...state,
         ...payload,
+        user: { ...payload.user, password: '' },
         isAdmin: 0,
         userName: payload.user.username,
         isActivated: payload.user.is_activated,

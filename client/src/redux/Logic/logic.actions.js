@@ -35,7 +35,7 @@ export const createRoom = (room_info) => async dispatch => {
       if (room_info.game_type === 3) {
         // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'RPS Bet', message: `You scored [${room_info.brain_game_score}]!`} });
       }
-      history.push('/join');
+      history.push('/');
       dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
     } else {

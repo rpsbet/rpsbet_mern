@@ -160,7 +160,8 @@
 .dark_mode .modal-body button.btn-close {
 	color: white;
 }
-.dark_mode .modal-body p button {
+.dark_mode .modal-body p button,
+.dark_mode .modal-body p span {
 	color: white !important;
 }
 .dark_mode .modal-body input {

@@ -89,7 +89,7 @@ class BrainGame extends Component {
     }
 
     componentWillUnmount() {
-        if (this.state.is_started) {
+        if (this.state.is_started && this.state.remaining_time > 0) {
             this.props.join({
                 bet_amount: this.props.bet_amount,
                 brain_game_score: -1000,
@@ -243,7 +243,7 @@ class BrainGame extends Component {
                         <div className="pre-summary-panel">
                             <div className="your-bet-amount">Bet Amount : £{updateDigitToPoint2(this.props.bet_amount)}</div>
                             <div className="public-max-return">Pot : £{updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)}</div>
-                            <div className="your-max-return">Potential Return : £{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) * 0.95)}</div>
+                            <div className="your-max-return">Potential Return : £{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) * 0.9)}</div>
                         </div>
                         <div className="game-info-panel">
                             <h3 className="game-sub-title">Game Type:</h3>

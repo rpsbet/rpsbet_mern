@@ -95,7 +95,7 @@ export const userSignIn = body => async dispatch => {
       setAuthToken(res.data.token);
       dispatch({ type: LOGIN_SUCCESS, payload: res.data });
       dispatch({ type: MSG_SUCCESS, payload: res.data.message });
-      return { status: 'success' };
+      return { status: 'success', user: res.data.user };
     } else {
       dispatch({ type: LOGIN_FAIL });
       dispatch({ type: MSG_ERROR, payload: res.data.error });

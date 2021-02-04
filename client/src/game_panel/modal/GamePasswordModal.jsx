@@ -65,9 +65,6 @@ class GamePasswordModal extends Component {
                     <button className="btn-back" onClick={this.props.closeGamePasswordModal}>Cancel</button>
                 </div>
             </div>
-            <h2 style={{borderBottom: "1px solid gray"}}>
-                Password
-            </h2>
         </Modal>;
     }
 }
