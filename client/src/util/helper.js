@@ -19,7 +19,7 @@ export function updateDigitToPoint2(number) {
   return number;
 }
 
-export function getQsLottieAnimation(nation, short_name) {
+export async function getQsLottieAnimation(nation, short_name) {
   let nationStr = '';
   let shortStr = '';
   
@@ -47,7 +47,7 @@ export function getQsLottieAnimation(nation, short_name) {
     shortStr = 'RightBottom';
   }
   
-  const anim = require(`../game_panel/LottieAnimations/${nationStr}${shortStr}.json`);
+  const anim = await import(`../game_panel/LottieAnimations/${nationStr}${shortStr}.json`);
 
   return anim;
 }

@@ -13,7 +13,7 @@ class QuickShoot extends Component {
             advanced_status: '',
             is_anonymous: false,
             balance: this.props.balance,
-            isPasswordCorrect: this.props.isPasswordCorrect
+            isPasswordCorrect: this.props.isPasswordCorrect,
         };
         this.onBtnBetClick = this.onBtnBetClick.bind(this);
         this.onLeftPositionButtonClicked = this.onLeftPositionButtonClicked.bind(this);
@@ -118,7 +118,7 @@ class QuickShoot extends Component {
         return (
             <div className="game-page">
                 <div className="page-title">
-                    <h2>Join Game - <i>Spleesh!</i></h2>
+                    <h2>Join Game - QuickShoot</h2>
                 </div>
 				<div className="game-contents">
                     <div className="pre-summary-panel">

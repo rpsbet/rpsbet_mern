@@ -61,8 +61,8 @@ class CreateGame extends Component {
 		return null;
 	}
 
-	onChangeState(newState) {
-		this.setState(newState);
+	async onChangeState(newState) {
+		await this.setState(newState);
 	}
 
 	async componentDidMount() {
