@@ -415,6 +415,13 @@ router.get('/rooms', async (req, res) => {
 router.post('/rooms', auth, async (req, res) => {
 	try {
 		const start = new Date();
+		if (req.body.bet_amount * 100 <= 0) {
+			return res.json({
+				success: false,
+				message: 'Wrong bet amount!'
+			});
+		}
+
 		if (req.body.bet_amount * 100 > req.user.balance) {
 			return res.json({
 				success: false,

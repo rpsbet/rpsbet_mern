@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { alertModal } from '../modal/ConfirmAlerts';
 
 class MysteryBox extends Component {
     constructor(props) {
@@ -58,6 +59,17 @@ class MysteryBox extends Component {
 
         let new_box_price = parseFloat(this.state.new_box_price);
         let new_box_prize = parseFloat(this.state.new_box_prize);
+
+        if (new_box_price < 0) {
+            alertModal(this.props.isDarkMode, `You can't make a box with negative price!`)
+            return;
+        }
+
+        if (new_box_prize < 0) {
+            alertModal(this.props.isDarkMode, `You can't make a box with negative prize!`)
+            return;
+        }
+
         new_box_price = isNaN(new_box_price) ? 0 : new_box_price;
         new_box_prize = isNaN(new_box_prize) ? 0 : new_box_prize;
 

@@ -178,7 +178,8 @@ class CreateGame extends Component {
 
 	onNextButtonClicked() {
 		if (this.state.step === 2) {
-			if (parseFloat(this.state.bet_amount) === 0 || isNaN(parseFloat(this.state.bet_amount))) {
+			console.log(this.state.bet_amount)
+			if (parseFloat(this.state.bet_amount) <= 0 || isNaN(parseFloat(this.state.bet_amount))) {
 				alertModal(this.props.isDarkMode, 'Please input the bet amount!')
 				return;
 			}

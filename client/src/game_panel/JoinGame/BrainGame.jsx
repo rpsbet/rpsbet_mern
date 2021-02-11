@@ -106,11 +106,6 @@ class BrainGame extends Component {
             return;
         }
 
-        if (this.props.bet_amount === 0) {
-            alertModal(this.props.isDarkMode, `Please input the bet amount!`)
-            return;
-        }
-
         if (this.props.bet_amount > this.state.balance / 100.0) {
             alertModal(this.props.isDarkMode, `Not enough balance!`)
             return;
