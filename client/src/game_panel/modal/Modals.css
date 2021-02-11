@@ -16,6 +16,7 @@
     width: 1000px;
 }
 .modal-body.edit-modal-body.deposit-modal-body {
+    width: 300px;
     padding: 24px;
 }
 .modal-body.edit-modal-body::-webkit-scrollbar {
@@ -260,10 +261,10 @@
 }
 .modal-body .payment-action-panel {
     margin-top: 10px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 30px;
-    row-gap: 10px;
+    /* display: grid; */
+    /* grid-template-columns: 1fr 1fr; */
+    /* column-gap: 30px; */
+    /* row-gap: 10px; */
 }
 .modal-body .payment-action-panel button.btn-stripe-pay {
     width: 100%;
@@ -334,9 +335,9 @@
     .modal-body.how-to-play-modal-body .modal-content-wrapper div.modal-content-panel p {
         margin-left: 8px;
     }
-    .modal-body .payment-action-panel {
+    /* .modal-body .payment-action-panel {
         grid-template-columns: 1fr;
-    }
+    } */
     .modal-body.edit-modal-body.deposit-modal-body .modal-content-wrapper div.modal-content-panel {
         padding: 16px;
     }

@@ -164,12 +164,12 @@ class DepositModal extends Component {
                                         }}
                                     />
                                 </div>
-                                <div>
+                                {/* <div>
                                     <p>Stripe</p>
                                     <Elements stripe={stripePromise}>
                                         <InjectedCheckoutForm amount={this.state.amount} setBalance={this.props.setBalance} closeModal={this.props.closeModal} addNewTransaction={this.props.addNewTransaction} />
                                     </Elements>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>
