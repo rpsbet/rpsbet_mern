@@ -94,7 +94,12 @@ class WithdrawModal extends Component {
             return;
         }
 
-        if (this.state.payment_method === 'paypal' && this.state.email === '') {
+        if (this.state.amount > this.props.balance) {
+            alertModal(this.props.isDarkMode, `Sorry, you can withdraw your balance at most.`)
+            return;
+        }
+
+        if (this.state.payment_method === 'PayPal' && this.state.email === '') {
             alertModal(this.props.isDarkMode, `Please input your paypal email address.`)
             return;
         }

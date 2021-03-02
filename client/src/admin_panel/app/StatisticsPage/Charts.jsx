@@ -29,7 +29,12 @@ class HeatmapChart extends React.Component {
       options: {
         chart: {
           background: '#424242',
-          foreColor: '#fafcfc'
+          stacked: false,
+          zoom: {
+            type: 'x',
+            enabled: true,
+            autoScaleYaxis: true,
+          }
         },
         plotOptions: {
           heatmap: {
@@ -68,7 +73,8 @@ class HeatmapChart extends React.Component {
           enabled: false
         },
         title: {
-          text: 'Pallet life activity'
+          text: 'Pallet life activity',
+          color: 'white'
         }
       },
       series: [
@@ -145,7 +151,7 @@ class HeatmapChart extends React.Component {
         <ChartEl
           options={this.state.options}
           series={this.state.series}
-          type="heatmap"
+          type="area"
           height="350"
           width="100%"
         />

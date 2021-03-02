@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setUrl } from '../../../../redux/Auth/user.actions';
-import { acGetCustomerInfo, updateCustomer } from '../../../../redux/Customer/customer.action';
+import { acGetCustomerInfo, updateCustomer, getCustomerStatisticsData } from '../../../../redux/Customer/customer.action';
 import ContainerHeader from '../../../../components/ContainerHeader';
 import EditCustomerForm from './EditCustomerForm';
+import StatisticsForm from './StatisticsForm';
 import { warningMsgBar, infoMsgBar } from '../../../../redux/Notification/notification.actions';
+import moment from 'moment';
 import history from '../../../../redux/history';
+import { updateDigitToPoint2 } from '../../../../util/helper';
 
 class EditCustomerPage extends Component {
   state = {
@@ -16,25 +19,53 @@ class EditCustomerPage extends Component {
     avatar: '',
     bio: '',
     buttonDisable: true,
-    is_banned: false
+    is_banned: false,
+    joined_date: '',
+    gameLogList: [],
+    deposit: 0,
+    withdraw: 0,
+    gameProfit: 0,
+    gamePlayed: 0,
+    totalWagered: 0,
+    netProfit: 0,
+    profitAllTimeHigh: 0,
+    profitAllTimeLow: 0
   };
 
   async componentDidMount() {
-    if (this.props.match.params._id && this.state._id !== this.props.match.params._id) {
-      this.setState({_id: this.props.match.params._id});
+    const customer_id = this.props.match.params._id;
+
+    if (customer_id && this.state._id !== customer_id) {
+      this.setState({_id: customer_id});
     }
 
+
     this.props.setUrl(this.props.match.path);
-    const user = await this.props.acGetCustomerInfo(this.props.match.params._id);
+    const user = await this.props.acGetCustomerInfo(customer_id);
     if (user)
       this.setState({
-        balance: user.balance / 100.0,
+        balance: updateDigitToPoint2(user.balance / 100.0),
         username: user.username,
         email: user.email,
         avatar: user.avatar,
         bio: user.bio,
-        is_banned: user.is_deleted
+        is_banned: user.is_deleted,
+        joined_date: moment(user.created_at).format('LL')
       });
+    
+    const result = await this.props.getCustomerStatisticsData(customer_id);
+    
+    this.setState({
+      ...result,
+      gameLogList: [
+        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: -100, net_profit: -100 },
+        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: 100, net_profit: 100 },
+        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: 200, net_profit: 200 },
+        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: -100, net_profit: -100 },
+        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: 100, net_profit: 100 },
+        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: -100, net_profit: -100 },
+      ]
+    })
   }
 
   handleCancel = () => {
@@ -51,7 +82,6 @@ class EditCustomerPage extends Component {
       balance: this.state.balance
     })
   };
-
 
   onDelete = e => {
     e.preventDefault();
@@ -101,6 +131,20 @@ class EditCustomerPage extends Component {
           onDelete={this.onDelete}
           onRestore={this.onRestore}
         />
+        <StatisticsForm
+          username={this.state.username}
+          joined_date={this.state.joined_date}
+          gameLogList={this.state.gameLogList}
+          deposit={this.state.deposit}
+          withdraw={this.state.withdraw}
+          gameProfit={this.state.gameProfit}
+          balance={this.state.balance}
+          gamePlayed={this.state.gamePlayed}
+          totalWagered={this.state.totalWagered}
+          netProfit={this.state.netProfit}
+          profitAllTimeHigh={this.state.profitAllTimeHigh}
+          profitAllTimeLow={this.state.profitAllTimeLow}
+        />
       </>
     );
   }
@@ -120,7 +164,8 @@ const mapDispatchToProps = {
   warningMsgBar,
   infoMsgBar,
   acGetCustomerInfo,
-  updateCustomer
+  updateCustomer,
+  getCustomerStatisticsData
 };
 
 export default connect(

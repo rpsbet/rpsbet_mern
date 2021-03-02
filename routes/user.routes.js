@@ -11,6 +11,8 @@ const sendgrid = require('../helper/sendgrid');
 // User Model
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
+const GameLog = require('../model/GameLog');
+const Room = require('../model/Room');
 
 router.get('/', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;

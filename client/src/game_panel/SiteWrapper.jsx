@@ -358,7 +358,7 @@ class SiteWrapper extends Component {
           {this.state.showSignupModal && <SignupModal modalIsOpen={this.state.showSignupModal} closeModal={this.handleCloseSignupModal} openLoginModal={this.handleOpenLoginModal} />}
           {this.state.showVerificationModal && <VerificationModal modalIsOpen={this.state.showVerificationModal} closeModal={this.handleCloseVerificationModal} />}
           {this.state.showDepositModal && <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} />}
-          {this.state.showWithdrawModal && <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} />}
+          {this.state.showWithdrawModal && <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} balance={this.state.balance} />}
           {this.state.showResetPasswordModal && <ResetPasswordModal modalIsOpen={this.state.showResetPasswordModal} closeModal={this.handleCloseResetPasswordModal} openLoginModal={this.handleOpenLoginModal} />}
           <GamePasswordModal />
         </div>

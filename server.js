@@ -33,6 +33,7 @@ const gameRoutes = require('./routes/game.routes');
 const questionRoutes = require('./routes/admin_question.routes');
 const brainGameTypeRoutes = require('./routes/admin_brain_game_type.route');
 const stripeRoutes = require('./routes/stripe.routes');
+const statisticsRoutes = require('./routes/statistics.routes');
 
 // app.use(bodyParser.urlencoded({ extended: false }));
 // app.use(bodyParser.json());
@@ -58,6 +59,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/question', questionRoutes);
 app.use('/api/brain_game_type', brainGameTypeRoutes);
 app.use('/api/stripe', stripeRoutes);
+app.use('/api/statistics', statisticsRoutes);
 
 app.use(cors(corsOptions));
 

@@ -16,7 +16,7 @@
     width: 1000px;
 }
 .modal-body.edit-modal-body.deposit-modal-body {
-    width: 300px;
+    width: 400px;
     padding: 24px;
 }
 .modal-body.edit-modal-body::-webkit-scrollbar {
