@@ -10,6 +10,7 @@ import ActivityPage from './Activity/ActivityPage';
 import EditCustomerPage from './Customer/EditCustomerPage/EditCustomerPage';
 import QuestionPage from './Question/QuestionPage';
 import QuestionEditPage from './Question/QuestionEditPage';
+import SettingsPage from './SettingsPage/SettingsPage';
 
 export class AppMainRoute extends Component {
   render() {
@@ -72,6 +73,11 @@ export class AppMainRoute extends Component {
             exact
             path={`${match.path}/statistics`}
             component={StatisticsPage}
+          />
+          <Route
+            exact
+            path={`${match.path}/settings`}
+            component={SettingsPage}
           />
         </Switch>
       </LayoutCop>

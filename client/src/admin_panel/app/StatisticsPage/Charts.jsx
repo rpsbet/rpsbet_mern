@@ -3,23 +3,9 @@ import ReactApexChart from 'react-apexcharts';
 import styled from 'styled-components';
 import { styleColor } from '../../../Styles/styleThem';
 import Elevation from '../../../Styles/Elevation';
+import { addCurrencySignal } from '../../../util/helper'
 
-function generateData(count, yrange) {
-  var i = 0;
-  var series = [];
-  while (i < count) {
-    var x = (i + 1).toString();
-    var y =
-      Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min;
-
-    series.push({
-      x: x,
-      y: y
-    });
-    i++;
-  }
-  return series;
-}
+const xLabels = ['£0 - £1', '£1 - £10', '£10 - £20', '£20 - £30', '£30 - £40', '£40 - £50', '£50 - £60', '£60 - £70', '£70 - £80', '£80 - £90', '£90 - £100', '£100 -', ]
 
 class HeatmapChart extends React.Component {
   constructor(props) {
@@ -31,117 +17,46 @@ class HeatmapChart extends React.Component {
           background: '#424242',
           stacked: false,
           zoom: {
-            type: 'x',
-            enabled: true,
-            autoScaleYaxis: true,
+            enabled: false,
           }
         },
-        plotOptions: {
-          heatmap: {
-            shadeIntensity: 0.5,
-            colorScale: {
-              ranges: [
-                {
-                  from: -30,
-                  to: 5,
-                  name: 'low',
-                  color: styleColor.color.greyDark2
-                },
-                {
-                  from: 6,
-                  to: 20,
-                  name: 'medium',
-                  color: styleColor.secondary.main
-                },
-                {
-                  from: 21,
-                  to: 45,
-                  name: 'high',
-                  color: styleColor.primary.main
-                },
-                {
-                  from: 46,
-                  to: 55,
-                  name: 'extreme',
-                  color: styleColor.error.main
-                }
-              ]
-            }
-          }
+        theme: {
+          mode: 'dark'
         },
         dataLabels: {
           enabled: false
         },
         title: {
-          text: 'Pallet life activity',
-          color: 'white'
+          text: 'Volume of Bets',
+        },
+        xaxis: {
+          categories: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+          tickAmount: 11,
+          range: 11,
+          tickPlacement: 'between',
+          axiesTicks: {
+            show: true
+          },
+          labels: {
+            formatter: function (value) {
+              return xLabels[parseInt(value)];
+            }
+          }
+        },
+        yaxis: {
+          labels: {
+            formatter: function (value) {
+              return addCurrencySignal(value);
+            }
+          }
+        },
+        legend: {
+          itemMargin: {
+            vertical: 30,
+            horizontal: 20
+          }
         }
       },
-      series: [
-        {
-          name: 'Jan',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        },
-        {
-          name: 'Feb',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        },
-        {
-          name: 'Mar',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        },
-        {
-          name: 'Apr',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        },
-        {
-          name: 'May',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        },
-        {
-          name: 'Jun',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        },
-        {
-          name: 'Jul',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        },
-        {
-          name: 'Aug',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        },
-        {
-          name: 'Sep',
-          data: generateData(20, {
-            min: -30,
-            max: 55
-          })
-        }
-      ]
     };
   }
 
@@ -150,9 +65,9 @@ class HeatmapChart extends React.Component {
       <ChartDivEl>
         <ChartEl
           options={this.state.options}
-          series={this.state.series}
-          type="area"
-          height="350"
+          series={this.props.series}
+          type="scatter"
+          height="400"
           width="100%"
         />
       </ChartDivEl>

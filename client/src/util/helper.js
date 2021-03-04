@@ -19,6 +19,14 @@ export function updateDigitToPoint2(number) {
   return number;
 }
 
+export function addCurrencySignal(amount) {
+	if (amount > 0)
+		return '£' + updateDigitToPoint2(amount);
+	if (amount < 0) 
+		return '-£' + updateDigitToPoint2(Math.abs(amount));
+	return 0;
+}
+
 export async function getQsLottieAnimation(nation, short_name) {
   let nationStr = '';
   let shortStr = '';

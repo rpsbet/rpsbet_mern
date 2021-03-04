@@ -3,27 +3,22 @@ import ReactApexChart from 'react-apexcharts';
 import styled from 'styled-components';
 import { styleColor } from '../../../../Styles/styleThem';
 import Elevation from '../../../../Styles/Elevation';
-import { updateDigitToPoint2 } from '../../../../util/helper';
+import { updateDigitToPoint2, addCurrencySignal } from '../../../../util/helper';
+import moment from 'moment';
 import './style.css';
 
 function generateData(gameLogList) {
-  var series = [];
+  const series = [];
+  let totalProfit = 0;
   for (let i = 0; i < gameLogList.length; i++) {
-	var x = (i + 1).toString();
+	const x = (i + 1).toString();
+	totalProfit += gameLogList[i].profit;
 	series.push({
 	  x: x,
-	  y: gameLogList[i].profit
+	  y: totalProfit
 	});
   }
   return series;
-}
-
-function addCurrencySignal(amount) {
-	if (amount > 0)
-		return '£' + updateDigitToPoint2(amount);
-	if (amount < 0) 
-		return '-£' + updateDigitToPoint2(Math.abs(amount));
-	return 0;
 }
 
 class StatisticsForm extends React.Component {
@@ -47,6 +42,9 @@ class StatisticsForm extends React.Component {
 				autoScaleYaxis: true,
 			}
 		},
+		theme: {
+			mode: 'dark'
+		},
 		dataLabels: {
 			enabled: false
 		},
@@ -56,18 +54,8 @@ class StatisticsForm extends React.Component {
 				color: 'white'
 			}
 		},
-		xaxis: {
-			labels: {
-				style: {
-					colors: 'white'
-				}
-			}
-		},
 		yaxis: {
 			labels: {
-				style: {
-					colors: 'white'
-				},
 				formatter: function (value) {
 					return addCurrencySignal(value);
 				}
@@ -77,10 +65,10 @@ class StatisticsForm extends React.Component {
 			custom: function ({series, seriesIndex, dataPointIndex, w}) {
 				return '<div class="chart-tooltip">' +
 						'<div>Game Id: ' + gameLogList[dataPointIndex].game_id + '</div>' +
-						'<div>Played: ' + gameLogList[dataPointIndex].played + '</div>' +
+						'<div>Played: ' + moment(gameLogList[dataPointIndex].played).fromNow() + '</div>' +
 						'<div>Bet: £' + gameLogList[dataPointIndex].bet + '</div>' +
-						'<div>Opponent:' + gameLogList[dataPointIndex].opponent + '</div>' +
-						'<div>Profit:' + gameLogList[dataPointIndex].profit + '</div>' +
+						'<div>Opponent:' + gameLogList[dataPointIndex].opponent.username + '</div>' +
+						'<div>Profit:' + addCurrencySignal(updateDigitToPoint2(gameLogList[dataPointIndex].profit)) + '</div>' +
 						'<div>Net Profit:' + gameLogList[dataPointIndex].net_profit + '</div>' +
 						'</div>'
 			}
@@ -89,6 +77,7 @@ class StatisticsForm extends React.Component {
 	const series = [
 		{name: 'Jan', data: generateData(gameLogList)},
 	]
+
 	return (
 	  <ChartDivEl>
 			<H2>{this.props.username}<Span>Joined: {this.props.joined_date}</Span></H2>

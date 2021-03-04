@@ -9,45 +9,222 @@ const Receipt = require('../model/Receipt');
 const Transaction = require('../model/Transaction');
 const GameLog = require('../model/GameLog');
 const Room = require('../model/Room');
+const GameType = require('../model/GameType');
+const SystemSetting = require('../model/SystemSetting');
+
+getCommission = async () => {
+	const commission = await SystemSetting.findOne({name: 'commission'});
+	if (commission.value) {
+		return parseFloat(commission.value);
+	}
+
+	return 0;
+}
 
 router.get('/get-customer-statistics', auth, async (req, res) => {
-    try {
-      const _id = req.query._id;
-      const statistics = {
-        deposit: 0,
-        withdraw: 0,
-        gameProfit: 0
-      };
-  
-      const user = await User.findOne({_id});
-      const receipts = await Receipt.find({user_id: _id});
-      const transactions = await Transaction.find({user:_id});
-      
-      for (r of receipts) {
-        if (r.payment_type === 'Deposit') {
-          statistics['deposit'] += r.amount / 100.0;
-        } else if (r.payment_type === 'Withdraw') {
-          statistics['withdraw'] += r.amount / 100.0;
+  try {
+    const _id = req.query._id;
+    const statistics = {
+      deposit: 0,
+      withdraw: 0,
+      gameProfit: 0,
+      profitAllTimeHigh: 0,
+      profitAllTimeLow: 0,
+      gamePlayed: 0,
+      totalWagered: 0,
+      gameLogList: []
+    };
+
+    const user = await User.findOne({_id});
+    const receipts = await Receipt.find({user_id: _id});
+    const transactions = await Transaction.find({user:_id});
+    const gameLogs = await GameLog.find({
+      $or: [{creator: _id}, {joined_user: _id}]
+    })
+    .sort({created_at: 'asc'})
+    .populate({path: 'creator', model: User})
+    .populate({path: 'joined_user', model: User})
+    .populate({path: 'room', model: Room})
+    .populate({path: 'game_type', model: GameType});
+
+    for (r of receipts) {
+      if (r.payment_type === 'Deposit') {
+        statistics['deposit'] += r.amount / 100.0;
+      } else if (r.payment_type === 'Withdraw') {
+        statistics['withdraw'] += r.amount / 100.0;
+      }
+    }
+
+    for (t of transactions) {
+      if (t.description != 'deposit' && t.description != 'withdraw') {
+          statistics['gameProfit'] += t.amount / 100.0;
+      }
+    }
+
+    const commission = await getCommission();
+
+    for (log of gameLogs) {
+      if (log.game_result == -100) { //end_game
+        continue;
+      }
+      statistics['gamePlayed'] ++;
+
+      const opponent = (log.creator._id == _id) ? {_id: log.joined_user._id, username: log.joined_user.username} : {_id: log.creator._id, username: log.creator.username};
+      let profit = 0;
+
+      if (log.game_type.short_name == 'S!') {
+        if (log.game_result == 1) {
+          if (log.creator._id == _id) {
+            profit = 0 - log.bet_amount;
+          } else {
+            profit = log.bet_amount * 2 * (100 - commission) / 100.0 - log.bet_amount;
+          }
+        } else {
+          if (log.creator._id == _id) {
+            profit = log.bet_amount * (100 - commission) / 100.0;
+          } else {
+            profit = 0 - log.bet_amount;
+          }
+        }
+      } else if (log.game_type.short_name == 'QS') {
+        if (log.game_result == 1) {
+          if (log.creator._id == _id) {
+            profit = 0 - log.bet_amount;
+          } else {
+            profit = log.bet_amount * log.room.qs_game_type * (100 - commission) / 100.0 - log.bet_amount;
+          }
+        } else {
+          if (log.creator._id == _id) {
+            profit = log.bet_amount * (100 - commission) / 100.0;
+          } else {
+            profit = 0 - log.bet_amount;
+          }
+        }
+      } else if (log.game_type.short_name == 'MB') {
+        if (log.creator._id == _id) {
+          profit = log.bet_amount * (100 - commission) / 100.0;
+        } else {
+          profit = log.game_result * (100 - commission) / 100.0;
+        }
+      } else {
+        if (log.game_result == 0) {
+          profit = 0 - (log.bet_amount * commission / 100.0);
+        } else {
+          if ((log.creator._id == _id && log.game_result == 1) || (log.joined_user._id == _id && log.game_result == -1)) {
+            profit = 0 - log.bet_amount;
+          } else {
+            profit = log.bet_amount * 2 * (100 - commission) / 100.0 - log.bet_amount;
+          }
         }
       }
 
-      for (t of transactions) {
-          if (t.description != 'deposit' && t.description != 'withdraw') {
-              statistics['gameProfit'] += t.amount / 100.0;
-          }
+      statistics['gameLogList'].push({
+        game_id: log.game_type.short_name + '-' + log.room.room_number,
+        played: log.created_at,
+        bet: log.bet_amount,
+        opponent: opponent,
+        profit: profit,
+        net_profit: 0
+      });
+
+      if (log.creator == _id) {
+
+      } else if (log.joined_user == _id) {
+
       }
-  
-      res.json({
-        success: true,
-        statistics,
-      });
-    } catch (err) {
-      console.error(err);
-      res.json({
-        success: false,
-        err: message
-      });
     }
+
+    res.json({
+      success: true,
+      statistics,
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      err: message
+    });
+  }
+});
+
+getBetType = (bet_amount) => {
+  if (bet_amount >= 1 && bet_amount < 10) { return 1; } 
+  else if (bet_amount >= 10 && bet_amount < 20) { return 2; }
+  else if (bet_amount >= 20 && bet_amount < 30) { return 3; }
+  else if (bet_amount >= 30 && bet_amount < 40) { return 4; }
+  else if (bet_amount >= 40 && bet_amount < 50) { return 5; }
+  else if (bet_amount >= 50 && bet_amount < 60) { return 6; }
+  else if (bet_amount >= 60 && bet_amount < 70) { return 7; }
+  else if (bet_amount >= 70 && bet_amount < 80) { return 8; }
+  else if (bet_amount >= 80 && bet_amount < 90) { return 9; }
+  else if (bet_amount >= 90 && bet_amount < 100) { return 10;}
+  else if (bet_amount >= 100) { return 11; }
+
+  return 0;
+}
+
+getIndexByGameType = (game_type) => {
+  const game_types = ['RPS', 'S!', 'BG', 'MB', 'QS'];
+  return game_types.indexOf(game_type);
+}
+
+router.get('/get-total-statistics', auth, async (req, res) => {
+  try {
+    const _id = req.query._id;
+    const statistics = {
+      totalGameCreated: 0,
+      totalGameJoined: 0,
+      totalWagered: 0,
+      totalDeposited: 0,
+      totalWithdrawn: 0,
+      volumeOfBets: [
+        {name : 'Classic RPS', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+        {name : 'Spleesh', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+        {name : 'Mystery Box', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+        {name : 'Brain Game', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+        {name : 'Quick Shoot', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+      ]
+    };
+
+    const receipts = await Receipt.find({});
+    const rooms = await Room.find({}).populate({path: 'game_type', model: GameType});
+    const gameLogs = await GameLog.find({}).populate({path: 'game_type', model: GameType});
+
+    for (r of receipts) {
+      if (r.payment_type === 'Deposit') {
+        statistics['totalDeposited'] += r.amount / 100.0;
+      } else if (r.payment_type === 'Withdraw') {
+        statistics['totalWithdrawn'] += r.amount / 100.0;
+      }
+    }
+
+    statistics['totalGameCreated'] = rooms.length;
+
+    for (room of rooms) {
+      statistics['totalWagered'] += room.bet_amount;
+      statistics['volumeOfBets'][getIndexByGameType(room.game_type.short_name)].data[getBetType(room.bet_amount)] += room.bet_amount;
+    }
+
+    for (log of gameLogs) {
+      if (log.game_result == -100) { //end_game
+        continue;
+      }
+      statistics['totalGameJoined'] ++;
+      statistics['totalWagered'] += log.bet_amount;
+      statistics['volumeOfBets'][getIndexByGameType(log.game_type.short_name)].data[getBetType(log.bet_amount)] += log.bet_amount;
+    }
+
+    res.json({
+      success: true,
+      statistics,
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      err: message
+    });
+  }
 });
 
 module.exports = router;

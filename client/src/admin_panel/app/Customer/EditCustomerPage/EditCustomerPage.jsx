@@ -57,14 +57,7 @@ class EditCustomerPage extends Component {
     
     this.setState({
       ...result,
-      gameLogList: [
-        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: -100, net_profit: -100 },
-        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: 100, net_profit: 100 },
-        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: 200, net_profit: 200 },
-        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: -100, net_profit: -100 },
-        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: 100, net_profit: 100 },
-        { game_id: 1, played: '2 months ago', bet: 100, opponent: 'Jacks280', profit: -100, net_profit: -100 },
-      ]
+      netProfit: result.withdraw - result.deposit
     })
   }
 
