@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setUrl } from '../../../../redux/Auth/user.actions';
-import { acGetCustomerInfo, updateCustomer, getCustomerStatisticsData } from '../../../../redux/Customer/customer.action';
+import { acGetCustomerInfo, updateCustomer, getCustomerStatisticsData, getRoomStatisticsData } from '../../../../redux/Customer/customer.action';
 import ContainerHeader from '../../../../components/ContainerHeader';
 import EditCustomerForm from './EditCustomerForm';
 import StatisticsForm from './StatisticsForm';
@@ -137,6 +137,7 @@ class EditCustomerPage extends Component {
           netProfit={this.state.netProfit}
           profitAllTimeHigh={this.state.profitAllTimeHigh}
           profitAllTimeLow={this.state.profitAllTimeLow}
+          getRoomStatisticsData={this.props.getRoomStatisticsData}
         />
       </>
     );
@@ -158,7 +159,8 @@ const mapDispatchToProps = {
   infoMsgBar,
   acGetCustomerInfo,
   updateCustomer,
-  getCustomerStatisticsData
+  getCustomerStatisticsData,
+  getRoomStatisticsData
 };
 
 export default connect(

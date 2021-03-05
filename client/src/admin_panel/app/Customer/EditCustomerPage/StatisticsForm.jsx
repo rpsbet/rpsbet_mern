@@ -26,8 +26,21 @@ class StatisticsForm extends React.Component {
 		super(props);
 
 		this.state = {
-			
+			room_info: null
 		};
+  }
+
+  dataPointSelection = async (event, chartContext, config) => {
+	console.log(this.props.gameLogList[config.dataPointIndex]);
+	const gameLogList = this.props.gameLogList;
+	const room_id = gameLogList[config.dataPointIndex].room_id;
+	const actionList = await this.props.getRoomStatisticsData(room_id);
+	this.setState({
+		room_info: {
+			room_name: gameLogList[config.dataPointIndex].game_id,
+			actionList: actionList
+		}
+	})
   }
 
   render() {
@@ -35,11 +48,15 @@ class StatisticsForm extends React.Component {
 	const options = {
 		chart: {
 			background: '#424242',
+			type: 'bar',
 			stacked: false,
 			zoom: {
 				type: 'x',
 				enabled: true,
 				autoScaleYaxis: true,
+			},
+			events: {
+				dataPointSelection: this.dataPointSelection
 			}
 		},
 		theme: {
@@ -53,6 +70,13 @@ class StatisticsForm extends React.Component {
 			style: {
 				color: 'white'
 			}
+		},
+		xaxis: {
+			labels: {
+				show: true,
+				rotate: 0,
+				hideOverlappingLabels: false,
+			},
 		},
 		yaxis: {
 			labels: {
@@ -72,7 +96,7 @@ class StatisticsForm extends React.Component {
 						'<div>Net Profit:' + gameLogList[dataPointIndex].net_profit + '</div>' +
 						'</div>'
 			}
-		}
+		},
 	};
 	const series = [
 		{name: 'Jan', data: generateData(gameLogList)},
@@ -81,25 +105,53 @@ class StatisticsForm extends React.Component {
 	return (
 	  <ChartDivEl>
 			<H2>{this.props.username}<Span>Joined: {this.props.joined_date}</Span></H2>
-			<div className="statistics-panel">
-				<h5>BREAKDOWN</h5>
-				<div>Deposits: {addCurrencySignal(this.props.deposit)}</div>
-				<div>Withdrawals: {addCurrencySignal(this.props.withdraw)}</div>
-				<div>Game Profit: {addCurrencySignal(this.props.gameProfit)}</div>
-				<div>Balance: {addCurrencySignal(this.props.balance)}</div>
-			</div>
-			<div className="statistics-panel">
-				<h5>PERFORMANCE</h5>
-				<div>Game Played: {this.props.gamePlayed}</div>
-				<div>Total Wagered: {this.props.totalWagered}</div>
-				<div>Net Profit: {addCurrencySignal(this.props.netProfit)}</div>
-				<div>Profit All Time High: {addCurrencySignal(this.props.profitAllTimeHigh)}</div>
-				<div>Profit All Time Low: {addCurrencySignal(this.props.profitAllTimeLow)}</div>
+			<div className="statistics-container">
+				<div>
+					<div className="statistics-panel">
+						<h5>BREAKDOWN</h5>
+						<div>Deposits: {addCurrencySignal(this.props.deposit)}</div>
+						<div>Withdrawals: {addCurrencySignal(this.props.withdraw)}</div>
+						<div>Game Profit: {addCurrencySignal(this.props.gameProfit)}</div>
+						<div>Balance: {addCurrencySignal(this.props.balance)}</div>
+					</div>
+					<div className="statistics-panel">
+						<h5>PERFORMANCE</h5>
+						<div>Game Played: {this.props.gamePlayed}</div>
+						<div>Total Wagered: {this.props.totalWagered}</div>
+						<div>Net Profit: {addCurrencySignal(this.props.netProfit)}</div>
+						<div>Profit All Time High: {addCurrencySignal(this.props.profitAllTimeHigh)}</div>
+						<div>Profit All Time Low: {addCurrencySignal(this.props.profitAllTimeLow)}</div>
+					</div>
+				</div>
+				<div>
+					{this.state.room_info && <div className="statistics-panel">
+						<h5>ROOM INFO ({this.state.room_info.room_name})</h5>
+						<table>
+							<thead>
+								<tr>
+									<th>Date/Time</th>
+									<th>Actor</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								{this.state.room_info.actionList.map((action, key) => (
+									<tr key={action._id}>
+										<td>{moment(action.created_at).format('LLL')}</td>
+										<td>{action.actor}</td>
+										<td>{action.action}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>}
+				</div>
 			</div>
 			<ChartEl
 				options={options}
 				series={series}
-				type="area"
+				className={series[0].data.length > 100 ? 'step-10' : (series[0].data.length > 20 ? 'step-5' : 'step-1')}
+				type="bar"
 				height="350"
 				width="100%"
 			/>
