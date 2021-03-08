@@ -512,7 +512,6 @@ router.post('/rooms', auth, async (req, res) => {
 });
 
 getMyRooms = async (user_id, pagination, page) => {
-	const start = new Date();
 	const rooms = await Room.find({creator: new ObjectId(user_id), status: 'open'})
 		.populate({path: 'game_type', model: GameType})
 		.sort({created_at: 'desc'})
@@ -521,39 +520,45 @@ getMyRooms = async (user_id, pagination, page) => {
 	const count = await Room.countDocuments({creator: new ObjectId(user_id), status: 'open'});
 	
 	let result = [];
+	const commission = await getCommission();
+	const commissionRate = (100 - commission) / 100.0;
 
 	for (const room of rooms) {
-		let temp = {
-			_id : room['_id'],
-			game_type : room['game_type'],
-			bet_amount : room['bet_amount'],
-			pr : room['host_pr'], 
-			winnings : '',
-			index: room['room_number'],
-			endgame_amount: room['endgame_amount'],
-			is_private: room['is_private'],
-		};
-		
-		const gameLogCount = await GameLog.countDocuments({ room: new ObjectId(room._id) });
+		try {
+			let temp = {
+				_id : room['_id'],
+				game_type : room['game_type'],
+				bet_amount : room['bet_amount'],
+				pr : room['host_pr'], 
+				winnings : '',
+				index: room['room_number'],
+				endgame_amount: room['endgame_amount'],
+				is_private: room['is_private'],
+			};
+			
+			const gameLogCount = await GameLog.countDocuments({ room: new ObjectId(room._id) });
 
-		if (temp.game_type.game_type_id === 1) { // Classic RPS
-			temp.pr = updateDigitToPoint2(temp.pr * 2 * commissionRate);
+			if (temp.game_type.game_type_id === 1) { // Classic RPS
+				temp.pr = updateDigitToPoint2(temp.pr * 2 * commissionRate);
+			}
+
+			if (gameLogCount === 0) {
+				temp.winnings = "£" + temp.bet_amount;
+			} else if (temp.game_type.game_type_id === 2) { // Spleesh!
+				temp.pr = temp.pr === 0 ? temp.bet_amount : temp.pr;
+				temp.winnings = "£" + updateDigitToPoint2(temp.pr  * commissionRate);
+			} else if (temp.game_type.game_type_id === 3) { // Brain Game
+				temp.winnings = "£" + updateDigitToPoint2((room['pr'] + room['bet_amount']) * commissionRate);
+			} else if (temp.game_type.game_type_id === 4) { //Mytery Box
+				temp.winnings = "£" + updateDigitToPoint2(temp.pr * commissionRate);
+			} else if (temp.game_type.game_type_id === 5) { // Quick Shoot
+				temp.winnings = "£" + updateDigitToPoint2(temp.pr * commissionRate);
+			}
+
+			result.push(temp);
+		} catch (e) {
+			console.log(e);
 		}
-
-		if (gameLogCount === 0) {
-			temp.winnings = "£" + temp.bet_amount;
-		} else if (temp.game_type.game_type_id === 2) { // Spleesh!
-			temp.pr = temp.pr === 0 ? temp.bet_amount : temp.pr;
-			temp.winnings = "£" + updateDigitToPoint2(temp.pr  * commissionRate);
-		} else if (temp.game_type.game_type_id === 3) { // Brain Game
-			temp.winnings = "£" + updateDigitToPoint2((room['pr'] + room['bet_amount']) * commissionRate);
-		} else if (temp.game_type.game_type_id === 4) { //Mytery Box
-			temp.winnings = "£" + updateDigitToPoint2(temp.pr * commissionRate);
-		} else if (temp.game_type.game_type_id === 5) { // Quick Shoot
-			temp.winnings = "£" + updateDigitToPoint2(temp.pr * commissionRate);
-		}
-
-		result.push(temp);
 	}
 
 	return {
@@ -566,8 +571,9 @@ router.get('/my_games', auth, async (req, res) => {
 	try {
 		const pagination = req.query.pagination ? parseInt(req.query.pagination) : 8;
 		const page = req.query.page ? parseInt(req.query.page) : 1;
-	
+		console.log("myGames: ", 111)
 		const rooms = await getMyRooms(req.user._id, pagination, page);
+		console.log(rooms.length);
 		res.json({
 			success: true,
 			myGames: rooms.rooms,
