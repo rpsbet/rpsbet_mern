@@ -46,6 +46,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
     .populate({path: 'joined_user', model: User})
     .populate({path: 'room', model: Room})
     .populate({path: 'game_type', model: GameType});
+    const rooms = await Room.find({creator: _id});
 
     for (r of receipts) {
       if (r.payment_type === 'Deposit') {
@@ -59,6 +60,10 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       if (t.description != 'deposit' && t.description != 'withdraw') {
           statistics['gameProfit'] += t.amount / 100.0;
       }
+    }
+
+    for (room of rooms) {
+      statistics['totalWagered'] += room.bet_amount;
     }
 
     const commission = await getCommission();
@@ -128,6 +133,10 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         statistics['profitAllTimeLow'] = profit;
       }
 
+      if (log.joined_user && log.joined_user._id == _id) {
+        statistics['totalWagered'] += log.bet_amount;
+      }
+
       statistics['gameLogList'].push({
         game_id: log.game_type.short_name + '-' + log.room.room_number,
         room_id: log.room._id,
@@ -137,12 +146,6 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         profit: profit,
         net_profit: 0
       });
-
-      if (log.creator == _id) {
-
-      } else if (log.joined_user == _id) {
-
-      }
     }
 
     res.json({
@@ -270,7 +273,7 @@ router.get('/get-room-statistics', auth, async (req, res) => {
         }
       }
     } else {
-      room_info.push({_id: room._id, created_at: room.created_at, actor: room.creator.username, bet_amount: '£' + room.bet_amount});
+      room_info.push({_id: room._id, created_at: room.created_at, actor: room.creator.username, bet_amount: '£' + room.bet_amount, action: 'Create Room'});
 
       for (log of gameLogs) {
         if (log.game_result == -100) {

@@ -109,18 +109,18 @@ class StatisticsForm extends React.Component {
 				<div>
 					<div className="statistics-panel">
 						<h5>BREAKDOWN</h5>
-						<div>Deposits: {addCurrencySignal(this.props.deposit)}</div>
-						<div>Withdrawals: {addCurrencySignal(this.props.withdraw)}</div>
-						<div>Game Profit: {addCurrencySignal(this.props.gameProfit)}</div>
-						<div>Balance: {addCurrencySignal(this.props.balance)}</div>
+						<div>Deposits: {addCurrencySignal(updateDigitToPoint2(this.props.deposit))}</div>
+						<div>Withdrawals: {addCurrencySignal(updateDigitToPoint2(this.props.withdraw))}</div>
+						<div>Game Profit: {addCurrencySignal(updateDigitToPoint2(this.props.gameProfit))}</div>
+						<div>Balance: {addCurrencySignal(updateDigitToPoint2(this.props.balance))}</div>
 					</div>
 					<div className="statistics-panel">
 						<h5>PERFORMANCE</h5>
 						<div>Game Played: {this.props.gamePlayed}</div>
-						<div>Total Wagered: {this.props.totalWagered}</div>
-						<div>Net Profit: {addCurrencySignal(this.props.netProfit)}</div>
-						<div>Profit All Time High: {addCurrencySignal(this.props.profitAllTimeHigh)}</div>
-						<div>Profit All Time Low: {addCurrencySignal(this.props.profitAllTimeLow)}</div>
+						<div>Total Wagered: {addCurrencySignal(updateDigitToPoint2(this.props.totalWagered))}</div>
+						<div>Net Profit: {addCurrencySignal(updateDigitToPoint2(this.props.netProfit))}</div>
+						<div>Profit All Time High: {addCurrencySignal(updateDigitToPoint2(this.props.profitAllTimeHigh))}</div>
+						<div>Profit All Time Low: {addCurrencySignal(updateDigitToPoint2(this.props.profitAllTimeLow))}</div>
 					</div>
 				</div>
 				<div>
