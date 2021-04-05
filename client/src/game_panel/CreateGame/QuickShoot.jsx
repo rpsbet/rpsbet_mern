@@ -10,12 +10,9 @@ class QuickShoot extends Component {
             is_other: 'hidden',
             animation: <div />
         };
-
-        this.onLeftPositionButtonClicked = this.onLeftPositionButtonClicked.bind(this);
-        this.onRightPositionButtonClicked = this.onRightPositionButtonClicked.bind(this);
     }
 
-    async onLeftPositionButtonClicked(e) {
+    onLeftPositionButtonClicked = async (e) => {
         e.preventDefault();
         if (this.props.selected_qs_position > 0) {
             await this.props.onChangeState({selected_qs_position: this.props.selected_qs_position - 1});
@@ -23,7 +20,7 @@ class QuickShoot extends Component {
         }
     }
 
-    async onRightPositionButtonClicked(e) {
+    onRightPositionButtonClicked = async (e) => {
         e.preventDefault();
         if (this.props.selected_qs_position < this.props.qs_game_type - 1) {
             await this.props.onChangeState({selected_qs_position: this.props.selected_qs_position + 1});
@@ -31,7 +28,7 @@ class QuickShoot extends Component {
         }
     }
 
-    async updateAnimation() {
+    updateAnimation = async () => {
         let position_short_name = ["center", "tl", "tr", "bl", "br"];
 
         if (this.props.qs_game_type === 2) {

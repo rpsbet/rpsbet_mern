@@ -36,11 +36,6 @@ class SignupModal extends Component {
             bio: '',
             avatar: ''
         }
-
-        this.onSubmitForm = this.onSubmitForm.bind(this);
-        this.onChangeUserName = this.onChangeUserName.bind(this);
-        this.onChangeEmail = this.onChangeEmail.bind(this);
-        this.onChangePassword = this.onChangePassword.bind(this);
     }
 
     onChangeUserName = (e) => {
@@ -58,7 +53,7 @@ class SignupModal extends Component {
     componentDidMount() {
     }
 
-    async onSubmitForm(e) {
+    onSubmitForm = async (e) => {
         e.preventDefault();
         const result = await this.props.userSignUp(this.state);
 

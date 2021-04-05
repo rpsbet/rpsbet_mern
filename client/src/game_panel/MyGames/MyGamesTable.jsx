@@ -1,46 +1,150 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { endGame, getMyGames } from '../../redux/Logic/logic.actions';
+import { getMyGames, endGame } from '../../redux/Logic/logic.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-import { confirmModalClosed } from '../modal/ConfirmAlerts';
+import { alertModal, confirmModalClosed } from '../modal/ConfirmAlerts';
+import Pagination from "../../components/Pagination"
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import history from '../../redux/history';
 
 class MyGamesTable extends Component {
 	constructor(props) {
 		super(props);
-		this.endRoom = this.endRoom.bind(this);
+		this.state = {
+			selectedGameType: 'RPS'
+		}
 	}
 
-	endRoom(winnings, room_id) {
-		confirmModalClosed(this.props.isDarkMode, `Do you want to end this game now? You will take [${winnings}]`, 'Okay', 'Cancel', () => {
+	componentDidMount() {
+	}
+
+	endRoom = (winnings, room_id) => {
+		confirmModalClosed(true, `Do you want to end this game now? You will take [${winnings}]`, 'Okay', 'Cancel', () => {
 			this.props.endGame(room_id);
 		});
 	}
 
-	render() {
-		const pageNumbers = [];
+	handleGameTypeButtonClicked = async (short_name) => {
+		this.setState({ selectedGameType: short_name });
+		this.props.getMyGames({
+			game_type: short_name
+		});
+		return;
+	}
 
-		for (let i = 1; i <= this.props.myGamesTotalPage; i++) {
-			pageNumbers.push(
-				<button 
-					key={i}
-					className={`btn btn_main_table_page_number ${i === this.props.pageNumber ? 'active' : ''}`}
-					onClick={(e)=>{ this.props.getMyGames(i); } }>
-					{i}
-				</button>);
+	handleBtnLeftClicked = (e) => {
+		this.game_type_panel.scrollLeft = 0;
+	}
+
+	handleBtnRightClicked = (e) => {
+		this.game_type_panel.scrollLeft = this.game_type_panel.scrollWidth;
+	}
+
+	generateGameTypePanel = () => {
+		const gameTypeStyleClass = {
+			'RPS': 'classic-rps',
+			'S!': 'spleesh',
+			'MB': 'mystery-box',
+			'BG': 'brain-game',
+			'QS': 'quick-shoot',
 		}
 
+		const gameTypePanel = [
+			<div className="btn-arrow-left" key="open-game-left-button" onClick={this.handleBtnLeftClicked}><ChevronLeftIcon /></div>,
+			<div className="btn-arrow-right" key="open-game-right-button" onClick={this.handleBtnRightClicked}><ChevronRightIcon /></div>,
+			<div className={`btn-game-type btn-icon all-games ${this.state.selectedGameType === 'All' ? 'active' : ''}`} 
+				key="open-game-all-game-button" 
+				game_type_id={null} 
+				short_name="All"
+				onClick={(e) => {this.handleGameTypeButtonClicked('All')}}>
+				<img src={`../img/gametype/icons/All.svg`} alt="" />
+				<div>All Games</div>
+			</div>
+		];
+
+		this.props.gameTypeList.map((gameType, index) => {
+			gameTypePanel.push(
+				<div className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]} ${this.state.selectedGameType === gameType.short_name ? 'active' : ''}`} 
+					game_type_id={gameType._id}
+					short_name={gameType.short_name}
+					key={index} 
+					onClick={(e) => {this.handleGameTypeButtonClicked(gameType.short_name)}}>
+					<img src={`../img/gametype/icons/${gameType.short_name}.svg`} alt="" />
+					<div>{gameType.game_type_name}</div>
+				</div>
+			);
+			return true;
+		});
+
+		return gameTypePanel;
+	}
+
+	handlePageNumberClicked = (page) => {
+		this.props.getMyGames({
+			page: page,
+			game_type: this.state.selectedGameType
+		});
+	}
+
+	handlePrevPageClicked = () => {
+		if (this.props.pageNumber === 1) return;
+		this.props.getMyGames({
+			page: this.props.pageNumber - 1,
+			game_type: this.state.selectedGameType
+		});
+	}
+
+	handleNextPageClicked = () => {
+		if (this.props.pageNumber === this.props.totalPage) return;
+		this.props.getMyGames({
+			page: this.props.pageNumber + 1,
+			game_type: this.state.selectedGameType
+		});
+	}
+
+	handleCreateBtnClicked = (e) => {
+		e.preventDefault();
+
+		if (this.state.selectedGameType === 'All') {
+            alertModal(true, `Please choose a game type!`)
+			return;
+		}
+
+		for (let i = 0; i < this.props.gameTypeList.length; i++) {
+			if (this.props.gameTypeList[i].short_name === this.state.selectedGameType) {
+				history.push(`/create/${this.props.gameTypeList[i].game_type_name}`);
+				break;
+			}
+		}
+	}
+
+	render() {
+		const gameTypePanel = this.generateGameTypePanel();
 		return (
 			<div className="my-open-games">
+				<div className="create-room-btn-panel">
+					<label>Host your first game today!</label>
+					<button className="btn-create-room" onClick={this.handleCreateBtnClicked}>+ Host Game</button>
+				</div>
+				<div className="game-type-container">
+					<div className="game-type-panel" ref={(elem) => {this.game_type_panel = elem}}>
+						{gameTypePanel}
+					</div>
+				</div>
 				<div className="table my-open-game-table">
-					<div className="table-header">
+					{this.props.myGames.length > 0 && <div className="table-header">
 						<div className="table-cell room-id">Room ID</div>
 						<div className="table-cell bet-info">Bet / PR</div>
 						<div className="table-cell winnings">Winnings</div>
 						<div className="table-cell action desktop-only">Action</div>
-					</div>
+					</div>}
 					{
 						this.props.myGames.length === 0 ? 
-							<div></div>
+							<div className="dont-have-game-msg">
+								<div>You don't have any games right now.</div>
+								<span>You can start your games <br/>from "+ Host Game"</span>
+							</div>
 							: 
 							this.props.myGames.map((row, key) => (
 								<div className="table-row" key={row._id}>
@@ -80,9 +184,14 @@ class MyGamesTable extends Component {
 							), this)
 					}
 				</div>
-				<div className="main_table_pagination">
-					{pageNumbers}
-				</div>
+				{this.props.myGames.length > 0 && <Pagination 
+					handlePageNumberClicked={this.handlePageNumberClicked}
+					handlePrevPageClicked={this.handlePrevPageClicked}
+					handleNextPageClicked={this.handleNextPageClicked}
+					pageNumber={this.props.pageNumber}
+					totalPage={this.props.totalPage}
+					prefix="MyGames"
+				/>}
 			</div>
 		);
 	}
@@ -91,7 +200,7 @@ class MyGamesTable extends Component {
 const mapStateToProps = state => ({
   	isDarkMode: state.auth.isDarkMode,
   	myGames: state.logic.myGames,
-	myGamesTotalPage: state.logic.myGamesTotalPage,
+	totalPage: state.logic.myGamesTotalPage,
 	pageNumber: state.logic.myGamesPageNumber,
 });
 

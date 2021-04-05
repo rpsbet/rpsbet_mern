@@ -5,7 +5,6 @@ import {
   END_LOADING,
   ROOMS_LOADED,
   BET_SUCCESS,
-  MSG_CREATE_ROOM_FAIL,
   MSG_CREATE_ROOM_SUCCESS,
   MSG_ROOMS_LOAD_FAILED,
   MSG_GAMETYPE_LOAD_FAILED,
@@ -20,6 +19,9 @@ import {
   SET_BALANCE,
   ONLINE_USER_LIST_UPDATED,
   MSG_WARNING,
+  SELECT_MAIN_TAB,
+  MY_CHAT_LOADED,
+  GLOBAL_CHAT_RECEIVED,
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -138,7 +140,6 @@ export const getRoomList = (search_condition) => async dispatch => {
     const res = await axios.get('/game/rooms', {params: search_condition});
     dispatch({ type: END_LOADING });
     if (res.data.success) {
-      res.data.page = search_condition.page;
       dispatch({ type: ROOMS_LOADED, payload: res.data });
     }
   } catch (err) {
@@ -150,7 +151,7 @@ export const getHistory = (search_condition) => async dispatch => {
   try {
     const res = await axios.get('/game/history', {params: search_condition});
     if (res.data.success) {
-      dispatch({ type: HISTORY_LOADED, payload: res.data.history });
+      dispatch({ type: HISTORY_LOADED, payload: res.data });
     }
   } catch (err) {
   }
@@ -170,13 +171,13 @@ export const getGameTypeList = () => async dispatch => {
   }
 };
 
-export const getMyGames = (page) => async dispatch => {
+export const getMyGames = (search_condition) => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
-    const res = await axios.get('/game/my_games', {params: {page}});
+    const res = await axios.get('/game/my_games', {params: search_condition});
     dispatch({ type: END_LOADING });
     if (res.data.success) {
-      dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data, pageNumber: page } });
+      dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
     } else {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
@@ -194,25 +195,32 @@ export const endGame = (room_id) => async dispatch => {
     } else {
       if (res.data.already_finished) {
         // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
-      } else {
-        dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
       }
     }
   } catch (err) {
-    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+    console.log(err)
   }
 }
 
-export const getMyHistory = () => async dispatch => {
+export const getMyHistory = (search_condition) => async dispatch => {
   try {
-    const res = await axios.get('/game/my_history');
+    const res = await axios.get('/game/my_history', {params: search_condition});
     if (res.data.success) {
-      dispatch({ type: MY_HISTORY_LOADED, payload: res.data.myHistory });
-    } else {
-      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+      dispatch({ type: MY_HISTORY_LOADED, payload: res.data });
     }
   } catch (err) {
-    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+    console.log(err)
+  }
+}
+
+export const getMyChat = () => async dispatch => {
+  try {
+    const res = await axios.get('/game/my_chat');
+    if (res.data.success) {
+      dispatch({ type: MY_CHAT_LOADED, payload: res.data.myChat });
+    }
+  } catch (err) {
+    console.log(err)
   }
 }
 
@@ -321,4 +329,12 @@ export const endLoading = () => dispatch => {
 
 export const updateOnlineUserList = (user_list) => dispatch => {
   dispatch({ type: ONLINE_USER_LIST_UPDATED, payload: user_list });
+}
+
+export const selectMainTab = (index) => dispatch => {
+  dispatch({ type: SELECT_MAIN_TAB, payload: index });
+}
+
+export const globalChatReceived = (data) => dispatch => {
+  dispatch({ type: GLOBAL_CHAT_RECEIVED, payload: data });
 }

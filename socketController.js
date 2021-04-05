@@ -1,6 +1,7 @@
 const ObjectId = require('mongoose').Types.ObjectId;
 const socket_io = require ('socket.io');
 const Message = require('./model/Message');
+const Moment = require('moment');
 
 let sockets = {};
 
@@ -24,17 +25,17 @@ module.exports.socketio = (server) => {
   io.on ('connection', (socket) => {
     socket.emit('CONNECTED', {});
 
-    socket.on('upgrade', () => { console.log(123123); })
-
     socket.on ('STORE_CLIENT_USER_ID', (data) => {
       sockets[data.user_id] = socket;
-      console.log("SocketId:", socket.id);
-      console.log("added: ", Object.keys(sockets));
       io.sockets.emit('ONLINE_STATUS_UPDATED', {user_list: Object.keys(sockets)});
     })
 
+    socket.on('GLOBAL_CHAT_SEND', (data) => {
+      data.time = Moment(new Date()).format('hh:mm');
+      io.sockets.emit('GLOBAL_CHAT_RECEIVED', data);
+    })
+
     socket.on ('disconnect', (reason) => {
-      console.log(reason);
       Object.keys(sockets).forEach(
         (key, index) => {
           if (sockets[key].id === socket.id) {
@@ -42,7 +43,6 @@ module.exports.socketio = (server) => {
           }
         }
       )
-      console.log("removed: ", Object.keys(sockets));
       io.sockets.emit('ONLINE_STATUS_UPDATED', {user_list: Object.keys(sockets)});
     });
 

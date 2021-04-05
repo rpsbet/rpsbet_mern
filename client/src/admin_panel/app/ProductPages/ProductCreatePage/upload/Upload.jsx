@@ -15,18 +15,14 @@ class Upload extends Component {
       uploadProgress: {},
       successfullUploaded: false
     };
-
-    this.onFileAdded = this.onFileAdded.bind(this);
-    this.uploadFiles = this.uploadFiles.bind(this);
-    this.sendRequest = this.sendRequest.bind(this);
   }
 
-  onFileAdded(file) {
+  onFileAdded = (file) => {
     this.setState({ file: file });
     this.uploadFiles(file);
   }
 
-  async uploadFiles(file) {
+  uploadFiles = async (file) => {
     this.setState({ uploadProgress: {}, uploading: true });
     const promises = [];
     promises.push(this.sendRequest(file));
@@ -40,7 +36,7 @@ class Upload extends Component {
     }
   }
 
-  sendRequest(file) {
+  sendRequest = (file) => {
     return new Promise((resolve, reject) => {
       const req = new XMLHttpRequest();
 

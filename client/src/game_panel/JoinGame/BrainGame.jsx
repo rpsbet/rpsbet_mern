@@ -26,11 +26,6 @@ class BrainGame extends Component {
             next_answers: [],
             isPasswordCorrect: this.props.isPasswordCorrect
         };
-        this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
-        this.onCountDown = this.onCountDown.bind(this);
-        this.onStartGame = this.onStartGame.bind(this);
-        this.onClickAnswer = this.onClickAnswer.bind(this);
-        this.getNextQuestion = this.getNextQuestion.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -44,7 +39,7 @@ class BrainGame extends Component {
         return null;
     }
 
-    async getNextQuestion() {
+    getNextQuestion = async () => {
         try {
             const res = await axios.get('/game/question/' + this.state.brain_game_type._id);
             if (res.data.success) {
@@ -62,7 +57,7 @@ class BrainGame extends Component {
         this.getNextQuestion();
     }
 
-    onShowButtonClicked(e) {
+    onShowButtonClicked = (e) => {
         e.preventDefault();
         // if (this.state.advanced_status === "") {
         //     this.setState({advanced_status: "hidden"});
@@ -98,7 +93,7 @@ class BrainGame extends Component {
         }
     }
 
-    async onStartGame(e) {
+    onStartGame = async (e) => {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
@@ -132,7 +127,7 @@ class BrainGame extends Component {
         })
     }
 
-    async onCountDown() {
+    onCountDown = async () => {
         const remaining_time = this.state.remaining_time - 1;
         this.setState({ remaining_time });
 
@@ -171,7 +166,7 @@ class BrainGame extends Component {
         }
     }
 
-    async onClickAnswer(e) {
+    onClickAnswer = async (e) => {
         try {
             const data = {
                 question_id: this.state.question._id,

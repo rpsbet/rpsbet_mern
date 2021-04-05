@@ -40,13 +40,6 @@ class CreateGame extends Component {
 			box_list: [],
 			brain_game_type: this.props.brain_game_type,
 		}
-
-		this.onPrevButtonClicked = this.onPrevButtonClicked.bind(this);
-		this.onNextButtonClicked = this.onNextButtonClicked.bind(this);
-		this.onSkipButtonClicked = this.onSkipButtonClicked.bind(this);
-		this.onCreateRoom = this.onCreateRoom.bind(this);
-		this.onChangeState = this.onChangeState.bind(this);
-		this.onStartBrainGame = this.onStartBrainGame.bind(this);
 	}
 
 	static getDerivedStateFromProps(props, current_state) {
@@ -61,7 +54,7 @@ class CreateGame extends Component {
 		return null;
 	}
 
-	async onChangeState(newState) {
+	onChangeState = async (newState) => {
 		await this.setState(newState);
 	}
 
@@ -128,7 +121,7 @@ class CreateGame extends Component {
 		}
 	};
 
-	onSkipButtonClicked() {
+	onSkipButtonClicked = () => {
 		this.setState({
 			is_private: false,
 			is_anonymous: false,
@@ -137,7 +130,7 @@ class CreateGame extends Component {
 		});
 	}
 
-	onStartBrainGame(e) {
+	onStartBrainGame = (e) => {
 		e.preventDefault();
 		confirmModalCreate(this.props.isDarkMode, 'Do you want to create new game now?', 'Okay', 'Cancel', ()=>{
 			this.setState({
@@ -147,7 +140,7 @@ class CreateGame extends Component {
 		})
 	}
 
-	onPrevButtonClicked() {
+	onPrevButtonClicked = () => {
 		if (this.state.game_mode !== 'Mystery Box' && this.state.step < 4) {
 			if (this.state.step === 3 && this.state.child_step === 1) {
 				if (this.state.game_mode === "Quick Shoot") {
@@ -176,7 +169,7 @@ class CreateGame extends Component {
 		});
 	}
 
-	onNextButtonClicked() {
+	onNextButtonClicked = () => {
 		if (this.state.step === 2) {
 			console.log(this.state.bet_amount)
 			if (parseFloat(this.state.bet_amount) <= 0 || isNaN(parseFloat(this.state.bet_amount))) {
@@ -227,14 +220,14 @@ class CreateGame extends Component {
 		this.setState({step: (this.state.step < 4 ? this.state.step + 1 : this.state.step)});
 	}
 
-	async onCreateRoom() {
+	onCreateRoom = async () => {
 		console.log("CreateRoom");
 		confirmModalCreate(this.props.isDarkMode, 'Do you want to create new game now?', 'Okay', 'Cancel', async ()=>{
 			await this.props.createRoom(this.state);
 		})
 	}
 
-	step2() {
+	step2 = () => {
 		if (this.state.game_mode === 'Classic RPS') {
 			return <ClassicRPS onChangeState={this.onChangeState} selected_rps={this.state.selected_rps} bet_amount={this.state.bet_amount} is_private={this.state.is_private} is_anonymous={this.state.is_anonymous} room_password={this.state.room_password} step={this.state.child_step}/>
 		} else if (this.state.game_mode === 'Spleesh!') {
@@ -249,7 +242,7 @@ class CreateGame extends Component {
 		return <></>
 	}
 
-	action_panel() {
+	action_panel = () => {
 		return (
 			<>
 				<hr/>

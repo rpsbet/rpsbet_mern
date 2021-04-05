@@ -35,10 +35,6 @@ class LoginModal extends Component {
             password: props.password,
             showVerificationModal: false
         }
-
-        this.onSubmitForm = this.onSubmitForm.bind(this);
-        this.onChangeEmail = this.onChangeEmail.bind(this);
-        this.onChangePassword = this.onChangePassword.bind(this);
     }
 
     onChangeEmail = (e) => {
@@ -52,7 +48,7 @@ class LoginModal extends Component {
     componentDidMount() {
     }
 
-    async onSubmitForm(e) {
+    onSubmitForm = async (e) => {
         e.preventDefault();
         const result = await this.props.userSignIn(this.state);
         if (result.status === 'success') {

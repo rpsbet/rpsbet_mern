@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 import styled from 'styled-components';
-import { styleColor } from '../../../../Styles/styleThem';
 import Elevation from '../../../../Styles/Elevation';
 import { updateDigitToPoint2, addCurrencySignal } from '../../../../util/helper';
 import moment from 'moment';

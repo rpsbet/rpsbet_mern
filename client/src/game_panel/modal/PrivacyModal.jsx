@@ -27,12 +27,9 @@ class PrivacyModal extends Component {
         this.state = {
             showPrivacyModal: false
         }
-
-        this.handleOpenPrivacyModal = this.handleOpenPrivacyModal.bind(this);
-    
     }
 
-    handleOpenPrivacyModal () {
+    handleOpenPrivacyModal = () => {
         this.setState({ showPrivacyModal: true });
     }
 

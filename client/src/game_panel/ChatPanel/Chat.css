@@ -1,0 +1,52 @@
+.chat-wrapper .chat-panel.global-chat {
+    height: calc(100vh - 160px);
+    overflow-y: auto;
+}
+
+.chat-wrapper .chat-input-panel {
+    background: transparent;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 5px;
+}
+
+.chat-wrapper .chat-input-panel .emoticon-panel {
+    display: none;
+    position: absolute;
+    font-size: 16px;
+    bottom: 100%;
+    left: 0;
+    background-color: #2f3136;
+    padding: 2px 5px;
+    border-radius: 8px;
+    max-width: 100%;
+}
+
+.chat-wrapper .chat-input-panel .emoticon-panel.active {
+    display: block;
+}
+
+.chat-wrapper .chat-input-panel .emoticon-panel > span {
+    margin: 0 5px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    display: inline-block;
+}
+
+.chat-wrapper .chat-input-panel button.btn-show-emoticon {
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='none' viewBox='0 0 22 22'%3E%3Cpath fill='%23B9BBBE' d='M11 22c6.075 0 11-4.925 11-11S17.075 0 11 0 0 4.925 0 11s4.925 11 11 11z'/%3E%3Cpath fill='%2336393F' d='M6.426 14.435c.027.11.714 2.676 4.574 2.676s4.547-2.566 4.574-2.676c.034-.132-.026-.27-.145-.338s-.268-.048-.366.047c-.012.011-1.195 1.134-4.063 1.134-2.869 0-4.052-1.123-4.063-1.134-.058-.058-.137-.088-.215-.088-.051 0-.103.013-.15.039-.12.068-.18.207-.146.34zM7.333 10.389c.844 0 1.528-.958 1.528-2.139 0-1.181-.684-2.139-1.528-2.139-.843 0-1.527.958-1.527 2.139 0 1.181.684 2.139 1.527 2.139zM14.667 10.389c.844 0 1.528-.958 1.528-2.139 0-1.181-.684-2.139-1.528-2.139s-1.528.958-1.528 2.139c0 1.181.684 2.139 1.528 2.139z'/%3E%3C/svg%3E%0A");
+}
+
+@media (max-width: 1023px) {
+    .chat-wrapper .chat-panel.global-chat {
+        height: calc(100vh - 222px);
+    }
+}

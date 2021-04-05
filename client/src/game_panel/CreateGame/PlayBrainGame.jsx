@@ -15,12 +15,9 @@ class PlayBrainGame extends Component {
 			next_question: { _id: '', question: '' },
 			next_answers: ['','','','']
 		};
-		this.onCountDown = this.onCountDown.bind(this);
-		this.onClickAnswer = this.onClickAnswer.bind(this);
-		this.getNextQuestion = this.getNextQuestion.bind(this);
 	}
 
-	async getNextQuestion() {
+	getNextQuestion = async () => {
 		try {
 			const res = await axios.get('/game/question/' + this.props.brain_game_type);
 			if (res.data.success) {
@@ -51,7 +48,7 @@ class PlayBrainGame extends Component {
 		});
 	}
 
-	onCountDown() {
+	onCountDown = () => {
 		const remaining_time = this.state.remaining_time - 1;
 		this.setState({ remaining_time });
 
@@ -74,7 +71,7 @@ class PlayBrainGame extends Component {
 		}
 	}
 
-	async onClickAnswer(e) {
+	onClickAnswer = async (e) => {
 		try {
 			const answer_id = e.target.getAttribute('_id');
 			if (this.state.remaining_time === 'FIN' || !answer_id) {

@@ -26,16 +26,29 @@
 	color: #ffffff !important;
 }
 
+.dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: rgba(47, 49, 54, 0.2);
 }
-.dark_mode .main-game .main-game-page-tabs {
+.dark_mode .main-game-page-tabs {
 	color: #8e9297;
-	border-bottom: 1px solid rgba(47, 49, 54, 1);
+	/* border-bottom: 1px solid rgba(47, 49, 54, 1); */
+	border-bottom: 1px solid transparent;
 }
-.dark_mode .main-game .main-game-page-tabs .Mui-selected {
-	background-color: rgba(47, 49, 54, 0.5);
+.dark_mode .main-game-page-tabs .Mui-selected {
+	background-color: #202225 !important;
 	color: white;
+}
+.dark_mode div.table .dont-have-game-msg {
+	color: #8e9297;
+	text-align: center;
+}
+.dark_mode div.table .dont-have-game-msg div {
+	font-size: 16px;
+	font-weight: 600;
+}
+.dark_mode div.table .dont-have-game-msg span {
+	font-size: 14px;
 }
 .dark_mode div.table .table-row {
 	background: rgba(47, 49, 54, 0.5);
@@ -60,7 +73,7 @@
 	border-color: rgba(47, 49, 54, 0.5);
 }
 .dark_mode .search_panel input.search_text,
-.dark_mode .create-game-panel .btn-create-game .game-type-icon,
+.dark_mode .game-type-panel .btn-game-type .game-type-icon,
 .dark_mode .game-page .page-title > .pre-summary-panel	{
 	background-color: rgba(47, 49, 54, 0.5);
 }
@@ -75,7 +88,7 @@
 .dark_mode .game-page .game-contents .summary-panel .summary-info .summary-item .summary-item-name,
 .dark_mode .game-page .pre-summary-panel,
 .dark_mode .game-page .game-contents .game-info-panel .edit-amount-panel span,
-.dark_mode .create-game-panel .btn-create-game:hover .game-type-name {
+.dark_mode .game-panel-panel .btn-game-type:hover .game-type-name {
 	color: white;
 }
 .dark_mode #game_logs .game_logs_contents table td.fromNow,
@@ -262,16 +275,6 @@
 @media (max-width: 768px) {
     .dark_mode .game_header .main_header a.game_logo {
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='23' fill='none' viewBox='0 0 64 23'%3E%3Cpath fill='%23D81719' fill-rule='evenodd' d='M4.037 15.28v4.397H.634V5.562h6.573c1.251 0 2.45.5 3.335 1.39.885.891 1.382 2.1 1.382 3.36 0 1.259-.497 2.467-1.382 3.358-.678.683-1.542 1.137-2.472 1.31l3.543 4.753H7.36l-3.322-4.454zm3.17-3.645h-3.17V8.988h3.17c.349 0 .683.139.93.387.246.248.385.585.385.936 0 .351-.139.688-.385.936-.247.248-.581.388-.93.388zm9.357 3.426h3.17c1.25 0 2.45-.5 3.335-1.391.885-.891 1.382-2.1 1.382-3.359 0-1.26-.497-2.468-1.382-3.358-.884-.891-2.084-1.391-3.335-1.391H13.16V19.677h3.403V15.06zm3.17-3.426h-3.17V8.988h3.17c.349 0 .683.139.93.387.246.248.384.585.384.936 0 .351-.138.688-.384.936-.247.248-.581.388-.93.388zm5.722 8.254h7.269c1.169 0 2.29-.468 3.116-1.3.827-.833 1.291-1.962 1.291-3.139 0-1.177-.464-2.306-1.29-3.138-.827-.832-1.948-1.3-3.117-1.3h-2.939c-.266 0-.522-.107-.71-.296-.189-.19-.295-.448-.295-.716 0-.269.106-.526.295-.716.188-.19.444-.296.71-.296h7.269V5.562h-7.269c-1.169 0-2.29.467-3.116 1.3-.827.832-1.291 1.96-1.291 3.138 0 1.177.464 2.306 1.29 3.138.827.832 1.948 1.3 3.117 1.3h2.939c.266 0 .522.107.71.296.19.19.295.448.295.716 0 .269-.106.526-.294.716-.189.19-.445.296-.711.296h-7.269v3.427z' clip-rule='evenodd'/%3E%3Cpath fill='%23FFFFFF' fill-rule='evenodd' d='M45.142 17.434c0 1.308-1.05 2.213-2.36 2.213h-3.216v-7.63h2.988c1.278 0 2.306.871 2.306 2.147.007.293-.054.583-.178.849-.124.265-.308.497-.536.678.308.171.565.424.74.731.176.308.264.658.256 1.012zm-4.082-4.013v1.68h1.494c.215-.009.419-.102.567-.258.15-.157.232-.365.232-.582 0-.217-.083-.425-.232-.581-.148-.157-.352-.25-.567-.259H41.06zm2.598 3.915c.005-.118-.015-.235-.057-.345-.043-.11-.107-.209-.19-.293-.081-.083-.18-.15-.288-.193-.108-.044-.224-.066-.341-.063H41.06v1.799h1.722c.117.003.234-.02.343-.064.11-.045.208-.112.29-.197.083-.085.147-.186.188-.296.042-.111.061-.23.055-.348zm5.186 1.188c.23.01.46-.035.67-.13.21-.094.396-.236.543-.415l1.125.654c-.508.742-1.32 1.167-2.36 1.167-1.818 0-2.966-1.254-2.966-2.878 0-1.625 1.159-2.88 2.858-2.88 1.602 0 2.74 1.277 2.74 2.88-.002.194-.02.387-.055.578h-4.081c.195.719.795 1.024 1.526 1.024zm1.213-2.115c-.053-.316-.219-.602-.466-.804-.247-.203-.558-.308-.877-.297-.747 0-1.255.404-1.418 1.101h2.76zm4.087 1.407v-2.268h1.219v-1.353H54.14v-1.526l-1.392.425v1.101h-.942v1.353h.942v2.268c0 1.471.66 2.049 2.62 1.831v-1.275c-.802.043-1.224.032-1.224-.556z' clip-rule='evenodd'/%3E%3Cpath fill='%23D81719' d='M54.813 2.373L50.334.677c-.148-.056-.312-.05-.455.017-.143.067-.255.188-.31.338L48.166 4.84c-.595 1.61-.732 3.005-.412 4.187.32 1.182 1.15 2.433 2.49 3.75l2.065-1.865c-.813-.845-1.323-1.572-1.53-2.18-.207-.611-.215-1.274-.023-1.89l2.119.801c.148.056.311.05.455-.017.143-.066.255-.188.31-.338l1.523-4.139c.054-.15.048-.315-.017-.46-.066-.146-.185-.26-.333-.316z'/%3E%3Cpath fill='%23FFB000' d='M55.658 7.433l4.664-1.03c.076-.017.156-.019.233-.006.077.013.15.04.217.081.067.04.124.093.17.155.044.063.077.133.094.207l.892 3.789c.377 1.602.33 2.943-.141 4.023-.471 1.079-1.458 2.158-2.96 3.237l-1.805-2.035c.918-.695 1.519-1.318 1.803-1.868.286-.552.383-1.18.275-1.79l-2.204.488c-.154.034-.316.007-.45-.074-.133-.082-.228-.212-.264-.361l-.967-4.123c-.035-.149-.009-.305.075-.435.083-.13.215-.222.368-.258z'/%3E%3C/svg%3E%0A");
-	}
-	.dark_mode div.main-page-nav-button-group button {
-		color: white;
-		background-color: #252628;
-		border-top-color: #252628;
-	}
-	.dark_mode div.main-page-nav-button-group button:hover,
-	.dark_mode div.main-page-nav-button-group button.active {
-		background-color: #202225;
-		color: white;
 	}
 	.dark_mode .contents_wrapper .game-page .page-title h2 {
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M15.474 17.705l-.67.336.67-.336zm-.495-.99l.67-.336c-.127-.254-.386-.415-.67-.415v.75zm-6.258 0v-.75c-.284 0-.543.16-.67.414l.67.335zM22.05 8.893v7.083h1.5V8.893h-1.5zm-5.905 8.477l-.496-.99-1.341.67.495.99 1.342-.67zm-1.166-1.406H8.72v1.5h6.258v-1.5zm-6.928.415l-.496.99 1.342.672.495-.991-1.341-.67zm-6.401-.403V8.893H.15v7.083h1.5zM5.593 4.95h12.514v-1.5H5.593v1.5zm-.826 14.143c-1.722 0-3.117-1.395-3.117-3.117H.15c0 2.55 2.067 4.617 4.617 4.617v-1.5zm14.166 0c-1.18 0-2.26-.667-2.788-1.723l-1.342.67c.782 1.565 2.38 2.553 4.13 2.553v-1.5zm3.117-3.117c0 1.722-1.396 3.117-3.117 3.117v1.5c2.55 0 4.617-2.067 4.617-4.617h-1.5zM7.555 17.37c-.528 1.056-1.607 1.723-2.788 1.723v1.5c1.749 0 3.348-.988 4.13-2.552l-1.342-.671zM23.55 8.893c0-3.006-2.437-5.443-5.443-5.443v1.5c2.178 0 3.943 1.765 3.943 3.943h1.5zm-21.9 0c0-2.178 1.765-3.943 3.943-3.943v-1.5C2.587 3.45.15 5.887.15 8.893h1.5zm3.16 2.314h4.693v-1.5H4.811v1.5zm1.597-3.096v4.693h1.5V8.11h-1.5zm10.918 1.532h1.564v-1.5h-1.564v1.5zm-3.129 3.129h1.565v-1.5h-1.565v1.5z'/%3E%3C/svg%3E%0A");

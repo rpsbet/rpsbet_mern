@@ -8,18 +8,13 @@ class MysteryBox extends Component {
             new_box_price: '',
             new_box_prize: '',
         };
-        this.onChangeNewBoxPrize = this.onChangeNewBoxPrize.bind(this);
-        this.onChangeNewBoxPrice = this.onChangeNewBoxPrice.bind(this);
-        this.onAddBox = this.onAddBox.bind(this);
-        this.onRemoveBox = this.onRemoveBox.bind(this);
-        this.onEmptyBoxes = this.onEmptyBoxes.bind(this);
     }
 
-    onChangeNewBoxPrize(e) {
+    onChangeNewBoxPrize = (e) => {
         this.setState({new_box_prize: e.target.value});
     }
 
-    onChangeNewBoxPrice(e) {
+    onChangeNewBoxPrice = (e) => {
         this.setState({new_box_price: e.target.value});
     }
 
@@ -54,7 +49,7 @@ class MysteryBox extends Component {
         return { max_return, max_prize, lowest_box_price, highest_box_price };
     }
 
-    onAddBox(e) {
+    onAddBox = (e) => {
         e.preventDefault();
 
         let new_box_price = parseFloat(this.state.new_box_price);
@@ -93,7 +88,7 @@ class MysteryBox extends Component {
         });
     }
 
-    onRemoveBox(e) {
+    onRemoveBox = (e) => {
         e.preventDefault();
         let box_list = this.props.box_list;
         box_list.splice(e.target.getAttribute('index'), 1);
@@ -111,7 +106,7 @@ class MysteryBox extends Component {
         });
     }
 
-    onEmptyBoxes(e) {
+    onEmptyBoxes = (e) => {
         e.preventDefault();
         this.props.onChangeState({box_list: [], bet_amount: 0, max_return: 0, max_prize: 0, endgame_amount: 0});
     }
@@ -130,19 +125,25 @@ class MysteryBox extends Component {
                 </div>
                 <div className="create-box-panel">
                     <div className="amounts-panel">
-                        <div className="edit-amount-panel">
-                            <span>£</span>
-                            <input type="text" pattern="[0-9]*" name="new_box_prize" id="new_box_prize"  maxLength="5"
-                                value={this.state.new_box_prize} 
-                                onChange={this.onChangeNewBoxPrize}
-                                placeholder="Box Prize" />
+                        <div>
+                            <div>Public Win</div>
+                            <div className="edit-amount-panel">
+                                <span>£</span>
+                                <input type="text" pattern="[0-9]*" name="new_box_prize" id="new_box_prize"  maxLength="5"
+                                    value={this.state.new_box_prize} 
+                                    onChange={this.onChangeNewBoxPrize}
+                                    placeholder="Box Prize" />
+                            </div>
                         </div>
-                        <div className="edit-amount-panel">
-                            <span>£</span>
-                            <input type="text" pattern="[0-9]*" name="new_box_price" id="new_box_price"  maxLength="5"
-                                value={this.state.new_box_price} 
-                                onChange={this.onChangeNewBoxPrice}
-                                placeholder="Box Price" />
+                        <div>
+                            <div>Cost of Opening</div>
+                            <div className="edit-amount-panel">
+                                <span>£</span>
+                                <input type="text" pattern="[0-9]*" name="new_box_price" id="new_box_price"  maxLength="5"
+                                    value={this.state.new_box_price} 
+                                    onChange={this.onChangeNewBoxPrice}
+                                    placeholder="Box Price" />
+                            </div>
                         </div>
                     </div>
                     <button className="other" onClick={this.onAddBox}>Add another box</button>

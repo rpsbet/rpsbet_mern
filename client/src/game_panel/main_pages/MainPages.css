@@ -2,33 +2,60 @@ button, button.btn {
     outline: none !important;
 }
 .contents_wrapper .main-game {
-    display: flex;
+    display: grid;
+    grid-template-columns: 15% 48% 37%;
     position: relative;
 }
+.chat-wrapper .chat-panel {
+    padding: 16px;
+}
+.chat-wrapper .chat-panel .chat-line {
+    display: grid;
+    grid-template-columns: 1fr 25px;
+    grid-gap: 8px;
+}
+.chat-wrapper .chat-panel .chat-line .chat-content {
+    font-size: 12px;
+    display: flex;
+}
+.chat-wrapper .chat-panel .chat-line .chat-content .sender-name {
+    color: #ffb000;
+    margin-right: 5px;
+}
+.chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
+    color: white;
+}
+.chat-wrapper .chat-panel .chat-line .chat-time {
+    font-size: 10px;
+    color: #72767d;
+}
 .contents_wrapper .main-game .main-panel {
-    padding: 32px;
-    width: 60%;
+    padding: 24px 0 24px 24px;
+    background-color: rgba(235, 237, 239, 0.5);
+    position: relative;
 }
 .contents_wrapper .main-game .sub-panel {
-    padding: 32px 24px 8px;
-    background-color: rgba(235, 237, 239, 0.5);
+    padding: 24px 24px 8px;
     position: initial;
-    width: 40%;
+    background-color: rgba(235, 237, 239, 0.5);
 }
 .main-game h2.main-title {
     font-size: 18px;
     font-weight: 600;
     color: #060607;
-    margin-bottom: 24px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
     text-transform: uppercase;
+    border-bottom: 1px solid #36393f;
 }
-.main-game .main-game-page-tabs {
-    border-bottom: 1px solid #b9b9b9;
+.main-game-page-tabs {
+    /* border-bottom: 1px solid #b9b9b9; */
+    border-bottom: 1px solid transparent;
 }
-.main-game .main-game-page-tabs .Mui-selected {
+.main-game-page-tabs .Mui-selected {
     background-color: white;
 }
-.main-game .main-game-page-tabs.sub-tabs .Mui-selected {
+.main-game-page-tabs.sub-tabs .Mui-selected {
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
 }
@@ -67,6 +94,50 @@ div.table .table-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+div.table.main-history-table .table-row > div {
+    align-items: flex-start;
+    color: white;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+div.table.main-history-table .table-row > div > .room-id {
+    font-size: 14px;
+}
+div.table.main-history-table .table-row .table-cell img.avatar {
+    width: 16px;
+    height: 16px;
+}
+div.table.my-chat-table {
+    padding: 10px;
+}
+div.table.my-chat-table .table-row > div {
+    align-items: flex-start;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+div.table.my-chat-table .table-row > div.message-panel {
+    color: white;
+}
+div.table.my-chat-table .table-row .table-cell {
+    padding: 5px;
+}
+div.table.my-chat-table .table-row .table-cell.message-date {
+    min-width: 60px;
+}
+div.table.my-chat-table .table-cell button.btn_join {
+    width: 80px;
+}
+div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
+    background-color: #C83228;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    text-align: center;
+    line-height: 20px;
+    cursor: default;
 }
 div.table .table-header {
     background-color: transparent;
@@ -109,7 +180,7 @@ div.table .table-cell button.btn_end {
     height: 32px;
 }
 div.table.main-game-table .table-row .table-cell.cell-room-info{
-    width: 15%;
+    width: 20%;
     display: flex;
     align-items: center;
 }
@@ -146,64 +217,96 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     color: #ffb000;
     text-transform: none;
 }
-.create-game-panel {
+.game-type-container {
+    position: relative;
+}
+.game-type-panel {
     display: flex;
     justify-content: left;
     align-items: center;
-    border-bottom: 1px solid rgba(163, 163, 165, 0.3);
-    padding-bottom: 20px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    transition: 1s;
+    -webkit-scroll-behavior-duration: 0.5s;
+    -webkit-scroll-behavior-timing-function: ease-in;
+    scroll-behavior: smooth;
 }
-.create-game-panel .btn-create-game {
+.game-type-panel::-webkit-scrollbar {
+    height: 0;
+    background: transparent;
+}
+.game-type-panel .btn-game-type {
     margin-right: 20px;
     text-align: center;
     cursor: pointer;
+    font-size: 14px;
+    line-height: 1.71;
+    background-color: transparent;
+    color: #8e9297;
+    padding: 8px 16px;
+    border-radius: 50px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
 }
-.create-game-panel .btn-create-game .game-type-icon {
-    display: inline-block;
-    width: 64px;
-    height: 64px;
-    background-color: white;
-    border-radius: 8px;
-    background-position: center;
-    background-repeat: no-repeat;
+.game-type-panel .btn-game-type img {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+    filter: invert(61%) sepia(7%) saturate(233%) hue-rotate(173deg) brightness(94%) contrast(89%);
 }
-.create-game-panel .game-type-icon.classic-rps {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M19.098 24.03l-.422-.62c-.274.186-.453.486-.484.819l-.052.525h0c-.086.88.271 1.74.955 2.3.27.221.579.385.915.486h0l7.692 2.304.464.917c-.28.193-.531.425-.75.692-1.301 1.59-1.066 3.941.524 5.243 1.59 1.301 3.942 1.067 5.244-.524 1.273-1.556 1.076-3.84-.422-5.157 1.563 1.092 3.724.957 5.005-.451l.002-.003c.042-.047.085-.096.127-.148.691-.844.977-1.935.784-3.015-.205-1.15-.93-2.121-1.972-2.664-1.244-.648-2.772-.522-3.902.316h0c-.54.402-.952.92-1.208 1.516l-.99-.273-3.78-7.085h0c-.165-.31-.387-.579-.657-.8-.684-.56-1.599-.74-2.444-.481h0l-.504.154h-.002c-.316.097-.576.329-.705.636-.129.304-.117.65.032.945 0 0 0 0 0 0l2.593 5.121-5.533-1.527s0 0 0 0c-.32-.09-.663-.032-.936.156l.426.618zm0 0c.09-.062.203-.081.31-.052l-.47.322c.01-.109.069-.208.16-.27zm13.946 6.261c1.296 1.016 3.127.913 4.168-.232.036-.04.07-.08.104-.12.552-.676.78-1.545.626-2.409l-4.898 2.761zm-2.173 3.989c-.257.314-.724.36-1.038.103-.315-.257-.361-.724-.104-1.038.257-.314.724-.361 1.038-.104.315.258.361.724.104 1.039zm-1.674-6.177l.002-.002h.006l.002.004s0 0 0 0 0 .001 0 0v.005s-.001 0 0 0h-.001s-.001.002-.003.002h-.001-.004l-.001-.002-.001-.002c-.001 0 0-.001 0 0v-.002-.003s0 0 0 0zm6.386.419c-.257.314-.724.361-1.039.104-.314-.258-.36-.724-.103-1.039.257-.314.724-.36 1.038-.104.315.258.361.725.104 1.039z'/%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M24.9 36.812h-14c-1.105 0-2-.895-2-2V11.5c0-1.105.895-2 2-2h13.07c1.105 0 2 .895 2 2v1.69c0 1.105.895 2 2 2h1.69c1.105 0 2 .896 2 2v5.31'/%3E%3C/svg%3E%0A");
+.game-type-panel .btn-game-type.active img, 
+.game-type-panel .btn-game-type:hover img {
+    filter: none;
 }
-.create-game-panel .game-type-icon.spleesh {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M23.62 27.363v-.92c0-.996.506-1.907 1.31-2.353.802-.445 1.309-1.372 1.309-2.368 0-1.49-1.087-2.722-2.428-2.722h-.136c-.874 0-1.713.386-2.33 1.072l-.345.382m2.62 8v1.454'/%3E%3Crect width='18.5' height='26.5' x='14.75' y='10.75' stroke='%23747F8D' stroke-width='1.5' rx='1.25'/%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M15.064 16l-4.615.951c-1.07.22-1.747 1.256-1.523 2.325l3.198 15.237c.186.887 1.037 1.486 1.936 1.364v0l.802-.108M32.936 16l4.615.951c1.07.22 1.747 1.256 1.523 2.325l-3.198 15.237c-.186.887-1.037 1.486-1.936 1.364v0l-.802-.108'/%3E%3C/svg%3E%0A");
+.game-type-panel .btn-game-type.active,
+.game-type-panel .btn-game-type:hover {
+    background-color: #191a1d;
+    color: white;
 }
-.create-game-panel .game-type-icon.brain-game {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M35.242 21.282c0 1.512-.316 2.97-.94 4.338-.954 2.088-1.182 4.275-.65 6.333l.7 2.721c.06.223-.076.454-.304.508L21.31 38.487c-.034.009-.072.013-.105.013-.186 0-.35-.118-.405-.302l-.929-3.142-4.038-.088c-.933-.02-1.688-.79-1.688-1.717V28.9h-1.308c-.283 0-.54-.14-.696-.37-.156-.231-.182-.525-.076-.781l2.165-5.14c-.494-3.628 1.007-7.136 3.666-9.374 1.361-1.146 3.026-1.958 4.883-2.284'/%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M33.596 12.91h0v.004c.135 1.1-.271 2.229-1.069 3.007h0l-.007.007c-.712.712-1.16 1.674-1.22 2.688h-2.527c-.067-1.032-.539-2.008-1.27-2.716-1.026-1.029-1.337-2.56-.792-3.924.54-1.352 1.856-2.226 3.314-2.226.177 0 .309.001.41.016l.01.001.009.001c1.648.194 2.948 1.494 3.142 3.142z'/%3E%3Cmask id='sp62pc8n8a' fill='%23747F8D'%3E%3Cpath d='M30.025 22.696c.422 0 .797-.258.938-.68h-1.9c.141.422.54.68.962.68z'/%3E%3C/mask%3E%3Cpath fill='%23747F8D' d='M30.963 22.016l1.423.475.658-1.975h-2.08v1.5zm-1.9 0v-1.5h-2.08l.657 1.975 1.424-.475zm.962 2.18c1.057 0 2.013-.66 2.361-1.705l-2.846-.95c.03-.087.092-.179.188-.247.093-.067.2-.098.297-.098v3zm.938-3.68h-1.9v3h1.9v-3zm-3.323 1.975c.361 1.082 1.37 1.705 2.385 1.705v-3c.172 0 .382.108.462.346l-2.846.949z' mask='url(%23sp62pc8n8a)'/%3E%3Cmask id='znpqfj4jnb' fill='%23747F8D'%3E%3Cpath d='M28.337 21.031c0 .188.14.329.329.329h2.673c.188 0 .328-.141.328-.329v-1.008h-3.33v1.008z'/%3E%3C/mask%3E%3Cpath fill='%23747F8D' d='M31.667 20.023h1.5v-1.5h-1.5v1.5zm-3.33 0v-1.5h-1.5v1.5h1.5zm-1.5 1.008c0 1.016.812 1.829 1.829 1.829v-3c.29 0 .594.114.826.345.231.232.345.535.345.826h-3zm1.829 1.829h2.673v-3h-2.673v3zm2.673 0c1.016 0 1.828-.813 1.828-1.829h-3c0-.291.114-.594.346-.826.231-.231.535-.345.826-.345v3zm1.828-1.829v-1.008h-3v1.008h3zm-1.5-2.508h-3.33v3h3.33v-3zm-4.83 1.5v1.008h3v-1.008h-3z' mask='url(%23znpqfj4jnb)'/%3E%3C/svg%3E%0A");
+.game-type-panel .btn-arrow-left,
+.game-type-panel .btn-arrow-right {
+    color: white;
+    display: none;
+    transition: 0.5s;
+    width: 40px;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    cursor: pointer;
 }
-.create-game-panel .game-type-icon.mystery-box {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Cpath stroke='%23747F8D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M14.57 25.935c-.414 0-.75.336-.75.75V37.5c0 .967.784 1.75 1.75 1.75h17.334c.966 0 1.75-.783 1.75-1.75V26.685c0-.414-.336-.75-.75-.75H14.57z'/%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M16.345 31.142l-1.771-4.78H33.9l-1.77 4.78c-.037.098-.13.163-.235.163H16.579c-.104 0-.198-.065-.234-.163z'/%3E%3Cpath fill='%23747F8D' d='M8.62 31.58c-.263.321-.216.794.105 1.056.32.262.793.215 1.055-.105l-1.16-.95zm5.994-4.957c.262-.32.215-.793-.106-1.055-.32-.263-.793-.215-1.055.105l1.16.95zM9.78 32.531l4.834-5.908-1.161-.95-4.834 5.908 1.161.95zM39.854 31.58c.263.321.215.794-.105 1.056s-.793.215-1.056-.105l1.161-.95zm-5.994-4.957c-.262-.32-.215-.793.106-1.055.32-.263.793-.215 1.055.105l-1.16.95zm4.834 5.908l-4.834-5.908 1.161-.95 4.833 5.908-1.16.95z'/%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M30.923 26.148c1.837-1.76 2.98-4.237 2.98-6.981 0-5.34-4.327-9.667-9.666-9.667s-9.667 4.328-9.667 9.667c0 2.744 1.144 5.221 2.98 6.981'/%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M23.93 20.51v-1.88h.614c1.017 0 1.841-.842 1.841-1.88v-.125c0-.97-.77-1.755-1.718-1.755h-.737c-1.017 0-1.841.842-1.841 1.88m1.227 5.639h1.228'/%3E%3C/svg%3E%0A");
+.game-type-panel:hover .btn-arrow-left,
+.game-type-panel:hover .btn-arrow-right {
+    display: flex;
 }
-.create-game-panel .game-type-icon.quick-shoot {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Ccircle cx='27.542' cy='21.383' r='12' stroke='%23747F8D' stroke-width='1.5' transform='rotate(8.444 27.542 21.383)'/%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M16.67 25.91l5.603 2.02 3.06-3.59 4.452.662 2.07-3.737 4.104-.402 2.949 3.976M15.774 21.733l4.927-3.64 3.81 1.576 3.829-1.959.587-3.956 5.077-2.457'/%3E%3Cpath stroke='%23747F8D' stroke-width='1.5' d='M25.175 9.48l3.752 4.274-.587 3.956 3.516 3.555 4.103-.402 1.982-5.444M36.763 29.07l-5.093.255-1.885-4.323-4.451-.661-.823-4.672-3.81-1.576-.418-6.306M29.105 32.988l2.566-3.663M22.273 27.93l1.813 4.819'/%3E%3Cpath stroke='%23747F8D' stroke-linecap='round' stroke-width='1.5' d='M15.828 24.774L7.4 31.156M15.405 30.2l-8.032 5.956M22.996 32.041l-7.23 5.36M14.16 38.593l-.402.298'/%3E%3C/svg%3E%0A");
+.game-type-panel .btn-arrow-left {
+    background-image: linear-gradient(to right, #191a1d, rgba(25, 26, 29, 0));
 }
-.create-game-panel .btn-create-game:hover .game-type-icon.classic-rps {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M19.098 24.03l-.422-.62c-.274.186-.453.486-.484.819l-.052.525h0c-.086.88.271 1.74.955 2.3.27.221.579.385.915.486h0l7.692 2.304.464.917c-.28.193-.531.425-.75.692-1.301 1.59-1.066 3.941.524 5.243 1.59 1.301 3.942 1.067 5.244-.524 1.273-1.556 1.076-3.84-.422-5.157 1.563 1.092 3.724.957 5.005-.451l.002-.003c.042-.047.085-.096.127-.148.691-.844.977-1.935.784-3.015-.205-1.15-.93-2.121-1.972-2.664-1.244-.648-2.772-.522-3.902.316h0c-.54.402-.952.92-1.208 1.516l-.99-.273-3.78-7.085h0c-.165-.31-.387-.579-.657-.8-.684-.56-1.599-.74-2.444-.481h0l-.504.154h-.002c-.316.097-.576.329-.705.636-.129.304-.117.65.032.945 0 0 0 0 0 0l2.593 5.121-5.533-1.527s0 0 0 0c-.32-.09-.663-.032-.936.156l.426.618zm0 0c.09-.062.203-.081.31-.052l-.47.322c.01-.109.069-.208.16-.27zm13.946 6.261c1.296 1.016 3.127.913 4.168-.232.036-.04.07-.08.104-.12.552-.676.78-1.545.626-2.409l-4.898 2.761zm-2.173 3.989c-.257.314-.724.36-1.038.103-.315-.257-.361-.724-.104-1.038.257-.314.724-.361 1.038-.104.315.258.361.724.104 1.039zm-1.674-6.177l.002-.002h.006l.002.004s0 0 0 0 0 .001 0 0v.005s-.001 0 0 0h-.001s-.001.002-.003.002h-.001-.004l-.001-.002-.001-.002c-.001 0 0-.001 0 0v-.002-.003s0 0 0 0zm6.386.419c-.257.314-.724.361-1.039.104-.314-.258-.36-.724-.103-1.039.257-.314.724-.36 1.038-.104.315.258.361.725.104 1.039z'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M24.9 36.812h-14c-1.105 0-2-.895-2-2V11.5c0-1.105.895-2 2-2h13.07c1.105 0 2 .895 2 2v1.69c0 1.105.895 2 2 2h1.69c1.105 0 2 .896 2 2v5.31'/%3E%3C/svg%3E%0A"), linear-gradient(to top, #4f66ec, #3149be);
+.game-type-panel .btn-arrow-right {
+    background-image: linear-gradient(to right, rgba(25, 26, 29, 0), #191a1d);
+    right: 0;
 }
-.create-game-panel .btn-create-game:hover .game-type-icon.spleesh {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M23.62 27.363v-.92c0-.996.506-1.907 1.31-2.353.802-.445 1.309-1.372 1.309-2.368 0-1.49-1.087-2.722-2.428-2.722h-.136c-.874 0-1.713.386-2.33 1.072l-.345.382m2.62 8v1.454'/%3E%3Crect width='18.5' height='26.5' x='14.75' y='10.75' stroke='%23fff' stroke-width='1.5' rx='1.25'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M15.064 16l-4.615.951c-1.07.22-1.747 1.256-1.523 2.325l3.198 15.237c.186.887 1.037 1.486 1.936 1.364v0l.802-.108M32.936 16l4.615.951c1.07.22 1.747 1.256 1.523 2.325l-3.198 15.237c-.186.887-1.037 1.486-1.936 1.364v0l-.802-.108'/%3E%3C/svg%3E%0A"), linear-gradient(to top, #fa1c65, #d73b3c);
+.create-room-btn-panel {
+    position: absolute;
+    top: 12px;
+    right: 0;
 }
-.create-game-panel .btn-create-game:hover .game-type-icon.brain-game {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M35.242 21.282c0 1.512-.316 2.97-.94 4.338-.954 2.088-1.182 4.275-.65 6.333l.7 2.721c.06.223-.076.454-.304.508L21.31 38.487c-.034.009-.072.013-.105.013-.186 0-.35-.118-.405-.302l-.929-3.142-4.038-.088c-.933-.02-1.688-.79-1.688-1.717V28.9h-1.308c-.283 0-.54-.14-.696-.37-.156-.231-.182-.525-.076-.781l2.165-5.14c-.494-3.628 1.007-7.136 3.666-9.374 1.361-1.146 3.026-1.958 4.883-2.284'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M33.596 12.91h0v.004c.135 1.1-.271 2.229-1.069 3.007h0l-.007.007c-.712.712-1.16 1.674-1.22 2.688h-2.527c-.067-1.032-.539-2.008-1.27-2.716-1.026-1.029-1.337-2.56-.792-3.924.54-1.352 1.856-2.226 3.314-2.226.177 0 .309.001.41.016l.01.001.009.001c1.648.194 2.948 1.494 3.142 3.142z'/%3E%3Cmask id='sp62pc8n8a' fill='%23fff'%3E%3Cpath d='M30.025 22.696c.422 0 .797-.258.938-.68h-1.9c.141.422.54.68.962.68z'/%3E%3C/mask%3E%3Cpath fill='%23fff' d='M30.963 22.016l1.423.475.658-1.975h-2.08v1.5zm-1.9 0v-1.5h-2.08l.657 1.975 1.424-.475zm.962 2.18c1.057 0 2.013-.66 2.361-1.705l-2.846-.95c.03-.087.092-.179.188-.247.093-.067.2-.098.297-.098v3zm.938-3.68h-1.9v3h1.9v-3zm-3.323 1.975c.361 1.082 1.37 1.705 2.385 1.705v-3c.172 0 .382.108.462.346l-2.846.949z' mask='url(%23sp62pc8n8a)'/%3E%3Cmask id='znpqfj4jnb' fill='%23fff'%3E%3Cpath d='M28.337 21.031c0 .188.14.329.329.329h2.673c.188 0 .328-.141.328-.329v-1.008h-3.33v1.008z'/%3E%3C/mask%3E%3Cpath fill='%23fff' d='M31.667 20.023h1.5v-1.5h-1.5v1.5zm-3.33 0v-1.5h-1.5v1.5h1.5zm-1.5 1.008c0 1.016.812 1.829 1.829 1.829v-3c.29 0 .594.114.826.345.231.232.345.535.345.826h-3zm1.829 1.829h2.673v-3h-2.673v3zm2.673 0c1.016 0 1.828-.813 1.828-1.829h-3c0-.291.114-.594.346-.826.231-.231.535-.345.826-.345v3zm1.828-1.829v-1.008h-3v1.008h3zm-1.5-2.508h-3.33v3h3.33v-3zm-4.83 1.5v1.008h3v-1.008h-3z' mask='url(%23znpqfj4jnb)'/%3E%3C/svg%3E%0A"), linear-gradient(to top, #713ff3, #542bee);
+.create-room-btn-panel label {
+    margin-right: 24px;
+    font-size: 14px;
+    color: #72767d;
 }
-.create-game-panel .btn-create-game:hover .game-type-icon.mystery-box {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Cpath stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M14.57 25.935c-.414 0-.75.336-.75.75V37.5c0 .967.784 1.75 1.75 1.75h17.334c.966 0 1.75-.783 1.75-1.75V26.685c0-.414-.336-.75-.75-.75H14.57z'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M16.345 31.142l-1.771-4.78H33.9l-1.77 4.78c-.037.098-.13.163-.235.163H16.579c-.104 0-.198-.065-.234-.163z'/%3E%3Cpath fill='%23fff' d='M8.62 31.58c-.263.321-.216.794.105 1.056.32.262.793.215 1.055-.105l-1.16-.95zm5.994-4.957c.262-.32.215-.793-.106-1.055-.32-.263-.793-.215-1.055.105l1.16.95zM9.78 32.531l4.834-5.908-1.161-.95-4.834 5.908 1.161.95zM39.854 31.58c.263.321.215.794-.105 1.056s-.793.215-1.056-.105l1.161-.95zm-5.994-4.957c-.262-.32-.215-.793.106-1.055.32-.263.793-.215 1.055.105l-1.16.95zm4.834 5.908l-4.834-5.908 1.161-.95 4.833 5.908-1.16.95z'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M30.923 26.148c1.837-1.76 2.98-4.237 2.98-6.981 0-5.34-4.327-9.667-9.666-9.667s-9.667 4.328-9.667 9.667c0 2.744 1.144 5.221 2.98 6.981'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M23.93 20.51v-1.88h.614c1.017 0 1.841-.842 1.841-1.88v-.125c0-.97-.77-1.755-1.718-1.755h-.737c-1.017 0-1.841.842-1.841 1.88m1.227 5.639h1.228'/%3E%3C/svg%3E%0A"), linear-gradient(to top, #52e2c6, #39c7e5);
-}
-.create-game-panel .btn-create-game:hover .game-type-icon.quick-shoot {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Ccircle cx='27.542' cy='21.383' r='12' stroke='%23fff' stroke-width='1.5' transform='rotate(8.444 27.542 21.383)'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M16.67 25.91l5.603 2.02 3.06-3.59 4.452.662 2.07-3.737 4.104-.402 2.949 3.976M15.774 21.733l4.927-3.64 3.81 1.576 3.829-1.959.587-3.956 5.077-2.457'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M25.175 9.48l3.752 4.274-.587 3.956 3.516 3.555 4.103-.402 1.982-5.444M36.763 29.07l-5.093.255-1.885-4.323-4.451-.661-.823-4.672-3.81-1.576-.418-6.306M29.105 32.988l2.566-3.663M22.273 27.93l1.813 4.819'/%3E%3Cpath stroke='%23fff' stroke-linecap='round' stroke-width='1.5' d='M15.828 24.774L7.4 31.156M15.405 30.2l-8.032 5.956M22.996 32.041l-7.23 5.36M14.16 38.593l-.402.298'/%3E%3C/svg%3E%0A"), linear-gradient(to top, #ffdd65, #ffc83a);
-}
-.create-game-panel .btn-create-game .game-type-name {
-    font-size: 12px;
-    color: #747f8d;
-}
-.create-game-panel .btn-create-game:hover .game-type-name {
-    color: #060607;
+.create-room-btn-panel button.btn-create-room {
+    color: white;
+    font-size: 16px;
+    border: 2px solid transparent;
+    height: 35px;
+    background: 
+        linear-gradient(to top, #232529, #232529) padding-box, 
+        linear-gradient(to top, #ff409a, #c438ef) border-box;
+    border-radius: 100px;
+    font-weight: 600;
 }
 div.table.my-open-game-table {
     text-align: center;
@@ -256,6 +359,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     line-height: 24px;
     height: 24px;
     background-color: white;
+    box-shadow: none;
 }
 .main_table_pagination button.btn_main_table_page_number.active {
     border: 1px solid #ff409a;
@@ -265,11 +369,9 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     width: 100%;
     height: 100vh;
     background: rgba(0, 0, 0, 0.7);
-    transition: opacity 1s ease-in-out, transform 0.15s ease-in-out;
 }
 #game_logs.hidden {
     display: none;
-    opacity: 0;
 }
 #game_logs .arrow-up{
     width: 0;
@@ -288,6 +390,13 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     right: 150px;
     position: absolute;
     padding: 14px 10px;
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 0.5s, opacity 0.5s linear;
+}
+#game_logs.hidden .game_logs_contents {
+    visibility: hidden;
+    opacity: 0;
 }
 #game_logs .game_logs_contents h2 {
     color: #060607;
@@ -299,8 +408,11 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     width: 100%;
     line-height: 33px;
 }
+#game_logs .game_logs_contents table tr td {
+    padding: 0 10px;
+}
 #game_logs .game_logs_contents table tr:hover {
-    background-color: #f2f3f5;
+    background-color: #36393f;
 }
 #game_logs .game_logs_contents table td.amount {
     font-size: 14px;
@@ -318,8 +430,36 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     font-weight: normal;
     color: #747f8d;
 }
-.contents_wrapper .game-page {
+#game_logs .transaction-panel {
+    border-top: 2px solid #36393f;
+    padding-top: 5px;
+}
+#game_logs .transaction-panel button {
+    width: 100%;
+    background-color: transparent;
+    padding: 8px 16px 8px 36px;
+    text-align: left;
+    color: white;
+    background-repeat: no-repeat;
+    background-position: 5px center;
+}
+#game_logs .transaction-panel button:hover {
+    background-color: #36393f;
+}
+#game_logs .transaction-panel button.btn-deposit {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7' stroke='%23fff'/%3E%3Cpath stroke='%23fff' d='M9 13.714c0 .947.806 1.715 1.8 1.715h2.4c.994 0 1.8-.768 1.8-1.715 0-.947-.806-1.714-1.8-1.714h-2.4c-.994 0-1.8-.768-1.8-1.714 0-.947.806-1.715 1.8-1.715h2.4c.994 0 1.8.768 1.8 1.715M12 7v1.571M12 17v-1.571M3 19h18'/%3E%3C/svg%3E%0A");
+}
+#game_logs .transaction-panel button.btn-withdraw {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%23fff' d='M14 18.5l-2 1-2-1M17.052 5.5v10c0 .552-.448 1-1 1h-2m-7-11v10c0 .552.447 1 1 1h2m-1-3.5v1.5h1.5m4.5-1.5v1.5h-1.5m-1.5 1v4m-2-10c0-1.105.895-2 2-2 1.104 0 2 .895 2 2s-.896 2-2 2c-1.105 0-2-.895-2-2z'/%3E%3Cpath stroke='%23fff' d='M6.5 7.5h-2v-3h15v3h-2'/%3E%3C/svg%3E%0A");
+}
+.contents_wrapper .game-page,
+.contents_wrapper .room-history-panel {
     padding: 32px;
+}
+.contents_wrapper .room-history-panel h2.room-history-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
 }
 .contents_wrapper .game-page .page-title {
     display: flex;
@@ -626,7 +766,7 @@ input {
 }
 .game-page .game-contents .game-info-panel .create-box-panel {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     margin-top: 32px;
 }
 .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
@@ -640,6 +780,7 @@ input {
 }
 .game-page .game-contents .game-info-panel .create-box-panel a.btn-empty-boxes {
     font-size: 16px;
+    line-height: 36px;
     margin-left: 16px;
     color: #ffb000;
     cursor: pointer;
@@ -873,7 +1014,7 @@ input {
 .chat-page .chat-input-panel .emoticon-panel {
     display: none;
     position: absolute;
-    font-size: 36px;
+    font-size: 30px;
     bottom: 100%;
     left: 0;
     background-color: #b9bbbe;
@@ -928,28 +1069,48 @@ input {
 }
 @media (max-width: 1023px) {
     .contents_wrapper .main-game {
-        flex-direction: column;
+        grid-template-columns: 100%;
         margin-bottom: 60px;
     }
-    .create-game-panel-parent {
+    .sub-panel {
+        display: none;
+    }
+    .game-type-panel-parent {
         overflow: hidden;
         height: 95px;
     }
-    .create-game-panel {
+    .game-type-panel {
         border-bottom: none;
         width: 100%;
         overflow-x: auto;
     }
-    .create-game-panel .btn-create-game {
+    .game-type-panel .btn-game-type.btn-icon {
+        display: block;
         margin-right: 16px;
+        font-size: 10px;
+        padding: 0;
     }
-    .create-game-panel .btn-create-game .game-type-icon {
+    .game-type-panel .btn-game-type.btn-icon.active,
+    .game-type-panel .btn-game-type.btn-icon:hover {
+        background: transparent;
+        color: #C438EF;
+    }
+    .game-type-panel .btn-game-type.btn-icon img {
         width: 56px;
         height: 56px;
+        padding: 6px;
+        border-radius: 8px;
+        margin: 0 0 8px;
     }
-    .create-game-panel .btn-create-game .game-type-name {
-        font-size: 9px;
+    .game-type-panel .btn-game-type.btn-icon.active {
+        color: white;
     }
+    .game-type-panel .btn-game-type.btn-icon.active img {
+        border: 1px solid #C438EF;
+    }
+    /* .game-type-panel .btn-game-type:hover img {
+        filter: invert(43%) sepia(61%) saturate(6413%) hue-rotate(269deg) brightness(94%) contrast(100%);
+    } */
     .main-game h2.main-title {
         font-size: 16px;
     }
@@ -961,15 +1122,16 @@ input {
 
     div.table div.table-row div.table-cell {
         width: auto !important;
+        font-size: 12px;
+    }
+    div.table div.table-row div.table-cell .room-id {
+        font-size: 14px;
     }
     .desktop-only {
-        display: none;
+        display: none !important;
     }
     .mobile-only {
         display: initial;
-    }
-    div.table div.table-row div.table-cell {
-        font-size: 14px;
     }
     div.table div.table-row div.mobile-only {
         margin-top: 16px;
@@ -982,25 +1144,34 @@ input {
         position: fixed;
         width: 100%;
         bottom: 0;
-        box-shadow: 0 -4px 4px 0 rgba(0, 0, 0, 0.14);
+        display: flex;
+        padding: 12px 24px;
+        justify-content: space-between;
+        background: #191a1d;
     }
     div.main-page-nav-button-group button {
-        width: 50%;
-        height: 60px;
-        background-color: #f2f3f5;
-        color: #747f8d;
-        font-size: 16px;
+        display: flex;
+        align-items: center;
+        height: 40px;
+        background-color: transparent;
+        color: #8E9297;
+        font-size: 14px;
         font-weight: 500;
-        line-height: 60px;
-        border-top: 3px solid #f2f3f5;
-        border-radius: 0;
+        border-radius: 100px;
+        padding: 0;
         text-transform: none;
+        transition: 0.3s;
+    }
+    div.main-page-nav-button-group button svg {
+        width: 32px;
+        height: 32px;
+        margin-right: 5px;
     }
     div.main-page-nav-button-group button:hover,
     div.main-page-nav-button-group button.active {
-        color: #060607;
-        background-color: white;
-        border-top-color: #ff409a;
+        background: #36393f;
+        color: white;
+        padding: 0 15px;
     }
     div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
         width: 8px;
@@ -1117,6 +1288,13 @@ input {
     }
     .chat-page .chat-input-panel {
         margin: 16px 16px 0;
+    }
+    .game-type-panel:hover .btn-arrow-left,
+    .game-type-panel:hover .btn-arrow-right {
+        display: none;
+    }
+    .create-room-btn-panel {
+        position: initial;
     }
 }
 @media (max-width: 400px) {

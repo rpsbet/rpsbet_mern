@@ -557,11 +557,11 @@ div.table .table-row .table-cell img.game-type-icon {
         margin-right: -60px;
   }
 
-  .create-game-panel .btn-create-game {
+  .game-type-panel .btn-game-type {
     margin-right: 14px !important;
   }
 
-  .create-game-panel .btn-create-game .game-type-name {
+  .game-type-panel .btn-game-type .game-type-name {
     font-size: 11px !important;
   }
  }

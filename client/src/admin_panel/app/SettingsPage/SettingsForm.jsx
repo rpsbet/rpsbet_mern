@@ -6,7 +6,6 @@ import styled from 'styled-components';
 import { styleColor } from '../../../Styles/styleThem';
 import Grid from '@material-ui/core/Grid';
 import { connect } from 'react-redux';
-import FormLabel from '@material-ui/core/FormLabel';
 
 function SettingsForm({
   commission,
@@ -74,24 +73,8 @@ const ButtonDiv = styled.div`
   justify-content: space-between;
 `;
 
-const EditColumn = styled.div`
-  display: flex;
-  justify-content: space-between;
-  width: 180px;
-  .MuiButton-containedPrimary {
-    background-color: ${styleColor.error.main};
-  }
-`;
-const DeleteButtonEl = styled(Button)``;
-
 const ButtonEl = styled(Button)`
   span {
     color: ${({ cancel }) => (cancel ? styleColor.error.main : 'white')};
   }
-`;
-
-const Avatar = styled.img`
-  width: 200px;
-  height: 200px;
-  border-radius: 10px;
 `;

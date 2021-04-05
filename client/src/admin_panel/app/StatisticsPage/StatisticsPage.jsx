@@ -9,18 +9,6 @@ import MyChart from "./Charts";
 import { addCurrencySignal } from '../../../util/helper';
 import Elevation from '../../../Styles/Elevation';
 
-function generateData(count, yrange) {
-  var i = 0;
-  var series = [];
-  while (i < count) {
-    var x = (i + 1).toString();
-    var y = Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min;
-    series.push({x: i > 11 ? 11 : i, y});
-    i++;
-  }
-  return series;
-}
-
 class PalletPage extends Component {
   state = {
     totalGameCreated: 0,

@@ -37,58 +37,50 @@ class WithdrawModal extends Component {
             bank_short_code: '',
             payment_method: 'PayPal'
         };
-
-        this.handleAmountChange = this.handleAmountChange.bind(this);
-        this.handlePayeeNameChange = this.handlePayeeNameChange.bind(this);
-        this.handleEmailChange = this.handleEmailChange.bind(this);
-        this.sendWithdrawEmail = this.sendWithdrawEmail.bind(this);
-        this.handlePaymentMethodChange = this.handlePaymentMethodChange.bind(this);
-        this.handleBankAccountNumberChange = this.handleBankAccountNumberChange.bind(this);
-        this.handleBankShortCodeChange = this.handleBankShortCodeChange.bind(this);
     }
 
-    handlePayeeNameChange(e) {
+    handlePayeeNameChange = (e) => {
         e.preventDefault();
         this.setState({
             payee_name: e.target.value
         })
     }
 
-    handleBankAccountNumberChange(e) {
+    handleBankAccountNumberChange = (e) => {
         e.preventDefault();
         this.setState({
             bank_account_number: e.target.value
         })
     }
 
-    handleBankShortCodeChange(e) {
+    handleBankShortCodeChange = (e) => {
         e.preventDefault();
         this.setState({
             bank_short_code: e.target.value
         })
     }
 
-    handlePaymentMethodChange(method) {
+    handlePaymentMethodChange = (method) => {
         this.setState({
             payment_method: method
         });
     }
 
-    handleAmountChange(e) {
+    handleAmountChange = (e) => {
         e.preventDefault();
         this.setState({
             amount: e.target.value
         })
     }
 
-    handleEmailChange(e) {
+    handleEmailChange = (e) => {
         e.preventDefault();
         this.setState({
             email: e.target.value
         })
     }
 
-    async sendWithdrawEmail() {
+    sendWithdrawEmail = async () => {
         if (this.state.amount < 5) {
             alertModal(this.props.isDarkMode, `Sorry, you can withdraw a minimum of £5.`)
             return;

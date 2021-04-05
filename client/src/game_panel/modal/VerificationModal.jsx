@@ -31,10 +31,6 @@ class VerificationModal extends Component {
         this.state = {
             verificationCode: ''
         }
-
-        this.onSubmitForm = this.onSubmitForm.bind(this);
-        this.onChangeVerificationCode = this.onChangeVerificationCode.bind(this);
-        this.handleBtnResendClicked = this.handleBtnResendClicked.bind(this);
     }
 
     onChangeVerificationCode = (e) => {
@@ -44,7 +40,7 @@ class VerificationModal extends Component {
     componentDidMount() {
     }
 
-    async onSubmitForm(e) {
+    onSubmitForm = async (e) => {
         e.preventDefault();
         const is_verified = await this.props.verifyEmail(this.state.verificationCode);
         if (is_verified) {
@@ -52,7 +48,7 @@ class VerificationModal extends Component {
         }
     }
 
-    handleBtnResendClicked(e) {
+    handleBtnResendClicked = (e) => {
         e.preventDefault();
         this.props.resendVerificationEmail();
     }
