@@ -14,8 +14,6 @@ class JoinGame extends Component {
         this.state = {
             roomInfo : this.props.roomInfo
         }
-
-        this.join = this.join.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -38,7 +36,7 @@ class JoinGame extends Component {
         }
     };
 
-    async join(betInfo) {
+    join = async (betInfo) => {
         const result = await this.props.bet({
             _id: this.state.roomInfo._id,
             game_type: this.props.roomInfo.game_type,
@@ -97,6 +95,22 @@ class JoinGame extends Component {
                         bet_amount={this.props.roomInfo.bet_amount} 
                         is_private={this.props.roomInfo.is_private} 
                     />}
+                <div className="room-history-panel">
+                    <h2 className="room-history-title">Game History</h2>
+                    <div className="table main-history-table">
+                        {this.props.roomInfo.room_history.map((row, key) => (
+                            <div className="table-row" key={'my_history' + row._id}>
+                                <div>
+                                    <div className="table-cell">
+                                        <div className="room-id">{row.room_name}</div>
+                                        <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
+                                    </div>
+                                    <div className="table-cell">{row.from_now}</div>
+                                </div>
+                            </div>
+                        ), this)}
+                    </div>
+                </div>
             </>
         );
     }

@@ -31,9 +31,6 @@ class VerificationModal extends Component {
         this.state = {
             verificationCode: ''
         }
-
-        this.onSubmitForm = this.onSubmitForm.bind(this);
-        this.onChangeVerificationCode = this.onChangeVerificationCode.bind(this);
     }
 
     onChangeVerificationCode = (e) => {
@@ -43,12 +40,17 @@ class VerificationModal extends Component {
     componentDidMount() {
     }
 
-    async onSubmitForm(e) {
+    onSubmitForm = async (e) => {
         e.preventDefault();
         const is_verified = await this.props.verifyEmail(this.state.verificationCode);
         if (is_verified) {
             this.props.closeModal();
         }
+    }
+
+    handleBtnResendClicked = (e) => {
+        e.preventDefault();
+        this.props.resendVerificationEmail();
     }
 
     render() {
@@ -70,13 +72,13 @@ class VerificationModal extends Component {
                         <form onSubmit={this.onSubmitForm}>
                             <p>Enter your verification code</p>
                             <input type="text" className="form-control" value={this.state.verificationCode} onChange={this.onChangeVerificationCode} />
-                            <button className="btn-submit">Confirm</button>
-                            <button className="btn-back" onClick={(e) => { 
+                            <button className="btn-submit" type="submit">Confirm</button>
+                            <button className="btn-back" type="button" onClick={(e) => { 
                                 e.preventDefault();
                                 this.props.userSignOut();
                                 this.props.closeModal();
                             }}>Go Back</button>
-                            <p className="m-0 sm-text-center">Not received yet? <button onClick={(e) => {  }}>Resend Code →</button></p>
+                            <p className="m-0 sm-text-center">Not received yet? <button type="button" onClick={this.handleBtnResendClicked}>Resend Code →</button></p>
                         </form>
                     </div>
                 </div>

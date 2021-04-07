@@ -1,0 +1,33 @@
+.statistics-container {
+    display: grid;
+    grid-template-columns: 30% auto;
+}
+
+.statistics-panel {
+    margin: 30px 0;
+}
+
+.statistics-panel div {
+    margin: 5px 20px;
+}
+
+.statistics-panel table th, .statistics-panel table td {
+    padding: 5px 20px;
+}
+
+.apexcharts-tooltip {
+    padding: 10px;
+}
+
+.step-10 .apexcharts-xaxis-label,
+.step-5 .apexcharts-xaxis-label {
+    display: none;
+}
+
+.step-10 .apexcharts-xaxis-label:nth-child(10n) {
+    display:revert;
+}
+
+.step-5 .apexcharts-xaxis-label:nth-child(5n) {
+    display:revert;
+}

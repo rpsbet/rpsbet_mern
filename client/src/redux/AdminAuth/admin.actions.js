@@ -98,3 +98,17 @@ export const adminSignOut = body => async dispatch => {
 export const setUrl = url => dispatch => {
   dispatch({ type: SET_URL, payload: url });
 };
+
+export const getStatisticsData = _id => async dispatch => {
+  try {
+    const { data } = await axios.get('statistics/get-total-statistics', {params: {}});
+    if (data.success) {
+      return data.statistics;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+}

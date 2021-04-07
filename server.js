@@ -33,6 +33,8 @@ const gameRoutes = require('./routes/game.routes');
 const questionRoutes = require('./routes/admin_question.routes');
 const brainGameTypeRoutes = require('./routes/admin_brain_game_type.route');
 const stripeRoutes = require('./routes/stripe.routes');
+const statisticsRoutes = require('./routes/statistics.routes');
+const systemSetting = require('./routes/settings.routes');
 
 // app.use(bodyParser.urlencoded({ extended: false }));
 // app.use(bodyParser.json());
@@ -44,6 +46,8 @@ app.use(fileUpload());
 mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
     useCreateIndex: true
   })
   .then(() => console.log(`***mongodb connected`))
@@ -58,6 +62,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/question', questionRoutes);
 app.use('/api/brain_game_type', brainGameTypeRoutes);
 app.use('/api/stripe', stripeRoutes);
+app.use('/api/statistics', statisticsRoutes);
+app.use('/api/settings', systemSetting);
 
 app.use(cors(corsOptions));
 

@@ -133,6 +133,34 @@ export const acGetCustomerInfo = _id => async dispatch => {
   }
 };
 
+export const getCustomerStatisticsData = _id => async dispatch => {
+  try {
+    const { data } = await api.get('statistics/get-customer-statistics', {params: {_id}});
+    if (data.success) {
+      return data.statistics;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+}
+
+export const getRoomStatisticsData = room_id => async dispatch => {
+  try {
+    const { data } = await api.get('statistics/get-room-statistics', {params: {room_id}});
+    if (data.success) {
+      return data.room_info;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+}
+
 // Update Customer
 export const updateCustomer = customer => async dispatch => {
   try {

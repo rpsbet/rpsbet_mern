@@ -19,23 +19,18 @@ class ChatPage extends Component {
             socket: this.props.socket,
             showEmojiPanel: false,
         };
-
-        this.insertEmoji = this.insertEmoji.bind(this);
-        this.onChangeText = this.onChangeText.bind(this);
-        this.onTextAreaKeyDown = this.onTextAreaKeyDown.bind(this);
-        this.sendMessage = this.sendMessage.bind(this);
     }
 
-    insertEmoji(e) {
+    insertEmoji = (e) => {
         this.setState({text: this.state.text + e.target.innerHTML});
         this.textarea.focus();
     }
 
-    onChangeText(e) {
+    onChangeText = (e) => {
         this.setState({text: e.target.value});
     }
 
-    sendMessage(e) {
+    sendMessage = (e) => {
         const text = this.state.text.trim();
 
         if (text !== '') {
@@ -51,7 +46,7 @@ class ChatPage extends Component {
         }
     }
 
-    onTextAreaKeyDown(e) {
+    onTextAreaKeyDown = (e) => {
         if (e.keyCode === 13) {
             e.preventDefault();
             this.sendMessage();

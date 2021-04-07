@@ -35,11 +35,6 @@ class ProfileModal extends Component {
             passwordConfirmation: '',
             avatar: this.props.userInfo.avatar,
         }
-        this.handleAvatarLoaded = this.handleAvatarLoaded.bind(this);
-        this.saveUserInfo = this.saveUserInfo.bind(this);
-        this.handleCloseModal = this.handleCloseModal.bind(this);
-        this.handleChangePassword = this.handleChangePassword.bind(this);
-        this.handleChangePasswordConfirmation = this.handleChangePasswordConfirmation.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -57,22 +52,22 @@ class ProfileModal extends Component {
     componentDidMount() {
     }
 
-    handleAvatarLoaded(filename) {
+    handleAvatarLoaded = (filename) => {
         console.log(filename)
         this.props.setUserInfo({ ...this.props.userInfo, avatar: filename });
     }
 
-    handleChangePassword(e) {
+    handleChangePassword = (e) => {
         e.preventDefault();
         this.setState({ password: e.target.value });
     }
 
-    handleChangePasswordConfirmation(e) {
+    handleChangePasswordConfirmation = (e) => {
         e.preventDefault();
         this.setState({ passwordConfirmation: e.target.value });
     }
 
-    async saveUserInfo(e) {
+    saveUserInfo = async (e) => {
         e.preventDefault();
         if (this.state.password !== this.state.passwordConfirmation) {
             alertModal(this.props.isDarkMode, `Password confirmation doesn't match the password.`);
@@ -85,7 +80,7 @@ class ProfileModal extends Component {
         }
     }
 
-    handleCloseModal() {
+    handleCloseModal = () => {
         this.props.getUser(true);
         this.props.closeModal();
     }

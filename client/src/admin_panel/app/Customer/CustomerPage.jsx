@@ -50,7 +50,6 @@ class CustomerPage extends Component {
     this.state = {
       is_banned: false
     };
-    this.handleChange = this.handleChange.bind(this);
   }
 
   componentDidMount() {
@@ -58,7 +57,7 @@ class CustomerPage extends Component {
     this.props.queryCustomer(10, 1, false);
   }
 
-  handleChange (event) {
+  handleChange = (event) => {
     this.setState({ is_banned: event.target.checked });
     this.props.queryCustomer(10, 1, event.target.checked);
 

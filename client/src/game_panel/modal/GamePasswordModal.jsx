@@ -30,12 +30,9 @@ class GamePasswordModal extends Component {
         this.state = {
             password: ''
         }
-
-        this.onBtnOkClicked = this.onBtnOkClicked.bind(this);
-        this.onBtnCancelClicked = this.onBtnCancelClicked.bind(this);
     }
 
-    async onBtnOkClicked(e) {
+    onBtnOkClicked = async (e) => {
         const response = await this.props.checkGamePassword({room_id: this.props.roomId, password: this.state.password});
         if (response === true) {
             this.props.closeGamePasswordModal();
@@ -45,7 +42,7 @@ class GamePasswordModal extends Component {
         }
     }
 
-    onBtnCancelClicked(e) {
+    onBtnCancelClicked = (e) => {
         this.props.closeGamePasswordModal();
     }
 
@@ -65,9 +62,6 @@ class GamePasswordModal extends Component {
                     <button className="btn-back" onClick={this.props.closeGamePasswordModal}>Cancel</button>
                 </div>
             </div>
-            <h2 style={{borderBottom: "1px solid gray"}}>
-                Password
-            </h2>
         </Modal>;
     }
 }

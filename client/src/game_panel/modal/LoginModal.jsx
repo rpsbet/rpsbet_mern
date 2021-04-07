@@ -5,7 +5,6 @@ import './Modals.css';
 
 import { userSignIn, getUser } from '../../redux/Auth/user.actions';
 import { getMyGames, getMyHistory } from '../../redux/Logic/logic.actions';
-import VerificationModal from './VerificationModal';
 import history from '../../redux/history';
 
 Modal.setAppElement('#root')
@@ -36,12 +35,6 @@ class LoginModal extends Component {
             password: props.password,
             showVerificationModal: false
         }
-
-        this.onSubmitForm = this.onSubmitForm.bind(this);
-        this.onChangeEmail = this.onChangeEmail.bind(this);
-        this.onChangePassword = this.onChangePassword.bind(this);
-        this.handleOpenVerificationModal = this.handleOpenVerificationModal.bind(this);
-        this.handleCloseVerificationModal = this.handleCloseVerificationModal.bind(this);
     }
 
     onChangeEmail = (e) => {
@@ -55,57 +48,45 @@ class LoginModal extends Component {
     componentDidMount() {
     }
 
-    handleOpenVerificationModal () {
-        this.setState({ showVerificationModal: true }); 
-    }
-
-    handleCloseVerificationModal () {
-        this.setState({ showVerificationModal: false }); 
-    }
-
-    async onSubmitForm(e) {
+    onSubmitForm = async (e) => {
         e.preventDefault();
-        let result = await this.props.userSignIn(this.state);
+        const result = await this.props.userSignIn(this.state);
         if (result.status === 'success') {
-            this.props.closeModal();
-            result = await this.props.getUser(true);
             if (!result.user.is_activated) {
-                this.handleOpenVerificationModal();
+                this.props.openVerificationModal();
             } else {
                 this.props.initSocket();
                 this.props.getMyGames();
                 this.props.getMyHistory();
                 history.push('/');
             }
+            this.props.closeModal();
         }
     }
 
     render() {
         return (
-            <>
-                <Modal
-                    isOpen={this.props.modalIsOpen}
-                    style={customStyles}
-                    contentLabel={this.props.title}
-                >
-                    <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-                        <div className="modal-body">
-                            <button className="btn-close" onClick={this.props.closeModal}>×</button>
-                            <h4>Welcome back! 🔫🤠</h4>
-                            <h2>Sign In to RPSBet</h2>
-                            <form onSubmit={this.onSubmitForm}>
-                                <p>Username or email address</p>
-                                <input type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail} />
-                                <p className="has-forgot-password">Password <button onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>Forgot password?</button></p>
-                                <input type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword} />
-                                <button className="btn-submit">Sign In</button>
-                                <p className="m-0 sm-text-center">Not a member? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>Sign Up now →</button></p>
-                            </form>
-                        </div>
+            <Modal
+                isOpen={this.props.modalIsOpen}
+                style={customStyles}
+                contentLabel={this.props.title}
+            >
+                <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                    <div className="modal-body">
+                        <button className="btn-close" onClick={this.props.closeModal}>×</button>
+                        <h4>Welcome back! 🔫🤠</h4>
+                        <h2>Sign In to RPSBet</h2>
+                        <form onSubmit={this.onSubmitForm}>
+                            <p>Username or email address</p>
+                            <input type="text" className="form-control" id="email" value={this.state.email} onChange={this.onChangeEmail} />
+                            <p className="has-forgot-password">Password <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>Forgot password?</span></p>
+                            <input type="password" className="form-control" id="password" value={this.state.password} onChange={this.onChangePassword} />
+                            <button className="btn-submit">Sign In</button>
+                            <p className="m-0 sm-text-center">Not a member? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>Sign Up now →</button></p>
+                        </form>
                     </div>
-                </Modal>
-                <VerificationModal modalIsOpen={this.state.showVerificationModal} closeModal={this.handleCloseVerificationModal} />
-            </>
+                </div>
+            </Modal>
         );
     }
 }

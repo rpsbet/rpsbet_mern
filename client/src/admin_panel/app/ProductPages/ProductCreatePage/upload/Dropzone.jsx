@@ -12,12 +12,6 @@ class Dropzone extends Component {
       imagePreviewUrl: ''
     };
     this.fileInputRef = React.createRef();
-
-    this.openFileDialog = this.openFileDialog.bind(this);
-    this.onFileAdded = this.onFileAdded.bind(this);
-    this.onDragOver = this.onDragOver.bind(this);
-    this.onDragLeave = this.onDragLeave.bind(this);
-    this.onDrop = this.onDrop.bind(this);
   }
 
   static getDerivedStateFromProps(props, state) {
@@ -26,12 +20,12 @@ class Dropzone extends Component {
     };
   }
 
-  openFileDialog() {
+  openFileDialog = () => {
     if (this.props.disabled) return;
     this.fileInputRef.current.click();
   }
 
-  previewImage(file) {
+  previewImage = (file) => {
     if (!file) return;
 
     let reader = new FileReader();
@@ -45,7 +39,7 @@ class Dropzone extends Component {
     reader.readAsDataURL(file)
   }
 
-  onFileAdded(evt) {
+  onFileAdded = (evt) => {
     if (this.props.disabled) return;
     const file = evt.target.files[0];
 
@@ -56,17 +50,17 @@ class Dropzone extends Component {
     }
   }
 
-  onDragOver(event) {
+  onDragOver = (event) => {
     event.preventDefault();
     if (this.props.disabed) return;
     this.setState({ hightlight: true });
   }
 
-  onDragLeave(event) {
+  onDragLeave = (event) => {
     this.setState({ hightlight: false });
   }
 
-  onDrop(event) {
+  onDrop = (event) => {
     event.preventDefault();
     if (this.props.disabed) return;
       const file = event.dataTransfer.files[0];

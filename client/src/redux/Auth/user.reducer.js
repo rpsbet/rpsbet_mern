@@ -21,7 +21,7 @@ const initialState = {
   socket: null,
   token: localStorage.getItem('token'),
   isAuthenticated: localStorage.getItem('isAuthenticated'),
-  isDarkMode: localStorage.getItem('darkMode') === 'true' ? true : false,
+  isDarkMode: localStorage.getItem('darkMode') === 'false' ? false : true,
   isAdmin: false,
   loading: true,
   user: {_id:null, email:'', password:''},
@@ -75,7 +75,7 @@ export default function(state = initialState, action) {
         isAuthenticated: true,
         isActivated: payload.is_activated,
         loading: false,
-        user: payload,
+        user: { ...payload, password: '' },
         balance: payload.balance
       };
     case LOGIN_SUCCESS:
@@ -84,6 +84,8 @@ export default function(state = initialState, action) {
       return {
         ...state,
         ...payload,
+        user: { ...payload.user, password: '' },
+        balance: payload.user.balance,
         isAdmin: 0,
         userName: payload.user.username,
         isActivated: payload.user.is_activated,

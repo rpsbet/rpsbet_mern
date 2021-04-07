@@ -13,11 +13,8 @@ class QuickShoot extends Component {
             advanced_status: '',
             is_anonymous: false,
             balance: this.props.balance,
-            isPasswordCorrect: this.props.isPasswordCorrect
+            isPasswordCorrect: this.props.isPasswordCorrect,
         };
-        this.onBtnBetClick = this.onBtnBetClick.bind(this);
-        this.onLeftPositionButtonClicked = this.onLeftPositionButtonClicked.bind(this);
-        this.onRightPositionButtonClicked = this.onRightPositionButtonClicked.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -32,14 +29,14 @@ class QuickShoot extends Component {
         return null;
     }
 
-    onLeftPositionButtonClicked(e) {
+    onLeftPositionButtonClicked = (e) => {
         e.preventDefault();
         if (this.state.selected_qs_position > 0) {
             this.setState({selected_qs_position: this.state.selected_qs_position - 1});
         }
     }
 
-    onRightPositionButtonClicked(e) {
+    onRightPositionButtonClicked = (e) => {
         e.preventDefault();
         if (this.state.selected_qs_position < this.props.qs_game_type - 1) {
             this.setState({selected_qs_position: this.state.selected_qs_position + 1});
@@ -52,7 +49,7 @@ class QuickShoot extends Component {
         }
     }
 
-    async joinGame() {
+    joinGame = async () => {
         const result = await this.props.join({selected_qs_position: this.state.selected_qs_position, is_anonymous: this.state.is_anonymous});
 
         if (result.status === 'success') {
@@ -76,7 +73,7 @@ class QuickShoot extends Component {
         }
     }
 
-    onBtnBetClick(e) {
+    onBtnBetClick = (e) => {
         e.preventDefault();
         
         if (this.props.creator_id === this.props.user_id) {
@@ -118,7 +115,7 @@ class QuickShoot extends Component {
         return (
             <div className="game-page">
                 <div className="page-title">
-                    <h2>Join Game - <i>Spleesh!</i></h2>
+                    <h2>Join Game - QuickShoot</h2>
                 </div>
 				<div className="game-contents">
                     <div className="pre-summary-panel">

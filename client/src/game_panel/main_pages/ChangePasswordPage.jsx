@@ -10,26 +10,22 @@ class ChangePasswordPage extends Component {
             password: '',
             password_confirmation: ''
         }
-
-        this.handlePasswordChanged = this.handlePasswordChanged.bind(this);
-        this.handlePasswordConfirmationChanged = this.handlePasswordConfirmationChanged.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     componentDidMount() {
     }
 
-    handlePasswordChanged(e) {
+    handlePasswordChanged = (e) => {
         e.preventDefault();
         this.setState({password: e.target.value});
     }
 
-    handlePasswordConfirmationChanged(e) {
+    handlePasswordConfirmationChanged = (e) => {
         e.preventDefault();
         this.setState({password_confirmation: e.target.value})
     }
 
-    async handleSubmit(e) {
+    handleSubmit = async (e) => {
         e.preventDefault();
         
         if (this.state.password === '') {

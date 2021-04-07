@@ -26,11 +26,6 @@ class BrainGame extends Component {
             next_answers: [],
             isPasswordCorrect: this.props.isPasswordCorrect
         };
-        this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
-        this.onCountDown = this.onCountDown.bind(this);
-        this.onStartGame = this.onStartGame.bind(this);
-        this.onClickAnswer = this.onClickAnswer.bind(this);
-        this.getNextQuestion = this.getNextQuestion.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -44,7 +39,7 @@ class BrainGame extends Component {
         return null;
     }
 
-    async getNextQuestion() {
+    getNextQuestion = async () => {
         try {
             const res = await axios.get('/game/question/' + this.state.brain_game_type._id);
             if (res.data.success) {
@@ -62,7 +57,7 @@ class BrainGame extends Component {
         this.getNextQuestion();
     }
 
-    onShowButtonClicked(e) {
+    onShowButtonClicked = (e) => {
         e.preventDefault();
         // if (this.state.advanced_status === "") {
         //     this.setState({advanced_status: "hidden"});
@@ -89,7 +84,7 @@ class BrainGame extends Component {
     }
 
     componentWillUnmount() {
-        if (this.state.is_started) {
+        if (this.state.is_started && this.state.remaining_time > 0) {
             this.props.join({
                 bet_amount: this.props.bet_amount,
                 brain_game_score: -1000,
@@ -98,16 +93,11 @@ class BrainGame extends Component {
         }
     }
 
-    async onStartGame(e) {
+    onStartGame = async (e) => {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
             alertModal(this.props.isDarkMode, `Oops! This game is yours. You can't join this game.`)
-            return;
-        }
-
-        if (this.props.bet_amount === 0) {
-            alertModal(this.props.isDarkMode, `Please input the bet amount!`)
             return;
         }
 
@@ -137,7 +127,7 @@ class BrainGame extends Component {
         })
     }
 
-    async onCountDown() {
+    onCountDown = async () => {
         const remaining_time = this.state.remaining_time - 1;
         this.setState({ remaining_time });
 
@@ -176,7 +166,7 @@ class BrainGame extends Component {
         }
     }
 
-    async onClickAnswer(e) {
+    onClickAnswer = async (e) => {
         try {
             const data = {
                 question_id: this.state.question._id,
@@ -243,7 +233,7 @@ class BrainGame extends Component {
                         <div className="pre-summary-panel">
                             <div className="your-bet-amount">Bet Amount : £{updateDigitToPoint2(this.props.bet_amount)}</div>
                             <div className="public-max-return">Pot : £{updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)}</div>
-                            <div className="your-max-return">Potential Return : £{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) * 0.95)}</div>
+                            <div className="your-max-return">Potential Return : £{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) * 0.9)}</div>
                         </div>
                         <div className="game-info-panel">
                             <h3 className="game-sub-title">Game Type:</h3>

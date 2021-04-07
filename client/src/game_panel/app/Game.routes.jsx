@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Route, Switch } from 'react-router-dom';
-// import LandingPage from '../main_pages/LandingPage';
 import CreateGame from '../main_pages/CreateGame';
 import SiteWrapper from '../SiteWrapper';
-import RoomList from '../main_pages/RoomList';
+import MainPage from '../main_pages/MainPage';
 import JoinGame from '../main_pages/JoinGame';
 import ChatPage from '../MyGames/ChatPage';
 import ChangePasswordPage from '../main_pages/ChangePasswordPage';
@@ -38,7 +37,7 @@ export class GameMainRoute extends Component {
           />
           <Route 
             path={`${match.path}`}
-            component={RoomList}
+            component={MainPage}
           />
         </Switch>
       </SiteWrapper>

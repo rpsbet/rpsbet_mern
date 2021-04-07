@@ -14,7 +14,10 @@ import {
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
   HISTORY_LOADED,
-  ONLINE_USER_LIST_UPDATED
+  ONLINE_USER_LIST_UPDATED,
+  SELECT_MAIN_TAB,
+  MY_CHAT_LOADED,
+  GLOBAL_CHAT_RECEIVED,
 } from '../types';
   
 const initialState = {
@@ -27,11 +30,14 @@ const initialState = {
   roomCount: 0,
   totalPage: 0,
   pageNumber: 1,
+  historyTotalPage: 0,
+  historyPageNumber: 1,
   gameTypeList: [
     { game_type_name: 'Classic RPS' },
     { game_type_name: 'Spleesh!' },
     { game_type_name: 'Brain Game' },
     { game_type_name: 'Mystery Box' },
+    { game_type_name: 'Quick Shoot' },
   ],
   curRoomInfo: {
     _id: 0,
@@ -40,7 +46,7 @@ const initialState = {
     bet_amount: 0,
     spleesh_bet_unit: 1,
     box_price: 0,
-    game_log_list: [],
+    room_history: [],
     box_list: [],
     qs_game_type: 2
   },
@@ -50,13 +56,18 @@ const initialState = {
   myGamesTotalPage: 0,
   myGamesPageNumber: 1,
   myHistory: [],
+  myHistoryTotalPage: 0,
+  myHistoryPageNumber: 1,
+  myChat: [],
   chatRoomInfo: {
     user_id: '',
     avatar: '',
     username: '',
     chatLogs: []
   },
-  onlineUserList: []
+  onlineUserList: [],
+  selectedMainTabIndex: 0,
+  globalChatList: []
 };
   
 export default function(state = initialState, action) {
@@ -66,10 +77,6 @@ export default function(state = initialState, action) {
       return {
         ...state, betResult: payload.betResult, roomStatus: payload.roomStatus
       };
-    case HISTORY_LOADED:
-      return {
-        ...state, history: payload
-      }
     case START_LOADING:
       return {
         ...state, isActiveLoadingOverlay: true
@@ -106,13 +113,21 @@ export default function(state = initialState, action) {
       return {
         ...state, roomList: payload.roomList, totalPage: payload.pages, roomCount: payload.total, pageNumber: payload.page
       };
+    case HISTORY_LOADED:
+      return {
+        ...state, history: payload.history, historyTotalPage: payload.pages, historyPageNumber: payload.page
+      }
     case MY_GAMES_LOADED:
       return {
-        ...state, myGames: payload.myGames, myGamesTotalPage: payload.pages, myGamesPageNumber: payload.pageNumber
+        ...state, myGames: payload.myGames, myGamesTotalPage: payload.pages, myGamesPageNumber: payload.page
       };
-    case MY_HISTORY_LOADED:
+      case MY_HISTORY_LOADED:
+        return {
+          ...state, myHistory: payload.history, myHistoryTotalPage: payload.pages, myHistoryPageNumber: payload.page
+        };
+    case MY_CHAT_LOADED:
       return {
-        ...state, myHistory: payload
+        ...state, myChat: payload
       };
     case MSG_CREATE_ROOM_SUCCESS:
       return {
@@ -129,6 +144,17 @@ export default function(state = initialState, action) {
     case ONLINE_USER_LIST_UPDATED:
       return {
         ...state, onlineUserList: payload
+      }
+    case SELECT_MAIN_TAB:
+      return {
+        ...state, selectedMainTabIndex: payload
+      }
+    case GLOBAL_CHAT_RECEIVED:
+      const chat_list = JSON.parse(JSON.stringify(state.globalChatList));
+      chat_list.push(payload)
+      console.log(chat_list)
+      return {
+        ...state, globalChatList: chat_list
       }
     default:
       return state;

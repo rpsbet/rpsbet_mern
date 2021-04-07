@@ -19,6 +19,7 @@ import Person from '@material-ui/icons/Person';
 import TimeLine from '@material-ui/icons/Timeline';
 import ExitToApp from '@material-ui/icons/ExitToApp';
 import VpnKey from '@material-ui/icons/VpnKey';
+import SettingsIcon from '@material-ui/icons/Settings';
 
 import history from '../../redux/history';
 import { connect } from 'react-redux';
@@ -109,6 +110,12 @@ function ClippedDrawer(props) {
           <TimeLine color={activeUrl === '/admin/statistics' ? 'secondary' : 'inherit'} />
         </ListItemIcon>
         <ListItemTextEl inputcolor={activeUrl === '/admin/statistics' ? 'true' : 'false'} primary="Statistics" />
+      </ListItem>
+      <ListItem button onClick={() => navPush('/admin/settings')}>
+        <ListItemIcon>
+          <SettingsIcon color={activeUrl === '/admin/settings' ? 'secondary' : 'inherit'} />
+        </ListItemIcon>
+        <ListItemTextEl inputcolor={activeUrl === '/admin/settings' ? 'true' : 'false'} primary="System Settings" />
       </ListItem>
     </List>
   );

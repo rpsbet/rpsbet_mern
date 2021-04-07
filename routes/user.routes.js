@@ -11,6 +11,8 @@ const sendgrid = require('../helper/sendgrid');
 // User Model
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
+const GameLog = require('../model/GameLog');
+const Room = require('../model/Room');
 
 router.get('/', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
@@ -18,7 +20,7 @@ router.get('/', auth, async (req, res) => {
   const is_banned = req.query.is_banned;
   try {
     const users = await User.find({is_deleted: is_banned}, { _id: 1, username: 1, email: 1, created_at: 1 })
-      .sort({date: 'desc'})
+      .sort({created_at: 'desc'})
       .skip(pagination * page - pagination)
       .limit(pagination);
     const count = await User.countDocuments({is_deleted: is_banned});

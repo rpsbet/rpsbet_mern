@@ -27,12 +27,9 @@ class TermsModal extends Component {
         this.state = {
             showTermsModal: false
         }
-
-        this.handleOpenTermsModal = this.handleOpenTermsModal.bind(this);
-    
     }
 
-    handleOpenTermsModal () {
+    handleOpenTermsModal = () => {
         this.setState({ showTermsModal: true });
     }
 

@@ -7,40 +7,66 @@ class QuickShoot extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            is_other: 'hidden'
+            is_other: 'hidden',
+            animation: <div />
         };
-
-        this.onLeftPositionButtonClicked = this.onLeftPositionButtonClicked.bind(this);
-        this.onRightPositionButtonClicked = this.onRightPositionButtonClicked.bind(this);
     }
 
-    onLeftPositionButtonClicked(e) {
+    onLeftPositionButtonClicked = async (e) => {
         e.preventDefault();
         if (this.props.selected_qs_position > 0) {
-            this.props.onChangeState({selected_qs_position: this.props.selected_qs_position - 1});
+            await this.props.onChangeState({selected_qs_position: this.props.selected_qs_position - 1});
+            this.updateAnimation();
         }
     }
 
-    onRightPositionButtonClicked(e) {
+    onRightPositionButtonClicked = async (e) => {
         e.preventDefault();
         if (this.props.selected_qs_position < this.props.qs_game_type - 1) {
-            this.props.onChangeState({selected_qs_position: this.props.selected_qs_position + 1});
+            await this.props.onChangeState({selected_qs_position: this.props.selected_qs_position + 1});
+            this.updateAnimation();
         }
+    }
+
+    updateAnimation = async () => {
+        let position_short_name = ["center", "tl", "tr", "bl", "br"];
+
+        if (this.props.qs_game_type === 2) {
+            position_short_name = ["bl", "br"];
+        } else if (this.props.qs_game_type === 3) {
+            position_short_name = ["bl", "center", "br"];
+        } else if (this.props.qs_game_type === 4) {
+            position_short_name = ["tl", "tr", "bl", "br"];
+        }
+
+        const animationData = await getQsLottieAnimation(this.props.qs_nation, position_short_name[this.props.selected_qs_position]);
+
+        this.setState({
+            animation: <div className="qs-image-panel">
+                    <Lottie options={{
+                            loop: true,
+                            autoplay: true, 
+                            animationData
+                        }}
+                        style={{maxWidth: '100%', width: '600px'}}
+                    />
+                </div>
+        })
+    }
+
+    async componentDidMount() {
+        await this.updateAnimation();
     }
 
     render() {
         let position_name = ["Center", "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right"];
-        let position_short_name = ["center", "tl", "tr", "bl", "br"];
 
         if (this.props.qs_game_type === 2) {
             position_name = ["Left", "Right"];
-            position_short_name = ["bl", "br"];
         } else if (this.props.qs_game_type === 3) {
             position_name = ["Bottom-Left", "Center", "Bottom-Right"];
-            position_short_name = ["bl", "center", "br"];
         } else if (this.props.qs_game_type === 4) {
             position_name = ["Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right"];
-            position_short_name = ["tl", "tr", "bl", "br"];
         }
 
         return (
@@ -60,15 +86,7 @@ class QuickShoot extends Component {
                 {this.props.step === 3 && 
                     <div className="game-info-panel">
                         <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
-                        <div className="qs-image-panel">
-                            <Lottie options={{
-                                    loop: true,
-                                    autoplay: true, 
-                                    animationData: getQsLottieAnimation(this.props.qs_nation, position_short_name[this.props.selected_qs_position])
-                                }}
-                                style={{maxWidth: '100%', width: '600px'}}
-                            />
-                        </div>
+                        {this.state.animation}
                         <div className="qs-action-panel">
                             <button className="btn-left" onClick={this.onLeftPositionButtonClicked}></button>
                             <label>{position_name[this.props.selected_qs_position]}</label>

@@ -15,8 +15,6 @@ class Spleesh extends Component {
             balance: this.props.balance,
             isPasswordCorrect: false
         };
-        this.onShowButtonClicked = this.onShowButtonClicked.bind(this);
-        this.onBtnBetClick = this.onBtnBetClick.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -31,7 +29,7 @@ class Spleesh extends Component {
         return null;
     }
 
-    onShowButtonClicked(e) {
+    onShowButtonClicked = (e) => {
         e.preventDefault();
     }
 
@@ -41,7 +39,7 @@ class Spleesh extends Component {
         }
     }
 
-    async joinGame() {
+    joinGame = async () => {
         const result = await this.props.join({bet_amount: this.state.bet_amount, is_anonymous: this.state.is_anonymous});
         if (result.status === 'success') {
             let text = 'Oops, You Lost!';
@@ -64,7 +62,7 @@ class Spleesh extends Component {
         }
     }
 
-    onBtnBetClick(e) {
+    onBtnBetClick = (e) => {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
@@ -86,7 +84,7 @@ class Spleesh extends Component {
         })
     }
 
-    createNumberPanel() {
+    createNumberPanel = () => {
 		let panel = [];
 		for (let i = 1; i <= 10; i++) {
 			panel.push( <button

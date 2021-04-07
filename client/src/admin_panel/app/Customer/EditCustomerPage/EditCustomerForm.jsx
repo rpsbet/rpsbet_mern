@@ -30,7 +30,7 @@ function EditCustomerForm({
         <TopDiv>
           <Grid container spacing={2}>
             <Grid item xs={4}>
-              <Avatar src={avatar} alt="" />
+              <Avatar src={avatar ? avatar : '../../img/profile-thumbnail.svg'} alt="" />
             </Grid>
             <Grid item xs={8}>
               <Grid container spacing={2}>

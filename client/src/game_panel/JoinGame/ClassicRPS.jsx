@@ -15,7 +15,6 @@ class ClassicRPS extends Component {
             balance: this.props.balance,
             isPasswordCorrect: this.props.isPasswordCorrect
         };
-        this.onBtnBetClick = this.onBtnBetClick.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -35,7 +34,7 @@ class ClassicRPS extends Component {
         }
     }
 
-    async joinGame() {
+    joinGame = async () => {
         const result = await this.props.join({selected_rps: this.state.selected_rps, is_anonymous: this.state.is_anonymous});
         if (result.status === 'success') {
             let text = 'Oops, You Lost!';
@@ -54,7 +53,7 @@ class ClassicRPS extends Component {
         }
     }
 
-    onBtnBetClick(e) {
+    onBtnBetClick = (e) => {
         e.preventDefault();
         
         if (this.props.creator_id === this.props.user_id) {

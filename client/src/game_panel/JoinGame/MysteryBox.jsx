@@ -18,10 +18,6 @@ class MysteryBox extends Component {
             betResult: this.props.betResult,
             isPasswordCorrect: false
         };
-        this.onBoxClicked = this.onBoxClicked.bind(this);
-        this.onBtnBetClick = this.onBtnBetClick.bind(this);
-        this.onBtnGoToMainGamesClicked = this.onBtnGoToMainGamesClicked.bind(this);
-        this.onBtnPlayAgainClicked = this.onBtnPlayAgainClicked.bind(this);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -39,7 +35,7 @@ class MysteryBox extends Component {
         return null;
     }
 
-    onBoxClicked(e) {
+    onBoxClicked = (e) => {
         e.preventDefault();
 
         if (e.target.getAttribute('status') === 'opened') {
@@ -61,7 +57,7 @@ class MysteryBox extends Component {
         }
     }
 
-    onBtnBetClick(e) {
+    onBtnBetClick = (e) => {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
@@ -92,7 +88,7 @@ class MysteryBox extends Component {
         })
     }
 
-    onBtnGoToMainGamesClicked(e) {
+    onBtnGoToMainGamesClicked = (e) => {
         e.preventDefault();
         history.push('/');
     }
@@ -145,7 +141,7 @@ class MysteryBox extends Component {
         )
     }
 
-    onBtnPlayAgainClicked(e) {
+    onBtnPlayAgainClicked = (e) => {
         e.preventDefault();
         if (this.props.roomStatus === 'finished') {
             alertModal(this.props.isDarkMode, 'This game is already finished.');

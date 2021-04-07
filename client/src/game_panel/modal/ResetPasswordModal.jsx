@@ -33,16 +33,13 @@ class ResetPasswordModal extends Component {
             password: props.password,
             showVerificationModal: false
         }
-
-        this.onSubmitForm = this.onSubmitForm.bind(this);
-        this.onChangeEmail = this.onChangeEmail.bind(this);
     }
 
     onChangeEmail = (e) => {
         this.setState({email: e.target.value});
     }
 
-    async onSubmitForm(e) {
+    onSubmitForm = async (e) => {
         e.preventDefault();
         const is_sent = await this.props.sendResetPasswordEmail(this.state.email);
         if (is_sent) {

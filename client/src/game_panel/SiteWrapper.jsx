@@ -3,9 +3,9 @@ import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setSocket, userSignOut, getUser, setUnreadMessageCount, setDarkMode } from '../redux/Auth/user.actions';
-import { setRoomList, addChatLog, getMyGames, getMyHistory, addNewTransaction, updateOnlineUserList } from '../redux/Logic/logic.actions';
+import { setRoomList, addChatLog, getMyGames, getMyHistory, addNewTransaction, updateOnlineUserList, selectMainTab, globalChatReceived } from '../redux/Logic/logic.actions';
 
-import { Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@material-ui/core';
+import { Tabs, Tab, Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@material-ui/core';
 
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
@@ -28,7 +28,7 @@ import WithdrawModal from './modal/WithdrawModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
 
 import Moment from 'moment';
-import DarkModeToggle from 'react-dark-mode-toggle';
+// import DarkModeToggle from 'react-dark-mode-toggle';
 import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css'
 import Avatar from "../components/Avatar";
@@ -44,6 +44,14 @@ const darkTheme = createMuiTheme({
     type: 'dark'
   }
 });
+
+const customStyles = {
+	tabRoot: {
+    textTransform: 'none',
+    height: '62px',
+    backgroundColor: 'rgba(47, 49, 54, 0.5)'
+	}
+}
 
 function updateFromNow(transactions) {
   const result = JSON.parse(JSON.stringify(transactions));
@@ -76,47 +84,12 @@ class SiteWrapper extends Component {
       transactions: updateFromNow(this.props.transactions),
       anchorEl: null,
     }
-
-    this.handleLogout = this.handleLogout.bind(this);
-
-    this.handleOpenLoginModal = this.handleOpenLoginModal.bind(this);
-    this.handleCloseLoginModal = this.handleCloseLoginModal.bind(this);
-
-    this.handleOpenSignupModal = this.handleOpenSignupModal.bind(this);
-    this.handleCloseSignupModal = this.handleCloseSignupModal.bind(this);
-
-    this.handleOpenVerificationModal = this.handleOpenVerificationModal.bind(this);
-    this.handleCloseVerificationModal = this.handleCloseVerificationModal.bind(this);
-
-    this.handleOpenProfileModal = this.handleOpenProfileModal.bind(this);
-    this.handleCloseProfileModal = this.handleCloseProfileModal.bind(this);
-
-    this.handleOpenPrivacyModal = this.handleOpenPrivacyModal.bind(this);
-    this.handleClosePrivacyModal = this.handleClosePrivacyModal.bind(this);
-
-    this.handleOpenTermsModal = this.handleOpenTermsModal.bind(this);
-    this.handleCloseTermsModal = this.handleCloseTermsModal.bind(this);
-
-    this.handleOpenHowToPlayModal = this.handleOpenHowToPlayModal.bind(this);
-    this.handleCloseHowToPlayModal = this.handleCloseHowToPlayModal.bind(this);
-
-    this.handleOpenDepositModal = this.handleOpenDepositModal.bind(this);
-    this.handleCloseDepositModal = this.handleCloseDepositModal.bind(this);
-
-    this.handleOpenWithdrawModal = this.handleOpenWithdrawModal.bind(this);
-    this.handleCloseWithdrawModal = this.handleCloseWithdrawModal.bind(this);
-
-    this.handleOpenResetPasswordModal = this.handleOpenResetPasswordModal.bind(this);
-    this.handleCloseResetPasswordModal = this.handleCloseResetPasswordModal.bind(this);
-  
-
-    this.handleBalanceClick = this.handleBalanceClick.bind(this);
-
-    this.initSocket = this.initSocket.bind(this);
   }
 
   static getDerivedStateFromProps(props, current_state) {
-    if (current_state.balance !== props.balance || current_state.userName !== props.userName || current_state.isActiveLoadingOverlay !== props.isActiveLoadingOverlay) {
+    if (current_state.balance !== props.balance 
+      || current_state.userName !== props.userName 
+      || current_state.isActiveLoadingOverlay !== props.isActiveLoadingOverlay) {
       return {
         ...current_state,
         balance: props.balance,
@@ -129,6 +102,10 @@ class SiteWrapper extends Component {
     return null;
   }
 
+  handleMainTabChange = (event, newValue) => {
+		this.props.selectMainTab(newValue);
+	}
+
   handleClickMenu = (e) => {
     this.setState({anchorEl: e.currentTarget});
   }
@@ -137,11 +114,11 @@ class SiteWrapper extends Component {
     this.setState({anchorEl: null});
   }
 
-  updateReminderTime() {
+  updateReminderTime = () => {
     this.setState({ transactions: updateFromNow(this.state.transactions) });
   }
 
-  initSocket() {
+  initSocket = () => {
     const socket = socketIOClient(this.state.endpoint);
 
     socket.on('CONNECTED', (data) => {
@@ -183,6 +160,10 @@ class SiteWrapper extends Component {
       this.props.updateOnlineUserList(data.user_list);
     });
 
+    socket.on('GLOBAL_CHAT_RECEIVED', (data) => {
+      this.props.globalChatReceived(data);
+    });
+
     this.props.setSocket(socket);
   }
 
@@ -194,16 +175,16 @@ class SiteWrapper extends Component {
       console.log(e)
     }
 
+    this.initSocket();
+
     const result = await this.props.getUser(true);
     if (result.status === 'success') {
-      if (result.user.is_activated) {
-        this.initSocket();
-      } else {
+      if (!result.user.is_activated) {
         this.handleOpenVerificationModal();
       }
     }
     
-    this.interval = setInterval(this.updateReminderTime.bind(this), 3000);
+    this.interval = setInterval(this.updateReminderTime, 3000);
   }
 
   componentWillUnmount() {
@@ -213,7 +194,7 @@ class SiteWrapper extends Component {
     clearInterval(this.interval);
   }
 
-  handleLogout(clear_token) {
+  handleLogout = (clear_token) => {
     this.setState({ anchorEl: null });
     if (this.props.socket) {
       this.props.socket.disconnect();
@@ -221,37 +202,37 @@ class SiteWrapper extends Component {
     this.props.userSignOut(clear_token);
   }
 
-  handleOpenLoginModal () { this.setState({ showLoginModal: true }); }
-  handleCloseLoginModal () { this.setState({ showLoginModal: false }); }
+  handleOpenLoginModal = () => { this.setState({ showLoginModal: true }); }
+  handleCloseLoginModal = () => { this.setState({ showLoginModal: false }); }
 
-  handleOpenSignupModal () { this.setState({ showSignupModal: true }); }
-  handleCloseSignupModal () { this.setState({ showSignupModal: false }); }
+  handleOpenSignupModal = () => { this.setState({ showSignupModal: true }); }
+  handleCloseSignupModal = () => { this.setState({ showSignupModal: false }); }
 
-  handleOpenVerificationModal () { this.setState({ showVerificationModal: true }); }
-  handleCloseVerificationModal () { this.setState({ showVerificationModal: false }); }
+  handleOpenVerificationModal = () => { this.setState({ showVerificationModal: true }); }
+  handleCloseVerificationModal = () => { this.setState({ showVerificationModal: false }); }
 
-  handleOpenProfileModal () { this.setState({ showProfileModal: true, anchorEl: null }); }
-  handleCloseProfileModal () { this.setState({ showProfileModal: false }); }
+  handleOpenProfileModal = () => { this.setState({ showProfileModal: true, anchorEl: null }); }
+  handleCloseProfileModal = () => { this.setState({ showProfileModal: false }); }
 
-  handleOpenTermsModal () { this.setState({ showTermsModal: true }); }
-  handleCloseTermsModal () { this.setState({ showTermsModal: false }); }
+  handleOpenTermsModal = () => { this.setState({ showTermsModal: true }); }
+  handleCloseTermsModal = () => { this.setState({ showTermsModal: false }); }
 
-  handleOpenPrivacyModal () { this.setState({ showPrivacyModal: true }); }
-  handleClosePrivacyModal () { this.setState({ showPrivacyModal: false }); }
+  handleOpenPrivacyModal = () => { this.setState({ showPrivacyModal: true, anchorEl: null }); }
+  handleClosePrivacyModal = () => { this.setState({ showPrivacyModal: false }); }
 
-  handleOpenHowToPlayModal () { this.setState({ showHowToPlayModal: true }); }
-  handleCloseHowToPlayModal () { this.setState({ showHowToPlayModal: false }); }
+  handleOpenHowToPlayModal = () => { this.setState({ showHowToPlayModal: true }); }
+  handleCloseHowToPlayModal = () => { this.setState({ showHowToPlayModal: false }); }
 
-  handleOpenDepositModal () { this.setState({ showDepositModal: true, anchorEl: null }); }
-  handleCloseDepositModal () { this.setState({ showDepositModal: false }); }
+  handleOpenDepositModal = () => { this.setState({ showDepositModal: true, anchorEl: null }); }
+  handleCloseDepositModal = () => { this.setState({ showDepositModal: false }); }
 
-  handleOpenWithdrawModal () { this.setState({ showWithdrawModal: true, anchorEl: null }); }
-  handleCloseWithdrawModal () { this.setState({ showWithdrawModal: false }); }
+  handleOpenWithdrawModal = () => { this.setState({ showWithdrawModal: true, anchorEl: null }); }
+  handleCloseWithdrawModal = () => { this.setState({ showWithdrawModal: false }); }
 
-  handleOpenResetPasswordModal () { this.setState({ showResetPasswordModal: true }); }
-  handleCloseResetPasswordModal () { this.setState({ showResetPasswordModal: false }); }
+  handleOpenResetPasswordModal = () => { this.setState({ showResetPasswordModal: true }); }
+  handleCloseResetPasswordModal = () => { this.setState({ showResetPasswordModal: false }); }
 
-  handleBalanceClick() { this.setState({ showGameLog: !this.state.showGameLog }); }
+  handleBalanceClick = () => { this.setState({ showGameLog: !this.state.showGameLog }); }
   
   render() {
     return (
@@ -266,7 +247,16 @@ class SiteWrapper extends Component {
           </LoadingOverlay>
           <div className="game_header">
             <div className="main_header">
-              <a className="game_logo" href='' onClick={(e)=>{history.push('/')}}> </a>
+              <a className="game_logo" href='#' onClick={(e)=>{history.push('/')}}> </a>
+              <Tabs
+                value={this.props.selectedMainTabIndex}
+                onChange={this.handleMainTabChange}
+                TabIndicatorProps={{style: {background: '#c438ef'}}}
+                className="main-game-page-tabs desktop-only"
+              >
+                <Tab label="Live Games" style={customStyles.tabRoot} />
+                <Tab label="My Games" style={customStyles.tabRoot} />
+              </Tabs>
               <div className="header_action_panel">
                 <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HOW TO PLAY</span></a>
                 { this.props.isAuthenticated ? 
@@ -284,24 +274,21 @@ class SiteWrapper extends Component {
                       onClose={this.handleCloseMenu}
                       anchorOrigin={{vertical: 'bottom', horizontal: 'center'}}
                       transformOrigin={{vertical: 'top', horizontal: 'center'}}
+                      PaperProps={{ style: { width: '200px' }}}
                     >
                       <MenuItem onClick={this.handleOpenProfileModal}>
                         <ListItemIcon><PersonOutlineIcon /></ListItemIcon>
                         <ListItemText>Profile</ListItemText>
-                      </MenuItem>
-                      <MenuItem onClick={this.handleOpenWithdrawModal}>
-                        <ListItemIcon><PaymentIcon /></ListItemIcon>
-                        <ListItemText>Withdraw</ListItemText>
-                      </MenuItem>
-                      <MenuItem onClick={this.handleOpenDepositModal}>
-                        <ListItemIcon><PaymentIcon /></ListItemIcon>
-                        <ListItemText>Deposit</ListItemText>
                       </MenuItem>
                       <MenuItem onClick={(e) => {this.handleLogout(true)}}>
                         <ListItemIcon><ExitToAppIcon size="small" /></ListItemIcon>
                         <ListItemText>Logout</ListItemText>
                       </MenuItem>
                       <Divider />
+                      <MenuItem onClick={(e) => {this.handleOpenPrivacyModal()}}>
+                        <ListItemText>Privacy Policy</ListItemText>
+                      </MenuItem>
+                      {/* <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
                         <ListItemText>Dark theme</ListItemText>
                         <DarkModeToggle
@@ -311,7 +298,7 @@ class SiteWrapper extends Component {
                           speed={5}
                           className="dark_mode_toggle"
                         />
-                      </MenuItem>
+                      </MenuItem> */}
                     </Menu>
                   </>
                   :
@@ -339,7 +326,11 @@ class SiteWrapper extends Component {
                   }
                   </tbody>
                 </table>
+                <div className="transaction-panel">
+                  <button className="btn-withdraw" onClick={this.handleOpenWithdrawModal}>Withdraw</button>
+                  <button className="btn-deposit" onClick={this.handleOpenDepositModal}>Deposit</button>
                 </div>
+              </div>
             </div>
           </div>
           <div className="game_wrapper">
@@ -347,9 +338,6 @@ class SiteWrapper extends Component {
                 {this.props.children}
               </div>
           </div>
-          {/* <div className="game_footer text-center">
-            <span>All Rights Reserved, </span>rpsbet.com © 2020 <a href="#privacy" id="privacy" onClick={this.handleOpenPrivacyModal}>Privacy</a> | <a href="#terms" id="terms" onClick={this.handleOpenTermsModal}>Terms</a>
-          </div> */}
           {this.state.showTermsModal && <TermsModal modalIsOpen={this.state.showTermsModal} closeModal={this.handleCloseTermsModal} isDarkMode={this.props.isDarkMode} />}
           {this.state.showPrivacyModal && <PrivacyModal modalIsOpen={this.state.showPrivacyModal} closeModal={this.handleClosePrivacyModal} isDarkMode={this.props.isDarkMode} />}
           {this.state.showProfileModal && <ProfileModal modalIsOpen={this.state.showProfileModal} closeModal={this.handleCloseProfileModal} player_name={this.state.userName} balance={this.state.balance / 100.0} avatar={this.props.user.avatar} email={this.props.user.email} />}
@@ -358,7 +346,7 @@ class SiteWrapper extends Component {
           {this.state.showSignupModal && <SignupModal modalIsOpen={this.state.showSignupModal} closeModal={this.handleCloseSignupModal} openLoginModal={this.handleOpenLoginModal} />}
           {this.state.showVerificationModal && <VerificationModal modalIsOpen={this.state.showVerificationModal} closeModal={this.handleCloseVerificationModal} />}
           {this.state.showDepositModal && <DepositModal modalIsOpen={this.state.showDepositModal} closeModal={this.handleCloseDepositModal} />}
-          {this.state.showWithdrawModal && <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} />}
+          {this.state.showWithdrawModal && <WithdrawModal modalIsOpen={this.state.showWithdrawModal} closeModal={this.handleCloseWithdrawModal} balance={this.state.balance} />}
           {this.state.showResetPasswordModal && <ResetPasswordModal modalIsOpen={this.state.showResetPasswordModal} closeModal={this.handleCloseResetPasswordModal} openLoginModal={this.handleOpenLoginModal} />}
           <GamePasswordModal />
         </div>
@@ -376,6 +364,7 @@ const mapStateToProps = state => ({
   user: state.auth.user,
   unreadMessageCount: state.auth.unreadMessageCount,
   isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
+  selectedMainTabIndex: state.logic.selectedMainTabIndex,
   transactions: state.auth.transactions,
   isDarkMode: state.auth.isDarkMode,
 });
@@ -391,7 +380,9 @@ const mapDispatchToProps = {
   setUnreadMessageCount,
   addNewTransaction,
   setDarkMode,
-  updateOnlineUserList
+  updateOnlineUserList,
+  selectMainTab,
+  globalChatReceived
 };
 
 export default connect(

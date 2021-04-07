@@ -56,6 +56,7 @@ export const SET_SCORE = 'SET_SCORE';
 // action mygames
 export const MY_GAMES_LOADED = 'MY_GAMES_LOADED';
 export const MY_HISTORY_LOADED = 'MY_HISTORY_LOADED';
+export const MY_CHAT_LOADED = 'MY_CHAT_LOADED';
 export const SET_CHAT_ROOM_INFO = 'SET_CHAT_ROOM_INFO';
 
 // action item
@@ -101,3 +102,6 @@ export const SET_DARK_MODE = 'SET_DARK_MODE';
 export const SET_PASSWORD_CORRECT = 'SET_PASSWORD_CORRECT';
 
 export const ONLINE_USER_LIST_UPDATED = 'ONLINE_USER_LIST_UPDATED';
+
+export const SELECT_MAIN_TAB = 'SELECT_MAIN_TAB';
+export const GLOBAL_CHAT_RECEIVED = 'GLOBAL_CHAT_RECEIVED';

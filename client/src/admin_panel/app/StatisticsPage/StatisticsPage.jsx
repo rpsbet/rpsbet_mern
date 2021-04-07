@@ -1,25 +1,53 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setUrl } from '../../../redux/Auth/user.actions';
+import { getStatisticsData } from '../../../redux/AdminAuth/admin.actions';
 import { warningMsgBar } from '../../../redux/Notification/notification.actions';
 import ContainerHeader from '../../../components/ContainerHeader';
 import styled from 'styled-components';
 import MyChart from "./Charts";
+import { addCurrencySignal } from '../../../util/helper';
+import Elevation from '../../../Styles/Elevation';
 
 class PalletPage extends Component {
   state = {
-    data: null
+    totalGameCreated: 0,
+    totalGameJoined: 0,
+    totalWagered: 0,
+    totalDeposited: 0,
+    totalWithdrawn: 0,
+    volumeOfBets: [],
   };
-  componentDidMount() {
+
+  async componentDidMount() {
     this.props.setUrl(this.props.match.path);
+    const result = await this.props.getStatisticsData();
+    this.setState({...result});
   }
   
   render() {
+    // const series = [
+    //   {name: 'Classic RPS', data: generateData(20, { min: -30, max: 55 })},
+    //   {name: 'Spleesh', data: generateData(20, { min: -30, max: 55 })},
+    //   {name: 'Mystery Box', data: generateData(20, { min: -30, max: 55 }) },
+    //   {name: 'Brain Game', data: generateData(20, { min: -30, max: 55 })},
+    //   {name: 'Quick Shoot', data: generateData(20, { min: -30, max: 55 })},
+    // ];
+
     return (
       <>
-        <ContainerHeader title={`Statistics`} />
+        <ContainerHeader title={`All Stats`} />
         <MainContent>
-          <MyChart></MyChart>
+          <StatsDiv>
+            <div>Total Games Created: {this.state.totalGameCreated}</div>
+            <div>Total Games Joined: {this.state.totalGameJoined}</div>
+            <div>Total Wagered: {addCurrencySignal(this.state.totalWagered)}</div>
+            <div>Total Deposited: {addCurrencySignal(this.state.totalDeposited)}</div>
+            <div>Total Withdrawn: {addCurrencySignal(this.state.totalWithdrawn)}</div>
+            <div>Total in PayPal Bank (Total Deposited - Total Withdrawn): {addCurrencySignal(this.state.totalDeposited - this.state.totalWithdrawn)}</div>
+            <div>Total Virtual Balance + Live Games Running: {addCurrencySignal(0)}</div>
+          </StatsDiv>
+          <MyChart series={this.state.volumeOfBets}></MyChart>
         </MainContent>
       </>
     );
@@ -30,7 +58,8 @@ const mapStateToProps = state => ({});
 
 const mapDispatchToProps = {
   setUrl,
-  warningMsgBar
+  warningMsgBar,
+  getStatisticsData
 };
 
 export default connect(
@@ -49,5 +78,15 @@ const MainContent = styled.main`
       'PalletInfoCop PalletInfoCop PalletInfoCop PalletInfoCop . . . HistoryCop HistoryCop HistoryCop HistoryCop HistoryCop'
       'Charts Charts Charts Charts Charts Charts Charts Charts Charts Charts Charts Charts';
   }
-  
+`;
+
+const StatsDiv = styled.div`
+  width: 100%;
+  border-radius: 5px;
+  background-color: #424242;
+  padding: 20px;
+  margin: 5px 0;
+  font-size: 16px;
+  line-height: 30px;
+  ${Elevation[2]}
 `;
