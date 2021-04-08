@@ -26,7 +26,7 @@ class OpenGamesTable extends Component {
 		const bet_amount = e.target.getAttribute('bet_amount');
 
 		if (!this.props.isAuthenticated) {
-            alertModal(this.props.isDarkMode, `Please login to join this game!`)
+            alertModal(this.props.isDarkMode, `Please Login to join this game!`)
 			return;
 		}
 

@@ -11,7 +11,7 @@ class ClassicRPS extends Component {
 
     render() {
         return (this.props.step === 1 ? 
-            <DefaultBetAmountPanel bet_amount={this.props.bet_amount} onChangeState={this.props.onChangeState} game_type="Classic RPS" />
+            <DefaultBetAmountPanel bet_amount={this.props.bet_amount} onChangeState={this.props.onChangeState} game_type="RPS" />
             :
             <div className="game-info-panel">
                 <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>

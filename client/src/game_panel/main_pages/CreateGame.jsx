@@ -261,7 +261,7 @@ class CreateGame extends Component {
 		return (
 			<div className="game-page">
 				<div className="page-title">
-					<h2>Create a Bet - ({this.state.game_mode})</h2>
+					<h2>Host / Create a New Game - <br />({this.state.game_mode})</h2>
 					{
 						(this.state.step === 5 && this.state.game_mode === "Brain Game" && this.state.isPlayingBrain) ? 
 							<Summary 
@@ -277,7 +277,7 @@ class CreateGame extends Component {
 								public_bet_amount={this.state.public_bet_amount}
 							/>
 							:
-							<span>Click ‘How To Play’ in the top bar for more game instructions.</span>
+							<span>Click ‘HELP’ at the top for more game instructions.</span>
 					}
 				</div>
 				<div className="game-contents">

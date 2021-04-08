@@ -51,6 +51,7 @@
 }
 .modal-body h2.modal-title {
     font-size: 16px;
+    text-transform: uppercase;
     margin: -24px auto 40px -16px;
 }
 .modal-body h5 {
@@ -198,23 +199,17 @@
     width: auto;
     margin: 0 0 0 16px;
 }
-.modal-body .modal-content-wrapper {
-    background: #F2F3F5;
-    margin-bottom: 30px;
-    border-radius: 4px;
-    padding-bottom: 16px;
-}
 .modal-body .modal-content-wrapper h4 {
+    text-transform: uppercase;
     font-size: 16px;
     font-weight: bold;
     line-height: 2.5;
-    background-color: rgba(216,23,25, 0.2);
-    color: #060607;
+    background-color: rgb(84 84 84);
     padding: 0 24px 0 60px;
-    border-radius: 8px 8px 0 0;
     background-repeat: no-repeat;
     background-size: 40px 40px;
     background-position: 18px center;
+    margin: 0 !important;
 }
 .modal-body .modal-content-wrapper.quick-shoot h4 {
     background-image: url("/img/icons/modal-quick-shoot.svg");
@@ -231,8 +226,23 @@
 .modal-body .modal-content-wrapper.brain-game h4 {
     background-image: url("/img/icons/modal-brain-game.svg");
 }
+.modal-body .modal-content-wrapper.house-edge h4 {
+    background-image: url("/img/icons/modal-house-edge.svg");
+    background-size: 27px;
+    background-position: 4% center;
+}
+.modal-body .modal-content-wrapper.provably-fair h4 {
+    background-image: url("/img/icons/modal-provably-fair.svg");
+    background-size: 28px;
+    background-position: 4% center;
+}
+.modal-body .modal-content-wrapper.support h4 {
+    background-image: url("/img/icons/modal-support.svg");
+    background-size: 25px;
+    background-position: 4% center;
+}
 .modal-body .modal-content-wrapper div.modal-content-panel {
-    padding: 0 24px;
+    padding: 20px 24px;
 }
 .modal-body.how-to-play-modal-body .modal-content-wrapper div.modal-content-panel p {
     margin-top: initial;
@@ -306,6 +316,10 @@
     text-align: center;
 }
 @media (max-width: 768px) {
+    .accordion {
+      margin-top: 15px;
+    }
+
     .modal-body p.sm-text-center {
         text-align: center;
     }
@@ -327,7 +341,7 @@
         background-position: 8px center;
     }
     .modal-body .modal-content-wrapper div.modal-content-panel {
-        padding: 0 16px;
+        padding: 16px 16px;
     }
     .modal-body.how-to-play-modal-body .modal-content-wrapper div.modal-content-panel ol {
         margin-left: 20px;

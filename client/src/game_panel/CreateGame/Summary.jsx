@@ -79,11 +79,11 @@ class Summary extends Component {
                         <div className="summary-item-value">£{updateDigitToPoint2(this.props.max_return)}</div>
                     </div>
                     {this.props.endgame_type && <div className="summary-item">
-                        <div className="summary-item-name">End Game Amount</div>
+                        <div className="summary-item-name">Payout</div>
                         <div className="summary-item-value">£{updateDigitToPoint2(this.props.endgame_amount)}</div>
                     </div>}
                     <div className="summary-item">
-                        <div className="summary-item-name">Status</div>
+                        <div className="summary-item-name">Privacy</div>
                         <div className="summary-item-value">{this.props.is_private ? "Private" : "Public"}</div>
                     </div>
                 </div>

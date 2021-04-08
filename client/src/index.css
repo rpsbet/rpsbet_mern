@@ -86,6 +86,22 @@ input,textarea { border-radius: 0 !important; }
 }
 
 .disclaimer p span { color: #c73128; font-weight: 600; }
+
+#root .site_wrapper, button {
+  text-transform: uppercase !important;
+}
+div.table.my-chat-table .table-row > div.message-panel ,
+.chat-log-panel .my-message .message-content,
+.dont-have-game-msg,
+.chat-wrapper .chat-panel.global-chat,
+.chat-header,
+.cell-user-name,
+.quiz-panel,
+.answer-panel .answer,
+.qs-game-type-panel button{
+  text-transform: none !important;
+}
+
 #root .site_wrapper .login_wrapper {
   height: 100vh;
   display: flex;
@@ -245,6 +261,7 @@ div[aria-label="How To Play Modal"] ul {
 }
 
 #game_footer_howto {
+  margin-top: 30px;
   text-align: center;
   overflow-x: scroll;
   -ms-overflow-style: none;  /* Internet Explorer 10+ */
@@ -377,6 +394,13 @@ div.table .table-row .table-cell img.game-type-icon {
   
 }
 
+/*** GLOBAL CHAT ***/
+
+.chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
+  overflow-wrap: anywhere;
+}
+
+/*** MY CHAT ***/
 
 .contents_wrapper .chat_header {
   background-color: #33271e;
@@ -563,8 +587,8 @@ div.table .table-row .table-cell img.game-type-icon {
 (-webkit-min-device-pixel-ratio: 1.5) {
   div.table.main-game-table .table-row .table-cell.cell-user-name {
         width: 34%;
-        margin-left: 60px;
-        margin-right: -60px;
+        margin-left: 15px;
+        margin-right: 0px;
   }
 
   .game-type-panel .btn-game-type {

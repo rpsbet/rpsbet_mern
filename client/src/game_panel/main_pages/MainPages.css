@@ -1,6 +1,7 @@
 button, button.btn {
     outline: none !important;
 }
+
 .contents_wrapper .main-game {
     display: grid;
     grid-template-columns: 15% 48% 37%;
@@ -30,7 +31,7 @@ button, button.btn {
     color: #72767d;
 }
 .contents_wrapper .main-game .main-panel {
-    padding: 24px 0 24px 24px;
+    padding: 24px 0 8px 24px;
     background-color: rgba(235, 237, 239, 0.5);
     position: relative;
 }
@@ -95,6 +96,9 @@ div.table .table-header {
     justify-content: space-between;
     align-items: center;
 }
+div.table.main-history-table, div.table.my-open-game-table {
+    height: calc(100vh - 240px);
+}
 div.table.main-history-table .table-row > div {
     align-items: flex-start;
     color: white;
@@ -121,6 +125,9 @@ div.table.my-chat-table .table-row > div.message-panel {
 }
 div.table.my-chat-table .table-row .table-cell {
     padding: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 div.table.my-chat-table .table-row .table-cell.message-date {
     min-width: 60px;
@@ -179,6 +186,19 @@ div.table .table-cell button.btn_end {
     width: 64px;
     height: 32px;
 }
+div.table.main-game-table::-webkit-scrollbar, div.table.main-history-table::-webkit-scrollbar, div.table.my-open-game-table::-webkit-scrollbar {
+  display: none;
+}
+
+div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-table {
+    overflow-y: auto;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+div.table.main-game-table, div.table.my-open-game-table {
+    height: calc(100vh - 250px);
+}
+
 div.table.main-game-table .table-row .table-cell.cell-room-info{
     width: 20%;
     display: flex;
@@ -194,6 +214,7 @@ div.table.main-game-table .table-row .table-cell.cell-room-info{
 }
 div.table.main-game-table .table-row .table-cell.cell-user-name {
     width: 35%;
+    text-align: center;
 }
 div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
     display: inline-block;
@@ -291,6 +312,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     position: absolute;
     top: 12px;
     right: 0;
+    margin-bottom: 15px;
 }
 .create-room-btn-panel label {
     margin-right: 24px;
@@ -298,10 +320,11 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     color: #72767d;
 }
 .create-room-btn-panel button.btn-create-room {
+    margin-top: -2.5px;
     color: white;
     font-size: 16px;
     border: 2px solid transparent;
-    height: 35px;
+    height: 38px;
     background: 
         linear-gradient(to top, #232529, #232529) padding-box, 
         linear-gradient(to top, #ff409a, #c438ef) border-box;
@@ -321,7 +344,7 @@ div.table.my-open-game-table .table-cell.bet-info {
 }
 div.table.my-open-game-table .table-row .table-cell.winnings span {
     font-weight: bold;
-    color: #43b581;
+    color: #02c526;
 }
 div.table.my-open-game-table .table-row .table-cell.room-id {
     text-align: left;
@@ -1241,7 +1264,8 @@ input {
         margin-bottom: 16px;
     }
     .game-page .game-contents .game-info-panel .create-box-panel .edit-amount-panel {
-        width: 150px;
+        width: 147px;
+        overflow-x: hidden;
     }
     .brain-game-play-panel .play-panel-header .timer {
         padding: 8px 16px;
@@ -1298,6 +1322,17 @@ input {
     }
 }
 @media (max-width: 400px) {
+   .game-type-panel::-webkit-scrollbar {
+        display: none;
+    }
+    .game-type-panel {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+    div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-table {
+        height: unset;
+    }
+
     .brain-game-play-panel .play-panel-header .brain-score {
         padding: 16px;
     }

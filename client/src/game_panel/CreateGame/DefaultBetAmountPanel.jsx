@@ -53,7 +53,7 @@ class DefaultBetAmountPanel extends Component {
 						}} 
 						placeholder="Bet Amount" />
 				</div>
-				<p className="tip">The global cost to play this game</p>
+				<p className="tip">The cost to play this game</p>
 			</div>
 		);
 	}

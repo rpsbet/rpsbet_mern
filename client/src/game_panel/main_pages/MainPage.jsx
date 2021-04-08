@@ -60,12 +60,12 @@ class MainPage extends Component {
 						TabIndicatorProps={{style: {background: '#c438ef'}}}
 						className="main-game-page-tabs"
 					>
-						<Tab label="Open Games" style={customStyles.tabRoot} />
+						<Tab label="Live Games" style={customStyles.tabRoot} />
 						<Tab label="History" style={customStyles.tabRoot} />
 					</Tabs>
 				}
 				<div className="main-panel">
-					<h2 className="main-title desktop-only">Open Games</h2>
+					<h2 className="main-title desktop-only">Live Games</h2>
 					{ ((!this.state.is_mobile && this.props.selectedMainTabIndex === 0) || 
 						(this.state.is_mobile && this.state.selectedMobileTab === 'live_games' && this.state.show_open_game === 0)) && 
 						<OpenGamesTable 

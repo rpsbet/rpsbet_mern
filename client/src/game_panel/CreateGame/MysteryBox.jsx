@@ -126,23 +126,23 @@ class MysteryBox extends Component {
                 <div className="create-box-panel">
                     <div className="amounts-panel">
                         <div>
-                            <div>Public Win</div>
+                            <div>Box Prize</div>
                             <div className="edit-amount-panel">
                                 <span>£</span>
                                 <input type="text" pattern="[0-9]*" name="new_box_prize" id="new_box_prize"  maxLength="5"
                                     value={this.state.new_box_prize} 
                                     onChange={this.onChangeNewBoxPrize}
-                                    placeholder="Box Prize" />
+                                    placeholder="Your Bet Amount" />
                             </div>
                         </div>
                         <div>
-                            <div>Cost of Opening</div>
+                            <div>Box Price</div>
                             <div className="edit-amount-panel">
                                 <span>£</span>
                                 <input type="text" pattern="[0-9]*" name="new_box_price" id="new_box_price"  maxLength="5"
                                     value={this.state.new_box_price} 
                                     onChange={this.onChangeNewBoxPrice}
-                                    placeholder="Box Price" />
+                                    placeholder="Public Bet Amount" />
                             </div>
                         </div>
                     </div>

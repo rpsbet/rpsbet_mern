@@ -258,7 +258,7 @@ class SiteWrapper extends Component {
                 <Tab label="My Games" style={customStyles.tabRoot} />
               </Tabs>
               <div className="header_action_panel">
-                <a href="#how-to-play" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HOW TO PLAY</span></a>
+                <a href="#help" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HELP</span></a>
                 { this.props.isAuthenticated ? 
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>£{updateDigitToPoint2(parseInt(this.state.balance) / 100.0)}</span>

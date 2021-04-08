@@ -77,7 +77,7 @@ class QuickShoot extends Component {
         e.preventDefault();
         
         if (this.props.creator_id === this.props.user_id) {
-            alertModal(this.props.isDarkMode, `Oops! This game is yours. You can't join this game.`)
+            alertModal(this.props.isDarkMode, `Oops! This game is yours. What's the point?!`)
             return;
         }
 
@@ -86,7 +86,7 @@ class QuickShoot extends Component {
             return;
         }
 
-        confirmModalCreate(this.props.isDarkMode, 'Do you want to bet on this game now?', 'Okay', 'Cancel', async ()=>{
+        confirmModalCreate(this.props.isDarkMode, 'Are you sure you want to place this bet?', 'Yes', 'Cancel', async ()=>{
             if (this.props.is_private === true) {
                 this.props.openGamePasswordModal();
             } else {

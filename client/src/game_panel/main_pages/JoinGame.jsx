@@ -49,7 +49,7 @@ class JoinGame extends Component {
     render() {
         return (
             <>
-                {this.props.roomInfo.game_type === 'Classic RPS' && 
+                {this.props.roomInfo.game_type === 'RPS' && 
                     <ClassicRPS 
                         join={this.join} 
                         user_id={this.props.user_id} 

@@ -95,7 +95,7 @@ class ChatPanel extends Component {
                             <span role="img" aria-label="" onClick={this.insertEmoji}>🤝</span>
                         </div>
                         <button className="btn-show-emoticon" onClick={this.toggleEmojiPanel}></button>
-                        <input type="text" className="form-control" placeholder="Type Something..." onKeyDown={this.onTextAreaKeyDown} onChange={this.onChangeText} value={this.state.text} ref={(elem) => {this.textarea = elem}} />
+                        <input type="text" className="form-control" placeholder="Say something..." onKeyDown={this.onTextAreaKeyDown} onChange={this.onChangeText} value={this.state.text} ref={(elem) => {this.textarea = elem}} />
                     </div>
                 }
 			</div>

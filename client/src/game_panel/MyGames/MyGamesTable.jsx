@@ -124,7 +124,7 @@ class MyGamesTable extends Component {
 		return (
 			<div className="my-open-games">
 				<div className="create-room-btn-panel">
-					<label>Host your first game today!</label>
+					<label>Increased Earnings ➜</label>
 					<button className="btn-create-room" onClick={this.handleCreateBtnClicked}>+ Host Game</button>
 				</div>
 				<div className="game-type-container">
@@ -143,7 +143,7 @@ class MyGamesTable extends Component {
 						this.props.myGames.length === 0 ? 
 							<div className="dont-have-game-msg">
 								<div>You don't have any games right now.</div>
-								<span>You can start your games <br/>from "+ Host Game"</span>
+								<span>To Create a New Game, Choose a Gamemode <br/>then "+ HOST GAME"</span>
 							</div>
 							: 
 							this.props.myGames.map((row, key) => (

@@ -51,6 +51,15 @@ class MyChat extends Component {
 											<Avatar src={this.state.myChat[row].avatar} alt="" className="avatar" darkMode={this.props.isDarkMode} />
 											{this.state.myChat[row].username}
 										</div>
+									</div>
+									<div className="message-panel">
+										<div className="table-cell">{this.state.myChat[row].message}</div>
+										<div className="table-cell" title="Unread message">{this.state.myChat[row].unread_message_count === 0 ? <></> : <span className="unread_message_badge">{this.state.myChat[row].unread_message_count}</span>}</div>
+										<div className="table-cell message-date">{Moment(this.state.myChat[row].created_at_str).format('DD / MM')}</div>
+									</div>
+									<div>
+										<div className="table-cell">
+										</div>
 										<div className="table-cell">
 											<button 
 												className="btn btn_join" 
@@ -62,11 +71,6 @@ class MyChat extends Component {
 												Open
 											</button>
 										</div>
-									</div>
-									<div className="message-panel">
-										<div className="table-cell">{this.state.myChat[row].message}</div>
-										<div className="table-cell" title="Unread message">{this.state.myChat[row].unread_message_count === 0 ? <></> : <span className="unread_message_badge">{this.state.myChat[row].unread_message_count}</span>}</div>
-										<div className="table-cell message-date">{Moment(this.state.myChat[row].created_at_str).format('DD / MM')}</div>
 									</div>
 								</div>
 							), this)

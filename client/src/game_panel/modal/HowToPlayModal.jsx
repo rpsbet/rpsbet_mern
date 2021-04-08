@@ -1,5 +1,12 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
+import {
+    Accordion,
+    AccordionItem,
+    AccordionItemHeading,
+    AccordionItemButton,
+    AccordionItemPanel,
+} from 'react-accessible-accordion';
 
 Modal.setAppElement('#root')
 
@@ -30,16 +37,25 @@ class HowToPlayModal extends Component {
 		>
 			<div className={this.props.isDarkMode ? 'dark_mode' : ''}>
 				<div className="modal-body edit-modal-body how-to-play-modal-body">
-					<h2 className="modal-title">How To Play <span style={{color: "#d81719"}}>RPS</span> <span style={{color: "#ebddca"}}>Bet</span></h2>
+					<h2 className="modal-title">Help</h2>
+
 					<button className="btn-close" onClick={this.props.closeModal}>×</button>
-				
-					<div className="modal-content-wrapper quick-shoot">
-						<h4>Quick Shoot - Game Mode</h4>
-						<div className="modal-content-panel">
+				<Accordion>
+	            <AccordionItem>
+	                <AccordionItemHeading>
+	                    <AccordionItemButton>
+	                    <div className="modal-content-wrapper quick-shoot">
+	                        <h4>Quick Shoot - Tutorial</h4>
+	                        </div>
+	                    </AccordionItemButton>
+	                </AccordionItemHeading>
+	                <AccordionItemPanel>
+	                <div className="modal-content-wrapper quick-shoot">
+                    <div className="modal-content-panel">
 							<h5>HOST GAME</h5>
 							<ol>
 								<li>Set the Game Type (Returns Multiplier e.g. 2x, 3x etc.)</li>
-								<li>Set your Bet Amount</li>
+								<li>Set Your Bet Amount</li>
 								<li>Choose Where to Save</li>
 							</ol>
 						</div>
@@ -54,13 +70,22 @@ class HowToPlayModal extends Component {
 							<p>e.g.</p>
 							<p>Your Bet Amount = <span style={{color: "#b52c22"}}>£50</span></p>
 							<p>Game Type = <span style={{color: "#f6b22a"}}><u>5 (5x)</u></span></p>
-							<p>Public Bet Amount = <span style={{color:"#b52c22"}}>£200 [£50 * 0.95]</span></p>
-							<p>Winnings = <span style={{color:"#02c526"}}>£237.50 [£250 * 0.95]</span></p>
+							<p>Public Bet Amount = <span style={{color:"#b52c22"}}>£200 [£50 * 4]</span></p>
+							<p>Winnings = <span style={{color:"#02c526"}}>£247.50 [£250 * 0.99]</span></p>
 						</div>
-					</div>
-
-					<div className="modal-content-wrapper brain-game">
-						<h4>Brain Game - Game Mode</h4>
+						</div>
+	                </AccordionItemPanel>
+			            </AccordionItem>
+			            <AccordionItem>
+			                <AccordionItemHeading>
+			                    <AccordionItemButton>
+			                        <div className="modal-content-wrapper brain-game">
+							<h4>Brain Game - Tutorial</h4>
+						</div>
+			                    </AccordionItemButton>
+			                </AccordionItemHeading>
+			                <AccordionItemPanel>
+			                    <div className="modal-content-wrapper brain-game">
 						<div className="modal-content-panel">
 							<h5>HOST GAME</h5>
 							<ol>
@@ -80,12 +105,21 @@ class HowToPlayModal extends Component {
 							<p>e.g.</p>
 							<p>Bet Amount = <span style={{color:"#b52c22"}}>£5</span></p>
 							<p>Payout = <span style={{color: "#f6b22a"}}>Automatic(£30)</span></p>
-							<p>Winnings = <span style={{color:"#02c526"}}>£27 [£30 * 0.9]</span></p>
+							<p>Winnings = <span style={{color:"#02c526"}}>£29.70 [£30 * 0.99]</span></p>
 						</div>
 					</div>
-
-					<div className="modal-content-wrapper mystery-box">
-						<h4>Mystery Box - Game Mode</h4>
+			             </AccordionItemPanel>
+			            </AccordionItem>
+			            <AccordionItem>
+			                <AccordionItemHeading>
+			                    <AccordionItemButton>
+			            <div className="modal-content-wrapper mystery-box">
+						<h4>Mystery Box - Tutorial</h4>
+						</div>
+						</AccordionItemButton>
+	                </AccordionItemHeading>
+	                <AccordionItemPanel>
+	                <div className="modal-content-wrapper quick-shoot">
 						<div className="modal-content-panel">
 							<h5>HOST GAME</h5>
 							<ol>
@@ -104,13 +138,22 @@ class HowToPlayModal extends Component {
 							<p>e.g.</p>
 							<p>The following boxes are set (Prize/Price): <span style={{color:"#b52c22"}}>£25/£4, £0/£6, £0/£10</span></p>
 							<p>Payout = <span style={{color: "#f6b22a"}}>Automatic(£41) [£25 + £6 + £10]</span></p>
-							<p>Host Winnings = <span style={{color:"#02c526"}}>£38.95 [£41 * 0.95]</span></p>
+							<p>Host Winnings = <span style={{color:"#02c526"}}>£38.95 [£41 * 0.99]</span></p>
 							<p><i>If the £25 Prize box is opened, the host still receives the £4 (Price).</i></p>
 						</div>
-					</div>
-
-					<div className="modal-content-wrapper spleesh">
-						<h4><i>Spleesh!</i> - Game Mode</h4>
+						</div>
+			             </AccordionItemPanel>
+			            </AccordionItem>
+			            <AccordionItem>
+			                <AccordionItemHeading>
+			                    <AccordionItemButton>
+			            <div className="modal-content-wrapper spleesh">
+						<h4><i>Spleesh!</i> - Tutuorial</h4>
+						</div>
+						</AccordionItemButton>
+	                </AccordionItemHeading>
+	                <AccordionItemPanel>
+						<div className="modal-content-wrapper spleesh">
 						<div className="modal-content-panel">
 							<h5>HOST GAME</h5>
 							<ol>
@@ -130,41 +173,102 @@ class HowToPlayModal extends Component {
 							<p>Host's Number (Bet Amount) = <span style={{color: "#b52c22"}}>£7</span></p>
 							<p>Payout = <span style={{color: "#f6b22a"}}>Automatic(£30)</span></p>
 							<p>Guesses (in order):  1, 2,10,9,5,8- <i>*Game ENDs automatically*</i></p>
-							<p>Host Winnings = <span style={{color:"#02c526"}}>£37.80 [£42 * 0.9]</span></p>
+							<p>Host Winnings = <span style={{color:"#02c526"}}>£41.58 [£42 * 0.99]</span></p>
 						</div>
 					</div>
-
-					<div className="modal-content-wrapper classic-rps">
-						<h4>Classic RPS - Game Mode</h4>
+			             </AccordionItemPanel>
+			            </AccordionItem>
+			            <AccordionItem>
+			                <AccordionItemHeading>
+			                    <AccordionItemButton>
+			           <div className="modal-content-wrapper classic-rps">
+						<h4>RPS - Tutorial</h4>
+						</div>
+						</AccordionItemButton>
+	                </AccordionItemHeading>
+	                <AccordionItemPanel>
+						<div className="modal-content-wrapper classic-rps">
 						<div className="modal-content-panel">
-							<p>Rock BEATS Scissors, Paper BEATS Rock, Scissors BEATS Paper!</p>
+							<h5>HOST GAME</h5>
+								<ol>
+									<li>Set the Game Type (Freeplay to allow players to bet freely; Fixed to have set bets).</li>
+									<li>(skip this step if Game Type is Fixed) Set the Bankroll.</li>
+									<li>Set the runs.</li>
+								</ol>
+							</div>
+							<div className="modal-content-panel">
+								<h5>JOIN GAME</h5>
+								<ol>
+									<li>Rock BEATS Scissors, Paper BEATS Rock and Scissors BEATS Paper!</li>
+								</ol>
 							<h5 style={{color: "#02c526"}}>WINNINGS</h5>
 
 							<p>e.g.</p>
+							<p>Game Type = Freeplay</p>
 							<p>Bet Amount = <span style={{color: "#b52c22"}}>£50</span></p>
-							<p>Winnings = <span style={{color:"#02c526"}}>£95 [£100 * 0.95]</span></p>
+							<p>Winnings = <span style={{color:"#02c526"}}>£99 [£100 * 0.99]</span></p>
 						</div>
 					</div>
-
-					<hr />
-					<h5>Winnings Tax</h5>
-					<p>We introduced <u>Winnings Tax</u> to cover transactional costs from the payment provider and development costs for the website, we hope to lower these as soon as we can!!!</p>
+					 </AccordionItemPanel>
+			            </AccordionItem>
+			             <AccordionItem>
+			                <AccordionItemHeading>
+			                    <AccordionItemButton>
+			           <div className="modal-content-wrapper provably-fair">
+						<h4>Games of Skill - Provably Fair</h4>
+						</div>
+						</AccordionItemButton>
+	                </AccordionItemHeading>
+	                <AccordionItemPanel>
+	                <div className="modal-content-wrapper spleesh">
+						<div className="modal-content-panel">
+					<p>All our games are 100% Player vs. Player(s) and there are zero random factors affecting the outcome of games, players have complete control. Skilled players can increase their chances of Winning. If you want to understand more about provably fair, 'PvP' games, you can go through  <a href="https://bitcointalk.org/index.php?topic=5194336.0">this forum here</a>.</p>
+					</div>
+					</div>
+					 </AccordionItemPanel>
+			            </AccordionItem>
+			            <AccordionItem>
+			                <AccordionItemHeading>
+			                    <AccordionItemButton>
+			           <div className="modal-content-wrapper house-edge">
+						<h4>Fees - House Edge</h4>
+						</div>
+						</AccordionItemButton>
+	                </AccordionItemHeading>
+	                <AccordionItemPanel>
+	                <div className="modal-content-wrapper spleesh">
+						<div className="modal-content-panel">
+					<p>The only fees you pay is Winnings Tax i.e., the <u>House's Edge</u> which is deducted each time you take Winnings.</p>
 					<table id="howto-modal">
 						<tbody>
-							<tr><th>Game Modes</th><th>Winnings Tax</th><th>Withdrawal Fees</th></tr>
-							<tr><td className="gamemode">Quick Shoot</td><td>5%</td><td rowSpan="6"><u>NO withdrawal Fees.</u></td></tr>
-							<tr><td className="gamemode">Mystery Box</td><td>5%</td></tr>
-							<tr><td className="gamemode">Brain Game</td><td>10%</td></tr>
-							<tr><td className="gamemode"><i>Spleesh!</i></td><td>10%</td></tr>
-							<tr><td className="gamemode">RPS</td><td>5%</td></tr>
+							<tr><th>Deposit Fees</th><th>House Edge</th><th>Withdrawal Fees</th></tr>
+							<tr><td><u>NO deposit Fees.</u></td><td className="gamemode">1%</td><td rowSpan="6"><u>NO withdrawal Fees.</u></td></tr>
 						</tbody>
 					</table>
-					<hr />
-					<h5>For All Enquiries</h5>
-					<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>. We love feedback and we thank you!</p><br /><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>&#9679;&#9679;&#9679;<span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span><span style={{color: "#b52c22"}}>&#9679;</span>
-					<p>To learn more about RPSBet and its values, follow our official accounts below and keep up with updates:</p>
+					</div>
+					</div>
+					 </AccordionItemPanel>
+			            </AccordionItem>
+			            <AccordionItem>
+			                <AccordionItemHeading>
+			                    <AccordionItemButton>
+			           <div className="modal-content-wrapper support">
+						<h4>Support - Get in Touch</h4>
+						</div>
+						</AccordionItemButton>
+	                </AccordionItemHeading>
+	                <AccordionItemPanel>
+	                <div className="modal-content-wrapper spleesh">
+						<div className="modal-content-panel">
+					<p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>.</p>
+					</div>
+					</div>
+					 </AccordionItemPanel>
+			            </AccordionItem>
+		        </Accordion>
+		        <p>CRYPTO COMING SOON! FOLLOW FOR MORE UPDATES!!</p>
 					<div id="game_footer_howto">
-					<a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://twitter.com/rpsbet">TWITTER</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">YOUTUBE</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.reddit.com/user/RPSBet">REDDIT</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.facebook.com/rpsbet">FACEBOOK</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://rpsbet.itch.io/">ITCH</a>
+					<a href="https://discord.gg/94QywhSc4d">DISCORD</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://twitter.com/rpsbet">TWITTER</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">YOUTUBE</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.reddit.com/user/RPSBet">REDDIT</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://rpsbet.itch.io/">ITCH</a>
 					<br />
 					</div>
 					<div className="game_footer text-center">
