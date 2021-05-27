@@ -1085,6 +1085,69 @@ input {
     line-height: 24px;
     height: 24px;
 }
+.leaderboards-page {
+    padding: 32px 24px;
+}
+.leaderboards-page .page-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+.leaderboards-page .page-title h3 {
+    font-size: 18px;
+    font-weight: 600;
+}
+.leaderboards-page .page-title .leaderboard-action-panel {
+    display: flex;
+    align-items: center;
+}
+.leaderboards-page .page-title button {
+    background: #191a1d;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    margin-left: 16px;
+    padding: 0;
+    font-size: 16px;
+}
+.leaderboards-page table {
+    margin-top: 16px;
+}
+.leaderboards-page table thead {
+    color: #ffb000;
+    font-size: 14px;
+    font-weight: 600;
+}
+.leaderboards-page table tr {
+    background-color: rgba(47, 49, 54, 0.5);
+}
+.leaderboards-page table th {
+    border-top: none;
+    border-bottom: 2px solid #202225;
+    text-align: right;
+}
+.leaderboards-page table td {
+    border-top: 1px solid #202225;
+    color: white;
+    text-align: right;
+}
+.leaderboards-page table th.player,
+.leaderboards-page table td.player {
+    text-align: left;
+}
+.leaderboards-page table th:first-child {
+    border-top-left-radius: 8px;
+}
+.leaderboards-page table th:last-child {
+    border-top-right-radius: 8px;
+}
+.leaderboards-page table tr:last-child td:first-child {
+    border-bottom-left-radius: 8px;
+}
+.leaderboards-page table tr:last-child td:last-child {
+    border-bottom-right-radius: 8px;
+}
 @media (min-width: 1024px) {
     .mobile-only {
         display: none !important;

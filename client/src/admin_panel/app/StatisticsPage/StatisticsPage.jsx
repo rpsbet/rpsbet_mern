@@ -26,14 +26,6 @@ class PalletPage extends Component {
   }
   
   render() {
-    // const series = [
-    //   {name: 'Classic RPS', data: generateData(20, { min: -30, max: 55 })},
-    //   {name: 'Spleesh', data: generateData(20, { min: -30, max: 55 })},
-    //   {name: 'Mystery Box', data: generateData(20, { min: -30, max: 55 }) },
-    //   {name: 'Brain Game', data: generateData(20, { min: -30, max: 55 })},
-    //   {name: 'Quick Shoot', data: generateData(20, { min: -30, max: 55 })},
-    // ];
-
     return (
       <>
         <ContainerHeader title={`All Stats`} />

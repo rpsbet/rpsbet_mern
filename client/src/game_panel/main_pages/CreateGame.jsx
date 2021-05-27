@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import ClassicRPS from '../CreateGame/ClassicRPS';
+import RPS from '../CreateGame/RPS';
 import Spleesh from '../CreateGame/Spleesh';
 import MysteryBox from '../CreateGame/MysteryBox';
 import BrainGame from '../CreateGame/BrainGame';
@@ -84,7 +84,7 @@ class CreateGame extends Component {
 				endgame_amount: 54,
 				max_return: 54,
 			};
-		} else if (gameTypeName === "Classic RPS") {
+		} else if (gameTypeName === "RPS") {
 			newState = {
 				...newState,
 				game_type: 1,
@@ -209,7 +209,7 @@ class CreateGame extends Component {
 				this.setState({endgame_type: false});
 			}
 
-			if (this.state.game_mode !== 'Classic RPS' && this.state.game_mode !== 'Quick Shoot' && this.state.child_step === 1) {
+			if (this.state.game_mode !== 'RPS' && this.state.game_mode !== 'Quick Shoot' && this.state.child_step === 1) {
 				this.setState({
 					child_step: this.state.child_step + 1
 				});
@@ -228,8 +228,8 @@ class CreateGame extends Component {
 	}
 
 	step2 = () => {
-		if (this.state.game_mode === 'Classic RPS') {
-			return <ClassicRPS onChangeState={this.onChangeState} selected_rps={this.state.selected_rps} bet_amount={this.state.bet_amount} is_private={this.state.is_private} is_anonymous={this.state.is_anonymous} room_password={this.state.room_password} step={this.state.child_step}/>
+		if (this.state.game_mode === 'RPS') {
+			return <RPS onChangeState={this.onChangeState} selected_rps={this.state.selected_rps} bet_amount={this.state.bet_amount} is_private={this.state.is_private} is_anonymous={this.state.is_anonymous} room_password={this.state.room_password} step={this.state.child_step}/>
 		} else if (this.state.game_mode === 'Spleesh!') {
 			return <Spleesh onChangeState={this.onChangeState} bet_amount={this.state.bet_amount} spleesh_bet_unit={this.state.spleesh_bet_unit} is_private={this.state.is_private} is_anonymous={this.state.is_anonymous} room_password={this.state.room_password} endgame_type={this.state.endgame_type} endgame_amount={this.state.endgame_amount} step={this.state.child_step} />
 		} else if (this.state.game_mode === 'Mystery Box') {

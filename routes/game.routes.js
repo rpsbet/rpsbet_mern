@@ -200,7 +200,7 @@ convertGameLogToHistoryStyle = async (gameLogList) => {
 				room_name = `<span style='color: #C83228;'>${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</span>`;
 			}
 	
-			if (gameLog['game_type']['game_type_name'] === 'Classic RPS') {
+			if (gameLog['game_type']['game_type_name'] === 'RPS') {
 				if (gameLog.game_result === 1) {
 					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] won [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['room']['bet_amount'] * 2 * commissionRate)}
 						</span>] against ${creator_avatar}[${gameLog['creator']['username']}] in [${room_name}]`;
@@ -478,7 +478,7 @@ router.post('/rooms', auth, async (req, res) => {
 
 		gameType = await GameType.findOne({game_type_id: parseInt(req.body.game_type)});
 
-		if (req.body.game_type === 1) { // Classic RPS
+		if (req.body.game_type === 1) { // RPS
 			pr = req.body.bet_amount * 2;
 			host_pr = req.body.bet_amount;
 			user_bet = req.body.bet_amount;
@@ -579,7 +579,7 @@ getMyRooms = async (user_id, pagination, page) => {
 			
 			const gameLogCount = await GameLog.countDocuments({ room: new ObjectId(room._id) });
 
-			if (temp.game_type.game_type_id === 1) { // Classic RPS
+			if (temp.game_type.game_type_id === 1) { // RPS
 				temp.pr = updateDigitToPoint2(temp.pr * 2 * commissionRate);
 			}
 
@@ -681,7 +681,7 @@ router.post('/end_game', auth, async (req, res) => {
 
 				message.message = "I made £" + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
-			} else if (roomInfo['game_type']['game_type_name'] === 'Classic RPS') {
+			} else if (roomInfo['game_type']['game_type_name'] === 'RPS') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
 				message.message = "I made £" + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
@@ -972,7 +972,7 @@ router.post('/bet', auth, async (req, res) => {
 
 			const commission = await getCommission();
 
-			if (roomInfo['game_type']['game_type_name'] === 'Classic RPS') {
+			if (roomInfo['game_type']['game_type_name'] === 'RPS') {
 				newTransactionJ.amount -= roomInfo['bet_amount'] * 100;
 
 				newGameLog.selected_rps = req.body.selected_rps;

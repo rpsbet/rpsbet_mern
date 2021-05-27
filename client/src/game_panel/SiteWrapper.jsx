@@ -258,6 +258,10 @@ class SiteWrapper extends Component {
                 <Tab label="My Games" style={customStyles.tabRoot} />
               </Tabs>
               <div className="header_action_panel">
+                <a href="#" onClick={(e) => { history.push('/leaderboards'); }} id="btn_leaderboards">
+                  <img src="/img/icons/leaderboards.svg" alt="Leaderboards" />
+                  Leaderboards
+                </a>
                 <a href="#help" onClick={this.handleOpenHowToPlayModal} id="btn_how_to_play"><span>HELP</span></a>
                 { this.props.isAuthenticated ? 
                   <>

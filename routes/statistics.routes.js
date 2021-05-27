@@ -191,7 +191,7 @@ router.get('/get-total-statistics', auth, async (req, res) => {
       totalDeposited: 0,
       totalWithdrawn: 0,
       volumeOfBets: [
-        {name : 'Classic RPS', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+        {name : 'RPS', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
         {name : 'Spleesh', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
         {name : 'Mystery Box', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
         {name : 'Brain Game', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},

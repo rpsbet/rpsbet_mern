@@ -23,7 +23,7 @@ import {
 const initialState = {
   isActiveLoadingOverlay: false,
   socket: null,
-  game_mode: 'Classic RPS',
+  game_mode: 'RPS',
   // game_mode: 'Spleesh!',
   roomList: [],
   history: [],
@@ -33,7 +33,7 @@ const initialState = {
   historyTotalPage: 0,
   historyPageNumber: 1,
   gameTypeList: [
-    { game_type_name: 'Classic RPS' },
+    { game_type_name: 'RPS' },
     { game_type_name: 'Spleesh!' },
     { game_type_name: 'Brain Game' },
     { game_type_name: 'Mystery Box' },

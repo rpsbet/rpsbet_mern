@@ -34,10 +34,13 @@ class MainPage extends Component {
 	async componentDidMount() {
 		this.props.getRoomList();
 		this.props.getHistory();
-		this.props.getMyGames();
-		this.props.getMyHistory();
 		this.props.getGameTypeList();
-		this.props.getMyChat();
+
+		if (this.props.isAuthenticated) {
+			this.props.getMyGames();
+			this.props.getMyHistory();
+			this.props.getMyChat();
+		}
 	}
 
 	showOpenGameOrHistory = (e, newValue) => {

@@ -22,6 +22,7 @@ import {
   SELECT_MAIN_TAB,
   MY_CHAT_LOADED,
   GLOBAL_CHAT_RECEIVED,
+  LOAD_LEADERBOARDS,
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -251,6 +252,17 @@ export const deductBalanceWhenStartBrainGame = (data) => async dispatch => {
     return false;
   } catch (err) {
     return false;
+  }
+}
+
+export const getLeaderboardsInfo = () => async dispatch => {
+  try {
+    const res = await axios.post('/game/get_leaderboards_info');
+    if (res.data.success) {
+      dispatch({ type: LOAD_LEADERBOARDS, payload: res.data });
+    }
+  } catch (err) {
+    console.log(err)
   }
 }
 

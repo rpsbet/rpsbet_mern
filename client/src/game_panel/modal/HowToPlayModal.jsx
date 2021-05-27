@@ -181,13 +181,13 @@ class HowToPlayModal extends Component {
 			            <AccordionItem>
 			                <AccordionItemHeading>
 			                    <AccordionItemButton>
-			           <div className="modal-content-wrapper classic-rps">
+			           <div className="modal-content-wrapper rps">
 						<h4>RPS - Tutorial</h4>
 						</div>
 						</AccordionItemButton>
 	                </AccordionItemHeading>
 	                <AccordionItemPanel>
-						<div className="modal-content-wrapper classic-rps">
+						<div className="modal-content-wrapper rps">
 						<div className="modal-content-panel">
 							<h5>HOST GAME</h5>
 								<ol>

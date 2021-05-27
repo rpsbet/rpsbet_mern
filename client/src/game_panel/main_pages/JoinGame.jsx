@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import ClassicRPS from '../JoinGame/ClassicRPS';
+import RPS from '../JoinGame/RPS';
 import Spleesh from '../JoinGame/Spleesh';
 import MysteryBox from '../JoinGame/MysteryBox';
 import BrainGame from '../JoinGame/BrainGame';
@@ -50,7 +50,7 @@ class JoinGame extends Component {
         return (
             <>
                 {this.props.roomInfo.game_type === 'RPS' && 
-                    <ClassicRPS 
+                    <RPS 
                         join={this.join} 
                         user_id={this.props.user_id} 
                         creator_id={this.props.roomInfo.creator_id} 

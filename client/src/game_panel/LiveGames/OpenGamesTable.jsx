@@ -77,7 +77,7 @@ class OpenGamesTable extends Component {
 
 	generateGameTypePanel = () => {
 		const gameTypeStyleClass = {
-			'RPS': 'classic-rps',
+			'RPS': 'rps',
 			'S!': 'spleesh',
 			'MB': 'mystery-box',
 			'BG': 'brain-game',

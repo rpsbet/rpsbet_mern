@@ -214,8 +214,8 @@
 .modal-body .modal-content-wrapper.quick-shoot h4 {
     background-image: url("/img/icons/modal-quick-shoot.svg");
 }
-.modal-body .modal-content-wrapper.classic-rps h4 {
-    background-image: url("/img/icons/modal-classic-rps.svg");
+.modal-body .modal-content-wrapper.rps h4 {
+    background-image: url("/img/icons/modal-rps.svg");
 }
 .modal-body .modal-content-wrapper.mystery-box h4 {
     background-image: url("/img/icons/modal-mystery-box.svg");

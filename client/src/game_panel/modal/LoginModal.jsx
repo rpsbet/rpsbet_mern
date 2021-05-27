@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import './Modals.css';
 
 import { userSignIn, getUser } from '../../redux/Auth/user.actions';
-import { getMyGames, getMyHistory } from '../../redux/Logic/logic.actions';
+import { getMyGames, getMyHistory, getMyChat } from '../../redux/Logic/logic.actions';
 import history from '../../redux/history';
 
 Modal.setAppElement('#root')
@@ -58,6 +58,7 @@ class LoginModal extends Component {
                 this.props.initSocket();
                 this.props.getMyGames();
                 this.props.getMyHistory();
+                this.props.getMyChat();
                 history.push('/');
             }
             this.props.closeModal();
@@ -101,7 +102,8 @@ const mapDispatchToProps = {
     userSignIn,
     getUser,
     getMyGames,
-    getMyHistory
+    getMyHistory,
+    getMyChat
 };
 
 export default connect(
