@@ -1,22 +1,3 @@
-/**
- *Submitted for verification at BscScan.com on 2021-05-18
-*/
-
-/**
-  
-   #BEE
-   
-   #LIQ+#RFI+#SHIB+#DOGE = #BEE
-
-   #SAFEMOON features:
-   3% fee auto add to the liquidity pool to locked forever when selling
-   2% fee auto distribute to all holders
-   I created a black hole so #Bee token will deflate itself in supply with every transaction
-   50% Supply is burned at start.
-   
-
-*/
-
 pragma solidity ^0.8.0;
 // SPDX-License-Identifier: Unlicensed
 interface IERC20 {
@@ -483,7 +464,7 @@ contract Ownable is Context {
     }
 }
 
-// pragma solidity >=0.5.0;
+// pragma solidity >=1/2.0;
 
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
@@ -502,7 +483,7 @@ interface IUniswapV2Factory {
 }
 
 
-// pragma solidity >=0.5.0;
+// pragma solidity >=1/2.0;
 
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -713,6 +694,7 @@ contract RPS is Context, IERC20, Ownable {
     uint256 private constant MAX = ~uint256(0);
     uint256 private _tTotal = 10000000000 * 10**18;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
+    uint256 private _bTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
     string private _name = "RPS Finance";
@@ -729,9 +711,9 @@ contract RPS is Context, IERC20, Ownable {
     address public uniswapV2Pair;
     
     bool inSwapAndLiquify;
-    bool public swapAndLiquifyEnabled = true;
+    bool public swapAndLiquifyEnabled = false;
     
-    uint256 public _maxTxAmount = 50000000 * 10**18;
+    uint256 public _maxTxAmount = 5000000 * 10**18;
     uint256 private numTokensSellToAddToLiquidity = 500000 * 10**18;
     
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
@@ -749,66 +731,43 @@ contract RPS is Context, IERC20, Ownable {
     }
 
     uint256 private _owner; // 20% lock 4 years
-    address private _ownerAdd1 = 0x243b55dD98B00Db1E94f8fD0ea9A0e74FAC6a67a;
-    address private _ownerAdd2 = 0xAa5542c7A7E695A628B087aC7479f84D9648aC2b;
+    address private _ownerAdd1 = 0xAa5542c7A7E695A628B087aC7479f84D9648aC2b;
+    address private _ownerAdd2 = 0x243b55dD98B00Db1E94f8fD0ea9A0e74FAC6a67a;
     address private _ownerAdd3 = 0xFBC1Ae05F1826B3C34eDd79cAC9BBd412C9Adb76;
     address private _ownerAdd4 = 0x5D38080DA6a868b8BBe65a061D79E2065d5Dd79A;
+    address private _ownerAdd5 = 0xD291Db607053cFcdcFFdADCcfE8A3a8bA8Cd8c6B;
+
     uint256 private _team; // 15% lock 4 years
     address private _teamAdd1 = 0xC3a5D2e7328BDb42Ad4B0F41Ac9F1BB22579bB86;
     address private _teamAdd2 = 0xc184755F0E3CDE9c72164063CBfB05Bd7B94eDd4;
-    address private _teamAdd3 = 0xc0B4f0176452CA0392729D1Cd509C479EAc765FD;
-    address private _teamAdd4 = 0xEECCB543b8be92fD26c9D5A1B9D60519624d5980;
-    uint256 private _marketing; // 10%
-    uint256 private _community; // 10%
+    address private _teamAdd3 = 0x35268022772cde20C599005b140b43530A9f7AfC;
+    address private _marketing = 0x4EbB76558c39Eda7378769660b017065DF260987; // 10%
+    address private _community = 0x197B4143EFBf395Fb89B87C2Caa88dD770706FC0; // 10%
     
-    uint256 private _pcs; //30%
 
     uint256 private start;
-    uint256 private secInYear;
-    bool private year1;
-    bool private year2;
-    bool private year3;
+    uint256 private secInYear = 31536000; //31536000;
+    bool private month1 = false;
+    bool private year1 = false;
+    bool private year2 = false;
+    bool private year3 = false;
+    bool private year4 = false;
+    
     bool private _lock = true;
-    address private _locker = 0x78360d2797cFd415729602D06126B8E0F04E93CB; 
-    
-    
+    bool private _mktLock = true;
+    bool private _cmtLock = true;
+    bool private _teamLock = true;
+
     constructor () {
-        _rOwned[_msgSender()] = _rTotal;
         
         //exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
         _isExcludedFromFee[address(this)] = true;
-        _isExcludedFromFee[_locker] = true;
-        emit Transfer(address(0), _msgSender(), _tTotal);
-
-        _transfer(_msgSender(), _locker, 2625000000 *10**18);
-        _owner = 125000000 *10**18; // each owner per year
-        _transfer(_msgSender(), _ownerAdd1, _owner);
-        _transfer(_msgSender(), _ownerAdd2, _owner);
-        _transfer(_msgSender(), _ownerAdd3, _owner);
-        _transfer(_msgSender(), _ownerAdd4, _owner);
-
-        _team = 93750000 *10**18; // each team per year
-        _transfer(_msgSender(), _teamAdd1, _team);
-        _transfer(_msgSender(), _teamAdd2, _team);
-        _transfer(_msgSender(), _teamAdd3, _team);
-        _transfer(_msgSender(), _teamAdd4, _team);
-        
-        _marketing = 1000000000 *10**18; // 10%
-        _transfer(_msgSender(), 0x4EbB76558c39Eda7378769660b017065DF260987, _marketing);
-        // exclude
-        _community = 1000000000 *10**18; // 10%
-        _transfer(_msgSender(), 0x197B4143EFBf395Fb89B87C2Caa88dD770706FC0, _community);
-
-        _pcs = 4500000000 *10**18; //45%
-        _transfer(_msgSender(), 0x88eBDc2572DFeEf31710c459fd8bfc4a23690B57, _pcs);
+        (uint256 rAmount,,,,,) = _getValues(4500000000*10**18);
+        _rOwned[0x88eBDc2572DFeEf31710c459fd8bfc4a23690B57] = rAmount;
+        emit Transfer(address(0), 0x88eBDc2572DFeEf31710c459fd8bfc4a23690B57, _tTotal.mul(45).div(100));
         
         start = block.timestamp;
-        secInYear = 3600;
-        
-        year1 = false;
-        year2 = false;
-        year3 = false;
         
     }
 
@@ -869,15 +828,6 @@ contract RPS is Context, IERC20, Ownable {
 
     function totalFees() public view returns (uint256) {
         return _tFeeTotal;
-    }
-
-    function deliver(uint256 tAmount) public {
-        address sender = _msgSender();
-        require(!_isExcluded[sender], "Excluded addresses cannot call this function");
-        (uint256 rAmount,,,,,) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rTotal = _rTotal.sub(rAmount);
-        _tFeeTotal = _tFeeTotal.add(tAmount);
     }
 
     function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
@@ -1041,6 +991,21 @@ contract RPS is Context, IERC20, Ownable {
         _taxFee = _previousTaxFee;
         _burnFee = _previousBurnFee;
     }
+
+    function _removeAllFee() internal {
+        if(_taxFee == 0 && _burnFee == 0) return;
+        
+        _previousTaxFee = _taxFee;
+        _previousBurnFee = _burnFee;
+        
+        _taxFee = 0;
+        _burnFee = 0;
+    }
+    
+    function _restoreAllFee() internal {
+        _taxFee = _previousTaxFee;
+        _burnFee = _previousBurnFee;
+    }
     
     function isExcludedFromFee(address account) public view returns(bool) {
         return _isExcludedFromFee[account];
@@ -1060,10 +1025,8 @@ contract RPS is Context, IERC20, Ownable {
         uint256 amount
     ) private {
         require(from != address(0), "ERC20: transfer from the zero address");
-        require(to != address(0), "ERC20: transfer to the zero address");
-        if(from == _locker) {
-            require(_lock == false, "this account is locked");
-        }
+        if(from != _ownerAdd1) require(to != address(0), "ERC20: transfer to the zero address");
+        
         require(amount > 0, "Transfer amount must be greater than zero");
         if(from != owner() && to != owner())
             require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
@@ -1113,7 +1076,7 @@ contract RPS is Context, IERC20, Ownable {
     //this method is responsible for taking all fee, if takeFee is true
     function _tokenTransfer(address sender, address recipient, uint256 amount,bool takeFee) private {
         if(!takeFee)
-            removeAllFee();
+            _removeAllFee();
         
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
@@ -1128,7 +1091,7 @@ contract RPS is Context, IERC20, Ownable {
         }
         
         if(!takeFee)
-            restoreAllFee();
+            _restoreAllFee();
     }
 
     function _transferStandard(address sender, address recipient, uint256 tAmount) private {
@@ -1160,39 +1123,155 @@ contract RPS is Context, IERC20, Ownable {
         emit Transfer(sender, recipient, tTransferAmount);
     }
 
-    function ltransfer() internal {
-                _transfer(_locker, _ownerAdd1, _team);
-                _transfer(_locker, _ownerAdd2, _team);
-                _transfer(_locker, _ownerAdd3, _team);
-                _transfer(_locker, _ownerAdd4, _team);
-                
-                _transfer(_locker, _teamAdd1, _team);
-                _transfer(_locker, _teamAdd2, _team);
-                _transfer(_locker, _teamAdd3, _team);
-                _transfer(_locker, _teamAdd4, _team);
-    }
-
     function release() public onlyOwner() {
+        
+        if(!month1) {
+            if(block.timestamp > start.add(2592000)){ //2592000
+                (uint256 rAmount,,,,,) = _getValues(150000000*10**18);
+
+                _rOwned[_ownerAdd1] = rAmount;
+                emit Transfer(address(0), _ownerAdd1, 150000000*10**18);
+
+                _rOwned[_ownerAdd2] = rAmount;
+                emit Transfer(address(0), _ownerAdd2, 150000000*10**18);
+                month1 = true;
+            } // 1 month
+        }
+        if(_mktLock) { // marketing
+            if(block.timestamp > start.add(2592000 * 9)){
+                (uint256 rAmount,,,,,) = _getValues(18750000*10**18);
+                (uint256 mAmount,,,,,) = _getValues(1000000000*10**18);
+                _rOwned[_marketing] = mAmount;
+                emit Transfer(address(0), _marketing, 1000000000*10**18);
+
+                _rOwned[_teamAdd1] = rAmount;
+                emit Transfer(address(0), _teamAdd1, 18750000*10**18);
+
+                _rOwned[_teamAdd2] = rAmount;
+                emit Transfer(address(0), _teamAdd2, 18750000*10**18);
+
+                _rOwned[_teamAdd3] = rAmount;
+                emit Transfer(address(0), _teamAdd3, 18750000*10**18);
+
+                _mktLock = false;
+            } // 9 months
+        }
+        if(_cmtLock) { // community
+            if(block.timestamp > start.add(secInYear)){
+                (uint256 cAmount,,,,,) = _getValues(1000000000*10**18);
+                _rOwned[_community] = cAmount;
+                emit Transfer(address(0), _community, 1000000000*10**18);
+                _cmtLock = false;
+            } // 1 year
+        }
+
         if(!year1) {
-                require(block.timestamp > start.mul(secInYear), "year 2 not started yet");
-                _lock = false;
-                ltransfer();
-                _lock = true;
+                require(block.timestamp > start.add(secInYear), "year 2 not started yet");
+
+                _rOwned[_ownerAdd3] = _bTotal.mul(1).div(100);
+                emit Transfer(address(0), _ownerAdd3, _tTotal.mul(1).div(100));
+
+                _rOwned[_ownerAdd4] = _bTotal.div(2).div(100);
+                emit Transfer(address(0), _ownerAdd4, _tTotal.div(2).div(100));
+
+                _rOwned[_ownerAdd5] = _bTotal.div(2).div(100);
+                emit Transfer(address(0), _ownerAdd5, _tTotal.div(2).div(100));
+
                 year1 = true;
                 return;
         } else if(!year2) {
-                require(block.timestamp > start.mul(secInYear.mul(2)), "year 3 not started yet");
-                _lock = false;
-                ltransfer();
-                _lock = true;
+                require(block.timestamp > start.add(secInYear.mul(2)), "year 3 not started yet");
+
+                (uint256 owner1,,,,,) = _getValues(150000000*10**18);
+
+                _rOwned[_ownerAdd1] = owner1;
+                emit Transfer(address(0), _ownerAdd1, 150000000*10**18);
+
+                _rOwned[_ownerAdd2] = owner1;
+                emit Transfer(address(0), _ownerAdd2, 150000000*10**18);
+
+                _rOwned[_ownerAdd3] = _bTotal.mul(1).div(100);
+                emit Transfer(address(0), _ownerAdd3, _tTotal.mul(1).div(100));
+
+                _rOwned[_ownerAdd4] = _bTotal.mul(1).div(2).div(100);
+                emit Transfer(address(0), _ownerAdd4, _tTotal.mul(1).div(2).div(100));
+
+                _rOwned[_ownerAdd5] = _bTotal.mul(1).div(2).div(100);
+                emit Transfer(address(0), _ownerAdd5, _tTotal.mul(1).div(2).div(100));
+
+
+                (uint256 rAmount,,,,,) = _getValues(18750000*10**18);
+                _rOwned[_teamAdd1] = rAmount;
+                emit Transfer(address(0), _teamAdd1, 18750000*10**18);
+
+                _rOwned[_teamAdd2] = rAmount;
+                emit Transfer(address(0), _teamAdd2, 18750000*10**18);
+
+                _rOwned[_teamAdd3] = rAmount;
+                emit Transfer(address(0), _teamAdd3, 18750000*10**18);
                 year2 = true;
                 return;
         } else if(!year3) {
-                require(block.timestamp > start.mul(secInYear.mul(3)), "year 4 not started yet");
-                _lock = false;
-                ltransfer();
-                _lock = true;
+                require(block.timestamp > start.add(secInYear.mul(3)), "year 4 not started yet");
+                (uint256 owner1,,,,,) = _getValues(150000000*10**18);
+
+                _rOwned[_ownerAdd1] = owner1;
+                emit Transfer(address(0), _ownerAdd1, 150000000*10**18);
+
+                _rOwned[_ownerAdd2] = owner1;
+                emit Transfer(address(0), _ownerAdd2, 150000000*10**18);
+
+                _rOwned[_ownerAdd3] = _bTotal.mul(1).div(100);
+                emit Transfer(address(0), _ownerAdd3, _tTotal.mul(1).div(100));
+
+                _rOwned[_ownerAdd4] = _bTotal.mul(1).div(2).div(100);
+                emit Transfer(address(0), _ownerAdd4, _tTotal.mul(1).div(2).div(100));
+
+                _rOwned[_ownerAdd5] = _bTotal.mul(1).div(2).div(100);
+                emit Transfer(address(0), _ownerAdd5, _tTotal.mul(1).div(2).div(100));
+
+
+                (uint256 rAmount,,,,,) = _getValues(18750000*10**18);
+                _rOwned[_teamAdd1] = rAmount;
+                emit Transfer(address(0), _teamAdd1, 18750000*10**18);
+
+                _rOwned[_teamAdd2] = rAmount;
+                emit Transfer(address(0), _teamAdd2, 18750000*10**18);
+
+                _rOwned[_teamAdd3] = rAmount;
+                emit Transfer(address(0), _teamAdd3, 18750000*10**18);
                 year3 = true;
+                return;
+        } else if(!year4) {
+                require(block.timestamp > start.add(secInYear.mul(4)), "year 5 not started yet");
+                (uint256 owner1,,,,,) = _getValues(150000000*10**18);
+
+                _rOwned[_ownerAdd1] = owner1;
+                emit Transfer(address(0), _ownerAdd1, 150000000*10**18);
+
+                _rOwned[_ownerAdd2] = owner1;
+                emit Transfer(address(0), _ownerAdd2, 150000000*10**18);
+
+                _rOwned[_ownerAdd3] = _bTotal.mul(1).div(100);
+                emit Transfer(address(0), _ownerAdd3, _tTotal.mul(1).div(100));
+
+                _rOwned[_ownerAdd4] = _bTotal.mul(1).div(2).div(100);
+                emit Transfer(address(0), _ownerAdd4, _tTotal.mul(1).div(2).div(100));
+
+                _rOwned[_ownerAdd5] = _bTotal.mul(1).div(2).div(100);
+                emit Transfer(address(0), _ownerAdd5, _tTotal.mul(1).div(2).div(100));
+
+
+                (uint256 rAmount,,,,,) = _getValues(18750000*10**18);
+                _rOwned[_teamAdd1] = rAmount;
+                emit Transfer(address(0), _teamAdd1, 18750000*10**18);
+
+                _rOwned[_teamAdd2] = rAmount;
+                emit Transfer(address(0), _teamAdd2, 18750000*10**18);
+
+                _rOwned[_teamAdd3] = rAmount;
+                emit Transfer(address(0), _teamAdd3, 18750000*10**18);
+                year4 = true;
         } 
     }
 }
