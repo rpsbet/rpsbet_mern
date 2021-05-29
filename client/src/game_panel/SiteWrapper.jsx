@@ -179,9 +179,9 @@ class SiteWrapper extends Component {
 
     const result = await this.props.getUser(true);
     if (result.status === 'success') {
-      if (!result.user.is_activated) {
-        this.handleOpenVerificationModal();
-      }
+      // if (!result.user.is_activated) {
+      //   this.handleOpenVerificationModal();
+      // }
     }
     
     this.interval = setInterval(this.updateReminderTime, 3000);
