@@ -52,15 +52,15 @@ class LoginModal extends Component {
         e.preventDefault();
         const result = await this.props.userSignIn(this.state);
         if (result.status === 'success') {
-            if (!result.user.is_activated) {
-                this.props.openVerificationModal();
-            } else {
+            // if (!result.user.is_activated) {
+            //     this.props.openVerificationModal();
+            // } else {
                 this.props.initSocket();
                 this.props.getMyGames();
                 this.props.getMyHistory();
                 this.props.getMyChat();
                 history.push('/');
-            }
+            // }
             this.props.closeModal();
         }
     }
