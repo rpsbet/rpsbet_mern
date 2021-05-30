@@ -266,7 +266,7 @@ class HowToPlayModal extends Component {
 					 </AccordionItemPanel>
 			            </AccordionItem>
 		        </Accordion>
-		        <p>CRYPTO COMING SOON! FOLLOW FOR MORE UPDATES!!</p>
+		        <p>CRYPTO COMING SOON! FOLLOW FOR MORE UPDATES!! <a href="https://www.rps.finance/" target="_blank">https://www.rps.finance/</a></p>
 					<div id="game_footer_howto">
 					<a href="https://discord.gg/94QywhSc4d">DISCORD</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://twitter.com/rpsbet">TWITTER</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">YOUTUBE</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.reddit.com/user/RPSBet">REDDIT</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a>&nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;<a href="https://rpsbet.itch.io/">ITCH</a>
 					<br />
