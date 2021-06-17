@@ -23,8 +23,8 @@ const GameLogSchema = new Schema({
         default: 0
     },
     selected_rps: {
-        type: Number,
-        default: 0
+        type: String,
+        default: ''
     },
     selected_qs_position: {
         type: Number,

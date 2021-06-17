@@ -128,6 +128,7 @@
 .dark_mode .game-page .game-contents .radio-button-group button.radio-button.selected::before {
 	box-shadow: 0 0 0px 7px #202225 inset;
 }
+.dark_mode #rps-game-type-radio span,
 .dark_mode #rps-radio span {
 	background-color: #202225;
     border: 2px solid #4f545c;

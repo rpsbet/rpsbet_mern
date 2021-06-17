@@ -56,14 +56,6 @@ export const bet = (bet_info) => async dispatch => {
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
-      if (res.data.betResult === -100) {
-        // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
-        history.push('/');
-        return {
-          status: 'failed',
-          message: 'Sorry, this game is already finished.'
-        };
-      }
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
 
       if (bet_info.game_type === 'Mystery Box') {
@@ -91,7 +83,21 @@ export const bet = (bet_info) => async dispatch => {
         roomStatus: res.data.roomStatus
       };
     } else {
-      dispatch({ type: MSG_WARNING, payload: 'Something went wrong. Please try again in a few minutes.' });
+      if (res.data.betResult === -100) {
+        // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
+        history.push('/');
+        return {
+          status: 'failed',
+          message: 'Sorry, this game is already finished.'
+        };
+      } else if (res.data.betResult === -102) {
+        return {
+          status: 'failed',
+          message: res.data.message
+        };
+      } else {
+        dispatch({ type: MSG_WARNING, payload: 'Something went wrong. Please try again in a few minutes.' });
+      }
     }
   } catch (err) {
     console.log(err)

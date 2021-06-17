@@ -4,17 +4,37 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper'
 import { alertModal, confirmModalCreate, gameResultModal } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 class RPS extends Component {
     constructor(props) {
         super(props);
+
+        this.settingsRef = React.createRef();
+
         this.state = {
-            selected_rps: 1,
+            selected_rps: 'R',
             advanced_status: '',
             is_anonymous: false,
             balance: this.props.balance,
-            isPasswordCorrect: this.props.isPasswordCorrect
+            isPasswordCorrect: this.props.isPasswordCorrect,
+            slippage: 100,
+            settings_panel_opened: false,
         };
+    }
+
+    handleClickOutside = (e) => {
+        if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+            this.setState({settings_panel_opened: false});
+        }
+    }
+
+    componentDidMount = () => {
+        document.addEventListener('mousedown', this.handleClickOutside);
+    }
+
+    componentWillUnmount = () => {
+        document.removeEventListener('mousedown', this.handleClickOutside);
     }
 
     static getDerivedStateFromProps(props, current_state) {
@@ -35,7 +55,12 @@ class RPS extends Component {
     }
 
     joinGame = async () => {
-        const result = await this.props.join({selected_rps: this.state.selected_rps, is_anonymous: this.state.is_anonymous});
+        const result = await this.props.join({
+            selected_rps: this.state.selected_rps, 
+            is_anonymous: this.state.is_anonymous,
+            rps_bet_item_id: this.props.rps_bet_item_id,
+            slippage: this.state.slippage
+        });
         if (result.status === 'success') {
             let text = 'Oops, You Lost!';
             
@@ -85,13 +110,24 @@ class RPS extends Component {
                     <div className="pre-summary-panel">
                         <div className="your-bet-amount">Bet Amount : £{this.props.bet_amount}</div>
                         <div className="your-max-return">Potential Return : £{updateDigitToPoint2(this.props.bet_amount * 2 * 0.95)}</div>
+                        <SettingsOutlinedIcon id="btn-rps-settings" onClick={() => this.setState({settings_panel_opened: !this.state.settings_panel_opened})} />
+                        <div ref={this.settingsRef} className={`transaction-settings game-info-panel ${this.state.settings_panel_opened ? 'active' : ''}`}>
+                            <h5>Transaction Settings</h5>
+                            <p>Slippage tolerance</p>
+                            <div className="slippage-select-panel">
+                                <button class={this.state.slippage === 100 ? "active" : ""} onClick={() => { this.setState({slippage: 100}); }}>100%</button>
+                                <button class={this.state.slippage === 200 ? "active" : ""} onClick={() => { this.setState({slippage: 200}); }}>200%</button>
+                                <button class={this.state.slippage === 500 ? "active" : ""} onClick={() => { this.setState({slippage: 500}); }}>500%</button>
+                                <button class={this.state.slippage === 'unlimited' ? "active" : ""} onClick={() => { this.setState({slippage: 'unlimited'}); }}>Unlimited</button>
+                            </div>
+                        </div>
                     </div>
                     <div className="game-info-panel">
                         <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
                         <div id="rps-radio">
-                            <span className={"rock" + (this.state.selected_rps === 1 ? " active" : "")} onClick={() => { this.setState({selected_rps: 1}); }}></span>
-                            <span className={"paper" + (this.state.selected_rps === 2 ? " active" : "")} onClick={() => { this.setState({selected_rps: 2}); }}></span>
-                            <span className={"scissors" + (this.state.selected_rps === 3 ? " active" : "")} onClick={() => { this.setState({selected_rps: 3}); }}></span>
+                            <span className={"rock" + (this.state.selected_rps === 'R' ? " active" : "")} onClick={() => { this.setState({selected_rps: 'R'}); }}></span>
+                            <span className={"paper" + (this.state.selected_rps === 'P' ? " active" : "")} onClick={() => { this.setState({selected_rps: 'P'}); }}></span>
+                            <span className={"scissors" + (this.state.selected_rps === 'S' ? " active" : "")} onClick={() => { this.setState({selected_rps: 'S'}); }}></span>
                         </div>
                     </div>
                     <hr/>

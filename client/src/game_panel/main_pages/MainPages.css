@@ -517,6 +517,8 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     display: flex;
     color: #4f5660;
     padding: 8px 0;
+    width: 100%;
+    position: relative;
 }
 .game-page .pre-summary-panel > div {
     padding-left: 48px;
@@ -569,6 +571,9 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     color: #060607;
     line-height: 19px;
     margin: 32px 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 .game-page .game-contents p {
     font-size: 14px;
@@ -577,7 +582,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     margin-top: 16px;
 }
 .game-page .game-contents .game-info-panel {
-    min-height: 200px;
+    min-height: 150px;
 }
 .game-page .game-contents .game-info-panel button {
     background: white;
@@ -629,8 +634,46 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     outline: 0;
     background: transparent;
 }
-#rps-radio {
+.rps-add-run-panel {
+    border: 2px solid #4f545c;
+    border-radius: 12px;
+    display: flex;
+    padding: 30px;
+}
+.rps-add-run-panel > div.rps-add-run-form {
+    padding-right: 30px;
+    border-right: 2px solid #36393F;
+}
+.rps-add-run-panel > div.rps-add-run-table {
+    padding-left: 30px;
+}
+.rps-add-run-panel > div.rps-add-run-table table {
+    background: #202225;
+    border-radius: 8px;
+    width: 300px;
+}
+.rps-add-run-panel > div.rps-add-run-table table th,
+.rps-add-run-panel > div.rps-add-run-table table td {
+    border: 2px solid #36393f;
+    padding: 5px 15px;
     text-align: center;
+}
+#rps-game-type-radio,
+#rps-radio {
+    text-align: left;
+}
+#rps-game-type-radio span {
+    text-align: center;
+    margin: 0 16px;
+    display: inline-block;
+    padding-top: 20px;
+    width: 200px;
+    height: 70px;
+    background-position: center;
+    border-radius: 12px;
+}
+#rps-game-type-radio span.active {
+    border: 2px solid #ffb000;
 }
 #rps-radio span {
     background-size: contain;
@@ -697,6 +740,24 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     background-color: #ffb000;
     border: 1px solid #ffb000;
     box-shadow: 0 0 0px 7px #fff inset;
+}
+#btn-rps-settings {
+    position: absolute;
+    right: 0;
+    cursor: pointer;
+}
+.game-page .pre-summary-panel .transaction-settings {
+    position: absolute;
+    right: 0;
+    top: 50px;
+    padding: 20px 30px;
+    background: #2f3136;
+    border-radius: 8px;
+    opacity: 0;
+    transition: .2s;
+}
+.game-page .pre-summary-panel .transaction-settings.active {
+    opacity: 1;
 }
 input {
     border-radius: 8px !important;

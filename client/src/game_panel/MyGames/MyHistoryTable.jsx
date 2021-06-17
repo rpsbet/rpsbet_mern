@@ -25,9 +25,9 @@ class MyHistoryTable extends Component {
 	}
 
 	static getDerivedStateFromProps(props, current_state) {
-		if (current_state.myHistory.length === 0 
-			|| current_state.myHistory.length !== props.myHistory.length
-			|| (props.myHistory && current_state.myHistory[0]['created_at'] !== props.myHistory[0]['created_at'])) {
+		if ((current_state.myHistory && current_state.myHistory.length === 0)
+			|| (current_state.myHistory && current_state.myHistory.length !== props.myHistory.length)
+			|| (props.myHistory && current_state.myHistory && current_state.myHistory[0]['created_at'] !== props.myHistory[0]['created_at'])) {
 			return {
 				...current_state,
 				myHistory: updateFromNow(props.myHistory)

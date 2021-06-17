@@ -4,18 +4,20 @@ import { updateDigitToPoint2 } from '../../util/helper';
 class DefaultBetAmountPanel extends Component {
 	constructor(props) {
 		super(props);
+		const defaultBetAmounts = this.props.defaultBetAmounts ? this.props.defaultBetAmounts : [1, 2.5, 5, 10, 25];
+		console.log(defaultBetAmounts, this.props.bet_amount)
 		this.state = {
-			is_other: (this.props.bet_amount === 1 || this.props.bet_amount === 2.5 || this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25) ? false : true
+			defaultBetAmounts: defaultBetAmounts,
+			is_other: (defaultBetAmounts.indexOf(this.props.bet_amount) < 0 ) ? true : false
 		};
 	}
 
 	render() {
-		const defaultBetAmounts = [1, 2.5, 5, 10, 25];
 		return (
 			<div className="default-bet-amount-panel game-info-panel">
 				<h3 className="game-sub-title">Bet Amount</h3>
 				<div className="bet-amounts">
-					{ defaultBetAmounts.map((amount, index) => (
+					{ this.state.defaultBetAmounts.map((amount, index) => (
 						<button className={(!this.state.is_other && this.props.bet_amount === amount ? ' active' : '')} 
 						onClick={() => {
 							this.setState({is_other: false}); 
@@ -53,7 +55,13 @@ class DefaultBetAmountPanel extends Component {
 						}} 
 						placeholder="Bet Amount" />
 				</div>
-				<p className="tip">The cost to play this game</p>
+				{
+					this.props.game_type === "RPS" ?
+						<p className="tip">The cost to play this RUN</p>
+						:
+						<p className="tip">The cost to play this game</p>
+				}
+				
 			</div>
 		);
 	}

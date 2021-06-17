@@ -22,7 +22,7 @@ class CreateGame extends Component {
 			game_type: 1,
 			game_mode : this.props.game_mode,
 			isPlayingBrain: false,
-			selected_rps: 1,
+			rps_list: [],
 			qs_game_type: 2,
 			qs_nation: 0,
 			selected_qs_position: 0,
@@ -39,6 +39,7 @@ class CreateGame extends Component {
 			endgame_type: true,
 			box_list: [],
 			brain_game_type: this.props.brain_game_type,
+			rps_game_type: 0
 		}
 	}
 
@@ -88,7 +89,8 @@ class CreateGame extends Component {
 			newState = {
 				...newState,
 				game_type: 1,
-				max_return: 2 * 0.95
+				bet_amount: 0,
+				max_return: 0
 			};
 		} else if (gameTypeName === "Brain Game") {
 			newState = {
@@ -171,8 +173,8 @@ class CreateGame extends Component {
 
 	onNextButtonClicked = () => {
 		if (this.state.step === 2) {
-			console.log(this.state.bet_amount)
-			if (parseFloat(this.state.bet_amount) <= 0 || isNaN(parseFloat(this.state.bet_amount))) {
+			if ((this.state.game_mode !== 'RPS' || (this.state.game_mode === 'RPS' && this.state.child_step === 2)) && 
+				(parseFloat(this.state.bet_amount) <= 0 || isNaN(parseFloat(this.state.bet_amount)))) {
 				alertModal(this.props.isDarkMode, 'Please input the bet amount!')
 				return;
 			}
@@ -228,16 +230,60 @@ class CreateGame extends Component {
 	}
 
 	step2 = () => {
+		console.log(this.state.bet_amount)
 		if (this.state.game_mode === 'RPS') {
-			return <RPS onChangeState={this.onChangeState} selected_rps={this.state.selected_rps} bet_amount={this.state.bet_amount} is_private={this.state.is_private} is_anonymous={this.state.is_anonymous} room_password={this.state.room_password} step={this.state.child_step}/>
+			return <RPS 
+						onChangeState={this.onChangeState} 
+						rps_list={this.state.rps_list} 
+						bet_amount={this.state.bet_amount} 
+						is_private={this.state.is_private} 
+						is_anonymous={this.state.is_anonymous} 
+						room_password={this.state.room_password} 
+						step={this.state.child_step}
+						rps_game_type={this.state.rps_game_type}
+					/>
 		} else if (this.state.game_mode === 'Spleesh!') {
-			return <Spleesh onChangeState={this.onChangeState} bet_amount={this.state.bet_amount} spleesh_bet_unit={this.state.spleesh_bet_unit} is_private={this.state.is_private} is_anonymous={this.state.is_anonymous} room_password={this.state.room_password} endgame_type={this.state.endgame_type} endgame_amount={this.state.endgame_amount} step={this.state.child_step} />
+			return <Spleesh 
+						onChangeState={this.onChangeState} 
+						bet_amount={this.state.bet_amount} 
+						spleesh_bet_unit={this.state.spleesh_bet_unit} 
+						is_private={this.state.is_private} 
+						is_anonymous={this.state.is_anonymous} 
+						room_password={this.state.room_password} 
+						endgame_type={this.state.endgame_type} 
+						endgame_amount={this.state.endgame_amount} 
+						step={this.state.child_step} 
+					/>
 		} else if (this.state.game_mode === 'Mystery Box') {
-			return <MysteryBox onChangeState={this.onChangeState} box_list={this.state.box_list} bet_amount={this.state.bet_amount} max_return={this.state.max_return} max_prize={this.state.max_prize} endgame_amount={this.state.endgame_amount}/>
+			return <MysteryBox 
+						onChangeState={this.onChangeState} 
+						box_list={this.state.box_list} 
+						bet_amount={this.state.bet_amount} 
+						max_return={this.state.max_return} 
+						max_prize={this.state.max_prize} 
+						endgame_amount={this.state.endgame_amount}
+					/>
 		} else if (this.state.game_mode === 'Brain Game') {
-			return <BrainGame onChangeState={this.onChangeState} bet_amount = {this.state.bet_amount} brain_game_type = {this.state.brain_game_type} step={this.state.child_step} />
+			return <BrainGame 
+						onChangeState={this.onChangeState} 
+						bet_amount = {this.state.bet_amount} 
+						brain_game_type = {this.state.brain_game_type} 
+						step={this.state.child_step} 
+					/>
 		} else if (this.state.game_mode === 'Quick Shoot') {
-			return <QuickShoot onChangeState={this.onChangeState} bet_amount={this.state.bet_amount} is_private={this.state.is_private} is_anonymous={this.state.is_anonymous} room_password={this.state.room_password} endgame_type={this.state.endgame_type} endgame_amount={this.state.endgame_amount} qs_game_type={this.state.qs_game_type} selected_qs_position={this.state.selected_qs_position} step={this.state.child_step} qs_nation={this.state.qs_nation} />
+			return <QuickShoot 
+						onChangeState={this.onChangeState} 
+						bet_amount={this.state.bet_amount} 
+						is_private={this.state.is_private} 
+						is_anonymous={this.state.is_anonymous} 
+						room_password={this.state.room_password} 
+						endgame_type={this.state.endgame_type} 
+						endgame_amount={this.state.endgame_amount} 
+						qs_game_type={this.state.qs_game_type} 
+						selected_qs_position={this.state.selected_qs_position} 
+						step={this.state.child_step} 
+						qs_nation={this.state.qs_nation} 
+					/>
 		}
 		return <></>
 	}

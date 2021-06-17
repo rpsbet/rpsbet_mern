@@ -54,7 +54,8 @@ class JoinGame extends Component {
                         join={this.join} 
                         user_id={this.props.user_id} 
                         creator_id={this.props.roomInfo.creator_id} 
-                        bet_amount={this.props.roomInfo.bet_amount} 
+                        bet_amount={this.props.roomInfo.bet_amount}
+                        rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
                         is_private={this.props.roomInfo.is_private} 
                     />}
                 {this.props.roomInfo.game_type === 'Spleesh!' && 
@@ -95,22 +96,24 @@ class JoinGame extends Component {
                         bet_amount={this.props.roomInfo.bet_amount} 
                         is_private={this.props.roomInfo.is_private} 
                     />}
-                <div className="room-history-panel">
-                    <h2 className="room-history-title">Game History</h2>
-                    <div className="table main-history-table">
-                        {this.props.roomInfo.room_history.map((row, key) => (
-                            <div className="table-row" key={'my_history' + row._id}>
-                                <div>
-                                    <div className="table-cell">
-                                        <div className="room-id">{row.room_name}</div>
-                                        <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
+                { this.props.roomInfo.room_history && 
+                    <div className="room-history-panel">
+                        <h2 className="room-history-title">Game History</h2>
+                        <div className="table main-history-table">
+                            {this.props.roomInfo.room_history.map((row, key) => (
+                                <div className="table-row" key={'my_history' + row._id}>
+                                    <div>
+                                        <div className="table-cell">
+                                            <div className="room-id">{row.room_name}</div>
+                                            <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
+                                        </div>
+                                        <div className="table-cell">{row.from_now}</div>
                                     </div>
-                                    <div className="table-cell">{row.from_now}</div>
                                 </div>
-                            </div>
-                        ), this)}
+                            ), this)}
+                        </div>
                     </div>
-                </div>
+                }
             </>
         );
     }
