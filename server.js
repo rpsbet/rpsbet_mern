@@ -1,16 +1,37 @@
 require('dotenv').config();
 const express = require('express');
+const fs = require('fs');
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
+const https = require('https');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const socketContoller = require('./socketController.js');
 
 const app = express();
 
-const server = app.listen(process.env.PORT, () =>
-  console.log(`server running on port ${process.env.PORT}`)
-);
+// const server = app.listen(process.env.PORT, () =>
+//   console.log(`server running on port ${process.env.PORT}`)
+// );
+
+const { PORT } = process.env;
+
+const server = https
+  .createServer(
+    {
+      key: fs.readFileSync(path.resolve('./ssl/key.pem')),
+      cert: fs.readFileSync(path.resolve('./ssl/cert.pem')),
+    },
+    app
+  )
+  .listen(PORT || 443, () =>
+    console.log(
+      `Server listening at: http${PORT === '443' ? 's' : ''}://localhost${
+        PORT === '443' || PORT === '80' ? '' : `:${PORT}`
+      }`
+    )
+  );
 
 const io = socketContoller.socketio(server, {origins: '*:*'});
 
@@ -20,7 +41,9 @@ app.use(function(req,res,next){
 });
 
 var corsOptions = {
-  origin: "*",
+  origin: 'https://localhost:3000',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  credentials: true,
   optionsSuccessStatus: 200
 };
 
@@ -36,8 +59,10 @@ const stripeRoutes = require('./routes/stripe.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
 const systemSetting = require('./routes/settings.routes');
 
-// app.use(bodyParser.urlencoded({ extended: false }));
-// app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+app.use(cors(corsOptions));
 
 app.use(express.json({ extended: false }));
 app.use(fileUpload());
@@ -53,6 +78,7 @@ mongoose
   .then(() => console.log(`***mongodb connected`))
   .catch(err => console.log(err));
 
+
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
@@ -65,7 +91,6 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/settings', systemSetting);
 
-app.use(cors(corsOptions));
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {

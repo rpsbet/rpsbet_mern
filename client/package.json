@@ -14,6 +14,7 @@
     "@stripe/stripe-js": "^1.5.0",
     "apexcharts": "^3.8.6",
     "axios": "^0.19.0",
+    "dotenv": "^16.0.0",
     "material-ui-datetimepicker": "^1.0.7",
     "material-ui-flat-pagination": "^4.0.0",
     "react": "^16.9.0",
@@ -35,7 +36,7 @@
     "uniqid": "^5.0.3"
   },
   "scripts": {
-    "start": "HTTPS=true&&react-scripts start",
+    "start": "SET HTTPS=true&&react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -51,5 +52,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "overrides": {
+    "react-error-overlay": "6.0.9"
+  },
+  "devDependencies": {
+    "react-error-overlay": "^6.0.9"
   }
 }

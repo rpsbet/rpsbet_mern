@@ -10,7 +10,7 @@ import store from './redux/store';
 
 import { BrowserRouter, Router } from 'react-router-dom';
 
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import { MuiThemeProvider, createTheme } from '@material-ui/core/styles';
 
 import { styleColor } from './Styles/styleThem';
 import App from './App';
@@ -19,7 +19,7 @@ import history from './redux/history';
 import MessageBar from './components/MessugeBar';
 // import AnimatedCusror from './components/AnimatedCursor';
 
-const theme = createMuiTheme({
+const theme = createTheme({
   palette: {
     type: 'dark',
     primary: { main: styleColor.primary.main },

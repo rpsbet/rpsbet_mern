@@ -115,7 +115,7 @@ export default function(state = initialState, action) {
       };
     case HISTORY_LOADED:
       return {
-        ...state, history: payload.history, historyTotalPage: payload.pages, historyPageNumber: payload.page
+        ...state, history: [...payload.history], historyTotalPage: payload.pages, historyPageNumber: payload.page
       }
     case MY_GAMES_LOADED:
       return {
