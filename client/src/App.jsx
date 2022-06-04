@@ -8,7 +8,7 @@ import { getAdmin } from './redux/AdminAuth/admin.actions';
 import GameMainRoute from './game_panel/app/Game.routes';
 
 import AdminSignInPage from './admin_panel/auth/SignInPage';
-// import AdminSignUpPage from './admin_panel/auth/SignUpPage';
+import AdminSignUpPage from './admin_panel/auth/SignUpPage';
 import Error404Page from './admin_panel/Error404Page';
 import AdminMainRoute from './admin_panel/app/App.routes';
 import setAuthToken from './util/setAuthToken';
@@ -42,7 +42,7 @@ const App = props => {
           )
         }
       />
-      {/* <Route
+      <Route
         path="/admin/signup"
         render={routeProps =>
           isAdminAuthenticated ? (
@@ -51,7 +51,7 @@ const App = props => {
             <AdminSignUpPage {...routeProps} />
           )
         }
-      /> */}
+      />
       <Route
         path="/admin"
         render={routeProps =>
@@ -108,7 +108,4 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = { getUser, getAdmin };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(App);
