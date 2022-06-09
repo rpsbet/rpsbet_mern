@@ -348,7 +348,7 @@ class SiteWrapper extends Component {
                 <Tab label="My Games" style={customStyles.tabRoot} />
               </Tabs>
               <div className="header_action_panel">
-                <a
+                {/* <a
                   href="#"
                   onClick={e => {
                     history.push('/leaderboards');
@@ -364,7 +364,7 @@ class SiteWrapper extends Component {
                   id="btn_how_to_play"
                 >
                   <span>HELP</span>
-                </a>
+                </a> */}
                 {this.props.isAuthenticated ? (
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>

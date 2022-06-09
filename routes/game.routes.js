@@ -33,17 +33,6 @@ getCommission = async () => {
 
 // /api/game_types call
 router.get('/game_types', async (req, res) => {
-	return res.json({
-		success: true,
-		query: req.query,
-		gameTypeList: [
-			{ game_type_name: 'RPS' },
-			{ game_type_name: 'Spleesh!' },
-			{ game_type_name: 'Brain Game' },
-			{ game_type_name: 'Mystery Box' },
-			{ game_type_name: 'Quick Shoot' }	
-		]
-	})
 	try {
 		const gameTypes = await GameType.find({});
 		res.json({
