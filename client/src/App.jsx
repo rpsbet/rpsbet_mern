@@ -42,7 +42,7 @@ const App = props => {
           )
         }
       />
-      <Route
+      {/* <Route
         path="/admin/signup"
         render={routeProps =>
           isAdminAuthenticated ? (
@@ -51,7 +51,7 @@ const App = props => {
             <AdminSignUpPage {...routeProps} />
           )
         }
-      />
+      /> */}
       <Route
         path="/admin"
         render={routeProps =>

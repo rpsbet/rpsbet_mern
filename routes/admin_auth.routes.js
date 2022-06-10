@@ -87,59 +87,59 @@ router.post('/logout', auth, async (req, res) => {
   }
 });
 
-router.post('/signup', (req, res) => {
-  const { first_name, last_name, email, password } = req.body;
+// router.post('/signup', (req, res) => {
+//   const { first_name, last_name, email, password } = req.body;
 
-  // Simple validation
-  if (!first_name || !last_name || !email || !password) {
-    return res.json({
-      success: false,
-      error: 'Please enter all fields'
-    });
-  }
+//   // Simple validation
+//   if (!first_name || !last_name || !email || !password) {
+//     return res.json({
+//       success: false,
+//       error: 'Please enter all fields'
+//     });
+//   }
 
-  // Check for existing admin
-  AdminUser.findOne({ email }).then(async user => {
-    if (user)
-      return res.json({
-        success: false,
-        error: 'User already exists'
-      });
+//   // Check for existing admin
+//   AdminUser.findOne({ email }).then(async user => {
+//     if (user)
+//       return res.json({
+//         success: false,
+//         error: 'User already exists'
+//       });
 
-    const newAdmin = new AdminUser({
-      first_name,
-      last_name,
-      email,
-      password,
-      status: 'off',
-    });
+//     const newAdmin = new AdminUser({
+//       first_name,
+//       last_name,
+//       email,
+//       password,
+//       status: 'off',
+//     });
 
-    console.log(1);
+//     console.log(1);
 
-    // Create salt & hash
-    bcrypt.genSalt(10, (err, salt) => {
-      console.log(2);
-      bcrypt.hash(newAdmin.password, salt, (err, hash) => {
-        console.log(3);
-        if (err) throw err;
-        newAdmin.password = hash;
-        newAdmin.save().then(user => {
-          console.log(4);
-          jwt.sign({ user: user, is_admin: 1 }, process.env.SECRET_OR_KEY, (err, token) => {
-            console.log(5);
-            console.log(token);
-            console.log(user);
-            res.json({
-              success: true,
-              message: 'New admin user created',
-              token,
-              admin: user
-            });
-          });
-        });
-      });
-    });
-  });
-});
+//     // Create salt & hash
+//     bcrypt.genSalt(10, (err, salt) => {
+//       console.log(2);
+//       bcrypt.hash(newAdmin.password, salt, (err, hash) => {
+//         console.log(3);
+//         if (err) throw err;
+//         newAdmin.password = hash;
+//         newAdmin.save().then(user => {
+//           console.log(4);
+//           jwt.sign({ user: user, is_admin: 1 }, process.env.SECRET_OR_KEY, (err, token) => {
+//             console.log(5);
+//             console.log(token);
+//             console.log(user);
+//             res.json({
+//               success: true,
+//               message: 'New admin user created',
+//               token,
+//               admin: user
+//             });
+//           });
+//         });
+//       });
+//     });
+//   });
+// });
 
 module.exports = router;
