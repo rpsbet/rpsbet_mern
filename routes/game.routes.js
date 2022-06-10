@@ -560,13 +560,21 @@ router.post('/rooms', auth, async (req, res) => {
 	}
 });
 
-const getMyRooms = async (user_id, pagination, page) => {
-	const rooms = await Room.find({creator: new ObjectId(user_id), status: 'open'})
+const getMyRooms = async (user_id, pagination, page, game_type) => {
+	const search_condition = {
+		creator: new ObjectId(user_id),
+		status: 'open'
+	}
+	if (game_type !== 'All') {
+		const gameType = await GameType.findOne({ short_name: game_type })
+		search_condition.game_type = gameType._id
+	}
+	const rooms = await Room.find(search_condition)
 		.populate({path: 'game_type', model: GameType})
 		.sort({created_at: 'desc'})
 		.skip(pagination * page - pagination)
 		.limit(pagination);
-	const count = await Room.countDocuments({creator: new ObjectId(user_id), status: 'open'});
+	const count = await Room.countDocuments(search_condition);
 	
 	let result = [];
 	const commission = await getCommission();
@@ -620,7 +628,8 @@ router.get('/my_games', auth, async (req, res) => {
 	try {
 		const pagination = req.query.pagination ? parseInt(req.query.pagination) : 8;
 		const page = req.query.page ? parseInt(req.query.page) : 1;
-		const rooms = await getMyRooms(req.user._id, pagination, page);
+		const game_type = req.query.game_type ? req.query.game_type : 'RPS';
+		const rooms = await getMyRooms(req.user._id, pagination, page, game_type);
 
 		res.json({
 			success: true,
