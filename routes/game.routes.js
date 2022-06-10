@@ -22,10 +22,10 @@ const RpsBetItem = require('../model/RpsBetItem');
 
 let user_access_log = {};
 
-getCommission = async () => {
+const getCommission = async () => {
 	const commission = await SystemSetting.findOne({name: 'commission'});
-	if (commission.value) {
-		return parseFloat(commission.value);
+	if (commission?.value) {
+		return parseFloat(commission?.value);
 	}
 
 	return 0;
@@ -181,7 +181,7 @@ router.post('/answer', async (req, res) => {
 	}
 });
 
-convertGameLogToHistoryStyle = async (gameLogList) => {
+const convertGameLogToHistoryStyle = async (gameLogList) => {
 	let result = [];
 	const commission = await getCommission();
 	const commissionRate = (100 - commission) / 100.0;
@@ -263,7 +263,7 @@ convertGameLogToHistoryStyle = async (gameLogList) => {
 	return result;
 }
 
-getHistory = async (pagination, page, my_id, game_type) => {
+const getHistory = async (pagination, page, my_id, game_type) => {
 	try {
 		const id_condition = {};
 		const game_type_condition = {};
@@ -301,15 +301,14 @@ getHistory = async (pagination, page, my_id, game_type) => {
 	}
 };
 
-updateDigitToPoint2 = (number) => {
+const updateDigitToPoint2 = (number) => {
 	if (parseFloat(number) - parseInt(number) > 0) {
 		return parseFloat(number).toFixed(2);
 	}
 	return number;
 }
 
-getRoomList = async (pagination, page, game_type) => {
-	console.log('getRoomList', pagination, page, game_type);
+const getRoomList = async (pagination, page, game_type) => {
 	const search_condition = { status: 'open' };
 
 	if (game_type !== 'All') {
@@ -382,11 +381,10 @@ getRoomList = async (pagination, page, game_type) => {
 	
 			result.push(temp);
 		} catch (e) {
-			console.log(e);
+			console.log({ error: e.toString() });
 			console.log('room_id: ', room_id);
 		}
 	}
-
 	return {
 		rooms: result,
 		count: count,
@@ -506,7 +504,6 @@ router.post('/rooms', auth, async (req, res) => {
 		}
 
 		const roomCount = await Room.countDocuments({});
-		
 		newRoom = new Room({ ...req.body, creator: req.user, game_type: gameType, user_bet: user_bet, pr: pr, host_pr: host_pr, room_number: roomCount + 1, status: 'open' });
 		await newRoom.save();
 
@@ -530,7 +527,6 @@ router.post('/rooms', auth, async (req, res) => {
 				newRps.save();
 			})
 		}
-
 		newTransaction = new Transaction({user: req.user, amount: 0, description: 'create ' + gameType.game_type_name + ' - ' + newRoom.room_number});
 
 		if (req.body.is_anonymous === true) {
@@ -551,8 +547,6 @@ router.post('/rooms', auth, async (req, res) => {
 			pages: Math.ceil(rooms.count / 10)
 		});
 
-		const end = new Date();
-
 		res.json({
 			success: true,
 			message: 'room create',
@@ -561,12 +555,12 @@ router.post('/rooms', auth, async (req, res) => {
 	} catch (err) {
 		res.json({
 			success: false,
-			message: err
+			message: err.toString()
 		});
 	}
 });
 
-getMyRooms = async (user_id, pagination, page) => {
+const getMyRooms = async (user_id, pagination, page) => {
 	const rooms = await Room.find({creator: new ObjectId(user_id), status: 'open'})
 		.populate({path: 'game_type', model: GameType})
 		.sort({created_at: 'desc'})
@@ -612,7 +606,7 @@ getMyRooms = async (user_id, pagination, page) => {
 
 			result.push(temp);
 		} catch (e) {
-			console.log(e);
+			console.log(e.toString());
 		}
 	}
 
