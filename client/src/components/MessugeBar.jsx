@@ -60,12 +60,12 @@ function MySnackbarContentWrapper(props) {
     <SnackbarContent
       className={clsx(classes[variant], className)}
       aria-describedby="client-snackbar"
-      // message={
-      //   <span id="client-snackbar" className={classes.message}>
-      //     <Icon className={clsx(classes.icon, classes.iconVariant)} />
-      //     {message}
-      //   </span>
-      // }
+      message={
+        <span id="client-snackbar" className={classes.message}>
+          <Icon className={clsx(classes.icon, classes.iconVariant)} />
+          {message}
+        </span>
+      }
       action={[
         <IconButton
           key="close"
