@@ -216,8 +216,10 @@ class OpenGamesTable extends Component {
                     />
                     <span>{row.creator}</span>
                     <i
-                      className={`online-status ${
-                        this.props.onlineUserList.indexOf(row.creator_id) >= 0
+                      className={`online-status${
+                        this.props.onlineUserList.filter(
+                          user => user === row.creator_id
+                        ).length > 0
                           ? 'online'
                           : ''
                       }`}
@@ -275,7 +277,15 @@ class OpenGamesTable extends Component {
                       darkMode={this.props.isDarkMode}
                     />
                     <span>{row.creator}</span>
-                    <i className="online-status online"></i>
+                    <i
+                      className={`online-status${
+                        this.props.onlineUserList.filter(
+                          user => user === row.creator_id
+                        ).length > 0
+                          ? 'online'
+                          : ''
+                      }`}
+                    ></i>
                   </div>
                   <div className="table-cell cell-amount-info">
                     {'£' +
