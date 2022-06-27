@@ -309,23 +309,26 @@ const updateDigitToPoint2 = (number) => {
 }
 
 const getRoomList = async (pagination, page, game_type) => {
-	const search_condition = { status: 'open' };
+	const search_condition = { status: 'open', game_type: { $ne:null } };
 
 	if (game_type !== 'All') {
 		const gameType = await GameType.findOne({ short_name: game_type });
 		search_condition.game_type = gameType._id;
 	}
-	const rooms = await Room.find(search_condition)
-		.select('_id is_anonymous bet_amount creator game_type user_bet pr spleesh_bet_unit is_private brain_game_type status room_number created_at')
-		.sort({created_at: 'desc'})
-		.skip(pagination * page - pagination)
-		.limit(pagination)
+
+	const preRooms = await Room.find(search_condition)
+	.sort({ created_at: 'desc' })
+	.skip(pagination * page - pagination)
+	.limit(pagination)
+
+	const rooms = await Room.find({ _id: { $in: preRooms.map(({ _id }) => _id) } })
 		.populate({path: 'creator', model: User})
 		.populate({path: 'game_type', model: GameType})
 		.populate({path: 'brain_game_type', model: BrainGameType})
 	const commission = await getCommission();
 	const commissionRate = (100 - commission) / 100.0;
 	const count = await Room.countDocuments(search_condition);
+
 	let result = [];
 	for (const room of rooms) {
 		const room_id = room['game_type']['short_name'] + '-' + room['room_number'];
@@ -457,7 +460,7 @@ router.get('/rooms', async (req, res) => {
 	} catch (err) {
 		res.json({
 			success: false,
-			err: err
+			err: err.toString()
 		});
 	}
 });
