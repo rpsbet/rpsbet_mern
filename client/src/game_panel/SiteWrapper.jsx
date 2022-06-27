@@ -90,7 +90,9 @@ class SiteWrapper extends Component {
 
     this.state = {
       endpoint:
-        process.env.NODE_ENV === 'production' ? '' : 'https://localhost:5001',
+        process.env.NODE_ENV === 'production'
+          ? 'https://rpsbet.io'
+          : 'https://localhost:5001',
       userName: this.props.userName,
       balance: this.props.balance,
       showProfileModal: false,
