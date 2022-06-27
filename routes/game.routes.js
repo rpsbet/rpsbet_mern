@@ -82,7 +82,7 @@ router.get('/room/:id', async (req, res) => {
 						.populate({path: 'joined_user', model: User});
 		const boxPrizeList = await RoomBoxPrize.find({room: room}).sort({_id : 'asc'});
 		const rpsBetItem = await RpsBetItem.findOne({room: room, joiner_rps: ''}).sort({_id : 'asc'});
-
+		console.log({ rpsBetItem})
 		const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
 
 		res.json({
@@ -99,14 +99,14 @@ router.get('/room/:id', async (req, res) => {
 				qs_game_type: room['qs_game_type'],
 				room_history: roomHistory,
 				box_list: boxPrizeList,
-				rps_bet_item_id: rpsBetItem._id ? rpsBetItem._id : null,
+				rps_bet_item_id: rpsBetItem?._id ?? null,
 				is_private: room['is_private']
 			}
 		});
 	} catch (err) {
 		res.json({
 			success: false,
-			err: err
+			err: err.toString()
 		});
 	}
 });
