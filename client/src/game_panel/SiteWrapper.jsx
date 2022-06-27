@@ -89,7 +89,8 @@ class SiteWrapper extends Component {
     super(props);
 
     this.state = {
-      endpoint: '',
+      endpoint:
+        process.env.NODE_ENV === 'production' ? '' : 'https://localhost:5001',
       userName: this.props.userName,
       balance: this.props.balance,
       showProfileModal: false,
@@ -178,7 +179,6 @@ class SiteWrapper extends Component {
     });
 
     socket.on('NEW_TRANSACTION', data => {
-      console.log(data);
       this.props.addNewTransaction(data);
     });
 
