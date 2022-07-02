@@ -2,6 +2,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const socket_io = require ('socket.io');
 const Message = require('./model/Message');
 const Moment = require('moment');
+const Chat = require('./model/Chat');
 
 let sockets = {};
 
@@ -31,8 +32,22 @@ module.exports.socketio = (server) => {
     })
 
     socket.on('GLOBAL_CHAT_SEND', (data) => {
-      data.time = Moment(new Date()).format('hh:mm');
+      // data.time = Moment(new Date()).format('hh:mm');
+      console.log({ data })
+      //  Add save here
+      const chat = new Chat(data)
+      chat.save()
       io.sockets.emit('GLOBAL_CHAT_RECEIVED', data);
+    })
+
+    socket.on('FETCH_GLOBAL_CHAT', () => {
+      Chat.find({})
+      .sort({ created_at: -1 })
+      .limit(10)
+      .then(( results ) => {
+        console.log({ results })
+        io.sockets.emit('SET_GLOBAL_CHAT', results);
+      })
     })
 
     socket.on ('disconnect', (reason) => {
@@ -71,6 +86,7 @@ module.exports.socketio = (server) => {
     });
 
     socket.on ('SEND_CHAT', async (data) => {
+      console.log({ data })
       send('SEND_CHAT', data.to, data);
 
       const message = new Message(data);
