@@ -33,7 +33,7 @@ class ChatPanel extends Component {
     };
   }
 
-  oncomponentDidMount() {
+  componentDidMount() {
     this.props.socket.emit('FETCH_GLOBAL_CHAT');
   }
 
@@ -60,6 +60,7 @@ class ChatPanel extends Component {
       if (text !== '') {
         this.props.socket.emit('GLOBAL_CHAT_SEND', {
           sender: this.props.userName,
+          senderId: this.props.user._id,
           message: this.state.text
         });
         this.setState({ text: '', showEmojiPanel: false });
@@ -155,6 +156,7 @@ const mapStateToProps = state => ({
   isAuthenticated: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
   userName: state.auth.userName,
+  user: state.auth.user,
   socket: state.auth.socket
 });
 

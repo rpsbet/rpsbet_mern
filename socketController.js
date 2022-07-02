@@ -3,6 +3,7 @@ const socket_io = require ('socket.io');
 const Message = require('./model/Message');
 const Moment = require('moment');
 const Chat = require('./model/Chat');
+const User = require('./model/User');
 
 let sockets = {};
 
@@ -32,22 +33,33 @@ module.exports.socketio = (server) => {
     })
 
     socket.on('GLOBAL_CHAT_SEND', (data) => {
-      // data.time = Moment(new Date()).format('hh:mm');
-      console.log({ data })
-      //  Add save here
-      const chat = new Chat(data)
+      const chat = new Chat({
+        sender: data.senderId,
+        message: data.message
+      })
       chat.save()
-      io.sockets.emit('GLOBAL_CHAT_RECEIVED', data);
+      io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
+        ...data,
+        time: Moment(new Date()).format('hh:mm')
+      });
     })
 
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
       .sort({ created_at: -1 })
       .limit(10)
-      .then(( results ) => {
-        console.log({ results })
-        io.sockets.emit('SET_GLOBAL_CHAT', results);
-      })
+      .populate({path: 'sender', model: User})
+      .then((results) =>
+        results.map(({ created_at, message, sender }) => ({
+            sender: sender.username,
+            message,
+            time: Moment(created_at).format('hh:mm')
+        }))
+        .sort((a, b) => a.time > b.time ? 1 : -1)
+      )
+      .then(( results ) =>
+        io.sockets.emit('SET_GLOBAL_CHAT', results)
+      )
     })
 
     socket.on ('disconnect', (reason) => {
