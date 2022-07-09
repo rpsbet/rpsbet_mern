@@ -55,6 +55,7 @@ import Moment from 'moment';
 import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css';
 import Avatar from '../components/Avatar';
+import { ethers } from 'ethers';
 
 const mainTheme = createTheme({
   palette: {
@@ -75,6 +76,9 @@ const customStyles = {
     backgroundColor: 'rgba(47, 49, 54, 0.5)'
   }
 };
+
+const { ethereum } = window;
+const provider = new ethers.providers.Web3Provider(window.ethereum);
 
 function updateFromNow(transactions) {
   const result = JSON.parse(JSON.stringify(transactions));
@@ -108,7 +112,11 @@ class SiteWrapper extends Component {
       isActiveLoadingOverlay: this.props.isActiveLoadingOverlay,
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
-      anchorEl: null
+      anchorEl: null,
+      isWalletConnected: false,
+      walletAddress: '',
+      mmBalance: 0,
+      isMetaMask: false
     };
   }
 
@@ -217,6 +225,8 @@ class SiteWrapper extends Component {
     }
 
     this.interval = setInterval(this.updateReminderTime, 3000);
+
+    this.setState({isWalletConnected: localStorage.getItem('isWalletConnected')})
   }
 
   componentWillUnmount() {
@@ -308,13 +318,27 @@ class SiteWrapper extends Component {
     this.setState({ showGameLog: !this.state.showGameLog });
   };
 
+  connectWallet = async () => {
+    try {
+      const accounts = await ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+      console.log('wallet = ', accounts[0]);
+      let balance = await provider.getBalance(accounts[0]);
+      localStorage.setItem("isWalletConnected", true);
+      this.setState({ isWalletConnected: true, walletAddress: accounts[0], mmBalance: ethers.utils.formatEther(balance) });
+    }
+    catch (error) {
+      console.log('connect wallet error');
+    }
+  };
+
   render() {
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
         <div
-          className={`site_wrapper row ${
-            this.props.isDarkMode ? 'dark_mode' : ''
-          }`}
+          className={`site_wrapper row ${this.props.isDarkMode ? 'dark_mode' : ''
+            }`}
         >
           <LoadingOverlay
             active={this.state.isActiveLoadingOverlay}
@@ -369,12 +393,19 @@ class SiteWrapper extends Component {
                 </a> */}
                 {this.props.isAuthenticated ? (
                   <>
-                    <span id="balance" onClick={this.handleBalanceClick}>
-                      £
-                      {updateDigitToPoint2(
-                        parseInt(this.state.balance) / 100.0
-                      )}
-                    </span>
+                    {
+                      this.state.isWalletConnected ?
+                        (<span id="balance" onClick={this.handleBalanceClick}>
+                          £
+                          {updateDigitToPoint2(
+                            parseInt(this.state.balance) / 100.0
+                          )}
+                        </span>)
+                        :
+                        (<span id="balance" onClick={this.connectWallet}>
+                          Connect
+                        </span>)
+                    }
                     <Button
                       area-constrols="profile-menu"
                       aria-haspopup="true"
@@ -483,9 +514,9 @@ class SiteWrapper extends Component {
                             {row.amount > 0
                               ? '+ £' + updateDigitToPoint2(row.amount / 100.0)
                               : '- £' +
-                                updateDigitToPoint2(
-                                  Math.abs(row.amount / 100.0)
-                                )}
+                              updateDigitToPoint2(
+                                Math.abs(row.amount / 100.0)
+                              )}
                           </td>
                           <td className="fromNow">{row.from_now}</td>
                         </tr>
