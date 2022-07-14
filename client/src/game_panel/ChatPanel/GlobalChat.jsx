@@ -7,8 +7,17 @@ class GlobalChat extends Component {
     super(props);
 
     this.state = {
-      chat_list: []
+      chat_list: [],
+      fetchedGloabal: false
     };
+
+    this.chatBoxRef = React.createRef();
+  }
+
+  componentDidUpdate() {
+    if (this.chatBoxRef.current) {
+      this.chatBoxRef.current.scrollTop = this.chatBoxRef.current.scrollHeight;
+    }
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -24,7 +33,7 @@ class GlobalChat extends Component {
 
   render() {
     return (
-      <div className="chat-panel global-chat">
+      <div className="chat-panel global-chat" ref={this.chatBoxRef}>
         {this.state.chat_list.map(
           (chat, key) => (
             <div className="chat-line" key={key}>

@@ -152,6 +152,7 @@ class SiteWrapper extends Component {
 
     socket.on('CONNECTED', data => {
       socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
+      socket.emit('FETCH_GLOBAL_CHAT');
     });
 
     socket.on('UPDATED_ROOM_LIST', data => {

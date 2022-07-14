@@ -33,10 +33,6 @@ class ChatPanel extends Component {
     };
   }
 
-  componentDidMount() {
-    this.props.socket.emit('FETCH_GLOBAL_CHAT');
-  }
-
   insertEmoji = e => {
     this.setState({ text: this.state.text + e.target.innerHTML });
     this.textarea.focus();
