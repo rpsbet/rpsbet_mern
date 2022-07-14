@@ -29,7 +29,11 @@ class MyGamesTable extends Component {
       'Okay',
       'Cancel',
       () => {
-        this.props.endGame(room_id);
+        this.props.endGame(room_id, () => {
+          this.props.getMyGames({
+            game_type: this.state.selectedGameType
+          });
+        });
       }
     );
   };

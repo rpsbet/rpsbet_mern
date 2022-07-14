@@ -194,9 +194,9 @@ export const getMyGames = (search_condition) => async dispatch => {
   }
 };
 
-export const endGame = (room_id) => async dispatch => {
+export const endGame = (room_id, callback) => async dispatch => {
   try {
-    const res = await axios.post('/game/end_game', {room_id});
+    const res = await axios.post('/game/end_game', { room_id });
     if (res.data.success) {
       dispatch({ type: MY_GAMES_LOADED, payload: { myGames: res.data.myGames, pages: res.data.pages, pageNumber: 1 } });
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
@@ -205,6 +205,7 @@ export const endGame = (room_id) => async dispatch => {
         // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
       }
     }
+    callback()
   } catch (err) {
     console.log(err)
   }
