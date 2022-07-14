@@ -12,11 +12,15 @@ class MyGamesTable extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedGameType: 'RPS'
+      selectedGameType: 'All'
     };
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    this.props.getMyGames({
+      game_type: this.state.selectedGameType
+    });
+  }
 
   endRoom = (winnings, room_id) => {
     confirmModalClosed(

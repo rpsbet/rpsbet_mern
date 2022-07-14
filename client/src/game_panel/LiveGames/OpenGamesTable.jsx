@@ -17,8 +17,14 @@ class OpenGamesTable extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedGameType: 'RPS'
+      selectedGameType: 'All'
     };
+  }
+
+  componentDidMount() {
+    this.props.getRoomList({
+      game_type: this.state.selectedGameType
+    });
   }
 
   joinRoom = e => {
