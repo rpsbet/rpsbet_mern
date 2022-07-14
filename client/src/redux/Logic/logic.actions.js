@@ -23,6 +23,7 @@ import {
   MY_CHAT_LOADED,
   GLOBAL_CHAT_RECEIVED,
   LOAD_LEADERBOARDS,
+  SET_GLOBAL_CHAT
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
@@ -291,6 +292,9 @@ export const setCurRoomInfo = room_info => dispatch => {
 export const setChatRoomInfo = room_info => dispatch => {
   dispatch({ type: SET_CHAT_ROOM_INFO, payload: room_info });
 };
+
+export const setGlobalChat = payload => dispatch =>
+  dispatch({ type: SET_GLOBAL_CHAT, payload });
 
 const getNow = () => {
   const date = new Date();

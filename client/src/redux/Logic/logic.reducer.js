@@ -18,6 +18,7 @@ import {
   SELECT_MAIN_TAB,
   MY_CHAT_LOADED,
   GLOBAL_CHAT_RECEIVED,
+  SET_GLOBAL_CHAT
 } from '../types';
   
 const initialState = {
@@ -152,10 +153,14 @@ export default function(state = initialState, action) {
     case GLOBAL_CHAT_RECEIVED:
       const chat_list = JSON.parse(JSON.stringify(state.globalChatList));
       chat_list.push(payload)
-      console.log(chat_list)
       return {
         ...state, globalChatList: chat_list
       }
+    case SET_GLOBAL_CHAT:
+        return {
+          ...state,
+          globalChatList: payload
+        }
     default:
       return state;
   }

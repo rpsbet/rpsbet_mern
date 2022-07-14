@@ -17,7 +17,8 @@ import {
   addNewTransaction,
   updateOnlineUserList,
   selectMainTab,
-  globalChatReceived
+  globalChatReceived,
+  setGlobalChat
 } from '../redux/Logic/logic.actions';
 
 import {
@@ -151,6 +152,7 @@ class SiteWrapper extends Component {
 
     socket.on('CONNECTED', data => {
       socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
+      socket.emit('FETCH_GLOBAL_CHAT');
     });
 
     socket.on('UPDATED_ROOM_LIST', data => {
@@ -195,6 +197,8 @@ class SiteWrapper extends Component {
     socket.on('GLOBAL_CHAT_RECEIVED', data => {
       this.props.globalChatReceived(data);
     });
+
+    socket.on('SET_GLOBAL_CHAT', this.props.setGlobalChat);
 
     this.props.setSocket(socket);
   };
@@ -625,7 +629,8 @@ const mapDispatchToProps = {
   setDarkMode,
   updateOnlineUserList,
   selectMainTab,
-  globalChatReceived
+  globalChatReceived,
+  setGlobalChat
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);
