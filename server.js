@@ -62,7 +62,8 @@ const systemSetting = require('./routes/settings.routes');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(express.json({ extended: false }));
 app.use(fileUpload());

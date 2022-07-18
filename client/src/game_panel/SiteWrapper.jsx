@@ -56,7 +56,9 @@ import Moment from 'moment';
 import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css';
 import Avatar from '../components/Avatar';
-
+import Web3 from "web3";
+import abi from "../config/abi_token.json";
+import { tokenAddr }  from "../config/index.js";
 const mainTheme = createTheme({
   palette: {
     type: 'light'
@@ -93,7 +95,7 @@ class SiteWrapper extends Component {
       endpoint:
         process.env.NODE_ENV === 'production'
           ? 'https://rpsbet.io'
-          : 'https://localhost:5001',
+          : 'http://localhost:5001',
       userName: this.props.userName,
       balance: this.props.balance,
       showProfileModal: false,
@@ -109,7 +111,9 @@ class SiteWrapper extends Component {
       isActiveLoadingOverlay: this.props.isActiveLoadingOverlay,
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
-      anchorEl: null
+      anchorEl: null,
+      web3account: '',
+      web3balance: 0,
     };
   }
 
@@ -202,25 +206,45 @@ class SiteWrapper extends Component {
 
     this.props.setSocket(socket);
   };
-
+  loadWeb3 = async () => {
+    try{
+      const web3 = new Web3(Web3.givenProvider);
+      const accounts = await web3.eth.requestAccounts();
+      const contractInstance = new web3.eth.Contract(abi, tokenAddr);
+      const tokenBalance = await contractInstance.methods.balanceOf(accounts[0]).call();
+      const decimal = await contractInstance.methods.decimals().call();
+      const tokenAmount = Number(tokenBalance / Math.pow(10, decimal)).toFixed(0);
+      this.setState({web3account:accounts[0]});
+      this.setState({web3balance:tokenAmount});
+    }catch(e){
+      console.log(e)
+    }
+  }
   async componentDidMount() {
     try {
       this.audio = new Audio('/sounds/sound.mp3');
       this.audio.load();
     } catch (e) {
-      console.log(e);
+      console.log('rere',e);
     }
-
     this.initSocket();
-
     const result = await this.props.getUser(true);
     if (result.status === 'success') {
       // if (!result.user.is_activated) {
       //   this.handleOpenVerificationModal();
       // }
     }
-
     this.interval = setInterval(this.updateReminderTime, 3000);
+    //web3
+    if(window.ethereum) {
+      window.ethereum.on('chainChanged', () => {
+        window.location.reload();
+      })
+      window.ethereum.on('accountsChanged', () => {
+        window.location.reload();
+      })
+    }
+    this.loadWeb3();
   }
 
   componentWillUnmount() {
@@ -374,16 +398,17 @@ class SiteWrapper extends Component {
                 {this.props.isAuthenticated ? (
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>
-                      £
                       {updateDigitToPoint2(
-                        parseInt(this.state.balance) / 100.0
+                        parseInt(this.state.web3balance) / 100.0
                       )}
+                      &nbsp;
+                      RPS
                     </span>
                     <Button
                       area-constrols="profile-menu"
                       aria-haspopup="true"
                       onClick={this.handleClickMenu}
-                      className="profile-menu"
+                      className="profile-menu" 
                     >
                       <Avatar
                         src={this.props.user.avatar}
@@ -469,7 +494,7 @@ class SiteWrapper extends Component {
             >
               <div className="arrow-up"></div>
               <div className="game_logs_contents">
-                <h2>BALANCE HISTORY</h2>
+                {/* <h2>BALANCE HISTORY</h2> */}
                 <table>
                   <tbody>
                     {this.state.transactions.length === 0 ? (
@@ -498,12 +523,12 @@ class SiteWrapper extends Component {
                   </tbody>
                 </table>
                 <div className="transaction-panel">
-                  <button
+                  {/* <button
                     className="btn-withdraw"
                     onClick={this.handleOpenWithdrawModal}
                   >
                     Withdraw
-                  </button>
+                  </button> */}
                   <button
                     className="btn-deposit"
                     onClick={this.handleOpenDepositModal}
