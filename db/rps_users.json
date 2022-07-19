@@ -1,11 +1,11 @@
 [{
   "_id": {
-    "$oid": "5e0015f6d3567d48c489c3e5"
+    "$oid": "5e0015f6d3567d48c489c315"
   },
   "balance": 9900,
-  "username": "JinWang",
-  "email": "wangjin8855@hotmail.com",
-  "password": "$2a$10$CF8q3rT1oYDc9OGzWYoqp.S9p2kAYS5irs6HU5kHxX7lM1/l7gVNS",
+  "username": "123",
+  "email": "123@123",
+  "password": "$2a$10$k6kuDgExVv5PI0nR3CpbVOVA9vXiub90L2kMveC5dZGRT.ASysTAi",
   "bio": "test",
   "status": "on",
   "avatar": "/img/uploads/IMG_kk3eyy6a.gif",
