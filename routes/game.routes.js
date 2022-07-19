@@ -99,7 +99,7 @@ router.get('/room/:id', async (req, res) => {
 				qs_game_type: room['qs_game_type'],
 				room_history: roomHistory,
 				box_list: boxPrizeList,
-				rps_bet_item_id: rpsBetItem?._id ?? null,
+				rps_bet_item_id: rpsBetItem?.rpsBetItem_id : null,
 				is_private: room['is_private']
 			}
 		});
