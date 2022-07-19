@@ -24,8 +24,8 @@ let user_access_log = {};
 
 const getCommission = async () => {
 	const commission = await SystemSetting.findOne({name: 'commission'});
-	if (commission?.value) {
-		return parseFloat(commission?.value);
+	if (commission.value) {
+		return parseFloat(commission.value);
 	}
 
 	return 0;
