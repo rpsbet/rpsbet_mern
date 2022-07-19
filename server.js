@@ -11,27 +11,27 @@ const socketContoller = require('./socketController.js');
 
 const app = express();
 
-// const server = app.listen(process.env.PORT, () =>
-//   console.log(`server running on port ${process.env.PORT}`)
-// );
+const server = app.listen(process.env.PORT, () =>
+  console.log(`server running on port ${process.env.PORT}`)
+);
 
-const { PORT } = process.env;
+// const { PORT } = process.env;
 
-const server = https
-  .createServer(
-    {
-      key: fs.readFileSync(path.resolve('./ssl/key.pem')),
-      cert: fs.readFileSync(path.resolve('./ssl/cert.pem')),
-    },
-    app
-  )
-  .listen(PORT || 443, () =>
-    console.log(
-      `Server listening at: http${PORT === '443' ? 's' : ''}://localhost${
-        PORT === '443' || PORT === '80' ? '' : `:${PORT}`
-      }`
-    )
-  );
+// const server = https
+//   .createServer(
+//     {
+//       key: fs.readFileSync(path.resolve('./ssl/key.pem')),
+//       cert: fs.readFileSync(path.resolve('./ssl/cert.pem')),
+//     },
+//     app
+//   )
+//   .listen(PORT || 443, () =>
+//     console.log(
+//       `Server listening at: http${PORT === '443' ? 's' : ''}://localhost${
+//         PORT === '443' || PORT === '80' ? '' : `:${PORT}`
+//       }`
+//     )
+//   );
 
 const io = socketContoller.socketio(server, {origins: '*:*'});
 
