@@ -95,7 +95,7 @@ class SiteWrapper extends Component {
       endpoint:
         process.env.NODE_ENV === 'production'
           ? 'https://rpsbet.io'
-          : 'http://127.0.0.1:5001',
+          : 'http://localhost:5001',
       userName: this.props.userName,
       balance: this.props.balance,
       showProfileModal: false,
@@ -112,6 +112,7 @@ class SiteWrapper extends Component {
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
       anchorEl: null,
+      web3: null,
       web3account: '',
       web3balance: 0,
     };
@@ -209,11 +210,12 @@ class SiteWrapper extends Component {
   loadWeb3 = async () => {
     try{
       const web3 = new Web3(Web3.givenProvider);
+      this.setState({web3});
       const accounts = await web3.eth.requestAccounts();
       const contractInstance = new web3.eth.Contract(abi, tokenAddr);
       const tokenBalance = await contractInstance.methods.balanceOf(accounts[0]).call();
       const decimal = await contractInstance.methods.decimals().call();
-      const tokenAmount = Number(tokenBalance / Math.pow(10, decimal)).toFixed(0);
+      const tokenAmount = Number(tokenBalance / Math.pow(10, decimal)).toFixed(6);
       this.setState({web3account:accounts[0]});
       this.setState({web3balance:tokenAmount});
     }catch(e){
@@ -238,10 +240,10 @@ class SiteWrapper extends Component {
     //web3
     if(window.ethereum) {
       window.ethereum.on('chainChanged', () => {
-        window.location.reload();
+        this.loadWeb3();
       })
       window.ethereum.on('accountsChanged', () => {
-        window.location.reload();
+        this.loadWeb3();
       })
     }
     this.loadWeb3();
@@ -398,9 +400,7 @@ class SiteWrapper extends Component {
                 {this.props.isAuthenticated ? (
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>
-                      {updateDigitToPoint2(
-                        parseInt(this.state.web3balance) / 100.0
-                      )}
+                      {Math.floor(this.state.balance*100000)/100000}
                       &nbsp;
                       RPS
                     </span>
@@ -495,7 +495,7 @@ class SiteWrapper extends Component {
               <div className="arrow-up"></div>
               <div className="game_logs_contents">
                 {/* <h2>BALANCE HISTORY</h2> */}
-                <table>
+                {/* <table>
                   <tbody>
                     {this.state.transactions.length === 0 ? (
                       <tr>
@@ -510,10 +510,10 @@ class SiteWrapper extends Component {
                             }
                           >
                             {row.amount > 0
-                              ? '+ £' + updateDigitToPoint2(row.amount / 100.0)
-                              : '- £' +
+                              ? '+ RPS' + updateDigitToPoint2(row.amount)
+                              : '- RPS' +
                                 updateDigitToPoint2(
-                                  Math.abs(row.amount / 100.0)
+                                  Math.abs(row.amount)
                                 )}
                           </td>
                           <td className="fromNow">{row.from_now}</td>
@@ -521,14 +521,14 @@ class SiteWrapper extends Component {
                       ))
                     )}
                   </tbody>
-                </table>
+                </table> */}
                 <div className="transaction-panel">
-                  {/* <button
+                  <button
                     className="btn-withdraw"
                     onClick={this.handleOpenWithdrawModal}
                   >
                     Withdraw
-                  </button> */}
+                  </button>
                   <button
                     className="btn-deposit"
                     onClick={this.handleOpenDepositModal}
@@ -604,6 +604,9 @@ class SiteWrapper extends Component {
             <DepositModal
               modalIsOpen={this.state.showDepositModal}
               closeModal={this.handleCloseDepositModal}
+              web3={this.state.web3}
+              balance={this.state.web3balance}
+              account={this.state.web3account}
             />
           )}
           {this.state.showWithdrawModal && (
@@ -611,6 +614,8 @@ class SiteWrapper extends Component {
               modalIsOpen={this.state.showWithdrawModal}
               closeModal={this.handleCloseWithdrawModal}
               balance={this.state.balance}
+              web3={this.state.web3}
+              account={this.state.web3account}
             />
           )}
           {this.state.showResetPasswordModal && (

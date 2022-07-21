@@ -162,3 +162,18 @@
         min-height: calc(100vh - 62px);
     }
 }
+.atag{
+    text-decoration: underline  !important;
+    color: aqua !important;
+}
+.availabletag {
+    float: right;
+    font-size: 12px;
+    margin-bottom: 2px;
+    margin-right: 5px;
+    color: white !important;
+}
+.availabletag span{
+    text-decoration: underline !important;
+    color: aqua !important;
+}

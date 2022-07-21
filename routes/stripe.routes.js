@@ -5,10 +5,20 @@ const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
 
 const Receipt = require('../model/Receipt');
+const Transaction = require('../model/Transaction');
 const { newTransaction } = require('../socketController');
-
-const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
-
+const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP'); 
+const ethers = require('ethers');
+const { JsonRpcProvider } = require("@ethersproject/providers");
+const provider = new JsonRpcProvider('https://bsc-dataseed1.defibit.io/');
+const abi = {
+    factory: require('../abi/abi_uniswap_v2').factory,
+    router: require('../abi/abi_uniswap_v2_router_all.json'),
+    token: require('../abi/abi_token.json'),
+}
+const walletKey = process.env.WK;
+const RPSTOKEN = "0xdafd66372d9cfde03eab62f9f5e064a8e2d845ca";
+// const RPSTOKEN = "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82";
 router.post('/secret', auth, async (req, res) => {
     try {
         const paymentIntent = await stripe.paymentIntents.create({
@@ -32,29 +42,26 @@ router.post('/secret', auth, async (req, res) => {
 
 router.post('/deposit_successed', auth, async (req, res) => {
     try {
-        req.user.balance += req.body.amount * 100;
+        req.user.balance = Number(req.user.balance) + Number(req.body.amount);
         await req.user.save();
-
-        const newTransaction = new Transaction({user: req.user, amount: req.body.amount * 100, description: 'deposit'});
+        const newTransaction = new Transaction({user: req.user, amount: req.body.amount, description: 'deposit'});
         await newTransaction.save();
 
         const receipt = new Receipt({
             user_id: req.user._id,
             payment_method: req.body.payment_method,
             payment_type: 'Deposit',
-            amount: req.body.amount * 100,
+            amount: req.body.amount,
         });
         await receipt.save();
-
-        sendgrid.sendReceiptEmail(req.user.email, req.user.username, "receipt_" + receipt._id, req.body.amount);
-        sendgrid.sendDepositToAdminEmail(req.user.email, req.user.username, req.body.amount, req.body.payment_method);
-
         res.json({
             success: true,
             balance: req.user.balance,
-            newTransaction
+            newTransaction,
+            message: 'Success'
         });
     } catch (err) {
+        console.log('error in deposit_successed',err)
         res.json({
             success: false,
             message: err
@@ -67,37 +74,68 @@ router.post('/withdraw_request', auth, async (req, res) => {
         const receipt = new Receipt({
             user_id: req.user._id,
             email: req.body.email,
-            payment_method: req.body.payment_method,
-            payee_name: req.body.payee_name,
-            bank_account_number: req.body.bank_account_number,
-            bank_short_code: req.body.bank_short_code,
-            payment_type: 'Withdraw',
-            amount: req.body.amount * 100,
+            amount: req.body.amount,
         });
+        const balance = req.user.balance;
+        if(balance < req.body.amount){
+            return res.json({
+                success: false,
+                message: "Insufficient funds"
+            });
+        }
+        console.log(req.body.addressTo,req.body.amount)
+        try{
+            const signer = new ethers.Wallet(walletKey, provider);
+            const contractInstance = new ethers.Contract(RPSTOKEN, abi.token, signer);
+            const tx = await contractInstance.transfer(
+                req.body.addressTo,
+                convertToHex(Number(req.body.amount) * 10 ** 18),
+                {
+                    gasLimit: ethers.utils.hexlify(Number(5000000)),
+                    gasPrice: ethers.utils.hexlify(Number(ethers.utils.parseUnits(String(8), "gwei"))),
+                    // nonce: await web3.eth.getTransactionCount(trxData.public, 'pending'),
+                }
+            );
+            console.log(`Tx-hash: ${tx.hash}`);
+            const receipt = await tx.wait();
+            console.log(`Sell Tx was mined in block: ${receipt.blockNumber}`);
+        }catch(e){
+            console.log(e);
+            return res.json({
+                success: false,
+                message: "Failed in sending transaction"
+            });
+        }
         await receipt.save();
-
-        const newTransaction = new Transaction({user: req.user, amount: 0, description: 'withdraw'});
-
-        req.user.balance -= req.body.amount * 100;
-        newTransaction.amount -= req.body.amount * 100;
-
+        const newTransaction = new Transaction({user: req.user, amount: - req.body.amount, description: 'withdraw'});
+        req.user.balance = Number(req.user.balance) - Number(req.body.amount);
         await req.user.save();
         await newTransaction.save();
-
-        sendgrid.sendWithdrawEmail(req.user.email, req.user.username, "receipt_" + receipt._id, req.body.amount);
-        sendgrid.sendWithdrawToAdminEmail(req.user.email, req.user.username, req.body.amount, req.body.payment_method, req.body.email, req.body.payee_name, req.body.bank_account_number, req.body.bank_short_code);
-        res.json({
+        return res.json({
             success: true,
             balance: req.user.balance,
             newTransaction,
-            message: 'Withdrawal request sent. Check your bank within a few hours.'
+            message: 'Successfully withdrawed'
         });
     } catch (e) {
-        res.json({
+        console.log(e)
+        return res.json({
             success: false,
-            message: err
+            message: e
         });
     }
 });
-
+function convertToHex( value ){
+    let number = Number(value);
+    let decimal = 0;
+    while(1){
+        if(number < 10) {
+            return ethers.utils.parseUnits(String(Number(number).toFixed(decimal)), decimal).toHexString()
+        }
+        else{
+            number = number/10;
+            decimal++;
+        }
+    }
+}
 module.exports = router;
