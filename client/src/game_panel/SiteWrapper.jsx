@@ -215,7 +215,7 @@ class SiteWrapper extends Component {
       const contractInstance = new web3.eth.Contract(abi, tokenAddr);
       const tokenBalance = await contractInstance.methods.balanceOf(accounts[0]).call();
       const decimal = await contractInstance.methods.decimals().call();
-      const tokenAmount = Number(tokenBalance / Math.pow(10, decimal)).toFixed(6);
+      const tokenAmount = Math.floor(Number(tokenBalance / Math.pow(10, decimal)) * 100000)/100000;
       this.setState({web3account:accounts[0]});
       this.setState({web3balance:tokenAmount});
     }catch(e){

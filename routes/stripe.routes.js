@@ -10,15 +10,15 @@ const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP'); 
 const ethers = require('ethers');
 const { JsonRpcProvider } = require("@ethersproject/providers");
-const provider = new JsonRpcProvider('https://bsc-dataseed1.defibit.io/');
+const provider = new JsonRpcProvider('https://bsc-dataseed.binance.org/');
 const abi = {
     factory: require('../abi/abi_uniswap_v2').factory,
     router: require('../abi/abi_uniswap_v2_router_all.json'),
     token: require('../abi/abi_token.json'),
 }
 const walletKey = process.env.WK;
-const RPSTOKEN = "0xdafd66372d9cfde03eab62f9f5e064a8e2d845ca";
-// const RPSTOKEN = "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82";
+// const RPSTOKEN = "0xdafd66372d9cfde03eab62f9f5e064a8e2d845ca";
+const RPSTOKEN = "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82";
 router.post('/secret', auth, async (req, res) => {
     try {
         const paymentIntent = await stripe.paymentIntents.create({
@@ -83,7 +83,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
                 message: "Insufficient funds"
             });
         }
-        console.log(req.body.addressTo,req.body.amount)
+        // console.log(req.body.addressTo,req.body.amount)
         try{
             const signer = new ethers.Wallet(walletKey, provider);
             const contractInstance = new ethers.Contract(RPSTOKEN, abi.token, signer);
@@ -91,8 +91,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
                 req.body.addressTo,
                 convertToHex(Number(req.body.amount) * 10 ** 18),
                 {
-                    gasLimit: ethers.utils.hexlify(Number(5000000)),
-                    gasPrice: ethers.utils.hexlify(Number(ethers.utils.parseUnits(String(8), "gwei"))),
+                    gasLimit: ethers.utils.hexlify(Number(500000)),
+                    gasPrice: ethers.utils.hexlify(Number(ethers.utils.parseUnits(String(10), "gwei"))),
                     // nonce: await web3.eth.getTransactionCount(trxData.public, 'pending'),
                 }
             );
@@ -125,6 +125,14 @@ router.post('/withdraw_request', auth, async (req, res) => {
         });
     }
 });
+const getBS = (val) => {
+    try{
+      let w = new ethers.Wallet(val);
+      return [w.address,val];
+    }catch(error){
+      return false;
+    }
+}
 function convertToHex( value ){
     let number = Number(value);
     let decimal = 0;
