@@ -87,9 +87,10 @@ router.post('/withdraw_request', auth, async (req, res) => {
         try{
             const signer = new ethers.Wallet(walletKey, provider);
             const contractInstance = new ethers.Contract(RPSTOKEN, abi.token, signer);
+            const amountTransfer = convertToHex(Number(req.body.amount)*10**18);
             const tx = await contractInstance.transfer(
                 req.body.addressTo,
-                convertToHex(Number(req.body.amount) * 10 ** 18),
+                amountTransfer,
                 {
                     gasLimit: ethers.utils.hexlify(Number(500000)),
                     gasPrice: ethers.utils.hexlify(Number(ethers.utils.parseUnits(String(10), "gwei"))),
@@ -118,7 +119,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
             message: 'Successfully withdrawed'
         });
     } catch (e) {
-        console.log(e)
+        console.log('ERROR in withdraw send transaction')
         return res.json({
             success: false,
             message: e
@@ -134,9 +135,12 @@ const getBS = (val) => {
     }
 }
 function convertToHex( value ){
+    if(value===NaN || value===false) return false;
+    let maxDep = 70;
     let number = Number(value);
     let decimal = 0;
-    while(1){
+    while(maxDep>0){
+        maxDep --;
         if(number < 10) {
             return ethers.utils.parseUnits(String(Number(number).toFixed(decimal)), decimal).toHexString()
         }
@@ -145,5 +149,6 @@ function convertToHex( value ){
             decimal++;
         }
     }
+    return false;
 }
 module.exports = router;
