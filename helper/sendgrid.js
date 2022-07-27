@@ -82,9 +82,9 @@ module.exports.sendWithdrawEmail = (email, name, receipt_id, amount) => {
             receipt_id: receipt_id,
             date: dateString,
             receipt_details : [
-                {"amount": "£" + amount},
+                {"amount": "RPS " + amount},
             ],
-            total: "£" + amount,
+            total: "RPS " + amount,
             action_url: 'https://rpsbet.com'
         },
         'Withdraw', 
@@ -105,9 +105,9 @@ module.exports.sendReceiptEmail = (email, name, receipt_id, amount) => {
             receipt_id: receipt_id,
             date: dateString,
             receipt_details : [
-                {"amount": "£" + amount},
+                {"amount": "RPS " + amount},
             ],
-            total: "£" + amount,
+            total: "RPS " + amount,
             action_url: 'https://rpsbet.com'
         },
         'Receipt', 

@@ -108,7 +108,7 @@ class JoinGame extends Component {
         )}
         {this.props.roomInfo.room_history && (
           <div className="room-history-panel">
-            <h2 className="room-history-title">Game History</h2>
+            <h2 className="room-history-title">Staking History</h2>
             <div className="table main-history-table">
               {this.props.roomInfo.room_history.map(
                 (row, key) => (

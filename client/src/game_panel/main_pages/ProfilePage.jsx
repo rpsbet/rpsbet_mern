@@ -86,7 +86,7 @@ class ProfilePage extends React.Component {
 				return '<div class="chart-tooltip">' +
 						'<div>Game Id: ' + gameLogList[dataPointIndex].game_id + '</div>' +
 						'<div>Played: ' + moment(gameLogList[dataPointIndex].played).fromNow() + '</div>' +
-						'<div>Bet: £' + gameLogList[dataPointIndex].bet + '</div>' +
+						'<div>Bet: RPS ' + gameLogList[dataPointIndex].bet + '</div>' +
 						'<div>Opponent:' + gameLogList[dataPointIndex].opponent.username + '</div>' +
 						'<div>Profit:' + addCurrencySignal(updateDigitToPoint2(gameLogList[dataPointIndex].profit)) + '</div>' +
 						'<div>Net Profit:' + gameLogList[dataPointIndex].net_profit + '</div>' +

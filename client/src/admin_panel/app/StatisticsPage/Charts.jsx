@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Elevation from '../../../Styles/Elevation';
 import { addCurrencySignal } from '../../../util/helper'
 
-const xLabels = ['£0 - £1', '£1 - £10', '£10 - £20', '£20 - £30', '£30 - £40', '£40 - £50', '£50 - £60', '£60 - £70', '£70 - £80', '£80 - £90', '£90 - £100', '£100 -', ]
+const xLabels = ['0 RPS - 1 RPS', '1 RPS - 10 RPS', '10 RPS - 20 RPS', '20 RPS - 30 RPS', '30 RPS - 40 RPS', '40 RPS - 50 RPS', '50 RPS - 60 RPS', '60 RPS - 70 RPS', '70 RPS - 80 RPS', '80 RPS - 90 RPS', '90 RPS - 100 RPS', '100 RPS -', ]
 
 class HeatmapChart extends React.Component {
   constructor(props) {

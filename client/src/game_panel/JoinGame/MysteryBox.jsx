@@ -74,7 +74,7 @@ class MysteryBox extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `Oops! This game is yours. What's the point?!`
+        `Oops! This is your Stake. What's the point?!`
       );
       return;
     }
@@ -142,10 +142,10 @@ class MysteryBox extends Component {
         <div className="game-contents">
           <div className="pre-summary-panel">
             <div className="your-bet-amount">
-              Bet Amount : £{updateDigitToPoint2(this.state.bet_amount)}
+              Bet Amount : {updateDigitToPoint2(this.state.bet_amount)} RPS
             </div>
             <div className="your-max-return">
-              Potential Return : £{updateDigitToPoint2(pr * 0.95)}
+              Potential Return : {updateDigitToPoint2(pr /* 0.95 */)} RPS
             </div>
           </div>
           <div className="game-info-panel">
@@ -153,7 +153,7 @@ class MysteryBox extends Component {
             <p className="box-prizes">
               {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
-                  £{item.price}
+                  {item.price} RPS
                 </span>
               ))}
             </p>
@@ -173,7 +173,7 @@ class MysteryBox extends Component {
                   key={key}
                   onClick={this.onBoxClicked}
                 >
-                  <span>£{row.box_price}</span>
+                  <span>{row.box_price} RPS</span>
                 </div>
               ))}
             </div>
@@ -194,7 +194,7 @@ class MysteryBox extends Component {
   onBtnPlayAgainClicked = e => {
     e.preventDefault();
     if (this.props.roomStatus === 'finished') {
-      alertModal(this.props.isDarkMode, 'This game is already finished.');
+      alertModal(this.props.isDarkMode, 'This stake has already ended.');
       history.go('/');
     } else {
       history.go(0);
@@ -221,7 +221,7 @@ class MysteryBox extends Component {
                 this.state.betResult === 0 ? 'failed' : 'success'
               }`}
             >
-              £{this.state.betResult}
+              {this.state.betResult} RPS
             </div>
             <h4 className="game-sub-title">
               {this.state.betResult === 0
@@ -237,7 +237,7 @@ class MysteryBox extends Component {
             <p className="box-prizes">
               {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
-                  £{item.price}
+                  {item.price} RPS
                 </span>
               ))}
             </p>
@@ -245,7 +245,7 @@ class MysteryBox extends Component {
           <hr />
           <div className="action-panel">
             <button id="btn-back" onClick={this.onBtnGoToMainGamesClicked}>
-              All Games
+              All Stakes
             </button>
             <button id="btn-submit" onClick={this.onBtnPlayAgainClicked}>
               Play Again

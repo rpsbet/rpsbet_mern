@@ -55,7 +55,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper quick-shoot">
                     <div className="modal-content-panel">
-                      <h5>HOST GAME</h5>
+                      <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
                           Set the Game Type (Returns Multiplier e.g. 2x, 3x
@@ -66,7 +66,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN GAME</h5>
+                      <h5>JOIN STAKE</h5>
                       <ol>
                         <li>Choose Where to Shoot</li>
                       </ol>
@@ -76,7 +76,7 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Your Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>£50</span>
+                        <span style={{ color: '#b52c22' }}>50 RPS</span>
                       </p>
                       <p>
                         Game Type ={' '}
@@ -86,12 +86,12 @@ class HowToPlayModal extends Component {
                       </p>
                       <p>
                         Public Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>£200 [£50 * 4]</span>
+                        <span style={{ color: '#b52c22' }}>200 RPS [50 RPS * 4]</span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          £247.50 [£250 * 0.99]
+                          250 RPS
                         </span>
                       </p>
                     </div>
@@ -109,7 +109,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper brain-game">
                     <div className="modal-content-panel">
-                      <h5>HOST GAME</h5>
+                      <h5>HOST / STAKE</h5>
                       <ol>
                         <li>Set a global Bet Amount</li>
                         <li>Set Payout for an Automatic cash out (optional)</li>
@@ -117,7 +117,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN GAME</h5>
+                      <h5>JOIN STAKE</h5>
                       <ol>
                         <li>Try to Win</li>
                       </ol>
@@ -127,16 +127,16 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>£5</span>
+                        <span style={{ color: '#b52c22' }}>5  RPS</span>
                       </p>
                       <p>
                         Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>Automatic(£30)</span>
+                        <span style={{ color: '#f6b22a' }}>Automatic(30 RPS)</span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          £29.70 [£30 * 0.99]
+                          30 RPS
                         </span>
                       </p>
                     </div>
@@ -154,7 +154,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper quick-shoot">
                     <div className="modal-content-panel">
-                      <h5>HOST GAME</h5>
+                      <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
                           Add boxes by setting the <u>Prize</u> (or Empty) and{' '}
@@ -168,7 +168,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN GAME</h5>
+                      <h5>JOIN STAKE</h5>
                       <ol>
                         <li>Open a box and hope to win a Prize</li>
                       </ol>
@@ -179,25 +179,25 @@ class HowToPlayModal extends Component {
                       <p>
                         The following boxes are set (Prize/Price):{' '}
                         <span style={{ color: '#b52c22' }}>
-                          £25/£4, £0/£6, £0/£10
+                          25 RPS/4 RPS, 0 RPS/6 RPS, 0 RPS/10 RPS
                         </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          Automatic(£41) [£25 + £6 + £10]
+                          Automatic(RPS 41) [RPS 25 + RPS 6 + RPS 10]
                         </span>
                       </p>
                       <p>
                         Host Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          £38.95 [£41 * 0.99]
+                          41 RPS
                         </span>
                       </p>
                       <p>
                         <i>
-                          If the £25 Prize box is opened, the host still
-                          receives the £4 (Price).
+                          If the 25 RPS Prize box is opened, the host still
+                          receives the 4 RPS (Price).
                         </i>
                       </p>
                     </div>
@@ -217,7 +217,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
-                      <h5>HOST GAME</h5>
+                      <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
                           Pick Your Number (Your Bet Amount): 1-10 or 10-100
@@ -226,7 +226,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN GAME</h5>
+                      <h5>JOIN STAKE</h5>
                       <ol>
                         <li>Guess the Host's Number</li>
                       </ol>
@@ -236,20 +236,20 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Host's Number (Bet Amount) ={' '}
-                        <span style={{ color: '#b52c22' }}>£7</span>
+                        <span style={{ color: '#b52c22' }}>7 RPS</span>
                       </p>
                       <p>
                         Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>Automatic(£30)</span>
+                        <span style={{ color: '#f6b22a' }}>Automatic(30 RPS)</span>
                       </p>
                       <p>
-                        Guesses (in order): 1, 2,10,9,5,8-{' '}
+                        Guesses (in order): 1, 2, 10, 9, 5, 8-{' '}
                         <i>*Game ENDs automatically*</i>
                       </p>
                       <p>
                         Host Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          £41.58 [£42 * 0.99]
+                          42 RPS
                         </span>
                       </p>
                     </div>
@@ -267,7 +267,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper rps">
                     <div className="modal-content-panel">
-                      <h5>HOST GAME</h5>
+                      <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
                           Set the Game Type (Freeplay to allow players to bet
@@ -281,7 +281,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN GAME</h5>
+                      <h5>JOIN STAKE</h5>
                       <ol>
                         <li>
                           Rock BEATS Scissors, Paper BEATS Rock and Scissors
@@ -294,12 +294,12 @@ class HowToPlayModal extends Component {
                       <p>Game Type = Freeplay</p>
                       <p>
                         Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>£50</span>
+                        <span style={{ color: '#b52c22' }}>50 RPS</span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          £99 [£100 * 0.99]
+                          100 RPS
                         </span>
                       </p>
                     </div>
@@ -384,7 +384,7 @@ class HowToPlayModal extends Component {
                     <div className="modal-content-panel">
                       <p>
                         For any technical/general problems, please contact{' '}
-                        <u style={{ color: '#f5b22d' }}>online@rpsbet.com</u>.
+                        <u style={{ color: '#f5b22d' }}>mobyfatdick@protonmail.com</u>.
                       </p>
                     </div>
                   </div>
@@ -408,6 +408,7 @@ class HowToPlayModal extends Component {
               <a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://twitter.com/rpsbet">TWITTER</a>
+              <a href="https://twitter.com/rps_finance">TWITTER</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">
                 YOUTUBE
@@ -421,7 +422,7 @@ class HowToPlayModal extends Component {
               <br />
             </div>
             <div className="game_footer text-center">
-              <span>All Rights Reserved, </span>RPSBet © 2021{' '}
+              <span>All Rights Reserved, </span>RPS Finance © 2022{' '}
               <a
                 href="#privacy"
                 id="privacy"
