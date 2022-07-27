@@ -27,7 +27,7 @@ class AdvancedSettings extends Component {
 						<button className={(!this.props.endgame_type ? ' active' : '')} onClick={() => { this.props.onChangeState({endgame_type: false}); }}>Manual</button>
 						<button className={(this.props.endgame_type ? ' active' : '')} onClick={() => { this.props.onChangeState({endgame_type: true}); }}>Automatic</button>
 						<div className={`edit-amount-panel ${this.props.endgame_type ? '' : 'hidden'}`}>
-							<span>£</span>
+							<span>RPS </span>
 							<input type="text" pattern="[0-9]*" name="endgame_amount" id="endgame_amount" 
 								value={this.props.endgame_amount} 
 								onChange={(e) => {this.props.onChangeState({endgame_amount: e.target.value})}} 
@@ -44,7 +44,7 @@ class AdvancedSettings extends Component {
 					<label className={"radio-inline" + (this.props.is_anonymous === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: true}); }}>Yes</label>
 					<label className={"radio-inline" + (this.props.is_anonymous === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: false}); }}>No</label>
 				</div>
-				<div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. £0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your £0.10 back.</div> */}
+				<div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. RPS 0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your RPS 0.10 back.</div> */}
 			</div>
 		);
 	}

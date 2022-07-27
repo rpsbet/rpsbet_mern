@@ -80,11 +80,11 @@ class MysteryBox extends Component {
         this.props.onChangeState({
             box_list: box_list,
             bet_amount: bet_amount,
-            max_return: max_return['max_return'] + " * 0.95",
+            max_return: max_return['max_return']/* + " * 0.95" */,
             max_prize: max_return['max_prize'],
             endgame_amount: max_return['max_return'],
             lowest_box_price: max_return['lowest_box_price'],
-            public_bet_amount: (max_return['lowest_box_price'] === max_return['highest_box_price'] ? `£${max_return['lowest_box_price']}` : `£${max_return['lowest_box_price']} - £${max_return['highest_box_price']}`)
+            public_bet_amount: (max_return['lowest_box_price'] === max_return['highest_box_price'] ? `RPS ${max_return['lowest_box_price']}` : `RPS ${max_return['lowest_box_price']} - RPS ${max_return['highest_box_price']}`)
         });
     }
 
@@ -98,11 +98,11 @@ class MysteryBox extends Component {
         this.props.onChangeState({
             box_list: box_list,
             bet_amount: bet_amount,
-            max_return: max_return['max_return'] + " * 0.95",
+            max_return: max_return['max_return']/* + " * 0.95", */
             max_prize: max_return['max_prize'],
             endgame_amount: max_return['max_return'],
             lowest_box_price: max_return['lowest_box_price'],
-            public_bet_amount: (max_return['lowest_box_price'] === max_return['highest_box_price'] ? `£${max_return['lowest_box_price']}` : `£${max_return['lowest_box_price']} - £${max_return['highest_box_price']}`)
+            public_bet_amount: (max_return['lowest_box_price'] === max_return['highest_box_price'] ? `RPS ${max_return['lowest_box_price']}` : `RPS ${max_return['lowest_box_price']} - RPS ${max_return['highest_box_price']}`)
         });
     }
 
@@ -119,7 +119,7 @@ class MysteryBox extends Component {
                     {this.props.box_list.map((row, key) => (
                         <div className="box" key={key}>
                             <i title="Delete Box?" onClick={this.onRemoveBox} index={key} >-</i>
-                            <span>{'£' + row.box_prize} / {'£' + row.box_price}</span>
+                            <span>{row.box_prize + ' RPS'} / {row.box_price + ' RPS'}</span>
                         </div>
                     ), this)}
                 </div>
@@ -128,21 +128,21 @@ class MysteryBox extends Component {
                         <div>
                             <div>Box Prize</div>
                             <div className="edit-amount-panel">
-                                <span>£</span>
                                 <input type="text" pattern="[0-9]*" name="new_box_prize" id="new_box_prize"  maxLength="5"
                                     value={this.state.new_box_prize} 
                                     onChange={this.onChangeNewBoxPrize}
                                     placeholder="Your Bet Amount" />
+                                    <span> RPS</span>
                             </div>
                         </div>
                         <div>
                             <div>Box Price</div>
                             <div className="edit-amount-panel">
-                                <span>£</span>
                                 <input type="text" pattern="[0-9]*" name="new_box_price" id="new_box_price"  maxLength="5"
                                     value={this.state.new_box_price} 
                                     onChange={this.onChangeNewBoxPrice}
                                     placeholder="Public Bet Amount" />
+                                    <span> RPS</span>
                             </div>
                         </div>
                     </div>

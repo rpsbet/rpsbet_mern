@@ -77,7 +77,7 @@ class QuickShoot extends Component {
         e.preventDefault();
         
         if (this.props.creator_id === this.props.user_id) {
-            alertModal(this.props.isDarkMode, `Oops! This game is yours. What's the point?!`)
+            alertModal(this.props.isDarkMode, `Oops! This is your Stake. What's the point?!`)
             return;
         }
 
@@ -115,12 +115,12 @@ class QuickShoot extends Component {
         return (
             <div className="game-page">
                 <div className="page-title">
-                    <h2>Join Game - QuickShoot</h2>
+                    <h2>Join Stake - QuickShoot</h2>
                 </div>
 				<div className="game-contents">
                     <div className="pre-summary-panel">
-                        <div className="your-bet-amount">Bet Amount : £{updateDigitToPoint2(this.props.bet_amount)}</div>
-                        <div className="your-max-return">Potential Return : £{updateDigitToPoint2(host_bet * this.props.qs_game_type * 0.95)}</div>
+                        <div className="your-bet-amount">Bet Amount : {updateDigitToPoint2(this.props.bet_amount)} RPS</div>
+                        <div className="your-max-return">Potential Return : {updateDigitToPoint2(host_bet * this.props.qs_game_type /* 0.95 */)} RPS</div>
                     </div>
                     <div className="game-info-panel">
                         <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>

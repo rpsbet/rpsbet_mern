@@ -90,7 +90,7 @@ class MyGamesTable extends Component {
         }}
       >
         <img src={`../img/gametype/icons/All.svg`} alt="" />
-        <div>All Games</div>
+        <div>All Stakes</div>
       </div>
     ];
 
@@ -173,7 +173,7 @@ class MyGamesTable extends Component {
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}
           >
-            + Host Game
+            + STAKE
           </button>
         </div>
         <div className="game-type-container">
@@ -197,10 +197,10 @@ class MyGamesTable extends Component {
           )}
           {this.props.myGames.length === 0 ? (
             <div className="dont-have-game-msg">
-              <div>You don't have any games right now.</div>
+              <div>You don't have any stakes right now.</div>
               <span>
-                To Create a New Game, Choose a Gamemode <br />
-                then "+ HOST GAME"
+                To Create a New Stake, Choose a Gamemode <br />
+                then "+ STAKE"
               </span>
             </div>
           ) : (
@@ -225,13 +225,13 @@ class MyGamesTable extends Component {
                     </div>
                     <div className="table-cell bet-info">
                       <span className="bet-pr">
-                        {'£' +
+                        {'RPS ' +
                           updateDigitToPoint2(row.bet_amount) +
-                          ' / £' +
+                          ' / RPS ' +
                           updateDigitToPoint2(row.pr)}
                       </span>
                       <span className="end-amount">
-                        {'£' + updateDigitToPoint2(row.endgame_amount)}
+                        {'RPS ' + updateDigitToPoint2(row.endgame_amount)}
                       </span>
                     </div>
                     <div className="table-cell winnings">
@@ -248,7 +248,7 @@ class MyGamesTable extends Component {
                         }}
                         _id={row._id}
                       >
-                        End
+                        UNSTAKE
                       </button>
                     </div>
                   </div>
@@ -265,7 +265,7 @@ class MyGamesTable extends Component {
                         }}
                         _id={row._id}
                       >
-                        End
+                        UNSTAKE
                       </button>
                     </div>
                   </div>

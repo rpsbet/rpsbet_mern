@@ -50,9 +50,9 @@ class PrivacyModal extends Component {
                     <div>
                         <h2>Privacy Policy</h2>
                         <br/>
-                        <h5>Last updated: 22nd August 2019</h5>
+                        <h5>Last updated: 28th July 2022</h5>
                         <br/>
-                        “RPS Bet,” ("us", "we", or "our") operates https://rpsbet.com (the "Site"). This page informs you of our policies regarding the collection, use and disclosure of Personal Information we receive from users of the Site. We use your Personal Information only for providing and improving the Site. By using the Site, you agree to the collection and use of information in accordance with this policy. If you do not want RPS Bet to collect, store, use, or share your information in the ways described in this Privacy Policy, you may not play RPS Bet games or use RPS Bet’s other Services. For purposes of data protection laws, RPS Bet is the “data controller” of your personal information.
+                        “RPS Finance,” ("us", "we", or "our") operates https://rpsbet.io (the "Site"). This page informs you of our policies regarding the collection, use and disclosure of Personal Information we receive from users of the Site. We use your Personal Information only for providing and improving the Site. By using the Site, you agree to the collection and use of information in accordance with this policy. If you do not want RPS Bet to collect, store, use, or share your information in the ways described in this Privacy Policy, you may not play RPS Bet games or use RPS Bet’s other Services. For purposes of data protection laws, RPS Bet is the “data controller” of your personal information.
                         <br/><br/>
                         <h5>Information Collection And Use</h5>
                         While using our Site, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you. This only includes your email address. Personally identifiable information may include, but is not limited to your name ("Personal Information"). We do not collect payment details as this is done through third-party payment merchants including PayPal (https://www.paypal.com/) and Stripe (https://.stripe.com/).

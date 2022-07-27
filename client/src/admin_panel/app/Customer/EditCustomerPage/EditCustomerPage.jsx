@@ -80,7 +80,7 @@ class EditCustomerPage extends Component {
     e.preventDefault();
     console.log(this.state);
 
-    if (!window.confirm('Do you want to delete this customer? Balance: £' + this.state.balance)) {
+    if (!window.confirm('Do you want to delete this customer? Balance: RPS ' + this.state.balance)) {
       return;
     }
 

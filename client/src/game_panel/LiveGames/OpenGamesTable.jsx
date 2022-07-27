@@ -32,7 +32,7 @@ class OpenGamesTable extends Component {
     const bet_amount = e.target.getAttribute('bet_amount');
 
     if (!this.props.isAuthenticated) {
-      alertModal(this.props.isDarkMode, `Please Login to join this game!`);
+      alertModal(this.props.isDarkMode, `Login to join this Stake!`);
       return;
     }
 
@@ -44,7 +44,7 @@ class OpenGamesTable extends Component {
     if (e.target.getAttribute('room_status') === 'finished') {
       alertModal(
         this.props.isDarkMode,
-        `You can't join the game. This game has been finished.`
+        `You can't join the stake as it has ended.`
       );
       return;
     }
@@ -120,7 +120,7 @@ class OpenGamesTable extends Component {
         }}
       >
         <img src={`../img/gametype/icons/All.svg`} alt="" />
-        <div>All Games</div>
+        <div>All Stakes</div>
       </div>
     ];
 
@@ -193,7 +193,7 @@ class OpenGamesTable extends Component {
         <div className="table main-game-table">
           {this.props.roomList.length === 0 && (
             <div className="dont-have-game-msg">
-              <div>There aren't any games right now.</div>
+              <div>There aren't any stakes right now.</div>
             </div>
           )}
           {this.props.roomList.map(
@@ -233,11 +233,11 @@ class OpenGamesTable extends Component {
                   </div>
                   <div className="table-cell desktop-only cell-amount-info">
                     {row.game_type.game_type_name === 'Spleesh!'
-                      ? '£' +
+                      ? 'RPS ' +
                         row.spleesh_bet_unit +
-                        ' - £' +
+                        ' - RPS ' +
                         row.spleesh_bet_unit * 10
-                      : '£' + updateDigitToPoint2(row.user_bet)}{' '}
+                      : 'RPS ' + updateDigitToPoint2(row.user_bet)}{' '}
                     / {row.winnings}
                   </div>
                   <div className="table-cell cell-action">
@@ -270,7 +270,7 @@ class OpenGamesTable extends Component {
                           className="lock-icon"
                         />
                       )}
-                      Join Game
+                      Join Stake
                     </button>
                   </div>
                 </div>
@@ -294,10 +294,10 @@ class OpenGamesTable extends Component {
                     ></i>
                   </div>
                   <div className="table-cell cell-amount-info">
-                    {'£' +
-                      updateDigitToPoint2(
+                    {updateDigitToPoint2(
                         row.user_bet
-                      ) /*+ " / £" + row.pr*/}{' '}
+                      ) /*+ " / RPS " + row.pr*/}{' '}
+                      + ' RPS'
                     / {row.winnings}
                   </div>
                 </div>
