@@ -260,7 +260,7 @@ router.get('/get-room-statistics', auth, async (req, res) => {
       const boxPrices = [];
 
       for (box of boxList) {
-        boxPrices.push(`[£${box.box_price}, £${box.box_prize}]`);
+        boxPrices.push(`[RPS ${box.box_price}, RPS ${box.box_prize}]`);
       }
 
       room_info.push({_id: room._id, created_at: room.created_at, actor: room.creator.username, action: 'Create boxes. ' + boxPrices.join(', ')});
@@ -269,17 +269,17 @@ router.get('/get-room-statistics', auth, async (req, res) => {
         if (log.game_result == -100) {
           room_info.push({_id: log._id, created_at: log.created_at, actor: log.joined_user.username, action: `End Game by Creator`})
         } else {
-          room_info.push({_id: log._id, created_at: log.created_at, actor: log.joined_user.username, action: `Open a box. [£${log.bet_amount}, £${log.game_result}]`})
+          room_info.push({_id: log._id, created_at: log.created_at, actor: log.joined_user.username, action: `Open a box. [RPS ${log.bet_amount}, RPS ${log.game_result}]`})
         }
       }
     } else {
-      room_info.push({_id: room._id, created_at: room.created_at, actor: room.creator.username, bet_amount: '£' + room.bet_amount, action: 'Create Room'});
+      room_info.push({_id: room._id, created_at: room.created_at, actor: room.creator.username, bet_amount: 'RPS ' + room.bet_amount, action: 'Create Room'});
 
       for (log of gameLogs) {
         if (log.game_result == -100) {
           room_info.push({_id: log._id, created_at: log.created_at, actor: log.joined_user.username, action: `End Game by Creator`})
         } else {
-          room_info.push({_id: log._id, created_at: log.created_at, actor: log.joined_user.username, action: `Bet £${log.bet_amount} and ${log.game_result == 1 ? 'Win' : (log.game_result == -1 ? 'Lose' : 'Draw')}`});
+          room_info.push({_id: log._id, created_at: log.created_at, actor: log.joined_user.username, action: `Bet RPS ${log.bet_amount} and ${log.game_result == 1 ? 'Win' : (log.game_result == -1 ? 'Lose' : 'Draw')}`});
         }
       }
     }

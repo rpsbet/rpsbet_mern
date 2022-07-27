@@ -110,7 +110,7 @@ class RPS extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `Oops! This game is yours. What's the point?!`
+        `Oops! This is your Stake. What's the point?!`
       );
       return;
     }
@@ -144,11 +144,11 @@ class RPS extends Component {
         <div className="game-contents">
           <div className="pre-summary-panel">
             <div className="your-bet-amount">
-              Bet Amount : £{this.props.bet_amount}
+              Bet Amount : {this.props.bet_amount} RPS
             </div>
             <div className="your-max-return">
-              Potential Return : £
-              {updateDigitToPoint2(this.props.bet_amount * 2 * 0.95)}
+              Potential Return : RPS 
+              {updateDigitToPoint2(this.props.bet_amount * 2 /* * 0.95 */)}
             </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"

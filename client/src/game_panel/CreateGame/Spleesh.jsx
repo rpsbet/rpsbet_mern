@@ -12,7 +12,7 @@ class Spleesh extends Component {
 						max_return: this.props.spleesh_bet_unit * (55 - i)
 					}); }} key={i}
 				>
-					£{i * this.props.spleesh_bet_unit}
+					RPS {i * this.props.spleesh_bet_unit}
 				</button>);
 		}
 		return panel;
@@ -29,7 +29,7 @@ class Spleesh extends Component {
 								this.props.onChangeState({spleesh_bet_unit: 1, bet_amount: 1, max_return: 54, endgame_amount: 54});
 							}}
 						>
-								£1 - £10
+								1 RPS - 10 RPS
 						</button>
 						<button
 							className={(this.props.spleesh_bet_unit === 10 ? ' active' : '')}
@@ -37,7 +37,7 @@ class Spleesh extends Component {
 								this.props.onChangeState({spleesh_bet_unit: 10, bet_amount: 10, max_return: 540, endgame_amount: 540});
 							}}
 						>
-							£10 - £100
+							10 RPS - 100 RPS
 						</button>
 					</div>
 				</div>

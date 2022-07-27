@@ -66,7 +66,7 @@ class Spleesh extends Component {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
-            alertModal(this.props.isDarkMode, `Oops! This game is yours. What's the point?!`)
+            alertModal(this.props.isDarkMode, `Oops! This is your Stake. What's the point?!`)
             return;
         }
 
@@ -94,7 +94,7 @@ class Spleesh extends Component {
 						endgame_amount: this.props.spleesh_bet_unit * (55 - i),
 					}); }} key={i}
 				>
-					£{updateDigitToPoint2(i * this.props.spleesh_bet_unit)}
+					RPS {updateDigitToPoint2(i * this.props.spleesh_bet_unit)}
 				</button>);
 		}
 		return panel;
@@ -104,19 +104,19 @@ class Spleesh extends Component {
         let previous_guesses = '';
         let pot = 0;
         for (let i = 0; i < this.props.game_log_list.length; i++) {
-            previous_guesses += (i === 0 ? '' : ', ') + '£' + this.props.game_log_list[i].bet_amount;
+            previous_guesses += (i === 0 ? '' : ', ') + 'RPS ' + this.props.game_log_list[i].bet_amount;
             pot += this.props.game_log_list[i].bet_amount;
         };
 
         return (
             <div className="game-page">
                 <div className="page-title">
-                    <h2>Join Game - <i>Spleesh!</i></h2>
+                    <h2>Join Stake - <i>Spleesh!</i></h2>
                 </div>
 				<div className="game-contents">
                     <div className="pre-summary-panel">
-                        <div className="your-bet-amount">Bet Amount : £{this.state.bet_amount}</div>
-                        <div className="your-max-return">Potential Return : £{updateDigitToPoint2((pot + (this.state.bet_amount * 2)) * 0.9)}</div>
+                        <div className="your-bet-amount">Bet Amount : {this.state.bet_amount} RPS</div>
+                        <div className="your-max-return">Potential Return : {updateDigitToPoint2((pot + (this.state.bet_amount * 2)) /* 0.9 */)} RPS</div>
                     </div>
                     <div className="game-info-panel">
                         <h3 className="game-sub-title">Previous Guesses</h3>

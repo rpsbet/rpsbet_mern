@@ -29,7 +29,7 @@ class RPS extends Component {
     this.props.onChangeState({
       rps_list: newArray,
       bet_amount: bet_amount,
-      max_return: bet_amount * 2 * 0.95
+      max_return: bet_amount * 2 /* 0.95 */
     });
   };
 
@@ -44,7 +44,7 @@ class RPS extends Component {
     this.props.onChangeState({
       rps_list: newArray,
       bet_amount: bet_amount,
-      max_return: bet_amount * 2 * 0.95
+      max_return: bet_amount * 2 /* 0.95 */
     });
     this.setState({
       selected_rps: 'R',

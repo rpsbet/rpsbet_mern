@@ -97,7 +97,7 @@ class BrainGame extends Component {
         e.preventDefault();
 
         if (this.props.creator_id === this.props.user_id) {
-            alertModal(this.props.isDarkMode, `Oops! This game is yours. What's the point?!`)
+            alertModal(this.props.isDarkMode, `Oops! This is your Stake. What's the point?!`)
             return;
         }
 
@@ -231,9 +231,9 @@ class BrainGame extends Component {
                     </div>
                     <div className="game-contents">
                         <div className="pre-summary-panel">
-                            <div className="your-bet-amount">Bet Amount : £{updateDigitToPoint2(this.props.bet_amount)}</div>
-                            <div className="public-max-return">Pot : £{updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)}</div>
-                            <div className="your-max-return">Potential Return : £{updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) * 0.9)}</div>
+                            <div className="your-bet-amount">Bet Amount : RPS {updateDigitToPoint2(this.props.bet_amount)}</div>
+                            <div className="public-max-return">Pot : RPS {updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)}</div>
+                            <div className="your-max-return">Potential Return : {updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) /* 0.9 */)} RPS</div>
                         </div>
                         <div className="game-info-panel">
                             <h3 className="game-sub-title">Game Type:</h3>

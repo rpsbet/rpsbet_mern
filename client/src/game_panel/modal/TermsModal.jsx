@@ -50,9 +50,9 @@ class TermsModal extends Component {
                     <div>
                         <h2>Terms of Service</h2>
                         <br/>
-                        <h5>Last Updated: 7th April 2019</h5>
+                        <h5>Last Updated: 28th July 2022</h5>
                         <br/>
-                        <h5>Welcome to RPS Bet!</h5>
+                        <h5>Welcome to RPSBET.IO!</h5>
                         <br/>
                         These terms and conditions outline the rules and regulations for the use of RPS Bet's site, located at rpsbet.com. By accessing this site we assume you accept these terms and conditions. Do not continue to use RPS Bet if you do not agree to take all of the terms and conditions stated on this page. The following terminology applies to these Terms and Conditions, Privacy Statement and Disclaimer Notice and all Agreements: "Client", "You" and "Your" refers to you, the person log on this site and compliant to the Company’s terms and conditions. "The Company", "Ourselves", "We", "Our" and "Us", refers to our Company. "Party", "Parties", or "Us", refers to both the Client and ourselves. All terms refer to the offer, acceptance and consideration of payment necessary to undertake the process of our assistance to the Client in the most appropriate manner for the express purpose of meeting the Client’s needs in respect of provision of the Company’s stated services, in accordance with and subject to, prevailing law of the United Kingdom. Any use of the above terminology or other words in the singular, plural, capitalization and/or he/she or they, are taken as interchangeable and therefore as referring to same.<br/>
                         <br/>

@@ -32,7 +32,7 @@ class CreateGame extends Component {
 			max_return: 0,
 			max_prize: 0,
 			lowest_box_price: 0,
-			public_bet_amount: "£0",
+			public_bet_amount: "RPS 0",
 			is_private: false,
 			is_anonymous: false,
 			room_password: '',
@@ -75,7 +75,7 @@ class CreateGame extends Component {
 			max_return: 0,
 			max_prize: 0,
 			lowest_box_price: 0,
-			public_bet_amount: "£0",
+			public_bet_amount: "0 RPS",
 		};
 
 		if (gameTypeName === "Spleesh!") {
@@ -96,13 +96,13 @@ class CreateGame extends Component {
 			newState = {
 				...newState,
 				game_type: 3,
-				max_return: "∞ * 0.9"
+				max_return: "∞"
 			};
 		} else if (gameTypeName === "Quick Shoot") {
 			newState = {
 				...newState,
 				game_type: 5,
-				public_bet_amount: "£1",
+				public_bet_amount: "1 RPS",
 				max_return: "2",
 				qs_nation: Math.floor(Math.random() * 5)
 			};
@@ -134,7 +134,7 @@ class CreateGame extends Component {
 
 	onStartBrainGame = (e) => {
 		e.preventDefault();
-		confirmModalCreate(this.props.isDarkMode, 'Do you want to create new game now?', 'Okay', 'Cancel', ()=>{
+		confirmModalCreate(this.props.isDarkMode, 'Do you want to create new stake now?', 'Okay', 'Cancel', ()=>{
 			this.setState({
 				step: 5,
 				isPlayingBrain: true
@@ -224,7 +224,7 @@ class CreateGame extends Component {
 
 	onCreateRoom = async () => {
 		console.log("CreateRoom");
-		confirmModalCreate(this.props.isDarkMode, 'Do you want to create new game now?', 'Okay', 'Cancel', async ()=>{
+		confirmModalCreate(this.props.isDarkMode, 'Do you want to create new stake now?', 'Okay', 'Cancel', async ()=>{
 			await this.props.createRoom(this.state);
 		})
 	}
@@ -307,7 +307,7 @@ class CreateGame extends Component {
 		return (
 			<div className="game-page">
 				<div className="page-title">
-					<h2>Host / Create a New Game - <br />({this.state.game_mode})</h2>
+					<h2>Host / Create a New Stake - <br />({this.state.game_mode})</h2>
 					{
 						(this.state.step === 5 && this.state.game_mode === "Brain Game" && this.state.isPlayingBrain) ? 
 							<Summary 
@@ -323,7 +323,7 @@ class CreateGame extends Component {
 								public_bet_amount={this.state.public_bet_amount}
 							/>
 							:
-							<span>Click ‘HELP’ at the top for more game instructions.</span>
+							<span>Click ‘HELP’ at the top for more game help.</span>
 					}
 				</div>
 				<div className="game-contents">

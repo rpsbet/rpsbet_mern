@@ -207,51 +207,51 @@ const convertGameLogToHistoryStyle = async (gameLogList) => {
 	
 			if (gameLog['game_type']['game_type_name'] === 'RPS') {
 				if (gameLog.game_result === 1) {
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] won [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)}
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] won [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)}
 						</span>] against ${creator_avatar}[${gameLog['creator']['username']}] in [${room_name}]`;
 				} else if (gameLog.game_result === 0) {
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] split [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)}
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] split [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)}
 						</span>] with ${creator_avatar}[${gameLog['creator']['username']}] in [${room_name}]`;
 				} else {
-					temp.history = `${creator_avatar}[${gameLog['creator']['username']}] won [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)}
+					temp.history = `${creator_avatar}[${gameLog['creator']['username']}] won [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)}
 						</span>] against ${joined_user_avatar}[${gameLog['joined_user']['username']}] in [${room_name}]`;
 				}
 			} else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
 				if (gameLog.game_result === 1) {
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] scored a goal and won [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['room']['bet_amount'] * gameLog['room']['qs_game_type'] * commissionRate)} 
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] scored a goal and won [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['room']['bet_amount'] * gameLog['room']['qs_game_type'] * commissionRate)} 
 						</span>] in [${room_name}]`;
 				} else {
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] missed his shot and lost [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['room']['user_bet'])}</span>] in [${room_name}]`;
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] missed his shot and lost [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['room']['user_bet'])}</span>] in [${room_name}]`;
 				}
 			} else if (gameLog['game_type']['game_type_name'] === 'Spleesh!') {
 				if (gameLog.game_result === 1) {
 					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] guessed [<span style='color: #02c526;'>${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
-						and won [<span style='color: #02c526;'>£${updateDigitToPoint2((gameLog['room']['host_pr'] + gameLog['room']['bet_amount']) * commissionRate)}</span>] in [${room_name}]`;
+						and won [<span style='color: #02c526;'>RPS ${updateDigitToPoint2((gameLog['room']['host_pr'] + gameLog['room']['bet_amount']) * commissionRate)}</span>] in [${room_name}]`;
 				} else if (gameLog.game_result === -100) { //end game
-					temp.history = `${creator_avatar}[${gameLog['creator']['username']}] ended [${room_name}] and won [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'])}</span>]`;
+					temp.history = `${creator_avatar}[${gameLog['creator']['username']}] ended [${room_name}] and won [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'])}</span>]`;
 				} else {
 					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] guessed [<span style='color: #02c526;'>${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
 						and lost in [${room_name}]`;
 				}
 			} else if (gameLog['game_type']['game_type_name'] === 'Mystery Box') {
 				if (gameLog.game_result === 0) {
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] opened a box [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] opened a box [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
 						and won [<span style='color: #02c526;'>Nothing</span>] in [${room_name}]`;
 				} else if (gameLog.game_result === -100) { //end game
-					temp.history = `${creator_avatar}[${gameLog['creator']['username']}] ended [${room_name}] and won [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'] * commissionRate)}</span>]`;
+					temp.history = `${creator_avatar}[${gameLog['creator']['username']}] ended [${room_name}] and won [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'] * commissionRate)}</span>]`;
 				} else {
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] opened a box [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
-						and won [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['game_result'] * commissionRate)}</span>] in [${room_name}]`;
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] opened a box [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
+						and won [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['game_result'] * commissionRate)}</span>] in [${room_name}]`;
 				}
 			} else if (gameLog['game_type']['game_type_name'] === 'Brain Game') {
 				if (gameLog.game_result === 0) {   //draw          Draw, No Winner! PR will be split.
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] bet [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
-						and split [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['room']['pr'] * commissionRate)}</span>] in [${room_name}]`;
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] bet [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
+						and split [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['room']['pr'] * commissionRate)}</span>] in [${room_name}]`;
 				} else if (gameLog.game_result === 1) { //win       WOW, What a BRAIN BOX - You WIN!
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] bet [<span style='color: #02c526;'>£${gameLog['bet_amount']}</span>] 
-						and won [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['room']['pr'] * commissionRate)}</span>] in [${room_name}]`;
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] bet [<span style='color: #02c526;'>RPS ${gameLog['bet_amount']}</span>] 
+						and won [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['room']['pr'] * commissionRate)}</span>] in [${room_name}]`;
 				} else {    //failed    Oops, back to school for you loser!!
-					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] bet [<span style='color: #02c526;'>£${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
+					temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']}] bet [<span style='color: #02c526;'>RPS ${updateDigitToPoint2(gameLog['bet_amount'])}</span>] 
 						and lost in [${room_name}]`;
 				}
 			}
@@ -353,11 +353,11 @@ const getRoomList = async (pagination, page, game_type) => {
 			};
 	
 			if (temp.game_type.game_type_id === 1) {
-				temp.winnings = "£" + updateDigitToPoint2(room['user_bet'] * 2 * commissionRate);
+				temp.winnings = "RPS " + updateDigitToPoint2(room['user_bet'] * 2 * commissionRate);
 			} else if (temp.game_type.game_type_id === 2) {
 				const gameLogList = await GameLog.find({room: room}).sort({bet_amount: 'desc'});
 				if (!gameLogList || gameLogList.length == 0) {
-					temp.winnings = "£" + temp.spleesh_bet_unit * 10;
+					temp.winnings = "RPS " + temp.spleesh_bet_unit * 10;
 				} else {
 					for (let i = 10; i > 0; i--) {
 						let is_exist = false;
@@ -369,17 +369,17 @@ const getRoomList = async (pagination, page, game_type) => {
 						}
 
 						if (!is_exist) {
-							temp.winnings = "£" + (i * temp.spleesh_bet_unit);
+							temp.winnings = "RPS " + (i * temp.spleesh_bet_unit);
 							break;
 						}
 					}
 				}
 			} else if (temp.game_type.game_type_id === 3) {
-				temp.winnings = "£" + updateDigitToPoint2((room['pr'] + room['bet_amount']) * commissionRate);
+				temp.winnings = "RPS " + updateDigitToPoint2((room['pr'] + room['bet_amount']) * commissionRate);
 			} else if (temp.game_type.game_type_id === 4) {
-				temp.winnings = "£" + updateDigitToPoint2(room['pr'] * commissionRate);
+				temp.winnings = "RPS " + updateDigitToPoint2(room['pr'] * commissionRate);
 			} else if (temp.game_type.game_type_id === 5) {
-				temp.winnings = "£" + updateDigitToPoint2(room['pr'] * commissionRate);
+				temp.winnings = "RPS " + updateDigitToPoint2(room['pr'] * commissionRate);
 			}
 	
 			result.push(temp);
@@ -603,16 +603,16 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
 			}
 
 			if (gameLogCount === 0) {
-				temp.winnings = "£" + temp.bet_amount;
+				temp.winnings = "RPS " + temp.bet_amount;
 			} else if (temp.game_type.game_type_id === 2) { // Spleesh!
 				temp.pr = temp.pr === 0 ? temp.bet_amount : temp.pr;
-				temp.winnings = "£" + updateDigitToPoint2(temp.pr  * commissionRate);
+				temp.winnings = "RPS " + updateDigitToPoint2(temp.pr  * commissionRate);
 			} else if (temp.game_type.game_type_id === 3) { // Brain Game
-				temp.winnings = "£" + updateDigitToPoint2((room['pr'] + room['bet_amount']) * commissionRate);
+				temp.winnings = "RPS " + updateDigitToPoint2((room['pr'] + room['bet_amount']) * commissionRate);
 			} else if (temp.game_type.game_type_id === 4) { //Mytery Box
-				temp.winnings = "£" + updateDigitToPoint2(temp.pr * commissionRate);
+				temp.winnings = "RPS " + updateDigitToPoint2(temp.pr * commissionRate);
 			} else if (temp.game_type.game_type_id === 5) { // Quick Shoot
-				temp.winnings = "£" + updateDigitToPoint2(temp.pr * commissionRate);
+				temp.winnings = "RPS " + updateDigitToPoint2(temp.pr * commissionRate);
 			}
 
 			result.push(temp);
@@ -690,7 +690,7 @@ router.post('/end_game', auth, async (req, res) => {
 		if (gameLogCount === 0) {
 			newTransaction.amount += roomInfo['bet_amount'] * 100;
 
-			message.message = "I made £" + roomInfo['bet_amount'] + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+			message.message = "I made RPS " + roomInfo['bet_amount'] + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 		} else {
 			const commission = await getCommission();
 			const percent = 100 - commission;
@@ -699,23 +699,23 @@ router.post('/end_game', auth, async (req, res) => {
 			if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
 
-				message.message = "I made £" + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made RPS " + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 			} else if (roomInfo['game_type']['game_type_name'] === 'RPS') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
-				message.message = "I made £" + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made RPS " + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 			} else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
-				message.message = "I made £" + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made RPS " + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 			} else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
-				message.message = "I made £" + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made RPS " + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 			} else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
-				message.message = "I made £" + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made RPS " + roomInfo['host_pr'] + " * " + commissionRate + " from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 			}
 
 			newGameLog = new GameLog({
@@ -1025,18 +1025,18 @@ router.post('/bet', auth, async (req, res) => {
 					(bet_item.rps === 'S' && req.body.selected_rps == 'R') ) {
 					newGameLog.game_result = 1;
 					newTransactionJ.amount += bet_item.bet_amount * 2 * (100 - commission);
-					message.message = "I won £" + (bet_item.bet_amount * 2) + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+					message.message = "I won RPS " + (bet_item.bet_amount * 2) + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 				} else if (bet_item.rps === req.body.selected_rps) {
 					newGameLog.game_result = 0;
 					newTransactionJ.amount += bet_item.bet_amount * (100 - commission);
 					newTransactionC.amount += bet_item.bet_amount * (100 - commission);
 
-					message.message = "We split £" + (bet_item.bet_amount * 2) + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in our " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+					message.message = "We split RPS " + (bet_item.bet_amount * 2) + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in our " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 				} else {
 					newGameLog.game_result = -1;
 					newTransactionC.amount += bet_item.bet_amount * 2 * (100 - commission);
 
-					message.message = "I lost £" + bet_item.bet_amount + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+					message.message = "I lost RPS " + bet_item.bet_amount + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 				}
 
 				bet_item.joiner = req.user;
@@ -1063,13 +1063,13 @@ router.post('/bet', auth, async (req, res) => {
 				if (roomInfo.selected_qs_position !== req.body.selected_qs_position) {
 					newGameLog.game_result = 1;
 					newTransactionJ.amount += roomInfo['bet_amount'] * roomInfo['qs_game_type'] * (100 - commission);
-					message.message = "Your not the best keeper are you? I just won £" + (roomInfo['bet_amount'] * roomInfo['qs_game_type']) 
+					message.message = "Your not the best keeper are you? I just won RPS " + (roomInfo['bet_amount'] * roomInfo['qs_game_type']) 
 						+ " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 				} else {
 					newGameLog.game_result = -1;
 					newTransactionC.amount += roomInfo['bet_amount'] * roomInfo['qs_game_type'] * (100 - commission);
 
-					message.message = "The boots suck, I just lost £" + roomInfo['user_bet'] + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+					message.message = "The boots suck, I just lost RPS " + roomInfo['user_bet'] + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 				}
 
 				roomInfo.status = 'finished';
@@ -1086,10 +1086,10 @@ router.post('/bet', auth, async (req, res) => {
 
 					roomInfo.status = 'finished';
 					newGameLog.game_result = 1;
-					message.message = "I won £" + (roomInfo['host_pr'] + roomInfo['bet_amount']) + " * " + updateDigitToPoint2((100 - commission) / 100.0)
+					message.message = "I won RPS " + (roomInfo['host_pr'] + roomInfo['bet_amount']) + " * " + updateDigitToPoint2((100 - commission) / 100.0)
 						+ " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 				} else {
-					message.message = "I lost £" + req.body.bet_amount + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+					message.message = "I lost RPS " + req.body.bet_amount + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 					
 					newGameLog.game_result = -1;
 					if (roomInfo['endgame_type'] && roomInfo['host_pr'] >= roomInfo['endgame_amount']) {
@@ -1124,7 +1124,7 @@ router.post('/bet', auth, async (req, res) => {
 				if (selected_box.box_prize === 0) {
 					message.message = "I won NOTHING in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 				} else {
-					message.message = "I won £" + (selected_box.box_prize) + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " 
+					message.message = "I won RPS " + (selected_box.box_prize) + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " 
 						+ roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 				}
 
@@ -1154,7 +1154,7 @@ router.post('/bet', auth, async (req, res) => {
 					roomInfo.status = 'finished';
 					newTransactionC.amount += new_host_pr * (100 - commission);
 					
-					const messageC = "I made £" + new_host_pr + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " from ENDING " 
+					const messageC = "I made RPS " + new_host_pr + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " from ENDING " 
 						+ roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 					sendEndedMessageToJoiners(roomInfo._id, roomInfo['creator']['id'], messageC, roomInfo.is_anonymous);
 
@@ -1184,7 +1184,7 @@ router.post('/bet', auth, async (req, res) => {
 				roomInfo['host_pr'] += roomInfo['bet_amount'];
 				
 				if (roomInfo.brain_game_score == req.body.brain_game_score) {   //draw          Draw, No Winner! PR will be split.
-					message.message = "We split £" + (roomInfo['pr']) + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " 
+					message.message = "We split RPS " + (roomInfo['pr']) + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " 
 						+ roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 					
 					newTransactionJ.amount += roomInfo['pr'] * (100 - commission) / 2;
@@ -1193,7 +1193,7 @@ router.post('/bet', auth, async (req, res) => {
 					roomInfo.status = 'finished';
 					newGameLog.game_result = 0;
 				} else if (roomInfo.brain_game_score < req.body.brain_game_score) { //win       WOW, What a BRAIN BOX - You WIN!
-					message.message = "I won £" + roomInfo['pr'] + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " 
+					message.message = "I won RPS " + roomInfo['pr'] + " * " + updateDigitToPoint2((100 - commission) / 100.0) + " in " 
 						+ roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 					newTransactionJ.amount += roomInfo['pr'] * (100 - commission);
@@ -1201,7 +1201,7 @@ router.post('/bet', auth, async (req, res) => {
 					newGameLog.game_result = 1;
 					roomInfo.status = 'finished';
 				} else {    //failed    Oops, back to school for you loser!!
-					message.message = "I lost £" + (roomInfo['bet_amount']) + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+					message.message = "I lost RPS " + (roomInfo['bet_amount']) + " in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 					newGameLog.game_result = -1;
 					if (roomInfo['endgame_type'] && roomInfo['host_pr'] >= roomInfo['endgame_amount']) {

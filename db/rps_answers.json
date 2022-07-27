@@ -38268,7 +38268,7 @@
   "_id": {
     "$oid": "5e70dc1f0071e16fb82948fd"
   },
-  "answer": "£50,000",
+  "answer": "RPS 50,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38287,7 +38287,7 @@
   "_id": {
     "$oid": "5e70dc1f0071e16fb82948fe"
   },
-  "answer": "£12,500",
+  "answer": "RPS 12,500",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38306,7 +38306,7 @@
   "_id": {
     "$oid": "5e70dc1f0071e16fb82948ff"
   },
-  "answer": "£300,000",
+  "answer": "RPS 300,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38325,7 +38325,7 @@
   "_id": {
     "$oid": "5e70dc1f0071e16fb8294900"
   },
-  "answer": "£150,000",
+  "answer": "RPS 150,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38344,7 +38344,7 @@
   "_id": {
     "$oid": "5e70dd550071e16fb8294908"
   },
-  "answer": "£300,000",
+  "answer": "RPS 300,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38363,7 +38363,7 @@
   "_id": {
     "$oid": "5e70dd550071e16fb8294907"
   },
-  "answer": "£12,500",
+  "answer": "RPS 12,500",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38382,7 +38382,7 @@
   "_id": {
     "$oid": "5e70dd550071e16fb8294909"
   },
-  "answer": "£50,000",
+  "answer": "RPS 50,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38401,7 +38401,7 @@
   "_id": {
     "$oid": "5e70dd550071e16fb829490a"
   },
-  "answer": "£150,000",
+  "answer": "RPS 150,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38572,7 +38572,7 @@
   "_id": {
     "$oid": "5e70dd8a0071e16fb8294915"
   },
-  "answer": "£150,000",
+  "answer": "RPS 150,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38591,7 +38591,7 @@
   "_id": {
     "$oid": "5e70dd8a0071e16fb8294916"
   },
-  "answer": "£12,500",
+  "answer": "RPS 12,500",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38610,7 +38610,7 @@
   "_id": {
     "$oid": "5e70dd8a0071e16fb8294917"
   },
-  "answer": "£300,000",
+  "answer": "RPS 300,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -38629,7 +38629,7 @@
   "_id": {
     "$oid": "5e70dd8a0071e16fb8294918"
   },
-  "answer": "£50,000",
+  "answer": "RPS 50,000",
   "brain_game_type": {
     "$oid": "5e66cb9dd0c5d55d14b040ac"
   },
@@ -48319,7 +48319,7 @@
   "_id": {
     "$oid": "5f92025017d3b2144838c5df"
   },
-  "answer": "£30,000/month",
+  "answer": "RPS 30,000/month",
   "brain_game_type": {
     "$oid": "5f908981bca9c72ce05720a1"
   },
@@ -48338,7 +48338,7 @@
   "_id": {
     "$oid": "5f92025017d3b2144838c5e0"
   },
-  "answer": "£3,000,000/month",
+  "answer": "RPS 3,000,000/month",
   "brain_game_type": {
     "$oid": "5f908981bca9c72ce05720a1"
   },
@@ -48357,7 +48357,7 @@
   "_id": {
     "$oid": "5f92025017d3b2144838c5de"
   },
-  "answer": "£30/month",
+  "answer": "RPS 30/month",
   "brain_game_type": {
     "$oid": "5f908981bca9c72ce05720a1"
   },
@@ -48376,7 +48376,7 @@
   "_id": {
     "$oid": "5f92025017d3b2144838c5dd"
   },
-  "answer": "£3000/month",
+  "answer": "RPS 3000/month",
   "brain_game_type": {
     "$oid": "5f908981bca9c72ce05720a1"
   },

@@ -36,19 +36,19 @@ class DefaultBetAmountPanel extends Component {
                   this.props.onChangeState({
                     bet_amount: amount,
                     public_bet_amount:
-                      '£' + (this.props.qs_game_type - 1) * amount,
+                      'RPS ' + (this.props.qs_game_type - 1) * amount,
                     max_return: this.props.qs_game_type * amount
                   });
                 } else {
                   this.props.onChangeState({
                     bet_amount: amount,
-                    max_return: amount * 2 * 0.95
+                    max_return: amount * 2 /* * 0.95 */
                   });
                 }
               }}
               key={index}
             >
-              £{updateDigitToPoint2(amount)}
+              RPS {updateDigitToPoint2(amount)}
             </button>
           ))}
           <button
@@ -63,7 +63,7 @@ class DefaultBetAmountPanel extends Component {
         <div
           className={`edit-amount-panel ${this.state.is_other ? '' : 'hidden'}`}
         >
-          <span>£</span>
+          <span>RPS </span>
           <input
             type="text"
             pattern="[0-9]*"
@@ -77,7 +77,7 @@ class DefaultBetAmountPanel extends Component {
                 this.props.onChangeState({
                   bet_amount: parseInt(e.target.value) || '',
                   public_bet_amount:
-                    '£' +
+                    'RPS ' +
                     updateDigitToPoint2(
                       (this.props.qs_game_type - 1) *
                         (parseInt(e.target.value) || '')
@@ -87,7 +87,7 @@ class DefaultBetAmountPanel extends Component {
               } else {
                 this.props.onChangeState({
                   bet_amount: parseInt(e.target.value) || '',
-                  max_return: (parseInt(e.target.value) || 0) * 2 * 0.95
+                  max_return: (parseInt(e.target.value) || 0) * 2 /* * 0.95 */
                 });
               }
             }}
