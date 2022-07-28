@@ -185,7 +185,7 @@ class HowToPlayModal extends Component {
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          Automatic(RPS 41) [RPS 25 + RPS 6 + RPS 10]
+                          Automatic(41 RPS) [25 RPS + 6 RPS + 10 RPS]
                         </span>
                       </p>
                       <p>

@@ -481,7 +481,7 @@ class SiteWrapper extends Component {
                       id="btn-signup"
                       onClick={this.handleOpenSignupModal}
                     >
-                      Sign Up
+                      Register
                     </button>
                   </>
                 )}

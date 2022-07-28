@@ -63,8 +63,8 @@ class MainPage extends Component {
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0)
-      ? 'Live Games'
-      : 'My Games';
+      ? 'Live Stakes'
+      : 'My Stakes';
 
   render() {
     return (

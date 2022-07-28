@@ -9,11 +9,11 @@ class Summary extends Component {
 
     if (this.props.game_mode === 'Spleesh!') {
       if (this.props.max_return < 100) {
-        public_bet_amount = '1 RPS - 10 RPS';
-        public_max_return = updateDigitToPoint2(56 /* 0.9 */) + ' RPS';
+        public_bet_amount = '100000 RPS - 1000000 RPS';
+        public_max_return = updateDigitToPoint2(5600000 /* 0.9 */) + ' RPS';
       } else {
-        public_bet_amount = '10 RPS - 100 RPS';
-        public_max_return = updateDigitToPoint2(560 /* 0.9 */) + 'RPS ';
+        public_bet_amount = '1000000 RPS - 10000000 RPS';
+        public_max_return = updateDigitToPoint2(56000000 /* 0.9 */) + ' RPS';
       }
     } else if (this.props.game_mode === 'Quick Shoot') {
       public_max_return = updateDigitToPoint2(this.props.max_return) + ' RPS';
@@ -23,7 +23,7 @@ class Summary extends Component {
       <div className="pre-summary-panel">
         <div className="your-bet-amount">
           Your Bet Amount :{' '}
-          {updateDigitToPoint2(this.props.bet_amount) + 'RPS '}
+          {updateDigitToPoint2(this.props.bet_amount) + ' RPS'}
         </div>
         {(this.props.game_mode === 'Mystery Box' ||
           this.props.game_mode === 'Spleesh!' ||
@@ -54,9 +54,9 @@ class Summary extends Component {
 
     if (this.props.game_mode === 'Spleesh!') {
       if (this.props.max_return < 100) {
-        public_bet_amount = '1 RPS - 10 RPS';
+        public_bet_amount = '100000 RPS - 1000000 RPS';
       } else {
-        public_bet_amount = '10 RPS - 100 RPS';
+        public_bet_amount = '1000000 RPS - 10000000 RPS';
       }
     } else if (this.props.game_mode === 'Quick Shoot') {
       public_max_return = updateDigitToPoint2(this.props.max_return) + ' RPS';
@@ -69,7 +69,7 @@ class Summary extends Component {
           <div className="summary-item">
             <div className="summary-item-name">Bet Amount</div>
             <div className="summary-item-value">
-              {updateDigitToPoint2(this.props.bet_amount)} + RPS
+              {updateDigitToPoint2(this.props.bet_amount)} RPS
             </div>
           </div>
           {(this.props.game_mode === 'Spleesh!' ||

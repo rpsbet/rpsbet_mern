@@ -139,7 +139,7 @@ class RPS extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>Join Game - RPS</h2>
+          <h2>Join Stake - RPS</h2>
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
@@ -147,8 +147,8 @@ class RPS extends Component {
               Bet Amount : {this.props.bet_amount} RPS
             </div>
             <div className="your-max-return">
-              Potential Return : RPS 
-              {updateDigitToPoint2(this.props.bet_amount * 2 /* * 0.95 */)}
+              Potential Return : 
+              {updateDigitToPoint2(this.props.bet_amount * 2 /* * 0.95 */)} RPS
             </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"

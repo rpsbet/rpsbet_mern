@@ -105,7 +105,7 @@ class MyHistoryTable extends Component {
         short_name="All"
         onClick={this.handleGameTypeButtonClicked}
       >
-        All Stakes
+        All Games
       </div>
     ];
 
@@ -171,7 +171,7 @@ class MyHistoryTable extends Component {
         <div className="table main-history-table">
           {this.state.myHistory?.length === 0 && (
             <div className="dont-have-game-msg">
-              <div>There aren't any histories right now.</div>
+              <div>There isn't any Staking history right now.</div>
             </div>
           )}
           {this.state.myHistory?.map(

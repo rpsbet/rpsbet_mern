@@ -86,15 +86,15 @@ class Spleesh extends Component {
 
     createNumberPanel = () => {
 		let panel = [];
-		for (let i = 1; i <= 10; i++) {
+		for (let i = 1; i <= 100000; i++) {
 			panel.push( <button
 					className={(this.state.bet_amount / this.props.spleesh_bet_unit === i ? ' active' : '')}
 					onClick={() => { this.setState({
 						bet_amount: i * this.props.spleesh_bet_unit,
-						endgame_amount: this.props.spleesh_bet_unit * (55 - i),
+						endgame_amount: this.props.spleesh_bet_unit * (5500000 - i),
 					}); }} key={i}
 				>
-					RPS {updateDigitToPoint2(i * this.props.spleesh_bet_unit)}
+					{updateDigitToPoint2(i * this.props.spleesh_bet_unit)} RPS 
 				</button>);
 		}
 		return panel;
@@ -104,7 +104,7 @@ class Spleesh extends Component {
         let previous_guesses = '';
         let pot = 0;
         for (let i = 0; i < this.props.game_log_list.length; i++) {
-            previous_guesses += (i === 0 ? '' : ', ') + 'RPS ' + this.props.game_log_list[i].bet_amount;
+            previous_guesses += (i === 0 ? '' : ', ') + ' RPS' + this.props.game_log_list[i].bet_amount;
             pot += this.props.game_log_list[i].bet_amount;
         };
 

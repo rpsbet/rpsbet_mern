@@ -227,12 +227,12 @@ class BrainGame extends Component {
             (
                 <div className="game-page">
                     <div className="page-title">
-                        <h2>Join Game - Brain Game</h2>
+                        <h2>Join Stake - Brain Game</h2>
                     </div>
                     <div className="game-contents">
                         <div className="pre-summary-panel">
-                            <div className="your-bet-amount">Bet Amount : RPS {updateDigitToPoint2(this.props.bet_amount)}</div>
-                            <div className="public-max-return">Pot : RPS {updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)}</div>
+                            <div className="your-bet-amount">Bet Amount : {updateDigitToPoint2(this.props.bet_amount)} RPS</div>
+                            <div className="public-max-return">Pot : {updateDigitToPoint2(this.props.bet_amount * this.props.joined_count)} RPS</div>
                             <div className="your-max-return">Potential Return : {updateDigitToPoint2(this.props.bet_amount * (this.props.joined_count + 2) /* 0.9 */)} RPS</div>
                         </div>
                         <div className="game-info-panel">

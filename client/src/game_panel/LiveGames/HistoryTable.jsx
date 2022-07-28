@@ -103,7 +103,7 @@ class HistoryTable extends Component {
         short_name="All"
         onClick={this.handleGameTypeButtonClicked}
       >
-        All Stakes
+        All Games
       </div>
     ];
 

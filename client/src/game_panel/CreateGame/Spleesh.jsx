@@ -3,16 +3,16 @@ import React, { Component } from 'react';
 class Spleesh extends Component {
 	createNumberPanel() {
 		let panel = [];
-		for (let i = 1; i <= 10; i++) {
+		for (let i = 100000; i <= 1000000; i++) {
 			panel.push( <button
 					className={(this.props.bet_amount / this.props.spleesh_bet_unit === i ? ' active' : '')}
 					onClick={() => { this.props.onChangeState({
 						bet_amount: i * this.props.spleesh_bet_unit,
-						endgame_amount: this.props.spleesh_bet_unit * (55 - i),
-						max_return: this.props.spleesh_bet_unit * (55 - i)
+						endgame_amount: this.props.spleesh_bet_unit * (5500000 - i),
+						max_return: this.props.spleesh_bet_unit * (5500000 - i)
 					}); }} key={i}
 				>
-					RPS {i * this.props.spleesh_bet_unit}
+					{i * this.props.spleesh_bet_unit} RPS
 				</button>);
 		}
 		return panel;
@@ -24,20 +24,20 @@ class Spleesh extends Component {
 					<h3 className="game-sub-title">Game Type</h3>
 					<div className="select-buttons-panel">
 						<button
-							className={(this.props.spleesh_bet_unit === 1 ? ' active' : '')}
+							className={(this.props.spleesh_bet_unit === 100000 ? ' active' : '')}
 							onClick={() => {
-								this.props.onChangeState({spleesh_bet_unit: 1, bet_amount: 1, max_return: 54, endgame_amount: 54});
+								this.props.onChangeState({spleesh_bet_unit: 100000, bet_amount: 100000, max_return: 5400000, endgame_amount: 5400000});
 							}}
 						>
-								1 RPS - 10 RPS
+								100000 RPS - 1000000 RPS
 						</button>
 						<button
 							className={(this.props.spleesh_bet_unit === 10 ? ' active' : '')}
 							onClick={() => {
-								this.props.onChangeState({spleesh_bet_unit: 10, bet_amount: 10, max_return: 540, endgame_amount: 540});
+								this.props.onChangeState({spleesh_bet_unit: 1000000, bet_amount: 1000000, max_return: 54000000, endgame_amount: 54000000});
 							}}
 						>
-							10 RPS - 100 RPS
+							1000000 RPS - 10000000 RPS
 						</button>
 					</div>
 				</div>

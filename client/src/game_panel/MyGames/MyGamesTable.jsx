@@ -225,13 +225,13 @@ class MyGamesTable extends Component {
                     </div>
                     <div className="table-cell bet-info">
                       <span className="bet-pr">
-                        {'RPS ' +
+                        {
                           updateDigitToPoint2(row.bet_amount) +
-                          ' / RPS ' +
-                          updateDigitToPoint2(row.pr)}
+                          ' RPS / ' +
+                          updateDigitToPoint2(row.pr) + ' RPS'}
                       </span>
                       <span className="end-amount">
-                        {'RPS ' + updateDigitToPoint2(row.endgame_amount)}
+                        {updateDigitToPoint2(row.endgame_amount) + ' RPS'}
                       </span>
                     </div>
                     <div className="table-cell winnings">

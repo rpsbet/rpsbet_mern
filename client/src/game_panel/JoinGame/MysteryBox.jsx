@@ -137,7 +137,7 @@ class MysteryBox extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>Join Game - Mystery Box</h2>
+          <h2>Join Stake - Mystery Box</h2>
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">

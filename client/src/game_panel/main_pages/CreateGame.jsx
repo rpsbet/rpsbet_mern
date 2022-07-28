@@ -32,7 +32,7 @@ class CreateGame extends Component {
 			max_return: 0,
 			max_prize: 0,
 			lowest_box_price: 0,
-			public_bet_amount: "RPS 0",
+			public_bet_amount: "0 RPS",
 			is_private: false,
 			is_anonymous: false,
 			room_password: '',
@@ -82,8 +82,8 @@ class CreateGame extends Component {
 			newState = {
 				...newState,
 				game_type: 2,
-				endgame_amount: 54,
-				max_return: 54,
+				endgame_amount: 5400000,
+				max_return: 5400000,
 			};
 		} else if (gameTypeName === "RPS") {
 			newState = {
@@ -307,7 +307,7 @@ class CreateGame extends Component {
 		return (
 			<div className="game-page">
 				<div className="page-title">
-					<h2>Host / Create a New Stake - <br />({this.state.game_mode})</h2>
+					<h2>Host / Stake - <br />({this.state.game_mode})</h2>
 					{
 						(this.state.step === 5 && this.state.game_mode === "Brain Game" && this.state.isPlayingBrain) ? 
 							<Summary 
