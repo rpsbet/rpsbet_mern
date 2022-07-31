@@ -21,9 +21,9 @@ export function updateDigitToPoint2(number) {
 
 export function addCurrencySignal(amount) {
 	if (amount > 0)
-		return 'RPS ' + updateDigitToPoint2(amount);
+		return updateDigitToPoint2(amount) + ' RPS';
 	if (amount < 0) 
-		return '-RPS ' + updateDigitToPoint2(Math.abs(amount));
+		return updateDigitToPoint2(Math.abs(amount)) + '- RPS';
 	return 0;
 }
 

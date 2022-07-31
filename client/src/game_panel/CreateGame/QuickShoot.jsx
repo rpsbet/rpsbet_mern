@@ -75,10 +75,11 @@ class QuickShoot extends Component {
                     <div className="game-info-panel">
                         <h3 className="game-sub-title">Choose a Game Type</h3>
                         <div className="qs-game-type-panel">
-                            <button className={(this.props.qs_game_type === 2 ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: 2, max_return: this.props.bet_amount * 2, public_bet_amount: "RPS " + this.props.bet_amount * 1, selected_qs_position: 0 }); }}>2x</button>
-                            <button className={(this.props.qs_game_type === 3 ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: 3, max_return: this.props.bet_amount * 3, public_bet_amount: "RPS " + this.props.bet_amount * 2, selected_qs_position: 0 }); }}>3x</button>
-                            <button className={(this.props.qs_game_type === 4 ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: 4, max_return: this.props.bet_amount * 4, public_bet_amount: "RPS " + this.props.bet_amount * 3, selected_qs_position: 0 }); }}>4x</button>
-                            <button className={(this.props.qs_game_type === 5 ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: 5, max_return: this.props.bet_amount * 5, public_bet_amount: "RPS " + this.props.bet_amount * 4, selected_qs_position: 0 }); }}>5x</button>
+                            {
+                                [2, 3, 4, 5].map((i) => (
+                                    <button className={(this.props.qs_game_type === i ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: i, max_return: this.props.bet_amount * Number(i), public_bet_amount: 'RPS ' + this.props.bet_amount * Number(i), selected_qs_position: 0})}}>{i}x</button>
+                                ))
+                            }
                         </div>
                         <p className="tip">Your multiplier</p>
                     </div>
