@@ -7,7 +7,7 @@ class DefaultBetAmountPanel extends Component {
     super(props);
     const defaultBetAmounts = this.props.defaultBetAmounts
       ? this.props.defaultBetAmounts
-      : [1, 2.5, 5, 10, 25];
+      : [100000, 250000, 500000, 1000000, 2500000];
     console.log(defaultBetAmounts, this.props.bet_amount);
     this.state = {
       defaultBetAmounts: defaultBetAmounts,
@@ -36,7 +36,7 @@ class DefaultBetAmountPanel extends Component {
                   this.props.onChangeState({
                     bet_amount: amount,
                     public_bet_amount:
-                      'RPS ' + (this.props.qs_game_type - 1) * amount,
+                      (this.props.qs_game_type - 1) * amount + ' RPS',
                     max_return: this.props.qs_game_type * amount
                   });
                 } else {
@@ -48,7 +48,7 @@ class DefaultBetAmountPanel extends Component {
               }}
               key={index}
             >
-              RPS {updateDigitToPoint2(amount)}
+              {updateDigitToPoint2(amount)} RPS
             </button>
           ))}
           <button
@@ -77,11 +77,11 @@ class DefaultBetAmountPanel extends Component {
                 this.props.onChangeState({
                   bet_amount: parseInt(e.target.value) || '',
                   public_bet_amount:
-                    'RPS ' +
                     updateDigitToPoint2(
                       (this.props.qs_game_type - 1) *
                         (parseInt(e.target.value) || '')
-                    ),
+                    )
+                    + ' RPS',
                   max_return: this.props.qs_game_type * e.target.value
                 });
               } else {

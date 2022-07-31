@@ -77,7 +77,7 @@ class QuickShoot extends Component {
                         <div className="qs-game-type-panel">
                             {
                                 [2, 3, 4, 5].map((i) => (
-                                    <button className={(this.props.qs_game_type === i ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: i, max_return: this.props.bet_amount * Number(i), public_bet_amount: 'RPS ' + this.props.bet_amount * Number(i), selected_qs_position: 0})}}>{i}x</button>
+                                    <button className={(this.props.qs_game_type === i ? ' active' : '')} onClick={() => { this.props.onChangeState({ qs_game_type: i, max_return: this.props.bet_amount * Number(i), public_bet_amount: (this.props.bet_amount * Number(i)) + ' RPS', selected_qs_position: 0})}}>{i}x</button>
                                 ))
                             }
                         </div>
