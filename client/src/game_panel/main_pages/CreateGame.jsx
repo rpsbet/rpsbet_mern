@@ -26,9 +26,9 @@ class CreateGame extends Component {
 			qs_game_type: 2,
 			qs_nation: 0,
 			selected_qs_position: 0,
-			bet_amount: 1,
+			bet_amount: 100000,
 			endgame_amount: 0,
-			spleesh_bet_unit: 1, 
+			spleesh_bet_unit: 100000, 
 			max_return: 0,
 			max_prize: 0,
 			lowest_box_price: 0,
@@ -69,8 +69,8 @@ class CreateGame extends Component {
 		await this.props.setGameMode(gameTypeName);
 		
 		let newState = { 
-			child_step: 1, 
-			bet_amount: 1,
+			child_step: 100000, 
+			bet_amount: 100000,
 			endgame_amount: 0,
 			max_return: 0,
 			max_prize: 0,
@@ -102,8 +102,8 @@ class CreateGame extends Component {
 			newState = {
 				...newState,
 				game_type: 5,
-				public_bet_amount: "1 RPS",
-				max_return: "2",
+				public_bet_amount: "100000 RPS",
+				max_return: "200000",
 				qs_nation: Math.floor(Math.random() * 5)
 			};
 		} else if (gameTypeName === "Mystery Box") {

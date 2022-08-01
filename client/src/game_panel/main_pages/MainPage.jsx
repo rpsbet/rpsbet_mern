@@ -80,7 +80,7 @@ class MainPage extends Component {
               TabIndicatorProps={{ style: { background: '#c438ef' } }}
               className="main-game-page-tabs"
             >
-              <Tab label="Live Games" style={customStyles.tabRoot} />
+              <Tab label="Live Stakes" style={customStyles.tabRoot} />
               <Tab label="History" style={customStyles.tabRoot} />
             </Tabs>
           )}
@@ -151,7 +151,7 @@ class MainPage extends Component {
                   d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
                 />
               </svg>
-              {this.state.selectedMobileTab === 'live_games' && 'LIVE GAMES'}
+              {this.state.selectedMobileTab === 'live_games' && 'LIVE STAKES'}
             </button>
             <button
               className={`mobile-tab-my ${
@@ -186,7 +186,7 @@ class MainPage extends Component {
                   d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
                 />
               </svg>
-              {this.state.selectedMobileTab === 'my_games' && 'MY GAMES'}
+              {this.state.selectedMobileTab === 'my_games' && 'MY STAKES'}
             </button>
             <button
               className={`mobile-tab-leaderboards ${

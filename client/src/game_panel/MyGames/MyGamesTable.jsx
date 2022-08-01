@@ -90,7 +90,7 @@ class MyGamesTable extends Component {
         }}
       >
         <img src={`../img/gametype/icons/All.svg`} alt="" />
-        <div>All Stakes</div>
+        <div>All Games</div>
       </div>
     ];
 
@@ -168,7 +168,7 @@ class MyGamesTable extends Component {
     return (
       <div className="my-open-games">
         <div className="create-room-btn-panel">
-          <label>Increased Earnings ➜</label>
+          <label>Unlimited APY ➜</label>
           <button
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}

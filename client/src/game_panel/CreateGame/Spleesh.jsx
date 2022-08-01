@@ -32,7 +32,7 @@ class Spleesh extends Component {
 								100000 RPS - 1000000 RPS
 						</button>
 						<button
-							className={(this.props.spleesh_bet_unit === 10 ? ' active' : '')}
+							className={(this.props.spleesh_bet_unit === 100000 ? ' active' : '')}
 							onClick={() => {
 								this.props.onChangeState({spleesh_bet_unit: 1000000, bet_amount: 1000000, max_return: 54000000, endgame_amount: 54000000});
 							}}
