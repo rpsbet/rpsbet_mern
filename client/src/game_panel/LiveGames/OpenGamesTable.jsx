@@ -237,7 +237,7 @@ class OpenGamesTable extends Component {
                         row.spleesh_bet_unit +
                         ' - RPS ' +
                         row.spleesh_bet_unit * 100000
-                      : updateDigitToPoint2(row.user_bet)} + ' RPS'{' '}
+                      : updateDigitToPoint2(row.user_bet)}{' '}RPS
                     / {row.winnings}
                   </div>
                   <div className="table-cell cell-action">
@@ -296,8 +296,7 @@ class OpenGamesTable extends Component {
                   <div className="table-cell cell-amount-info">
                     {updateDigitToPoint2(
                         row.user_bet
-                      ) /*+ " / RPS " + row.pr*/}{' '}
-                      + ' RPS'
+                      ) /*+ " / RPS " + row.pr*/}{' '}RPS
                     / {row.winnings}
                   </div>
                 </div>
