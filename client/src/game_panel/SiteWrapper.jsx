@@ -380,7 +380,7 @@ class SiteWrapper extends Component {
                 <Tab label="My Games" style={customStyles.tabRoot} />
               </Tabs>
               <div className="header_action_panel">
-                {/* <a
+                { /*<a
                   href="#"
                   onClick={e => {
                     history.push('/leaderboards');
@@ -390,13 +390,14 @@ class SiteWrapper extends Component {
                   <img src="/img/icons/leaderboards.svg" alt="Leaderboards" />
                   Leaderboards
                 </a>
+                */
                 <a
                   href="#help"
                   onClick={this.handleOpenHowToPlayModal}
                   id="btn_how_to_play"
                 >
                   <span>HELP</span>
-                </a> */}
+                </a> }
                 {this.props.isAuthenticated ? (
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>
@@ -494,8 +495,8 @@ class SiteWrapper extends Component {
             >
               <div className="arrow-up"></div>
               <div className="game_logs_contents">
-                {/* <h2>BALANCE HISTORY</h2> */}
-                {/* <table>
+                { <h2>BALANCE HISTORY</h2> }
+                { <table>
                   <tbody>
                     {this.state.transactions.length === 0 ? (
                       <tr>
@@ -521,7 +522,7 @@ class SiteWrapper extends Component {
                       ))
                     )}
                   </tbody>
-                </table> */}
+                </table> }
                 <div className="transaction-panel">
                   <button
                     className="btn-withdraw"

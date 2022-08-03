@@ -245,7 +245,7 @@ class MysteryBox extends Component {
           <hr />
           <div className="action-panel">
             <button id="btn-back" onClick={this.onBtnGoToMainGamesClicked}>
-              All Stakes
+              Live Stakes
             </button>
             <button id="btn-submit" onClick={this.onBtnPlayAgainClicked}>
               Play Again

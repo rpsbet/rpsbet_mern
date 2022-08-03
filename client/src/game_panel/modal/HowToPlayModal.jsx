@@ -76,7 +76,7 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Your Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>50 RPS</span>
+                        <span style={{ color: '#b52c22' }}>50000 RPS</span>
                       </p>
                       <p>
                         Game Type ={' '}
@@ -86,12 +86,12 @@ class HowToPlayModal extends Component {
                       </p>
                       <p>
                         Public Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>200 RPS [50 RPS * 4]</span>
+                        <span style={{ color: '#b52c22' }}>200000 RPS [50000 RPS * 4]</span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          250 RPS
+                          250000 RPS
                         </span>
                       </p>
                     </div>
@@ -127,16 +127,16 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>5  RPS</span>
+                        <span style={{ color: '#b52c22' }}>50000 RPS</span>
                       </p>
                       <p>
                         Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>Automatic(30 RPS)</span>
+                        <span style={{ color: '#f6b22a' }}>Automatic(300000 RPS)</span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          30 RPS
+                          300000 RPS
                         </span>
                       </p>
                     </div>
@@ -179,25 +179,25 @@ class HowToPlayModal extends Component {
                       <p>
                         The following boxes are set (Prize/Price):{' '}
                         <span style={{ color: '#b52c22' }}>
-                          25 RPS/4 RPS, 0 RPS/6 RPS, 0 RPS/10 RPS
+                          250000 RPS/40000 RPS, 0 RPS/60000 RPS, 0 RPS/100000 RPS
                         </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          Automatic(41 RPS) [25 RPS + 6 RPS + 10 RPS]
+                          Automatic(410000 RPS) [250000 RPS + 60000 RPS + 100000 RPS]
                         </span>
                       </p>
                       <p>
                         Host Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          41 RPS
+                          410000 RPS
                         </span>
                       </p>
                       <p>
                         <i>
-                          If the 25 RPS Prize box is opened, the host still
-                          receives the 4 RPS (Price).
+                          If the 250000 RPS Prize box is opened, the host still
+                          receives the 40000 RPS (Price).
                         </i>
                       </p>
                     </div>
@@ -209,7 +209,7 @@ class HowToPlayModal extends Component {
                   <AccordionItemButton>
                     <div className="modal-content-wrapper spleesh">
                       <h4>
-                        <i>Spleesh!</i> - Tutuorial
+                        <i>Spleesh!</i> - Tutorial
                       </h4>
                     </div>
                   </AccordionItemButton>
@@ -220,7 +220,7 @@ class HowToPlayModal extends Component {
                       <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
-                          Pick Your Number (Your Bet Amount): 1-10 or 10-100
+                          Pick Your Number (Your Bet Amount): 100000-1000000 or 1000000-10000000
                         </li>
                         <li>Set Payout for an Automatic cash out (optional)</li>
                       </ol>
@@ -236,20 +236,20 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Host's Number (Bet Amount) ={' '}
-                        <span style={{ color: '#b52c22' }}>7 RPS</span>
+                        <span style={{ color: '#b52c22' }}>700000 RPS</span>
                       </p>
                       <p>
                         Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>Automatic(30 RPS)</span>
+                        <span style={{ color: '#f6b22a' }}>Automatic(3000000 RPS)</span>
                       </p>
                       <p>
-                        Guesses (in order): 1, 2, 10, 9, 5, 8-{' '}
+                        Guesses (in order): 100000, 200000, 1000000, 900000, 500000, 800000-{' '}
                         <i>*Game ENDs automatically*</i>
                       </p>
                       <p>
                         Host Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          42 RPS
+                          4200000 RPS
                         </span>
                       </p>
                     </div>
@@ -294,12 +294,12 @@ class HowToPlayModal extends Component {
                       <p>Game Type = Freeplay</p>
                       <p>
                         Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>50 RPS</span>
+                        <span style={{ color: '#b52c22' }}>500000 RPS</span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          100 RPS
+                          1000000 RPS
                         </span>
                       </p>
                     </div>
@@ -321,8 +321,7 @@ class HowToPlayModal extends Component {
                         All our games are 100% Player vs. Player(s) and there
                         are zero random factors affecting the outcome of games,
                         players have complete control. Skilled players can
-                        increase their chances of Winning. If you want to
-                        understand more about provably fair, 'PvP' games, you
+                        improve over time. If you want to read more, you
                         can go through{' '}
                         <a href="https://bitcointalk.org/index.php?topic=5194336.0">
                           this forum here
@@ -345,10 +344,12 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        The only fees you pay is Winnings Tax i.e., the{' '}
-                        <u>House's Edge</u> which is deducted each time you take
-                        Winnings.
+                        The only fees you pay is Token Tax i.e., the{' '}
+                        <u><a href="https://docs.rps.finance/economy/rps-finance/tokenomics/tax-and-dividends">Tokenomics</a>
+                        </u> which is deducted each time you take
+                        Winnings. Token tax works in favour of its investors and players, for example Automatic Dividends in BNB.
                       </p>
+                      <p><i>Please note, we are currently only partially on-chain so tax is only deducted on Withdrawals/Deposits. Otherwise, the platform is non-profit.</i></p>
                       <table id="howto-modal">
                         <tbody>
                           <tr>
@@ -358,11 +359,11 @@ class HowToPlayModal extends Component {
                           </tr>
                           <tr>
                             <td>
-                              <u>NO deposit Fees.</u>
+                              <u>5% Token Tax</u>
                             </td>
-                            <td className="gamemode">1%</td>
+                            <td className="gamemode">0%</td>
                             <td rowSpan="6">
-                              <u>NO withdrawal Fees.</u>
+                              <u>5% Token Tax</u>
                             </td>
                           </tr>
                         </tbody>
@@ -383,8 +384,8 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        For any technical/general problems, please contact{' '}
-                        <u style={{ color: '#f5b22d' }}>mobyfatdick@protonmail.com</u>.
+                        For any technical/general feedback, please contact{' '}
+                        <u style={{ color: '#f5b22d' }}>online@rpsbet.com</u>.
                       </p>
                     </div>
                   </div>
@@ -392,21 +393,17 @@ class HowToPlayModal extends Component {
               </AccordionItem>
             </Accordion>
             <p>
-              CRYPTO COMING SOON! FOLLOW FOR MORE UPDATES!!{' '}
+              FULL ON-CHAIN INTEGRATION COMING SOON! FOLLOW FOR MORE UPDATES!!{' '}
               <a
-                href="https://www.rps.finance/"
+                href="https://rps.finance/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                https://www.rps.finance/
+                https://rps.finance/
               </a>
             </p>
 
             <div id="game_footer_howto">
-              <a href="https://discord.gg/94QywhSc4d">DISCORD</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://twitter.com/rpsbet">TWITTER</a>
               <a href="https://twitter.com/rps_finance">TWITTER</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
@@ -414,7 +411,11 @@ class HowToPlayModal extends Component {
                 YOUTUBE
               </a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://www.reddit.com/user/RPSBet">REDDIT</a>
+              <a href="https://t.me/rpsfinance">TELEGRAM</a>
+              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
+              <a href="https://discord.gg/94QywhSc4d">DISCORD</a>
+              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
+              <a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
