@@ -393,9 +393,11 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     height: 100vh;
     background: rgba(0, 0, 0, 0.7);
 }
+/*
 #game_logs.hidden {
     display: none;
 }
+*/
 #game_logs .arrow-up{
     width: 0;
     height: 0;
