@@ -359,7 +359,7 @@ const getRoomList = async (pagination, page, game_type) => {
 				if (!gameLogList || gameLogList.length == 0) {
 					temp.winnings = temp.spleesh_bet_unit * 10 + " RPS";
 				} else {
-					for (let i = 100000; i > 0; i--) {
+					for (let i = 100000; i > 0; i-= 100000) {
 						let is_exist = false;
 						for(let j = 0; j < gameLogList.length; j++) {
 							if (gameLogList[j].bet_amount == i * temp.spleesh_bet_unit) {
@@ -375,7 +375,7 @@ const getRoomList = async (pagination, page, game_type) => {
 					}
 				}
 			} else if (temp.game_type.game_type_id === 3) {
-				temp.winnings = updateDigitToPoint2((room['pr'] + room['bet_amount']) * commissionRate) + "RPS";
+				temp.winnings = updateDigitToPoint2((room['pr'] + room['bet_amount']) * commissionRate) + " RPS";
 			} else if (temp.game_type.game_type_id === 4) {
 				temp.winnings = updateDigitToPoint2(room['pr'] * commissionRate) + " RPS";
 			} else if (temp.game_type.game_type_id === 5) {
@@ -669,7 +669,7 @@ router.post('/end_game', auth, async (req, res) => {
 			res.json({
 				success: false,
 				already_finished: true,
-				message: "Sorry, this Stake has already ended."
+				message: "Sorry, this game has already ended."
 			});
 			return;
 		}
@@ -690,7 +690,7 @@ router.post('/end_game', auth, async (req, res) => {
 		if (gameLogCount === 0) {
 			newTransaction.amount += roomInfo['bet_amount'] * 100;
 
-			message.message = "I made " + roomInfo['bet_amount'] + " RPS from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+			message.message = "I made " + roomInfo['bet_amount'] + " RPS from UNSTAKING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 		} else {
 			const commission = await getCommission();
 			const percent = 100 - commission;
@@ -699,23 +699,23 @@ router.post('/end_game', auth, async (req, res) => {
 			if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
 
-				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from UNSTAKING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 			} else if (roomInfo['game_type']['game_type_name'] === 'RPS') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
-				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from UNSTAKING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 			} else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
-				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from UNSTAKING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 			} else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
-				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from UNSTAKING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
 			} else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
-				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from ENDING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+				message.message = "I made " + roomInfo['host_pr'] + " * " + commissionRate + " RPS from UNSTAKING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 			}
 
 			newGameLog = new GameLog({
@@ -948,7 +948,7 @@ router.post('/bet', auth, async (req, res) => {
 			if (roomInfo['creator']._id === req.user._id) {
 				res.json({
 					success: false,
-					message: 'This Stake is yours. What\'s the point?!',
+					message: 'This game is yours. What\'s the point?!',
 					betResult: -101
 				});
 				
@@ -958,7 +958,7 @@ router.post('/bet', auth, async (req, res) => {
 			if (roomInfo['status'] === 'finished') {
 				res.json({
 					success: false,
-					message: 'Sorry, this Stake is already ended.',
+					message: 'Sorry, this game has already ended.',
 					betResult: -100
 				});
 				
@@ -1006,7 +1006,7 @@ router.post('/bet', auth, async (req, res) => {
 					if (next_bet_item.bet_amount > bet_item.bet_amount) {
 						res.json({
 							success: false,
-							message: 'Sorry, this game is quite busy, try setting the slippage higher!',
+							message: 'Sorry, this game is busy, increase slippage or try again later.',
 							betResult: -102
 						});
 						
@@ -1154,7 +1154,7 @@ router.post('/bet', auth, async (req, res) => {
 					roomInfo.status = 'finished';
 					newTransactionC.amount += new_host_pr * (100 - commission);
 					
-					const messageC = "I made " + new_host_pr + " RPS from ENDING " 
+					const messageC = "I made " + new_host_pr + " RPS from UNSTAKING " 
 						+ roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 					sendEndedMessageToJoiners(roomInfo._id, roomInfo['creator']['id'], messageC, roomInfo.is_anonymous);
 

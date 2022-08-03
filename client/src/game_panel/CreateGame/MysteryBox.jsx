@@ -98,8 +98,8 @@ class MysteryBox extends Component {
       lowest_box_price: max_return['lowest_box_price'],
       public_bet_amount:
         max_return['lowest_box_price'] === max_return['highest_box_price']
-          ? `RPS ${max_return['lowest_box_price']}`
-          : `RPS ${max_return['lowest_box_price']} - RPS ${max_return['highest_box_price']}`
+          ? `${max_return['lowest_box_price']} RPS`
+          : `${max_return['lowest_box_price']} RPS - ${max_return['highest_box_price']} RPS`
     });
   };
 
@@ -122,8 +122,8 @@ class MysteryBox extends Component {
       lowest_box_price: max_return['lowest_box_price'],
       public_bet_amount:
         max_return['lowest_box_price'] === max_return['highest_box_price']
-          ? `RPS ${max_return['lowest_box_price']}`
-          : `RPS ${max_return['lowest_box_price']} - RPS ${max_return['highest_box_price']}`
+          ? `${max_return['lowest_box_price']} RPS`
+          : `${max_return['lowest_box_price']} RPS - ${max_return['highest_box_price']} RPS`
     });
   };
 
@@ -167,7 +167,7 @@ class MysteryBox extends Component {
                   pattern="[0-9]*"
                   name="new_box_prize"
                   id="new_box_prize"
-                  maxLength="5"
+                  maxLength="9"
                   value={this.state.new_box_prize}
                   onChange={this.onChangeNewBoxPrize}
                   placeholder="Your Bet Amount"
@@ -183,7 +183,7 @@ class MysteryBox extends Component {
                   pattern="[0-9]*"
                   name="new_box_price"
                   id="new_box_price"
-                  maxLength="5"
+                  maxLength="9"
                   value={this.state.new_box_price}
                   onChange={this.onChangeNewBoxPrice}
                   placeholder="Public Bet Amount"
@@ -205,7 +205,7 @@ class MysteryBox extends Component {
           </a>
         </div>
         <p className="tip">
-          Boxes will be displayed to the public in the order you have added them
+          Boxes will be displayed to the public in the order you have added them.
         </p>
       </div>
     );

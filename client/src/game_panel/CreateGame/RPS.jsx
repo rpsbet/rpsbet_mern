@@ -48,12 +48,12 @@ class RPS extends Component {
     });
     this.setState({
       selected_rps: 'R',
-      selected_bet_amount: 5
+      selected_bet_amount: 50000
     });
   };
 
   render() {
-    const defaultBetAmounts = [5, 10, 25, 50];
+    const defaultBetAmounts = [50000, 100000, 250000, 500000];
     console.log(this.props.step);
 
     return this.props.step === 1 ? (

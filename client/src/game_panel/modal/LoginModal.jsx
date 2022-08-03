@@ -76,14 +76,14 @@ class LoginModal extends Component {
                     <div className="modal-body">
                         <button className="btn-close" onClick={this.props.closeModal}>×</button>
                         <h4>Welcome back! 🔫🤠</h4>
-                        <h2>Sign In to RPSBet</h2>
+                        <h2>Login to RPSBET.IO</h2>
                         <form onSubmit={this.onSubmitForm}>
                             <p>Username or email address</p>
                             <input type="text" className="form-control" id="email" value={this.state.email} onChange={this.onChangeEmail} />
                             <p className="has-forgot-password">Password <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>Forgot password?</span></p>
                             <input type="password" className="form-control" id="password" value={this.state.password} onChange={this.onChangePassword} />
-                            <button className="btn-submit">Sign In</button>
-                            <p className="m-0 sm-text-center">Not a member? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>Sign Up now →</button></p>
+                            <button className="btn-submit">Loginn</button>
+                            <p className="m-0 sm-text-center">New here? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>Register now →</button></p>
                         </form>
                     </div>
                 </div>
