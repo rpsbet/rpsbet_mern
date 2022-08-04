@@ -56,9 +56,9 @@ import Moment from 'moment';
 import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css';
 import Avatar from '../components/Avatar';
-import Web3 from "web3";
-import abi from "../config/abi_token.json";
-import { tokenAddr }  from "../config/index.js";
+import Web3 from 'web3';
+import abi from '../config/abi_token.json';
+import { tokenAddr } from '../config/index.js';
 const mainTheme = createTheme({
   palette: {
     type: 'light'
@@ -114,7 +114,7 @@ class SiteWrapper extends Component {
       anchorEl: null,
       web3: null,
       web3account: '',
-      web3balance: 0,
+      web3balance: 0
     };
   }
 
@@ -208,26 +208,30 @@ class SiteWrapper extends Component {
     this.props.setSocket(socket);
   };
   loadWeb3 = async () => {
-    try{
+    try {
       const web3 = new Web3(Web3.givenProvider);
-      this.setState({web3});
+      this.setState({ web3 });
       const accounts = await web3.eth.requestAccounts();
       const contractInstance = new web3.eth.Contract(abi, tokenAddr);
-      const tokenBalance = await contractInstance.methods.balanceOf(accounts[0]).call();
+      const tokenBalance = await contractInstance.methods
+        .balanceOf(accounts[0])
+        .call();
       const decimal = await contractInstance.methods.decimals().call();
-      const tokenAmount = Math.floor(Number(tokenBalance / Math.pow(10, decimal)) * 100000)/100000;
-      this.setState({web3account:accounts[0]});
-      this.setState({web3balance:tokenAmount});
-    }catch(e){
-      console.log(e)
+      const tokenAmount =
+        Math.floor(Number(tokenBalance / Math.pow(10, decimal)) * 100000) /
+        100000;
+      this.setState({ web3account: accounts[0] });
+      this.setState({ web3balance: tokenAmount });
+    } catch (e) {
+      console.log(e);
     }
-  }
+  };
   async componentDidMount() {
     try {
       this.audio = new Audio('/sounds/sound.mp3');
       this.audio.load();
     } catch (e) {
-      console.log('rere',e);
+      console.log('rere', e);
     }
     this.initSocket();
     const result = await this.props.getUser(true);
@@ -238,13 +242,13 @@ class SiteWrapper extends Component {
     }
     this.interval = setInterval(this.updateReminderTime, 3000);
     //web3
-    if(window.ethereum) {
+    if (window.ethereum) {
       window.ethereum.on('chainChanged', () => {
         this.loadWeb3();
-      })
+      });
       window.ethereum.on('accountsChanged', () => {
         this.loadWeb3();
-      })
+      });
     }
     this.loadWeb3();
   }
@@ -380,7 +384,8 @@ class SiteWrapper extends Component {
                 <Tab label="My Stakes" style={customStyles.tabRoot} />
               </Tabs>
               <div className="header_action_panel">
-                { /*<a
+                {
+                  /*<a
                   href="#"
                   onClick={e => {
                     history.push('/leaderboards');
@@ -391,25 +396,25 @@ class SiteWrapper extends Component {
                   Leaderboards
                 </a>
                 */
-                <a
-                  href="#help"
-                  onClick={this.handleOpenHowToPlayModal}
-                  id="btn_how_to_play"
-                >
-                  <span>HELP</span>
-                </a> }
+                  <a
+                    href="#help"
+                    onClick={this.handleOpenHowToPlayModal}
+                    id="btn_how_to_play"
+                  >
+                    <span>HELP</span>
+                  </a>
+                }
                 {this.props.isAuthenticated ? (
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>
-                      {Math.floor(this.state.balance*100000)/100000}
-                      &nbsp;
-                      RPS
+                      {Math.floor(this.state.balance * 100000) / 100000}
+                      &nbsp; RPS
                     </span>
                     <Button
                       area-constrols="profile-menu"
                       aria-haspopup="true"
                       onClick={this.handleClickMenu}
-                      className="profile-menu" 
+                      className="profile-menu"
                     >
                       <Avatar
                         src={this.props.user.avatar}
@@ -495,34 +500,37 @@ class SiteWrapper extends Component {
             >
               <div className="arrow-up"></div>
               <div className="game_logs_contents">
-                { <h2>BALANCE HISTORY</h2> }
-                { <table>
-                  <tbody>
-                    {this.state.transactions.length === 0 ? (
-                      <tr>
-                        <td>...</td>
-                      </tr>
-                    ) : (
-                      this.state.transactions.map((row, key) => (
-                        <tr key={key}>
-                          <td
-                            className={
-                              'amount ' + (row.amount > 0 ? 'green' : 'red')
-                            }
-                          >
-                            {row.amount > 0
-                              ? '+ ' + updateDigitToPoint2(row.amount) + ' RPS'
-                              : '- ' +
-                                updateDigitToPoint2(
-                                  Math.abs(row.amount)
-                                ) + ' RPS'}
-                          </td>
-                          <td className="fromNow">{row.from_now}</td>
+                {<h2>BALANCE HISTORY</h2>}
+                {
+                  <table>
+                    <tbody>
+                      {this.state.transactions.length === 0 ? (
+                        <tr>
+                          <td>...</td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table> }
+                      ) : (
+                        this.state.transactions.map((row, key) => (
+                          <tr key={key}>
+                            <td
+                              className={
+                                'amount ' + (row.amount > 0 ? 'green' : 'red')
+                              }
+                            >
+                              {row.amount > 0
+                                ? '+ ' +
+                                  updateDigitToPoint2(row.amount) +
+                                  ' RPS'
+                                : '- ' +
+                                  updateDigitToPoint2(Math.abs(row.amount)) +
+                                  ' RPS'}
+                            </td>
+                            <td className="fromNow">{row.from_now}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                }
                 <div className="transaction-panel">
                   <button
                     className="btn-withdraw"
@@ -562,7 +570,7 @@ class SiteWrapper extends Component {
               modalIsOpen={this.state.showProfileModal}
               closeModal={this.handleCloseProfileModal}
               player_name={this.state.userName}
-              balance={this.state.balance / 100.0}
+              balance={this.state.balance}
               avatar={this.props.user.avatar}
               email={this.props.user.email}
             />
@@ -572,7 +580,7 @@ class SiteWrapper extends Component {
               modalIsOpen={this.state.showHowToPlayModal}
               closeModal={this.handleCloseHowToPlayModal}
               player_name={this.state.userName}
-              balance={this.state.balance / 100.0}
+              balance={this.state.balance}
               isDarkMode={this.props.isDarkMode}
               openTermsModal={this.handleOpenTermsModal}
               openPrivacyModal={this.handleOpenPrivacyModal}

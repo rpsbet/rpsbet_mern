@@ -115,7 +115,7 @@ class RPS extends Component {
       return;
     }
 
-    if (this.props.bet_amount > this.state.balance / 100.0) {
+    if (this.props.bet_amount > this.state.balance) {
       alertModal(this.props.isDarkMode, `Not enough balance!`);
       return;
     }
@@ -147,7 +147,7 @@ class RPS extends Component {
               Bet Amount : {this.props.bet_amount} RPS
             </div>
             <div className="your-max-return">
-              Potential Return : 
+              Potential Return :
               {updateDigitToPoint2(this.props.bet_amount * 2 /* * 0.95 */)} RPS
             </div>
             <SettingsOutlinedIcon

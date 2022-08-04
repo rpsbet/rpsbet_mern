@@ -19,21 +19,24 @@ router.get('/', auth, async (req, res) => {
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const is_banned = req.query.is_banned;
   try {
-    const users = await User.find({is_deleted: is_banned}, { _id: 1, username: 1, email: 1, created_at: 1 })
-      .sort({created_at: 'desc'})
+    const users = await User.find(
+      { is_deleted: is_banned },
+      { _id: 1, username: 1, email: 1, created_at: 1 }
+    )
+      .sort({ created_at: 'desc' })
       .skip(pagination * page - pagination)
       .limit(pagination);
-    const count = await User.countDocuments({is_deleted: is_banned});
+    const count = await User.countDocuments({ is_deleted: is_banned });
 
     let result = [];
-    
+
     users.forEach((user, index) => {
       let temp = {
-        _id : user['_id'],
-        username : user['username'],
-        email : user['email'],
-        date : moment(user['created_at']).format('YYYY-MM-DD')
-      }
+        _id: user['_id'],
+        username: user['username'],
+        email: user['email'],
+        date: moment(user['created_at']).format('YYYY-MM-DD')
+      };
       result.push(temp);
     });
 
@@ -58,8 +61,8 @@ router.get('/activity', auth, async (req, res) => {
   const page = req.query.page ? parseInt(req.query.page) : 1;
   try {
     const transactions = await Transaction.find({})
-      .populate({path: 'user', model: User})
-      .sort({created_at: 'desc'})
+      .populate({ path: 'user', model: User })
+      .sort({ created_at: 'desc' })
       .skip(pagination * page - pagination)
       .limit(pagination);
     const count = await Transaction.countDocuments({});
@@ -68,12 +71,14 @@ router.get('/activity', auth, async (req, res) => {
 
     transactions.forEach((transaction, index) => {
       let temp = {
-        _id : transaction['_id'],
-        username : transaction['user']['username'],
+        _id: transaction['_id'],
+        username: transaction['user']['username'],
         description: transaction['description'],
         amount: transaction['amount'],
-        created_at: moment(transaction['created_at']).format('YYYY-MM-DD hh:mm:ss')
-      }
+        created_at: moment(transaction['created_at']).format(
+          'YYYY-MM-DD hh:mm:ss'
+        )
+      };
       result.push(temp);
     });
 
@@ -140,16 +145,20 @@ router.post('/', async (req, res) => {
       if (err) throw err;
       newUser.password = hash;
       newUser.save().then(user => {
-        jwt.sign({ user: user, is_admin: 0 }, process.env.SECRET_OR_KEY, (err, token) => {
-          sendgrid.sendWelcomeEmail(email, username, verification_code);
+        jwt.sign(
+          { user: user, is_admin: 0 },
+          process.env.SECRET_OR_KEY,
+          (err, token) => {
+            sendgrid.sendWelcomeEmail(email, username, verification_code);
 
-          res.json({
-            success: true,
-            message: 'new user created',
-            token,
-            user
-          });
-        });
+            res.json({
+              success: true,
+              message: 'new user created',
+              token,
+              user
+            });
+          }
+        );
       });
     });
   });
@@ -157,12 +166,12 @@ router.post('/', async (req, res) => {
 
 router.post('/get-info', async (req, res) => {
   try {
-    const user = await User.findOne({_id: req.body._id});
+    const user = await User.findOne({ _id: req.body._id });
 
     res.json({
       success: true,
       query: req.query,
-      user: user,
+      user: user
     });
   } catch (err) {
     console.error(err);
@@ -175,9 +184,9 @@ router.post('/get-info', async (req, res) => {
 
 router.post('/updateCustomer', auth, async (req, res) => {
   try {
-    const user = await User.findOne({_id: req.body._id});
+    const user = await User.findOne({ _id: req.body._id });
     if (req.body.balance) {
-      user.balance = req.body.balance * 100;
+      user.balance = req.body.balance;
     }
 
     if (req.body.is_deleted === true || req.body.is_deleted === false) {
@@ -187,7 +196,7 @@ router.post('/updateCustomer', auth, async (req, res) => {
     await user.save();
 
     res.json({
-      success: true,
+      success: true
     });
   } catch (err) {
     console.error(err);
