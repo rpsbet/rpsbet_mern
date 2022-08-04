@@ -36,7 +36,7 @@ class OpenGamesTable extends Component {
       return;
     }
 
-    if (bet_amount > this.props.balance / 100.0) {
+    if (bet_amount > this.props.balance) {
       alertModal(this.props.isDarkMode, `Not enough balance!`);
       return;
     }
@@ -233,11 +233,12 @@ class OpenGamesTable extends Component {
                   </div>
                   <div className="table-cell desktop-only cell-amount-info">
                     {row.game_type.game_type_name === 'Spleesh!'
-                      ? row.spleesh_bet_unit + ' RPS' +
+                      ? row.spleesh_bet_unit +
+                        ' RPS' +
                         ' - ' +
                         row.spleesh_bet_unit * 100000
-                      : updateDigitToPoint2(row.user_bet)}{' '}RPS
-                    / {row.winnings}
+                      : updateDigitToPoint2(row.user_bet)}{' '}
+                    RPS / {row.winnings}
                   </div>
                   <div className="table-cell cell-action">
                     <button
@@ -293,10 +294,8 @@ class OpenGamesTable extends Component {
                     ></i>
                   </div>
                   <div className="table-cell cell-amount-info">
-                    {updateDigitToPoint2(
-                        row.user_bet
-                      ) /*+ " / RPS " + row.pr*/}{' '}RPS
-                    / {row.winnings}
+                    {updateDigitToPoint2(row.user_bet) /*+ " / RPS " + row.pr*/}{' '}
+                    RPS / {row.winnings}
                   </div>
                 </div>
               </div>
