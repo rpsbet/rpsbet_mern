@@ -86,13 +86,13 @@ class HowToPlayModal extends Component {
                       </p>
                       <p>
                         Public Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>200000 RPS [50000 RPS * 4]</span>
+                        <span style={{ color: '#b52c22' }}>
+                          200000 RPS [50000 RPS * 4]
+                        </span>
                       </p>
                       <p>
                         Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          250000 RPS
-                        </span>
+                        <span style={{ color: '#02c526' }}>250000 RPS</span>
                       </p>
                     </div>
                   </div>
@@ -121,7 +121,7 @@ class HowToPlayModal extends Component {
                       <ol>
                         <li>Try to Win</li>
                       </ol>
-              </div>
+                    </div>
                     <div className="modal-content-panel">
                       <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
                       <p>e.g.</p>
@@ -131,13 +131,13 @@ class HowToPlayModal extends Component {
                       </p>
                       <p>
                         Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>Automatic(300000 RPS)</span>
+                        <span style={{ color: '#f6b22a' }}>
+                          Automatic(300000 RPS)
+                        </span>
                       </p>
                       <p>
                         Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          300000 RPS
-                        </span>
+                        <span style={{ color: '#02c526' }}>300000 RPS</span>
                       </p>
                     </div>
                   </div>
@@ -179,20 +179,20 @@ class HowToPlayModal extends Component {
                       <p>
                         The following boxes are set (Prize/Price):{' '}
                         <span style={{ color: '#b52c22' }}>
-                          250000 RPS/40000 RPS, 0 RPS/60000 RPS, 0 RPS/100000 RPS
+                          250000 RPS/40000 RPS, 0 RPS/60000 RPS, 0 RPS/100000
+                          RPS
                         </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          Automatic(410000 RPS) [250000 RPS + 60000 RPS + 100000 RPS]
+                          Automatic(410000 RPS) [250000 RPS + 60000 RPS + 100000
+                          RPS]
                         </span>
                       </p>
                       <p>
                         Host Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          410000 RPS
-                        </span>
+                        <span style={{ color: '#02c526' }}>410000 RPS</span>
                       </p>
                       <p>
                         <i>
@@ -220,7 +220,8 @@ class HowToPlayModal extends Component {
                       <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
-                          Pick Your Number (Your Bet Amount): 100000-1000000 or 1000000-10000000
+                          Pick Your Number (Your Bet Amount): 100000-1000000 or
+                          1000000-10000000
                         </li>
                         <li>Set Payout for an Automatic cash out (optional)</li>
                       </ol>
@@ -240,17 +241,17 @@ class HowToPlayModal extends Component {
                       </p>
                       <p>
                         Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>Automatic(3000000 RPS)</span>
+                        <span style={{ color: '#f6b22a' }}>
+                          Automatic(3000000 RPS)
+                        </span>
                       </p>
                       <p>
-                        Guesses (in order): 100000, 200000, 1000000, 900000, 500000, 800000-{' '}
-                        <i>*Game ENDs automatically*</i>
+                        Guesses (in order): 100000, 200000, 1000000, 900000,
+                        500000, 800000- <i>*Game ENDs automatically*</i>
                       </p>
                       <p>
                         Host Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          4200000 RPS
-                        </span>
+                        <span style={{ color: '#02c526' }}>4200000 RPS</span>
                       </p>
                     </div>
                   </div>
@@ -298,9 +299,7 @@ class HowToPlayModal extends Component {
                       </p>
                       <p>
                         Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          1000000 RPS
-                        </span>
+                        <span style={{ color: '#02c526' }}>1000000 RPS</span>
                       </p>
                     </div>
                   </div>
@@ -321,8 +320,8 @@ class HowToPlayModal extends Component {
                         All our games are 100% Player vs. Player(s) and there
                         are zero random factors affecting the outcome of games,
                         players have complete control. Skilled players can
-                        improve over time. If you want to read more, you
-                        can go through{' '}
+                        improve over time. If you want to read more, you can go
+                        through{' '}
                         <a href="https://bitcointalk.org/index.php?topic=5194336.0">
                           this forum here
                         </a>
@@ -345,11 +344,22 @@ class HowToPlayModal extends Component {
                     <div className="modal-content-panel">
                       <p>
                         The only fees you pay is Token Tax i.e., the{' '}
-                        <u><a href="https://docs.rps.finance/economy/rps-finance/tokenomics/tax-and-dividends">Tokenomics</a>
-                        </u> which is deducted each time you take
-                        Winnings. Token tax works in favour of its investors and players, for example Automatic Dividends in BNB.
+                        <u>
+                          <a href="https://docs.rps.finance/economy/rps-finance/tokenomics/tax-and-dividends">
+                            Tokenomics
+                          </a>
+                        </u>{' '}
+                        which is deducted each time you take Winnings. Token tax
+                        works in favour of its investors and players, for
+                        example Automatic Dividends in BNB.
                       </p>
-                      <p><i>Please note, we are currently only partially on-chain so tax is only deducted on Withdrawals/Deposits. Otherwise, the platform is non-profit.</i></p>
+                      <p>
+                        <i>
+                          Please note, we are currently only partially on-chain
+                          so tax is only deducted on Withdrawals/Deposits.
+                          Otherwise, the platform is non-profit.
+                        </i>
+                      </p>
                       <table id="howto-modal">
                         <tbody>
                           <tr>
