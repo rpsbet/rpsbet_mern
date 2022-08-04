@@ -200,7 +200,7 @@ router.post('/answer', async (req, res) => {
 const convertGameLogToHistoryStyle = async gameLogList => {
   let result = [];
   const commission = await getCommission();
-  const commissionRate = 100 - commission;
+  const commissionRate = comission;
 
   gameLogList.forEach(gameLog => {
     try {
@@ -425,7 +425,7 @@ const getRoomList = async (pagination, page, game_type) => {
     .populate({ path: 'game_type', model: GameType })
     .populate({ path: 'brain_game_type', model: BrainGameType });
   const commission = await getCommission();
-  const commissionRate = 100 - commission;
+  const commissionRate = comission;
   const count = await Room.countDocuments(search_condition);
 
   let result = [];
@@ -721,7 +721,7 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
 
   let result = [];
   const commission = await getCommission();
-  const commissionRate = 100 - commission;
+  const commissionRate = comission;
 
   for (const room of rooms) {
     try {
@@ -861,7 +861,7 @@ router.post('/end_game', auth, async (req, res) => {
         roomInfo['room_number'];
     } else {
       const commission = await getCommission();
-      const percent = 100 - commission;
+      const percent = comission;
       const commissionRate = percent;
 
       if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
@@ -1271,8 +1271,7 @@ router.post('/bet', auth, async (req, res) => {
           (bet_item.rps === 'S' && req.body.selected_rps == 'R')
         ) {
           newGameLog.game_result = 1;
-          newTransactionJ.amount +=
-            bet_item.bet_amount * 2 * (100 - commission);
+          newTransactionJ.amount += bet_item.bet_amount * 2 * commission;
           message.message =
             'I won ' +
             bet_item.bet_amount * 2 +
@@ -1282,8 +1281,8 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else if (bet_item.rps === req.body.selected_rps) {
           newGameLog.game_result = 0;
-          newTransactionJ.amount += bet_item.bet_amount * (100 - commission);
-          newTransactionC.amount += bet_item.bet_amount * (100 - commission);
+          newTransactionJ.amount += bet_item.bet_amount * commission;
+          newTransactionC.amount += bet_item.bet_amount * commission;
 
           message.message =
             'We split ' +
@@ -1294,8 +1293,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else {
           newGameLog.game_result = -1;
-          newTransactionC.amount +=
-            bet_item.bet_amount * 2 * (100 - commission);
+          newTransactionC.amount += bet_item.bet_amount * 2 * commission;
 
           message.message =
             'I lost ' +
@@ -1329,9 +1327,7 @@ router.post('/bet', auth, async (req, res) => {
         if (roomInfo.selected_qs_position !== req.body.selected_qs_position) {
           newGameLog.game_result = 1;
           newTransactionJ.amount +=
-            roomInfo['bet_amount'] *
-            roomInfo['qs_game_type'] *
-            (100 - commission);
+            roomInfo['bet_amount'] * roomInfo['qs_game_type'] * commission;
           message.message =
             "You're not the best keeper are you? I just won " +
             roomInfo['bet_amount'] * roomInfo['qs_game_type'] +
@@ -1343,9 +1339,7 @@ router.post('/bet', auth, async (req, res) => {
         } else {
           newGameLog.game_result = -1;
           newTransactionC.amount +=
-            roomInfo['bet_amount'] *
-            roomInfo['qs_game_type'] *
-            (100 - commission);
+            roomInfo['bet_amount'] * roomInfo['qs_game_type'] * commission;
 
           message.message =
             'The boots suck, I just lost ' +
@@ -1367,7 +1361,7 @@ router.post('/bet', auth, async (req, res) => {
 
         if (roomInfo.bet_amount == req.body.bet_amount) {
           newTransactionJ.amount +=
-            (roomInfo['pr'] + roomInfo['bet_amount']) * (100 - commission);
+            (roomInfo['pr'] + roomInfo['bet_amount']) * commission;
 
           roomInfo.status = 'finished';
           newGameLog.game_result = 1;
@@ -1420,7 +1414,7 @@ router.post('/bet', auth, async (req, res) => {
         newGameLog.game_result = selected_box.box_prize;
 
         newTransactionJ.amount -= selected_box.box_price;
-        newTransactionJ.amount += selected_box.box_prize * (100 - commission);
+        newTransactionJ.amount += selected_box.box_prize * commission;
 
         if (selected_box.box_prize === 0) {
           message.message =
@@ -1465,7 +1459,7 @@ router.post('/bet', auth, async (req, res) => {
           max_prize === 0
         ) {
           roomInfo.status = 'finished';
-          newTransactionC.amount += new_host_pr * (100 - commission);
+          newTransactionC.amount += new_host_pr * commission;
 
           const messageC =
             'I made ' +
@@ -1516,8 +1510,8 @@ router.post('/bet', auth, async (req, res) => {
             '-' +
             roomInfo['room_number'];
 
-          newTransactionJ.amount += (roomInfo['pr'] * (100 - commission)) / 2;
-          newTransactionC.amount += (roomInfo['pr'] * (100 - commission)) / 2;
+          newTransactionJ.amount += (roomInfo['pr'] * comission) / 2;
+          newTransactionC.amount += (roomInfo['pr'] * comission) / 2;
 
           roomInfo.status = 'finished';
           newGameLog.game_result = 0;
@@ -1531,7 +1525,7 @@ router.post('/bet', auth, async (req, res) => {
             '-' +
             roomInfo['room_number'];
 
-          newTransactionJ.amount += roomInfo['pr'] * (100 - commission);
+          newTransactionJ.amount += roomInfo['pr'] * comission;
 
           newGameLog.game_result = 1;
           roomInfo.status = 'finished';
@@ -1551,7 +1545,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['host_pr'] >= roomInfo['endgame_amount']
           ) {
             roomInfo.status = 'finished';
-            newTransactionC.amount += roomInfo['host_pr'] * (100 - commission);
+            newTransactionC.amount += roomInfo['host_pr'] * comission;
           }
         }
       }
