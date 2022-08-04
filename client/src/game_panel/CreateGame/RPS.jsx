@@ -83,13 +83,6 @@ class RPS extends Component {
             />
             <h3 className="game-sub-title">
               Select: Rock - Paper - Scissors!{' '}
-              <button
-                id="btn-add-run"
-                className="other"
-                onClick={this.onAddRun}
-              >
-                + Add Run
-              </button>
             </h3>
             <div id="rps-radio">
               <span
@@ -118,6 +111,13 @@ class RPS extends Component {
                 }}
               ></span>
             </div>
+            <button
+                id="btn-add-run"
+                className="other"
+                onClick={this.onAddRun}
+              >
+                + Add Run
+              </button>
           </div>
           <div className="rps-add-run-table">
             <h3 className="game-sub-title">Runs</h3>
@@ -146,7 +146,7 @@ class RPS extends Component {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4">Please add a run.</td>
+                    <td colSpan="4">Please add a run</td>
                   </tr>
                 )}
               </tbody>
