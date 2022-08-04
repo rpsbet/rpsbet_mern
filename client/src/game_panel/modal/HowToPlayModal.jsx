@@ -121,7 +121,7 @@ class HowToPlayModal extends Component {
                       <ol>
                         <li>Try to Win</li>
                       </ol>
-                    </div>
+              </div>
                     <div className="modal-content-panel">
                       <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
                       <p>e.g.</p>

@@ -610,6 +610,10 @@ div.table .table-row .table-cell img.game-type-icon {
   
 }
 @media (max-width: 992px) {
+  
+.bet-amounts .other.active {
+  margin-top: 4%;
+}
 }
 
 /* 
@@ -626,6 +630,7 @@ div.table .table-row .table-cell img.game-type-icon {
 */
 
 @media (min-width: 481px) and (max-width: 767px) {
+  
 }
 
 /* 
@@ -634,5 +639,6 @@ div.table .table-row .table-cell img.game-type-icon {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+
 
 }

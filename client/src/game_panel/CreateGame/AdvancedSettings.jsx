@@ -27,11 +27,11 @@ class AdvancedSettings extends Component {
 						<button className={(!this.props.endgame_type ? ' active' : '')} onClick={() => { this.props.onChangeState({endgame_type: false}); }}>Manual</button>
 						<button className={(this.props.endgame_type ? ' active' : '')} onClick={() => { this.props.onChangeState({endgame_type: true}); }}>Automatic</button>
 						<div className={`edit-amount-panel ${this.props.endgame_type ? '' : 'hidden'}`}>
-							<span>RPS </span>
 							<input type="text" pattern="[0-9]*" name="endgame_amount" id="endgame_amount" 
 								value={this.props.endgame_amount} 
 								onChange={(e) => {this.props.onChangeState({endgame_amount: e.target.value})}} 
 								placeholder="End Game Amount" />
+							<span> RPS</span>
 						</div>
 					</div>
 					<p className="tip">Choose Automatic to cashout at a set amount.</p>

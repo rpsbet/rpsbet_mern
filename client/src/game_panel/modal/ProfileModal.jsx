@@ -101,19 +101,19 @@ class ProfileModal extends Component {
                     </div>
                     <div className="modal-edit-panel">
                         <div>
-                            <p>User Name</p>
+                            <p>USERNAME</p>
                             <input className="form-control" value={this.state.username} readOnly />
                         </div>
                         <div>
-                            <p>Email</p>
+                            <p>EMAIL</p>
                             <input className="form-control" value={this.state.email} readOnly />
                         </div>    
                         <div>
-                            <p>New Password</p>
+                            <p>NEW PASSWORD</p>
                             <input type="password" className="form-control" value={this.state.password} onChange={this.handleChangePassword} />
                         </div>
                         <div>
-                            <p>Password Confirmation</p>
+                            <p>PASSWORD CONFIRMATION</p>
                             <input type="password" className="form-control" value={this.state.passwordConfirmation} onChange={this.handleChangePasswordConfirmation} />
                         </div>    
                     </div>

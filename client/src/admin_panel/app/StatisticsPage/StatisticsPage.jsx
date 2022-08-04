@@ -37,7 +37,7 @@ class PalletPage extends Component {
             <div>Total Deposited: {addCurrencySignal(this.state.totalDeposited)}</div>
             <div>Total Withdrawn: {addCurrencySignal(this.state.totalWithdrawn)}</div>
             <div>Total in PayPal Bank (Total Deposited - Total Withdrawn): {addCurrencySignal(this.state.totalDeposited - this.state.totalWithdrawn)}</div>
-            <div>Total Virtual Balance + Live Games Running: {addCurrencySignal(0)}</div>
+            <div>Total Virtual Balance + Live Stakes Running: {addCurrencySignal(0)}</div>
           </StatsDiv>
           <MyChart series={this.state.volumeOfBets}></MyChart>
         </MainContent>

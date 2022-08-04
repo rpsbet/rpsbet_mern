@@ -1368,7 +1368,7 @@ input {
         margin: 24px 0;
     }
     #rps-radio span {
-        width: 311px;
+        width: 262px;
         margin: 0;
         max-width: 100%;
     }
@@ -1448,6 +1448,29 @@ input {
     }
 }
 @media (max-width: 400px) {
+    .rps-add-run-panel {
+        flex-direction: column-reverse;
+    }
+
+    .pre-summary-panel {
+        margin-bottom: 30px;
+    }
+
+    .rps-add-run-table table.tbl tr td:first-child { display: none; }
+
+    .rps-add-run-panel {
+        padding: 20px;
+    }
+
+    .rps-add-run-table {
+        padding-left: 0;
+    }
+
+    .rps-add-run-panel>div.rps-add-run-form {
+        padding-right: 0;
+        border-right: none;
+    }
+
    .game-type-panel::-webkit-scrollbar {
         display: none;
     }

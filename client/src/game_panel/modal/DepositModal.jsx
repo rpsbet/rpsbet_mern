@@ -115,7 +115,7 @@ class DepositModal extends Component {
             <button className="btn-close" onClick={this.props.closeModal}>
               ×
             </button>
-            <h2>Deposit</h2>
+            <h2>DEPOSIT</h2>
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
                 <a
@@ -123,11 +123,11 @@ class DepositModal extends Component {
                   href="https://pancakeswap.finance/swap"
                   target="_blank"
                 >
-                  Buy RPS
+                  BUY RPS
                 </a>
                 <p>{tokenAddr}</p>
                 <label className="availabletag">
-                  <span>available</span> {this.state.balance}
+                  <span>AVAILABLE:  </span> {this.state.balance}
                 </label>
                 <input
                   pattern="[0-9]*"

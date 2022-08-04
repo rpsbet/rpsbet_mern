@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 class Spleesh extends Component {
 	createNumberPanel() {
 		let panel = [];
-		for (let i = 100000; i <= 1000000; i+= 100000) {
+		for (let i = 0; i <= 1000000; i+= 100000) {
 			panel.push( <button
 					className={(this.props.bet_amount / this.props.spleesh_bet_unit === i ? ' active' : '')}
 					onClick={() => { this.props.onChangeState({

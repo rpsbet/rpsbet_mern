@@ -169,7 +169,7 @@ class HistoryTable extends Component {
         <div className="table main-history-table">
           {this.state.history?.length === 0 && (
             <div className="dont-have-game-msg">
-              <div>There aren't any histories right now.</div>
+              <div>NO HISTORY YET</div>
             </div>
           )}
           {this.state.history?.map(

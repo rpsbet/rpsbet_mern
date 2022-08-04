@@ -44,7 +44,7 @@ class OpenGamesTable extends Component {
     if (e.target.getAttribute('room_status') === 'finished') {
       alertModal(
         this.props.isDarkMode,
-        `You can't join this stake as it has ended.`
+        `You can't join this game as it has ended.`
       );
       return;
     }
@@ -233,9 +233,8 @@ class OpenGamesTable extends Component {
                   </div>
                   <div className="table-cell desktop-only cell-amount-info">
                     {row.game_type.game_type_name === 'Spleesh!'
-                      ? ' RPS' +
-                        row.spleesh_bet_unit +
-                        ' - RPS ' +
+                      ? row.spleesh_bet_unit + ' RPS' +
+                        ' - ' +
                         row.spleesh_bet_unit * 100000
                       : updateDigitToPoint2(row.user_bet)}{' '}RPS
                     / {row.winnings}

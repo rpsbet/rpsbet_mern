@@ -86,7 +86,7 @@ class Spleesh extends Component {
 
     createNumberPanel = () => {
 		let panel = [];
-		for (let i = 1; i <= 100000; i+= 100000) {
+		for (let i = 0; i <= 100000; i+= 100000) {
 			panel.push( <button
 					className={(this.state.bet_amount / this.props.spleesh_bet_unit === i ? ' active' : '')}
 					onClick={() => { this.setState({

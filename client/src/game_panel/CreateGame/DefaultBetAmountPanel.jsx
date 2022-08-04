@@ -63,7 +63,6 @@ class DefaultBetAmountPanel extends Component {
         <div
           className={`edit-amount-panel ${this.state.is_other ? '' : 'hidden'}`}
         >
-          <span>RPS </span>
           <input
             type="text"
             pattern="[0-9]*"
@@ -93,6 +92,7 @@ class DefaultBetAmountPanel extends Component {
             }}
             placeholder="Bet Amount"
           />
+          <span> RPS</span>
         </div>
         {this.props.game_type === 'RPS' ? (
           <p className="tip">The cost to play this RUN</p>

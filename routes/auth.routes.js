@@ -56,7 +56,7 @@ router.post('/', (req, res) => {
         (err, token) => {
           res.json({
             success: true,
-            message: 'User logged in',
+            message: 'NICE, YOU\'RE IN!',
             token,
             user
           });
@@ -201,7 +201,7 @@ router.post('/logout', auth, async (req, res) => {
     req.user.save();
     res.json({
       success: true,
-      message: 'User has been logged out'
+      message: 'LOGGED OUT'
     });
   } catch (error) {
     res.json({ success: false, error });
