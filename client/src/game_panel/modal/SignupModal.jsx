@@ -90,17 +90,17 @@ class SignupModal extends Component {
                 <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                     <div className="modal-body">
                         <button className="btn-close" onClick={this.props.closeModal}>×</button>
-                        <h4>Welcome!</h4>
-                        <h2>Join the Community</h2>
+                        <h4>WELCOME!</h4>
+                        <h2>JOIN IN THE COMMUNITY</h2>
                         <form onSubmit={this.onSubmitForm}>
-                            <p>Your username</p>
-                            <input placeholder="Pick a username (case sensitive)" type="text" className="form-control" value={this.state.userName} onChange={this.onChangeUserName}  />
-                            <p>Your email address</p>
+                            <p>YOUR USERNAME</p>
+                            <input placeholder="CasE SeNsItIvE)" type="text" className="form-control" value={this.state.userName} onChange={this.onChangeUserName}  />
+                            <p>YOUR EMAIL</p>
                             <input placeholder="Enter an email for verification" type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail}  />
-                            <p>Your password</p>
+                            <p>YOUR PASSWORD</p>
                             <input placeholder="Create a secure password" type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword}  />
-                            <button className="btn-submit">Sign Up</button>
-                            <p className="m-0 sm-text-center">Already a member? <button onClick={(e) => { this.props.closeModal(); this.props.openLoginModal(); }}>Login here →</button></p>
+                            <button className="btn-submit">Register</button>
+                            <p className="m-0 sm-text-center">ALREADY REGISTERED? <button onClick={(e) => { this.props.closeModal(); this.props.openLoginModal(); }}>LOGIN HERE →</button></p>
                         </form>
                     </div>
                 </div>

@@ -81,10 +81,10 @@ class WithdrawModal extends Component {
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
 				<div className="modal-body edit-modal-body deposit-modal-body">
                     <button className="btn-close" onClick={this.props.closeModal}>×</button>
-                    <h2>Withdraw</h2>
+                    <h2>WITHDRAW</h2>
                     <div className="modal-content-wrapper">
 						<div className="modal-content-panel">
-                            <label className="availabletag"><span>available</span> {this.state.balance}</label>
+                            <label className="availabletag"><span>AVAILABLE: </span> {this.state.balance}</label>
                             <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} className="form-control" />
                             <div className="modal-action-panel">
                                 <button className="btn-submit" onClick={this.send}>Withdraw</button>

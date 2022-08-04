@@ -376,8 +376,8 @@ class SiteWrapper extends Component {
                 TabIndicatorProps={{ style: { background: '#c438ef' } }}
                 className="main-game-page-tabs desktop-only"
               >
-                <Tab label="Live Games" style={customStyles.tabRoot} />
-                <Tab label="My Games" style={customStyles.tabRoot} />
+                <Tab label="Live Stakes" style={customStyles.tabRoot} />
+                <Tab label="My Stakes" style={customStyles.tabRoot} />
               </Tabs>
               <div className="header_action_panel">
                 { /*<a
@@ -511,11 +511,11 @@ class SiteWrapper extends Component {
                             }
                           >
                             {row.amount > 0
-                              ? '+ RPS' + updateDigitToPoint2(row.amount)
-                              : '- RPS' +
+                              ? '+ ' + updateDigitToPoint2(row.amount) + ' RPS'
+                              : '- ' +
                                 updateDigitToPoint2(
                                   Math.abs(row.amount)
-                                )}
+                                ) + ' RPS'}
                           </td>
                           <td className="fromNow">{row.from_now}</td>
                         </tr>
