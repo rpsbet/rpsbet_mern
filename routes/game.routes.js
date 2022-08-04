@@ -464,19 +464,22 @@ const getRoomList = async (pagination, page, game_type) => {
           bet_amount: 'desc'
         });
         if (!gameLogList || gameLogList.length == 0) {
-          temp.winnings = temp.spleesh_bet_unit * 10 + ' RPS';
+          temp.winnings = temp.spleesh_bet_unit + ' RPS';
         } else {
-          for (let i = 100000; i > 0; i -= 100000) {
+          for (let i = 10; i > 0; i--) {
             let is_exist = false;
             for (let j = 0; j < gameLogList.length; j++) {
-              if (gameLogList[j].bet_amount == i * temp.spleesh_bet_unit) {
+              if (
+                gameLogList[j].bet_amount ==
+                i * 100000 * temp.spleesh_bet_unit
+              ) {
                 is_exist = true;
                 break;
               }
             }
 
             if (!is_exist) {
-              temp.winnings = i * temp.spleesh_bet_unit + ' RPS';
+              temp.winnings = i * 100000 * temp.spleesh_bet_unit + ' RPS';
               break;
             }
           }
