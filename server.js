@@ -94,7 +94,7 @@ app.use('/api/settings', systemSetting);
 
 // Set static folder
 app.use(express.static('client/build'));
-
+cd
 // app.get('*', (req, res) => {
 //   res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
 // });
