@@ -200,7 +200,7 @@ router.post('/answer', async (req, res) => {
 const convertGameLogToHistoryStyle = async gameLogList => {
   let result = [];
   const commission = await getCommission();
-  const commissionRate = comission;
+  const commissionRate = commission;
 
   gameLogList.forEach(gameLog => {
     try {
@@ -425,7 +425,7 @@ const getRoomList = async (pagination, page, game_type) => {
     .populate({ path: 'game_type', model: GameType })
     .populate({ path: 'brain_game_type', model: BrainGameType });
   const commission = await getCommission();
-  const commissionRate = comission;
+  const commissionRate = commission;
   const count = await Room.countDocuments(search_condition);
 
   let result = [];
@@ -721,7 +721,7 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
 
   let result = [];
   const commission = await getCommission();
-  const commissionRate = comission;
+  const commissionRate = commission;
 
   for (const room of rooms) {
     try {
@@ -794,9 +794,10 @@ router.get('/my_games', auth, async (req, res) => {
       pages: Math.ceil(rooms.count / pagination)
     });
   } catch (err) {
+    console.log({ err: err.toString() });
     res.json({
       success: false,
-      message: err
+      message: err.toString()
     });
   }
 });
@@ -861,7 +862,7 @@ router.post('/end_game', auth, async (req, res) => {
         roomInfo['room_number'];
     } else {
       const commission = await getCommission();
-      const percent = comission;
+      const percent = commission;
       const commissionRate = percent;
 
       if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
@@ -1510,8 +1511,8 @@ router.post('/bet', auth, async (req, res) => {
             '-' +
             roomInfo['room_number'];
 
-          newTransactionJ.amount += (roomInfo['pr'] * comission) / 2;
-          newTransactionC.amount += (roomInfo['pr'] * comission) / 2;
+          newTransactionJ.amount += (roomInfo['pr'] * commission) / 2;
+          newTransactionC.amount += (roomInfo['pr'] * commission) / 2;
 
           roomInfo.status = 'finished';
           newGameLog.game_result = 0;
@@ -1525,7 +1526,7 @@ router.post('/bet', auth, async (req, res) => {
             '-' +
             roomInfo['room_number'];
 
-          newTransactionJ.amount += roomInfo['pr'] * comission;
+          newTransactionJ.amount += roomInfo['pr'] * commission;
 
           newGameLog.game_result = 1;
           roomInfo.status = 'finished';
@@ -1545,7 +1546,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['host_pr'] >= roomInfo['endgame_amount']
           ) {
             roomInfo.status = 'finished';
-            newTransactionC.amount += roomInfo['host_pr'] * comission;
+            newTransactionC.amount += roomInfo['host_pr'] * commission;
           }
         }
       }
