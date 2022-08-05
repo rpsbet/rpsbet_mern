@@ -59,6 +59,9 @@ import Avatar from '../components/Avatar';
 import Web3 from 'web3';
 import abi from '../config/abi_token.json';
 import { tokenAddr } from '../config/index.js';
+
+LoadingOverlay.propTypes = undefined
+
 const mainTheme = createTheme({
   palette: {
     type: 'light'

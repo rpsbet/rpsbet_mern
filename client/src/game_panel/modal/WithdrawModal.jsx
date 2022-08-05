@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import LoadingOverlay from 'react-loading-overlay';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import Modal from 'react-modal';
@@ -33,6 +34,7 @@ class WithdrawModal extends Component {
             web3: props.web3,
             balance: props.balance,
             account: props.account,
+            isLoading: false
         };
     }
 
@@ -43,27 +45,31 @@ class WithdrawModal extends Component {
         })
     }
     send = async () => {
-        try{
+        try {
             if (this.state.amount <= 0) {
                 alertModal(this.props.isDarkMode, `Amount is wrong.`)
                 return;
             }
-    
+            
             if (this.state.amount > this.state.balance) {
                 alertModal(this.props.isDarkMode, `Sorry, you can withdraw your balance at most.`)
                 return;
             }
+            this.setState({ isLoading: true })
             const result = await axios.post('/stripe/withdraw_request/', { amount: this.state.amount, addressTo: this.state.account});
-    
+            
             if (result.data.success) {
                 alertModal(this.props.isDarkMode, result.data.message)
                 this.props.setBalance(result.data.balance);
                 this.props.addNewTransaction(result.data.newTransaction);
+                this.setState({ isLoading: false })
                 this.props.closeModal();
             } else {
+                this.setState({ isLoading: false })
                 alertModal(this.props.isDarkMode, `Something went wrong. Please try again in a few minutes.`)
             }
-        }catch(e){
+        } catch(e) {
+            this.setState({ isLoading: false })
             if (this.state.amount <= 0) {
                 alertModal(this.props.isDarkMode, `Something went wrong`);
                 return;
@@ -72,29 +78,47 @@ class WithdrawModal extends Component {
 
     }
     render() {
-        return <Modal
-            isOpen={this.props.modalIsOpen}
-            onRequestClose={this.props.closeModal}
-            style={customStyles}
-            contentLabel="Deposit Modal"
-        >
-            <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-				<div className="modal-body edit-modal-body deposit-modal-body">
-                    <button className="btn-close" onClick={this.props.closeModal}>×</button>
-                    <h2>WITHDRAW</h2>
-                    <div className="modal-content-wrapper">
-						<div className="modal-content-panel">
-                            <label className="availabletag"><span>AVAILABLE: </span> {this.state.balance}</label>
-                            <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} className="form-control" />
-                            <div className="modal-action-panel">
-                                <button className="btn-submit" onClick={this.send}>Withdraw</button>
-                                <button className="btn-back" onClick={this.props.closeModal}>CANCEL</button>
+        console.log({ loading: this.state.isLoading })
+        return (
+            <>
+                <LoadingOverlay
+                    active={true}
+                    spinner
+                    text="Please wait..."
+                    styles={{
+                        wrapper: {
+                            position: 'fixed',
+                            width: '100%',
+                            height: '100vh',
+                            zIndex: this.state.isLoading ? 999 : 0
+                        }
+                    }}
+                />
+                <Modal
+                    isOpen={this.props.modalIsOpen}
+                    onRequestClose={this.props.closeModal}
+                    style={customStyles}
+                    contentLabel="Deposit Modal"
+                >
+                    <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                        <div className="modal-body edit-modal-body deposit-modal-body">
+                            <button className="btn-close" onClick={this.props.closeModal}>×</button>
+                            <h2>WITHDRAW</h2>
+                            <div className="modal-content-wrapper">
+                                <div className="modal-content-panel">
+                                    <label className="availabletag"><span>AVAILABLE: </span> {this.state.balance}</label>
+                                    <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} className="form-control" />
+                                    <div className="modal-action-panel">
+                                        <button className="btn-submit" onClick={this.send}>Withdraw</button>
+                                        <button className="btn-back" onClick={this.props.closeModal}>CANCEL</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </Modal>;
+                </Modal>
+            </>
+        )
     }
 }
 

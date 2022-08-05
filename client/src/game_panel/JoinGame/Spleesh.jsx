@@ -133,7 +133,7 @@ class Spleesh extends Component {
 
   createNumberPanel = () => {
     let panel = [];
-    for (let i = 0; i <= 100000; i += 100000) {
+    for (let i = 1; i <= 10; i ++) {
       panel.push(
         <button
           className={
@@ -159,7 +159,7 @@ class Spleesh extends Component {
   render() {
     let previous_guesses = '';
     let pot = 0;
-    for (let i = 0; i < this.props.game_log_list.length; i += 100000) {
+    for (let i = 1; i < this.props.game_log_list.length; i ++) {
       previous_guesses +=
         (i === 0 ? '' : ', ') + ' RPS' + this.props.game_log_list[i].bet_amount;
       pot += this.props.game_log_list[i].bet_amount;
