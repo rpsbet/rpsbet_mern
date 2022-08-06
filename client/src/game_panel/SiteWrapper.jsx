@@ -59,6 +59,9 @@ import Avatar from '../components/Avatar';
 import Web3 from 'web3';
 import abi from '../config/abi_token.json';
 import { tokenAddr } from '../config/index.js';
+
+LoadingOverlay.propTypes = undefined
+
 const mainTheme = createTheme({
   palette: {
     type: 'light'
@@ -407,7 +410,7 @@ class SiteWrapper extends Component {
                 {this.props.isAuthenticated ? (
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>
-                      {Math.floor(this.state.balance * 100000) / 100000}
+                      {(Math.floor(this.state.balance * 100000) / 100000).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                       &nbsp; RPS
                     </span>
                     <Button
