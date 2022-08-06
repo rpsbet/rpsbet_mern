@@ -91,7 +91,7 @@ class TermsModal extends Component {
                         educational institutions and trade associations.<br/>
                         We will approve link requests from these organizations if we decide that: (a) the link would not make us look unfavorably to ourselves or to our accredited businesses; (b) the organization does not have any negative records with us; (c) the benefit to us from the visibility of the hyperlink compensates the absence of RPS Bet; and (d) the link is in the context of general resource information.<br/>
                         These organizations may link to our home page so long as the link: (a) is not in any way deceptive; (b) does not falsely imply sponsorship, endorsement or approval of the linking party and its products or services; and (c) fits within the context of the linking party’s site.<br/>
-                        If you are one of the organizations listed in paragraph 2 above and are interested in linking to our site, you must inform us by sending an e-mail to online@rpsbet.com. Please include your name, your organization name, contact information as well as the URL of your site, a list of any URLs from which you intend to link to our site, and a list of the URLs on our site to which you would like to link. Wait 2-3 days for a response.<br/>
+                        If you are one of the organizations listed in paragraph 2 above and are interested in linking to our site, you must inform us by sending an e-mail to support@rpsbet.io. Please include your name, your organization name, contact information as well as the URL of your site, a list of any URLs from which you intend to link to our site, and a list of the URLs on our site to which you would like to link. Wait 2-3 days for a response.<br/>
                         Approved organizations may hyperlink to our site as follows:<br/>
                         <br/>
                         By use of our corporate name; or<br/>
@@ -133,7 +133,7 @@ class TermsModal extends Component {
                         <h5>3.1 How it Works</h5>
                         You get a limited license and right to use Virtual Bets after visiting the payment gateway in one of our games or Services and providing billing authorization through the gateway on which relates to the game you are playing.<br/>
                         When you make a purchase on RPS Bet, the payment gateway will let you know what payment methods you can use to pay when you make your purchase. The price of the product will be the price indicated on the order page when you place your order. When your purchase is complete, we may send you a confirmation email that will have details of the items you have ordered. Please check that the details in the confirmation message are correct as soon as possible and keep a copy of it for your records. RPS Bet may keep records of RPS Bet transactions in order to handle any future questions about that transaction.<br/>
-                        You can contact our Online Support team (online@rpsbet.com) for questions concerning refunds of purchases.<br/>
+                        You can contact our Online Support team (support@rpsbet.io) for questions concerning refunds of purchases.<br/>
                         For Virtual Bets, your order will represent an offer to us to obtain a limited license and right to use the relevant Service(s) or Virtual Bet(s) that will be accepted by us when we accept payment. At that point, the limited license begins.<br/>
                         For orders to obtain a limited license and right to use Virtual Bets, by clicking the purchase/order button on the purchase window or page you:<br/>
                         <br/>
@@ -148,7 +148,7 @@ class TermsModal extends Component {
                         You agree to pay all fees and applicable taxes incurred by you or anyone using an Account registered to you. RPS Bet may revise the pricing for the goods and services it licenses to you through the Services at any time.<br/>
                         <br/>
                         <h5>3.3 Billing Support</h5>
-                        For billing support, please contact us through online@rpsbet.com in which you will receive a response within 2 working days. Please note that e-mail support for billing-related issues and questions is available in English only.<br/>
+                        For billing support, please contact us through support@rpsbet.io in which you will receive a response within 2 working days. Please note that e-mail support for billing-related issues and questions is available in English only.<br/>
                         <br/>
                         <h5>4.0 Promotions and Offers</h5>
                         From time to time, we may offer limited-time promotions. In addition, from time to time, we may promote Offers. We are not required to give, and you are not required to accept, any Offer. Offers are not transferable, redeemable, or exchangeable for other things of value, except at our sole discretion. If you accept any Offer, you may have to sign a declaration of eligibility and liability release or other paperwork to receive the Offer. Some Offers will be subject to taxes and other charges, travel, or activities outside of the virtual world, all of which will be disclosed before you accept the offer. If you accept any Offer, you assume all liability associated with the Offer.<br/>
@@ -203,14 +203,14 @@ class TermsModal extends Component {
                         <h5>17.0 Complaints and Disputes</h5>
                         We are committed to providing a high standard of service to our players and our Internal Complaints Procedure is designed to resolve problems and difficulties quickly and easily.<br/>
                         <br/>
-                        For all Enquiries: online@rpsbet.com<br/>
+                        For all Enquiries: support@rpsbet.io<br/>
                         <br/>
                         <h5>Contact Us</h5>
-                        If you have any questions about this Terms Policy, please contact online@rpsbet.com.<br/>
+                        If you have any questions about this Terms Policy, please contact support@rpsbet.io.<br/>
                     </div>
 
                     <h5 className="mt-3">For All Enquiries</h5>
-                    <p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>online@rpsbet.com</u>. We thank you for playing!</p>
+                    <p>For any technical/general problems, please contact <u style={{color: "#f5b22d"}}>support@rpsbet.io</u>. We thank you for playing!</p>
                 </div>
             </div>
         </Modal>;

@@ -59,9 +59,9 @@ class ResetPasswordModal extends Component {
                             <button className="btn-close" onClick={this.props.closeModal}>×</button>
                             <h2>RECOVER PASSWORD</h2>
                             <form onSubmit={this.onSubmitForm}>
-                                <p>YOUR E-MAIL ADDRESS</p>
+                                <p>YOUR EMAIL ADDRESS</p>
                                 <input type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail} />
-                                <button className="btn-submit">Send E-mail</button>
+                                <button className="btn-submit">Send Email</button>
                                 <p className="m-0 sm-text-center"><button onClick={(e) => { this.props.closeModal(); this.props.openLoginModal(); }}>Back to Login →</button></p>
                             </form>
                         </div>

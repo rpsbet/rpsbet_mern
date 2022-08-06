@@ -25,8 +25,8 @@ const sendEmail = (to, content, subject, template_id) => {
                 dynamic_template_data: content,
                 subject: subject
             }],
-            from: { email: 'online@rpsbet.com', name: 'Rpsbet' },
-            reply_to: { email: 'online@rpsbet.com', name: 'Rpsbet' },
+            from: { email: 'support@rpsbet.io', name: 'Rpsbet' },
+            reply_to: { email: 'support@rpsbet.io', name: 'Rpsbet' },
             template_id: template_id
         },
         json: true 

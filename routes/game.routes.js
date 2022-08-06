@@ -181,10 +181,10 @@ router.post('/answer', async (req, res) => {
 	}
 });
 
-const convertGameLogToHistoryStyle = async gameLogList => {
-  let result = [];
-  const commission = await getCommission();
-  const commissionRate = comission;
+const convertGameLogToHistoryStyle = async (gameLogList) => {
+	let result = [];
+	const commission = await getCommission();
+	const commissionRate = (100 - commission) / 100.0;
 
 	gameLogList.forEach(gameLog => {
 		try {
@@ -321,15 +321,13 @@ const getRoomList = async (pagination, page, game_type) => {
 	.skip(pagination * page - pagination)
 	.limit(pagination)
 
-  const rooms = await Room.find({
-    _id: { $in: preRooms.map(({ _id }) => _id) }
-  })
-    .populate({ path: 'creator', model: User })
-    .populate({ path: 'game_type', model: GameType })
-    .populate({ path: 'brain_game_type', model: BrainGameType });
-  const commission = await getCommission();
-  const commissionRate = comission;
-  const count = await Room.countDocuments(search_condition);
+	const rooms = await Room.find({ _id: { $in: preRooms.map(({ _id }) => _id) } })
+		.populate({path: 'creator', model: User})
+		.populate({path: 'game_type', model: GameType})
+		.populate({path: 'brain_game_type', model: BrainGameType})
+	const commission = await getCommission();
+	const commissionRate = (100 - commission) / 100.0;
+	const count = await Room.countDocuments(search_condition);
 
 	let result = [];
 	for (const room of rooms) {
@@ -585,22 +583,20 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
 	const commission = await getCommission();
 	const commissionRate = (100 - commission) / 100.0;
 
-  for (const room of rooms) {
-    try {
-      let temp = {
-        _id: room['_id'],
-        game_type: room['game_type'],
-        bet_amount: room['bet_amount'],
-        pr: room['host_pr'],
-        winnings: '',
-        index: room['room_number'],
-        endgame_amount: room['endgame_amount'],
-        is_private: room['is_private']
-      };
-
-      const gameLogCount = await GameLog.countDocuments({
-        room: new ObjectId(room._id)
-      });
+	for (const room of rooms) {
+		try {
+			let temp = {
+				_id : room['_id'],
+				game_type : room['game_type'],
+				bet_amount : room['bet_amount'],
+				pr : room['host_pr'], 
+				winnings : '',
+				index: room['room_number'],
+				endgame_amount: room['endgame_amount'],
+				is_private: room['is_private'],
+			};
+			
+			const gameLogCount = await GameLog.countDocuments({ room: new ObjectId(room._id) });
 
 			if (temp.game_type.game_type_id === 1) { // RPS
 				temp.pr = updateDigitToPoint2(temp.pr * 2 * commissionRate);
@@ -638,19 +634,19 @@ router.get('/my_games', auth, async (req, res) => {
 		const game_type = req.query.game_type ? req.query.game_type : 'RPS';
 		const rooms = await getMyRooms(req.user._id, pagination, page, game_type);
 
-    res.json({
-      success: true,
-      page: page,
-      myGames: rooms.rooms,
-      total: rooms.count,
-      pages: Math.ceil(rooms.count / pagination)
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err
-    });
-  }
+		res.json({
+			success: true,
+			page: page,
+			myGames: rooms.rooms,
+			total: rooms.count,
+			pages: Math.ceil(rooms.count / pagination)
+		});
+	} catch (err) {
+		res.json({
+			success: false,
+			message: err
+		});
+	}
 });
 
 router.post('/end_game', auth, async (req, res) => {
@@ -694,17 +690,11 @@ router.post('/end_game', auth, async (req, res) => {
 		if (gameLogCount === 0) {
 			newTransaction.amount += roomInfo['bet_amount'] * 100;
 
-      message.message =
-        'I made ' +
-        roomInfo['bet_amount'] +
-        ' RPS from UNSTAKING ' +
-        roomInfo['game_type']['short_name'] +
-        '-' +
-        roomInfo['room_number'];
-    } else {
-      const commission = await getCommission();
-      const percent = comission;
-      const commissionRate = percent;
+			message.message = "I made " + roomInfo['bet_amount'] + " RPS from UNSTAKING " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
+		} else {
+			const commission = await getCommission();
+			const percent = 100 - commission;
+			const commissionRate = percent / 100.0;
 
 			if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
 				newTransaction.amount += roomInfo['host_pr'] * percent;
@@ -1200,98 +1190,82 @@ router.post('/bet', auth, async (req, res) => {
 					newTransactionJ.amount += roomInfo['pr'] * (100 - commission) / 2;
 					newTransactionC.amount += roomInfo['pr'] * (100 - commission) / 2;
 
-          roomInfo.status = 'finished';
-          newGameLog.game_result = 0;
-        } else if (roomInfo.brain_game_score < req.body.brain_game_score) {
-          //win       WOW, What a BRAIN BOX - You WIN!
-          message.message =
-            'I won ' +
-            roomInfo['pr'] +
-            ' RPS in ' +
-            roomInfo['game_type']['short_name'] +
-            '-' +
-            roomInfo['room_number'];
+					roomInfo.status = 'finished';
+					newGameLog.game_result = 0;
+				} else if (roomInfo.brain_game_score < req.body.brain_game_score) { //win       WOW, What a BRAIN BOX - You WIN!
+					message.message = "I won " + roomInfo['pr'] + " RPS in " 
+						+ roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
-          newTransactionJ.amount += roomInfo['pr'] * comission;
+					newTransactionJ.amount += roomInfo['pr'] * (100 - commission);
 
-          newGameLog.game_result = 1;
-          roomInfo.status = 'finished';
-        } else {
-          //failed    Oops, back to school for you loser!!
-          message.message =
-            'I lost ' +
-            roomInfo['bet_amount'] +
-            ' RPS in ' +
-            roomInfo['game_type']['short_name'] +
-            '-' +
-            roomInfo['room_number'];
+					newGameLog.game_result = 1;
+					roomInfo.status = 'finished';
+				} else {    //failed    Oops, back to school for you loser!!
+					message.message = "I lost " + (roomInfo['bet_amount']) + " RPS in " + roomInfo['game_type']['short_name'] + '-' + roomInfo['room_number'];
 
-          newGameLog.game_result = -1;
-          if (
-            roomInfo['endgame_type'] &&
-            roomInfo['host_pr'] >= roomInfo['endgame_amount']
-          ) {
-            roomInfo.status = 'finished';
-            newTransactionC.amount += roomInfo['host_pr'] * commission;
-          }
-        }
-      }
+					newGameLog.game_result = -1;
+					if (roomInfo['endgame_type'] && roomInfo['host_pr'] >= roomInfo['endgame_amount']) {
+						roomInfo.status = 'finished';
+						newTransactionC.amount += roomInfo['host_pr'] * (100 - commission);
+					}
+				}
+			}
 
-      roomInfo['creator']['balance'] += newTransactionC.amount;
-      roomInfo['creator'].save();
+			roomInfo['creator']['balance'] += newTransactionC.amount;
+			roomInfo['creator'].save();
 
-      req.user['balance'] += newTransactionJ.amount;
+			req.user['balance'] += newTransactionJ.amount;
 
-      if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
-        req.user['balance'] += roomInfo['bet_amount'];
-      }
-      await req.user.save();
+			if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
+				req.user['balance'] += roomInfo['bet_amount'] * 100;
+			}
+			await req.user.save();
 
-      newGameLog.save();
-      await roomInfo.save();
+			newGameLog.save();
+			await roomInfo.save();
 
-      const rooms = await getRoomList(10, 1, 'RPS');
-      req.io.sockets.emit('UPDATED_ROOM_LIST', {
-        _id: roomInfo['_id'],
-        total: rooms.count,
-        roomList: rooms.rooms,
-        pages: Math.ceil(rooms.count / 10)
-      });
+			const rooms = await getRoomList(10, 1, 'RPS');
+			req.io.sockets.emit('UPDATED_ROOM_LIST', {
+				_id: roomInfo['_id'],
+				total: rooms.count,
+				roomList: rooms.rooms,
+				pages: Math.ceil(rooms.count / 10)
+			});
 
-      if (newTransactionJ.acount !== 0) {
-        newTransactionJ.save();
-      }
+			if (newTransactionJ.acount !== 0) {
+				newTransactionJ.save();
+			}
 
-      if (newTransactionC.amount !== 0) {
-        newTransactionC.save();
-        socket.newTransaction(newTransactionC);
-      }
+			if (newTransactionC.amount !== 0) {
+				newTransactionC.save();
+				socket.newTransaction(newTransactionC);
+			}
 
-      if (message.from._id !== message.to._id) {
-        message.save();
-        socket.sendMessage(message.to._id, {
-          from: message.from._id,
-          to: message.to_id,
-          message: message.message,
-          created_at: moment(new Date()).format('LLL')
-        });
-      }
-
-      res.json({
-        success: true,
-        message: 'successful bet',
-        betResult: newGameLog.game_result,
-        newTransaction: newTransactionJ,
-        roomStatus: roomInfo.status
-      });
-    }
-    const end = new Date();
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err
-    });
-  }
+			if (message.from._id !== message.to._id) {
+				message.save();
+				socket.sendMessage(message.to._id, {
+					from: message.from._id,
+					to: message.to_id,
+					message: message.message,
+					created_at: moment(new Date()).format('LLL')
+				});
+			}
+	
+			res.json({
+				success: true,
+				message: 'successful bet',
+				betResult: newGameLog.game_result,
+				newTransaction: newTransactionJ,
+				roomStatus: roomInfo.status
+			});
+		}
+		const end = new Date();
+	} catch (err) {
+		res.json({
+			success: false,
+			message: err
+		});
+	}
 });
   
 module.exports = router;

@@ -448,7 +448,7 @@ class SiteWrapper extends Component {
                         <ListItemIcon>
                           <PersonOutlineIcon />
                         </ListItemIcon>
-                        <ListItemText>Profile</ListItemText>
+                        <ListItemText>PROFILE</ListItemText>
                       </MenuItem>
                       <MenuItem
                         onClick={e => {
@@ -458,7 +458,7 @@ class SiteWrapper extends Component {
                         <ListItemIcon>
                           <ExitToAppIcon size="small" />
                         </ListItemIcon>
-                        <ListItemText>Logout</ListItemText>
+                        <ListItemText>LOGOUT</ListItemText>
                       </MenuItem>
                       <Divider />
                       <MenuItem
@@ -466,7 +466,7 @@ class SiteWrapper extends Component {
                           this.handleOpenPrivacyModal();
                         }}
                       >
-                        <ListItemText>Privacy Policy</ListItemText>
+                        <ListItemText>PRIVACY POLICY</ListItemText>
                       </MenuItem>
                       {/* <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
