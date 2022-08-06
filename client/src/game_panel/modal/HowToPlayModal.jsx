@@ -395,7 +395,7 @@ class HowToPlayModal extends Component {
                     <div className="modal-content-panel">
                       <p>
                         For any technical/general feedback, please contact{' '}
-                        <u style={{ color: '#f5b22d' }}>online@rpsbet.com</u>.
+                        <u style={{ color: '#f5b22d' }}>support@rpsbet.io</u>.
                       </p>
                     </div>
                   </div>

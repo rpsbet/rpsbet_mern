@@ -94,7 +94,7 @@ class SignupModal extends Component {
                         <h2>JOIN IN THE COMMUNITY</h2>
                         <form onSubmit={this.onSubmitForm}>
                             <p>YOUR USERNAME</p>
-                            <input placeholder="CasE SeNsItIvE)" type="text" className="form-control" value={this.state.userName} onChange={this.onChangeUserName}  />
+                            <input placeholder="CasE SeNsItIvE" type="text" className="form-control" value={this.state.userName} onChange={this.onChangeUserName}  />
                             <p>YOUR EMAIL</p>
                             <input placeholder="Enter an email for verification" type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail}  />
                             <p>YOUR PASSWORD</p>
