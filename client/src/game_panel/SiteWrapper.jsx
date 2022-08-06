@@ -61,7 +61,6 @@ import abi from '../config/abi_token.json';
 import { tokenAddr } from '../config/index.js';
 
 LoadingOverlay.propTypes = undefined
-
 const mainTheme = createTheme({
   palette: {
     type: 'light'
@@ -140,6 +139,9 @@ class SiteWrapper extends Component {
   }
 
   handleMainTabChange = (event, newValue) => {
+    if (window.location.pathname !== '/') {
+      history.push('/');
+    }
     this.props.selectMainTab(newValue);
   };
 
