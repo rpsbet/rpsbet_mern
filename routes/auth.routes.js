@@ -201,7 +201,7 @@ router.post('/logout', auth, async (req, res) => {
     req.user.save();
     res.json({
       success: true,
-      message: 'LOGGED OUT'
+      message: 'LOGGED TF OUT!'
     });
   } catch (error) {
     res.json({ success: false, error });

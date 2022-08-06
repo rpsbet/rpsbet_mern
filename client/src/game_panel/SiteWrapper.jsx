@@ -410,7 +410,7 @@ class SiteWrapper extends Component {
                 {this.props.isAuthenticated ? (
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>
-                      {Math.floor(this.state.balance * 100000) / 100000}
+                      {(Math.floor(this.state.balance * 100000) / 100000).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                       &nbsp; RPS
                     </span>
                     <Button

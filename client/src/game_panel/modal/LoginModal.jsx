@@ -80,7 +80,7 @@ class LoginModal extends Component {
                         <form onSubmit={this.onSubmitForm}>
                             <p>USERNAME OR EMAIL</p>
                             <input type="text" className="form-control" id="email" value={this.state.email} onChange={this.onChangeEmail} />
-                            <p className="has-forgot-password">Password <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>FORGOT PASSWORD?</span></p>
+                            <p className="has-forgot-password">PASSWORD <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>FORGOT PASSWORD?</span></p>
                             <input type="password" className="form-control" id="password" value={this.state.password} onChange={this.onChangePassword} />
                             <button className="btn-submit">Login</button>
                             <p className="m-0 sm-text-center">NEWBIE? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>GET REGISTERED →</button></p>
