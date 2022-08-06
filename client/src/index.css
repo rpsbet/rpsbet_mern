@@ -639,6 +639,8 @@ div.table .table-row .table-cell img.game-type-icon {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
-
+  .game-page .pre-summary-panel div {
+    background-size: 24px;
+  }
 
 }
