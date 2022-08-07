@@ -34,7 +34,11 @@ class Summary extends Component {
         )}
         <div className="your-max-return">
           Your Max Return :{' '}
-          {updateDigitToPoint2(this.props.max_return) + ' RPS'}
+          {`${
+            typeof this.props.max_return === 'number'
+              ? updateDigitToPoint2(this.props.max_return)
+              : this.props.max_return
+          } RPS`}
         </div>
         {(this.props.game_mode === 'Mystery Box' ||
           this.props.game_mode === 'Spleesh!' ||
@@ -88,7 +92,11 @@ class Summary extends Component {
           <div className="summary-item">
             <div className="summary-item-name">Max Return Amount</div>
             <div className="summary-item-value">
-              {updateDigitToPoint2(this.props.max_return)} RPS
+              {`${
+                typeof this.props.max_return === 'number'
+                  ? updateDigitToPoint2(this.props.max_return)
+                  : this.props.max_return
+              } RPS`}
             </div>
           </div>
           {this.props.endgame_type && (
