@@ -1,4 +1,4 @@
-import { createTransport, SendMailOptions } from 'nodemailer';
+import { createTransport } from 'nodemailer';
 
 const mailer = createTransport({
   service: 'gmail',

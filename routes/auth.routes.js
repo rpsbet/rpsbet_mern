@@ -13,6 +13,7 @@ const ChangePasswordRequest = require('../model/ChangePasswordRequest');
 
 const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
+const { resetPassword } = require('../helper/mailer');
 
 // @route   POST api/auth
 // @desc    Auth user
@@ -20,7 +21,7 @@ const sendgrid = require('../helper/sendgrid');
 // eslint-disable-next-line consistent-return
 router.post('/', (req, res) => {
   const { email, password } = req.body;
-  console.log(email, password)
+  console.log(email, password);
   //  Simple validation
   if (!email || !password) {
     return res.json({
@@ -56,7 +57,7 @@ router.post('/', (req, res) => {
         (err, token) => {
           res.json({
             success: true,
-            message: 'NICE, YOU\'RE IN!',
+            message: "NICE, YOU'RE IN!",
             token,
             user
           });
@@ -76,7 +77,9 @@ router.get('/user', auth, async (req, res) => {
       is_read: false
     });
 
-    const transactions = await Transaction.find({user: req.user}).sort({created_at: 'desc'}).limit(4);
+    const transactions = await Transaction.find({ user: req.user })
+      .sort({ created_at: 'desc' })
+      .limit(4);
 
     res.json({
       success: true,
@@ -102,16 +105,18 @@ router.post('/sendResetPasswordEmail', async (req, res) => {
 
       const request = new ChangePasswordRequest({ user: user });
       await request.save();
-      
-      sendgrid.sendResetPasswordEmail(user.email, user.username, request._id + '-' + user._id);
-
-      return res.json({
-        success: true,
-      });
+      resetPassword(
+        user.email,
+        user.username,
+        `${request._id}-${user._id}`
+      ).then(() =>
+        res.json({
+          success: true
+        })
+      );
     });
-
   } catch (error) {
-    res.json({ success: false, error });
+    res.json({ success: false, error: error.toString() });
   }
 });
 
@@ -126,8 +131,9 @@ router.post('/resetPassword', async (req, res) => {
       });
     }
 
-    const request = await ChangePasswordRequest.findOne({_id: params[0]})
-            .populate({path: 'user', model: User});
+    const request = await ChangePasswordRequest.findOne({
+      _id: params[0]
+    }).populate({ path: 'user', model: User });
 
     if (request.user._id != params[1]) {
       return res.json({
@@ -142,11 +148,10 @@ router.post('/resetPassword', async (req, res) => {
         request.user.password = hash;
         request.user.save();
         return res.json({
-          success: true,
+          success: true
         });
       });
     });
-
   } catch (error) {
     res.json({ success: false, error });
   }
@@ -164,11 +169,10 @@ router.post('/changePasswordAndAvatar', auth, async (req, res) => {
         req.user.avatar = req.body.new_avatar;
         req.user.save();
         return res.json({
-          success: true,
+          success: true
         });
       });
     });
-
   } catch (error) {
     res.json({ success: false, error });
   }
@@ -178,14 +182,17 @@ router.post('/changePasswordAndAvatar', auth, async (req, res) => {
 router.post('/deleteAccount', auth, async (req, res) => {
   try {
     if (req.user.balance > 0) {
-      return res.json({ success: false, error: "Oops! Please withdraw all funds first." });
+      return res.json({
+        success: false,
+        error: 'Oops! Please withdraw all funds first.'
+      });
     }
 
     req.user.is_deleted = true;
     req.user.save();
 
     return res.json({
-      success: true,
+      success: true
     });
   } catch (error) {
     res.json({ success: false, error });
@@ -214,7 +221,11 @@ router.post('/resend_verification_email', auth, async (req, res) => {
     req.user.verification_code = verification_code;
     req.user.save();
 
-    sendgrid.sendWelcomeEmail(req.user.email, req.user.username, verification_code);
+    sendgrid.sendWelcomeEmail(
+      req.user.email,
+      req.user.username,
+      verification_code
+    );
 
     res.json({
       success: true,
@@ -230,7 +241,7 @@ router.post('/verify_email', auth, async (req, res) => {
     if (req.user.verification_code === req.body.verification_code) {
       req.user.is_activated = true;
       req.user.save();
- 
+
       res.json({
         success: true,
         message: ''
