@@ -17,6 +17,7 @@ import {
 import moment from 'moment';
 import history from '../../../../redux/history';
 import { updateDigitToPoint2 } from '../../../../util/helper';
+import { convertToCurrency } from '../../../../util/conversion';
 
 class EditCustomerPage extends Component {
   state = {
@@ -90,8 +91,7 @@ class EditCustomerPage extends Component {
     if (
       !window.confirm(
         'Do you want to delete this customer? Balance: ' +
-          this.state.balance +
-          ' RPS'
+          convertToCurrency(this.state.balance)
       )
     ) {
       return;

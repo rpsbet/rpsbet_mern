@@ -87,7 +87,6 @@ router.get('/room/:id', async (req, res) => {
       room: room,
       joiner_rps: ''
     }).sort({ _id: 'asc' });
-    console.log({ rpsBetItem });
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
 
     res.json({
@@ -105,7 +104,8 @@ router.get('/room/:id', async (req, res) => {
         room_history: roomHistory,
         box_list: boxPrizeList,
         rps_bet_item_id: rpsBetItem ? rpsBetItem.id : null,
-        is_private: room['is_private']
+        is_private: room['is_private'],
+        game_log_list: gameLogList.map(({ bet_amount }) => bet_amount)
       }
     });
   } catch (err) {

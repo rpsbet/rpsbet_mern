@@ -8,6 +8,7 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
+import { convertToCurrency } from '../../util/conversion';
 
 class QuickShoot extends Component {
   constructor(props) {
@@ -174,14 +175,16 @@ class QuickShoot extends Component {
         <div className="game-contents">
           <div className="pre-summary-panel">
             <div className="your-bet-amount">
-              Bet Amount : {updateDigitToPoint2(this.props.bet_amount)} RPS
+              Bet Amount :{' '}
+              {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
             </div>
             <div className="your-max-return">
               Potential Return :{' '}
-              {updateDigitToPoint2(
-                host_bet * this.props.qs_game_type /* 0.95 */
-              )}{' '}
-              RPS
+              {convertToCurrency(
+                updateDigitToPoint2(
+                  host_bet * this.props.qs_game_type /* 0.95 */
+                )
+              )}
             </div>
           </div>
           <div className="game-info-panel">

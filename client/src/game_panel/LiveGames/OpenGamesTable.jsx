@@ -12,6 +12,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
 import Pagination from '../../components/Pagination';
+import { convertToCurrency } from '../../util/conversion';
 
 class OpenGamesTable extends Component {
   constructor(props) {
@@ -233,11 +234,11 @@ class OpenGamesTable extends Component {
                   </div>
                   <div className="table-cell desktop-only cell-amount-info">
                     {row.game_type.game_type_name === 'Spleesh!'
-                      ? row.spleesh_bet_unit + ' RPS' +
+                      ? convertToCurrency(row.spleesh_bet_unit) +
                         ' - ' +
-                        row.spleesh_bet_unit * 100
-                      : updateDigitToPoint2(row.user_bet)}{' '}RPS
-                    / {row.winnings}
+                        convertToCurrency(row.spleesh_bet_unit * 100)
+                      : convertToCurrency(updateDigitToPoint2(row.user_bet))}
+                    / {convertToCurrency(row.winnings)}
                   </div>
                   <div className="table-cell cell-action">
                     <button
@@ -293,10 +294,10 @@ class OpenGamesTable extends Component {
                     ></i>
                   </div>
                   <div className="table-cell cell-amount-info">
-                    {updateDigitToPoint2(
-                        row.user_bet
-                      ) /*+ " / RPS " + row.pr*/}{' '}RPS
-                    / {row.winnings}
+                    {convertToCurrency(
+                      updateDigitToPoint2(row.user_bet)
+                    ) /*+ " / RPS " + row.pr*/}
+                    / {convertToCurrency(row.winnings)}
                   </div>
                 </div>
               </div>

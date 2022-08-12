@@ -59,8 +59,9 @@ import Avatar from '../components/Avatar';
 import Web3 from 'web3';
 import abi from '../config/abi_token.json';
 import { tokenAddr } from '../config/index.js';
+import { convertToCurrency } from '../util/conversion';
 
-LoadingOverlay.propTypes = undefined
+LoadingOverlay.propTypes = undefined;
 const mainTheme = createTheme({
   palette: {
     type: 'light'
@@ -412,8 +413,7 @@ class SiteWrapper extends Component {
                 {this.props.isAuthenticated ? (
                   <>
                     <span id="balance" onClick={this.handleBalanceClick}>
-                      {(Math.floor(this.state.balance * 100000) / 100000).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                      &nbsp; RPS
+                      {convertToCurrency(this.state.balance)}
                     </span>
                     <Button
                       area-constrols="profile-menu"
@@ -523,11 +523,13 @@ class SiteWrapper extends Component {
                             >
                               {row.amount > 0
                                 ? '+ ' +
-                                  updateDigitToPoint2(row.amount) +
-                                  ' RPS'
+                                  convertToCurrency(
+                                    updateDigitToPoint2(row.amount)
+                                  )
                                 : '- ' +
-                                  updateDigitToPoint2(Math.abs(row.amount)) +
-                                  ' RPS'}
+                                  convertToCurrency(
+                                    updateDigitToPoint2(Math.abs(row.amount))
+                                  )}
                             </td>
                             <td className="fromNow">{row.from_now}</td>
                           </tr>

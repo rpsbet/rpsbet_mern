@@ -12,6 +12,7 @@ import { createRoom, setGameMode } from '../../redux/Logic/logic.actions';
 import { getBrainGameType } from '../../redux/Question/question.action';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
+import { convertToCurrency } from '../../util/conversion';
 
 class CreateGame extends Component {
   constructor(props) {
@@ -32,7 +33,7 @@ class CreateGame extends Component {
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
-      public_bet_amount: '0 RPS',
+      public_bet_amount: convertToCurrency(0),
       is_private: false,
       is_anonymous: false,
       room_password: '',
@@ -79,7 +80,7 @@ class CreateGame extends Component {
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
-      public_bet_amount: '0 RPS'
+      public_bet_amount: convertToCurrency(0)
     };
 
     if (gameTypeName === 'Spleesh!') {
@@ -106,7 +107,7 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 5,
-        public_bet_amount: '1 RPS',
+        public_bet_amount: convertToCurrency(1),
         max_return: '2',
         qs_nation: Math.floor(Math.random() * 5)
       };

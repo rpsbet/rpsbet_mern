@@ -7,6 +7,7 @@ import Pagination from '../../components/Pagination';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import history from '../../redux/history';
+import { convertToCurrency } from '../../util/conversion';
 
 class MyGamesTable extends Component {
   constructor(props) {
@@ -225,13 +226,16 @@ class MyGamesTable extends Component {
                     </div>
                     <div className="table-cell bet-info">
                       <span className="bet-pr">
-                        {
-                          updateDigitToPoint2(row.bet_amount) +
-                          ' RPS / ' +
-                          updateDigitToPoint2(row.pr) + ' RPS'}
+                        {convertToCurrency(
+                          updateDigitToPoint2(row.bet_amount)
+                        ) +
+                          ' / ' +
+                          convertToCurrency(updateDigitToPoint2(row.pr))}
                       </span>
                       <span className="end-amount">
-                        {updateDigitToPoint2(row.endgame_amount) + ' RPS'}
+                        {convertToCurrency(
+                          updateDigitToPoint2(row.endgame_amount)
+                        )}
                       </span>
                     </div>
                     <div className="table-cell winnings">
