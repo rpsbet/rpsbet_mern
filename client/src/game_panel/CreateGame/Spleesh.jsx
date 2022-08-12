@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { convertToCurrency } from '../../util/conversion';
 
 class Spleesh extends Component {
   createNumberPanel() {
@@ -20,7 +21,7 @@ class Spleesh extends Component {
           }}
           key={i}
         >
-          {i * this.props.spleesh_bet_unit} RPS
+          {convertToCurrency(i * this.props.spleesh_bet_unit)}
         </button>
       );
     }
@@ -28,37 +29,25 @@ class Spleesh extends Component {
   }
 
   render() {
-    console.log({ step: this.props.step });
     return this.props.step === 1 ? (
       <div className="game-info-panel">
         <h3 className="game-sub-title">Game Type</h3>
         <div className="select-buttons-panel">
-          <button
-            className={this.props.spleesh_bet_unit === 100000 ? ' active' : ''}
-            onClick={() => {
-              this.props.onChangeState({
-                spleesh_bet_unit: 100000,
-                bet_amount: 100000,
-                max_return: 5400000,
-                endgame_amount: 5400000
-              });
-            }}
-          >
-            100000 RPS - 1000000 RPS
-          </button>
-          <button
-            className={this.props.spleesh_bet_unit === 1000000 ? ' active' : ''}
-            onClick={() => {
-              this.props.onChangeState({
-                spleesh_bet_unit: 1000000,
-                bet_amount: 1000000,
-                max_return: 54000000,
-                endgame_amount: 54000000
-              });
-            }}
-          >
-            1000000 RPS - 10000000 RPS
-          </button>
+          {[100000, 1000000].map(item => (
+            <button
+              className={this.props.spleesh_bet_unit === item ? 'active' : ''}
+              onClick={() => {
+                this.props.onChangeState({
+                  spleesh_bet_unit: convertToCurrency(item),
+                  bet_amount: convertToCurrency(item),
+                  max_return: convertToCurrency(54 * item),
+                  endgame_amount: convertToCurrency(54 * item)
+                });
+              }}
+            >
+              {convertToCurrency(item)} - {convertToCurrency(item * 10)}
+            </button>
+          ))}
         </div>
       </div>
     ) : (

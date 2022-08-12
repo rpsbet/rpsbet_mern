@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
+import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 
@@ -142,10 +143,12 @@ class MysteryBox extends Component {
         <div className="game-contents">
           <div className="pre-summary-panel">
             <div className="your-bet-amount">
-              Bet Amount : {updateDigitToPoint2(this.state.bet_amount)} RPS
+              Bet Amount :{' '}
+              {convertToCurrency(updateDigitToPoint2(this.state.bet_amount))}
             </div>
             <div className="your-max-return">
-              Potential Return : {updateDigitToPoint2(pr /* 0.95 */)} RPS
+              Potential Return :{' '}
+              {convertToCurrency(updateDigitToPoint2(pr /* 0.95 */))}
             </div>
           </div>
           <div className="game-info-panel">
@@ -153,7 +156,7 @@ class MysteryBox extends Component {
             <p className="box-prizes">
               {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
-                  {item.price} RPS
+                  {convertToCurrency(item.price)}
                 </span>
               ))}
             </p>
@@ -173,7 +176,7 @@ class MysteryBox extends Component {
                   key={key}
                   onClick={this.onBoxClicked}
                 >
-                  <span>{row.box_price} RPS</span>
+                  <span>{convertToCurrency(row.box_price)}</span>
                 </div>
               ))}
             </div>
@@ -221,7 +224,7 @@ class MysteryBox extends Component {
                 this.state.betResult === 0 ? 'failed' : 'success'
               }`}
             >
-              {this.state.betResult} RPS
+              {convertToCurrency(this.state.betResult)}
             </div>
             <h4 className="game-sub-title">
               {this.state.betResult === 0
@@ -237,7 +240,7 @@ class MysteryBox extends Component {
             <p className="box-prizes">
               {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
-                  {item.price} RPS
+                  {convertToCurrency(item.price)}
                 </span>
               ))}
             </p>
