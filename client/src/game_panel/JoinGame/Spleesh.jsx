@@ -157,14 +157,6 @@ class Spleesh extends Component {
   };
 
   render() {
-    let previous_guesses = '';
-    let pot = 0;
-    for (let i = 0; i < this.props.game_log_list.length; i++) {
-      previous_guesses +=
-        (i === 0 ? '' : ', ') + ' RPS' + this.props.game_log_list[i].bet_amount;
-      pot += this.props.game_log_list[i].bet_amount;
-    }
-
     return (
       <div className="game-page">
         <div className="page-title">
@@ -179,16 +171,19 @@ class Spleesh extends Component {
             </div>
             <div className="your-max-return">
               Potential Return :{' '}
-              {updateDigitToPoint2(pot + this.state.bet_amount * 2 /* 0.9 */)}{' '}
+              {updateDigitToPoint2(
+                this.props.game_log_list.reduce((a, b) => a + b, 0) +
+                  this.state.bet_amount * 2 /* 0.9 */
+              )}{' '}
               RPS
             </div>
           </div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Previous Guesses</h3>
             <p className="previous-guesses">
-              {previous_guesses === ''
-                ? `There are no guesses yet. Be the first to guess the Host's number?`
-                : previous_guesses}
+              {this.props.game_log_list.length > 0
+                ? this.props.game_log_list.join(', ')
+                : `There are no guesses yet. Be the first to guess the Host's number?`}
             </p>
             <h3 className="game-sub-title">Your Number</h3>
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>
