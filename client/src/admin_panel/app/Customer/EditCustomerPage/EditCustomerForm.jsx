@@ -30,16 +30,31 @@ function EditCustomerForm({
         <TopDiv>
           <Grid container spacing={2}>
             <Grid item xs={4}>
-              <Avatar src={avatar ? avatar : '../../img/profile-thumbnail.svg'} alt="" />
+              <Avatar
+                src={avatar ? avatar : '/img/profile-thumbnail.svg'}
+                alt=""
+              />
             </Grid>
             <Grid item xs={8}>
               <Grid container spacing={2}>
-                <Grid item xs={2}><FormLabel>Username: </FormLabel></Grid>
-                <Grid item xs={10}><FormLabel>{username}</FormLabel></Grid>
-                <Grid item xs={2}><FormLabel>Email: </FormLabel></Grid>
-                <Grid item xs={10}><FormLabel>{email}</FormLabel></Grid>
-                <Grid item xs={2}><FormLabel>Bio: </FormLabel></Grid>
-                <Grid item xs={10}><FormLabel>{bio}</FormLabel></Grid>
+                <Grid item xs={2}>
+                  <FormLabel>Username: </FormLabel>
+                </Grid>
+                <Grid item xs={10}>
+                  <FormLabel>{username}</FormLabel>
+                </Grid>
+                <Grid item xs={2}>
+                  <FormLabel>Email: </FormLabel>
+                </Grid>
+                <Grid item xs={10}>
+                  <FormLabel>{email}</FormLabel>
+                </Grid>
+                <Grid item xs={2}>
+                  <FormLabel>Bio: </FormLabel>
+                </Grid>
+                <Grid item xs={10}>
+                  <FormLabel>{bio}</FormLabel>
+                </Grid>
                 <Grid item xs={12}>
                   <TextField
                     label="Balance"
@@ -63,7 +78,7 @@ function EditCustomerForm({
           >
             cancel
           </ButtonEl>
-          {_id === "" || _id === undefined ? (
+          {_id === '' || _id === undefined ? (
             <ButtonEl
               disabled={buttonDisable}
               type="submit"
@@ -72,7 +87,7 @@ function EditCustomerForm({
             >
               Submit
             </ButtonEl>
-          ) : (!is_banned ? (
+          ) : !is_banned ? (
             <EditColumn>
               <DeleteButtonEl
                 color="primary"
@@ -99,22 +114,17 @@ function EditCustomerForm({
                 Restore
               </ButtonEl>
             </EditColumn>
-          ))}
+          )}
         </ButtonDiv>
       </FormEl>
     </PaperEl>
   );
 }
 
-const mapStateToProps = state => ({
-});
+const mapStateToProps = state => ({});
 
-const mapDispatchToProps = {
-};
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(EditCustomerForm);
+const mapDispatchToProps = {};
+export default connect(mapStateToProps, mapDispatchToProps)(EditCustomerForm);
 
 const PaperEl = styled(Paper)`
   padding: 18px;

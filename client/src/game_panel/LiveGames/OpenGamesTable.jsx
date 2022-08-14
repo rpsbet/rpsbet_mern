@@ -120,7 +120,7 @@ class OpenGamesTable extends Component {
           this.handleGameTypeButtonClicked('All');
         }}
       >
-        <img src={`../img/gametype/icons/All.svg`} alt="" />
+        <img src={`/img/gametype/icons/All.svg`} alt="" />
         <div>All Games</div>
       </div>
     ];
@@ -140,10 +140,7 @@ class OpenGamesTable extends Component {
             this.handleGameTypeButtonClicked(gameType.short_name);
           }}
         >
-          <img
-            src={`../img/gametype/icons/${gameType.short_name}.svg`}
-            alt=""
-          />
+          <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" />
           <div>{gameType.game_type_name}</div>
         </div>
       );
