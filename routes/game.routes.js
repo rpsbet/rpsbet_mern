@@ -216,8 +216,8 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         created_at: gameLog['created_at']
       };
 
-      const joined_user_avatar = `<img class='avatar' src='${gameLog['joined_user']['avatar']} ' alt='' onerror='this.src="../img/profile-thumbnail.svg"' />`;
-      const creator_avatar = `<img class='avatar' src='${gameLog['creator']['avatar']} ' alt='' onerror='this.src="../img/profile-thumbnail.svg"' />`;
+      const joined_user_avatar = `<img class='avatar' src='${gameLog['joined_user']['avatar']} ' alt='' onerror='this.src="/img/profile-thumbnail.svg"' />`;
+      const creator_avatar = `<img class='avatar' src='${gameLog['creator']['avatar']} ' alt='' onerror='this.src="/img/profile-thumbnail.svg"' />`;
       let room_name = '';
       if (gameLog['room']['status'] === 'open') {
         room_name = `<a style='color: #C83228; text-decoration: underline'>${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
@@ -497,7 +497,6 @@ const getRoomList = async (pagination, page, game_type) => {
       result.push(temp);
     } catch (e) {
       console.log({ error: e.toString() });
-      console.log('room_id: ', room_id);
     }
   }
   return {

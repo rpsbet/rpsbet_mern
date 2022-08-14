@@ -80,7 +80,14 @@ class MainPage extends Component {
               TabIndicatorProps={{ style: { background: '#c438ef' } }}
               className="main-game-page-tabs"
             >
-              <Tab label="Live Stakes" style={customStyles.tabRoot} />
+              <Tab
+                label={
+                  this.state.selectedMobileTab === 'live_games'
+                    ? 'Live Stakes'
+                    : 'My Stakes'
+                }
+                style={customStyles.tabRoot}
+              />
               <Tab label="History" style={customStyles.tabRoot} />
             </Tabs>
           )}
