@@ -94,11 +94,11 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           if (creator_id == _id) {
             profit = 0 - log.bet_amount;
           } else {
-            profit = log.bet_amount * 2 * (100 - commission) - log.bet_amount;
+            profit = log.bet_amount * 2 - log.bet_amount;
           }
         } else {
           if (creator_id == _id) {
-            profit = log.bet_amount * (100 - commission);
+            profit = log.bet_amount;
           } else {
             profit = 0 - log.bet_amount;
           }
@@ -108,22 +108,20 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           if (creator_id == _id) {
             profit = 0 - log.bet_amount;
           } else {
-            profit =
-              log.bet_amount * log.room.qs_game_type * (100 - commission) -
-              log.bet_amount;
+            profit = log.bet_amount * log.room.qs_game_type - log.bet_amount;
           }
         } else {
           if (creator_id == _id) {
-            profit = log.bet_amount * (100 - commission);
+            profit = log.bet_amount;
           } else {
             profit = 0 - log.bet_amount;
           }
         }
       } else if (log.game_type.short_name == 'MB') {
         if (creator_id == _id) {
-          profit = log.bet_amount * (100 - commission) - log.game_result;
+          profit = log.bet_amount - log.game_result;
         } else {
-          profit = log.game_result * (100 - commission) - log.bet_amount;
+          profit = log.game_result - log.bet_amount;
         }
       } else {
         if (log.game_result == 0) {
@@ -135,7 +133,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           ) {
             profit = 0 - log.bet_amount;
           } else {
-            profit = log.bet_amount * 2 * (100 - commission) - log.bet_amount;
+            profit = log.bet_amount * 2 - log.bet_amount;
           }
         }
       }

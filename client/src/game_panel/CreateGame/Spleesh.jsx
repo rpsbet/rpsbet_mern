@@ -38,10 +38,10 @@ class Spleesh extends Component {
               className={this.props.spleesh_bet_unit === item ? 'active' : ''}
               onClick={() => {
                 this.props.onChangeState({
-                  spleesh_bet_unit: convertToCurrency(item),
-                  bet_amount: convertToCurrency(item),
-                  max_return: convertToCurrency(54 * item),
-                  endgame_amount: convertToCurrency(54 * item)
+                  spleesh_bet_unit: item,
+                  bet_amount: item,
+                  max_return: 54 * item,
+                  endgame_amount: 54 * item
                 });
               }}
             >
