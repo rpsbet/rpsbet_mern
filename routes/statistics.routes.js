@@ -15,7 +15,7 @@ const RoomBoxPrize = require('../model/RoomBoxPrize');
 
 getCommission = async () => {
   const commission = await SystemSetting.findOne({ name: 'commission' });
-  if (commission.value) {
+  if (commission?.value) {
     return parseFloat(commission.value);
   }
 
@@ -25,7 +25,7 @@ getCommission = async () => {
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
     const _id = req.query._id;
-    const statistics = {
+    let statistics = {
       deposit: 0,
       withdraw: 0,
       gameProfit: 0,
@@ -247,7 +247,7 @@ router.get('/get-total-statistics', auth, async (req, res) => {
     for (room of rooms) {
       statistics['totalWagered'] += room.bet_amount;
       statistics['volumeOfBets'][
-        getIndexByGameType(room.game_type.short_name)
+        getIndexByGameType(room.game_type?.short_name)
       ].data[getBetType(room.bet_amount)] += room.bet_amount;
     }
 
