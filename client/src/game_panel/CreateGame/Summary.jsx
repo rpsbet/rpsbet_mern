@@ -4,27 +4,21 @@ import { updateDigitToPoint2 } from '../../util/helper';
 
 class Summary extends Component {
   pre_summery() {
+    console.log({ props: this.props });
     let public_max_return = convertToCurrency(
       updateDigitToPoint2(this.props.max_prize /* 0.95 */)
     );
     let public_bet_amount = this.props.public_bet_amount;
 
     if (this.props.game_mode === 'Spleesh!') {
-      if (this.props.max_return < 100) {
-        public_bet_amount = `${convertToCurrency(100000)} - ${convertToCurrency(
-          1000000
-        )}`;
-        public_max_return = convertToCurrency(
-          updateDigitToPoint2(5600000 /* 0.9 */)
-        );
-      } else {
-        public_bet_amount = `${convertToCurrency(
-          1000000
-        )} - ${convertToCurrency(10000000)}`;
-        public_max_return = convertToCurrency(
-          updateDigitToPoint2(56000000 /* 0.9 */)
-        );
-      }
+      public_bet_amount = `${convertToCurrency(
+        this.props.bet_amount
+      )} - ${convertToCurrency(this.props.bet_amount * 10)}`;
+      public_max_return = convertToCurrency(
+        updateDigitToPoint2(
+          this.props.bet_amount * 2 + this.props.bet_amount * 54 /* 0.9 */
+        )
+      );
     } else if (this.props.game_mode === 'Quick Shoot') {
       public_max_return = convertToCurrency(
         updateDigitToPoint2(this.props.max_return)
