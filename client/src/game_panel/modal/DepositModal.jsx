@@ -5,6 +5,7 @@ import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { BigNumber } from 'ethers';
 import { tokenAddr, adminWallet } from '../../config/index.js';
 import abi from '../../config/abi_token.json';
 Modal.setAppElement('#root');
@@ -60,14 +61,13 @@ class DepositModal extends Component {
       const web3 = this.state.web3;
       const contractInstance = new web3.eth.Contract(abi, tokenAddr);
       await new Promise((resolve, reject) => {
+        var decimals = 18;
         try {
+          const amount = BigNumber.from(this.state.amount).mul(
+            BigNumber.from(10).pow(decimals)
+          );
           contractInstance.methods
-            .transfer(
-              adminWallet,
-              web3.utils.toHex(
-                Number(this.state.amount * Math.pow(10, 18)).toFixed(0)
-              )
-            )
+            .transfer(adminWallet, amount)
             .send({ from: this.state.account })
             .on('confirmation', function(confNumber, receipt) {
               resolve(true);
@@ -127,7 +127,7 @@ class DepositModal extends Component {
                 </a>
                 <p>{tokenAddr}</p>
                 <label className="availabletag">
-                  <span>AVAILABLE:  </span> {this.state.balance}
+                  <span>AVAILABLE: </span> {this.state.balance}
                 </label>
                 <input
                   pattern="[0-9]*"
