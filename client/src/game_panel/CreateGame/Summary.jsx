@@ -38,10 +38,28 @@ class Summary extends Component {
             Public Bet Amount : {public_bet_amount}
           </div>
         )}
-        <div className="your-max-return">
-          Your Max Return :{' '}
-          {convertToCurrency(updateDigitToPoint2(this.props.max_return))}
-        </div>
+        {this.props.game_mode === 'Brain Game' ? (
+          <div
+            className="your-max-return"
+            style={{ display: 'inline-flex', justifyContent: 'center' }}
+          >
+            Your Max Return :{' '}
+            <span
+              style={{
+                fontSize: '2em',
+                padding: '0 .125em'
+              }}
+            >
+              ∞
+            </span>{' '}
+            RPS
+          </div>
+        ) : (
+          <div className="your-max-return">
+            Your Max Return :{' '}
+            {convertToCurrency(updateDigitToPoint2(this.props.max_return))}
+          </div>
+        )}
         {(this.props.game_mode === 'Mystery Box' ||
           this.props.game_mode === 'Spleesh!' ||
           this.props.game_mode === 'Quick Shoot') && (

@@ -178,7 +178,7 @@ class MysteryBox extends Component {
                   onChange={this.onChangeNewBoxPrize}
                   placeholder="Your Bet Amount"
                 />
-                <span> RPS</span>
+                <span style={{ marginLeft: '1rem' }}>RPS</span>
               </div>
             </div>
             <div>
@@ -194,7 +194,7 @@ class MysteryBox extends Component {
                   onChange={this.onChangeNewBoxPrice}
                   placeholder="Public Bet Amount"
                 />
-                <span> RPS</span>
+                <span style={{ marginLeft: '1rem' }}>RPS</span>
               </div>
             </div>
           </div>
