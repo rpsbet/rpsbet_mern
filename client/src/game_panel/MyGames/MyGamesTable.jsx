@@ -26,7 +26,9 @@ class MyGamesTable extends Component {
   endRoom = (winnings, room_id) => {
     confirmModalClosed(
       true,
-      `Do you want to end this game now? You will take [${winnings}]`,
+      `Do you want to end this game now? You will take [${convertToCurrency(
+        winnings
+      )}]`,
       'Okay',
       'Cancel',
       () => {
