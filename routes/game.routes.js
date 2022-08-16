@@ -537,7 +537,7 @@ router.get('/my_history', auth, async (req, res) => {
       ? parseInt(req.query.pagination)
       : 10;
     const page = req.query.page ? parseInt(req.query.page) : 1;
-    const game_type = req.query.game_type ? req.query.game_type : 'RPS';
+    const game_type = req.query.game_type ? req.query.game_type : 'All';
 
     const history = await getHistory(pagination, page, req.user._id, game_type);
 
@@ -560,7 +560,7 @@ router.get('/my_history', auth, async (req, res) => {
 router.get('/rooms', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
-  const game_type = req.query.game_type ? req.query.game_type : 'RPS';
+  const game_type = req.query.game_type ? req.query.game_type : 'All';
 
   try {
     const rooms = await getRoomList(pagination, page, game_type);
@@ -1044,7 +1044,7 @@ router.post('/start_brain_game', auth, async (req, res) => {
   } catch (err) {
     res.json({
       success: false,
-      message: err
+      message: err.toString()
     });
   }
 });
@@ -1312,9 +1312,7 @@ router.post('/bet', auth, async (req, res) => {
         if (roomInfo.selected_qs_position !== req.body.selected_qs_position) {
           newGameLog.game_result = 1;
           newTransactionJ.amount +=
-            roomInfo['bet_amount'] *
-            roomInfo['qs_game_type'] *
-            (100 - commission);
+            roomInfo['bet_amount'] * roomInfo['qs_game_type'];
           message.message =
             "You're not the best keeper are you? I just won " +
             roomInfo['bet_amount'] * roomInfo['qs_game_type'] +
@@ -1326,9 +1324,7 @@ router.post('/bet', auth, async (req, res) => {
         } else {
           newGameLog.game_result = -1;
           newTransactionC.amount +=
-            roomInfo['bet_amount'] *
-            roomInfo['qs_game_type'] *
-            (100 - commission);
+            roomInfo['bet_amount'] * roomInfo['qs_game_type'];
 
           message.message =
             'The boots suck, I just lost ' +
