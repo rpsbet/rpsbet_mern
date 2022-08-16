@@ -21,7 +21,7 @@ class HistoryTable extends Component {
     super(props);
     this.state = {
       history: this.props.history,
-      selectedGameType: 'RPS'
+      selectedGameType: 'All'
     };
   }
 

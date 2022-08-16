@@ -20,7 +20,7 @@ class MyHistoryTable extends Component {
     super(props);
     this.state = {
       myHistory: this.props.myHistory,
-      selectedGameType: 'RPS'
+      selectedGameType: 'All'
     };
   }
 
@@ -28,7 +28,7 @@ class MyHistoryTable extends Component {
     if (
       (current_state.myHistory && current_state.myHistory.length === 0) ||
       (current_state.myHistory &&
-        current_state.myHistory.length !== props.myHistory.length) ||
+        current_state.myHistory.length !== props.myHistory?.length) ||
       (props.myHistory &&
         current_state.myHistory &&
         current_state.myHistory[0]['created_at'] !==
