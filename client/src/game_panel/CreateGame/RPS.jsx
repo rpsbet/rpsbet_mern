@@ -54,6 +54,10 @@ class RPS extends Component {
 
   render() {
     const defaultBetAmounts = [50000, 100000, 250000, 500000];
+    const disabledStyle = {
+      opacity: '0.5',
+      pointerEvents: 'none',
+    };
     console.log(this.props.step);
 
     return this.props.step === 1 ? (
@@ -68,7 +72,11 @@ class RPS extends Component {
           >
             Fixed
           </span>
-          {/* <span className={(this.props.rps_game_type === 1 ? " active" : "")} onClick={() => { this.props.onChangeState({rps_game_type: 1}); }}>Freeplay</span> */}
+          <span style={disabledStyle}
+          className={(this.props.rps_game_type === 1 ? " disabled" : "")} 
+          onClick={() => { this.props.onChangeState({rps_game_type: 1}); }}>
+            Freeplay
+            </span>
         </div>
       </div>
     ) : (

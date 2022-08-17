@@ -54,7 +54,22 @@ input,textarea { border-radius: 0 !important; }
   color: #7574c03b;
 }
 
-.btn:hover, .btn:focus, .btn.focus { transform: scale(1.05); transition: 0.3s; }
+.btn:hover, .btn:focus, .btn.focus { transform: scale(1.05); transition: 0.3xcs; }
+
+
+.btn_join , .btn-create-room, .btn_end, span#button,
+#btn_next, #btn_prev, button, .accordion__button, .btn-back {
+  cursor: pointer;
+  transition: all 0.08s ease-out;
+}
+
+.btn_join:hover, .btn-create-room:hover, .btn_end:hover,
+ #balance:hover, #btn_next:hover, #btn_prev:hover, button:hover, .accordion__button:hover,
+ .btn-back:hover  {
+  /* transform:scale(0.98); */
+  filter: brightness(0.9) contrast(1.2);
+  text-shadow: 0px 0px 1px #ffffff;
+}
 
 #root .site_wrapper {
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
@@ -243,7 +258,7 @@ div.table.my-chat-table .table-row > div.message-panel ,
 div[aria-label="How To Play Modal"] th {
   color: #343a40;
   border-bottom: 5px solid #fff !important;
-  padding: 5px 20px;
+  padding: 4px 18px;
   margin: 20px 0;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
@@ -252,7 +267,7 @@ div[aria-label="How To Play Modal"] th {
 
 div[aria-label="How To Play Modal"] td {
   border: 1px solid #fff;
-  padding: 5px 15px;
+  padding: 4px 14px;
   text-align: center;
 }
 div[aria-label="How To Play Modal"] ul {
@@ -264,6 +279,7 @@ div[aria-label="How To Play Modal"] ul {
   margin-top: 30px;
   text-align: center;
   overflow-x: scroll;
+  white-space: nowrap;
   -ms-overflow-style: none;  /* Internet Explorer 10+ */
   scrollbar-width: none;  /* Firefox */
 }
@@ -379,6 +395,7 @@ div[aria-label="How To Play Modal"] ul {
 
 div.table .table-row .table-cell img.game-type-icon {
   padding: 6px;
+  
 }
 
 .game-page .game-contents .game-info-panel button.other {
@@ -387,6 +404,8 @@ div.table .table-row .table-cell img.game-type-icon {
   display: inline-block;
   word-break: break-word;
 }
+
+
 
 .table-cell.cell-room-info .cell-game-type, div.table.my-open-game-table .table-row .table-cell.room-id {
   display: flex;
@@ -611,6 +630,21 @@ div.table .table-row .table-cell img.game-type-icon {
 }
 @media (max-width: 992px) {
   
+.game-info-panel table th:first-child, .game-info-panel table td:first-child  {
+ display: none;
+}
+
+.game-info-panel table th:last-child, .game-info-panel table td:last-child  {
+  border-color: #282a2d !important;
+  background: none;
+  background-color: #282a2d;
+ }
+ 
+
+.rps-add-run-table {
+  padding-left: 0px !important;
+}
+  
 .bet-amounts .other.active {
   margin-top: 4%;
 }
@@ -631,6 +665,7 @@ div.table .table-row .table-cell img.game-type-icon {
 
 @media (min-width: 481px) and (max-width: 767px) {
   
+  
 }
 
 /* 
@@ -639,6 +674,7 @@ div.table .table-row .table-cell img.game-type-icon {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+  
   .game-page .pre-summary-panel div {
     background-size: 24px;
   }

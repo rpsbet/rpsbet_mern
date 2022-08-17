@@ -126,7 +126,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: 'Successfully withdrawed'
+      message: 'Great success! 🤑 Check the Latest Block at RPS.FINANCE'
     });
   } catch (e) {
     console.log('ERROR in withdraw send transaction');

@@ -6,6 +6,7 @@ import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import Modal from 'react-modal';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
+import { FaClipboard } from 'react-icons/fa';
 Modal.setAppElement('#root')
 
 const customStyles = {
@@ -47,12 +48,12 @@ class WithdrawModal extends Component {
     send = async () => {
         try {
             if (this.state.amount <= 0) {
-                alertModal(this.props.isDarkMode, `Amount is wrong.`)
+                alertModal(this.props.isDarkMode, `Do you know what 'AMOUNT' means?`)
                 return;
             }
             
             if (this.state.amount > this.state.balance) {
-                alertModal(this.props.isDarkMode, `Sorry, you can withdraw your balance at most.`)
+                alertModal(this.props.isDarkMode, `Sorry, you can withdraw your in-game balance at most.`)
                 return;
             }
             this.setState({ isLoading: true })
@@ -77,7 +78,27 @@ class WithdrawModal extends Component {
         }
 
     }
-    render() {
+
+    
+    toggleBtnHandler = () => {
+        return this.setState({
+          clicked:!this.state.clicked
+        })
+        
+      }
+      copy() {
+        navigator.clipboard.writeText('0xBAA0907EC5D9FbC2c902d477B2174D4100dE8178')
+      }
+
+
+      render() {
+        const styles = ['copy-btn'];
+         let text = 'COPY CONTRACT';
+    
+        if (this.state.clicked) {
+        styles.push('clicked');
+        text = 'COPIED!';
+        }
         console.log({ loading: this.state.isLoading })
         return (
             <>
@@ -100,14 +121,29 @@ class WithdrawModal extends Component {
                     style={customStyles}
                     contentLabel="Deposit Modal"
                 >
-                    <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-                        <div className="modal-body edit-modal-body deposit-modal-body">
-                            <button className="btn-close" onClick={this.props.closeModal}>×</button>
-                            <h2>WITHDRAW</h2>
-                            <div className="modal-content-wrapper">
-                                <div className="modal-content-panel">
-                                    <label className="availabletag"><span>AVAILABLE: </span> {this.state.balance}</label>
+                        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                            <div className="modal-body edit-modal-body deposit-modal-body">
+                                <button className="btn-close" onClick={this.props.closeModal}>×</button>
+                                <h2>WITHDRAW</h2>
+                                <div className="modal-content-wrapper">
+                                    <div className="modal-content-panel">
+                                        <div className='balance'>
+                                        <label className="availabletag">
+                                            <span>IN-GAME BALANCE</span>:&nbsp;{this.state.balance} RPS
+                                            </label>
+                                            </div>
+                                <div className="input-amount">
                                     <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} className="form-control" />
+                                    <span>
+                                        RPS
+                                    </span>
+                                    </div>
+                                    
+                                <button className={styles.join('')} onClick={() => {
+                                    this.toggleBtnHandler();
+                                    this.copy();
+                                }}><FaClipboard />&nbsp;{text}</button>
+                                
                                     <div className="modal-action-panel">
                                         <button className="btn-submit" onClick={this.send}>Withdraw</button>
                                         <button className="btn-back" onClick={this.props.closeModal}>CANCEL</button>
