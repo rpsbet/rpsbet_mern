@@ -245,8 +245,8 @@ class HowToPlayModal extends Component {
                       <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
-                          Pick Your Number (Your Bet Amount): 100000-1000000 or
-                          1000000-10000000
+                          Pick Your Number (Your Bet Amount): {convertToCurrency(100000)}-{convertToCurrency(1000000)} or
+                          {convertToCurrency(1000000)}-{convertToCurrency(10000000)}
                         </li>
                         <li>Set Payout for an Automatic cash out (optional)</li>
                       </ol>
@@ -441,20 +441,21 @@ class HowToPlayModal extends Component {
                 </AccordionItemPanel>
               </AccordionItem>
             </Accordion>
-            <p>
-              FULL ON-CHAIN INTEGRATION COMING SOON! FOLLOW FOR MORE UPDATES!!{' '}
-              <a
-                href="https://rps.finance/"
+            <p><span>📃 </span>
+              CHECK OUT <a
+                href="https://docs.rps.finance/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                https://rps.finance/
-              </a>
+                RPS FINANCE DOCS
+              </a> FOR MORE INFORMATION ON $RPS AND UPDATES!!{' '}
+              
             </p>
 
             <div id="game_footer_howto">
-              <a href="https://twitter.com/rpsbet">TWITTER</a>
-              <a href="https://twitter.com/rps_finance">TWITTER</a>
+              <a href="https://twitter.com/rpsbet">TWITTER #1</a>
+              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
+              <a href="https://twitter.com/rps_finance">TWITTER #2</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">
                 YOUTUBE

@@ -464,11 +464,15 @@ class SiteWrapper extends Component {
                       </MenuItem>
                       <Divider />
                       <MenuItem
-                        onClick={e => {
-                          this.handleOpenPrivacyModal();
-                        }}
+                        onClick={
+                          event => {
+                          //this.handleOpenPrivacyModal();
+                          window.location='https://rps.finance/'
+                        }
+                        
+                      }
                       >
-                        <ListItemText>PRIVACY POLICY</ListItemText>
+                        <ListItemText>GO TO RPS FINANCE</ListItemText>
                       </MenuItem>
                       {/* <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
