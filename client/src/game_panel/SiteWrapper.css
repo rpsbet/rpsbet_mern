@@ -59,6 +59,7 @@
     font-size: 16px;
     font-weight: 600;
     line-height: 32px;
+    white-space: nowrap;
 }
 
 .game_header .main_header .header_action_panel {
@@ -86,6 +87,10 @@
     padding: 0 20px;
     font-weight: 600;
     margin: 0 20px;
+}
+
+.game-page .pre-summary-panel > div.host-display-name {
+    background-size: 2em;
 }
 
 .game_header .main_header .header_action_panel button#btn-signup {
@@ -137,6 +142,9 @@
 }
 
 @media (max-width: 768px) {
+    .game_header .main_header span#balance {
+        font-size: 13px;
+    }
     .game_header .main_header {
         padding: 14px 16px;
     }

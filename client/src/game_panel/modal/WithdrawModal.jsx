@@ -7,6 +7,7 @@ import Modal from 'react-modal';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { FaClipboard } from 'react-icons/fa';
+import { convertToCurrency } from '../../util/conversion';
 Modal.setAppElement('#root')
 
 const customStyles = {
@@ -129,7 +130,7 @@ class WithdrawModal extends Component {
                                     <div className="modal-content-panel">
                                         <div className='balance'>
                                         <label className="availabletag">
-                                            <span>IN-GAME BALANCE</span>:&nbsp;{this.state.balance} RPS
+                                            <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.state.balance)}
                                             </label>
                                             </div>
                                 <div className="input-amount">

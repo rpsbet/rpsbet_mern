@@ -13,14 +13,10 @@ import { convertToCurrency } from '../../../../util/conversion';
 function generateData(gameLogList) {
   const series = [];
   let totalProfit = 0;
-  for (let i = 0; i < gameLogList.length; i++) {
-    const x = (i + 1).toString();
-    totalProfit += gameLogList[i].profit;
-    series.push({
-      x: x,
-      y: totalProfit
-    });
-  }
+  gameLogList && gameLogList.forEach((log, index) => {
+    totalProfit += log.profit;
+    series.push({ x: `${Number(index) + 1}`, y: totalProfit })
+  })
   return series;
 }
 
@@ -123,7 +119,6 @@ class StatisticsForm extends React.Component {
       <ChartDivEl>
         <H2>
           {this.props.username}
-          <Span>Joined: {this.props.joined_date}</Span>
         </H2>
         <div className="statistics-container">
           <div>
