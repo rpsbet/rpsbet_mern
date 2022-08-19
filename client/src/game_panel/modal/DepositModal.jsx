@@ -9,6 +9,7 @@ import { BigNumber } from 'ethers';
 import { tokenAddr, adminWallet } from '../../config/index.js';
 import abi from '../../config/abi_token.json';
 import { FaClipboard } from 'react-icons/fa';
+import { convertToCurrency } from '../../util/conversion';
 Modal.setAppElement('#root');
 const customStyles = {
   overlay: {
@@ -143,7 +144,7 @@ class DepositModal extends Component {
                   BUY RPS
                 </a><div className="balance">
                 <label className="availabletag">
-                  <span>WALLET BALANCE</span>: {this.state.balance} RPS
+                  <span>WALLET BALANCE</span>: {convertToCurrency(this.state.balance)}
                 </label>
                 </div>
                 <div>

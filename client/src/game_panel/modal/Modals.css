@@ -171,6 +171,24 @@
     top: 16px;
     right: 16px;
 }
+
+.user-statistics div {
+    background-color: transparent;
+    box-shadow: none !important;
+}
+
+.statistics-container {
+    grid-template-columns: 100%;
+}
+
+.apexcharts-canvas svg {
+    border-radius: 12px;
+    border: 3px solid #2dc7df;
+    box-shadow: inset 0 0 8px 6px #0d8295;
+    filter: drop-shadow(2px 4px 6px black);
+    background: linear-gradient(45deg, #17a2b8, #005e6c) !important;
+}
+
 .modal-body .edit-avatar-panel {
     display: flex;
 }

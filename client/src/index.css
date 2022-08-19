@@ -405,6 +405,9 @@ div.table .table-row .table-cell img.game-type-icon {
   word-break: break-word;
 }
 
+.game-page .game-contents .game-info-panel button {
+  margin-bottom: 14px !important;
+}
 
 
 .table-cell.cell-room-info .cell-game-type, div.table.my-open-game-table .table-row .table-cell.room-id {

@@ -575,7 +575,9 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     padding: 8px 16px;
     border-radius: 16px;
 }
-.game-page .pre-summary-panel > div.your-bet-amount {
+.game-page .pre-summary-panel > div.host-display-name {
+    background-image: url("/img/profile-thumbnail-dark.svg");
+}.game-page .pre-summary-panel > div.your-bet-amount {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' fill='none' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='url(%23paint0_linear)'/%3E%3Cg fill='%23fff' clip-path='url(%23clip0)'%3E%3Cpath d='M11.424 14.828l.958-.957.957.957-.957.958-.958-.958z'/%3E%3Cpath d='M18.617 10.788l-.056.001c-1.32-2.012-3.596-3.344-6.178-3.344C8.313 7.445 5 10.757 5 14.828c0 4.072 3.312 7.384 7.383 7.384l.053-.001c.623.95 1.46 1.751 2.441 2.329 1.13.664 2.423 1.015 3.74 1.015 4.07 0 7.383-3.312 7.383-7.383 0-4.072-3.312-7.384-7.383-7.384zm6.028 7.384c0 .855-.18 1.67-.502 2.408l-1.248-.72c.207-.523.32-1.093.32-1.688s-.113-1.164-.32-1.688l1.248-.72c.323.737.502 1.552.502 2.408zm-6.028 3.244c-.69 0-1.351-.219-1.9-.614 1.77-1.288 2.947-3.34 3.043-5.667 1.231.465 2.101 1.657 2.101 3.037 0 1.789-1.455 3.244-3.244 3.244zM6.355 14.828c0-.856.18-1.67.502-2.408l1.248.72c-.207.523-.32 1.093-.32 1.688 0 .596.113 1.165.32 1.688l-1.248.72c-.323-.737-.502-1.552-.502-2.408zm2.784 0c0-1.789 1.455-3.244 3.244-3.244 1.79 0 3.245 1.455 3.245 3.244 0 1.79-1.456 3.245-3.245 3.245-1.789 0-3.244-1.456-3.244-3.245zm9.273 0c0 .856-.18 1.67-.502 2.409l-1.248-.72c.207-.524.32-1.093.32-1.689 0-.595-.113-1.165-.32-1.688l1.248-.72c.323.738.502 1.552.502 2.408zm-5.351 5.99v-1.44c1.178-.175 2.211-.798 2.921-1.69l1.249.72c-.973 1.314-2.465 2.22-4.17 2.41zm10.403-6.227l-1.248.72c-.63-.791-1.516-1.373-2.536-1.615-.081-.526-.218-1.034-.405-1.517 1.713.187 3.213 1.094 4.189 2.412zm-6.233-3.343l-1.249.72c-.71-.891-1.743-1.514-2.921-1.689V8.838c1.705.191 3.197 1.097 4.17 2.41zm-5.525-2.41v1.441c-1.178.175-2.212.797-2.922 1.69l-1.248-.721c.973-1.313 2.465-2.219 4.17-2.41zm-4.17 9.57l1.248-.72c.71.892 1.744 1.515 2.922 1.69v1.44c-1.705-.19-3.197-1.096-4.17-2.41zm6.454 3.627c.518-.115 1.015-.285 1.486-.503.683.638 1.542 1.052 2.463 1.189v1.44c-1.54-.176-2.958-.943-3.95-2.126zm5.304 2.127v-1.441c1.178-.175 2.212-.798 2.922-1.69l1.248.721c-.973 1.313-2.465 2.219-4.17 2.41z'/%3E%3C/g%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear' x1='-7.881' x2='42.35' y1='-6.5' y2='39.672' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23FFB000'/%3E%3Cstop offset='1' stop-color='%23D81719'/%3E%3C/linearGradient%3E%3CclipPath id='clip0'%3E%3Cpath fill='%23fff' d='M0 0H21V21H0z' transform='translate(5 6)'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E%0A");
 }
 .game-page .pre-summary-panel > div.your-max-return {
@@ -785,11 +787,12 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     position: absolute;
     right: 0;
     cursor: pointer;
+    z-index: 1;
 }
 .game-page .pre-summary-panel .transaction-settings {
     position: absolute;
     right: 0;
-    top: 50px;
+    top: 70px;
     padding: 20px 30px;
     background: #2f3136;
     border-radius: 8px;
@@ -798,6 +801,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 }
 .game-page .pre-summary-panel .transaction-settings.active {
     opacity: 1;
+    z-index: 999;
 }
 input {
     border-radius: 8px !important;
@@ -839,7 +843,6 @@ input {
     font-weight: bold;
     text-align: center;
     width: 70px;
-    height: 23px;
     display: inline-block;
     border-radius: 20px;
     padding: 4px 8px;
@@ -897,7 +900,7 @@ input {
     display: flex;
 }
 .game-page .game-contents .game-info-panel .create-box-panel .edit-amount-panel {
-    margin: 0 16px 0 0;
+    margin: 0 70px 0 0;
 }
 .game-page .game-contents .game-info-panel .create-box-panel button {
     margin: 0;
@@ -1428,7 +1431,7 @@ input {
         margin-bottom: 16px;
     }
     .game-page .game-contents .game-info-panel .create-box-panel .edit-amount-panel {
-        width: 147px;
+        width: 292px;
         overflow-x: hidden;
     }
     .brain-game-play-panel .play-panel-header .timer {
@@ -1486,6 +1489,13 @@ input {
     }
 }
 @media (max-width: 400px) {
+    .game-page .pre-summary-panel > div.public-bet-amount {
+        background-size: 26px;
+    }
+    .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
+        display: flex;
+        flex-direction: column;
+    }
     .rps-add-run-panel {
         flex-direction: column-reverse;
     }

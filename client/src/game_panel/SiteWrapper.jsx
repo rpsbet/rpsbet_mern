@@ -464,13 +464,10 @@ class SiteWrapper extends Component {
                       </MenuItem>
                       <Divider />
                       <MenuItem
-                        onClick={
-                          event => {
-                          //this.handleOpenPrivacyModal();
-                          window.location='https://rps.finance/'
-                        }
-                        
-                      }
+                        onClick={e => {
+                          // this.handleOpenPrivacyModal();
+                          window.location = "https://rps.finance"
+                        }}
                       >
                         <ListItemText>GO TO RPS FINANCE</ListItemText>
                       </MenuItem>

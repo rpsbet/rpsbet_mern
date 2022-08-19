@@ -90,28 +90,28 @@ class Leaderboards extends Component {
                             <tr>
                                 <td>1</td>
                                 <td className="player">Kadin</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
                                 <td>123</td>
                             </tr>
                             <tr>
                                 <td>2</td>
                                 <td className="player">Corey</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
                                 <td>123</td>
                             </tr>
                             <tr>
                                 <td>3</td>
                                 <td className="player">Ruben</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
-                                <td>₿ 1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
+                                <td>1.12368</td>
                                 <td>123</td>
                             </tr>
                         </tbody>

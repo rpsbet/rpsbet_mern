@@ -81,6 +81,8 @@ router.get('/room/:id', async (req, res) => {
       .populate({ path: 'game_type', model: GameType })
       .populate({ path: 'creator', model: User })
       .populate({ path: 'joined_user', model: User });
+ 
+    const creator = await User.findOne({ _id: room.creator });
     const boxPrizeList = await RoomBoxPrize.find({ room: room }).sort({
       _id: 'asc'
     });
@@ -96,6 +98,7 @@ router.get('/room/:id', async (req, res) => {
       roomInfo: {
         _id: room['_id'],
         creator_id: room['creator'],
+        creator_name: creator['username'],
         game_type: room['game_type']['game_type_name'],
         bet_amount: room['user_bet'],
         spleesh_bet_unit: room['spleesh_bet_unit'],
