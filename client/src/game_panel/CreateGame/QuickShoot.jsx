@@ -100,7 +100,7 @@ class QuickShoot extends Component {
                       qs_game_type: i,
                       max_return: this.props.bet_amount * Number(i),
                       public_bet_amount: convertToCurrency(
-                        this.props.bet_amount * Number(i)
+                        this.props.bet_amount * Number(i - 1)
                       ),
                       selected_qs_position: 0
                     });
