@@ -88,7 +88,8 @@ class CreateGame extends Component {
         ...newState,
         game_type: 2,
         endgame_amount: 5400000,
-        max_return: 5400000
+        max_return: 5400000,
+        public_bet_amount: this.state
       };
     } else if (gameTypeName === 'RPS') {
       newState = {
@@ -270,7 +271,6 @@ class CreateGame extends Component {
   };
 
   step2 = () => {
-    console.log(this.state.bet_amount);
     if (this.state.game_mode === 'RPS') {
       return (
         <RPS
@@ -417,6 +417,7 @@ class CreateGame extends Component {
               game_mode={this.state.game_mode}
               max_prize={this.state.max_prize}
               public_bet_amount={this.state.public_bet_amount}
+              spleesh_bet_unit={this.state.spleesh_bet_unit}
             />
           )}
           {this.state.step === 2 && this.step2()}
