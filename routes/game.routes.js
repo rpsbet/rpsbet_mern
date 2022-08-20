@@ -23,15 +23,6 @@ const convertToCurrency = require('../helper/util/conversion');
 
 let user_access_log = {};
 
-const getCommission = async () => {
-  const commission = await SystemSetting.findOne({ name: 'commission' });
-  if (commission?.value) {
-    return parseFloat(commission.value);
-  }
-
-  return 0;
-};
-
 // /api/game_types call
 router.get('/game_types', async (req, res) => {
   try {
@@ -200,8 +191,6 @@ router.post('/answer', async (req, res) => {
 
 const convertGameLogToHistoryStyle = async gameLogList => {
   let result = [];
-  const commission = await getCommission();
-  const commissionRate = (100 - commission) / 100.0;
 
   gameLogList.forEach(gameLog => {
     try {
@@ -230,7 +219,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `${joined_user_avatar}[${
             gameLog['joined_user']['username']
           }] won [<span style='color: #02c526;'>${convertToCurrency(
-            updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)
+            updateDigitToPoint2(gameLog['bet_amount'] * 2)
           )}</span>] against ${creator_avatar}[${
             gameLog['creator']['username']
           }] in [${room_name}]`;
@@ -238,7 +227,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `${joined_user_avatar}[${
             gameLog['joined_user']['username']
           }] split [<span style='color: #02c526;'>${convertToCurrency(
-            updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)
+            updateDigitToPoint2(gameLog['bet_amount'] * 2)
           )}</span>] with ${creator_avatar}[${
             gameLog['creator']['username']
           }] in [${room_name}]`;
@@ -246,7 +235,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `${creator_avatar}[${
             gameLog['creator']['username']
           }] won [<span style='color: #02c526;'>${convertToCurrency(
-            updateDigitToPoint2(gameLog['bet_amount'] * 2 * commissionRate)
+            updateDigitToPoint2(gameLog['bet_amount'] * 2)
           )}</span>] against ${joined_user_avatar}[${
             gameLog['joined_user']['username']
           }] in [${room_name}]`;
@@ -257,9 +246,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             gameLog['joined_user']['username']
           }] scored a goal and won [<span style='color: #02c526;'>${convertToCurrency(
             updateDigitToPoint2(
-              gameLog['room']['bet_amount'] *
-                gameLog['room']['qs_game_type'] *
-                commissionRate
+              gameLog['room']['bet_amount'] * gameLog['room']['qs_game_type']
             )
           )} 
 						</span>] in [${room_name}]`;
@@ -279,8 +266,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           )}</span>] 
 						and won [<span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(
-                (gameLog['room']['host_pr'] + gameLog['room']['bet_amount']) *
-                  commissionRate
+                gameLog['room']['host_pr'] + gameLog['room']['bet_amount']
               )
             )}</span>] in [${room_name}]`;
         } else if (gameLog.game_result === -100) {
@@ -311,7 +297,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `${creator_avatar}[${
             gameLog['creator']['username']
           }] ended [${room_name}] and won [<span style='color: #02c526;'>${convertToCurrency(
-            updateDigitToPoint2(gameLog['bet_amount'] * commissionRate)
+            updateDigitToPoint2(gameLog['bet_amount'])
           )}</span>]`;
         } else {
           temp.history = `${joined_user_avatar}[${
@@ -320,7 +306,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             updateDigitToPoint2(gameLog['bet_amount'])
           )}</span>] 
 						and won [<span style='color: #02c526;'>${convertToCurrency(
-              updateDigitToPoint2(gameLog['game_result'] * commissionRate)
+              updateDigitToPoint2(gameLog['game_result'])
             )}</span>] in [${room_name}]`;
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Brain Game') {
@@ -332,7 +318,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             updateDigitToPoint2(gameLog['bet_amount'])
           )}</span>] 
 						and split [<span style='color: #02c526;'>${convertToCurrency(
-              updateDigitToPoint2(gameLog['room']['pr'] * commissionRate)
+              updateDigitToPoint2(gameLog['room']['pr'])
             )}</span>] in [${room_name}]`;
         } else if (gameLog.game_result === 1) {
           //win       WOW, What a BRAIN BOX - You WIN!
@@ -342,7 +328,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             gameLog['bet_amount']
           )}</span>] 
 						and won [<span style='color: #02c526;'>${convertToCurrency(
-              updateDigitToPoint2(gameLog['room']['pr'] * commissionRate)
+              updateDigitToPoint2(gameLog['room']['pr'])
             )}</span>] in [${room_name}]`;
         } else {
           //failed    Oops, back to school for you loser!!
@@ -426,8 +412,6 @@ const getRoomList = async (pagination, page, game_type) => {
     .populate({ path: 'creator', model: User })
     .populate({ path: 'game_type', model: GameType })
     .populate({ path: 'brain_game_type', model: BrainGameType });
-  const commission = await getCommission();
-  const commissionRate = (100 - commission) / 100.0;
   const count = await Room.countDocuments(search_condition);
 
   let result = [];
@@ -459,9 +443,7 @@ const getRoomList = async (pagination, page, game_type) => {
       };
 
       if (temp.game_type.game_type_id === 1) {
-        temp.winnings = updateDigitToPoint2(
-          room['user_bet'] * 2 * commissionRate
-        );
+        temp.winnings = updateDigitToPoint2(room['user_bet'] * 2);
       } else if (temp.game_type.game_type_id === 2) {
         const gameLogList = await GameLog.find({ room: room }).sort({
           bet_amount: 'desc'
@@ -485,13 +467,11 @@ const getRoomList = async (pagination, page, game_type) => {
           }
         }
       } else if (temp.game_type.game_type_id === 3) {
-        temp.winnings = updateDigitToPoint2(
-          (room['pr'] + room['bet_amount']) * commissionRate
-        );
+        temp.winnings = updateDigitToPoint2(room['pr'] + room['bet_amount']);
       } else if (temp.game_type.game_type_id === 4) {
-        temp.winnings = updateDigitToPoint2(room['pr'] * commissionRate);
+        temp.winnings = updateDigitToPoint2(room['pr']);
       } else if (temp.game_type.game_type_id === 5) {
-        temp.winnings = updateDigitToPoint2(room['pr'] * commissionRate);
+        temp.winnings = updateDigitToPoint2(room['pr']);
       }
 
       result.push(temp);
@@ -583,6 +563,7 @@ router.get('/rooms', async (req, res) => {
 router.post('/rooms', auth, async (req, res) => {
   try {
     const start = new Date();
+    const user = User.findById(req.user._id);
     if (req.body.bet_amount <= 0) {
       return res.json({
         success: false,
@@ -590,7 +571,7 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    if (req.body.bet_amount > req.user.balance) {
+    if (req.body.bet_amount > user.balance) {
       return res.json({
         success: false,
         message: 'Not enough balance!'
@@ -631,7 +612,7 @@ router.post('/rooms', auth, async (req, res) => {
     const roomCount = await Room.countDocuments({});
     newRoom = new Room({
       ...req.body,
-      creator: req.user,
+      creator: user,
       game_type: gameType,
       user_bet: user_bet,
       pr: pr,
@@ -662,21 +643,21 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
     newTransaction = new Transaction({
-      user: req.user,
+      user: user,
       amount: 0,
       description:
         'create ' + gameType.game_type_name + ' - ' + newRoom.room_number
     });
 
     if (req.body.is_anonymous === true) {
-      req.user['balance'] -= 10;
+      user['balance'] -= 10;
       newTransaction.amount -= 10;
     }
 
-    req.user['balance'] -= req.body.bet_amount;
+    user['balance'] -= req.body.bet_amount;
     newTransaction.amount -= req.body.bet_amount;
 
-    await req.user.save();
+    await user.save();
     await newTransaction.save();
 
     const rooms = await getRoomList(10, 1, 'RPS');
@@ -716,8 +697,6 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
   const count = await Room.countDocuments(search_condition);
 
   let result = [];
-  const commission = await getCommission();
-  const commissionRate = (100 - commission) / 100.0;
 
   for (const room of rooms) {
     try {
@@ -738,7 +717,7 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
 
       if (temp.game_type.game_type_id === 1) {
         // RPS
-        temp.pr = updateDigitToPoint2(temp.pr * 2 * commissionRate);
+        temp.pr = updateDigitToPoint2(temp.pr * 2);
       }
 
       if (gameLogCount === 0) {
@@ -746,18 +725,16 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
       } else if (temp.game_type.game_type_id === 2) {
         // Spleesh!
         temp.pr = temp.pr === 0 ? temp.bet_amount : temp.pr;
-        temp.winnings = updateDigitToPoint2(temp.pr * commissionRate);
+        temp.winnings = updateDigitToPoint2(temp.pr);
       } else if (temp.game_type.game_type_id === 3) {
         // Brain Game
-        temp.winnings = updateDigitToPoint2(
-          (room['pr'] + room['bet_amount']) * commissionRate
-        );
+        temp.winnings = updateDigitToPoint2(room['pr'] + room['bet_amount']);
       } else if (temp.game_type.game_type_id === 4) {
         //Mytery Box
-        temp.winnings = updateDigitToPoint2(temp.pr * commissionRate);
+        temp.winnings = updateDigitToPoint2(temp.pr);
       } else if (temp.game_type.game_type_id === 5) {
         // Quick Shoot
-        temp.winnings = updateDigitToPoint2(temp.pr * commissionRate);
+        temp.winnings = updateDigitToPoint2(temp.pr);
       }
 
       result.push(temp);
@@ -855,12 +832,8 @@ router.post('/end_game', auth, async (req, res) => {
         '-' +
         roomInfo['room_number'];
     } else {
-      const commission = await getCommission();
-      const percent = 100 - commission;
-      const commissionRate = percent / 100.0;
-
       if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
-        newTransaction.amount += roomInfo['host_pr'] * percent;
+        newTransaction.amount += roomInfo['host_pr'];
 
         message.message =
           'I made ' +
@@ -870,7 +843,7 @@ router.post('/end_game', auth, async (req, res) => {
           '-' +
           roomInfo['room_number'];
       } else if (roomInfo['game_type']['game_type_name'] === 'RPS') {
-        newTransaction.amount += roomInfo['host_pr'] * percent;
+        newTransaction.amount += roomInfo['host_pr'];
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
@@ -879,7 +852,7 @@ router.post('/end_game', auth, async (req, res) => {
           '-' +
           roomInfo['room_number'];
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
-        newTransaction.amount += roomInfo['host_pr'] * percent;
+        newTransaction.amount += roomInfo['host_pr'];
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
@@ -888,7 +861,7 @@ router.post('/end_game', auth, async (req, res) => {
           '-' +
           roomInfo['room_number'];
       } else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
-        newTransaction.amount += roomInfo['host_pr'] * percent;
+        newTransaction.amount += roomInfo['host_pr'];
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
@@ -897,7 +870,7 @@ router.post('/end_game', auth, async (req, res) => {
           '-' +
           roomInfo['room_number'];
       } else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
-        newTransaction.amount += roomInfo['host_pr'] * percent;
+        newTransaction.amount += roomInfo['host_pr'];
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
@@ -1217,8 +1190,6 @@ router.post('/bet', auth, async (req, res) => {
         is_anonymous: req.body.is_anonymous,
         is_read: false
       });
-
-      const commission = await getCommission();
 
       if (roomInfo['game_type']['game_type_name'] === 'RPS') {
         let bet_item = await RpsBetItem.findOne({
