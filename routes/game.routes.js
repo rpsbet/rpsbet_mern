@@ -72,7 +72,7 @@ router.get('/room/:id', async (req, res) => {
       .populate({ path: 'game_type', model: GameType })
       .populate({ path: 'creator', model: User })
       .populate({ path: 'joined_user', model: User });
- 
+
     const creator = await User.findOne({ _id: room.creator });
     const boxPrizeList = await RoomBoxPrize.find({ room: room }).sort({
       _id: 'asc'
@@ -678,7 +678,7 @@ router.post('/rooms', auth, async (req, res) => {
   } catch (err) {
     res.json({
       success: false,
-      message: err.toString()
+      message: 'something went wrong'
     });
   }
 });
