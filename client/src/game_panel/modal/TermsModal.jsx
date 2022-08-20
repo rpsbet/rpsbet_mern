@@ -185,7 +185,7 @@ class TermsModal extends Component {
                         <h5>11.0 Account Sharing</h5>
                         Players must not share their account with any other person, nor share their account information (password etc.). Players may not allow any other person to use their account, nor use any account other than their own.<br/>
                         <br/>
-                        <h5>12.0 'Gold Farming'</h5>
+                        <h5>12.0 'RPS Farming'</h5>
                         Players must play exclusively on their own behalf, in their own best interests. RPS Bet prohibits playing on behalf of an employer or any form of team/co-operative.<br/>
                         <br/>
                         <h5>13.0 Angleshooting</h5>

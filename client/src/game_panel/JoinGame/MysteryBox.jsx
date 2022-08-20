@@ -142,6 +142,9 @@ class MysteryBox extends Component {
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
+          <div className="host-display-name">
+              Host : {this.props.creator}
+            </div>
             <div className="your-bet-amount">
               Bet Amount :{' '}
               {convertToCurrency(updateDigitToPoint2(this.state.bet_amount))}
@@ -271,7 +274,9 @@ const mapStateToProps = state => ({
   betResult: state.logic.betResult,
   roomStatus: state.logic.roomStatus,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  balance: state.auth.balance,
+  creator: state.logic.curRoomInfo.creator_name
 });
 
 const mapDispatchToProps = {

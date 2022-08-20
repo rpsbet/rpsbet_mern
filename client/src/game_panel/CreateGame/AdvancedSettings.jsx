@@ -85,7 +85,7 @@ class AdvancedSettings extends Component {
                 <span style={{ marginLeft: '1rem' }}>RPS</span>
               </div>
             </div>
-            <p className="tip">Choose Automatic to cashout at a set amount.</p>
+            <p className="tip">Choose Automatic to Unstake at a set amount.</p>
           </div>
         )}
 

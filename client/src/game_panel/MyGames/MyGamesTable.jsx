@@ -238,7 +238,7 @@ class MyGamesTable extends Component {
                       </span>
                     </div>
                     <div className="table-cell winnings">
-                      <span>{row.winnings}</span>
+                      <span>{convertToCurrency(row.winnings)}</span>
                     </div>
                     <div className="table-cell action desktop-only">
                       <button

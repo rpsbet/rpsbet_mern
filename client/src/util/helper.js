@@ -1,3 +1,5 @@
+import { convertToCurrency } from './conversion';
+
 export const cleanObj = obj => {
   let newObj = {};
   Object.keys(obj).forEach(prop => {
@@ -21,9 +23,9 @@ export function updateDigitToPoint2(number) {
 
 export function addCurrencySignal(amount) {
 	if (amount > 0)
-		return updateDigitToPoint2(amount) + ' RPS';
+		return convertToCurrency(updateDigitToPoint2(amount));
 	if (amount < 0) 
-		return updateDigitToPoint2(Math.abs(amount)) + '- RPS';
+		return '-' + convertToCurrency(updateDigitToPoint2(Math.abs(amount)));
 	return 0;
 }
 

@@ -170,10 +170,13 @@ class QuickShoot extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>Join Stake - QuickShoot</h2>
+          <h2>Join Stake - Quick Shoot</h2>
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
+          <div className="host-display-name">
+              Host : {this.props.creator}
+            </div>
             <div className="your-bet-amount">
               Bet Amount :{' '}
               {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
@@ -229,7 +232,9 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  balance: state.auth.balance,
+  creator: state.logic.curRoomInfo.creator_name
 });
 
 const mapDispatchToProps = {

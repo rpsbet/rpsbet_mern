@@ -283,6 +283,9 @@ class BrainGame extends Component {
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
+          <div className="host-display-name">
+              Host : {this.props.creator}
+            </div>
             <div className="your-bet-amount">
               Bet Amount :{' '}
               {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
@@ -328,7 +331,9 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  balance: state.auth.balance,
+  creator: state.logic.curRoomInfo.creator_name
 });
 
 const mapDispatchToProps = {
