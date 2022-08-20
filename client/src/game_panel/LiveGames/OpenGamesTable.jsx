@@ -37,7 +37,7 @@ class OpenGamesTable extends Component {
       return;
     }
 
-    if (bet_amount > this.props.balance / 100.0) {
+    if (bet_amount > this.props.balance) {
       alertModal(this.props.isDarkMode, `Not enough balance!`);
       return;
     }

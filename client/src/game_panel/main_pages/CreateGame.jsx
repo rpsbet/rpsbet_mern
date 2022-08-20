@@ -80,7 +80,7 @@ class CreateGame extends Component {
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
-      public_bet_amount: convertToCurrency(0)
+      public_bet_amount: convertToCurrency(100000)
     };
 
     if (gameTypeName === 'Spleesh!') {
@@ -108,8 +108,8 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 5,
-        public_bet_amount: convertToCurrency(1),
-        max_return: '2',
+        public_bet_amount: convertToCurrency(100000),
+        max_return: 200000,
         qs_nation: Math.floor(Math.random() * 5)
       };
     } else if (gameTypeName === 'Mystery Box') {
