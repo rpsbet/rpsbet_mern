@@ -13,6 +13,7 @@ const ChangePasswordRequest = require('../model/ChangePasswordRequest');
 
 const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
+const { resetPassword } = require('../helper/mailer');
 
 // @route   POST api/auth
 // @desc    Auth user
@@ -103,26 +104,25 @@ router.post('/sendResetPasswordEmail', async (req, res) => {
 
       const request = new ChangePasswordRequest({ user: user });
       await request.save();
-
-      sendgrid.sendResetPasswordEmail(
+      resetPassword(
         user.email,
         user.username,
-        request._id + '-' + user._id
+        `${request._id}-${user._id}`
+      ).then(() =>
+        res.json({
+          success: true
+        })
       );
-
-      return res.json({
-        success: true
-      });
     });
   } catch (error) {
-    res.json({ success: false, error });
+    res.json({ success: false, error: error.toString() });
   }
 });
 
 // Forgot Password
 router.post('/resetPassword', async (req, res) => {
   try {
-    const params = req.body.params.split('-');
+    const params = req.body.code.split('-');
     if (params.length !== 2) {
       return res.json({
         success: false,
@@ -152,7 +152,7 @@ router.post('/resetPassword', async (req, res) => {
       });
     });
   } catch (error) {
-    res.json({ success: false, error });
+    res.json({ success: false, error: error.toString() });
   }
 });
 
@@ -222,7 +222,9 @@ router.post('/resend_verification_email', auth, async (req, res) => {
 
     sendgrid.sendWelcomeEmail(
       req.user.email,
+
       req.user.username,
+
       verification_code
     );
 
