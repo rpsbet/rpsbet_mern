@@ -565,8 +565,6 @@ router.get('/rooms', async (req, res) => {
 
 router.post('/rooms', auth, async (req, res) => {
   try {
-    const start = new Date();
-    const user = User.findById(req.user._id);
     if (req.body.bet_amount <= 0) {
       return res.json({
         success: false,
@@ -574,7 +572,7 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    if (req.body.bet_amount > user.balance) {
+    if (req.body.bet_amount > req.user.balance) {
       return res.json({
         success: false,
         message: 'Not enough balance!'
@@ -615,7 +613,7 @@ router.post('/rooms', auth, async (req, res) => {
     const roomCount = await Room.countDocuments({});
     newRoom = new Room({
       ...req.body,
-      creator: user,
+      creator: req.user,
       game_type: gameType,
       user_bet: user_bet,
       pr: pr,
@@ -646,21 +644,21 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
     newTransaction = new Transaction({
-      user: user,
+      user: req.user,
       amount: 0,
       description:
         'create ' + gameType.game_type_name + ' - ' + newRoom.room_number
     });
 
     if (req.body.is_anonymous === true) {
-      user['balance'] -= 10;
+      req.user['balance'] -= 10;
       newTransaction.amount -= 10;
     }
 
-    user['balance'] -= req.body.bet_amount;
+    req.user['balance'] -= req.body.bet_amount;
     newTransaction.amount -= req.body.bet_amount;
 
-    await user.save();
+    await req.user.save();
     await newTransaction.save();
 
     const rooms = await getRoomList(10, 1, 'RPS');
