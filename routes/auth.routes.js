@@ -122,7 +122,7 @@ router.post('/sendResetPasswordEmail', async (req, res) => {
 // Forgot Password
 router.post('/resetPassword', async (req, res) => {
   try {
-    const params = req.body.params.split('-');
+    const params = req.body.code.split('-');
     if (params.length !== 2) {
       return res.json({
         success: false,
@@ -152,7 +152,7 @@ router.post('/resetPassword', async (req, res) => {
       });
     });
   } catch (error) {
-    res.json({ success: false, error });
+    res.json({ success: false, error: error.toString() });
   }
 });
 
