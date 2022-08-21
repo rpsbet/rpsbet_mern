@@ -15,27 +15,9 @@ const server = app.listen(process.env.PORT, () =>
   console.log(`server running on port ${process.env.PORT}`)
 );
 
-// const { PORT } = process.env;
+const io = socketContoller.socketio(server, { origins: '*:*' });
 
-// const server = https
-//   .createServer(
-//     {
-//       key: fs.readFileSync(path.resolve('./ssl/key.pem')),
-//       cert: fs.readFileSync(path.resolve('./ssl/cert.pem')),
-//     },
-//     app
-//   )
-//   .listen(PORT || 443, () =>
-//     console.log(
-//       `Server listening at: http${PORT === '443' ? 's' : ''}://localhost${
-//         PORT === '443' || PORT === '80' ? '' : `:${PORT}`
-//       }`
-//     )
-//   );
-
-const io = socketContoller.socketio(server, {origins: '*:*'});
-
-app.use(function(req,res,next){
+app.use(function(req, res, next) {
   req.io = io;
   next();
 });
@@ -78,7 +60,6 @@ mongoose
   })
   .then(() => console.log(`***mongodb connected`))
   .catch(err => console.log(err));
-
 
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/auth', authRoutes);

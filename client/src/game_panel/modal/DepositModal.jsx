@@ -5,8 +5,11 @@ import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { BigNumber } from 'ethers';
 import { tokenAddr, adminWallet } from '../../config/index.js';
 import abi from '../../config/abi_token.json';
+import { FaClipboard } from 'react-icons/fa';
+import { convertToCurrency } from '../../util/conversion';
 Modal.setAppElement('#root');
 const customStyles = {
   overlay: {
@@ -45,14 +48,14 @@ class DepositModal extends Component {
   };
   send = async () => {
     if (this.state.amount <= 0) {
-      alertModal(this.props.isDarkMode, `Amount is wrong.`);
+      alertModal(this.props.isDarkMode, `Do you know what 'AMOUNT' means?`);
       return;
     }
 
     if (this.state.amount > this.state.balance) {
       alertModal(
         this.props.isDarkMode,
-        `Sorry, you can deposit your balance at most.`
+        `Sorry, you can deposit your Wallet RPS balance at most.`
       );
       return;
     }
@@ -60,14 +63,13 @@ class DepositModal extends Component {
       const web3 = this.state.web3;
       const contractInstance = new web3.eth.Contract(abi, tokenAddr);
       await new Promise((resolve, reject) => {
+        var decimals = 18;
         try {
+          const amount = BigNumber.from(this.state.amount).mul(
+            BigNumber.from(10).pow(decimals)
+          );
           contractInstance.methods
-            .transfer(
-              adminWallet,
-              web3.utils.toHex(
-                Number(this.state.amount * Math.pow(10, 18)).toFixed(0)
-              )
-            )
+            .transfer(adminWallet, amount)
             .send({ from: this.state.account })
             .on('confirmation', function(confNumber, receipt) {
               resolve(true);
@@ -102,7 +104,23 @@ class DepositModal extends Component {
       );
     }
   };
+  toggleBtnHandler = () => {
+    return this.setState({
+      clicked:!this.state.clicked
+    })
+    
+  }
+  copy() {
+    navigator.clipboard.writeText('0xBAA0907EC5D9FbC2c902d477B2174D4100dE8178')
+  }
   render() {
+    const styles = ['copy-btn'];
+    let text = 'COPY CONTRACT';
+    
+    if (this.state.clicked) {
+      styles.push('clicked');
+      text = 'COPIED!';
+    } 
     return (
       <Modal
         isOpen={this.props.modalIsOpen}
@@ -124,18 +142,29 @@ class DepositModal extends Component {
                   target="_blank"
                 >
                   BUY RPS
-                </a>
-                <p>{tokenAddr}</p>
+                </a><div className="balance">
                 <label className="availabletag">
-                  <span>AVAILABLE:  </span> {this.state.balance}
+                  <span>WALLET BALANCE</span>: {convertToCurrency(this.state.balance)}
                 </label>
+                </div>
+                <div>
+                <div className="input-amount">
                 <input
                   pattern="[0-9]*"
                   type="text"
                   value={this.state.amount}
                   onChange={this.handleAmountChange}
                   className="form-control"
-                />
+                /><span> RPS</span>
+                </div>
+                
+                <button className={styles.join('')} onClick={() => {
+                    this.toggleBtnHandler();
+                    this.copy();
+                }}><FaClipboard />&nbsp;{text}</button>
+                
+                
+                </div>
                 <div className="modal-action-panel">
                   <button className="btn-submit" onClick={this.send}>
                     Deposit

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { initParams } from 'request';
+import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 
 class DefaultBetAmountPanel extends Component {
@@ -35,8 +36,9 @@ class DefaultBetAmountPanel extends Component {
                 } else if (this.props.game_type === 'Quick Shoot') {
                   this.props.onChangeState({
                     bet_amount: amount,
-                    public_bet_amount:
-                      (this.props.qs_game_type - 1) * amount + ' RPS',
+                    public_bet_amount: convertToCurrency(
+                      (this.props.qs_game_type - 1) * amount
+                    ),
                     max_return: this.props.qs_game_type * amount
                   });
                 } else {
@@ -48,7 +50,7 @@ class DefaultBetAmountPanel extends Component {
               }}
               key={index}
             >
-              {updateDigitToPoint2(amount)} RPS
+              {convertToCurrency(updateDigitToPoint2(amount))}
             </button>
           ))}
           <button
@@ -75,12 +77,12 @@ class DefaultBetAmountPanel extends Component {
               } else if (this.props.game_type === 'Quick Shoot') {
                 this.props.onChangeState({
                   bet_amount: parseInt(e.target.value) || '',
-                  public_bet_amount:
+                  public_bet_amount: convertToCurrency(
                     updateDigitToPoint2(
                       (this.props.qs_game_type - 1) *
                         (parseInt(e.target.value) || '')
                     )
-                    + ' RPS',
+                  ),
                   max_return: this.props.qs_game_type * e.target.value
                 });
               } else {
@@ -92,7 +94,7 @@ class DefaultBetAmountPanel extends Component {
             }}
             placeholder="Bet Amount"
           />
-          <span> RPS</span>
+          <span style={{ marginLeft: '1rem' }}>RPS</span>
         </div>
         {this.props.game_type === 'RPS' ? (
           <p className="tip">The cost to play this RUN</p>

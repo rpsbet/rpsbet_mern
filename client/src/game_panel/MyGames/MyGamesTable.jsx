@@ -7,6 +7,7 @@ import Pagination from '../../components/Pagination';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import history from '../../redux/history';
+import { convertToCurrency } from '../../util/conversion';
 
 class MyGamesTable extends Component {
   constructor(props) {
@@ -25,7 +26,9 @@ class MyGamesTable extends Component {
   endRoom = (winnings, room_id) => {
     confirmModalClosed(
       true,
-      `Do you want to end this game now? You will take [${winnings}]`,
+      `Do you want to end this game now? You will take [${convertToCurrency(
+        winnings
+      )}]`,
       'Okay',
       'Cancel',
       () => {
@@ -89,7 +92,7 @@ class MyGamesTable extends Component {
           this.handleGameTypeButtonClicked('All');
         }}
       >
-        <img src={`../img/gametype/icons/All.svg`} alt="" />
+        <img src={`/img/gametype/icons/All.svg`} alt="" />
         <div>All Games</div>
       </div>
     ];
@@ -109,10 +112,7 @@ class MyGamesTable extends Component {
             this.handleGameTypeButtonClicked(gameType.short_name);
           }}
         >
-          <img
-            src={`../img/gametype/icons/${gameType.short_name}.svg`}
-            alt=""
-          />
+          <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" />
           <div>{gameType.game_type_name}</div>
         </div>
       );
@@ -225,17 +225,20 @@ class MyGamesTable extends Component {
                     </div>
                     <div className="table-cell bet-info">
                       <span className="bet-pr">
-                        {
-                          updateDigitToPoint2(row.bet_amount) +
-                          ' RPS / ' +
-                          updateDigitToPoint2(row.pr) + ' RPS'}
+                        {convertToCurrency(
+                          updateDigitToPoint2(row.bet_amount)
+                        ) +
+                          ' / ' +
+                          convertToCurrency(updateDigitToPoint2(row.pr))}
                       </span>
                       <span className="end-amount">
-                        {updateDigitToPoint2(row.endgame_amount) + ' RPS'}
+                        {convertToCurrency(
+                          updateDigitToPoint2(row.endgame_amount)
+                        )}
                       </span>
                     </div>
                     <div className="table-cell winnings">
-                      <span>{row.winnings}</span>
+                      <span>{convertToCurrency(row.winnings)}</span>
                     </div>
                     <div className="table-cell action desktop-only">
                       <button

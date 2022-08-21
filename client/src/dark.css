@@ -247,6 +247,7 @@
 	background-color: #36393f;
 }
 .dark_mode .game-page .game-contents .game-info-panel .box-prizes span.opened {
+	white-space: nowrap;
 	background-color: #191a1d;
 }
 .dark_mode .chat-page {

@@ -114,21 +114,13 @@ router.post('/logout', auth, async (req, res) => {
 //       status: 'off',
 //     });
 
-//     console.log(1);
-
 //     // Create salt & hash
 //     bcrypt.genSalt(10, (err, salt) => {
-//       console.log(2);
 //       bcrypt.hash(newAdmin.password, salt, (err, hash) => {
-//         console.log(3);
 //         if (err) throw err;
 //         newAdmin.password = hash;
 //         newAdmin.save().then(user => {
-//           console.log(4);
 //           jwt.sign({ user: user, is_admin: 1 }, process.env.SECRET_OR_KEY, (err, token) => {
-//             console.log(5);
-//             console.log(token);
-//             console.log(user);
 //             res.json({
 //               success: true,
 //               message: 'New admin user created',

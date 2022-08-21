@@ -12,6 +12,7 @@ import { createRoom, setGameMode } from '../../redux/Logic/logic.actions';
 import { getBrainGameType } from '../../redux/Question/question.action';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
+import { convertToCurrency } from '../../util/conversion';
 
 class CreateGame extends Component {
   constructor(props) {
@@ -32,7 +33,7 @@ class CreateGame extends Component {
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
-      public_bet_amount: '0 RPS',
+      public_bet_amount: convertToCurrency(0),
       is_private: false,
       is_anonymous: false,
       room_password: '',
@@ -79,7 +80,7 @@ class CreateGame extends Component {
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
-      public_bet_amount: '0 RPS'
+      public_bet_amount: convertToCurrency(100000)
     };
 
     if (gameTypeName === 'Spleesh!') {
@@ -87,7 +88,8 @@ class CreateGame extends Component {
         ...newState,
         game_type: 2,
         endgame_amount: 5400000,
-        max_return: 5400000
+        max_return: 5400000,
+        public_bet_amount: this.state
       };
     } else if (gameTypeName === 'RPS') {
       newState = {
@@ -106,8 +108,8 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 5,
-        public_bet_amount: '1 RPS',
-        max_return: '2',
+        public_bet_amount: convertToCurrency(100000),
+        max_return: 200000,
         qs_nation: Math.floor(Math.random() * 5)
       };
     } else if (gameTypeName === 'Mystery Box') {
@@ -269,7 +271,6 @@ class CreateGame extends Component {
   };
 
   step2 = () => {
-    console.log(this.state.bet_amount);
     if (this.state.game_mode === 'RPS') {
       return (
         <RPS
@@ -416,6 +417,7 @@ class CreateGame extends Component {
               game_mode={this.state.game_mode}
               max_prize={this.state.max_prize}
               public_bet_amount={this.state.public_bet_amount}
+              spleesh_bet_unit={this.state.spleesh_bet_unit}
             />
           )}
           {this.state.step === 2 && this.step2()}

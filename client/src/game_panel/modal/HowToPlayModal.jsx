@@ -7,6 +7,7 @@ import {
   AccordionItemButton,
   AccordionItemPanel
 } from 'react-accessible-accordion';
+import { convertToCurrency } from '../../util/conversion';
 
 Modal.setAppElement('#root');
 
@@ -76,7 +77,9 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Your Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>50000 RPS</span>
+                        <span style={{ color: '#b52c22' }}>
+                          {convertToCurrency(50000)}
+                        </span>
                       </p>
                       <p>
                         Game Type ={' '}
@@ -87,12 +90,16 @@ class HowToPlayModal extends Component {
                       <p>
                         Public Bet Amount ={' '}
                         <span style={{ color: '#b52c22' }}>
-                          200000 RPS [50000 RPS * 4]
+                          {`${convertToCurrency(200000)} [${convertToCurrency(
+                            50000
+                          )} * 4]`}
                         </span>
                       </p>
                       <p>
                         Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>250000 RPS</span>
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(250000)}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -127,17 +134,21 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>50000 RPS</span>
+                        <span style={{ color: '#b52c22' }}>
+                          {convertToCurrency(50000)}
+                        </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          Automatic(300000 RPS)
+                          {`Automatic(${convertToCurrency(300000)})`}
                         </span>
                       </p>
                       <p>
                         Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>300000 RPS</span>
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(300000)}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -179,25 +190,39 @@ class HowToPlayModal extends Component {
                       <p>
                         The following boxes are set (Prize/Price):{' '}
                         <span style={{ color: '#b52c22' }}>
-                          250000 RPS/40000 RPS, 0 RPS/60000 RPS, 0 RPS/100000
-                          RPS
+                          {`${convertToCurrency(250000)}/${convertToCurrency(
+                            40000
+                          )}, ${convertToCurrency(0)}/${convertToCurrency(
+                            60000
+                          )}, ${convertToCurrency(0)}/${convertToCurrency(
+                            100000
+                          )}`}
                         </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          Automatic(410000 RPS) [250000 RPS + 60000 RPS + 100000
-                          RPS]
+                          {`Automatic(${convertToCurrency(
+                            410000
+                          )}) [${convertToCurrency(
+                            250000
+                          )} + ${convertToCurrency(
+                            60000
+                          )} + ${convertToCurrency(100000)}]`}
                         </span>
                       </p>
                       <p>
                         Host Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>410000 RPS</span>
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(410000)}
+                        </span>
                       </p>
                       <p>
                         <i>
-                          If the 250000 RPS Prize box is opened, the host still
-                          receives the 40000 RPS (Price).
+                          {`If the ${convertToCurrency(
+                            250000
+                          )} Prize box is opened, the host still
+                          receives the ${convertToCurrency(40000)} (Price).`}
                         </i>
                       </p>
                     </div>
@@ -220,8 +245,8 @@ class HowToPlayModal extends Component {
                       <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
-                          Pick Your Number (Your Bet Amount): 100000-1000000 or
-                          1000000-10000000
+                          Pick Your Number (Your Bet Amount): {convertToCurrency(100000)}-{convertToCurrency(1000000)} or
+                          {convertToCurrency(1000000)}-{convertToCurrency(10000000)}
                         </li>
                         <li>Set Payout for an Automatic cash out (optional)</li>
                       </ol>
@@ -237,21 +262,31 @@ class HowToPlayModal extends Component {
                       <p>e.g.</p>
                       <p>
                         Host's Number (Bet Amount) ={' '}
-                        <span style={{ color: '#b52c22' }}>700000 RPS</span>
+                        <span style={{ color: '#b52c22' }}>
+                          {convertToCurrency(700000)}
+                        </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          Automatic(3000000 RPS)
+                          {`Automatic(${convertToCurrency(3000000)})`}
                         </span>
                       </p>
                       <p>
-                        Guesses (in order): 100000, 200000, 1000000, 900000,
-                        500000, 800000- <i>*Game ENDs automatically*</i>
+                        {`Guesses (in order): ${convertToCurrency(
+                          100000
+                        )}, ${convertToCurrency(200000)}, ${convertToCurrency(
+                          1000000
+                        )}, ${convertToCurrency(900000)},
+                        ${convertToCurrency(500000)}, ${convertToCurrency(
+                          800000
+                        )}- <i>*Game ENDs automatically*</i>`}
                       </p>
                       <p>
                         Host Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>4200000 RPS</span>
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(4200000)}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -295,11 +330,15 @@ class HowToPlayModal extends Component {
                       <p>Game Type = Freeplay</p>
                       <p>
                         Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>500000 RPS</span>
+                        <span style={{ color: '#b52c22' }}>
+                          {convertToCurrency(500000)}
+                        </span>
                       </p>
                       <p>
                         Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>1000000 RPS</span>
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(1000000)}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -402,20 +441,21 @@ class HowToPlayModal extends Component {
                 </AccordionItemPanel>
               </AccordionItem>
             </Accordion>
-            <p>
-              FULL ON-CHAIN INTEGRATION COMING SOON! FOLLOW FOR MORE UPDATES!!{' '}
-              <a
-                href="https://rps.finance/"
+            <p><span>📃 </span>
+              CHECK OUT <a
+                href="https://docs.rps.finance/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                https://rps.finance/
-              </a>
+                RPS FINANCE DOCS
+              </a> FOR MORE INFORMATION ON $RPS AND UPDATES!!{' '}
+              
             </p>
 
             <div id="game_footer_howto">
-              <a href="https://twitter.com/rpsbet">TWITTER</a>
-              <a href="https://twitter.com/rps_finance">TWITTER</a>
+              <a href="https://twitter.com/rpsbet">TWITTER #1</a>
+              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
+              <a href="https://twitter.com/rps_finance">TWITTER #2</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">
                 YOUTUBE

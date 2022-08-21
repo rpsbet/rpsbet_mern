@@ -15,7 +15,7 @@ const RoomBoxPrize = require('../model/RoomBoxPrize');
 
 getCommission = async () => {
   const commission = await SystemSetting.findOne({ name: 'commission' });
-  if (commission.value) {
+  if (commission?.value) {
     return parseFloat(commission.value);
   }
 
@@ -25,7 +25,7 @@ getCommission = async () => {
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
     const _id = req.query._id;
-    const statistics = {
+    let statistics = {
       deposit: 0,
       withdraw: 0,
       gameProfit: 0,
@@ -94,11 +94,11 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           if (creator_id == _id) {
             profit = 0 - log.bet_amount;
           } else {
-            profit = log.bet_amount * 2 * (100 - commission) - log.bet_amount;
+            profit = log.bet_amount * 2 - log.bet_amount;
           }
         } else {
           if (creator_id == _id) {
-            profit = log.bet_amount * (100 - commission);
+            profit = log.bet_amount;
           } else {
             profit = 0 - log.bet_amount;
           }
@@ -108,22 +108,20 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           if (creator_id == _id) {
             profit = 0 - log.bet_amount;
           } else {
-            profit =
-              log.bet_amount * log.room.qs_game_type * (100 - commission) -
-              log.bet_amount;
+            profit = log.bet_amount * log.room.qs_game_type - log.bet_amount;
           }
         } else {
           if (creator_id == _id) {
-            profit = log.bet_amount * (100 - commission);
+            profit = log.bet_amount;
           } else {
             profit = 0 - log.bet_amount;
           }
         }
       } else if (log.game_type.short_name == 'MB') {
         if (creator_id == _id) {
-          profit = log.bet_amount * (100 - commission) - log.game_result;
+          profit = log.bet_amount - log.game_result;
         } else {
-          profit = log.game_result * (100 - commission) - log.bet_amount;
+          profit = log.game_result - log.bet_amount;
         }
       } else {
         if (log.game_result == 0) {
@@ -135,7 +133,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           ) {
             profit = 0 - log.bet_amount;
           } else {
-            profit = log.bet_amount * 2 * (100 - commission) - log.bet_amount;
+            profit = log.bet_amount * 2 - log.bet_amount;
           }
         }
       }
@@ -249,7 +247,7 @@ router.get('/get-total-statistics', auth, async (req, res) => {
     for (room of rooms) {
       statistics['totalWagered'] += room.bet_amount;
       statistics['volumeOfBets'][
-        getIndexByGameType(room.game_type.short_name)
+        getIndexByGameType(room.game_type?.short_name)
       ].data[getBetType(room.bet_amount)] += room.bet_amount;
     }
 

@@ -1,44 +1,68 @@
 import React, { Component } from 'react';
+import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 
 class Summary extends Component {
   pre_summery() {
-    let public_max_return =
-      updateDigitToPoint2(this.props.max_prize /* 0.95 */) + ' RPS';
+    console.log({ props: this.props });
+    let public_max_return = convertToCurrency(
+      updateDigitToPoint2(this.props.max_prize /* 0.95 */)
+    );
     let public_bet_amount = this.props.public_bet_amount;
 
     if (this.props.game_mode === 'Spleesh!') {
-      if (this.props.max_return < 100) {
-        public_bet_amount = '100000 RPS - 1000000 RPS';
-        public_max_return = updateDigitToPoint2(5600000 /* 0.9 */) + ' RPS';
-      } else {
-        public_bet_amount = '1000000 RPS - 10000000 RPS';
-        public_max_return = updateDigitToPoint2(56000000 /* 0.9 */) + ' RPS';
-      }
+      public_bet_amount = `${convertToCurrency(
+        this.props.spleesh_bet_unit
+      )} - ${convertToCurrency(this.props.spleesh_bet_unit * 10)}`;
+      public_max_return = convertToCurrency(
+        updateDigitToPoint2(
+          this.props.spleesh_bet_unit * 55 + this.props.bet_amount /* 0.9 */
+        )
+      );
     } else if (this.props.game_mode === 'Quick Shoot') {
-      public_max_return = updateDigitToPoint2(this.props.max_return) + ' RPS';
+      public_max_return = convertToCurrency(
+        updateDigitToPoint2(this.props.max_return)
+      );
     }
 
     return (
       <div className="pre-summary-panel">
         <div className="your-bet-amount">
           Your Bet Amount :{' '}
-          {updateDigitToPoint2(this.props.bet_amount) + ' RPS'}
+          {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
         </div>
-        {(this.props.game_mode === 'Mystery Box' ||
-          this.props.game_mode === 'Spleesh!' ||
-          this.props.game_mode === 'Quick Shoot') && (
+        {['Mystery Bpx', 'Spleesh!', 'Quick Shoot'].includes(
+          this.props.game_mode
+        ) && (
           <div className="public-bet-amount">
             Public Bet Amount : {public_bet_amount}
           </div>
         )}
-        <div className="your-max-return">
-          Your Max Return :{' '}
-          {updateDigitToPoint2(this.props.max_return) + ' RPS'}
-        </div>
-        {(this.props.game_mode === 'Mystery Box' ||
-          this.props.game_mode === 'Spleesh!' ||
-          this.props.game_mode === 'Quick Shoot') && (
+        {this.props.game_mode === 'Brain Game' ? (
+          <div
+            className="your-max-return"
+            style={{ display: 'inline-flex', justifyContent: 'center' }}
+          >
+            Your Max Return :{' '}
+            <span
+              style={{
+                fontSize: '2em',
+                padding: '0 .125em'
+              }}
+            >
+              ∞
+            </span>{' '}
+            RPS
+          </div>
+        ) : (
+          <div className="your-max-return">
+            Your Max Return :{' '}
+            {convertToCurrency(updateDigitToPoint2(this.props.max_return))}
+          </div>
+        )}
+        {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
+          this.props.game_mode
+        ) && (
           <div className="public-max-return">
             Public Max Return : {public_max_return}
           </div>
@@ -49,17 +73,18 @@ class Summary extends Component {
 
   total_summery() {
     let public_bet_amount = this.props.public_bet_amount;
-    let public_max_return =
-      updateDigitToPoint2(this.props.max_prize /* 0.95 */) + ' RPS';
+    let public_max_return = convertToCurrency(
+      updateDigitToPoint2(this.props.max_prize /* 0.95 */)
+    );
 
     if (this.props.game_mode === 'Spleesh!') {
-      if (this.props.max_return < 100) {
-        public_bet_amount = '100000 RPS - 1000000 RPS';
-      } else {
-        public_bet_amount = '1000000 RPS - 10000000 RPS';
-      }
+      public_bet_amount = `${convertToCurrency(
+        this.props.spleesh_bet_unit
+      )} - ${convertToCurrency(this.props.spleesh_bet_unit * 10)}`;
     } else if (this.props.game_mode === 'Quick Shoot') {
-      public_max_return = updateDigitToPoint2(this.props.max_return) + ' RPS';
+      public_max_return = convertToCurrency(
+        updateDigitToPoint2(this.props.max_return)
+      );
     }
 
     return (
@@ -69,7 +94,7 @@ class Summary extends Component {
           <div className="summary-item">
             <div className="summary-item-name">Bet Amount</div>
             <div className="summary-item-value">
-              {updateDigitToPoint2(this.props.bet_amount)} RPS
+              {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
             </div>
           </div>
           {(this.props.game_mode === 'Spleesh!' ||
@@ -88,14 +113,16 @@ class Summary extends Component {
           <div className="summary-item">
             <div className="summary-item-name">Max Return Amount</div>
             <div className="summary-item-value">
-              {updateDigitToPoint2(this.props.max_return)} RPS
+              {convertToCurrency(updateDigitToPoint2(this.props.max_return))}
             </div>
           </div>
           {this.props.endgame_type && (
             <div className="summary-item">
               <div className="summary-item-name">Payout</div>
               <div className="summary-item-value">
-                {updateDigitToPoint2(this.props.endgame_amount)} RPS
+                {convertToCurrency(
+                  updateDigitToPoint2(this.props.endgame_amount)
+                )}
               </div>
             </div>
           )}

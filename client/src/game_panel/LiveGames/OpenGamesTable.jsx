@@ -12,6 +12,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
 import Pagination from '../../components/Pagination';
+import { convertToCurrency } from '../../util/conversion';
 
 class OpenGamesTable extends Component {
   constructor(props) {
@@ -36,7 +37,7 @@ class OpenGamesTable extends Component {
       return;
     }
 
-    if (bet_amount > this.props.balance / 100.0) {
+    if (bet_amount > this.props.balance) {
       alertModal(this.props.isDarkMode, `Not enough balance!`);
       return;
     }
@@ -119,7 +120,7 @@ class OpenGamesTable extends Component {
           this.handleGameTypeButtonClicked('All');
         }}
       >
-        <img src={`../img/gametype/icons/All.svg`} alt="" />
+        <img src={`/img/gametype/icons/All.svg`} alt="" />
         <div>All Games</div>
       </div>
     ];
@@ -139,10 +140,7 @@ class OpenGamesTable extends Component {
             this.handleGameTypeButtonClicked(gameType.short_name);
           }}
         >
-          <img
-            src={`../img/gametype/icons/${gameType.short_name}.svg`}
-            alt=""
-          />
+          <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" />
           <div>{gameType.game_type_name}</div>
         </div>
       );
@@ -233,11 +231,14 @@ class OpenGamesTable extends Component {
                   </div>
                   <div className="table-cell desktop-only cell-amount-info">
                     {row.game_type.game_type_name === 'Spleesh!'
-                      ? row.spleesh_bet_unit + ' RPS' +
+                      ? convertToCurrency(row.spleesh_bet_unit) +
                         ' - ' +
-                        row.spleesh_bet_unit * 100
-                      : updateDigitToPoint2(row.user_bet)}{' '}RPS
-                    / {row.winnings}
+                        convertToCurrency(row.spleesh_bet_unit * 10) +
+                        ' / ' +
+                        convertToCurrency(row.spleesh_bet_unit * 2) +
+                        ' - ?'
+                      : `${convertToCurrency(updateDigitToPoint2(row.user_bet))}
+                    / ${convertToCurrency(row.winnings)}`}
                   </div>
                   <div className="table-cell cell-action">
                     <button
@@ -293,10 +294,10 @@ class OpenGamesTable extends Component {
                     ></i>
                   </div>
                   <div className="table-cell cell-amount-info">
-                    {updateDigitToPoint2(
-                        row.user_bet
-                      ) /*+ " / RPS " + row.pr*/}{' '}RPS
-                    / {row.winnings}
+                    {convertToCurrency(
+                      updateDigitToPoint2(row.user_bet)
+                    ) /*+ " / RPS " + row.pr*/}
+                    / {convertToCurrency(row.winnings)}
                   </div>
                 </div>
               </div>

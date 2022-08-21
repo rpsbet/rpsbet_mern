@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { convertToCurrency } from '../../util/conversion';
 import { alertModal } from '../modal/ConfirmAlerts';
 
 class MysteryBox extends Component {
@@ -98,8 +99,10 @@ class MysteryBox extends Component {
       lowest_box_price: max_return['lowest_box_price'],
       public_bet_amount:
         max_return['lowest_box_price'] === max_return['highest_box_price']
-          ? `${max_return['lowest_box_price']} RPS`
-          : `${max_return['lowest_box_price']} RPS - ${max_return['highest_box_price']} RPS`
+          ? convertToCurrency(max_return['lowest_box_price'])
+          : `${convertToCurrency(
+              max_return['lowest_box_price']
+            )} - ${convertToCurrency(max_return['highest_box_price'])}`
     });
   };
 
@@ -122,8 +125,10 @@ class MysteryBox extends Component {
       lowest_box_price: max_return['lowest_box_price'],
       public_bet_amount:
         max_return['lowest_box_price'] === max_return['highest_box_price']
-          ? `${max_return['lowest_box_price']} RPS`
-          : `${max_return['lowest_box_price']} RPS - ${max_return['highest_box_price']} RPS`
+          ? convertToCurrency(max_return['lowest_box_price'])
+          : `${convertToCurrency(
+              max_return['lowest_box_price']
+            )} - ${convertToCurrency(max_return['highest_box_price'])}`
     });
   };
 
@@ -150,7 +155,8 @@ class MysteryBox extends Component {
                   -
                 </i>
                 <span>
-                  {row.box_prize + ' RPS'} / {row.box_price + ' RPS'}
+                  {convertToCurrency(row.box_prize)} /{' '}
+                  {convertToCurrency(row.box_price)}
                 </span>
               </div>
             ),
@@ -172,7 +178,7 @@ class MysteryBox extends Component {
                   onChange={this.onChangeNewBoxPrize}
                   placeholder="Your Bet Amount"
                 />
-                <span> RPS</span>
+                <span style={{ marginLeft: '1rem' }}>RPS</span>
               </div>
             </div>
             <div>
@@ -188,7 +194,7 @@ class MysteryBox extends Component {
                   onChange={this.onChangeNewBoxPrice}
                   placeholder="Public Bet Amount"
                 />
-                <span> RPS</span>
+                <span style={{ marginLeft: '1rem' }}>RPS</span>
               </div>
             </div>
           </div>
@@ -205,7 +211,8 @@ class MysteryBox extends Component {
           </a>
         </div>
         <p className="tip">
-          Boxes will be displayed to the public in the order you have added them.
+          Boxes will be displayed to the public in the order you have added
+          them.
         </p>
       </div>
     );

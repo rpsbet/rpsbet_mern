@@ -21,7 +21,6 @@ const { resetPassword } = require('../helper/mailer');
 // eslint-disable-next-line consistent-return
 router.post('/', (req, res) => {
   const { email, password } = req.body;
-  console.log(email, password);
   //  Simple validation
   if (!email || !password) {
     return res.json({
@@ -223,7 +222,9 @@ router.post('/resend_verification_email', auth, async (req, res) => {
 
     sendgrid.sendWelcomeEmail(
       req.user.email,
+
       req.user.username,
+
       verification_code
     );
 

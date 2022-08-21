@@ -9,6 +9,7 @@ import {
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import { convertToCurrency } from '../../util/conversion';
 
 const options = [
   { classname: 'rock', selection: 'R' },
@@ -143,12 +144,17 @@ class RPS extends Component {
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
+          <div className="host-display-name">
+              Host : {this.props.creator}
+            </div>
             <div className="your-bet-amount">
-              Bet Amount : {this.props.bet_amount} RPS
+              Bet Amount : {convertToCurrency(this.props.bet_amount)}
             </div>
             <div className="your-max-return">
               Potential Return :
-              {updateDigitToPoint2(this.props.bet_amount * 2 /* * 0.95 */)} RPS
+              {convertToCurrency(
+                updateDigitToPoint2(this.props.bet_amount * 2 /* * 0.95 */)
+              )}
             </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"
@@ -238,7 +244,9 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  balance: state.auth.balance,
+  creator: state.logic.curRoomInfo.creator_name
 });
 
 const mapDispatchToProps = {
