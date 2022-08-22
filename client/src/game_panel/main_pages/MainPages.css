@@ -548,6 +548,11 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     padding: 24px;
     margin-top: 40px;
 }
+
+.game-page.reset-password-page {
+    padding: 60px;
+}
+
 .game-page.reset-password-page .game-contents {
     width: 700px;
     max-width: 100%;

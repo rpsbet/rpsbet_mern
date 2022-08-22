@@ -62,7 +62,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: 'Success'
+      message: 'Account loaded 🤑 Much wow!!'
     });
   } catch (err) {
     console.log('error in deposit_successed', err);

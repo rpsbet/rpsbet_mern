@@ -230,7 +230,7 @@ router.post('/resend_verification_email', auth, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Email has been sent. Please check your inbox.'
+      message: 'Email has been sent. Please check your inbox (including spam).'
     });
   } catch (error) {
     res.json({ success: false, error });
