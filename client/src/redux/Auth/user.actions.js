@@ -196,7 +196,7 @@ export const sendResetPasswordEmail = (email) => async dispatch => {
   try {
     const { data } = await axios.post('/auth/sendResetPasswordEmail', { email });
     if (data.success) {
-      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has been sent. Please check your mail box.'})
+      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has been sent. Please check your mail box (including spam).'})
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error })
     }

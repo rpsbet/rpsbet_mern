@@ -61,7 +61,7 @@ class ChangePasswordPage extends Component {
         </div>
         <div className="game-contents">
           <div className="game-info-panel">
-            <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
+            <h3 className="game-sub-title">FRESH NEW PASSWORD!</h3>
             <p>New Password</p>
             <input
               type="password"

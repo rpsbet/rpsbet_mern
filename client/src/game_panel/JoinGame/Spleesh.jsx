@@ -189,7 +189,9 @@ class Spleesh extends Component {
             <h3 className="game-sub-title">Previous Guesses</h3>
             <p className="previous-guesses">
               {this.props.game_log_list.length > 0
-                ? this.props.game_log_list.join(', ')
+                ? this.props.game_log_list.map((log) => 
+                  convertToCurrency(log)
+                ).join(', ')
                 : `There are no guesses yet. Be the first to guess the Host's number?`}
             </p>
             <h3 className="game-sub-title">Your Number</h3>
