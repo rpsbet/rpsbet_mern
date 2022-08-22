@@ -48,7 +48,7 @@ class ChangePasswordPage extends Component {
     if (result) {
       alertModal(
         this.props.isDarkMode,
-        'Password has been changed. Please login with your new password.'
+        'Password has been changed. Please Login with your new password.'
       );
     }
   };
@@ -57,7 +57,7 @@ class ChangePasswordPage extends Component {
     return (
       <div className="game-page reset-password-page">
         <div className="page-title">
-          <h2>Reset Password</h2>
+          <h2 class="main-title desktop-only">Reset Password</h2>
         </div>
         <div className="game-contents">
           <div className="game-info-panel">
