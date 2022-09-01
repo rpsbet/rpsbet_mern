@@ -33,8 +33,8 @@ class Dropzone extends Component {
     if (this.props.disabled) return;
     const file = evt.target.files[0];
 
-    if (file.size > 2097152) {//file size > 2MB
-      alertModal(this.props.darkMode, "The file size is more than 2 MB. Please select another file to upload.");
+    if (file.size > 3145728) {//file size > 3MB
+      alertModal(this.props.darkMode, "The image is too big. Please try a smaller size.");
       return;
     }
 
@@ -81,7 +81,7 @@ class Dropzone extends Component {
             <button onClick={(e)=>{this.props.setImageFilename("")}}>Remove Photo</button>
             <button onClick={this.openFileDialog}>Upload Photo</button>
           </div>
-          <p className="mt-1">at most 2MB image file.</p>
+          <p className="mt-1">CHOOSE THE SMALLEST SIZE</p>
         </div>
       </div>
     );
