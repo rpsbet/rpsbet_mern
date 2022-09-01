@@ -138,7 +138,7 @@ class DepositModal extends Component {
               <div className="modal-content-panel">
                 <a
                   className="atag"
-                  href="https://pancakeswap.finance/swap"
+                  href="https://pancakeswap.finance/swap?outputCurrency=0xbaa0907ec5d9fbc2c902d477b2174d4100de8178"
                   target="_blank"
                 >
                   BUY RPS
