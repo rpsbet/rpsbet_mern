@@ -88,7 +88,7 @@ class WithdrawModal extends Component {
         
       }
       copy() {
-        navigator.clipboard.writeText('0xBAA0907EC5D9FbC2c902d477B2174D4100dE8178')
+        navigator.clipboard.writeText('0x960af0c27c4b5062e77a58080576643c5be15080')
       }
 
 
