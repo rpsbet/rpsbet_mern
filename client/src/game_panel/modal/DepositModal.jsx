@@ -111,7 +111,7 @@ class DepositModal extends Component {
     
   }
   copy() {
-    navigator.clipboard.writeText('0xBAA0907EC5D9FbC2c902d477B2174D4100dE8178')
+    navigator.clipboard.writeText('0x960af0c27c4b5062e77a58080576643c5be15080')
   }
   render() {
     const styles = ['copy-btn'];
@@ -138,7 +138,7 @@ class DepositModal extends Component {
               <div className="modal-content-panel">
                 <a
                   className="atag"
-                  href="https://pancakeswap.finance/swap?outputCurrency=0xbaa0907ec5d9fbc2c902d477b2174d4100de8178"
+                  href="https://pancakeswap.finance/swap?outputCurrency=0x960af0c27c4b5062e77a58080576643c5be15080"
                   target="_blank"
                 >
                   BUY RPS
