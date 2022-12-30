@@ -18,7 +18,7 @@ const abi = {
 };
 const walletKey = process.env.WK;
 // const RPSTOKEN = "0xdafd66372d9cfde03eab62f9f5e064a8e2d845ca";
-const RPSTOKEN = '0xbaa0907ec5d9fbc2c902d477b2174d4100de8178';
+const RPSTOKEN = '0x960af0c27c4b5062e77a58080576643c5be15080';
 router.post('/secret', auth, async (req, res) => {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
