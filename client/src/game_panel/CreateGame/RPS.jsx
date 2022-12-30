@@ -48,12 +48,12 @@ class RPS extends Component {
     });
     this.setState({
       selected_rps: 'R',
-      selected_bet_amount: 50000
+      selected_bet_amount: 5
     });
   };
 
   render() {
-    const defaultBetAmounts = [50000, 100000, 250000, 500000];
+    const defaultBetAmounts = [5, 10, 25, 50];
     const disabledStyle = {
       opacity: '0.5',
       pointerEvents: 'none',

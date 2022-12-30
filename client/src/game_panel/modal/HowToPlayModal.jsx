@@ -442,13 +442,13 @@ class HowToPlayModal extends Component {
               </AccordionItem>
             </Accordion>
             <p><span>📃 </span>
-              CHECK OUT <a
-                href="https://docs.rps.finance/"
+              CHECK US OUT <a
+                href="https://twitter.com/rpsbet"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                RPS FINANCE DOCS
-              </a> FOR MORE INFORMATION ON $RPS AND UPDATES!!{' '}
+                ON TWITTER
+              </a> FOR MORE INFORMATION ON RPSBET.IO AND UPDATES!!{' '}
               
             </p>
 
@@ -473,7 +473,7 @@ class HowToPlayModal extends Component {
               <br />
             </div>
             <div className="game_footer text-center">
-              <span>All Rights Reserved, </span>RPS Finance © 2022{' '}
+              <span>All Rights Reserved, </span>RPS Finance © 2023{' '}
               <a
                 href="#privacy"
                 id="privacy"

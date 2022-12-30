@@ -136,7 +136,7 @@ class WithdrawModal extends Component {
                                 <div className="input-amount">
                                     <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} className="form-control" />
                                     <span>
-                                        RPS
+                                        BUSD
                                     </span>
                                     </div>
                                     

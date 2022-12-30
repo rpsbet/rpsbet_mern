@@ -52,7 +52,7 @@ class Summary extends Component {
             >
               ∞
             </span>{' '}
-            RPS
+            BUSD
           </div>
         ) : (
           <div className="your-max-return">

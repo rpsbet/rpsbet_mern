@@ -58,7 +58,7 @@ module.exports.socketio = server => {
               message,
               time: Moment(created_at).format('hh:mm')
             }))
-            .sort((a, b) => (a.time > b.time ? 1 : -1))
+            .sort((a, b) => (a.time > b.time ? -1 : 1))
         )
         .then(results => io.sockets.emit('SET_GLOBAL_CHAT', results));
     });
