@@ -94,7 +94,7 @@ class DefaultBetAmountPanel extends Component {
             }}
             placeholder="Bet Amount"
           />
-          <span style={{ marginLeft: '1rem' }}>RPS</span>
+          <span style={{ marginLeft: '1rem' }}>BUSD</span>
         </div>
         {this.props.game_type === 'RPS' ? (
           <p className="tip">The cost to play this RUN</p>

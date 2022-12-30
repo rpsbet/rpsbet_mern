@@ -111,7 +111,7 @@ class RPS extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `Oops! This is your Stake. What's the point?!`
+        `Dude? This is your Stake. What's the point?!`
       );
       return;
     }

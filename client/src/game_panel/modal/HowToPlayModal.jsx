@@ -78,7 +78,7 @@ class HowToPlayModal extends Component {
                       <p>
                         Your Bet Amount ={' '}
                         <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(50000)}
+                          {convertToCurrency(5)}
                         </span>
                       </p>
                       <p>
@@ -90,15 +90,15 @@ class HowToPlayModal extends Component {
                       <p>
                         Public Bet Amount ={' '}
                         <span style={{ color: '#b52c22' }}>
-                          {`${convertToCurrency(200000)} [${convertToCurrency(
-                            50000
+                          {`${convertToCurrency(20)} [${convertToCurrency(
+                            5
                           )} * 4]`}
                         </span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(250000)}
+                          {convertToCurrency(25)}
                         </span>
                       </p>
                     </div>
@@ -135,19 +135,19 @@ class HowToPlayModal extends Component {
                       <p>
                         Bet Amount ={' '}
                         <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(50000)}
+                          {convertToCurrency(5)}
                         </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          {`Automatic(${convertToCurrency(300000)})`}
+                          {`Automatic(${convertToCurrency(30)})`}
                         </span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(300000)}
+                          {convertToCurrency(30)}
                         </span>
                       </p>
                     </div>
@@ -190,12 +190,12 @@ class HowToPlayModal extends Component {
                       <p>
                         The following boxes are set (Prize/Price):{' '}
                         <span style={{ color: '#b52c22' }}>
-                          {`${convertToCurrency(250000)}/${convertToCurrency(
-                            40000
+                          {`${convertToCurrency(25)}/${convertToCurrency(
+                            4
                           )}, ${convertToCurrency(0)}/${convertToCurrency(
-                            60000
+                            6
                           )}, ${convertToCurrency(0)}/${convertToCurrency(
-                            100000
+                            10
                           )}`}
                         </span>
                       </p>
@@ -203,26 +203,26 @@ class HowToPlayModal extends Component {
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
                           {`Automatic(${convertToCurrency(
-                            410000
+                            41
                           )}) [${convertToCurrency(
-                            250000
+                            25
                           )} + ${convertToCurrency(
-                            60000
-                          )} + ${convertToCurrency(100000)}]`}
+                            6
+                          )} + ${convertToCurrency(10)}]`}
                         </span>
                       </p>
                       <p>
                         Host Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(410000)}
+                          {convertToCurrency(41)}
                         </span>
                       </p>
                       <p>
                         <i>
                           {`If the ${convertToCurrency(
-                            250000
+                            25
                           )} Prize box is opened, the host still
-                          receives the ${convertToCurrency(40000)} (Price).`}
+                          receives the ${convertToCurrency(4)} (Price).`}
                         </i>
                       </p>
                     </div>
@@ -245,8 +245,8 @@ class HowToPlayModal extends Component {
                       <h5>HOST / STAKE</h5>
                       <ol>
                         <li>
-                          Pick Your Number (Your Bet Amount): {convertToCurrency(100000)}-{convertToCurrency(1000000)} or
-                          {convertToCurrency(1000000)}-{convertToCurrency(10000000)}
+                          Pick Your Number (Your Bet Amount): {convertToCurrency(1)}-{convertToCurrency(10)} or
+                          {convertToCurrency(10)}-{convertToCurrency(100)}
                         </li>
                         <li>Set Payout for an Automatic cash out (optional)</li>
                       </ol>
@@ -263,29 +263,29 @@ class HowToPlayModal extends Component {
                       <p>
                         Host's Number (Bet Amount) ={' '}
                         <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(700000)}
+                          {convertToCurrency(70)}
                         </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          {`Automatic(${convertToCurrency(3000000)})`}
+                          {`Automatic(${convertToCurrency(30)})`}
                         </span>
                       </p>
                       <p>
                         {`Guesses (in order): ${convertToCurrency(
-                          100000
-                        )}, ${convertToCurrency(200000)}, ${convertToCurrency(
-                          1000000
-                        )}, ${convertToCurrency(900000)},
-                        ${convertToCurrency(500000)}, ${convertToCurrency(
-                          800000
+                          10
+                        )}, ${convertToCurrency(20)}, ${convertToCurrency(
+                          100
+                        )}, ${convertToCurrency(90)},
+                        ${convertToCurrency(50)}, ${convertToCurrency(
+                          80
                         )}- <i>*Game ENDs automatically*</i>`}
                       </p>
                       <p>
                         Host Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(4200000)}
+                          {convertToCurrency(42)}
                         </span>
                       </p>
                     </div>
@@ -331,13 +331,13 @@ class HowToPlayModal extends Component {
                       <p>
                         Bet Amount ={' '}
                         <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(500000)}
+                          {convertToCurrency(50)}
                         </span>
                       </p>
                       <p>
                         Winnings ={' '}
                         <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(1000000)}
+                          {convertToCurrency(100)}
                         </span>
                       </p>
                     </div>
