@@ -54,7 +54,7 @@ class WithdrawModal extends Component {
             }
             
             if (this.state.amount > this.state.balance) {
-                alertModal(this.props.isDarkMode, `Sorry, you can withdraw your in-game balance at most.`)
+                alertModal(this.props.isDarkMode, `Try again later brokie`)
                 return;
             }
             this.setState({ isLoading: true })
@@ -68,7 +68,7 @@ class WithdrawModal extends Component {
                 this.props.closeModal();
             } else {
                 this.setState({ isLoading: false })
-                alertModal(this.props.isDarkMode, `Something went wrong. Please try again in a few minutes.`)
+                alertModal(this.props.isDarkMode, `Check your wallet is connected dumbass`)
             }
         } catch(e) {
             this.setState({ isLoading: false })
@@ -88,7 +88,7 @@ class WithdrawModal extends Component {
         
       }
       copy() {
-        navigator.clipboard.writeText('0xBAA0907EC5D9FbC2c902d477B2174D4100dE8178')
+        navigator.clipboard.writeText('0x5D38080DA6a868b8BBe65a061D79E2065d5Dd79A')
       }
 
 
