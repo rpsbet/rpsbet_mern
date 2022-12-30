@@ -828,7 +828,7 @@ router.post('/end_game', auth, async (req, res) => {
       message.message =
         'I made ' +
         roomInfo['bet_amount'] +
-        ' RPS from UNSTAKING ' +
+        ' BUSD from UNSTAKING ' +
         roomInfo['game_type']['short_name'] +
         '-' +
         roomInfo['room_number'];
@@ -839,7 +839,7 @@ router.post('/end_game', auth, async (req, res) => {
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
-          ' RPS from UNSTAKING ' +
+          ' BUSD from UNSTAKING ' +
           roomInfo['game_type']['short_name'] +
           '-' +
           roomInfo['room_number'];
@@ -848,7 +848,7 @@ router.post('/end_game', auth, async (req, res) => {
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
-          ' RPS from UNSTAKING ' +
+          ' BUSD from UNSTAKING ' +
           roomInfo['game_type']['short_name'] +
           '-' +
           roomInfo['room_number'];
@@ -857,7 +857,7 @@ router.post('/end_game', auth, async (req, res) => {
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
-          ' RPS from UNSTAKING ' +
+          ' BUSD from UNSTAKING ' +
           roomInfo['game_type']['short_name'] +
           '-' +
           roomInfo['room_number'];
@@ -866,7 +866,7 @@ router.post('/end_game', auth, async (req, res) => {
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
-          ' RPS from UNSTAKING ' +
+          ' BUSD from UNSTAKING ' +
           roomInfo['game_type']['short_name'] +
           '-' +
           roomInfo['room_number'];
@@ -875,7 +875,7 @@ router.post('/end_game', auth, async (req, res) => {
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
-          ' RPS from UNSTAKING ' +
+          ' BUSD from UNSTAKING ' +
           roomInfo['game_type']['short_name'] +
           '-' +
           roomInfo['room_number'];
@@ -1232,7 +1232,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'I won ' +
             bet_item.bet_amount * 2 +
-            ' RPS in ' +
+            ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1244,7 +1244,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'We split ' +
             bet_item.bet_amount * 2 +
-            ' RPS in our ' +
+            ' BUSD in our ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1255,7 +1255,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'I lost ' +
             bet_item.bet_amount +
-            ' RPS in ' +
+            ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1288,7 +1288,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             "You're not the best keeper are you? I just won " +
             roomInfo['bet_amount'] * roomInfo['qs_game_type'] +
-            ' RPS' +
+            ' BUSD' +
             ' in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
@@ -1301,7 +1301,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'The boots suck, I just lost ' +
             roomInfo['user_bet'] +
-            ' RPS in ' +
+            ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1324,7 +1324,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'I won ' +
             (roomInfo['host_pr'] + roomInfo['bet_amount']) +
-            ' RPS' +
+            ' BUSD' +
             ' in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
@@ -1333,7 +1333,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'I lost ' +
             req.body.bet_amount +
-            ' RPS in ' +
+            ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1382,7 +1382,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'I won ' +
             selected_box.box_prize +
-            ' RPS in ' +
+            ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1420,7 +1420,7 @@ router.post('/bet', auth, async (req, res) => {
           const messageC =
             'I made ' +
             new_host_pr +
-            ' RPS from UNSTAKING ' +
+            ' BUSD from UNSTAKING ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1461,7 +1461,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'We split ' +
             roomInfo['pr'] +
-            ' RPS in ' +
+            ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1476,7 +1476,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'I won ' +
             roomInfo['pr'] +
-            ' RPS in ' +
+            ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
@@ -1490,7 +1490,7 @@ router.post('/bet', auth, async (req, res) => {
           message.message =
             'I lost ' +
             roomInfo['bet_amount'] +
-            ' RPS in ' +
+            ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];

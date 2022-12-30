@@ -45,7 +45,7 @@ const RoomSchema = new Schema({
   },
   spleesh_bet_unit: {
     type: Number,
-    default: 100000
+    default: 1
   },
   pr: {
     type: Number,

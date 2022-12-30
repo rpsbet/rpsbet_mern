@@ -29,7 +29,7 @@ class CreateGame extends Component {
       selected_qs_position: 0,
       bet_amount: 1,
       endgame_amount: 0,
-      spleesh_bet_unit: 100000,
+      spleesh_bet_unit: 1,
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
@@ -75,20 +75,20 @@ class CreateGame extends Component {
 
     let newState = {
       child_step: 1,
-      bet_amount: 100000,
+      bet_amount: 1,
       endgame_amount: 0,
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
-      public_bet_amount: convertToCurrency(100000)
+      public_bet_amount: convertToCurrency(1)
     };
 
     if (gameTypeName === 'Spleesh!') {
       newState = {
         ...newState,
         game_type: 2,
-        endgame_amount: 5400000,
-        max_return: 5400000,
+        endgame_amount: 54,
+        max_return: 54,
         public_bet_amount: this.state
       };
     } else if (gameTypeName === 'RPS') {
@@ -108,8 +108,8 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 5,
-        public_bet_amount: convertToCurrency(100000),
-        max_return: 200000,
+        public_bet_amount: convertToCurrency(1),
+        max_return: 2,
         qs_nation: Math.floor(Math.random() * 5)
       };
     } else if (gameTypeName === 'Mystery Box') {

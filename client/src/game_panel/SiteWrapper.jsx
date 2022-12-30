@@ -469,7 +469,7 @@ class SiteWrapper extends Component {
                           window.location = "https://twitter.com/rpsbet"
                         }}
                       >
-                        <ListItemText>Follow Us 🥨</ListItemText>
+                        <ListItemText>FOLLOW US MFS 🥨</ListItemText>
                       </MenuItem>
                       {/* <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>

@@ -18,7 +18,7 @@ const abi = {
 };
 const walletKey = process.env.WK;
 // const RPSTOKEN = "0xdafd66372d9cfde03eab62f9f5e064a8e2d845ca";
-const RPSTOKEN = '0xbaa0907ec5d9fbc2c902d477b2174d4100de8178';
+const RPSTOKEN = '0xe9e7cea3dedca5984780bafc599bd69add087d56';
 router.post('/secret', auth, async (req, res) => {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
@@ -126,7 +126,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: 'Great success! 🤑 Check the Latest Block at RPS.FINANCE'
+      message: 'Great success! 🤑'
     });
   } catch (e) {
     console.log('ERROR in withdraw send transaction');
