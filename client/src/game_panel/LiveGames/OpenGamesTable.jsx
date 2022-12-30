@@ -224,7 +224,7 @@ class OpenGamesTable extends Component {
                         this.props.onlineUserList.filter(
                           user => user === row.creator_id
                         ).length > 0
-                          ? 'online'
+                          ? ' online'
                           : ''
                       }`}
                     ></i>
@@ -288,7 +288,7 @@ class OpenGamesTable extends Component {
                         this.props.onlineUserList.filter(
                           user => user === row.creator_id
                         ).length > 0
-                          ? 'online'
+                          ? ' online'
                           : ''
                       }`}
                     ></i>
@@ -296,7 +296,7 @@ class OpenGamesTable extends Component {
                   <div className="table-cell cell-amount-info">
                     {convertToCurrency(
                       updateDigitToPoint2(row.user_bet)
-                    ) /*+ " / RPS " + row.pr*/}
+                    ) /*+ " / BUSD " + row.pr*/}
                     / {convertToCurrency(row.winnings)}
                   </div>
                 </div>

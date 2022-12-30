@@ -34,7 +34,7 @@ class Dropzone extends Component {
     const file = evt.target.files[0];
 
     if (file.size > 3145728) {//file size > 3MB
-      alertModal(this.props.darkMode, "The image is too big. Please try a smaller size.");
+      alertModal(this.props.darkMode, "This one is too ugly, please try another image");
       return;
     }
 

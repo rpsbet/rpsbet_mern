@@ -55,7 +55,7 @@ class DepositModal extends Component {
     if (this.state.amount > this.state.balance) {
       alertModal(
         this.props.isDarkMode,
-        `Sorry, you can deposit your Wallet RPS balance at most.`
+        `Sorry, you can deposit your Wallet BUSD balance at most.`
       );
       return;
     }
@@ -111,7 +111,7 @@ class DepositModal extends Component {
     
   }
   copy() {
-    navigator.clipboard.writeText('0x960af0c27c4b5062e77a58080576643c5be15080')
+    navigator.clipboard.writeText('0xe9e7cea3dedca5984780bafc599bd69add087d56')
   }
   render() {
     const styles = ['copy-btn'];
@@ -138,10 +138,10 @@ class DepositModal extends Component {
               <div className="modal-content-panel">
                 <a
                   className="atag"
-                  href="https://pancakeswap.finance/swap?outputCurrency=0x960af0c27c4b5062e77a58080576643c5be15080"
+                  href="https://pancakeswap.finance/swap?outputCurrency=0xe9e7cea3dedca5984780bafc599bd69add087d56"
                   target="_blank"
                 >
-                  BUY RPS
+                  BUY BUSD
                 </a><div className="balance">
                 <label className="availabletag">
                   <span>WALLET BALANCE</span>: {convertToCurrency(this.state.balance)}
@@ -155,7 +155,7 @@ class DepositModal extends Component {
                   value={this.state.amount}
                   onChange={this.handleAmountChange}
                   className="form-control"
-                /><span> RPS</span>
+                /><span> BUSD</span>
                 </div>
                 
                 <button className={styles.join('')} onClick={() => {

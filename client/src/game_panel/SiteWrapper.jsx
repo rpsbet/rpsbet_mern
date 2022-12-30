@@ -466,10 +466,10 @@ class SiteWrapper extends Component {
                       <MenuItem
                         onClick={e => {
                           // this.handleOpenPrivacyModal();
-                          window.location = "https://rps.finance"
+                          window.location = "https://twitter.com/rpsbet"
                         }}
                       >
-                        <ListItemText>GO TO RPS FINANCE</ListItemText>
+                        <ListItemText>Follow Us 🥨</ListItemText>
                       </MenuItem>
                       {/* <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
