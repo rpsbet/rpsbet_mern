@@ -382,21 +382,16 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        The only fees you pay is Token Tax i.e., the{' '}
+                        The only fees you pay is your mom.
                         <u>
-                          <a href="https://docs.rps.finance/economy/rps-finance/tokenomics/tax-and-dividends">
-                            Tokenomics
+                          <a href="mailto:bigdonkeydick@dancingkimjongun.com">
+                            Tell her to contact me.
                           </a>
                         </u>{' '}
-                        which is deducted each time you take Winnings. Token tax
-                        works in favour of its investors and players, for
-                        example Automatic Dividends in BNB.
                       </p>
                       <p>
                         <i>
-                          Please note, we are currently only partially on-chain
-                          so tax is only deducted on Withdrawals/Deposits.
-                          Otherwise, the platform is non-profit.
+                        JK, chill, snowflake.
                         </i>
                       </p>
                       <table id="howto-modal">
@@ -408,11 +403,11 @@ class HowToPlayModal extends Component {
                           </tr>
                           <tr>
                             <td>
-                              <u>5% Token Tax</u>
+                              <u>$0.07 - $0.30 BNB-CHAIN GAS</u>
                             </td>
                             <td className="gamemode">0%</td>
                             <td rowSpan="6">
-                              <u>5% Token Tax</u>
+                              <u>WE'LL PAY THIS, BUT PLZ NO RAPE</u>
                             </td>
                           </tr>
                         </tbody>
@@ -425,7 +420,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper support">
-                      <h4>Support - Get in Touch</h4>
+                      <h4>FAQ - IS THIS SITE A SCAM?</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -433,8 +428,8 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        For any technical/general feedback, please contact{' '}
-                        <u style={{ color: '#f5b22d' }}>support@rpsbet.io</u>.
+                        Maybe *wink wink*{' '}
+                        <u style={{ color: '#f5b22d' }}>jk, but some players might create scam games as there is no house</u>.
                       </p>
                     </div>
                   </div>
@@ -442,20 +437,18 @@ class HowToPlayModal extends Component {
               </AccordionItem>
             </Accordion>
             <p><span>📃 </span>
-              CHECK US OUT <a
-                href="https://twitter.com/rpsbet"
+              <a
+                href="https://rpsbet.io"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                ON TWITTER
-              </a> FOR MORE INFORMATION ON RPSBET.IO AND UPDATES!!{' '}
+                RPSBET.IO
+              </a> IS AN MVP PRODUCT TO TEST THE MARKET FOR PVP CASINO'S BEFORE REBRANDING Q2 / '23 {' '}
               
             </p>
 
             <div id="game_footer_howto">
-              <a href="https://twitter.com/rpsbet">TWITTER #1</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://twitter.com/rps_finance">TWITTER #2</a>
+              <a href="https://twitter.com/rpsbet">TWITTER</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">
                 YOUTUBE
@@ -473,7 +466,7 @@ class HowToPlayModal extends Component {
               <br />
             </div>
             <div className="game_footer text-center">
-              <span>All Rights Reserved, </span>RPS Finance © 2023{' '}
+              <span>All Rights Reserved, </span>RPSBET © 2023{' '}
               <a
                 href="#privacy"
                 id="privacy"

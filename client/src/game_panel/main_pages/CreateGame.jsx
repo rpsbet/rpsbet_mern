@@ -142,7 +142,7 @@ class CreateGame extends Component {
     e.preventDefault();
     confirmModalCreate(
       this.props.isDarkMode,
-      'Do you want to create new stake now?',
+      'ARE YOU SURE YOU CANNOT BET MORE, BROKIE?',
       'Okay',
       'Cancel',
       () => {

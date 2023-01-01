@@ -195,7 +195,7 @@ class MainPage extends Component {
               </svg>
               {this.state.selectedMobileTab === 'my_games' && 'MY STAKES'}
             </button>
-            <button
+            {/* <button
               className={`mobile-tab-leaderboards ${
                 this.state.selectedMobileTab === 'leaderboards' ? 'active' : ''
               }`}
@@ -222,7 +222,7 @@ class MainPage extends Component {
               </svg>
               {this.state.selectedMobileTab === 'leaderboards' &&
                 'LEADERBOARDS'}
-            </button>
+            </button> */}
             <button
               className={`mobile-tab-chat ${
                 this.state.selectedMobileTab === 'chat' ? 'active' : ''

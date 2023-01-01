@@ -33,7 +33,7 @@ class Spleesh extends Component {
       <div className="game-info-panel">
         <h3 className="game-sub-title">Game Type</h3>
         <div className="select-buttons-panel">
-          {[100000, 1000000].map(item => (
+          {[10, 100].map(item => (
             <button
               className={this.props.spleesh_bet_unit === item ? 'active' : ''}
               onClick={() => {

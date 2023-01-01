@@ -149,7 +149,7 @@ class MyGamesTable extends Component {
     e.preventDefault();
 
     if (this.state.selectedGameType === 'All') {
-      alertModal(true, `Please choose a game type!`);
+      alertModal(true, `SELECT A GAME FIRST!!!`);
       return;
     }
 
@@ -168,7 +168,7 @@ class MyGamesTable extends Component {
     return (
       <div className="my-open-games">
         <div className="create-room-btn-panel">
-          <label>Unlimited APY ➜</label>
+          <label>BECOME THE HOUSE ➜</label>
           <button
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}
@@ -197,10 +197,10 @@ class MyGamesTable extends Component {
           )}
           {this.props.myGames.length === 0 ? (
             <div className="dont-have-game-msg">
-              <div>You don't have any stakes right now.</div>
+              <div>BECOME THE HOUSE AND STAKE A GAME</div>
               <span>
-                To Create a New Stake, Choose a Gamemode <br />
-                then "+ STAKE"
+                FIRST SELECT A GAME <br />
+                THEN CLICK "+ STAKE"
               </span>
             </div>
           ) : (

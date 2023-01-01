@@ -122,7 +122,7 @@ class StatisticsForm extends React.Component {
         </H2>
         <div className="statistics-container">
           <div>
-            <div className="statistics-panel">
+            {/* <div className="statistics-panel">
               <h5>BREAKDOWN</h5>
               <div>
                 Deposits:{' '}
@@ -140,7 +140,7 @@ class StatisticsForm extends React.Component {
                 Balance:{' '}
                 {addCurrencySignal(updateDigitToPoint2(this.props.balance))}
               </div>
-            </div>
+            </div> */}
             <div className="statistics-panel">
               <h5>PERFORMANCE</h5>
               <div>Game Played: {this.props.gamePlayed}</div>
@@ -152,7 +152,8 @@ class StatisticsForm extends React.Component {
               </div>
               <div>
                 Net Profit:{' '}
-                {addCurrencySignal(updateDigitToPoint2(this.props.netProfit))}
+                {addCurrencySignal(updateDigitToPoint2(this.props.gameProfit))}
+                {/* {addCurrencySignal(updateDigitToPoint2(this.props.netProfit))} */}
               </div>
               <div>
                 Profit All Time High:{' '}

@@ -421,6 +421,20 @@ div.table .table-row .table-cell img.game-type-icon {
 .chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
   overflow-wrap: anywhere;
 }
+.chat {
+  height: 100vh;
+  overflow-y: scroll;
+}
+
+.chat::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.chat {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
 
 /*** MY CHAT ***/
 
@@ -483,6 +497,14 @@ div.table .table-row .table-cell img.game-type-icon {
   margin-bottom: 10px;
   width: 60%;
   position: relative;
+}
+
+.game-page .game-contents .game-info-panel .create-box-panel .amounts-panel{
+  gap: 30px;
+}
+
+.game-page .game-contents .game-info-panel .create-box-panel button {
+  margin-left: 30px;
 }
 
 .contents_wrapper .chat_log_panel .my_message,

@@ -49,12 +49,12 @@ class WithdrawModal extends Component {
     send = async () => {
         try {
             if (this.state.amount <= 0) {
-                alertModal(this.props.isDarkMode, `Do you know what 'AMOUNT' means?`)
+                alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`)
                 return;
             }
             
             if (this.state.amount > this.state.balance) {
-                alertModal(this.props.isDarkMode, `Try again later brokie`)
+                alertModal(this.props.isDarkMode, `TRY LATER BROKIE`)
                 return;
             }
             this.setState({ isLoading: true })

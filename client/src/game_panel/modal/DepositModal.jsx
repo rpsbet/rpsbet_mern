@@ -48,14 +48,14 @@ class DepositModal extends Component {
   };
   send = async () => {
     if (this.state.amount <= 0) {
-      alertModal(this.props.isDarkMode, `Do you know what 'AMOUNT' means?`);
+      alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
       return;
     }
 
     if (this.state.amount > this.state.balance) {
       alertModal(
         this.props.isDarkMode,
-        `Sorry, you can deposit your Wallet BUSD balance at most.`
+        `TRY LATER, BROKIE!`
       );
       return;
     }
