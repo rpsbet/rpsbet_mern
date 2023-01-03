@@ -140,7 +140,11 @@ class DepositModal extends Component {
                   className="atag"
                   href="https://pancakeswap.finance/swap?outputCurrency=0xe9e7cea3dedca5984780bafc599bd69add087d56"
                   target="_blank"
-                >
+                ><iframe
+                src="https://poocoin.app/embed-swap?inputCurrency=0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
+                width="420"
+                height="630"
+              ></iframe>
                   BUY BUSD
                 </a><div className="balance">
                 <label className="availabletag">
