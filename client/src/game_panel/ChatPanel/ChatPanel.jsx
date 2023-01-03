@@ -125,6 +125,18 @@ class ChatPanel extends Component {
               <span role="img" aria-label="" onClick={this.insertEmoji}>
                 ☔️
               </span>
+              <span role="img" aria-label="" onClick={this.insertEmoji}>
+                🏆
+              </span>
+              <span role="img" aria-label="" onClick={this.insertEmoji}>
+                🎁
+              </span>
+              <span role="img" aria-label="" onClick={this.insertEmoji}>
+                🎯
+              </span>
+              <span role="img" aria-label="" onClick={this.insertEmoji}>
+                ❤
+              </span>
             </div>
             <button
               className="btn-show-emoticon"

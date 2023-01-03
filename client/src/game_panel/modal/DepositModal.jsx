@@ -134,19 +134,22 @@ class DepositModal extends Component {
               ×
             </button>
             <h2>DEPOSIT</h2>
+            <h5>STEP 1. SWAP BNB FOR BUSD</h5>
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <a
+              <iframe
+              src="https://poocoin.app/embed-swap?outputCurrency=0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
+              width="100%"
+              height="420"
+            ></iframe><a
                   className="atag"
                   href="https://pancakeswap.finance/swap?outputCurrency=0xe9e7cea3dedca5984780bafc599bd69add087d56"
                   target="_blank"
-                ><iframe
-                src="https://poocoin.app/embed-swap?inputCurrency=0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
-                width="420"
-                height="630"
-              ></iframe>
-                  BUY BUSD
-                </a><div className="balance">
+                >
+                  OR CLICK HERE TO VISIT PCS
+                </a><h5>STEP 1. SWAP BNB FOR BUSD</h5>
+                <br />
+                <div className="balance">
                 <label className="availabletag">
                   <span>WALLET BALANCE</span>: {convertToCurrency(this.state.balance)}
                 </label>
@@ -160,6 +163,7 @@ class DepositModal extends Component {
                   onChange={this.handleAmountChange}
                   className="form-control"
                 /><span> BUSD</span>
+                <br />
                 </div>
                 
                 <button className={styles.join('')} onClick={() => {
