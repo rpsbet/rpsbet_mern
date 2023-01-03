@@ -146,10 +146,10 @@ class DepositModal extends Component {
                   href="https://pancakeswap.finance/swap?outputCurrency=0xe9e7cea3dedca5984780bafc599bd69add087d56"
                   target="_blank"
                 >
-                  OR CLICK HERE TO VISIT PCS
-                </a><h5>STEP 1. SWAP BNB FOR BUSD</h5>
-                <br />
+                  OR CLICK HERE TO BUY ON PCS
+                </a>
                 <div className="balance">
+                <h5>STEP 2. ENTER AMOUNT & DEPOSIT</h5>
                 <label className="availabletag">
                   <span>WALLET BALANCE</span>: {convertToCurrency(this.state.balance)}
                 </label>
