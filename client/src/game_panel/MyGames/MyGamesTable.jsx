@@ -8,6 +8,18 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
+import Lottie from 'react-lottie';
+import animationData from '../LottieAnimations/add';
+
+
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice"
+  }
+};
 
 class MyGamesTable extends Component {
   constructor(props) {
@@ -26,7 +38,7 @@ class MyGamesTable extends Component {
   endRoom = (winnings, room_id) => {
     confirmModalClosed(
       true,
-      `Do you want to end this game now? You will take [${convertToCurrency(
+      `DO YOU WANT TO END THIS GAME NOW? YOU WILL TAKE [${convertToCurrency(
         winnings
       )}]`,
       'Okay',
@@ -149,7 +161,7 @@ class MyGamesTable extends Component {
     e.preventDefault();
 
     if (this.state.selectedGameType === 'All') {
-      alertModal(true, `SELECT A GAME FIRST!!!`);
+      alertModal(this.props.isDarkMode, `SELECT A GAME FIRST!!!`);
       return;
     }
 
@@ -167,15 +179,6 @@ class MyGamesTable extends Component {
     const gameTypePanel = this.generateGameTypePanel();
     return (
       <div className="my-open-games">
-        <div className="create-room-btn-panel">
-          <label>BECOME THE HOUSE ➜</label>
-          <button
-            className="btn-create-room"
-            onClick={this.handleCreateBtnClicked}
-          >
-            + STAKE
-          </button>
-        </div>
         <div className="game-type-container">
           <div
             className="game-type-panel"
@@ -185,6 +188,15 @@ class MyGamesTable extends Component {
           >
             {gameTypePanel}
           </div>
+        </div>
+        <div className="create-room-btn-panel">
+          <label>BECOME THE HOUSE ➜</label>
+          <button
+            className="btn-create-room"
+            onClick={this.handleCreateBtnClicked}
+          >
+            + STAKE
+          </button>
         </div>
         <div className="table my-open-game-table">
           {this.props.myGames.length > 0 && (
@@ -197,7 +209,10 @@ class MyGamesTable extends Component {
           )}
           {this.props.myGames.length === 0 ? (
             <div className="dont-have-game-msg">
-              <div>BECOME THE HOUSE AND STAKE A GAME</div>
+              <Lottie 
+        options={defaultOptions}
+          width={50}
+        />
               <span>
                 FIRST SELECT A GAME <br />
                 THEN CLICK "+ STAKE"

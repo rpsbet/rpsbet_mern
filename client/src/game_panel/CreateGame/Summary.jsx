@@ -28,14 +28,14 @@ class Summary extends Component {
     return (
       <div className="pre-summary-panel">
         <div className="your-bet-amount">
-          Your Bet Amount :{' '}
+          Your Bet Amount:{' '}
           {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
         </div>
         {['Mystery Bpx', 'Spleesh!', 'Quick Shoot'].includes(
           this.props.game_mode
         ) && (
           <div className="public-bet-amount">
-            Public Bet Amount : {public_bet_amount}
+            Public Bet Amount: {public_bet_amount}
           </div>
         )}
         {this.props.game_mode === 'Brain Game' ? (
@@ -43,7 +43,7 @@ class Summary extends Component {
             className="your-max-return"
             style={{ display: 'inline-flex', justifyContent: 'center' }}
           >
-            Your Max Return :{' '}
+            Your Max Return:{' '}
             <span
               style={{
                 fontSize: '2em',
@@ -56,7 +56,7 @@ class Summary extends Component {
           </div>
         ) : (
           <div className="your-max-return">
-            Your Max Return :{' '}
+            Your Max Return:{' '}
             {convertToCurrency(updateDigitToPoint2(this.props.max_return))}
           </div>
         )}
@@ -64,7 +64,7 @@ class Summary extends Component {
           this.props.game_mode
         ) && (
           <div className="public-max-return">
-            Public Max Return : {public_max_return}
+            Public Max Return: {public_max_return}
           </div>
         )}
       </div>

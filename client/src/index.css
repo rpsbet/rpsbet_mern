@@ -68,7 +68,6 @@ input,textarea { border-radius: 0 !important; }
  .btn-back:hover  {
   /* transform:scale(0.98); */
   filter: brightness(0.9) contrast(1.2);
-  text-shadow: 0px 0px 1px #ffffff;
 }
 
 #root .site_wrapper {
@@ -234,6 +233,20 @@ div.table.my-chat-table .table-row > div.message-panel ,
     color: white;
     background-color: #5653df;
 }
+.game-type-panel .btn-game-type.active,
+.game-type-panel .btn-game-type:hover {
+    border-radius: 16px;
+    background-color: #f9f9f9;
+}
+
+.modal-body {
+	border-radius: 20px !important;
+}
+
+.modal-body button,
+.modal-body button.btn-back {
+	border-radius: 9px;
+}
 
 .login_form #btn_signup,
 .login_form #btn_goback {
@@ -276,7 +289,7 @@ div[aria-label="How To Play Modal"] ul {
 }
 
 #game_footer_howto {
-  margin-top: 30px;
+  margin: 30px 0;
   text-align: center;
   overflow-x: scroll;
   white-space: nowrap;
@@ -398,17 +411,19 @@ div.table .table-row .table-cell img.game-type-icon {
   
 }
 
+#liveStakes div {
+  position: absolute;
+  height: auto !important;
+  margin-top: -10px !important;
+  display: inline-block !important;
+}
+
 .game-page .game-contents .game-info-panel button.other {
   height: auto;
   white-space: pre-wrap;
   display: inline-block;
   word-break: break-word;
 }
-
-.game-page .game-contents .game-info-panel button {
-  margin-bottom: 14px !important;
-}
-
 
 .table-cell.cell-room-info .cell-game-type, div.table.my-open-game-table .table-row .table-cell.room-id {
   display: flex;
@@ -499,8 +514,23 @@ div.table .table-row .table-cell img.game-type-icon {
   position: relative;
 }
 
+.game-page .game-contents {
+  border-radius: 30px !important;
+}
+.game-page .game-contents .game-info-panel .box-prizes {
+  border-radius: 16px !important;
+}
+
+a.player {
+color: #ffb000 !important;
+}
+
+a.player:hover {
+  cursor: pointer;
+  }
 .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel{
-  gap: 30px;
+  gap: 10px;
+  margin-right: 30px;
 }
 
 .game-page .game-contents .game-info-panel .create-box-panel button {

@@ -191,7 +191,7 @@ class CreateGame extends Component {
         (parseFloat(this.state.bet_amount) <= 0 ||
           isNaN(parseFloat(this.state.bet_amount)))
       ) {
-        alertModal(this.props.isDarkMode, 'Please input the bet amount!');
+        alertModal(this.props.isDarkMode, 'YOU DIDN\'T BET ANYTHING!!!');
         return;
       }
 
@@ -200,7 +200,7 @@ class CreateGame extends Component {
           bet_amount: this.state.bet_amount,
           balance: this.state.balance
         });
-        alertModal(this.props.isDarkMode, 'Not enough balance!');
+        alertModal(this.props.isDarkMode, 'MAKE A DEPOSIT, BROKIE!');
         return;
       }
 
@@ -381,7 +381,7 @@ class CreateGame extends Component {
       <div className="game-page">
         <div className="page-title">
           <h2>
-            Host / Stake - <br />({this.state.game_mode})
+            CREATE - <br />({this.state.game_mode})
           </h2>
           {this.state.step === 5 &&
           this.state.game_mode === 'Brain Game' &&

@@ -14,6 +14,9 @@ import {
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 
+import Lottie from 'react-lottie';
+import animationData from '../LottieAnimations/live';
+
 import { Tabs, Tab } from '@material-ui/core';
 
 import './MainPages.css';
@@ -27,6 +30,16 @@ const customStyles = {
     width: '50%',
     height: '62px',
     backgroundColor: 'rgba(47, 49, 54, 0.5)'
+  }
+};
+
+
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice"
   }
 };
 
@@ -63,7 +76,11 @@ class MainPage extends Component {
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0)
-      ? 'Live Stakes'
+      ? <div id="liveStakes">LIVE STAKES
+      <Lottie 
+        options={defaultOptions}
+          width={40}
+        /></div>
       : 'My Stakes';
 
   render() {
@@ -83,7 +100,7 @@ class MainPage extends Component {
               <Tab
                 label={
                   this.state.selectedMobileTab === 'live_games'
-                    ? 'Live Stakes'
+                    ? 'Live Stakes' 
                     : 'My Stakes'
                 }
                 style={customStyles.tabRoot}

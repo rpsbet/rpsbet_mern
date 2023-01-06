@@ -70,6 +70,7 @@ class DefaultBetAmountPanel extends Component {
             pattern="[0-9]*"
             name="betamount"
             id="betamount"
+            maxLength="9"
             value={this.props.bet_amount}
             onChange={e => {
               if (this.props.game_type === 'Brain Game') {
@@ -94,7 +95,7 @@ class DefaultBetAmountPanel extends Component {
             }}
             placeholder="Bet Amount"
           />
-          <span style={{ marginLeft: '1rem' }}>BUSD</span>
+          <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
         </div>
         {this.props.game_type === 'RPS' ? (
           <p className="tip">The cost to play this RUN</p>

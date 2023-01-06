@@ -166,7 +166,6 @@ class MysteryBox extends Component {
         <div className="create-box-panel">
           <div className="amounts-panel">
             <div>
-              <div>Box Prize</div>
               <div className="edit-amount-panel">
                 <input
                   type="text"
@@ -176,13 +175,12 @@ class MysteryBox extends Component {
                   maxLength="9"
                   value={this.state.new_box_prize}
                   onChange={this.onChangeNewBoxPrize}
-                  placeholder="Your Bet Amount"
+                  placeholder="ENTER BOX PRIZE"
                 />
-                <span style={{ marginLeft: '1rem' }}>BUSD</span>
+                <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
               </div>
             </div>
             <div>
-              <div>Box Price</div>
               <div className="edit-amount-panel">
                 <input
                   type="text"
@@ -192,9 +190,9 @@ class MysteryBox extends Component {
                   maxLength="9"
                   value={this.state.new_box_price}
                   onChange={this.onChangeNewBoxPrice}
-                  placeholder="Public Bet Amount"
+                  placeholder="ENTER BOX PRICE"
                 />
-                <span style={{ marginLeft: '1rem' }}>BUSD</span>
+                <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
               </div>
             </div>
           </div>

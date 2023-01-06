@@ -82,7 +82,7 @@ class AdvancedSettings extends Component {
                   }}
                   placeholder="End Game Amount"
                 />
-                <span style={{ marginLeft: '1rem' }}>RPS</span>
+                <span style={{ marginLeft: '-3.2rem' }}> BUSD</span>
               </div>
             </div>
             <p className="tip">Choose Automatic to Unstake at a set amount.</p>

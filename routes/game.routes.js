@@ -575,7 +575,7 @@ router.post('/rooms', auth, async (req, res) => {
     if (req.body.bet_amount > req.user.balance) {
       return res.json({
         success: false,
-        message: 'Not enough balance!'
+        message: 'MAKE A DEPOSIT, BROKIE!'
       });
     }
 

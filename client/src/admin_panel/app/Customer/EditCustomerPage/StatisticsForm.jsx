@@ -47,7 +47,7 @@ class StatisticsForm extends React.Component {
     const options = {
       chart: {
         background: '#424242',
-        type: 'bar',
+        type: 'numeric',
         stacked: false,
         zoom: {
           type: 'x',

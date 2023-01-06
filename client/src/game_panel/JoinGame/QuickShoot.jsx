@@ -71,10 +71,10 @@ class QuickShoot extends Component {
     });
 
     if (result.status === 'success') {
-      let text = 'Oops, You Lost!';
+      let text = 'HAHAA, YOU SUCK!!!';
 
       if (result.betResult === 1) {
-        text = 'Nice, You Won!';
+        text = 'NICE SHOT, WINNER!!';
       } else if (result.betResult === 0) {
         text = 'Draw, No Winner!';
       }
@@ -119,13 +119,13 @@ class QuickShoot extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `Oops! This is your Stake. What's the point?!`
+        `THIS IS YOUR OWN STAKE, WTF IS WRONG WITH YOU?!`
       );
       return;
     }
 
     if (this.state.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `Not enough balance!`);
+      alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
       return;
     }
 
@@ -170,19 +170,19 @@ class QuickShoot extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>Join Stake - Quick Shoot</h2>
+          <h2>PLAY - Quick Shoot</h2>
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
           <div className="host-display-name">
-              Host : {this.props.creator}
+              Host: {this.props.creator}
             </div>
             <div className="your-bet-amount">
-              Bet Amount :{' '}
+              Bet Amount:{' '}
               {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
             </div>
             <div className="your-max-return">
-              Potential Return :{' '}
+              Potential Return:{' '}
               {convertToCurrency(
                 updateDigitToPoint2(
                   host_bet * this.props.qs_game_type /* 0.95 */
@@ -200,7 +200,8 @@ class QuickShoot extends Component {
                   position_short_name[this.state.selected_qs_position]
                 }.png`}
                 alt=""
-                style={{ width: '600px', maxWidth: '100%' }}
+                style={{ width: '600px', maxWidth: '100%', borderRadius: '20px',
+                boxShadow: '0 0 20px #0e0e0e' }}
               />
             </div>
             <div className="qs-action-panel">

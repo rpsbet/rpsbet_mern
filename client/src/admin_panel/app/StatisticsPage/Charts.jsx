@@ -65,7 +65,7 @@ class HeatmapChart extends React.Component {
         <ChartEl
           options={this.state.options}
           series={this.props.series}
-          type="scatter"
+          type="numeric"
           height="400"
           width="100%"
         />

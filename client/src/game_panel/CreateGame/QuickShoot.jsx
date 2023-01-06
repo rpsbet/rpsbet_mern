@@ -58,7 +58,8 @@ class QuickShoot extends Component {
               autoplay: true,
               animationData
             }}
-            style={{ maxWidth: '100%', width: '600px' }}
+            style={{ maxWidth: '100%', width: '600px', borderRadius: '20px',
+            boxShadow: '0 0 20px #0e0e0e'  }}
           />
         </div>
       )

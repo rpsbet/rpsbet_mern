@@ -30,6 +30,11 @@ body * {
   cursor: none !important;
 }
 
+
+.chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
+  color: #7e868c;
+}
+
 #cursor-dot,
 #cursor-dot-outline {
   z-index: 9999;
@@ -441,7 +446,7 @@ div[aria-label="How To Play Modal"] ul {
   height: 30px;
   border: 1px solid black;
   text-align: center;
-  padding: 0;
+  padding: 10px;
 }
 
 .modal-body {

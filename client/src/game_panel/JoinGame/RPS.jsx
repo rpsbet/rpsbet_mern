@@ -79,12 +79,12 @@ class RPS extends Component {
       slippage: this.state.slippage
     });
     if (result.status === 'success') {
-      let text = 'Oops, You Lost!';
+      let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
-        text = 'Nice, You Won!';
+        text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
-        text = 'Draw, No Winner!';
+        text = 'DRAW, NO WINNER!';
       }
 
       gameResultModal(
@@ -111,13 +111,13 @@ class RPS extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `Dude? This is your Stake. What's the point?!`
+        `THIS IS YOUR OWN STAKE!! ARE YOU OKAY?!`
       );
       return;
     }
 
     if (this.props.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `Not enough balance!`);
+      alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
       return;
     }
 
@@ -140,18 +140,18 @@ class RPS extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>Join Stake - RPS</h2>
+          <h2>PLAY - RPS</h2>
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
           <div className="host-display-name">
-              Host : {this.props.creator}
+              Host: {this.props.creator}
             </div>
             <div className="your-bet-amount">
-              Bet Amount : {convertToCurrency(this.props.bet_amount)}
+              Bet Amount: {convertToCurrency(this.props.bet_amount)}
             </div>
             <div className="your-max-return">
-              Potential Return :
+              Potential Return:
               {convertToCurrency(
                 updateDigitToPoint2(this.props.bet_amount * 2 /* * 0.95 */)
               )}

@@ -52,7 +52,7 @@ import WithdrawModal from './modal/WithdrawModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
 
 import Moment from 'moment';
-// import DarkModeToggle from 'react-dark-mode-toggle';
+import DarkModeToggle from 'react-dark-mode-toggle';
 import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css';
 import Avatar from '../components/Avatar';
@@ -62,6 +62,8 @@ import { tokenAddr } from '../config/index.js';
 import { convertToCurrency } from '../util/conversion';
 
 LoadingOverlay.propTypes = undefined;
+
+
 const mainTheme = createTheme({
   palette: {
     type: 'light'
@@ -389,7 +391,11 @@ class SiteWrapper extends Component {
                 <Tab label="Live Stakes" style={customStyles.tabRoot} />
                 <Tab label="My Stakes" style={customStyles.tabRoot} />
               </Tabs>
+              
               <div className="header_action_panel">
+              <div>
+      
+    </div>
                 {
                   /*<a
                   href="#"
@@ -436,6 +442,8 @@ class SiteWrapper extends Component {
                       getContentAnchorEl={null}
                       open={Boolean(this.state.anchorEl)}
                       onClose={this.handleCloseMenu}
+                      isDarkMode={this.props.isDarkMode}
+                      
                       anchorOrigin={{
                         vertical: 'bottom',
                         horizontal: 'center'
@@ -471,9 +479,9 @@ class SiteWrapper extends Component {
                       >
                         <ListItemText>FOLLOW US MFS 🥨</ListItemText>
                       </MenuItem>
-                      {/* <Divider />
+                      <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
-                        <ListItemText>Dark theme</ListItemText>
+                        {/* <ListItemText>DARK MODE</ListItemText> */}
                         <DarkModeToggle
                           onChange={this.props.setDarkMode}
                           checked={this.props.isDarkMode}
@@ -481,7 +489,7 @@ class SiteWrapper extends Component {
                           speed={5}
                           className="dark_mode_toggle"
                         />
-                      </MenuItem> */}
+                      </MenuItem>
                     </Menu>
                   </>
                 ) : (
@@ -543,12 +551,14 @@ class SiteWrapper extends Component {
                   <button
                     className="btn-withdraw"
                     onClick={this.handleOpenWithdrawModal}
+                    isDarkMode={this.props.isDarkMode}
                   >
                     Withdraw
                   </button>
                   <button
                     className="btn-deposit"
                     onClick={this.handleOpenDepositModal}
+                    isDarkMode={this.props.isDarkMode}
                   >
                     Deposit
                   </button>

@@ -14,7 +14,8 @@ Modal.setAppElement('#root');
 const customStyles = {
   overlay: {
     zIndex: 3,
-    backgroundColor: 'rgba(47, 49, 54, 0.8)'
+    backgroundColor: 'rgba(47, 49, 54, 0.8)',
+    backdropFilter: 'blur(4px)'
   },
   content: {
     top: '50%',
@@ -56,7 +57,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper quick-shoot">
                     <div className="modal-content-panel">
-                      <h5>HOST / STAKE</h5>
+                      <h5>CREATE</h5>
                       <ol>
                         <li>
                           Set the Game Type (Returns Multiplier e.g. 2x, 3x
@@ -67,7 +68,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN STAKE</h5>
+                      <h5>PLAY</h5>
                       <ol>
                         <li>Choose Where to Shoot</li>
                       </ol>
@@ -116,7 +117,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper brain-game">
                     <div className="modal-content-panel">
-                      <h5>HOST / STAKE</h5>
+                      <h5>CREATE</h5>
                       <ol>
                         <li>Set a global Bet Amount</li>
                         <li>Set Payout for an Automatic cash out (optional)</li>
@@ -124,7 +125,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN STAKE</h5>
+                      <h5>PLAY</h5>
                       <ol>
                         <li>Try to Win</li>
                       </ol>
@@ -165,7 +166,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper quick-shoot">
                     <div className="modal-content-panel">
-                      <h5>HOST / STAKE</h5>
+                      <h5>CREATE</h5>
                       <ol>
                         <li>
                           Add boxes by setting the <u>Prize</u> (or Empty) and{' '}
@@ -179,7 +180,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN STAKE</h5>
+                      <h5>PLAY</h5>
                       <ol>
                         <li>Open a box and hope to win a Prize</li>
                       </ol>
@@ -242,7 +243,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
-                      <h5>HOST / STAKE</h5>
+                      <h5>CREATE</h5>
                       <ol>
                         <li>
                           Pick Your Number (Your Bet Amount): {convertToCurrency(1)}-{convertToCurrency(10)} or
@@ -252,7 +253,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN STAKE</h5>
+                      <h5>PLAY</h5>
                       <ol>
                         <li>Guess the Host's Number</li>
                       </ol>
@@ -303,7 +304,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper rps">
                     <div className="modal-content-panel">
-                      <h5>HOST / STAKE</h5>
+                      <h5>CREATE</h5>
                       <ol>
                         <li>
                           Set the Game Type (Freeplay to allow players to bet
@@ -317,7 +318,7 @@ class HowToPlayModal extends Component {
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>JOIN STAKE</h5>
+                      <h5>PLAY</h5>
                       <ol>
                         <li>
                           Rock BEATS Scissors, Paper BEATS Rock and Scissors
@@ -443,7 +444,7 @@ class HowToPlayModal extends Component {
                 rel="noopener noreferrer"
               >
                 RPSBET.IO
-              </a> IS AN MVP PRODUCT TO TEST THE MARKET FOR PVP CASINO'S BEFORE REBRANDING Q2 / '23 {' '}
+              </a> HAS NO FEES AND IS FREE TO USE {' '}
               
             </p>
 

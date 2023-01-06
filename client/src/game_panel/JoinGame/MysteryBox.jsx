@@ -75,13 +75,13 @@ class MysteryBox extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `Oops! This is your Stake. What's the point?!`
+        `THIS IS YOUR OWN STAKE?!?`
       );
       return;
     }
 
     if (this.state.selected_id === '') {
-      alertModal(this.props.isDarkMode, `Please select a box!`);
+      alertModal(this.props.isDarkMode, `SELECT A BOX!!!`);
       return;
     }
 
@@ -138,19 +138,19 @@ class MysteryBox extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>Join Stake - Mystery Box</h2>
+          <h2>PLAY - Mystery Box</h2>
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
           <div className="host-display-name">
-              Host : {this.props.creator}
+              Host: {this.props.creator}
             </div>
             <div className="your-bet-amount">
-              Bet Amount :{' '}
+              Bet Amount:{' '}
               {convertToCurrency(updateDigitToPoint2(this.state.bet_amount))}
             </div>
             <div className="your-max-return">
-              Potential Return :{' '}
+              Potential Return:{' '}
               {convertToCurrency(updateDigitToPoint2(pr /* 0.95 */))}
             </div>
           </div>

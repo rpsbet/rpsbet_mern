@@ -4,6 +4,7 @@ import history from '../../redux/history';
 import { getRoomList, setCurRoomInfo } from '../../redux/Logic/logic.actions';
 
 import { alertModal } from '../modal/ConfirmAlerts';
+import PlayerModal from '../modal/PlayerModal';
 
 import { updateDigitToPoint2 } from '../../util/helper';
 
@@ -14,11 +15,13 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Pagination from '../../components/Pagination';
 import { convertToCurrency } from '../../util/conversion';
 
+
 class OpenGamesTable extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedGameType: 'All'
+      selectedGameType: 'All',
+      showPlayerModal: false
     };
   }
 
@@ -33,19 +36,19 @@ class OpenGamesTable extends Component {
     const bet_amount = e.target.getAttribute('bet_amount');
 
     if (!this.props.isAuthenticated) {
-      alertModal(this.props.isDarkMode, `Login to join this Stake!`);
+      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME!`);
       return;
     }
 
     if (bet_amount > this.props.balance) {
-      alertModal(this.props.isDarkMode, `Not enough balance!`);
+      alertModal(this.props.isDarkMode, `TOO BROKE!`);
       return;
     }
 
     if (e.target.getAttribute('room_status') === 'finished') {
       alertModal(
         this.props.isDarkMode,
-        `You can't join this game as it has ended.`
+        `THIS GAME HAS ENDED ALREADY`
       );
       return;
     }
@@ -157,6 +160,13 @@ class OpenGamesTable extends Component {
     });
   };
 
+  handleOpenPlayerModal = () => {
+    this.setState({ showPlayerModal: true, anchorEl: null });
+  };
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
+
   handlePrevPageClicked = () => {
     if (this.props.pageNumber === 1) return;
     this.props.getRoomList({
@@ -191,7 +201,7 @@ class OpenGamesTable extends Component {
         <div className="table main-game-table">
           {this.props.roomList.length === 0 && (
             <div className="dont-have-game-msg">
-              <div>There aren't any stakes right now.</div>
+              <div>NO STAKES YET, GO TO 'MY STAKES'</div>
             </div>
           )}
           {this.props.roomList.map(
@@ -212,6 +222,17 @@ class OpenGamesTable extends Component {
                     </div>
                   </div>
                   <div className="table-cell desktop-only cell-user-name">
+                  <a className="player" onClick={this.handleOpenPlayerModal}>
+                  {this.state.showPlayerModal && (
+            <PlayerModal
+              modalIsOpen={this.state.showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
+              player_name={this.state.creator}
+              // balance={this.state.balance}
+              // avatar={this.props.user.avatar}
+              // email={this.props.user.email}
+            />
+          )}
                     <Avatar
                       className="avatar"
                       src={row.creator_avatar}
@@ -219,6 +240,7 @@ class OpenGamesTable extends Component {
                       darkMode={this.props.isDarkMode}
                     />
                     <span>{row.creator}</span>
+                    </a>
                     <i
                       className={`online-status${
                         this.props.onlineUserList.filter(
@@ -235,8 +257,8 @@ class OpenGamesTable extends Component {
                         ' - ' +
                         convertToCurrency(row.spleesh_bet_unit * 10) +
                         ' / ' +
-                        convertToCurrency(row.spleesh_bet_unit * 2) +
-                        ' - ?'
+                        // convertToCurrency(row.spleesh_bet_unit * 2) +
+                        '???'
                       : `${convertToCurrency(updateDigitToPoint2(row.user_bet))}
                     / ${convertToCurrency(row.winnings)}`}
                   </div>
@@ -270,7 +292,7 @@ class OpenGamesTable extends Component {
                           className="lock-icon"
                         />
                       )}
-                      Join Stake
+                      PLAY
                     </button>
                   </div>
                 </div>
@@ -315,6 +337,7 @@ class OpenGamesTable extends Component {
             prefix="LiveGames"
           />
         )}
+        
       </div>
     );
   }
