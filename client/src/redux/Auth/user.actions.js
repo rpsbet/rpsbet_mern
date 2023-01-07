@@ -240,6 +240,7 @@ export const setDarkMode = isDarkMode => dispatch => {
   dispatch({ type: SET_DARK_MODE, payload: isDarkMode });
 }
 
+
 export const setUserInfo = userInfo => dispatch => {
   dispatch({ type: USER_LOADED, payload: userInfo });
 }

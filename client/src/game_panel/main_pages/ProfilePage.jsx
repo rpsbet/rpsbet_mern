@@ -63,16 +63,16 @@ class ProfilePage extends React.Component {
         enabled: false
       },
       title: {
-        text: 'Cumulative Net Profit',
+        text: 'CUMULATIVE PROFIT',
         style: {
           color: 'white'
         }
       },
       xaxis: {
         labels: {
-          show: true,
+          show: false,
           rotate: 0,
-          hideOverlappingLabels: false
+          hideOverlappingLabels: true
         }
       },
       yaxis: {
@@ -103,9 +103,9 @@ class ProfilePage extends React.Component {
               updateDigitToPoint2(gameLogList[dataPointIndex].profit)
             ) +
             '</div>' +
-            '<div>Net Profit:' +
-            gameLogList[dataPointIndex].net_profit +
-            '</div>' +
+            // '<div>Net Profit:' +
+            // gameLogList[dataPointIndex].net_profit +
+            // '</div>' +
             '</div>'
           );
         }
@@ -159,7 +159,7 @@ class ProfilePage extends React.Component {
               ? 'step-5'
               : 'step-1'
           }
-          type="bar"
+          type="line"
           height="350"
           width="100%"
         />

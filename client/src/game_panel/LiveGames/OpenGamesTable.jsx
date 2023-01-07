@@ -36,7 +36,7 @@ class OpenGamesTable extends Component {
     const bet_amount = e.target.getAttribute('bet_amount');
 
     if (!this.props.isAuthenticated) {
-      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME!`);
+      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
       return;
     }
 
@@ -87,6 +87,14 @@ class OpenGamesTable extends Component {
   handleBtnRightClicked = e => {
     this.game_type_panel.scrollLeft = this.game_type_panel.scrollWidth;
   };
+
+  handleOpenPlayerModal = () => {
+    this.setState({ showPlayerModal: true, anchorEl: null });
+  };
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
+
 
   generateGameTypePanel = () => {
     const gameTypeStyleClass = {
@@ -223,6 +231,8 @@ class OpenGamesTable extends Component {
                   </div>
                   <div className="table-cell desktop-only cell-user-name">
                   <a className="player" onClick={this.handleOpenPlayerModal}>
+                  <div onClick={e => e.stopPropagation()}>
+
                   {this.state.showPlayerModal && (
             <PlayerModal
               modalIsOpen={this.state.showPlayerModal}
@@ -230,9 +240,8 @@ class OpenGamesTable extends Component {
               player_name={this.state.creator}
               // balance={this.state.balance}
               // avatar={this.props.user.avatar}
-              // email={this.props.user.email}
             />
-          )}
+          )}</div>
                     <Avatar
                       className="avatar"
                       src={row.creator_avatar}
@@ -343,11 +352,13 @@ class OpenGamesTable extends Component {
   }
 }
 
-const mapStateToProps = state => ({});
+const mapStateToProps = state => ({
+  creator: state.logic.curRoomInfo.creator_name
+});
 
 const mapDispatchToProps = {
   getRoomList,
-  setCurRoomInfo
+  setCurRoomInfo,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);

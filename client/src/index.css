@@ -411,6 +411,11 @@ div.table .table-row .table-cell img.game-type-icon {
   
 }
 
+.playBtn {
+  display: flex;
+    justify-content: flex-start;
+}
+
 #liveStakes div {
   position: absolute;
   height: auto !important;

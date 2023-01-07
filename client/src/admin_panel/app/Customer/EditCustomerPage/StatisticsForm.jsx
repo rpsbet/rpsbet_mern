@@ -64,17 +64,20 @@ class StatisticsForm extends React.Component {
       dataLabels: {
         enabled: false
       },
+      animations: {
+        enabled: false
+        },
       title: {
-        text: 'Cumulative Net Profit',
+        text: 'CUMULATIVE PROFIT',
         style: {
           color: 'white'
         }
       },
       xaxis: {
         labels: {
-          show: true,
+          show: false,
           rotate: 0,
-          hideOverlappingLabels: false
+          hideOverlappingLabels: true
         }
       },
       yaxis: {
@@ -88,26 +91,26 @@ class StatisticsForm extends React.Component {
         custom: function({ series, seriesIndex, dataPointIndex, w }) {
           return (
             '<div class="chart-tooltip">' +
-            '<div>Game Id: ' +
+            '<div>GAME ID:  ' +
             gameLogList[dataPointIndex].game_id +
             '</div>' +
-            '<div>Played: ' +
+            '<div>PLAYED:  ' +
             moment(gameLogList[dataPointIndex].played).fromNow() +
             '</div>' +
-            '<div>Bet: ' +
+            '<div>BET:  ' +
             convertToCurrency(gameLogList[dataPointIndex].bet) +
             '</div>' +
-            '<div>Opponent:' +
+            '<div>OPPONENT:  ' +
             gameLogList[dataPointIndex].opponent.username +
             '</div>' +
-            '<div>Profit:' +
+            '<div>PROFIT:  ' +
             addCurrencySignal(
               updateDigitToPoint2(gameLogList[dataPointIndex].profit)
             ) +
             '</div>' +
-            '<div>Net Profit:' +
-            gameLogList[dataPointIndex].net_profit +
-            '</div>' +
+            // '<div>Net Profit:' +
+            // gameLogList[dataPointIndex].net_profit +
+            // '</div>' +
             '</div>'
           );
         }
@@ -205,9 +208,10 @@ class StatisticsForm extends React.Component {
               ? 'step-5'
               : 'step-1'
           }
-          type="bar"
+          type="line"
           height="350"
           width="100%"
+          
         />
       </ChartDivEl>
     );

@@ -10,7 +10,7 @@ import MyChat from './MyChat';
 // function updateFromNow(history) {
 // 	const result = JSON.parse(JSON.stringify(history));
 // 	for (let i=0; i<result.length; i++) {
-// 		result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
+// 		result[i]['from_now'] = Moment(result [i]['created_at']).fromNow();
 // 	}
 // 	return result;
 // }

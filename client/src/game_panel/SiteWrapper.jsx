@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { createTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
+import song from './sounds/tems.mp3';
 import LoadingOverlay from 'react-loading-overlay';
 import {
   setSocket,
@@ -32,7 +33,10 @@ import {
   Divider
 } from '@material-ui/core';
 
+
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import PlayCircleOutlineIcon from '@material-ui/icons/PlayCircleOutline';
+import PauseCircleOutlineIcon from '@material-ui/icons/PauseCircleOutline';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import PersonOutlineIcon from '@material-ui/icons/PersonOutline';
 
@@ -40,6 +44,7 @@ import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
 
 import ProfileModal from './modal/ProfileModal';
+import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
 import PrivacyModal from './modal/PrivacyModal';
 import TermsModal from './modal/TermsModal';
@@ -64,6 +69,7 @@ import { convertToCurrency } from '../util/conversion';
 LoadingOverlay.propTypes = undefined;
 
 
+
 const mainTheme = createTheme({
   palette: {
     type: 'light'
@@ -83,6 +89,7 @@ const customStyles = {
     backgroundColor: 'rgba(47, 49, 54, 0.5)'
   }
 };
+
 
 function updateFromNow(transactions) {
   const result = JSON.parse(JSON.stringify(transactions));
@@ -104,9 +111,14 @@ class SiteWrapper extends Component {
       userName: this.props.userName,
       balance: this.props.balance,
       showProfileModal: false,
+      showPlayerModal: false,
       showHowToPlayModal: false,
       showPrivacyModal: false,
       showTermsModal: false,
+      // Get audio file in a variable
+      audio: new Audio(song),
+      // Set initial state of song
+      isPlaying: false,
       showLoginModal: false,
       showSignupModal: false,
       showVerificationModal: false,
@@ -121,7 +133,9 @@ class SiteWrapper extends Component {
       web3account: '',
       web3balance: 0
     };
+    
   }
+  
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -147,6 +161,8 @@ class SiteWrapper extends Component {
     }
     this.props.selectMainTab(newValue);
   };
+
+
 
   handleClickMenu = e => {
     this.setState({ anchorEl: e.currentTarget });
@@ -303,6 +319,13 @@ class SiteWrapper extends Component {
   handleCloseProfileModal = () => {
     this.setState({ showProfileModal: false });
   };
+  handleOpenPlayerModal = () => {
+    this.setState({ showPlayerModal: true, anchorEl: null });
+  };
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
+
 
   handleOpenTermsModal = () => {
     this.setState({ showTermsModal: true });
@@ -348,6 +371,25 @@ class SiteWrapper extends Component {
 
   handleBalanceClick = () => {
     this.setState({ showGameLog: !this.state.showGameLog });
+  };
+
+  playPause = () => {
+    this.audio.loop = true;
+    // Get state of song
+    let isPlaying = this.state.isPlaying;
+
+    if (isPlaying) {
+      // Pause the song if it is playing
+      this.state.audio.pause();
+    } else {
+
+      // Play the song if it is paused
+      this.state.audio.play();
+    }
+
+    // Change the state of song
+    this.setState({ isPlaying: !isPlaying });
+    
   };
 
   render() {
@@ -471,17 +513,17 @@ class SiteWrapper extends Component {
                         <ListItemText>LOGOUT</ListItemText>
                       </MenuItem>
                       <Divider />
-                      <MenuItem
-                        onClick={e => {
-                          // this.handleOpenPrivacyModal();
-                          window.location = "https://twitter.com/rpsbet"
-                        }}
-                      >
-                        <ListItemText>FOLLOW US MFS 🥨</ListItemText>
+                      <MenuItem onClick={this.playPause}>
+                        <ListItemText>{this.state.isPlaying ? <div className="playBtn">
+                        <ListItemIcon>
+                          <PauseCircleOutlineIcon /></ListItemIcon> PAUSE</div>
+                          : 
+                          <div className="playBtn"><ListItemIcon>
+                            <PlayCircleOutlineIcon/> </ListItemIcon> PLAY</div>}</ListItemText>
                       </MenuItem>
                       <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
-                        {/* <ListItemText>DARK MODE</ListItemText> */}
+                        {/* <ListItemText></ListItemText> */}
                         <DarkModeToggle
                           onChange={this.props.setDarkMode}
                           checked={this.props.isDarkMode}
@@ -591,6 +633,15 @@ class SiteWrapper extends Component {
               balance={this.state.balance}
               avatar={this.props.user.avatar}
               email={this.props.user.email}
+            />
+          )}
+          {this.state.showPlayerModal && (
+            <PlayerModal
+              modalIsOpen={this.state.showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
+              player_name={this.state.userName}
+              balance={this.state.balance}
+              avatar={this.props.user.avatar}
             />
           )}
           {this.state.showHowToPlayModal && (

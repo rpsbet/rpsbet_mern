@@ -31,7 +31,7 @@ class HeatmapChart extends React.Component {
         xaxis: {
           categories: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
           tickAmount: 11,
-          range: 11,
+          range: 7,
           tickPlacement: 'between',
           axiesTicks: {
             show: true
@@ -48,6 +48,9 @@ class HeatmapChart extends React.Component {
               return addCurrencySignal(value);
             }
           }
+        },
+        animations: {
+          enabled: false
         },
         legend: {
           itemMargin: {

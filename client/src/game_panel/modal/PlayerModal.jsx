@@ -120,7 +120,7 @@ class PlayerModal extends Component {
                     <h2 className="modal-title">Player Profile</h2>
                     <div className="user-statistics">
                       <StatisticsForm
-                        username={this.state.creator_id}
+                        username={this.state.player_name}
                         joined_date={this.state.joined_date}
                         // gameLogList={this.state.gameLogList}
                         // deposit={this.state.deposit}
@@ -147,6 +147,7 @@ class PlayerModal extends Component {
 const mapStateToProps = state => ({
     isDarkMode: state.auth.isDarkMode,
     userInfo: state.auth.user,
+    creator: state.logic.curRoomInfo.creator_name
 });
 
 const mapDispatchToProps = {

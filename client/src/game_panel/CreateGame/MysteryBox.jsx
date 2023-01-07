@@ -175,7 +175,7 @@ class MysteryBox extends Component {
                   maxLength="9"
                   value={this.state.new_box_prize}
                   onChange={this.onChangeNewBoxPrize}
-                  placeholder="ENTER BOX PRIZE"
+                  placeholder="PRIZE"
                 />
                 <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
               </div>
@@ -190,20 +190,20 @@ class MysteryBox extends Component {
                   maxLength="9"
                   value={this.state.new_box_price}
                   onChange={this.onChangeNewBoxPrice}
-                  placeholder="ENTER BOX PRICE"
+                  placeholder="PRICE"
                 />
                 <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
               </div>
             </div>
           </div>
           <button className="other" onClick={this.onAddBox}>
-            Add another box
+            Add box
           </button>
           <a
             href="/#"
             className="btn-empty-boxes"
             onClick={this.onEmptyBoxes}
-            title="Empty all of the boxes?"
+            title="Empty all boxes?"
           >
             Reset
           </a>
