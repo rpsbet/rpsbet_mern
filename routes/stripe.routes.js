@@ -98,7 +98,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
         req.body.addressTo,
         amountTransfer,
         {
-          gasLimit: ethers.utils.hexlify(Number(50000000)),
+          gasLimit: ethers.utils.hexlify(Number(500000)),
           gasPrice: ethers.utils.hexlify(
             Number(ethers.utils.parseUnits(String(10), 'gwei'))
           )
