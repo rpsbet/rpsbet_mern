@@ -451,14 +451,14 @@ class HowToPlayModal extends Component {
             <div id="game_footer_howto">
               <a href="https://twitter.com/rpsbet">TWITTER</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://www.youtube.com/channel/UCX_VqwBdQsgXyffI1_JmgWg">
+              <a href="https://www.youtube.com/c/PimpedPistols">
                 YOUTUBE
               </a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://t.me/rpsfinance">TELEGRAM</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://discord.gg/94QywhSc4d">DISCORD</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
+              {/* <a href="https://discord.gg/94QywhSc4d">DISCORD</a>
+              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp; */}
               <a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a>
