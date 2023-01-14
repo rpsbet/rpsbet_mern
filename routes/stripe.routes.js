@@ -101,8 +101,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
           gasLimit: ethers.utils.hexlify(Number(500000)),
           gasPrice: ethers.utils.hexlify(
             Number(ethers.utils.parseUnits(String(10), 'gwei'))
-          ),
-          nonce: await web3.eth.getTransactionCount(trxData.public, 'pending'),
+          )
+          // nonce: await web3.eth.getTransactionCount(trxData.public, 'pending'),
         }
       );
       console.log(`Tx-hash: ${tx.hash}`);
