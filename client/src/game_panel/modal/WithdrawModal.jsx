@@ -69,7 +69,7 @@ class WithdrawModal extends Component {
                 this.props.closeModal();
             } else {
                 this.setState({ isLoading: false })
-                alertModal(this.props.isDarkMode, `CHECK YOUR WALLET IS CONNECTED DUMBASS`)
+                alertModal(this.props.isDarkMode, `SOMETHING IS WRONG - CONTACT @RPSBET ON TG`)
             }
         } catch(e) {
             this.setState({ isLoading: false })

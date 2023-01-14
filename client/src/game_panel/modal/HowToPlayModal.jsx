@@ -398,9 +398,9 @@ class HowToPlayModal extends Component {
                       <table id="howto-modal">
                         <tbody>
                           <tr>
-                            <th>Deposit Fees</th>
-                            <th>House Edge</th>
-                            <th>Withdrawal Fees</th>
+                            <th>DEPOSIT FEES</th>
+                            <th>HOUSE EDGE</th>
+                            <th>WITHDRAWAL FEES</th>
                           </tr>
                           <tr>
                             <td>
@@ -443,8 +443,8 @@ class HowToPlayModal extends Component {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                RPSBET.IO
-              </a> HAS NO FEES AND IS FREE TO USE {' '}
+                SUGGEST YOUR OWN #BRAINGAME
+              </a> {' '}
               
             </p>
 
