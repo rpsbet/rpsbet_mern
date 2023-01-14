@@ -64,7 +64,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: 'Account loaded 🤑 Much wow!!'
+      message: 'ACCOUNT LOADED 🤑 MUCH WOW!!'
     });
   } catch (err) {
     console.log('error in deposit_successed', err);
@@ -128,7 +128,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: 'Great success! 🤑'
+      message: 'GREAT SUCCESS! 🧀 VERY NICE!!'
     });
   } catch (e) {
     console.log('ERROR in withdraw send transaction');
