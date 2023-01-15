@@ -88,15 +88,40 @@ class AdvancedSettings extends Component {
             <p className="tip">Choose Automatic to Unstake at a set amount.</p>
           </div>
         )}
+        {/* {this.props.step === 3 && (
+          <div className="game-privacy-panel game-info-panel">
+            <h3 className="game-sub-title">Anonymous</h3>
+            <div className="radio-button-group">
+              <button
+                className={
+                  'radio-button' + (this.props.is_anonymous === true ? ' checked' : '')
+                }
+                onClick={() => { this.props.onChangeState({is_anonymous: true}); }}
+              >
+                Yes
+              </button>
+              <button
+                className={
+                  'radio-button' + (this.props.is_anonymous === false ? ' checked' : '')
+                }
+                onClick={() => { this.props.onChangeState({is_anonymous: false}); }}
+              >
+                No
+              </button>
+            </div>
+            <p>Choose 'Yes' to place an anonymous bet. RPS 0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your RPS 0.10 back.</p>
+          </div>
+        )} */}
 
-        {/* <hr/>
-				<label style={{pointerEvents: "none", opacity: "0.6"}} className="lbl_game_option">(DISABLED) Anonymous Bet</label>
-				<div style={{pointerEvents: "none", opacity: "0.6"}}>
+{/* 
+        <hr/>
+				<label className="lbl_game_option">Anonymous Bet</label>
+				<div >
 					<label className={"radio-inline" + (this.props.is_anonymous === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: true}); }}>Yes</label>
 					<label className={"radio-inline" + (this.props.is_anonymous === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: false}); }}>No</label>
 				</div>
-				<div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. RPS 0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your RPS 0.10 back.</div> */}
-      </div>
+				<div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. RPS 0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your RPS 0.10 back.</div>
+      */}</div> 
     );
   }
 }

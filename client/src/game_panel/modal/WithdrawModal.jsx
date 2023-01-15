@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
+
 import Modal from 'react-modal';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
@@ -33,6 +35,7 @@ class WithdrawModal extends Component {
         super(props);
 
         this.state = {
+            _id: this.props.userInfo._id,
             amount: 0,
             web3: props.web3,
             balance: props.balance,
@@ -47,10 +50,32 @@ class WithdrawModal extends Component {
             amount: e.target.value
         })
     }
+
+    async componentDidMount() {
+        const result = await this.props.getCustomerStatisticsData(this.state._id)
+        this.setState({
+          ...result
+        })
+      }
+
+   
     send = async () => {
+        
+        
         try {
-            if (this.state.amount <= 20) {
-                alertModal(this.props.isDarkMode, `MINIMUM WITHDRAWAL IS 20 BUSD`)
+            
+            if (this.state.amount <= 5) {
+                alertModal(this.props.isDarkMode, `WITHDRAWAL AMOUNT MUST BE MORE THAN 5 BUSD`)
+                return;
+            }
+
+            if (this.state.totalWagered <= 25) {
+                alertModal(this.props.isDarkMode, `MUST HAVE WAGERED AT LEAST 25 BUSD`)
+                return;
+            }
+
+            if (this.state.deposit <= 5) {
+                alertModal(this.props.isDarkMode, `DEPOSIT AT LEAST 5 BUSD FIRST`)
                 return;
             }
             
@@ -58,6 +83,7 @@ class WithdrawModal extends Component {
                 alertModal(this.props.isDarkMode, `TRY LATER BROKIE`)
                 return;
             }
+            
             this.setState({ isLoading: true })
             const result = await axios.post('/stripe/withdraw_request/', { amount: this.state.amount, addressTo: this.state.account});
             
@@ -129,7 +155,12 @@ class WithdrawModal extends Component {
                                 <h2>WITHDRAW</h2>
                                 <div className="modal-content-wrapper">
                                     <div className="modal-content-panel">
-                                        <div><span>MINIMUM WITHDRAWAL:&nbsp;&nbsp;&nbsp;20 BUSD</span></div>
+                                        <div id='withdrawal-status'>
+                                        <h6>ELIGIBILILITY STATUS</h6>
+                                    <div><span style={{color: this.state.totalWagered <= 25 ? "red" : "rgb(87, 202, 34)"}}>WAGERED:&nbsp;&nbsp;&nbsp;{this.state.totalWagered} BUSD</span></div>
+                                    <div><span style={{color: this.state.deposit <= 5 ? "red" : "rgb(87, 202, 34)"}}>DEPOSITS:&nbsp;&nbsp;&nbsp;{this.state.deposit} BUSD</span></div>
+                                        <div><span style={{color: this.state.amount <= 5 ? "red" : "rgb(87, 202, 34)"}}>AMOUNT:&nbsp;&nbsp;&nbsp;{this.state.amount} BUSD</span></div>
+                                        </div>
                                         <div className='balance'>
                                         <label className="availabletag">
                                             <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.state.balance)}
@@ -163,11 +194,13 @@ class WithdrawModal extends Component {
 
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
+  userInfo: state.auth.user,
 });
 
 const mapDispatchToProps = {
   setBalance,
   addNewTransaction,
+  getCustomerStatisticsData,
 };
 
 export default connect(

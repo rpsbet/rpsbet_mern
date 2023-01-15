@@ -6,6 +6,22 @@
     max-width: 95vw;
     position: relative;
 }
+
+#withdrawal-status {
+    text-align: center;
+    font-weight: 900;
+    color: #fff;
+   
+    padding: 20px 5px;
+    border-radius: 20px;
+    background: linear-gradient(45deg, #fa3fa04f, #fc41ddab);
+    /* box-shadow: 0 0 8px 2px #560251; */
+}
+#withdrawal-status h6 {
+ text-shadow: -1px 0px 2px #fff;
+}
+
+
 .modal-body.edit-modal-body {
     width: 700px;
     max-height: 85vh;
@@ -124,6 +140,7 @@
     align-items: center;
 }
 .modal-body p.has-forgot-password span {
+    display: none;
     margin: 0;
 }
 

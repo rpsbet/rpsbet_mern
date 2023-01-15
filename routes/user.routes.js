@@ -133,7 +133,7 @@ router.post('/', async (req, res) => {
     email,
     password,
     bio,
-    balance: 5,
+    balance: 1,
     status: 'off',
     avatar,
     verification_code
