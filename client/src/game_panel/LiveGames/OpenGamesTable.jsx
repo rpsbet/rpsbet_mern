@@ -40,10 +40,10 @@ class OpenGamesTable extends Component {
       return;
     }
 
-    if (bet_amount > this.props.balance) {
-      alertModal(this.props.isDarkMode, `TOO BROKE!`);
-      return;
-    }
+    // if (bet_amount > this.props.balance) {
+    //   alertModal(this.props.isDarkMode, `TOO BROKE!`);
+    //   return;
+    // }
 
     if (e.target.getAttribute('room_status') === 'finished') {
       alertModal(

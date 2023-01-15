@@ -86,7 +86,7 @@ class MysteryBox extends Component {
     }
 
     if (this.state.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `Not enough balance!`);
+      alertModal(this.props.isDarkMode, `TOO BROKE!`);
       return;
     }
 
