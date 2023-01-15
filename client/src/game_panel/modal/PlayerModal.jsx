@@ -117,7 +117,7 @@ class PlayerModal extends Component {
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                 <div className="modal-body edit-modal-body">
                     <button className="btn-close" onClick={this.handleCloseModal}>×</button>
-                    <h2 className="modal-title">Player Profile</h2>
+                    <h2 className="modal-title">Player Profiles ~ COMING SOON!</h2>
                     <div className="user-statistics">
                       <StatisticsForm
                         username={this.state.player_name}

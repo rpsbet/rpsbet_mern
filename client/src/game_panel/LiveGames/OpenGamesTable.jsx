@@ -237,7 +237,7 @@ class OpenGamesTable extends Component {
             <PlayerModal
               modalIsOpen={this.state.showPlayerModal}
               closeModal={this.handleClosePlayerModal}
-              player_name={this.state.creator}
+              player_name={row.creator}
               // balance={this.state.balance}
               // avatar={this.props.user.avatar}
             />

@@ -64,8 +64,8 @@ class SignupModal extends Component {
                     return (
                         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                             <div className='modal-body'>
-                                <h2>WELCOME TO RPSBET.IO MF!</h2>
-                                <p>Your account has been successfully registered.</p>
+                                <h2>WELCOME TO RPSBET.IO MF! ⚔</h2>
+                                <p>CLICK YOUR BALANCE TO MAKE A DEPOSIT</p>
                                 <div className="modal-action-panel">
                                     <button onClick={() => { 
                                         onClose(); 

@@ -135,7 +135,7 @@ class DepositModal extends Component {
               ×
             </button>
             <h2>DEPOSIT</h2>
-            <h5>STEP 1. SWAP BNB FOR BUSD</h5>
+            <h6>STEP 1.&nbsp;&nbsp;SWAP BNB FOR BUSD</h6>
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
               <iframe
@@ -150,9 +150,9 @@ class DepositModal extends Component {
                   OR CLICK HERE TO BUY ON PCS
                 </a>
                 <div className="balance">
-                <h5>STEP 2. ENTER AMOUNT & DEPOSIT</h5>
+                <h6>STEP 2.&nbsp;&nbsp;ENTER AMOUNT & DEPOSIT</h6>
                 <label className="availabletag">
-                  <span>WALLET BALANCE</span>: {convertToCurrency(this.state.balance)}
+                  <span>WALLET BALANCE</span>:&nbsp;&nbsp; {this.state.balance}&nbsp;BUSD&nbsp;
                 </label>
                 </div>
                 <div>

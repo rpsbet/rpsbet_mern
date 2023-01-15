@@ -105,7 +105,7 @@ router.post('/', async (req, res) => {
   if (!username || !email || !password) {
     return res.json({
       success: false,
-      error: 'Please enter all fields'
+      error: 'PLEASE FILL IN ALL THE FIELDS'
     });
   }
 
@@ -115,7 +115,7 @@ router.post('/', async (req, res) => {
   if (user)
     return res.json({
       success: false,
-      error: 'Email already exists.'
+      error: 'EMAIL ALREADY EXISTS'
     });
 
   user = await User.findOne({ username });
@@ -123,7 +123,7 @@ router.post('/', async (req, res) => {
   if (user)
     return res.json({
       success: false,
-      error: 'Username already exists.'
+      error: 'USERNAME ALREADY EXISTS'
     });
 
   const verification_code = Math.floor(Math.random() * 8999) + 1000;
@@ -133,7 +133,7 @@ router.post('/', async (req, res) => {
     email,
     password,
     bio,
-    balance: 0,
+    balance: 5,
     status: 'off',
     avatar,
     verification_code

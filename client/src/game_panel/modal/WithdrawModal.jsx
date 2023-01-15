@@ -49,8 +49,8 @@ class WithdrawModal extends Component {
     }
     send = async () => {
         try {
-            if (this.state.amount <= 0) {
-                alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`)
+            if (this.state.amount <= 20) {
+                alertModal(this.props.isDarkMode, `MINIMUM WITHDRAWAL IS 20 BUSD`)
                 return;
             }
             
@@ -129,6 +129,7 @@ class WithdrawModal extends Component {
                                 <h2>WITHDRAW</h2>
                                 <div className="modal-content-wrapper">
                                     <div className="modal-content-panel">
+                                        <div><span>MINIMUM WITHDRAWAL:&nbsp;&nbsp;&nbsp;20 BUSD</span></div>
                                         <div className='balance'>
                                         <label className="availabletag">
                                             <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.state.balance)}

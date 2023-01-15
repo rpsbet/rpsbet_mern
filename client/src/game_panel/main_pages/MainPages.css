@@ -995,6 +995,7 @@ width: 100px;
     margin-right: 16px;
     padding: 5px;
     border-radius: 3px;
+    white-space: nowrap;
 }
 .game-page .game-contents .game-info-panel .box-prizes span.opened {
     position: relative;
