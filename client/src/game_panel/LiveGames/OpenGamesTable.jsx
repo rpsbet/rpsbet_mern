@@ -325,8 +325,8 @@ class OpenGamesTable extends Component {
                       src={row.creator_avatar}
                       alt=""
                       darkMode={this.props.isDarkMode}
-                    /></a>
-                    <span>{row.creator}</span>
+                    />
+                    <span>{row.creator}</span></a>
                     <i
                       className={`online-status${
                         this.props.onlineUserList.filter(

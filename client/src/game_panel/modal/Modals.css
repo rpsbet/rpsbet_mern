@@ -157,9 +157,11 @@
 
 .align-center img,
 .AvatarDropzone img {
-    width: 144px;
+    width: 130px;
+    height: 130px;
     border-radius: 40px;
     border: 2px solid #ff409a;
+    box-shadow: 0px 0 4px 0px #c438ef;
 }
 
 .modal-body .modal-icon {

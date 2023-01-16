@@ -112,6 +112,10 @@ div.table.main-history-table .table-row > div > .room-id {
 div.table.main-history-table .table-row .table-cell img.avatar {
     width: 16px;
     height: 16px;
+    border-radius: 9px;
+    border: 2px solid #ff409a;
+    box-shadow: 0px 0 2px 0px #c438ef;
+
 }
 div.table.my-chat-table {
     padding: 10px;
@@ -189,8 +193,10 @@ div.table .table-row .table-cell img.game-type-icon {
 div.table .table-row .table-cell img.avatar {
     width: 32px;
     height: 32px;
-    border-radius: 50%;
     margin-right: 10px;
+    border-radius: 20px;
+        border: 2px solid #dc3ccd;
+    box-shadow: 0px 0 4px 0px #c438ef;
 }
 div.table .table-row .table-cell button:last-child {
     padding: 0;
@@ -995,7 +1001,8 @@ width: 100px;
     margin-right: 16px;
     padding: 5px;
     border-radius: 3px;
-    white-space: nowrap;
+    white-space: pre;
+    white-space: -webkit-nowrap;
 }
 .game-page .game-contents .game-info-panel .box-prizes span.opened {
     position: relative;
@@ -1455,6 +1462,7 @@ width: 100px;
     div.table .table-row .table-cell img.avatar {
         width: 16px; 
         height: 16px;
+        border-radius: 9px;
     }
     div.main-page-nav-button-group {
         position: fixed;
