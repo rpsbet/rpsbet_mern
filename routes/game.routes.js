@@ -1288,7 +1288,7 @@ router.post('/bet', auth, async (req, res) => {
         if (roomInfo.selected_qs_position !== req.body.selected_qs_position) {
           newGameLog.game_result = 1;
           newTransactionJ.amount +=
-            roomInfo['bet_amount'] * roomInfo['qs_game_type'];
+            roomInfo['bet_amount'] * roomInfo['qs_game_type'] * ((100 - commission.value) / 100);
           message.message =
             "You're not the best keeper are you? I just won " +
             roomInfo['bet_amount'] * roomInfo['qs_game_type'] +
@@ -1300,7 +1300,7 @@ router.post('/bet', auth, async (req, res) => {
         } else {
           newGameLog.game_result = -1;
           newTransactionC.amount +=
-            roomInfo['bet_amount'] * roomInfo['qs_game_type'];
+            roomInfo['bet_amount'] * roomInfo['qs_game_type'] * ((100 - commission.value) / 100);
 
           message.message =
             'The boots suck, I just lost ' +
@@ -1321,7 +1321,7 @@ router.post('/bet', auth, async (req, res) => {
         roomInfo['pr'] += req.body.bet_amount;
 
         if (roomInfo.bet_amount == req.body.bet_amount) {
-          newTransactionJ.amount += (roomInfo['pr'] + roomInfo['bet_amount']);
+          newTransactionJ.amount += (roomInfo['pr'] + roomInfo['bet_amount']) * ((100 - commission.value) / 100);
 
           roomInfo.status = 'finished';
           newGameLog.game_result = 1;
@@ -1348,7 +1348,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['host_pr'] >= roomInfo['endgame_amount']
           ) {
             roomInfo.status = 'finished';
-            newTransactionC.amount += roomInfo['host_pr'];
+            newTransactionC.amount += roomInfo['host_pr'] * ((100 - commission.value) / 100);
             const newGameLogC = new GameLog({
               room: roomInfo,
               creator: roomInfo['creator'],
@@ -1374,7 +1374,7 @@ router.post('/bet', auth, async (req, res) => {
         newGameLog.game_result = selected_box.box_prize;
 
         newTransactionJ.amount -= selected_box.box_price;
-        newTransactionJ.amount += selected_box.box_prize;
+        newTransactionJ.amount += selected_box.box_prize * ((100 - commission.value) / 100);
 
         if (selected_box.box_prize === 0) {
           message.message =
@@ -1419,7 +1419,7 @@ router.post('/bet', auth, async (req, res) => {
           max_prize === 0
         ) {
           roomInfo.status = 'finished';
-          newTransactionC.amount += new_host_pr;
+          newTransactionC.amount += new_host_pr * ((100 - commission.value) / 100);
 
           const messageC =
             'I made ' +
@@ -1485,7 +1485,7 @@ router.post('/bet', auth, async (req, res) => {
             '-' +
             roomInfo['room_number'];
 
-          newTransactionJ.amount += roomInfo['pr'];
+          newTransactionJ.amount += roomInfo['pr'] * ((100 - commission.value) / 100);
 
           newGameLog.game_result = 1;
           roomInfo.status = 'finished';
@@ -1505,7 +1505,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['host_pr'] >= roomInfo['endgame_amount']
           ) {
             roomInfo.status = 'finished';
-            newTransactionC.amount += roomInfo['host_pr'];
+            newTransactionC.amount += roomInfo['host_pr'] * ((100 - commission.value) / 100);
           }
         }
       }

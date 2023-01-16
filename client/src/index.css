@@ -134,6 +134,11 @@ div.table.my-chat-table .table-row > div.message-panel ,
   border-top-left-radius: 30px;
 }
 
+.align-center {
+  display: flex;
+  justify-content: center;
+}
+
 #root .site_wrapper .login_wrapper .login_form {
   text-align: center;
   /* background-image: url(/img/rps_characters.png); */

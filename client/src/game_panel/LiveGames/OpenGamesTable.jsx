@@ -236,9 +236,10 @@ class OpenGamesTable extends Component {
             <PlayerModal
               modalIsOpen={this.state.showPlayerModal}
               closeModal={this.handleClosePlayerModal}
-              player_name={row.creator}
+              _id={row.creator_id}
+              username={row.creator}
               // balance={this.state.balance}
-              // avatar={this.props.user.avatar}
+              avatar={row.creator_avatar}
             />
           )}</div>
                     <Avatar
@@ -306,12 +307,25 @@ class OpenGamesTable extends Component {
                 </div>
                 <div className="mobile-only">
                   <div className="table-cell cell-user-name">
+                              <a className="player" onClick={this.handleOpenPlayerModal}>
+                              <div onClick={e => e.stopPropagation()}>
+
+                              {this.state.showPlayerModal && (
+                        <PlayerModal
+                          modalIsOpen={this.state.showPlayerModal}
+                          closeModal={this.handleClosePlayerModal}
+                          _id={row.creator_id}
+                          username={row.creator}
+                          // balance={this.state.balance}
+                          avatar={row.creator_avatar}
+                        />
+                      )}</div>
                     <Avatar
                       className="avatar"
                       src={row.creator_avatar}
                       alt=""
                       darkMode={this.props.isDarkMode}
-                    />
+                    /></a>
                     <span>{row.creator}</span>
                     <i
                       className={`online-status${

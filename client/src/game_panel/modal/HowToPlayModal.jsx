@@ -397,7 +397,7 @@ class HowToPlayModal extends Component {
                             <td>
                               <u>$0.07 - $0.30 BNB-CHAIN GAS</u>
                             </td>
-                            <td className="gamemode">1.5%</td>
+                            <td className="gamemode">2%</td>
                             <td rowSpan="6">
                               <u>FREE (WE'LL PAY THIS)</u>
                             </td>

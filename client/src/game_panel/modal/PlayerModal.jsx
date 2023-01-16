@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
-import { setUserInfo, changePasswordAndAvatar, getUser } from '../../redux/Auth/user.actions';
-import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
+import { setUserInfo, getUser } from '../../redux/Auth/user.actions';
+import { acGetCustomerInfo, getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import { alertModal } from './ConfirmAlerts';
+import Avatar from '../../components/Avatar';
+
 import ReactApexChart from 'react-apexcharts';
 import styled from 'styled-components';
 import Elevation from '../../Styles/Elevation';
@@ -53,10 +55,10 @@ class PlayerModal extends Component {
         super(props);
     
         this.state = {
-            _id: this.props.userInfo._id,
-            username: this.props.userInfo.username,
-            avatar: this.props.userInfo.avatar,
-            joined_date: this.props.userInfo.joined_date,
+            _id: this.props._id,
+            username: this.props.username,
+            avatar: this.props.avatar,
+            // joined_date: this.props.userInfo.joined_date,
         }
     }
 
@@ -64,16 +66,37 @@ class PlayerModal extends Component {
         if (current_state.avatar !== props.avatar || current_state.username !== props.username || current_state.email !== props.email ) {
             return {
                 ...current_state,
-                avatar: props.userInfo.avatar,
-                username: props.userInfo.username,
-                email: props.userInfo.email,
+                avatar: props.avatar,
+                _id: props._id,
+                username: props.username,
+                // email: props.userInfo.email,
             };
         }
         return null;
     }
 
     async componentDidMount() {
-      const result = await this.props.getCustomerStatisticsData(this.state._id)
+      const customer_id = this.state._id;
+
+    if (customer_id && this.state._id !== customer_id) {
+      this.setState({ _id: customer_id });
+    }
+
+    // this.props.setUrl(this.props.match.path);
+    const user = await this.props.acGetCustomerInfo(customer_id);
+    if (user)
+      this.setState({
+        // balance: updateDigitToPoint2(user.balance),
+        username: user.username,
+        // email: user.email,
+        avatar: user.avatar,
+        // bio: user.bio,
+        // is_banned: user.is_deleted,
+        // joined_date: moment(user.created_at).format('LL')
+      });
+
+    const result = await this.props.getCustomerStatisticsData(customer_id);
+      // const result = await this.props.getCustomerStatisticsData(this.state._id)
       this.setState({
         ...result
       })
@@ -81,7 +104,7 @@ class PlayerModal extends Component {
 
     handleAvatarLoaded = (filename) => {
         console.log(filename)
-        this.props.setUserInfo({ ...this.props.userInfo, avatar: filename });
+        // this.props.setUserInfo({ ...this.props.userInfo, avatar: filename });
     }
 
    
@@ -117,22 +140,28 @@ class PlayerModal extends Component {
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                 <div className="modal-body edit-modal-body">
                     <button className="btn-close" onClick={this.handleCloseModal}>×</button>
-                    <h2 className="modal-title">Player Profiles ~ COMING SOON!</h2>
+                    <h2 className="modal-title">Player Profile</h2>
+                    <div className='align-center'>
+                    <Avatar
+                      src={this.state.avatar ? this.state.avatar : '/img/profile-thumbnail.svg'}
+                      alt=""
+                    />
+                    </div>
                     <div className="user-statistics">
                       <StatisticsForm
-                        username={this.state.player_name}
+                        username={this.state.username}
                         joined_date={this.state.joined_date}
-                        // gameLogList={this.state.gameLogList}
-                        // deposit={this.state.deposit}
-                        // withdraw={this.state.withdraw}
-                        // gameProfit={this.state.gameProfit}
-                        // balance={this.state.balance}
-                        // gamePlayed={this.state.gamePlayed}
-                        // totalWagered={this.state.totalWagered}
-                        // netProfit={this.state.netProfit}
-                        // profitAllTimeHigh={this.state.profitAllTimeHigh}
-                        // profitAllTimeLow={this.state.profitAllTimeLow}
-                        // getRoomStatisticsData={this.props.getRoomStatisticsData}
+                        gameLogList={this.state.gameLogList}
+                        deposit={this.state.deposit}
+                        withdraw={this.state.withdraw}
+                        gameProfit={this.state.gameProfit}
+                        balance={this.state.balance}
+                        gamePlayed={this.state.gamePlayed}
+                        totalWagered={this.state.totalWagered}
+                        netProfit={this.state.netProfit}
+                        profitAllTimeHigh={this.state.profitAllTimeHigh}
+                        profitAllTimeLow={this.state.profitAllTimeLow}
+                        getRoomStatisticsData={this.props.getRoomStatisticsData}
                       />
                     </div>
                     <div className="modal-action-panel">
@@ -152,9 +181,10 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
     setUserInfo,
-    changePasswordAndAvatar,
+    // changePasswordAndAvatar,
     getUser,
-    getCustomerStatisticsData
+    getCustomerStatisticsData,
+    acGetCustomerInfo
 };
 
 export default connect(
