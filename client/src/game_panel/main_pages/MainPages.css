@@ -194,9 +194,9 @@ div.table .table-row .table-cell img.avatar {
     width: 32px;
     height: 32px;
     margin-right: 10px;
-    border-radius: 20px;
+    border-radius: 9px;
         border: 2px solid #dc3ccd;
-    box-shadow: 0px 0 4px 0px #c438ef;
+    box-shadow: 0px 0 2px 0px #c438ef;
 }
 div.table .table-row .table-cell button:last-child {
     padding: 0;
@@ -1391,6 +1391,10 @@ width: 100px;
     }
 }
 @media (max-width: 1023px) {
+    .game-page .game-contents .game-info-panel .box-prizes span {
+        white-space: unset;
+        white-space: unset;
+    }
     .contents_wrapper .main-game {
         grid-template-columns: 100%;
         margin-bottom: 60px;
@@ -1462,7 +1466,9 @@ width: 100px;
     div.table .table-row .table-cell img.avatar {
         width: 16px; 
         height: 16px;
-        border-radius: 9px;
+        border-radius: 4px;
+        border: 1px solid #dc3ccd;
+        box-shadow: 0 0 1px 0 #c438ef;
     }
     div.main-page-nav-button-group {
         position: fixed;
@@ -1625,6 +1631,10 @@ width: 100px;
     }
 }
 @media (max-width: 400px) {
+    .game-page .game-contents .game-info-panel .box-prizes span {
+        white-space: unset;
+        white-space: unset;
+    }
     .game-page .pre-summary-panel > div.public-bet-amount {
         background-size: 26px;
     }
