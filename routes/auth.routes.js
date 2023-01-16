@@ -78,7 +78,7 @@ router.get('/user', auth, async (req, res) => {
 
     const transactions = await Transaction.find({ user: req.user })
       .sort({ created_at: 'desc' })
-      .limit(4);
+      .limit(6);
 
     res.json({
       success: true,

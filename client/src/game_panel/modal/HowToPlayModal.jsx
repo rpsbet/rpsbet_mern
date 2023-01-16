@@ -383,32 +383,23 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        The only fees you pay is your mom.
-                        <u>
-                          <a href="mailto:bigdonkeydick@dancingkimjongun.com">
-                            Tell her to contact me.
-                          </a>
-                        </u>{' '}
-                      </p>
-                      <p>
-                        <i>
-                        JK, chill, snowflake.
-                        </i>
+                        See table below for fees
+                        {' '}
                       </p>
                       <table id="howto-modal">
                         <tbody>
                           <tr>
                             <th>DEPOSIT FEES</th>
-                            <th>HOUSE EDGE</th>
+                            <th>WINNINGS TAX</th>
                             <th>WITHDRAWAL FEES</th>
                           </tr>
                           <tr>
                             <td>
                               <u>$0.07 - $0.30 BNB-CHAIN GAS</u>
                             </td>
-                            <td className="gamemode">0%</td>
+                            <td className="gamemode">1.5%</td>
                             <td rowSpan="6">
-                              <u>WE'LL PAY THIS, BUT PLZ NO RAPE</u>
+                              <u>FREE (WE'LL PAY THIS)</u>
                             </td>
                           </tr>
                         </tbody>
@@ -429,8 +420,8 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        Maybe *wink wink*{' '}
-                        <u style={{ color: '#f5b22d' }}>jk, but some players might create scam games as there is no house</u>.
+                        No.{' '} 
+                        As there is no randomness, we don't need <a href='https://en.wiktionary.org/wiki/RNG'><u style={{ color: '#f5b22d' }}>RNG's or oracles</u></a>.
                       </p>
                     </div>
                   </div>

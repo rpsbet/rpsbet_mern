@@ -1143,6 +1143,7 @@ width: 100px;
 }
 .game-info-panel .qs-image-panel img {
     max-width: 100%;
+    border-radius: '20px';
 }
 .game-page .game-contents .game-info-panel .qs-action-panel button {
     width: 40px;

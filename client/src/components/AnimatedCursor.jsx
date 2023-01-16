@@ -28,7 +28,7 @@ function useEventListener(eventName, handler, element = document) {
  * @author Stephen Scaff
  */
 export default function AnimatedCursor({
-	color = '220, 90, 90',
+	color = '200, 50, 40',
 	outerAlpha = 0.4,
 	innerSize = 8,
 	outerSize = 8,

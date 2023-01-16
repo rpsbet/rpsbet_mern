@@ -316,6 +316,7 @@ class CreateGame extends Component {
           bet_amount={this.state.bet_amount}
           brain_game_type={this.state.brain_game_type}
           step={this.state.child_step}
+          endgame_amount={this.state.endgame_amount}
         />
       );
     } else if (this.state.game_mode === 'Quick Shoot') {

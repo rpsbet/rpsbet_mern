@@ -23,6 +23,8 @@ const convertToCurrency = require('../helper/util/conversion');
 
 let user_access_log = {};
 
+
+
 // /api/game_types call
 router.get('/game_types', async (req, res) => {
   try {
@@ -1115,6 +1117,8 @@ async function sendEndedMessageToJoiners(roomId, from, message, is_anonymous) {
 
 router.post('/bet', auth, async (req, res) => {
   try {
+    const commission = await SystemSetting.findOne({ name: 'commission' });
+
     const start = new Date();
     if (req.body._id) {
       if (!check_access_time(req.user._id)) {
@@ -1228,7 +1232,7 @@ router.post('/bet', auth, async (req, res) => {
           (bet_item.rps === 'S' && req.body.selected_rps == 'R')
         ) {
           newGameLog.game_result = 1;
-          newTransactionJ.amount += bet_item.bet_amount * 2;
+          newTransactionJ.amount += bet_item.bet_amount * 2 * ((100 - commission.value) / 100);
           message.message =
             'I won ' +
             bet_item.bet_amount * 2 +
@@ -1250,7 +1254,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else {
           newGameLog.game_result = -1;
-          newTransactionC.amount += bet_item.bet_amount * 2;
+          newTransactionC.amount += bet_item.bet_amount * 2 * ((100 - commission.value) / 100);
 
           message.message =
             'I lost ' +
@@ -1317,7 +1321,7 @@ router.post('/bet', auth, async (req, res) => {
         roomInfo['pr'] += req.body.bet_amount;
 
         if (roomInfo.bet_amount == req.body.bet_amount) {
-          newTransactionJ.amount += roomInfo['pr'] + roomInfo['bet_amount'];
+          newTransactionJ.amount += (roomInfo['pr'] + roomInfo['bet_amount']);
 
           roomInfo.status = 'finished';
           newGameLog.game_result = 1;
