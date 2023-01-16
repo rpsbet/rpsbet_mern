@@ -154,6 +154,14 @@
     padding: 32px 64px;
     text-align: center;
 }
+
+.align-center img,
+.AvatarDropzone img {
+    width: 144px;
+    border-radius: 40px;
+    border: 2px solid #ff409a;
+}
+
 .modal-body .modal-icon {
     height: 72px;
     background-repeat: no-repeat;
