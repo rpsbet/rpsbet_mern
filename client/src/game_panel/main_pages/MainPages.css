@@ -112,8 +112,8 @@ div.table.main-history-table .table-row > div > .room-id {
 div.table.main-history-table .table-row .table-cell img.avatar {
     width: 16px;
     height: 16px;
-    border-radius: 9px;
-    border: 2px solid #ff409a;
+    border-radius: 4px;
+    border: 1px solid #ff409a;
     box-shadow: 0px 0 2px 0px #c438ef;
 
 }
