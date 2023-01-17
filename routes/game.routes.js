@@ -247,7 +247,8 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
         if (gameLog.game_result === 1) {
-          temp.history = `${joined_user_avatar}[${
+          temp.history = `
+         ${joined_user_avatar}[${
             gameLog['joined_user']['username']
           }] scored a goal and won [<span style='color: #02c526;'>${convertToCurrency(
             updateDigitToPoint2(
