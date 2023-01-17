@@ -22,9 +22,9 @@ class Dropzone extends Component {
 
     let reader = new FileReader();
 
-    reader.onloadend = () => {
-      this.props.setImageFilename(reader.result);
-    }
+    // reader.onloadend = () => {
+    //   this.props.setImageFilename(reader.result);
+    // }
 
     reader.readAsDataURL(file)
   }
@@ -33,7 +33,7 @@ class Dropzone extends Component {
     if (this.props.disabled) return;
     const file = evt.target.files[0];
 
-    if (file.size > 3145728 * 2) {//file size > 3MB
+    if (file.size > 3145728) {//file size > 3MB
       alertModal(this.props.darkMode, "THIS ONE IS UGLY, TRY ANOTHER");
       return;
     }
@@ -81,7 +81,7 @@ class Dropzone extends Component {
             <button onClick={(e)=>{this.props.setImageFilename("")}}>Remove Photo</button>
             <button onClick={this.openFileDialog}>Upload Photo</button>
           </div>
-          <p className="mt-1">CHOOSE THE SMALLEST SIZE</p>
+          <p className="mt-1">CHOOSE A SMALLISH SIZE</p>
         </div>
       </div>
     );
