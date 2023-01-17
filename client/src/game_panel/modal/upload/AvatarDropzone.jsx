@@ -22,9 +22,9 @@ class Dropzone extends Component {
 
     let reader = new FileReader();
 
-    // reader.onloadend = () => {
-    //   this.props.setImageFilename(reader.result);
-    // }
+    reader.onloadend = () => {
+      this.props.setImageFilename(reader.result);
+    }
 
     reader.readAsDataURL(file)
   }
@@ -33,7 +33,7 @@ class Dropzone extends Component {
     if (this.props.disabled) return;
     const file = evt.target.files[0];
 
-    if (file.size > 3145728) {//file size > 3MB
+    if (file.size > 3145728 * 1.2) {//file size > 3MB
       alertModal(this.props.darkMode, "THIS ONE IS UGLY, TRY ANOTHER");
       return;
     }
@@ -74,7 +74,7 @@ class Dropzone extends Component {
         onDragLeave={this.onDragLeave}
         onDrop={this.onDrop}
       >
-        <input ref={this.fileInputRef} className="AvatarFileInput" type="file" accept="image/x-png,image/gif,image/jpeg" onChange={this.onFileAdded} />
+        <input ref={this.fileInputRef} className="AvatarFileInput" type="file" accept="image/x-png,image/gif,image/jpeg, image/jpg, image/heic" onChange={this.onFileAdded} />
         <Avatar className="AvatarPreviewPanel" alt="" src={this.props.imageUrl} darkMode={this.props.darkMode} />
         <div className="AvatarControlPanel">
           <div className="AvatarButtonPanel">

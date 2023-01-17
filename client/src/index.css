@@ -123,7 +123,7 @@ div.table.my-chat-table .table-row > div.message-panel ,
   padding-bottom: 5%;
   overflow-y: scroll !important;
 }
-.login_wrapper::-webkit-scrollbar {
+.login_wrapper::-webkit-scrollbar, .modal-body::-webkit-scrollbar {
     display: none;
 }
 
