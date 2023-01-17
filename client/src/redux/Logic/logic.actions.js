@@ -89,7 +89,7 @@ export const bet = (bet_info) => async dispatch => {
         history.push('/');
         return {
           status: 'failed',
-          message: 'Sorry, this game has already ended.'
+          message: 'THIS GAME HAS ENDED ALREADY'
         };
       } else if (res.data.betResult === -102) {
         return {

@@ -214,9 +214,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
       const creator_avatar = `<img class='avatar' src='${gameLog['creator']['avatar']} ' alt='' onerror='this.src="/img/profile-thumbnail.svg"' />`;
       let room_name = '';
       if (gameLog['room']['status'] === 'open') {
-        room_name = `<a style='color: #C83228; text-decoration: underline'>${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
+        room_name = `<a style='color: #C83228; text-decoration: underline'  href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
       } else {
-        room_name = `<span style='color: #C83228;'>${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</span>`;
+        room_name = `<a style='color: #C83228;' href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
+        // $(':button').prop('disabled', true);
+        
       }
 
       if (gameLog['game_type']['game_type_name'] === 'RPS') {
@@ -797,7 +799,7 @@ router.post('/end_game', auth, async (req, res) => {
       res.json({
         success: false,
         already_finished: true,
-        message: 'Sorry, this game has already ended.'
+        message: 'THIS GAME HAS ENDED ALEADY'
       });
       return;
     }
@@ -1149,7 +1151,7 @@ router.post('/bet', auth, async (req, res) => {
       if (roomInfo['status'] === 'finished') {
         res.json({
           success: false,
-          message: 'Sorry, this game has already ended.',
+          message: 'THIS GAME HAS ENDED ALREADY',
           betResult: -100
         });
 

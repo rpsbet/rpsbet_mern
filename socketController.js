@@ -49,7 +49,7 @@ module.exports.socketio = server => {
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
         .sort({ created_at: -1 })
-        .limit(32)
+        .limit(26)
         .populate({ path: 'sender', model: User })
         .then(results =>
           results
