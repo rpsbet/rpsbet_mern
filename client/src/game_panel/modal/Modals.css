@@ -238,6 +238,11 @@
 .modal-body .modal-edit-panel p {
     margin-top: 0;
 }
+
+.ReactModal__Content {
+    overflow: unset !important;
+}
+
 .modal-body.edit-modal-body .modal-action-panel {
     margin-top: 40px;
     text-align: right;
