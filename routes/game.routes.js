@@ -498,7 +498,7 @@ router.get('/history', async (req, res) => {
       ? parseInt(req.query.pagination)
       : 10;
     const page = req.query.page ? parseInt(req.query.page) : 1;
-    const game_type = req.query.game_type ? req.query.game_type : 'RPS';
+    const game_type = req.query.game_type ? req.query.game_type : 'All';
 
     const history = await getHistory(pagination, page, null, game_type);
 
@@ -1416,7 +1416,7 @@ router.post('/bet', auth, async (req, res) => {
         });
 
         if (
-          (roomInfo['endgame_type'] && new_host_pr > roomInfo.endgame_amount) ||
+          (roomInfo['endgame_type'] && new_host_pr >= roomInfo.endgame_amount) ||
           max_prize === 0
         ) {
           roomInfo.status = 'finished';
