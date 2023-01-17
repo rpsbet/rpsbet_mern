@@ -79,6 +79,7 @@ export class AppMainRoute extends Component {
             path={`${match.path}/settings`}
             component={SettingsPage}
           />
+          
         </Switch>
       </LayoutCop>
     );

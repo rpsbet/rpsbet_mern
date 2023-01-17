@@ -26,15 +26,15 @@ class JoinGame extends Component {
   }
 
   componentDidMount() {
-    this.IsAuthenticatedReroute();
+    // this.IsAuthenticatedReroute();
     this.props.getRoomInfo(this.props.match.params.id);
   }
 
-  IsAuthenticatedReroute = () => {
-    if (!this.props.auth) {
-      history.push('/');
-    }
-  };
+  // IsAuthenticatedReroute = () => {
+  //   if (!this.props.auth) {
+  //     history.push('/');
+  //   }
+  // };
 
   join = async betInfo => {
     const result = await this.props.bet({
