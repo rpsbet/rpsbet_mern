@@ -22,15 +22,30 @@ class OpenGamesTable extends Component {
       selectedGameType: 'All',
       showPlayerModal: false,
       rooms: [],
-      selectedRow: null
+      selectedRow: null,
+      
     };
   }
 
   componentDidMount() {
+    
+    
     this.props.getRoomList({
       game_type: this.state.selectedGameType
     });
+    console.log(this.props)
   }
+
+  handleOpenPlayerModal = (creator_id) => {
+    const selectedRow = this.state.rooms.find(row => row.creator_id === creator_id);
+    this.setState({ showPlayerModal: true, selectedRow });
+  }
+
+  
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
+
 
   joinRoom = e => {
     const creator_id = e.target.getAttribute('creator_id');
@@ -88,26 +103,6 @@ class OpenGamesTable extends Component {
   handleBtnRightClicked = e => {
     this.game_type_panel.scrollLeft = this.game_type_panel.scrollWidth;
   };
-
-  handleOpenPlayerModal = (creator_id) => {
-    const selectedRow = this.state.rooms.find(row => row.creator_id === creator_id);
-    this.setState({ showPlayerModal: true, selectedRow });
-  }
-
-  
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
-  };
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.selectedRow !== this.state.selectedRow) {
-      this.setState({ selectedRow: this.state.selectedRow });
-    }
-  }
-
-
-  
-
 
 
   generateGameTypePanel = () => {
@@ -200,6 +195,7 @@ class OpenGamesTable extends Component {
 
   render() {
     const gameTypePanel = this.generateGameTypePanel();
+    console.log('Props being passed to PlayerModal: ', this.state.selectedRow);
 
     return (
       <div className="overflowX">
@@ -318,7 +314,6 @@ class OpenGamesTable extends Component {
                           closeModal={this.handleClosePlayerModal}
                           _id={row.creator_id}
                           username={row.creator}
-                          // balance={this.state.balance}
                           avatar={row.creator_avatar}
                         />
                       )}</div>
@@ -352,13 +347,13 @@ class OpenGamesTable extends Component {
           )}
         </div>
         {this.state.showPlayerModal && this.state.selectedRow && (
-          <PlayerModal
-            key={this.state.selectedRow._id}
-            modalIsOpen={this.state.showPlayerModal}
-            closeModal={this.handleClosePlayerModal}
-            selectedRow={this.state.selectedRow}
-          />
-        )}
+        <PlayerModal
+          _id={this.state.selectedRow._id}
+          modalIsOpen={this.state.showPlayerModal}
+          closeModal={this.handleClosePlayerModal}
+          {...this.state.selectedRow}
+        />
+      )}
         {this.props.roomList.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
