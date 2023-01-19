@@ -235,7 +235,7 @@ class OpenGamesTable extends Component {
                     </div>
                   </div>
                   <div className="table-cell desktop-only cell-user-name">
-                  <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}>
+                  {/* <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}> */}
                     <div onClick={e => e.stopPropagation()}>
                       
                   </div>
@@ -247,7 +247,7 @@ class OpenGamesTable extends Component {
                       darkMode={this.props.isDarkMode}
                     />
                     <span>{row.creator}</span>
-                    </a>
+                    {/* </a> */}
                     <i
                       className={`online-status${
                         this.props.onlineUserList.filter(
@@ -305,7 +305,7 @@ class OpenGamesTable extends Component {
                 </div>
                 <div className="mobile-only">
                   <div className="table-cell cell-user-name">
-                              <a className="player" onClick={this.handleOpenPlayerModal}>
+                              {/* <a className="player" onClick={this.handleOpenPlayerModal}> */}
                               <div onClick={e => e.stopPropagation()}>
 
                               {this.state.showPlayerModal && (
@@ -323,7 +323,8 @@ class OpenGamesTable extends Component {
                       alt=""
                       darkMode={this.props.isDarkMode}
                     />
-                    <span>{row.creator}</span></a>
+                    <span>{row.creator}</span>
+                    {/* </a> */}
                     <i
                       className={`online-status${
                         this.props.onlineUserList.filter(
