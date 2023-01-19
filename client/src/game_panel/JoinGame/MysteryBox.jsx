@@ -159,7 +159,7 @@ class MysteryBox extends Component {
             <p className="box-prizes">
               {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
-                  {convertToCurrency(item.price)}
+                  {convertToCurrency(item.price === 0 ? 'EMPTY' : item.price)}
                 </span>
               ))}
             </p>
