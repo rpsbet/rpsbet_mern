@@ -20,7 +20,9 @@ class OpenGamesTable extends Component {
     super(props);
     this.state = {
       selectedGameType: 'All',
-      showPlayerModal: false
+      showPlayerModal: false,
+      rooms: [],
+      selectedRow: null
     };
   }
 
@@ -87,12 +89,25 @@ class OpenGamesTable extends Component {
     this.game_type_panel.scrollLeft = this.game_type_panel.scrollWidth;
   };
 
-  handleOpenPlayerModal = () => {
-    this.setState({ showPlayerModal: true, anchorEl: null });
-  };
+  handleOpenPlayerModal = (creator_id) => {
+    const selectedRow = this.state.rooms.find(row => row.creator_id === creator_id);
+    this.setState({ showPlayerModal: true, selectedRow });
+  }
+
+  
   handleClosePlayerModal = () => {
     this.setState({ showPlayerModal: false });
   };
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.selectedRow !== this.state.selectedRow) {
+      this.setState({ selectedRow: this.state.selectedRow });
+    }
+  }
+
+
+  
+
 
 
   generateGameTypePanel = () => {
@@ -167,13 +182,6 @@ class OpenGamesTable extends Component {
     });
   };
 
-  handleOpenPlayerModal = () => {
-    this.setState({ showPlayerModal: true, anchorEl: null });
-  };
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
-  };
-
   handlePrevPageClicked = () => {
     if (this.props.pageNumber === 1) return;
     this.props.getRoomList({
@@ -211,6 +219,8 @@ class OpenGamesTable extends Component {
               <div>NO STAKES YET, GO TO 'MY STAKES'</div>
             </div>
           )}
+          
+
           {this.props.roomList.map(
             (row, key) => (
               <div className="table-row" key={row._id}>
@@ -229,19 +239,11 @@ class OpenGamesTable extends Component {
                     </div>
                   </div>
                   <div className="table-cell desktop-only cell-user-name">
-                  <a className="player" onClick={this.handleOpenPlayerModal}>
-                  <div onClick={e => e.stopPropagation()}>
+                  <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}>
+                    <div onClick={e => e.stopPropagation()}>
+                      
+                  </div>
 
-                  {this.state.showPlayerModal && (
-            <PlayerModal
-              modalIsOpen={this.state.showPlayerModal}
-              closeModal={this.handleClosePlayerModal}
-              _id={row.creator_id}
-              username={row.creator}
-              // balance={this.state.balance}
-              avatar={row.creator_avatar}
-            />
-          )}</div>
                     <Avatar
                       className="avatar"
                       src={row.creator_avatar}
@@ -349,6 +351,14 @@ class OpenGamesTable extends Component {
             this
           )}
         </div>
+        {this.state.showPlayerModal && this.state.selectedRow && (
+          <PlayerModal
+            key={this.state.selectedRow._id}
+            modalIsOpen={this.state.showPlayerModal}
+            closeModal={this.handleClosePlayerModal}
+            selectedRow={this.state.selectedRow}
+          />
+        )}
         {this.props.roomList.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
