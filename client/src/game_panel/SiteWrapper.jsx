@@ -573,14 +573,16 @@ class SiteWrapper extends Component {
                               }
                             >
                               {row.amount > 0
-                                ? '+ ' +
-                                  convertToCurrency(
-                                    updateDigitToPoint2(row.amount)
-                                  )
-                                : '- ' +
-                                  convertToCurrency(
-                                    updateDigitToPoint2(Math.abs(row.amount))
-                                  )}
+                                ? <>
+                                    {'+ '}
+                                    {convertToCurrency(updateDigitToPoint2(row.amount))}
+                                  </>
+                                : <>
+                                    {'- '}
+                                    {convertToCurrency(updateDigitToPoint2(Math.abs(row.amount)))}
+                                  </>
+                              }
+
                             </td>
                             <td className="fromNow">{row.from_now}</td>
                           </tr>

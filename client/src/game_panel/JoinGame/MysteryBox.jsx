@@ -231,19 +231,19 @@ class MysteryBox extends Component {
             </div>
             <h4 className="game-sub-title">
               {this.state.betResult === 0
-                ? `Opps! Wrong Box`
-                : `Nice 😎 It's a Money Box`}
+                ? `HAHAHA! WRONG BOX MTF!`
+                : `NICE 😎 ISSA MONEY BOX`}
             </h4>
             <p>
               {this.state.betResult === 0
-                ? `This box is Empty`
-                : `You won a Prize!`}
+                ? `THIS BOX IS EMPTY`
+                : `YOU WON A PRIZE!`}
             </p>
             <h3 className="game-sub-title">ALL BOXES</h3>
             <p className="box-prizes">
-              {prizes.map((item, key) => (
+            {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
-                  {convertToCurrency(item.price)}
+                  {convertToCurrency(item.price === 0 ? 'EMPTY' : item.price)}
                 </span>
               ))}
             </p>

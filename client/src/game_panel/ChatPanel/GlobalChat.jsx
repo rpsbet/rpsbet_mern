@@ -12,9 +12,11 @@ class GlobalChat extends Component {
     };
 
     this.chatBoxRef = React.createRef();
+   
   }
 
   componentDidUpdate() {
+    console.log(this.chatBoxRef.current.scrollTop)
     if (this.chatBoxRef.current) {
       this.chatBoxRef.current.scrollTop = this.chatBoxRef.current.scrollHeight;
     }
@@ -25,6 +27,7 @@ class GlobalChat extends Component {
       return {
         ...current_state,
         chat_list: props.globalChatList
+        
       };
     }
 

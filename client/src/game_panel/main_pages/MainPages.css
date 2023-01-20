@@ -1688,4 +1688,10 @@ width: 100px;
     .brain-game-play-panel .play-panel-header .timer .timer-footer2 {
         display: block;
     }
+
+    .chat-wrapper .chat-input-panel {
+        position: fixed !important;
+        width: 100%;
+        z-index: 9;
+    }
 }

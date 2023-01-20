@@ -152,7 +152,7 @@ class DepositModal extends Component {
                 <div className="balance">
                 <h6>STEP 2.&nbsp;&nbsp;ENTER AMOUNT & DEPOSIT</h6>
                 <label className="availabletag">
-                  <span>WALLET BALANCE</span>:&nbsp;&nbsp; {this.state.balance}&nbsp;BUSD&nbsp;
+                  <span>WALLET BALANCE</span>:&nbsp;&nbsp; {convertToCurrency(this.state.balance)}&nbsp;BUSD&nbsp;
                 </label>
                 </div>
                 <div>

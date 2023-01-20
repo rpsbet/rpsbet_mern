@@ -63,6 +63,11 @@ input,textarea { border-radius: 0 !important; }
   transition: all 0.08s ease-out;
 }
 
+#busd {
+  margin-top: -3px;
+  margin-left: 3px;
+}
+
 .btn_join:hover, .btn-create-room:hover, .btn_end:hover,
  #balance:hover, #btn_next:hover, #btn_prev:hover, button:hover, .accordion__button:hover,
  .btn-back:hover  {
