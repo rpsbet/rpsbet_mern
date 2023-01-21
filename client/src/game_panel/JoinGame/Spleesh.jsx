@@ -119,7 +119,7 @@ class Spleesh extends Component {
 
     confirmModalCreate(
       this.props.isDarkMode,
-      'Are you sure you want to place this bet?',
+      'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
       'Yes',
       'Cancel',
       async () => {
@@ -192,7 +192,7 @@ class Spleesh extends Component {
                 ? this.props.game_log_list.map((log) => 
                   convertToCurrency(log)
                 ).join(', ')
-                : `There are no guesses yet. Be the first to guess the Host's number?`}
+                : `No guesses yet`}
             </p>
             <h3 className="game-sub-title">Your Number</h3>
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>

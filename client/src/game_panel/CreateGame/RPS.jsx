@@ -33,12 +33,13 @@ class RPS extends Component {
     });
   };
 
-  onAddRun = e => {
+  onAddRun = (selected_rps, selected_bet_amount) => {
+    this.setState({ selected_rps: selected_rps, selected_bet_amount: selected_bet_amount });
     const newArray = JSON.parse(JSON.stringify(this.props.rps_list));
     newArray.push({
-      rps: this.state.selected_rps,
-      bet_amount: this.state.selected_bet_amount,
-      pr: this.state.selected_bet_amount * 2
+      rps: selected_rps,
+      bet_amount: selected_bet_amount,
+      pr: selected_bet_amount * 2
     });
     const bet_amount = calcBetAmount(newArray);
     this.props.onChangeState({
@@ -46,43 +47,40 @@ class RPS extends Component {
       bet_amount: bet_amount,
       max_return: bet_amount * 2 /* 0.95 */
     });
-    this.setState({
-      selected_rps: 'R',
-      selected_bet_amount: 5
-    });
   };
+
 
   render() {
     const defaultBetAmounts = [5, 10, 25, 50];
-    const disabledStyle = {
-      opacity: '0.5',
-      pointerEvents: 'none',
-    };
-    console.log(this.props.step);
+    const defaultBankrollAmounts = [300, 400, 500];
 
     return this.props.step === 1 ? (
       <div className="game-info-panel">
         <h3 className="game-sub-title">Game type</h3>
         <div id="rps-game-type-radio">
-          <span
-            className={this.props.rps_game_type === 0 ? ' active' : ''}
-            onClick={() => {
-              this.props.onChangeState({ rps_game_type: 0 });
-            }}
-          >
-            Fixed
-          </span>
-          <span style={disabledStyle}
-          className={(this.props.rps_game_type === 1 ? " disabled" : "")} 
-          onClick={() => { this.props.onChangeState({rps_game_type: 1}); }}>
-            Freeplay
-            </span>
-        </div>
+        <span
+          className={this.props.rps_game_type === 0 ? ' active' : ''}
+          onClick={() => {
+            this.props.onChangeState({ rps_game_type: 0 });
+          }}
+        >
+          Fixed
+        </span>
+        <span 
+          className={(this.props.rps_game_type === 1 ? 'disabled' : '')}
+          onClick={() => {
+            if(this.props.rps_game_type !== 1) {
+              this.props.onChangeState({rps_game_type: 1});
+            }
+          }}>
+          Freeplay
+        </span>
+      </div>
       </div>
     ) : (
       <div className="game-info-panel">
         <div className="rps-add-run-panel">
-          <div className="rps-add-run-form">
+        <div className="rps-add-run-form">
             <DefaultBetAmountPanel
               bet_amount={this.state.selected_bet_amount}
               onChangeState={this.onChangeBetAmount}
@@ -98,7 +96,7 @@ class RPS extends Component {
                   'rock' + (this.state.selected_rps === 'R' ? ' active' : '')
                 }
                 onClick={() => {
-                  this.setState({ selected_rps: 'R' });
+                  this.onAddRun('R', this.state.selected_bet_amount);
                 }}
               ></span>
               <span
@@ -106,7 +104,7 @@ class RPS extends Component {
                   'paper' + (this.state.selected_rps === 'P' ? ' active' : '')
                 }
                 onClick={() => {
-                  this.setState({ selected_rps: 'P' });
+                  this.onAddRun('P', this.state.selected_bet_amount);
                 }}
               ></span>
               <span
@@ -115,17 +113,11 @@ class RPS extends Component {
                   (this.state.selected_rps === 'S' ? ' active' : '')
                 }
                 onClick={() => {
-                  this.setState({ selected_rps: 'S' });
+                  this.onAddRun('S', this.state.selected_bet_amount);
                 }}
               ></span>
             </div>
-            <button
-                id="btn-add-run"
-                className="other"
-                onClick={this.onAddRun}
-              >
-                + Add Run
-              </button>
+           
           </div>
           <div className="rps-add-run-table">
             <h3 className="game-sub-title">Runs</h3>

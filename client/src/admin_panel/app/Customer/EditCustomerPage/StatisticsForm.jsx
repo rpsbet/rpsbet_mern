@@ -2,10 +2,6 @@ import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 import styled from 'styled-components';
 import Elevation from '../../../../Styles/Elevation';
-import {
-  updateDigitToPoint2,
-  addCurrencySignal
-} from '../../../../util/helper';
 import moment from 'moment';
 import './style.css';
 import { convertToCurrency } from '../../../../util/conversion';
@@ -19,6 +15,8 @@ function generateData(gameLogList) {
   })
   return series;
 }
+
+
 
 class StatisticsForm extends React.Component {
   constructor(props) {
@@ -43,6 +41,7 @@ class StatisticsForm extends React.Component {
   };
 
   render() {
+   
     const gameLogList = this.props.gameLogList;
     const options = {
       chart: {
@@ -83,31 +82,52 @@ class StatisticsForm extends React.Component {
       yaxis: {
         labels: {
           formatter: function(value) {
-            return addCurrencySignal(value);
+            const convertToCurrency = input => {
+              let number = Number(input);
+              if(!isNaN(number)){
+                  let [whole, decimal] = number.toFixed(2).toString().split('.');
+                  whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                  return `${whole}.${decimal}`;
+              }else{
+                  return input;
+              }
+          };
+          
+            return convertToCurrency(value);
           }
         }
       },
       tooltip: {
         custom: function({ series, seriesIndex, dataPointIndex, w }) {
-          return (
+          const convertToCurrency = input => {
+            let number = Number(input);
+            if(!isNaN(number)){
+                let [whole, decimal] = number.toFixed(2).toString().split('.');
+                whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return `<svg id='busd' width="0.7em" height="0.7em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 336.41 337.42"><defs><style>.cls-1{fill:#f0b90b;stroke:#f0b90b;}</style></defs><title>BUSD Icon</title><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path class="cls-1" d="M168.2.71l41.5,42.5L105.2,147.71l-41.5-41.5Z"/><path class="cls-1" d="M231.2,63.71l41.5,42.5L105.2,273.71l-41.5-41.5Z"/><path class="cls-1" d="M42.2,126.71l41.5,42.5-41.5,41.5L.7,169.21Z"/><path class="cls-1" d="M294.2,126.71l41.5,42.5L168.2,336.71l-41.5-41.5Z"/></g></g></svg>&thinsp;${whole}.${decimal}`;
+            }else{
+                return input;
+            }
+            };
+            return (
             '<div class="chart-tooltip">' +
-            '<div>GAME ID:  ' +
-            gameLogList[dataPointIndex].game_id +
-            '</div>' +
-            '<div>PLAYED:  ' +
-            moment(gameLogList[dataPointIndex].played).fromNow() +
-            '</div>' +
-            '<div>BET:  ' +
-            convertToCurrency(gameLogList[dataPointIndex].bet) +
-            '</div>' +
-            '<div>OPPONENT:  ' +
-            gameLogList[dataPointIndex].opponent.username +
-            '</div>' +
-            '<div>PROFIT:  ' +
-            addCurrencySignal(
-              updateDigitToPoint2(gameLogList[dataPointIndex].profit)
-            ) +
-            '</div>' +
+                '<div>GAME ID: ' +
+                gameLogList[dataPointIndex].game_id +
+                '</div>' +
+                '<div>PLAYED: ' +
+                moment(gameLogList[dataPointIndex].played).fromNow() +
+                '</div>' +
+                '<div>BET: ' +
+                convertToCurrency(gameLogList[dataPointIndex].bet
+                  ) +
+                '</div>' +
+                '<div>OPPONENT: ' +
+                gameLogList[dataPointIndex].opponent.username +
+                '</div>' +
+                '<div>PROFIT: ' +
+                convertToCurrency(gameLogList[dataPointIndex].profit
+                ) +
+                '</div>' +
             // '<div>Net Profit:' +
             // gameLogList[dataPointIndex].net_profit +
             // '</div>' +
@@ -149,25 +169,23 @@ class StatisticsForm extends React.Component {
               <div>Game Played: {this.props.gamePlayed}</div>
               <div>
                 Total Wagered:{' '}
-                {addCurrencySignal(
-                  updateDigitToPoint2(this.props.totalWagered)
+                {convertToCurrency(this.props.totalWagered
                 )}
               </div>
               <div>
                 Net Profit:{' '}
-                {addCurrencySignal(updateDigitToPoint2(this.props.gameProfit))}
+                {convertToCurrency(this.props.gameProfit)}
                 {/* {addCurrencySignal(updateDigitToPoint2(this.props.netProfit))} */}
               </div>
               <div>
                 Profit All Time High:{' '}
-                {addCurrencySignal(
-                  updateDigitToPoint2(this.props.profitAllTimeHigh)
+                {convertToCurrency(this.props.profitAllTimeHigh
                 )}
               </div>
               <div>
                 Profit All Time Low:{' '}
-                {addCurrencySignal(
-                  updateDigitToPoint2(this.props.profitAllTimeLow)
+                {convertToCurrency(
+                  this.props.profitAllTimeLow
                 )}
               </div>
             </div>

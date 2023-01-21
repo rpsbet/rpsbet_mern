@@ -68,6 +68,13 @@ input,textarea { border-radius: 0 !important; }
   margin-left: 3px;
 }
 
+.apexcharts-canvas svg#busd {
+border: unset !important;
+filter: unset !important;
+background: unset !important;
+box-shadow: unset !important;
+border-radius: unset !important;
+}
 .btn_join:hover, .btn-create-room:hover, .btn_end:hover,
  #balance:hover, #btn_next:hover, #btn_prev:hover, button:hover, .accordion__button:hover,
  .btn-back:hover  {
@@ -119,6 +126,14 @@ div.table.my-chat-table .table-row > div.message-panel ,
 .answer-panel .answer,
 .qs-game-type-panel button{
   text-transform: none !important;
+}
+
+#rps-game-type-radio span, #rps-radio span {
+  margin-bottom: 15px !important;
+}
+
+#add-ten{
+  margin-left: 15px;
 }
 
 #root .site_wrapper .login_wrapper {
@@ -438,6 +453,10 @@ div.table .table-row .table-cell img.game-type-icon {
   white-space: pre-wrap;
   display: inline-block;
   word-break: break-word;
+}
+
+.game-info-panel table th:last-child, .game-info-panel table th:first-child {
+  background-color: transparent !important;
 }
 
 .table-cell.cell-room-info .cell-game-type, div.table.my-open-game-table .table-row .table-cell.room-id {

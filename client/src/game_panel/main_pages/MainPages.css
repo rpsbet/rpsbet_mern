@@ -18,10 +18,12 @@ button, button.btn {
 .chat-wrapper .chat-panel .chat-line .chat-content {
     font-size: 12px;
     display: flex;
+    flex-direction: column;
 }
 .chat-wrapper .chat-panel .chat-line .chat-content .sender-name {
     color: #ffb000;
     margin-right: 5px;
+    width: 100%;
 }
 
 .chat-wrapper .chat-panel .chat-line .chat-time {
@@ -829,6 +831,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     background-position: center;
     border-radius: 12px;
 }
+
 #rps-radio span.active {
     border: 2px solid #ff409a;
 }
@@ -1057,7 +1060,7 @@ width: 100px;
     color: #f04747;
 }
 .game-page .game-contents.mystery-box-result-contents .mystery-box-result.success {
-    color: #43b581;
+    color: rgb(87, 202, 34);
 }
 .game-page .game-contents .game-info-panel.brain-game-play-panel .play-panel-header {
     display: flex;
@@ -1550,10 +1553,19 @@ width: 100px;
         margin: 24px 0;
     }
     #rps-radio span {
-        width: 262px;
-        margin: 0;
+        width: 74px;
+        margin: 10px !important;
         max-width: 100%;
+        background-size: 54px;
     }
+
+    #rps-radio span:first-child {
+        margin-left: 0px !important;
+    }
+    #rps-radio span:last-child {
+        margin-right: 0px !important;
+    }
+
     .game-page .game-contents .game-info-panel button {
         margin: 0 16px 16px 0;
     }

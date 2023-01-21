@@ -261,8 +261,8 @@ class CreateGame extends Component {
     });
     confirmModalCreate(
       this.props.isDarkMode,
-      'Do you want to create new stake now?',
-      'Okay',
+      'CONFIRM GAME SETTINGS?',
+      'LFG',
       'Cancel',
       async () => {
         await this.props.createRoom(this.state);
@@ -376,6 +376,8 @@ class CreateGame extends Component {
       </>
     );
   };
+
+  
 
   render() {
     return (

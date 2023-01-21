@@ -10,7 +10,7 @@ import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
-
+import InlineSVG from 'react-inlinesvg';
 
 const defaultOptions = {
   loop: true,
@@ -36,11 +36,19 @@ class MyGamesTable extends Component {
   }
 
   endRoom = (winnings, room_id) => {
+    const convertToCurrency = input => {
+      let number = Number(input);
+      if(!isNaN(number)){
+        let [whole, decimal] = number.toFixed(2).toString().split('.');
+        whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return <><InlineSVG src={`<svg id='busd' width="0.7em" height="0.7em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 336.41 337.42"><defs><style>.cls-1{fill:#f0b90b;stroke:#f0b90b;}</style></defs><title>BUSD Icon</title><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path class="cls-1" d="M168.2.71l41.5,42.5L105.2,147.71l-41.5-41.5Z"/><path class="cls-1" d="M231.2,63.71l41.5,42.5L105.2,273.71l-41.5-41.5Z"/><path class="cls-1" d="M42.2,126.71l41.5,42.5-41.5,41.5L.7,169.21Z"/><path class="cls-1" d="M294.2,126.71l41.5,42.5L168.2,336.71l-41.5-41.5Z"/></g></g></svg>`} /> {`${whole}.${decimal}`}</>;
+      }else{
+        return input;
+      }
+    };
     confirmModalClosed(
       true,
-      `DO YOU WANT TO END THIS GAME NOW? YOU WILL TAKE [${convertToCurrency(
-        winnings
-      )}]`,
+      `DO YOU WANT TO END THIS GAME NOW?   YOU WILL TAKE  ${updateDigitToPoint2(winnings)} BUSD`,
       'Okay',
       'Cancel',
       () => {
@@ -239,22 +247,18 @@ class MyGamesTable extends Component {
                       )}
                     </div>
                     <div className="table-cell bet-info">
-                      <span className="bet-pr">
-                        {convertToCurrency(
-                          updateDigitToPoint2(row.bet_amount)
-                        ) +
-                          ' / ' +
-                          convertToCurrency(updateDigitToPoint2(row.pr))}
-                      </span>
-                      <span className="end-amount">
-                        {convertToCurrency(
-                          updateDigitToPoint2(row.endgame_amount)
-                        )}
-                      </span>
-                    </div>
-                    <div className="table-cell winnings">
-                      <span>{convertToCurrency(row.winnings)}</span>
-                    </div>
+  <span className="bet-pr">
+    {convertToCurrency(updateDigitToPoint2(row.bet_amount))} {' / '}
+    {convertToCurrency(updateDigitToPoint2(row.pr))}
+  </span>
+  <span className="end-amount">
+    {convertToCurrency(updateDigitToPoint2(row.endgame_amount))}
+  </span>
+</div>
+<div className="table-cell winnings">
+  <span>{convertToCurrency(row.winnings)}</span>
+</div>
+
                     <div className="table-cell action desktop-only">
                       <button
                         className="btn_end"

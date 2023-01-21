@@ -4,7 +4,6 @@ import history from '../../redux/history';
 import { getRoomList, setCurRoomInfo } from '../../redux/Logic/logic.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
-import InlineSVG from 'react-inlinesvg';
 
 
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -23,23 +22,13 @@ class OpenGamesTable extends Component {
     this.state = {
       selectedGameType: 'All',
       showPlayerModal: false,
-      rooms: [],
       selectedRow: null,
-      
     };
   }
 
-  componentDidMount() {
-    
-    
-    this.props.getRoomList({
-      game_type: this.state.selectedGameType
-    });
-    console.log(this.props)
-  }
-
+ 
   handleOpenPlayerModal = (creator_id) => {
-    const selectedRow = this.state.rooms.find(row => row.creator_id === creator_id);
+    const selectedRow = this.props.roomList.find(row => row.creator_id === creator_id);
     this.setState({ showPlayerModal: true, selectedRow });
   }
 
@@ -198,9 +187,9 @@ class OpenGamesTable extends Component {
   render() {
     const gameTypePanel = this.generateGameTypePanel();
     console.log('Props being passed to PlayerModal: ', this.state.selectedRow);
-    // const CurrencySVG = inlineSVG(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 336.41 337.42"><defs><style>.cls-1{fill:#f0b90b;stroke:#f0b90b;}</style></defs><title>Asset 1</title><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path class="cls-1" d="M168.2.71l41.5,42.5L105.2,147.71l-41.5-41.5Z"/><path class="cls-1" d="M231.2,63.71l41.5,42.5L105.2,273.71l-41.5-41.5Z"/><path class="cls-1" d="M42.2,126.71l41.5,42.5-41.5,41.5L.7,169.21Z"/><path class="cls-1" d="M294.2,126.71l41.5,42.5L168.2,336.71l-41.5-41.5Z"/></g></g></svg>`);
 
     return (
+      
       <div className="overflowX">
         <div className="game-type-container">
           <div
@@ -218,7 +207,14 @@ class OpenGamesTable extends Component {
               <div>NO STAKES YET, GO TO 'MY STAKES'</div>
             </div>
           )}
-          
+           {this.state.showPlayerModal && this.state.selectedRow && (
+            <PlayerModal
+              _id={this.state.selectedRow._id}
+              modalIsOpen={this.state.showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
+              {...this.state.selectedRow}
+            />
+          )}
 
           {this.props.roomList.map(
             (row, key) => (
@@ -238,10 +234,7 @@ class OpenGamesTable extends Component {
                     </div>
                   </div>
                   <div className="table-cell desktop-only cell-user-name">
-                  {/* <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}> */}
-                    <div onClick={e => e.stopPropagation()}>
-                      
-                  </div>
+                  {/* <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}>                    */}
 
                     <Avatar
                       className="avatar"
@@ -341,10 +334,17 @@ class OpenGamesTable extends Component {
                     ></i>
                   </div>
                   <div className="table-cell cell-amount-info">
-                    {convertToCurrency(
-                      updateDigitToPoint2(row.user_bet)
-                    )}
-                    / {convertToCurrency(row.winnings)}
+                  {row.game_type.game_type_name === 'Spleesh!'
+    ? <>
+      {convertToCurrency(row.spleesh_bet_unit)} - 
+      {convertToCurrency(row.spleesh_bet_unit * 10)} / 
+      '???'
+    </>
+    : <>
+      {convertToCurrency(updateDigitToPoint2(row.user_bet))} / 
+      {convertToCurrency(row.winnings)}
+    </>
+  }
                   </div>
                 </div>
               </div>
@@ -352,14 +352,7 @@ class OpenGamesTable extends Component {
             this
           )}
         </div>
-        {this.state.showPlayerModal && this.state.selectedRow && (
-        <PlayerModal
-          _id={this.state.selectedRow._id}
-          modalIsOpen={this.state.showPlayerModal}
-          closeModal={this.handleClosePlayerModal}
-          {...this.state.selectedRow}
-        />
-      )}
+       
         {this.props.roomList.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}

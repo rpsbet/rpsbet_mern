@@ -11,9 +11,7 @@ class Summary extends Component {
     let public_bet_amount = this.props.public_bet_amount;
 
     if (this.props.game_mode === 'Spleesh!') {
-      public_bet_amount = `${convertToCurrency(
-        this.props.spleesh_bet_unit
-      )} - ${convertToCurrency(this.props.spleesh_bet_unit * 10)}`;
+      public_bet_amount = <>{convertToCurrency(this.props.spleesh_bet_unit)} - {convertToCurrency(this.props.spleesh_bet_unit * 10)} </>
       public_max_return = convertToCurrency(
         updateDigitToPoint2(
           this.props.spleesh_bet_unit * 55 + this.props.bet_amount /* 0.9 */
@@ -72,10 +70,9 @@ class Summary extends Component {
   }
 
   total_summery() {
-    let public_bet_amount = this.props.public_bet_amount;
-    let public_max_return = convertToCurrency(
-      updateDigitToPoint2(this.props.max_prize /* 0.95 */)
-    );
+    let public_bet_amount = <> {convertToCurrency(updateDigitToPoint2(this.props.public_bet_amount))} </>;
+    let public_max_return = <> {convertToCurrency(updateDigitToPoint2(this.props.max_prize))} </>;
+
 
     if (this.props.game_mode === 'Spleesh!') {
       public_bet_amount = `${convertToCurrency(
@@ -86,6 +83,7 @@ class Summary extends Component {
         updateDigitToPoint2(this.props.max_return)
       );
     }
+
 
     return (
       <div className="summary-panel">

@@ -666,7 +666,7 @@ router.post('/rooms', auth, async (req, res) => {
     await req.user.save();
     await newTransaction.save();
 
-    const rooms = await getRoomList(10, 1, 'RPS');
+    const rooms = await getRoomList(10, 1, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
       roomList: rooms.rooms,
@@ -761,7 +761,7 @@ router.get('/my_games', auth, async (req, res) => {
       ? parseInt(req.query.pagination)
       : 8;
     const page = req.query.page ? parseInt(req.query.page) : 1;
-    const game_type = req.query.game_type ? req.query.game_type : 'RPS';
+    const game_type = req.query.game_type ? req.query.game_type : 'All';
     const rooms = await getMyRooms(req.user._id, pagination, page, game_type);
 
     res.json({
@@ -920,7 +920,7 @@ router.post('/end_game', auth, async (req, res) => {
       newTransaction
     });
 
-    const rooms = await getRoomList(10, 1, 'RPS');
+    const rooms = await getRoomList(10, 1, 'All');
 
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
@@ -1141,7 +1141,7 @@ router.post('/bet', auth, async (req, res) => {
       if (roomInfo['creator']._id === req.user._id) {
         res.json({
           success: false,
-          message: "This game is yours. What's the point?!",
+          message: "THIS IS YOUR OWN GAME!!!",
           betResult: -101
         });
 

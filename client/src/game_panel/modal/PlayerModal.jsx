@@ -32,11 +32,11 @@ const customStyles = {
 class PlayerModal extends Component {
     constructor(props) {
         super(props);
-        this._isMounted = true;
     this.state = {
       _id: props._id || '',
       username: props.username || '',
-      avatar: this.props.avatar,
+      avatar: props.avatar,
+      dataLoaded: false
     }
     }
     updateSelectedRow(selectedRow) {
@@ -56,6 +56,8 @@ class PlayerModal extends Component {
        
     }
 
+    
+
     handleAvatarLoaded = (filename) => {
         console.log(filename)
     }
@@ -72,21 +74,12 @@ class PlayerModal extends Component {
 }
   
 
-async componentDidUpdate(prevProps) {
-  if (this.props._id !== prevProps._id) {
-    const result = await this.props.getCustomerStatisticsData(this.props._id);
-    this.setState({
-      ...result
-    });
-  }
-}
-
-componentWillReceiveProps(nextProps) {
-  if (nextProps._id !== this.props._id) {
-    this.props.getCustomerStatisticsData(nextProps._id)
-      .then(result => this.setState({ ...result }));
-  }
-}
+// componentWillReceiveProps(nextProps) {
+//   if (nextProps._id !== nextProps._id) {
+//     this.props.getCustomerStatisticsData(nextProps._id)
+//       .then(result => this.setState({ ...result }));
+//   }
+// }
     render() {
         return <Modal
             isOpen={this.props.modalIsOpen}

@@ -106,6 +106,66 @@ class MysteryBox extends Component {
     });
   };
 
+  onAddTenBoxes = e => {
+    e.preventDefault();
+
+    let new_box_price = parseFloat(this.state.new_box_price);
+    let new_box_prize = parseFloat(this.state.new_box_prize);
+
+    if (new_box_price < 0) {
+      alertModal(
+        this.props.isDarkMode,
+        `You can't make a box with negative price!`
+      );
+      return;
+    }
+
+    if (new_box_prize < 0) {
+      alertModal(
+        this.props.isDarkMode,
+        `You can't make a box with negative prize!`
+      );
+      return;
+    }
+
+    new_box_price = isNaN(new_box_price) ? 0 : new_box_price;
+    new_box_prize = isNaN(new_box_prize) ? 0 : new_box_prize;
+
+    let box_list = this.props.box_list;
+    for (let i = 0; i < 10; i++) {
+      box_list = box_list.concat({
+        box_price: new_box_price,
+        box_prize: new_box_prize
+      });
+    }
+
+    const bet_amount = box_list.reduce(
+      (totalAmount, box) => totalAmount + box.box_prize,
+      0
+    );
+    const max_return = this.calcMaxReturn(box_list);
+
+    this.setState({
+      new_box_price: '',
+      new_box_prize: ''
+    });
+
+    this.props.onChangeState({
+      box_list: box_list,
+      bet_amount: bet_amount,
+      max_return: max_return['max_return'],
+      max_prize: max_return['max_prize'],
+      endgame_amount: max_return['max_return'],
+      lowest_box_price: max_return['lowest_box_price'],
+      public_bet_amount:
+        max_return['lowest_box_price'] === max_return['highest_box_price']
+          ? convertToCurrency(max_return['lowest_box_price'])
+          : `${convertToCurrency(
+              max_return['lowest_box_price']
+            )} - ${convertToCurrency(max_return['highest_box_price'])}`
+    });
+  };
+
   onRemoveBox = e => {
     e.preventDefault();
     let box_list = this.props.box_list;
@@ -198,6 +258,9 @@ class MysteryBox extends Component {
           </div>
           <button className="other" onClick={this.onAddBox}>
             Add box
+          </button>
+          <button id="add-ten" onClick={this.onAddTenBoxes}>
+            Add 10 boxes
           </button>
           <a
             href="/#"

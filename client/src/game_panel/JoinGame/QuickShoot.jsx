@@ -131,7 +131,7 @@ class QuickShoot extends Component {
 
     confirmModalCreate(
       this.props.isDarkMode,
-      'Are you sure you want to place this bet?',
+      'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
       'Yes',
       'Cancel',
       async () => {

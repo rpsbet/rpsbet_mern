@@ -128,7 +128,7 @@ class BrainGame extends Component {
 
     confirmModalCreate(
       this.props.isDarkMode,
-      'Are you sure you want to place this bet?',
+      'AARE YOU SURE YOU WANT TO PLACE THIS BET?',
       'Yes',
       'Cancel',
       async () => {

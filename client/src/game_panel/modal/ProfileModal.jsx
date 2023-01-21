@@ -101,7 +101,7 @@ class ProfileModal extends Component {
     saveUserInfo = async (e) => {
         e.preventDefault();
         if (this.state.password !== this.state.passwordConfirmation) {
-            alertModal(this.props.isDarkMode, `Password confirmation doesn't match the password.`);
+            alertModal(this.props.isDarkMode, `PASSWORD CONFIRMATION DOESN'T MATCH NEW PASSWORD`);
             return;
         }
 

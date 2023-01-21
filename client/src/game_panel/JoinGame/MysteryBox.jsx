@@ -92,7 +92,7 @@ class MysteryBox extends Component {
 
     confirmModalCreate(
       this.props.isDarkMode,
-      'Are you sure you want to place this bet?',
+      'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
       'Yes',
       'Cancel',
       async () => {
@@ -200,7 +200,7 @@ class MysteryBox extends Component {
   onBtnPlayAgainClicked = e => {
     e.preventDefault();
     if (this.props.roomStatus === 'finished') {
-      alertModal(this.props.isDarkMode, 'This stake has already ended.');
+      alertModal(this.props.isDarkMode, 'THIS STAKE HAS ENDED');
       history.go('/');
     } else {
       history.go(0);
