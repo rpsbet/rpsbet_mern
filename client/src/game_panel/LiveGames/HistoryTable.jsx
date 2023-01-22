@@ -4,6 +4,7 @@ import { getHistory } from '../../redux/Logic/logic.actions';
 import Moment from 'moment';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import PlayerModal from '../modal/PlayerModal';
 
 import Pagination from '../../components/Pagination';
 
@@ -20,7 +21,9 @@ class HistoryTable extends Component {
     super(props);
     this.state = {
       history: this.props.history,
+      showPlayerModal: false,
       selectedGameType: 'All'
+      
     };
   }
 
@@ -38,6 +41,16 @@ class HistoryTable extends Component {
     }
     return null;
   }
+
+  handleOpenPlayerModal = (creator_id) => {
+        console.log(this.state.selectedCreator)
+    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+  }
+
+  
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
 
   updateReminderTime = () => {
     this.setState({ history: updateFromNow(this.state.history) });

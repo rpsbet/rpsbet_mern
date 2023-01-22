@@ -1041,6 +1041,14 @@ width: 100px;
     cursor: pointer;
     text-decoration: underline;
 }
+.msgtooltip {
+    width: 100%;
+    height: 100%;
+background-color: red;
+    z-index: 99;
+    position: absolute;
+
+}
 .game-page .game-contents.mystery-box-result-contents {
     width: 550px;
     max-width: 100%;
@@ -1704,6 +1712,9 @@ width: 100px;
     .chat-wrapper .chat-input-panel {
         position: fixed !important;
         width: 100%;
-        z-index: 9;
+        z-index: 1;
+        bottom: 64px;
+        background-color: #fff;
     }
+    
 }

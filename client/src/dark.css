@@ -17,7 +17,9 @@
 .dark-mode ul[role=menu] {
     background-color: #2f3136;
 }
-
+.dark_mode .chat-wrapper .chat-input-panel {
+	background-color: #212529;
+}
 
 .dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
 	color: #959595;

@@ -22,14 +22,13 @@ class OpenGamesTable extends Component {
     this.state = {
       selectedGameType: 'All',
       showPlayerModal: false,
-      selectedRow: null,
+      selectedCreator: '',
     };
   }
 
  
   handleOpenPlayerModal = (creator_id) => {
-    const selectedRow = this.props.roomList.find(row => row.creator_id === creator_id);
-    this.setState({ showPlayerModal: true, selectedRow });
+    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   }
 
   
@@ -186,7 +185,7 @@ class OpenGamesTable extends Component {
 
   render() {
     const gameTypePanel = this.generateGameTypePanel();
-    console.log('Props being passed to PlayerModal: ', this.state.selectedRow);
+    // console.log('Props being passed to PlayerModal: ', this.state.selectedRow);
 
     return (
       
@@ -207,14 +206,22 @@ class OpenGamesTable extends Component {
               <div>NO STAKES YET, GO TO 'MY STAKES'</div>
             </div>
           )}
-           {this.state.showPlayerModal && this.state.selectedRow && (
+           {this.state.showPlayerModal &&
             <PlayerModal
-              _id={this.state.selectedRow._id}
+              selectedCreator={this.state.selectedCreator}
               modalIsOpen={this.state.showPlayerModal}
               closeModal={this.handleClosePlayerModal}
-              {...this.state.selectedRow}
+              // {...this.state.selectedRow}
             />
-          )}
+          }
+          {/* {this.state.showPlayerModal && this.state.selectedRow && (
+            <PlayerModal
+              // _id={this.state.selectedRow._id}
+              modalIsOpen={this.state.showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
+              // {...this.state.selectedRow}
+            />
+          )} */}
 
           {this.props.roomList.map(
             (row, key) => (
@@ -234,7 +241,7 @@ class OpenGamesTable extends Component {
                     </div>
                   </div>
                   <div className="table-cell desktop-only cell-user-name">
-                  {/* <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}>                    */}
+                  <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}>                   
 
                     <Avatar
                       className="avatar"
@@ -243,7 +250,7 @@ class OpenGamesTable extends Component {
                       darkMode={this.props.isDarkMode}
                     />
                     <span>{row.creator}</span>
-                    {/* </a> */}
+                    </a>
                     <i
                       className={`online-status${
                         this.props.onlineUserList.filter(
@@ -302,19 +309,10 @@ class OpenGamesTable extends Component {
                   </div>
                 </div>
                 <div className="mobile-only">
-                  <div className="table-cell cell-user-name">
-                              {/* <a className="player" onClick={this.handleOpenPlayerModal}> */}
-                              <div onClick={e => e.stopPropagation()}>
 
-                              {this.state.showPlayerModal && (
-                        <PlayerModal
-                          modalIsOpen={this.state.showPlayerModal}
-                          closeModal={this.handleClosePlayerModal}
-                          _id={row.creator_id}
-                          username={row.creator}
-                          avatar={row.creator_avatar}
-                        />
-                      )}</div>
+                  <div className="table-cell cell-user-name">
+                  <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}>                   
+       
                     <Avatar
                       className="avatar"
                       src={row.creator_avatar}
@@ -322,7 +320,7 @@ class OpenGamesTable extends Component {
                       darkMode={this.props.isDarkMode}
                     />
                     <span>{row.creator}</span>
-                    {/* </a> */}
+                    </a>
                     <i
                       className={`online-status${
                         this.props.onlineUserList.filter(
