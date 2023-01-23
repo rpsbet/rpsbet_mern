@@ -59,6 +59,16 @@ class OpenGamesTable extends Component {
       return;
     }
 
+     // Dispatch the loadRoomInfo action with the updated room information
+    //  this.props.loadRoomInfo({
+    //   _id: room_id,
+    //   game_type: e.target.getAttribute('game_type'),
+    //   bet_amount: bet_amount,
+    //   creator_id: creator_id,
+    //   // other room information
+    // });
+    // history.push('/join/' + room_id);
+
     const room_id = e.target.getAttribute('_id');
     this.props.setCurRoomInfo({
       _id: room_id,

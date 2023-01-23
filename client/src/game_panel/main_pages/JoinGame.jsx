@@ -6,7 +6,9 @@ import Spleesh from '../JoinGame/Spleesh';
 import MysteryBox from '../JoinGame/MysteryBox';
 import BrainGame from '../JoinGame/BrainGame';
 import QuickShoot from '../JoinGame/QuickShoot';
-import { bet, getRoomInfo } from '../../redux/Logic/logic.actions';
+import { bet, getRoomInfo, setCurRoomInfo, loadRoomInfo } from '../../redux/Logic/logic.actions';
+
+
 
 class JoinGame extends Component {
   constructor(props) {
@@ -37,13 +39,15 @@ class JoinGame extends Component {
   // };
 
   componentDidUpdate(prevProps) {
-    if (this.props.roomInfo !== prevProps.roomInfo) {
-      this.setState(prevState => ({
-        ...prevState,
-        roomInfo: this.props.roomInfo
-      }));
+    if (this.props.match.params.id !== prevProps.match.params.id) {
+      if(this.props.isAuthenticated){
+        if(this.props.roomInfo.status !== 'finished'){
+          this.refreshHistory();
+        }
+      }
     }
   }
+  
 
 
   join = async betInfo => {
@@ -56,11 +60,23 @@ class JoinGame extends Component {
     return result;
   };
 
+  refreshHistory = () => {
+    this.props.getRoomInfo(this.props.match.params.id);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.history !== prevProps.history) {
+      this.refreshHistory();
+    }
+  }
+  
+
   render() {
     return (
       <>
         {this.props.roomInfo.game_type === 'RPS' && (
           <RPS
+          refreshHistory={this.refreshHistory}
             join={this.join}
             user_id={this.props.user_id}
             creator_id={this.props.roomInfo.creator_id}
@@ -71,6 +87,7 @@ class JoinGame extends Component {
         )}
         {this.props.roomInfo.game_type === 'Spleesh!' && (
           <Spleesh
+          refreshHistory={this.refreshHistory}
             join={this.join}
             spleesh_bet_unit={this.props.roomInfo.spleesh_bet_unit}
             game_log_list={this.props.roomInfo.game_log_list || []}
@@ -82,16 +99,20 @@ class JoinGame extends Component {
         {this.props.roomInfo.game_type === 'Mystery Box' &&
           this.props.roomInfo.box_list.length > 0 && (
             <MysteryBox
+            refreshHistory={this.refreshHistory}
               join={this.join}
               box_list={this.props.roomInfo.box_list}
               box_price={this.props.roomInfo.box_price}
               user_id={this.props.user_id}
               creator_id={this.props.roomInfo.creator_id}
               is_private={this.props.roomInfo.is_private}
+
+              betResult={this.state.betResult}
             />
           )}
         {this.props.roomInfo.game_type === 'Brain Game' && (
           <BrainGame
+          refreshHistory={this.refreshHistory}
             join={this.join}
             brain_game_type={this.props.roomInfo.brain_game_type}
             brain_game_score={this.props.roomInfo.brain_game_score}
@@ -108,6 +129,7 @@ class JoinGame extends Component {
         )}
         {this.props.roomInfo.game_type === 'Quick Shoot' && (
           <QuickShoot
+          refreshHistory={this.refreshHistory}
             join={this.join}
             user_id={this.props.user_id}
             creator_id={this.props.roomInfo.creator_id}
@@ -119,6 +141,8 @@ class JoinGame extends Component {
         {this.props.roomInfo.room_history && (
           <div className="room-history-panel">
             <h2 className="room-history-title">Staking History</h2>
+            <button id="refresh-btn" onClick={this.refreshHistory}>Refresh</button>
+
             <div className="table main-history-table">
               {this.props.roomInfo.room_history.map(
                 (row, key) => (
@@ -147,12 +171,17 @@ class JoinGame extends Component {
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   roomInfo: state.logic.curRoomInfo,
-  user_id: state.auth.user._id
+  user_id: state.auth.user._id,
+  
 });
 
 const mapDispatchToProps = {
   getRoomInfo,
-  bet
+  bet,
+  setCurRoomInfo,
+  loadRoomInfo
+
+
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(JoinGame);

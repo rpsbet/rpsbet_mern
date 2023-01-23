@@ -105,12 +105,12 @@ export const bet = (bet_info) => async dispatch => {
           message: res.data.message
         };
       } else {
-        dispatch({ type: MSG_WARNING, payload: 'Something went wrong. Please try again in a few minutes.' });
+        dispatch({ type: MSG_WARNING, payload: 'SLOW TF DOWN!' });
       }
     }
   } catch (err) {
     console.log(err)
-    dispatch({ type: MSG_WARNING, payload: 'Something went wrong. Please try again in a few minutes.' });
+    dispatch({ type: MSG_WARNING, payload: 'SLOW TF DOWN!' });
   }
 
   return {

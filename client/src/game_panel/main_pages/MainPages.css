@@ -921,7 +921,7 @@ input {
     width: 74px;
     height: 72px;
     position: relative;
-    margin-right: 40px;
+    margin-right: 8px;
     margin-bottom: 30px;
     display: inline-block;
     text-align: center;
@@ -1005,7 +1005,7 @@ width: 100px;
 }
 .game-page .game-contents .game-info-panel .box-prizes span {
     color: rgb(87, 202, 34);
-    margin-right: 16px;
+    margin: 20px 6px;
     padding: 5px;
     border-radius: 3px;
     white-space: pre;
@@ -1406,10 +1406,9 @@ background-color: red;
     }
 }
 @media (max-width: 1023px) {
-    .game-page .game-contents .game-info-panel .box-prizes span {
-        white-space: unset;
-        white-space: unset;
-    }
+    /* .game-page .game-contents .game-info-panel .box-prizes span { */
+        /* white-space: unset; */
+    /* } */
     .contents_wrapper .main-game {
         grid-template-columns: 100%;
         margin-bottom: 60px;
@@ -1655,9 +1654,17 @@ background-color: red;
     }
 }
 @media (max-width: 400px) {
+    /* .game-page .game-contents .game-info-panel .box-prizes span {
+        white-space: unset;
+        white-space: unset;
+    } */
+
     .game-page .game-contents .game-info-panel .box-prizes span {
-        white-space: unset;
-        white-space: unset;
+        width: 64px;
+        padding: 3px 5px;
+        display: block;
+        float: left;
+        margin: 0 3px;
     }
     .game-page .pre-summary-panel > div.public-bet-amount {
         background-size: 26px;

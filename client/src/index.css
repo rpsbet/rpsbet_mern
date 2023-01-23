@@ -106,6 +106,13 @@ border-radius: unset !important;
   background-color: #495057;
 }
 
+#refresh-btn {
+  background: #333;
+  border-radius: 9px;
+  margin: -40px 0px 30px;
+  float: right;
+}
+
 .disclaimer p {
   font-weight: 400;
   font-size: 1em;

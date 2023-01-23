@@ -14,7 +14,6 @@ import {
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
   UPDATE_BET_RESULT,
-  UPDATE_BET_RESULTS,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -79,28 +78,18 @@ export default function(state = initialState, action) {
   switch (type) {
     case BET_SUCCESS:
       return {
-        ...state, betResults: payload.betResults, roomStatus: payload.roomStatus
+        ...state, betResult: payload.betResult, roomStatus: payload.roomStatus
       };
       case UPDATE_BET_RESULT:
-      return {
-        ...state,
-        betResults: [...state.betResults, action.payload]
-      };
-      case UPDATE_BET_RESULTS:
-  console.log('UPDATE_BET_RESULTS action received with payload:', action.payload);
-  return {
-    ...state,
-    betResult: action.payload
-  };
-  // case UPDATE_BET_RESULTS:
-  //   if (typeof payload === 'object') {
-  //     return {
-  //       ...state,
-  //       betResults: [...state.betResults, payload]
-  //     }
-  //   } else {
-  //     return state;
-  //   }
+  if (typeof payload === 'object') {
+    return {
+      ...state,
+      betResult: [...state.betResult, payload]
+    }
+  } else {
+    return state;
+  }
+
       
     case START_LOADING:
       return {
@@ -132,13 +121,12 @@ export default function(state = initialState, action) {
       };
       case ROOMINFO_LOADED:
         return {
-          ...state,
+          ...state, 
           curRoomInfo: {
             ...state.curRoomInfo, 
             ...payload.roomInfo
           }
         };
-        
   
 
     case ROOMS_LOADED:

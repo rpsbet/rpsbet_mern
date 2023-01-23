@@ -5,6 +5,26 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
+import ReactModal from 'react-modal';
+
+const customStyles = {
+  overlay: {
+      zIndex: 3,
+      backgroundColor: 'rgba(47, 49, 54, 0.8)',
+      backdropFilter: 'blur(4px)'
+  },
+  content: {
+      top         : '50%',
+      left        : '50%',
+      right       : 'auto',
+      bottom      : 'auto',
+      transform   : 'translate(-50%, -50%)',
+      background: 'transparent',
+      padding: 0,
+      border: 0
+  }
+}
+
 
 class MysteryBox extends Component {
   constructor(props) {
@@ -17,7 +37,9 @@ class MysteryBox extends Component {
       is_anonymous: false,
       balance: this.props.balance,
       betResult: this.props.betResult,
-      isPasswordCorrect: false
+      isPasswordCorrect: false,
+      isModalOpen: false
+
     };
   }
 
@@ -40,17 +62,29 @@ class MysteryBox extends Component {
 
   onBoxClicked = e => {
     e.preventDefault();
-
     if (e.target.getAttribute('status') === 'opened') {
       return;
     }
-
     const _id = e.target.getAttribute('_id');
     const box_price = e.target.getAttribute('box_price');
-    this.setState({ selected_id: _id, bet_amount: box_price });
+    this.setState({ selected_id: _id, bet_amount: box_price});
+
+
+    this.onBtnBetClick(e, _id);
   };
 
+//   componentDidMount() {
+
+//     const firstSelectedBox = this.state.box_list.find(box => box.active);
+//     if (firstSelectedBox) {
+//       this.setState({ selected_id: firstSelectedBox._id });
+//       this.onBtnBetClick(null, firstSelectedBox._id);
+//   }
+// }
+
+
   componentDidUpdate(prevProps, prevState) {
+    console.log(this.state.betResult);
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
       this.state.isPasswordCorrect === true
@@ -61,6 +95,10 @@ class MysteryBox extends Component {
         is_anonymous: this.state.is_anonymous
       });
 
+
+    if (prevState.betResult !== this.state.betResult && this.state.betResult === 0) {
+      this.setState({ isModalOpen: true });
+    }
       this.setState({
         box_list: this.state.box_list.map(el =>
           el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
@@ -69,21 +107,28 @@ class MysteryBox extends Component {
     }
   }
 
-  onBtnBetClick = e => {
-    e.preventDefault();
-
+  openModal = () => {
+    
+    this.setState({ isModalOpen: true });
+  }
+  
+  onBtnBetClick = (e, selected_id) => {
+    if (e) {
+        e.preventDefault();
+    }
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
         `THIS IS YOUR OWN STAKE?!?`
       );
       return;
+      
     }
 
-    if (this.state.selected_id === '') {
-      alertModal(this.props.isDarkMode, `SELECT A BOX!!!`);
-      return;
-    }
+    // if (this.state.selected_id === '') {
+    //   alertModal(this.props.isDarkMode, `SELECT A BOX!!!`);
+    //   return;
+    // }
 
     if (this.state.bet_amount > this.state.balance) {
       alertModal(this.props.isDarkMode, `TOO BROKE!`);
@@ -104,8 +149,10 @@ class MysteryBox extends Component {
             selected_id: this.state.selected_id,
             is_anonymous: this.state.is_anonymous
           });
+          this.openModal();
 
           this.setState({
+            // betResult: 0,
             box_list: this.state.box_list.map(el =>
               el._id === this.state.selected_id
                 ? { ...el, status: 'opened' }
@@ -116,7 +163,9 @@ class MysteryBox extends Component {
       }
     );
   };
-
+  closeModal = () => {
+    this.setState({ betResult: -1, isModalOpen: false });
+  }
   onBtnGoToMainGamesClicked = e => {
     e.preventDefault();
     history.push('/');
@@ -155,7 +204,7 @@ class MysteryBox extends Component {
             </div>
           </div>
           <div className="game-info-panel">
-            <h3 className="game-sub-title">Prizes:</h3>
+            <h3 className="game-sub-title">Prizes</h3>
             <p className="box-prizes">
               {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
@@ -185,13 +234,13 @@ class MysteryBox extends Component {
             </div>
             <p>Each box will open one of the Prizes above.</p>
           </div>
-          <hr />
+          {/* <hr />
           <div className="action-panel">
             <span></span>
             <button id="btn_bet" onClick={this.onBtnBetClick}>
               Place Bet
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     );
@@ -203,9 +252,16 @@ class MysteryBox extends Component {
       alertModal(this.props.isDarkMode, 'THIS STAKE HAS ENDED');
       history.go('/');
     } else {
-      history.go(0);
+      this.setState({ betResult: -1, isModalOpen: false });
+      
+      // history.go(0);
     }
+
   };
+
+  hideModal = () => {
+    this.setState({betResult: -1});
+}
 
   getBetResultForm = () => {
     let prizes = [];
@@ -250,11 +306,11 @@ class MysteryBox extends Component {
           </div>
           <hr />
           <div className="action-panel">
-            <button id="btn-back" onClick={this.onBtnGoToMainGamesClicked}>
+            {/* <button id="btn-back" onClick={this.onBtnGoToMainGamesClicked}>
               Live Stakes
-            </button>
+            </button> */}
             <button id="btn-submit" onClick={this.onBtnPlayAgainClicked}>
-              Play Again
+              OKAY
             </button>
           </div>
         </div>
@@ -263,8 +319,28 @@ class MysteryBox extends Component {
   };
 
   render() {
-    const betResult = this.state.betResult;
-    return betResult === -1 ? this.getBetForm() : this.getBetResultForm();
+    return (
+      <div>
+        {this.getBetForm()}
+        {this.state.betResult === 0 ? (
+          <ReactModal 
+            isOpen={true}
+            contentLabel="Prizes"
+            onRequestClose={() => {
+              this.setState({ betResult: -1 });
+            }}
+            style={customStyles}
+          ><div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-body edit-modal-body">
+            <button className="btn-close" onClick={this.closeModal}>×</button>
+            {this.getBetResultForm()}
+            {/* <button onClick={this.onBtnPlayAgainClicked}>Okay</button> */}
+            </div>
+            </div>
+          </ReactModal>
+        ) : null}
+        </div>
+    );
   }
 }
 

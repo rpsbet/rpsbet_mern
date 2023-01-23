@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+
 // import { dispatch } from 'redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -19,6 +20,8 @@ const options = [
   { classname: 'paper', selection: 'P' },
   { classname: 'scissors', selection: 'S' }
 ];
+
+
 
 class RPS extends Component {
   constructor(props) {
@@ -75,6 +78,8 @@ class RPS extends Component {
     }
   }
 
+  
+
   joinGame = async (selected_rps) => {
     this.setState({selected_rps: selected_rps});
     const result = await this.props.join({
@@ -83,7 +88,8 @@ class RPS extends Component {
       rps_bet_item_id: this.props.rps_bet_item_id,
       slippage: this.state.slippage
     });
-    
+    this.onBtnBetClick(result);
+
     // const result = await this.props.join({
     //   selected_rps: this.state.selected_rps,
     //   is_anonymous: this.state.is_anonymous,
@@ -125,11 +131,12 @@ class RPS extends Component {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
+    this.props.refreshHistory();
   };
 
 
-  onBtnBetClick = e => {
-    e.preventDefault();
+  onBtnBetClick = (selected_rps) => {
+    // e.preventDefault();
 
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
@@ -153,7 +160,7 @@ class RPS extends Component {
         if (this.props.is_private === true) {
           this.props.openGamePasswordModal();
         } else {
-          this.joinGame();
+          this.joinGame(selected_rps);
         }
       }
     );
@@ -249,7 +256,7 @@ class RPS extends Component {
       onClick={() => {
         console.log(`clicked ${classname}`);
         this.setState({ selected_rps: selection });
-        this.joinGame(selection);
+        this.onBtnBetClick(selection);
       }}
     />
   ))}
