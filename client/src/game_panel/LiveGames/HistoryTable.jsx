@@ -42,6 +42,12 @@ class HistoryTable extends Component {
     return null;
   }
 
+  componentDidUpdate(prevProps) {
+        if (prevProps.history !== this.props.history) {
+            this.setState({ history: updateFromNow(this.props.history) });
+        }
+    }
+
   handleOpenPlayerModal = (creator_id) => {
         console.log(this.state.selectedCreator)
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -165,6 +171,7 @@ class HistoryTable extends Component {
 
   render() {
     const gameTypePanel = this.generateGameTypePanel();
+    console.log("StakingHistory props:", this.props); // <- add this
 
     return (
       <div className="overflowX">

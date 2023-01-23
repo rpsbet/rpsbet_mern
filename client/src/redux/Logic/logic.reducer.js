@@ -13,6 +13,8 @@ import {
   MY_GAMES_LOADED,
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
+  UPDATE_BET_RESULT,
+  UPDATE_BET_RESULTS,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -52,6 +54,7 @@ const initialState = {
     qs_game_type: 2
   },
   betResult: -1,
+  betResults: [],
   roomStatus: '',
   myGames: [],
   myGamesTotalPage: 0,
@@ -76,8 +79,29 @@ export default function(state = initialState, action) {
   switch (type) {
     case BET_SUCCESS:
       return {
-        ...state, betResult: payload.betResult, roomStatus: payload.roomStatus
+        ...state, betResults: payload.betResults, roomStatus: payload.roomStatus
       };
+      case UPDATE_BET_RESULT:
+      return {
+        ...state,
+        betResults: [...state.betResults, action.payload]
+      };
+      case UPDATE_BET_RESULTS:
+  console.log('UPDATE_BET_RESULTS action received with payload:', action.payload);
+  return {
+    ...state,
+    betResult: action.payload
+  };
+  // case UPDATE_BET_RESULTS:
+  //   if (typeof payload === 'object') {
+  //     return {
+  //       ...state,
+  //       betResults: [...state.betResults, payload]
+  //     }
+  //   } else {
+  //     return state;
+  //   }
+      
     case START_LOADING:
       return {
         ...state, isActiveLoadingOverlay: true
@@ -106,10 +130,17 @@ export default function(state = initialState, action) {
       return {
         ...state, game_mode: firstGameType, ...payload
       };
-    case ROOMINFO_LOADED:
-      return {
-        ...state, curRoomInfo: payload.roomInfo
-      };
+      case ROOMINFO_LOADED:
+        return {
+          ...state,
+          curRoomInfo: {
+            ...state.curRoomInfo, 
+            ...payload.roomInfo
+          }
+        };
+        
+  
+
     case ROOMS_LOADED:
       return {
         ...state, roomList: payload.roomList, totalPage: payload.pages, roomCount: payload.total, pageNumber: payload.page

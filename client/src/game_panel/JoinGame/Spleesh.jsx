@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
+import InlineSVG from 'react-inlinesvg';
+
 import {
   alertModal,
   confirmModalCreate,
@@ -160,6 +162,7 @@ class Spleesh extends Component {
   };
 
   render() {
+
     return (
       <div className="game-page">
         <div className="page-title">
@@ -188,11 +191,13 @@ class Spleesh extends Component {
           <div className="game-info-panel">
             <h3 className="game-sub-title">Previous Guesses</h3>
             <p className="previous-guesses">
-              {this.props.game_log_list.length > 0
-                ? this.props.game_log_list.map((log) => 
-                  convertToCurrency(log)
-                ).join(', ')
-                : `No guesses yet`}
+              
+            {this.props.game_log_list.length > 0
+    ? this.props.game_log_list.map(log => <span style={{background: '#d8171866', borderRadius: '6px', padding: '0.3em 0.9em', marginRight: '20px' }}> <InlineSVG id='busd' src={require('./busd.svg')} /> {log + '.00'}</span>)
+    : `No guesses yet`}
+
+
+
             </p>
             <h3 className="game-sub-title">Your Number</h3>
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>

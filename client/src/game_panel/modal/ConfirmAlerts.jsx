@@ -58,7 +58,7 @@ const showResultModal = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTi
                     <div className='modal-body alert-body result-body'>
                         <div className={`modal-icon result-icon${icon}`}></div>
                         <h1>{text}</h1>
-                        <p>Click your balance for<br/>balance differences.</p>
+                        <p>CLICK YOUR BALANCE<br/>TO SEE RECENT BETS</p>
                         <div className="modal-action-panel">
                             <button className="btn-submit" onClick={() => {callback(); onClose();}}>{okayButtonTitle}</button>
                             { cancelButtonTitle &&

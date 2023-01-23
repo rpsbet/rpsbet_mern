@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+// import { dispatch } from 'redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
+import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Avatar from '../../components/Avatar';
 import {
   alertModal,
@@ -31,6 +33,7 @@ class RPS extends Component {
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
+      betResults: props.betResults,
       settings_panel_opened: false
     };
   }
@@ -72,20 +75,38 @@ class RPS extends Component {
     }
   }
 
-  joinGame = async () => {
+  joinGame = async (selected_rps) => {
+    this.setState({selected_rps: selected_rps});
     const result = await this.props.join({
-      selected_rps: this.state.selected_rps,
+      selected_rps: selected_rps,
       is_anonymous: this.state.is_anonymous,
       rps_bet_item_id: this.props.rps_bet_item_id,
       slippage: this.state.slippage
     });
+    
+    // const result = await this.props.join({
+    //   selected_rps: this.state.selected_rps,
+    //   is_anonymous: this.state.is_anonymous,
+    //   rps_bet_item_id: this.props.rps_bet_item_id,
+    //   slippage: this.state.slippage
+    // });
+    const currentUser = this.props.user;
+    const currentRoom = this.props.room;
     if (result.status === 'success') {
+      this.setState(prevState => ({
+        betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
+    }));
+    console.log(this.state.betResults);
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
+        this.props.updateBetResult('win')
         text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
+        this.props.updateBetResult('draw')
         text = 'DRAW, NO WINNER!';
+      }else{
+         this.props.updateBetResult('lose')
       }
 
       gameResultModal(
@@ -95,7 +116,7 @@ class RPS extends Component {
         'Okay',
         null,
         () => {
-          history.push('/');
+          // history.push('/');
         },
         () => {}
       );
@@ -105,6 +126,7 @@ class RPS extends Component {
       }
     }
   };
+
 
   onBtnBetClick = e => {
     e.preventDefault();
@@ -145,6 +167,9 @@ class RPS extends Component {
         </div>
         <div className="game-contents">
           <div className="pre-summary-panel">
+          {/* {this.props.betResults.map((result, index) => {
+          return <div key={index}>{result}</div>;
+        })} */}
           <div className="host-display-name">
               Host: {this.props.creator}
             </div>
@@ -175,7 +200,7 @@ class RPS extends Component {
               <p>Slippage tolerance</p>
               <div className="slippage-select-panel">
                 <button
-                  class={this.state.slippage === 100 ? 'active' : ''}
+                  className={this.state.slippage === 100 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 100 });
                   }}
@@ -183,7 +208,7 @@ class RPS extends Component {
                   100%
                 </button>
                 <button
-                  class={this.state.slippage === 200 ? 'active' : ''}
+                  className={this.state.slippage === 200 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
@@ -191,7 +216,7 @@ class RPS extends Component {
                   200%
                 </button>
                 <button
-                  class={this.state.slippage === 500 ? 'active' : ''}
+                  className={this.state.slippage === 500 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
@@ -199,7 +224,7 @@ class RPS extends Component {
                   500%
                 </button>
                 <button
-                  class={this.state.slippage === 'unlimited' ? 'active' : ''}
+                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 'unlimited' });
                   }}
@@ -215,26 +240,28 @@ class RPS extends Component {
           >
             <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
             <div id="rps-radio" style={{ zIndex: 1 }}>
-              {options.map(({ classname, selection }) => (
-                <span
-                  className={`${classname}${
-                    this.state.selected_rps === selection ? ' active' : ''
-                  }`}
-                  onClick={() => {
-                    console.log(`clicked ${classname}`);
-                    this.setState({ selected_rps: selection });
-                  }}
-                />
-              ))}
-            </div>
+  {options.map(({ classname, selection }) => (
+    <span
+      id={`rps-${classname}`}
+      className={`rps-option ${classname}${
+        this.state.selected_rps === selection ? ' active' : ''
+      }`}
+      onClick={() => {
+        console.log(`clicked ${classname}`);
+        this.setState({ selected_rps: selection });
+        this.joinGame(selection);
+      }}
+    />
+  ))}
+</div>
           </div>
-          <hr />
+          {/* <hr />
           <div className="action-panel">
             <span></span>
             <button id="btn_bet" onClick={this.onBtnBetClick}>
               Place Bet
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     );
@@ -242,16 +269,21 @@ class RPS extends Component {
 }
 
 const mapStateToProps = state => ({
+  
   auth: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
-  creator: state.logic.curRoomInfo.creator_name
+  creator: state.logic.curRoomInfo.creator_name,
+  betResults: state.logic.betResults
+
 });
 
-const mapDispatchToProps = {
-  openGamePasswordModal
-};
+const mapDispatchToProps = dispatch => ({
+  openGamePasswordModal,
+
+  updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

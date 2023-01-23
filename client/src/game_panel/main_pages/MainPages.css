@@ -711,6 +711,10 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     margin-top: 16px;
 }
 .game-page .game-contents .game-info-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
     min-height: 150px;
 }
 .game-page .game-contents .game-info-panel button {

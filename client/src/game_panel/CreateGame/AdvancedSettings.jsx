@@ -80,7 +80,7 @@ class AdvancedSettings extends Component {
                       endgame_amount: e.target.value
                     });
                   }}
-                  placeholder="End Game Amount"
+                  placeholder="PAYOUT"
                 />
                 <span style={{ marginLeft: '-3.2rem' }}> BUSD</span>
               </div>

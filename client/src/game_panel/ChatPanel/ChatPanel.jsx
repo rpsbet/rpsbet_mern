@@ -145,7 +145,7 @@ class ChatPanel extends Component {
             <input
               type="text"
               className="form-control"
-              placeholder="Say something..."
+              placeholder="SAY HI..."
               onKeyDown={this.onTextAreaKeyDown}
               onChange={this.onChangeText}
               value={this.state.text}
