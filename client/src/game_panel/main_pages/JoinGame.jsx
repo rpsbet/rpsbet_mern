@@ -36,6 +36,16 @@ class JoinGame extends Component {
   //   }
   // };
 
+  componentDidUpdate(prevProps) {
+    if (this.props.roomInfo !== prevProps.roomInfo) {
+      this.setState(prevState => ({
+        ...prevState,
+        roomInfo: this.props.roomInfo
+      }));
+    }
+  }
+
+
   join = async betInfo => {
     const result = await this.props.bet({
       _id: this.state.roomInfo._id,
