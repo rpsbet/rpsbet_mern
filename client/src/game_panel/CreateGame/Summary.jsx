@@ -3,6 +3,23 @@ import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 
 class Summary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      winChance: 0
+    }
+    if(this.props.game_mode === 'RPS'){
+      this.state.winChance = 33
+    } else if(this.props.game_mode === 'Spleesh!'){
+      this.state.winChance = 69
+    } else if(this.props.game_mode === 'Mystery Box'){
+      this.state.winChance = 10
+    } else if(this.props.game_mode === 'Quick Shoot'){
+      this.state.winChance = 15
+    } else if(this.props.game_mode === 'Brain Game'){
+      this.state.winChance = '0 - 100'
+    }
+  }
   pre_summery() {
     console.log({ props: this.props });
     let public_max_return = convertToCurrency(
@@ -55,6 +72,7 @@ class Summary extends Component {
           <div className="your-max-return">
             Your Max Return:{' '}
             {convertToCurrency(updateDigitToPoint2(this.props.max_return))}
+
           </div>
         )}
         {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
@@ -64,8 +82,27 @@ class Summary extends Component {
             Public Max Return: {public_max_return}
           </div>
         )}
+        <div className="win-chance">
+            Win Chance:  {this.props.winChance}
+          </div>
       </div>
     );
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.game_mode !== this.props.game_mode) {
+      if(this.props.game_mode === 'RPS'){
+        this.setState({ winChance: 33 })
+      } else if(this.props.game_mode === 'Spleesh!'){
+        this.setState({ winChance: 69 })
+      } else if(this.props.game_mode === 'Mystery Box'){
+        this.setState({ winChance: 10 })
+      } else if(this.props.game_mode === 'Quick Shoot'){
+        this.setState({ winChance: 15 })
+      } else if(this.props.game_mode === 'Brain Game'){
+        this.setState({ winChance: '0 - 100' })
+      }
+    }
   }
 
   total_summery() {
@@ -89,10 +126,12 @@ class Summary extends Component {
         <h3 className="game-sub-title">Stake Summary</h3>
         <div className="summary-info">
           <div className="summary-item">
+            <div className="summary-item-name">Win Chance</div>
+            <div className="summary-item-value">{this.props.winChance}</div>
+          </div>
+          <div className="summary-item">
             <div className="summary-item-name">Bet Amount</div>
-            <div className="summary-item-value">
-              {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
-            </div>
+            <div className="summary-item-value">{convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}</div>
           </div>
           {(this.props.game_mode === 'Spleesh!' ||
             this.props.game_mode === 'Quick Shoot') && (
@@ -123,6 +162,7 @@ class Summary extends Component {
               </div>
             </div>
           )}
+          
           <div className="summary-item">
             <div className="summary-item-name">Privacy</div>
             <div className="summary-item-value">

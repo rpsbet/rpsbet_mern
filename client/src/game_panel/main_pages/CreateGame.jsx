@@ -32,6 +32,7 @@ class CreateGame extends Component {
       spleesh_bet_unit: 1,
       max_return: 0,
       max_prize: 0,
+      winChance:0,
       lowest_box_price: 0,
       public_bet_amount: convertToCurrency(0),
       is_private: false,
@@ -96,6 +97,7 @@ class CreateGame extends Component {
         ...newState,
         game_type: 1,
         bet_amount: 0,
+        winChance: 0,
         max_return: 0
       };
     } else if (gameTypeName === 'Brain Game') {
@@ -277,6 +279,7 @@ class CreateGame extends Component {
           onChangeState={this.onChangeState}
           rps_list={this.state.rps_list}
           bet_amount={this.state.bet_amount}
+          winChance={this.state.winChance}
           is_private={this.state.is_private}
           is_anonymous={this.state.is_anonymous}
           room_password={this.state.room_password}
@@ -384,7 +387,7 @@ class CreateGame extends Component {
       <div className="game-page">
         <div className="page-title">
           <h2>
-            CREATE - <br />({this.state.game_mode})
+            CREATE - ({this.state.game_mode})
           </h2>
           {this.state.step === 5 &&
           this.state.game_mode === 'Brain Game' &&
@@ -399,6 +402,7 @@ class CreateGame extends Component {
               child_step={this.state.child_step}
               game_mode={this.state.game_mode}
               max_prize={this.state.max_prize}
+              winChance={this.state.winChance}
               public_bet_amount={this.state.public_bet_amount}
             />
           ) : (
@@ -421,6 +425,7 @@ class CreateGame extends Component {
               max_prize={this.state.max_prize}
               public_bet_amount={this.state.public_bet_amount}
               spleesh_bet_unit={this.state.spleesh_bet_unit}
+              winChance={this.state.winChance}
             />
           )}
           {this.state.step === 2 && this.step2()}

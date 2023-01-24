@@ -198,6 +198,23 @@ div.table.my-chat-table .table-row > div.message-panel ,
   border-bottom-left-radius: 50px;
   border-top-left-radius: 50px;
 }
+.rps-add-run-panel > div.rps-add-run-table table th {
+  text-align: left !important;
+}
+
+
+.rps-add-run-panel > div.rps-add-run-table table td {
+  width: 80px;
+}
+
+#runs {
+  max-height: 35vh;
+  display: flex;
+  overflow-y: scroll;
+  justify-content: center;
+}
+
+
 
 .login_form label {
   color: #666;
@@ -732,15 +749,19 @@ a.player:hover {
   
 }
 @media (max-width: 992px) {
+  #runs {
+    max-height: 25vh;
+  }
+  
   
 .game-info-panel table th:first-child, .game-info-panel table td:first-child  {
  display: none;
 }
 
-.game-info-panel table th:last-child, .game-info-panel table td:last-child  {
+.game-info-panel table th:last-child, .game-info-panel table#runs td:last-child  {
   border-color: #282a2d !important;
   background: none;
-  background-color: #282a2d;
+  text-align: center;
  }
  
 
@@ -777,6 +798,10 @@ a.player:hover {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+  #runs {
+    max-height: 10vh;
+  }
+  
   
   .game-page .pre-summary-panel div {
     background-size: 24px;

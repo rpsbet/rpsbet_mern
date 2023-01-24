@@ -35,14 +35,14 @@
     width: 400px;
     padding: 24px;
 }
-.modal-body.edit-modal-body::-webkit-scrollbar {
+.modal-body.edit-modal-body::-webkit-scrollbar, #runs::-webkit-scrollbar  {
     width: 4px;
     background: transparent;
 }
 .modal-body.edit-modal-body::-webkit-scrollbar-track {
     background: transparent;
 }
-.modal-body.edit-modal-body::-webkit-scrollbar-thumb {
+.modal-body.edit-modal-body::-webkit-scrollbar-thumb,  #runs::-webkit-scrollbar-thumb {
     background-image: linear-gradient(to bottom, #ff409a, #c438ef);
 }
 .modal-body button.btn-close {

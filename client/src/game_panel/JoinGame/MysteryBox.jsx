@@ -165,6 +165,7 @@ class MysteryBox extends Component {
   };
   closeModal = () => {
     this.setState({ betResult: -1, isModalOpen: false });
+    history.go(0);
   }
   onBtnGoToMainGamesClicked = e => {
     e.preventDefault();
@@ -254,7 +255,7 @@ class MysteryBox extends Component {
     } else {
       this.setState({ betResult: -1, isModalOpen: false });
       
-      // history.go(0);
+      history.go(0);
     }
 
   };
