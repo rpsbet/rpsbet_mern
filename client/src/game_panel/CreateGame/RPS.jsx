@@ -48,7 +48,7 @@ const calcWinChance = (rps_list) => {
   return (lowest.toFixed(2) + '% - ' + highest.toFixed(2) + '%');
   }
 
-  const predictNext = (prevStates, randomness = 0.8, deviationThreshold = 20) => {
+  const predictNext = (prevStates, randomness = 0.5, deviationThreshold = 5) => {
     // Create a transition matrix to store the probability of transitioning from one state to another
     const transitionMatrix = {
       R: { R: 0, P: 0, S: 0 },
