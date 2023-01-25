@@ -1601,6 +1601,7 @@ background-color: red;
     }
     .game-page .game-contents .game-info-panel .create-box-panel {
         display: block;
+        margin: auto;
     }
     .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
         margin-bottom: 16px;

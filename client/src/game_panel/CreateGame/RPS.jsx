@@ -48,19 +48,19 @@ const calcWinChance = (rps_list) => {
   return (lowest.toFixed(2) + '% - ' + highest.toFixed(2) + '%');
   }
 
-  const predictNext = (prevStates) => {
+  const predictNext = (prevStates, randomness = 0.8, deviationThreshold = 20) => {
     // Create a transition matrix to store the probability of transitioning from one state to another
     const transitionMatrix = {
       R: { R: 0, P: 0, S: 0 },
       P: { R: 0, P: 0, S: 0 },
       S: { R: 0, P: 0, S: 0 },
     };
-
+  
     // Iterate through the previous states to populate the transition matrix
     for (let i = 0; i < prevStates.length - 1; i++) {
       transitionMatrix[prevStates[i].rps][prevStates[i + 1].rps]++;
     }
-
+  
     // Normalize the transition matrix
     Object.keys(transitionMatrix).forEach((fromState) => {
       const totalTransitions = Object.values(transitionMatrix[fromState]).reduce((a, b) => a + b);
@@ -68,19 +68,87 @@ const calcWinChance = (rps_list) => {
         transitionMatrix[fromState][toState] /= totalTransitions;
       });
     });
-
+  
     // Use the transition matrix to predict the next state based on the current state
     let currentState = prevStates[prevStates.length - 1].rps;
     let nextState = currentState;
-    let maxProb = 0;
+  
+    // Calculate the average win chance of the predictions
+    let totalPredictions = 0;
+    let totalWinChance = 0;
     Object.keys(transitionMatrix[currentState]).forEach((state) => {
-      if (transitionMatrix[currentState][state] > maxProb) {
-        maxProb = transitionMatrix[currentState][state];
-        nextState = state;
-      }
+      totalPredictions++;
+      totalWinChance += transitionMatrix[currentState][state];
     });
-    return nextState;
+    const averageWinChance = totalWinChance / totalPredictions;
+  
+    // Generate a random number between 0 and 1
+    let randomNum = Math.random();
+    if (randomNum < randomness) {
+      // Randomly select a state from all possible states
+      nextState = Object.keys(transitionMatrix)[Math.floor(Math.random() * 3)];
+    } else {
+      // Get the probabilities of transitioning to each state
+      const probabilities = transitionMatrix[currentState];
+      // Check if there is a state with a probability of 0 or 100%
+      const isCertain = Object.values(probabilities).some((p) => p === 0 || p === 1);
+      if (isCertain) {
+        // If there is a state with a probability of 0 or 100%, calculate the count for each R, P and S in the rps_list
+        let total = 0;
+        let rock = 0;
+        let paper = 0;
+        let scissors = 0;
+        prevStates.map((el, i) => {
+          total++;
+          if (el.rps === "R") {
+            rock++;
+          } else if (el.rps === "P") {
+            paper++;
+          } else if (el.rps === "S") {
+            scissors++;
+          }
+        });
+        // Calculate the probability of each occurring next
+        const rockProbability = rock / total;
+        const paperProbability = paper / total;
+        const scissorsProbability = scissors / total;
+      // Generate a random number between 0 and 1
+      const randomProb = Math.random();
+      if (randomProb < rockProbability) {
+        nextState = "R";
+      } else if (randomProb < rockProbability + paperProbability) {
+        nextState = "P";
+      } else {
+        nextState = "S";
+      }
+    } else {
+      // Check if the deviation of the average win chance from the predictions is too high
+      const deviation = Math.abs(averageWinChance - (1 / totalPredictions));
+      if (deviation > deviationThreshold) {
+        // Increase the probability of the other selections to balance the average win chance
+        const adjustment = (1 / totalPredictions - averageWinChance) / (totalPredictions - 1);
+        Object.keys(probabilities).forEach((state) => {
+          if (state !== currentState) {
+            probabilities[state] += adjustment;
+          }
+        });
+      }
+      // Randomly select a state based on the probabilities in the transition matrix
+      const randomProb = Math.random();
+      let probSum = 0;
+      Object.keys(probabilities).forEach((state) => {
+        probSum += probabilities[state];
+        if (randomProb <= probSum) {
+          nextState = state;
+          return;
+        }
+      });
+    }
   }
+  return nextState;
+};
+  
+
 
 
 class RPS extends Component {
@@ -286,7 +354,7 @@ class RPS extends Component {
                 }}
               ></span>
             </div>
-            {/* <button onClick={this.onAutoPlay}> Autoplay</button> */}
+            <button onClick={this.onAutoPlay}> Autoplay</button>
 
           </div>
           <div className="rps-add-run-table">
