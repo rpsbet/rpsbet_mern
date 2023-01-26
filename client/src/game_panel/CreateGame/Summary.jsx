@@ -38,6 +38,10 @@ class Summary extends Component {
       public_max_return = convertToCurrency(
         updateDigitToPoint2(this.props.max_return)
       );
+    } else if (this.props.game_mode === 'Quick Shoot') {
+      public_max_return = convertToCurrency(
+        updateDigitToPoint2(this.props.max_return)
+      );
     }
 
     return (

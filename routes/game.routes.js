@@ -799,7 +799,7 @@ router.post('/end_game', auth, async (req, res) => {
       res.json({
         success: false,
         already_finished: true,
-        message: 'THIS GAME HAS ENDED ALEADY'
+        message: 'THIS GAME HAS ENDED ALREADY'
       });
       return;
     }

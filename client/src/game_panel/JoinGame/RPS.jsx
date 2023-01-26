@@ -96,6 +96,7 @@ class RPS extends Component {
     //   rps_bet_item_id: this.props.rps_bet_item_id,
     //   slippage: this.state.slippage
     // });
+
     const currentUser = this.props.user;
     const currentRoom = this.props.room;
     if (result.status === 'success') {

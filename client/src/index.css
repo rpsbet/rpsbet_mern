@@ -113,6 +113,14 @@ border-radius: unset !important;
   float: right;
 }
 
+#max {
+  margin: 0px 1.4rem -1.5em 1.5em;
+    cursor: none;
+    transform: translateY(3px);
+    font-size: small;
+    color: #f0b90b;
+}
+
 .disclaimer p {
   font-weight: 400;
   font-size: 1em;

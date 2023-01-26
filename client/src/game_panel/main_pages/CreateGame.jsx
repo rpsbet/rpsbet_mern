@@ -189,7 +189,7 @@ class CreateGame extends Component {
     if (this.state.step === 2) {
       if (
         (this.state.game_mode !== 'RPS' ||
-          (this.state.game_mode === 'RPS' && this.state.child_step === 2)) &&
+          (this.state.game_mode === 'RPS' && this.state.child_step === 1)) &&
         (parseFloat(this.state.bet_amount) <= 0 ||
           isNaN(parseFloat(this.state.bet_amount)))
       ) {

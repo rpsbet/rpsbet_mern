@@ -1576,6 +1576,7 @@ background-color: red;
     }
     #rps-radio span {
         width: 74px;
+        height: 74px;
         margin: 10px !important;
         max-width: 100%;
         background-size: 54px;

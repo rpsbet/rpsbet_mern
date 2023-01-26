@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { initParams } from 'request';
 import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
+import { connect } from 'react-redux';
 
 class DefaultBetAmountPanel extends Component {
   constructor(props) {
@@ -12,15 +13,37 @@ class DefaultBetAmountPanel extends Component {
     console.log(defaultBetAmounts, this.props.bet_amount);
     this.state = {
       defaultBetAmounts: defaultBetAmounts,
+      // balance: this.state.balance,
       is_other:
         defaultBetAmounts.indexOf(this.props.bet_amount) < 0 ? true : false
     };
   }
 
+ 
+  handleMaxButtonClick() {
+    const maxBetAmount = (this.props.balance).toFixed(2);
+    if (this.props.game_type === 'Brain Game') {
+      this.props.onChangeState({ bet_amount: maxBetAmount });
+    } else if (this.props.game_type === 'Quick Shoot') {
+      this.props.onChangeState({
+        bet_amount: maxBetAmount,
+        public_bet_amount: convertToCurrency(
+          (this.props.qs_game_type - 1) * maxBetAmount
+        ),
+        max_return: this.props.qs_game_type * maxBetAmount
+      });
+    } else {
+      this.props.onChangeState({
+        bet_amount: maxBetAmount,
+        max_return: maxBetAmount * 2 /* * 0.95 */
+      });
+    }
+  }
+
   render() {
     return (
       <div className="default-bet-amount-panel game-info-panel">
-        <h3 className="game-sub-title">Bet Amount</h3>
+        <h3 className="game-sub-title">BANKROLL</h3>
         <div className="bet-amounts">
           {this.state.defaultBetAmounts.map((amount, index) => (
             <button
@@ -93,12 +116,14 @@ class DefaultBetAmountPanel extends Component {
                 });
               }
             }}
-            placeholder="Bet Amount"
+            placeholder="BET AMOUNT"
           />
           <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
+          <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
+
         </div>
         {this.props.game_type === 'RPS' ? (
-          <p className="tip">The cost to play this RUN</p>
+          <p className="tip">SET THE INITIAL 'POT' FOR THIS GAME</p>
         ) : (
           <p className="tip">The cost to play this game</p>
         )}
@@ -107,4 +132,12 @@ class DefaultBetAmountPanel extends Component {
   }
 }
 
-export default DefaultBetAmountPanel;
+const mapStateToProps = state => ({
+  auth: state.auth.isAuthenticated,
+  socket: state.auth.socket,
+  balance: state.auth.balance,
+});
+
+const mapDispatchToProps = {
+};
+export default connect(mapStateToProps, mapDispatchToProps)(DefaultBetAmountPanel);
