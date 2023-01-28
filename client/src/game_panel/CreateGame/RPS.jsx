@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
+import { connect } from 'react-redux';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
-
+import {
+  alertModal
+} from '../modal/ConfirmAlerts';
 // const calcBetAmount = rps_list => {
 //   let bet_amount = 0;
 //   rps_list.map((el, i) => {
@@ -135,13 +138,14 @@ class RPS extends Component {
 
   onAutoPlay = () => {
     
-    if(this.props.rps_list.length > 0){
+    if(this.props.rps_list.length > 2){
       const prevStates = this.props.rps_list;
       const nextRPS = predictNext(prevStates, this.props.rps_list);
       this.onAddRun(nextRPS);
 
     }else {
-      console.log("There is no RPS history to make a prediction")
+      alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
+      return;
     }
    
   };
@@ -327,4 +331,11 @@ class RPS extends Component {
   }
 }
 
-export default RPS;
+const mapStateToProps = state => ({
+  
+  auth: state.auth.isAuthenticated,
+  isDarkMode: state.auth.isDarkMode,
+
+});
+
+export default connect(mapStateToProps)(RPS);

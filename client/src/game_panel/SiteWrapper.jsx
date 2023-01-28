@@ -285,6 +285,8 @@ class SiteWrapper extends Component {
   }
 
   handleLogout = clear_token => {
+    this.setState({ web3account: null });
+    this.setState({ web3balance: null });
     this.setState({ anchorEl: null });
     if (this.props.socket) {
       this.props.socket.disconnect();
@@ -390,6 +392,12 @@ class SiteWrapper extends Component {
     // Change the state of song
     this.setState({ isPlaying: !isPlaying });
     
+  };
+
+
+  disconnectWeb3 = async () => {
+    this.setState({ web3account: null });
+    this.setState({ web3balance: null });
   };
 
   render() {
@@ -547,6 +555,7 @@ class SiteWrapper extends Component {
                     </button>
                   </>
                 )}
+               
               </div>
             </div>
             <div
@@ -606,11 +615,28 @@ class SiteWrapper extends Component {
                   >
                     Deposit
                   </button>
+                  <hr />
+                  {this.state.web3account ? (
+          <>
+            <input type="text" value={this.state.web3account} readOnly />
+            <button className="connect" onClick={this.disconnectWeb3}>Disconnect</button>
+          </>
+        ) : (
+          <button className="connect" onClick={this.loadWeb3}>Connect</button>
+        )}
                 </div>
+                
+
+
+
               </div>
+              
             </div>
+            
           </div>
+          
           <div className="game_wrapper">
+            
             <div className="contents_wrapper">{this.props.children}</div>
           </div>
           {this.state.showTermsModal && (
@@ -707,6 +733,7 @@ class SiteWrapper extends Component {
           )}
           <GamePasswordModal />
         </div>
+        
       </MuiThemeProvider>
     );
   }

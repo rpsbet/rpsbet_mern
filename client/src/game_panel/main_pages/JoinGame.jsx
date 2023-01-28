@@ -6,7 +6,13 @@ import Spleesh from '../JoinGame/Spleesh';
 import MysteryBox from '../JoinGame/MysteryBox';
 import BrainGame from '../JoinGame/BrainGame';
 import QuickShoot from '../JoinGame/QuickShoot';
-import { bet, getRoomInfo, setCurRoomInfo, loadRoomInfo } from '../../redux/Logic/logic.actions';
+import {
+  bet,
+  getRoomInfo,
+  setCurRoomInfo,
+  loadRoomInfo,
+  
+} from '../../redux/Logic/logic.actions';
 
 
 
@@ -14,14 +20,18 @@ class JoinGame extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      roomInfo: this.props.roomInfo
+      roomInfo: this.props.roomInfo,
+      bankroll: this.props.roomInfo.bet_amount - this.getPreviousBets()
+
     };
   }
 
   static getDerivedStateFromProps(props, current_state) {
     if (current_state.roomInfo._id !== props.roomInfo._id) {
       return {
-        roomInfo: props.roomInfo
+        roomInfo: props.roomInfo,
+        // bankroll: props.roomInfo.bet_amount - this.getPreviousBets()
+
       };
     }
     return null;
@@ -48,7 +58,17 @@ class JoinGame extends Component {
     }
   }
   
-
+  getPreviousBets() {
+    let previousBets = 0;
+    if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
+      this.props.roomInfo.game_log_list.forEach(room_history => {
+        if(room_history.bet_amount){
+          previousBets += room_history.bet_amount;
+        }
+      });
+    }
+    return previousBets;
+  }
 
   join = async betInfo => {
     const result = await this.props.bet({
@@ -81,6 +101,7 @@ class JoinGame extends Component {
             user_id={this.props.user_id}
             creator_id={this.props.roomInfo.creator_id}
             bet_amount={this.props.roomInfo.bet_amount}
+            bankroll={this.state.bankroll}
             rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
             is_private={this.props.roomInfo.is_private}
           />

@@ -4,11 +4,9 @@ import LoadingOverlay from 'react-loading-overlay';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
-
 import Modal from 'react-modal';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { FaClipboard } from 'react-icons/fa';
 import { convertToCurrency } from '../../util/conversion';
 Modal.setAppElement('#root')
 
@@ -107,26 +105,9 @@ class WithdrawModal extends Component {
 
     }
 
-    
-    toggleBtnHandler = () => {
-        return this.setState({
-          clicked:!this.state.clicked
-        })
-        
-      }
-      copy() {
-        navigator.clipboard.writeText('0xe9e7cea3dedca5984780bafc599bd69add087d56')
-      }
-
 
       render() {
-        const styles = ['copy-btn'];
-         let text = 'COPY CONTRACT';
-    
-        if (this.state.clicked) {
-        styles.push('clicked');
-        text = 'COPIED!';
-        }
+
         console.log({ loading: this.state.isLoading })
         return (
             <>
@@ -148,13 +129,16 @@ class WithdrawModal extends Component {
                     onRequestClose={this.props.closeModal}
                     style={customStyles}
                     contentLabel="Deposit Modal"
+                    account={this.state.web3account}
                 >
                         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                             <div className="modal-body edit-modal-body deposit-modal-body">
                                 <button className="btn-close" onClick={this.props.closeModal}>×</button>
                                 <h2>WITHDRAW</h2>
+                               
                                 <div className="modal-content-wrapper">
                                     <div className="modal-content-panel">
+                                      
                                         <div id='withdrawal-status'>
                                         <h6>ELIGIBILILITY STATUS</h6>
                                     <div><span style={{color: this.state.totalWagered <= 25 ? "red" : "rgb(87, 202, 34)"}}>WAGERED:&nbsp;&nbsp;&nbsp;{this.state.totalWagered} BUSD</span></div>
@@ -173,11 +157,8 @@ class WithdrawModal extends Component {
                                     </span>
                                     </div>
                                     
-                                <button className={styles.join('')} onClick={() => {
-                                    this.toggleBtnHandler();
-                                    this.copy();
-                                }}><FaClipboard />&nbsp;{text}</button>
-                                
+                               
+                                 
                                     <div className="modal-action-panel">
                                         <button className="btn-submit" onClick={this.send}>Withdraw</button>
                                         <button className="btn-back" onClick={this.props.closeModal}>CANCEL</button>

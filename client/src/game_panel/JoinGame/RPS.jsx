@@ -1,5 +1,8 @@
-import React, { Component } from 'react';
+import React, { Component  } from 'react';
 import { connect } from 'react-redux';
+import { TwitterShareButton, TwitterIcon } from 'react-share';
+// import { clipboard } from 'electron';
+
 
 // import { dispatch } from 'redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
@@ -14,6 +17,7 @@ import {
 import history from '../../redux/history';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
+import { FaClipboard } from 'react-icons/fa';
 
 const options = [
   { classname: 'rock', selection: 'R' },
@@ -21,6 +25,7 @@ const options = [
   { classname: 'scissors', selection: 'S' }
 ];
 
+const twitterLink = window.location.href;
 
 
 class RPS extends Component {
@@ -30,22 +35,46 @@ class RPS extends Component {
     this.settingsRef = React.createRef();
 
     this.state = {
+      clicked: true,
+
       selected_rps: 'R',
       advanced_status: '',
       is_anonymous: false,
+      bet_amount: 0,
+      bankroll: this.props.bet_amount - this.getPreviousBets(),
+      copied: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
       betResults: props.betResults,
       settings_panel_opened: false
     };
+    this.onChangeState = this.onChangeState.bind(this);
+
   }
 
-  handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
+  onChangeState(e) {
+    this.setState({bet_amount: e.target.value});
+    this.setState({potential_return: e.target.value*2});
+}
+
+getPreviousBets() {
+  let previousBets = 0;
+  if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
+    this.props.roomInfo.game_log_list.forEach(room_history => {
+      if(room_history.bet_amount){
+        previousBets += room_history.bet_amount;
+      }
+    });
+  }
+  return previousBets;
+}
+
+  // handleClickOutside = e => {
+  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+  //     this.setState({ settings_panel_opened: false });
+  //   }
+  // };
 
   componentDidMount = () => {
     document.addEventListener('mousedown', this.handleClickOutside);
@@ -80,9 +109,10 @@ class RPS extends Component {
 
   
 
-  joinGame = async (selected_rps) => {
-    this.setState({selected_rps: selected_rps});
+  joinGame = async (selected_rps, bet_amount) => {
+    this.setState({selected_rps: selected_rps, bet_amount: this.state.bet_amount});
     const result = await this.props.join({
+      bet_amount: this.state.bet_amount,
       selected_rps: selected_rps,
       is_anonymous: this.state.is_anonymous,
       rps_bet_item_id: this.props.rps_bet_item_id,
@@ -147,7 +177,17 @@ class RPS extends Component {
       return;
     }
 
-    if (this.props.bet_amount > this.state.balance) {
+    if (isNaN(this.state.bet_amount)) {
+      alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
+      return;
+      }
+
+    if (this.state.bet_amount <= 0) {
+      alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
+      return;
+    }
+
+    if (this.state.bet_amount >this.state.balance) {
       alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
       return;
     }
@@ -167,7 +207,38 @@ class RPS extends Component {
     );
   };
 
+  handleMaxButtonClick() {
+    const maxBetAmount = (this.state.balance).toFixed(2);
+    this.setState({
+      bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
+    });
+  }
+  toggleBtnHandler = () => {
+    this.setState({
+      clicked:!this.state.clicked,
+      text: 'LINK GRABBED'
+    });
+    setTimeout(() => {
+      this.setState({
+        clicked:!this.state.clicked,
+        text: ''
+      });
+    }, 1000);
+  }
+
+  copy() {
+    navigator.clipboard.writeText(twitterLink)
+  }
+
+
   render() {
+    const styles = ['copy-btn'];
+    let text = 'COPY CONTRACT';
+
+   if (this.state.clicked) {
+   styles.push('clicked');
+   text = 'COPIED!';
+   }
     return (
       <div className="game-page">
         <div className="page-title">
@@ -182,15 +253,18 @@ class RPS extends Component {
               Host: {this.props.creator}
             </div>
             <div className="your-bet-amount">
-              Bet Amount: {convertToCurrency(this.props.bet_amount)}
+              Bankroll: {convertToCurrency(this.state.bankroll)}
+            </div>
+            <div className="your-bet-amount">
+              Bet Amount: {convertToCurrency(this.state.bet_amount)}
             </div>
             <div className="your-max-return">
               Potential Return:
               {convertToCurrency(
-                updateDigitToPoint2(this.props.bet_amount * 2 /* * 0.95 */)
+                updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
               )}
             </div>
-            <SettingsOutlinedIcon
+            {/* <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>
                 this.setState({
@@ -240,7 +314,7 @@ class RPS extends Component {
                   Unlimited
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
           <div
             className="game-info-panel"
@@ -262,14 +336,35 @@ class RPS extends Component {
     />
   ))}
 </div>
+<div className="your-bet-amount">
+          Bet Amount: 
+          <input value={this.state.bet_amount} onChange={this.onChangeState} />
+          <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
+
+        </div>
           </div>
-          {/* <hr />
+          <hr />
           <div className="action-panel">
-            <span></span>
-            <button id="btn_bet" onClick={this.onBtnBetClick}>
+          <div className="share-options">
+          <TwitterShareButton
+    url={twitterLink}
+    title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
+    className="Demo__some-network__share-button"
+  >
+    <TwitterIcon size={32} round />
+  </TwitterShareButton>
+  {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
+  {this.state.clicked ? <input type="text" value={twitterLink} readOnly onClick={this.toggleBtnHandler}/> : null }
+  <a className={styles.join('')} onClick={() => {
+                                    this.toggleBtnHandler();
+                                    this.copy();
+                                }}><FaClipboard />&nbsp;{this.state.text}</a>
+
+        </div>
+            {/* <button id="btn_bet" onClick={this.onBtnBetClick}>
               Place Bet
-            </button>
-          </div> */}
+            </button> */}
+          </div>
         </div>
       </div>
     );
@@ -280,7 +375,6 @@ const mapStateToProps = state => ({
   
   auth: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
-  balance: state.auth.balance,
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,

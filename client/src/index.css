@@ -158,6 +158,24 @@ div.table.my-chat-table .table-row > div.message-panel ,
   margin-left: 15px;
 }
 
+#or {
+  width: 100%;
+  margin-bottom: 10px !important;
+  display: block;
+  text-align: center;
+  font-style: italic;
+  font-weight: bolder;
+  text-align: center;
+}
+
+.connect {
+  width: 100%;
+  font-weight: 700;
+  background: linear-gradient(180deg, #f0b90b, #ff6200);
+  color: #fff !important;
+  width: 100%;
+}
+
 #root .site_wrapper .login_wrapper {
   height: 100vh;
   display: flex;

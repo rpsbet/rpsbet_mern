@@ -98,7 +98,8 @@ class CreateGame extends Component {
         game_type: 1,
         bet_amount: 0,
         winChance: 0,
-        max_return: 0
+        max_return: 0,
+        endgame_amount: 0
       };
     } else if (gameTypeName === 'Brain Game') {
       newState = {
@@ -240,7 +241,7 @@ class CreateGame extends Component {
       }
 
       if (
-        this.state.game_mode !== 'RPS' &&
+        // this.state.game_mode !== 'RPS' &&
         this.state.game_mode !== 'Quick Shoot' &&
         this.state.child_step === 1
       ) {
@@ -284,6 +285,7 @@ class CreateGame extends Component {
           is_anonymous={this.state.is_anonymous}
           room_password={this.state.room_password}
           step={this.state.child_step}
+          endgame_amount={this.state.endgame_amount}
           rps_game_type={this.state.rps_game_type}
         />
       );
