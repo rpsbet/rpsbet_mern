@@ -4,7 +4,7 @@ button, button.btn {
 
 .contents_wrapper .main-game {
     display: grid;
-    grid-template-columns: 15% 48% 37%;
+    grid-template-columns: 15% 55% 30%;
     position: relative;
 }
 .chat-wrapper .chat-panel {

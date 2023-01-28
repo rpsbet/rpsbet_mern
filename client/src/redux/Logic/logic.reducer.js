@@ -40,6 +40,7 @@ const initialState = {
     { game_type_name: 'Brain Game' },
     { game_type_name: 'Mystery Box' },
     { game_type_name: 'Quick Shoot' },
+    { game_type_name: 'Drop Game' },
   ],
   curRoomInfo: {
     _id: 0,

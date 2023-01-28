@@ -379,7 +379,7 @@ div[aria-label="How To Play Modal"] ul {
   scrollbar-width: none;  /* Firefox */
 }
 
-#game_footer_howto::-webkit-scrollbar { 
+#game_footer_howto::-webkit-scrollbar, .join-game-panel::-webkit-scrollbar { 
     display: none;  /* Safari and Chrome */
 }
 
@@ -665,6 +665,11 @@ a.player:hover {
   width: 0;
   position: absolute;
   border-width: 10px;
+}
+
+.join-game-panel {
+  height: 90vh;
+  overflow-y: scroll;
 }
 
 .contents_wrapper .chat_log_panel .message_content { word-wrap: break-word; }
