@@ -33,6 +33,7 @@ class AdvancedSettings extends Component {
               </button>
               <input
                 type="text"
+                id="betamount"
                 value={this.props.room_password}
                 onChange={e => {
                   this.props.onChangeState({ room_password: e.target.value });

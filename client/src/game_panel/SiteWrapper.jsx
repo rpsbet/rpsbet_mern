@@ -3,6 +3,7 @@ import { createTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import song from './sounds/tems.mp3';
 import LoadingOverlay from 'react-loading-overlay';
+
 import {
   setSocket,
   userSignOut,
@@ -19,7 +20,8 @@ import {
   updateOnlineUserList,
   selectMainTab,
   globalChatReceived,
-  setGlobalChat
+  setGlobalChat,
+  updateBetResult
 } from '../redux/Logic/logic.actions';
 
 import {
@@ -110,6 +112,7 @@ class SiteWrapper extends Component {
           : `http://${window.location.hostname}:5001`,
       userName: this.props.userName,
       balance: this.props.balance,
+      betResult: this.props.betResult,
       showProfileModal: false,
       showPlayerModal: false,
       showHowToPlayModal: false,
@@ -140,6 +143,7 @@ class SiteWrapper extends Component {
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance ||
+      current_state.betResult !== props.betResult ||
       current_state.userName !== props.userName ||
       current_state.isActiveLoadingOverlay !== props.isActiveLoadingOverlay
     ) {
@@ -148,7 +152,8 @@ class SiteWrapper extends Component {
         balance: props.balance,
         userName: props.userName,
         isActiveLoadingOverlay: props.isActiveLoadingOverlay,
-        transactions: updateFromNow(props.transactions)
+        transactions: updateFromNow(props.transactions),
+        betResult: props.betResult
       };
     }
 
@@ -160,6 +165,7 @@ class SiteWrapper extends Component {
       history.push('/');
     }
     this.props.selectMainTab(newValue);
+    
   };
 
 
@@ -193,9 +199,18 @@ class SiteWrapper extends Component {
 
     socket.on('SEND_CHAT', data => {
       try {
-        this.audio.play();
+        console.log('1', this.state.betResult);
+        console.log('2', this.props.betResult);
+        console.log('3', data.betResult);
+        if (data.betResult === 1) {
+          this.audioWin.play();
+        } else if (data.betResult === 0) {
+          this.audioSplit.play();
+        } else if (data.betResult === -1) {
+          this.audioLose.play();
+        }
         this.props.addChatLog(data);
-
+    
         if (history.location.pathname.substr(0, 5) === '/chat') {
           socket.emit('READ_MESSAGE', {
             to: this.props.user._id,
@@ -209,6 +224,10 @@ class SiteWrapper extends Component {
       } catch (e) {
         console.log(e);
       }
+    });
+    
+    socket.on('UPDATE_BET_RESULT', data => {
+      this.props.updateBetResult(data);
     });
 
     socket.on('NEW_TRANSACTION', data => {
@@ -251,12 +270,25 @@ class SiteWrapper extends Component {
     }
   };
   async componentDidMount() {
-    try {
-      this.audio = new Audio('/sounds/sound.mp3');
-      this.audio.load();
-    } catch (e) {
-      console.log('rere', e);
+    let currentUrl = window.location.pathname;
+    if(currentUrl.indexOf('create') !== -1) {
+    this.setState({
+    selectedMainTabIndex: this.props.selectMainTab(1),
+    // selectedMobileTabIndex: this.props.selectMobileTab(1)
+    });
     }
+
+    try {
+      this.audioWin = new Audio('/sounds/audioWin.mp3');
+      this.audioWin.load();
+      this.audioSplit = new Audio('/sounds/audioSplit.mp3');
+      this.audioSplit.load();
+      this.audioLose = new Audio('/sounds/audioLose.mp3');
+      this.audioLose.load();
+    } catch (e) {
+      console.log(e);
+    }
+    
     this.initSocket();
     const result = await this.props.getUser(true);
     if (result.status === 'success') {
@@ -459,7 +491,7 @@ class SiteWrapper extends Component {
                 </a>
                 */
                   <a
-                    href="#help"
+                    // href="#help"
                     onClick={this.handleOpenHowToPlayModal}
                     id="btn_how_to_play"
                   >
@@ -622,7 +654,7 @@ class SiteWrapper extends Component {
             <button className="connect" onClick={this.disconnectWeb3}>Disconnect</button>
           </>
         ) : (
-          <button className="connect" onClick={this.loadWeb3}>Connect</button>
+          <button className="connect" onClick={this.loadWeb3}>Wallet Not connected</button>
         )}
                 </div>
                 
@@ -671,8 +703,9 @@ class SiteWrapper extends Component {
               balance={this.state.balance}
               avatar={this.props.user.avatar}
             />
-          )}
+          )}            
           {this.state.showHowToPlayModal && (
+
             <HowToPlayModal
               modalIsOpen={this.state.showHowToPlayModal}
               closeModal={this.handleCloseHowToPlayModal}
@@ -750,7 +783,8 @@ const mapStateToProps = state => ({
   isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   transactions: state.auth.transactions,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  betResult: state.logic.betResult,
 });
 
 const mapDispatchToProps = {
@@ -767,7 +801,8 @@ const mapDispatchToProps = {
   updateOnlineUserList,
   selectMainTab,
   globalChatReceived,
-  setGlobalChat
+  setGlobalChat,
+  updateBetResult
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);

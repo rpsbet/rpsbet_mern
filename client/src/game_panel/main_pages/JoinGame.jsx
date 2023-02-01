@@ -6,6 +6,7 @@ import Spleesh from '../JoinGame/Spleesh';
 import MysteryBox from '../JoinGame/MysteryBox';
 import BrainGame from '../JoinGame/BrainGame';
 import QuickShoot from '../JoinGame/QuickShoot';
+import DropGame from '../JoinGame/DropGame';
 import {
   bet,
   getRoomInfo,
@@ -21,6 +22,8 @@ import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@material-ui/core';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
+import Lottie from 'react-lottie';
+import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
 const customStyles = {
   tabRoot: {
@@ -34,10 +37,12 @@ const customStyles = {
 const defaultOptions = {
   loop: true,
   autoplay: true,
+  animationData: animationData,
   rendererSettings: {
     preserveAspectRatio: "xMidYMid slice"
   }
 };
+
 
 class JoinGame extends Component {
   constructor(props) {
@@ -46,7 +51,7 @@ class JoinGame extends Component {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
       roomInfo: this.props.roomInfo,
-      bankroll: this.props.roomInfo.bet_amount - this.getPreviousBets()
+      bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
 
     };
   }
@@ -95,7 +100,7 @@ class JoinGame extends Component {
     if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
       this.props.roomInfo.game_log_list.forEach(room_history => {
         if(room_history.bet_amount){
-          previousBets += room_history.bet_amount;
+          previousBets += parseFloat(room_history.bet_amount);
         }
       });
     }
@@ -121,12 +126,23 @@ class JoinGame extends Component {
       this.refreshHistory();
     }
   }
-  
+
+  showOpenGameOrHistory = (e, newValue) => {
+    e.preventDefault();
+    this.setState({
+      show_open_game: newValue
+    });
+  };
+
+
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0)
       ? <div id="liveStakes">{this.props.roomCount} LIVE STAKES
-      </div>
+      <Lottie 
+        options={defaultOptions}
+          width={40}
+        /></div>
       : 'My Stakes';
 
   render() {
@@ -135,9 +151,9 @@ class JoinGame extends Component {
       <div className="main-game">
        {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
           !this.state.is_mobile) && <ChatPanel />}
-        {this.state.is_mobile &&
-          (this.state.selectedMobileTab === 'live_games' ||
-            this.state.selectedMobileTab === 'my_games') && (
+        {!this.state.is_mobile &&
+          (!this.state.selectedMobileTab === 'live_games' ||
+            !this.state.selectedMobileTab === 'my_games') && (
             <Tabs
               value={this.state.show_open_game}
               onChange={this.showOpenGameOrHistory}
@@ -158,7 +174,7 @@ class JoinGame extends Component {
           
           <div className='main-panel'>
             <div className='join-game-panel'>
-        {!this.state.is_mobile && this.props.roomInfo.game_type === 'RPS' && (
+        {(this.props.roomInfo.game_type === 'RPS' && (
           <RPS
           refreshHistory={this.refreshHistory}
             join={this.join}
@@ -169,8 +185,8 @@ class JoinGame extends Component {
             rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
             is_private={this.props.roomInfo.is_private}
           />
-        )}
-        {!this.state.is_mobile && this.props.roomInfo.game_type === 'Spleesh!' && (
+        ))}
+        {this.props.roomInfo.game_type === 'Spleesh!' && (
           <Spleesh
           refreshHistory={this.refreshHistory}
             join={this.join}
@@ -181,7 +197,7 @@ class JoinGame extends Component {
             is_private={this.props.roomInfo.is_private}
           />
         )}
-        {!this.state.is_mobile && this.props.roomInfo.game_type === 'Mystery Box' &&
+        {this.props.roomInfo.game_type === 'Mystery Box' &&
           this.props.roomInfo.box_list.length > 0 && (
             <MysteryBox
             refreshHistory={this.refreshHistory}
@@ -195,7 +211,7 @@ class JoinGame extends Component {
               betResult={this.state.betResult}
             />
           )}
-        {!this.state.is_mobile && this.props.roomInfo.game_type === 'Brain Game' && (
+        {this.props.roomInfo.game_type === 'Brain Game' && (
           <BrainGame
           refreshHistory={this.refreshHistory}
             join={this.join}
@@ -212,13 +228,25 @@ class JoinGame extends Component {
             is_private={this.props.roomInfo.is_private}
           />
         )}
-        {!this.state.is_mobile && this.props.roomInfo.game_type === 'Quick Shoot' && (
+        {this.props.roomInfo.game_type === 'Quick Shoot' && (
           <QuickShoot
           refreshHistory={this.refreshHistory}
             join={this.join}
             user_id={this.props.user_id}
             creator_id={this.props.roomInfo.creator_id}
             qs_game_type={this.props.roomInfo.qs_game_type}
+            bet_amount={this.props.roomInfo.bet_amount}
+            bankroll={this.state.bankroll}
+            qs_bet_item_id={this.props.roomInfo.qs_bet_item_id}
+            is_private={this.props.roomInfo.is_private}
+          />
+        )}
+        {this.props.roomInfo.game_type === 'Drop Game' && (
+          <DropGame
+          refreshHistory={this.refreshHistory}
+            join={this.join}
+            user_id={this.props.user_id}
+            creator_id={this.props.roomInfo.creator_id}
             bet_amount={this.props.roomInfo.bet_amount}
             is_private={this.props.roomInfo.is_private}
           />
@@ -274,7 +302,7 @@ class JoinGame extends Component {
             <MyHistoryTable />
           )}
         </div>
-        {this.state.is_mobile && (
+        {!this.state.is_mobile && (
           <div className="mobile-only main-page-nav-button-group">
             <button
               className={`mobile-tab-live ${

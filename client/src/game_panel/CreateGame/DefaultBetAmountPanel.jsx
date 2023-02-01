@@ -18,27 +18,34 @@ class DefaultBetAmountPanel extends Component {
         defaultBetAmounts.indexOf(this.props.bet_amount) < 0 ? true : false
     };
   }
-
- 
   handleMaxButtonClick() {
     const maxBetAmount = (this.props.balance).toFixed(2);
     if (this.props.game_type === 'Brain Game') {
-      this.props.onChangeState({ bet_amount: maxBetAmount });
+    this.props.onChangeState({
+    bet_amount: maxBetAmount
+    });
     } else if (this.props.game_type === 'Quick Shoot') {
-      this.props.onChangeState({
-        bet_amount: maxBetAmount,
-        public_bet_amount: convertToCurrency(
-          (this.props.qs_game_type - 1) * maxBetAmount
-        ),
-        max_return: this.props.qs_game_type * maxBetAmount
-      });
+    this.props.onChangeState({
+    bet_amount: maxBetAmount,
+    public_bet_amount: convertToCurrency(
+    (this.props.qs_game_type - 1) * maxBetAmount
+    ),
+    max_return: this.props.qs_game_type * maxBetAmount
+    });
     } else {
-      this.props.onChangeState({
-        bet_amount: maxBetAmount,
-        max_return: maxBetAmount * 2 /* * 0.95 */
-      });
+    this.props.onChangeState({
+    bet_amount: maxBetAmount,
+    max_return: maxBetAmount * 2
+    });
     }
-  }
+    }
+
+    componentDidUpdate(prevProps) {
+      if (this.props.bet_amount !== prevProps.bet_amount) {
+        document.getElementById("betamount").focus();
+      }
+    }
+    
 
   render() {
     return (

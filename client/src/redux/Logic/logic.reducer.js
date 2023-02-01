@@ -14,6 +14,7 @@ import {
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
   UPDATE_BET_RESULT,
+  UPDATE_BANKROLL,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -55,6 +56,7 @@ const initialState = {
   },
   betResult: -1,
   betResults: [],
+  bankroll: 0,
   roomStatus: '',
   myGames: [],
   myGamesTotalPage: 0,
@@ -91,7 +93,11 @@ export default function(state = initialState, action) {
     return state;
   }
 
-      
+  case UPDATE_BANKROLL:
+      return {
+        ...state,
+        bankroll: action.payload,
+      };
     case START_LOADING:
       return {
         ...state, isActiveLoadingOverlay: true

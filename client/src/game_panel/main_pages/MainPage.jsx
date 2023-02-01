@@ -55,6 +55,7 @@ class MainPage extends Component {
   }
 
   async componentDidMount() {
+    
     this.props.getRoomList();
     this.props.getHistory();
     this.props.getGameTypeList();

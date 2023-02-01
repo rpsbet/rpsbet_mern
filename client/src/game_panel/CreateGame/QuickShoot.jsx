@@ -3,35 +3,46 @@ import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { getQsLottieAnimation } from '../../util/helper';
 import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
-
+import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 class QuickShoot extends Component {
   constructor(props) {
     super(props);
     this.state = {
       is_other: 'hidden',
+      selected_qs_position: 0,
+      qs_list: [],
       animation: <div />
     };
+    this.handlePositionSelection = this.handlePositionSelection.bind(this);
+
+  }
+  async handlePositionSelection(selected_qs_position) {
+    await this.props.onChangeState({
+      selected_qs_position: selected_qs_position,
+    });
+    this.onAddRun(selected_qs_position);
+    this.updateAnimation();
   }
 
-  onLeftPositionButtonClicked = async e => {
-    e.preventDefault();
-    if (this.props.selected_qs_position > 0) {
-      await this.props.onChangeState({
-        selected_qs_position: this.props.selected_qs_position - 1
-      });
-      this.updateAnimation();
-    }
-  };
+  // onLeftPositionButtonClicked = async e => {
+  //   e.preventDefault();
+  //   if (this.props.selected_qs_position > 0) {
+  //     await this.props.onChangeState({
+  //       selected_qs_position: this.props.selected_qs_position - 1
+  //     });
+  //     this.updateAnimation();
+  //   }
+  // };
 
-  onRightPositionButtonClicked = async e => {
-    e.preventDefault();
-    if (this.props.selected_qs_position < this.props.qs_game_type - 1) {
-      await this.props.onChangeState({
-        selected_qs_position: this.props.selected_qs_position + 1
-      });
-      this.updateAnimation();
-    }
-  };
+  // onRightPositionButtonClicked = async e => {
+  //   e.preventDefault();
+  //   if (this.props.selected_qs_position < this.props.qs_game_type - 1) {
+  //     await this.props.onChangeState({
+  //       selected_qs_position: this.props.selected_qs_position + 1
+  //     });
+  //     this.updateAnimation();
+  //   }
+  // };
 
   updateAnimation = async () => {
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
@@ -66,8 +77,119 @@ class QuickShoot extends Component {
     });
   };
 
+  onAddRun = (selected_qs_position) => {
+    this.setState({ selected_qs_position: selected_qs_position });
+    const newArray = JSON.parse(JSON.stringify(this.props.qs_list));
+    newArray.push({
+      qs: selected_qs_position
+    });
+    this.props.onChangeState({
+      qs_list: newArray
+    });
+    let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
+  console.log('jfk aiuurporrt'  , selected_qs_position)
+    if (this.props.qs_game_type === 2) {
+      position_short_name = ['bl', 'br'];
+    } else if (this.props.qs_game_type === 3) {
+      position_short_name = ['bl', 'center', 'br'];
+    } else if (this.props.qs_game_type === 4) {
+      position_short_name = ['tl', 'tr', 'bl', 'br'];
+    }
+  
+    this.setState((prevState) => {
+      const updatedQsList = [...prevState.qs_list, { qs: position_short_name[selected_qs_position] }];
+
+      return { qs_list: updatedQsList };
+    });
+  };
+  
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.qs_list.length !== this.state.qs_list.length) {
+      const lastRow = document.querySelector("#runs tbody tr:last-child");
+      lastRow.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+  
+
+  onRemoveItem = (index) => {
+    this.setState((prevState) => {
+      const updatedQsList = [...prevState.qs_list];
+      updatedQsList.splice(index, 1);
+      return { qs_list: updatedQsList };
+    });
+  };
+  
+
   async componentDidMount() {
     await this.updateAnimation();
+  }
+
+  renderButtons() {
+    const { qs_game_type } = this.props;
+
+    if (qs_game_type === 2) {
+      return (
+        <div className='qs-buttons'>
+          <button id="l" onClick={() => this.handlePositionSelection(0)}>
+            {/* Left */}
+          </button>
+          <button id="r" onClick={() => this.handlePositionSelection(1)}>
+            {/* Right */}
+          </button>
+        </div>
+      );
+    } else if (qs_game_type === 3) {
+      return (
+        <div className='qs-buttons'>
+          <button id="l" onClick={() => this.handlePositionSelection(1)}>
+            {/* Left */}
+          </button>
+          <button id="cc" onClick={() => this.handlePositionSelection(2)}>
+            {/* Center */}
+          </button>
+          <button id="r" onClick={() => this.handlePositionSelection(3)}>
+            {/* Right */}
+          </button>
+        </div>
+      );
+    } else if (qs_game_type === 4) {
+      return (
+        <div className='qs-buttons'>
+          <button id="tl" onClick={() => this.handlePositionSelection(1)}>
+            {/* Top Left */}
+          </button>
+          <button id="tr" onClick={() => this.handlePositionSelection(2)}>
+            {/* Top Right */}
+          </button>
+          <button id="bl" onClick={() => this.handlePositionSelection(3)}>
+            {/* Bottom Left */}
+          </button>
+          <button id="br" onClick={() => this.handlePositionSelection(4)}>
+            {/* Bottom Right */}
+          </button>
+        </div>
+      );
+    } else if (qs_game_type === 5) {
+      return (
+        <div className='qs-buttons'>
+          <button id="tl" onClick={() => this.handlePositionSelection(1)}>
+            {/* TL */}
+          </button>
+          <button id="tr"  onClick={() => this.handlePositionSelection(2)}>
+            {/* TR */}
+          </button>
+          <button id="bl"  onClick={() => this.handlePositionSelection(3)}>
+            {/* BL */}
+          </button>
+          <button id="br"  onClick={() => this.handlePositionSelection(4)}>
+            {/* BR */}
+          </button>
+          <button id="c"  onClick={() => this.handlePositionSelection(0)}>
+            {/* C */}
+          </button>
+        </div>
+      );
+    }
   }
 
   render() {
@@ -124,8 +246,11 @@ class QuickShoot extends Component {
         )}
         {this.props.step === 3 && (
           <div className="game-info-panel">
+            <div className='qs-add-run-panel'>
+              <div className='qs-add-run-form'>
             <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
             {this.state.animation}
+            {this.renderButtons()}
             <div className="qs-action-panel">
               <button
                 className="btn-left"
@@ -136,6 +261,42 @@ class QuickShoot extends Component {
                 className="btn-right"
                 onClick={this.onRightPositionButtonClicked}
               ></button>
+            </div>
+            </div>
+            <div className="qs-add-run-table">
+            <h3 className="game-sub-title">Runs</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>INDEX</th>
+                  <th>POS</th>
+                  {/* <th>BET / PR</th> */}
+                  <th></th>
+                </tr>
+              </thead>
+              </table>
+             
+<table id="runs">
+  <tbody>
+    {this.state.qs_list && this.state.qs_list.length > 0 ? (
+      this.state.qs_list.map((qs, index) => (
+        <tr key={index}>
+          <td>{index + 1}</td>
+          <td>{qs.qs}</td>
+          <td>
+            <HighlightOffIcon onClick={() => this.onRemoveItem(index)} />
+          </td>
+        </tr>
+      ))
+    ) : (
+      <tr>
+        <td id="add-run" colSpan="3">Please add a run</td>
+      </tr>
+    )}
+  </tbody>
+</table>
+
+          </div>
             </div>
           </div>
         )}

@@ -1,13 +1,10 @@
 import React, { Component  } from 'react';
 import { connect } from 'react-redux';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
-// import { clipboard } from 'electron';
-
-
-// import { dispatch } from 'redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { updateBetResult } from '../../redux/Logic/logic.actions';
+
 import Avatar from '../../components/Avatar';
 import {
   alertModal,
@@ -33,15 +30,16 @@ class RPS extends Component {
     super(props);
 
     this.settingsRef = React.createRef();
-
+    this.socket = this.props.socket;
     this.state = {
       clicked: true,
 
-      selected_rps: 'R',
+      selected_rps: '',
       advanced_status: '',
       is_anonymous: false,
-      bet_amount: 0,
-      bankroll: this.props.bet_amount - this.getPreviousBets(),
+      bet_amount: 1,
+      bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
+      // bankroll: 0,
       copied: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
@@ -63,7 +61,7 @@ getPreviousBets() {
   if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
     this.props.roomInfo.game_log_list.forEach(room_history => {
       if(room_history.bet_amount){
-        previousBets += room_history.bet_amount;
+        previousBets += parseFloat(room_history.bet_amount);
       }
     });
   }
@@ -77,6 +75,11 @@ getPreviousBets() {
   // };
 
   componentDidMount = () => {
+    const { socket } = this.props
+    socket.on('UPDATED_BANKROLL', data => {
+      this.setState({ bankroll: data.bankroll })
+    })
+
     document.addEventListener('mousedown', this.handleClickOutside);
   };
 
@@ -99,6 +102,14 @@ getPreviousBets() {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    if (prevProps.roomInfo && this.props.roomInfo) {
+      if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
+        this.setState({
+          bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
+        });
+      }
+    }
+
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
       this.state.isPasswordCorrect === true
@@ -112,7 +123,7 @@ getPreviousBets() {
   joinGame = async (selected_rps, bet_amount) => {
     this.setState({selected_rps: selected_rps, bet_amount: this.state.bet_amount});
     const result = await this.props.join({
-      bet_amount: this.state.bet_amount,
+      bet_amount: parseFloat(this.state.bet_amount),
       selected_rps: selected_rps,
       is_anonymous: this.state.is_anonymous,
       rps_bet_item_id: this.props.rps_bet_item_id,
@@ -207,10 +218,40 @@ getPreviousBets() {
     );
   };
 
+  handlehalfxButtonClick() {
+    const multipliedBetAmount = this.state.bet_amount * 0.5;
+    const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
+    this.setState({
+    bet_amount: roundedBetAmount
+    }, () => {
+    document.getElementById("betamount").focus();
+    });
+    }
+
+  handle2xButtonClick() {
+    const maxBetAmount = this.state.balance;
+    const multipliedBetAmount = this.state.bet_amount * 2;
+    const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount, this.props.bet_amount);
+    const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
+    if (roundedBetAmount < -2330223) {
+      alertModal(this.props.isDarkMode, "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?");
+    } else {
+      this.setState({
+        bet_amount: roundedBetAmount
+      }, () => {
+      document.getElementById("betamount").focus();
+      });
+    }
+  }
+
+
+
   handleMaxButtonClick() {
     const maxBetAmount = (this.state.balance).toFixed(2);
     this.setState({
       bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
+    }, () => {
+    document.getElementById("betamount").focus();
     });
   }
   toggleBtnHandler = () => {
@@ -249,20 +290,33 @@ getPreviousBets() {
           {/* {this.props.betResults.map((result, index) => {
           return <div key={index}>{result}</div>;
         })} */}
-          <div className="host-display-name">
-              Host: {this.props.creator}
-            </div>
-            <div className="your-bet-amount">
-              Bankroll: {convertToCurrency(this.state.bankroll)}
-            </div>
-            <div className="your-bet-amount">
-              Bet Amount: {convertToCurrency(this.state.bet_amount)}
-            </div>
-            <div className="your-max-return">
-              Potential Return:
-              {convertToCurrency(
-                updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
-              )}
+        <div className="data-item">
+          <div>
+        <div className="label host-display-name">Host</div></div>
+        <div className="value">{this.props.creator}</div>
+      
+</div>
+<div className="data-item">
+      <div>
+        <div className="label your-bet-amount">Bankroll</div></div>
+        <div className="value">{convertToCurrency(this.state.bankroll)}</div>
+      
+</div>
+<div className="data-item">
+      <div>
+        <div className="label your-bet-amount">Bet Amount</div> </div>
+        <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
+     
+</div>
+<div className="data-item">
+      <div>
+        <div className="label your-max-return">Potential Return</div></div>
+        <div className="value">
+          {convertToCurrency(
+            updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
+          )}
+        </div>
+      
             </div>
             {/* <SettingsOutlinedIcon
               id="btn-rps-settings"
@@ -329,16 +383,29 @@ getPreviousBets() {
         this.state.selected_rps === selection ? ' active' : ''
       }`}
       onClick={() => {
-        console.log(`clicked ${classname}`);
+        // console.log(`clicked ${classname}`);
         this.setState({ selected_rps: selection });
         this.onBtnBetClick(selection);
+        
       }}
     />
   ))}
 </div>
 <div className="your-bet-amount">
-          Bet Amount: 
-          <input value={this.state.bet_amount} onChange={this.onChangeState} />
+         
+          <input
+            type="text"
+            pattern="[0-9]*"
+            name="betamount"
+            id="betamount"
+            maxLength="9"
+            value={this.state.bet_amount}
+            onChange={this.onChangeState}
+            placeholder="BET AMOUNT"
+          />
+          <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
+          <a id='max' onClick={() => this.handlehalfxButtonClick()}>0.5x</a>
+          <a id='max' onClick={() => this.handle2xButtonClick()}>2x</a>
           <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
 
         </div>
@@ -354,11 +421,11 @@ getPreviousBets() {
     <TwitterIcon size={32} round />
   </TwitterShareButton>
   {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-  {this.state.clicked ? <input type="text" value={twitterLink} readOnly onClick={this.toggleBtnHandler}/> : null }
   <a className={styles.join('')} onClick={() => {
                                     this.toggleBtnHandler();
                                     this.copy();
-                                }}><FaClipboard />&nbsp;{this.state.text}</a>
+                                }}>{this.state.clicked ? <input type="text" value={twitterLink} readOnly onClick={this.toggleBtnHandler}/> : null }
+  <FaClipboard />&nbsp;{this.state.text}</a>
 
         </div>
             {/* <button id="btn_bet" onClick={this.onBtnBetClick}>
@@ -372,7 +439,7 @@ getPreviousBets() {
 }
 
 const mapStateToProps = state => ({
-  
+  socket: state.auth.socket,
   auth: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,

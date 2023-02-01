@@ -111,7 +111,8 @@ class OpenGamesTable extends Component {
       'S!': 'spleesh',
       MB: 'mystery-box',
       BG: 'brain-game',
-      QS: 'quick-shoot'
+      QS: 'quick-shoot',
+      DG: 'drop-game'
     };
 
     const gameTypePanel = [
@@ -224,22 +225,14 @@ class OpenGamesTable extends Component {
               // {...this.state.selectedRow}
             />
           }
-          {/* {this.state.showPlayerModal && this.state.selectedRow && (
-            <PlayerModal
-              // _id={this.state.selectedRow._id}
-              modalIsOpen={this.state.showPlayerModal}
-              closeModal={this.handleClosePlayerModal}
-              // {...this.state.selectedRow}
-            />
-          )} */}
-
+   
           {this.props.roomList.map(
             (row, key) => (
               <div className="table-row" key={row._id}>
                 <div>
                   <div className="table-cell cell-room-info">
                     <img
-                      src={`/img/gametype/i${row.game_type.short_name}.png `}
+                      src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
                       alt=""
                       className="game-type-icon"
                     />
@@ -276,12 +269,14 @@ class OpenGamesTable extends Component {
   {row.game_type.game_type_name === 'Spleesh!'
     ? <>
       {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
-      {convertToCurrency(row.spleesh_bet_unit * 10)} / 
-      '???'
+      {convertToCurrency(row.spleesh_bet_unit * 10)}
+       {/* / 
+      '???' */}
     </>
     : <>
-      {convertToCurrency(updateDigitToPoint2(row.user_bet))} / 
-      {convertToCurrency(row.winnings)}
+      {convertToCurrency(updateDigitToPoint2(row.user_bet))}
+       {/* / 
+      {convertToCurrency(row.winnings)} */}
     </>
   }
 </div>

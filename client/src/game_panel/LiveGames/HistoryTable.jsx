@@ -94,7 +94,8 @@ class HistoryTable extends Component {
       'S!': 'spleesh',
       MB: 'mystery-box',
       BG: 'brain-game',
-      QS: 'quick-shoot'
+      QS: 'quick-shoot',
+      DG: 'drop-game'
     };
 
     const gameTypePanel = [

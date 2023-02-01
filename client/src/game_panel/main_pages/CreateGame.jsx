@@ -50,6 +50,7 @@ class CreateGame extends Component {
       game_mode: this.props.game_mode,
       isPlayingBrain: false,
       rps_list: [],
+      qs_list: [],
       qs_game_type: 2,
       qs_nation: 0,
       selected_qs_position: 0,
@@ -94,8 +95,9 @@ class CreateGame extends Component {
   async componentDidMount() {
     this.IsAuthenticatedReroute();
     this.props.getHistory();
-    this.props.getGameTypeList();
+    // this.props.getGameTypeList();
     const gameTypeName = this.props.match.params.game_type_name;
+    
     if (this.props.isAuthenticated) {
       this.props.getMyGames();
       this.props.getMyHistory();
@@ -152,6 +154,12 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 4,
+        bet_amount: 0
+      };
+    } else if (gameTypeName === 'Drop Game') {
+      newState = {
+        ...newState,
+        game_type: 6,
         bet_amount: 0
       };
     }
@@ -264,7 +272,7 @@ class CreateGame extends Component {
       if (this.state.is_private === true && this.state.room_password === '') {
         alertModal(
           this.props.isDarkMode,
-          `You have set the Privacy to 'Private'. Please create a password!`
+          `SET THE PASSWORD TO JOIN YOUR GAME!`
         );
         return;
       }
@@ -360,6 +368,7 @@ class CreateGame extends Component {
     } else if (this.state.game_mode === 'Quick Shoot') {
       return (
         <QuickShoot
+        qs_list={this.state.qs_list}
           onChangeState={this.onChangeState}
           bet_amount={this.state.bet_amount}
           is_private={this.state.is_private}
@@ -427,9 +436,9 @@ class CreateGame extends Component {
       <div className="main-game">
         {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
           !this.state.is_mobile) && <ChatPanel />}
-        {this.state.is_mobile &&
-          (this.state.selectedMobileTab === 'live_games' ||
-            this.state.selectedMobileTab === 'my_games') && (
+        {!this.state.is_mobile &&
+          (!this.state.selectedMobileTab === 'live_games' ||
+            !this.state.selectedMobileTab === 'my_games') && (
             <Tabs
               value={this.state.show_open_game}
               onChange={this.showOpenGameOrHistory}
@@ -449,7 +458,7 @@ class CreateGame extends Component {
           )}
           <div className="main-panel">
           <h2 className="main-title desktop-only">{this.getActiveTabText()}</h2>
-          
+          <div className="create-game-panel">
       <div className="game-page">
         <div className="page-title">
           <h2>
@@ -522,6 +531,8 @@ class CreateGame extends Component {
         </div>
       </div>
       </div>
+
+      </div>
       <div className="sub-panel">
           <h2 className="main-title desktop-only">HISTORY</h2>
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
@@ -531,7 +542,7 @@ class CreateGame extends Component {
             <MyHistoryTable />
           )}
         </div>
-        {this.state.is_mobile && (
+        {!this.state.is_mobile && (
           <div className="mobile-only main-page-nav-button-group">
             <button
               className={`mobile-tab-live ${

@@ -9,6 +9,8 @@
   background-color: #2b2b2b;
 }
 
+
+
 svg {
     font-size: 1.3em;
 }
@@ -54,7 +56,106 @@ input,textarea { border-radius: 0 !important; }
   color: #7574c03b;
 }
 
-.btn:hover, .btn:focus, .btn.focus { transform: scale(1.05); transition: 0.3xcs; }
+.btn {
+  transition: 0.3s ease-in-out;
+}
+
+
+
+.btn:hover,
+.btn:focus,
+.btn.focus {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  animation: pulse 0.5s ease-in-out 0.5s infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+.join-game-panel .qs-image-panel {
+  position: relative;
+  padding-top: 25%;
+    padding-bottom: 25%;
+    width: 100%;
+    height: 0;
+}
+
+.qs-image-panel img {
+  position: absolute;
+}
+
+
+/* .qs-buttons {
+  position: absolute !important;
+} */
+.qs-buttons button {
+  position: absolute !important;
+    background: linear-gradient(184deg, #ffae00a8, #8116813d) !important;
+    color: #fff !important;
+    width: 2.75rem !important;
+    opacity: 1;
+    height: 2.75rem !important;
+    border-radius: 50% !important;
+    margin: 0 !important;
+    border: 3px solid #ddd !important;
+    box-shadow: 0 0 6px 4px #ff0c8a;
+transform: scale(3.5);
+}
+
+
+.qs-buttons button:hover,
+.qs-buttons button:focus{
+  transform: scale(3.5);
+}
+
+button#l {
+  left: 10%;
+  top: 45%;
+}
+
+/* Right button */
+button#r {
+  right: 10%;
+  top: 45%;
+}
+
+button#tr {
+  right: 31%;
+  top: 20.5%;
+}
+button#tl {
+  left: 30.85%;
+  top: 22%;
+}
+
+button#c {
+  left: 47.5%;
+  top: 35%;
+}
+
+button#cc {
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, 0);
+}
+
+button#br {
+  right: 31%;
+  bottom: 42.5%;
+}
+
+button#bl {
+  left: 30.95%;
+  bottom: 42.3%;
+}
+
 
 
 .btn_join , .btn-create-room, .btn_end, span#button,
@@ -71,9 +172,6 @@ input,textarea { border-radius: 0 !important; }
  
 }
 
-.busd-icon {
- 
-}
 
 .apexcharts-canvas svg#busd {
 border: unset !important;
@@ -82,12 +180,34 @@ background: unset !important;
 box-shadow: unset !important;
 border-radius: unset !important;
 }
-.btn_join:hover, .btn-create-room:hover, .btn_end:hover,
- #balance:hover, #btn_next:hover, #btn_prev:hover, button:hover, .accordion__button:hover,
- .btn-back:hover  {
+.accordion__button:hover {
   /* transform:scale(0.98); */
   filter: brightness(0.9) contrast(1.2);
 }
+
+.btn_join:hover,
+.btn-create-room:hover,
+.btn_end:hover,
+#balance:hover,
+#btn_next:hover,
+#btn_prev:hover,
+button:hover,
+.btn-back:hover {
+  filter: brightness(0.9) contrast(1.2);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  animation: pulse 0.5s ease-in-out 0.5s infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
 
 #root .site_wrapper {
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
@@ -105,6 +225,12 @@ border-radius: unset !important;
   z-index: 1000;
   background-color: #495057;
 }
+.select-buttons-panel, .bet-amounts,
+#select-buttons-panel {
+  text-align: center !important;
+  text-align: -webkit-center;
+}
+  
 
 #refresh-btn {
   background: #333;
@@ -224,12 +350,12 @@ div.table.my-chat-table .table-row > div.message-panel ,
   border-bottom-left-radius: 50px;
   border-top-left-radius: 50px;
 }
-.rps-add-run-panel > div.rps-add-run-table table th {
+table#runs th {
   text-align: left !important;
 }
 
 
-.rps-add-run-panel > div.rps-add-run-table table td {
+table#runs td {
   width: 80px;
 }
 
@@ -238,7 +364,37 @@ div.table.my-chat-table .table-row > div.message-panel ,
   display: flex;
   overflow-y: scroll;
   justify-content: center;
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
 }
+
+
+#runs td {
+  padding: 10px;
+}
+
+#runs tr:nth-child(even) {
+ filter: grayscale(0.2);
+}
+
+#runs tr:hover {
+  transform: scale(1.05);
+}
+
+.highlight {
+  animation: highlight 1s ease-out;
+}
+
+@keyframes highlight {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 
 
 
@@ -379,7 +535,9 @@ div[aria-label="How To Play Modal"] ul {
   scrollbar-width: none;  /* Firefox */
 }
 
-#game_footer_howto::-webkit-scrollbar, .join-game-panel::-webkit-scrollbar { 
+#game_footer_howto::-webkit-scrollbar,
+.join-game-panel::-webkit-scrollbar,
+.create-game-panel::-webkit-scrollbar { 
     display: none;  /* Safari and Chrome */
 }
 
@@ -671,6 +829,10 @@ a.player:hover {
   height: 90vh;
   overflow-y: scroll;
 }
+.create-game-panel {
+  height: 93vh;
+  overflow-y: scroll;
+}
 
 .contents_wrapper .chat_log_panel .message_content { word-wrap: break-word; }
 
@@ -780,11 +942,11 @@ a.player:hover {
   
 }
 @media (max-width: 992px) {
+
   #runs {
     max-height: 25vh;
   }
-  
-  
+ 
 .game-info-panel table th:first-child, .game-info-panel table td:first-child  {
  display: none;
 }
@@ -799,7 +961,8 @@ a.player:hover {
 .rps-add-run-table {
   padding-left: 0px !important;
 }
-  
+
+
 .bet-amounts .other.active {
   margin-top: 4%;
 }
@@ -820,6 +983,7 @@ a.player:hover {
 
 @media (min-width: 481px) and (max-width: 767px) {
   
+ 
   
 }
 
@@ -829,6 +993,68 @@ a.player:hover {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+  .qs-buttons button {
+    position: absolute !important;
+      background: linear-gradient(184deg, #ffae00a8, #8116813d) !important;
+      color: #fff !important;
+      width: 2.75rem !important;
+      opacity: 0;
+      height: 2.75rem !important;
+      border-radius: 50% !important;
+      margin: 0 !important;
+      border: 3px solid #ddd !important;
+      box-shadow: 0 0 6px 4px #ff0c8a;
+  transform: scale(1);
+  }
+  
+  
+  .qs-buttons button:hover,
+  .qs-buttons button:focus{
+    transform: scale(1);
+  }
+  
+  button#l {
+    left: 19%;
+    top: 40%;
+  }
+  
+  /* Right button */
+  button#r {
+    right: 19%;
+    top: 40%;
+  }
+  
+  button#tr {
+    right: 19%;
+    top: 3%;
+  }
+  button#tl {
+    left: 18.85%;
+    top: 2%;
+  }
+  
+  button#c {
+    left: 43%;
+    top: 20%;
+  }
+  
+  button#cc {
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, 0);
+  }
+  
+  button#br {
+    right: 19%;
+    bottom: 32.5%;
+  }
+  
+  button#bl {
+    left: 17.95%;
+    bottom: 29.3%;
+  }
+  
+  
   #runs {
     max-height: 10vh;
   }

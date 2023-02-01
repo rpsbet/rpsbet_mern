@@ -86,23 +86,23 @@ class ProfilePage extends React.Component {
         custom: function({ series, seriesIndex, dataPointIndex, w }) {
           return (
             '<div class="chart-tooltip">' +
-                '<div>GAME ID: ' +
-                gameLogList[dataPointIndex].game_id +
-                '</div>' +
-                '<div>PLAYED: ' +
-                moment(gameLogList[dataPointIndex].played).fromNow() +
-                '</div>' +
-                '<div>BET: ' +
-                convertToCurrency(gameLogList[dataPointIndex].bet
-                  ) +
-                '</div>' +
-                '<div>OPPONENT: ' +
-                gameLogList[dataPointIndex].opponent.username +
-                '</div>' +
-                '<div>PROFIT: ' +
-                convertToCurrency(gameLogList[dataPointIndex].profit
-                ) +
-                '</div>' +
+            '<div>Game Id: ' +
+            gameLogList[dataPointIndex].game_id +
+            '</div>' +
+            '<div>Played: ' +
+            moment(gameLogList[dataPointIndex].played).fromNow() +
+            '</div>' +
+            '<div>Bet: ' +
+            convertToCurrency(gameLogList[dataPointIndex].bet) +
+            '</div>' +
+            '<div>Opponent:' +
+            gameLogList[dataPointIndex].opponent.username +
+            '</div>' +
+            '<div>Profit:' +
+            addCurrencySignal(
+              updateDigitToPoint2(gameLogList[dataPointIndex].profit)
+            ) +
+            '</div>' +
             // '<div>Net Profit:' +
             // gameLogList[dataPointIndex].net_profit +
             // '</div>' +

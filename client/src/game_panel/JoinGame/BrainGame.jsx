@@ -282,32 +282,39 @@ class BrainGame extends Component {
           <h2>Play - Brain Game</h2>
         </div>
         <div className="game-contents">
-          <div className="pre-summary-panel">
-          <div className="host-display-name">
-              Host: {this.props.creator}
-            </div>
-            <div className="your-bet-amount">
-              Bet Amount:{' '}
-              {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
-            </div>
-            <div className="public-max-return">
-              Pot:{' '}
-              {convertToCurrency(
+        <div className="pre-summary-panel">
+    <div className="data-item">
+        <div className="label host-display-name">Host</div>
+        <div className="value">{this.props.creator}</div>
+    </div>
+    <div className="data-item">
+        <div className="label your-bet-amount">Bet Amount</div>
+        <div className="value ">
+            {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
+        </div>
+    </div>
+    <div className="data-item">
+        <div className="label public-max-return">Pot</div>
+        <div className="value">
+            {convertToCurrency(
                 updateDigitToPoint2(
-                  this.props.bet_amount * this.props.joined_count
+                    this.props.bet_amount * this.props.joined_count
                 )
-              )}
-            </div>
-            <div className="your-max-return">
-              Potential Return:{' '}
-              {convertToCurrency(
+            )}
+        </div>
+    </div>
+    <div className="data-item">
+        <div className="label your-max-return">Potential Return</div>
+        <div className="value">
+            {convertToCurrency(
                 updateDigitToPoint2(
-                  this.props.bet_amount *
+                    this.props.bet_amount *
                     (this.props.joined_count + 2) /* 0.9 */
                 )
-              )}
-            </div>
-          </div>
+            )}
+        </div>
+    </div>
+</div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Game Type:</h3>
             <p>{this.props.brain_game_type.game_type_name}</p>

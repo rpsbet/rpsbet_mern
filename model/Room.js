@@ -22,6 +22,10 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
+  selected_dg: {
+    type: Number,
+    default: 0
+  },
   qs_game_type: {
     type: Number,
     default: 2

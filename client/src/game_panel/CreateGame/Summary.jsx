@@ -18,6 +18,8 @@ class Summary extends Component {
       this.state.winChance = 15
     } else if(this.props.game_mode === 'Brain Game'){
       this.state.winChance = '0 - 100'
+    } else if(this.props.game_mode === 'Drop Game'){
+      this.state.winChance = 42
     }
   }
   pre_summery() {
@@ -38,60 +40,56 @@ class Summary extends Component {
       public_max_return = convertToCurrency(
         updateDigitToPoint2(this.props.max_return)
       );
-    } else if (this.props.game_mode === 'Quick Shoot') {
+    } else if (this.props.game_mode === 'RPS') {
       public_max_return = convertToCurrency(
-        updateDigitToPoint2(this.props.max_return)
+        updateDigitToPoint2(this.props.bet_amount)
       );
     }
 
     return (
       <div className="pre-summary-panel">
-        <div className="your-bet-amount">
-          Your Bet Amount:{' '}
-          {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
+        <div className="data-item">
+          <div className="label your-bet-amount">YOUR BET</div>
+          <div className="value">
+            {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
+          </div>
         </div>
         {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
           this.props.game_mode
         ) && (
-          <div className="public-bet-amount">
-            Public Bet Amount: {public_bet_amount}
+          <div className="data-item">
+            <div className="label public-bet-amount">THEIR BET</div>
+            <div className="value">{convertToCurrency(public_bet_amount)}</div>
           </div>
         )}
-        {this.props.game_mode === 'Brain Game' ? (
-          <div
-            className="your-max-return"
-            style={{ display: 'inline-flex', justifyContent: 'center' }}
-          >
-            Your Max Return:{' '}
-            <span
-              style={{
-                fontSize: '2em',
-                padding: '0 .125em'
-              }}
-            >
-              ∞
-            </span>{' '}
+        <div className="data-item">
+          <div className="label your-max-return">Your Return</div>
+          <div className="value">
+            {this.props.game_mode === 'Brain Game' ? (
+              <>
+                <span style={{ fontSize: '2em' }}>∞</span>
+              </>
+            ) : (
+              convertToCurrency(updateDigitToPoint2(this.props.max_return))
+            )}
           </div>
-        ) : (
-          <div className="your-max-return">
-            Your Max Return:{' '}
-            {convertToCurrency(updateDigitToPoint2(this.props.max_return))}
-
-          </div>
-        )}
+        </div>
         {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
           this.props.game_mode
         ) && (
-          <div className="public-max-return">
-            Public Max Return: {public_max_return}
+          <div className="data-item">
+            <div className="label public-max-return">Their Return</div>
+            <div className="value">{public_max_return}</div>
           </div>
         )}
-        <div className="win-chance">
-            Win Chance:  {this.props.winChance}
-          </div>
+        <div className="data-item">
+          <div className="label win-chance">Win Chance</div>
+          <div className="value">{this.props.winChance}</div>
+        </div>
       </div>
     );
-  }
+    
+  }    
 
   componentDidUpdate(prevProps) {
     if (prevProps.game_mode !== this.props.game_mode) {
@@ -105,12 +103,14 @@ class Summary extends Component {
         this.setState({ winChance: 15 })
       } else if(this.props.game_mode === 'Brain Game'){
         this.setState({ winChance: '0 - 100' })
+      } else if(this.props.game_mode === 'Drop Game'){
+        this.setState({ winChance: 42 })
       }
     }
   }
 
   total_summery() {
-    let public_bet_amount = <> {convertToCurrency(updateDigitToPoint2(this.props.public_bet_amount))} </>;
+    let public_bet_amount = this.props.public_bet_amount;
     let public_max_return = <> {convertToCurrency(updateDigitToPoint2(this.props.max_prize))} </>;
 
 
@@ -141,7 +141,7 @@ class Summary extends Component {
             this.props.game_mode === 'Quick Shoot') && (
             <div className="summary-item">
               <div className="summary-item-name">Public Bet Amount</div>
-              <div className="summary-item-value">{public_bet_amount}</div>
+              <div className="summary-item-value">{convertToCurrency(public_bet_amount)}</div>
             </div>
           )}
           {this.props.game_mode === 'Quick Shoot' && (

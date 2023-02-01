@@ -119,7 +119,7 @@ class RPS extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selected_rps: 'R',
+      selected_rps: '',
       bet_amount: 5.00,
       winChance: 33,
       // is_other: (this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25 || this.props.bet_amount === 50 || this.props.bet_amount === 100) ? 'hidden' : '',
@@ -265,6 +265,10 @@ class RPS extends Component {
                 }
                 onClick={() => {
                   this.onAddRun('R');
+                  const currentActive = document.querySelector(".active");
+                  currentActive.style.animation = "none";
+                  void currentActive.offsetWidth;
+                  currentActive.style.animation = "pulse 0.2s ease-in-out ";
                 }}
               ></span>
               <span
@@ -273,6 +277,10 @@ class RPS extends Component {
                 }
                 onClick={() => {
                   this.onAddRun('P');
+                  const currentActive = document.querySelector(".active");
+                  currentActive.style.animation = "none";
+                  void currentActive.offsetWidth;
+                  currentActive.style.animation = "pulse 0.2s ease-in-out ";
                 }}
               ></span>
               <span
@@ -282,6 +290,10 @@ class RPS extends Component {
                 }
                 onClick={() => {
                   this.onAddRun('S');
+                  const currentActive = document.querySelector(".active");
+                  currentActive.style.animation = "none";
+                  void currentActive.offsetWidth;
+                  currentActive.style.animation = "pulse 0.2s ease-in-out ";
                 }}
               ></span>
             </div>
@@ -295,7 +307,7 @@ class RPS extends Component {
             <table>
               <thead>
                 <tr>
-                  <th>POS</th>
+                  <th>INDEX</th>
                   <th>RPS</th>
                   {/* <th>BET / PR</th> */}
                   <th></th>

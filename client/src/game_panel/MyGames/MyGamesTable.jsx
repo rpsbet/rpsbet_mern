@@ -210,8 +210,9 @@ class MyGamesTable extends Component {
           {this.props.myGames.length > 0 && (
             <div className="table-header">
               <div className="table-cell room-id">Room ID</div>
-              <div className="table-cell bet-info">Bet / PR</div>
-              <div className="table-cell winnings">Winnings</div>
+              <div className="table-cell bet-info">BANKROLL</div>
+              <div className="table-cell payout">PAYOUT</div>
+              <div className="table-cell winnings">NET PROFIT</div>
               <div className="table-cell action desktop-only">Action</div>
             </div>
           )}
@@ -233,7 +234,7 @@ class MyGamesTable extends Component {
                   <div>
                     <div className="table-cell room-id">
                       <img
-                        src={`/img/gametype/i${row.game_type.short_name}.png `}
+                        src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
                         alt=""
                         className="game-type-icon"
                       />

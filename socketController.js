@@ -13,6 +13,7 @@ const send = (msg_type, to_id, data) => {
   }
 };
 
+
 module.exports.sendMessage = (to_user_id, data) => {
   send('SEND_CHAT', to_user_id, data);
 };
@@ -46,6 +47,7 @@ module.exports.socketio = server => {
       });
     });
 
+
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
         .sort({ created_at: -1 })
@@ -72,6 +74,10 @@ module.exports.socketio = server => {
       io.sockets.emit('ONLINE_STATUS_UPDATED', {
         user_list: Object.keys(sockets)
       });
+    });
+
+    socket.on('UPDATED_BANKROLL', (data) => {
+      socket.broadcast.emit('UPDATED_BANKROLL', data);
     });
 
     socket.on('error', err => {

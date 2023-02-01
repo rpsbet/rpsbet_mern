@@ -191,19 +191,24 @@ class MysteryBox extends Component {
           <h2>PLAY - Mystery Box</h2>
         </div>
         <div className="game-contents">
-          <div className="pre-summary-panel">
-          <div className="host-display-name">
-              Host: {this.props.creator}
-            </div>
-            <div className="your-bet-amount">
-              Bet Amount:{' '}
-              {convertToCurrency(updateDigitToPoint2(this.state.bet_amount))}
-            </div>
-            <div className="your-max-return">
-              Potential Return:{' '}
-              {convertToCurrency(updateDigitToPoint2(pr /* 0.95 */))}
-            </div>
-          </div>
+        <div className="pre-summary-panel">
+    <div className="data-item">
+        <div className="label host-display-name">Host</div>
+        <div className="value">{this.props.creator}</div>
+    </div>
+    <div className="data-item">
+        <div className="label your-bet-amount">Bet Amount</div>
+        <div className="value">
+            {convertToCurrency(updateDigitToPoint2(this.state.bet_amount))}
+        </div>
+    </div>
+    <div className="data-item">
+        <div className="label your-max-return">Potential Return</div>
+        <div className="value">
+            {convertToCurrency(updateDigitToPoint2(pr /* 0.95 */))}
+        </div>
+    </div>
+</div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Prizes</h3>
             <p className="box-prizes">

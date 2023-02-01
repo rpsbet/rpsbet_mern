@@ -45,7 +45,68 @@ class HowToPlayModal extends Component {
             <button className="btn-close" onClick={this.props.closeModal}>
               ×
             </button>
+            
             <Accordion>
+            <AccordionItem>
+                <AccordionItemHeading>
+                  <AccordionItemButton>
+                    <div className="modal-content-wrapper drop-game">
+                      <h4>Drop Game - Coming Soon!</h4>
+                    </div>
+                  </AccordionItemButton>
+                </AccordionItemHeading>
+                <AccordionItemPanel>
+                  {/* <div className="modal-content-wrapper quick-shoot">
+                    <div className="modal-content-panel">
+                      <h5>CREATE</h5>
+                      <ol>
+                        <li>
+                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
+                          etc.)
+                        </li>
+                        <li>Set Your Bet Amount</li>
+                        <li>Choose Where to Save</li>
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>PLAY</h5>
+                      <ol>
+                        <li>Choose Where to Shoot</li>
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
+                      <p>e.g.</p>
+                      <p>
+                        Your Bet Amount ={' '}
+                        <span style={{ color: '#b52c22' }}>
+                          {convertToCurrency(5)}
+                        </span>
+                      </p>
+                      <p>
+                        Game Type ={' '}
+                        <span style={{ color: '#f6b22a' }}>
+                          <u>5 (5x)</u>
+                        </span>
+                      </p>
+                      <p>
+                        Public Bet Amount ={' '}
+                        <span style={{ color: '#b52c22' }}>
+                          {`${convertToCurrency(20)} [${convertToCurrency(
+                            5
+                          )} * 4]`}
+                        </span>
+                      </p>
+                      <p>
+                        Winnings ={' '}
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(25)}
+                        </span>
+                      </p>
+                    </div>
+                  </div> */}
+                </AccordionItemPanel>
+              </AccordionItem>
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
@@ -450,7 +511,7 @@ class HowToPlayModal extends Component {
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               {/* <a href="https://discord.gg/94QywhSc4d">DISCORD</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp; */}
-              <a href="https://www.instagram.com/rps.bet/">INSTAGRAM</a>
+              <a href="https://www.instagram.com/rpsbet.io/">INSTAGRAM</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
@@ -458,17 +519,17 @@ class HowToPlayModal extends Component {
               <br />
             </div>
             <div className="game_footer text-center">
-              <span>All Rights Reserved, </span>RPSBET © 2023{' '}
+              <span>ALL RIGHTS RESERVED </span>RPSBET © 2023{' '}
               <a
                 href="#privacy"
                 id="privacy"
                 onClick={this.props.openPrivacyModal}
               >
-                Privacy
+                PRIVACY
               </a>{' '}
               |{' '}
               <a href="#terms" id="terms" onClick={this.props.openTermsModal}>
-                Terms
+                TERMS
               </a>
             </div>
           </div>

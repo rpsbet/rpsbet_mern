@@ -23,7 +23,9 @@ class StatisticsForm extends React.Component {
     super(props);
 
     this.state = {
-      room_info: null
+      room_info: null,
+      loaded: true
+
     };
   }
 
@@ -40,14 +42,35 @@ class StatisticsForm extends React.Component {
     });
   };
 
+  // componentDidUpdate(prevProps) {
+  //   if (
+  //     prevProps.gamePlayed !== this.props.gamePlayed ||
+  //     prevProps.totalWagered !== this.props.totalWagered 
+  //     // prevProps.gameProfit !== this.props.gameProfit ||
+  //     // prevProps.profitAllTimeHigh !== this.props.profitAllTimeHigh ||
+  //     // prevProps.profitAllTimeLow !== this.props.profitAllTimeLow
+  //   ) {
+  //     this.setState({ loaded: true });
+  //   }
+  // }
+
+
   render() {
    
     const gameLogList = this.props.gameLogList;
     const options = {
+      
       chart: {
         background: '#424242',
         type: 'numeric',
         stacked: false,
+        toolbar: {
+          show: true,
+          tools:{
+            download:false // <== line to add
+          }
+        },
+        
         zoom: {
           type: 'x',
           enabled: true,
@@ -56,6 +79,23 @@ class StatisticsForm extends React.Component {
         events: {
           dataPointSelection: this.dataPointSelection
         }
+      
+      },
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shade: 'dark',
+          gradientToColors: [ '#fa3fa0'],
+          shadeIntensity: 1,
+          type: 'horizontal',
+          opacityFrom: 1,
+          opacityTo: 1,
+          stops: [0, 100, 100, 100]
+        },
+      },
+      stroke: {
+        width: 5,
+        curve: 'smooth'
       },
       theme: {
         mode: 'dark'
@@ -66,13 +106,8 @@ class StatisticsForm extends React.Component {
       animations: {
         enabled: false
         },
-      title: {
-        text: 'CUMULATIVE PROFIT',
-        style: {
-          color: 'white'
-        }
-      },
       xaxis: {
+        // range: 1000,
         labels: {
           show: false,
           rotate: 0,
@@ -110,33 +145,63 @@ class StatisticsForm extends React.Component {
             }
             };
             return (
-            '<div class="chart-tooltip">' +
-                '<div>GAME ID: ' +
-                gameLogList[dataPointIndex].game_id +
-                '</div>' +
-                '<div>PLAYED: ' +
-                moment(gameLogList[dataPointIndex].played).fromNow() +
-                '</div>' +
-                '<div>BET: ' +
-                convertToCurrency(gameLogList[dataPointIndex].bet
-                  ) +
-                '</div>' +
-                '<div>OPPONENT: ' +
-                gameLogList[dataPointIndex].opponent.username +
-                '</div>' +
-                '<div>PROFIT: ' +
-                convertToCurrency(gameLogList[dataPointIndex].profit
-                ) +
-                '</div>' +
-            // '<div>Net Profit:' +
-            // gameLogList[dataPointIndex].net_profit +
-            // '</div>' +
-            '</div>'
-          );
+              `<table class="chart-tooltip">
+              <tr>
+              <td>GAME ID: </td>
+              <td>${gameLogList[dataPointIndex].game_id}</td>
+              </tr>
+              <tr>
+              <td>PLAYED: </td>
+              <td>${moment(gameLogList[dataPointIndex].played).fromNow()}</td>
+              </tr>
+              <tr>
+              <td>BET: </td>
+              <td>${convertToCurrency(gameLogList[dataPointIndex].bet)}</td>
+              </tr>
+              <tr>
+              <td>AGAINST: </td>
+              <td>${gameLogList[dataPointIndex].opponent.username}</td>
+              </tr>
+              <tr>
+              <td>PROFIT: </td>
+              <td>${convertToCurrency(gameLogList[dataPointIndex].profit)}</td>
+              </tr>
+              
+                </table>`
+              );
+              
+              
+              
+              
         }
       }
     };
-    const series = [{ name: 'Jan', data: generateData(gameLogList) }];
+    const series = [{
+      name: 'Jan',
+      data: generateData(gameLogList),
+     
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shade: 'light',
+          gradientToColors: ['#8F7CC3'],
+          shadeIntensity: 1,
+          type: 'vertical',
+          opacityFrom: 0.7,
+          opacityTo: 0.9,
+          stops: [0, 100, 100]
+        }
+      },
+      
+    }];
+    const {
+      gamePlayed,
+      totalWagered,
+      netProfit,
+      gameProfit,
+      profitAllTimeHigh,
+      profitAllTimeLow
+    } = this.props;
 
     return (
       <ChartDivEl>
@@ -165,30 +230,37 @@ class StatisticsForm extends React.Component {
               </div>
             </div> */}
             <div className="statistics-panel">
-              <h5>PERFORMANCE</h5>
-              <div>Game Played: {this.props.gamePlayed}</div>
-              <div>
-                Total Wagered:{' '}
-                {convertToCurrency(this.props.totalWagered
-                )}
-              </div>
-              <div>
-                Net Profit:{' '}
-                {convertToCurrency(this.props.gameProfit)}
-                {/* {addCurrencySignal(updateDigitToPoint2(this.props.netProfit))} */}
-              </div>
-              <div>
-                Profit All Time High:{' '}
-                {convertToCurrency(this.props.profitAllTimeHigh
-                )}
-              </div>
-              <div>
-                Profit All Time Low:{' '}
-                {convertToCurrency(
-                  this.props.profitAllTimeLow
-                )}
-              </div>
-            </div>
+        <h5>PERFORMANCE</h5>
+        {!this.state.loaded ? (
+          <div className="loading">LOADING...</div>
+        ) : (
+          <table>
+            <tbody>
+              <tr>
+                <td className="label">Game Played</td>
+                <td className="value">{gamePlayed}</td>
+              </tr>
+              <tr>
+                <td className="label">Total Wagered</td>
+                <td className="value">{convertToCurrency(totalWagered)}</td>
+              </tr>
+              <tr>
+                <td className="label">Net Profit</td>
+                <td className="value">{convertToCurrency(gameProfit)}</td>
+                {/* <td className="value">{netProfit}</td> */}
+              </tr>
+              <tr>
+                <td className="label">Profit ATH</td>
+                <td className="value">{convertToCurrency(profitAllTimeHigh)}</td>
+              </tr>
+              <tr>
+                <td className="label">Profit ATL</td>
+                <td className="value">{convertToCurrency(profitAllTimeLow)}</td>
+              </tr>
+            </tbody>
+          </table>
+        )}
+      </div>
           </div>
           <div>
             {this.state.room_info && (

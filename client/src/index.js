@@ -30,7 +30,7 @@ const theme = createTheme({
 
 ReactDOM.render(
   <React.Fragment>
-    <AnimatedCusror />
+    {window.innerWidth > 767 && <AnimatedCusror />}
     <Provider store={store}>
       <GlobalStyle />
       <MuiThemeProvider theme={theme}>

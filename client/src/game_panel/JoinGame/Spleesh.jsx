@@ -171,23 +171,29 @@ class Spleesh extends Component {
           </h2>
         </div>
         <div className="game-contents">
-          <div className="pre-summary-panel">
-          <div className="host-display-name">
-              Host: {this.props.creator}
-            </div>
-            <div className="your-bet-amount">
-              Bet Amount: {convertToCurrency(this.state.bet_amount)}
-            </div>
-            <div className="your-max-return">
-              Potential Return:{' '}
-              {convertToCurrency(
+        <div className="pre-summary-panel">
+    <div className="data-item">
+        <div className="label host-display-name">Host</div>
+        <div className="value">{this.props.creator}</div>
+    </div>
+    <div className="data-item">
+        <div className="label your-bet-amount">Bet Amount</div>
+        <div className="value">
+            {convertToCurrency(this.state.bet_amount)}
+        </div>
+    </div>
+    <div className="data-item">
+        <div className="label your-max-return">Potential Return</div>
+        <div className="value">
+            {convertToCurrency(
                 updateDigitToPoint2(
-                  this.props.game_log_list.reduce((a, b) => a + b, 0) +
+                    this.props.game_log_list.reduce((a, b) => a + b, 0) +
                     this.state.bet_amount * 2 /* 0.9 */
                 )
-              )}
-            </div>
-          </div>
+            )}
+        </div>
+    </div>
+</div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Previous Guesses</h3>
             <p className="previous-guesses">

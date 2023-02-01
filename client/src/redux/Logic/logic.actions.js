@@ -5,6 +5,7 @@ import {
   END_LOADING,
   ROOMS_LOADED,
   UPDATE_BET_RESULT,
+  UPDATE_BANKROLL,
   BET_SUCCESS,
   MSG_CREATE_ROOM_SUCCESS,
   MSG_ROOMS_LOAD_FAILED,
@@ -278,6 +279,14 @@ export const deductBalanceWhenStartBrainGame = (data) => async dispatch => {
     return false;
   }
 }
+
+export const updateBankroll = (bankroll) => {
+  return {
+    type: UPDATE_BANKROLL,
+    payload: bankroll,
+  };
+};
+
 
 export const getLeaderboardsInfo = () => async dispatch => {
   try {

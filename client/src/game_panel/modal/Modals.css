@@ -7,6 +7,8 @@
     position: relative;
 }
 
+
+
 #withdrawal-status {
     text-align: center;
     font-weight: 900;
@@ -56,14 +58,34 @@
     width: 24px;
     height: 24px;
 }
+
+.modal-body button.btn-close:hover {
+    animation: spin 1s cubic-bezier(0.165, 0.840, 0.440, 1.000);
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+
 .modal-body h4 {
     font-size: 16px;
     font-weight: 500;
 }
-.modal-body h2 {
+
+
+.modal-body h2,
+.modal-body h5 {
+    text-align: center;
     font-size: 24px;
     font-weight: bold;
     color: #060607;
+    border-bottom: none !important;
 }
 .modal-body h2.modal-title {
     font-size: 16px;
@@ -160,8 +182,8 @@
     width: 130px;
     height: 130px;
     border-radius: 40px;
-    border: 2px solid #ff409a;
-    box-shadow: 0px 0 4px 0px #c438ef;
+    border: 4px solid #ff409a;
+    box-shadow: 0px 0 14px 0px #c438ef;
 }
 
 .modal-body .modal-icon {
@@ -215,14 +237,15 @@
 
 .apexcharts-canvas svg {
     border-radius: 12px;
-    border: 3px solid #2dc7df;
-    box-shadow: inset 0 0 8px 6px #0d8295;
+    /* border: 3px solid #2dc7df;
+    box-shadow: inset 0 0 8px 6px #0d8295; */
     filter: drop-shadow(2px 4px 6px black);
-    background: linear-gradient(45deg, #17a2b8, #005e6c) !important;
+    background: transparent !important;
 }
 
 .modal-body .edit-avatar-panel {
     display: flex;
+    flex-flow: column;
 }
 .modal-body .edit-avatar-panel img.avatar {
     width: 80px;
@@ -282,6 +305,13 @@
 .modal-body .modal-content-wrapper.brain-game h4 {
     background-image: url("/img/icons/modal-brain-game.svg");
 }
+
+.modal-body .modal-content-wrapper.drop-game h4 {
+    background-image: url("/img/icons/modal-drop-game.svg");
+    background-size: 26px;
+    background-position: 4.5% center;
+}
+
 .modal-body .modal-content-wrapper.house-edge h4 {
     background-image: url("/img/icons/modal-house-edge.svg");
     background-size: 27px;
@@ -399,6 +429,7 @@ div[role="presentation"] li:last-child {
       margin-top: 15px;
     }
 
+    
     .modal-body p.sm-text-center {
         text-align: center;
     }

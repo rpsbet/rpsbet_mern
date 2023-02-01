@@ -26,6 +26,10 @@ const GameLogSchema = new Schema({
         type: String,
         default: ''
     },
+    selected_dg: {
+        type: String,
+        default: ''
+    },
     selected_qs_position: {
         type: Number,
         default: 0
