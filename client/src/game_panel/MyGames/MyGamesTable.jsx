@@ -48,7 +48,7 @@ class MyGamesTable extends Component {
     };
     confirmModalClosed(
       true,
-      `DO YOU WANT TO END THIS GAME NOW?   YOU WILL TAKE  ${updateDigitToPoint2(winnings)} BUSD`,
+      `TERMINATE GAME?`, //   YOU WILL TAKE  ${updateDigitToPoint2(winnings)} BUSD
       'Okay',
       'Cancel',
       () => {
@@ -83,7 +83,8 @@ class MyGamesTable extends Component {
       'S!': 'spleesh',
       MB: 'mystery-box',
       BG: 'brain-game',
-      QS: 'quick-shoot'
+      QS: 'quick-shoot',
+      DG: 'drop-game'
     };
 
     const gameTypePanel = [
@@ -212,7 +213,7 @@ class MyGamesTable extends Component {
               <div className="table-cell room-id">Room ID</div>
               <div className="table-cell bet-info">BANKROLL</div>
               <div className="table-cell payout">PAYOUT</div>
-              <div className="table-cell winnings">NET PROFIT</div>
+              <div className="table-cell winnings">WINNINGS</div>
               <div className="table-cell action desktop-only">Action</div>
             </div>
           )}
@@ -249,7 +250,8 @@ class MyGamesTable extends Component {
                     </div>
                     <div className="table-cell bet-info">
   <span className="bet-pr">
-    {convertToCurrency(updateDigitToPoint2(row.bet_amount))} {' / '}
+    {'('}{convertToCurrency(updateDigitToPoint2(row.bet_amount))}{') '}
+    
     {convertToCurrency(updateDigitToPoint2(row.pr))}
   </span>
   <span className="end-amount">
@@ -265,7 +267,7 @@ class MyGamesTable extends Component {
                         className="btn_end"
                         onClick={e => {
                           this.endRoom(
-                            row.winnings,
+                            row.bet_amount,
                             e.target.getAttribute('_id')
                           );
                         }}
@@ -282,7 +284,7 @@ class MyGamesTable extends Component {
                         className="btn_end"
                         onClick={e => {
                           this.endRoom(
-                            row.winnings,
+                            row.bet_amount,
                             e.target.getAttribute('_id')
                           );
                         }}

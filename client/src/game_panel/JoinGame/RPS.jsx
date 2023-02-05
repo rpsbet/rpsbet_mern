@@ -24,6 +24,108 @@ const options = [
 
 const twitterLink = window.location.href;
 
+const calcWinChance = (prevStates) => {
+  let total = prevStates.length;
+  let rock = 0;
+  let paper = 0;
+  let scissors = 0;
+  prevStates.map((el) => {
+    if (el.rps === "R") {
+      rock++;
+    } else if (el.rps === "P") {
+      paper++;
+    } else if (el.rps === "S") {
+      scissors++;
+    }
+  });
+  const rockWinChance = (rock / total) * 100;
+  const paperWinChance = (paper / total) * 100;
+  const scissorsWinChance = (scissors / total) * 100;
+  let lowest = rockWinChance;
+  let highest = rockWinChance;
+  if (paperWinChance < lowest) {
+    lowest = paperWinChance;
+  }
+  if (scissorsWinChance < lowest) {
+    lowest = scissorsWinChance;
+  }
+  if (paperWinChance > highest) {
+    highest = paperWinChance;
+  }
+  if (scissorsWinChance > highest) {
+    highest = scissorsWinChance;
+  }
+  if (lowest === highest) {
+    return lowest.toFixed(2) + "%";
+  }
+  return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
+};
+
+
+
+
+const predictNext = (rps_list) => {
+  // Create a transition matrix to store the probability of transitioning from one state to another
+  const transitionMatrix = {
+    R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
+    P: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
+    S: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
+  };
+
+  // Iterate through the previous states to populate the transition matrix
+  for (let i = 0; i < rps_list.length - 3; i++) {
+    transitionMatrix[rps_list[i].rps][rps_list[i + 1].rps][rps_list[i + 2].rps][rps_list[i + 3].rps]++;
+  }
+
+  // Normalize the transition matrix
+  Object.keys(transitionMatrix).forEach((fromState1) => {
+    Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
+      Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
+        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
+        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
+          transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
+        });
+      });
+    });
+  });
+
+// Check for consistency
+const winChance = calcWinChance(rps_list);
+let deviation = 0;
+if (winChance !== "33.33%") {
+    deviation = (1 - (1 / 3)) / 2;
+}
+// Use the transition matrix to predict the next state based on the current state
+let currentState1 = rps_list[rps_list.length - 3].rps;
+let currentState2 = rps_list[rps_list.length - 2].rps;
+let currentState3 = rps_list[rps_list.length - 1].rps;
+let nextState = currentState3;
+let maxProb = 0;
+Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
+  if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
+    maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
+    nextState = state;
+  }
+});
+
+// Add randomness
+let randomNum = Math.random();
+if (randomNum < deviation) {
+  let randomState = '';
+  do {
+      randomNum = Math.random();
+      if (randomNum < (1 / 3)) {
+          randomState = 'R';
+      } else if (randomNum < (2 / 3)) {
+          randomState = 'P';
+      } else {
+          randomState = 'S';
+      }
+  } while (randomState === currentState3);
+  nextState = randomState;
+}
+return nextState;
+}
 
 class RPS extends Component {
   constructor(props) {
@@ -32,7 +134,10 @@ class RPS extends Component {
     this.settingsRef = React.createRef();
     this.socket = this.props.socket;
     this.state = {
+      betting: false,
+    holdTime: 0,
       clicked: true,
+      intervalId: null,
 
       selected_rps: '',
       advanced_status: '',
@@ -45,8 +150,10 @@ class RPS extends Component {
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
       betResults: props.betResults,
-      settings_panel_opened: false
+      settings_panel_opened: false,
+      
     };
+
     this.onChangeState = this.onChangeState.bind(this);
 
   }
@@ -84,6 +191,7 @@ getPreviousBets() {
   };
 
   componentWillUnmount = () => {
+    clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
   };
 
@@ -131,20 +239,12 @@ getPreviousBets() {
     });
     this.onBtnBetClick(result);
 
-    // const result = await this.props.join({
-    //   selected_rps: this.state.selected_rps,
-    //   is_anonymous: this.state.is_anonymous,
-    //   rps_bet_item_id: this.props.rps_bet_item_id,
-    //   slippage: this.state.slippage
-    // });
-
     const currentUser = this.props.user;
     const currentRoom = this.props.room;
     if (result.status === 'success') {
       this.setState(prevState => ({
         betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
     }));
-    console.log(this.state.betResults);
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
@@ -156,6 +256,11 @@ getPreviousBets() {
       }else{
          this.props.updateBetResult('lose')
       }
+
+   let stored_rps_array = JSON.parse(localStorage.getItem("rps_arrayq")) || [];
+stored_rps_array.push({ rps: selected_rps });
+localStorage.setItem("rps_arrayq", JSON.stringify(stored_rps_array));
+console.log(stored_rps_array);
 
       gameResultModal(
         this.props.isDarkMode,
@@ -217,6 +322,8 @@ getPreviousBets() {
       }
     );
   };
+ 
+  
 
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
@@ -270,6 +377,58 @@ getPreviousBets() {
   copy() {
     navigator.clipboard.writeText(twitterLink)
   }
+
+  startBetting = () => {
+    const intervalId = setInterval(() => {
+      const randomItem = predictNext(JSON.parse(localStorage.getItem("rps_arrayq")));
+      console.log('wwedw', randomItem)
+      this.joinGame2(randomItem, this.state.bet_amount);
+    }, 3500);
+
+    this.setState({ intervalId });
+  };
+
+  stopBetting = () => {
+    clearInterval(this.state.intervalId);
+    this.setState({ intervalId: null });
+  };
+
+  joinGame2 = async (selected_rps, bet_amount) => {
+    this.setState({selected_rps: selected_rps, bet_amount: this.state.bet_amount});
+    const result = await this.props.join({
+      bet_amount: parseFloat(this.state.bet_amount),
+      selected_rps: selected_rps,
+      is_anonymous: this.state.is_anonymous,
+      rps_bet_item_id: this.props.rps_bet_item_id,
+      slippage: this.state.slippage
+    });
+
+    const currentUser = this.props.user;
+    const currentRoom = this.props.room;
+    if (result.status === 'success') {
+      this.setState(prevState => ({
+        betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
+    }));
+      let text = 'HAHAA, YOU LOST!!!';
+
+      if (result.betResult === 1) {
+        this.props.updateBetResult('win')
+        text = 'NOT BAD, WINNER!';
+      } else if (result.betResult === 0) {
+        this.props.updateBetResult('draw')
+        text = 'DRAW, NO WINNER!';
+      }else{
+         this.props.updateBetResult('lose')
+      }
+
+   
+    this.props.refreshHistory();
+  };
+
+
+   
+  };
+
 
 
   render() {
@@ -409,6 +568,8 @@ getPreviousBets() {
           <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
 
         </div>
+        <button onClick={this.startBetting }>AI Play</button>
+        <button onClick={this.stopBetting }>Stop</button>
           </div>
           <hr />
           <div className="action-panel">

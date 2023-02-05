@@ -358,6 +358,71 @@ table#runs th {
 table#runs td {
   width: 80px;
 }
+.YourButton {
+  background-color: lightgray;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 20px;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.YourButton:before {
+  background: linear-gradient(to right, lightblue, blue);
+  content: "";
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  transition: width 0.5s ease;
+  width: 0;
+}
+
+.YourButton.holding:before {
+  width: 100%;
+}
+
+.YourButton:active {
+  background-color: blue;
+}
+
+.YourButton button {
+  background-color: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  outline: none;
+  padding: 10px 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.YourButton.holding {
+  overflow: hidden;
+}
+
+.YourButton.holding:before {
+  width: 100%;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  border-radius: inherit;
+  transform-origin: 0 0;
+}
+
+.YourButton.holding:active:before {
+  transform: scale(10);
+}
+
+
+.qs-add-run-panel #runs {
+  max-height: 15vh;
+  width: 100% !important;
+}
 
 #runs {
   max-height: 35vh;

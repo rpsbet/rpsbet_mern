@@ -270,9 +270,9 @@ div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status.
     background-color: rgb(87, 202, 34);
 }
 div.table.main-game-table .table-row .table-cell.cell-amount-info{
-    color: rgb(87, 202, 34);
+    color: #ffb000;
     font-weight: bold;
-    background: rgba(87, 202, 34, 0.1);
+    background: #ffb00022;
     border-radius: 9px;
     padding: 4px 8px;
     white-space: nowrap;
@@ -321,6 +321,11 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     height: 32px;
     margin-right: 8px;
     filter: invert(61%) sepia(7%) saturate(233%) hue-rotate(173deg) brightness(94%) contrast(89%);
+}
+.drop-game img {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 5px !important;
 }
 .game-type-panel .btn-game-type.active img:hover{
     filter: none;
@@ -842,14 +847,12 @@ overflow: hidden;
     border: 1px solid #ff8c00;
     box-shadow: 0 0 15px rgba(255, 140, 0, 0.3);
     }
-.rps-add-run-panel,
-.qs-add-run-panel {
+.rps-add-run-panel{
     border-radius: 12px;
     display: flex;
     padding: 30px;
 }
-.rps-add-run-panel > div.rps-add-run-form,
-.qs-add-run-form {
+.rps-add-run-panel > div.rps-add-run-form{
     padding-right: 30px;
     border-right: 2px solid #36393F;
 }
@@ -1279,6 +1282,8 @@ background-color: red;
     justify-content: center;
     align-items: center;
     margin-bottom: 32px;
+    max-width: 420px;
+    margin: auto;
 }
 .game-info-panel .qs-image-panel img {
     max-width: 100%;
@@ -1671,19 +1676,23 @@ background-color: red;
     display: flex;
     padding: 0;
     align-items: center;
-    flex-direction: column;
+    flex-direction: row;
     }
     .game-page .pre-summary-panel > div {
         font-size: 14px;
         line-height: 24px;
         background-size: contain;
     }
-    .game-page .pre-summary-panel > div ~ div {
-        margin-top: 16px;
-        margin-left: 0;
-    }
     .game-page .game-contents h3.game-sub-title {
         margin: 24px 0 14px;
+    }
+
+    .qs-image-panel div {
+        width: 288px !important;
+    };
+
+    .rps-add-run-panel > div.rps-add-run-form, .qs-add-run-form {
+        padding-right: 0 !important;
     }
     #rps-radio span {
         width: 74px;
@@ -1778,6 +1787,14 @@ background-color: red;
     }
 }
 @media (max-width: 400px) {
+    .rps-add-run-panel > div.rps-add-run-form, .qs-add-run-form {
+        padding-right: 0 !important;
+    }
+    .drop-game img {
+        width: 55px !important;
+        height: 55px !important;
+        padding: 12px !important;
+    }
     /* .game-page .game-contents .game-info-panel .box-prizes span {
         white-space: unset;
         white-space: unset;
@@ -1795,7 +1812,7 @@ background-color: red;
     }
     .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
     }
     .rps-add-run-panel {
         flex-direction: column-reverse;

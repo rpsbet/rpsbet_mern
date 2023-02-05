@@ -148,6 +148,7 @@ class CreateGame extends Component {
         game_type: 5,
         public_bet_amount: convertToCurrency(1),
         max_return: 2,
+        winChance: 0,
         qs_nation: Math.floor(Math.random() * 5)
       };
     } else if (gameTypeName === 'Mystery Box') {
@@ -373,6 +374,7 @@ class CreateGame extends Component {
           bet_amount={this.state.bet_amount}
           is_private={this.state.is_private}
           is_anonymous={this.state.is_anonymous}
+          winChance={this.state.winChance}
           room_password={this.state.room_password}
           endgame_type={this.state.endgame_type}
           endgame_amount={this.state.endgame_amount}

@@ -105,7 +105,8 @@ export const bet = (bet_info) => async dispatch => {
           status: 'failed',
           message: res.data.message
         };
-      } else {
+      }
+      else {
         dispatch({ type: MSG_WARNING, payload: 'SLOW TF DOWN!' });
       }
     }

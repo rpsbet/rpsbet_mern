@@ -50,7 +50,7 @@ const calcWinChance = (prevStates) => {
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 };
 
-const predictNext = (prevStates, rps_list) => {
+const predictNext = (rps_list) => {
   // Create a transition matrix to store the probability of transitioning from one state to another
   const transitionMatrix = {
     R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
@@ -59,8 +59,8 @@ const predictNext = (prevStates, rps_list) => {
   };
 
   // Iterate through the previous states to populate the transition matrix
-  for (let i = 0; i < prevStates.length - 3; i++) {
-    transitionMatrix[prevStates[i].rps][prevStates[i + 1].rps][prevStates[i + 2].rps][prevStates[i + 3].rps]++;
+  for (let i = 0; i < rps_list.length - 3; i++) {
+    transitionMatrix[rps_list[i].rps][rps_list[i + 1].rps][rps_list[i + 2].rps][rps_list[i + 3].rps]++;
   }
 
   // Normalize the transition matrix
@@ -82,9 +82,9 @@ if (winChance !== "33.33%") {
     deviation = (1 - (1 / 3)) / 2;
 }
 // Use the transition matrix to predict the next state based on the current state
-let currentState1 = prevStates[prevStates.length - 3].rps;
-let currentState2 = prevStates[prevStates.length - 2].rps;
-let currentState3 = prevStates[prevStates.length - 1].rps;
+let currentState1 = rps_list[rps_list.length - 3].rps;
+let currentState2 = rps_list[rps_list.length - 2].rps;
+let currentState3 = rps_list[rps_list.length - 1].rps;
 let nextState = currentState3;
 let maxProb = 0;
 Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
@@ -129,7 +129,6 @@ class RPS extends Component {
         P: { R: 0, P: 0, S: 0 },
         S: { R: 0, P: 0, S: 0 }
     },
-    autoplay: false
 
     };
     this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
@@ -140,6 +139,8 @@ class RPS extends Component {
     
     if(this.props.rps_list.length > 2){
       const prevStates = this.props.rps_list;
+
+      console.log(this.props.rps_list)
       const nextRPS = predictNext(prevStates, this.props.rps_list);
       this.onAddRun(nextRPS);
 
@@ -181,8 +182,6 @@ class RPS extends Component {
     const newArray = JSON.parse(JSON.stringify(this.props.rps_list));
     newArray.push({
       rps: selected_rps
-      // bet_amount: selected_bet_amount,
-      // pr: selected_bet_amount * 2
     });
     // const bet_amount = calcBetAmount(newArray);
     const winChance = calcWinChance(newArray);
@@ -208,11 +207,11 @@ class RPS extends Component {
   }
 
 
-  handleAutoplayChange = () => {
-    this.setState(prevState => ({
-      autoplay: !prevState.autoplay
-    }));
-  };
+  // handleAutoplayChange = () => {
+  //   this.setState(prevState => ({
+  //     autoplay: !prevState.autoplay
+  //   }));
+  // };
   onChangeBetAmount = new_state => {
     this.setState({ bet_amount: new_state.selected_bet_amount });
   };
@@ -297,13 +296,13 @@ class RPS extends Component {
                 }}
               ></span>
             </div>
-            <button onClick={this.onAutoPlay}>Test Autoplay</button>
-            <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
-</label>
+            <button onClick={this.onAutoPlay}>Test AI Play</button>
+            {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
+</label> */}
 
           </div>
           <div className="rps-add-run-table">
-            <h3 className="game-sub-title">Runs</h3>
+            <h3 className="game-sub-title">Training Data</h3>
             <table>
               <thead>
                 <tr>

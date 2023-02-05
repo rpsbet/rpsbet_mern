@@ -4,6 +4,10 @@ import { getQsLottieAnimation } from '../../util/helper';
 import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
+
+
+
+
 class QuickShoot extends Component {
   constructor(props) {
     super(props);
@@ -11,6 +15,7 @@ class QuickShoot extends Component {
       is_other: 'hidden',
       selected_qs_position: 0,
       qs_list: [],
+      winChance: 33,
       animation: <div />
     };
     this.handlePositionSelection = this.handlePositionSelection.bind(this);
@@ -43,6 +48,8 @@ class QuickShoot extends Component {
   //     this.updateAnimation();
   //   }
   // };
+
+  
 
   updateAnimation = async () => {
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
@@ -77,17 +84,49 @@ class QuickShoot extends Component {
     });
   };
 
+  onChangeWinChance = (winChance) => {
+    this.setState({ winChance });
+  };
+
+  calcWinChance = (gametype, rounds) => {
+    let positionCounts = new Array(gametype + 1).fill(0);
+    for (let i = 0; i < rounds.length; i++) {
+      positionCounts[rounds[i].qs]++;
+
+    }
+    console.log('position counts', positionCounts)
+    let entropy = 0;
+    for (let i = 0; i < gametype; i++) {
+      if (positionCounts[i] === 0) {
+        continue;
+      }
+      let probability = positionCounts[i] / rounds.length;
+      entropy -= probability * Math.log2(probability);
+    }
+    console.log('entropy', entropy)
+    let winChanceMin = Math.max(0, (1 - entropy / Math.log2(gametype)) / gametype);
+    let winChanceMax = Math.min(1, (1 - entropy / Math.log2(gametype)));
+    winChanceMin *= 100;
+    winChanceMax *= 100;
+    return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
+  }
+
   onAddRun = (selected_qs_position) => {
     this.setState({ selected_qs_position: selected_qs_position });
     const newArray = JSON.parse(JSON.stringify(this.props.qs_list));
     newArray.push({
       qs: selected_qs_position
     });
+    
+    const winChance = this.calcWinChance(this.props.qs_game_type, newArray);
     this.props.onChangeState({
+      winChance: winChance,
       qs_list: newArray
     });
+    this.onChangeWinChance(winChance);
+    this.setState({ winChance });
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-  console.log('jfk aiuurporrt'  , selected_qs_position)
+  console.log('jfk aiuurporrt'  , winChance)
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
     } else if (this.props.qs_game_type === 3) {
@@ -101,6 +140,9 @@ class QuickShoot extends Component {
 
       return { qs_list: updatedQsList };
     });
+
+ 
+
   };
   
   componentDidUpdate(prevProps, prevState) {
@@ -115,7 +157,12 @@ class QuickShoot extends Component {
     this.setState((prevState) => {
       const updatedQsList = [...prevState.qs_list];
       updatedQsList.splice(index, 1);
-      return { qs_list: updatedQsList };
+      const winChance = this.calcWinChance(this.props.qs_game_type, updatedQsList);
+      this.props.onChangeState({
+        winChance: winChance,
+        qs_list: updatedQsList
+      });
+      return { qs_list: updatedQsList, winChance };
     });
   };
   
@@ -251,7 +298,7 @@ class QuickShoot extends Component {
             <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
             {this.state.animation}
             {this.renderButtons()}
-            <div className="qs-action-panel">
+            {/* <div className="qs-action-panel">
               <button
                 className="btn-left"
                 onClick={this.onLeftPositionButtonClicked}
@@ -261,7 +308,7 @@ class QuickShoot extends Component {
                 className="btn-right"
                 onClick={this.onRightPositionButtonClicked}
               ></button>
-            </div>
+            </div> */}
             </div>
             <div className="qs-add-run-table">
             <h3 className="game-sub-title">Runs</h3>
