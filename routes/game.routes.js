@@ -696,7 +696,7 @@ router.post('/rooms', auth, async (req, res) => {
           // bet_amount: rps.bet_amount
         });
         newQs.save();
-        console.log(`Saved QsBetItem: ${JSON.stringify(newQs)}`);
+        // console.log(`Saved QsBetItem: ${JSON.stringify(newQs)}`);
 
       });
     }
@@ -1432,8 +1432,16 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else {
           newGameLog.game_result = 1;
+          
           newTransactionJ.amount +=
-            roomInfo['bet_amount'] * roomInfo['qs_game_type'] * ((100 - commission.value) / 100);
+            (roomInfo['bet_amount'] + (roomInfo['bet_amount'] / (roomInfo['qs_game_type'] - 1))) * ((100 - commission.value) / 100);
+          roomInfo['host_pr'] -= parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
+          roomInfo['user_bet'] -= parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
+          if(req.io.sockets){
+            req.io.sockets.emit('UPDATED_BANKROLL', {
+                bankroll: roomInfo['user_bet']
+            });
+        }
           message.message =
             "You're not the best keeper are you? I just won " +
             roomInfo['bet_amount'] * roomInfo['qs_game_type'] +

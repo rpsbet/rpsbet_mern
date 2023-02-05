@@ -80,8 +80,8 @@ class QuickShoot extends Component {
   handlePositionSelection(position) {
     this.setState({ selected_qs_position: position });
     this.onBtnBetClick(position);
-    console.log('selected qs', position);
-    console.log('bet_amount', this.state.bet_amount);
+    // console.log('selected qs', position);
+    // console.log('bet_amount', this.state.bet_amount);
   }
 
   // onLeftPositionButtonClicked = e => {
@@ -120,7 +120,7 @@ class QuickShoot extends Component {
   }
 
   joinGame = async (selected_qs_position, bet_amount) => {
-    this.setState({selected_qs_position: selected_qs_position, bet_amount: bet_amount});
+    this.setState({selected_qs_position: selected_qs_position, bet_amount: this.state.bet_amount});
 
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
@@ -158,14 +158,12 @@ class QuickShoot extends Component {
           this.props.isDarkMode,
           text,
           result.betResult,
-          'Try again',
-          'Close',
+          'Okay',
+          null,
           () => {
-            this.props.refreshHistory();
             // history.go(0);
           },
           () => {
-            this.props.refreshHistory();
             // history.push('/');
           }
         );
@@ -175,6 +173,7 @@ class QuickShoot extends Component {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
+    this.props.refreshHistory();
   };
 
   
@@ -309,13 +308,13 @@ updatePotentialReturn = () => {
     } else if (qs_game_type === 3) {
       return (
         <div className='qs-buttons'>
-          <button id="l" onClick={() => this.handlePositionSelection(1)}>
+          <button id="l" onClick={() => this.handlePositionSelection(0)}>
             {/* Left */}
           </button>
-          <button id="cc" onClick={() => this.handlePositionSelection(2)}>
+          <button id="cc" onClick={() => this.handlePositionSelection(1)}>
             {/* Center */}
           </button>
-          <button id="r" onClick={() => this.handlePositionSelection(3)}>
+          <button id="r" onClick={() => this.handlePositionSelection(2)}>
             {/* Right */}
           </button>
         </div>
@@ -323,16 +322,16 @@ updatePotentialReturn = () => {
     } else if (qs_game_type === 4) {
       return (
         <div className='qs-buttons'>
-          <button id="tl" onClick={() => this.handlePositionSelection(1)}>
+          <button id="tl" onClick={() => this.handlePositionSelection(0)}>
             {/* Top Left */}
           </button>
-          <button id="tr" onClick={() => this.handlePositionSelection(2)}>
+          <button id="tr" onClick={() => this.handlePositionSelection(1)}>
             {/* Top Right */}
           </button>
-          <button id="bl" onClick={() => this.handlePositionSelection(3)}>
+          <button id="bl" onClick={() => this.handlePositionSelection(2)}>
             {/* Bottom Left */}
           </button>
-          <button id="br" onClick={() => this.handlePositionSelection(4)}>
+          <button id="br" onClick={() => this.handlePositionSelection(3)}>
             {/* Bottom Right */}
           </button>
         </div>

@@ -140,7 +140,7 @@ class RPS extends Component {
     if(this.props.rps_list.length > 2){
       const prevStates = this.props.rps_list;
 
-      console.log(this.props.rps_list)
+      // console.log(this.props.rps_list)
       const nextRPS = predictNext(prevStates, this.props.rps_list);
       this.onAddRun(nextRPS);
 
@@ -150,9 +150,6 @@ class RPS extends Component {
     }
    
   };
-
-
-  
 
 
   onChangeWinChance = (winChance) => {

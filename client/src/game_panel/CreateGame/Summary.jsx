@@ -23,7 +23,7 @@ class Summary extends Component {
     }
   }
   pre_summery() {
-    console.log({ props: this.props });
+    // console.log({ props: this.props });
     let public_max_return = convertToCurrency(
       updateDigitToPoint2(this.props.max_prize /* 0.95 */)
     );
