@@ -7,9 +7,51 @@ class MysteryBox extends Component {
     super(props);
     this.state = {
       new_box_price: '',
-      new_box_prize: ''
+      new_box_prize: '',
+      winChance: 100,
+            endgame_amount: 25,
+
     };
+    this.calcWinChance = this.calcWinChance.bind(this);
+
+
   }
+  
+ 
+  calcWinChance = (boxes, revenueLimit) => {
+    let emptyBoxesWithCost4 = 0;
+    let prizeBoxCount = 0;
+    let costOfPrizes = 0;
+  
+    // Count the number of empty boxes and prize boxes, and total the cost of prizes
+    boxes.forEach(box => {
+      if (box.box_prize) {
+        prizeBoxCount++;
+        costOfPrizes += box.box_price;
+      } else {
+        emptyBoxesWithCost4++;
+      }
+    });
+  
+    // Calculate the maximum number of guesses the guesser can make
+    let maxGuesses = Math.floor((revenueLimit - costOfPrizes) / boxes[0].box_price);
+  
+    // Calculate the probability of the creator winning when the guesser chooses a box with cost 4
+    let probabilityOfCreatorWinningWithCost4 = 0;
+    for (let i = 0; i < prizeBoxCount && i < maxGuesses; i++) {
+      let probability = 1;
+      for (let j = 0; j < i; j++) {
+        probability *= emptyBoxesWithCost4 / (boxes.length - j);
+      }
+      probability *= prizeBoxCount / (boxes.length - i);
+      probabilityOfCreatorWinningWithCost4 += probability;
+    }
+  
+    // Calculate the overall probability of the creator winning
+    let probabilityOfCreatorWinning = ((probabilityOfCreatorWinningWithCost4 * (emptyBoxesWithCost4 / boxes.length)) * 100).toFixed(2);
+  
+    return probabilityOfCreatorWinning +  '%';
+  };
 
   onChangeNewBoxPrize = e => {
     this.setState({ new_box_prize: e.target.value });
@@ -92,6 +134,7 @@ class MysteryBox extends Component {
 
     this.props.onChangeState({
       box_list: box_list,
+      winChance: this.calcWinChance(box_list, this.props.endgame_amount),
       bet_amount: bet_amount,
       max_return: max_return['max_return'],
       max_prize: max_return['max_prize'],
@@ -100,9 +143,9 @@ class MysteryBox extends Component {
       public_bet_amount:
         max_return['lowest_box_price'] === max_return['highest_box_price']
           ? convertToCurrency(max_return['lowest_box_price'])
-          : `${convertToCurrency(
+          : <>{convertToCurrency(
               max_return['lowest_box_price']
-            )} - ${convertToCurrency(max_return['highest_box_price'])}`
+            )} - {convertToCurrency(max_return['highest_box_price'])}</>
     });
   };
 
@@ -152,6 +195,8 @@ class MysteryBox extends Component {
 
     this.props.onChangeState({
       box_list: box_list,
+      winChance: this.calcWinChance(box_list, this.props.endgame_amount),
+
       bet_amount: bet_amount,
       max_return: max_return['max_return'],
       max_prize: max_return['max_prize'],
@@ -160,9 +205,9 @@ class MysteryBox extends Component {
       public_bet_amount:
         max_return['lowest_box_price'] === max_return['highest_box_price']
           ? convertToCurrency(max_return['lowest_box_price'])
-          : `${convertToCurrency(
+          : <> {convertToCurrency(
               max_return['lowest_box_price']
-            )} - ${convertToCurrency(max_return['highest_box_price'])}`
+            )} - {convertToCurrency(max_return['highest_box_price'])}</>
     });
   };
 
@@ -179,6 +224,8 @@ class MysteryBox extends Component {
     this.props.onChangeState({
       box_list: box_list,
       bet_amount: bet_amount,
+      winChance: this.calcWinChance(box_list, this.props.endgame_amount),
+
       max_return: max_return['max_return'],
       max_prize: max_return['max_prize'],
       endgame_amount: max_return['max_return'],
@@ -186,9 +233,9 @@ class MysteryBox extends Component {
       public_bet_amount:
         max_return['lowest_box_price'] === max_return['highest_box_price']
           ? convertToCurrency(max_return['lowest_box_price'])
-          : `${convertToCurrency(
+          : <>{convertToCurrency(
               max_return['lowest_box_price']
-            )} - ${convertToCurrency(max_return['highest_box_price'])}`
+            )} - {convertToCurrency(max_return['highest_box_price'])}</>
     });
   };
 
@@ -203,6 +250,13 @@ class MysteryBox extends Component {
     });
   };
 
+  // componentDidUpdate(prevProps) {
+  //   if (prevProps.endgame_amount !== this.props.endgame_amount) {
+  //     const winChance = this.calcWinChance(this.props.box_list, this.props.endgame_amount);
+  //     this.setState(winChance);
+  //   }
+
+  // }
   render() {
     return (
       <div className="game-info-panel">
@@ -256,12 +310,14 @@ class MysteryBox extends Component {
               </div>
             </div>
           </div>
+          <div class="box-btn-row">
           <button className="other" onClick={this.onAddBox}>
             Add box
           </button>
           <button id="add-ten" onClick={this.onAddTenBoxes}>
             Add 10 boxes
           </button>
+          </div>
           <a
             href="/#"
             className="btn-empty-boxes"

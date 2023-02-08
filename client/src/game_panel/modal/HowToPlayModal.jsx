@@ -17,6 +17,7 @@ const customStyles = {
     backgroundColor: 'rgba(47, 49, 54, 0.8)',
     backdropFilter: 'blur(4px)'
   },
+  
   content: {
     top: '50%',
     left: '50%',
@@ -45,7 +46,39 @@ class HowToPlayModal extends Component {
             <button className="btn-close" onClick={this.props.closeModal}>
               ×
             </button>
-            
+            <div className="release-updates">
+  <h2 className="section-title">Latest Features</h2>
+  <ul className="feature-list">
+    <li>
+      <h3 className="feature-title">Drop Game</h3>
+      <p className="feature-description">Compete for the highest value and win big with our new drop game feature.</p>
+    </li>
+    <li>
+      <h3 className="feature-title">AI Play</h3>
+      <p className="feature-description">Enjoy non-stop gaming with our AI Play feature. Joiners can now play autonomously and the games run indefinitely.</p>
+    </li>
+    <li>
+      <h3 className="feature-title">Payouts</h3>
+      <p className="feature-description">Hosts can now receive regular payouts for their games with our new payout system.</p>
+    </li>
+    <li>
+      <h3 className="feature-title">Bankrolls</h3>
+      <p className="feature-description">Manage your winnings with ease using our new 'Pot / Pool' system for bankrolls.</p>
+    </li>
+    <li>
+      <h3 className="feature-title">Brain Game</h3>
+      <p className="feature-description">Challenge your mind and create your own quizzes with our new Brain Game feature.</p>
+    </li>
+    <li>
+      <h3 className="feature-title">Player Profiles</h3>
+      <p className="feature-description">Show off your gaming skills with our new player profiles, which display your stats for all to see.</p>
+    </li>
+    <li>
+      <h3 className="feature-title">Light Mode</h3>
+      <p className="feature-description">Experience gaming in a whole new light with our new Light Mode feature.</p>
+    </li>
+  </ul>
+</div>
             <Accordion>
             <AccordionItem>
                 <AccordionItemHeading>
@@ -489,16 +522,7 @@ class HowToPlayModal extends Component {
                 </AccordionItemPanel>
               </AccordionItem>
             </Accordion>
-            <p><span>📃 </span>
-              <a
-                href="https://rpsbet.io"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                SUGGEST YOUR OWN #BRAINGAME
-              </a> {' '}
-              
-            </p>
+            
 
             <div id="game_footer_howto">
               <a href="https://twitter.com/rpsbet">TWITTER</a>

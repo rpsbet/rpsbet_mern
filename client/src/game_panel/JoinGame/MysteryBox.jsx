@@ -6,6 +6,10 @@ import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import ReactModal from 'react-modal';
+import { TwitterShareButton, TwitterIcon } from 'react-share';
+import { FaClipboard } from 'react-icons/fa';
+
+const twitterLink = window.location.href;
 
 const customStyles = {
   overlay: {
@@ -29,6 +33,8 @@ const customStyles = {
 class MysteryBox extends Component {
   constructor(props) {
     super(props);
+    this.socket = this.props.socket;
+
     this.state = {
       bet_amount: 0,
       selected_id: '',
@@ -38,7 +44,7 @@ class MysteryBox extends Component {
       balance: this.props.balance,
       betResult: this.props.betResult,
       isPasswordCorrect: false,
-      isModalOpen: false
+      isOpen: true
 
     };
   }
@@ -57,6 +63,8 @@ class MysteryBox extends Component {
       };
     }
 
+    
+
     return null;
   }
 
@@ -73,44 +81,52 @@ class MysteryBox extends Component {
     this.onBtnBetClick(e, _id);
   };
 
-//   componentDidMount() {
+  componentDidMount() {
+    const { socket } = this.props
+    socket.on('UPDATED_BOX_LIST', data => {
+      console.log("jimmy updated box list:", data);
+
+      this.setState({ box_list: data.box_list })
+    })
+
 
 //     const firstSelectedBox = this.state.box_list.find(box => box.active);
 //     if (firstSelectedBox) {
 //       this.setState({ selected_id: firstSelectedBox._id });
 //       this.onBtnBetClick(null, firstSelectedBox._id);
 //   }
-// }
+}
 
-
-  componentDidUpdate(prevProps, prevState) {
-    console.log(this.state.betResult);
-    if (
-      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
-      this.state.isPasswordCorrect === true
-    ) {
-      this.props.join({
-        bet_amount: this.state.bet_amount,
-        selected_id: this.state.selected_id,
-        is_anonymous: this.state.is_anonymous
-      });
-
-
-    if (prevState.betResult !== this.state.betResult && this.state.betResult === 0) {
-      this.setState({ isModalOpen: true });
-    }
-      this.setState({
-        box_list: this.state.box_list.map(el =>
-          el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
-        )
-      });
-    }
+componentDidUpdate(prevProps, prevState) {
+  if (prevState.box_list !== this.state.box_list) {
+    this.setState({ box_list: this.state.box_list });
   }
+  console.log(this.state.betResult);
+  if (
+    prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
+    this.state.isPasswordCorrect === true
+  ) {
+    this.props.join({
+      bet_amount: this.state.bet_amount,
+      selected_id: this.state.selected_id,
+      is_anonymous: this.state.is_anonymous
+    });
 
-  openModal = () => {
+    this.setState({
+      box_list: this.state.box_list.map(el =>
+        el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+      )
+    });
+  }
+  
+}
+
+
+
+  // openModal = () => {
     
-    this.setState({ isModalOpen: true });
-  }
+  //   this.setState({ isModalOpen: true });
+  // }
   
   onBtnBetClick = (e, selected_id) => {
     if (e) {
@@ -147,9 +163,9 @@ class MysteryBox extends Component {
           this.props.join({
             bet_amount: this.state.bet_amount,
             selected_id: this.state.selected_id,
-            is_anonymous: this.state.is_anonymous
+            is_anonyopenModalmous: this.state.is_anonymous
           });
-          this.openModal();
+          // this.openModal();
 
           this.setState({
             // betResult: 0,
@@ -157,16 +173,17 @@ class MysteryBox extends Component {
               el._id === this.state.selected_id
                 ? { ...el, status: 'opened' }
                 : el
-            )
+            ),
+            isOpen: true
+
           });
         }
       }
     );
   };
-  closeModal = () => {
-    this.setState({ betResult: -1, isModalOpen: false });
-    history.go(0);
-  }
+  // closeModal = () => {
+  //   this.setState({ betResult: -1, isOpen: false });
+  // }
   onBtnGoToMainGamesClicked = e => {
     e.preventDefault();
     history.push('/');
@@ -185,6 +202,15 @@ class MysteryBox extends Component {
       return true;
     });
     prizes.sort((a, b) => a.price - b.price);
+    
+    const styles = ['copy-btn'];
+    let text = 'COPY CONTRACT';
+
+   if (this.state.clicked) {
+   styles.push('clicked');
+   text = 'COPIED!';
+   }
+
     return (
       <div className="game-page">
         <div className="page-title">
@@ -220,33 +246,50 @@ class MysteryBox extends Component {
             </p>
             <h3 className="game-sub-title">Select a Box</h3>
             <div className="boxes-panel boxes-join">
-              {this.state.box_list.map((row, key) => (
-                <div
-                  className={
-                    'box box-' +
-                    row.status +
-                    (row._id === this.state.selected_id ? ' active' : '')
-                  }
-                  status={row.status}
-                  _id={row._id}
-                  box_price={row.box_price}
-                  index={key}
-                  key={key}
-                  onClick={this.onBoxClicked}
-                >
-                  <span>{convertToCurrency(row.box_price)}</span>
-                </div>
-              ))}
+            {this.state.box_list.map((row, index) => (
+  <div
+    className={
+      'box box-' +
+      row.status +
+      (row._id === this.state.selected_id ? ' active' : '')
+    }
+    status={row.status}
+    _id={row._id}
+    box_price={row.box_price}
+    index={index}
+    key={row._id}
+    onClick={this.onBoxClicked}
+  >
+    <span>{convertToCurrency(row.box_price)}</span>
+  </div>
+))}
+
             </div>
             <p>Each box will open one of the Prizes above.</p>
           </div>
-          {/* <hr />
+          <hr />
           <div className="action-panel">
-            <span></span>
+          <div className="share-options">
+          <TwitterShareButton
+    url={twitterLink}
+    title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
+    className="Demo__some-network__share-button"
+  >
+    <TwitterIcon size={32} round />
+  </TwitterShareButton>
+  {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
+  <a className={styles.join('')} onClick={() => {
+                                    this.toggleBtnHandler();
+                                    this.copy();
+                                }}>{this.state.clicked ? <input type="text" value={twitterLink} readOnly onClick={this.toggleBtnHandler}/> : null }
+  <FaClipboard />&nbsp;{this.state.text}</a>
+
+        </div>
+            {/* <span></span>
             <button id="btn_bet" onClick={this.onBtnBetClick}>
               Place Bet
-            </button>
-          </div> */}
+            </button> */}
+          </div>
         </div>
       </div>
     );
@@ -258,16 +301,11 @@ class MysteryBox extends Component {
       alertModal(this.props.isDarkMode, 'THIS STAKE HAS ENDED');
       history.go('/');
     } else {
-      this.setState({ betResult: -1, isModalOpen: false });
+      this.setState({ isOpen: false });
       
-      history.go(0);
     }
-
   };
-
-  hideModal = () => {
-    this.setState({betResult: -1});
-}
+  
 
   getBetResultForm = () => {
     let prizes = [];
@@ -284,23 +322,20 @@ class MysteryBox extends Component {
       <div className="game-page">
         <div className="game-contents mystery-box-result-contents">
           <div className="game-info-panel">
-            <div
-              className={`mystery-box-result ${
-                this.state.betResult === 0 ? 'failed' : 'success'
-              }`}
-            >
-              {convertToCurrency(this.state.betResult)}
-            </div>
-            <h4 className="game-sub-title">
-              {this.state.betResult === 0
-                ? `HAHAHA! WRONG BOX MTF!`
-                : `NICE 😎 ISSA MONEY BOX`}
-            </h4>
-            <p>
-              {this.state.betResult === 0
-                ? `THIS BOX IS EMPTY`
-                : `YOU WON A PRIZE!`}
-            </p>
+          <div className={`mystery-box-result ${this.state.betResult === 0 ? 'failed' : 'success'}`}>
+  {convertToCurrency(this.state.betResult)}
+</div>
+<h4 className="game-sub-title">
+  {this.state.betResult === 0
+    ? `HAHAHA! WRONG BOX MTF!`
+    : `NICE 😎 ISSA MONEY BOX`}
+</h4>
+<p>
+  {this.state.betResult === 0
+    ? `THIS BOX IS EMPTY`
+    : `YOU WON ${convertToCurrency(this.state.betResult)}!`}
+</p>
+
             <h3 className="game-sub-title">ALL BOXES</h3>
             <p className="box-prizes">
             {prizes.map((item, key) => (
@@ -324,33 +359,52 @@ class MysteryBox extends Component {
     );
   };
 
+
+  toggleBtnHandler = () => {
+    this.setState({
+      clicked:!this.state.clicked,
+      text: 'LINK GRABBED'
+    });
+    setTimeout(() => {
+      this.setState({
+        clicked:!this.state.clicked,
+        text: ''
+      });
+    }, 1000);
+  }
+
+  copy() {
+    navigator.clipboard.writeText(twitterLink)
+  }
+
+
   render() {
+    
     return (
       <div>
         {this.getBetForm()}
-        {this.state.betResult === 0 ? (
+        {this.state.isOpen === true && (this.state.betResult === 0 || this.state.betResult === 1) && (
           <ReactModal 
             isOpen={true}
             contentLabel="Prizes"
-            onRequestClose={() => {
-              this.setState({ betResult: -1 });
-            }}
+            closeModal={this.onBtnPlayAgainClicked}
             style={customStyles}
           ><div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-body edit-modal-body">
-            <button className="btn-close" onClick={this.closeModal}>×</button>
+            <button className="btn-close" onClick={this.onBtnPlayAgainClicked}>×</button>
             {this.getBetResultForm()}
             {/* <button onClick={this.onBtnPlayAgainClicked}>Okay</button> */}
             </div>
             </div>
           </ReactModal>
-        ) : null}
+         : null)}
         </div>
     );
   }
 }
 
 const mapStateToProps = state => ({
+  socket: state.auth.socket,
   auth: state.auth.isAuthenticated,
   balance: state.auth.balance,
   betResult: state.logic.betResult,

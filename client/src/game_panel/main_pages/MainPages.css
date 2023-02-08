@@ -810,7 +810,7 @@ overflow: hidden;
 .game-page .game-contents .game-info-panel .edit-amount-panel {
     margin-top: 16px;
     height: 35px;
-    width: 200px;
+    width: 170px;
     border-radius: 8px;
     display: flex;
     justify-content: left;
@@ -821,6 +821,16 @@ overflow: hidden;
     display: inline-block;
     white-space: nowrap;
 }
+
+.box-btn-row {
+    margin-top: 15px;
+    display: flex;
+}
+
+.game-page .game-contents .game-info-panel .create-box-panel button {
+    width: 60%;
+    white-space: nowrap;
+}
 .game-page .game-contents .game-info-panel .edit-amount-panel span {
     font-size: 16px;
     color: #060607;
@@ -829,6 +839,12 @@ overflow: hidden;
     color: #d81718;
     font-size: 16px;
     font-weight: 600;
+    text-align: center;
+}
+.game-page .game-contents .game-info-panel .previous-guesses span{
+    margin-bottom: 12px !important;
+    margin-right: 10px !important;
+    display: inline-block;
 }
 .game-page .game-contents .game-info-panel .edit-amount-panel input,  #betamount {
     height: 33px;
@@ -1047,6 +1063,7 @@ input {
     padding-top: 45px;
     background-repeat: no-repeat;
 }
+
 .boxes-panel .box i {
     width: 20px;
     height: 20px;
@@ -1144,8 +1161,10 @@ width: 100px;
 }
 .game-page .game-contents .game-info-panel .create-box-panel {
     display: flex;
-    align-items: flex-end;
+    justify-content: space-between;
     margin-top: 32px;
+    flex-wrap: wrap;
+    align-items: center;
 }
 .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
     display: flex;

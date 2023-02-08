@@ -34,7 +34,7 @@ class HeatmapChart extends React.Component {
           range: 7,
           tickPlacement: 'between',
           axiesTicks: {
-            show: true
+            show: false
           },
           labels: {
             formatter: function (value) {

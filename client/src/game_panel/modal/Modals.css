@@ -22,13 +22,83 @@
 #withdrawal-status h6 {
  text-shadow: -1px 0px 2px #fff;
 }
-
-
+.release-updates {
+    padding: 1rem;
+    text-align: center;
+  }
+  .rps-game-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    overflow-x: scroll;
+  }
+  
+  .rps-game-card {
+    width: 300px;
+    height: 400px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin-right: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .rps-game-card:hover {
+    transform: scale(1.1);
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .feature-list li {
+    width: 30%;
+    margin: 1rem;
+    padding: 1rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    text-align: center;
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(246,246,246,1) 47%,rgba(237,237,237,1) 100%);
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .feature-list li:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  .feature-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .feature-description {
+    font-size: 1rem;
+    margin-bottom: 0;
+    color: gray;
+  }
+    
 .modal-body.edit-modal-body {
     width: 700px;
     max-height: 85vh;
     overflow-y: auto;
     overflow-x: hidden;
+
 }
 .modal-body.edit-modal-body.terms-modal-body {
     width: 1000px;
@@ -77,8 +147,15 @@
     font-size: 16px;
     font-weight: 500;
 }
-
-
+.how-to-play-modal-body,
+div[aria-label="Privacy Modal"] .modal-body,
+div[aria-label="Terms Modal"] .modal-body, 
+div[aria-label="Player Modal"] .modal-body,
+div[aria-label="Profile Modal"] .modal-body,
+div[aria-label="Add Question Modal"] .modal-body {
+border-top-right-radius: 0 !important;
+border-bottom-right-radius: 0 !important;
+}
 .modal-body h2,
 .modal-body h5 {
     text-align: center;

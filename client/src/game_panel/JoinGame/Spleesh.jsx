@@ -3,7 +3,8 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import InlineSVG from 'react-inlinesvg';
-
+import { TwitterShareButton, TwitterIcon } from 'react-share';
+import { FaClipboard } from 'react-icons/fa';
 import {
   alertModal,
   confirmModalCreate,
@@ -12,12 +13,17 @@ import {
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 
+
+const twitterLink = window.location.href;
+
+
 class Spleesh extends Component {
   constructor(props) {
     super(props);
     this.state = {
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
+      copied: false,
       is_anonymous: false,
       balance: this.props.balance,
       isPasswordCorrect: false
@@ -42,6 +48,14 @@ class Spleesh extends Component {
   onShowButtonClicked = e => {
     e.preventDefault();
   };
+
+  componentDidMount = () => {
+    const { socket } = this.props
+    socket.on('UPDATED_SPLEESH_BET_UNIT', data => {
+      this.setState({ bet_amount: data.spleesh_bet_unit })
+    })
+  }
+  
 
   componentDidUpdate(prevProps, prevState) {
     if (
@@ -86,14 +100,12 @@ class Spleesh extends Component {
           this.props.isDarkMode,
           text,
           result.betResult,
-          'Try again',
-          'Close',
+          'Okay',
+          null,
           () => {
-            history.go(0);
+            // history.push('/');
           },
-          () => {
-            history.push('/');
-          }
+          () => {}
         );
       }
     } else {
@@ -103,8 +115,7 @@ class Spleesh extends Component {
     }
   };
 
-  onBtnBetClick = e => {
-    e.preventDefault();
+  onBtnBetClick = () => {
 
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
@@ -149,6 +160,7 @@ class Spleesh extends Component {
               bet_amount: i * this.props.spleesh_bet_unit,
               endgame_amount: this.props.spleesh_bet_unit * (55 - i)
             });
+            this.onBtnBetClick();
           }}
           key={i}
         >
@@ -161,7 +173,34 @@ class Spleesh extends Component {
     return panel;
   };
 
+
+  toggleBtnHandler = () => {
+    this.setState({
+      clicked:!this.state.clicked,
+      text: 'LINK GRABBED'
+    });
+    setTimeout(() => {
+      this.setState({
+        clicked:!this.state.clicked,
+        text: ''
+      });
+    }, 1000);
+  }
+
+  copy() {
+    navigator.clipboard.writeText(twitterLink)
+  }
+
+
   render() {
+
+    const styles = ['copy-btn'];
+    let text = 'COPY CONTRACT';
+
+   if (this.state.clicked) {
+   styles.push('clicked');
+   text = 'COPIED!';
+   }
 
     return (
       <div className="game-page">
@@ -210,18 +249,34 @@ class Spleesh extends Component {
           </div>
           <hr />
           <div className="action-panel">
-            <span></span>
-            <button id="btn_bet" onClick={this.onBtnBetClick}>
+          <div className="share-options">
+          <TwitterShareButton
+    url={twitterLink}
+    title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
+    className="Demo__some-network__share-button"
+  >
+    <TwitterIcon size={32} round />
+  </TwitterShareButton>
+  {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
+  <a className={styles.join('')} onClick={() => {
+                                    this.toggleBtnHandler();
+                                    this.copy();
+                                }}>{this.state.clicked ? <input type="text" value={twitterLink} readOnly onClick={this.toggleBtnHandler}/> : null }
+  <FaClipboard />&nbsp;{this.state.text}</a>
+
+        </div>
+            {/* <button id="btn_bet" onClick={this.onBtnBetClick}>
               Place Bet
-            </button>
+            </button> */}
+          </div>
           </div>
         </div>
-      </div>
     );
   }
 }
 
 const mapStateToProps = state => ({
+  socket: state.auth.socket,
   auth: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,

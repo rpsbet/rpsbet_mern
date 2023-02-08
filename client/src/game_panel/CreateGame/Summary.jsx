@@ -6,7 +6,8 @@ class Summary extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      winChance: 0
+      winChance: 0,
+      public_bet_amount: 0
     }
     if(this.props.game_mode === 'RPS'){
       this.state.winChance = 33
@@ -59,7 +60,7 @@ class Summary extends Component {
         ) && (
           <div className="data-item">
             <div className="label public-bet-amount">THEIR BET</div>
-            <div className="value">{convertToCurrency(public_bet_amount)}</div>
+            <div className="value">{public_bet_amount}</div>
           </div>
         )}
         <div className="data-item">

@@ -70,6 +70,7 @@ class CreateGame extends Component {
       brain_game_type: this.props.brain_game_type,
       rps_game_type: 0
     };
+    
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -93,6 +94,7 @@ class CreateGame extends Component {
   };
 
   async componentDidMount() {
+
     this.IsAuthenticatedReroute();
     this.props.getHistory();
     // this.props.getGameTypeList();
@@ -123,6 +125,7 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 2,
+        winChance: 0,
         endgame_amount: 54,
         max_return: 54,
         public_bet_amount: this.state
@@ -140,7 +143,9 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 3,
-        max_return: '∞'
+        winChance: 0,
+        max_return: '∞',
+        endgame_amount: 0
       };
     } else if (gameTypeName === 'Quick Shoot') {
       newState = {
@@ -149,19 +154,25 @@ class CreateGame extends Component {
         public_bet_amount: convertToCurrency(1),
         max_return: 2,
         winChance: 0,
-        qs_nation: Math.floor(Math.random() * 5)
+        qs_nation: Math.floor(Math.random() * 5),
+        endgame_amount: 0
       };
     } else if (gameTypeName === 'Mystery Box') {
       newState = {
         ...newState,
         game_type: 4,
-        bet_amount: 0
+        winChance: 0,
+        bet_amount: 0,
+        public_bet_amount: 0,
+        endgame_amount: 0
       };
     } else if (gameTypeName === 'Drop Game') {
       newState = {
         ...newState,
         game_type: 6,
-        bet_amount: 0
+        winChance: 0,
+        bet_amount: 0,
+        endgame_amount: 0
       };
     }
 
@@ -284,7 +295,7 @@ class CreateGame extends Component {
 
       if (
         // this.state.game_mode !== 'RPS' &&
-        this.state.game_mode !== 'Quick Shoot' &&
+        this.state.game_mode !== 'mtf jones' &&
         this.state.child_step === 1
       ) {
         this.setState({
@@ -340,6 +351,7 @@ class CreateGame extends Component {
           is_private={this.state.is_private}
           is_anonymous={this.state.is_anonymous}
           room_password={this.state.room_password}
+          winChance={this.state.winChance}
           endgame_type={this.state.endgame_type}
           endgame_amount={this.state.endgame_amount}
           step={this.state.child_step}
@@ -353,7 +365,9 @@ class CreateGame extends Component {
           bet_amount={this.state.bet_amount}
           max_return={this.state.max_return}
           max_prize={this.state.max_prize}
+          winChance={this.state.winChance}
           endgame_amount={this.state.endgame_amount}
+          calcWinChance={this.calcWinChance}
         />
       );
     } else if (this.state.game_mode === 'Brain Game') {
@@ -361,6 +375,7 @@ class CreateGame extends Component {
         <BrainGame
           onChangeState={this.onChangeState}
           bet_amount={this.state.bet_amount}
+          winChance={this.state.winChance}
           brain_game_type={this.state.brain_game_type}
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
@@ -369,14 +384,13 @@ class CreateGame extends Component {
     } else if (this.state.game_mode === 'Quick Shoot') {
       return (
         <QuickShoot
-        qs_list={this.state.qs_list}
           onChangeState={this.onChangeState}
+          qs_list={this.state.qs_list}
           bet_amount={this.state.bet_amount}
           is_private={this.state.is_private}
           is_anonymous={this.state.is_anonymous}
           winChance={this.state.winChance}
           room_password={this.state.room_password}
-          endgame_type={this.state.endgame_type}
           endgame_amount={this.state.endgame_amount}
           qs_game_type={this.state.qs_game_type}
           selected_qs_position={this.state.selected_qs_position}
@@ -425,6 +439,7 @@ class CreateGame extends Component {
       </>
     );
   };
+
 
   getActiveTabText = () =>
   (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
@@ -503,12 +518,15 @@ class CreateGame extends Component {
               public_bet_amount={this.state.public_bet_amount}
               spleesh_bet_unit={this.state.spleesh_bet_unit}
               winChance={this.state.winChance}
+  calcWinChance={this.props.calcWinChance}
             />
           )}
           {this.state.step === 2 && this.step2()}
           {this.state.step === 3 && (
             <AdvancedSettings
+            calcWinChance={this.calcWinChance}
               onChangeState={this.onChangeState}
+              winChance={this.state.winChance}
               is_private={this.state.is_private}
               room_password={this.state.room_password}
               game_mode={this.state.game_mode}
@@ -516,6 +534,7 @@ class CreateGame extends Component {
               endgame_amount={this.state.endgame_amount}
               is_anonymous={this.state.is_anonymous}
               step={this.state.child_step}
+              box_list={this.state.box_list}
             />
           )}
           {this.state.step === 5 &&

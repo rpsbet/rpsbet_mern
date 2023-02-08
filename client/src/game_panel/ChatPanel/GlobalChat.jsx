@@ -107,7 +107,15 @@ if (current_state.chat_list.length !== props.globalChatList.length) {
                     darkMode={this.props.isDarkMode}
                   /> */}
                 <span className="sender-name">{chat.sender}</span></a>
-                <span className="chat-text">{chat.message}</span>
+                <span className="chat-text">
+                {
+        chat.message.split(/(\S+\.[^\s]+)/).map((part, i) =>
+          /\S+\.[^\s]+/.test(part) && !/\.{2,}/.test(part)
+            ? <a href={part} target="_blank" rel="noopener noreferrer">{part}</a>
+            : part
+        )
+      }
+    </span>
               </div>
               <div className="chat-time">{chat.time}</div>
             </div>

@@ -2,16 +2,24 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
+import AddQuestionModal from '../modal/AddQuestionModal';
 
 class BrainGame extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            showModal: false,
             is_other: (this.props.bet_amount === 1 || this.props.bet_amount === 2.5 || this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25) ? 'hidden' : ''
         };
     }
 
+    toggleModal = () => {
+        this.setState({ showModal: !this.state.showModal });
+      };
+    
+
     render() {
+        
         return (this.props.step === 1 ? 
             <DefaultBetAmountPanel bet_amount={this.props.bet_amount} onChangeState={this.props.onChangeState} game_type="Brain Game" />
             :
@@ -26,6 +34,18 @@ class BrainGame extends Component {
                             {game_type.game_type_name}
                         </button>
                     ))}
+                    <button className="add-new-game-type" onClick={this.toggleModal}>
+                      + Add New
+                    </button>
+                    {this.state.showModal && (
+         
+            <AddQuestionModal
+            modalIsOpen={this.state.showModal}
+              closeModal={this.toggleModal}
+              darkMode={this.props.isDarkMode}
+            />
+          
+        )}
                 </div>
             </div>
         );
@@ -33,11 +53,13 @@ class BrainGame extends Component {
 }
 
 const mapStateToProps = state => ({
-    game_type_list: state.questionReducer.game_type_list
+    game_type_list: state.questionReducer.game_type_list,
+    isDarkMode: state.auth.isDarkMode,
 });
 
 const mapDispatchToProps = {
     setCurrentQuestionInfo,
+    
 };
 
 export default connect(

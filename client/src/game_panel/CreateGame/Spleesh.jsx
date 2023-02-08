@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import { convertToCurrency } from '../../util/conversion';
 
+
 class Spleesh extends Component {
   createNumberPanel() {
+    console.log(this.props.spleesh_bet_unit)
     let panel = [];
     for (let i = 1; i <= 10; i++) {
       panel.push(
@@ -48,6 +50,7 @@ class Spleesh extends Component {
               {convertToCurrency(item)} - {convertToCurrency(item * 10)}
             </button>
           ))}
+        
         </div>
       </div>
     ) : (

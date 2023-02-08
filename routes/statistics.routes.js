@@ -150,6 +150,10 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         statistics['totalWagered'] += log.bet_amount;
       }
 
+      if (!log.room) {
+        return { error: 'Room object is null or undefined' };
+      }
+      
       statistics['gameLogList'].push({
         game_id: log.game_type.short_name + '-' + log.room.room_number,
         room_id: log.room._id,

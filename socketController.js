@@ -76,6 +76,16 @@ module.exports.socketio = server => {
       });
     });
 
+    socket.on('UPDATED_BOX_LIST', (data) => {
+      console.log("Received updated box list:", data);
+
+      socket.broadcast.emit('UPDATED_BOX_LIST', data);
+    });
+
+    socket.on('UPDATED_SPLEESH_BET_UNIT', (data) => {
+      socket.broadcast.emit('UPDATED_SPLEESH_BET_UNIT', data);
+    });
+
     socket.on('UPDATED_BANKROLL', (data) => {
       socket.broadcast.emit('UPDATED_BANKROLL', data);
     });
