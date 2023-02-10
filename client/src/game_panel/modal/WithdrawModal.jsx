@@ -114,7 +114,7 @@ class WithdrawModal extends Component {
                 <LoadingOverlay
                     active={true}
                     spinner
-                    text="Please wait..."
+                    text="CONNECTING..."
                     styles={{
                         wrapper: {
                             position: 'fixed',

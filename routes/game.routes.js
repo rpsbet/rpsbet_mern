@@ -1212,7 +1212,7 @@ router.post('/bet', auth, async (req, res) => {
       if (roomInfo['creator']._id === req.user._id) {
         res.json({
           success: false,
-          message: "THIS IS YOUR OWN GAME!!!",
+          message: `DIS YOUR OWN STAKE CRAZY FOO-!`,
           betResult: -101
         });
 
@@ -1599,6 +1599,7 @@ router.post('/bet', auth, async (req, res) => {
         newTransactionJ.amount -= selected_box.box_price;
         newTransactionJ.amount += selected_box.box_prize * ((100 - commission.value) / 100);
 
+        
         if (selected_box.box_prize === 0) {
           message.message =
             'I won NOTHING in ' +
@@ -1637,7 +1638,15 @@ router.post('/bet', auth, async (req, res) => {
           }
         });
 
-        
+        // Retrieve the updated box list data from the database
+const updatedBoxList = await RoomBoxPrize.find({ room: roomInfo });
+
+// Emit the updated box list data to the connected clients
+if (req.io.sockets) {
+  req.io.sockets.emit('UPDATED_BOX_LIST', {
+    box_list: updatedBoxList
+  });
+}
 
         if (
           (roomInfo['endgame_type'] && new_host_pr >= roomInfo.endgame_amount) ||
@@ -1647,32 +1656,39 @@ router.post('/bet', auth, async (req, res) => {
           const originalBoxList = await RoomBoxPrize.find({ room: roomInfo }).select('box_prize box_price');
           
           let originalHasZero = originalBoxList.some(box => box.box_price === 0);
-          
           await RoomBoxPrize.deleteMany({ room: roomInfo });
 
-let updatedBoxList = originalBoxList.map(box => {
-  let randomAmount = Math.floor(Math.random() * 5) - 2;
-  let newPrice = box.box_price + randomAmount;
-  while (newPrice <= 0) {
-    randomAmount = Math.floor(Math.random() * 5) - 2;
-    newPrice = box.box_price + randomAmount;
-  }
-  let newBox = new RoomBoxPrize({
-    room: roomInfo,
-    box_prize: box.box_prize,
-    box_price: newPrice,
-    status: 'init'
-  });
-  newBox.save();
-  return newBox;
-});
+          let boxPrizes = originalBoxList.map(box => box.box_prize);
+          
+          // shuffle the box prizes
+          for (let i = boxPrizes.length - 1; i > 0; i--) {
+              let j = Math.floor(Math.random() * (i + 1));
+              [boxPrizes[i], boxPrizes[j]] = [boxPrizes[j], boxPrizes[i]];
+          }
+          
+          let updatedBoxList = originalBoxList.map((box, index) => {
+            let randomAmount = Math.floor(Math.random() * 5) - 2;
+            let newPrice = box.box_price + randomAmount;
+            while (newPrice <= 0) {
+              randomAmount = Math.floor(Math.random() * 5) - 2;
+              newPrice = box.box_price + randomAmount;
+            }
+            let newBox = new RoomBoxPrize({
+              room: roomInfo,
+              box_prize: boxPrizes[index],
+              box_price: newPrice,
+              status: 'init'
+            });
+            newBox.save();
+            return newBox;
+          });
+          
 
-if (req.io.sockets) {
-  req.io.sockets.emit('UPDATED_BOX_LIST', {
-    box_list: updatedBoxList
-  });
-}
-
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATED_BOX_LIST', {
+              box_list: updatedBoxList
+            });
+          }
 
         
         
@@ -1703,6 +1719,8 @@ if (req.io.sockets) {
           });
           await newGameLogC.save();
         }
+        
+
 
         roomInfo.host_pr = new_host_pr;
         roomInfo.user_bet = lowest_box_price === -1 ? 0 : lowest_box_price;

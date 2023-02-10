@@ -312,8 +312,7 @@ class QuickShoot extends Component {
       // console.log(prevStates)
       const nextQS = this.predictNext(prevStates, this.props.qs_game_type);
       // console.log('wankeer', nextQS)
-      this.onAddRun(nextQS);
-
+      this.handlePositionSelection(nextQS);
     }else {
       alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
       return;
@@ -381,7 +380,7 @@ class QuickShoot extends Component {
             <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
             {this.state.animation}
             {this.renderButtons()}
-            <button onClick={this.onAutoPlay}>Test AI Play</button>
+            <button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</button>
             {/* <div className="qs-action-panel">
               <button
                 className="btn-left"
@@ -395,17 +394,16 @@ class QuickShoot extends Component {
             </div> */}
             </div>
             <div className="qs-add-run-table">
-            <h3 className="game-sub-title">Runs</h3>
-            <table>
+            <h3 className="game-sub-title">TRAINING DATA</h3>
+            {/* <table>
               <thead>
                 <tr>
                   <th>INDEX</th>
                   <th>POS</th>
-                  {/* <th>BET / PR</th> */}
                   <th></th>
                 </tr>
               </thead>
-              </table>
+              </table> */}
              
 <table id="runs">
   <tbody>

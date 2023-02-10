@@ -173,7 +173,7 @@ getPreviousBets() {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
-    this.props.refreshHistory();
+    // this.props.refreshHistory();
   };
 
 
@@ -183,7 +183,7 @@ getPreviousBets() {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `THIS IS YOUR OWN STAKE!! ARE YOU OKAY?!`
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
       );
       return;
     }

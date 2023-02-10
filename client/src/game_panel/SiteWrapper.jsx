@@ -3,6 +3,7 @@ import { createTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import song from './sounds/tems.mp3';
 import LoadingOverlay from 'react-loading-overlay';
+import ReactApexChart from 'react-apexcharts';
 
 import {
   setSocket,
@@ -16,6 +17,7 @@ import {
   addChatLog,
   getMyGames,
   getMyHistory,
+  getHistory,
   addNewTransaction,
   updateOnlineUserList,
   selectMainTab,
@@ -132,10 +134,11 @@ class SiteWrapper extends Component {
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
       anchorEl: null,
+      
       web3: null,
       web3account: '',
-      web3balance: 0
-    };
+      web3balance: 0,
+    }
     
   }
   
@@ -195,6 +198,7 @@ class SiteWrapper extends Component {
       this.props.getUser(true);
       this.props.getMyGames(1);
       this.props.getMyHistory();
+      this.props.getHistory();
     });
 
     socket.on('SEND_CHAT', data => {
@@ -307,7 +311,60 @@ class SiteWrapper extends Component {
       });
     }
     this.loadWeb3();
-  }
+      this.fetchData();
+      setInterval(() => this.fetchData(), 2000); // Call the fetchData method every 2 seconds
+    }
+    
+    async fetchData() {
+      const transactions = this.props.transactions;
+    
+      let categories = [];
+      let data = [];
+      let currentBalance = 0;
+    
+      transactions.forEach(transaction => {
+        categories.push(transaction.created_at);
+        currentBalance += transaction.amount;
+        data.push({
+          x: categories.length - 1,
+          y: currentBalance,
+          color: transaction.amount >= 0 ? 'green' : 'red',
+        });
+      });
+    
+      this.setState({
+        options: {
+          chart: {
+            id: 'balance-chart',
+            toolbar: {
+              show: false
+            },
+            markers: {
+              size: 0,
+            },
+            grid: {
+              show: false,
+            },
+            tooltip: {
+              enabled: false,
+            },
+          },
+          xaxis: {
+            categories,
+          },
+          yaxis: {
+            opposite: true,
+          },
+          interactions: [],
+        },
+    
+        series: [
+          {
+            data,
+          },
+        ],
+      });
+    }
 
   componentWillUnmount() {
     if (this.props.socket) {
@@ -407,24 +464,24 @@ class SiteWrapper extends Component {
     this.setState({ showGameLog: !this.state.showGameLog });
   };
 
-  playPause = () => {
-    this.audio.loop = true;
-    // Get state of song
-    let isPlaying = this.state.isPlaying;
+  // playPause = () => {
+  //   this.audio.loop = true;
+  //   // Get state of song
+  //   let isPlaying = this.state.isPlaying;
 
-    if (isPlaying) {
-      // Pause the song if it is playing
-      this.state.audio.pause();
-    } else {
+  //   if (isPlaying) {
+  //     // Pause the song if it is playing
+  //     this.state.audio.pause();
+  //   } else {
 
-      // Play the song if it is paused
-      this.state.audio.play();
-    }
+  //     // Play the song if it is paused
+  //     this.state.audio.play();
+  //   }
 
-    // Change the state of song
-    this.setState({ isPlaying: !isPlaying });
+  //   // Change the state of song
+  //   this.setState({ isPlaying: !isPlaying });
     
-  };
+  // };
 
 
   disconnectWeb3 = async () => {
@@ -433,6 +490,17 @@ class SiteWrapper extends Component {
   };
 
   render() {
+   
+
+    const texts = [
+      'FRANKLY, IDC 😎', 'FAIL FASTER 💥', 'DOING WINS 🔥', 'PLAY THE INFINITE GAME ♾',
+      'BRING YOUR SEED 🌱', 'STILL, I RISE 📈',  'AIM FOR THE MOON 🚀', 'LOSERS QUIT 💪',
+      'TIME COSTS LIVES 🔪', 'LOSERS REACT 🤬', 'LEADERS ANTICIPATE 👀', 'THINGS HAPPEN JUST 🎯',
+      'BUY THE RUMOR 💲', 'THINK HARDER 🤔',  'WE HAVE 6 SENSES 👃', 'AVERAGE SUCKS! 🐂',
+      'TIME COSTS LIVES 🔪', 'NEVER SETTLE 🏆', 'BE FEARLESS ⚔', 'BE UNSTOPPABLE 🧨',
+      'AVOID BEING REALISTIC 🌴', 'INTELLECTS LOVE ❤',  'ATTITUDE IS PRICELESS 💳', 'GENIUSES ARE MADE 🧠'
+    ];
+const randomText = texts[Math.floor(Math.random() * texts.length)];
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
         <div
@@ -440,10 +508,11 @@ class SiteWrapper extends Component {
             this.props.isDarkMode ? 'dark_mode' : ''
           }`}
         >
+          
           <LoadingOverlay
             active={this.state.isActiveLoadingOverlay}
             spinner
-            text="Please wait..."
+            text={randomText}
             styles={{
               wrapper: {
                 position: 'fixed',
@@ -542,6 +611,82 @@ class SiteWrapper extends Component {
                         </ListItemIcon>
                         <ListItemText>PROFILE</ListItemText>
                       </MenuItem>
+                      <MenuItem onClick={this.playPause}>
+                        
+                      <ReactApexChart
+        options={{
+          chart: {
+            animations: {
+              enabled: false
+            },
+            toolbar: {
+              show: false
+            },
+            events: {},
+            zoom: {
+              enabled: false
+            },
+            
+          },
+          grid: {
+            show: false
+          },
+          tooltip: {
+            enabled: false
+          },
+          fill: {
+            type: 'gradient',
+            gradient: {
+              shade: 'light',
+              gradientToColors: ['#8F7CC3'],
+              shadeIntensity: 1,
+              type: 'vertical',
+              opacityFrom: 0.7,
+              opacityTo: 0.9,
+              stops: [0, 100, 100]
+            }
+          },
+          stroke: {
+            curve: 'smooth'
+          },
+          xaxis: {
+            labels: {
+              show: false
+            },
+            axisTicks: {
+              show: false
+            },
+            axisBorder: {
+              show: false
+            },
+          },
+          yaxis: {
+            labels: {
+              show: false
+            },
+            axisTicks: {
+              show: false
+            },
+            axisBorder: {
+              show: false
+            },
+          },
+          
+        }}
+        series={this.state.series}
+        type="line"
+        height="80"
+      />
+
+                        {/* <ListItemText>{this.state.isPlaying ? <div className="playBtn">
+                        <ListItemIcon>
+                          <PauseCircleOutlineIcon /></ListItemIcon> PAUSE</div>
+                          : 
+                          <div className="playBtn"><ListItemIcon>
+                            <PlayCircleOutlineIcon/> </ListItemIcon> PLAY</div>}</ListItemText> */}
+                      </MenuItem>
+                      <Divider />
+
                       <MenuItem
                         onClick={e => {
                           this.handleLogout(true);
@@ -552,15 +697,7 @@ class SiteWrapper extends Component {
                         </ListItemIcon>
                         <ListItemText>LOGOUT</ListItemText>
                       </MenuItem>
-                      <Divider />
-                      <MenuItem onClick={this.playPause}>
-                        <ListItemText>{this.state.isPlaying ? <div className="playBtn">
-                        <ListItemIcon>
-                          <PauseCircleOutlineIcon /></ListItemIcon> PAUSE</div>
-                          : 
-                          <div className="playBtn"><ListItemIcon>
-                            <PlayCircleOutlineIcon/> </ListItemIcon> PLAY</div>}</ListItemText>
-                      </MenuItem>
+                      
                       <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
                         {/* <ListItemText></ListItemText> */}
@@ -795,6 +932,7 @@ const mapDispatchToProps = {
   addChatLog,
   getMyGames,
   getMyHistory,
+  getHistory,
   setUnreadMessageCount,
   addNewTransaction,
   setDarkMode,

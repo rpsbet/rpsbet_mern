@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
+import { updateBetResult } from '../../redux/Logic/logic.actions';
+
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -43,8 +45,13 @@ class MysteryBox extends Component {
       is_anonymous: false,
       balance: this.props.balance,
       betResult: this.props.betResult,
+      betResults: [],
       isPasswordCorrect: false,
-      isOpen: true
+      isOpen: true,
+      betting: false,
+      holdTime: 0,
+        clicked: true,
+        intervalId: null,
 
     };
   }
@@ -84,11 +91,9 @@ class MysteryBox extends Component {
   componentDidMount() {
     const { socket } = this.props
     socket.on('UPDATED_BOX_LIST', data => {
-      console.log("jimmy updated box list:", data);
 
       this.setState({ box_list: data.box_list })
     })
-
 
 //     const firstSelectedBox = this.state.box_list.find(box => box.active);
 //     if (firstSelectedBox) {
@@ -101,7 +106,7 @@ componentDidUpdate(prevProps, prevState) {
   if (prevState.box_list !== this.state.box_list) {
     this.setState({ box_list: this.state.box_list });
   }
-  console.log(this.state.betResult);
+  // console.log(this.state.betResult);
   if (
     prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
     this.state.isPasswordCorrect === true
@@ -121,12 +126,142 @@ componentDidUpdate(prevProps, prevState) {
   
 }
 
+predictNext = (betAmountArray, boxList) => {
+  let transitions = {};
+  let probabilities = {};
+  let startProbabilities = {};
+  let distinctBoxes = [...new Set(boxList)];
+
+  // Calculate start probabilities
+  for (let i = 0; i < boxList.length; i++) {
+    if (startProbabilities[boxList[i]]) {
+      startProbabilities[boxList[i]]++;
+    } else {
+      startProbabilities[boxList[i]] = 1;
+    }
+  }
+
+  let totalStartStates = Object.values(startProbabilities).reduce(
+    (a, b) => a + b
+  );
+
+  for (let box in startProbabilities) {
+    startProbabilities[box] /= totalStartStates;
+  }
+
+  // Calculate transition probabilities
+  for (let i = 0; i < boxList.length - 1; i++) {
+    let currentBox = boxList[i];
+    let nextBox = boxList[i + 1];
+
+    if (transitions[currentBox]) {
+      if (transitions[currentBox][nextBox]) {
+        transitions[currentBox][nextBox]++;
+      } else {
+        transitions[currentBox][nextBox] = 1;
+      }
+    } else {
+      transitions[currentBox] = {};
+      transitions[currentBox][nextBox] = 1;
+    }
+  }
+
+  for (let currentBox in transitions) {
+    let currentBoxTransitions = transitions[currentBox];
+    let totalCurrentBoxTransitions = Object.values(
+      currentBoxTransitions
+    ).reduce((a, b) => a + b);
+
+    probabilities[currentBox] = {};
+
+    for (let nextBox in currentBoxTransitions) {
+      probabilities[currentBox][nextBox] =
+        currentBoxTransitions[nextBox] / totalCurrentBoxTransitions;
+    }
+  }
+
+  // Make prediction
+  let prediction = null;
+  let maxProbability = -1;
+
+  for (let i = 0; i < distinctBoxes.length; i++) {
+    let currentBox = distinctBoxes[i];
+    let currentBoxProbability =
+      startProbabilities[currentBox] *
+      probabilities[currentBox][betAmountArray[betAmountArray.length - 1]];
+
+    if (currentBoxProbability > maxProbability) {
+      maxProbability = currentBoxProbability;
+      prediction = currentBox;
+    }
+  }
+
+  return prediction;
+};
+
+startBetting = () => {
+  const intervalId = setInterval(() => {
+    const nextBox = this.predictNext(JSON.parse(localStorage.getItem("bet_array")), this.state.box_list);
+
+    this.joinGame2(nextBox.box_price);
+  }, 3500);
+
+  this.setState({ intervalId });
+};
+
+stopBetting = () => {
+  clearInterval(this.state.intervalId);
+  this.setState({ intervalId: null });
+};
+
+joinGame2 = async (predictedBetAmount) => {
+  const availableBoxes = this.state.box_list.filter(
+    box =>
+      box.status === "init" &&
+      (box.box_price >= predictedBetAmount - 4) &&
+      (box.box_price <= predictedBetAmount + 4)
+  );
+  if (availableBoxes.length === 0) {
+    alertModal(
+      this.props.isDarkMode,
+      `No available boxes with the predicted bet amount found`
+    );
+    return;
+  }
+  
+  const randomIndex = Math.floor(Math.random() * availableBoxes.length);
+  const selectedBox = availableBoxes[randomIndex];
+  const result = await this.props.join({
+    bet_amount: parseFloat(this.state.bet_amount),
+    selected_id: selectedBox._id,
+    is_anonymous: this.state.is_anonymous,
+    // slippage: this.state.slippage
+  });
+  
+  const currentUser = this.props.user;
+  const currentRoom = this.props.room;
+  if (result.status === 'success') {
+    this.setState(prevState => ({
+      betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
+    }));
+    let text = 'HAHAA, YOU LOST!!!';
+
+    if (result.betResult === 1) {
+      this.props.updateBetResult('win')
+      text = 'NOT BAD, WINNER!';
+    } else if (result.betResult === 0) {
+      this.props.updateBetResult('draw')
+      text = 'DRAW, NO WINNER!';
+    }else{
+      this.props.updateBetResult('lose')
+    }
+
+    this.props.refreshHistory();
+  }
+};
 
 
-  // openModal = () => {
-    
-  //   this.setState({ isModalOpen: true });
-  // }
+
   
   onBtnBetClick = (e, selected_id) => {
     if (e) {
@@ -135,16 +270,11 @@ componentDidUpdate(prevProps, prevState) {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `THIS IS YOUR OWN STAKE?!?`
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
       );
       return;
       
     }
-
-    // if (this.state.selected_id === '') {
-    //   alertModal(this.props.isDarkMode, `SELECT A BOX!!!`);
-    //   return;
-    // }
 
     if (this.state.bet_amount > this.state.balance) {
       alertModal(this.props.isDarkMode, `TOO BROKE!`);
@@ -177,13 +307,16 @@ componentDidUpdate(prevProps, prevState) {
             isOpen: true
 
           });
+          let stored_bet_array = JSON.parse(localStorage.getItem("bet_array")) || [];
+          stored_bet_array.push({ bet: this.state.bet_amount });
+          localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
+          console.log(stored_bet_array);
+
         }
       }
     );
   };
-  // closeModal = () => {
-  //   this.setState({ betResult: -1, isOpen: false });
-  // }
+  
   onBtnGoToMainGamesClicked = e => {
     e.preventDefault();
     history.push('/');
@@ -266,6 +399,8 @@ componentDidUpdate(prevProps, prevState) {
 
             </div>
             <p>Each box will open one of the Prizes above.</p>
+            <button onClick={this.startBetting }>AI Play</button>
+        <button onClick={this.stopBetting }>Stop</button>
           </div>
           <hr />
           <div className="action-panel">
@@ -383,9 +518,11 @@ componentDidUpdate(prevProps, prevState) {
     return (
       <div>
         {this.getBetForm()}
-        {this.state.isOpen === true && (this.state.betResult === 0 || this.state.betResult === 1) && (
-          <ReactModal 
-            isOpen={true}
+        { this.state.betResult !== -1 && 
+  this.state.isOpen && 
+  ( <ReactModal 
+    
+            isOpen={this.state.isOpen}
             contentLabel="Prizes"
             closeModal={this.onBtnPlayAgainClicked}
             style={customStyles}
@@ -397,7 +534,7 @@ componentDidUpdate(prevProps, prevState) {
             </div>
             </div>
           </ReactModal>
-         : null)}
+         )}
         </div>
     );
   }
@@ -415,8 +552,10 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name
 });
 
-const mapDispatchToProps = {
-  openGamePasswordModal
-};
+const mapDispatchToProps = dispatch => ({
+  openGamePasswordModal,
+  updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
+
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(MysteryBox);

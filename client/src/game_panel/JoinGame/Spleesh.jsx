@@ -120,7 +120,7 @@ class Spleesh extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `THIS IS YOUR OWN STAKE? ARE YOU OKAY!?`
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
       );
       return;
     }

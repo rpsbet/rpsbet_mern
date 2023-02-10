@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { getMyGames, endGame } from '../../redux/Logic/logic.actions';
+import { setBalance } from '../../redux/Auth/user.actions';
+import { getMyGames, endGame, addNewTransaction } from '../../redux/Logic/logic.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalClosed } from '../modal/ConfirmAlerts';
 import Pagination from '../../components/Pagination';
@@ -12,6 +13,8 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
 import InlineSVG from 'react-inlinesvg';
 
+
+
 const defaultOptions = {
   loop: true,
   autoplay: true,
@@ -21,11 +24,16 @@ const defaultOptions = {
   }
 };
 
+
+
 class MyGamesTable extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedGameType: 'All'
+      selectedGameType: 'All',
+      holding: false,
+      timer: null,
+      balance: this.props.balance
     };
   }
 
@@ -33,34 +41,81 @@ class MyGamesTable extends Component {
     this.props.getMyGames({
       game_type: this.state.selectedGameType
     });
+    console.log('balance', this.state.balance)
   }
 
-  endRoom = (winnings, room_id) => {
-    const convertToCurrency = input => {
-      let number = Number(input);
-      if(!isNaN(number)){
-        let [whole, decimal] = number.toFixed(2).toString().split('.');
-        whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        return <><InlineSVG src={`<svg id='busd' width="0.7em" height="0.7em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 336.41 337.42"><defs><style>.cls-1{fill:#f0b90b;stroke:#f0b90b;}</style></defs><title>BUSD Icon</title><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path class="cls-1" d="M168.2.71l41.5,42.5L105.2,147.71l-41.5-41.5Z"/><path class="cls-1" d="M231.2,63.71l41.5,42.5L105.2,273.71l-41.5-41.5Z"/><path class="cls-1" d="M42.2,126.71l41.5,42.5-41.5,41.5L.7,169.21Z"/><path class="cls-1" d="M294.2,126.71l41.5,42.5L168.2,336.71l-41.5-41.5Z"/></g></g></svg>`} /> {`${whole}.${decimal}`}</>;
-      }else{
-        return input;
-      }
-    };
-    confirmModalClosed(
-      true,
-      `TERMINATE GAME?`, //   YOU WILL TAKE  ${updateDigitToPoint2(winnings)} BUSD
-      'Okay',
-      'Cancel',
-      () => {
-        this.props.endGame(room_id, () => {
-          this.props.getMyGames({
-            game_type: this.state.selectedGameType
-          });
-        });
-      }
-    );
-  };
+  // endRoom = (winnings, room_id) => {
+  //   const convertToCurrency = input => {
+  //     let number = Number(input);
+  //     if(!isNaN(number)){
+  //       let [whole, decimal] = number.toFixed(2).toString().split('.');
+  //       whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  //       return <><InlineSVG src={`<svg id='busd' width="0.7em" height="0.7em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 336.41 337.42"><defs><style>.cls-1{fill:#f0b90b;stroke:#f0b90b;}</style></defs><title>BUSD Icon</title><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path class="cls-1" d="M168.2.71l41.5,42.5L105.2,147.71l-41.5-41.5Z"/><path class="cls-1" d="M231.2,63.71l41.5,42.5L105.2,273.71l-41.5-41.5Z"/><path class="cls-1" d="M42.2,126.71l41.5,42.5-41.5,41.5L.7,169.21Z"/><path class="cls-1" d="M294.2,126.71l41.5,42.5L168.2,336.71l-41.5-41.5Z"/></g></g></svg>`} /> {`${whole}.${decimal}`}</>;
+  //     }else{
+  //       return input;
+  //     }
+  //   };
+  //   confirmModalClosed(
+  //     true,
+  //     `TERMINATE GAME?`, //   YOU WILL TAKE  ${updateDigitToPoint2(winnings)} BUSD
+  //     'Okay',
+  //     'Cancel',
+  //     () => {
+  //       this.props.endGame(room_id, () => {
+  //         this.props.getMyGames({
+  //           game_type: this.state.selectedGameType
+  //         });
+  //       });
+  //     }
+  //   );
+  // };
 
+  handleButtonClick = (winnings, room_id) => {
+    let startTime = 1500;
+    this.setState({
+      [room_id]: {
+        holding: true,
+        timeLeft: startTime,
+        timer: setInterval(() => {
+          this.setState(prevState => {
+            const timeLeft = prevState[room_id].timeLeft - 10;
+            if (timeLeft === 0) {
+              clearInterval(prevState[room_id].timer);
+              this.endRoom(winnings, room_id);
+              this.props.addNewTransaction({ amount: winnings, room_id });
+              this.props.setBalance(this.state.balance + winnings);
+
+            }
+            return {
+              [room_id]: {
+                ...prevState[room_id],
+                timeLeft,
+              },
+            };
+          });
+        }, 10),
+      },
+    });
+  };
+  
+    handleButtonRelease = (room_id) => {
+      if (this.state[room_id] && this.state[room_id].timer) {
+        clearTimeout(this.state[room_id].timer);
+      }
+      this.setState({
+        [room_id]: { holding: false },
+      });
+    };
+    
+    
+    endRoom = (winnings, room_id) => {
+    this.props.endGame(room_id, () => {
+    this.props.getMyGames({
+    game_type: this.state.selectedGameType
+    });
+    });
+    };
+  
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
     this.props.getMyGames({
@@ -186,6 +241,7 @@ class MyGamesTable extends Component {
 
   render() {
     const gameTypePanel = this.generateGameTypePanel();
+    const { row } = this.props;
     return (
       <div className="my-open-games">
         <div className="game-type-container">
@@ -263,35 +319,32 @@ class MyGamesTable extends Component {
 </div>
 
                     <div className="table-cell action desktop-only">
-                      <button
-                        className="btn_end"
-                        onClick={e => {
-                          this.endRoom(
-                            row.bet_amount,
-                            e.target.getAttribute('_id')
-                          );
-                        }}
-                        _id={row._id}
-                      >
-                        UNSTAKE
-                      </button>
+                    <button
+      className="btn_end"
+      onMouseDown={() => this.handleButtonClick(row.bet_amount, row._id)}
+      onMouseUp={() => this.handleButtonRelease(row._id)}
+      onMouseLeave={() => this.handleButtonRelease(row._id)}
+      _id={row._id}
+    >
+      {this.state[row._id] && this.state[row._id].holding ? `${(this.state[row._id].timeLeft / 1000).toFixed(2)}s` : 'UNSTAKE'}
+    </button>
                     </div>
                   </div>
                   <div className="mobile-only">
                     <div className="table-cell room-id"></div>
                     <div className="table-cell action">
-                      <button
-                        className="btn_end"
-                        onClick={e => {
-                          this.endRoom(
-                            row.bet_amount,
-                            e.target.getAttribute('_id')
-                          );
-                        }}
-                        _id={row._id}
-                      >
-                        UNSTAKE
-                      </button>
+                    <button
+      className="btn_end"
+      onMouseDown={() => this.handleButtonClick(row.bet_amount, row._id)}
+      onMouseUp={() => this.handleButtonRelease(row._id)}
+      onMouseLeave={() => this.handleButtonRelease(row._id)}
+      onTouchStart={() => this.handleButtonClick(row.bet_amount, row._id)}
+  onTouchEnd={() => this.handleButtonRelease(row._id)}
+  onTouchCancel={() => this.handleButtonRelease(row._id)}
+      _id={row._id}
+    >
+      {this.state[row._id] && this.state[row._id].holding ? `${(this.state[row._id].timeLeft / 1000).toFixed(2)}s` : 'UNSTAKE'}
+    </button>
                     </div>
                   </div>
                 </div>
@@ -319,12 +372,16 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   myGames: state.logic.myGames,
   totalPage: state.logic.myGamesTotalPage,
-  pageNumber: state.logic.myGamesPageNumber
+  pageNumber: state.logic.myGamesPageNumber,
+  socket: state.auth.socket,
+  balance: state.auth.balance
 });
 
 const mapDispatchToProps = {
   endGame,
-  getMyGames
+  getMyGames,
+  addNewTransaction,
+  setBalance
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyGamesTable);

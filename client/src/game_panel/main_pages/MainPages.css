@@ -1,7 +1,12 @@
 button, button.btn {
     outline: none !important;
 }
-
+.your-bet-amount {
+    padding-left:15px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+}
 .contents_wrapper .main-game {
     display: grid;
     grid-template-columns: 15% 55% 30%;
@@ -276,7 +281,6 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     border-radius: 9px;
     padding: 4px 8px;
     white-space: nowrap;
-    margin-right: 10px;
 }
 .contents_wrapper .main-game h2 span {
     font-size: 12px;
@@ -716,6 +720,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 }.game-page .pre-summary-panel  div.your-bet-amount {
     background-repeat: no-repeat;
     background-size: 1.6em;
+    margin: unset;
     background-position: 0px 6px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' fill='none' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='url(%23paint0_linear)'/%3E%3Cg fill='%23fff' clip-path='url(%23clip0)'%3E%3Cpath d='M11.424 14.828l.958-.957.957.957-.957.958-.958-.958z'/%3E%3Cpath d='M18.617 10.788l-.056.001c-1.32-2.012-3.596-3.344-6.178-3.344C8.313 7.445 5 10.757 5 14.828c0 4.072 3.312 7.384 7.383 7.384l.053-.001c.623.95 1.46 1.751 2.441 2.329 1.13.664 2.423 1.015 3.74 1.015 4.07 0 7.383-3.312 7.383-7.383 0-4.072-3.312-7.384-7.383-7.384zm6.028 7.384c0 .855-.18 1.67-.502 2.408l-1.248-.72c.207-.523.32-1.093.32-1.688s-.113-1.164-.32-1.688l1.248-.72c.323.737.502 1.552.502 2.408zm-6.028 3.244c-.69 0-1.351-.219-1.9-.614 1.77-1.288 2.947-3.34 3.043-5.667 1.231.465 2.101 1.657 2.101 3.037 0 1.789-1.455 3.244-3.244 3.244zM6.355 14.828c0-.856.18-1.67.502-2.408l1.248.72c-.207.523-.32 1.093-.32 1.688 0 .596.113 1.165.32 1.688l-1.248.72c-.323-.737-.502-1.552-.502-2.408zm2.784 0c0-1.789 1.455-3.244 3.244-3.244 1.79 0 3.245 1.455 3.245 3.244 0 1.79-1.456 3.245-3.245 3.245-1.789 0-3.244-1.456-3.244-3.245zm9.273 0c0 .856-.18 1.67-.502 2.409l-1.248-.72c.207-.524.32-1.093.32-1.689 0-.595-.113-1.165-.32-1.688l1.248-.72c.323.738.502 1.552.502 2.408zm-5.351 5.99v-1.44c1.178-.175 2.211-.798 2.921-1.69l1.249.72c-.973 1.314-2.465 2.22-4.17 2.41zm10.403-6.227l-1.248.72c-.63-.791-1.516-1.373-2.536-1.615-.081-.526-.218-1.034-.405-1.517 1.713.187 3.213 1.094 4.189 2.412zm-6.233-3.343l-1.249.72c-.71-.891-1.743-1.514-2.921-1.689V8.838c1.705.191 3.197 1.097 4.17 2.41zm-5.525-2.41v1.441c-1.178.175-2.212.797-2.922 1.69l-1.248-.721c.973-1.313 2.465-2.219 4.17-2.41zm-4.17 9.57l1.248-.72c.71.892 1.744 1.515 2.922 1.69v1.44c-1.705-.19-3.197-1.096-4.17-2.41zm6.454 3.627c.518-.115 1.015-.285 1.486-.503.683.638 1.542 1.052 2.463 1.189v1.44c-1.54-.176-2.958-.943-3.95-2.126zm5.304 2.127v-1.441c1.178-.175 2.212-.798 2.922-1.69l1.248.721c-.973 1.313-2.465 2.219-4.17 2.41z'/%3E%3C/g%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear' x1='-7.881' x2='42.35' y1='-6.5' y2='39.672' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23FFB000'/%3E%3Cstop offset='1' stop-color='%23D81719'/%3E%3C/linearGradient%3E%3CclipPath id='clip0'%3E%3Cpath fill='%23fff' d='M0 0H21V21H0z' transform='translate(5 6)'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E%0A");
 }
@@ -828,7 +833,7 @@ overflow: hidden;
 }
 
 .game-page .game-contents .game-info-panel .create-box-panel button {
-    width: 60%;
+    /* width: 60%; */
     white-space: nowrap;
 }
 .game-page .game-contents .game-info-panel .edit-amount-panel span {
@@ -919,10 +924,11 @@ table#runs td svg {
 #rps-radio span {
     background-size: contain;
     background-repeat: no-repeat;
-    margin-right: 10px;
+    margin-right: 8px;
+    margin-bottom: 0 !important;
     display: inline-block;
-    width: 130px;
-    height: 117px;
+    width: 60px;
+    height: 60px;
     cursor: pointer;
     background-color: #d3d7db;
     border-radius: 12px;
@@ -1051,13 +1057,14 @@ input {
     padding-left: 8px;
     border-width: 1px;
 }
+
+
 .boxes-panel .box {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='74' height='72' fill='none' viewBox='0 0 74 72'%3E%3Cpath fill='%23FEBE7E' d='M47.956 72L0 61.182V9.23l47.956 7.2v55.57z'/%3E%3Cpath fill='%23C47D49' d='M74 55.237L47.956 72V16.43L74 5.133v50.105z'/%3E%3Cpath fill='%23FEDC98' d='M74 5.132L27.962 0 0 9.23l47.956 7.2L74 5.133z'/%3E%3Cpath fill='%23BA835D' d='M27.15 24.148l-9.48-1.514V11.926l9.48 1.44v10.782z'/%3E%3Cpath fill='%23C99570' d='M27.15 13.366l-9.48-1.44 26.192-10.19 8.927 1.033L27.15 13.366z'/%3E%3Cpath fill='%23A37452' d='M64.888 19.163l-5.976 2.77V11.704l5.976-2.585v10.043zM64.888 61.145l-5.976 3.84V54.091l5.976-3.212v10.264z'/%3E%3Cpath fill='%23C99570' d='M64.888 9.12L18.408 3.14 11.583 5.39l47.33 6.314 5.975-2.585z'/%3E%3Cpath fill='%23BA835D' d='M27.15 67.31l-9.48-2.067V54.5l9.48 1.44V67.31z'/%3E%3Cpath fill='%23BF6726' d='M0 9.231s3.726.148 6.825.554c4.574.59 11.03 2.141 11.03 2.141L0 9.231zM27.298 13.255s3.32.333 4.464.443c7.968.776 16.194 2.696 16.194 2.696l-20.658-3.139z'/%3E%3C/svg%3E%0A");
-    width: 74px;
-    height: 72px;
     position: relative;
-    margin-right: 8px;
-    margin-bottom: 30px;
+    margin-right: 0.1px;
+    margin-left: 6px;
+    margin-bottom: 6px;
     display: inline-block;
     text-align: center;
     padding-top: 45px;
@@ -1066,6 +1073,7 @@ input {
 
 .boxes-panel .box i {
     width: 20px;
+    z-index: 99;
     height: 20px;
     background-color: #ff0000;
     border-radius: 50%;
@@ -1079,20 +1087,22 @@ input {
     cursor: pointer;
 }
 .boxes-panel .box span {
-    background: #7a7a7a4a;
+    /* background: #7a7a7a4a; */
     color: #444;
-    font-size: 13px;
+    font-size: 11px;
     line-height: 30px;
     font-weight: bold;
     text-align: center;
     width: 100%;
-    display: inline-block;
+    display: table;
+    letter-spacing: 0.05em;
     border-radius: 9px;
-    padding: 4px 8px;
+    padding: 4px;
+    margin-top: -10px;
 }
 
 .boxes-panel .box.active span {
-    background: #c438ef0f;
+    /* background: #c438ef0f; */
     color: #fa3fa0;
 }
 
@@ -1118,17 +1128,54 @@ input {
     transition:cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 .boxes-panel.boxes-join .box {
-width: 100px;
-    height: 130px;
+width: 66px;
+    height: 100px;
     background-position: center 15px;
-    padding: 89px 0px 8px;
+    padding: 69px 0px 8px;
     border-radius: 16px;
-    border: 2px double #4f5660;
+    border: unset !important;
     cursor: pointer;
+    background-size: 2.7em;
 }
+
+.create-game-panel .boxes-panel .box {
+    background-size: 3.5em;
+    /* padding: unset; */
+}
+
+.create-game-panel .boxes-panel .box {
+    
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='74' height='72' fill='none' viewBox='0 0 74 72'%3E%3Cpath fill='%23FEBE7E' d='M47.956 72L0 61.182V9.23l47.956 7.2v55.57z'/%3E%3Cpath fill='%23C47D49' d='M74 55.237L47.956 72V16.43L74 5.133v50.105z'/%3E%3Cpath fill='%23FEDC98' d='M74 5.132L27.962 0 0 9.23l47.956 7.2L74 5.133z'/%3E%3Cpath fill='%23BA835D' d='M27.15 24.148l-9.48-1.514V11.926l9.48 1.44v10.782z'/%3E%3Cpath fill='%23C99570' d='M27.15 13.366l-9.48-1.44 26.192-10.19 8.927 1.033L27.15 13.366z'/%3E%3Cpath fill='%23A37452' d='M64.888 19.163l-5.976 2.77V11.704l5.976-2.585v10.043zM64.888 61.145l-5.976 3.84V54.091l5.976-3.212v10.264z'/%3E%3Cpath fill='%23C99570' d='M64.888 9.12L18.408 3.14 11.583 5.39l47.33 6.314 5.975-2.585z'/%3E%3Cpath fill='%23BA835D' d='M27.15 67.31l-9.48-2.067V54.5l9.48 1.44V67.31z'/%3E%3Cpath fill='%23BF6726' d='M0 9.231s3.726.148 6.825.554c4.574.59 11.03 2.141 11.03 2.141L0 9.231zM27.298 13.255s3.32.333 4.464.443c7.968.776 16.194 2.696 16.194 2.696l-20.658-3.139z'/%3E%3C/svg%3E%0A");
+    width: 74px;
+    height: 72px;
+    position: relative;
+    margin-right: 8px;
+    margin-bottom: 30px;
+    display: inline-flex;
+    align-items: self-end;
+    text-align: center;
+    padding-top: 45px;
+    background-repeat: no-repeat;
+}
+
+
+.create-game-panel .boxes-panel .box span {
+    background: #7a7a7a4a;
+    /* color: #444; */
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: bold;
+    text-align: center;
+    width: 65px;
+    display: inline-block;
+    border-radius: 9px;
+    padding: 4px 2px;
+}
+
 .boxes-panel.boxes-join .box.box-opened {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='74' height='72' fill='none' viewBox='0 0 74 72'%3E%3Cpath fill='%23A5A5A5' d='M47.956 72L0 61.182V9.23l47.956 7.2v55.57z'/%3E%3Cpath fill='%23696969' d='M74 55.237L47.956 72V16.43L74 5.133v50.105z'/%3E%3Cpath fill='%23E4E4E4' d='M74 5.132L27.962 0 0 9.23l47.956 7.2L74 5.133z'/%3E%3Cpath fill='%23686867' d='M27.15 24.148l-9.48-1.514V11.926l9.48 1.44v10.782z'/%3E%3Cpath fill='%23686867' d='M27.15 13.366l-9.48-1.44 26.191-10.19 8.928 1.033L27.15 13.366z'/%3E%3Cpath fill='%23515151' d='M64.888 19.163l-5.976 2.77V11.704l5.976-2.585v10.043zM64.888 61.145l-5.976 3.84V54.091l5.976-3.212v10.264z'/%3E%3Cpath fill='%23686867' d='M64.888 9.12L18.408 3.14 11.583 5.39l47.33 6.314 5.975-2.585zM27.15 67.31l-9.48-2.067V54.5l9.48 1.44V67.31z'/%3E%3Cpath fill='%23515151' d='M0 9.231s3.726.148 6.825.554c4.574.59 11.03 2.141 11.03 2.141L0 9.231zM27.298 13.255s3.32.333 4.464.443c7.968.776 16.194 2.696 16.194 2.696l-20.658-3.139z'/%3E%3C/svg%3E%0A");
     cursor: auto;
+  
 }
 .game-page .game-contents .game-info-panel .box-prizes {
     font-size: 16px;
@@ -1273,20 +1320,22 @@ background-color: red;
     border-top: 1px solid #36393f;
 }
 .brain-game-play-panel .quiz-panel .question {
-    font-size: 32px;
+    font-size: 24px;
     font-weight: bold;
-    margin: 50px 0 30px;
+    margin: 20px 0 20px;
+    padding: 0 20px;
 }
 .brain-game-play-panel .quiz-panel .answer-panel {
     display: grid;
-    grid-template-columns: 350px 350px;
-    grid-gap: 32px;
+    grid-template-columns: 250px 250px;
+    grid-gap: 12px 22px;
     margin-bottom: 30px;
+    justify-content: center;
 }
 .brain-game-play-panel .quiz-panel .answer-panel button {
     width: 350px;
     max-width: 100%;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
     height: 45px;
 }
@@ -1716,7 +1765,6 @@ background-color: red;
     #rps-radio span {
         width: 74px;
         height: 74px;
-        margin: 10px !important;
         max-width: 100%;
         background-size: 54px;
     }
@@ -1806,6 +1854,23 @@ background-color: red;
     }
 }
 @media (max-width: 400px) {
+
+    .your-bet-amount {
+        padding: 10% 14% 0% 14%;
+margin-top: -15px;
+            margin-bottom: 45px;
+        display: inline-flex;
+        justify-content: center;
+        align-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+
+    }
+    .create-game-panel .boxes-panel .box {
+        margin-right: -1px;
+        margin-left: 0px;
+        margin-bottom: 18px;
+    }
     .rps-add-run-panel > div.rps-add-run-form, .qs-add-run-form {
         padding-right: 0 !important;
     }
@@ -1820,12 +1885,13 @@ background-color: red;
     } */
 
     .game-page .game-contents .game-info-panel .box-prizes span {
-        width: 64px;
+        width: 57px;
         padding: 3px 5px;
         display: block;
         float: left;
         margin: 0 3px;
-    }
+        font-size: small;
+        }
     .game-page .pre-summary-panel > div.public-bet-amount {
         background-size: 26px;
     }

@@ -257,9 +257,9 @@ getPreviousBets() {
          this.props.updateBetResult('lose')
       }
 
-   let stored_rps_array = JSON.parse(localStorage.getItem("rps_arrayq")) || [];
+   let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
 stored_rps_array.push({ rps: selected_rps });
-localStorage.setItem("rps_arrayq", JSON.stringify(stored_rps_array));
+localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
 // console.log(stored_rps_array);
 
       gameResultModal(
@@ -278,7 +278,7 @@ localStorage.setItem("rps_arrayq", JSON.stringify(stored_rps_array));
         alertModal(this.props.isDarkMode, result.message);
       }
     }
-    this.props.refreshHistory();
+    // this.props.refreshHistory();
   };
 
 
@@ -288,7 +288,7 @@ localStorage.setItem("rps_arrayq", JSON.stringify(stored_rps_array));
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `THIS IS YOUR OWN STAKE!! ARE YOU OKAY?!`
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
       );
       return;
     }
@@ -380,7 +380,7 @@ localStorage.setItem("rps_arrayq", JSON.stringify(stored_rps_array));
 
   startBetting = () => {
     const intervalId = setInterval(() => {
-      const randomItem = predictNext(JSON.parse(localStorage.getItem("rps_arrayq")));
+      const randomItem = predictNext(JSON.parse(localStorage.getItem("rps_array")));
       // console.log('wwedw', randomItem)
       this.joinGame2(randomItem, this.state.bet_amount);
     }, 3500);
@@ -422,7 +422,7 @@ localStorage.setItem("rps_arrayq", JSON.stringify(stored_rps_array));
       }
 
    
-    this.props.refreshHistory();
+    // this.props.refreshHistory();
   };
 
 

@@ -262,9 +262,11 @@ class RPS extends Component {
                 onClick={() => {
                   this.onAddRun('R');
                   const currentActive = document.querySelector(".active");
-                  currentActive.style.animation = "none";
-                  void currentActive.offsetWidth;
-                  currentActive.style.animation = "pulse 0.2s ease-in-out ";
+                  if (currentActive) {
+                    currentActive.style.animation = "none";
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = "pulse 0.2s ease-in-out ";
+                  }
                 }}
               ></span>
               <span
@@ -274,9 +276,11 @@ class RPS extends Component {
                 onClick={() => {
                   this.onAddRun('P');
                   const currentActive = document.querySelector(".active");
-                  currentActive.style.animation = "none";
-                  void currentActive.offsetWidth;
-                  currentActive.style.animation = "pulse 0.2s ease-in-out ";
+                  if (currentActive) {
+                    currentActive.style.animation = "none";
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = "pulse 0.2s ease-in-out ";
+                  }
                 }}
               ></span>
               <span
@@ -287,29 +291,30 @@ class RPS extends Component {
                 onClick={() => {
                   this.onAddRun('S');
                   const currentActive = document.querySelector(".active");
-                  currentActive.style.animation = "none";
-                  void currentActive.offsetWidth;
-                  currentActive.style.animation = "pulse 0.2s ease-in-out ";
+                  if (currentActive) {
+                    currentActive.style.animation = "none";
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = "pulse 0.2s ease-in-out ";
+                  }
                 }}
               ></span>
             </div>
-            <button onClick={this.onAutoPlay}>Test AI Play</button>
+            <button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</button>
             {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
 </label> */}
 
           </div>
           <div className="rps-add-run-table">
             <h3 className="game-sub-title">Training Data</h3>
-            <table>
+            {/* <table>
               <thead>
                 <tr>
                   <th>INDEX</th>
                   <th>RPS</th>
-                  {/* <th>BET / PR</th> */}
                   <th></th>
                 </tr>
               </thead>
-              </table>
+              </table> */}
             <table id="runs">
               <tbody>
                 {this.props.rps_list && this.props.rps_list.length > 0 ? (

@@ -340,13 +340,15 @@ class OpenGamesTable extends Component {
                   <div className="table-cell cell-amount-info">
                   {row.game_type.game_type_name === 'Spleesh!'
     ? <>
-      {convertToCurrency(row.spleesh_bet_unit)} - 
-      {convertToCurrency(row.spleesh_bet_unit * 10)} / 
-      '???'
+      {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
+      {convertToCurrency(row.spleesh_bet_unit * 10)}
+       {/* / 
+      '???' */}
     </>
     : <>
-      {convertToCurrency(updateDigitToPoint2(row.user_bet))} / 
-      {convertToCurrency(row.winnings)}
+      {convertToCurrency(updateDigitToPoint2(row.user_bet))}
+       {/* / 
+      {convertToCurrency(row.winnings)} */}
     </>
   }
                   </div>

@@ -182,7 +182,7 @@ class QuickShoot extends Component {
     stored_qs_array.push({ qs: selected_qs_position });
     localStorage.setItem("qs_array", JSON.stringify(stored_qs_array));
     console.log(JSON.parse(localStorage.getItem("qs_array")));
-    this.props.refreshHistory();
+    // this.props.refreshHistory();
   };
 
   
@@ -433,7 +433,7 @@ predictNext = (qs_list, gameType) => {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `THIS IS YOUR OWN STAKE!! ARE YOU OKAY?!`
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
       );
       return;
     }
@@ -513,7 +513,7 @@ predictNext = (qs_list, gameType) => {
       }
 
    
-    this.props.refreshHistory();
+    // this.props.refreshHistory();
   };
 
   }

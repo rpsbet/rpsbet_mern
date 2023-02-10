@@ -49,10 +49,10 @@ class HowToPlayModal extends Component {
             <div className="release-updates">
   <h2 className="section-title">Latest Features</h2>
   <ul className="feature-list">
-    <li>
+    {/* <li>
       <h3 className="feature-title">Drop Game</h3>
       <p className="feature-description">Compete for the highest value and win big with our new drop game feature.</p>
-    </li>
+    </li> */}
     <li>
       <h3 className="feature-title">AI Play</h3>
       <p className="feature-description">Enjoy non-stop gaming with our AI Play feature. Joiners can now play autonomously and the games run indefinitely.</p>

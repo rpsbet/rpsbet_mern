@@ -255,7 +255,7 @@ class JoinGame extends Component {
         {this.props.roomInfo.room_history && (
           <div className="room-history-panel">
             <h2 className="room-history-title">Staking History</h2>
-            <button id="refresh-btn" onClick={this.refreshHistory}>Refresh</button>
+            {/* <button id="refresh-btn" onClick={this.refreshHistory}>Refresh</button> */}
 
             <div className="table main-history-table">
               {this.props.roomInfo.room_history.map(

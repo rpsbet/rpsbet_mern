@@ -116,7 +116,7 @@ class BrainGame extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `THIS IS YOUR OWN STAKE?!?`
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
       );
       return;
     }

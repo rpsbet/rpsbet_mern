@@ -276,8 +276,19 @@ div.table.my-chat-table .table-row > div.message-panel ,
   text-transform: none !important;
 }
 
+
 #rps-game-type-radio span, #rps-radio span {
-  margin-bottom: 15px !important;
+  margin-bottom: 6px !important;
+}
+
+#aiplay {
+  display: block;
+  margin: auto !important;
+  translate: -5px 10px;
+  
+}
+h3.game-sub-title {
+  text-align: center !important;
 }
 
 #add-ten{
@@ -425,7 +436,7 @@ table#runs td {
 }
 
 #runs {
-  max-height: 35vh;
+  max-height: 19vh;
   display: flex;
   overflow-y: scroll;
   justify-content: center;

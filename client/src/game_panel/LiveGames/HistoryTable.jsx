@@ -95,7 +95,7 @@ class HistoryTable extends Component {
       MB: 'mystery-box',
       BG: 'brain-game',
       QS: 'quick-shoot',
-      DG: 'drop-game'
+      DG: 'drop-game',
     };
 
     const gameTypePanel = [
@@ -172,7 +172,6 @@ class HistoryTable extends Component {
 
   render() {
     const gameTypePanel = this.generateGameTypePanel();
-    console.log("StakingHistory props:", this.props); // <- add this
 
     return (
       <div className="overflowX">
