@@ -23,6 +23,12 @@ class Spleesh extends Component {
         this.socket = this.props.socket;
 
     this.state = {
+      betting: false,
+      holdTime: 0,
+      clicked: true,
+      intervalId: null,
+      spleesh_guesses1Received: false,
+
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
       copied: false,
@@ -54,8 +60,15 @@ class Spleesh extends Component {
 
   componentDidMount() {
     this.socket.on('SPLEESH_GUESSES', data => {
-      console.log('spleesh', data);
       this.setState({spleesh_guesses: data });
+    });
+    this.socket.on('SPLEESH_GUESSES1', data => {
+      if (!this.state.spleesh_guesses1Received) {
+        this.setState({
+          spleesh_guesses: data,
+          spleesh_guesses1Received: true,
+        });
+      }
     });
   }
   
@@ -87,6 +100,15 @@ class Spleesh extends Component {
         text = 'DRAW, NO WINNER!';
       }
 
+      let stored_spleesh_array = JSON.parse(localStorage.getItem("spleesh_array")) || [];
+      // if (!stored_spleesh_array.length || stored_spleesh_array[0].room !== currentRoom) {
+      //   // If the stored RPS array is empty or if the current room is different from the room stored in the array, reset the array
+      //   stored_spleesh_array = [{ room: currentRoom, rps: [] }];
+      // }
+      stored_spleesh_array.push({ spleesh: this.state.bet_amount });
+      localStorage.setItem("spleesh_array", JSON.stringify(stored_spleesh_array));
+      console.log(stored_spleesh_array);
+
       if (result.roomStatus === 'finished') {
         gameResultModal(
           this.props.isDarkMode,
@@ -117,6 +139,8 @@ class Spleesh extends Component {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
+    this.props.refreshHistory();
+
   };
 
   onBtnBetClick = () => {
@@ -176,6 +200,88 @@ class Spleesh extends Component {
     }
     return panel;
   };
+
+  predictNext = (array1, array2) => {
+    const frequencyMap = {};
+    let maxValue = 0;
+    let maxKey = 0;
+  
+    // Create a frequency map of the spleesh values in array1
+    array1.forEach(item => {
+      if (!frequencyMap[item.spleesh]) {
+        frequencyMap[item.spleesh] = 0;
+      }
+      frequencyMap[item.spleesh] += 1;
+  
+      // Keep track of the spleesh value with the highest frequency
+      if (frequencyMap[item.spleesh] > maxValue) {
+        maxValue = frequencyMap[item.spleesh];
+        maxKey = item.spleesh;
+      }
+    });
+  
+    // Get all the spleesh values from the frequency map
+    const spleeshValues = Object.keys(frequencyMap);
+  
+    let prediction = maxKey;
+    let i = 0;
+    const maxAttempts = spleeshValues.length * 2; // set a maximum number of attempts to find a value
+    while (array2.some(item => item.bet_amount === prediction)) {
+      // Randomize a value from the spleesh values until one is found that doesn't exist in array2 or until the maximum number of attempts is reached
+      const randomIndex = Math.floor(Math.random() * spleeshValues.length);
+      prediction = Number(spleeshValues[randomIndex]);
+  
+      i++;
+      if (i >= maxAttempts) {
+        console.log('No more values available');
+        alertModal(this.props.isDarkMode, `NO MORE AVAILABLE OPTIONS MTF!!`);
+
+        break;
+      }
+    }
+  
+    return prediction;
+  }
+  
+  
+startBetting = () => {
+  const intervalId = setInterval(() => {
+    console.log('spleeshtastic', this.state.spleesh_guesses);
+    console.log('we', JSON.parse(localStorage.getItem("spleesh_array")));
+    const nextGuess = this.predictNext(JSON.parse(localStorage.getItem("spleesh_array")), this.state.spleesh_guesses);
+    console.log('nextguess', nextGuess);
+    this.joinGame2(nextGuess);
+  }, 3500);
+
+  this.setState({ intervalId });
+};
+
+
+stopBetting = () => {
+  clearInterval(this.state.intervalId);
+  this.setState({ intervalId: null });
+};
+
+joinGame2 = async (nextGuess) => {
+  const result = await this.props.join({
+    bet_amount: nextGuess,
+    is_anonymous: this.state.is_anonymous
+  });
+  if (result.status === 'success') {
+    let text = 'HAHAA, YOU LOST!!!';
+
+    if (result.betResult === 1) {
+      text = 'NOT BAD, WINNER!';
+    } else if (result.betResult === 0) {
+      text = 'DRAW, NO WINNER!';
+    }
+  }
+   
+  this.props.refreshHistory();
+
+};
+
+
 
 
   toggleBtnHandler = () => {
@@ -251,6 +357,8 @@ class Spleesh extends Component {
             </p>
             <h3 className="game-sub-title">Your Number</h3>
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>
+            <button onClick={this.startBetting }>AI Play</button>
+        <button onClick={this.stopBetting }>Stop</button>
           </div>
           <hr />
           <div className="action-panel">

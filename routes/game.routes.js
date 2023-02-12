@@ -94,11 +94,21 @@ router.get('/room/:id', async (req, res) => {
       room: room,
       joiner_qs: ''
     }).sort({ _id: 'asc' });
-    const guesses = await SpleeshGuess.find({ room: room });
-    if (req.io.sockets) {
-      req.io.sockets.emit('SPLEESH_GUESSES', guesses);
-    }
+    
+    let hasEmitted = false;
 
+async function emitGuesses(req) {
+if (!hasEmitted) {
+const spleesh_guesses = await SpleeshGuess.find({ room: room });
+if (req.io.sockets) {
+req.io.sockets.emit('SPLEESH_GUESSES1', spleesh_guesses);
+}
+hasEmitted = true;
+}
+}
+
+// Call the function only once when the page loads
+emitGuesses(req);
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
     // console.log('wankke',spleeshGuesses);
 
@@ -1538,6 +1548,43 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
+
+            const originalBetAmount = roomInfo.host_pr;
+
+
+            // Randomize the new bet amount
+            let newBetAmount;
+            if (roomInfo.spleesh_bet_unit === 1) {
+              newBetAmount = Math.floor(Math.random() * 10) + 1;
+              while (newBetAmount > originalBetAmount) {
+                newBetAmount = Math.floor(Math.random() * 10) + 1;
+              }
+            } else if (roomInfo.spleesh_bet_unit === 10) {
+              newBetAmount = (Math.floor(Math.random() * 10) + 1) * 10;
+              while (newBetAmount > originalBetAmount) {
+                newBetAmount = (Math.floor(Math.random() * 10) + 1) * 10;
+              }
+            }
+           
+            roomInfo.bet_amount = newBetAmount;
+            console.log('newBetAmount',roomInfo['pr']);
+            console.log('roomInfo.bet_amount',roomInfo.pr);
+            console.log('roomInfo.host_pr',roomInfo.host_pr);
+            roomInfo['pr'] = 0;
+
+              // Reset the spleesh guess array
+            SpleeshGuess.deleteMany({ room: roomInfo._id }, function(err) {
+              if (err) {
+                console.log(err);
+              }
+            });
+            
+    
+                    const guesses = await SpleeshGuess.find({room: roomInfo._id }).sort({created_at: 'ascending'});
+                    if (req.io.sockets) {
+                      req.io.sockets.emit('SPLEESH_GUESSES', guesses);
+                    }
+                
         } else {
           message.message =
             'I lost ' +
@@ -1556,10 +1603,7 @@ router.post('/bet', auth, async (req, res) => {
     });
     await newSpleeshGuess.save();
 
-    const guesses = await SpleeshGuess.find({room: roomInfo._id }).sort({created_at: 'ascending'});
-    if (req.io.sockets) {
-      req.io.sockets.emit('SPLEESH_GUESSES', guesses);
-    }
+   
 
           
 
@@ -1569,17 +1613,17 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['host_pr'] >= roomInfo['endgame_amount']
           ) {
 
-            const originalBetAmount = roomInfo.bet_amount;
+            const originalBetAmount = roomInfo.host_pr;
 
 
             // Randomize the new bet amount
             let newBetAmount;
-            if (roomInfo.game_type === 1) {
+            if (roomInfo.spleesh_bet_unit === 1) {
               newBetAmount = Math.floor(Math.random() * 10) + 1;
               while (newBetAmount > originalBetAmount) {
                 newBetAmount = Math.floor(Math.random() * 10) + 1;
               }
-            } else if (roomInfo.game_type === 10) {
+            } else if (roomInfo.spleesh_bet_unit === 10) {
               newBetAmount = (Math.floor(Math.random() * 10) + 1) * 10;
               while (newBetAmount > originalBetAmount) {
                 newBetAmount = (Math.floor(Math.random() * 10) + 1) * 10;
@@ -1596,13 +1640,7 @@ router.post('/bet', auth, async (req, res) => {
                 console.log(err);
               }
             });
-
-            const guesses = await SpleeshGuess.find({room: roomInfo._id }).sort({created_at: 'ascending'});
-            if (req.io.sockets) {
-              req.io.sockets.emit('SPLEESH_GUESSES', guesses);
-            }
-        
-
+            
             // roomInfo.status = 'finished';
             newTransactionC.amount += roomInfo['host_pr'] * ((100 - commission.value) / 100);
             const newGameLogC = new GameLog({
@@ -1618,9 +1656,15 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['host_pr'] = 0;
           }
         }
+        
+                    const guesses = await SpleeshGuess.find({room: roomInfo._id }).sort({created_at: 'ascending'});
+                    if (req.io.sockets) {
+                      req.io.sockets.emit('SPLEESH_GUESSES', guesses);
+                    }
+                
       } else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
         newGameLog.bet_amount = req.body.bet_amount;
-
+        
         let selected_box = await RoomBoxPrize.findOne({
           _id: new ObjectId(req.body.selected_id)
         }).populate({ path: 'joiner', model: User });

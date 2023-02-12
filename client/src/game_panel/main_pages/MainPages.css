@@ -147,17 +147,41 @@ div.table.my-chat-table .table-row .table-cell.message-date {
 div.table.my-chat-table .table-cell button.btn_join {
     width: 80px;
 }
+div.table.my-chat-table .table-row .table-cell[title="Unread message"] {
+    position: sticky;
+    translate: 12px 20px;
+    transform: scale(0.9);
+    z-index: 99;
+    transition: transform 0.1s ease-in-out;
+
+
+}
+div.table.my-chat-table .table-row .table-cell[title="Unread message"]:hover {
+    /* transform: scale(0.95); */
+    animation: 2s;
+    transform: translateX(-2px) !important;
+
+}
+
+div.table.my-chat-table .table-row .table-cell[title="Unread message"]:hover:active {
+    transform: translateX(2px) !important;
+    }
+
 div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
-    background-color: #C83228;
+    background: linear-gradient(45deg, #a500109d, #c83328);
     color: white;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: inline-block;
-    text-align: center;
-    line-height: 20px;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    font-size: xx-small;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    font-weight: 800;
     cursor: default;
 }
+
 div.table .table-header {
     background-color: transparent;
     margin: 0;

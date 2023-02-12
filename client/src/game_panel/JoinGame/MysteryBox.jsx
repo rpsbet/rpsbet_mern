@@ -316,7 +316,7 @@ joinGame2 = async (predictedBetAmount) => {
           let stored_bet_array = JSON.parse(localStorage.getItem("bet_array")) || [];
           stored_bet_array.push({ bet: this.state.bet_amount });
           localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
-          console.log(stored_bet_array);
+          
 
         }
       }
