@@ -20,10 +20,13 @@ const twitterLink = window.location.href;
 class Spleesh extends Component {
   constructor(props) {
     super(props);
+        this.socket = this.props.socket;
+
     this.state = {
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
       copied: false,
+      spleesh_guesses: [],
       is_anonymous: false,
       balance: this.props.balance,
       isPasswordCorrect: false
@@ -49,11 +52,11 @@ class Spleesh extends Component {
     e.preventDefault();
   };
 
-  componentDidMount = () => {
-    const { socket } = this.props
-    socket.on('UPDATED_SPLEESH_BET_UNIT', data => {
-      this.setState({ bet_amount: data.spleesh_bet_unit })
-    })
+  componentDidMount() {
+    this.socket.on('SPLEESH_GUESSES', data => {
+      console.log('spleesh', data);
+      this.setState({spleesh_guesses: data });
+    });
   }
   
 
@@ -70,6 +73,7 @@ class Spleesh extends Component {
   }
 
   joinGame = async () => {
+    console.log(this.state.spleesh_guesses);
     const result = await this.props.join({
       bet_amount: this.state.bet_amount,
       is_anonymous: this.state.is_anonymous
@@ -120,7 +124,7 @@ class Spleesh extends Component {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
+        `THIS IS YOUR OWN STAKE? ARE YOU OKAY!?`
       );
       return;
     }
@@ -226,7 +230,8 @@ class Spleesh extends Component {
         <div className="value">
             {convertToCurrency(
                 updateDigitToPoint2(
-                    this.props.game_log_list.reduce((a, b) => a + b, 0) +
+                  this.state.spleesh_guesses.reduce((a, b) => a + b.bet_amount, 0) +
+                    // this.props.game_log_list.reduce((a, b) => a + b, 0) +
                     this.state.bet_amount * 2 /* 0.9 */
                 )
             )}
@@ -237,8 +242,8 @@ class Spleesh extends Component {
             <h3 className="game-sub-title">Previous Guesses</h3>
             <p className="previous-guesses">
               
-            {this.props.game_log_list.length > 0
-    ? this.props.game_log_list.map(log => <span style={{background: '#d8171866', borderRadius: '6px', padding: '0.3em 0.9em', marginRight: '20px' }}> <InlineSVG id='busd' src={require('./busd.svg')} /> {log + '.00'}</span>)
+            {this.state.spleesh_guesses.length > 0
+    ? this.state.spleesh_guesses.map((guess, index) => <span key={index} style={{background: '#d8171866', borderRadius: '6px', padding: '0.3em 0.9em', marginRight: '20px' }}> <InlineSVG id='busd' src={require('./busd.svg')} /> {guess.bet_amount + '.00'}</span>)
     : `No guesses yet`}
 
 

@@ -178,11 +178,40 @@ class QuickShoot extends Component {
       }
     }
 
-    let stored_qs_array = JSON.parse(localStorage.getItem("qs_array")) || [];
-    stored_qs_array.push({ qs: selected_qs_position });
-    localStorage.setItem("qs_array", JSON.stringify(stored_qs_array));
-    console.log(JSON.parse(localStorage.getItem("qs_array")));
-    // this.props.refreshHistory();
+   
+    let stored_qs_array;
+
+    if (this.props.qs_game_type === 2) {
+      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_2")) || [];
+    } else if (this.props.qs_game_type === 3) {
+      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_3")) || [];
+    } else if (this.props.qs_game_type === 4) {
+      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_4")) || [];
+    } else if (this.props.qs_game_type === 5) {
+      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
+    }
+    
+    // const roomArray = stored_qs_array.filter(obj => obj.room_id === this.props.qs_bet_item_id);
+
+    // if (roomArray.length === 0) {
+    //   stored_qs_array = [];
+    // }
+    
+    stored_qs_array.push({qs: selected_qs_position, room_id: this.props.qs_bet_item_id});
+    
+    if (this.props.qs_game_type === 2) {
+      localStorage.setItem("qs_array_2", JSON.stringify(stored_qs_array));
+    } else if (this.props.qs_game_type === 3) {
+      localStorage.setItem("qs_array_3", JSON.stringify(stored_qs_array));
+    } else if (this.props.qs_game_type === 4) {
+      localStorage.setItem("qs_array_4", JSON.stringify(stored_qs_array));
+    } else if (this.props.qs_game_type === 5) {
+      localStorage.setItem("qs_array_5", JSON.stringify(stored_qs_array));
+    }
+    
+    console.log(JSON.parse(localStorage.getItem("qs_array_" + this.props.qs_game_type)));
+    this.props.refreshHistory();
+    
   };
 
   
@@ -468,16 +497,33 @@ predictNext = (qs_list, gameType) => {
   };
 
 
-
   startBetting = () => {
+    let stored_qs_array;
+  
+    if (this.props.qs_game_type === 2) {
+      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_2")) || [];
+    } else if (this.props.qs_game_type === 3) {
+      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_3")) || [];
+    } else if (this.props.qs_game_type === 4) {
+      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_4")) || [];
+    } else if (this.props.qs_game_type === 5) {
+      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
+    }
+  
+    if (stored_qs_array.length < 3) {
+      alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+      return;
+    }
+  
     const intervalId = setInterval(() => {
-      const randomItem = this.predictNext(JSON.parse(localStorage.getItem("qs_array")), this.props.qs_game_type);
+      const randomItem = this.predictNext(stored_qs_array, this.props.qs_game_type);
       // console.log('wwedw', randomItem)
       this.joinGame2(randomItem, this.state.bet_amount);
     }, 3500);
-
+  
     this.setState({ intervalId });
   };
+    
 
   stopBetting = () => {
     clearInterval(this.state.intervalId);
@@ -520,6 +566,7 @@ predictNext = (qs_list, gameType) => {
 
   renderButtons() {
     const { qs_game_type } = this.props;
+    
 
     if (qs_game_type === 2) {
       return (

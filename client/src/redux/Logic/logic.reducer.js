@@ -15,6 +15,7 @@ import {
   SET_CHAT_ROOM_INFO,
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
+  SPLEESH_GUESSES,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -31,6 +32,7 @@ const initialState = {
   roomList: [],
   history: [],
   roomCount: 0,
+  spleesh_guesses: [],
   totalPage: 0,
   pageNumber: 1,
   historyTotalPage: 0,
@@ -91,7 +93,13 @@ export default function(state = initialState, action) {
     }
   } else {
     return state;
-  }
+  };
+  case SPLEESH_GUESSES:
+    return {
+      ...state,
+      spleesh_guesses: action.spleesh_guesses
+    };
+
 
   case UPDATE_BANKROLL:
       return {

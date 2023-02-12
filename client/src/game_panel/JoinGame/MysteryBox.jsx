@@ -125,7 +125,6 @@ componentDidUpdate(prevProps, prevState) {
   }
   
 }
-
 predictNext = (betAmountArray, boxList) => {
   let transitions = {};
   let probabilities = {};
@@ -184,8 +183,13 @@ predictNext = (betAmountArray, boxList) => {
   let prediction = null;
   let maxProbability = -1;
 
+  const maxBetAmount = Math.max(...betAmountArray);
+  betAmountArray = [boxList[boxList.length - 1]];
   for (let i = 0; i < distinctBoxes.length; i++) {
     let currentBox = distinctBoxes[i];
+    if (currentBox > maxBetAmount) {
+      continue;
+    }
     let currentBoxProbability =
       startProbabilities[currentBox] *
       probabilities[currentBox][betAmountArray[betAmountArray.length - 1]];
@@ -199,15 +203,18 @@ predictNext = (betAmountArray, boxList) => {
   return prediction;
 };
 
+
 startBetting = () => {
+  console.log('boxLis', this.state.box_list);
   const intervalId = setInterval(() => {
     const nextBox = this.predictNext(JSON.parse(localStorage.getItem("bet_array")), this.state.box_list);
-
+    console.log('nextBox', nextBox);
     this.joinGame2(nextBox.box_price);
   }, 3500);
 
   this.setState({ intervalId });
 };
+
 
 stopBetting = () => {
   clearInterval(this.state.intervalId);
@@ -218,8 +225,7 @@ joinGame2 = async (predictedBetAmount) => {
   const availableBoxes = this.state.box_list.filter(
     box =>
       box.status === "init" &&
-      (box.box_price >= predictedBetAmount - 4) &&
-      (box.box_price <= predictedBetAmount + 4)
+      (box.box_price <= predictedBetAmount + 5)
   );
   if (availableBoxes.length === 0) {
     alertModal(

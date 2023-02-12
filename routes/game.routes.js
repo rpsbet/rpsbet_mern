@@ -18,6 +18,7 @@ const BrainGameType = require('../model/BrainGameType');
 const Message = require('../model/Message');
 const Transaction = require('../model/Transaction');
 const SystemSetting = require('../model/SystemSetting');
+const SpleeshGuess = require('../model/SpleeshGuess');
 const RpsBetItem = require('../model/RpsBetItem');
 const QsBetItem = require('../model/QsBetItem');
 const DgBetItem = require('../model/DgBetItem');
@@ -93,9 +94,15 @@ router.get('/room/:id', async (req, res) => {
       room: room,
       joiner_qs: ''
     }).sort({ _id: 'asc' });
-
+    const guesses = await SpleeshGuess.find({ room: room });
+    if (req.io.sockets) {
+      req.io.sockets.emit('SPLEESH_GUESSES', guesses);
+    }
 
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
+    // console.log('wankke',spleeshGuesses);
+
+    
 
     res.json({
       success: true,
@@ -112,6 +119,8 @@ router.get('/room/:id', async (req, res) => {
         qs_game_type: room['qs_game_type'],
         room_history: roomHistory,
         box_list: boxPrizeList,
+        
+        // spleesh_guesses: spleeshGuesses ? spleeshGuesses.map(guess => guess.bet_amount) : null,
         rps_bet_item_id: rpsBetItem ? rpsBetItem.id : null,
         qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
         is_private: room['is_private'],
@@ -1508,12 +1517,13 @@ router.post('/bet', auth, async (req, res) => {
           }
 
       } else if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
-        newGameLog.bet_amount = req.body.bet_amount;
 
         newTransactionJ.amount -= req.body.bet_amount;
 
         roomInfo['host_pr'] += req.body.bet_amount;
         roomInfo['pr'] += req.body.bet_amount;
+        newGameLog.bet_amount = req.body.bet_amount;
+        
 
         if (roomInfo.bet_amount == req.body.bet_amount) {
           newTransactionJ.amount += (roomInfo['pr'] + roomInfo['bet_amount']) * ((100 - commission.value) / 100);
@@ -1538,6 +1548,22 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
 
           newGameLog.game_result = -1;
+
+          // Save the new spleesh guess
+    const newSpleeshGuess = new SpleeshGuess({
+      room: roomInfo._id,
+      bet_amount: newGameLog.bet_amount
+    });
+    await newSpleeshGuess.save();
+
+    const guesses = await SpleeshGuess.find({room: roomInfo._id }).sort({created_at: 'ascending'});
+    if (req.io.sockets) {
+      req.io.sockets.emit('SPLEESH_GUESSES', guesses);
+    }
+
+          
+
+
           if (
             roomInfo['endgame_type'] &&
             roomInfo['host_pr'] >= roomInfo['endgame_amount']
@@ -1545,30 +1571,37 @@ router.post('/bet', auth, async (req, res) => {
 
             const originalBetAmount = roomInfo.bet_amount;
 
-            // Clear previous bets for the room
-            await Bet.deleteMany({ room: roomInfo });
 
             // Randomize the new bet amount
             let newBetAmount;
-            if (roomInfo.game_type === 'random') {
+            if (roomInfo.game_type === 1) {
               newBetAmount = Math.floor(Math.random() * 10) + 1;
               while (newBetAmount > originalBetAmount) {
                 newBetAmount = Math.floor(Math.random() * 10) + 1;
               }
-            } else if (roomInfo.game_type === 'fixed') {
+            } else if (roomInfo.game_type === 10) {
               newBetAmount = (Math.floor(Math.random() * 10) + 1) * 10;
               while (newBetAmount > originalBetAmount) {
                 newBetAmount = (Math.floor(Math.random() * 10) + 1) * 10;
               }
             }
+           
             roomInfo.bet_amount = newBetAmount;
+            
+            roomInfo['pr'] = 0;
 
-            // Update the socket with the new bet amount
+              // Reset the spleesh guess array
+            SpleeshGuess.deleteMany({ room: roomInfo._id }, function(err) {
+              if (err) {
+                console.log(err);
+              }
+            });
+
+            const guesses = await SpleeshGuess.find({room: roomInfo._id }).sort({created_at: 'ascending'});
             if (req.io.sockets) {
-              req.io.sockets.emit('UPDATED_BET_AMOUNT', {
-                bet_amount: roomInfo.bet_amount
-              });
+              req.io.sockets.emit('SPLEESH_GUESSES', guesses);
             }
+        
 
             // roomInfo.status = 'finished';
             newTransactionC.amount += roomInfo['host_pr'] * ((100 - commission.value) / 100);
@@ -1582,6 +1615,7 @@ router.post('/bet', auth, async (req, res) => {
               game_result: -100
             });
             await newGameLogC.save();
+            roomInfo['host_pr'] = 0;
           }
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {

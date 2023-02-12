@@ -19,6 +19,7 @@ import {
   HISTORY_LOADED,
   NEW_TRANSACTION,
   SET_BALANCE,
+  SPLEESH_GUESSES,
   ONLINE_USER_LIST_UPDATED,
   MSG_WARNING,
   SELECT_MAIN_TAB,
@@ -49,6 +50,25 @@ export const createRoom = (room_info) => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: err });
   }
 };
+
+export function updateSpleeshGuesses() {
+  return dispatch => {
+    // Make a GET request to your server to retrieve the spleesh guesses
+    fetch('/api/spleesh/guesses')
+      .then(res => res.json())
+      .then(data => {
+        // Dispatch the action to store the spleesh guesses in your state
+        dispatch({
+          type: SPLEESH_GUESSES,
+          payload: data
+        });
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+}
+
 
 // joinRoom
 export const bet = (bet_info) => async dispatch => {

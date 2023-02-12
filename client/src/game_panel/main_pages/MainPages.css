@@ -1796,6 +1796,7 @@ background-color: red;
     }
     .game-page .game-contents .game-info-panel .create-box-panel .edit-amount-panel {
         width: 292px;
+        margin-bottom: 10px;
         overflow-x: hidden;
     }
     .brain-game-play-panel .play-panel-header .timer {
@@ -1897,7 +1898,7 @@ margin-top: -15px;
     }
     .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
     }
     .rps-add-run-panel {
         flex-direction: column-reverse;

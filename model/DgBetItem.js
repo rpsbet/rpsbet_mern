@@ -37,4 +37,4 @@ const DgBetItemSchema = new Schema({
     }
 });
 
-module.exports = QsBetItem = mongoose.model('rps_dg_bet_item', DgBetItemSchema);
+module.exports = DgBetItem = mongoose.model('rps_dg_bet_item', DgBetItemSchema);

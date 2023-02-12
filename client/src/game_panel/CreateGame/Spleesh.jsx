@@ -4,7 +4,7 @@ import { convertToCurrency } from '../../util/conversion';
 
 class Spleesh extends Component {
   createNumberPanel() {
-    console.log(this.props.spleesh_bet_unit)
+    // console.log(this.props.spleesh_bet_unit)
     let panel = [];
     for (let i = 1; i <= 10; i++) {
       panel.push(

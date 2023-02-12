@@ -937,7 +937,7 @@ a.player:hover {
   background-position: right center;
 }
 .join-game-panel {
-  height: 90vh;
+  height: 86vh;
   overflow-y: scroll;
 }
 .create-game-panel {
