@@ -53,6 +53,7 @@ class CreateGame extends Component {
       qs_list: [],
       qs_game_type: 2,
       qs_nation: 0,
+      selected_rps: '',
       selected_qs_position: 0,
       bet_amount: 1,
       endgame_amount: 0,
@@ -251,12 +252,21 @@ class CreateGame extends Component {
         return;
       }
 
+      if (this.state.game_mode === 'RPS' && this.state.child_step === 2 && this.state.rps_list.length < 3) {
+        alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
+        return;
+      }
+
       if (this.state.bet_amount > this.state.balance) {
         console.log({
           bet_amount: this.state.bet_amount,
           balance: this.state.balance
         });
         alertModal(this.props.isDarkMode, 'MAKE A DEPOSIT, BROKIE!');
+        return;
+      }
+      if (this.state.game_mode === 'Quick Shoot' && this.state.child_step === 3 && this.state.qs_list.length < 3) {
+        alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
         return;
       }
 

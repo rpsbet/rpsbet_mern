@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const BrainGameTypeSchema = new Schema({
+    user_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     game_type_name: {
         type: String,
         default: ''

@@ -9,6 +9,39 @@
   background-color: #2b2b2b;
 }
 
+div[class*="makeStyles"] {
+  border-radius: 14px;
+  background: linear-gradient(45deg, #c438ef, #f0b90b) !important;
+}
+div[class*="makeStyles-success"] {
+  background: linear-gradient(45deg, #28a745, #ffb000) !important;
+}
+div[class*="makeStyles-info"] {
+  background: linear-gradient(45deg, #3f00ee, #ffb000) !important;
+}
+.eligible-label {
+  width: 100%;
+  display: inline-block;
+  font-size: small;
+  margin-top: 15px;
+  opacity: 0.5;
+}
+
+.loading-spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #555;
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  animation: spin 1s linear infinite;
+  margin: 1rem auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 
 svg {
@@ -91,29 +124,84 @@ input,textarea { border-radius: 0 !important; }
   position: absolute;
 }
 
+.create-game-panel .qs-buttons {
+  position: sticky !important;
+  translate: 0 -115px;
+  -moz-transform: scaleY(-1);
+    -o-transform: scaleY(-1);
+    -webkit-transform: scaleY(-1);
+    transform: scaleY(-1);
+}
 
-/* .qs-buttons {
-  position: absolute !important;
-} */
+.join-game-panel .qs-buttons button {
+  opacity: 0;
+  transform: scale(3);
+}
 .qs-buttons button {
   position: absolute !important;
     background: linear-gradient(184deg, #ffae00a8, #8116813d) !important;
     color: #fff !important;
     width: 2.75rem !important;
-    opacity: 1;
+  
     height: 2.75rem !important;
     border-radius: 50% !important;
     margin: 0 !important;
     border: 3px solid #ddd !important;
     box-shadow: 0 0 6px 4px #ff0c8a;
-transform: scale(3.5);
+
 }
 
 
+button#l {
+  left: 10%;
+  top: 45%;
+}
+
+/* Right button */
+button#r {
+  right: 10%;
+  top: 45%;
+}
+
+.create-game-panel button#tr {
+  right: 18%;
+  top: 54px;
+}
+.create-game-panel button#tl {
+  left: 18%;
+  top: 54px;
+}
+
+.create-game-panel button#c {
+  left: 45%;
+}
+
+.create-game-panel button#cc {
+  left: 44.5%;
+}
+
+.create-game-panel #br {
+  right: 18%;
+}
+
+.create-game-panel button#bl {
+  left: 18%;
+}
+
+.create-game-panel button#l {
+  left: 20%;
+}
+
+/* Right button */
+.create-game-panel button#r {
+  right: 20%;
+}
+
+/* 
 .qs-buttons button:hover,
 .qs-buttons button:focus{
-  transform: scale(3.5);
-}
+  transform: scale(3);
+} */
 
 button#l {
   left: 10%;
@@ -141,9 +229,8 @@ button#c {
 }
 
 button#cc {
-  left: 50%;
+  left: 42.5%;
   top: 45%;
-  transform: translate(-50%, 0);
 }
 
 button#br {
@@ -232,7 +319,7 @@ button:hover,
 }
   
 
-#refresh-btn {
+#load-btn {
   background: #333;
   border-radius: 9px;
   margin: -40px 0px 30px;
@@ -306,9 +393,9 @@ h3.game-sub-title {
 }
 
 .connect {
-  width: 100%;
+  text-align: center !important;
   font-weight: 700;
-  background: linear-gradient(180deg, #f0b90b, #ff6200);
+  /* background: linear-gradient(180deg, #f0b90b, #ff6200); */
   color: #fff !important;
   width: 100%;
 }
@@ -931,6 +1018,35 @@ a.player:hover {
   color: #fff;
   cursor: pointer;
 }
+.share-options input[type="text"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+.share-options button {
+  margin-right: 10px !important;
+}
+.join-game-panel .game-page .game-contents .action-panel {
+  text-align: center;
+}
+circle {
+  fill: transparent !important;
+}
+
+.share-options button.react-share__ShareButton {
+  opacity: 0.8;
+  transition: 0.2s;
+  background-image: none !important;
+  filter: drop-shadow(0px 0px 0px rgba(0, 0, 0, 0.26));
+}
+
+.share-options button.react-share__ShareButton:hover {
+  opacity: 1;
+  transition: 0.2s;
+  box-shadow: unset;
+  filter: drop-shadow(1px 2px 4px black);
+}
 
 
 .add-new-game-type:hover {
@@ -1104,12 +1220,15 @@ a.player:hover {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+  .join-game-panel, .create-game-panel {
+    height: unset;
+    overflow-y: scroll;
+  }
   .qs-buttons button {
     position: absolute !important;
       background: linear-gradient(184deg, #ffae00a8, #8116813d) !important;
       color: #fff !important;
       width: 2.75rem !important;
-      opacity: 0;
       height: 2.75rem !important;
       border-radius: 50% !important;
       margin: 0 !important;
@@ -1117,7 +1236,62 @@ a.player:hover {
       box-shadow: 0 0 6px 4px #ff0c8a;
   transform: scale(1);
   }
+
+  .create-game-panel .qs-buttons button {
+    transform: scale(0.7);
+  }
   
+button#l {
+  left: 10%;
+  top: 45%;
+}
+
+/* Right button */
+button#r {
+  right: 10%;
+  top: 45%;
+}
+
+.create-game-panel button#l {
+  top: -45px;
+}
+
+/* Right button */
+.create-game-panel button#r {
+  top: -45px;
+}
+
+.create-game-panel button#tr {
+  right: 18%;
+  top: -10px;
+}
+.create-game-panel button#tl {
+  left: 18%;
+  top: -10px;
+}
+
+.create-game-panel button#c {
+  left: 42.5%;
+  top: -30px;
+}
+
+.create-game-panel button#cc {
+  left: 42.5%;
+  top: -30px;
+}
+
+.create-game-panel #br {
+  right: 18%;
+  bottom: 10px;
+}
+
+.create-game-panel button#bl {
+  left: 18%;
+  bottom: 10px;
+}
+
+
+
   
   .qs-buttons button:hover,
   .qs-buttons button:focus{
@@ -1145,14 +1319,12 @@ a.player:hover {
   }
   
   button#c {
-    left: 43%;
-    top: 20%;
+    left: 42.5%;
   }
   
   button#cc {
-    left: 50%;
+    left: 42.5%;
     top: 45%;
-    transform: translate(-50%, 0);
   }
   
   button#br {

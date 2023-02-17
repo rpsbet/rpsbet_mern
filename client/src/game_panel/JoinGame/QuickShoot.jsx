@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
+import Lottie from 'react-lottie';
+import animationData from '../LottieAnimations/spinningIcon';
 import { updateBetResult } from '../../redux/Logic/logic.actions';
 import {
   alertModal,
@@ -13,6 +15,14 @@ import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import { FaClipboard } from 'react-icons/fa';
 
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice"
+  }
+};
 const twitterLink = window.location.href;
 
 class QuickShoot extends Component {
@@ -21,7 +31,8 @@ class QuickShoot extends Component {
     this.socket = this.props.socket;
     this.state = {
       betting: false,
-      holdTime: 0,
+    timer: null,
+    timerValue: 1000,
         clicked: true,
         intervalId: null,
       selected_qs_position: 0,
@@ -190,13 +201,6 @@ class QuickShoot extends Component {
     } else if (this.props.qs_game_type === 5) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
     }
-    
-    // const roomArray = stored_qs_array.filter(obj => obj.room_id === this.props.qs_bet_item_id);
-
-    // if (roomArray.length === 0) {
-    //   stored_qs_array = [];
-    // }
-    
     stored_qs_array.push({qs: selected_qs_position, room_id: this.props.qs_bet_item_id});
     
     if (this.props.qs_game_type === 2) {
@@ -495,7 +499,32 @@ predictNext = (qs_list, gameType) => {
       }
     );
   };
+  handleButtonClick = () => {
+    if (!this.state.betting) {
+      this.setState({
+        timer: setInterval(() => {
+          this.setState(state => {
+            if (state.timerValue === 0) {
+              clearInterval(this.state.timer);
+              this.startBetting();
+              return { timerValue: 1000 };
+            } else {
+              return { timerValue: state.timerValue - 10 };
+            }
+          });
+        }, 10)
+      });
+    } else {
+      this.stopBetting();
+    }
+  };
 
+  handleButtonRelease = () => {
+    if (this.state.timer) {
+      clearInterval(this.state.timer);
+      this.setState({ timerValue: 1000 });
+    }
+  };
 
   startBetting = () => {
     let stored_qs_array;
@@ -521,13 +550,13 @@ predictNext = (qs_list, gameType) => {
       this.joinGame2(randomItem, this.state.bet_amount);
     }, 3500);
   
-    this.setState({ intervalId });
+    this.setState({ intervalId, betting: true  });
   };
     
 
   stopBetting = () => {
     clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null });
+    this.setState({ intervalId: null,  betting: false, timerValue: 1000 });
   };
 
   joinGame2 = async (selected_qs_position, bet_amount) => {
@@ -559,7 +588,7 @@ predictNext = (qs_list, gameType) => {
       }
 
    
-    // this.props.refreshHistory();
+    this.props.refreshHistory();
   };
 
   }
@@ -744,8 +773,32 @@ predictNext = (qs_list, gameType) => {
                 onClick={this.onRightPositionButtonClicked}
               ></button>
             </div> */}
-            <button onClick={this.startBetting }>AI Play</button>
-        <button onClick={this.stopBetting }>Stop</button>
+            <button
+        onMouseDown={this.handleButtonClick}
+        onMouseUp={this.handleButtonRelease}
+        onTouchStart={this.handleButtonClick}
+        onTouchEnd={this.handleButtonRelease}
+        >
+        {this.state.betting ? (
+          <div id="stop">
+            <span>Stop</span>
+           <Lottie 
+        options={defaultOptions}
+          width={22}
+        />
+          </div>
+        ) : (
+          <div>
+            {this.state.timerValue !== 1000 ? (
+              <span>
+                {(this.state.timerValue / 1000).toFixed(2)}s
+              </span>
+            ) : (
+              <span>AI Play</span>
+            )}
+          </div>
+        )}
+        </button>
           </div>
           <hr />
           <div className="action-panel">
@@ -765,9 +818,7 @@ predictNext = (qs_list, gameType) => {
   <FaClipboard />&nbsp;{this.state.text}</a>
 
         </div>
-            {/* <button id="btn_bet" onClick={this.onBtnBetClick}>
-              Place Bet
-            </button> */}
+           
           </div>
         </div>
       </div>

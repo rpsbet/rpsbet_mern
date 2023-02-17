@@ -49,7 +49,7 @@ function QuestionEditForm({
         <TopDiv>
           <Grid container spacing={2}>
             <Grid item xs={4}>
-              <Typography variant="h6">Game Type</Typography>
+              <Typography variant="h6">GAME TYPE</Typography>
               <RadioGroup aria-label="brain_game_type" name="brain_game_type" value={brain_game_type ? brain_game_type : ''} onChange={e => handleChange(e.target.name, e.target.value)}>
                 { game_type_list.map((game_type, index) => (
                   <Grid item xs={12} key={index}>
@@ -64,7 +64,7 @@ function QuestionEditForm({
               </RadioGroup>
               <List>
                 <ListItem>
-                  <TextField label="New Game Type" name="new_brain_game_type" margin="normal" fullWidth type="text" value={new_brain_game_type} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
+                  <TextField label=" 🧠" name="new_brain_game_type" margin="normal" fullWidth type="text" value={new_brain_game_type} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
                   <ListItemSecondaryAction>
                     <IconButtonEl edge="end" aria-label="add" onClick={ e => {
                       if (new_brain_game_type !== '') {
@@ -80,12 +80,12 @@ function QuestionEditForm({
             </Grid>
             <Grid item xs={8}>
               <Grid item xs={12}>
-                <Typography variant="h6">Question</Typography>
-                <TextField autoFocus={true} label="Question" name="question" margin="normal" fullWidth type="text" value={question} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
+                <Typography variant="h6">QUESTION</Typography>
+                <TextField autoFocus={true} label="&nbsp;Are birds real?" name="question" margin="normal" fullWidth type="text" value={question} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
               </Grid>
               <Grid item xs={12} style={{marginTop: 50}}>
                 <Grid item xs={6}>
-                  <Typography variant="h6">Correct Answers</Typography>
+                  <Typography variant="h6">CORRECT ANSWERS</Typography>
                   <List>
                     {answers.map((row, index) => (
                       <React.Fragment key={index}>
@@ -109,7 +109,7 @@ function QuestionEditForm({
                       </React.Fragment>
                     ))}
                     <ListItem>
-                      <TextField label="New Answer" name="new_answer" margin="normal" fullWidth type="text" value={new_answer} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
+                      <TextField label="&nbsp;Yes" name="new_answer" margin="normal" fullWidth type="text" value={new_answer} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
                       <ListItemSecondaryAction>
                         <IconButtonEl edge="end" aria-label="add" onClick={ e => {
                           if (new_answer !== '') {
@@ -125,7 +125,7 @@ function QuestionEditForm({
                   </List>
                 </Grid>
                 <Grid item xs={6}>
-                <Typography variant="h6">Incorrect Answers</Typography>
+                <Typography variant="h6">INCORRECT ANSWERS</Typography>
                 <List>
                   {incorrect_answers.map((row, index) => (
                     <React.Fragment key={index}>
@@ -149,7 +149,7 @@ function QuestionEditForm({
                     </React.Fragment>
                   ))}
                   <ListItem>
-                    <TextField label="New Incorrect Answer" name="new_incorrect_answer" margin="normal" fullWidth type="text" value={new_incorrect_answer} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
+                    <TextField label="&nbsp;No" name="new_incorrect_answer" margin="normal" fullWidth type="text" value={new_incorrect_answer} onChange={e => updateTextField(e.target.name, e.target.value, 255)} />
                     <ListItemSecondaryAction>
                       <IconButtonEl edge="end" aria-label="add" onClick={ e => {
                         if (new_incorrect_answer !== '') {

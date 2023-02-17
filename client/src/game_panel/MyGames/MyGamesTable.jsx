@@ -71,7 +71,7 @@ class MyGamesTable extends Component {
   // };
 
   handleButtonClick = (winnings, room_id) => {
-    let startTime = 1500;
+    let startTime = 2000;
     this.setState({
       [room_id]: {
         holding: true,
@@ -83,7 +83,7 @@ class MyGamesTable extends Component {
               clearInterval(prevState[room_id].timer);
               this.endRoom(winnings, room_id);
               this.props.addNewTransaction({ amount: winnings, room_id });
-              this.props.setBalance(this.state.balance + winnings);
+              this.props.setBalance(this.state.balance += winnings);
 
             }
             return {
@@ -321,7 +321,7 @@ class MyGamesTable extends Component {
                     <div className="table-cell action desktop-only">
                     <button
       className="btn_end"
-      onMouseDown={() => this.handleButtonClick(row.bet_amount, row._id)}
+      onMouseDown={() => this.handleButtonClick(row.winnings, row._id)}
       onMouseUp={() => this.handleButtonRelease(row._id)}
       onMouseLeave={() => this.handleButtonRelease(row._id)}
       _id={row._id}

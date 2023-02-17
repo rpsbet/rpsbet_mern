@@ -2,6 +2,7 @@
 /* eslint-disable no-underscore-dangle */
 var ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 const Question = require('../model/Question');
@@ -27,8 +28,7 @@ router.post('/delete', async (req, res) => {
 		});
 	}
 });
-
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
 	try {
 		const { _id, question, brain_game_type, answers, incorrect_answers } = req.body;
 
@@ -49,6 +49,15 @@ router.post('/', async (req, res) => {
 			questionObj.question = question;
 			questionObj.brain_game_type = new ObjectId(brain_game_type);
 			questionObj.updated_at = Date.now();
+		}
+		
+		// Retrieve the brain game type from the database and check its user_id
+		const gameType = await BrainGameType.findById(brain_game_type);
+		if (gameType.user_id.toString() !== req.user._id.toString()) {
+			return res.status(401).json({
+				success: false,
+				error: 'You are not authorized to add a question to this brain game type'
+			});
 		}
 	
 		await questionObj.save();

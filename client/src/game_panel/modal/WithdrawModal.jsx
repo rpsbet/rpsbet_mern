@@ -38,7 +38,11 @@ class WithdrawModal extends Component {
             web3: props.web3,
             balance: props.balance,
             account: props.account,
-            isLoading: false
+            isLoading: false,
+            totalWagered: 0,
+            deposit: 0,
+            amount: 0,
+            balance: 0,
         };
     }
 
@@ -107,6 +111,7 @@ class WithdrawModal extends Component {
 
 
       render() {
+        const { totalWagered, deposit, amount, balance } = this.state;
 
         console.log({ loading: this.state.isLoading })
         return (
@@ -141,9 +146,9 @@ class WithdrawModal extends Component {
                                       
                                         <div id='withdrawal-status'>
                                         <h6>ELIGIBILILITY STATUS</h6>
-                                    <div><span style={{color: this.state.totalWagered <= 25 ? "red" : "rgb(87, 202, 34)"}}>WAGERED:&nbsp;&nbsp;&nbsp;{this.state.totalWagered} BUSD</span></div>
-                                    <div><span style={{color: this.state.deposit <= 5 ? "red" : "rgb(87, 202, 34)"}}>DEPOSITS:&nbsp;&nbsp;&nbsp;{this.state.deposit} BUSD</span></div>
-                                        <div><span style={{color: this.state.amount <= 5 ? "red" : "rgb(87, 202, 34)"}}>AMOUNT:&nbsp;&nbsp;&nbsp;{this.state.amount} BUSD</span></div>
+                                    <div><span className="eligible-label">WAGERED (MIN {convertToCurrency(25)})</span><span style={{color: this.state.totalWagered <= 25 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.totalWagered)}</span></div>
+                                    <div><span className="eligible-label">DEPOSITS (MIN {convertToCurrency(5)})</span><span style={{color: this.state.deposit <= 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.deposit)}</span></div>
+                                        <div><span className="eligible-label">AMOUNT (MIN {convertToCurrency(5)})</span><span style={{color: this.state.amount <= 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.amount)}</span></div>
                                         </div>
                                         <div className='balance'>
                                         <label className="availabletag">

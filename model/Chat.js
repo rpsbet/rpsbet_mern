@@ -14,6 +14,11 @@ const ChatSchema = new Schema({
     type: Date,
     default: Date.now
   },
+  avatar: {
+    type: String,
+    ref: 'User.avatar'
+
+  }
 });
 
 module.exports = Chat = mongoose.model('rps_chat', ChatSchema);

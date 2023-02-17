@@ -88,7 +88,15 @@
     border-radius: 9px;
 }
 
-.game_header .main_header .header_action_panel img.avatar {
+.chat-content .avatar {
+    border-radius: 5px !important;
+    width: 17px !important;
+    height: 17px !important;
+    margin-bottom: 5px;
+    margin-right: 5px !important;
+}
+
+.game_header .main_header .header_action_panel img.avatar,.chat-content .avatar {
     width: 32px;
     height: 32px;
     border-radius: 10px;
@@ -133,15 +141,17 @@
 
 .game_footer {
     color: #f2f3f5;
-    font-size: 12px;
+    font-size: 11px;
     bottom: 0;
-    margin: 30px 0 20px;
-    border-width: 1px 0 0;
-    border-radius: 0;
+    width: calc(100% - 5px);
+    translate: -0px;
+    border-bottom-left-radius: 20px;
     position: fixed;
     right: 0;
     left: 0;
     z-index: 2;
+    padding: 10px 30px 10px 40px;
+    backdrop-filter: blur(6px);
 }
 
 

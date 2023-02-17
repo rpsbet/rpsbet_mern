@@ -150,6 +150,25 @@ export const getBrainGameType = () => async dispatch => {
   }
 };
 
+export const getBrainGameTypes = (userId) => async dispatch => {
+  try {
+    const { data } = await api.get('brain_game_type', {
+      params: {
+        user_id: userId
+      }
+    });
+    if (data.success) {
+      dispatch({ type: BRAIN_GAME_TYPE_QUERY, payload: data.brain_game_types });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+
+
 export const addBrainGameType = game_type_name => async (dispatch) => {
   try {
     const { data } = await api.post('brain_game_type', {game_type_name});

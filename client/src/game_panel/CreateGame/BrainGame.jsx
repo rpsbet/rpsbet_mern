@@ -8,6 +8,12 @@ class BrainGame extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            question: '',
+            answers: [],
+            incorrect_answers: [],
+            brain_game_type: 1,
+            buttonDisable: true,
+            game_type_list: [],
             showModal: false,
             is_other: (this.props.bet_amount === 1 || this.props.bet_amount === 2.5 || this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25) ? 'hidden' : ''
         };

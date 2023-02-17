@@ -136,7 +136,7 @@ class AdvancedSettings extends Component {
                 <span style={{ marginLeft: '-3.2rem' }}> BUSD</span>
               </div>
             </div>
-            <p className="tip">Choose Automatic to Unstake at a set amount.</p>
+            <p className="tip">AUTOMATIC PAYOUTS WHEN BANKROLL HITS VALUE</p>
           </div>
         )}
         {/* {this.props.step === 3 && (

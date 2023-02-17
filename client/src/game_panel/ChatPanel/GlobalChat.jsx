@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import './Chat.css';
 import PlayerModal from '../modal/PlayerModal';
+import Avatar from '../../components/Avatar';
 import {
   acGetCustomerInfo
 } from '../../redux/Customer/customer.action';
@@ -57,20 +58,13 @@ if (current_state.chat_list.length !== props.globalChatList.length) {
     return null;
   }
 
-  handleOpenPlayerModal = async (sender) => {
-  
-    const user = await this.props.acGetCustomerInfo(sender);
-    if (user) {
-      this.setState({
-        // username: sender,
-        showPlayerModal: true
-      });
-    }
-  };
-  
-  
 
-  
+   handleOpenPlayerModal = (senderId) => {
+    console.log('senderId', senderId)
+    this.setState({ showPlayerModal: true, selectedCreator: senderId });
+  }
+
+
   handleClosePlayerModal = () => {
     this.setState({ showPlayerModal: false });
   };
@@ -98,14 +92,14 @@ if (current_state.chat_list.length !== props.globalChatList.length) {
           (chat, key) => (
             <div className="chat-line" key={key}>
               <div className="chat-content">
-              <a className="player" onClick={() => this.handleOpenPlayerModal(chat.sender)}>                   
+              <a className="player" onClick={() => this.handleOpenPlayerModal(chat.senderId)}>                   
 
-                  {/* <Avatar
+                  <Avatar
                     className="avatar"
-                    src={chat.creator_avatar}
+                    src={chat.avatar}
                     alt=""
                     darkMode={this.props.isDarkMode}
-                  /> */}
+                  />
                 <span className="sender-name">{chat.sender}</span></a>
                 <span className="chat-text">
                 {

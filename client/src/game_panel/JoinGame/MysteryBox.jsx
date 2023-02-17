@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { updateBetResult } from '../../redux/Logic/logic.actions';
-
+import Lottie from 'react-lottie';
+import animationData from '../LottieAnimations/spinningIcon';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -12,6 +13,15 @@ import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { FaClipboard } from 'react-icons/fa';
 
 const twitterLink = window.location.href;
+
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice"
+  }
+};
 
 const customStyles = {
   overlay: {
@@ -38,6 +48,8 @@ class MysteryBox extends Component {
     this.socket = this.props.socket;
 
     this.state = {
+
+      
       bet_amount: 0,
       selected_id: '',
       box_list: this.props.box_list,
@@ -49,7 +61,8 @@ class MysteryBox extends Component {
       isPasswordCorrect: false,
       isOpen: true,
       betting: false,
-      holdTime: 0,
+      timer: null,
+      timerValue: 1000,
         clicked: true,
         intervalId: null,
 
@@ -105,6 +118,7 @@ class MysteryBox extends Component {
 componentDidUpdate(prevProps, prevState) {
   if (prevState.box_list !== this.state.box_list) {
     this.setState({ box_list: this.state.box_list });
+    this.props.refreshHistory();
   }
   // console.log(this.state.betResult);
   if (
@@ -202,7 +216,32 @@ predictNext = (betAmountArray, boxList) => {
 
   return prediction;
 };
+handleButtonClick = () => {
+  if (!this.state.betting) {
+    this.setState({
+      timer: setInterval(() => {
+        this.setState(state => {
+          if (state.timerValue === 0) {
+            clearInterval(this.state.timer);
+            this.startBetting();
+            return { timerValue: 1000 };
+          } else {
+            return { timerValue: state.timerValue - 10 };
+          }
+        });
+      }, 10)
+    });
+  } else {
+    this.stopBetting();
+  }
+};
 
+handleButtonRelease = () => {
+  if (this.state.timer) {
+    clearInterval(this.state.timer);
+    this.setState({ timerValue: 1000 });
+  }
+};
 
 startBetting = () => {
   console.log('boxLis', this.state.box_list);
@@ -212,25 +251,25 @@ startBetting = () => {
     this.joinGame2(nextBox.box_price);
   }, 3500);
 
-  this.setState({ intervalId });
+  this.setState({ intervalId, betting: true });
 };
 
 
 stopBetting = () => {
   clearInterval(this.state.intervalId);
-  this.setState({ intervalId: null });
+  this.setState({ intervalId: null, betting: false, timerValue: 1000  });
 };
 
 joinGame2 = async (predictedBetAmount) => {
   const availableBoxes = this.state.box_list.filter(
     box =>
       box.status === "init" &&
-      (box.box_price <= predictedBetAmount + 5)
+      (box.box_price <= predictedBetAmount + 8)
   );
   if (availableBoxes.length === 0) {
     alertModal(
       this.props.isDarkMode,
-      `No available boxes with the predicted bet amount found`
+      `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
     );
     return;
   }
@@ -314,12 +353,17 @@ joinGame2 = async (predictedBetAmount) => {
 
           });
           let stored_bet_array = JSON.parse(localStorage.getItem("bet_array")) || [];
-          stored_bet_array.push({ bet: this.state.bet_amount });
-          localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
-          
+while (stored_bet_array.length >= 30) {
+  stored_bet_array.shift();
+}
+stored_bet_array.push({ bet: this.state.bet_amount });
+localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
 
         }
+        this.props.refreshHistory();
+
       }
+      
     );
   };
   
@@ -338,6 +382,7 @@ joinGame2 = async (predictedBetAmount) => {
       });
 
       pr = pr < row.box_prize ? row.box_prize : pr;
+
       return true;
     });
     prizes.sort((a, b) => a.price - b.price);
@@ -405,8 +450,32 @@ joinGame2 = async (predictedBetAmount) => {
 
             </div>
             <p>Each box will open one of the Prizes above.</p>
-            <button onClick={this.startBetting }>AI Play</button>
-        <button onClick={this.stopBetting }>Stop</button>
+            <button
+        onMouseDown={this.handleButtonClick}
+        onMouseUp={this.handleButtonRelease}
+        onTouchStart={this.handleButtonClick}
+        onTouchEnd={this.handleButtonRelease}
+        >
+        {this.state.betting ? (
+          <div id="stop">
+            <span>Stop</span>
+           <Lottie 
+        options={defaultOptions}
+          width={22}
+        />
+          </div>
+        ) : (
+          <div>
+            {this.state.timerValue !== 1000 ? (
+              <span>
+                {(this.state.timerValue / 1000).toFixed(2)}s
+              </span>
+            ) : (
+              <span>AI Play</span>
+            )}
+          </div>
+        )}
+        </button>
           </div>
           <hr />
           <div className="action-panel">
@@ -468,13 +537,13 @@ joinGame2 = async (predictedBetAmount) => {
 </div>
 <h4 className="game-sub-title">
   {this.state.betResult === 0
-    ? `HAHAHA! WRONG BOX MTF!`
+    ? `PAHAH WRONG BOX DICKHEAD!`
     : `NICE 😎 ISSA MONEY BOX`}
 </h4>
 <p>
   {this.state.betResult === 0
     ? `THIS BOX IS EMPTY`
-    : `YOU WON ${convertToCurrency(this.state.betResult)}!`}
+    : `YOU WON!`}
 </p>
 
             <h3 className="game-sub-title">ALL BOXES</h3>

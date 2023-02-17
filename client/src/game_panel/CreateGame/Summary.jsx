@@ -64,7 +64,7 @@ class Summary extends Component {
           </div>
         )}
         <div className="data-item">
-          <div className="label your-max-return">Your Return</div>
+          <div className="label your-max-return">TARGET ROI</div>
           <div className="value">
             {this.props.game_mode === 'Brain Game' ? (
               <>
@@ -152,7 +152,7 @@ class Summary extends Component {
             </div>
           )}
           <div className="summary-item">
-            <div className="summary-item-name">Max Return Amount</div>
+            <div className="summary-item-name">TARGET ROI</div>
             <div className="summary-item-value">
               {convertToCurrency(updateDigitToPoint2(this.props.max_return))}
             </div>

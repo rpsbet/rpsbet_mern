@@ -7,7 +7,15 @@
     position: relative;
 }
 
+.modal-body.edit-modal-body.question-modal-body div[class*='MuiPaper'] {
+    box-shadow: unset !important;
+    background-color: unset;
+}
 
+
+.modal-body.edit-modal-body.question-modal-body div[class*='MuiGrid-grid'] {
+    max-width: 100%;
+}
 
 #withdrawal-status {
     text-align: center;
@@ -16,7 +24,7 @@
    
     padding: 20px 5px;
     border-radius: 20px;
-    background: linear-gradient(45deg, #fa3fa04f, #fc41ddab);
+    background: #0606075c;
     /* box-shadow: 0 0 8px 2px #560251; */
 }
 #withdrawal-status h6 {
@@ -505,8 +513,22 @@ div[role="presentation"] li:last-child {
     .accordion {
       margin-top: 15px;
     }
+    .align-center img, .AvatarDropzone img {
+        margin-right: 10px !important;
 
-    
+        margin-left: 10px !important;
+    }
+
+
+    .AvatarButtonPanel button:first-child {
+        display: flex;
+        align-items: center;
+    }
+
+    .AvatarDropzone {
+        display: flex;
+        flex-direction: revert !important;
+    }
     .modal-body p.sm-text-center {
         text-align: center;
     }

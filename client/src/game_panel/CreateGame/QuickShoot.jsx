@@ -115,6 +115,7 @@ class QuickShoot extends Component {
   }
 
  predictNext = (qs_list, gameType) => {
+  console.log('wee', qs_list);
     const options = [...Array(gameType).keys()];
     const transitionMatrix = {};
     options.forEach(option1 => {

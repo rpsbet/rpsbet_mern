@@ -4,7 +4,8 @@ import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { updateBetResult } from '../../redux/Logic/logic.actions';
-
+import Lottie from 'react-lottie';
+import animationData from '../LottieAnimations/spinningIcon';
 import Avatar from '../../components/Avatar';
 import {
   alertModal,
@@ -15,6 +16,15 @@ import history from '../../redux/history';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
 import { FaClipboard } from 'react-icons/fa';
+
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice"
+  }
+};
 
 const options = [
   { classname: 'rock', selection: 'R' },
@@ -135,7 +145,8 @@ class RPS extends Component {
     this.socket = this.props.socket;
     this.state = {
       betting: false,
-    holdTime: 0,
+    timer: null,
+    timerValue: 1000,
       clicked: true,
       intervalId: null,
 
@@ -257,13 +268,14 @@ getPreviousBets() {
          this.props.updateBetResult('lose')
       }
 
-      let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
-      if (!stored_rps_array.length || stored_rps_array[0].room !== currentRoom) {
-        // If the stored RPS array is empty or if the current room is different from the room stored in the array, reset the array
-        stored_rps_array = [{ room: currentRoom, rps: [] }];
-      }
-      stored_rps_array[0].rps.push({ rps: selected_rps });
-      localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
+//       let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
+
+// while (stored_rps_array.length >= 30) {
+//   stored_rps_array.shift();
+// }
+// stored_rps_array.push({ rps: selected_rps });
+// localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
+
 // console.log(stored_rps_array);
 
       gameResultModal(
@@ -282,13 +294,12 @@ getPreviousBets() {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
-    // this.props.refreshHistory();
+    this.props.refreshHistory();
   };
 
 
   onBtnBetClick = (selected_rps) => {
     // e.preventDefault();
-
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
@@ -381,20 +392,46 @@ getPreviousBets() {
   copy() {
     navigator.clipboard.writeText(twitterLink)
   }
+  handleButtonClick = () => {
+    if (!this.state.betting) {
+      this.setState({
+        timer: setInterval(() => {
+          this.setState(state => {
+            if (state.timerValue === 0) {
+              clearInterval(this.state.timer);
+              this.startBetting();
+              return { timerValue: 1000 };
+            } else {
+              return { timerValue: state.timerValue - 10 };
+            }
+          });
+        }, 10)
+      });
+    } else {
+      this.stopBetting();
+    }
+  };
 
+  handleButtonRelease = () => {
+    if (this.state.timer) {
+      clearInterval(this.state.timer);
+      this.setState({ timerValue: 1000 });
+    }
+  };
   startBetting = () => {
+
     const intervalId = setInterval(() => {
       const randomItem = predictNext(JSON.parse(localStorage.getItem("rps_array")));
       // console.log('wwedw', randomItem)
       this.joinGame2(randomItem, this.state.bet_amount);
     }, 3500);
 
-    this.setState({ intervalId });
+    this.setState({ intervalId,betting: true });
   };
 
   stopBetting = () => {
-    clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null });
+    clearInterval(this.state.intervalId, this.state.timer);
+    this.setState({ intervalId: null, betting: false, timerValue: 1000 });
   };
 
   joinGame2 = async (selected_rps, bet_amount) => {
@@ -595,8 +632,32 @@ getPreviousBets() {
           <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
 
         </div>
-        <button onClick={this.startBetting }>AI Play</button>
-        <button onClick={this.stopBetting }>Stop</button>
+        <button
+        onMouseDown={this.handleButtonClick}
+        onMouseUp={this.handleButtonRelease}
+        onTouchStart={this.handleButtonClick}
+        onTouchEnd={this.handleButtonRelease}
+        >
+        {this.state.betting ? (
+          <div id="stop">
+            <span>Stop</span>
+           <Lottie 
+        options={defaultOptions}
+          width={22}
+        />
+          </div>
+        ) : (
+          <div>
+            {this.state.timerValue !== 1000 ? (
+              <span>
+                {(this.state.timerValue / 1000).toFixed(2)}s
+              </span>
+            ) : (
+              <span>AI Play</span>
+            )}
+          </div>
+        )}
+        </button>
           </div>
           <hr />
           <div className="action-panel">
@@ -616,9 +677,7 @@ getPreviousBets() {
   <FaClipboard />&nbsp;{this.state.text}</a>
 
         </div>
-            {/* <button id="btn_bet" onClick={this.onBtnBetClick}>
-              Place Bet
-            </button> */}
+           
           </div>
         </div>
       </div>

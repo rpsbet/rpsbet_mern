@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
+import { setChatRoomInfo } from '../../redux/Logic/logic.actions';
+import history from '../../redux/history';
+
 import { acGetCustomerInfo, getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
@@ -37,10 +40,42 @@ class PlayerModal extends Component {
             _id: props.selectedCreator || '',
             username: '',
             avatar: '',
-            loading: true
+            loading: true,
+            myChat: []
+
         }
     }
-
+ 
+    handleOpenChat = (e) => {
+        const selectedCreator = this.props.selectedCreator;
+        const chatExists = this.state.myChat.find(chat => chat._id === selectedCreator);
+      
+        if (!chatExists) {
+          // Handle case where chat does not exist
+          const newChatRoom = {
+            _id: selectedCreator,
+            username: e.target.getAttribute('username'),
+            avatar: e.target.getAttribute('avatar'),
+            chatLogs: []
+          };
+          this.setState(prevState => ({
+            myChat: [...prevState.myChat, newChatRoom]
+          }));
+          this.props.setChatRoomInfo(newChatRoom);
+          history.push('/chat/' + selectedCreator);
+        } else {
+          // Handle case where chat exists
+          this.props.setChatRoomInfo({
+            avatar: e.target.getAttribute('avatar'),
+            username: e.target.getAttribute('username'),
+            chatLogs: chatExists.chatLogs
+          });
+          history.push('/chat/' + selectedCreator);
+        }
+      }
+      
+    
+      
     async componentDidMount() {
         console.log('Props received in PlayerModal: ', this.props);
     
@@ -53,8 +88,7 @@ class PlayerModal extends Component {
           loading: false
         })
     }
-    
-
+   
 
     handleCloseModal = () => {
         this.props.closeModal();
@@ -81,14 +115,15 @@ class PlayerModal extends Component {
                         <button className="btn-close" onClick={this.handleCloseModal}>×</button>
                         <h2 className="modal-title">{this.state.selectedCreator}</h2>
                         <div className='align-center'>
+
                             {this.state.loading ? (
                                 <div>LOADING...</div>
-                            ) : (
-                                <Avatar
+                                ) : (
+                                    <Avatar
                                     src={this.state.avatar ? this.state.avatar : '/img/profile-thumbnail.svg'}
                                     alt=""
-                                />
-                            )}
+                                    />
+                                    )}
                         </div>
                         {this.state.loading ? null : (
                             <div className="user-statistics">
@@ -107,6 +142,9 @@ class PlayerModal extends Component {
                                     profitAllTimeLow={this.state.profitAllTimeLow}
                                     getRoomStatisticsData={this.props.getRoomStatisticsData}
                                 />
+                                <div className='align-center'>
+                                <button className="btn btn_join" onClick={this.handleOpenChat}>Send Message</button>
+                            </div>
                             </div>
                         )}
                     </div>
@@ -119,11 +157,14 @@ class PlayerModal extends Component {
 
 const mapStateToProps = state => ({
     isDarkMode: state.auth.isDarkMode,
+    myChat: state.logic.myChat
+
 });
 
 const mapDispatchToProps = {
     getCustomerStatisticsData,
-    acGetCustomerInfo
+    acGetCustomerInfo,
+    setChatRoomInfo
 };
 
 export default connect(

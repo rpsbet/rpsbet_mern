@@ -148,23 +148,23 @@ class StatisticsForm extends React.Component {
               `<table class="chart-tooltip">
               <tr>
               <td>GAME ID: </td>
-              <td>${gameLogList[dataPointIndex].game_id}</td>
+              <td>&nbsp;${gameLogList[dataPointIndex].game_id}</td>
               </tr>
               <tr>
               <td>PLAYED: </td>
-              <td>${moment(gameLogList[dataPointIndex].played).fromNow()}</td>
+              <td>&nbsp;${moment(gameLogList[dataPointIndex].played).fromNow()}</td>
               </tr>
               <tr>
               <td>BET: </td>
-              <td>${convertToCurrency(gameLogList[dataPointIndex].bet)}</td>
+              <td>&nbsp;${convertToCurrency(gameLogList[dataPointIndex].bet)}</td>
               </tr>
               <tr>
               <td>AGAINST: </td>
-              <td>${gameLogList[dataPointIndex].opponent.username}</td>
+              <td>&nbsp;${gameLogList[dataPointIndex].opponent.username}</td>
               </tr>
               <tr>
               <td>PROFIT: </td>
-              <td>${convertToCurrency(gameLogList[dataPointIndex].profit)}</td>
+              <td>&nbsp;${convertToCurrency(gameLogList[dataPointIndex].profit)}</td>
               </tr>
               
                 </table>`

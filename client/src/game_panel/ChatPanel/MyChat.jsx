@@ -11,6 +11,8 @@ class MyChat extends Component {
 		this.state = {
 			myChat: this.props.myChat
 		};
+		this.state.myChat = this.props.myChat || {};
+
 	}
 
 	openChat = (e) => {

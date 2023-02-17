@@ -135,19 +135,16 @@ class DepositModal extends Component {
               ×
             </button>
             <h2>DEPOSIT</h2>
-            <h6>STEP 1.&nbsp;&nbsp;SWAP BNB FOR BUSD</h6>
+            
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-              <iframe
-              src="https://poocoin.app/embed-swap?outputCurrency=0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
-              width="100%"
-              height="420"
-            ></iframe><a
+              <h6>STEP 1.&nbsp;&nbsp;BUY BUSD</h6>
+              <a
                   className="atag"
                   href="https://pancakeswap.finance/swap?outputCurrency=0xe9e7cea3dedca5984780bafc599bd69add087d56"
                   target="_blank"
                 >
-                  OR CLICK HERE TO BUY ON PCS
+                  CLICK HERE TO BUY ON PCS
                 </a>
                 <div className="balance">
                 <h6>STEP 2.&nbsp;&nbsp;ENTER AMOUNT & DEPOSIT</h6>
@@ -167,10 +164,10 @@ class DepositModal extends Component {
                 <br />
                 </div>
                 
-                <button className={styles.join('')} onClick={() => {
+                {/* <button className={styles.join('')} onClick={() => {
                     this.toggleBtnHandler();
                     this.copy();
-                }}><FaClipboard />&nbsp;{text}</button>
+                }}><FaClipboard />&nbsp;{text}</button> */}
                 
                 
                 </div>

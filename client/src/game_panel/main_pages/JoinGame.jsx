@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
+import Moment from 'moment';
+
 import RPS from '../JoinGame/RPS';
 import Spleesh from '../JoinGame/Spleesh';
 import MysteryBox from '../JoinGame/MysteryBox';
@@ -25,6 +27,16 @@ import MyHistoryTable from '../MyGames/MyHistoryTable';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
+
+function updateFromNow(history) {
+  const result = JSON.parse(JSON.stringify(history));
+  console.log(result)
+  for (let i = 0; i < result.length; i++) {
+    result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
+  }
+  return result;
+}
+
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
@@ -50,13 +62,29 @@ class JoinGame extends Component {
     this.state = {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
+      numToShow: 9,
+      isLoading: false,
       roomInfo: this.props.roomInfo,
-      bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
-
+      bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
+      history: this.props.history
     };
+    this.lastItemRef = React.createRef();
+    this.handleScroll = this.handleScroll.bind(this);
+
   }
 
   static getDerivedStateFromProps(props, current_state) {
+    if (
+      current_state.history?.length === 0 ||
+      (props.history &&
+        current_state.history[0]['created_at'] !==
+          props.history[0]['created_at'])
+    ) {
+      return {
+        ...current_state,
+        history: updateFromNow(props.history)
+      };
+    }
     if (current_state.roomInfo._id !== props.roomInfo._id) {
       return {
         roomInfo: props.roomInfo,
@@ -64,13 +92,18 @@ class JoinGame extends Component {
 
       };
     }
+
     return null;
   }
 
   componentDidMount() {
+    window.addEventListener('scroll', this.handleScroll);
+    console.log('componentDidMount called');
+
+    // this.updateReminderTime();
+    // this.interval = setInterval(this.updateReminderTime(), 3000);
     this.props.getHistory();
     this.props.getGameTypeList();
-    // this.IsAuthenticatedReroute();
     if (this.props.isAuthenticated) {
       this.props.getMyGames();
       this.props.getMyHistory();
@@ -79,13 +112,28 @@ class JoinGame extends Component {
     this.props.getRoomInfo(this.props.match.params.id);
   }
 
-  // IsAuthenticatedReroute = () => {
-  //   if (!this.props.auth) {
-  //     history.push('/');
-  //   }
-  // };
+  handleScroll = () => {
+    const lastItem = this.lastItemRef.current;
+    if (lastItem) {
+      const lastItemOffset = lastItem.offsetTop + lastItem.clientHeight;
+      const pageOffset = window.pageYOffset + window.innerHeight;
+      if (pageOffset > lastItemOffset - 20 && !this.state.isLoading) {
+        this.setState({ isLoading: true }, () => {
+          this.setState({ numToShow: this.state.numToShow + 9, isLoading: false });
+        });
+      }
+    }
+  };
+  
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
 
   componentDidUpdate(prevProps) {
+    if (prevProps.history !== this.props.history) {
+      this.setState({ history: updateFromNow(this.props.history) });
+  }
     if (this.props.match.params.id !== prevProps.match.params.id) {
       if(this.props.isAuthenticated){
         if(this.props.roomInfo.status !== 'finished'){
@@ -94,6 +142,12 @@ class JoinGame extends Component {
       }
     }
   }
+
+
+  updateReminderTime = () => {
+    this.setState({ history: updateFromNow(this.state.history) });
+  };
+
   
   getPreviousBets() {
     let previousBets = 0;
@@ -121,11 +175,11 @@ class JoinGame extends Component {
     this.props.getRoomInfo(this.props.match.params.id);
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.history !== prevProps.history) {
-      this.refreshHistory();
-    }
-  }
+  // componentDidUpdate(prevProps) {
+  //   if (this.props.history !== prevProps.history) {
+  //     this.refreshHistory();
+  //   }
+  // }
 
   showOpenGameOrHistory = (e, newValue) => {
     e.preventDefault();
@@ -253,30 +307,34 @@ class JoinGame extends Component {
         )}
         
         {this.props.roomInfo.room_history && (
-          <div className="room-history-panel">
-            <h2 className="room-history-title">Staking History</h2>
-            {/* <button id="refresh-btn" onClick={this.refreshHistory}>Refresh</button> */}
-
-            <div className="table main-history-table">
-              {this.props.roomInfo.room_history.map(
-                (row, key) => (
-                  <div className="table-row" key={'my_history' + row._id}>
-                    <div>
-                      <div className="table-cell">
-                        <div className="room-id">{row.room_name}</div>
-                        <div
-                          dangerouslySetInnerHTML={{ __html: row.history }}
-                        ></div>
-                      </div>
-                      <div className="table-cell">{row.from_now}</div>
-                    </div>
-                  </div>
-                ),
-                this
-              )}
+  <div className="room-history-panel">
+    <h2 className="room-history-title">Staking History</h2>
+    <div className="table main-history-table">
+      {this.props.roomInfo.room_history.slice(0, this.state.numToShow).map(
+        (row, key) => (
+          <div className="table-row" key={'history' + row._id}>
+            <div>
+              <div className="table-cell">
+                <div className="room-id">{row.room_name}</div>
+                <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
+                <div className="table-cell">{row.from_now}</div>
+              </div>
             </div>
+            {key === this.props.roomInfo.room_history.length - 1 && (
+              <div ref={this.lastItemRef}></div>
+            )}
           </div>
-        )}
+        ),
+        this
+      )}
+      {this.state.isLoading && (
+        <div className="loading-spinner"></div>
+      )}
+    </div>
+  </div>
+)}
+
+
         </div>
         <div>
         {((!this.state.is_mobile && this.props.selectedMainTabIndex === 1) ||

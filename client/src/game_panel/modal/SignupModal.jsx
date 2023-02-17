@@ -97,7 +97,7 @@ class SignupModal extends Component {
                             <p>YOUR USERNAME</p>
                             <input placeholder="CasE SeNsItIvE" type="text" className="form-control" value={this.state.userName} onChange={this.onChangeUserName}  />
                             <p>YOUR EMAIL</p>
-                            <input placeholder="OPTIONAL" type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail}  />
+                            <input placeholder="0 EMAILS" type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail}  />
                             <p>YOUR PASSWORD</p>
                             <input placeholder="Create a secure password" type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword}  />
                             <button className="btn-submit">Register</button>

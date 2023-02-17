@@ -4,6 +4,8 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 import InlineSVG from 'react-inlinesvg';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
+import Lottie from 'react-lottie';
+import animationData from '../LottieAnimations/spinningIcon';
 import { FaClipboard } from 'react-icons/fa';
 import {
   alertModal,
@@ -12,6 +14,15 @@ import {
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
+
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice"
+  }
+};
 
 
 const twitterLink = window.location.href;
@@ -24,6 +35,8 @@ class Spleesh extends Component {
 
     this.state = {
       betting: false,
+      timer: null,
+      timerValue: 1000,
       holdTime: 0,
       clicked: true,
       intervalId: null,
@@ -101,14 +114,26 @@ class Spleesh extends Component {
       }
 
       let stored_spleesh_array = JSON.parse(localStorage.getItem("spleesh_array")) || [];
-      // if (!stored_spleesh_array.length || stored_spleesh_array[0].room !== currentRoom) {
-      //   // If the stored RPS array is empty or if the current room is different from the room stored in the array, reset the array
-      //   stored_spleesh_array = [{ room: currentRoom, rps: [] }];
-      // }
-      stored_spleesh_array.push({ spleesh: this.state.bet_amount });
-      localStorage.setItem("spleesh_array", JSON.stringify(stored_spleesh_array));
-      console.log(stored_spleesh_array);
-
+      let stored_spleesh_10_array = JSON.parse(localStorage.getItem("spleesh_10_array")) || [];
+      
+      while (stored_spleesh_array.length >= 30) {
+        stored_spleesh_array.shift();
+      }
+      
+      if (this.props.spleesh_bet_unit === 10) {
+        while (stored_spleesh_10_array.length >= 30) {
+          stored_spleesh_10_array.shift();
+        }
+        stored_spleesh_10_array.push({ spleesh: this.state.bet_amount });
+        localStorage.setItem("spleesh_10_array", JSON.stringify(stored_spleesh_10_array));
+        console.log(stored_spleesh_10_array);
+      } else {
+        stored_spleesh_array.push({ spleesh: this.state.bet_amount });
+        localStorage.setItem("spleesh_array", JSON.stringify(stored_spleesh_array));
+        console.log(stored_spleesh_array);
+      }
+      
+      
       if (result.roomStatus === 'finished') {
         gameResultModal(
           this.props.isDarkMode,
@@ -233,7 +258,6 @@ class Spleesh extends Component {
   
       i++;
       if (i >= maxAttempts) {
-        console.log('No more values available');
         alertModal(this.props.isDarkMode, `NO MORE AVAILABLE OPTIONS MTF!!`);
 
         break;
@@ -243,23 +267,49 @@ class Spleesh extends Component {
     return prediction;
   }
   
+  handleButtonClick = () => {
+    if (!this.state.betting) {
+      this.setState({
+        timer: setInterval(() => {
+          this.setState(state => {
+            if (state.timerValue === 0) {
+              clearInterval(this.state.timer);
+              this.startBetting();
+              return { timerValue: 1000 };
+            } else {
+              return { timerValue: state.timerValue - 10 };
+            }
+          });
+        }, 10)
+      });
+    } else {
+      this.stopBetting();
+    }
+  };
+
+  handleButtonRelease = () => {
+    if (this.state.timer) {
+      clearInterval(this.state.timer);
+      this.setState({ timerValue: 1000 });
+    }
+  };
+  startBetting = () => {
+    const intervalId = setInterval(() => {
+      let storageKey = "spleesh_array";
+      if (this.props.spleesh_bet_unit === 10) {
+        storageKey = "spleesh_10_array";
+      }
+      const nextGuess = this.predictNext(JSON.parse(localStorage.getItem(storageKey)), this.state.spleesh_guesses);
+      this.joinGame2(nextGuess);
+    }, 3500);
   
-startBetting = () => {
-  const intervalId = setInterval(() => {
-    console.log('spleeshtastic', this.state.spleesh_guesses);
-    console.log('we', JSON.parse(localStorage.getItem("spleesh_array")));
-    const nextGuess = this.predictNext(JSON.parse(localStorage.getItem("spleesh_array")), this.state.spleesh_guesses);
-    console.log('nextguess', nextGuess);
-    this.joinGame2(nextGuess);
-  }, 3500);
-
-  this.setState({ intervalId });
-};
-
+    this.setState({ intervalId, betting: true });
+  };
+  
 
 stopBetting = () => {
   clearInterval(this.state.intervalId);
-  this.setState({ intervalId: null });
+  this.setState({ intervalId: null, betting: false, timerValue: 1000 });
 };
 
 joinGame2 = async (nextGuess) => {
@@ -357,8 +407,32 @@ joinGame2 = async (nextGuess) => {
             </p>
             <h3 className="game-sub-title">Your Number</h3>
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>
-            <button onClick={this.startBetting }>AI Play</button>
-        <button onClick={this.stopBetting }>Stop</button>
+            <button
+        onMouseDown={this.handleButtonClick}
+        onMouseUp={this.handleButtonRelease}
+        onTouchStart={this.handleButtonClick}
+        onTouchEnd={this.handleButtonRelease}
+        >
+        {this.state.betting ? (
+          <div id="stop">
+            <span>Stop</span>
+           <Lottie 
+        options={defaultOptions}
+          width={22}
+        />
+          </div>
+        ) : (
+          <div>
+            {this.state.timerValue !== 1000 ? (
+              <span>
+                {(this.state.timerValue / 1000).toFixed(2)}s
+              </span>
+            ) : (
+              <span>AI Play</span>
+            )}
+          </div>
+        )}
+        </button>
           </div>
           <hr />
           <div className="action-panel">

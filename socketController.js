@@ -35,10 +35,11 @@ module.exports.socketio = server => {
       });
     });
 
-    socket.on('GLOBAL_CHAT_SEND', data => {
+      socket.on('GLOBAL_CHAT_SEND', data => {
       const chat = new Chat({
         sender: data.senderId,
-        message: data.message
+        message: data.message,
+        avatar: data.avatar
       });
       chat.save();
       io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
@@ -47,23 +48,26 @@ module.exports.socketio = server => {
       });
     });
 
-
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
         .sort({ created_at: -1 })
-        .limit(30)
-        .populate({ path: 'sender', model: User })
+        .limit(3000)
+        .populate({ path: 'sender', model: User, select: 'username avatar' })
         .then(results =>
           results
             .map(({ created_at, message, sender }) => ({
               sender: sender?.username ?? '',
+              senderId: sender?._id ?? '',
               message,
+              avatar: sender?.avatar ?? '',
+
               time: Moment(created_at).format('hh:mm')
             }))
             .sort((a, b) => (a.created_at > b.created_at ? 1 : -1))
         )
         .then(results => io.sockets.emit('SET_GLOBAL_CHAT', results));
     });
+    
 
     socket.on('disconnect', reason => {
       Object.keys(sockets).forEach((key, index) => {

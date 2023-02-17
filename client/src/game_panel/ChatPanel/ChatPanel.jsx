@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import Moment from 'moment';
 // import { alertModal } from '../modal/ConfirmAlerts';
-
+import Avatar from '../../components/Avatar';
 import { Tabs, Tab } from '@material-ui/core';
 import GlobalChat from './GlobalChat';
 import MyChat from './MyChat';
@@ -57,7 +57,8 @@ class ChatPanel extends Component {
         this.props.socket.emit('GLOBAL_CHAT_SEND', {
           sender: this.props.userName,
           senderId: this.props.user._id,
-          message: this.state.text
+          message: this.state.text,
+          avatar: this.props.user.avatar
         });
         this.setState({ text: '', showEmojiPanel: false });
       }

@@ -23,6 +23,7 @@ class BrainGame extends Component {
       is_started: false,
       remaining_time: 60,
       score: 0,
+      isOpen: true,
       intervalId: null,
       balance: this.props.balance,
       question: { _id: '', question: '' },
@@ -86,6 +87,7 @@ class BrainGame extends Component {
           bet_amount: this.props.bet_amount
         })
       ) {
+
         const intervalId = setInterval(this.onCountDown, 1000);
         this.setState({
           is_started: true,
@@ -112,7 +114,7 @@ class BrainGame extends Component {
 
   onStartGame = async e => {
     e.preventDefault();
-
+    
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
@@ -126,10 +128,14 @@ class BrainGame extends Component {
       return;
     }
 
+    if (this.props.roomStatus === 'finished') {
+      alertModal(this.props.isDarkMode, 'THIS STAKE HAS ENDED');
+      return;
+    }
     confirmModalCreate(
       this.props.isDarkMode,
-      'AARE YOU SURE YOU WANT TO PLACE THIS BET?',
-      'Yes',
+      'YOU SURE YOU GOT THIS?',
+      'Hell Yeah!',
       'Cancel',
       async () => {
         if (this.props.is_private === true) {
@@ -339,6 +345,7 @@ const mapStateToProps = state => ({
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
   isDarkMode: state.auth.isDarkMode,
+  roomStatus: state.logic.roomStatus,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name
 });
