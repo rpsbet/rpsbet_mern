@@ -35,11 +35,10 @@ module.exports.socketio = server => {
       });
     });
 
-      socket.on('GLOBAL_CHAT_SEND', data => {
+    socket.on('GLOBAL_CHAT_SEND', data => {
       const chat = new Chat({
         sender: data.senderId,
-        message: data.message,
-        avatar: data.avatar
+        message: data.message
       });
       chat.save();
       io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
@@ -48,31 +47,23 @@ module.exports.socketio = server => {
       });
     });
 
-    socket.on('FETCH_GLOBAL_CHAT', async () => {
-      try {
-        const results = await Chat.find({})
-          .sort({ created_at: -1 })
-          .limit(3000)
-          .populate({ path: 'sender', model: User, select: 'username avatar' });
-    
-        const formattedResults = results
-          .map(({ created_at, message, sender }) => ({
-            sender: sender?.username ?? '',
-            senderId: sender?._id ?? '',
-            message,
-            avatar: sender?.avatar ?? '',
-            time: Moment(created_at).format('hh:mm')
-          }))
-          .sort((a, b) => (a.created_at > b.created_at ? 1 : -1));
-    
-        io.sockets.emit('SET_GLOBAL_CHAT', formattedResults);
-      } catch (err) {
-        console.error(err);
-        // Handle the error gracefully
-        // Send an error response to the client, or try again after some time, etc.
-      }
+
+    socket.on('FETCH_GLOBAL_CHAT', () => {
+      Chat.find({})
+        .sort({ created_at: -1 })
+        .limit(30)
+        .populate({ path: 'sender', model: User })
+        .then(results =>
+          results
+            .map(({ created_at, message, sender }) => ({
+              sender: sender?.username ?? '',
+              message,
+              time: Moment(created_at).format('hh:mm')
+            }))
+            .sort((a, b) => (a.created_at > b.created_at ? 1 : -1))
+        )
+        .then(results => io.sockets.emit('SET_GLOBAL_CHAT', results));
     });
-    
 
     socket.on('disconnect', reason => {
       Object.keys(sockets).forEach((key, index) => {
@@ -86,16 +77,13 @@ module.exports.socketio = server => {
     });
 
     socket.on('UPDATED_BOX_LIST', (data) => {
+      console.log("Received updated box list:", data);
 
       socket.broadcast.emit('UPDATED_BOX_LIST', data);
     });
 
-    socket.on('SPLEESH_GUESSES', (data) => {
-      socket.broadcast.emit('SPLEESH_GUESSES', data);
-    });
-
-    socket.on('SPLEESH_GUESSES1', (data) => {
-      socket.broadcast.emit('SPLEESH_GUESSES1', data);
+    socket.on('UPDATED_SPLEESH_BET_UNIT', (data) => {
+      socket.broadcast.emit('UPDATED_SPLEESH_BET_UNIT', data);
     });
 
     socket.on('UPDATED_BANKROLL', (data) => {
