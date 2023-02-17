@@ -120,6 +120,14 @@ class ChatPage extends Component {
                         <span role="img" aria-label="" onClick={this.insertEmoji}>🎁</span>
                         <span role="img" aria-label="" onClick={this.insertEmoji}>🎯</span>
                         <span role="img" aria-label="" onClick={this.insertEmoji}>❤</span>
+                        <span role="img" aria-label="" onClick={this.insertEmoji}>😩</span>
+                        <span role="img" aria-label="" onClick={this.insertEmoji}>😍</span>
+                        <span role="img" aria-label="" onClick={this.insertEmoji}>😊</span>
+                        <span role="img" aria-label="" onClick={this.insertEmoji}>☠</span>
+                        <span role="img" aria-label="" onClick={this.insertEmoji}>🔥</span>
+                        <span role="img" aria-label="" onClick={this.insertEmoji}>🏝</span>
+                        <span role="img" aria-label="" onClick={this.insertEmoji}>🚀</span>
+                        <span role="img" aria-label="" onClick={this.insertEmoji}>🥩</span>
                     </div>
                     <button className="btn-show-emoticon" onClick={() => {this.setState({showEmojiPanel: !this.state.showEmojiPanel})}}></button>
                     <input type="text" className="form-control" placeholder="Type Something..." onKeyDown={this.onTextAreaKeyDown} onChange={this.onChangeText} value={this.state.text} ref={(elem) => {this.textarea = elem}} />

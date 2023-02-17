@@ -23,19 +23,23 @@ const variantIcon = {
 
 const useStyles1 = makeStyles(theme => ({
   success: {
-    backgroundColor: green[600],
+    backgroundColor: 'linear-gradient(45deg, #28a745, #ffb000)',
+    borderRadius: '14px',
     color: 'white'
   },
   error: {
-    backgroundColor: theme.palette.error.main,
+    backgroundColor: 'linear-gradient(45deg, #c438ef, #f0b90b) ',
+    borderRadius: '14px',
     color: 'white'
   },
   info: {
-    backgroundColor: theme.palette.primary.main,
+    backgroundColor: 'linear-gradient(45deg, #3f00ee, #ffb000)',
+    borderRadius: '14px',
     color: 'white'
   },
   warning: {
-    backgroundColor: amber[700],
+    backgroundColor: 'linear-gradient(45deg, #ff6a9c, #ff3c3c)',
+    borderRadius: '14px',
     color: 'white'
   },
   icon: {
