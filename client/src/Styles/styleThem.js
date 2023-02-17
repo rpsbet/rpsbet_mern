@@ -9,14 +9,14 @@ export const styleColor = {
     main: '#13d7bc',
     dark: '#01a790'
   },
-  error: { main: 'linear-gradient(45deg, #c438ef, #f0b90b)' },
+  error: { main: '#c438ef' },
   color: {
     white: '#fff',
     whiteD2: '#d3d3d3;',
     greyDark: '#3e4554',
     greyDark2: '#999',
     greyDark3: '#333',
-    listedBlue: 'linear-gradient(45deg, #3f00ee, #ffb000)',
+    listedBlue: '#3f00ee',
     black1: '#202020'
   }
 };
