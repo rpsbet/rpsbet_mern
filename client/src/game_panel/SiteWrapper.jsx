@@ -39,8 +39,10 @@ import {
 
 
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import PlayCircleOutlineIcon from '@material-ui/icons/PlayCircleOutline';
-import PauseCircleOutlineIcon from '@material-ui/icons/PauseCircleOutline';
+// import PlayCircleOutlineIcon from '@material-ui/icons/PlayCircleOutline';
+// import PauseCircleOutlineIcon from '@material-ui/icons/PauseCircleOutline';
+import VolumeUpIcon from '@material-ui/icons/VolumeUp';
+import VolumeOffIcon from '@material-ui/icons/VolumeOff';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import PersonOutlineIcon from '@material-ui/icons/PersonOutline';
 
@@ -94,6 +96,7 @@ const customStyles = {
   }
 };
 
+const { SpeechSynthesis } = window.speechSynthesis;
 
 function updateFromNow(transactions) {
   const result = JSON.parse(JSON.stringify(transactions));
@@ -114,6 +117,7 @@ class SiteWrapper extends Component {
           : `http://${window.location.hostname}:5001`,
       userName: this.props.userName,
       balance: this.props.balance,
+      isMuted: false,
       betResult: this.props.betResult,
       showProfileModal: false,
       showPlayerModal: false,
@@ -172,6 +176,37 @@ class SiteWrapper extends Component {
   };
 
 
+  handleMute = () => {
+    this.setState({ isMuted: true });
+
+    this.audioWin.pause();
+    this.audioSplit.pause();
+    this.audioLose.pause();
+    this.fatality.pause();
+    this.nyan.pause();
+    this.topG.pause();
+    this.oohBaby.pause();
+    this.cashRegister.pause();
+
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  handleUnmute = () => {
+    this.setState({ isMuted: false });
+  };
+
+  speak(message) {
+
+    if (!this.state.isMuted) {
+     
+    if (window.speechSynthesis) {
+      const utterance = new SpeechSynthesisUtterance(message);
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+  }
 
   handleClickMenu = e => {
     this.setState({ anchorEl: e.currentTarget });
@@ -203,16 +238,52 @@ class SiteWrapper extends Component {
 
     socket.on('SEND_CHAT', data => {
       try {
-        console.log('1', this.state.betResult);
-        console.log('2', this.props.betResult);
-        console.log('3', data.betResult);
-        if (data.betResult === 1) {
-          this.audioWin.play();
-        } else if (data.betResult === 0) {
-          this.audioSplit.play();
-        } else if (data.betResult === -1) {
-          this.audioLose.play();
+        let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
+    
+        const message = data.message.toLowerCase();
+        if (message.includes('lost')) {
+          const value = message.match(/\d+/);
+          if (value) {
+            this.speak(`Lost, ${value}`);
+          }
+          if (value >= 0 && value <= 2) {
+            this.audioSplit.play();
+          } else if (value > 25 && value <= 100) {
+            this.audioLose.play();
+          } else if (value > 100) {
+            this.fatality.play();
+          }
+          winCounter = 0;
+        } else if (message.includes('split')) {
+          const value = message.match(/\d+/);
+          if (value) {
+            this.speak(`Split, ${value}`);
+          }
+          winCounter = 0;
+        } else if (message.includes('won')) {
+          winCounter++;
+          if (winCounter === 3) {
+            this.oohBaby.play();
+            winCounter = 0;
+          }
+          const value = message.match(/\d+/);
+          if (value) {
+            this.speak(`Won, ${value}`);
+          }
+          if (value >= 0 && value <= 2) {
+            this.audioSplit.play();
+          } else if (value >= 15  && value <= 50) {
+            this.cashRegister.play();
+          } else if (value > 50  && value <= 250) {
+            this.audioWin.play();
+          } else if (value > 250  && value <= 1000) {
+            this.topG.play();
+          } else if (value > 1000 ) {
+            this.nyan.play();
+          }
         }
+        localStorage.setItem('winCounter', winCounter);
+        
         this.props.addChatLog(data);
     
         if (history.location.pathname.substr(0, 5) === '/chat') {
@@ -233,25 +304,25 @@ class SiteWrapper extends Component {
     socket.on('UPDATE_BET_RESULT', data => {
       this.props.updateBetResult(data);
     });
-
+    
     socket.on('NEW_TRANSACTION', data => {
       this.props.addNewTransaction(data);
     });
-
+    
     socket.on('SET_UNREAD_MESSAGE_COUNT', data => {
       this.props.setUnreadMessageCount(data);
     });
-
+    
     socket.on('ONLINE_STATUS_UPDATED', data => {
       this.props.updateOnlineUserList(data.user_list);
     });
-
+    
     socket.on('GLOBAL_CHAT_RECEIVED', data => {
       this.props.globalChatReceived(data);
     });
-
+    
     socket.on('SET_GLOBAL_CHAT', this.props.setGlobalChat);
-
+    
     this.props.setSocket(socket);
   };
   loadWeb3 = async () => {
@@ -283,6 +354,16 @@ class SiteWrapper extends Component {
     }
 
     try {
+      this.nyan = new Audio('/sounds/nyan.mp3');
+      this.nyan.load();
+      this.topG = new Audio('/sounds/topG.mp3');
+      this.topG.load();
+      this.oohBaby = new Audio('/sounds/ooh-baby.mp3');
+      this.oohBaby.load();
+      this.cashRegister = new Audio('/sounds/cash-register.mp3');
+      this.cashRegister.load();
+      this.fatality = new Audio('/sounds/fatality.mp3');
+      this.fatality.load();
       this.audioWin = new Audio('/sounds/audioWin.mp3');
       this.audioWin.load();
       this.audioSplit = new Audio('/sounds/audioSplit.mp3');
@@ -491,6 +572,7 @@ class SiteWrapper extends Component {
 
   render() {
    
+    const { isMuted } = this.state;
 
     const texts = [
       'FRANKLY, IDC 😎', 'FAIL FASTER 💥', 'DOING WINS 🔥', 'PLAY THE INFINITE GAME ♾',
@@ -682,6 +764,7 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
         height="80"
       />
 
+
                         {/* <ListItemText>{this.state.isPlaying ? <div className="playBtn">
                         <ListItemIcon>
                           <PauseCircleOutlineIcon /></ListItemIcon> PAUSE</div>
@@ -691,6 +774,25 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                       </MenuItem>
                       <Divider />
 
+                      <MenuItem>
+                      <ListItemText>
+  {this.state.isMuted ? (
+    <div className="playBtn" onClick={this.handleUnmute}>
+      <ListItemIcon>
+        <VolumeOffIcon />
+      </ListItemIcon>
+      UNMUTE
+    </div>
+  ) : (
+    <div className="playBtn" onClick={this.handleMute}>
+      <ListItemIcon>
+        <VolumeUpIcon />
+      </ListItemIcon>
+      MUTE
+    </div>
+  )}
+</ListItemText>
+</MenuItem>
                       <MenuItem
                         onClick={e => {
                           this.handleLogout(true);
@@ -699,9 +801,8 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                         <ListItemIcon>
                           <ExitToAppIcon size="small" />
                         </ListItemIcon>
-                        <ListItemText>LOGOUT</ListItemText>
+                        <ListItemText>LOG OUT</ListItemText>
                       </MenuItem>
-                      
                       <Divider />
                       <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
                         {/* <ListItemText></ListItemText> */}
@@ -791,7 +892,7 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                   <hr />
                   {this.state.web3account ? (
           <>
-            <input type="text" value={this.state.web3account} readOnly />
+            <input id="wallet-address" type="text" value={this.state.web3account} readOnly />
             <button className="connect" onClick={this.disconnectWeb3}>Disconnect</button>
           </>
         ) : (

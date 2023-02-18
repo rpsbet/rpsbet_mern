@@ -527,7 +527,6 @@ const getRoomList = async (pagination, page, game_type) => {
         temp.winnings = updateDigitToPoint2(room['pr'] + room['bet_amount']);
       } else if (temp.game_type.game_type_id === 4) {
         temp.winnings = parseFloat(room['host_pr']) + parseFloat(room['user_bet']);
-        console.log('i am a wankerrr', temp.winnings);
       } else if (temp.game_type.game_type_id === 5) {
         temp.winnings = updateDigitToPoint2(room['pr']);
       }
@@ -808,7 +807,6 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
       } else if (temp.game_type.game_type_id === 4) {
         //Mytery Box
         temp.winnings = parseFloat(room['user_bet']) + parseFloat(room['host_pr']);
-        console.log('i am a bigger wankerrr', temp.winnings);
 
       } else if (temp.game_type.game_type_id === 5) {
         // Quick Shoot
@@ -940,7 +938,6 @@ router.post('/end_game', auth, async (req, res) => {
           roomInfo['room_number'];
       } else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
         newTransaction.amount += roomInfo['host_pr'] + parseFloat(roomInfo['user_bet']);
-        console.log('dickhead', roomInfo['host_pr']);
         message.message =
           'I made ' +
           roomInfo['host_pr'] +
@@ -1748,11 +1745,10 @@ router.post('/bet', auth, async (req, res) => {
 
 
           newTransactionC.amount += new_host_pr - roomInfo.endgame_amount;
-          console.log('userbet1', roomInfo.user_bet);
           roomInfo.user_bet = parseFloat(roomInfo.user_bet) + roomInfo.endgame_amount - roomInfo.bet_amount;
           new_host_pr = roomInfo.bet_amount;
           /*lowest_box_price === -1 ? 0 : lowest_box_price; */
-          console.log('userbet2', roomInfo.user_bet);
+          
           // newTransactionC.amount += new_host_pr * ((100 - commission.value) / 100);
 
           const messageC =

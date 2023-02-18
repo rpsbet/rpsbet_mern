@@ -500,6 +500,31 @@ predictNext = (qs_list, gameType) => {
     );
   };
   handleButtonClick = () => {
+
+    if (this.props.creator_id === this.props.user_id) {
+      alertModal(
+        this.props.isDarkMode,
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
+      );
+      return;
+    }
+    if (isNaN(this.state.bet_amount)) {
+      alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
+      return;
+      }
+      if (this.state.bet_amount <= 0) {
+        alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
+        return;
+      }
+
+
+    if (this.state.bet_amount > this.state.balance) {
+      alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
+      return;
+    }
+
+
+
     if (!this.state.betting) {
       this.setState({
         timer: setInterval(() => {

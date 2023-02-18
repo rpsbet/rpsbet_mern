@@ -244,10 +244,26 @@ handleButtonRelease = () => {
 };
 
 startBetting = () => {
-  console.log('boxLis', this.state.box_list);
+  if (this.props.creator_id === this.props.user_id) {
+    alertModal(
+      this.props.isDarkMode,
+      `DIS YOUR OWN STAKE CRAZY FOO-!`
+    );
+    return;
+    
+  }
+
+  if (this.state.bet_amount > this.state.balance) {
+    alertModal(this.props.isDarkMode, `TOO BROKE!`);
+    return;
+  }
+  let stored_bet_array = JSON.parse(localStorage.getItem("bet_array")) || [];
+  if (stored_bet_array.length  < 3) {
+    alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+    return;
+  }
   const intervalId = setInterval(() => {
-    const nextBox = this.predictNext(JSON.parse(localStorage.getItem("bet_array")), this.state.box_list);
-    console.log('nextBox', nextBox);
+    const nextBox = this.predictNext(stored_bet_array, this.state.box_list);
     this.joinGame2(nextBox.box_price);
   }, 3500);
 

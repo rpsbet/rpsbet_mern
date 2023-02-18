@@ -299,6 +299,12 @@ class Spleesh extends Component {
       if (this.props.spleesh_bet_unit === 10) {
         storageKey = "spleesh_10_array";
       }
+
+      if (storageKey.length < 3) {
+        alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+        return;
+      }
+    
       const nextGuess = this.predictNext(JSON.parse(localStorage.getItem(storageKey)), this.state.spleesh_guesses);
       this.joinGame2(nextGuess);
     }, 3500);

@@ -1220,6 +1220,10 @@ circle {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+  #wallet-address {
+    width: calc(100vw - 90px);
+}
+
   .join-game-panel, .create-game-panel {
     height: unset;
     overflow-y: scroll;

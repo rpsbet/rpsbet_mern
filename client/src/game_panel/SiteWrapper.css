@@ -55,6 +55,13 @@
     background-color: #ffffff !important;
 }
 
+#wallet-address {
+    text-overflow: ellipsis;
+    width: calc(100% - 10px);
+    display: inline-block;
+    direction: rtl;
+}
+
 .game_header .main_header span#balance {
     height: 32px;
     margin: 0 32px;
@@ -132,6 +139,19 @@
 
 .dark_mode_toggle {
     margin: 10px;
+}
+
+ul[role=menu] li:hover {
+    border-radius: 0 !important;
+}
+
+.btn-show-emoticon:hover, .btn-send-message:hover {
+    border-radius: 20px !important;
+}
+
+.dark_mode_toggle:hover {
+    /* border-radius: 20px !important; */
+    box-shadow: unset !important;
 }
   
 .game_wrapper {

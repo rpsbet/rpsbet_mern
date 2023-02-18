@@ -268,13 +268,13 @@ getPreviousBets() {
          this.props.updateBetResult('lose')
       }
 
-//       let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
+      let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
 
-// while (stored_rps_array.length >= 30) {
-//   stored_rps_array.shift();
-// }
-// stored_rps_array.push({ rps: selected_rps });
-// localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
+while (stored_rps_array.length >= 30) {
+  stored_rps_array.shift();
+}
+stored_rps_array.push({ rps: selected_rps });
+localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
 
 // console.log(stored_rps_array);
 
@@ -420,12 +420,19 @@ getPreviousBets() {
   };
   startBetting = () => {
 
+    let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
+    if (stored_rps_array.length  < 3) {
+      alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+      return;
+    }
+
     const intervalId = setInterval(() => {
-      const randomItem = predictNext(JSON.parse(localStorage.getItem("rps_array")));
+      const randomItem = predictNext(stored_rps_array);
       // console.log('wwedw', randomItem)
       this.joinGame2(randomItem, this.state.bet_amount);
     }, 3500);
 
+  
     this.setState({ intervalId,betting: true });
   };
 
@@ -435,6 +442,7 @@ getPreviousBets() {
   };
 
   joinGame2 = async (selected_rps, bet_amount) => {
+    
 
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
@@ -458,6 +466,8 @@ getPreviousBets() {
       alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
       return;
     }
+
+
     this.setState({selected_rps: selected_rps, bet_amount: this.state.bet_amount});
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
