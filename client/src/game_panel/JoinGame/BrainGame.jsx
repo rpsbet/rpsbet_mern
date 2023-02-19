@@ -327,7 +327,7 @@ class BrainGame extends Component {
             <h3 className="game-sub-title">Score to BEAT:</h3>
             <p>{this.props.brain_game_score}</p>
           </div>
-          <hr />
+       
           <div className="action-panel">
             <span></span>
             <button id="btn_bet" onClick={this.onStartGame}>

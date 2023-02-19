@@ -115,7 +115,7 @@ class OpenGamesTable extends Component {
       QS: 'quick-shoot',
       DG: 'drop-game'
     };
-
+  
     const gameTypePanel = [
       <div
         className="btn-arrow-left"
@@ -142,11 +142,17 @@ class OpenGamesTable extends Component {
           this.handleGameTypeButtonClicked('All');
         }}
       >
-        <img src={`/img/gametype/icons/All.svg`} alt="" />
+        {/* <img src={`/img/gametype/icons/All.svg`} alt="" /> */}
         <div>All Games</div>
       </div>
     ];
-
+  
+    const gameTypeIcons = Object.keys(gameTypeStyleClass).map(shortName => {
+      const img = new Image();
+      img.src = `/img/gametype/icons/${shortName}.svg`;
+      return img;
+    });
+  
     this.props.gameTypeList.map((gameType, index) => {
       gameTypePanel.push(
         <div
@@ -162,16 +168,24 @@ class OpenGamesTable extends Component {
             this.handleGameTypeButtonClicked(gameType.short_name);
           }}
         >
-          <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" />
+          {/* <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" /> */}
           <div>{gameType.game_type_name}</div>
         </div>
       );
       return true;
     });
-
+  
     return gameTypePanel;
   };
 
+  componentDidMount() {
+    window.addEventListener('load', () => {
+      this.setState({ loaded: true });
+    });
+  }
+  
+
+  
   handlePageNumberClicked = page => {
     this.props.getRoomList({
       page: page,

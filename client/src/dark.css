@@ -2,9 +2,13 @@
 .dark_mode input,
 .dark_mode input:focus {
 	border: 0;
-	background-color: #2f3136;
+	background-color: #101010;
 	color: white;
 	box-shadow: none;
+}
+
+.dark_mode .contents_wrapper .room-history-panel h2.room-history-title {
+	color: #f9f9f9;
 }
 
 .dark_mode div.table .table-row .table-cell img.game-type-icon {
@@ -12,7 +16,8 @@
 }
 
 .dark_mode div.main-page-nav-button-group {
-background: #191a1d;
+	border-top: 1px solid #111;
+background: #060607;
 }
 
 .dark_mode .mobile-only .active,
@@ -65,7 +70,7 @@ background: #191a1d;
 
 .dark_mode .game-type-panel .btn-game-type.active,
 .dark_mode .game-type-panel .btn-game-type:hover {
-    background-color: #191a1d;
+    background-color: #f2f2f20a;
     color: white;
 }
 
@@ -74,12 +79,13 @@ background: #191a1d;
     background-color: #2f3136;
 }
 .dark_mode .chat-wrapper .chat-input-panel {
-	background-color: #212529;
+	background-color: #060607;
+	border-bottom: 1px solid #111;
 }
 
 .dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
 	color: #959595;
-    background: #292b2f;
+    background: #f2f2f20a;
     margin: 0 0px 15px;
     padding: 5px 10px;
     display: block;
@@ -92,7 +98,7 @@ background: #191a1d;
 
 
 .dark_mode .game_header {
-	background-color: #2f3136;
+	background-color: #060607;
 }
 .dark_mode .game_header .main_header a.game_logo {
     background-image: url("/img/dark-game-logo.svg")
@@ -101,7 +107,7 @@ background: #191a1d;
 	color: #8e9297;
 }
 .dark_mode .contents_wrapper {
-	background-color: #202225;
+	background-color: #060607;
 }
 .dark_mode .main-game h2.main-title {
 	color: white;
@@ -115,7 +121,7 @@ background: #191a1d;
 
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
-	background-color: rgba(47, 49, 54, 0.2);
+	background-color: #060607;
 }
 .dark_mode .main-game-page-tabs {
 	color: #8e9297;
@@ -137,14 +143,13 @@ background: #191a1d;
 	font-size: 14px;
 }
 .dark_mode div.table .table-row {
-	background: rgba(47, 49, 54, 0.5);
+	background: #f2f2f20a;
 	color: #8e9297;
 }
 
 .dark_mode .create-room-btn-panel button.btn-create-room {
-	background: 
-        linear-gradient(to top, #232529, #232529) padding-box, 
-        linear-gradient(to top, #ff409a, #c438ef) border-box;
+	color: #e9ecef;
+	background: linear-gradient(to top, #060607, #232529) padding-box, linear-gradient(to top, #ff409a, #c438ef) border-box;
 }
 
 .dark_mode .table-cell.cell-room-info .cell-game-type,
@@ -165,14 +170,14 @@ background: #191a1d;
 .dark_mode .search_panel input.search_text,
 .dark_mode .game-type-panel .btn-game-type .game-type-icon,
 .dark_mode .game-page .page-title > .pre-summary-panel	{
-	background-color: rgba(47, 49, 54, 0.5);
+	background:linear-gradient(0deg, #06060754, #0f0f10);
 }
 .dark_mode #game_logs {
 	background: rgba(0, 0, 0, 0.5);
 	backdrop-filter: blur(4px);
 }
 .dark_mode #game_logs .game_logs_contents {
-	background: #2f3136;
+	background: #060607;
 }
 .dark_mode #game_logs .game_logs_contents h2,
 .dark_mode #game_logs .game_logs_contents .transaction-panel button,
@@ -195,7 +200,7 @@ background: #191a1d;
 	color: #8e9297;
 }
 .dark_mode #game_logs .arrow-up {
-	border-bottom: 10px solid #2f3136;
+	border-bottom: 10px solid #101010;
 }
 .dark_mode .contents_wrapper .game-page .page-title h2 {
 	color: white;
@@ -206,7 +211,7 @@ background: #191a1d;
 }
 .dark_mode .game-page .game-contents {
 	color: white;
-	background-color: rgba(47, 49, 54, 0.5);
+	background-color: #060607;
 }
 .dark_mode .game-page hr {
 	border-color: #36393f;
@@ -235,11 +240,11 @@ background: #191a1d;
 }
 .dark_mode #rps-game-type-radio span,
 .dark_mode #rps-radio span {
-	background-color: #202225;
+	background-color: #060607;
     border: 2px solid #4f545c;
 }
 .dark_mode .game-page .game-contents .summary-panel .summary-info {
-	background-color: #202225;
+	background-color: #060607;
 }
 
 .dark_mode .brain-game-play-panel .play-panel-header .timer {
@@ -275,7 +280,7 @@ background: #191a1d;
 }
 .dark_mode .modal-body {
 	color: #8e9297;
-	background-color: #191a1d;
+	background-color: #060607;
 }
 .dark_mode .modal-body h2,
 .dark_mode .modal-body h5,
@@ -329,7 +334,7 @@ background: #191a1d;
 }
 .dark_mode table#runs,
 .dark_mode .chat-wrapper .chat-input-panel .emoticon-panel {
-    background: #202225;
+    background: #060607;
 }
 
 
@@ -367,7 +372,7 @@ background: #191a1d;
 }
 
 .dark_mode .modal-body .modal-content-wrapper h4 {
-	background-color: rgb(84 84 84 / 48%);
+	background-color: #202225;
 }
 .dark_mode .modal-body .modal-content-wrapper.quick-shoot h4 {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Ccircle cx='27.542' cy='21.383' r='12' stroke='%23fff' stroke-width='1.5' transform='rotate(8.444 27.542 21.383)'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M16.67 25.91l5.603 2.02 3.06-3.59 4.452.662 2.07-3.737 4.104-.402 2.949 3.976M15.774 21.733l4.927-3.64 3.81 1.576 3.829-1.959.587-3.956 5.077-2.457'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M25.175 9.48l3.752 4.274-.587 3.956 3.516 3.555 4.103-.402 1.982-5.444M36.763 29.07l-5.093.255-1.885-4.323-4.451-.661-.823-4.672-3.81-1.576-.418-6.306M29.105 32.988l2.566-3.663M22.273 27.93l1.813 4.819'/%3E%3Cpath stroke='%23fff' stroke-linecap='round' stroke-width='1.5' d='M15.828 24.774L7.4 31.156M15.405 30.2l-8.032 5.956M22.996 32.041l-7.23 5.36M14.16 38.593l-.402.298'/%3E%3C/svg%3E%0A");
@@ -412,13 +417,13 @@ background: #191a1d;
 }
 .dark_mode .game-page .game-contents .game-info-panel .box-prizes span.opened {
 	white-space: nowrap;
-	background-color: #191a1d;
+	background-color: #101010;
 }
 .dark_mode .chat-page {
-	background-color: #202225;
+	background-color: #060607;
 }
 .dark_mode .chat-page .chat-header {
-	background-color: #202225;
+	background-color: #060607;
 	color: white;
 }
 .dark_mode .chat-page .chat-header button.btn-back {
@@ -426,10 +431,12 @@ background: #191a1d;
 	background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20.5 24L11.5 15.5L20.5 7' stroke='white' stroke-width='1.5' stroke-linecap='square'/%3E%3C/svg%3E%0A");
 }
 .dark_mode .chat-page .chat-input-panel {
-	background-color: #36393f;
+	background-color: #060607;
+    border-top: 1px solid #111;
 }
 .dark_mode .chat-page .chat-input-panel .emoticon-panel {
-	background-color: #303339;
+	background-color: #060607;
+	box-shadow: 2px -2px #111;
 }
 .dark_mode .chat-page .chat-input-panel button.btn-show-emoticon {
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='none' viewBox='0 0 22 22'%3E%3Cpath fill='%23B9BBBE' d='M11 22c6.075 0 11-4.925 11-11S17.075 0 11 0 0 4.925 0 11s4.925 11 11 11z'/%3E%3Cpath fill='%2336393F' d='M6.426 14.435c.027.11.714 2.676 4.574 2.676s4.547-2.566 4.574-2.676c.034-.132-.026-.27-.145-.338s-.268-.048-.366.047c-.012.011-1.195 1.134-4.063 1.134-2.869 0-4.052-1.123-4.063-1.134-.058-.058-.137-.088-.215-.088-.051 0-.103.013-.15.039-.12.068-.18.207-.146.34zM7.333 10.389c.844 0 1.528-.958 1.528-2.139 0-1.181-.684-2.139-1.528-2.139-.843 0-1.527.958-1.527 2.139 0 1.181.684 2.139 1.527 2.139zM14.667 10.389c.844 0 1.528-.958 1.528-2.139 0-1.181-.684-2.139-1.528-2.139s-1.528.958-1.528 2.139c0 1.181.684 2.139 1.528 2.139z'/%3E%3C/svg%3E%0A");

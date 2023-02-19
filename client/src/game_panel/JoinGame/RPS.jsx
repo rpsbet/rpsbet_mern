@@ -309,9 +309,14 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
     }
 
     if (isNaN(this.state.bet_amount)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
+      alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
       return;
       }
+    
+    if (this.state.bet_amount > this.state.bankroll) {
+      alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
+      return;
+    }
 
     if (this.state.bet_amount <= 0) {
       alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
@@ -419,7 +424,7 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
     }
   };
   startBetting = () => {
-
+    
     let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
     if (stored_rps_array.length  < 3) {
       alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
@@ -443,6 +448,10 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
 
   joinGame2 = async (selected_rps, bet_amount) => {
     
+if (this.state.bet_amount > this.state.bankroll) {
+      alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
+      return;
+    }
 
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
@@ -669,7 +678,7 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
         )}
         </button>
           </div>
-          <hr />
+          
           <div className="action-panel">
           <div className="share-options">
           <TwitterShareButton

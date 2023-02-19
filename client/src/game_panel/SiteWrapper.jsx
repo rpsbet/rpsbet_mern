@@ -688,7 +688,12 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                         vertical: 'top',
                         horizontal: 'center'
                       }}
-                      PaperProps={{ style: { width: '200px' } }}
+                      PaperProps={{
+                        style: {
+                          width: '200px',
+                          background: this.props.isDarkMode ? '#060607' : 'white'
+                        }
+                      }}
                     >
                       <MenuItem onClick={this.handleOpenProfileModal}>
                         <ListItemIcon>

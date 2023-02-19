@@ -475,7 +475,9 @@ ul[role=menu] li:hover {
     border-radius: 9px !important;
 }
 
-
+/* .dark_mode #profile-menu div[class*="MuiPaper-root"] {
+    background-color: #101010 !important;
+} */
 div[role="presentation"] div {
     /* background-color: transparent !important; */
     box-shadow: none;

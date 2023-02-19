@@ -1042,6 +1042,8 @@ circle {
   fill: #495057 !important;
 }
 
+
+
 .share-options button.react-share__ShareButton {
   opacity: 0.8;
   transition: 0.2s;
@@ -1231,7 +1233,16 @@ circle {
   #wallet-address {
     width: calc(100vw - 90px);
 }
+.btn-game-type div {
+  border-radius: 16px;
+  padding: 8px 16px;
+  font-size: 14px;
+  margin-right: 4px;
+}
 
+.btn-game-type.active div {
+  background: #101010;
+}
   .join-game-panel, .create-game-panel {
     height: unset;
     overflow-y: scroll;

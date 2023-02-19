@@ -471,9 +471,15 @@ predictNext = (qs_list, gameType) => {
       return;
     }
     if (isNaN(this.state.bet_amount)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
+      alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
       return;
       }
+
+      if (((this.state.bet_amount / (this.props.qs_game_type - 1)) + parseFloat(this.state.bet_amount)) - (this.state.bankroll *  (this.props.qs_game_type - 1)) > (this.state.bankroll)) {
+        alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
+        return;
+      }
+  
       if (this.state.bet_amount <= 0) {
         alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
         return;
@@ -563,6 +569,8 @@ predictNext = (qs_list, gameType) => {
     } else if (this.props.qs_game_type === 5) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
     }
+    
+
   
     if (stored_qs_array.length < 3) {
       alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
@@ -585,6 +593,10 @@ predictNext = (qs_list, gameType) => {
   };
 
   joinGame2 = async (selected_qs_position, bet_amount) => {
+    if ( ((this.state.bet_amount / (this.props.qs_game_type - 1)) + parseFloat(this.state.bet_amount) )- (this.state.bankroll *  (this.props.qs_game_type - 1)) > (this.state.bankroll)) {
+      alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
+      return;
+    }
     this.setState({selected_qs_position: selected_qs_position, bet_amount: this.state.bet_amount});
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
@@ -593,6 +605,8 @@ predictNext = (qs_list, gameType) => {
       qs_bet_item_id: this.props.qs_bet_item_id,
       slippage: this.state.slippage
     });
+
+ 
 
     const currentUser = this.props.user;
     const currentRoom = this.props.room;
@@ -825,7 +839,7 @@ predictNext = (qs_list, gameType) => {
         )}
         </button>
           </div>
-          <hr />
+      
           <div className="action-panel">
           <div className="share-options">
           <TwitterShareButton

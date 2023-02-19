@@ -253,6 +253,8 @@ startBetting = () => {
     
   }
 
+
+
   if (this.state.bet_amount > this.state.balance) {
     alertModal(this.props.isDarkMode, `TOO BROKE!`);
     return;
@@ -277,6 +279,12 @@ stopBetting = () => {
 };
 
 joinGame2 = async (predictedBetAmount) => {
+
+  if (this.state.bet_amount > this.state.balance) {
+    alertModal(this.props.isDarkMode, `TOO BROKE!`);
+    return;
+  }
+
   const availableBoxes = this.state.box_list.filter(
     box =>
       box.status === "init" &&
@@ -493,7 +501,7 @@ localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
         )}
         </button>
           </div>
-          <hr />
+ 
           <div className="action-panel">
           <div className="share-options">
           <TwitterShareButton

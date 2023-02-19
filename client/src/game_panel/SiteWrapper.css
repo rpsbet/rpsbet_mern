@@ -148,6 +148,12 @@ ul[role=menu] li:hover {
     border-radius: 20px !important;
 }
 
+.room-history-panel,
+.action-panel {
+    padding: 20px;
+    border-top: 1px solid #111;;
+}
+
 .btn-back:hover,
 .btn-send-message:hover {
     border-radius: 20px !important;

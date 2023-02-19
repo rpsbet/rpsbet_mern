@@ -13,7 +13,7 @@ button, button.btn {
 .your-bet-amount {
     padding-left:15px;
     margin-top: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 25px;
     display: flex;
     flex-wrap: wrap;
 }
@@ -204,7 +204,7 @@ div.table .table-header {
 .btn_modal_close:hover,
 .btn-close:hover,
 .modal-body.alert-body button.btn-close:hover {
-  background-color: #80808042 !important;
+  background-color: unset !important;
 }
 
 .dont-have-game-msg svg {
@@ -665,14 +665,10 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     background: #adadad;
   }
 
-.contents_wrapper .game-page,
-.contents_wrapper .room-history-panel {
-    padding: 32px;
-}
 .contents_wrapper .room-history-panel h2.room-history-title {
     font-size: 24px;
     font-weight: bold;
-    color: white;
+    color: #212529;
 }
 .contents_wrapper .game-page .page-title {
     display: flex;
@@ -696,7 +692,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 .game-page .game-contents {
     background-color: white;
     border-radius: 8px;
-    padding: 24px;
+    /* padding: 24px; */
     margin-top: 40px;
 }
 
@@ -936,15 +932,13 @@ overflow: hidden;
 .rps-add-run-panel{
     border-radius: 12px;
     display: flex;
-    padding: 30px;
+    padding-bottom: 15px;
 }
 .rps-add-run-panel > div.rps-add-run-form{
     padding-right: 30px;
     border-right: 2px solid #36393F;
 }
-.rps-add-run-panel > div.rps-add-run-table {
-    padding-left: 30px;
-}
+
 table#runs {
     border-radius: 8px;
     width: 300px;
@@ -1803,9 +1797,7 @@ bottom: 0px;
         right: 50%;
         transform: translate(50%, 0);
     }
-    .contents_wrapper .game-page {
-        padding: 16px;
-    }
+  
     .contents_wrapper .game-page .page-title {
         display: block;
     }
@@ -1820,7 +1812,7 @@ margin-bottom: 25px;
     }
     .game-page .game-contents {
         margin-top: 24px;
-        padding: 24px 16px 16px;
+        /* padding: 24px 16px 16px; */
     }
     .game-page .pre-summary-panel {
         margin: 20px 0 40px;
@@ -1947,7 +1939,7 @@ margin-bottom: 25px;
     }
 
     .your-bet-amount {
-        padding: 10% 14% 0% 14%;
+        padding: 4% 14% 0% 14%;
             margin-bottom: 45px;
         display: inline-flex;
         justify-content: center;
@@ -2003,10 +1995,7 @@ margin-bottom: 25px;
 
     .rps-add-run-table table.tbl tr td:first-child { display: none; }
 
-    .rps-add-run-panel {
-        padding: 20px;
-    }
-
+ 
     .rps-add-run-table {
         padding-left: 0;
     }

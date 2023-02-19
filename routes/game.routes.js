@@ -919,19 +919,19 @@ router.post('/end_game', auth, async (req, res) => {
           '-' +
           roomInfo['room_number'];
       } else if (roomInfo['game_type']['game_type_name'] === 'RPS') {
-        newTransaction.amount += roomInfo['host_pr'];
+        newTransaction.amount += roomInfo['user_bet'];
         message.message =
           'I made ' +
-          roomInfo['host_pr'] +
+          roomInfo['user_bet'] +
           ' BUSD from UNSTAKING ' +
           roomInfo['game_type']['short_name'] +
           '-' +
           roomInfo['room_number'];
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
-        newTransaction.amount += roomInfo['host_pr'];
+        newTransaction.amount += roomInfo['user_bet'];
         message.message =
           'I made ' +
-          roomInfo['host_pr'] +
+          roomInfo['user_bet'] +
           ' BUSD from UNSTAKING ' +
           roomInfo['game_type']['short_name'] +
           '-' +
@@ -1270,6 +1270,10 @@ router.post('/bet', auth, async (req, res) => {
         is_read: false
       });
       if (roomInfo['game_type']['game_type_name'] === 'RPS') {
+        if (parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet'])) {
+          // Return an error or some other response to the user, e.g.:
+          return res.status(400).json({ error: 'Bet amount exceeds available balance.' });
+        }
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
 
         const availableBetItem = await RpsBetItem.findOne({
@@ -1391,12 +1395,27 @@ router.post('/bet', auth, async (req, res) => {
         bet_item.joiner_rps = req.body.selected_rps;
         await bet_item.save();
 
+if (roomInfo['user_bet'] <= 0) {
+    roomInfo.status = 'finished';
+    newGameLog.game_result = 1;
+    message.message =
+      'I won ' +
+      (roomInfo['host_pr'] + roomInfo['bet_amount']) +
+      ' BUSD' +
+      ' in ' +
+      roomInfo['game_type']['short_name'] +
+      '-' +
+      roomInfo['room_number'];
 
+}
 
 
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
-
+        if (((parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1)) + parseFloat(req.body.bet_amount)) -(roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) > parseFloat(roomInfo['user_bet'])) {
+          // Return an error or some other response to the user, e.g.:
+          return res.status(400).json({ error: 'Bet amount exceeds available balance.' });
+        }
         const availableBetItem = await QsBetItem.findOne({
           _id: req.body.qs_bet_item_id,
           joiner_qs: ''
@@ -1486,7 +1505,7 @@ router.post('/bet', auth, async (req, res) => {
 
           message.message =
             "You're not the best keeper are you? I just won " +
-            roomInfo['bet_amount'] * roomInfo['qs_game_type'] +
+            parseFloat(req.body.bet_amount) /** parseFloat(roomInfo['qs_game_type']s) */ +
             ' BUSD' +
             ' in ' +
             roomInfo['game_type']['short_name'] +
@@ -1498,7 +1517,20 @@ router.post('/bet', auth, async (req, res) => {
         bet_item.joiner_qs = req.body.selected_qs_position;
         await bet_item.save();
 
-
+        if (roomInfo['user_bet'] <= 0) {
+          roomInfo.status = 'finished';
+          newGameLog.game_result = 1;
+          message.message =
+            'I won ' +
+            (roomInfo['host_pr'] + roomInfo['bet_amount']) +
+            ' BUSD' +
+            ' in ' +
+            roomInfo['game_type']['short_name'] +
+            '-' +
+            roomInfo['room_number'];
+      
+      }
+      
 
 
       } else if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {

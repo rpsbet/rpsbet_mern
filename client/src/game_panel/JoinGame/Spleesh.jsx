@@ -440,7 +440,7 @@ joinGame2 = async (nextGuess) => {
         )}
         </button>
           </div>
-          <hr />
+       
           <div className="action-panel">
           <div className="share-options">
           <TwitterShareButton

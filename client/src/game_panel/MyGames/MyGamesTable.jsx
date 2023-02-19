@@ -83,7 +83,7 @@ class MyGamesTable extends Component {
               clearInterval(prevState[room_id].timer);
               this.endRoom(winnings, room_id);
               this.props.addNewTransaction({ amount: winnings, room_id });
-              this.props.setBalance(this.state.balance += winnings);
+              this.props.setBalance(this.state.balance += parseFloat(winnings));
 
             }
             return {
@@ -168,7 +168,7 @@ class MyGamesTable extends Component {
           this.handleGameTypeButtonClicked('All');
         }}
       >
-        <img src={`/img/gametype/icons/All.svg`} alt="" />
+        {/* <img src={`/img/gametype/icons/All.svg`} alt="" /> */}
         <div>All Games</div>
       </div>
     ];
@@ -188,7 +188,7 @@ class MyGamesTable extends Component {
             this.handleGameTypeButtonClicked(gameType.short_name);
           }}
         >
-          <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" />
+          {/* <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" /> */}
           <div>{gameType.game_type_name}</div>
         </div>
       );
