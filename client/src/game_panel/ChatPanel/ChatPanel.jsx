@@ -18,8 +18,7 @@ import MyChat from './MyChat';
 const customStyles = {
   tabRoot: {
     minWidth: '50%',
-    textTransform: 'none',
-    backgroundColor: 'rgba(47, 49, 54, 0.5)'
+    textTransform: 'none'
   }
 };
 

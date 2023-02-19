@@ -117,7 +117,7 @@ class PlayerModal extends Component {
                         <div className='align-center'>
 
                             {this.state.loading ? (
-                                <div>LOADING...</div>
+                                <div className="loading-spinner"></div>
                                 ) : (
                                     <Avatar
                                     src={this.state.avatar ? this.state.avatar : '/img/profile-thumbnail.svg'}
@@ -143,7 +143,7 @@ class PlayerModal extends Component {
                                     getRoomStatisticsData={this.props.getRoomStatisticsData}
                                 />
                                 <div className='align-center'>
-                                <button className="btn btn_join" onClick={this.handleOpenChat}>Send Message</button>
+                                <button className="btn btn_join send-msg" onClick={this.handleOpenChat}>Send Message</button>
                             </div>
                             </div>
                         )}

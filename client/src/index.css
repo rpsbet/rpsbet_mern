@@ -34,7 +34,7 @@ div[class*="makeStyles-info"] {
   width: 1.5rem;
   height: 1.5rem;
   animation: spin 1s linear infinite;
-  margin: 1rem auto;
+  margin: 2rem auto 1rem;
 }
 
 @keyframes spin {
@@ -243,6 +243,14 @@ button#bl {
   bottom: 42.3%;
 }
 
+.send-msg {
+  border-radius: 16px !important;
+  border: 2px solid #ff409a;
+  height: 50px;
+  padding: 0 30px;
+  color: #fa3fa0;
+  font-weight: 700;
+}
 
 
 .btn_join , .btn-create-room, .btn_end, span#button,
@@ -934,7 +942,7 @@ div.table .table-row .table-cell img.game-type-icon {
 }
 
 a.player {
-color: #ffb000 !important;
+color:  #747f8d;
 }
 
 a.player:hover {
@@ -1031,7 +1039,7 @@ a.player:hover {
   text-align: center;
 }
 circle {
-  fill: transparent !important;
+  fill: #495057 !important;
 }
 
 .share-options button.react-share__ShareButton {

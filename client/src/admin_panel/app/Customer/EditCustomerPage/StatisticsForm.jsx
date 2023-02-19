@@ -62,7 +62,7 @@ class StatisticsForm extends React.Component {
       
       chart: {
         background: '#424242',
-        type: 'numeric',
+        type: 'area',
         stacked: false,
         toolbar: {
           show: true,
@@ -84,13 +84,32 @@ class StatisticsForm extends React.Component {
       fill: {
         type: 'gradient',
         gradient: {
-          shade: 'dark',
-          gradientToColors: [ '#fa3fa0'],
           shadeIntensity: 1,
-          type: 'horizontal',
-          opacityFrom: 1,
-          opacityTo: 1,
-          stops: [0, 100, 100, 100]
+          inverseColors: true,
+          opacityFrom: 0.7,
+          opacityTo: 0.9,
+          colorStops: [
+            {
+              offset: 0,
+              color: "#ffb000",
+              opacity: 1
+            },
+            {
+              offset: 20,
+              color: "#ff550a",
+              opacity: 1
+            },
+            {
+              offset: 60,
+              color: "#dd1e30",
+              opacity: 1
+            },
+            {
+              offset: 100,
+              color: "#ef38d0",
+              opacity: 1
+            }
+          ]
         },
       },
       stroke: {
@@ -183,14 +202,11 @@ class StatisticsForm extends React.Component {
       fill: {
         type: 'gradient',
         gradient: {
-          shade: 'light',
-          gradientToColors: ['#8F7CC3'],
           shadeIntensity: 1,
-          type: 'vertical',
           opacityFrom: 0.7,
           opacityTo: 0.9,
-          stops: [0, 100, 100]
-        }
+          stops: [0, 90, 100]
+        },
       },
       
     }];

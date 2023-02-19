@@ -7,6 +7,62 @@
 	box-shadow: none;
 }
 
+.dark_mode div.table .table-row .table-cell img.game-type-icon {
+	filter: unset;
+}
+
+.dark_mode div.main-page-nav-button-group {
+background: #191a1d;
+}
+
+.dark_mode .mobile-only .active,
+.dark_mode div.table.my-chat-table .table-row > div.message-panel,
+.dark_mode #game_logs .transaction-panel button,
+.dark_mode .align-center img, .dark_mode .AvatarDropzone img,
+.dark_mode .game-type-panel .btn-game-type.active img:hover {
+	filter: unset;
+}
+.dark_mode #game_logs .transaction-panel button:hover {
+    background-color: #fff;    
+}
+
+.dark_mode .game_footer a, .dark_mode .game_footer{
+	color: #f2f3f5 !important;
+}
+
+.dark_mode 	.modal-body .modal-content-wrapper.drop-game h4 {
+    background-image: url("/img/icons/modal-drop-game-dark-mode.svg");
+}
+
+.dark_mode .modal-body .modal-content-wrapper.provably-fair h4 {
+    background-image: url("/img/icons/modal-provably-fair-dark-mode.svg");
+}
+
+.dark_mode .modal-body .modal-content-wrapper.house-edge h4 {
+    background-image: url("/img/icons/modal-house-edge-dark-mode.svg");
+}
+
+.dark_mode .modal-body .modal-content-wrapper.support h4 {
+    background-image: url("/img/icons/modal-support-dark-mode.svg");
+}
+
+.dark_mode a.player,
+.dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .sender-name {
+	
+    color:#ffb000;
+}
+
+.dark_mode div.table .table-row .table-cell img.avatar,
+.dark_mode .game_header .main_header .header_action_panel img.avatar,.dark_mode .chat-content .avatar,
+.dark_mode .chat-log-panel .message-header img.avatar {
+    background-color: unset;
+}
+
+.dark_mode .game-type-panel .btn-game-type.btn-icon.active {
+	color: white;
+}
+
+
 .dark_mode .game-type-panel .btn-game-type.active,
 .dark_mode .game-type-panel .btn-game-type:hover {
     background-color: #191a1d;
@@ -67,7 +123,6 @@
 	border-bottom: 1px solid transparent;
 }
 .dark_mode .main-game-page-tabs .Mui-selected {
-	background-color: #202225 !important;
 	color: #ef38d0;
 }
 .dark_mode div.table .dont-have-game-msg {
@@ -265,13 +320,6 @@
     background: rgba(47, 49, 54, 0.8) !important;
 }
 
-.dark_mode .main-game-page-tabs .Mui-selected {
-    background-color: unset !important;
-}
-.dark_mode .main-game-page-tabs button {
-    background-color: unset !important;
-}
-
 .dark_mode .availabletag {
 	color: #ffffff99;
 }
@@ -279,9 +327,24 @@
 .dark-mode div.table.main-history-table .table-row > div {
 	color: white;
 }
-.dark_mode table#runs {
+.dark_mode table#runs,
+.dark_mode .chat-wrapper .chat-input-panel .emoticon-panel {
     background: #202225;
 }
+
+
+
+.dark_mode circle {
+	fill: transparent !important;
+  }
+
+  .dark_mode .copy-btnclicked svg {
+	width: 30px;
+    height: 30px;
+    padding: 7px;
+    filter: opacity(0.8);
+    background: unset;
+  }
 
 .dark_mode .modal-body button:hover {
 	background-color: #fa3fa011;
@@ -301,6 +364,10 @@
 }
 .dark_mode .modal-body .modal-content-wrapper h4 {
     color: white;
+}
+
+.dark_mode .modal-body .modal-content-wrapper h4 {
+	background-color: rgb(84 84 84 / 48%);
 }
 .dark_mode .modal-body .modal-content-wrapper.quick-shoot h4 {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='none' viewBox='0 0 48 48'%3E%3Ccircle cx='27.542' cy='21.383' r='12' stroke='%23fff' stroke-width='1.5' transform='rotate(8.444 27.542 21.383)'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M16.67 25.91l5.603 2.02 3.06-3.59 4.452.662 2.07-3.737 4.104-.402 2.949 3.976M15.774 21.733l4.927-3.64 3.81 1.576 3.829-1.959.587-3.956 5.077-2.457'/%3E%3Cpath stroke='%23fff' stroke-width='1.5' d='M25.175 9.48l3.752 4.274-.587 3.956 3.516 3.555 4.103-.402 1.982-5.444M36.763 29.07l-5.093.255-1.885-4.323-4.451-.661-.823-4.672-3.81-1.576-.418-6.306M29.105 32.988l2.566-3.663M22.273 27.93l1.813 4.819'/%3E%3Cpath stroke='%23fff' stroke-linecap='round' stroke-width='1.5' d='M15.828 24.774L7.4 31.156M15.405 30.2l-8.032 5.956M22.996 32.041l-7.23 5.36M14.16 38.593l-.402.298'/%3E%3C/svg%3E%0A");

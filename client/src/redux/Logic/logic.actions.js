@@ -253,7 +253,7 @@ export const getMyHistory = (search_condition) => async dispatch => {
   try {
     const res = await axios.get('/game/my_history', {params: search_condition});
     if (res.data.success) {
-      dispatch({ type: MY_HISTORY_LOADED, payload: res.data });
+      dispatch({ type: MY_HISTORY_LOADED, payload: res.data || []});
     }
   } catch (err) {
     console.log(err)
@@ -358,13 +358,15 @@ const getNow = () => {
 
 export const addChatLog = chatLog => (dispatch, getState) => {
   const myId = getState().auth.user._id;
-  let newHistory = JSON.parse(JSON.stringify(getState().logic.myHistory));
+  const myHistory = getState().logic.myHistory || [];
+
+  let newHistory = JSON.parse(JSON.stringify(myHistory));
 
   const otherId = myId === chatLog.from ? chatLog.to : chatLog.from;
 
   newHistory[otherId] = {
     ...newHistory[otherId],
-    unread_message_count: newHistory[otherId] ? newHistory[otherId].unread_message_count + 1 : 1,
+    unread_message_count: (newHistory[otherId] ? newHistory[otherId].unread_message_count : 0) + 1,
     _id: otherId,
     message: chatLog.message,
     created_at_str: chatLog.created_at,
@@ -373,12 +375,16 @@ export const addChatLog = chatLog => (dispatch, getState) => {
   
   dispatch({ type: MY_HISTORY_LOADED, payload: newHistory });
 
-  let chatRoomInfo = JSON.parse(JSON.stringify(getState().logic.chatRoomInfo));
-  if (chatRoomInfo.user_id === otherId) {
-    chatRoomInfo.chatLogs.push(chatLog);
+  let chatRoomInfo = getState().logic.chatRoomInfo;
+  if (chatRoomInfo && chatRoomInfo.user_id === otherId) {
+    chatRoomInfo.chatLogs = chatRoomInfo.chatLogs ? [...chatRoomInfo.chatLogs, chatLog] : [chatLog];
     dispatch({ type: SET_CHAT_ROOM_INFO, payload: chatRoomInfo });
   }
-}
+  else {
+    console.error("Chat room info not found or user ID does not match");
+  }
+};
+
 
 
 export function updateBetResult(betResult) {

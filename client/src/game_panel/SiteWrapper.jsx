@@ -91,8 +91,7 @@ const darkTheme = createTheme({
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
-    height: '62px',
-    backgroundColor: 'rgba(47, 49, 54, 0.5)'
+    height: '62px'
   }
 };
 
@@ -282,7 +281,7 @@ class SiteWrapper extends Component {
             this.nyan.play();
           }
         }
-        localStorage.setItem('winCounter', winCounter);
+        localStorage.setItem('winCounter', winCounter); 
         
         this.props.addChatLog(data);
     

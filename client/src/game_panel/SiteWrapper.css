@@ -48,12 +48,6 @@
     padding-left: 35px;
 }
 
-.main-game-page-tabs .Mui-selected {
-    background-color: #f2f3f5 !important;
-}
-.main-game-page-tabs button {
-    background-color: #ffffff !important;
-}
 
 #wallet-address {
     text-overflow: ellipsis;
@@ -141,14 +135,27 @@
     margin: 10px;
 }
 
+
+div.table .table-row .table-cell img.avatar,
+.game_header .main_header .header_action_panel img.avatar, .chat-content .avatar {
+    background-color: rgb(0 0 0 / 50%);
+}
 ul[role=menu] li:hover {
     border-radius: 0 !important;
 }
 
-.btn-show-emoticon:hover, .btn-send-message:hover {
+.btn-show-emoticon:hover {
     border-radius: 20px !important;
 }
 
+.btn-back:hover,
+.btn-send-message:hover {
+    border-radius: 20px !important;
+    height: 40px;
+}
+.btn-send-message:hover {
+    height: 31px !important;
+}
 .dark_mode_toggle:hover {
     /* border-radius: 20px !important; */
     box-shadow: unset !important;
@@ -160,7 +167,7 @@ ul[role=menu] li:hover {
 }
 
 .game_footer {
-    color: #f2f3f5;
+    color: #212529;
     font-size: 11px;
     bottom: 0;
     width: calc(100% - 5px);
@@ -178,7 +185,7 @@ ul[role=menu] li:hover {
 
 .game_footer a {
     text-decoration: underline;
-    color: #fff !important;
+color: #212529;
 }
 
 .contents_wrapper {
