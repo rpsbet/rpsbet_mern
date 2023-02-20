@@ -1737,6 +1737,93 @@ if (roomInfo['user_bet'] <= 0) {
           (roomInfo['endgame_type'] && new_host_pr >= roomInfo.endgame_amount) ||
           max_prize === 0
         ) {
+          if (max_prize === 0) {
+            if (parseFloat(roomInfo.user_bet) - roomInfo.bet_amount >= 0) {
+            console.log('it cool ', new_host_pr - roomInfo.endgame_amount);
+             roomInfo.user_bet = parseFloat(roomInfo.user_bet) - roomInfo.bet_amount;
+            
+            const originalBoxList = await RoomBoxPrize.find({ room: roomInfo }).select('box_prize box_price');
+
+            let originalHasZero = originalBoxList.some(box => box.box_price === 0);
+            await RoomBoxPrize.deleteMany({ room: roomInfo });
+  
+            let boxPrizes = originalBoxList.map(box => box.box_prize);
+  
+            // shuffle the box prizes
+            for (let i = boxPrizes.length - 1; i > 0; i--) {
+              let j = Math.floor(Math.random() * (i + 1));
+              [boxPrizes[i], boxPrizes[j]] = [boxPrizes[j], boxPrizes[i]];
+            }
+  
+            let updatedBoxList = originalBoxList.map((box, index) => {
+              let randomAmount = Math.floor(Math.random() * 5) - 2;
+              let newPrice = box.box_price + randomAmount;
+              while (newPrice <= 0) {
+                randomAmount = Math.floor(Math.random() * 5) - 2;
+                newPrice = box.box_price + randomAmount;
+              }
+              let newBox = new RoomBoxPrize({
+                room: roomInfo,
+                box_prize: boxPrizes[index],
+                box_price: newPrice,
+                status: 'init'
+              });
+              newBox.save();
+              return newBox;
+            });
+  
+  
+            if (req.io.sockets) {
+              req.io.sockets.emit('UPDATED_BOX_LIST', {
+                box_list: updatedBoxList
+              });
+            }
+          
+            } else if (new_host_pr - roomInfo.endgame_amount <= 0) {
+              console.log('room status finished');
+              newTransactionC.amount += parseFloat(roomInfo.user_bet) + parseFloat(new_host_pr);
+
+              roomInfo.status = 'finished';
+            }
+          } else {
+
+          
+          newTransactionC.amount += new_host_pr - roomInfo.endgame_amount;
+          console.log('bingo', new_host_pr - roomInfo.endgame_amount);
+          
+          roomInfo.user_bet = parseFloat(roomInfo.user_bet) + roomInfo.endgame_amount - roomInfo.bet_amount;
+          console.log('roomInfo.user_bet',roomInfo.user_bet);
+          new_host_pr = roomInfo.bet_amount;
+          console.log('new_host_pr',new_host_pr);
+
+          /*lowest_box_price === -1 ? 0 : lowest_box_price; */
+          
+          // newTransactionC.amount += new_host_pr * ((100 - commission.value) / 100);
+
+          const messageC =
+            'I made ' +
+            new_host_pr +
+            ' BUSD from UNSTAKING ' +
+            roomInfo['game_type']['short_name'] +
+            '-' +
+            roomInfo['room_number'];
+          sendEndedMessageToJoiners(
+            roomInfo._id,
+            roomInfo['creator']['id'],
+            messageC,
+            roomInfo.is_anonymous
+          );
+
+          const newGameLogC = new GameLog({
+            room: roomInfo,
+            creator: roomInfo['creator'],
+            joined_user: roomInfo['creator'],
+            game_type: roomInfo['game_type'],
+            bet_amount: new_host_pr,
+            is_anonymous: roomInfo['is_anonymous'],
+            game_result: -100
+          });
+          await newGameLogC.save();
 
           const originalBoxList = await RoomBoxPrize.find({ room: roomInfo }).select('box_prize box_price');
 
@@ -1774,39 +1861,8 @@ if (roomInfo['user_bet'] <= 0) {
               box_list: updatedBoxList
             });
           }
+        }
 
-
-          newTransactionC.amount += new_host_pr - roomInfo.endgame_amount;
-          roomInfo.user_bet = parseFloat(roomInfo.user_bet) + roomInfo.endgame_amount - roomInfo.bet_amount;
-          new_host_pr = roomInfo.bet_amount;
-          /*lowest_box_price === -1 ? 0 : lowest_box_price; */
-          
-          // newTransactionC.amount += new_host_pr * ((100 - commission.value) / 100);
-
-          const messageC =
-            'I made ' +
-            new_host_pr +
-            ' BUSD from UNSTAKING ' +
-            roomInfo['game_type']['short_name'] +
-            '-' +
-            roomInfo['room_number'];
-          sendEndedMessageToJoiners(
-            roomInfo._id,
-            roomInfo['creator']['id'],
-            messageC,
-            roomInfo.is_anonymous
-          );
-
-          const newGameLogC = new GameLog({
-            room: roomInfo,
-            creator: roomInfo['creator'],
-            joined_user: roomInfo['creator'],
-            game_type: roomInfo['game_type'],
-            bet_amount: new_host_pr,
-            is_anonymous: roomInfo['is_anonymous'],
-            game_result: -100
-          });
-          await newGameLogC.save();
         }
 
 

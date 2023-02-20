@@ -177,24 +177,42 @@ class SiteWrapper extends Component {
 
   handleMute = () => {
     this.setState({ isMuted: true });
-
+  
     this.audioWin.pause();
+    this.audioWin.muted = true;
     this.audioSplit.pause();
+    this.audioSplit.muted = true;
     this.audioLose.pause();
+    this.audioLose.muted = true;
     this.fatality.pause();
+    this.fatality.muted = true;
     this.nyan.pause();
+    this.nyan.muted = true;
     this.topG.pause();
+    this.topG.muted = true;
     this.oohBaby.pause();
+    this.oohBaby.muted = true;
     this.cashRegister.pause();
-
+    this.cashRegister.muted = true;
+  
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
   };
-
+  
   handleUnmute = () => {
     this.setState({ isMuted: false });
+  
+    this.audioWin.muted = false;
+    this.audioSplit.muted = false;
+    this.audioLose.muted = false;
+    this.fatality.muted = false;
+    this.nyan.muted = false;
+    this.topG.muted = false;
+    this.oohBaby.muted = false;
+    this.cashRegister.muted = false;
   };
+  
 
   speak(message) {
 
