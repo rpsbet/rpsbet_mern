@@ -39,8 +39,8 @@ import {
 
 
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-// import PlayCircleOutlineIcon from '@material-ui/icons/PlayCircleOutline';
-// import PauseCircleOutlineIcon from '@material-ui/icons/PauseCircleOutline';
+import Brightness7Icon from '@material-ui/icons/Brightness7';
+import Brightness4Icon from '@material-ui/icons/Brightness4';
 import VolumeUpIcon from '@material-ui/icons/VolumeUp';
 import VolumeOffIcon from '@material-ui/icons/VolumeOff';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
@@ -814,7 +814,20 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
     </div>
   )}
 </ListItemText>
+</MenuItem>  
+                      <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
+  <ListItemIcon>
+    {this.props.isDarkMode ? (
+      <Brightness7Icon />
+    ) : (
+      <Brightness4Icon />
+    )}
+  </ListItemIcon>
+  <ListItemText>
+    {this.props.isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
+  </ListItemText>
 </MenuItem>
+<Divider />
                       <MenuItem
                         onClick={e => {
                           this.handleLogout(true);
@@ -825,9 +838,10 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                         </ListItemIcon>
                         <ListItemText>LOG OUT</ListItemText>
                       </MenuItem>
-                      <Divider />
-                      <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
-                        {/* <ListItemText></ListItemText> */}
+                    
+
+                      {/* <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
+                
                         <DarkModeToggle
                           onChange={this.props.setDarkMode}
                           checked={this.props.isDarkMode}
@@ -835,7 +849,7 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                           speed={5}
                           className="dark_mode_toggle"
                         />
-                      </MenuItem>
+                      </MenuItem> */}
                     </Menu>
                   </>
                 ) : (

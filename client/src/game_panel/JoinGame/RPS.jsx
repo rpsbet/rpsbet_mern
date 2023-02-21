@@ -149,7 +149,8 @@ class RPS extends Component {
     timerValue: 1000,
       clicked: true,
       intervalId: null,
-
+      items: [],
+      
       selected_rps: '',
       advanced_status: '',
       is_anonymous: false,
@@ -164,6 +165,7 @@ class RPS extends Component {
       settings_panel_opened: false,
       
     };
+    this.panelRef = React.createRef();
 
     this.onChangeState = this.onChangeState.bind(this);
 
@@ -193,6 +195,31 @@ getPreviousBets() {
   // };
 
   componentDidMount = () => {
+      // Add event listener to detect end of scroll
+  this.panelRef.current.addEventListener("scroll", this.handleScroll);
+    
+  // Initialize items array
+  const items = [
+    {
+      label: "Host",
+      value: this.props.creator
+    },
+    {
+      label: "Bankroll",
+      value: convertToCurrency(this.state.bankroll)
+    },
+    {
+      label: "Bet Amount",
+      value: convertToCurrency(this.state.bet_amount)
+    },
+    {
+      label: "Potential Return",
+      value: convertToCurrency(
+        updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
+      )
+    }
+  ];
+  this.setState({ items });
     const { socket } = this.props
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll })
@@ -204,8 +231,8 @@ getPreviousBets() {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-  };
-
+    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
+  }; 
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance ||
@@ -371,7 +398,25 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
     }
   }
 
-
+  handleScroll = (event) => {
+    const panel = event.target;
+    const scrollLeft = panel.scrollLeft;
+    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+    
+    if (scrollLeft >= maxScrollLeft) {
+      // Scrolled to or beyond end of panel, so append items to array and restart animation
+      const items = this.state.items.concat(this.state.items);
+      this.setState({ items }, () => {
+        panel.style.animation = "none";
+        panel.scrollTo({ left: 0, behavior: "auto" });
+        void panel.offsetWidth;
+        panel.style.animation = "ticker 20s linear infinite";
+      });
+    } else {
+      panel.style.animation = "none";
+    }
+  };
+  
 
   handleMaxButtonClick() {
     const maxBetAmount = (this.state.balance).toFixed(2);
@@ -528,38 +573,41 @@ if (this.state.bet_amount > this.state.bankroll) {
           <h2>PLAY - RPS</h2>
         </div>
         <div className="game-contents">
-          <div className="pre-summary-panel">
-          {/* {this.props.betResults.map((result, index) => {
-          return <div key={index}>{result}</div>;
-        })} */}
-        <div className="data-item">
-          <div>
-        <div className="label host-display-name">Host</div></div>
-        <div className="value">{this.props.creator}</div>
-      
-</div>
-<div className="data-item">
-      <div>
-        <div className="label your-bet-amount">Bankroll</div></div>
-        <div className="value">{convertToCurrency(this.state.bankroll)}</div>
-      
-</div>
-<div className="data-item">
-      <div>
-        <div className="label your-bet-amount">Bet Amount</div> </div>
-        <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
-     
-</div>
-<div className="data-item">
-      <div>
-        <div className="label your-max-return">Potential Return</div></div>
-        <div className="value">
-          {convertToCurrency(
-            updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
-          )}
+        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel__inner">
+          {[...Array(2)].map((_, i) => (
+            <React.Fragment key={i}>
+              <div className="data-item">
+                <div>
+                  <div className="label host-display-name">Host</div>
+                </div>
+                <div className="value">{this.props.creator}</div>
+              </div>
+              <div className="data-item">
+                <div>
+                  <div className="label your-bet-amount">Bankroll</div>
+                </div>
+                <div className="value">{convertToCurrency(this.state.bankroll)}</div>
+              </div>
+              <div className="data-item">
+                <div>
+                  <div className="label your-bet-amount">Bet Amount</div>
+                </div>
+                <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
+              </div>
+              <div className="data-item">
+                <div>
+                  <div className="label your-max-return">Potential Return</div>
+                </div>
+                <div className="value">
+                  {convertToCurrency(
+                    updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
+                  )}
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
         </div>
-      
-            </div>
             {/* <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>

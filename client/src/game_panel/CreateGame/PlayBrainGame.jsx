@@ -65,6 +65,7 @@ class PlayBrainGame extends Component {
 				brain_game_score: this.state.score,
 				bet_amount: this.props.bet_amount,
 				is_private: this.props.is_private,
+				endgame_amount: this.props.endgame_amount,
 				is_anonymous: this.props.is_anonymous,
 				room_password: this.props.room_password
 			});

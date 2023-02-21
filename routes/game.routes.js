@@ -374,7 +374,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
             }] bet [<span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>] 
+            )}</span>], scored ${gameLog['brain_game_score']} 
 						and split [<span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['room']['pr'])
             )}</span>] in [${room_name}]`;
@@ -383,7 +383,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
             }] bet [<span style='color: #02c526;'>${convertToCurrency(
               gameLog['bet_amount']
-            )}</span>] 
+            )}</span>], scored ${gameLog['brain_game_score']}
 						and won [<span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['room']['pr'])
             )}</span>] in [${room_name}]`;
@@ -393,7 +393,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             }] bet [<span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
             )}</span>] 
-						and lost in [${room_name}]`;
+						and, scored ${gameLog['brain_game_score']} lost in [${room_name}]`;
         }
       }
       result.push(temp);
@@ -506,7 +506,7 @@ const getRoomList = async (pagination, page, game_type) => {
           bet_amount: 'desc'
         });
         if (!gameLogList || gameLogList.length == 0) {
-          temp.winnings = temp.spleesh_bet_unit;
+          temp.winnings = temp.spleesh_bet_unit + updateDigitToPoint2(room['user_bet']);
         } else {
           for (let i = 10; i > 0; i--) {
             let is_exist = false;
@@ -518,7 +518,7 @@ const getRoomList = async (pagination, page, game_type) => {
             }
 
             if (!is_exist) {
-              temp.winnings = i * temp.spleesh_bet_unit;
+              temp.winnings = i * temp.spleesh_bet_unit + updateDigitToPoint2(room['user_bet']);
               break;
             }
           }
@@ -652,7 +652,7 @@ router.post('/rooms', auth, async (req, res) => {
       pr = user_bet * 2;
     } else if (req.body.game_type === 2) {
       // Spleesh!
-      user_bet = '??';
+      user_bet = 0;
       host_pr = 0;
       pr = 0;
     } else if (req.body.game_type === 3) {
@@ -802,6 +802,7 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
         temp.pr = temp.pr === 0 ? temp.bet_amount : temp.pr;
         temp.winnings = updateDigitToPoint2(temp.pr);
       } else if (temp.game_type.game_type_id === 3) {
+        console.log(temp.endgame_amount);
         // Brain Game
         temp.winnings = updateDigitToPoint2(room['pr'] + room['bet_amount']);
       } else if (temp.game_type.game_type_id === 4) {
@@ -909,7 +910,7 @@ router.post('/end_game', auth, async (req, res) => {
         roomInfo['room_number'];
     } else {
       if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
-        newTransaction.amount += roomInfo['host_pr'];
+        newTransaction.amount += (parseFloat(roomInfo['host_pr']) + parseFloat(roomInfo['user_bet']));
 
         message.message =
           'I made ' +
@@ -1540,12 +1541,12 @@ if (roomInfo['user_bet'] <= 0) {
         roomInfo['host_pr'] += req.body.bet_amount;
         roomInfo['pr'] += req.body.bet_amount;
         newGameLog.bet_amount = req.body.bet_amount;
-
+console.log('userbet', roomInfo['user_bet']);
 
         if (roomInfo.bet_amount == req.body.bet_amount) {
           newTransactionJ.amount += (roomInfo['pr'] + roomInfo['bet_amount']) * ((100 - commission.value) / 100);
 
-          // roomInfo.status = 'finished';
+          
           newGameLog.game_result = 1;
           message.message =
             'I won ' +
@@ -1572,8 +1573,9 @@ if (roomInfo['user_bet'] <= 0) {
               newBetAmount = (Math.floor(Math.random() * 10) + 1) * 10;
             }
           }
-
+if (newBetAmount <= roomInfo['user_bet']) {
           roomInfo.bet_amount = newBetAmount;
+          roomInfo['user_bet'] = parseFloat(roomInfo['user_bet'] - parseFloat(roomInfo.bet_amount));
           console.log('newBetAmount', roomInfo['pr']);
           console.log('roomInfo.bet_amount', roomInfo.pr);
           console.log('roomInfo.host_pr', roomInfo.host_pr);
@@ -1591,6 +1593,11 @@ if (roomInfo['user_bet'] <= 0) {
           if (req.io.sockets) {
             req.io.sockets.emit('SPLEESH_GUESSES', guesses);
           }
+        } else {
+          console.log('room finito');
+          newTransactionC.amount += parseFloat(roomInfo['user_bet']);
+          roomInfo.status = 'finished';
+        }
 
         } else {
           message.message =
@@ -1638,6 +1645,7 @@ if (roomInfo['user_bet'] <= 0) {
             }
 
             roomInfo.bet_amount = newBetAmount;
+            roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - parseFloat(roomInfo.bet_amount);
 
             roomInfo['pr'] = 0;
 
@@ -1649,7 +1657,8 @@ if (roomInfo['user_bet'] <= 0) {
             });
 
             // roomInfo.status = 'finished';
-            newTransactionC.amount += roomInfo['host_pr'] * ((100 - commission.value) / 100);
+            newTransactionC.amount += (parseFloat(roomInfo['host_pr']) - parseFloat(roomInfo['endgame_amount'])); /* ((100 - commission.value) / 100); **/
+           roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) + parseFloat(roomInfo['endgame_amount']);
             const newGameLogC = new GameLog({
               room: roomInfo,
               creator: roomInfo['creator'],
@@ -1878,18 +1887,20 @@ if (roomInfo['user_bet'] <= 0) {
 
         roomInfo['pr'] += roomInfo['bet_amount'];
         roomInfo['host_pr'] += roomInfo['bet_amount'];
+        console.log(roomInfo['pr']);
+        console.log(roomInfo['endgame_amount']);
         if (roomInfo.brain_game_score == req.body.brain_game_score) {
           //draw          Draw, No Winner! PR will be split.
           message.message =
             'We split ' +
-            roomInfo['pr'] +
+            roomInfo['bet_amount'] * 2 +
             ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
 
-          newTransactionJ.amount += roomInfo['pr'] / 2;
-          newTransactionC.amount += roomInfo['pr'] / 2;
+          newTransactionJ.amount += roomInfo['bet_amount'];
+          // newTransactionC.amount += roomInfo['bet_amount'];
 
           // roomInfo.status = 'finished';
           newGameLog.game_result = 0;
@@ -1897,13 +1908,15 @@ if (roomInfo['user_bet'] <= 0) {
           //win       WOW, What a BRAIN BOX - You WIN!
           message.message =
             'I won ' +
-            roomInfo['pr'] +
+            roomInfo['bet_amount'] * 2 +
             ' BUSD in ' +
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
 
-          newTransactionJ.amount += roomInfo['pr'] * ((100 - commission.value) / 100);
+          newTransactionJ.amount += ((roomInfo['bet_amount'] * 2) * ((100 - commission.value) / 100));
+          roomInfo['pr'] -= roomInfo['bet_amount'];
+          roomInfo['host_pr'] -= roomInfo['bet_amount'];
 
           newGameLog.game_result = 1;
           // roomInfo.status = 'finished';
@@ -1919,11 +1932,15 @@ if (roomInfo['user_bet'] <= 0) {
 
           newGameLog.game_result = -1;
           if (
-            roomInfo['endgame_type'] &&
-            roomInfo['host_pr'] >= roomInfo['endgame_amount']
+            roomInfo['endgame_amount'] > 0 &&
+            roomInfo['host_pr'] > roomInfo['endgame_amount']
           ) {
             // roomInfo.status = 'finished';
-            newTransactionC.amount += roomInfo['host_pr'] * ((100 - commission.value) / 100);
+
+            console.log('wssed', roomInfo['host_pr'] - parseFloat(roomInfo['endgame_amount']))
+            newTransactionC.amount += (roomInfo['bet_amount']); /* ((100 - commission.value) / 100);*/
+            roomInfo['host_pr'] = parseFloat(roomInfo['endgame_amount']);
+            roomInfo['pr'] = parseFloat(roomInfo['endgame_amount']);
           }
         }
       }

@@ -412,6 +412,21 @@ background: #060607;
 	background-color: #101010;
 	border-color: #4f545c;
 }
+.dark_mode .btn-game-type.active div {
+	background: #101010;
+  }
+
+  .dark_mode .btn_join:hover,
+  .dark_mode .btn-create-room:hover,
+  .dark_mode .btn_end:hover,
+  .dark_mode  #balance:hover,
+  .dark_mode #btn_next:hover,
+  .dark_mode #btn_prev:hover,
+  .dark_mode button:hover,
+  .dark_mode .btn-back:hover {
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  }
+
 .dark_mode .game-page .game-contents .game-info-panel .box-prizes {
 	background-color: #101010;
 }

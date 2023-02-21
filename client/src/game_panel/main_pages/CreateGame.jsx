@@ -556,6 +556,7 @@ class CreateGame extends Component {
                 is_private={this.state.is_private}
                 is_anonymous={this.state.is_anonymous}
                 room_password={this.state.room_password}
+                endgame_amount={this.state.endgame_amount}
               />
             )}
           {this.state.step !== 5 && this.action_panel()}

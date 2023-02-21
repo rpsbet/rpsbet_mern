@@ -290,7 +290,7 @@ button:hover,
 .btn-back:hover {
   filter: brightness(0.9) contrast(1.2);
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  box-shadow: 0 10px 20px #e9ecef1f, 0 6px 6px #f2f3f52e;
   animation: pulse 0.5s ease-in-out 0.5s infinite alternate;
 }
 
@@ -1241,7 +1241,7 @@ circle {
 }
 
 .btn-game-type.active div {
-  background: #101010;
+  background: #f9f9f9;
 }
   .join-game-panel, .create-game-panel {
     height: unset;

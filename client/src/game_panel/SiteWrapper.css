@@ -6,6 +6,34 @@
     height: 62px;
     top: 0;
 }
+
+.pre-summary-panel {
+    display: flex;
+    overflow: hidden;
+  }
+  
+  .pre-summary-panel__inner {
+    display: flex;
+    
+    flex-wrap: nowrap;
+    animation: ticker 60s linear infinite;
+    pointer-events: none;
+  }
+  
+  .data-item {
+    margin-right: 10px;
+    pointer-events: auto;
+  }
+  
+  @keyframes ticker {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(calc(-100% - 10px));
+    }
+  }
+  
   
 .game_header .main_header {
     padding: 0 24px;

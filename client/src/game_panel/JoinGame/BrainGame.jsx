@@ -4,6 +4,8 @@ import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
+import Lottie from 'react-lottie';
+import animationData from '../LottieAnimations/spinningIcon';
 import { deductBalanceWhenStartBrainGame } from '../../redux/Logic/logic.actions';
 import {
   alertModal,
@@ -12,6 +14,19 @@ import {
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
+import { FaClipboard } from 'react-icons/fa';
+import { TwitterShareButton, TwitterIcon } from 'react-share';
+
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice"
+  }
+};
+
+const twitterLink = window.location.href;
 
 class BrainGame extends Component {
   constructor(props) {
@@ -19,6 +34,10 @@ class BrainGame extends Component {
     this.state = {
       brain_game_type: this.props.brain_game_type,
       advanced_status: '',
+      betting: false,
+      timer: null,
+      timerValue: 1000,
+          clicked: true,
       is_anonymous: false,
       is_started: false,
       remaining_time: 60,
@@ -166,6 +185,12 @@ class BrainGame extends Component {
     this.setState({ remaining_time });
 
     if (remaining_time === 0) {
+      let stored_score_array = JSON.parse(localStorage.getItem(`score_array_${this.props.brain_game_type}`)) || [];
+
+stored_score_array.push({score: this.state.score, room_id: this.props.brain_game_type});
+
+localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify(stored_score_array));
+
       clearInterval(this.state.intervalId);
       this.setState({
         intervalId: null,
@@ -219,6 +244,8 @@ class BrainGame extends Component {
           alertModal(this.props.isDarkMode, result.message);
         }
       }
+      this.props.refreshHistory();
+
     }
   };
 
@@ -245,6 +272,150 @@ class BrainGame extends Component {
     }
     this.getNextQuestion();
   };
+
+  handleButtonClick = () => {
+
+    if (this.props.creator_id === this.props.user_id) {
+      alertModal(
+        this.props.isDarkMode,
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
+      );
+      return;
+    }
+    // if (isNaN(this.state.bet_amount)) {
+    //   alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
+    //   return;
+    //   }
+    //   if (this.state.bet_amount <= 0) {
+    //     alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
+    //     return;
+    //   }
+
+
+    // if (this.state.bet_amount > this.state.balance) {
+    //   alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
+    //   return;
+    // }
+
+
+
+    if (!this.state.betting) {
+      this.setState({
+        timer: setInterval(() => {
+          this.setState(state => {
+            if (state.timerValue === 0) {
+              clearInterval(this.state.timer);
+              this.startBetting();
+              return { timerValue: 1000 };
+            } else {
+              return { timerValue: state.timerValue - 10 };
+            }
+          });
+        }, 10)
+      });
+    } else {
+      this.stopBetting();
+    }
+  };
+  predictNext = (score_array) => {
+    if (score_array.length < 5) {
+      return Math.round(score_array.reduce((total, item) => total + item.score, 0) / score_array.length);
+    }
+  
+    const oldScores = score_array.slice(0, 5).map(item => item.score);
+    const newScores = score_array.slice(score_array.length - 5).map(item => item.score);
+  
+    const oldAvg = oldScores.reduce((total, score) => total + score, 0) / oldScores.length;
+    const newAvg = newScores.reduce((total, score) => total + score, 0) / newScores.length;
+  
+    if (newAvg > oldAvg) {
+      let diff = newAvg - oldAvg;
+      return Math.round(score_array[score_array.length - 1].score + diff);
+    } else {
+      return Math.round(score_array.reduce((total, item) => total + item.score, 0) / score_array.length);
+    }
+  };
+  
+  
+  startBetting = () => {
+    let stored_score_array;
+    stored_score_array = JSON.parse(localStorage.getItem(`score_array_${this.props.brain_game_type}`)) || [];
+    
+    if (stored_score_array.length < 1) {
+      alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+      return;
+    }
+    
+    const intervalId = setInterval(() => {
+      const prediction = this.predictNext(stored_score_array);
+      const randomPrediction = this.getRandomPrediction(prediction, stored_score_array);
+      const randomizeAgain = this.randomize(randomPrediction);
+      console.log(randomizeAgain);
+      this.joinGame2(randomizeAgain, this.props.bet_amount);
+    }, 3500);
+    
+    this.setState({ intervalId, betting: true, is_started: true });
+  };
+  
+    randomize = (prediction) => {
+    const randomOffset = Math.floor(Math.random() * 8) - 3;
+    return prediction + randomOffset;
+  };
+  
+  getRandomPrediction = (prediction, score_array) => {
+    const random = Math.random();
+    
+    if (score_array && score_array.length > 0 && random < 0.4) {
+      const randomIndex = Math.floor(Math.random() * score_array.length);
+      return score_array[randomIndex].score;
+    } else {
+      const offset = Math.floor(Math.random() * 2) + 1; // either 1 or 2
+      const sign = Math.random() < 0.5 ? -1 : 1; // either -1 or 1
+      return prediction + (offset * sign);
+    }
+  }
+  
+
+  handleButtonRelease = () => {
+    if (this.state.timer) {
+      clearInterval(this.state.timer);
+      this.setState({ timerValue: 1000 });
+    }
+  };
+
+  stopBetting = () => {
+    clearInterval(this.state.intervalId);
+    this.setState({ intervalId: null,  betting: false, timerValue: 1000 });
+  };
+
+  joinGame2 = async (score, bet_amount) => {
+
+    const result = await this.props.join({
+      bet_amount: bet_amount,
+      brain_game_score: score,
+      is_anonymous: this.state.is_anonymous
+    });
+    this.props.deductBalanceWhenStartBrainGame({
+      bet_amount: bet_amount
+    })
+
+    if (result.status === 'success') {
+      let text = 'HAHAA, WHAT A LOSER!!';
+
+      if (result.betResult === 1) {
+        text = 'NOT BAD, WINNER!';
+      } else if (result.betResult === 0) {
+        text = 'DRAW, NO WINNER!';
+      }
+
+         
+    }
+    this.setState({ is_started: false});
+    this.props.refreshHistory();
+  };
+
+  
+
 
   render() {
     const { is_started } = this.state;
@@ -326,6 +497,32 @@ class BrainGame extends Component {
             <p>{this.props.brain_game_type.game_type_name}</p>
             <h3 className="game-sub-title">Score to BEAT:</h3>
             <p>{this.props.brain_game_score}</p>
+            <button
+        onMouseDown={this.handleButtonClick}
+        onMouseUp={this.handleButtonRelease}
+        onTouchStart={this.handleButtonClick}
+        onTouchEnd={this.handleButtonRelease}
+        >
+        {this.state.betting ? (
+          <div id="stop">
+            <span>Stop</span>
+           <Lottie 
+        options={defaultOptions}
+          width={22}
+        />
+          </div>
+        ) : (
+          <div>
+            {this.state.timerValue !== 1000 ? (
+              <span>
+                {(this.state.timerValue / 1000).toFixed(2)}s
+              </span>
+            ) : (
+              <span>AI Play</span>
+            )}
+          </div>
+        )}
+        </button>
           </div>
        
           <div className="action-panel">
