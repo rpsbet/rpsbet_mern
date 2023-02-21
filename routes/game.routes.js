@@ -524,7 +524,7 @@ const getRoomList = async (pagination, page, game_type) => {
           }
         }
       } else if (temp.game_type.game_type_id === 3) {
-        temp.winnings = updateDigitToPoint2(room['pr'] + room['bet_amount']);
+        temp.winnings = updateDigitToPoint2(room['pr']);
       } else if (temp.game_type.game_type_id === 4) {
         temp.winnings = parseFloat(room['host_pr']) + parseFloat(room['user_bet']);
       } else if (temp.game_type.game_type_id === 5) {
@@ -804,7 +804,7 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
       } else if (temp.game_type.game_type_id === 3) {
         console.log(temp.endgame_amount);
         // Brain Game
-        temp.winnings = updateDigitToPoint2(room['pr'] + room['bet_amount']);
+        temp.winnings = updateDigitToPoint2(room['pr']);
       } else if (temp.game_type.game_type_id === 4) {
         //Mytery Box
         temp.winnings = parseFloat(room['user_bet']) + parseFloat(room['host_pr']);

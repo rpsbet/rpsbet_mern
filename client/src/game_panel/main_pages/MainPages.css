@@ -752,7 +752,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     justify-content: center;
     text-align: center;
     max-width: 100px;
-    min-width: 20%;
+    min-width: 25% !important;
     padding: 0.25rem;
     /* font-size: 1.125rem; */
   }
@@ -775,7 +775,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
   .game-page .pre-summary-panel  div.host-display-name {
     background-image: url("/img/profile-thumbnail-dark.svg");
     background-repeat: no-repeat;
-    background-position: 0 -2px;
+    background-position: 0 3px;
     background-size: 1.84em;
 
 }.game-page .pre-summary-panel  div.your-bet-amount {

@@ -30,6 +30,7 @@ class QuickShoot extends Component {
     super(props);
     this.socket = this.props.socket;
     this.state = {
+      items: [],
       betting: false,
     timer: null,
     timerValue: 1000,
@@ -48,11 +49,13 @@ class QuickShoot extends Component {
     };
     this.handlePositionSelection = this.handlePositionSelection.bind(this);
     this.onChangeState = this.onChangeState.bind(this);
+    this.panelRef = React.createRef();
 
   }
 
 
   componentDidMount = () => {
+    
     const { socket } = this.props
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll })
@@ -61,7 +64,31 @@ class QuickShoot extends Component {
     // document.addEventListener('mousedown', this.handleClickOutside);
   };
 
- 
+  componentWillUnmount = () => {
+    clearInterval(this.state.intervalId);
+    document.removeEventListener('mousedown', this.handleClickOutside);
+    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
+  }; 
+
+  handleScroll = (event) => {
+    const panel = event.target;
+    const scrollLeft = panel.scrollLeft;
+    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+    
+    if (scrollLeft >= maxScrollLeft) {
+      // Scrolled to or beyond end of panel, so append items to array and restart animation
+      const items = this.state.items.concat(this.state.items);
+      this.setState({ items }, () => {
+        panel.style.animation = "none";
+        panel.scrollTo({ left: 0, behavior: "auto" });
+        void panel.offsetWidth;
+        panel.style.animation = "ticker 20s linear infinite";
+      });
+    } else {
+      panel.style.animation = "none";
+    }
+  };
+  
 
 
   static getDerivedStateFromProps(props, current_state) {
@@ -737,32 +764,40 @@ predictNext = (qs_list, gameType) => {
           <h2>PLAY - Quick Shoot</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel">
-    <div className="data-item">
-        <div className="label host-display-name">Host</div>
-        <div className="value">{this.props.creator}</div>
-    </div>
-    <div className="data-item">
-      <div>
-        <div className="label your-bet-amount">Bankroll</div></div>
-        <div className="value">{convertToCurrency(this.state.bankroll)}</div>
-      
-</div>
-    <div className="data-item">
-        <div className="label your-bet-amount">Bet Amount</div>
-        <div className="value">
-            {convertToCurrency(updateDigitToPoint2(this.state.bet_amount))}
-        </div>
-    </div>
-    <div className="data-item">
-        <div className="label your-max-return">Potential Return</div>
-        <div className="value ">
-            {convertToCurrency(
-                updateDigitToPoint2(
+        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel__inner">
+          {[...Array(2)].map((_, i) => (
+            <React.Fragment key={i}>
+              <div className="data-item">
+                <div>
+                  <div className="label host-display-name">Host</div>
+                </div>
+                <div className="value">{this.props.creator}</div>
+              </div>
+              <div className="data-item">
+                <div>
+                  <div className="label your-bet-amount">Bankroll</div>
+                </div>
+                <div className="value">{convertToCurrency(this.state.bankroll)}</div>
+              </div>
+              <div className="data-item">
+                <div>
+                  <div className="label your-bet-amount">Bet Amount</div>
+                </div>
+                <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
+              </div>
+              <div className="data-item">
+                <div>
+                  <div className="label your-max-return">Potential Return</div>
+                </div>
+                <div className="value">
+                  {convertToCurrency(
                   (this.state.bet_amount / (this.props.qs_game_type - 1)) + parseFloat(this.state.bet_amount)  /* 0.95 */
-                )
-            )}
-        </div>
+                  )}
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
     </div>
 </div>
           <div className="game-info-panel">

@@ -233,6 +233,7 @@ getPreviousBets() {
     document.removeEventListener('mousedown', this.handleClickOutside);
     this.panelRef.current.removeEventListener("scroll", this.handleScroll);
   }; 
+  
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance ||

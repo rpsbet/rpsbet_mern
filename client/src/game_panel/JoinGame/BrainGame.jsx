@@ -47,10 +47,13 @@ class BrainGame extends Component {
       balance: this.props.balance,
       question: { _id: '', question: '' },
       answers: [],
+      items: [],
       next_question: null,
       next_answers: [],
       isPasswordCorrect: this.props.isPasswordCorrect
     };
+    this.panelRef = React.createRef();
+
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -122,6 +125,8 @@ class BrainGame extends Component {
   }
 
   componentWillUnmount() {
+    clearInterval(this.state.intervalId);
+    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
     if (this.state.is_started && this.state.remaining_time > 0) {
       this.props.join({
         bet_amount: this.props.bet_amount,
@@ -130,6 +135,27 @@ class BrainGame extends Component {
       });
     }
   }
+
+
+  handleScroll = (event) => {
+    const panel = event.target;
+    const scrollLeft = panel.scrollLeft;
+    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+    
+    if (scrollLeft >= maxScrollLeft) {
+      // Scrolled to or beyond end of panel, so append items to array and restart animation
+      const items = this.state.items.concat(this.state.items);
+      this.setState({ items }, () => {
+        panel.style.animation = "none";
+        panel.scrollTo({ left: 0, behavior: "auto" });
+        void panel.offsetWidth;
+        panel.style.animation = "ticker 20s linear infinite";
+      });
+    } else {
+      panel.style.animation = "none";
+    }
+  };
+  
 
   onStartGame = async e => {
     e.preventDefault();
@@ -459,28 +485,34 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
           <h2>Play - Brain Game</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel">
-    <div className="data-item">
-        <div className="label host-display-name">Host</div>
-        <div className="value">{this.props.creator}</div>
-    </div>
-    <div className="data-item">
-        <div className="label your-bet-amount">Bet Amount</div>
-        <div className="value ">
-            {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
-        </div>
-    </div>
-    <div className="data-item">
-        <div className="label public-max-return">Pot</div>
-        <div className="value">
-            {convertToCurrency(
-                updateDigitToPoint2(
-                    this.props.bet_amount * this.props.joined_count
-                )
-            )}
-        </div>
-    </div>
-    <div className="data-item">
+        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel__inner">
+          {[...Array(2)].map((_, i) => (
+            <React.Fragment key={i}>
+              <div className="data-item">
+                <div>
+                  <div className="label host-display-name">Host</div>
+                </div>
+                <div className="value">{this.props.creator}</div>
+              </div>
+              
+              <div className="data-item">
+                <div>
+                  <div className="label your-bet-amount">Bet Amount</div>
+                </div>
+                <div className="value">{convertToCurrency(this.props.bet_amount)}</div>
+              </div>
+              <div className="data-item">
+                  <div className="label public-max-return">Pot</div>
+                  <div className="value">
+                      {convertToCurrency(
+                          updateDigitToPoint2(
+                              this.props.bet_amount * this.props.joined_count
+                          )
+                      )}
+                  </div>
+              </div>
+              <div className="data-item">
         <div className="label your-max-return">Potential Return</div>
         <div className="value">
             {convertToCurrency(
@@ -491,7 +523,12 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
             )}
         </div>
     </div>
+            
+            </React.Fragment>
+          ))}
+    </div>
 </div>
+      
           <div className="game-info-panel">
             <h3 className="game-sub-title">Game Type:</h3>
             <p>{this.props.brain_game_type.game_type_name}</p>

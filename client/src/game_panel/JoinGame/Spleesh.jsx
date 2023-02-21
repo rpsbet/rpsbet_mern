@@ -41,7 +41,7 @@ class Spleesh extends Component {
       clicked: true,
       intervalId: null,
       spleesh_guesses1Received: false,
-
+      items: [],
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
       copied: false,
@@ -50,6 +50,8 @@ class Spleesh extends Component {
       balance: this.props.balance,
       isPasswordCorrect: false
     };
+    this.panelRef = React.createRef();
+
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -72,6 +74,8 @@ class Spleesh extends Component {
   };
 
   componentDidMount() {
+          // Add event listener to detect end of scroll
+  this.panelRef.current.addEventListener("scroll", this.handleScroll);
     this.socket.on('SPLEESH_GUESSES', data => {
       this.setState({spleesh_guesses: data });
     });
@@ -97,6 +101,33 @@ class Spleesh extends Component {
       });
     }
   }
+
+  componentWillUnmount = () => {
+    clearInterval(this.state.intervalId);
+    document.removeEventListener('mousedown', this.handleClickOutside);
+    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
+  }; 
+
+  
+  handleScroll = (event) => {
+    const panel = event.target;
+    const scrollLeft = panel.scrollLeft;
+    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+    
+    if (scrollLeft >= maxScrollLeft) {
+      // Scrolled to or beyond end of panel, so append items to array and restart animation
+      const items = this.state.items.concat(this.state.items);
+      this.setState({ items }, () => {
+        panel.style.animation = "none";
+        panel.scrollTo({ left: 0, behavior: "auto" });
+        void panel.offsetWidth;
+        panel.style.animation = "ticker 20s linear infinite";
+      });
+    } else {
+      panel.style.animation = "none";
+    }
+  };
+  
 
   joinGame = async () => {
     console.log(this.state.spleesh_guesses);
@@ -376,18 +407,24 @@ joinGame2 = async (nextGuess) => {
           </h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel">
-    <div className="data-item">
-        <div className="label host-display-name">Host</div>
-        <div className="value">{this.props.creator}</div>
-    </div>
-    <div className="data-item">
-        <div className="label your-bet-amount">Bet Amount</div>
-        <div className="value">
-            {convertToCurrency(this.state.bet_amount)}
-        </div>
-    </div>
-    <div className="data-item">
+        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel__inner spleesh">
+          {[...Array(2)].map((_, i) => (
+            <React.Fragment key={i}>
+              <div className="data-item">
+                <div>
+                  <div className="label host-display-name">Host</div>
+                </div>
+                <div className="value">{this.props.creator}</div>
+              </div>
+              
+              <div className="data-item">
+                <div>
+                  <div className="label your-bet-amount">Bet Amount</div>
+                </div>
+                <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
+              </div>
+              <div className="data-item">
         <div className="label your-max-return">Potential Return</div>
         <div className="value">
             {convertToCurrency(
@@ -398,6 +435,9 @@ joinGame2 = async (nextGuess) => {
                 )
             )}
         </div>
+    </div>
+            </React.Fragment>
+          ))}
     </div>
 </div>
           <div className="game-info-panel">

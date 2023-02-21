@@ -49,7 +49,7 @@ class MysteryBox extends Component {
 
     this.state = {
 
-      
+      items: [],
       bet_amount: 0,
       selected_id: '',
       box_list: this.props.box_list,
@@ -67,6 +67,8 @@ class MysteryBox extends Component {
         intervalId: null,
 
     };
+    this.panelRef = React.createRef();
+
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -102,6 +104,9 @@ class MysteryBox extends Component {
   };
 
   componentDidMount() {
+         // Add event listener to detect end of scroll
+  this.panelRef.current.addEventListener("scroll", this.handleScroll);
+  
     const { socket } = this.props
     socket.on('UPDATED_BOX_LIST', data => {
 
@@ -114,6 +119,33 @@ class MysteryBox extends Component {
 //       this.onBtnBetClick(null, firstSelectedBox._id);
 //   }
 }
+
+
+componentWillUnmount = () => {
+  clearInterval(this.state.intervalId);
+  document.removeEventListener('mousedown', this.handleClickOutside);
+  this.panelRef.current.removeEventListener("scroll", this.handleScroll);
+}; 
+
+handleScroll = (event) => {
+  const panel = event.target;
+  const scrollLeft = panel.scrollLeft;
+  const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+  
+  if (scrollLeft >= maxScrollLeft) {
+    // Scrolled to or beyond end of panel, so append items to array and restart animation
+    const items = this.state.items.concat(this.state.items);
+    this.setState({ items }, () => {
+      panel.style.animation = "none";
+      panel.scrollTo({ left: 0, behavior: "auto" });
+      void panel.offsetWidth;
+      panel.style.animation = "ticker 20s linear infinite";
+    });
+  } else {
+    panel.style.animation = "none";
+  }
+};
+
 
 componentDidUpdate(prevProps, prevState) {
   if (prevState.box_list !== this.state.box_list) {
@@ -425,24 +457,36 @@ localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
           <h2>PLAY - Mystery Box</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel">
-    <div className="data-item">
-        <div className="label host-display-name">Host</div>
-        <div className="value">{this.props.creator}</div>
-    </div>
-    <div className="data-item">
-        <div className="label your-bet-amount">Bet Amount</div>
-        <div className="value">
-            {convertToCurrency(updateDigitToPoint2(this.state.bet_amount))}
+        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel__inner mystery-box">
+          {[...Array(2)].map((_, i) => (
+            <React.Fragment key={i}>
+              <div className="data-item">
+                <div>
+                  <div className="label host-display-name">Host</div>
+                </div>
+                <div className="value">{this.props.creator}</div>
+              </div>
+              <div className="data-item">
+                <div>
+                  <div className="label your-bet-amount">Bet Amount</div>
+                </div>
+                <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
+              </div>
+              <div className="data-item">
+                <div>
+                  <div className="label your-max-return">Potential Return</div>
+                </div>
+                <div className="value">
+                  {convertToCurrency(
+                    updateDigitToPoint2(pr)
+                  )}
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
         </div>
-    </div>
-    <div className="data-item">
-        <div className="label your-max-return">Potential Return</div>
-        <div className="value">
-            {convertToCurrency(updateDigitToPoint2(pr /* 0.95 */))}
         </div>
-    </div>
-</div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Prizes</h3>
             <p className="box-prizes">
