@@ -722,7 +722,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     line-height: 32px;
 }
 .game-page .pre-summary-panel > div ~ div {
-    margin-left: 40px;
+    margin-left: 90px;
 }
 .game-page .page-title > .pre-summary-panel {
     background-color: white;
@@ -829,7 +829,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     color: #ffb000;
     font-weight: bold;
     background: #ffb00011;
-    padding: 2px 13.5px;
+    padding: 0px 10.5px;
     border-radius: 9px;
 }
 

@@ -212,6 +212,7 @@ class CreateGame extends Component {
   };
 
   onPrevButtonClicked = () => {
+    
     if (this.state.game_mode !== 'Mystery Box' && this.state.step < 4) {
       if (this.state.step === 3 && this.state.child_step === 1) {
         if (this.state.game_mode === 'Quick Shoot') {
@@ -265,6 +266,16 @@ class CreateGame extends Component {
         alertModal(this.props.isDarkMode, 'MAKE A DEPOSIT, BROKIE!');
         return;
       }
+      if (this.state.game_mode === 'Quick Shoot' && this.state.child_step === 1 && this.state.qs_list.length > 0 ){
+        // If the game mode is Quick Shoot and the step is 3, clear the qslist
+        this.setState({
+          qs_list: [],
+          winChance: 0,
+          step: this.state.step > 1
+       });
+       return 
+        }
+        
       if (this.state.game_mode === 'Quick Shoot' && this.state.child_step === 3 && this.state.qs_list.length < 3) {
         alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
         return;

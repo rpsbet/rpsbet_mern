@@ -215,15 +215,16 @@ class SiteWrapper extends Component {
   
 
   speak(message) {
-
     if (!this.state.isMuted) {
-     
-    if (window.speechSynthesis) {
-      const utterance = new SpeechSynthesisUtterance(message);
-      window.speechSynthesis.speak(utterance);
+      if (window.speechSynthesis) {
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
+        utterance.lang = 'en-US'; // set the language to US English
+        window.speechSynthesis.speak(utterance);
+      }
     }
   }
-  }
+  
 
   handleClickMenu = e => {
     this.setState({ anchorEl: e.currentTarget });
@@ -258,47 +259,69 @@ class SiteWrapper extends Component {
         let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
     
         const message = data.message.toLowerCase();
-        if (message.includes('lost')) {
-          const value = message.match(/\d+/);
-          if (value) {
-            this.speak(`Lost, ${value}`);
-          }
-          if (value >= 0 && value <= 2) {
-            this.audioSplit.play();
-          } else if (value > 25 && value <= 100) {
-            this.audioLose.play();
-          } else if (value > 100) {
-            this.fatality.play();
-          }
-          winCounter = 0;
-        } else if (message.includes('split')) {
-          const value = message.match(/\d+/);
-          if (value) {
-            this.speak(`Split, ${value}`);
-          }
-          winCounter = 0;
-        } else if (message.includes('won')) {
-          winCounter++;
-          if (winCounter === 3) {
-            this.oohBaby.play();
-            winCounter = 0;
-          }
-          const value = message.match(/\d+/);
-          if (value) {
-            this.speak(`Won, ${value}`);
-          }
-          if (value >= 0 && value <= 2) {
-            this.audioSplit.play();
-          } else if (value >= 15  && value <= 50) {
-            this.cashRegister.play();
-          } else if (value > 50  && value <= 250) {
-            this.audioWin.play();
-          } else if (value > 250  && value <= 1000) {
-            this.topG.play();
-          } else if (value > 1000 ) {
-            this.nyan.play();
-          }
-        }
+if (message.includes('won')) {
+  let value;
+  if (message.match(/\d+\.\d{2}/)) {
+    value = message.match(/\d+\.\d{2}/)[0];
+  } else if (message.match(/\d+/)) {
+    value = message.match(/\d+/)[0];
+  }
+  if (value) {
+    const formattedValue = parseFloat(value).toFixed(2);
+    const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
+    this.speak(`Lost, ${spokenValue}`);
+  }
+  if (value >= 0 && value <= 2) {
+    this.audioSplit.play();
+  } else if (value > 25 && value <= 100) {
+    this.audioLose.play();
+  } else if (value > 100) {
+    this.fatality.play();
+  }
+  winCounter = 0;
+} else if (message.includes('split')) {
+  let value;
+  if (message.match(/\d+\.\d{2}/)) {
+    value = message.match(/\d+\.\d{2}/)[0];
+  } else if (message.match(/\d+/)) {
+    value = message.match(/\d+/)[0];
+  }
+  if (value) {
+    const formattedValue = parseFloat(value).toFixed(2);
+    const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
+    this.speak(`Split, ${spokenValue}`);
+  }
+  winCounter = 0;
+} else if (message.includes('lost')) {
+  winCounter++;
+  if (winCounter === 3) {
+    this.oohBaby.play();
+    winCounter = 0;
+  }
+  let value;
+  if (message.match(/\d+\.\d{2}/)) {
+    value = message.match(/\d+\.\d{2}/)[0];
+  } else if (message.match(/\d+/)) {
+    value = message.match(/\d+/)[0];
+  }
+  if (value) {
+    const formattedValue = parseFloat(value).toFixed(2);
+    const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
+    this.speak(`Won, ${spokenValue}`);
+  }
+  if (value >= 0 && value <= 2) {
+    this.audioSplit.play();
+  } else if (value >= 15  && value <= 50) {
+    this.cashRegister.play();
+  } else if (value > 50  && value <= 250) {
+    this.audioWin.play();
+  } else if (value > 250  && value <= 1000) {
+    this.topG.play();
+  } else if (value > 1000 ) {
+    this.nyan.play();
+  }
+}
+
         localStorage.setItem('winCounter', winCounter); 
         
         this.props.addChatLog(data);

@@ -193,7 +193,6 @@ ul[role=menu] li:hover {
 
 .btn-back:hover,
 .btn-send-message:hover {
-    border-radius: 20px !important;
     height: 40px;
 }
 .btn-send-message:hover {

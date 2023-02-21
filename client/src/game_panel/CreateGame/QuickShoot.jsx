@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { getQsLottieAnimation } from '../../util/helper';
 import Lottie from 'react-lottie';
@@ -192,7 +194,6 @@ class QuickShoot extends Component {
     this.onChangeWinChance(winChance);
     this.setState({ winChance });
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-  // console.log('jfk aiuurporrt'  , winChance)
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
     } else if (this.props.qs_game_type === 3) {
@@ -434,5 +435,11 @@ class QuickShoot extends Component {
     );
   }
 }
+const mapStateToProps = state => ({
+  
+  auth: state.auth.isAuthenticated,
+  isDarkMode: state.auth.isDarkMode,
 
-export default QuickShoot;
+});
+
+export default connect(mapStateToProps)(QuickShoot);
