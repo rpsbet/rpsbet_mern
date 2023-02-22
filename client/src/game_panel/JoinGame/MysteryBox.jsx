@@ -98,7 +98,10 @@ class MysteryBox extends Component {
     const _id = e.target.getAttribute('_id');
     const box_price = e.target.getAttribute('box_price');
     this.setState({ selected_id: _id, bet_amount: box_price});
-
+    if (box_price > this.state.balance) {
+      alertModal(this.props.isDarkMode, `TOO BROKE!`);
+      return;
+    }
 
     this.onBtnBetClick(e, _id);
   };
@@ -249,6 +252,7 @@ predictNext = (betAmountArray, boxList) => {
   return prediction;
 };
 handleButtonClick = () => {
+  
   if (!this.state.betting) {
     this.setState({
       timer: setInterval(() => {
@@ -284,13 +288,7 @@ startBetting = () => {
     return;
     
   }
-
-
-
-  if (this.state.bet_amount > this.state.balance) {
-    alertModal(this.props.isDarkMode, `TOO BROKE!`);
-    return;
-  }
+  
   let stored_bet_array = JSON.parse(localStorage.getItem("bet_array")) || [];
   if (stored_bet_array.length  < 3) {
     alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
@@ -390,6 +388,9 @@ joinGame2 = async (predictedBetAmount) => {
       async () => {
         if (this.props.is_private === true) {
           this.props.openGamePasswordModal();
+        } else if (this.state.bet_amount > this.state.balance) {
+          alertModal(this.props.isDarkMode, `TOO BROKE!`);
+          return;
         } else {
           this.props.join({
             bet_amount: this.state.bet_amount,

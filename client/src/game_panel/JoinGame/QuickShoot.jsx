@@ -57,7 +57,7 @@ class QuickShoot extends Component {
   componentDidMount = () => {
     
     const { socket } = this.props
-    socket.on('UPDATED_BANKROLL', data => {
+    socket.on('UPDATED_BANKROLL_QS', data => {
       this.setState({ bankroll: data.bankroll })
     })
 

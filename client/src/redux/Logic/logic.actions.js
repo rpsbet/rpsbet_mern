@@ -6,6 +6,7 @@ import {
   ROOMS_LOADED,
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
+  UPDATE_BANKROLL_QS,
   BET_SUCCESS,
   MSG_CREATE_ROOM_SUCCESS,
   MSG_ROOMS_LOAD_FAILED,
@@ -304,6 +305,13 @@ export const deductBalanceWhenStartBrainGame = (data) => async dispatch => {
 export const updateBankroll = (bankroll) => {
   return {
     type: UPDATE_BANKROLL,
+    payload: bankroll,
+  };
+};
+
+export const updateBankrollQs = (bankroll) => {
+  return {
+    type: UPDATE_BANKROLL_QS,
     payload: bankroll,
   };
 };

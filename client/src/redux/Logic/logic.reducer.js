@@ -15,6 +15,7 @@ import {
   SET_CHAT_ROOM_INFO,
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
+  UPDATE_BANKROLL_QS,
   SPLEESH_GUESSES,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
@@ -106,6 +107,11 @@ export default function(state = initialState, action) {
         ...state,
         bankroll: action.payload,
       };
+  case UPDATE_BANKROLL_QS:
+    return {
+      ...state,
+      bankroll: action.payload,
+    };
     case START_LOADING:
       return {
         ...state, isActiveLoadingOverlay: true

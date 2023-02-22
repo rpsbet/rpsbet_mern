@@ -212,7 +212,10 @@ div.table .table-header {
 }
 
 
-
+.dont-have-game-msg {
+    padding: 10px 40px;
+    font-weight: 700;
+}
 
 .boxes-panel .box i:hover {
     transform: scale(1.2);
