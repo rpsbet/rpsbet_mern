@@ -210,8 +210,6 @@ div.table .table-header {
 .dont-have-game-msg svg {
     filter: contrast(0.2);
 }
-
-
 .dont-have-game-msg {
     padding: 10px 40px;
     font-weight: 700;

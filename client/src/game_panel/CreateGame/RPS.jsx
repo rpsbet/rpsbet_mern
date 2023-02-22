@@ -215,7 +215,7 @@ class RPS extends Component {
   };
   render() {
     
-    const defaultBetAmounts = [5, 10, 25, 50, 100];
+    const defaultBetAmounts = [10, 25, 50, 100, 250];
 
     return this.props.step === 1 ? (
       
