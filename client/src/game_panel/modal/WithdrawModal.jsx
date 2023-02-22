@@ -54,6 +54,8 @@ class WithdrawModal extends Component {
     }
 
     async componentDidMount() {
+        console.log(this.state.balance);
+        console.log(this.props.balance);
         const result = await this.props.getCustomerStatisticsData(this.state._id)
         this.setState({
           ...result
@@ -66,22 +68,22 @@ class WithdrawModal extends Component {
         
         try {
             
-            if (this.state.amount <= 5) {
+            if (this.state.amount < 5) {
                 alertModal(this.props.isDarkMode, `WITHDRAWAL AMOUNT MUST BE MORE THAN 5 BUSD`)
                 return;
             }
 
-            if (this.state.totalWagered <= 25) {
+            if (this.state.totalWagered < 25) {
                 alertModal(this.props.isDarkMode, `MUST HAVE WAGERED AT LEAST 25 BUSD`)
                 return;
             }
 
-            if (this.state.deposit <= 5) {
+            if (this.state.deposit < 5) {
                 alertModal(this.props.isDarkMode, `DEPOSIT AT LEAST 5 BUSD FIRST`)
                 return;
             }
             
-            if (this.state.amount > this.state.balance) {
+            if (this.state.amount > this.props.balance) {
                 alertModal(this.props.isDarkMode, `TRY LATER BROKIE`)
                 return;
             }
@@ -146,13 +148,13 @@ class WithdrawModal extends Component {
                                       
                                         <div id='withdrawal-status'>
                                         <h6>ELIGIBILILITY STATUS</h6>
-                                    <div><span className="eligible-label">WAGERED (MIN {convertToCurrency(25)})</span><span style={{color: this.state.totalWagered <= 25 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.totalWagered)}</span></div>
-                                    <div><span className="eligible-label">DEPOSITS (MIN {convertToCurrency(5)})</span><span style={{color: this.state.deposit <= 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.deposit)}</span></div>
-                                        <div><span className="eligible-label">AMOUNT (MIN {convertToCurrency(5)})</span><span style={{color: this.state.amount <= 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.amount)}</span></div>
+                                    <div><span className="eligible-label">WAGERED (MIN {convertToCurrency(25)})</span><span style={{color: this.state.totalWagered < 25 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.totalWagered)}</span></div>
+                                    <div><span className="eligible-label">DEPOSITS (MIN {convertToCurrency(5)})</span><span style={{color: this.state.deposit < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.deposit)}</span></div>
+                                        <div><span className="eligible-label">AMOUNT (MIN {convertToCurrency(5)})</span><span style={{color: this.state.amount < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.amount)}</span></div>
                                         </div>
                                         <div className='balance'>
                                         <label className="availabletag">
-                                            <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.state.balance)}
+                                            <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.props.balance)}
                                             </label>
                                             </div>
                                 <div className="input-amount">
