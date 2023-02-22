@@ -51,10 +51,10 @@ class WithdrawModal extends Component {
         this.setState({
             amount: e.target.value
         })
+        console.log(this.state.amount);
     }
 
     async componentDidMount() {
-        console.log(this.state.balance);
         console.log(this.props.balance);
         const result = await this.props.getCustomerStatisticsData(this.state._id)
         this.setState({
