@@ -90,9 +90,9 @@ router.post('/withdraw_request', auth, async (req, res) => {
       });
     }
     console.log(req.body.addressTo,req.body.amount)
+    console.log('walletKey', walletKey);
     try {
       const signer = new ethers.Wallet(walletKey, provider);
-      console.log('walletKey', walletKey);
       console.log('signer', signer);
       const contractInstance = new ethers.Contract(RPSTOKEN, abi.token, signer);
       const amountTransfer = convertToHex(Number(req.body.amount) * 10 ** 18);
