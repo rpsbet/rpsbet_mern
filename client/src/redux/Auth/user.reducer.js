@@ -14,7 +14,8 @@ import {
   NEW_TRANSACTION,
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
-  SET_DARK_MODE
+  SET_DARK_MODE,
+  SET_REFERRAL_CODE
 } from '../types';
 
 const initialState = {
@@ -30,7 +31,8 @@ const initialState = {
   isActivated: true,
   userName: '',
   liveUrl: null,
-  transactions: []
+  transactions: [],
+  referralCode: null
 };
 
 export default function(state = initialState, action) {
@@ -121,6 +123,11 @@ export default function(state = initialState, action) {
         ...state,
         liveUrl: payload
       };
+      case SET_REFERRAL_CODE:
+  return {
+    ...state,
+    referralCode: payload
+  };
     default:
       return state;
   }

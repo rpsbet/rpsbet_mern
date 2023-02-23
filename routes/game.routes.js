@@ -256,8 +256,8 @@ const convertGameLogToHistoryStyle = async gameLogList => {
 
       if (gameLog['game_type']['game_type_name'] === 'RPS') {
         if (gameLog.game_result === 1) {
-          temp.history = `<a href='#'>${joined_user_avatar}${gameLog['joined_user']['username']
-            }</a> won [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_avatar}${gameLog['joined_user']['username']
+            } won [<span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'] * 2)
             )}</span>] against ${creator_avatar}[${gameLog['creator']['username']
             }] in [${room_name}]`;

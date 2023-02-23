@@ -35,7 +35,9 @@ class SignupModal extends Component {
             email: '',
             password: '',
             bio: '',
-            avatar: ''
+            avatar: '',
+            referralCode: '' // add referralCode
+
         }
     }
 
@@ -51,6 +53,10 @@ class SignupModal extends Component {
         this.setState({password: e.target.value});
     }
 
+    onChangeReferralCode = (e) => {
+        this.setState({referralCode: e.target.value}); // update referralCode field in state
+    }
+    
     componentDidMount() {
     }
 
@@ -100,6 +106,9 @@ class SignupModal extends Component {
                             <input placeholder="ZERO EMAILS SENT" type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail}  />
                             <p>YOUR PASSWORD</p>
                             <input placeholder="●●●●●●" type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword}  />
+                            <p>REFERRAL - OPTIONAL</p>
+                            <input placeholder="V9FTGY" type="text" className="form-control" value={this.state.referralCode} onChange={this.onChangeReferralCode}  />
+
                             <button className="btn-submit">Register</button>
                             <p className="m-0 sm-text-center">ALREADY REGISTERED? <button onClick={(e) => { this.props.closeModal(); this.props.openLoginModal(); }}>LOGIN HERE →</button></p>
                         </form>

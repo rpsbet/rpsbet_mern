@@ -15,6 +15,24 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
+  rewards: {
+    type: Number,
+    default: 0
+  },
+  referralCode: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  referralId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  rewards: {
+    type: Number,
+    default: 0
+  },
   bio: {
     type: String,
   },

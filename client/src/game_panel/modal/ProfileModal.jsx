@@ -55,6 +55,8 @@ class ProfileModal extends Component {
     
         this.state = {
             _id: this.props.userInfo._id,
+            referralCode: '',
+            rewards: this.props.userInfo.rewards,
             username: this.props.userInfo.username,
             email: this.props.userInfo.email,
             password: '',
@@ -65,18 +67,27 @@ class ProfileModal extends Component {
     }
 
     static getDerivedStateFromProps(props, current_state) {
-        if (current_state.avatar !== props.avatar || current_state.username !== props.username || current_state.email !== props.email ) {
+        if (current_state.avatar !== props.avatar ||
+            current_state.username !== props.username ||
+            current_state.email !== props.email ||
+            current_state.rewards !== props.rewards ) {
             return {
                 ...current_state,
                 avatar: props.userInfo.avatar,
                 username: props.userInfo.username,
                 email: props.userInfo.email,
+                
+                referralCode: props.userInfo.referralCode,
+                rewards: props.userInfo.rewards
+
             };
         }
         return null;
     }
 
     async componentDidMount() {
+        // const referralCode = this.generateReferralCode();
+        // this.setState({ referralCode });
       const result = await this.props.getCustomerStatisticsData(this.state._id)
       this.setState({
         ...result
@@ -163,7 +174,20 @@ class ProfileModal extends Component {
                         getRoomStatisticsData={this.props.getRoomStatisticsData}
                       />
                     </div>
+
                     <div className="modal-edit-panel">
+                    <div>
+                        <p>REFERRAL CODE</p>
+                        <input className="form-control" value={this.state.referralCode} readOnly />
+                    </div>
+                      <div className="input-wrapper">
+
+                        <p>REFERRAL REWARDS</p>
+                        <input className="form-control" value={this.props.userInfo.rewards} readOnly />
+                        <span className="input-suffix">BUSD</span>
+
+                    </div>
+
                         <div>
                             <p>USERNAME</p>
                             <input className="form-control" value={this.state.username} readOnly />

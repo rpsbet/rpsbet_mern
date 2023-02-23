@@ -18,7 +18,9 @@ import {
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   START_LOADING,
-  END_LOADING
+  END_LOADING,
+  SET_REFERRAL_CODE // <- import the new action type
+
 } from '../types';
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
@@ -62,9 +64,10 @@ export const userSignUp = ({
   email,
   password,
   bio,
-  avatar
+  avatar,
+  referralCode
 }) => async dispatch => {
-  const body = JSON.stringify({ username: userName, email, password, bio, avatar });
+  const body = JSON.stringify({ username: userName, email, password, bio, avatar, referralCode }); // <- add referralCode to the request body
   try {
     dispatch({ type: START_LOADING });
     const res = await axios.post('/user', body);
@@ -72,6 +75,7 @@ export const userSignUp = ({
 
     if (res.data.success) {
       dispatch({ type: SET_USERNAME_PASSWORD, payload: {email, password} });
+      dispatch(setReferralCode(referralCode)); // <- dispatch setReferralCode with the referralCode value
       return { status: 'success' };
     } else {
       dispatch({ type: REGISTER_FAIL });
@@ -84,6 +88,16 @@ export const userSignUp = ({
     return { status: 'failed', error: err };
   }
 };
+
+//referral
+export const setReferralCode = (referralCode) => {
+  return {
+    type: SET_REFERRAL_CODE,
+    payload: referralCode
+  }
+}
+
+
 // Login User
 export const userSignIn = body => async dispatch => {
   try {
@@ -239,6 +253,25 @@ export const setBalance = balance => dispatch => {
 export const setDarkMode = isDarkMode => dispatch => {
   dispatch({ type: SET_DARK_MODE, payload: isDarkMode });
 }
+
+// Change User Name
+export const changeUserName = (newUserName) => async (dispatch) => {
+  try {
+    const { data } = await axios.put('/user/username', { newUserName });
+    if (data.success) {
+      dispatch({ type: USER_LOADED, payload: data.user });
+      dispatch({ type: MSG_SUCCESS, payload: 'Your username has been updated successfully' });
+      return { status: 'success', user: data.user };
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+  return { status: 'failed' };
+};
+
 
 
 export const setUserInfo = userInfo => dispatch => {

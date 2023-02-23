@@ -268,7 +268,9 @@ div.table .table-cell button.btn_end {
     height: 32px;
 }
 div.table.main-game-table::-webkit-scrollbar, div.table.main-history-table::-webkit-scrollbar, div.table.my-open-game-table::-webkit-scrollbar,
-.chat-panel.global-chat::-webkit-scrollbar {
+.chat-panel.global-chat::-webkit-scrollbar,
+.modal-body .modal-content-wrapper div.modal-content-panel::-webkit-scrollbar {
+    
   display: none;
 }
 

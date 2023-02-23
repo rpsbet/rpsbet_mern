@@ -414,6 +414,7 @@ border-bottom-right-radius: 0 !important;
 }
 .modal-body .modal-content-wrapper div.modal-content-panel {
     padding: 20px 24px;
+    overflow-x: scroll;
 }
 .modal-body.how-to-play-modal-body .modal-content-wrapper div.modal-content-panel p {
     margin-top: initial;

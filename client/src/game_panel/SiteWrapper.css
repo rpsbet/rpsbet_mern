@@ -7,6 +7,16 @@
     top: 0;
 }
 
+.input-wrapper {
+    position: relative;
+  }
+  .input-suffix {
+    position: absolute;
+    top: 60%;
+    right: 10px;
+    transform: translateY(-30%);
+  }
+
 .pre-summary-panel {
     display: flex;
     overflow: hidden;

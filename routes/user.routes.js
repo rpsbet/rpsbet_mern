@@ -21,7 +21,7 @@ router.get('/', auth, async (req, res) => {
   try {
     const users = await User.find(
       { is_deleted: is_banned },
-      { _id: 1, username: 1, email: 1, created_at: 1 }
+      { _id: 1, username: 1, email: 1, created_at: 1, rewards: 1 }
     )
       .sort({ created_at: 'desc' })
       .skip(pagination * page - pagination)
@@ -35,6 +35,7 @@ router.get('/', auth, async (req, res) => {
         _id: user['_id'],
         username: user['username'],
         email: user['email'],
+        rewards: user['rewards'], 
         date: moment(user['created_at']).format('YYYY-MM-DD')
       };
       result.push(temp);
@@ -99,7 +100,7 @@ router.get('/activity', auth, async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { username, email, password, bio, avatar } = req.body;
+  const { username, email, password, bio, avatar, referralCode  } = req.body;
 
   // Simple validation
   if (!username || !email || !password) {
@@ -127,16 +128,37 @@ router.post('/', async (req, res) => {
     });
 
   const verification_code = Math.floor(Math.random() * 8999) + 1000;
+  const referralId = req.body.referralCode ? await User.findOne({ referralCode: req.body.referralCode }) : null;
 
+  const generateReferralCode = () => {
+    let referralCode = "";
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    for (let i = 0; i < 6; i++) {
+      referralCode += characters.charAt(
+        Math.floor(Math.random() * characters.length)
+      );
+    }
+    return referralCode;
+  };
+
+  // Find the owner of the referral code, if it exists
+  let referralOwner = null;
+  if (referralCode) {
+    referralOwner = await User.findOne({ referralCode });
+  }
+  
   const newUser = new User({
     username,
     email,
     password,
     bio,
     balance: 1,
+    rewards: 0,
     status: 'off',
     avatar,
-    verification_code
+    verification_code,
+    referralCode: generateReferralCode(),
+    referralId: referralOwner ? referralOwner._id : null
   });
 
   // Create salt & hash
@@ -144,7 +166,15 @@ router.post('/', async (req, res) => {
     bcrypt.hash(newUser.password, salt, (err, hash) => {
       if (err) throw err;
       newUser.password = hash;
-      newUser.save().then(user => {
+      newUser.save().then(async user => {
+        // If there is a referral owner, update their balance
+        if (referralOwner) {
+          referralOwner.balance += 1;
+          referralOwner.rewards += 1;
+
+          await referralOwner.save();
+        }
+
         jwt.sign(
           { user: user, is_admin: 0 },
           process.env.SECRET_OR_KEY,
