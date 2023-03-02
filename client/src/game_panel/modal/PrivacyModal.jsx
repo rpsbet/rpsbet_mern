@@ -51,7 +51,7 @@ class PrivacyModal extends Component {
                     <div>
                         <h2>Privacy Policy</h2>
                         <br/>
-                        <h5>Last updated: 22nd August 2022</h5>
+                        <h5>Last updated: 2nd March 2023</h5>
                         <br/>
                         “RPSBet,” ("us", "we", or "our") operates https://rpsbet.io (the "Site"). This page informs you of our policies regarding the collection, use and disclosure of Personal Information we receive from users of the Site. We use your Personal Information only for providing and improving the Site. By using the Site, you agree to the collection and use of information in accordance with this policy. If you do not want RPS Bet to collect, store, use, or share your information in the ways described in this Privacy Policy, you may not play RPS Bet games or use RPS Bet’s other Services. For purposes of data protection laws, RPS Bet is the “data controller” of your personal information.
                         <br/><br/>

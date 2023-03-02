@@ -543,7 +543,12 @@ class HowToPlayModal extends Component {
               <br />
             </div>
             <div className="game_footer text-center">
-              <span>ALL RIGHTS RESERVED </span>RPSBET © 2023{' '}
+              <span>ALL RIGHTS </span>
+              <a
+                href="https://rps.finance/"
+              >
+                RPS.FINANCE
+              </a>{' '}© 2023{' '}
               <a
                 href="#privacy"
                 id="privacy"

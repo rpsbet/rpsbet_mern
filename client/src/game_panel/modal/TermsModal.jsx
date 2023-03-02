@@ -51,7 +51,7 @@ class TermsModal extends Component {
                     <div>
                         <h2>Terms of Service</h2>
                         <br/>
-                        <h5>Last Updated: 28th July 2022</h5>
+                        <h5>Last Updated: 2nd March 2023</h5>
                         <br/>
                         <h5>Welcome to RPSBET.IO!</h5>
                         <br/>
