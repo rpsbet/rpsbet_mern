@@ -614,17 +614,29 @@ if (message.includes('won')) {
    
     const { isMuted } = this.state;
 
-    const texts = [
-      'FRANKLY, IDC 😎', 'FAIL FASTER 💥', 'DOING WINS 🔥', 'PLAY THE INFINITE GAME ♾',
-      'BRING YOUR SEED 🌱', 'STILL, I RISE 📈',  'AIM FOR THE MOON 🚀', 'LOSERS QUIT 💪',
-      'TIME COSTS LIVES 🔪', 'LOSERS REACT 🤬', 'LEADERS ANTICIPATE 👀', 'THINGS HAPPEN JUST 🎯',
-      'BUY THE RUMOR 💲', 'THINK HARDER 🤔',  'WE HAVE 6 SENSES 👃', 'AVERAGE SUCKS! 🐂',
-      'TIME COSTS LIVES 🔪', 'NEVER SETTLE 🏆', 'BE FEARLESS ⚔', 'BE UNSTOPPABLE 🧨',
-      'IF I CAN, I WILL 🤧', 'STAY HUNGRY 🥐',  'WE HAVE 6 SENSES 🥱', 'PLAY TO WIN 🥊',
-      'NEVER BE BORED 🥱', 'FORGIVE NOT FORGET 🧐', 'RIDE OR DIE 🔫', 'NEVER SHARE DOUBTS 😖',
-      'FEAR IS STRONGER THAN LOVE 👿', 'SOME THINGS WILL NEVER CHANGE 👹',  'GIVE FIRST 🎁', 'MONEY IS GOOD 💰',
-      'PROGRESS IS IN SIMPLICITY 🧗‍♂️', 'FORGIVE NOT FORGET 🧐', 'WHAT YOU BECOME 🤠', 'WHAT GOES AROUND... 🌍',
-      'AVOID BEING REALISTIC 🌴', 'INTELLECTS LOVE ❤',  'ATTITUDE IS PRICELESS 💳', 'GENIUSES ARE MADE 🧠'
+    // const texts = [
+    //   'FRANKLY, IDC 😎', 'FAIL FASTER 💥', 'DOING WINS 🔥', 'PLAY THE INFINITE GAME ♾',
+    //   'BRING YOUR SEED 🌱', 'STILL, I RISE 📈',  'AIM FOR THE MOON 🚀', 'LOSERS QUIT 💪',
+    //   'TIME COSTS LIVES 🔪', 'LOSERS REACT 🤬', 'LEADERS ANTICIPATE 👀', 'THINGS HAPPEN JUST 🎯',
+    //   'BUY THE RUMOR 💲', 'THINK HARDER 🤔',  'WE HAVE 6 SENSES 👃', 'AVERAGE SUCKS! 🐂',
+    //   'TIME COSTS LIVES 🔪', 'NEVER SETTLE 🏆', 'BE FEARLESS ⚔', 'BE UNSTOPPABLE 🧨',
+    //   'IF I CAN, I WILL 🤧', 'STAY HUNGRY 🥐',  'WE HAVE 6 SENSES 🥱', 'PLAY TO WIN 🥊',
+    //   'NEVER BE BORED 🥱', 'FORGIVE NOT FORGET 🧐', 'RIDE OR DIE 🔫', 'NEVER SHARE DOUBTS 😖',
+    //   'FEAR IS STRONGER THAN LOVE 👿', 'SOME THINGS WILL NEVER CHANGE 👹',  'GIVE FIRST 🎁', 'MONEY IS GOOD 💰',
+    //   'PROGRESS IS IN SIMPLICITY 🧗‍♂️', 'FORGIVE NOT FORGET 🧐', 'WHAT YOU BECOME 🤠', 'WHAT GOES AROUND... 🌍',
+    //   'AVOID BEING REALISTIC 🌴', 'INTELLECTS LOVE ❤',  'ATTITUDE IS PRICELESS 💳', 'GENIUSES ARE MADE 🧠'
+    // ];
+        const texts = [
+      '😎', '💥', '🔥', '♾',
+      '🌱', '📈',  '🚀', '💪',
+      '🔪', '🤬', '👀', '🎯',
+      '💲', '🤔',  '👃', '🐂',
+      '🔪', '🏆', '⚔', '🧨',
+      '🤧', '🥐',  '🥱', '🥊',
+      '🥱', '🧐', '🔫', '😖',
+      '👿', '👹',  '🎁', '💰',
+      '🧗‍♂️', '🧐', '🤠', '🌍',
+      '🌴', '❤',  '💳', '🧠'
     ];
 const randomText = texts[Math.floor(Math.random() * texts.length)];
     return (

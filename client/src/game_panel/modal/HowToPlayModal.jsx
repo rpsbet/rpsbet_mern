@@ -185,9 +185,9 @@ class HowToPlayModal extends Component {
                       <p>
                         Public Bet Amount ={' '}
                         <span style={{ color: '#b52c22' }}>
-                          {`${convertToCurrency(20)} [${convertToCurrency(
+                          {convertToCurrency(20)} [{convertToCurrency(
                             5
-                          )} * 4]`}
+                          )} * 4]
                         </span>
                       </p>
                       <p>
@@ -236,7 +236,7 @@ class HowToPlayModal extends Component {
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          {`Automatic(${convertToCurrency(30)})`}
+                          Automatic({convertToCurrency(30)})
                         </span>
                       </p>
                       <p>
@@ -285,25 +285,25 @@ class HowToPlayModal extends Component {
                       <p>
                         The following boxes are set (Prize/Price):{' '}
                         <span style={{ color: '#b52c22' }}>
-                          {`${convertToCurrency(25)}/${convertToCurrency(
+                          {convertToCurrency(25)}/{convertToCurrency(
                             4
-                          )}, ${convertToCurrency(0)}/${convertToCurrency(
+                          )}, {convertToCurrency(0)}/{convertToCurrency(
                             6
-                          )}, ${convertToCurrency(0)}/${convertToCurrency(
+                          )}, {convertToCurrency(0)}/{convertToCurrency(
                             10
-                          )}`}
+                          )}
                         </span>
                       </p>
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          {`Automatic(${convertToCurrency(
+                          Automatic({convertToCurrency(
                             41
-                          )}) [${convertToCurrency(
+                          )}) [{convertToCurrency(
                             25
-                          )} + ${convertToCurrency(
+                          )} + {convertToCurrency(
                             6
-                          )} + ${convertToCurrency(10)}]`}
+                          )} + {convertToCurrency(10)}]
                         </span>
                       </p>
                       <p>
@@ -314,10 +314,10 @@ class HowToPlayModal extends Component {
                       </p>
                       <p>
                         <i>
-                          {`If the ${convertToCurrency(
+                          If the {convertToCurrency(
                             25
                           )} Prize box is opened, the host still
-                          receives the ${convertToCurrency(4)} (Price).`}
+                          receives the {convertToCurrency(4)} (Price).
                         </i>
                       </p>
                     </div>
@@ -364,18 +364,18 @@ class HowToPlayModal extends Component {
                       <p>
                         Payout ={' '}
                         <span style={{ color: '#f6b22a' }}>
-                          {`Automatic(${convertToCurrency(30)})`}
+                          Automatic({convertToCurrency(30)})
                         </span>
                       </p>
                       <p>
-                        {`Guesses (in order): ${convertToCurrency(
+                        Guesses (in order): {convertToCurrency(
                           10
-                        )}, ${convertToCurrency(20)}, ${convertToCurrency(
+                        )}, {convertToCurrency(20)}, {convertToCurrency(
                           100
-                        )}, ${convertToCurrency(90)},
-                        ${convertToCurrency(50)}, ${convertToCurrency(
+                        )}, {convertToCurrency(90)},
+                        {convertToCurrency(50)}, {convertToCurrency(
                           80
-                        )}- <i>*Game ENDs automatically*</i>`}
+                        )}- <i>*Game ENDs automatically*</i>
                       </p>
                       <p>
                         Host Winnings ={' '}
@@ -527,19 +527,19 @@ class HowToPlayModal extends Component {
             <div id="game_footer_howto">
               <a href="https://twitter.com/rpsbet">TWITTER</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://www.youtube.com/c/PimpedPistols">
-                YOUTUBE
-              </a>
+              <a href="https://discord.gg/anMJntW4AD">DISCORD</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               <a href="https://t.me/rpsfinance">TELEGRAM</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              {/* <a href="https://discord.gg/94QywhSc4d">DISCORD</a>
+              <a href="https://www.youtube.com/channel/UCJRXf1HVpAdBy3Uf6eNGHkA">
+                YOUTUBE
+              </a>
+              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
+              {/* <a href="https://www.instagram.com/rpsbet.io/">INSTAGRAM</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp; */}
-              <a href="https://www.instagram.com/rpsbet.io/">INSTAGRAM</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://rpsbet.itch.io/">ITCH</a>
+              {/* <a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a> */}
+              {/* &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
+              <a href="https://rpsbet.itch.io/">ITCH</a> */}
               <br />
             </div>
             <div className="game_footer text-center">

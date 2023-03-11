@@ -179,7 +179,7 @@ div.table.my-chat-table .table-row .table-cell[title="Unread message"]:hover:act
     }
 
 div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
-    background: linear-gradient(45deg, #a500109d, #c83328);
+    background: linear-gradient(45deg, #a50010, #c83328);
     color: white;
     border-radius: 50%;
     width: 25px;
@@ -323,9 +323,9 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 
 
 
-div.table.my-chat-table .table-row > div.message-panel {
+/* div.table.my-chat-table .table-row > div.message-panel {
     filter: brightness(0.5);
-}
+} */
 .contents_wrapper .main-game h2 span {
     font-size: 12px;
     font-weight: normal;
