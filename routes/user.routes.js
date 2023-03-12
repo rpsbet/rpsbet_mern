@@ -152,7 +152,7 @@ router.post('/', async (req, res) => {
     email,
     password,
     bio,
-    balance: 1,
+    balance: 0,
     rewards: 0,
     status: 'off',
     avatar,
