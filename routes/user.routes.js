@@ -169,7 +169,7 @@ router.post('/', async (req, res) => {
       newUser.save().then(async user => {
         // If there is a referral owner, update their balance
         if (referralOwner) {
-          referralOwner.balance += 1;
+          referralOwner.balance += 0;
           referralOwner.rewards += 1;
 
           await referralOwner.save();
