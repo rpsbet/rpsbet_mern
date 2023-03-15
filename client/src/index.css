@@ -279,7 +279,7 @@ border-radius: unset !important;
   /* transform:scale(0.98); */
   filter: brightness(0.9) contrast(1.2);
 }
-
+/* 
 .btn_join:hover,
 .btn-create-room:hover,
 .btn_end:hover,
@@ -301,7 +301,7 @@ button:hover,
   100% {
     transform: translateY(-4px);
   }
-}
+} */
 
 
 #root .site_wrapper {
@@ -644,8 +644,8 @@ table#runs td {
 }
 .game-type-panel .btn-game-type.active,
 .game-type-panel .btn-game-type:hover {
-    border-radius: 16px;
-    background-color: #f9f9f9;
+
+    color: #ef38d0;
 }
 
 .modal-body {

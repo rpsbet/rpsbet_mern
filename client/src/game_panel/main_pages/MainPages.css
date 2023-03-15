@@ -363,6 +363,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     white-space: nowrap;
     display: flex;
     align-items: center;
+    font-weight: 600;
 }
 .game-type-panel .btn-game-type img {
     width: 32px;

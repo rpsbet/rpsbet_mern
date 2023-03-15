@@ -63,16 +63,16 @@ background: #060607;
     background-color: unset;
 }
 
-.dark_mode .game-type-panel .btn-game-type.btn-icon.active {
+/* .dark_mode .game-type-panel .btn-game-type.btn-icon.active {
 	color: white;
-}
+} */
 
-
+/* 
 .dark_mode .game-type-panel .btn-game-type.active,
 .dark_mode .game-type-panel .btn-game-type:hover {
     background-color: #f2f2f20a;
     color: white;
-}
+} */
 
 
 .dark-mode ul[role=menu] {
@@ -121,7 +121,7 @@ background: #060607;
 
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
-	background-color: #060607;
+	background-color: #0c0c0c;
 }
 .dark_mode .main-game-page-tabs {
 	color: #8e9297;
@@ -412,9 +412,7 @@ background: #060607;
 	background-color: #101010;
 	border-color: #4f545c;
 }
-.dark_mode .btn-game-type.active div {
-	background: #101010;
-  }
+
 
   .dark_mode .btn_join:hover,
   .dark_mode .btn-create-room:hover,

@@ -4,7 +4,12 @@ import { connect } from 'react-redux';
 import song from './sounds/tems.mp3';
 import LoadingOverlay from 'react-loading-overlay';
 import ReactApexChart from 'react-apexcharts';
-
+import Battle from './icons/Battle.js';
+import BattleHover from './icons/BattleHover';
+import Manage from './icons/Manage.js';
+import ManageHover from './icons/ManageHover';
+import HowTo from './icons/HowTo.js';
+import HowToHover from './icons/HowToHover';
 import {
   setSocket,
   userSignOut,
@@ -91,7 +96,8 @@ const darkTheme = createTheme({
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
-    height: '62px'
+    height: '62px',
+    minWidth: '80px'
   }
 };
 
@@ -116,6 +122,7 @@ class SiteWrapper extends Component {
           : `http://${window.location.hostname}:5001`,
       userName: this.props.userName,
       balance: this.props.balance,
+      hoverTabIndex: -1,
       isMuted: false,
       betResult: this.props.betResult,
       showProfileModal: false,
@@ -174,7 +181,15 @@ class SiteWrapper extends Component {
     
   };
 
-
+  handleMouseEnter = (index) => {
+    this.setState({ hoverTabIndex: index });
+  }
+  
+  handleMouseLeave = () => {
+    this.setState({ hoverTabIndex: -1 });
+  }
+  
+  
   handleMute = () => {
     this.setState({ isMuted: true });
   
@@ -672,14 +687,43 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                 {' '}
               </a>
               <Tabs
-                value={this.props.selectedMainTabIndex}
-                onChange={this.handleMainTabChange}
-                TabIndicatorProps={{ style: { background: '#c438ef' } }}
-                className="main-game-page-tabs desktop-only"
-              >
-                <Tab label="Live Stakes" style={customStyles.tabRoot} />
-                <Tab label="My Stakes" style={customStyles.tabRoot} />
-              </Tabs>
+  value={this.props.selectedMainTabIndex}
+  onChange={this.handleMainTabChange}
+  TabIndicatorProps={{ style: { background: '#c438ef' } }}
+  className="main-game-page-tabs desktop-only"
+>
+  <Tab
+  className="custom-tab"
+    icon={
+      this.state.hoverTabIndex === 0 || this.props.selectedMainTabIndex === 0 ? (
+        <BattleHover />
+      ) : (
+        <Battle />
+      )
+    }
+    style={customStyles.tabRoot}
+    onMouseEnter={() => this.handleMouseEnter(0)}
+    onMouseLeave={this.handleMouseLeave}
+  />
+  <Tab
+  className="custom-tab"
+    icon={
+      this.state.hoverTabIndex === 1 || this.props.selectedMainTabIndex === 1 ? (
+        <ManageHover />
+      ) : (
+        <Manage />
+      )
+    }
+    style={customStyles.tabRoot}
+    onMouseEnter={() => this.handleMouseEnter(1)}
+    onMouseLeave={this.handleMouseLeave}
+  />
+</Tabs>
+
+
+
+
+
               
               <div className="header_action_panel">
               <div>
@@ -697,13 +741,16 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                   Leaderboards
                 </a>
                 */
-                  <a
-                    // href="#help"
-                    onClick={this.handleOpenHowToPlayModal}
-                    id="btn_how_to_play"
-                  >
-                    <span>HELP</span>
-                  </a>
+                <a
+                onClick={this.handleOpenHowToPlayModal}
+                id="btn_how_to_play"
+                onMouseEnter={() => this.handleMouseEnter(2)}
+                onMouseLeave={this.handleMouseLeave}
+              >
+                {this.state.hoverTabIndex === 2 ? <HowToHover /> : <HowTo />}
+              </a>
+              
+              
                 }
                 {this.props.isAuthenticated ? (
                   <>

@@ -7,6 +7,12 @@ import Avatar from '../../components/Avatar';
 import { Tabs, Tab } from '@material-ui/core';
 import GlobalChat from './GlobalChat';
 import MyChat from './MyChat';
+import Chat from '../icons/Chat.js';
+import ChatHover from '../icons/ChatHover';
+import ChatRoom from '../icons/ChatRoom';
+import ChatRoomHover from '../icons/ChatRoomHover.js';
+
+
 // function updateFromNow(history) {
 // 	const result = JSON.parse(JSON.stringify(history));
 // 	for (let i=0; i<result.length; i++) {
@@ -31,6 +37,16 @@ class ChatPanel extends Component {
       showEmojiPanel: false
     };
   }
+
+
+  handleMouseEnter = (index) => {
+    this.setState({ hoverTabIndex: index });
+  }
+  
+  handleMouseLeave = () => {
+    this.setState({ hoverTabIndex: -1 });
+  }
+  
 
   insertEmoji = e => {
     this.setState({ text: this.state.text + e.target.innerHTML });
@@ -72,14 +88,40 @@ class ChatPanel extends Component {
   render() {
     return (
       <div className="chat-wrapper">
+       
         <Tabs
           value={this.state.selected_tab_index}
           onChange={this.handleTabChange}
           TabIndicatorProps={{ style: { background: '#c438ef' } }}
           className="main-game-page-tabs"
         >
-          <Tab label="MY CHAT" style={customStyles.tabRoot} />
-          <Tab label="GLOBAL CHAT" style={customStyles.tabRoot} />
+          <Tab
+            className="custom-tab"
+            icon={
+              this.state.hoverTabIndex === 0 || this.state.selected_tab_index === 0 ? (
+                <ChatHover />
+              ) : (
+                <Chat />
+              )
+            }
+            style={customStyles.tabRoot}
+            onMouseEnter={() => this.handleMouseEnter(0)}
+    onMouseLeave={this.handleMouseLeave}
+          />
+          <Tab
+            className="custom-tab"
+
+            icon={
+              this.state.hoverTabIndex === 1 || this.state.selected_tab_index === 1 ? (
+                <ChatRoomHover />
+              ) : (
+                <ChatRoom />
+              )
+            }
+            style={customStyles.tabRoot} 
+            onMouseEnter={() => this.handleMouseEnter(1)}
+    onMouseLeave={this.handleMouseLeave}
+        />
         </Tabs>
         {this.state.selected_tab_index === 0 ? <MyChat /> : <GlobalChat />}
         {this.state.selected_tab_index === 1 && (

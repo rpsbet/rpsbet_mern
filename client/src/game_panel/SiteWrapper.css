@@ -83,8 +83,17 @@
     margin-right: 8px;
 }
 
-.game_header .main_header #btn_how_to_play {
-    font-size: 12px;
+.table.main-game-table .table-row:hover {
+transform: scale(0.99);
+filter: brightness(1.09);
+transition: 0.5s;
+z-index: 999;
+cursor: pointer;
+}
+
+.game_header .main_header #btn_how_to_play:hover {
+    cursor: pointer;
+    /* font-size: 12px;
     font-weight: 300;
     line-height: 20px;
     height: 20px;
@@ -92,7 +101,7 @@
     background-image: url("/img/icons/btn-how-to-play.svg");
     background-repeat: no-repeat;
     background-position: left center;
-    padding-left: 35px;
+    padding-left: 35px; */
 }
 
 
@@ -131,6 +140,30 @@
     color: #060607;
     margin-left: 10px;
 }
+
+.custom-tab {
+    position: relative;
+  }
+  
+  .custom-tab::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px; /* Adjust the border height as needed */
+    background-color: #c438ef; /* Use your desired color */
+    transition: width 0.3s ease-in-out, left 0.3s ease-in-out;
+    transform: translateX(-50%);
+  }
+  
+  .custom-tab:hover::before {
+    width: 100%;
+    left: 0;
+    transform: translateX(0%);
+  }
+  
+  
 
 .game_header .main_header .header_action_panel button:hover {
     border-radius: 9px;
