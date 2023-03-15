@@ -279,6 +279,17 @@ border-radius: unset !important;
   /* transform:scale(0.98); */
   filter: brightness(0.9) contrast(1.2);
 }
+
+.btn_join.clicked {
+  animation: btn-click 0.5s ease-in-out;
+}
+
+@keyframes btn-click {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
 /* 
 .btn_join:hover,
 .btn-create-room:hover,
@@ -1241,7 +1252,7 @@ circle {
 }
 
 .btn-game-type.active div {
-  background: #f9f9f9;
+  color: #ef38d0;
 }
   .join-game-panel, .create-game-panel {
     height: unset;

@@ -13,7 +13,12 @@ import {
 } from '../../redux/Logic/logic.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
-
+import ShowHistory from '../icons/ShowHistory.js';
+import ShowHistoryHover from '../icons/ShowHistoryHover';
+import Battle from '../icons/Battle.js';
+import BattleHover from '../icons/BattleHover';
+import Manage from '../icons/Manage.js';
+import ManageHover from '../icons/ManageHover';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 
@@ -91,22 +96,40 @@ class MainPage extends Component {
         {this.state.is_mobile &&
           (this.state.selectedMobileTab === 'live_games' ||
             this.state.selectedMobileTab === 'my_games') && (
-            <Tabs
-              value={this.state.show_open_game}
-              onChange={this.showOpenGameOrHistory}
-              TabIndicatorProps={{ style: { background: '#c438ef' } }}
-              className="main-game-page-tabs"
-            >
-              <Tab
-                label={
-                  this.state.selectedMobileTab === 'live_games'
-                    ? 'Live Stakes' 
-                    : 'My Stakes'
-                }
-                style={customStyles.tabRoot}
-              />
-              <Tab label="History" style={customStyles.tabRoot} />
-            </Tabs>
+              <Tabs
+  value={this.state.show_open_game}
+  onChange={this.showOpenGameOrHistory}
+  TabIndicatorProps={{ style: { background: '#c438ef' } }}
+  className="main-game-page-tabs"
+>
+  <Tab
+    icon={
+      (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'live_games') ? (
+        <BattleHover />
+      ) : (
+        (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'my_games') ? (
+          <ManageHover />
+        ) : (
+          this.state.selectedMobileTab === 'live_games' ? <Battle /> : <Manage />
+        )
+      )
+    }
+    style={customStyles.tabRoot}
+  />
+  <Tab
+    icon={
+      this.state.show_open_game === 1 ? (
+        <ShowHistoryHover />
+      ) : (
+        <ShowHistory />
+      )
+    }
+    style={customStyles.tabRoot}
+  />
+</Tabs>
+
+
+
           )}
         <div className="main-panel">
           <h2 className="main-title desktop-only">{this.getActiveTabText()}</h2>

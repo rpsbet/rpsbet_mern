@@ -23,6 +23,8 @@ class OpenGamesTable extends Component {
       selectedGameType: 'All',
       showPlayerModal: false,
       selectedCreator: '',
+      isClicked: false
+
     };
   }
 
@@ -39,13 +41,15 @@ class OpenGamesTable extends Component {
 
 
   joinRoom = e => {
+    this.setState({ isClicked: true });
+
     const creator_id = e.target.getAttribute('creator_id');
     const bet_amount = e.target.getAttribute('bet_amount');
 
-    // if (!this.props.isAuthenticated) {
-    //   alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
-    //   return;
-    // }
+    if (!this.props.isAuthenticated) {
+      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
+      return;
+    }
 
     // if (bet_amount > this.props.balance) {
     //   alertModal(this.props.isDarkMode, `TOO BROKE!`);
@@ -297,7 +301,7 @@ class OpenGamesTable extends Component {
 </div>
                   <div className="table-cell cell-action">
                     <button
-                      className="btn_join"
+                      className={`btn_join${this.state.isClicked ? ' clicked' : ''}`}
                       onClick={this.joinRoom}
                       _id={row._id}
                       creator_id={row.creator_id}
