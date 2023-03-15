@@ -534,7 +534,6 @@ class HowToPlayModal extends Component {
               <a href="https://www.youtube.com/channel/UCJRXf1HVpAdBy3Uf6eNGHkA">
                 YOUTUBE
               </a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
               {/* <a href="https://www.instagram.com/rpsbet.io/">INSTAGRAM</a>
               &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp; */}
               {/* <a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a> */}

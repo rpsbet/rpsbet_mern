@@ -662,7 +662,7 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
           }`}
         >
           
-          <LoadingOverlay
+          {/* <LoadingOverlay
             active={this.state.isActiveLoadingOverlay}
             spinner
             text={randomText}
@@ -674,7 +674,7 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                 zIndex: this.state.isActiveLoadingOverlay ? 3 : 0
               }
             }}
-          ></LoadingOverlay>
+          ></LoadingOverlay> */}
           <div className="game_header">
             <div className="main_header">
               <a

@@ -251,9 +251,9 @@ div.table .table-row .table-cell button:last-child {
     box-shadow: 0 0 5px 0px #ff409a;
 }
 
-div.table .table-cell button.btn_join:hover {
+/* div.table .table-cell button.btn_join:hover {
     transform: scale(1.05);
-}
+} */
 
 div.table .table-cell button.btn_join {
     width: 114px;
@@ -731,7 +731,6 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 .game-page .page-title > .pre-summary-panel {
     background-color: white;
     padding: 8px 16px;
-    border-radius: 16px;
 }
 
 
@@ -741,7 +740,8 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     align-items: center;
     padding: 1rem !important;
     background-color: #f2f2f20a;
-    border-radius: 1rem;
+    border-top-right-radius: 30px;
+    border-top-left-radius: 30px;
     margin-top: 0.25rem;
   }
   

@@ -279,16 +279,23 @@ border-radius: unset !important;
   /* transform:scale(0.98); */
   filter: brightness(0.9) contrast(1.2);
 }
-
-.btn_join.clicked {
-  animation: btn-click 0.5s ease-in-out;
+.btn_join {
+  /* other styles */
+  position: relative;
+  transform-origin: center center;
+  transition: transform 0.2s ease-out;
 }
 
-@keyframes btn-click {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+.btn_join.active {
+  transform: scale(0.9);
 }
+
+.btn_join {
+  transform: scale(1);
+}
+
+
+
 
 /* 
 .btn_join:hover,

@@ -23,7 +23,7 @@ class OpenGamesTable extends Component {
       selectedGameType: 'All',
       showPlayerModal: false,
       selectedCreator: '',
-      isClicked: false
+      mouseDown: false
 
     };
   }
@@ -301,8 +301,25 @@ class OpenGamesTable extends Component {
 </div>
                   <div className="table-cell cell-action">
                     <button
-                      className={`btn_join${this.state.isClicked ? ' clicked' : ''}`}
-                      onClick={this.joinRoom}
+                      className="btn_join"
+                      onMouseDown={(event) => {
+                        this.setState({ mouseDown: true });
+                        event.currentTarget.classList.add('active');
+                      }}
+                      onMouseUp={(event) => {
+                        this.setState({ mouseDown: false });
+                        event.currentTarget.classList.remove('active');
+                        this.joinRoom(event);
+                      }}
+                      onTouchStart={(event) => {
+                        this.setState({ mouseDown: true });
+                        event.currentTarget.classList.add('active');
+                      }}
+                      onTouchEnd={(event) => {
+                        this.setState({ mouseDown: false });
+                        event.currentTarget.classList.remove('active');
+                        this.joinRoom(event);
+                      }}
                       _id={row._id}
                       creator_id={row.creator_id}
                       room_status={row.status}
