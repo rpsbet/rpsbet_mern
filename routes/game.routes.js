@@ -1925,6 +1925,7 @@ if (newBetAmount <= roomInfo['user_bet']) {
 
         roomInfo['pr'] += roomInfo['bet_amount'];
         roomInfo['host_pr'] += roomInfo['bet_amount'];
+        // roomInfo['user_bet'] += roomInfo['bet_amount'];
         if (roomInfo.brain_game_score == req.body.brain_game_score) {
           //draw          Draw, No Winner! PR will be split.
           message.message =
@@ -1953,6 +1954,11 @@ if (newBetAmount <= roomInfo['user_bet']) {
           newTransactionJ.amount += ((roomInfo['bet_amount'] * 2) * ((100 - commission.value) / 100));
           roomInfo['pr'] -= roomInfo['bet_amount'];
           roomInfo['host_pr'] -= roomInfo['bet_amount'];
+          roomInfo['user_bet'] -= roomInfo['bet_amount'];
+          if (roomInfo['user_bet'] <= 0 || roomInfo['host_pr'] <= 0) {
+            console.log(roomInfo['user_bet'])
+            roomInfo.status = 'finished';
+          }
 
           newGameLog.game_result = 1;
           // roomInfo.status = 'finished';

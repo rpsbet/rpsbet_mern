@@ -4,6 +4,7 @@ import history from '../../redux/history';
 import RPS from '../CreateGame/RPS';
 import Spleesh from '../CreateGame/Spleesh';
 import MysteryBox from '../CreateGame/MysteryBox';
+import DropGame from '../CreateGame/DropGame';
 import BrainGame from '../CreateGame/BrainGame';
 import PlayBrainGame from '../CreateGame/PlayBrainGame';
 import QuickShoot from '../CreateGame/QuickShoot';
@@ -420,6 +421,22 @@ class CreateGame extends Component {
         />
       );
     }
+    // else if (this.state.game_mode === 'Drop Game') {
+    //   return (
+    //     <DropGame
+    //       onChangeState={this.onChangeState}
+    //       rps_list={this.state.rps_list}
+    //       bet_amount={this.state.bet_amount}
+    //       winChance={this.state.winChance}
+    //       is_private={this.state.is_private}
+    //       is_anonymous={this.state.is_anonymous}
+    //       room_password={this.state.room_password}
+    //       step={this.state.child_step}
+    //       endgame_amount={this.state.endgame_amount}
+    //       rps_game_type={this.state.rps_game_type}
+    //     />
+    //   );
+    // }
     return <></>;
   };
 

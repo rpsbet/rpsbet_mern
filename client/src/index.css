@@ -252,6 +252,20 @@ button#bl {
   font-weight: 700;
 }
 
+.drop-add-run-form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  
+}
+
+.addRun {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 10px;
+}
 
 .btn_join , .btn-create-room, .btn_end, span#button,
 #btn_next, #btn_prev, button, .accordion__button, .btn-back {
@@ -354,10 +368,12 @@ button:hover,
 
 #max {
   margin: 0px 1.4rem -1.5em 1.5em;
-    cursor: none;
     transform: translateY(3px);
     font-size: small;
     color: #f0b90b;
+}
+#max:hover, #max:active {
+    cursor: pointer;
 }
 
 .disclaimer p {

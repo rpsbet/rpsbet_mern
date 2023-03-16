@@ -399,6 +399,15 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
     }
   }
 
+  
+    handleMaxButtonClick() {
+      const maxBetAmount = (this.state.balance).toFixed(2);
+      this.setState({
+        bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
+      }, () => {
+      document.getElementById("betamount").focus();
+      });
+    }
   handleScroll = (event) => {
     const panel = event.target;
     const scrollLeft = panel.scrollLeft;
@@ -418,15 +427,6 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
     }
   };
   
-
-  handleMaxButtonClick() {
-    const maxBetAmount = (this.state.balance).toFixed(2);
-    this.setState({
-      bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
-    }, () => {
-    document.getElementById("betamount").focus();
-    });
-  }
   toggleBtnHandler = () => {
     this.setState({
       clicked:!this.state.clicked,
@@ -479,8 +479,12 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
 
     const intervalId = setInterval(() => {
       const randomItem = predictNext(stored_rps_array);
-      // console.log('wwedw', randomItem)
-      this.joinGame2(randomItem, this.state.bet_amount);
+      if (this.props.is_private === true) {
+        this.props.openGamePasswordModal();
+      } else {
+        // this.joinGame(selected_rps);
+        this.joinGame2(randomItem, this.state.bet_amount);
+      }
     }, 3500);
 
   
