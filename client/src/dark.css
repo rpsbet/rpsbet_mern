@@ -54,7 +54,7 @@ background: #060607;
 .dark_mode a.player,
 .dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .sender-name {
 	
-    color:#ffb000;
+    color:#b9bbbe;
 }
 
 .dark_mode div.table .table-row .table-cell img.avatar,
@@ -149,16 +149,15 @@ background: #060607;
 
 .dark_mode .create-room-btn-panel button.btn-create-room {
 	color: #e9ecef;
-	background: linear-gradient(to top, #060607, #232529) padding-box, linear-gradient(to top, #ff409a, #c438ef) border-box;
-}
+	background: linear-gradient(to top, #15ea21, #28a745) padding-box, linear-gradient(to top, #28a745, #15ea21) border-box;}
 
 .dark_mode .table-cell.cell-room-info .cell-game-type,
 .dark_mode div.table.my-open-game-table .table-row .table-cell.room-id {
-	color: white;
+	color: #dee2e6;
 }
 .dark_mode .main_table_pagination button.btn_main_table_page_number {
 	background-color: rgba(47, 49, 54, 0.5);
-	color: white;
+	color: #dee2e6;
 }
 .dark_mode .table_title_with_search {
 	color: #b9bbbe;
@@ -413,6 +412,9 @@ background: #060607;
 	border-color: #4f545c;
 }
 
+.dark_mode div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
+border-color: #151515;
+}
 
   .dark_mode .btn_join:hover,
   .dark_mode .btn-create-room:hover,

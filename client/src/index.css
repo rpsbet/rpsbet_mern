@@ -293,20 +293,7 @@ border-radius: unset !important;
   /* transform:scale(0.98); */
   filter: brightness(0.9) contrast(1.2);
 }
-.btn_join {
-  /* other styles */
-  position: relative;
-  transform-origin: center center;
-  transition: transform 0.2s ease-out;
-}
 
-.btn_join.active {
-  transform: scale(0.9);
-}
-
-.btn_join {
-  transform: scale(1);
-}
 
 
 
@@ -678,8 +665,11 @@ table#runs td {
 }
 .game-type-panel .btn-game-type.active,
 .game-type-panel .btn-game-type:hover {
-
-    color: #ef38d0;
+  color: #ef38d0;
+}
+.game-type-panel .btn-game-type:hover {
+backdrop-filter: brightness(2.5);
+border-radius: 6px;
 }
 
 .modal-body {
@@ -887,8 +877,17 @@ div.table .table-row .table-cell img.game-type-icon {
 
 /*** GLOBAL CHAT ***/
 
-.chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
+.chat-wrapper .chat-panel .chat-line .chat-content {
   overflow-wrap: anywhere;
+     
+}
+
+.chat-time .chat-text {
+  background: #f9f9f914;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-bottom-left-radius: 0;
+  margin-bottom: 20px;
 }
 .chat {
   height: 83vh;
@@ -970,9 +969,6 @@ div.table .table-row .table-cell img.game-type-icon {
 
 .game-page .game-contents {
   border-radius: 30px !important;
-}
-.game-page .game-contents .game-info-panel .box-prizes {
-  border-radius: 16px !important;
 }
 
 a.player {

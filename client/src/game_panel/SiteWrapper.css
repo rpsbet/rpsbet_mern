@@ -118,16 +118,16 @@ cursor: pointer;
     padding: 0 16px;
     color: white;
     cursor: pointer;
-    border-radius: 9px;;
-    background: linear-gradient(to top, #ffb000, #d81719);
+    border-radius: 6px;
+    background: linear-gradient(to top, #fa3fa0, #c438ef);
     font-size: 16px;
     font-weight: 600;
     line-height: 32px;
     white-space: nowrap;
-    box-shadow: 0 0 3px 1px #d87717;
+    box-shadow: 0 0 3px 1px #c438ef;
 }
 .game_header .main_header span#balance:hover {
-    box-shadow: 0 0 3px 3px #ff6307a6;
+    box-shadow: 0 0 3px 3px #c438efa6;
     transition: 0.1s;
 }
 
@@ -170,9 +170,6 @@ cursor: pointer;
 }
 
 .chat-content .avatar {
-    border-radius: 5px !important;
-    width: 17px !important;
-    height: 17px !important;
     margin-bottom: 5px;
     margin-right: 5px !important;
 }

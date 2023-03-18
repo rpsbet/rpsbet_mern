@@ -100,7 +100,10 @@ if (current_state.chat_list.length !== props.globalChatList.length) {
                     alt=""
                     darkMode={this.props.isDarkMode}
                   />
-                <span className="sender-name">{chat.sender}</span></a>
+                </a>
+              </div>
+              <div className="chat-time">
+                <span className="sender-name">{chat.sender}</span>
                 <span className="chat-text">
                 {
         chat.message.split(/(\S+\.[^\s]+)/).map((part, i) =>
@@ -110,8 +113,8 @@ if (current_state.chat_list.length !== props.globalChatList.length) {
         )
       }
     </span>
+                {/* {chat.time} */}
               </div>
-              <div className="chat-time">{chat.time}</div>
             </div>
           ),
           this

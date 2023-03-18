@@ -256,9 +256,9 @@ class OpenGamesTable extends Component {
                       className="game-type-icon"
                     />
                     <div>
-                      <div className="cell-game-type">
+                      {/* <div className="cell-game-type">
                         {row.game_type.game_type_name}
-                      </div>
+                      </div> */}
                       <div className="cell-game-id">{'#' + row.index}</div>
                     </div>
                   </div>
@@ -271,7 +271,7 @@ class OpenGamesTable extends Component {
                       alt=""
                       darkMode={this.props.isDarkMode}
                     />
-                    <span>{row.creator}</span>
+                    {/* <span>{row.creator}</span> */}
                     </a>
                     <i
                       className={`online-status${
@@ -361,7 +361,7 @@ class OpenGamesTable extends Component {
                       alt=""
                       darkMode={this.props.isDarkMode}
                     />
-                    <span>{row.creator}</span>
+                    {/* <span>{row.creator}</span> */}
                     </a>
                     <i
                       className={`online-status${
