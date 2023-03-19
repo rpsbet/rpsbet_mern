@@ -4,7 +4,7 @@ import history from '../../redux/history';
 import { getRoomList, setCurRoomInfo } from '../../redux/Logic/logic.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
-
+import Battle from '../icons/Battle';
 
 import { updateDigitToPoint2 } from '../../util/helper';
 
@@ -51,11 +51,6 @@ class OpenGamesTable extends Component {
       return;
     }
 
-    // if (bet_amount > this.props.balance) {
-    //   alertModal(this.props.isDarkMode, `TOO BROKE!`);
-    //   return;
-    // }
-
     if (e.target.getAttribute('room_status') === 'finished') {
       alertModal(
         this.props.isDarkMode,
@@ -63,16 +58,6 @@ class OpenGamesTable extends Component {
       );
       return;
     }
-
-     // Dispatch the loadRoomInfo action with the updated room information
-    //  this.props.loadRoomInfo({
-    //   _id: room_id,
-    //   game_type: e.target.getAttribute('game_type'),
-    //   bet_amount: bet_amount,
-    //   creator_id: creator_id,
-    //   // other room information
-    // });
-    // history.push('/join/' + room_id);
 
     const room_id = e.target.getAttribute('_id');
     this.props.setCurRoomInfo({
@@ -282,6 +267,20 @@ class OpenGamesTable extends Component {
                           : ''
                       }`}
                     ></i>
+                    {row.joiners && row.joiners.length > 0 ? (
+  <div className="table-cell desktop-only cell-joiners">
+    <Battle />
+    {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
+      <Avatar
+        className="avatar"
+        key={index}
+        src={avatar}
+        alt=""
+        darkMode={this.props.isDarkMode}
+      />
+    ))}
+  </div>
+) : null}
                   </div>
                   <div className="table-cell desktop-only cell-amount-info">
                  
@@ -372,6 +371,21 @@ class OpenGamesTable extends Component {
                           : ''
                       }`}
                     ></i>
+                    {row.joiners && row.joiners.length > 0 ? (
+  <div className="table-cell desktop-only cell-joiners">
+    <Battle />
+    {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
+      <Avatar
+        className="avatar"
+        key={index}
+        src={avatar}
+        alt=""
+        darkMode={this.props.isDarkMode}
+      />
+    ))}
+  </div>
+) : null}
+
                   </div>
                   <div className="table-cell cell-amount-info">
                   {row.game_type.game_type_name === 'Spleesh!'
@@ -412,7 +426,9 @@ class OpenGamesTable extends Component {
 }
 
 const mapStateToProps = state => ({
-  creator: state.logic.curRoomInfo.creator_name
+  creator: state.logic.curRoomInfo.creator_name,
+  joiners: state.logic.curRoomInfo.joiners
+
 });
 
 const mapDispatchToProps = {

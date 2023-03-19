@@ -70,19 +70,18 @@ router.post('/checkGamePassword', async (req, res) => {
 // /api/room/:id call
 router.get('/room/:id', async (req, res) => {
   try {
-
-
     const room = await Room.findOne({ _id: req.params.id })
       .populate({ path: 'game_type', model: GameType })
-      .populate({ path: 'brain_game_type', model: BrainGameType });
+      .populate({ path: 'brain_game_type', model: BrainGameType })
+      .populate({ path: 'joiners', model: User });
     const gameLogList = await GameLog.find({ room: room })
       .sort({ created_at: 'desc' })
       .populate({ path: 'room', model: Room })
       .populate({ path: 'game_type', model: GameType })
       .populate({ path: 'creator', model: User })
       .populate({ path: 'joined_user', model: User });
-
     const creator = await User.findOne({ _id: room.creator });
+    const joiners = await User.find({ _id: { $in: room.joiners } });
     const boxPrizeList = await RoomBoxPrize.find({ room: room }).sort({
       _id: 'asc'
     });
@@ -109,10 +108,8 @@ router.get('/room/:id', async (req, res) => {
 
     // Call the function only once when the page loads
     emitGuesses(req);
+
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
-    // console.log('wankke',spleeshGuesses);
-
-
 
     res.json({
       success: true,
@@ -121,6 +118,7 @@ router.get('/room/:id', async (req, res) => {
         _id: room['_id'],
         creator_id: room['creator'],
         creator_name: creator['username'],
+        joiners: joiners,
         game_type: room['game_type']['game_type_name'],
         bet_amount: parseFloat(room['user_bet']),
         spleesh_bet_unit: room['spleesh_bet_unit'],
@@ -484,6 +482,11 @@ const getRoomList = async (pagination, page, game_type) => {
   for (const room of rooms) {
     const room_id = room['game_type']['short_name'] + '-' + room['room_number'];
     try {
+      const joinerAvatars = [];
+        for (const joinedUser of room['joiners']) {
+          const user = await User.findOne({ _id: joinedUser });
+          joinerAvatars.push(user.avatar);
+        }
       const temp = {
         _id: room['_id'],
         creator:
@@ -493,6 +496,8 @@ const getRoomList = async (pagination, page, game_type) => {
               ? room['creator']['username']
               : '',
         creator_id: room['creator']['_id'],
+        joiners: room['joiners'],
+        joiner_avatars: joinerAvatars,
         creator_avatar: room['creator']['avatar'],
         creator_status: room['creator']['status'],
         game_type: room['game_type'],
@@ -686,6 +691,7 @@ router.post('/rooms', auth, async (req, res) => {
     newRoom = new Room({
       ...req.body,
       creator: req.user,
+      joiners: [],
       game_type: gameType,
       user_bet: user_bet,
       pr: pr,
@@ -1201,6 +1207,8 @@ async function sendEndedMessageToJoiners(roomId, from, message, is_anonymous) {
   });
 }
 
+
+
 router.post('/bet', auth, async (req, res) => {
   try {
     const commission = await SystemSetting.findOne({ name: 'commission' });
@@ -1407,6 +1415,13 @@ router.post('/bet', auth, async (req, res) => {
         bet_item.joiner_rps = req.body.selected_rps;
         await bet_item.save();
 
+        if (!roomInfo.joiners.includes(req.user)) {
+          roomInfo.joiners.addToSet(req.user);
+          await roomInfo.save();
+        }
+        
+
+
 if (roomInfo['user_bet'] <= 0) {
     roomInfo.status = 'finished';
     newGameLog.game_result = 1;
@@ -1455,6 +1470,10 @@ if (roomInfo['user_bet'] <= 0) {
           await bet_item.save();
         }
 
+        if (!roomInfo.joiners.includes(req.user)) {
+          roomInfo.joiners.addToSet(req.user);
+          await roomInfo.save();
+        }
         newTransactionJ.amount -= parseFloat(req.body.bet_amount);
 
         newGameLog.selected_qs_position = req.body.selected_qs_position;
@@ -1640,10 +1659,10 @@ if (newBetAmount <= roomInfo['user_bet']) {
           });
           await newSpleeshGuess.save();
 
-
-
-
-
+          if (!roomInfo.joiners.includes(req.user)) {
+            roomInfo.joiners.addToSet(req.user);
+            await roomInfo.save();
+          }
 
           if (
             roomInfo['endgame_type'] &&
@@ -1769,6 +1788,11 @@ if (newBetAmount <= roomInfo['user_bet']) {
           req.io.sockets.emit('UPDATED_BOX_LIST', {
             box_list: updatedBoxList
           });
+        }
+
+        if (!roomInfo.joiners.includes(req.user)) {
+          roomInfo.joiners.addToSet(req.user);
+          await roomInfo.save();
         }
 
         if (
@@ -1911,7 +1935,7 @@ if (newBetAmount <= roomInfo['user_bet']) {
         }
 
         }
-
+       
 
         // new_host_pr -= roomInfo.endgame_amount;
         roomInfo.host_pr = new_host_pr;
@@ -1979,7 +2003,6 @@ if (newBetAmount <= roomInfo['user_bet']) {
           ) {
             // roomInfo.status = 'finished';
 
-            console.log('wssed', roomInfo['host_pr'] - parseFloat(roomInfo['endgame_amount']))
             newTransactionC.amount += (roomInfo['bet_amount']); /* ((100 - commission.value) / 100);*/
             roomInfo['host_pr'] = parseFloat(roomInfo['endgame_amount']);
             roomInfo['pr'] = parseFloat(roomInfo['endgame_amount']);
@@ -2014,6 +2037,11 @@ if (newBetAmount <= roomInfo['user_bet']) {
       newGameLog.save();
       await roomInfo.save();
 
+      if (!roomInfo.joiners.includes(req.user)) {
+        roomInfo.joiners.addToSet(req.user);
+        await roomInfo.save();
+      }
+
       const rooms = await getRoomList(10, 1, 'All');
       req.io.sockets.emit('UPDATED_ROOM_LIST', {
         _id: roomInfo['_id'],
@@ -2030,6 +2058,8 @@ if (newBetAmount <= roomInfo['user_bet']) {
         newTransactionC.save();
         socket.newTransaction(newTransactionC);
       }
+
+      
 
       if (message.from._id !== message.to._id) {
         message.save();

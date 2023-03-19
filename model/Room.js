@@ -10,6 +10,11 @@ const RoomSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
+  joiners: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
   game_type: {
     type: Schema.Types.ObjectId,
     ref: 'GameType'
