@@ -830,10 +830,11 @@ predictNext = (qs_list, gameType) => {
             placeholder="BET AMOUNT"
           />
           <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
+          <div className='max'>
           <a id='max' onClick={() => this.handlehalfxButtonClick()}>0.5x</a>
           <a id='max' onClick={() => this.handle2xButtonClick()}>2x</a>
           <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
-
+</div>
         </div>
             {/* <div className="qs-action-panel">
             

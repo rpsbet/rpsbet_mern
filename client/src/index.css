@@ -133,13 +133,18 @@ input,textarea { border-radius: 0 !important; }
     transform: scaleY(-1);
 }
 
+button {
+  height: 45px !important;
+  margin: 5px;
+}
+
 .join-game-panel .qs-buttons button {
   opacity: 0;
   transform: scale(3);
 }
 .qs-buttons button {
   position: absolute !important;
-    background: linear-gradient(184deg, #ffae00a8, #8116813d) !important;
+    background: linear-gradient(184deg, #00fb39, #00ff3a4f) !important;
     color: #fff !important;
     width: 2.75rem !important;
   
@@ -351,7 +356,7 @@ button:hover,
 
 #load-btn {
   background: #333;
-  border-radius: 9px;
+  border-radius: 6px;
   margin: -40px 0px 30px;
   float: right;
 }
@@ -681,7 +686,7 @@ border-radius: 6px;
 
 .modal-body button,
 .modal-body button.btn-back {
-	border-radius: 9px;
+	border-radius: 6px;
 }
 
 .login_form #btn_signup,
@@ -862,7 +867,6 @@ div.table .table-row .table-cell img.game-type-icon {
 }
 
 .game-page .game-contents .game-info-panel button.other {
-  height: auto;
   white-space: pre-wrap;
   display: inline-block;
   word-break: break-word;
@@ -970,10 +974,6 @@ div.table .table-row .table-cell img.game-type-icon {
   position: relative;
 }
 
-.game-page .game-contents {
-  border-radius: 30px !important;
-}
-
 a.player {
 color:  #747f8d;
 }
@@ -1045,9 +1045,14 @@ a.player:hover {
   position: absolute;
   border-width: 10px;
 }
-.add-new-game-type {
+
+.game-page .game-contents .game-info-panel .max  button {
+  box-shadow: unset !important;
+  background: transparent !important;
+}
+.game-page .game-contents .game-info-panel button.add-new-game-type {
   background: linear-gradient(to right, #ff5f6d, #ffc371) !important;
-  
+  box-shadow: 0 -1px 0px #ff5f6d,0 -4px #ffc371 inset,0 2px #ff5f6d inset !important;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: #fff;
@@ -1074,7 +1079,6 @@ a.player:hover {
 circle {
   fill: #495057 !important;
 }
-
 
 
 .share-options button.react-share__ShareButton {

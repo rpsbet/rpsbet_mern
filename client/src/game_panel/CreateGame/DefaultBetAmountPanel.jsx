@@ -3,6 +3,7 @@ import { initParams } from 'request';
 import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { connect } from 'react-redux';
+import { Button, TextField } from '@material-ui/core';
 
 class DefaultBetAmountPanel extends Component {
   constructor(props) {
@@ -95,13 +96,23 @@ class DefaultBetAmountPanel extends Component {
         <div
           className={`edit-amount-panel ${this.state.is_other ? '' : 'hidden'}`}
         >
-          <input
+                 
+   
+          <TextField
             type="text"
-            pattern="[0-9]*"
             name="betamount"
             id="betamount"
-            maxLength="9"
             value={this.props.bet_amount}
+            inputProps={{
+              pattern: "[0-9]*",
+              maxLength: 9,
+            }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            InputProps={{
+              endAdornment: "BUSD",
+            }}
             onChange={e => {
               if (this.props.game_type === 'Brain Game') {
                 this.props.onChangeState({ bet_amount: e.target.value });
@@ -125,9 +136,11 @@ class DefaultBetAmountPanel extends Component {
             }}
             placeholder="BET AMOUNT"
           />
-          <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
-          <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
-
+          <div className='max'>
+            {/* <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button> */}
+            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
+          </div>
         </div>
         {this.props.game_type === 'RPS' ? (
           <p className="tip">SET THE INITIAL 'POT' FOR THIS GAME</p>

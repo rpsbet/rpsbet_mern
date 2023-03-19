@@ -129,27 +129,21 @@
     position: absolute;
     background: transparent;
     color: #747f8d;
+    opacity: 0.6;
     right: 24px;
     top: 24px;
-    font-size: 20px;
+    font-size: 2em;
     padding: 0;
     width: 24px;
     height: 24px;
 }
 
 .modal-body button.btn-close:hover {
-    animation: spin 1s cubic-bezier(0.165, 0.840, 0.440, 1.000);
+    transition:0.3s;
+    opacity: 1;
   }
   
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-  
+
 
 .modal-body h4 {
     font-size: 16px;
@@ -210,7 +204,7 @@ border-bottom-right-radius: 0 !important;
     height: 40px;
     background-image: linear-gradient(to top, #ff409a, #c438ef);
     color: white;
-    border-radius: 9px;
+    border-radius: 6px;
     padding: 0 20px;
     font-weight: 600;
     border: 0;
@@ -222,7 +216,7 @@ border-bottom-right-radius: 0 !important;
     background: transparent;
     color: #747f8d;
     border: 1px solid #d3d7db;
-    border-radius: 9px;
+    border-radius: 6px;
     padding: 0 20px;
     font-weight: 600;
 }
@@ -473,7 +467,7 @@ border-bottom-right-radius: 0 !important;
 
 
 ul[role=menu] li:hover {
-    border-radius: 9px !important;
+    border-radius: 6px !important;
 }
 
 /* .dark_mode #profile-menu div[class*="MuiPaper-root"] {

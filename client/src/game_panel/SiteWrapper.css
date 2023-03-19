@@ -166,7 +166,7 @@ cursor: pointer;
   
 
 .game_header .main_header .header_action_panel button:hover {
-    border-radius: 9px;
+    border-radius: 6px;
 }
 
 .chat-content .avatar {
@@ -201,7 +201,7 @@ cursor: pointer;
     height: 31px;
     background-image: linear-gradient(to top, #ff409a, #c438ef);
     color: white;
-    border-radius: 9px;
+    border-radius: 6px;
     padding: 0 20px;
     font-weight: 600;
     box-shadow: 0 0 5px 0px #ff409a;
@@ -226,8 +226,7 @@ ul[role=menu] li:hover {
 
 .room-history-panel,
 .action-panel {
-    padding: 20px;
- 
+    padding: 20px 0;
 }
 
 .btn-back:hover,

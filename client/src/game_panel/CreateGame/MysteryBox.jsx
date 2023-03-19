@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { convertToCurrency } from '../../util/conversion';
 import { alertModal } from '../modal/ConfirmAlerts';
+import { Button, TextField  } from '@material-ui/core';
 
 class MysteryBox extends Component {
   constructor(props) {
@@ -281,32 +282,48 @@ class MysteryBox extends Component {
           <div className="amounts-panel">
             <div>
               <div className="edit-amount-panel">
-                <input
+                        
+              
+                <TextField
                   type="text"
-                  pattern="[0-9]*"
+                  inputProps={{
+                    pattern: "[0-9]*",
+                    maxLength: 9,
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
                   name="new_box_prize"
                   id="new_box_prize"
-                  maxLength="9"
                   value={this.state.new_box_prize}
                   onChange={this.onChangeNewBoxPrize}
                   placeholder="PRIZE"
+                  InputProps={{
+                    endAdornment: "BUSD",
+                  }}
                 />
-                <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
               </div>
             </div>
             <div>
               <div className="edit-amount-panel">
-                <input
+              <TextField
                   type="text"
-                  pattern="[0-9]*"
+                  inputProps={{
+                    pattern: "[0-9]*",
+                    maxLength: 9,
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
                   name="new_box_price"
                   id="new_box_price"
-                  maxLength="9"
                   value={this.state.new_box_price}
                   onChange={this.onChangeNewBoxPrice}
                   placeholder="PRICE"
+                  InputProps={{
+                    endAdornment: "BUSD",
+                  }}
                 />
-                <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
               </div>
             </div>
           </div>

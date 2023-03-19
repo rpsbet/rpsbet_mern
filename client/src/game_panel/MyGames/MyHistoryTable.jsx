@@ -172,7 +172,7 @@ class MyHistoryTable extends Component {
         <div className="table main-history-table">
           {this.state.myHistory?.length === 0 && (
             <div className="dont-have-game-msg">
-              <div>NO STAKING HISTORY RIGHT NOW</div>
+              <div>NO BATTLE HISTORY RIGHT NOW</div>
             </div>
           )}
           {this.state.myHistory?.map(

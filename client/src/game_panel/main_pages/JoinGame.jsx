@@ -306,7 +306,7 @@ class JoinGame extends Component {
         )}
         
         <div className="room-history-panel">
-  <h2 className="room-history-title">Staking History</h2>
+  <h2 className="room-history-title">Battle History</h2>
   {this.props.roomInfo.room_history && this.props.roomInfo.room_history.length > 0 ? (
     <div className="table main-history-table">
       {this.props.roomInfo.room_history.slice(0, this.state.numToShow).map(

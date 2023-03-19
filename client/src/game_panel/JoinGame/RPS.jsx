@@ -5,6 +5,8 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
+import { Button, TextField  } from '@material-ui/core';
+
 import animationData from '../LottieAnimations/spinningIcon';
 import Avatar from '../../components/Avatar';
 import {
@@ -24,6 +26,12 @@ const defaultOptions = {
   rendererSettings: {
     preserveAspectRatio: "xMidYMid slice"
   }
+};
+
+const styles = {
+  focused: {
+    borderColor: '#fa3fa0',
+  },
 };
 
 const options = [
@@ -688,20 +696,29 @@ if (this.state.bet_amount > this.state.bankroll) {
 </div>
 <div className="your-bet-amount">
          
-          <input
-            type="text"
-            pattern="[0-9]*"
-            name="betamount"
-            id="betamount"
-            maxLength="9"
-            value={this.state.bet_amount}
-            onChange={this.onChangeState}
-            placeholder="BET AMOUNT"
-          />
-          <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
-          <a id='max' onClick={() => this.handlehalfxButtonClick()}>0.5x</a>
-          <a id='max' onClick={() => this.handle2xButtonClick()}>2x</a>
-          <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
+   <TextField
+  id="betamount"
+  label="BET AMOUNT"
+  type="text"
+  inputProps={{
+    pattern: "[0-9]*",
+    maxLength: 9,
+  }}
+  InputLabelProps={{
+    shrink: true,
+  }}
+  value={this.state.bet_amount}
+  onChange={this.onChangeState}
+  InputProps={{
+    endAdornment: "BUSD",
+  }}
+/>
+
+          <div className='max'>
+            <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
+          </div>
 
         </div>
         <button

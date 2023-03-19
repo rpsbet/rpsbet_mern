@@ -8,7 +8,7 @@
 }
 
 .dark_mode .contents_wrapper .room-history-panel h2.room-history-title {
-	color: #f9f9f9;
+	color: #8e9297;
 }
 
 .dark_mode div.table .table-row .table-cell img.game-type-icon {
@@ -145,9 +145,6 @@ background: #060607;
 	color: #8e9297;
 }
 
-.dark_mode .create-room-btn-panel button.btn-create-room {
-	color: #e9ecef;
-	background: linear-gradient(to top, #15ea21, #28a745) padding-box, linear-gradient(to top, #28a745, #15ea21) border-box;}
 
 .dark_mode .table-cell.cell-room-info .cell-game-type,
 .dark_mode div.table.my-open-game-table .table-row .table-cell.room-id {
@@ -208,25 +205,14 @@ background: #060607;
 }
 .dark_mode .game-page .game-contents {
 	color: white;
-	background-color: #060607;
+	background-color: #151515;
 }
 .dark_mode .game-page hr {
 	border-color: #36393f;
 }
-.dark_mode .game-page .game-contents .game-info-panel button,
-.dark_mode .game-page .game-contents .action-panel button:disabled {
-	color: #fa3fa0;
-    border-color: #fa3fa0;
-	background-color: transparent;
-}
-
-.dark_mode .game-page .game-contents .game-info-panel button:hover {
-	background-color: #fa3fa011;
-}
-
 
 .dark_mode .game-page .game-contents .radio-button-group button.radio-button {
-	background-color: #202225;
+	background-color: #151515;
 	color: white;
 }
 .dark_mode .game-page .game-contents .radio-button-group button.radio-button::before {
@@ -235,11 +221,7 @@ background: #060607;
 .dark_mode .game-page .game-contents .radio-button-group button.radio-button.selected::before {
 	box-shadow: 0 0 0px 7px #202225 inset;
 }
-.dark_mode #rps-game-type-radio span,
-.dark_mode #rps-radio span {
-	background-color: #060607;
-    border: 2px solid #4f545c;
-}
+
 .dark_mode .game-page .game-contents .summary-panel .summary-info {
 	background-color: #060607;
 }
@@ -269,7 +251,7 @@ background: #060607;
 	color: #f23eae;
     border-color: #e73dbd;
     box-shadow: 0 0 5px 0px #ff409a;
-	border-radius: 9px !important;
+	border-radius: 6px !important;
 }
 
 .dark_mode .game_header .main_header .header_action_panel button#btn-login:hover {
@@ -329,10 +311,7 @@ background: #060607;
 .dark-mode div.table.main-history-table .table-row > div {
 	color: white;
 }
-.dark_mode table#runs,
-.dark_mode .chat-wrapper .chat-input-panel .emoticon-panel {
-    background: #060607;
-}
+
 
 
 

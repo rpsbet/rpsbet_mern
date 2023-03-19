@@ -260,7 +260,7 @@ class MyGamesTable extends Component {
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}
           >
-            + STAKE
+            CREATE BATTLE
           </button>
         </div>
         <div className="table my-open-game-table">
@@ -281,7 +281,7 @@ class MyGamesTable extends Component {
         />
               <span>
                 FIRST SELECT A GAME <br />
-                THEN CLICK "+ STAKE"
+                THEN CLICK "CREATE BATTLE"
               </span>
             </div>
           ) : (
