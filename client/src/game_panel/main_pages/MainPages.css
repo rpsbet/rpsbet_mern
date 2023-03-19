@@ -57,13 +57,12 @@ button, button.btn {
     background-color: rgba(235, 237, 239, 0.5);
 }
 .main-game h2.main-title {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 400;
     color: #060607;
     padding-bottom: 12px;
     margin-bottom: 12px;
     text-transform: uppercase;
-    border-bottom: 1px solid #36393f;
 }
 .main-game-page-tabs {
     /* border-bottom: 1px solid #b9b9b9; */
@@ -378,13 +377,13 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     background: transparent;
 }
 .game-type-panel .btn-game-type {
-    margin-right: 20px;
+    margin-right: 14px;
     text-align: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 1.2em;
     line-height: 1.71;
     background-color: transparent;
-    color: #8e9297;
+    color: #f2f3f5;
     padding: 8px 16px;
     white-space: nowrap;
     display: flex;
@@ -1755,7 +1754,7 @@ bottom: 0px;
         filter: invert(43%) sepia(61%) saturate(6413%) hue-rotate(269deg) brightness(94%) contrast(100%);
     } */
     .main-game h2.main-title {
-        font-size: 16px;
+        font-size: 12px;
     }
     .contents_wrapper .main-game .main-panel,
     .contents_wrapper .main-game .sub-panel {

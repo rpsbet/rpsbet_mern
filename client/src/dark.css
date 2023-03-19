@@ -57,11 +57,7 @@ background: #060607;
     color:#b9bbbe;
 }
 
-.dark_mode div.table .table-row .table-cell img.avatar,
-.dark_mode .game_header .main_header .header_action_panel img.avatar,.dark_mode .chat-content .avatar,
-.dark_mode .chat-log-panel .message-header img.avatar {
-    background-color: unset;
-}
+
 
 /* .dark_mode .game-type-panel .btn-game-type.btn-icon.active {
 	color: white;
@@ -110,7 +106,7 @@ background: #060607;
 	background-color: #060607;
 }
 .dark_mode .main-game h2.main-title {
-	color: white;
+	color: #8e9297;
 }
 
 
@@ -122,6 +118,8 @@ background: #060607;
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: #0c0c0c;
+	background-image: linear-gradient(-135deg, transparent, #0c0c0c 25%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6098421f3bd61f4427e780dd_Background.svg);
+
 }
 .dark_mode .main-game-page-tabs {
 	color: #8e9297;

@@ -857,7 +857,7 @@ div.table .table-row .table-cell img.game-type-icon {
 #liveStakes div {
   position: absolute;
   height: auto !important;
-  margin-top: -10px !important;
+  margin-top: -13px !important;
   display: inline-block !important;
 }
 
@@ -1269,8 +1269,11 @@ circle {
 .btn-game-type div {
   border-radius: 16px;
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 1em !important;
   margin-right: 4px;
+}
+.game-type-panel .btn-game-type {
+  font-size: 1em !important;
 }
 
 .btn-game-type.active div {

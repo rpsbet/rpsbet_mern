@@ -81,12 +81,12 @@ class MainPage extends Component {
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0)
-      ? <div id="liveStakes">{this.props.roomCount} LIVE STAKES
+      ? <div id="liveStakes">{this.props.roomCount} BATTLES
       <Lottie 
         options={defaultOptions}
           width={40}
         /></div>
-      : 'My Stakes';
+      : 'My Battles';
 
   render() {
     return (

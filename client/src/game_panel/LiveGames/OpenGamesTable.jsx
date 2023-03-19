@@ -218,7 +218,7 @@ class OpenGamesTable extends Component {
         <div className="table main-game-table">
           {this.props.roomList.length === 0 && (
             <div className="dont-have-game-msg">
-              <div>NO STAKES YET, GO TO 'MY STAKES'</div>
+              <div>NO BATTLES YET, GO TO 'MY BATTLES'</div>
             </div>
           )}
            {this.state.showPlayerModal &&
