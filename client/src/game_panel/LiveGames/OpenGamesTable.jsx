@@ -372,7 +372,7 @@ class OpenGamesTable extends Component {
                       }`}
                     ></i>
                     {row.joiners && row.joiners.length > 0 ? (
-  <div className="table-cell desktop-only cell-joiners">
+  <div className="table-cell mobile-only cell-joiners">
     <Battle />
     {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
       <Avatar
