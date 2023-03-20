@@ -11,6 +11,7 @@ import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import ReactModal from 'react-modal';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { FaClipboard } from 'react-icons/fa';
+import { Card, CardContent, Typography } from '@material-ui/core';
 
 const twitterLink = window.location.href;
 
@@ -500,7 +501,8 @@ localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
             <h3 className="game-sub-title">Select a Box</h3>
             <div className="boxes-panel boxes-join">
             {this.state.box_list.map((row, index) => (
-  <div
+  <Card
+    variant="outlined"
     className={
       'box box-' +
       row.status +
@@ -513,12 +515,15 @@ localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
     key={row._id}
     onClick={this.onBoxClicked}
   >
-    <span>{convertToCurrency(row.box_price)}</span>
-  </div>
+    <CardContent>
+      <Typography color="textSecondary">
+        {convertToCurrency(row.box_price)}
+      </Typography>
+    </CardContent>
+  </Card>
 ))}
 
             </div>
-            <p>Each box will open one of the Prizes above.</p>
             <button
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}

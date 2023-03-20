@@ -61,7 +61,7 @@ class JoinGame extends Component {
     this.state = {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
-      numToShow: 1000,
+      numToShow: 1,
       isLoading: false,
       roomInfo: this.props.roomInfo,
       bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
@@ -69,6 +69,7 @@ class JoinGame extends Component {
     };
     this.lastItemRef = React.createRef();
     this.handleScroll = this.handleScroll.bind(this);
+    this.handleLoadMore = this.handleLoadMore.bind(this);
 
   }
 
@@ -111,22 +112,35 @@ class JoinGame extends Component {
     this.props.getRoomInfo(this.props.match.params.id);
   }
 
-  handleScroll = () => {
+  handleLoadMore() {
+    this.setState({
+      numToShow: this.state.numToShow + 10,
+    });
+  }
+
+  handleScroll() {
     const lastItem = this.lastItemRef.current;
     if (lastItem) {
       const lastItemOffset = lastItem.offsetTop + lastItem.clientHeight;
       const pageOffset = window.pageYOffset + window.innerHeight;
-      if (pageOffset > lastItemOffset - 20 && !this.state.isLoading) {
-        this.setState({ isLoading: true }, () => {
-          this.setState({ numToShow: this.state.numToShow + 9, isLoading: false });
+      if (pageOffset > lastItemOffset && !this.state.isLoading) {
+        this.setState({
+          isLoading: true,
         });
+        this.handleLoadMore();
+        setTimeout(() => {
+          this.setState({
+            isLoading: false,
+          });
+        }, 1000);
       }
     }
-  };
-  
+  }
 
   componentWillUnmount() {
     clearInterval(this.interval);
+    window.removeEventListener("scroll", this.handleScroll);
+
   }
 
   componentDidUpdate(prevProps) {
@@ -306,34 +320,37 @@ class JoinGame extends Component {
         )}
         
         <div className="room-history-panel">
-  <h2 className="room-history-title">Battle History</h2>
-  {this.props.roomInfo.room_history && this.props.roomInfo.room_history.length > 0 ? (
-    <div className="table main-history-table">
-      {this.props.roomInfo.room_history.slice(0, this.state.numToShow).map(
-        (row, key) => (
-          <div className="table-row" key={'history' + row._id}>
-            <div>
-              <div className="table-cell">
-                <div className="room-id">{row.room_name}</div>
-                <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
-                <div className="table-cell">{row.from_now}</div>
-              </div>
-            </div>
-            {key === this.props.roomInfo.room_history.length - 1 && (
-              <div ref={this.lastItemRef}></div>
+        <h2 className="room-history-title">Battle History</h2>
+        {this.props.roomInfo.room_history && this.props.roomInfo.room_history.length > 0 ? (
+          <div className="table main-history-table">
+            {this.props.roomInfo.room_history.slice(0, this.state.numToShow).map(
+              (row, key) => (
+                <div className="table-row" key={'history' + row._id}>
+                  <div>
+                    <div className="table-cell">
+                      <div className="room-id">{row.room_name}</div>
+                      <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
+                      <div className="table-cell">{row.from_now}</div>
+                    </div>
+                  </div>
+                  {key === this.props.roomInfo.room_history.length - 1 && (
+                    <div ref={this.lastItemRef}></div>
+                  )}
+                </div>
+              ),
+              this
+            )}
+            {this.state.isLoading && (
+              <div className="loading-spinner"></div>
             )}
           </div>
-        ),
-        this
-      )}
-      {this.state.isLoading && (
-        <div className="loading-spinner"></div>
-      )}
-    </div>
-  ) : (
-    <p>No History Yet</p>
-  )}
-</div>
+        ) : (
+          <p>No History Yet</p>
+        )}
+        {this.state.numToShow < this.props.roomInfo.room_history.length && (
+          <button onClick={this.handleLoadMore}>Load More</button>
+        )}
+      </div>
 
 
 

@@ -385,7 +385,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     font-size: 1.2em;
     line-height: 1.71;
     background-color: transparent;
-    color: #f2f3f5;
+    color: #495057cc;
     padding: 8px 16px;
     white-space: nowrap;
     display: flex;
@@ -452,6 +452,16 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     background: linear-gradient(to top, #15ea21, #28a745) padding-box, linear-gradient(to top, #28a745, #15ea21) border-box;
     border-radius: 6px;
     font-weight: 600;
+}
+
+.contents_wrapper .main-game .main-panel,
+.contents_wrapper .main-game .sub-panel {
+	background-image: linear-gradient(-135deg, transparent, #f9f9f9 25%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6418078a5aac65a4cfa60ea8_vbbg-svg-svg.svg);
+    background-repeat: no-repeat;
+    background-position: top right;
+
+    background-size: cover;
+    
 }
 
 .create-room-btn-panel button.btn-create-room:active,
@@ -743,6 +753,8 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     display: flex;
     color: #4f5660;
     padding: 8px 0;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
     width: 100%;
     position: relative;
 }
@@ -948,7 +960,7 @@ box-shadow:none !important;
     color: #060607;
 }
 .game-page .game-contents .game-info-panel .previous-guesses {
-    color: #d81718;
+    color: #8e9297;
     font-size: 16px;
     font-weight: 600;
     text-align: center;
@@ -1243,24 +1255,14 @@ input {
 .boxes-panel.boxes-join .box {
     background-color: #f2f3f5;
     width: 100px;
-    height: 130px;
     background-position: center 15px;
-    padding-top: 95px;
     border-radius: 6px;
     border: 2px dashed #4f5660;
     cursor: pointer;
 }
-.boxes-panel.boxes-join .box.active {
-    border-color: #fa3fa0;
-    filter: drop-shadow(2px 4px 6px black);
-    box-shadow: 0 0 6px #fa3fa0;
-    transition:cubic-bezier(0.075, 0.82, 0.165, 1);
-}
 .boxes-panel.boxes-join .box {
-width: 66px;
-    height: 100px;
     background-position: center 15px;
-    padding: 69px 0px 8px;
+    padding: 40px 0px 8px;
     border-radius: 6px;
     border: unset !important;
     cursor: pointer;
@@ -1293,11 +1295,15 @@ width: 66px;
     background-repeat: no-repeat;
 }
 
-
-.create-game-panel .boxes-panel .box span {
+.join-game-panel .game-page .game-contents p {
+    font-size: 1em;
+    font-weight: 600;
+    color: #f9f9f9;
+}
+.create-game-panel .boxes-panel .box p {
     background: #7a7a7a4a;
     /* color: #444; */
-    font-size: 12px;
+    font-size: 14px;
     line-height: 20px;
     font-weight: bold;
     text-align: center;
@@ -1325,8 +1331,13 @@ width: 66px;
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(auto, 10px);
 }
+.boxes-panel.boxes-join .box {
+    margin-bottom: 1px;
+	background-color: #02c526;
+}
 .game-page .game-contents .game-info-panel .box-prizes span {
-    color: rgb(87, 202, 34);
+    /* color: rgb(87, 202, 34); */
+    color: #e5e5e5;
     padding: 5px;
     border-radius: 3px;
     white-space: pre;
@@ -1401,6 +1412,7 @@ background-color: red;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 30px;
 }
 .brain-game-play-panel .play-panel-header .timer {
     height: 70px;
@@ -1481,6 +1493,7 @@ background-color: red;
     color: white;
     background: linear-gradient(#ff409a, #c438ef);
     border: 0;
+    box-shadow: 0 10px 27px #c438ef1a,0 -3px #ff409a inset,0 2px #c438ef inset!important;
 }
 .game-info-panel .qs-image-panel,
 .game-info-panel .qs-action-panel {
@@ -1924,8 +1937,11 @@ margin-bottom: 25px;
         margin-right: 0px !important;
     }
 
-    .game-page .game-contents .game-info-panel button {
-        margin: 0 6px 12px 0;
+    .join-game-panel .game-page .game-contents .game-info-panel button {
+        margin: 30px 0 0 0;
+    }
+    .join-game-panel   .game-page .game-contents .game-info-panel #select-buttons-panel button {
+        margin: 6px 6px;
     }
     .game-page .game-contents .game-info-panel .edit-amount-panel {
         margin-top: 0;
@@ -2003,7 +2019,7 @@ margin-bottom: 25px;
     }
 }
 @media (max-width: 400px) {
-
+    
     .mobile-only.cell-joiners svg{
         margin-left: 3px;
         margin-right: 3px;
@@ -2127,8 +2143,7 @@ margin-bottom: 25px;
     }
     
     .boxes-panel {
-        grid-template-columns: repeat(5, 1fr);
-        grid-template-rows: repeat(auto, 100px);
-        grid-gap: 0.4rem;
+        grid-template-columns: repeat(3, 1.2fr);
+        grid-gap: 0.6rem;
     }
   }

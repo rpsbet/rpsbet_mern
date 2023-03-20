@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Button, TextField } from '@material-ui/core';
 
 class AdvancedSettings extends Component {
   calcWinChance = (boxes, revenueLimit) => {
@@ -105,12 +106,22 @@ class AdvancedSettings extends Component {
                   this.props.endgame_type ? '' : 'hidden'
                 }`}
               >
-                <input
+               
+                <TextField
                   type="text"
-                  pattern="[0-9]*"
                   name="endgame_amount"
                   id="endgame_amount"
                   value={this.props.endgame_amount}
+                  inputProps={{
+                    pattern: "[0-9]*",
+                    maxLength: 9,
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  InputProps={{
+                    endAdornment: "BUSD",
+                  }}
                   onChange={e => {
                     console.log('23', )
 
@@ -133,7 +144,6 @@ class AdvancedSettings extends Component {
                   }}
                   placeholder="PAYOUT"
                 />
-                <span style={{ marginLeft: '-3.2rem' }}> BUSD</span>
               </div>
             </div>
             <p className="tip">AUTOMATIC PAYOUTS WHEN BANKROLL HITS VALUE</p>
