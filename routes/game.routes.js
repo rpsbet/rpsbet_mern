@@ -429,7 +429,7 @@ const getHistory = async (pagination, page, my_id, game_type) => {
 
     const gameLogList = await GameLog.find(search_condition)
       .sort({ created_at: 'desc' })
-      .skip(pagination * page - pagination)
+      .skip(pagination * (page - 1))
       .limit(pagination)
       .populate({ path: 'room', model: Room })
       .populate({ path: 'game_type', model: GameType })
@@ -443,12 +443,15 @@ const getHistory = async (pagination, page, my_id, game_type) => {
     return {
       history: result,
       count: count,
-      page: page
+      page: page,
+      totalPage: Math.ceil(count / pagination)
     };
   } catch (err) {
     return false;
   }
 };
+
+
 
 const updateDigitToPoint2 = number => {
   if (parseFloat(number) - parseInt(number) > 0) {

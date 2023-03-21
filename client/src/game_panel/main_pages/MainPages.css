@@ -16,7 +16,6 @@ button, button.btn {
 }
 .contents_wrapper .main-game {
     display: grid;
-    grid-template-columns: 15% 55% 30%;
     position: relative;
 }
 .chat-wrapper .chat-panel {
@@ -292,7 +291,6 @@ div.table .table-cell button.btn_end {
     height: 32px;
 }
 div.table.main-game-table::-webkit-scrollbar, div.table.main-history-table::-webkit-scrollbar, div.table.my-open-game-table::-webkit-scrollbar,
-.chat-panel.global-chat::-webkit-scrollbar,
 .modal-body .modal-content-wrapper div.modal-content-panel::-webkit-scrollbar {
     
   display: none;
@@ -391,6 +389,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     display: flex;
     align-items: center;
     font-weight: 600;
+    filter: brightness(0.6);
 }
 .game-type-panel .btn-game-type img {
     width: 32px;
@@ -522,13 +521,30 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     height: 50px;
     border-radius: 50%;
 }
+
+.chat-panel {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background-color: #f1f1f1;
+    z-index: 2;
+  }
+  
+
 .main_table_pagination button.btn_main_table_page_number {
-    margin: 0 16px 0 0;
+    margin: 0 4px 0 0;
     padding: 0 8px;
     font-size: 12px;
     color: #060607;
     line-height: 24px;
-    height: 24px;
+    height: 24px !important;
     background-color: white;
     box-shadow: none;
 }
@@ -1209,7 +1225,7 @@ input {
 .boxes-panel {
     grid-gap: 0.6rem;
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(5, 1fr);
 }
 
 .boxes-panel .box i {
@@ -1227,8 +1243,11 @@ input {
     bottom: 15px;
     cursor: pointer;
 }
+.create-game-panel .boxes-panel .box span {
+    background: rgba(0,0,0,0.2);
+    font-size: 0.8EM;
+}
 .boxes-panel .box span {
-    /* background: #7a7a7a4a; */
     color: #444;
     font-size: 11px;
     line-height: 30px;
@@ -1777,11 +1796,12 @@ bottom: 0px;
         font-size: 10px;
         padding: 0;
     }
-    .game-type-panel .btn-game-type.btn-icon.active,
+    /* .game-type-panel .btn-game-type.btn-icon.active,
     .game-type-panel .btn-game-type.btn-icon:hover {
         background: transparent;
         color: #C438EF;
-    }
+        
+    } 
     .game-type-panel .btn-game-type.btn-icon img {
         width: 56px;
         height: 56px;
@@ -1795,7 +1815,8 @@ bottom: 0px;
     .game-type-panel .btn-game-type.btn-icon.active img {
         border: 1px solid #C438EF;
     }
-    /* .game-type-panel .btn-game-type:hover img {
+    
+    .game-type-panel .btn-game-type:hover img {
         filter: invert(43%) sepia(61%) saturate(6413%) hue-rotate(269deg) brightness(94%) contrast(100%);
     } */
     .main-game h2.main-title {
@@ -1834,6 +1855,7 @@ bottom: 0px;
         width: 100%;
         bottom: 0;
         display: flex;
+        z-index: 99999;
         padding: 12px 24px;
         justify-content: space-between;
         background: #dee2e6;
@@ -2024,10 +2046,10 @@ margin-bottom: 25px;
         margin-left: 3px;
         margin-right: 3px;
     }
-    .contents_wrapper .main-game .main-panel,
-    .contents_wrapper .main-game .sub-panel {
-        padding: 12px 10px 30px;
+    div.table.my-chat-table {
+        padding: 55px 10px 10px;
     }
+   
     .game-page .pre-summary-panel {
         margin: -7.5px 0 0px;
     }
@@ -2127,7 +2149,7 @@ margin-bottom: 25px;
         position: fixed !important;
         width: 100%;
         z-index: 1;
-        bottom: 64px;
+        bottom: 80px;
         background-color: #fff;
     }
     

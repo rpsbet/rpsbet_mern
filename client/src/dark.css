@@ -31,9 +31,7 @@ background: #060607;
     background-color: #fff;    
 }
 
-.dark_mode .game_footer a, .dark_mode .game_footer{
-	color: #f2f3f5 !important;
-}
+
 
 .dark_mode 	.modal-body .modal-content-wrapper.drop-game h4 {
     background-image: url("/img/icons/modal-drop-game-dark-mode.svg");
@@ -123,8 +121,6 @@ background: #060607;
 }
 .dark_mode .main-game-page-tabs {
 	color: #8e9297;
-	/* border-bottom: 1px solid rgba(47, 49, 54, 1); */
-	border-bottom: 1px solid transparent;
 }
 .dark_mode .main-game-page-tabs .Mui-selected {
 	color: #ef38d0;

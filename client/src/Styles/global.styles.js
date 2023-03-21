@@ -27,15 +27,15 @@ body {
   
 /* Track */
 ::-webkit-scrollBar-track {
-    box-shadow: inset 0 0 5px ${styleColor.color.greyDark3}; 
-    background: ${styleColor.color.greyDark2}; 
+    box-shadow: none; 
+    background: transparent
 }
 /* Handle */
 ::-webkit-scrollBar-thumb {
     background-image:  linear-gradient(
         to right bottom,
-        rgba( 139, 138, 231 , 0.8),
-        rgba( 59, 57, 172, 0.8)
+       #212529,
+       #212529 
     );
     border-radius: 3px;
     transition: all .2s ease-out;

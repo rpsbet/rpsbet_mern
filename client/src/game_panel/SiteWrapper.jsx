@@ -57,8 +57,7 @@ import socketIOClient from 'socket.io-client';
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
-import PrivacyModal from './modal/PrivacyModal';
-import TermsModal from './modal/TermsModal';
+
 import GamePasswordModal from './modal/GamePasswordModal';
 import LoginModal from './modal/LoginModal';
 import SignupModal from './modal/SignupModal';
@@ -96,7 +95,7 @@ const darkTheme = createTheme({
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
-    height: '62px',
+    height: '48px',
     minWidth: '80px'
   }
 };
@@ -128,8 +127,7 @@ class SiteWrapper extends Component {
       showProfileModal: false,
       showPlayerModal: false,
       showHowToPlayModal: false,
-      showPrivacyModal: false,
-      showTermsModal: false,
+    
       // Get audio file in a variable
       audio: new Audio(song),
       // Set initial state of song
@@ -553,20 +551,6 @@ if (message.includes('won')) {
     this.setState({ showPlayerModal: false });
   };
 
-
-  handleOpenTermsModal = () => {
-    this.setState({ showTermsModal: true });
-  };
-  handleCloseTermsModal = () => {
-    this.setState({ showTermsModal: false });
-  };
-
-  handleOpenPrivacyModal = () => {
-    this.setState({ showPrivacyModal: true, anchorEl: null });
-  };
-  handleClosePrivacyModal = () => {
-    this.setState({ showPrivacyModal: false });
-  };
 
   handleOpenHowToPlayModal = () => {
     this.setState({ showHowToPlayModal: true });
@@ -1031,20 +1015,7 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
             
             <div className="contents_wrapper">{this.props.children}</div>
           </div>
-          {this.state.showTermsModal && (
-            <TermsModal
-              modalIsOpen={this.state.showTermsModal}
-              closeModal={this.handleCloseTermsModal}
-              isDarkMode={this.props.isDarkMode}
-            />
-          )}
-          {this.state.showPrivacyModal && (
-            <PrivacyModal
-              modalIsOpen={this.state.showPrivacyModal}
-              closeModal={this.handleClosePrivacyModal}
-              isDarkMode={this.props.isDarkMode}
-            />
-          )}
+         
           {this.state.showProfileModal && (
             <ProfileModal
               modalIsOpen={this.state.showProfileModal}
@@ -1072,8 +1043,6 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
               player_name={this.state.userName}
               balance={this.state.balance}
               isDarkMode={this.props.isDarkMode}
-              openTermsModal={this.handleOpenTermsModal}
-              openPrivacyModal={this.handleOpenPrivacyModal}
             />
           )}
           {this.state.showLoginModal && (

@@ -26,14 +26,15 @@ import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import HistoryTable from '../LiveGames/HistoryTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
-import { Tabs, Tab } from '@material-ui/core';
+import { Tabs, Tab, Drawer } from '@material-ui/core';
+import DrawerButton from './DrawerButton';
 
 
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
     width: '50%',
-    height: '62px',
+    height: '48px',
     backgroundColor: 'rgba(47, 49, 54, 0.5)'
   }
 };
@@ -52,6 +53,7 @@ class CreateGame extends Component {
       isPlayingBrain: false,
       rps_list: [],
       qs_list: [],
+      open: true,
       qs_game_type: 2,
       qs_nation: 0,
       selected_rps: '',
@@ -93,6 +95,10 @@ class CreateGame extends Component {
 
   onChangeState = async newState => {
     await this.setState(newState);
+  };
+
+  toggleDrawer = () => {
+    this.setState(prevState => ({ open: !prevState.open }));
   };
 
   async componentDidMount() {
@@ -487,10 +493,22 @@ class CreateGame extends Component {
     : 'My Stakes';
 
   render() {
+        const { open } = this.state;
     return (
-      <div className="main-game">
+      <div className="main-game" style={{ gridTemplateColumns: this.state.open ? '260px calc(70% - 260px) 30%' : '70% 30%' }}>
         {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
-          !this.state.is_mobile) && <ChatPanel />}
+          !this.state.is_mobile) &&
+          <Drawer
+          
+          className="mat-chat" style={{ display: this.state.open ? 'flex' : 'none' }}
+        variant="persistent"
+          anchor="left"
+          open={open}
+          >
+
+          <ChatPanel />
+          </Drawer>
+        }
         {!this.state.is_mobile &&
           (!this.state.selectedMobileTab === 'live_games' ||
             !this.state.selectedMobileTab === 'my_games') && (
@@ -601,6 +619,10 @@ class CreateGame extends Component {
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <MyHistoryTable />
           )}
+          <DrawerButton
+            open={this.state.open}
+            toggleDrawer={this.toggleDrawer}
+        />
         </div>
         {!this.state.is_mobile && (
           <div className="mobile-only main-page-nav-button-group">

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import Moment from 'moment';
+import { Button, Drawer } from "@material-ui/core";
 
 import RPS from '../JoinGame/RPS';
 import Spleesh from '../JoinGame/Spleesh';
@@ -27,6 +28,7 @@ import MyHistoryTable from '../MyGames/MyHistoryTable';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
+import DrawerButton from './DrawerButton';
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -41,7 +43,7 @@ const customStyles = {
   tabRoot: {
     textTransform: 'none',
     width: '50%',
-    height: '62px'
+    height: '48px'
   }
 };
 
@@ -61,14 +63,14 @@ class JoinGame extends Component {
     this.state = {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
-      numToShow: 1000,
-      isLoading: false,
+      numToShow: 10,
+      open: true,
       roomInfo: this.props.roomInfo,
       bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
       history: this.props.history
     };
-    this.lastItemRef = React.createRef();
-    this.handleScroll = this.handleScroll.bind(this);
+    this.handleLoadMore = this.handleLoadMore.bind(this);
+    this.toggleDrawer = this.toggleDrawer.bind(this);
 
   }
 
@@ -96,11 +98,6 @@ class JoinGame extends Component {
   }
 
   componentDidMount() {
-    window.addEventListener('scroll', this.handleScroll);
-    console.log('componentDidMount called');
-
-    // this.updateReminderTime();
-    // this.interval = setInterval(this.updateReminderTime(), 3000);
     this.props.getHistory();
     this.props.getGameTypeList();
     if (this.props.isAuthenticated) {
@@ -110,25 +107,22 @@ class JoinGame extends Component {
     }
     this.props.getRoomInfo(this.props.match.params.id);
   }
-
-  handleScroll = () => {
-    const lastItem = this.lastItemRef.current;
-    if (lastItem) {
-      const lastItemOffset = lastItem.offsetTop + lastItem.clientHeight;
-      const pageOffset = window.pageYOffset + window.innerHeight;
-      if (pageOffset > lastItemOffset - 20 && !this.state.isLoading) {
-        this.setState({ isLoading: true }, () => {
-          this.setState({ numToShow: this.state.numToShow + 9, isLoading: false });
-        });
-      }
-    }
-  };
   
-
   componentWillUnmount() {
     clearInterval(this.interval);
   }
+  
+   handleLoadMore() {
+     this.setState({
+       numToShow: this.state.numToShow + 10,
+     });
+   }
 
+   toggleDrawer = () => {
+    this.setState(prevState => ({ open: !prevState.open }));
+  };
+
+  
   componentDidUpdate(prevProps) {
     if (prevProps.history !== this.props.history) {
       this.setState({ history: updateFromNow(this.props.history) });
@@ -174,12 +168,6 @@ class JoinGame extends Component {
     this.props.getRoomInfo(this.props.match.params.id);
   }
 
-  // componentDidUpdate(prevProps) {
-  //   if (this.props.history !== prevProps.history) {
-  //     this.refreshHistory();
-  //   }
-  // }
-
   showOpenGameOrHistory = (e, newValue) => {
     e.preventDefault();
     this.setState({
@@ -199,11 +187,24 @@ class JoinGame extends Component {
       : 'My Stakes';
 
   render() {
+    const { open } = this.state;
+
     return (
       <>
-      <div className="main-game">
+      <div className="main-game"  style={{ gridTemplateColumns: this.state.open ? '260px calc(70% - 260px) 30%' : '70% 30%' }}>
        {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
-          !this.state.is_mobile) && <ChatPanel />}
+          !this.state.is_mobile) &&
+          <Drawer
+          
+          className="mat-chat" style={{ display: this.state.open ? 'flex' : 'none' }}
+        variant="persistent"
+          anchor="left"
+          open={open}
+          >
+
+          <ChatPanel />
+          </Drawer>
+          }
         {!this.state.is_mobile &&
           (!this.state.selectedMobileTab === 'live_games' ||
             !this.state.selectedMobileTab === 'my_games') && (
@@ -306,36 +307,37 @@ class JoinGame extends Component {
         )}
         
         <div className="room-history-panel">
-  <h2 className="room-history-title">Battle History</h2>
-  {this.props.roomInfo.room_history && this.props.roomInfo.room_history.length > 0 ? (
-    <div className="table main-history-table">
-      {this.props.roomInfo.room_history.slice(0, this.state.numToShow).map(
-        (row, key) => (
-          <div className="table-row" key={'history' + row._id}>
-            <div>
-              <div className="table-cell">
-                <div className="room-id">{row.room_name}</div>
-                <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
-                <div className="table-cell">{row.from_now}</div>
+        <h2 className="room-history-title">Battle History</h2>
+        {this.props.roomInfo && this.props.roomInfo.room_history && this.props.roomInfo.room_history.length > 0 ? (
+          <div className="table main-history-table">
+            {this.props.roomInfo.room_history.slice(0, this.state.numToShow).map(
+              (row, key) => (
+                <div className="table-row" key={'history' + row._id}>
+                  <div>
+                    <div className="table-cell">
+                      <div className="room-id">{row.room_name}</div>
+                      <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
+                      <div className="table-cell">{row.from_now}</div>
+                    </div>
+                  </div>
+                  {key === this.props.roomInfo.room_history.length - 1 && (
+                    <div ref={this.lastItemRef}></div>
+                  )}
+                </div>
+              )
+            )}
+            {this.state.numToShow < this.props.roomInfo.room_history.length && (
+              <div className="load-more-btn">
+                <Button id="load-btn" variant="contained" color="primary" onClick={this.handleLoadMore}>
+                  Load More
+                </Button>
               </div>
-            </div>
-            {key === this.props.roomInfo.room_history.length - 1 && (
-              <div ref={this.lastItemRef}></div>
             )}
           </div>
-        ),
-        this
-      )}
-      {this.state.isLoading && (
-        <div className="loading-spinner"></div>
-      )}
-    </div>
-  ) : (
-    <p>No History Yet</p>
-  )}
-</div>
-
-
+        ) : (
+          <p>No History Yet</p>
+        )}
+      </div>
 
         </div>
         <div>
@@ -358,6 +360,10 @@ class JoinGame extends Component {
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <HistoryTable />
           )}
+           <DrawerButton
+            open={this.state.open}
+            toggleDrawer={this.toggleDrawer}
+        />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <MyHistoryTable />
           )}

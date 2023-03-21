@@ -22,21 +22,21 @@ import ManageHover from '../icons/ManageHover';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 
-import { Tabs, Tab } from '@material-ui/core';
-
+import { Tabs, Tab, Drawer  } from '@material-ui/core';
+import DrawerButton from './DrawerButton';
 import './MainPages.css';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import OpenGamesTable from '../LiveGames/OpenGamesTable';
 import HistoryTable from '../LiveGames/HistoryTable';
+import Footer from './Footer';
 
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
     width: '50%',
-    height: '62px'
+    height: '48px'
   }
 };
-
 
 const defaultOptions = {
   loop: true,
@@ -54,8 +54,11 @@ class MainPage extends Component {
       balance: this.props.balance,
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
-      show_open_game: 0
+      show_open_game: 0,
+      open: true
     };
+    this.toggleDrawer = this.toggleDrawer.bind(this);
+
   }
 
   async componentDidMount() {
@@ -78,6 +81,10 @@ class MainPage extends Component {
     });
   };
 
+  toggleDrawer = () => {
+    this.setState(prevState => ({ open: !prevState.open }));
+  };
+
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0)
@@ -89,10 +96,24 @@ class MainPage extends Component {
       : 'My Battles';
 
   render() {
+    const { open } = this.state;
+
     return (
-      <div className="main-game">
+      
+      <div className="main-game" style={{ gridTemplateColumns: this.state.open ? '260px calc(70% - 260px) 30%' : '70% 30%' }}>
         {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
-          !this.state.is_mobile) && <ChatPanel />}
+          !this.state.is_mobile) &&
+          
+          <Drawer
+          
+          className="mat-chat" style={{ display: this.state.open ? 'flex' : 'none' }}
+        variant="persistent"
+          anchor="left"
+          open={open}
+          >
+            <ChatPanel />
+          </Drawer>
+          }
         {this.state.is_mobile &&
           (this.state.selectedMobileTab === 'live_games' ||
             this.state.selectedMobileTab === 'my_games') && (
@@ -167,6 +188,10 @@ class MainPage extends Component {
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <HistoryTable />
           )}
+          <DrawerButton
+            open={this.state.open}
+            toggleDrawer={this.toggleDrawer}
+        />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <MyHistoryTable />
           )}
@@ -317,6 +342,9 @@ class MainPage extends Component {
             </button>
           </div>
         )}
+            <Footer className="footer" open={this.state.open} style={{ marginLeft: this.state.open ? '270px' : '0' }} />
+
+
       </div>
     );
   }

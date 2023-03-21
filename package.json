@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fortawesome/free-brands-svg-icons": "^6.3.0",
     "@tensorflow/tfjs": "^4.2.0",
     "@tensorflow/tfjs-layers": "^4.2.0",
     "bcryptjs": "^2.4.3",

@@ -357,7 +357,7 @@ button:hover,
 #load-btn {
   background: #333;
   border-radius: 6px;
-  margin: -40px 0px 30px;
+  margin: 0px 0px 30px;
   float: right;
 }
 
@@ -400,7 +400,12 @@ div.table.my-chat-table .table-row > div.message-panel ,
   text-transform: none !important;
 }
 
-
+.social-icons svg{
+  width: 60px !important;
+    margin: 25px 0 !important;
+    font-size: 3em;
+    color: #c9c2c5;
+}
 #rps-game-type-radio span, #rps-radio span {
   margin-bottom: 6px !important;
 }
@@ -674,6 +679,8 @@ table#runs td {
 .game-type-panel .btn-game-type.active,
 .game-type-panel .btn-game-type:hover {
   color: #ef38d0;
+  transition: filter 0.2s;
+  filter: brightness(1.6);
 }
 .game-type-panel .btn-game-type:hover {
 backdrop-filter: brightness(2.5);
@@ -729,20 +736,6 @@ div[aria-label="How To Play Modal"] ul {
   margin-bottom: 0;
 }
 
-#game_footer_howto {
-  margin: 30px 0;
-  text-align: center;
-  overflow-x: scroll;
-  white-space: nowrap;
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
-}
-
-#game_footer_howto::-webkit-scrollbar,
-.join-game-panel::-webkit-scrollbar,
-.create-game-panel::-webkit-scrollbar { 
-    display: none;  /* Safari and Chrome */
-}
 
 .gamemode {
     color: #C83228;
@@ -1267,6 +1260,47 @@ circle {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+  .contents_wrapper .main-game {
+    grid-template-columns: unset !important;
+    display: block !important;
+    margin-bottom: unset !important;
+  }
+  .game-type-panel {
+    margin-top: 36px !important;
+  }
+  #footer-container {
+    padding-bottom: 90px;
+  }
+
+  .chat-wrapper .chat-panel {
+    padding: 0px 6px 0px 16px !important;
+}
+
+  .main-game-page-tabs {
+    position: fixed;
+    width: 100%;
+    background: #060607;
+    z-index: 999;
+}
+
+  .mat-chat .chat-wrapper {
+    width: unset !important;
+    overflow: auto;
+    overscroll-behavior-y: none;
+    flex: 1;
+
+  }
+
+  .bottom-footer {
+    margin-left: unset !important;
+  }
+  #footer-container {
+    width: unset !important;
+  }
+
+  .social-icons svg {
+    width: 55px !important;
+  }
   #wallet-address {
     width: calc(100vw - 90px);
 }

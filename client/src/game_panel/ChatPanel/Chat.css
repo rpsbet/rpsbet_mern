@@ -1,6 +1,7 @@
 .chat-wrapper .chat-panel.global-chat {
-    height: calc(100vh - 160px);
-    overflow-y: auto;
+    height: calc(100vh - 170px);
+    overflow-y: scroll;
+    width: 270px;
 }
 
 .chat-wrapper .chat-input-panel {
@@ -40,6 +41,61 @@
     display: inline-block;
 }
 
+#drawer-btn {
+    position: fixed !important;
+    right: 3rem;
+    bottom: 3rem;
+    z-index: 90;
+    width: 56px;
+    height: 56px !important;
+    border-bottom: 3px solid #810059;
+    border-top: 3px solid #fd5e9b;
+    background-color: rgb(228 34 250);
+}
+
+#drawer-btn:active {
+    border-bottom: 0px solid #810059;
+    border-top: 1px solid #fa5091;
+    transform: translateY(2px);
+    background-color: rgb(215, 7, 238);
+}
+
+#drawer-btn:active svg{
+    transform: translateY(0px) !important;
+    filter: unset !important;
+
+}
+
+#drawer-btn:hover {
+    filter: brightness(1.2);
+    transition: filter 0.2s, box-shadow 0.2s;
+    box-shadow: 0 3px 5px -1px #0003, 0 18px 10px #00000024, 0 1px 18px #0000001f;
+}
+
+#drawer-btn:hover svg{
+    transform: translateY(-2px);
+    transition: filter .2s;
+    filter: drop-shadow(0px 4px 2px rgba(0, 0, 0, 0.74));
+    /* box-shadow: 0 3px 5px -1px #0003, 0 18px 10px #00000024, 0 1px 18px #0000001f; */
+}
+
+.mat-chat > div {
+    border-right: none !important;
+}
+
+div.table.my-chat-table .table-row .table-cell:last-child {
+    overflow: visible;
+}
+
+.mat-chat .chat-wrapper{
+    background-color: #060607 !important;
+    padding-top: 43px;
+    overflow: hidden;
+    padding-bottom: 30px;
+    width: 270px;
+
+}
+
 .chat-wrapper .chat-input-panel .emoticon-panel > span:hover {
     transform: scale(1.15);
     transition: 0.3s;
@@ -54,11 +110,23 @@
 
 @media (max-width: 1023px) {
     .chat-wrapper .chat-panel.global-chat {
-        height: calc(100vh - 222px);
+        bottom: -50px !important;
     }
 }
 
 @media (max-width: 480px) {
+    .chat-wrapper .chat-input-panel {
+        border-top: 1px solid #111;
+    }
+    .chat-wrapper .chat-panel.global-chat {
+        height: calc(90vh - 250px);
+        width: unset;
+    }
+    
+
+    .chat {
+        width: 100vw;
+    }
     .chat-wrapper .chat-input-panel .emoticon-panel.active {
         grid-template-columns: repeat(12, 1fr);
         grid-gap: 0.7em;

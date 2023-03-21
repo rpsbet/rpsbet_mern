@@ -522,44 +522,6 @@ class HowToPlayModal extends Component {
                 </AccordionItemPanel>
               </AccordionItem>
             </Accordion>
-            
-
-            <div id="game_footer_howto">
-              <a href="https://twitter.com/rpsbet">TWITTER</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://discord.gg/anMJntW4AD">DISCORD</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://t.me/rpsfinance">TELEGRAM</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://www.youtube.com/channel/UCJRXf1HVpAdBy3Uf6eNGHkA">
-                YOUTUBE
-              </a>
-              {/* <a href="https://www.instagram.com/rpsbet.io/">INSTAGRAM</a>
-              &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp; */}
-              {/* <a href="https://www.tiktok.com/@rpsbet?lang=en">TIKTOK</a> */}
-              {/* &nbsp;&nbsp;&nbsp;&#10007;&nbsp;&nbsp;&nbsp;
-              <a href="https://rpsbet.itch.io/">ITCH</a> */}
-              <br />
-            </div>
-            <div className="game_footer text-center">
-              <span>ALL RIGHTS </span>
-              <a
-                href="https://rps.finance/"
-              >
-                RPS.FINANCE
-              </a>{' '}© 2023{' '}
-              <a
-                href="#privacy"
-                id="privacy"
-                onClick={this.props.openPrivacyModal}
-              >
-                PRIVACY
-              </a>{' '}
-              |{' '}
-              <a href="#terms" id="terms" onClick={this.props.openTermsModal}>
-                TERMS
-              </a>
-            </div>
           </div>
         </div>
       </Modal>
