@@ -5,6 +5,8 @@ import Moment from 'moment';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import PlayerModal from '../modal/PlayerModal';
+import IconButton from '@material-ui/core/IconButton';
+import {Box, Button} from '@material-ui/core';
 
 import Pagination from '../../components/Pagination';
 
@@ -98,52 +100,52 @@ class HistoryTable extends Component {
       DG: 'drop-game',
     };
 
-    const gameTypePanel = [
-      <div
-        className="btn-arrow-left"
-        key="open-game-left-button"
-        onClick={this.handleBtnLeftClicked}
-      >
-        <ChevronLeftIcon />
-      </div>,
-      <div
-        className="btn-arrow-right"
-        key="open-game-right-button"
-        onClick={this.handleBtnRightClicked}
-      >
-        <ChevronRightIcon />
-      </div>,
-      <div
-        className={`btn-game-type all-games ${
-          this.state.selectedGameType === 'All' ? 'active' : ''
-        }`}
-        key="open-game-all-game-button"
-        game_type_id={null}
-        short_name="All"
-        onClick={this.handleGameTypeButtonClicked}
-      >
-        All Games
-      </div>
-    ];
-
-    this.props.gameTypeList.map((gameType, index) => {
-      gameTypePanel.push(
-        <div
-          className={`btn-game-type ${
-            gameTypeStyleClass[gameType.short_name]
-          } ${
-            this.state.selectedGameType === gameType.short_name ? 'active' : ''
+    const gameTypePanel = (
+      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
+       <Box item key="open-game-left-button">
+          <IconButton
+            className="btn-arrow-left"
+            onClick={this.handleBtnLeftClicked}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+        </Box>,
+        <Button
+          className={`btn-game-type btn-icon all-games ${
+            this.state.selectedGameType === 'All' ? 'active' : ''
           }`}
-          game_type_id={gameType._id}
-          short_name={gameType.short_name}
-          key={index}
-          onClick={this.handleGameTypeButtonClicked}
+          key="open-game-all-game-button"
+          onClick={() => {
+            this.handleGameTypeButtonClicked('All');
+          }}
         >
-          {gameType.game_type_name}
-        </div>
-      );
-    });
-
+          All Games
+        </Button>
+        {this.props.gameTypeList.map((gameType, index) => (
+          <Button
+            className={`btn-game-type btn-icon ${
+              gameTypeStyleClass[gameType.short_name]
+            } ${
+              this.state.selectedGameType === gameType.short_name ? 'active' : ''
+            }`}
+            key={index}
+            onClick={() => {
+              this.handleGameTypeButtonClicked(gameType.short_name);
+            }}
+          >
+            {gameType.game_type_name}
+          </Button>
+        ))}
+        <IconButton
+          className="btn-arrow-right"
+          key="open-game-right-button"
+          onClick={this.handleBtnRightClicked}
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      </Box>
+    );
+    
     return gameTypePanel;
   };
 

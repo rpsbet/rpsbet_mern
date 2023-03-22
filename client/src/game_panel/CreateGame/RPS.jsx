@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
+import { Button } from '@material-ui/core';
+
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import {
   alertModal
@@ -256,51 +258,59 @@ class RPS extends Component {
               Select: Rock - Paper - Scissors!{' '}
             </h3>
             <div id="rps-radio">
-              <span
-                className={
-                  'rock' + (this.state.selected_rps === 'R' ? ' active' : '')
-                }
-                onClick={() => {
-                  this.onAddRun('R');
-                  const currentActive = document.querySelector(".active");
-                  if (currentActive) {
-                    currentActive.style.animation = "none";
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = "pulse 0.2s ease-in-out ";
-                  }
-                }}
-              ></span>
-              <span
-                className={
-                  'paper' + (this.state.selected_rps === 'P' ? ' active' : '')
-                }
-                onClick={() => {
-                  this.onAddRun('P');
-                  const currentActive = document.querySelector(".active");
-                  if (currentActive) {
-                    currentActive.style.animation = "none";
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = "pulse 0.2s ease-in-out ";
-                  }
-                }}
-              ></span>
-              <span
-                className={
-                  'scissors' +
-                  (this.state.selected_rps === 'S' ? ' active' : '')
-                }
-                onClick={() => {
-                  this.onAddRun('S');
-                  const currentActive = document.querySelector(".active");
-                  if (currentActive) {
-                    currentActive.style.animation = "none";
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = "pulse 0.2s ease-in-out ";
-                  }
-                }}
-              ></span>
-            </div>
-            <button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</button>
+  <Button
+    className={
+      'rock' + (this.state.selected_rps === 'R' ? ' active' : '')
+    }
+    variant="contained"
+    onClick={() => {
+      this.onAddRun('R');
+      const currentActive = document.querySelector(".active");
+      if (currentActive) {
+        currentActive.style.animation = "none";
+        void currentActive.offsetWidth;
+        currentActive.style.animation = "pulse 0.2s ease-in-out ";
+      }
+    }}
+  >
+    
+  </Button>
+  <Button
+    className={
+      'paper' + (this.state.selected_rps === 'P' ? ' active' : '')
+    }
+    variant="contained"
+    onClick={() => {
+      this.onAddRun('P');
+      const currentActive = document.querySelector(".active");
+      if (currentActive) {
+        currentActive.style.animation = "none";
+        void currentActive.offsetWidth;
+        currentActive.style.animation = "pulse 0.2s ease-in-out ";
+      }
+    }}
+  >
+    
+  </Button>
+  <Button
+    className={
+      'scissors' + (this.state.selected_rps === 'S' ? ' active' : '')
+    }
+    variant="contained"
+    onClick={() => {
+      this.onAddRun('S');
+      const currentActive = document.querySelector(".active");
+      if (currentActive) {
+        currentActive.style.animation = "none";
+        void currentActive.offsetWidth;
+        currentActive.style.animation = "pulse 0.2s ease-in-out ";
+      }
+    }}
+  >
+   
+  </Button>
+</div>
+            <Button id="aiplay" variant="contained" onClick={this.onAutoPlay}>Test AI Play</Button>
             {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
 </label> */}
 

@@ -5,6 +5,8 @@ import { getRoomList, setCurRoomInfo } from '../../redux/Logic/logic.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 import Battle from '../icons/Battle';
+import IconButton from '@material-ui/core/IconButton';
+import {Box, Button} from '@material-ui/core';
 
 import { updateDigitToPoint2 } from '../../util/helper';
 
@@ -40,44 +42,41 @@ class OpenGamesTable extends Component {
   };
 
 
-  joinRoom = e => {
+  joinRoom = (e) => {
     this.setState({ isClicked: true });
-
-    const creator_id = e.target.getAttribute('creator_id');
-    const bet_amount = e.target.getAttribute('bet_amount');
-
+  
+    const creator_id = e.currentTarget.dataset.creatorId;
+    const bet_amount = e.currentTarget.dataset.betAmount;
+  
     if (!this.props.isAuthenticated) {
       alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
       return;
     }
-
-    if (e.target.getAttribute('room_status') === 'finished') {
-      alertModal(
-        this.props.isDarkMode,
-        `THIS GAME HAS ENDED ALREADY`
-      );
+  
+    if (e.currentTarget.dataset.roomStatus === 'finished') {
+      alertModal(this.props.isDarkMode, `THIS GAME HAS ENDED ALREADY`);
       return;
     }
-
-    const room_id = e.target.getAttribute('_id');
+  
+    const room_id = e.currentTarget.dataset.id;
     this.props.setCurRoomInfo({
       _id: room_id,
-      game_type: e.target.getAttribute('game_type'),
+      game_type: e.currentTarget.dataset.gameType,
       bet_amount: bet_amount,
       creator_id: creator_id,
-      spleesh_bet_unit: parseInt(e.target.getAttribute('spleesh_bet_unit')),
-      box_price: parseFloat(e.target.getAttribute('box_price')),
+      spleesh_bet_unit: parseInt(e.currentTarget.dataset.spleeshBetUnit),
+      box_price: parseFloat(e.currentTarget.dataset.boxPrice),
       game_log_list: [],
       box_list: [],
       brain_game_type: {
-        _id: e.target.getAttribute('brain_game_type_id'),
-        game_type_name: e.target.getAttribute('brain_game_type_name')
+        _id: e.currentTarget.dataset.brainGameTypeId,
+        game_type_name: e.currentTarget.dataset.brainGameTypeName,
       },
-      brain_game_score: e.target.getAttribute('brain_game_score')
+      brain_game_score: e.currentTarget.dataset.brainGameScore,
     });
     history.push('/join/' + room_id);
   };
-
+  
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
     this.props.getRoomList({
@@ -94,7 +93,6 @@ class OpenGamesTable extends Component {
     this.game_type_panel.scrollLeft = this.game_type_panel.scrollWidth;
   };
 
-
   generateGameTypePanel = () => {
     const gameTypeStyleClass = {
       RPS: 'rps',
@@ -105,65 +103,52 @@ class OpenGamesTable extends Component {
       DG: 'drop-game'
     };
   
-    const gameTypePanel = [
-      <div
-        className="btn-arrow-left"
-        key="open-game-left-button"
-        onClick={this.handleBtnLeftClicked}
-      >
-        <ChevronLeftIcon />
-      </div>,
-      <div
-        className="btn-arrow-right"
-        key="open-game-right-button"
-        onClick={this.handleBtnRightClicked}
-      >
-        <ChevronRightIcon />
-      </div>,
-      <div
-        className={`btn-game-type btn-icon all-games ${
-          this.state.selectedGameType === 'All' ? 'active' : ''
-        }`}
-        key="open-game-all-game-button"
-        game_type_id={null}
-        short_name="All"
-        onClick={e => {
-          this.handleGameTypeButtonClicked('All');
-        }}
-      >
-        {/* <img src={`/img/gametype/icons/All.svg`} alt="" /> */}
-        <div>All Games</div>
-      </div>
-    ];
-  
-    const gameTypeIcons = Object.keys(gameTypeStyleClass).map(shortName => {
-      const img = new Image();
-      img.src = `/img/gametype/icons/${shortName}.svg`;
-      return img;
-    });
-  
-    this.props.gameTypeList.map((gameType, index) => {
-      gameTypePanel.push(
-        <div
-          className={`btn-game-type btn-icon ${
-            gameTypeStyleClass[gameType.short_name]
-          } ${
-            this.state.selectedGameType === gameType.short_name ? 'active' : ''
+    const gameTypePanel = (
+      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
+       <Box item key="open-game-left-button">
+          <IconButton
+            className="btn-arrow-left"
+            onClick={this.handleBtnLeftClicked}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+        </Box>,
+        <Button
+          className={`btn-game-type btn-icon all-games ${
+            this.state.selectedGameType === 'All' ? 'active' : ''
           }`}
-          game_type_id={gameType._id}
-          short_name={gameType.short_name}
-          key={index}
-          onClick={e => {
-            this.handleGameTypeButtonClicked(gameType.short_name);
+          key="open-game-all-game-button"
+          onClick={() => {
+            this.handleGameTypeButtonClicked('All');
           }}
         >
-          {/* <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" /> */}
-          <div>{gameType.game_type_name}</div>
-        </div>
-      );
-      return true;
-    });
-  
+          All Games
+        </Button>
+        {this.props.gameTypeList.map((gameType, index) => (
+          <Button
+            className={`btn-game-type btn-icon ${
+              gameTypeStyleClass[gameType.short_name]
+            } ${
+              this.state.selectedGameType === gameType.short_name ? 'active' : ''
+            }`}
+            key={index}
+            onClick={() => {
+              this.handleGameTypeButtonClicked(gameType.short_name);
+            }}
+          >
+            {gameType.game_type_name}
+          </Button>
+        ))}
+        <IconButton
+          className="btn-arrow-right"
+          key="open-game-right-button"
+          onClick={this.handleBtnRightClicked}
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      </Box>
+    );
+    
     return gameTypePanel;
   };
 
@@ -299,54 +284,55 @@ class OpenGamesTable extends Component {
   }
 </div>
                   <div className="table-cell cell-action">
-                    <button
-                      className="btn_join"
-                      onMouseDown={(event) => {
-                        this.setState({ mouseDown: true });
-                        event.currentTarget.classList.add('active');
-                      }}
-                      onMouseUp={(event) => {
-                        this.setState({ mouseDown: false });
-                        event.currentTarget.classList.remove('active');
-                        this.joinRoom(event);
-                      }}
-                      onTouchStart={(event) => {
-                        this.setState({ mouseDown: true });
-                        event.currentTarget.classList.add('active');
-                      }}
-                      onTouchEnd={(event) => {
-                        this.setState({ mouseDown: false });
-                        event.currentTarget.classList.remove('active');
-                        this.joinRoom(event);
-                      }}
-                      _id={row._id}
-                      creator_id={row.creator_id}
-                      room_status={row.status}
-                      game_type={row.game_type.game_type_name}
-                      bet_amount={row.user_bet}
-                      spleesh_bet_unit={row.spleesh_bet_unit}
-                      box_price={row.box_price}
-                      brain_game_type_id={
-                        row.brain_game_type ? row.brain_game_type._id : ''
-                      }
-                      brain_game_type_name={
-                        row.brain_game_type
-                          ? row.brain_game_type.game_type_name
-                          : ''
-                      }
-                      brain_game_score={
-                        row.brain_game_score ? row.brain_game_score : 0
-                      }
-                    >
-                      {row.is_private && (
-                        <img
-                          src="/img/icon-lock.png"
-                          alt=""
-                          className="lock-icon"
-                        />
-                      )}
-                      PLAY
-                    </button>
+                    
+<Button
+  className="btn_join"
+  onMouseDown={(event) => {
+    this.setState({ mouseDown: true });
+    event.currentTarget.classList.add('active');
+  }}
+  onMouseUp={(event) => {
+    this.setState({ mouseDown: false });
+    event.currentTarget.classList.remove('active');
+    this.joinRoom(event);
+  }}
+  onTouchStart={(event) => {
+    this.setState({ mouseDown: true });
+    event.currentTarget.classList.add('active');
+  }}
+  onTouchEnd={(event) => {
+    this.setState({ mouseDown: false });
+    event.currentTarget.classList.remove('active');
+    this.joinRoom(event);
+  }}
+  data-id={row._id}
+  data-creator-id={row.creator_id}
+  data-room-status={row.status}
+  data-game-type={row.game_type.game_type_name}
+  data-bet-amount={row.user_bet}
+  data-spleesh-bet-unit={row.spleesh_bet_unit}
+  data-box-price={row.box_price}
+  data-brain-game-type-id={
+    row.brain_game_type ? row.brain_game_type._id : ''
+  }
+  data-brain-game-type-name={
+    row.brain_game_type
+      ? row.brain_game_type.game_type_name
+      : ''
+  }
+  data-brain-game-score={
+    row.brain_game_score ? row.brain_game_score : 0
+  }
+>
+  {row.is_private && (
+    <img
+      src="/img/icon-lock.png"
+      alt=""
+      className="lock-icon"
+    />
+  )}
+  PLAY
+</Button>
                   </div>
                 </div>
                 <div className="mobile-only">

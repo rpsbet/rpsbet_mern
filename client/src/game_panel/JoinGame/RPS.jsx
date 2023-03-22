@@ -680,7 +680,8 @@ if (this.state.bet_amount > this.state.bankroll) {
             <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
             <div id="rps-radio" style={{ zIndex: 1 }}>
   {options.map(({ classname, selection }) => (
-    <span
+    <Button
+    variant="contained"
       id={`rps-${classname}`}
       className={`rps-option ${classname}${
         this.state.selected_rps === selection ? ' active' : ''
@@ -721,7 +722,9 @@ if (this.state.bet_amount > this.state.bankroll) {
           </div>
 
         </div>
-        <button
+        <Button
+        id="aiplay"
+        variant="contained"
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}
         onTouchStart={this.handleButtonClick}
@@ -746,7 +749,7 @@ if (this.state.bet_amount > this.state.bankroll) {
             )}
           </div>
         )}
-        </button>
+        </Button>
           </div>
           
           <div className="action-panel">

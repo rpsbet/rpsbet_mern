@@ -406,14 +406,11 @@ div.table.my-chat-table .table-row > div.message-panel ,
     font-size: 3em;
     color: #c9c2c5;
 }
-#rps-game-type-radio span, #rps-radio span {
-  margin-bottom: 6px !important;
-}
+
 
 #aiplay {
   display: block;
-  margin: auto !important;
-  translate: -5px 10px;
+  margin: 15px auto !important;
   
 }
 h3.game-sub-title {

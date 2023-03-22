@@ -12,7 +12,8 @@ import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
 import InlineSVG from 'react-inlinesvg';
-
+import IconButton from '@material-ui/core/IconButton';
+import {Box, Button} from '@material-ui/core';
 
 
 const defaultOptions = {
@@ -142,59 +143,52 @@ class MyGamesTable extends Component {
       DG: 'drop-game'
     };
 
-    const gameTypePanel = [
-      <div
-        className="btn-arrow-left"
-        key="open-game-left-button"
-        onClick={this.handleBtnLeftClicked}
-      >
-        <ChevronLeftIcon />
-      </div>,
-      <div
-        className="btn-arrow-right"
-        key="open-game-right-button"
-        onClick={this.handleBtnRightClicked}
-      >
-        <ChevronRightIcon />
-      </div>,
-      <div
-        className={`btn-game-type btn-icon all-games ${
-          this.state.selectedGameType === 'All' ? 'active' : ''
-        }`}
-        key="open-game-all-game-button"
-        game_type_id={null}
-        short_name="All"
-        onClick={e => {
-          this.handleGameTypeButtonClicked('All');
-        }}
-      >
-        {/* <img src={`/img/gametype/icons/All.svg`} alt="" /> */}
-        <div>All Games</div>
-      </div>
-    ];
-
-    this.props.gameTypeList.map((gameType, index) => {
-      gameTypePanel.push(
-        <div
-          className={`btn-game-type btn-icon ${
-            gameTypeStyleClass[gameType.short_name]
-          } ${
-            this.state.selectedGameType === gameType.short_name ? 'active' : ''
+    const gameTypePanel = (
+      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
+       <Box item key="open-game-left-button">
+          <IconButton
+            className="btn-arrow-left"
+            onClick={this.handleBtnLeftClicked}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+        </Box>,
+        <Button
+          className={`btn-game-type btn-icon all-games ${
+            this.state.selectedGameType === 'All' ? 'active' : ''
           }`}
-          game_type_id={gameType._id}
-          short_name={gameType.short_name}
-          key={index}
-          onClick={e => {
-            this.handleGameTypeButtonClicked(gameType.short_name);
+          key="open-game-all-game-button"
+          onClick={() => {
+            this.handleGameTypeButtonClicked('All');
           }}
         >
-          {/* <img src={`/img/gametype/icons/${gameType.short_name}.svg`} alt="" /> */}
-          <div>{gameType.game_type_name}</div>
-        </div>
-      );
-      return true;
-    });
-
+          All Games
+        </Button>
+        {this.props.gameTypeList.map((gameType, index) => (
+          <Button
+            className={`btn-game-type btn-icon ${
+              gameTypeStyleClass[gameType.short_name]
+            } ${
+              this.state.selectedGameType === gameType.short_name ? 'active' : ''
+            }`}
+            key={index}
+            onClick={() => {
+              this.handleGameTypeButtonClicked(gameType.short_name);
+            }}
+          >
+            {gameType.game_type_name}
+          </Button>
+        ))}
+        <IconButton
+          className="btn-arrow-right"
+          key="open-game-right-button"
+          onClick={this.handleBtnRightClicked}
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      </Box>
+    );
+    
     return gameTypePanel;
   };
 
@@ -256,12 +250,12 @@ class MyGamesTable extends Component {
         </div>
         <div className="create-room-btn-panel">
           <label>BECOME THE HOUSE ➜</label>
-          <button
+          <Button
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}
           >
             CREATE BATTLE
-          </button>
+          </Button>
         </div>
         <div className="table my-open-game-table">
           {this.props.myGames.length > 0 && (
@@ -319,7 +313,7 @@ class MyGamesTable extends Component {
 </div>
 
                     <div className="table-cell action desktop-only">
-                    <button
+                    <Button
       className="btn_end"
       onMouseDown={() => this.handleButtonClick(row.winnings, row._id)}
       onMouseUp={() => this.handleButtonRelease(row._id)}
@@ -327,13 +321,13 @@ class MyGamesTable extends Component {
       _id={row._id}
     >
       {this.state[row._id] && this.state[row._id].holding ? `${(this.state[row._id].timeLeft / 1000).toFixed(2)}s` : 'UNSTAKE'}
-    </button>
+    </Button>
                     </div>
                   </div>
                   <div className="mobile-only">
                     <div className="table-cell room-id"></div>
                     <div className="table-cell action">
-                    <button
+                    <Button
       className="btn_end"
       onMouseDown={() => this.handleButtonClick(row.bet_amount, row._id)}
       onMouseUp={() => this.handleButtonRelease(row._id)}
@@ -344,7 +338,7 @@ class MyGamesTable extends Component {
       _id={row._id}
     >
       {this.state[row._id] && this.state[row._id].holding ? `${(this.state[row._id].timeLeft / 1000).toFixed(2)}s` : 'UNSTAKE'}
-    </button>
+    </Button>
                     </div>
                   </div>
                 </div>
