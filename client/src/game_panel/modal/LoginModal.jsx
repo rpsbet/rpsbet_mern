@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import './Modals.css';
+import { Button, TextField } from '@material-ui/core';
 
 import { userSignIn, getUser } from '../../redux/Auth/user.actions';
 import { getMyGames, getMyHistory, getMyChat } from '../../redux/Logic/logic.actions';
@@ -79,11 +80,27 @@ class LoginModal extends Component {
                         <h4>WELCOME BACK! 🔫🤠</h4>
                         <h2>LOGIN TO RPSBET.IO</h2>
                         <form onSubmit={this.onSubmitForm}>
-                            <p>USERNAME OR EMAIL</p>
-                            <input type="text" className="form-control" id="email" value={this.state.email} onChange={this.onChangeEmail} />
-                            <p className="has-forgot-password">PASSWORD <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>FORGOT PASSWORD?</span></p>
-                            <input type="password" className="form-control" id="password" value={this.state.password} onChange={this.onChangePassword} />
-                            <button className="btn-submit">Login</button>
+                            <TextField
+                                type="text"
+                                className="form-control"
+                                variant="outlined"
+                                label="Email or Username"
+                                id="email"
+                                value={this.state.email}
+                                onChange={this.onChangeEmail}
+                            />
+                            <TextField
+                                type="password"
+                                className="form-control"
+                                id="password"
+                                value={this.state.password}
+                                label="Password"
+                                variant="outlined"      
+                                autoComplete="current-password"
+                                onChange={this.onChangePassword}
+                            />
+                             {/* <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>FORGOT PASSWORD?</span> */}
+                            <Button  onClick={this.onSubmitForm} className="btn-submit">Login</Button>
                             <p className="m-0 sm-text-center">NEWBIE? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>GET REGISTERED →</button></p>
                         </form>
                     </div>

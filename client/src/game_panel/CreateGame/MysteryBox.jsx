@@ -328,12 +328,12 @@ class MysteryBox extends Component {
             </div>
           </div>
           <div class="box-btn-row">
-          <button className="other" onClick={this.onAddBox}>
+          <Button className="other" onClick={this.onAddBox}>
             Add box
-          </button>
-          <button id="add-ten" onClick={this.onAddTenBoxes}>
+          </Button>
+          <Button id="add-ten" onClick={this.onAddTenBoxes}>
             Add 10 boxes
-          </button>
+          </Button>
           </div>
           <a
             href="/#"

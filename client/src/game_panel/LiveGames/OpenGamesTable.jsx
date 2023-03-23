@@ -112,7 +112,7 @@ class OpenGamesTable extends Component {
           >
             <ChevronLeftIcon />
           </IconButton>
-        </Box>,
+        </Box>
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''

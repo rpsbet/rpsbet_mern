@@ -5,6 +5,7 @@ import { getChatRoomInfo, addChatLog } from '../../redux/Logic/logic.actions';
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Avatar from "../../components/Avatar";
+import { Button } from '@material-ui/core';
 
 const moment = require('moment');
 
@@ -129,9 +130,9 @@ class ChatPage extends Component {
                         <span role="img" aria-label="" onClick={this.insertEmoji}>🚀</span>
                         <span role="img" aria-label="" onClick={this.insertEmoji}>🥩</span>
                     </div>
-                    <button className="btn-show-emoticon" onClick={() => {this.setState({showEmojiPanel: !this.state.showEmojiPanel})}}></button>
+                    <Button className="btn-show-emoticon" onClick={() => {this.setState({showEmojiPanel: !this.state.showEmojiPanel})}}></Button>
                     <input type="text" className="form-control" placeholder="TYPE SOMETHING..." onKeyDown={this.onTextAreaKeyDown} onChange={this.onChangeText} value={this.state.text} ref={(elem) => {this.textarea = elem}} />
-                    <button className="btn-send-message" onClick={this.sendMessage}><FontAwesomeIcon icon={faPaperPlane} /></button>
+                    <Button className="btn-send-message" onClick={this.sendMessage}><FontAwesomeIcon icon={faPaperPlane} /></Button>
                 </div>
             </div>
         );

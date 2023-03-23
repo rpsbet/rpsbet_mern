@@ -3,6 +3,7 @@ import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { setChatRoomInfo } from '../../redux/Logic/logic.actions';
 import history from '../../redux/history';
+import { Button } from '@material-ui/core';
 
 import { acGetCustomerInfo, getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Avatar from '../../components/Avatar';
@@ -143,7 +144,7 @@ class PlayerModal extends Component {
                                     getRoomStatisticsData={this.props.getRoomStatisticsData}
                                 />
                                 <div className='align-center'>
-                                <button className="btn btn_join send-msg" onClick={this.handleOpenChat}>Send Message</button>
+                                <Button className="btn btn_join send-msg" onClick={this.handleOpenChat}>Send Message</Button>
                             </div>
                             </div>
                         )}

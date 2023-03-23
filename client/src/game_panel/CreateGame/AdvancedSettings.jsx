@@ -43,10 +43,10 @@ class AdvancedSettings extends Component {
         {this.props.step === 1 && (
           <div className="game-privacy-panel game-info-panel">
             <h3 className="game-sub-title">Privacy</h3>
-            <div className="radio-button-group">
-              <button
+            <div className="radio-button-group bet-amounts">
+              <Button
                 className={
-                  'radio-button' + (!this.props.is_private ? ' selected' : '')
+                 (!this.props.is_private ? ' active' : '')
                 }
                 onClick={() => {
                   this.props.onChangeState({
@@ -56,20 +56,23 @@ class AdvancedSettings extends Component {
                 }}
               >
                 Public
-              </button>
-              <button
+              </Button>
+              <Button
                 className={
-                  'radio-button' + (this.props.is_private ? ' selected' : '')
+                  (this.props.is_private ? ' active' : '')
                 }
                 onClick={() => {
                   this.props.onChangeState({ is_private: true });
                 }}
               >
                 Private
-              </button>
-              <input
+              </Button>
+              <TextField
                 type="text"
                 id="betamount"
+                InputLabelProps={{
+                  shrink: true,
+                }}
                 value={this.props.room_password}
                 onChange={e => {
                   this.props.onChangeState({ room_password: e.target.value });
@@ -84,23 +87,23 @@ class AdvancedSettings extends Component {
         {this.props.step === 2 && (
           <div className="game-info-panel payout-info-panel">
             <h3 className="game-sub-title">Payout</h3>
-            <div className="select-buttons-panel">
-              <button
+            <div className="select-buttons-panel bet-amounts">
+              <Button
                 className={!this.props.endgame_type ? ' active' : ''}
                 onClick={() => {
                   this.props.onChangeState({ endgame_type: false });
                 }}
               >
                 Manual
-              </button>
-              <button
+              </Button>
+              <Button
                 className={this.props.endgame_type ? ' active' : ''}
                 onClick={() => {
                   this.props.onChangeState({ endgame_type: true });
                 }}
               >
                 Automatic
-              </button>
+              </Button>
               <div
                 className={`edit-amount-panel ${
                   this.props.endgame_type ? '' : 'hidden'
@@ -123,7 +126,6 @@ class AdvancedSettings extends Component {
                     endAdornment: "BUSD",
                   }}
                   onChange={e => {
-                    console.log('23', )
 
                     if (this.props.game_mode === 'Mystery Box') {
                       this.props.onChangeState({

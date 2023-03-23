@@ -5,6 +5,8 @@ import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Modal from 'react-modal';
+import { Button } from '@material-ui/core';
+
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
@@ -167,8 +169,8 @@ class WithdrawModal extends Component {
                                
                                  
                                     <div className="modal-action-panel">
-                                        <button className="btn-submit" onClick={this.send}>Withdraw</button>
-                                        <button className="btn-back" onClick={this.props.closeModal}>CANCEL</button>
+                                        <Button className="btn-submit" onClick={this.send}>Withdraw</Button>
+                                        <Button className="btn-back" onClick={this.props.closeModal}>CANCEL</Button>
                                     </div>
                                 </div>
                             </div>

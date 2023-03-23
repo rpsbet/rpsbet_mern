@@ -54,7 +54,7 @@ class DefaultBetAmountPanel extends Component {
         <h3 className="game-sub-title">BANKROLL</h3>
         <div className="bet-amounts">
           {this.state.defaultBetAmounts.map((amount, index) => (
-            <button
+            <Button
               className={
                 !this.state.is_other && this.props.bet_amount === amount
                   ? ' active'
@@ -82,16 +82,16 @@ class DefaultBetAmountPanel extends Component {
               key={index}
             >
               {convertToCurrency(updateDigitToPoint2(amount))}
-            </button>
+            </Button>
           ))}
-          <button
+          <Button
             className={this.state.is_other ? 'other active' : 'other'}
             onClick={() => {
               this.setState({ is_other: true });
             }}
           >
             Other
-          </button>
+          </Button>
         </div>
         <div
           className={`edit-amount-panel ${this.state.is_other ? '' : 'hidden'}`}

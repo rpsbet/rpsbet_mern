@@ -4,6 +4,8 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 import InlineSVG from 'react-inlinesvg';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
+import { Button } from '@material-ui/core';
+
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
 import { FaClipboard } from 'react-icons/fa';
@@ -233,7 +235,7 @@ class Spleesh extends Component {
     let panel = [];
     for (let i = 1; i <= 10; i++) {
       panel.push(
-        <button
+        <Button
           className={
             this.state.bet_amount / this.props.spleesh_bet_unit === i
               ? ' active'
@@ -251,7 +253,7 @@ class Spleesh extends Component {
           {convertToCurrency(
             updateDigitToPoint2(i * this.props.spleesh_bet_unit)
           )}
-        </button>
+        </Button>
       );
     }
     return panel;
@@ -452,7 +454,7 @@ joinGame2 = async (nextGuess) => {
 
             </p>
             <h3 className="game-sub-title">Your Number</h3>
-            <div id="select-buttons-panel">{this.createNumberPanel()}</div>
+            <div id="select-buttons-panel bet-amounts">{this.createNumberPanel()}</div>
             <button
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}

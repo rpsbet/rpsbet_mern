@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
+import { Button } from '@material-ui/core';
+
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import {
   alertModal
@@ -300,16 +302,16 @@ class DropGame extends Component {
               <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
               </div>
               <div className='addRun'>
-              <button 
+              <Button 
                   onClick={() => {
                     this.onAddRun(this.state.drop_amount);
 
                   }}>
                     Add Run
-              </button>
+              </Button>
               </div>
             </div>
-            <button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</button>
+            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</Button>
             {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
 </label> */}
 

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { createRoom } from "../../redux/Logic/logic.actions";
 import axios from '../../util/Api';
+import { Button } from '@material-ui/core';
 
 class PlayBrainGame extends Component {
 	constructor(props) {
@@ -123,7 +124,7 @@ class PlayBrainGame extends Component {
 					</div>
 					<div className="answer-panel">
 						{this.state.answers.map((answer, index) => (
-							<button key={index} className="answer other" onClick={this.onClickAnswer} _id={answer._id}>{answer.answer}</button>
+							<Button key={index} className="answer other" onClick={this.onClickAnswer} _id={answer._id}>{answer.answer}</Button>
 						))}
 					</div>
 				</div>

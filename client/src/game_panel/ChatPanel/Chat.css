@@ -96,6 +96,14 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 
 }
 
+.chat-input {
+    border-radius: 4px !important;
+}
+
+.chat-input:focus {
+    border: 2px solid #212529 !important
+}
+
 .chat-wrapper .chat-input-panel .emoticon-panel > span:hover {
     transform: scale(1.15);
     transition: 0.3s;

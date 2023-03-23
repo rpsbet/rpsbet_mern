@@ -4,6 +4,7 @@ import history from '../../redux/history';
 import { setChatRoomInfo } from '../../redux/Logic/logic.actions';
 import Avatar from "../../components/Avatar";
 import Moment from 'moment';
+import {Button} from '@material-ui/core';
 
 class MyChat extends Component {
 	constructor(props) {
@@ -16,13 +17,18 @@ class MyChat extends Component {
 	}
 
 	openChat = (e) => {
+		const { avatar, username } = e.currentTarget.dataset;
+		const chatRoomId = e.currentTarget.dataset.id;
+	  
 		this.props.setChatRoomInfo({
-			avatar: e.target.getAttribute('avatar'),
-			username: e.target.getAttribute('username'),
-			chatLogs: []
+		  avatar,
+		  username,
+		  chatLogs: []
 		});
-		history.push('/chat/' + e.target.getAttribute('_id'));
-	}
+	  
+		history.push('/chat/' + chatRoomId);
+	  }
+	  
 
 	static getDerivedStateFromProps(props, current_state) {
 		return {
@@ -63,15 +69,16 @@ class MyChat extends Component {
 										<div className="table-cell">
 										</div>
 										<div className="table-cell">
-											<button 
-												className="btn btn_join" 
-												onClick={this.openChat}
-												_id={this.state.myChat[row]._id} 
-												avatar={this.state.myChat[row].avatar} 
-												username={this.state.myChat[row].username} 
+										<Button 
+											className="btn btn_join" 
+											onClick={this.openChat}
+											data-id={this.state.myChat[row]._id} 
+											data-avatar={this.state.myChat[row].avatar} 
+											data-username={this.state.myChat[row].username} 
 											>
-												Open
-											</button>
+											Open
+											</Button>
+
 										</div>
 									</div>
 								</div>

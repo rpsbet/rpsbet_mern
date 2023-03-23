@@ -3,8 +3,12 @@
     width: 100%;
     z-index: 2;
     background-color: white;
-    height: 48px;
+    height: 49px;
     top: 0;
+}
+
+a#btn_how_to_play {
+    margin-right: 15px !important;
 }
 
 .input-wrapper {
@@ -112,23 +116,21 @@ cursor: pointer;
     direction: rtl;
 }
 
-.game_header .main_header span#balance {
+#balance {
     height: 32px;
-    margin: 0 32px;
-    padding: 0 16px;
+    padding: 0px 0px 32px 8px;
     color: white;
+    line-height: 28px;
     cursor: pointer;
-    border-radius: 6px;
-    background: linear-gradient(to top, #fa3fa0, #c438ef);
-    font-size: 16px;
+    border-radius: 0.25em;
+    background: #101010;
+    font-size: 0.75em;
     font-weight: 600;
-    line-height: 32px;
     white-space: nowrap;
-    box-shadow: 0 0 3px 1px #c438ef;
+    border: 1px solid #151515;
 }
-.game_header .main_header span#balance:hover {
-    box-shadow: 0 0 3px 3px #c438efa6;
-    transition: 0.1s;
+#balance svg{
+    color: #fff;
 }
 
 .game_header .main_header .header_action_panel {
@@ -163,11 +165,6 @@ cursor: pointer;
     transform: translateX(0%);
   }
   
-  
-
-.game_header .main_header .header_action_panel button:hover {
-    border-radius: 6px;
-}
 
 .chat-content .avatar {
     margin-bottom: 5px;
@@ -182,29 +179,14 @@ cursor: pointer;
     border: 2px solid #dc3ccd;
 }
 
-.game_header .main_header .header_action_panel button#btn-login {
-    height: 31px;
-    background: transparent;
-    color: #747f8d;
-    border: 1px solid #d3d7db;
-    border-radius: 40px;
-    padding: 0 20px;
-    font-weight: 600;
-    margin: 0 10px;
-}
-
 .game-page .pre-summary-panel > div.host-display-name {
     background-size: 2em;
 }
 
+.game_header .main_header .header_action_panel button#btn-login,
 .game_header .main_header .header_action_panel button#btn-signup {
-    height: 31px;
-    background-image: linear-gradient(to top, #ff409a, #c438ef);
-    color: white;
-    border-radius: 6px;
-    padding: 0 20px;
-    font-weight: 600;
-    box-shadow: 0 0 5px 0px #ff409a;
+    height: 32px !important;
+    
 }
 
 .dark_mode_toggle {
@@ -258,8 +240,13 @@ ul[role=menu] li:hover {
 }
 
 @media (max-width: 768px) {
-    .game_header .main_header span#balance {
-        font-size: 13px;
+
+    div.table .dont-have-game-msg div {
+        font-size: 0.75em;
+        font-weight: 600;
+    }
+    .game_header {
+        height: 62px;
     }
     .game_header .main_header {
         padding: 8px 16px;
@@ -270,9 +257,7 @@ ul[role=menu] li:hover {
         margin-right: 20px;
         background-image: url("/img/game-logo-mobile.svg");
     }
-    .game_header .main_header #btn_how_to_play {
-        margin-right: 20px;
-    }
+ 
     .game_header .main_header #btn_how_to_play span {
         display: none;
     }

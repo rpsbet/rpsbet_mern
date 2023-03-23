@@ -6,6 +6,8 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { BigNumber } from 'ethers';
+import { Button } from '@material-ui/core';
+
 import { tokenAddr, adminWallet } from '../../config/index.js';
 import abi from '../../config/abi_token.json';
 import { FaClipboard } from 'react-icons/fa';
@@ -172,12 +174,12 @@ class DepositModal extends Component {
                 
                 </div>
                 <div className="modal-action-panel">
-                  <button className="btn-submit" onClick={this.send}>
+                  <Button className="btn-submit" onClick={this.send}>
                     Deposit
-                  </button>
-                  <button className="btn-back" onClick={this.props.closeModal}>
+                  </Button>
+                  <Button className="btn-back" onClick={this.props.closeModal}>
                     CANCEL
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

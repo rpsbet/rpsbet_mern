@@ -165,11 +165,16 @@ div.table.my-chat-table .table-row .table-cell[title="Unread message"] {
     box-shadow: 0px 0px 7px #87000d;
     transition: transform 0.1s ease-in-out;
 }
+#stop {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+}
 #stop span {
-    padding-right: 20px;
+    padding-right: 10px;
 }
 #stop div {
-    translate: 26px -25px;
+    padding-bottom: 3px;
 }
 div.table.my-chat-table .table-row .table-cell[title="Unread message"]:hover {
     animation: 2s;
@@ -223,7 +228,18 @@ div.table .table-header {
     transition:cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
+a img {
+    margin: 0 5px 3px 2px !important;
+}
 
+a {
+    color: #b9bbbe;
+    font-weight: 600;
+}
+a:hover {
+    text-decoration: none;
+    color: #e5e5e5;
+}
 .table {
     color: #666666;
 }
@@ -243,17 +259,20 @@ div.table .table-row .table-cell img.avatar {
     border-radius: 9px;
         border: 3px solid #dc3ccd;
 }
-div.table .table-row .table-cell button:last-child {
+div.table .table-row .table-cell button:last-child,
+.game_header .main_header .header_action_panel button#btn-login,
+#balance button  {
     padding: 0;
-    border-radius: 6px;
+    border-radius: 0.25em;
     color: white;
-    line-height: 32px;
+    line-height: 40px;
     font-weight: 600;
     background: linear-gradient(to top, #15ea21, #28a745) padding-box, linear-gradient(to top, #28a745, #15ea21) border-box;
     box-shadow: 0 10px 27px #00ff0c1a,0 -3px #00913c inset,0 2px #35d87b inset!important;
 }
 div.table .table-row .table-cell button.active,
-div.table .table-row .table-cell button:active,
+#balance button:active,
+.game_header .main_header .header_action_panel button#btn-login:active,
 .btn-create-room:focus,
 .btn-create-room.active {
     background-color: #00bf49;
@@ -272,6 +291,8 @@ div.table .table-row .table-cell button:active,
     margin: auto 5px auto 3px;
 }
 div.table .table-row .table-cell button:last-child:hover,
+#balance button:hover,
+.game_header .main_header .header_action_panel button#btn-login:hover,
 .btn-create-room:hover {
     transform: translateY(-1px);
     filter: brightness(1.06);
@@ -365,7 +386,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     display: flex;
     justify-content: left;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     overflow-x: auto;
     transition: 1s;
     -webkit-scroll-behavior-duration: 0.5s;
@@ -732,11 +753,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     font-weight: 500;
     color: #212529;
 }
-.contents_wrapper .game-page .page-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+
 .contents_wrapper .game-page .page-title h2 {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' fill='none' viewBox='0 0 40 40'%3E%3Cpath fill='%23060607' fill-rule='evenodd' d='M2.25 14.821c0-3.905 3.166-7.071 7.071-7.071H30.18c3.905 0 7.071 3.166 7.071 7.071v6.143c.58.504 1.085 1.09 1.5 1.74v-7.883c0-4.733-3.838-8.571-8.571-8.571H9.32C4.588 6.25.75 10.088.75 14.821v11.805c0 3.974 3.221 7.195 7.195 7.195 2.726 0 5.217-1.54 6.436-3.977l.618-1.237h9.162c-.099-.485-.154-.987-.16-1.5h-9.465c-.284 0-.544.16-.671.415l-.826 1.651c-.965 1.93-2.937 3.148-5.094 3.148-3.145 0-5.695-2.55-5.695-5.695V14.821zm8.929-1.303v3.16H8.018v1.5h3.16v3.161h1.5v-3.16h3.161v-1.5h-3.16v-3.161h-1.5zm12.482 7.268h2.607v-1.5H23.66v1.5zm5.214-5.215h2.607v-1.5h-2.607v1.5z' clip-rule='evenodd'/%3E%3Cpath stroke='%23060607' stroke-width='1.5' d='M32.75 25L29.75 34M28 29.25L38 29.25'/%3E%3C/svg%3E%0A");
     background-repeat: no-repeat;
@@ -879,11 +896,11 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     margin: auto !important;
 }
 .game-page .game-contents .summary-panel .summary-info .summary-item {
-    font-size: 16px;
+    font-size: 0.75em;
     color: #060607;
     display: flex;
     justify-content: space-between;
-    padding: 16px;
+    padding: 10px 15px;
     font-weight: 500;
 }
 .game-page .game-contents .summary-panel .summary-info .summary-item .summary-item-value {
@@ -924,6 +941,7 @@ overflow: hidden;
     font-size: 1em;
     border-radius: 6px;
     font-weight: 600;
+    margin: 0 5px 10px;
     transform: translateY(-1px);
     color: #e5e5e5;
     background-image: linear-gradient(to top, #5a5a5a, #a39d9d);
@@ -1119,31 +1137,41 @@ table#runs td svg {
     background-position: center;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='135' height='116' fill='none' viewBox='0 0 135 116'%3E%3Cpath fill='silver' d='M94.85 58.223l-13.488 3.742c.484 1.509.786 3.078 1.028 4.647 4.96-1.569 9.255-2.897 10.223-3.198 2.782-.845 2.238-5.191 2.238-5.191z'/%3E%3Cpath fill='%2337353A' d='M88.439 59.973c-2.298.664-4.657 1.268-7.016 1.992.483 1.509.786 3.078 1.028 4.647 2.298-.724 4.536-1.448 6.714-2.112 1.814-.543 4.839-.664 4.839-3.139 0-3.862-3.871-1.87-5.565-1.388z' opacity='.14'/%3E%3Cpath fill='%236D6E71' d='M81.785 63.474l13.066-3.742v-1.509l-13.489 3.742c.181.483.303 1.026.424 1.509z'/%3E%3Cpath fill='%23B9BBBE' d='M96 68.846c-1.028 10.743-8.831 17.503-23.65 20.52-5.626 1.147-10.404 1.57-14.396 1.268-3.448-.422-6.412-3.682-8.71-9.838-1.21-3.138-1.997-6.156-2.48-9.355.06-.12.302-.242.786-.242 3.327 1.026 7.38 2.173 12.158 3.44 3.448.785 6.593.785 9.012.303 2.904-.664 5.323-2.052 7.138-4.225-.545-2.233-2.662-4.346-6.29-6.338-2.239-1.328-5.808-2.957-10.889-4.889-2.42-.905-5.988-2.414-10.403-4.285-3.146-1.63-4.779-3.078-5.02-4.406-.666-3.621 0-7.242 2.419-10.743 4.294-6.036 9.012-10.924 14.033-14.485 5.08-3.32 11.553-6.217 19.477-8.571 4.355 5.13 7.379 10.14 9.012 14.968-7.198-.664-21.533 4.648-23.892 11.649-.484.966.06 1.75 1.149 2.293.302.121 1.21.423 2.299.544 8.105 1.81 15 5.19 20.505 10.019 4.476 3.802 6.956 7.423 7.681 10.924.06.543.06.966.06 1.449z'/%3E%3Cpath fill='%23E75441' d='M34.968 76.33c.726 2.414 2.541 4.285 4.84 5.492 2.842 1.509 6.532 1.871 9.98.785 1.512-.483 2.843-1.207 3.992-2.052.06-.06.181-.121.302-.242 5.202-4.345 11.735-6.76 11.735-6.76l1.391-6.277-9.92 2.777c-.786-2.173-2.42-3.863-4.476-5.01-2.6-1.448-5.988-1.931-9.375-1.086-6.29 1.509-10.162 7.061-8.468 12.373zm10.102-7.545c1.935-.483 3.931-.301 5.504.544.666.362 1.573 1.026 1.936 2.112.786 2.293-1.21 5.07-4.537 6.035-1.935.604-4.113.423-5.685-.422-.726-.362-1.634-1.086-1.997-2.173-.786-2.414 1.452-5.19 4.779-6.096z'/%3E%3Cpath fill='%23F5F5F5' d='M77.733 95.463c.363-3.561-.545-7.002-2.238-9.537-1.33-1.991-3.206-3.44-5.323-3.983l1.452-10.623.484-3.681 3.387-25.652s-4.234 0-4.718 2.897c-.363 2.354-3.388 21.246-4.96 28.67 0 0-1.512 7.061-5.02 12.976-.061.12-.121.241-.182.302v.06c-.665 1.267-1.21 2.716-1.452 4.346-.605 3.742.182 7.484 1.996 10.26 1.452 2.233 3.448 3.803 5.868 4.285 5.262 1.026 10.04-3.681 10.706-10.32zm-9.98 4.587c-1.15-.242-1.876-1.087-2.36-1.811-1.028-1.57-1.451-3.742-1.149-5.855.545-3.5 2.904-5.975 5.202-5.432 1.089.242 1.815 1.087 2.238 1.75.968 1.51 1.452 3.562 1.15 5.614-.364 3.621-2.723 6.216-5.082 5.734z'/%3E%3Cpath fill='%23E75441' d='M77.733 95.463c.363-3.561-.545-7.002-2.238-9.537-1.33-1.992-3.206-3.44-5.323-3.983l1.452-10.623-5.807 2.233s-1.512 7.062-5.02 12.977c-.061.12-.121.241-.182.302v.06c-.665 1.267-1.21 2.716-1.452 4.346-.605 3.742.182 7.484 1.996 10.26 1.452 2.233 3.448 3.802 5.868 4.285 5.262 1.026 10.04-3.681 10.706-10.32zm-9.98 4.587c-1.15-.242-1.876-1.087-2.36-1.811-1.028-1.57-1.451-3.742-1.149-5.855.545-3.5 2.904-5.975 5.202-5.432 1.089.242 1.815 1.087 2.238 1.75.968 1.51 1.452 3.562 1.15 5.614-.364 3.621-2.723 6.216-5.082 5.734z'/%3E%3Cpath fill='%2337353A' d='M70.232 70.053c-.362.422-1.028.422-1.451 0-.484-.423-.545-1.087-.182-1.51.363-.422 1.029-.422 1.452 0 .423.423.484 1.087.181 1.51z'/%3E%3Cpath fill='%231C75BC' d='M74.588 42.048l-4.053 29.634 1.089-.362 3.87-29.333-.906.06z' opacity='.28'/%3E%3Cpath fill='%236D6E71' d='M71.624 71.32l4.113-1.207-3.387-4.285-.726 5.492z'/%3E%3Cpath fill='%23231F20' d='M67.208 67.276l-2.54.725-.242 6.216 1.39-.664 1.392-6.277z' opacity='.19'/%3E%3Cpath fill='%23231F20' d='M67.208 67.276l-1.15.302-2.66 6.941 2.419-.966 1.391-6.277z' opacity='.45'/%3E%3Cpath fill='%23231F20' d='M75.071 93.712c.424-4.587-1.935-8.63-5.262-8.932-3.266-.363-6.29 3.078-6.653 7.665-.424 4.587 1.935 8.631 5.262 8.932 3.266.363 6.23-3.078 6.653-7.665zm-6.956 7.122c-2.6-.362-4.536-3.802-4.355-7.665.242-3.863 2.48-6.7 5.142-6.277 2.6.362 4.536 3.802 4.355 7.665-.242 3.863-2.54 6.639-5.142 6.277zM48.82 79.287c3.992-1.931 6.11-5.975 4.718-9.114-1.391-3.138-5.807-4.104-9.86-2.172-3.991 1.931-6.108 5.975-4.717 9.113 1.39 3.139 5.806 4.105 9.86 2.173zm-8.347-3.138c-1.21-2.596.484-5.915 3.81-7.424 3.327-1.51 6.956-.664 8.166 1.931s-.484 5.915-3.81 7.424c-3.327 1.509-6.956.664-8.166-1.931z' opacity='.1'/%3E%3C/svg%3E%0A");
 }
-.game-page .game-contents .action-panel button {
+.game-page .game-contents .action-panel button,
+#btn-signup,
+button.btn-submit 
+{
     height: 40px;
+    margin: 0 15px;
     background-image: linear-gradient(to top, #ff409a, #c438ef);
     color: white;
-    border-radius: 6px;
+    border-radius: 0.25em;
     padding: 0 20px;
     font-weight: 600;
     
 }
-.create-game-panel .game-page .game-contents .action-panel {
+.create-game-panel .game-page .game-contents .action-panel
+    {
     display: flex;
     justify-content: space-between;
 }
-.create-game-panel .game-page .game-contents .action-panel button {
-    box-shadow: 0 -1px 0px #ff409a,0 -4px #c438ef inset,0 2px #e438ef inset!important;
+.create-game-panel .game-page .game-contents .action-panel button,
+#btn-signup,
+button.btn-submit {
+    box-shadow: 0 -0.5px 0px #ff409a,0 -3px #c438ef inset,0 2px #e438ef inset!important;
 }
-.create-game-panel .game-page .game-contents .action-panel button:hover {
+.create-game-panel .game-page .game-contents .action-panel button:hover,
+#btn-signup:hover,
+button.btn-submit:hover {
 transform: translateY(-1px);
 filter: brightness(1.06);
 transition: 0.5s;
 }
-.create-game-panel .game-page .game-contents .action-panel button:active {
-
-background-color: #ff409a;
-box-shadow: none!important;
+.create-game-panel .game-page .game-contents .action-panel button:active,
+#btn-signup:active,
+button.btn-submit:active {
+    background-color: #ff409a;
+    box-shadow: none!important;
 }
 
 .game-page .game-contents .action-panel button:disabled {
@@ -1791,7 +1819,7 @@ bottom: 0px;
     }
     .game-type-panel .btn-game-type.btn-icon {
         display: block;
-        margin-right: 16px;
+        width: 130px;
         font-size: 10px;
         padding: 0;
     }
@@ -1909,7 +1937,8 @@ bottom: 0px;
         display: block;
     }
     .contents_wrapper .game-page .page-title h2 {
-margin-bottom: 25px;
+        margin-top: 20px;
+margin-bottom: 10px;
         font-size: 16px;
         padding-left: 44px;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath fill='%23060607' d='M15.474 17.705l-.67.336.67-.336zm-.495-.99l.67-.336c-.127-.254-.386-.415-.67-.415v.75zm-6.258 0v-.75c-.284 0-.543.16-.67.414l.67.335zM22.05 8.892v7.083h1.5V8.893h-1.5zm-5.905 8.477l-.496-.991-1.341.67.495.992 1.342-.671zm-1.166-1.406H8.72v1.5h6.258v-1.5zm-6.928.415l-.496.99 1.342.672.495-.991-1.341-.671zm-6.401-.403V8.893H.15v7.083h1.5zM5.593 4.95h12.514v-1.5H5.593v1.5zm-.826 14.143c-1.722 0-3.117-1.396-3.117-3.117H.15c0 2.55 2.067 4.617 4.617 4.617v-1.5zm14.166 0c-1.18 0-2.26-.667-2.788-1.723l-1.342.67c.782 1.565 2.38 2.553 4.13 2.553v-1.5zm3.117-3.117c0 1.721-1.396 3.117-3.117 3.117v1.5c2.55 0 4.617-2.067 4.617-4.617h-1.5zM7.555 17.37c-.528 1.056-1.607 1.723-2.788 1.723v1.5c1.749 0 3.348-.988 4.13-2.552l-1.342-.671zM23.55 8.893c0-3.006-2.437-5.443-5.443-5.443v1.5c2.178 0 3.943 1.765 3.943 3.943h1.5zm-21.9 0c0-2.178 1.765-3.943 3.943-3.943v-1.5C2.587 3.45.15 5.887.15 8.893h1.5zm3.16 2.314h4.693v-1.5H4.811v1.5zm1.597-3.096v4.692h1.5V8.111h-1.5zm10.918 1.532h1.564v-1.5h-1.564v1.5zm-3.129 3.128h1.565v-1.5h-1.565v1.5z'/%3E%3C/svg%3E%0A");
@@ -1919,7 +1948,11 @@ margin-bottom: 25px;
     }
     .game-page .game-contents {
         margin-top: 24px;
-        /* padding: 24px 16px 16px; */
+    }
+
+    .summary-panel {
+
+        padding: 0px 16px 16px;
     }
     .game-page .pre-summary-panel {
         margin: 20px 0 40px;
@@ -1946,7 +1979,7 @@ margin-bottom: 25px;
     }
     #rps-radio Button {
         width: 74px;
-        height: 74px;
+        height: 74px !important;
         max-width: 100%;
         background-size: 54px;
     }
@@ -2041,6 +2074,11 @@ margin-bottom: 25px;
 }
 @media (max-width: 400px) {
     
+[role="tablist"] button{
+    padding-top: 25px !important;
+    padding-bottom: 10px !important;
+    min-height: 50px !important;
+    }
     .mobile-only.cell-joiners svg{
         margin-left: 3px;
         margin-right: 3px;
@@ -2055,7 +2093,7 @@ margin-bottom: 25px;
 
     .your-bet-amount {
         padding: 4% 14% 0% 14%;
-            margin-bottom: 45px;
+            margin-bottom: 30px;
         display: inline-flex;
         justify-content: center;
         align-content: center;

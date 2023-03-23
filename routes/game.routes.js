@@ -238,11 +238,15 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           gameLog['room']['room_number'],
         history: '',
         // created_at: moment(gameLog['created_at']).fromNow()
-        created_at: gameLog['created_at']
+        created_at: gameLog['created_at'],
+        status: gameLog['room']['status'],
       };
-
+      
       const joined_user_avatar = `<img class='avatar' src='${gameLog['joined_user']['avatar']} ' alt='' onerror='this.src="/img/profile-thumbnail.svg"' />`;
       const creator_avatar = `<img class='avatar' src='${gameLog['creator']['avatar']} ' alt='' onerror='this.src="/img/profile-thumbnail.svg"' />`;
+      const joined_user_link = `<a href="javascript:void(0)" class="user-link" data-userid="${gameLog['joined_user']['_id']}">${joined_user_avatar}${gameLog['joined_user']['username']}</a>`;
+      const creator_link = `<a href="javascript:void(0)" class="user-link" data-userid="${gameLog['creator']['_id']}">${creator_avatar}${gameLog['creator']['username']}</a>`;
+
       let room_name = '';
       if (gameLog['room']['status'] === 'open') {
         room_name = `<a style='color: #C83228; text-decoration: underline'  href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
@@ -254,153 +258,128 @@ const convertGameLogToHistoryStyle = async gameLogList => {
 
       if (gameLog['game_type']['game_type_name'] === 'RPS') {
         if (gameLog.game_result === 1) {
-          temp.history = `${joined_user_avatar}${gameLog['joined_user']['username']
-            } won [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} won <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'] * 2)
-            )}</span>] against ${creator_avatar}[${gameLog['creator']['username']
-            }] in [${room_name}]`;
+            )}</span> against ${creator_link} in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] just received a payout 💰 from their game [${room_name}]`;
+          temp.history = `${creator_link} just received a payout 💰 from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           //end game
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] earned [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${creator_link} earned <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(
                 gameLog['room']['endgame_amount'] - parseFloat(gameLog['room']['user_bet'])
               )
-            )}</span>] from their game [${room_name}]`;
+            )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === 0) {
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] split [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} split <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'] * 2)
-            )}</span>] with ${creator_avatar}[${gameLog['creator']['username']
-            }] in [${room_name}]`;
+            )}</span> with ${creator_link} in ${room_name}`;
         } else {
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] lost [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} lost <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>] against ${creator_avatar}[${gameLog['creator']['username']
-            }] in [${room_name}]`;
+            )}</span> against ${creator_link} in ${room_name}`;
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
         if (gameLog.game_result === 1) {
           temp.history = `
-         ${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] scored and won [<span style='color: #02c526;'>${convertToCurrency(
+         ${joined_user_link} scored and won <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(
                 (gameLog['bet_amount'] / (gameLog['room']['qs_game_type'] - 1)) + gameLog['bet_amount']
               )
             )} 
-						</span>] in [${room_name}]`;
+						</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] just received a payout 💰 from their game [${room_name}]`;
+          temp.history = `${creator_link} just received a payout 💰 from their game [${room_name}]`;
         } else if (gameLog.game_result === -100) {
           //end game
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] earned [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${creator_link} earned <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(
                 gameLog['room']['endgame_amount'] - parseFloat(gameLog['room']['user_bet'])
               )
-            )}</span>] from their game [${room_name}]`;
+            )}</span> from their game ${room_name}`;
         } else {
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] lost [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} lost <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>] in [${room_name}]`;
+            )}</span> in ${room_name}`;
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Spleesh!') {
         if (gameLog.game_result === 1) {
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] guessed [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} guessed <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>] 
-						and won [<span style='color: #02c526;'>${convertToCurrency(
+            )}</span>
+						and won <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(
                 gameLog['room']['host_pr'] + gameLog['room']['bet_amount']
               )
-            )}</span>] in [${room_name}]`;
+            )}</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] just received a payout 💰 from their game [${room_name}]`;
+          temp.history = `${creator_link} just received a payout 💰 from their game ${room_name}`;
         }  else if (gameLog.game_result === -100) {
           //end game
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] ended [${room_name}] and earned [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${creator_link} ended [${room_name}] and earned <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>]`;
+            )}</span>`;
         } else {
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] guessed [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} guessed <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>] 
-						and lost in [${room_name}]`;
+            )}</span> 
+						and lost in ${room_name}`;
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Mystery Box') {
         if (gameLog.game_result === 0) {
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] opened a box [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} opened a box <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>] 
-						and found [<span style='color: #02c526;'>Nothing</span>] in [${room_name}]`;
+            )}</span>
+						and found <span style='color: #02c526;'>Nothing</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] just received a payout 💰 from their game [${room_name}]`;
+          temp.history = `${creator_link} just received a payout 💰 from their game ${room_name}`;
         }  else if (gameLog.game_result === -100) {
           //end game
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] ended [${room_name}] and earned [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${creator_link} ended ${room_name} and earned <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['room']['pr'] + parseFloat(gameLog['room']['user_bet']))
-            )}</span>]`;
+            )}</span>`;
         } else {
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] opened a box [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} opened a box <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>] 
-						and won [<span style='color: #02c526;'>${convertToCurrency(
+            )}</span>
+						and won <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['game_result'])
-            )}</span>] in [${room_name}]`;
+            )}</span> in ${room_name}`;
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Brain Game') {
         if (gameLog.game_result === 0) {
           //draw          Draw, No Winner! PR will be split.
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] bet [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} bet <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>], scored ${gameLog['brain_game_score']} 
-						and split [<span style='color: #02c526;'>${convertToCurrency(
+            )}</span>, scored ${gameLog['brain_game_score']} 
+						and split <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['room']['pr'])
-            )}</span>] in [${room_name}]`;
+            )}</span> in ${room_name}`;
         } else if (gameLog.game_result === 1) {
           //win       WOW, What a BRAIN BOX - You WIN!
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] bet [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} bet <span style='color: #02c526;'>${convertToCurrency(
               gameLog['bet_amount']
-            )}</span>], scored ${gameLog['brain_game_score']}
-						and won [<span style='color: #02c526;'>${convertToCurrency(
+            )}</span>, scored ${gameLog['brain_game_score']}
+						and won <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['room']['pr'])
-            )}</span>] in [${room_name}]`;
+            )}</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] just received a payout 💰 from their game [${room_name}]`;
+          temp.history = `${creator_link} just received a payout 💰 from their game ${room_name}`;
         }  else if (gameLog.game_result === -100) {
           //end game
-          temp.history = `${creator_avatar}[${gameLog['creator']['username']
-            }] ended [${room_name}] and earned [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${creator_link} ended ${room_name} and earned [<span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['room']['pr'] + parseFloat(gameLog['room']['user_bet']))
-            )}</span>]`;
+            )}</span>`;
         } else {
           //failed    Oops, back to school for you loser!!
-          temp.history = `${joined_user_avatar}[${gameLog['joined_user']['username']
-            }] bet [<span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} bet <span style='color: #02c526;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>] 
+            )}</span> 
 						and, scored ${gameLog['brain_game_score']} lost in [${room_name}]`;
         }
       }

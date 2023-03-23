@@ -5,8 +5,6 @@ import Moment from 'moment';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import PlayerModal from '../modal/PlayerModal';
-import IconButton from '@material-ui/core/IconButton';
-import {Box, Button} from '@material-ui/core';
 
 import Pagination from '../../components/Pagination';
 
@@ -46,13 +44,25 @@ class HistoryTable extends Component {
 
   componentDidUpdate(prevProps) {
         if (prevProps.history !== this.props.history) {
+          this.attachUserLinkListeners();
+
             this.setState({ history: updateFromNow(this.props.history) });
         }
     }
 
+    attachUserLinkListeners = () => {
+      const userLinks = document.querySelectorAll('.user-link');
+      userLinks.forEach(link => {
+        link.addEventListener('click', event => {
+          const userId = event.target.getAttribute('data-userid');
+          this.handleOpenPlayerModal(userId);
+        });
+      });
+    };
+
   handleOpenPlayerModal = (creator_id) => {
-        console.log(this.state.selectedCreator)
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+    console.log(this.state.selectedCreator)
   }
 
   
@@ -66,6 +76,8 @@ class HistoryTable extends Component {
 
   async componentDidMount() {
     this.updateReminderTime();
+    this.attachUserLinkListeners();
+
     this.interval = setInterval(this.updateReminderTime(), 3000);
   }
 
@@ -100,52 +112,52 @@ class HistoryTable extends Component {
       DG: 'drop-game',
     };
 
-    const gameTypePanel = (
-      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
-       <Box item key="open-game-left-button">
-          <IconButton
-            className="btn-arrow-left"
-            onClick={this.handleBtnLeftClicked}
-          >
-            <ChevronLeftIcon />
-          </IconButton>
-        </Box>,
-        <Button
-          className={`btn-game-type btn-icon all-games ${
-            this.state.selectedGameType === 'All' ? 'active' : ''
+    const gameTypePanel = [
+      <div
+        className="btn-arrow-left"
+        key="open-game-left-button"
+        onClick={this.handleBtnLeftClicked}
+      >
+        <ChevronLeftIcon />
+      </div>,
+      <div
+        className="btn-arrow-right"
+        key="open-game-right-button"
+        onClick={this.handleBtnRightClicked}
+      >
+        <ChevronRightIcon />
+      </div>,
+      <div
+        className={`btn-game-type all-games ${
+          this.state.selectedGameType === 'All' ? 'active' : ''
+        }`}
+        key="open-game-all-game-button"
+        game_type_id={null}
+        short_name="All"
+        onClick={this.handleGameTypeButtonClicked}
+      >
+        All Games
+      </div>
+    ];
+
+    this.props.gameTypeList.map((gameType, index) => {
+      gameTypePanel.push(
+        <div
+          className={`btn-game-type ${
+            gameTypeStyleClass[gameType.short_name]
+          } ${
+            this.state.selectedGameType === gameType.short_name ? 'active' : ''
           }`}
-          key="open-game-all-game-button"
-          onClick={() => {
-            this.handleGameTypeButtonClicked('All');
-          }}
+          game_type_id={gameType._id}
+          short_name={gameType.short_name}
+          key={index}
+          onClick={this.handleGameTypeButtonClicked}
         >
-          All Games
-        </Button>
-        {this.props.gameTypeList.map((gameType, index) => (
-          <Button
-            className={`btn-game-type btn-icon ${
-              gameTypeStyleClass[gameType.short_name]
-            } ${
-              this.state.selectedGameType === gameType.short_name ? 'active' : ''
-            }`}
-            key={index}
-            onClick={() => {
-              this.handleGameTypeButtonClicked(gameType.short_name);
-            }}
-          >
-            {gameType.game_type_name}
-          </Button>
-        ))}
-        <IconButton
-          className="btn-arrow-right"
-          key="open-game-right-button"
-          onClick={this.handleBtnRightClicked}
-        >
-          <ChevronRightIcon />
-        </IconButton>
-      </Box>
-    );
-    
+          {gameType.game_type_name}
+        </div>
+      );
+    });
+
     return gameTypePanel;
   };
 
@@ -198,7 +210,7 @@ class HistoryTable extends Component {
               <div className="table-row" key={row._id}>
                 <div>
                   <div className="table-cell">
-                    <div className="room-id">{row.room_name}</div>
+                    <div className="room-id">{row.status}</div>
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}
@@ -217,6 +229,16 @@ class HistoryTable extends Component {
             this
           )}
         </div>
+        {this.state.showPlayerModal && (
+            <PlayerModal
+              modalIsOpen={this.state.showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
+              selectedCreator={this.state.selectedCreator}
+            // player_name={this.state.userName}
+            // balance={this.state.balance}
+            // avatar={this.props.user.avatar}
+            />
+          )}   
         {this.state.history?.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}

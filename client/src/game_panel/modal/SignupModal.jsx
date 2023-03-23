@@ -5,6 +5,7 @@ import './Modals.css';
 import { userSignUp } from '../../redux/Auth/user.actions';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import { Button, TextField } from '@material-ui/core';
 
 Modal.setAppElement('#root')
   
@@ -73,11 +74,11 @@ class SignupModal extends Component {
                                 <h2>WELCOME TO RPSBET.IO MF! ⚔</h2>
                                 <p>CLICK YOUR BALANCE TO MAKE A DEPOSIT</p>
                                 <div className="modal-action-panel">
-                                    <button onClick={() => { 
+                                    <Button onClick={() => { 
                                         onClose(); 
                                         this.props.closeModal();
                                         this.props.openLoginModal();
-                                    }}>Login now</button>
+                                    }}>Login now</Button>
                                 </div>
                             </div>
                         </div>
@@ -88,6 +89,8 @@ class SignupModal extends Component {
     }
 
     render() {
+        const { modalIsOpen, closeModal, openLoginModal, isDarkMode } = this.props;
+        const { userName, email, password, referralCode } = this.state;
         return (
             <Modal
                 isOpen={this.props.modalIsOpen}
@@ -100,18 +103,57 @@ class SignupModal extends Component {
                         <h4>WELCOME! ⚔🥋</h4>
                         <h2>JOIN THE CLUB</h2>
                         <form onSubmit={this.onSubmitForm}>
-                            <p>YOUR USERNAME</p>
-                            <input placeholder="CasE SeNsItIvE" type="text" className="form-control" value={this.state.userName} onChange={this.onChangeUserName}  />
-                            <p>YOUR EMAIL</p>
-                            <input placeholder="ZERO EMAILS SENT" type="text" className="form-control" value={this.state.email} onChange={this.onChangeEmail}  />
-                            <p>YOUR PASSWORD</p>
-                            <input placeholder="●●●●●●" type="password" className="form-control" value={this.state.password} onChange={this.onChangePassword}  />
-                            <p>REFERRAL - OPTIONAL</p>
-                            <input placeholder="V9FTGY" type="text" className="form-control" value={this.state.referralCode} onChange={this.onChangeReferralCode}  />
-
-                            <button className="btn-submit">Register</button>
-                            <p className="m-0 sm-text-center">ALREADY REGISTERED? <button onClick={(e) => { this.props.closeModal(); this.props.openLoginModal(); }}>LOGIN HERE →</button></p>
-                        </form>
+              <TextField
+                placeholder="CasE SeNsItIvE"
+                label="Your Username"
+                required
+                value={userName}
+                onChange={(e) => this.setState({ userName: e.target.value })}
+                fullWidth
+                className="form-control"
+                variant="outlined"
+              />
+              <TextField
+                placeholder="FAKEEMAIL@DISCO.COM"
+                type="email"
+                label="Your Email"
+                required
+                value={email}
+                onChange={(e) => this.setState({ email: e.target.value })}
+                fullWidth
+                className="form-control"
+                variant="outlined"
+              />
+              <TextField
+              required
+                placeholder="●●●●●●"
+                type="password"
+                label="Your Password"
+                value={password}
+                onChange={(e) => this.setState({ password: e.target.value })}
+                fullWidth
+                className="form-control"
+                variant="outlined"
+              />
+              <TextField
+                placeholder="V9FTGY"
+                label="Referral"
+                value={referralCode}
+                onChange={(e) => this.setState({ referralCode: e.target.value })}
+                fullWidth
+                className="form-control"
+                variant="outlined"
+              />
+              <Button className="btn-submit" type="submit">
+                Register
+              </Button>
+              <p className="m-0 sm-text-center">
+                ALREADY REGISTERED?{' '}
+                <button onClick={(e) => { closeModal(); openLoginModal(); }}>
+                  LOGIN HERE →
+                </button>
+              </p>
+            </form>
                     </div>
                 </div>
             </Modal>

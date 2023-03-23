@@ -370,7 +370,7 @@ class JoinGame extends Component {
         </div>
         {!this.state.is_mobile && (
           <div className="mobile-only main-page-nav-button-group">
-            <button
+            <Button
               className={`mobile-tab-live ${
                 this.state.selectedMobileTab === 'live_games' ? 'active' : ''
               }`}
@@ -396,8 +396,8 @@ class JoinGame extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'live_games' && 'LIVE STAKES'}
-            </button>
-            <button
+            </Button>
+            <Button
               className={`mobile-tab-my ${
                 this.state.selectedMobileTab === 'my_games' ? 'active' : ''
               }`}
@@ -431,7 +431,7 @@ class JoinGame extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'my_games' && 'MY STAKES'}
-            </button>
+            </Button>
             {/* <button
               className={`mobile-tab-leaderboards ${
                 this.state.selectedMobileTab === 'leaderboards' ? 'active' : ''
@@ -460,7 +460,7 @@ class JoinGame extends Component {
               {this.state.selectedMobileTab === 'leaderboards' &&
                 'LEADERBOARDS'}
             </button> */}
-            <button
+            <Button
               className={`mobile-tab-chat ${
                 this.state.selectedMobileTab === 'chat' ? 'active' : ''
               }`}
@@ -511,7 +511,7 @@ class JoinGame extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'chat' && 'CHAT'}
-            </button>
+            </Button>
           </div>
         )}
         </div>

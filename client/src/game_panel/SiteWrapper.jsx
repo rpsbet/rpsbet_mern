@@ -42,7 +42,7 @@ import {
   Divider
 } from '@material-ui/core';
 
-
+import AccountBalanceWallet from '@material-ui/icons/AccountBalanceWallet';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import Brightness7Icon from '@material-ui/icons/Brightness7';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
@@ -738,9 +738,16 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                 }
                 {this.props.isAuthenticated ? (
                   <>
-                    <span id="balance" onClick={this.handleBalanceClick}>
-                      {convertToCurrency(this.state.balance)}
-                    </span>
+                  <div id='balance'>
+
+                      <span >
+                        {convertToCurrency(this.state.balance)}
+                      </span>
+                     <Button  style={{ minWidth: "32px", maxHeight: "32px"}} onClick={this.handleBalanceClick} >
+                      <AccountBalanceWallet  style={{ width: "22px", height: "22px"}} />
+                    </Button>
+                  </div>
+                    
                     <Button
                       area-constrols="profile-menu"
                       aria-haspopup="true"
@@ -920,15 +927,15 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                   </>
                 ) : (
                   <>
-                    <button id="btn-login" onClick={this.handleOpenLoginModal}>
+                    <Button id="btn-login" onClick={this.handleOpenLoginModal}>
                       Login
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       id="btn-signup"
                       onClick={this.handleOpenSignupModal}
                     >
                       Register
-                    </button>
+                    </Button>
                   </>
                 )}
                
@@ -977,28 +984,28 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                   </table>
                 }
                 <div className="transaction-panel">
-                  <button
+                  <Button
                     className="btn-withdraw"
                     onClick={this.handleOpenWithdrawModal}
                     isDarkMode={this.props.isDarkMode}
                   >
                     Withdraw
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     className="btn-deposit"
                     onClick={this.handleOpenDepositModal}
                     isDarkMode={this.props.isDarkMode}
                   >
                     Deposit
-                  </button>
+                  </Button>
                   <hr />
                   {this.state.web3account ? (
           <>
             <input id="wallet-address" type="text" value={this.state.web3account} readOnly />
-            <button className="connect" onClick={this.disconnectWeb3}>Disconnect</button>
+            <Button className="connect" onClick={this.disconnectWeb3}>Disconnect</Button>
           </>
         ) : (
-          <button className="connect" onClick={this.loadWeb3}>Wallet Not connected</button>
+          <Button className="connect" onClick={this.loadWeb3}>Wallet Not connected</Button>
         )}
                 </div>
                 

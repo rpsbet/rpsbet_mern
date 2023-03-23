@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import Moment from 'moment';
 // import { alertModal } from '../modal/ConfirmAlerts';
 import Avatar from '../../components/Avatar';
-import { Tabs, Tab } from '@material-ui/core';
+import { Tabs, Tab, Button } from '@material-ui/core';
 import GlobalChat from './GlobalChat';
 import MyChat from './MyChat';
 import Chat from '../icons/Chat.js';
@@ -204,13 +204,14 @@ class ChatPanel extends Component {
                 🥩
               </span>
             </div>
-            <button
+            <Button
               className="btn-show-emoticon"
               onClick={this.toggleEmojiPanel}
-            ></button>
+            ></Button>
             <input
               type="text"
-              className="form-control"
+              className="form-control chat-input"
+              variant="outlined"
               placeholder="SAY HI..."
               onKeyDown={this.onTextAreaKeyDown}
               onChange={this.onChangeText}

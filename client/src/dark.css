@@ -129,10 +129,7 @@ background: #060607;
 	color: #8e9297;
 	text-align: center;
 }
-.dark_mode div.table .dont-have-game-msg div {
-	font-size: 16px;
-	font-weight: 600;
-}
+
 .dark_mode div.table .dont-have-game-msg span {
 	font-size: 14px;
 }
@@ -243,16 +240,8 @@ background: #060607;
 .dark_mode .game-page .game-contents .game-info-panel .qs-action-panel label {
 	color: white;
 }
-.dark_mode .game_header .main_header .header_action_panel button#btn-login {
-	color: #f23eae;
-    border-color: #e73dbd;
-    box-shadow: 0 0 5px 0px #ff409a;
-	border-radius: 6px !important;
-}
 
-.dark_mode .game_header .main_header .header_action_panel button#btn-login:hover {
-	background-color: #e73dbd11;
-}
+
 .dark_mode .modal-body {
 	color: #8e9297;
 	background-color: #060607;

@@ -7,6 +7,7 @@ import Moment from 'moment';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Pagination from '../../components/Pagination';
+import PlayerModal from '../modal/PlayerModal';
 
 function updateFromNow(history = []) {
   const result = JSON.parse(JSON.stringify(history));
@@ -21,7 +22,9 @@ class MyHistoryTable extends Component {
     super(props);
     this.state = {
       myHistory: this.props.myHistory,
-      selectedGameType: 'All'
+      selectedGameType: 'All',
+      showPlayerModal: false,
+
     };
   }
 
@@ -49,22 +52,50 @@ class MyHistoryTable extends Component {
 
   async componentDidMount() {
     this.updateReminderTime();
+    this.attachUserLinkListeners();
+
     this.interval = setInterval(this.updateReminderTime(), 3000);
   }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.history !== this.props.history) {
+      this.attachUserLinkListeners();
+
+        this.setState({ history: updateFromNow(this.props.history) });
+    }
+}
+
+  attachUserLinkListeners = () => {
+    const userLinks = document.querySelectorAll('.user-link');
+    userLinks.forEach(link => {
+      link.addEventListener('click', event => {
+        const userId = event.target.getAttribute('data-userid');
+        this.handleOpenPlayerModal(userId);
+      });
+    });
+  };
 
   componentWillUnmount() {
     clearInterval(this.interval);
   }
 
-  handleGameTypeButtonClicked = async e => {
-    const short_name = e.target.getAttribute('short_name');
+  handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
-    this.props.getMyHistory({
+    this.props.getHistory({
       game_type: short_name
     });
-    return;
   };
 
+  handleOpenPlayerModal = (creator_id) => {
+    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+    console.log(this.state.selectedCreator)
+  }
+
+  
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
+  
   handleBtnLeftClicked = e => {
     this.game_type_panel.scrollLeft = 0;
   };
@@ -80,57 +111,60 @@ class MyHistoryTable extends Component {
       MB: 'mystery-box',
       BG: 'brain-game',
       QS: 'quick-shoot',
-      DG: 'drop-game'
+      DG: 'drop-game',
     };
 
     const gameTypePanel = (
       <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
-       <Box item key="open-game-left-button">
+        <Box key="open-game-left-button">
           <IconButton
             className="btn-arrow-left"
             onClick={this.handleBtnLeftClicked}
           >
             <ChevronLeftIcon />
           </IconButton>
-        </Box>,
+        </Box>
         <Button
-          className={`btn-game-type btn-icon all-games ${
-            this.state.selectedGameType === 'All' ? 'active' : ''
-          }`}
-          key="open-game-all-game-button"
-          onClick={() => {
-            this.handleGameTypeButtonClicked('All');
-          }}
-        >
-          All Games
-        </Button>
-        {this.props.gameTypeList.map((gameType, index) => (
-          <Button
-            className={`btn-game-type btn-icon ${
-              gameTypeStyleClass[gameType.short_name]
-            } ${
-              this.state.selectedGameType === gameType.short_name ? 'active' : ''
-            }`}
-            key={index}
-            onClick={() => {
-              this.handleGameTypeButtonClicked(gameType.short_name);
-            }}
-          >
-            {gameType.game_type_name}
-          </Button>
+  className={`btn-game-type btn-icon all-games ${
+    this.state.selectedGameType === 'All' ? 'active' : ''
+  }`}
+  key="open-game-all-game-button"
+  onClick={() => {
+    this.handleGameTypeButtonClicked('All');
+  }}
+>
+  All Games
+</Button>
+{this.props.gameTypeList.map((gameType, index) => (
+  <Button
+    className={`btn-game-type btn-icon ${
+      gameTypeStyleClass[gameType.short_name]
+    } ${
+      this.state.selectedGameType === gameType.short_name ? 'active' : ''
+    }`}
+    key={index}
+    onClick={() => {
+      this.handleGameTypeButtonClicked(gameType.short_name);
+    }}
+  >
+    {gameType.game_type_name}
+  </Button>
         ))}
-        <IconButton
-          className="btn-arrow-right"
-          key="open-game-right-button"
-          onClick={this.handleBtnRightClicked}
-        >
-          <ChevronRightIcon />
-        </IconButton>
+        <Box key="open-game-right-button">
+          <IconButton
+            className="btn-arrow-right"
+            onClick={this.handleBtnRightClicked}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+        </Box>
       </Box>
     );
     
     return gameTypePanel;
+  
   };
+
 
   handlePageNumberClicked = page => {
     this.props.getMyHistory({
@@ -200,6 +234,16 @@ class MyHistoryTable extends Component {
             this
           )}
         </div>
+        {this.state.showPlayerModal && (
+            <PlayerModal
+              modalIsOpen={this.state.showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
+              selectedCreator={this.state.selectedCreator}
+            // player_name={this.state.userName}
+            // balance={this.state.balance}
+            // avatar={this.props.user.avatar}
+            />
+          )}  
         {this.state.myHistory?.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}

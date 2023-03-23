@@ -8,6 +8,8 @@ import DropGame from '../CreateGame/DropGame';
 import BrainGame from '../CreateGame/BrainGame';
 import PlayBrainGame from '../CreateGame/PlayBrainGame';
 import QuickShoot from '../CreateGame/QuickShoot';
+import { Button } from '@material-ui/core';
+
 import Summary from '../CreateGame/Summary';
 import {
   createRoom,
@@ -455,29 +457,29 @@ class CreateGame extends Component {
           this.state.child_step === 1 ? (
             <span></span>
           ) : (
-            <button id="btn_prev" onClick={this.onPrevButtonClicked}>
+            <Button id="btn_prev" onClick={this.onPrevButtonClicked}>
               Previous
-            </button>
+            </Button>
           )}
           {this.state.step === 3 && (
-            <button id="btn_skip" onClick={this.onSkipButtonClicked}>
+            <Button id="btn_skip" onClick={this.onSkipButtonClicked}>
               Skip
-            </button>
+            </Button>
           )}
           {this.state.step === 4 && this.state.game_mode === 'Brain Game' && (
-            <button id="btn_bet" onClick={this.onStartBrainGame}>
+            <Button id="btn_bet" onClick={this.onStartBrainGame}>
               Start
-            </button>
+            </Button>
           )}
           {this.state.step === 4 && this.state.game_mode !== 'Brain Game' && (
-            <button id="btn_bet" onClick={this.onCreateRoom}>
+            <Button id="btn_bet" onClick={this.onCreateRoom}>
               Place Bet
-            </button>
+            </Button>
           )}
           {this.state.step < 4 && this.state.step !== 1 && (
-            <button id="btn_next" onClick={this.onNextButtonClicked}>
+            <Button id="btn_next" onClick={this.onNextButtonClicked}>
               Next
-            </button>
+            </Button>
           )}
         </div>
       </>
@@ -626,7 +628,7 @@ class CreateGame extends Component {
         </div>
         {!this.state.is_mobile && (
           <div className="mobile-only main-page-nav-button-group">
-            <button
+            <Button
               className={`mobile-tab-live ${
                 this.state.selectedMobileTab === 'live_games' ? 'active' : ''
               }`}
@@ -652,8 +654,8 @@ class CreateGame extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'live_games' && 'LIVE STAKES'}
-            </button>
-            <button
+            </Button>
+            <Button
               className={`mobile-tab-my ${
                 this.state.selectedMobileTab === 'my_games' ? 'active' : ''
               }`}
@@ -687,7 +689,7 @@ class CreateGame extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'my_games' && 'MY STAKES'}
-            </button>
+            </Button>
             {/* <button
               className={`mobile-tab-leaderboards ${
                 this.state.selectedMobileTab === 'leaderboards' ? 'active' : ''
@@ -716,7 +718,7 @@ class CreateGame extends Component {
               {this.state.selectedMobileTab === 'leaderboards' &&
                 'LEADERBOARDS'}
             </button> */}
-            <button
+            <Button
               className={`mobile-tab-chat ${
                 this.state.selectedMobileTab === 'chat' ? 'active' : ''
               }`}
@@ -767,7 +769,7 @@ class CreateGame extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'chat' && 'CHAT'}
-            </button>
+            </Button>
           </div>
         )}
       </div>

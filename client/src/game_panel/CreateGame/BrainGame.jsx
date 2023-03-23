@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import AddQuestionModal from '../modal/AddQuestionModal';
+import { Button } from '@material-ui/core';
 
 class BrainGame extends Component {
     constructor(props) {
@@ -33,16 +34,16 @@ class BrainGame extends Component {
                 <h3 className="game-sub-title">Game Type</h3>
                 <div className="select-buttons-panel">
                     {this.props.game_type_list.map((game_type, index) => (
-                        <button className={(this.props.brain_game_type === game_type._id ? ' active' : '')} 
+                        <Button className={(this.props.brain_game_type === game_type._id ? ' active' : '')} 
                             onClick={(e) => { 
                                 this.props.setCurrentQuestionInfo({brain_game_type: game_type._id}); 
                             }} key={index}>
                             {game_type.game_type_name}
-                        </button>
+                        </Button>
                     ))}
-                    <button className="add-new-game-type" onClick={this.toggleModal}>
+                    <Button className="add-new-game-type" onClick={this.toggleModal}>
                       + Add New
-                    </button>
+                    </Button>
                     {this.state.showModal && (
          
             <AddQuestionModal

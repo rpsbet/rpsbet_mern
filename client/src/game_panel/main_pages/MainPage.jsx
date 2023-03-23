@@ -21,6 +21,7 @@ import Manage from '../icons/Manage.js';
 import ManageHover from '../icons/ManageHover';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
+import { Button } from '@material-ui/core';
 
 import { Tabs, Tab, Drawer  } from '@material-ui/core';
 import DrawerButton from './DrawerButton';
@@ -198,7 +199,7 @@ class MainPage extends Component {
         </div>
         {this.state.is_mobile && (
           <div className="mobile-only main-page-nav-button-group">
-            <button
+            <Button
               className={`mobile-tab-live ${
                 this.state.selectedMobileTab === 'live_games' ? 'active' : ''
               }`}
@@ -224,8 +225,8 @@ class MainPage extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'live_games' && 'LIVE STAKES'}
-            </button>
-            <button
+            </Button>
+            <Button
               className={`mobile-tab-my ${
                 this.state.selectedMobileTab === 'my_games' ? 'active' : ''
               }`}
@@ -259,7 +260,7 @@ class MainPage extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'my_games' && 'MY STAKES'}
-            </button>
+            </Button>
             {/* <button
               className={`mobile-tab-leaderboards ${
                 this.state.selectedMobileTab === 'leaderboards' ? 'active' : ''
@@ -288,7 +289,7 @@ class MainPage extends Component {
               {this.state.selectedMobileTab === 'leaderboards' &&
                 'LEADERBOARDS'}
             </button> */}
-            <button
+            <Button
               className={`mobile-tab-chat ${
                 this.state.selectedMobileTab === 'chat' ? 'active' : ''
               }`}
@@ -339,7 +340,7 @@ class MainPage extends Component {
                 />
               </svg>
               {this.state.selectedMobileTab === 'chat' && 'CHAT'}
-            </button>
+            </Button>
           </div>
         )}
             <Footer className="footer" open={this.state.open} style={{ marginLeft: this.state.open ? '270px' : '0' }} />

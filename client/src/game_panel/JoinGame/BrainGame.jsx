@@ -6,6 +6,8 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
+import {Button} from '@material-ui/core';
+
 import { deductBalanceWhenStartBrainGame } from '../../redux/Logic/logic.actions';
 import {
   alertModal,
@@ -465,14 +467,14 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
               <div className="question">{this.state.question.question}</div>
               <div className="answer-panel">
                 {this.state.answers.map((answer, index) => (
-                  <button
+                  <Button
                     key={index}
                     className="answer other"
                     onClick={this.onClickAnswer}
                     _id={answer._id}
                   >
                     {answer.answer}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -534,7 +536,7 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
             <p>{this.props.brain_game_type.game_type_name}</p>
             <h3 className="game-sub-title">Score to BEAT:</h3>
             <p>{this.props.brain_game_score}</p>
-            <button
+            <Button
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}
         onTouchStart={this.handleButtonClick}
@@ -559,14 +561,14 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
             )}
           </div>
         )}
-        </button>
+        </Button>
           </div>
        
           <div className="action-panel">
             <span></span>
-            <button id="btn_bet" onClick={this.onStartGame}>
+            <Button id="btn_bet" onClick={this.onStartGame}>
               Start
-            </button>
+            </Button>
           </div>
         </div>
       </div>

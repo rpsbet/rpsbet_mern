@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Button } from '@material-ui/core';
 
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { getQsLottieAnimation } from '../../util/helper';
@@ -382,7 +383,7 @@ class QuickShoot extends Component {
             <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
             {this.state.animation}
             {this.renderButtons()}
-            <button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</button>
+            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</Button>
             {/* <div className="qs-action-panel">
               <button
                 className="btn-left"

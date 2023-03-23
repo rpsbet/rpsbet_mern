@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
+import { Button, TextField } from '@material-ui/core';
+
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
 import { updateBetResult } from '../../redux/Logic/logic.actions';
@@ -819,7 +821,7 @@ predictNext = (qs_list, gameType) => {
             
             <div className="your-bet-amount">
          
-          <input
+          <TextField
             type="text"
             pattern="[0-9]*"
             name="betamount"
@@ -848,7 +850,7 @@ predictNext = (qs_list, gameType) => {
                 onClick={this.onRightPositionButtonClicked}
               ></button>
             </div> */}
-            <button
+            <Button
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}
         onTouchStart={this.handleButtonClick}
@@ -873,7 +875,7 @@ predictNext = (qs_list, gameType) => {
             )}
           </div>
         )}
-        </button>
+        </Button>
           </div>
       
           <div className="action-panel">

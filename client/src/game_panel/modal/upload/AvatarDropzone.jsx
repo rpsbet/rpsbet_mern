@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import "./AvatarDropzone.css";
 import Avatar from "../../../components/Avatar";
 import { alertModal } from "../ConfirmAlerts";
+import { Button } from '@material-ui/core';
+
 
 class Dropzone extends Component {
   constructor(props) {
@@ -78,8 +80,8 @@ class Dropzone extends Component {
         <Avatar className="AvatarPreviewPanel" alt="" src={this.props.imageUrl} darkMode={this.props.darkMode} />
         <div className="AvatarControlPanel">
           <div className="AvatarButtonPanel">
-            <button onClick={(e)=>{this.props.setImageFilename("")}}>Remove Photo</button>
-            <button onClick={this.openFileDialog}>Upload Photo</button>
+            <Button onClick={(e)=>{this.props.setImageFilename("")}}>Remove Photo</Button>
+            <Button onClick={this.openFileDialog}>Upload Photo</Button>
           </div>
           <p className="mt-1">CHOOSE A SMALLISH SIZE</p>
         </div>

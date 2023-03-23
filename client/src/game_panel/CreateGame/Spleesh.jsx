@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { convertToCurrency } from '../../util/conversion';
+import { Button } from '@material-ui/core';
 
 
 class Spleesh extends Component {
@@ -8,7 +9,7 @@ class Spleesh extends Component {
     let panel = [];
     for (let i = 1; i <= 10; i++) {
       panel.push(
-        <button
+        <Button
           className={
             this.props.bet_amount / this.props.spleesh_bet_unit === i
               ? ' active'
@@ -24,7 +25,7 @@ class Spleesh extends Component {
           key={i}
         >
           {convertToCurrency(i * this.props.spleesh_bet_unit)}
-        </button>
+        </Button>
       );
     }
     return panel;
@@ -56,7 +57,7 @@ class Spleesh extends Component {
     ) : (
       <div className="game-info-panel">
         <h3 className="game-sub-title">Your Number</h3>
-        <div className="select-buttons-panel">{this.createNumberPanel()}</div>
+        <div className="select-buttons-panel bet-amounts">{this.createNumberPanel()}</div>
         <p className="tip">
           Pick a number for players to guess (Your Bet Amount)
         </p>

@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
+import { Button } from '@material-ui/core';
+
 import animationData from '../LottieAnimations/spinningIcon';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
@@ -524,7 +526,7 @@ localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
 ))}
 
             </div>
-            <button
+            <Button
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}
         onTouchStart={this.handleButtonClick}
@@ -549,7 +551,7 @@ localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
             )}
           </div>
         )}
-        </button>
+        </Button>
           </div>
  
           <div className="action-panel">
@@ -634,9 +636,9 @@ localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
             {/* <button id="btn-back" onClick={this.onBtnGoToMainGamesClicked}>
               Live Stakes
             </button> */}
-            <button id="btn-submit" onClick={this.onBtnPlayAgainClicked}>
+            <Button id="btn-submit" onClick={this.onBtnPlayAgainClicked}>
               OKAY
-            </button>
+            </Button>
           </div>
         </div>
       </div>

@@ -7,6 +7,8 @@ import { getCustomerStatisticsData } from '../../redux/Customer/customer.action'
 import { alertModal } from './ConfirmAlerts';
 import ReactApexChart from 'react-apexcharts';
 import styled from 'styled-components';
+import { Button } from '@material-ui/core';
+
 import Elevation from '../../Styles/Elevation';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 import {
@@ -206,7 +208,7 @@ class ProfileModal extends Component {
                         </div>    
                     </div>
                     <div className="modal-action-panel">
-                        <button className="btn-submit" onClick={this.saveUserInfo}>Save</button>
+                        <Button className="btn-submit" onClick={this.saveUserInfo}>Save</Button>
                     </div>
                 </div>
             </div>

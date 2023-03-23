@@ -352,7 +352,10 @@ button:hover,
   text-align: center !important;
   text-align: -webkit-center;
 }
-  
+.bet-amounts button {
+margin-right: 10px;
+margin-bottom: 10px;
+}
 
 #load-btn {
   background: #333;
@@ -409,9 +412,12 @@ div.table.my-chat-table .table-row > div.message-panel ,
 
 
 #aiplay {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-items: center;
   margin: 15px auto !important;
-  
+  height: 64px !important;
+  min-width: 230px;
 }
 h3.game-sub-title {
   text-align: center !important;
@@ -461,10 +467,9 @@ h3.game-sub-title {
   display: flex;
   justify-content: center;
 }
-
+/* 
 #root .site_wrapper .login_wrapper .login_form {
   text-align: center;
-  /* background-image: url(/img/rps_characters.png); */
   background-size: 120%;
   background-position: 40% 45%;
   background-repeat: no-repeat;
@@ -486,7 +491,7 @@ h3.game-sub-title {
   border-top-right-radius: 50px;
   border-bottom-left-radius: 50px;
   border-top-left-radius: 50px;
-}
+} */
 table#runs th {
   text-align: left !important;
 }
@@ -597,39 +602,13 @@ table#runs td {
   }
 }
 
-
-
-
-.login_form label {
-  color: #666;
-  padding: 0 5px;
-  font-weight: 500;
-  margin-bottom: 0;
-  margin-top: 0.5em;
+.form-control {
+height: unset !important;  
+background: unset !important;
+margin-top: 20px !important;
 }
-
-.login_form .form-control {
-  background-color: #fffc;
-  color: #333;
-}
-
-.login_form input[type=text], .login_form input.form-control,
-.login_form input[type=password]{
-  font-size: 20px;
-  height: 50px;
-  padding: 5px 15px;
-  box-shadow: inset 10px 10px 4px 0px #eceff1;
-  border: none;
-}
-
-.login_form input[type=checkbox] {
-  /* Double-sized Checkboxes */
-  transform: scale(2);
-  -ms-transform: scale(2); /* IE */
-  -moz-transform: scale(2); /* FF */
-  -webkit-transform: scale(2); /* Safari and Chrome */
-  -o-transform: scale(2); /* Opera */
-  margin: 10px;
+.form-control input{
+border-radius: 0.25em !important;
 }
 
 .login_form img.logo{
@@ -638,12 +617,6 @@ table#runs td {
     margin: 10px auto;
 }
 
-.login_form .btn {
-  font-size: 20px;
-  text-transform: uppercase;
-  border-radius: 100px;
-  height: initial;
-}
 
 .btn-info {
     color: #fff;
@@ -887,19 +860,13 @@ div.table .table-row .table-cell img.game-type-icon {
   margin-bottom: 20px;
 }
 .chat {
-  height: 83vh;
+  height: 75vh;
   overflow-y: scroll;
+position: relative;
+top: 1vh;
+bottom: 2vh;
 }
 
-.chat::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for IE, Edge and Firefox */
-.chat {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
 
 /*** MY CHAT ***/
 
