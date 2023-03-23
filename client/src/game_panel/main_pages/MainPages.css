@@ -1872,10 +1872,10 @@ bottom: 0px;
         margin-top: 16px;
     }
     div.table .table-row .table-cell img.avatar {
-        border: 1px solid #dc3ccd;
-        box-shadow: 0 0 1px 0 #c438ef;
-        margin-left: 9px;
-        margin-bottom: 0;
+        border: 2px solid #dc3ccd;
+        /* box-shadow: 0 0 1px 0 #c438ef; */
+        margin-left: 2px;
+        margin-bottom: 3px;
     }
     div.main-page-nav-button-group {
         position: fixed;
