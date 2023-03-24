@@ -1,6 +1,7 @@
 import React from 'react';
 import { confirmAlert } from 'react-confirm-alert';
-
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 const showAlert = (isDarkMode, text, icon) => {
     confirmAlert({
         customUI: ({ onClose }) => {
@@ -29,6 +30,16 @@ const showConfirm = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle,
                         <button className="btn-close" onClick={onClose}>×</button>
                         <div className={`modal-icon alert-icon${icon}`}></div>
                         <h5>{text}</h5>
+                        <FormControlLabel
+                    control={
+                        <Checkbox
+                            color="primary"
+                            onChange={event => localStorage.setItem('hideConfirmModalx', event.target.checked)}
+                        />
+                    }
+                    label="Don't show this again"
+                />
+               
                         <div className="modal-action-panel">
                             <button className="btn-submit" onClick={() => {callback(); onClose();}}>{okayButtonTitle}</button>
                             { cancelButtonTitle &&
@@ -41,29 +52,37 @@ const showConfirm = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle,
         }
     }); 
 }
-export const confirmModalClosed = (isDarkMode, text, okayButtonTitle, cancelButtonTitle, callback) => {
-    showConfirm(isDarkMode, text, '-closed', okayButtonTitle, cancelButtonTitle, callback);
-}
 export const confirmModalCreate = (isDarkMode, text, okayButtonTitle, cancelButtonTitle, callback) => {
     showConfirm(isDarkMode, text, '-create', okayButtonTitle, cancelButtonTitle, callback);
 }
-
-const showResultModal = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle, callback, callback2) => {
+export const confirmModalClosed = (isDarkMode, text, okayButtonTitle, cancelButtonTitle, callback) => {
+    showConfirm(isDarkMode, text, '-closed', okayButtonTitle, cancelButtonTitle, callback);
+}
+const showResultModal = (isDarkMode, text, icon, cancelButtonTitle, callback, callback2) => {
+    let timeLeft = 2300; // duration of modal in milliseconds
+    const intervalId = setInterval(() => {
+        timeLeft -= 100;
+        if (timeLeft === 0) {
+            clearInterval(intervalId);
+        }
+    }, 100); // countdown interval
     confirmAlert({
         closeOnEscape: false,
         closeOnClickOutside: false,
         customUI: ({ onClose }) => {
+            setTimeout(() => onClose(), 2300); // dismiss modal after 2 seconds
             return (
                 <div className={isDarkMode ? 'dark_mode' : ''}>
                     <div className='modal-body alert-body result-body'>
                         <div className={`modal-icon result-icon${icon}`}></div>
                         <h1>{text}</h1>
-                        <p>CLICK YOUR BALANCE<br/>TO SEE RECENT BETS</p>
                         <div className="modal-action-panel">
-                            <button className="btn-submit" onClick={() => {callback(); onClose();}}>{okayButtonTitle}</button>
-                            { cancelButtonTitle &&
+                            {/* { cancelButtonTitle &&
                                 <button className="btn-back" onClick={() => {callback2(); onClose();}}>{cancelButtonTitle}</button>
-                            }
+                            } */}
+                            <div className="countdown-timer">
+                                <div className="countdown-bar" style={{ width: `${(timeLeft / 2300) * 100}%` }}></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -71,12 +90,12 @@ const showResultModal = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTi
         }
     });
 }
-export const gameResultModal = (isDarkMode, text, gameResult, okayButtonTitle, cancelButtonTitle, callback, callback2) => {
+export const gameResultModal = (isDarkMode, text, gameResult, cancelButtonTitle, callback, callback2) => {
     let icon = '-lost';
     if (gameResult === 0) {
         icon = '-draw';
     } else if (gameResult === 1) {
         icon = '-win';
     }
-    showResultModal(isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle, callback, callback2);
+    showResultModal(isDarkMode, text, icon, cancelButtonTitle, callback, callback2);
 }

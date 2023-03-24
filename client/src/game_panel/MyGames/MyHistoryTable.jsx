@@ -81,7 +81,7 @@ class MyHistoryTable extends Component {
 
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
-    this.props.getHistory({
+    this.props.getMyHistory({
       game_type: short_name
     });
   };

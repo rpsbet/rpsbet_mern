@@ -527,6 +527,7 @@ localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
 
             </div>
             <Button
+            id="aiplay"
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}
         onTouchStart={this.handleButtonClick}

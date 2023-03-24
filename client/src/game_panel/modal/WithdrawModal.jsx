@@ -5,7 +5,7 @@ import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Modal from 'react-modal';
-import { Button } from '@material-ui/core';
+import { Button, TextField } from '@material-ui/core';
 
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
@@ -141,6 +141,7 @@ class WithdrawModal extends Component {
                     account={this.state.web3account}
                 >
                         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                            
                             <div className="modal-body edit-modal-body deposit-modal-body">
                                 <button className="btn-close" onClick={this.props.closeModal}>×</button>
                                 <h2>WITHDRAW</h2>
@@ -155,16 +156,23 @@ class WithdrawModal extends Component {
                                         <div><span className="eligible-label">AMOUNT (MIN {convertToCurrency(5)})</span><span style={{color: this.state.amount < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.amount)}</span></div>
                                         </div>
                                         <div className='balance'>
-                                        <label className="availabletag">
-                                            <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.props.balance)}
-                                            </label>
                                             </div>
                                 <div className="input-amount">
-                                    <input pattern="[0-9]*" type="text" value={this.state.amount} onChange={this.handleAmountChange} className="form-control" />
-                                    <span>
-                                        BUSD
-                                    </span>
+                                    <TextField
+                                    pattern="[0-9]*"
+                                    variant='outlined'
+                                    autoComplete='off'
+                                    value={this.state.amount}
+                                    onChange={this.handleAmountChange}
+                                    InputProps={{
+                                        endAdornment: "BUSD",
+                                    }}
+                                    className="form-control" />
+                                  
                                     </div>
+                                    <label className="availabletag">
+                                        <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.props.balance)}
+                                        </label>
                                     
                                
                                  

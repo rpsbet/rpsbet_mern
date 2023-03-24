@@ -144,7 +144,7 @@ class PlayerModal extends Component {
                                     getRoomStatisticsData={this.props.getRoomStatisticsData}
                                 />
                                 <div className='align-center'>
-                                <Button className="btn btn_join send-msg" onClick={this.handleOpenChat}>Send Message</Button>
+                                <Button className="send-msg" onClick={this.handleOpenChat}>Send Message</Button>
                             </div>
                             </div>
                         )}

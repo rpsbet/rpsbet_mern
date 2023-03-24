@@ -851,6 +851,7 @@ predictNext = (qs_list, gameType) => {
               ></button>
             </div> */}
             <Button
+            id="aiplay"
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}
         onTouchStart={this.handleButtonClick}

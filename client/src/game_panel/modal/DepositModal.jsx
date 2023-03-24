@@ -6,7 +6,7 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { BigNumber } from 'ethers';
-import { Button } from '@material-ui/core';
+import { Button, TextField} from '@material-ui/core';
 
 import { tokenAddr, adminWallet } from '../../config/index.js';
 import abi from '../../config/abi_token.json';
@@ -150,21 +150,26 @@ class DepositModal extends Component {
                 </a>
                 <div className="balance">
                 <h6>STEP 2.&nbsp;&nbsp;ENTER AMOUNT & DEPOSIT</h6>
-                <label className="availabletag">
-                  <span>WALLET BALANCE</span>:&nbsp;&nbsp; {convertToCurrency(this.state.balance)}&nbsp;BUSD&nbsp;
-                </label>
                 </div>
                 <div>
                 <div className="input-amount">
-                <input
+                <TextField
                   pattern="[0-9]*"
                   type="text"
+                  variant='outlined'
+                  autoComplete='off'
                   value={this.state.amount}
                   onChange={this.handleAmountChange}
                   className="form-control"
-                /><span> BUSD</span>
+                  InputProps={{
+                    endAdornment: "BUSD",
+                  }}
+                />
                 <br />
                 </div>
+                  <label className="availabletag">
+                    <span>WALLET BALANCE</span>:&nbsp;&nbsp; {convertToCurrency(this.state.balance)}&nbsp;BUSD&nbsp;
+                  </label>
                 
                 {/* <button className={styles.join('')} onClick={() => {
                     this.toggleBtnHandler();

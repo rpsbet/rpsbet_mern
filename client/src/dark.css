@@ -74,7 +74,6 @@ background: #060607;
 }
 .dark_mode .chat-wrapper .chat-input-panel {
 	background-color: #060607;
-	border-bottom: 1px solid #111;
 }
 
 .dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
@@ -259,12 +258,6 @@ background: #060607;
 	background: rgba(47, 49, 54, 0.5);
 	color: white;
 }
-.dark_mode .modal-body button,
-.dark_mode .modal-body button.btn-back {
-	color: #fa3fa0;
-    border-color: #fa3fa0;
-}
-
 .dark-mode #game_logs .transaction-panel button {
 	color: #FFF;
 }
@@ -316,9 +309,6 @@ background: #060607;
     background: unset;
   }
 
-.dark_mode .modal-body button:hover {
-	background-color: #fa3fa011;
-}
 
 .dark_mode .modal-body .modal-icon.alert-icon {
 	background-image: url("/img/icons/dark-alert-icon.svg");

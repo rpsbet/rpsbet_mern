@@ -7,7 +7,7 @@ import { getCustomerStatisticsData } from '../../redux/Customer/customer.action'
 import { alertModal } from './ConfirmAlerts';
 import ReactApexChart from 'react-apexcharts';
 import styled from 'styled-components';
-import { Button } from '@material-ui/core';
+import { Button, TextField } from '@material-ui/core';
 
 import Elevation from '../../Styles/Elevation';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
@@ -179,32 +179,70 @@ class ProfileModal extends Component {
 
                     <div className="modal-edit-panel">
                     <div>
-                        <p>REFERRAL CODE</p>
-                        <input className="form-control" value={this.state.referralCode} readOnly />
+                        <TextField
+                        className="form-control"
+                        variant="outlined"
+                        label="REFERRAL CODE"
+                        value={this.state.referralCode}
+                        readOnly />
                     </div>
                       <div className="input-wrapper">
 
-                        <p>REFERRAL REWARDS</p>
-                        <input className="form-control" value={this.props.userInfo.rewards} readOnly />
-                        <span className="input-suffix">BUSD</span>
+                        <TextField
+                        value={this.props.userInfo.rewards}
+                        className="form-control"
+                        variant="outlined"
+                        label="REFERRAL REWARDS"
+                        InputProps={{
+                            endAdornment: "BUSD",
+                          }}
+                        readOnly />
 
                     </div>
 
                         <div>
-                            <p>USERNAME</p>
-                            <input className="form-control" value={this.state.username} readOnly />
+                            <TextField
+                            className="form-control"
+                            value={this.state.username}
+                            variant="outlined"
+                            label="USERNAME"
+                            readOnly />
                         </div>
                         <div>
-                            <p>EMAIL</p>
-                            <input className="form-control" value={this.state.email} readOnly />
+                            <TextField
+                            className="form-control"
+                            value={this.state.email}
+                            variant="outlined"
+                            label="EMAIL"
+                            readOnly />
                         </div>    
                         <div>
-                            <p>NEW PASSWORD</p>
-                            <input type="password" className="form-control" value={this.state.password} onChange={this.handleChangePassword} />
+                            <TextField
+                            type="password"
+                            InputLabelProps={{
+                                shrink: true,
+                              }}
+                            className="form-control"
+                            value={this.state.password} 
+                            variant="outlined"
+                            label="PASSWORD"
+                            autoComplete='off'
+                            onChange={this.handleChangePassword} />
                         </div>
                         <div>
-                            <p>PASSWORD CONFIRMATION</p>
-                            <input type="password" className="form-control" value={this.state.passwordConfirmation} onChange={this.handleChangePasswordConfirmation} />
+
+                            <TextField
+                            type="password"
+                             InputLabelProps={{
+                                shrink: true,
+                              }}
+                            className="form-control"
+                            value={this.state.password} 
+                            variant="outlined"
+                            label="PASSWORD"
+                            autoComplete='off'
+                            value={this.state.passwordConfirmation}
+                            onChange={this.handleChangePasswordConfirmation} />
                         </div>    
                     </div>
                     <div className="modal-action-panel">

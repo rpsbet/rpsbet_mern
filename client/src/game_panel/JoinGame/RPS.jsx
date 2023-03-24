@@ -158,13 +158,15 @@ class RPS extends Component {
       clicked: true,
       intervalId: null,
       items: [],
-      
+      bgColorChanged: false,
+
       selected_rps: '',
       advanced_status: '',
       is_anonymous: false,
       bet_amount: 1,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       // bankroll: 0,
+      betResult: null,
       copied: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
@@ -195,6 +197,13 @@ getPreviousBets() {
   }
   return previousBets;
 }
+
+changeBgColor = async (result) => {
+  this.setState({ betResult: result, bgColorChanged: true });
+  await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
+  this.setState({ bgColorChanged: false });
+};
+
 
   // handleClickOutside = e => {
   //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
@@ -272,9 +281,6 @@ getPreviousBets() {
       this.joinGame();
     }
   }
-
-  
-
   joinGame = async (selected_rps, bet_amount) => {
     this.setState({selected_rps: selected_rps, bet_amount: this.state.bet_amount});
     const result = await this.props.join({
@@ -284,57 +290,61 @@ getPreviousBets() {
       rps_bet_item_id: this.props.rps_bet_item_id,
       slippage: this.state.slippage
     });
-    this.onBtnBetClick(result);
-
-    const currentUser = this.props.user;
-    const currentRoom = this.props.room;
+  
+    let text = 'HAHAA, YOU LOST!!!';
+  
+    if (result.betResult === 1) {
+      this.props.updateBetResult('win')
+      text = 'NOT BAD, WINNER!';
+      this.changeBgColor(result.betResult); // Add this line
+    } else if (result.betResult === 0) {
+  
+      this.props.updateBetResult('draw')
+      this.changeBgColor(result.betResult); // Add this line
+      text = 'DRAW, NO WINNER!';
+    }else{
+      this.changeBgColor(result.betResult); // Add this line
+      this.props.updateBetResult('lose')
+    }
+  
+    let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
+  
+    while (stored_rps_array.length >= 30) {
+      stored_rps_array.shift();
+    }
+    stored_rps_array.push({ rps: selected_rps });
+    localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
+  
+    // console.log(stored_rps_array);
+  
+    gameResultModal(
+      this.props.isDarkMode,
+      text,
+      result.betResult,
+      'Okay',
+      null,
+      () => {
+        // history.push('/');
+      },
+      () => {}
+    );
+  
     if (result.status === 'success') {
+      const currentUser = this.props.user;
+      const currentRoom = this.props.room;
       this.setState(prevState => ({
         betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
-    }));
-      let text = 'HAHAA, YOU LOST!!!';
-
-      if (result.betResult === 1) {
-        this.props.updateBetResult('win')
-        text = 'NOT BAD, WINNER!';
-      } else if (result.betResult === 0) {
-        this.props.updateBetResult('draw')
-        text = 'DRAW, NO WINNER!';
-      }else{
-         this.props.updateBetResult('lose')
-      }
-
-      let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
-
-while (stored_rps_array.length >= 30) {
-  stored_rps_array.shift();
-}
-stored_rps_array.push({ rps: selected_rps });
-localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
-
-// console.log(stored_rps_array);
-
-      gameResultModal(
-        this.props.isDarkMode,
-        text,
-        result.betResult,
-        'Okay',
-        null,
-        () => {
-          // history.push('/');
-        },
-        () => {}
-      );
+      }));
     } else {
       if (result.message) {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
+  
     this.props.refreshHistory();
   };
-
-
-  onBtnBetClick = (selected_rps) => {
+  
+  onBtnBetClick = async (selected_rps) => {
     // e.preventDefault();
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
@@ -343,42 +353,49 @@ localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
       );
       return;
     }
-
+  
     if (isNaN(this.state.bet_amount)) {
       alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
       return;
-      }
-    
+    }
+  
     if (this.state.bet_amount > this.state.bankroll) {
       alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
       return;
     }
-
+  
     if (this.state.bet_amount <= 0) {
       alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
       return;
     }
-
-    if (this.state.bet_amount >this.state.balance) {
+  
+    if (this.state.bet_amount > this.state.balance) {
       alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
       return;
     }
-
-    confirmModalCreate(
-      this.props.isDarkMode,
-      'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-      'Yes',
-      'Cancel',
-      async () => {
-        if (this.props.is_private === true) {
-          this.props.openGamePasswordModal();
-        } else {
-          this.joinGame(selected_rps);
-        }
+  
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      if (this.props.is_private === true) {
+        this.props.openGamePasswordModal();
+      } else {
+        await this.joinGame(selected_rps, this.state.bet_amount);
       }
-    );
+    } else {
+      confirmModalCreate(
+        this.props.isDarkMode,
+        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+        'Yes',
+        'Cancel',
+        async () => {
+          if (this.props.is_private === true) {
+            this.props.openGamePasswordModal();
+          } else {
+            await this.joinGame(selected_rps, this.state.bet_amount);
+          }
+        }
+      );
+    }
   };
- 
   
 
   handlehalfxButtonClick() {
@@ -555,10 +572,13 @@ if (this.state.bet_amount > this.state.bankroll) {
       if (result.betResult === 1) {
         this.props.updateBetResult('win')
         text = 'NOT BAD, WINNER!';
+        this.changeBgColor(result.betResult); // Add this line
       } else if (result.betResult === 0) {
         this.props.updateBetResult('draw')
         text = 'DRAW, NO WINNER!';
+        this.changeBgColor(result.betResult); // Add this line
       }else{
+        this.changeBgColor(result.betResult); // Add this line
          this.props.updateBetResult('lose')
       }
 
@@ -570,6 +590,7 @@ if (this.state.bet_amount > this.state.bankroll) {
    
   };
 
+  
 
 
   render() {
@@ -679,21 +700,23 @@ if (this.state.bet_amount > this.state.bankroll) {
           >
             <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
             <div id="rps-radio" style={{ zIndex: 1 }}>
-  {options.map(({ classname, selection }) => (
-    <Button
-    variant="contained"
-      id={`rps-${classname}`}
-      className={`rps-option ${classname}${
-        this.state.selected_rps === selection ? ' active' : ''
-      }`}
-      onClick={() => {
-        // console.log(`clicked ${classname}`);
-        this.setState({ selected_rps: selection });
-        this.onBtnBetClick(selection);
-        
-      }}
-    />
-  ))}
+            {options.map(({ classname, selection }) => (
+  <Button
+  variant="contained"
+  id={`rps-${classname}`}
+  className={`rps-option ${classname}${
+    this.state.selected_rps === selection ? ' active' : ''
+  }${this.state.bgColorChanged && this.state.betResult === -1 && this.state.selected_rps === selection ? ' lose-bg' : ''}${this.state.betResult === 0 ? ' draw-bg' : ''}${this.state.betResult === 1 ? ' win-bg' : ''}`}
+  onClick={() => {
+    this.setState({ selected_rps: selection });
+    this.onBtnBetClick(selection);
+  }}
+/>
+
+))}
+
+
+
 </div>
 <div className="your-bet-amount">
          

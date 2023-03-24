@@ -70,6 +70,8 @@ class LoginModal extends Component {
     render() {
         return (
             <Modal
+            closeTimeoutMS={500}
+
                 isOpen={this.props.modalIsOpen}
                 style={customStyles}
                 contentLabel={this.props.title}

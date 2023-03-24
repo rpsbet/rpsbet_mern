@@ -537,6 +537,7 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
             <h3 className="game-sub-title">Score to BEAT:</h3>
             <p>{this.props.brain_game_score}</p>
             <Button
+            id="aiplay"
         onMouseDown={this.handleButtonClick}
         onMouseUp={this.handleButtonRelease}
         onTouchStart={this.handleButtonClick}

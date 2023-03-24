@@ -83,7 +83,7 @@ class ChatPage extends Component {
         return (
 			<div className="chat-page">
                 <div className="chat-header">
-                    <button className="btn-back" onClick={()=>{history.push('/')}}>Go Back</button>
+                    <Button className="btn-back" onClick={()=>{history.push('/')}}>Go Back</Button>
                     <span>{this.props.username}</span>
                 </div>
                 <div className="chat-log-panel" ref={(elem) => {this.chat_log_panel = elem}}>

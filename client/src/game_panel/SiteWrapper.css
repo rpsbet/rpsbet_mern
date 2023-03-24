@@ -56,7 +56,44 @@ a#btn_how_to_play {
       transform: translateX(calc(-100% - 10px));
     }
   }
-  
+  .countdown-timer {
+    width: 100%;
+    height: 20px;
+    border-radius: 10px;
+    background-color: #020202;
+    overflow: hidden;
+}
+
+
+.countdown-bar {
+    height: 100%;
+    background: linear-gradient(to top, #ff409a, #c438ef);
+    animation: countdown 2.3s linear;
+}
+
+@keyframes countdown {
+    0% {
+        width: 100%;
+    }
+    100% {
+        width: 0%;
+    }
+}
+
+.react-confirm-alert-overlay > .result-body {
+    background: #f5f5f5 !important;
+    backdrop-filter: unset !important;
+  }
+
+#rps-radio Button.active.lose-bg {
+    background-color: hwb(59 0% 15%) !important;
+  }
+  #rps-radio Button.active.draw-bg {
+    background-color: #777777 !important;
+  }
+  #rps-radio Button.active.win-bg {
+    background-color: hwb(4 18% 17%) !important;
+  }
   
 .game_header .main_header {
     padding: 0 24px;
