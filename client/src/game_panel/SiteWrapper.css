@@ -68,7 +68,7 @@ a#btn_how_to_play {
 .countdown-bar {
     height: 100%;
     background: linear-gradient(to top, #ff409a, #c438ef);
-    animation: countdown 2.3s linear;
+    animation: countdown 1.5s linear;
 }
 
 @keyframes countdown {

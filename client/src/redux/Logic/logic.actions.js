@@ -128,12 +128,13 @@ export const bet = (bet_info) => async dispatch => {
         };
       }
       else {
-        dispatch({ type: MSG_WARNING, payload: 'SLOW TF DOWN!' });
+        console.log('err')
+        // dispatch({ type: MSG_WARNING, payload: 'SLOW TF DOWN!' });
       }
     }
   } catch (err) {
     console.log(err)
-    dispatch({ type: MSG_WARNING, payload: 'SLOW TF DOWN!' });
+    // dispatch({ type: MSG_WARNING, payload: 'SLOW TF DOWN!' });
   }
 
   return {

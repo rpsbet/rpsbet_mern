@@ -59,7 +59,7 @@ export const confirmModalClosed = (isDarkMode, text, okayButtonTitle, cancelButt
     showConfirm(isDarkMode, text, '-closed', okayButtonTitle, cancelButtonTitle, callback);
 }
 const showResultModal = (isDarkMode, text, icon, cancelButtonTitle, callback, callback2) => {
-    let timeLeft = 2300; // duration of modal in milliseconds
+    let timeLeft = 1500; // duration of modal in milliseconds
     const intervalId = setInterval(() => {
         timeLeft -= 100;
         if (timeLeft === 0) {
@@ -70,7 +70,7 @@ const showResultModal = (isDarkMode, text, icon, cancelButtonTitle, callback, ca
         closeOnEscape: false,
         closeOnClickOutside: false,
         customUI: ({ onClose }) => {
-            setTimeout(() => onClose(), 2300); // dismiss modal after 2 seconds
+            setTimeout(() => onClose(), 1500); // dismiss modal after 2 seconds
             return (
                 <div className={isDarkMode ? 'dark_mode' : ''}>
                     <div className='modal-body alert-body result-body'>
@@ -81,7 +81,7 @@ const showResultModal = (isDarkMode, text, icon, cancelButtonTitle, callback, ca
                                 <button className="btn-back" onClick={() => {callback2(); onClose();}}>{cancelButtonTitle}</button>
                             } */}
                             <div className="countdown-timer">
-                                <div className="countdown-bar" style={{ width: `${(timeLeft / 2300) * 100}%` }}></div>
+                                <div className="countdown-bar" style={{ width: `${(timeLeft / 1500) * 100}%` }}></div>
                             </div>
                         </div>
                     </div>
