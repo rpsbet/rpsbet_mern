@@ -119,7 +119,7 @@ a#btn_how_to_play {
 .table.main-game-table .table-row:hover {
 transform: scale(0.99);
 filter: brightness(1.09);
-transition: 0.5s;
+transition: 0.2s;
 z-index: 999;
 cursor: pointer;
 }
