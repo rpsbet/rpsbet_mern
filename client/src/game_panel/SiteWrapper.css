@@ -85,15 +85,7 @@ a#btn_how_to_play {
     backdrop-filter: unset !important;
   }
 
-  #rps-radio Button.active.lose-bg {
-    background-color: hwb(59 0% 15%) !important;
-  }
-  #rps-radio Button.active.draw-bg {
-    background-color: #777777 !important;
-  }
-  #rps-radio Button.active.win-bg {
-    background-color: hwb(4 18% 17%) !important;
-  }
+
   
 .game_header .main_header {
     padding: 0 24px;

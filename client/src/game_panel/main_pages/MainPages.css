@@ -209,6 +209,16 @@ div.table .table-header {
     padding-bottom: 8px;
 }
 
+#rps-radio Button.active.lose-bg {
+    background-color: #FFD700 !important;
+  }
+  #rps-radio Button.active.draw-bg {
+    background-color: #777777 !important;
+  }
+  #rps-radio Button.active.win-bg {
+    background-color: hwb(4 18% 17%) !important;
+  }
+
 .btn_modal_close:hover,
 .btn-close:hover,
 .modal-body.alert-body button.btn-close:hover {
