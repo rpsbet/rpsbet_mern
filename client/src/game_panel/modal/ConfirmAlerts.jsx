@@ -34,10 +34,10 @@ const showConfirm = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle,
                     control={
                         <Checkbox
                             color="primary"
-                            onChange={event => localStorage.setItem('hideConfirmModalx', event.target.checked)}
+                            onChange={event => localStorage.setItem('hideConfirmModal', event.target.checked)}
                         />
                     }
-                    label="Don't show this again"
+                    label="DON'T SHOW THIS AGAIN"
                 />
                
                         <div className="modal-action-panel">
