@@ -706,7 +706,7 @@ if (this.state.bet_amount > this.state.bankroll) {
   id={`rps-${classname}`}
   className={`rps-option ${classname}${
     this.state.selected_rps === selection ? ' active' : ''
-  }${this.state.bgColorChanged && this.state.betResult === -1 && this.state.selected_rps === selection ? ' lose-bg' : ''}${this.state.betResult === 0 ? ' draw-bg' : ''}${this.state.betResult === 1 ? ' win-bg' : ''}`}
+  }${this.state.bgColorChanged && this.state.betResult === -1 ? ' lose-bg' : ''}${this.state.betResult === 0 ? ' draw-bg' : ''}${this.state.betResult === 1 ? ' win-bg' : ''}`}
   onClick={() => {
     this.setState({ selected_rps: selection });
     this.onBtnBetClick(selection);

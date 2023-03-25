@@ -85,7 +85,7 @@ a#btn_how_to_play {
     backdrop-filter: unset !important;
   }
 
-#rps-radio Button.active.lose-bg {
+  #rps-radio Button.active.lose-bg {
     background-color: hwb(59 0% 15%) !important;
   }
   #rps-radio Button.active.draw-bg {
