@@ -98,10 +98,12 @@ class SignupModal extends Component {
                 contentLabel={this.props.title}
             >
                 <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                    <div className='modal-header'>
+                        <h2>REGISTER</h2>
+                        <Button className="btn-close" onClick={this.props.closeModal}>×</Button>
+                    </div>
                     <div className="modal-body">
-                        <button className="btn-close" onClick={this.props.closeModal}>×</button>
                         <h4>WELCOME! ⚔🥋</h4>
-                        <h2>JOIN THE CLUB</h2>
                         <form onSubmit={this.onSubmitForm}>
               <TextField
                 placeholder="CasE SeNsItIvE"

@@ -54,11 +54,13 @@ class CreateGame extends Component {
       game_mode: this.props.game_mode,
       isPlayingBrain: false,
       rps_list: [],
+      drop_list: [],
       qs_list: [],
       open: true,
       qs_game_type: 2,
       qs_nation: 0,
       selected_rps: '',
+      selected_drop: '',
       selected_qs_position: 0,
       bet_amount: 1,
       endgame_amount: 0,
@@ -433,7 +435,7 @@ class CreateGame extends Component {
       return (
         <DropGame
           onChangeState={this.onChangeState}
-          rps_list={this.state.rps_list}
+          drop_list={this.state.drop_list}
           bet_amount={this.state.bet_amount}
           winChance={this.state.winChance}
           is_private={this.state.is_private}
@@ -441,7 +443,6 @@ class CreateGame extends Component {
           room_password={this.state.room_password}
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
-          rps_game_type={this.state.rps_game_type}
         />
       );
     }

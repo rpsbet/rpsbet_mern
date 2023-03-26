@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
+import { Button } from '@material-ui/core';
 
 Modal.setAppElement('#root')
 
@@ -45,9 +46,11 @@ class TermsModal extends Component {
             contentLabel="Terms Modal"
         >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+					<div className='modal-header'>
+                    <h2 className="modal-title">Terms <span style={{color: "#d81719"}}>RPS</span> <span style={{color: "#ebddca"}}>Bet</span></h2>
+					<Button className="btn-close" onClick={this.props.closeModal}>×</Button>
+                    </div>
 				<div className="modal-body edit-modal-body terms-modal-body">
-					<h2 className="modal-title">Terms <span style={{color: "#d81719"}}>RPS</span> <span style={{color: "#ebddca"}}>Bet</span></h2>
-					<button className="btn-close" onClick={this.props.closeModal}>×</button>
                     <div>
                         <h2>Terms of Service</h2>
                         <br/>

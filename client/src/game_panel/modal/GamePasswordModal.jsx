@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { setPasswordCorrect, closeGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { checkGamePassword } from '../../redux/Logic/logic.actions';
-import { Button } from '@material-ui/core';
+import { Button, TextField } from '@material-ui/core';
 
 Modal.setAppElement('#root')
 
@@ -55,11 +55,19 @@ class GamePasswordModal extends Component {
             contentLabel="Password"
         >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+<div className='modal-header'>
+                <h2 className='modal-title'>GAME LOCKED!</h2>
+                    <Button className="btn-close" onClick={this.props.closeGamePasswordModal}>×</Button>
+</div>
                 <div className='modal-body alert-body password-modal-body'>
-                    <button className="btn-close" onClick={this.props.closeGamePasswordModal}>×</button>
                     <div className={`modal-icon result-icon-password`}></div>
                     <h5>This game requires a password!<br/>Enter the game's password.</h5>
-                    <input type="password" id="game_password" value={this.state.password} onChange={(e) => {this.setState({password: e.target.value})}} className="form-control" />
+                    <TextField
+                    type="password"
+                    id="game_password"
+                    variant="outlined"
+                    value={this.state.password}
+                    onChange={(e) => {this.setState({password: e.target.value})}} className="form-control" />
                     <Button className="btn-submit" onClick={this.onBtnOkClicked}>Okay</Button>
                     <Button className="btn-back" onClick={this.props.closeGamePasswordModal}>Cancel</Button>
                 </div>

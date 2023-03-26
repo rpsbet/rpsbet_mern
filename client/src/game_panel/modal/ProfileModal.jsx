@@ -153,9 +153,11 @@ class ProfileModal extends Component {
             contentLabel="Profile Modal"
         >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-                <div className="modal-body edit-modal-body">
-                    <button className="btn-close" onClick={this.handleCloseModal}>×</button>
+                <div className='modal-header'>
                     <h2 className="modal-title">Your Profile</h2>
+                    <Button className="btn-close" onClick={this.handleCloseModal}>×</Button>
+                </div>
+                <div className="modal-body edit-modal-body">
                     <div className="edit-avatar-panel">
                         <AvatarUpload setImageFilename={this.handleAvatarLoaded} darkMode={this.props.isDarkMode} avatar={this.state.avatar} />
                     </div>

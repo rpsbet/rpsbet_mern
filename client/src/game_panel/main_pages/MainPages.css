@@ -6,7 +6,6 @@ button, button.btn {
     background: darkgray;
 }
 .your-bet-amount {
-    padding-left: 15px;
     margin-top: 15px;
     margin-bottom: 25px;
     display: flex;
@@ -14,6 +13,8 @@ button, button.btn {
     align-items: center;
     justify-content: center;
 }
+
+
 .contents_wrapper .main-game {
     display: grid;
     position: relative;
@@ -225,6 +226,12 @@ div.table .table-header {
   background-color: unset !important;
 }
 
+div.table .table-row .table-cell img.game-type-icon[src='/img/gametype/icons/DG.svg'] {
+    width: 34px !important;
+    height: 34px !important;
+    margin-left: 2px !important;
+}
+
 .dont-have-game-msg svg {
     filter: contrast(0.2);
 }
@@ -272,7 +279,8 @@ div.table .table-row .table-cell img.avatar {
 div.table .table-row .table-cell button:last-child,
 .boxes-panel.boxes-join .box,
 .game_header .main_header .header_action_panel button#btn-login,
-#balance button  {
+#balance button,
+.game-page .game-contents .game-info-panel button.place-bet  {
     padding: 0;
     border-radius: 0.25em;
     color: white;
@@ -283,6 +291,7 @@ div.table .table-row .table-cell button:last-child,
 }
 div.table .table-row .table-cell button.active,
 #balance button:active,
+.game-page .game-contents .game-info-panel button.place-bet:active,
 .boxes-panel.boxes-join .box:active,
 .game_header .main_header .header_action_panel button#btn-login:active,
 div.table .table-row .table-cell button:last-child:active,
@@ -299,6 +308,11 @@ div.table .table-row .table-cell button:last-child:active,
     justify-content: space-between;
 }
 
+.place-bet {
+    display: flex !important;
+    margin: auto !important;
+    width: 100%;
+}
 
 .cell-joiners svg {
     width: 20px !important;
@@ -306,6 +320,7 @@ div.table .table-row .table-cell button:last-child:active,
 }
 div.table .table-row .table-cell button:last-child:hover,
 #balance button:hover,
+.game-page .game-contents .game-info-panel button.place-bet:hover,
 .boxes-panel.boxes-join .box:hover,
 .game_header .main_header .header_action_panel button#btn-login:hover,
 .btn-create-room:hover {
@@ -326,8 +341,7 @@ div.table .table-cell button.btn_end {
     width: 94px;
     height: 32px;
 }
-div.table.main-game-table::-webkit-scrollbar, div.table.main-history-table::-webkit-scrollbar, div.table.my-open-game-table::-webkit-scrollbar,
-.modal-body .modal-content-wrapper div.modal-content-panel::-webkit-scrollbar {
+div.table.main-game-table::-webkit-scrollbar, div.table.main-history-table::-webkit-scrollbar, div.table.my-open-game-table::-webkit-scrollbar {
     
   display: none;
 }
@@ -2006,7 +2020,7 @@ margin-bottom: 10px;
     }
 
     .join-game-panel .game-page .game-contents .game-info-panel button {
-        margin: 30px 0 0 0;
+        margin-top: 10px;
     }
     .join-game-panel   .game-page .game-contents .game-info-panel #select-buttons-panel button {
         margin: 6px 6px;

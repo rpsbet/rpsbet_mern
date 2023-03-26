@@ -77,10 +77,12 @@ class LoginModal extends Component {
                 contentLabel={this.props.title}
             >
                 <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                    <div className='modal-header'>
+                        <h2>LOGIN</h2>
+                        <Button className="btn-close" onClick={this.props.closeModal}>×</Button>
+                    </div>
                     <div className="modal-body">
-                        <button className="btn-close" onClick={this.props.closeModal}>×</button>
                         <h4>WELCOME BACK! 🔫🤠</h4>
-                        <h2>LOGIN TO RPSBET.IO</h2>
                         <form onSubmit={this.onSubmitForm}>
                             <TextField
                                 type="text"

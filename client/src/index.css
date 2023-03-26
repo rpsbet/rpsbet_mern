@@ -632,8 +632,15 @@ backdrop-filter: brightness(2.5);
 border-radius: 6px;
 }
 
-.modal-body {
+.modal-body.alert-body {
 	border-radius: 20px !important;
+}
+
+.modal-body {
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  border-bottom-right-radius: 20px;
+  border-bottom-left-radius: 20px;
 }
 
 .modal-body button,

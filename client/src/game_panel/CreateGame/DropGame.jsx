@@ -1,15 +1,15 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button } from '@material-ui/core';
+import { Button, TextField } from '@material-ui/core';
 
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import {
   alertModal
 } from '../modal/ConfirmAlerts';
-// const calcBetAmount = rps_list => {
+// const calcBetAmount = drop_list => {
 //   let bet_amount = 0;
-//   rps_list.map((el, i) => {
+//   drop_list.map((el, i) => {
 //     bet_amount += el.bet_amount;
 //   });
 //   return bet_amount;
@@ -21,11 +21,11 @@ const calcWinChance = (prevStates) => {
   let paper = 0;
   let scissors = 0;
   prevStates.map((el) => {
-    if (el.rps === "R") {
+    if (el.drop === "R") {
       rock++;
-    } else if (el.rps === "P") {
+    } else if (el.drop === "P") {
       paper++;
-    } else if (el.rps === "S") {
+    } else if (el.drop === "S") {
       scissors++;
     }
   });
@@ -52,8 +52,8 @@ const calcWinChance = (prevStates) => {
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 };
 
-const predictNext = (rps_list) => {
-  // console.log(rps_list);
+const predictNext = (drop_list) => {
+  // console.log(drop_list);
   // Create a transition matrix to store the probability of transitioning from one state to another
   const transitionMatrix = {
     R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
@@ -62,8 +62,8 @@ const predictNext = (rps_list) => {
   };
 
   // Iterate through the previous states to populate the transition matrix
-  for (let i = 0; i < rps_list.length - 3; i++) {
-    transitionMatrix[rps_list[i].rps][rps_list[i + 1].rps][rps_list[i + 2].rps][rps_list[i + 3].rps]++;
+  for (let i = 0; i < drop_list.length - 3; i++) {
+    transitionMatrix[drop_list[i].drop][drop_list[i + 1].drop][drop_list[i + 2].drop][drop_list[i + 3].drop]++;
   }
 
   // Normalize the transition matrix
@@ -79,15 +79,15 @@ const predictNext = (rps_list) => {
   });
 
 // Check for consistency
-const winChance = calcWinChance(rps_list);
+const winChance = calcWinChance(drop_list);
 let deviation = 0;
 if (winChance !== "33.33%") {
     deviation = (1 - (1 / 3)) / 2;
 }
 // Use the transition matrix to predict the next state based on the current state
-let currentState1 = rps_list[rps_list.length - 3].rps;
-let currentState2 = rps_list[rps_list.length - 2].rps;
-let currentState3 = rps_list[rps_list.length - 1].rps;
+let currentState1 = drop_list[drop_list.length - 3].drop;
+let currentState2 = drop_list[drop_list.length - 2].drop;
+let currentState3 = drop_list[drop_list.length - 1].drop;
 let nextState = currentState3;
 let maxProb = 0;
 Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
@@ -122,7 +122,7 @@ class DropGame extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selected_rps: '',
+      selected_drop: '',
       drop_amount: 10.00,
       balance: this.props.balance,
       winChance: 33,
@@ -154,12 +154,12 @@ class DropGame extends Component {
 
   onAutoPlay = () => {
     
-    if(this.props.rps_list.length > 2){
-      const prevStates = this.props.rps_list;
+    if(this.props.drop_list.length > 2){
+      const prevStates = this.props.drop_list;
 
-      // console.log(this.props.rps_list)
-      const nextRPS = predictNext(prevStates, this.props.rps_list);
-      this.onAddRun(nextRPS);
+      // console.log(this.props.drop_list)
+      const nextDrop = predictNext(prevStates, this.props.drop_list);
+      this.onAddRun(nextDrop);
 
     }else {
       alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
@@ -178,11 +178,11 @@ class DropGame extends Component {
   
 
   onRemoveItem = index => {
-    const newArray = this.props.rps_list.filter((elem, i) => i != index);
+    const newArray = this.props.drop_list.filter((elem, i) => i != index);
     // const bet_amount = calcBetAmount(newArray);
     const winChance = calcWinChance(newArray);
     this.props.onChangeState({
-      rps_list: newArray,
+      drop_list: newArray,
       // bet_amount: bet_amount,
       // max_return: bet_amount * 2 /* 0.95 */,
       winChance: winChance
@@ -192,9 +192,9 @@ class DropGame extends Component {
 
   onAddRun = (drop_amount) => {
     this.setState({ drop_amount: drop_amount });
-    const newArray = JSON.parse(JSON.stringify(this.props.rps_list));
+    const newArray = JSON.parse(JSON.stringify(this.props.drop_list));
 
-    // Check if the rps_list is empty and if the drop_amount value exceeds this.props.bet_amount
+    // Check if the drop_list is empty and if the drop_amount value exceeds this.props.bet_amount
     if (newArray.length === 0 && drop_amount > this.props.bet_amount) {
       drop_amount = this.props.bet_amount; // Set the drop_amount value to this.props.bet_amount
     }
@@ -205,7 +205,7 @@ class DropGame extends Component {
 
     const winChance = calcWinChance(newArray);
     this.props.onChangeState({
-      rps_list: newArray,
+      drop_list: newArray,
       winChance: winChance,
       drop_amount: this.state.drop_amount
     });
@@ -214,7 +214,7 @@ class DropGame extends Component {
   };
 
   componentDidUpdate(prevProps) {
-    if (prevProps.rps_list !== this.props.rps_list) {
+    if (prevProps.drop_list !== this.props.drop_list) {
          //move this line after updating the state and the DOM
          const lastRow = document.querySelector("#runs tr:last-child");
          lastRow.scrollIntoView({block: "end", behavior: "smooth", top: -200});
@@ -278,6 +278,7 @@ class DropGame extends Component {
       </div>
     ) : (
       <div className="game-info-panel">
+        <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
         <div className="rps-add-run-panel">
         <div className="drop-add-run-form">
            
@@ -285,21 +286,26 @@ class DropGame extends Component {
               Drop some amounts!{' '}
             </h3>
             <div className="your-bet-amount">
-              <input
+              <TextField
                 type="text"
                 pattern="[0-9]*"
                 name="betamount"
+                variant="outlined"
                 id="betamount"
                 maxLength="9"
                 value={this.state.drop_amount}
                 onChange={(event) => this.setState({ drop_amount: event.target.value })}
                 placeholder="BET AMOUNT"
+                InputProps={{
+                  endAdornment: "BUSD",
+                }}
               />
-              <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
               <div>
-              <a id='max' onClick={() => this.handlehalfxButtonClick()}>0.5x</a>
-              <a id='max' onClick={() => this.handle2xButtonClick()}>2x</a>
-              <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
+              <div className='max'>
+            <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
+          </div>
               </div>
               <div className='addRun'>
               <Button 
@@ -320,11 +326,11 @@ class DropGame extends Component {
             <h3 className="game-sub-title">Training Data</h3>
             <table id="runs">
               <tbody>
-                {this.props.rps_list && this.props.rps_list.length > 0 ? (
-                  this.props.rps_list.map((rps, index) => (
+                {this.props.drop_list && this.props.drop_list.length > 0 ? (
+                  this.props.drop_list.map((drop, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{rps.drop_amount}</td>
+                      <td>{drop.drop_amount}</td>
                       <td>
                         <HighlightOffIcon
                           onClick={() => this.onRemoveItem(index)}

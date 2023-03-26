@@ -141,10 +141,11 @@ class WithdrawModal extends Component {
                     account={this.state.web3account}
                 >
                         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-                            
-                            <div className="modal-body edit-modal-body deposit-modal-body">
-                                <button className="btn-close" onClick={this.props.closeModal}>×</button>
+                            <div className='modal-header'>
                                 <h2>WITHDRAW</h2>
+                                <Button className="btn-close" onClick={this.props.closeModal}>×</Button>
+                            </div>
+                            <div className="modal-body edit-modal-body deposit-modal-body">
                                
                                 <div className="modal-content-wrapper">
                                     <div className="modal-content-panel">

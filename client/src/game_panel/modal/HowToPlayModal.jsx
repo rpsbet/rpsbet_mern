@@ -8,6 +8,7 @@ import {
   AccordionItemPanel
 } from 'react-accessible-accordion';
 import { convertToCurrency } from '../../util/conversion';
+import { Button } from '@material-ui/core';
 
 Modal.setAppElement('#root');
 
@@ -40,46 +41,194 @@ class HowToPlayModal extends Component {
         contentLabel="How To Play Modal"
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-body edit-modal-body how-to-play-modal-body">
+<div className='modal-header'>
             <h2 className="modal-title">Help</h2>
-
-            <button className="btn-close" onClick={this.props.closeModal}>
+            <Button className="btn-close" onClick={this.props.closeModal}>
               ×
-            </button>
-            {/* <div className="release-updates">
-  <h2 className="section-title">Latest Features</h2>
-  <ul className="feature-list">
-    <li>
-      <h3 className="feature-title">Drop Game</h3>
-      <p className="feature-description">Compete for the highest value and win big with our new drop game feature.</p>
-    </li> 
-    <li>
-      <h3 className="feature-title">AI Play</h3>
-      <p className="feature-description">Enjoy non-stop gaming with our AI Play feature. Joiners can now play autonomously and the games run indefinitely.</p>
-    </li>
-    <li>
-      <h3 className="feature-title">Payouts</h3>
-      <p className="feature-description">Hosts can now receive regular payouts for their games with our new payout system.</p>
-    </li>
-    <li>
-      <h3 className="feature-title">Bankrolls</h3>
-      <p className="feature-description">Manage your winnings with ease using our new 'Pot / Pool' system for bankrolls.</p>
-    </li>
-    <li>
-      <h3 className="feature-title">Brain Game</h3>
-      <p className="feature-description">Challenge your mind and create your own quizzes with our new Brain Game feature.</p>
-    </li>
-    <li>
-      <h3 className="feature-title">Player Profiles</h3>
-      <p className="feature-description">Show off your gaming skills with our new player profiles, which display your stats for all to see.</p>
-    </li>
-    <li>
-      <h3 className="feature-title">Light Mode</h3>
-      <p className="feature-description">Experience gaming in a whole new light with our new Light Mode feature.</p>
-    </li>
-  </ul>
-</div> */}
+            </Button>
+</div>
+          <div className="modal-body edit-modal-body how-to-play-modal-body">
             <Accordion>
+            <AccordionItem>
+                <AccordionItemHeading>
+                  <AccordionItemButton>
+                    <div className="modal-content-wrapper drop-game">
+                      <h4>Word Jumble - Coming Soon!</h4>
+                    </div>
+                  </AccordionItemButton>
+                </AccordionItemHeading>
+                <AccordionItemPanel>
+                  {/* <div className="modal-content-wrapper quick-shoot">
+                    <div className="modal-content-panel">
+                      <h5>CREATE</h5>
+                      <ol>
+                        <li>
+                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
+                          etc.)
+                        </li>
+                        <li>Set Your Bet Amount</li>
+                        <li>Choose Where to Save</li>
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>PLAY</h5>
+                      <ol>
+                        <li>Choose Where to Shoot</li>
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
+                      <p>e.g.</p>
+                      <p>
+                        Your Bet Amount ={' '}
+                        <span style={{ color: '#b52c22' }}>
+                          {convertToCurrency(5)}
+                        </span>
+                      </p>
+                      <p>
+                        Game Type ={' '}
+                        <span style={{ color: '#f6b22a' }}>
+                          <u>5 (5x)</u>
+                        </span>
+                      </p>
+                      <p>
+                        Public Bet Amount ={' '}
+                        <span style={{ color: '#b52c22' }}>
+                          {`${convertToCurrency(20)} [${convertToCurrency(
+                            5
+                          )} * 4]`}
+                        </span>
+                      </p>
+                      <p>
+                        Winnings ={' '}
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(25)}
+                        </span>
+                      </p>
+                    </div>
+                  </div> */}
+                </AccordionItemPanel>
+              </AccordionItem>
+              <AccordionItem>
+                <AccordionItemHeading>
+                  <AccordionItemButton>
+                    <div className="modal-content-wrapper drop-game">
+                      <h4>Slots - Coming Soon!</h4>
+                    </div>
+                  </AccordionItemButton>
+                </AccordionItemHeading>
+                <AccordionItemPanel>
+                  {/* <div className="modal-content-wrapper quick-shoot">
+                    <div className="modal-content-panel">
+                      <h5>CREATE</h5>
+                      <ol>
+                        <li>
+                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
+                          etc.)
+                        </li>
+                        <li>Set Your Bet Amount</li>
+                        <li>Choose Where to Save</li>
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>PLAY</h5>
+                      <ol>
+                        <li>Choose Where to Shoot</li>
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
+                      <p>e.g.</p>
+                      <p>
+                        Your Bet Amount ={' '}
+                        <span style={{ color: '#b52c22' }}>
+                          {convertToCurrency(5)}
+                        </span>
+                      </p>
+                      <p>
+                        Game Type ={' '}
+                        <span style={{ color: '#f6b22a' }}>
+                          <u>5 (5x)</u>
+                        </span>
+                      </p>
+                      <p>
+                        Public Bet Amount ={' '}
+                        <span style={{ color: '#b52c22' }}>
+                          {`${convertToCurrency(20)} [${convertToCurrency(
+                            5
+                          )} * 4]`}
+                        </span>
+                      </p>
+                      <p>
+                        Winnings ={' '}
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(25)}
+                        </span>
+                      </p>
+                    </div>
+                  </div> */}
+                </AccordionItemPanel>
+              </AccordionItem>
+              <AccordionItem>
+                <AccordionItemHeading>
+                  <AccordionItemButton>
+                    <div className="modal-content-wrapper drop-game">
+                      <h4>Blackjack- Coming Soon!</h4>
+                    </div>
+                  </AccordionItemButton>
+                </AccordionItemHeading>
+                <AccordionItemPanel>
+                  {/* <div className="modal-content-wrapper quick-shoot">
+                    <div className="modal-content-panel">
+                      <h5>CREATE</h5>
+                      <ol>
+                        <li>
+                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
+                          etc.)
+                        </li>
+                        <li>Set Your Bet Amount</li>
+                        <li>Choose Where to Save</li>
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>PLAY</h5>
+                      <ol>
+                        <li>Choose Where to Shoot</li>
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
+                      <p>e.g.</p>
+                      <p>
+                        Your Bet Amount ={' '}
+                        <span style={{ color: '#b52c22' }}>
+                          {convertToCurrency(5)}
+                        </span>
+                      </p>
+                      <p>
+                        Game Type ={' '}
+                        <span style={{ color: '#f6b22a' }}>
+                          <u>5 (5x)</u>
+                        </span>
+                      </p>
+                      <p>
+                        Public Bet Amount ={' '}
+                        <span style={{ color: '#b52c22' }}>
+                          {`${convertToCurrency(20)} [${convertToCurrency(
+                            5
+                          )} * 4]`}
+                        </span>
+                      </p>
+                      <p>
+                        Winnings ={' '}
+                        <span style={{ color: '#02c526' }}>
+                          {convertToCurrency(25)}
+                        </span>
+                      </p>
+                    </div>
+                  </div> */}
+                </AccordionItemPanel>
+              </AccordionItem>
             <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
@@ -443,7 +592,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper provably-fair">
-                      <h4>Games of Skill - Provably Fair</h4>
+                      <h4>Games of Skill</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>

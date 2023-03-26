@@ -112,9 +112,11 @@ class PlayerModal extends Component {
                 contentLabel="Player Modal"
             >
                 <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-                    <div className="modal-body edit-modal-body">
-                        <button className="btn-close" onClick={this.handleCloseModal}>×</button>
+                        <div className='modal-header'>
                         <h2 className="modal-title">{this.state.selectedCreator}</h2>
+                        <Button className="btn-close" onClick={this.handleCloseModal}>×</Button>
+                        </div>
+                    <div className="modal-body edit-modal-body">
                         <div className='align-center'>
 
                             {this.state.loading ? (

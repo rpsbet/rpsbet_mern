@@ -1,9 +1,10 @@
 .modal-body {
     background-color: white;
     color: #747f8d;
-    padding: 48px 40px;
-    width: 400px;
+    max-height: 75vh;
+    min-width: 50vw;
     max-width: 95vw;
+    overflow-y: scroll;
     position: relative;
 }
 
@@ -100,49 +101,19 @@
     margin-bottom: 0;
     color: gray;
   }
-    
-.modal-body.edit-modal-body {
-    width: 700px;
-    max-height: 85vh;
-    overflow-y: auto;
-    overflow-x: hidden;
 
-}
-.modal-body.edit-modal-body.terms-modal-body {
-    width: 1000px;
-}
-.modal-body.edit-modal-body.deposit-modal-body {
-    width: 400px;
-    padding: 24px;
-}
-.modal-body.edit-modal-body::-webkit-scrollbar, #runs::-webkit-scrollbar  {
-    width: 4px;
-    background: transparent;
-}
-.modal-body.edit-modal-body::-webkit-scrollbar-track {
-    background: transparent;
-}
+
 .modal-body.edit-modal-body::-webkit-scrollbar-thumb,  #runs::-webkit-scrollbar-thumb {
     background-image: linear-gradient(to bottom, #ff409a, #c438ef);
 }
-.modal-body button.btn-close {
-    position: absolute;
-    background: transparent;
-    color: #747f8d;
-    opacity: 0.6;
-    right: 24px;
-    top: 12px;
-    font-size: 2em;
-    padding: 0;
-    width: 24px;
-    height: 24px;
+
+.modal-header {
+    border-top-right-radius: 20px !important;
+    border-top-left-radius: 20px !important;
+    border-bottom: 0 !important;
 }
 
-.modal-body button.btn-close:hover {
-    transition:0.3s;
-    opacity: 1;
-  }
-  
+
   .ReactModal__Overlay {
     opacity: 0;
     transition: opacity 500ms ease-in-out;
@@ -170,7 +141,6 @@ div[aria-label="Add Question Modal"] .modal-body {
 border-top-right-radius: 0 !important;
 border-bottom-right-radius: 0 !important;
 }
-.modal-body h2,
 .modal-body h5 {
     text-align: center;
     font-size: 24px;
@@ -192,11 +162,7 @@ border-bottom-right-radius: 0 !important;
     margin: 30px 0 5px;
     font-size: 12px;
 }
-.modal-body input {
-    background: #f2f3f5;
-    color: #060607;
-    border: 0;
-}
+
 .modal-body .modal-action-panel {
     margin-top: 20px;
 }
@@ -232,9 +198,6 @@ border-bottom-right-radius: 0 !important;
     font-weight: 600;
 }
 
-.modal-body button.btn-back:hover  {
-    background: #ff409a11;
-}
 .modal-body p button,
 .modal-body p span {
     color: #060607 !important;
@@ -312,8 +275,9 @@ border-bottom-right-radius: 0 !important;
     background-image: url("/img/icons/result-icon-password.svg");
 }
 .modal-body.alert-body button.btn-close {
-    top: 8px;
-    right: 16px;
+    top: 10px;
+    right: 0;
+    position: absolute;
 }
 
 .user-statistics div {
@@ -526,7 +490,9 @@ div[role="presentation"] li:last-child {
 
         margin-left: 10px !important;
     }
-
+    .modal-body {
+        width: 90vw;
+    }
 
     .AvatarButtonPanel button:first-child {
         display: flex;
@@ -540,9 +506,7 @@ div[role="presentation"] li:last-child {
     .modal-body p.sm-text-center {
         text-align: center;
     }
-    .modal-body.edit-modal-body {
-        padding: 16px 16px 32px;
-    }
+
     .modal-body h2.modal-title {
         margin: 0;
     }

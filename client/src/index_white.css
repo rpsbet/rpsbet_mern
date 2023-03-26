@@ -450,7 +450,6 @@ div[aria-label="How To Play Modal"] ul {
 }
 
 .modal-body {
-  height: 70vh;
   overflow-y: scroll;
 }
 .modal-body span {

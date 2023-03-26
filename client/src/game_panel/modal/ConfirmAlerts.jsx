@@ -1,14 +1,13 @@
 import React from 'react';
 import { confirmAlert } from 'react-confirm-alert';
-import Checkbox from '@material-ui/core/Checkbox';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
+import {FormControlLabel, Button, Checkbox} from '@material-ui/core/';
 const showAlert = (isDarkMode, text, icon) => {
     confirmAlert({
         customUI: ({ onClose }) => {
             return (
                 <div className={isDarkMode ? 'dark_mode' : ''}>
                     <div className='modal-body alert-body'>
-                        <button className="btn-close" onClick={onClose}>×</button>
+                        <Button className="btn-close" onClick={onClose}>×</Button>
                         <div className={`modal-icon alert-icon${icon}`}></div>
                         <h5>{text}</h5>
                     </div>
@@ -27,7 +26,7 @@ const showConfirm = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle,
             return (
                 <div className={isDarkMode ? 'dark_mode' : ''}>
                     <div className='modal-body alert-body confirm-body'>
-                        <button className="btn-close" onClick={onClose}>×</button>
+                        <Button className="btn-close" onClick={onClose}>×</Button>
                         <div className={`modal-icon alert-icon${icon}`}></div>
                         <h5>{text}</h5>
                         <FormControlLabel
@@ -41,9 +40,9 @@ const showConfirm = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle,
                 />
                
                         <div className="modal-action-panel">
-                            <button className="btn-submit" onClick={() => {callback(); onClose();}}>{okayButtonTitle}</button>
+                            <Button className="btn-submit" onClick={() => {callback(); onClose();}}>{okayButtonTitle}</Button>
                             { cancelButtonTitle &&
-                                <button className="btn-back" onClick={onClose}>{cancelButtonTitle}</button>
+                                <Button className="btn-back" onClick={onClose}>{cancelButtonTitle}</Button>
                             }
                         </div>
                     </div>

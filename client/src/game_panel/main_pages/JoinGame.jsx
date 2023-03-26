@@ -302,6 +302,8 @@ class JoinGame extends Component {
             user_id={this.props.user_id}
             creator_id={this.props.roomInfo.creator_id}
             bet_amount={this.props.roomInfo.bet_amount}
+            bankroll={this.state.bankroll}
+            drop_bet_item_id={this.props.roomInfo.drop_bet_item_id}
             is_private={this.props.roomInfo.is_private}
           />
         )}
