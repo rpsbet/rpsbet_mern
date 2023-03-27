@@ -174,7 +174,6 @@ class QuickShoot extends Component {
       qs_bet_item_id: this.props.qs_bet_item_id,
 
     });
-    this.onBtnBetClick(result);
 
     if (result.status === 'success') {
       let text = 'HAHAA, YOU SUCK!!!';
@@ -519,20 +518,27 @@ predictNext = (qs_list, gameType) => {
       alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
       return;
     }
-
-    confirmModalCreate(
-      this.props.isDarkMode,
-      'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-      'Yes',
-      'Cancel',
-      async () => {
-        if (this.props.is_private === true) {
-          this.props.openGamePasswordModal();
-        } else {
-          this.joinGame(selected_qs_position);
-        }
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      if (this.props.is_private === true) {
+        this.props.openGamePasswordModal();
+      } else {
+        this.joinGame(selected_qs_position);
       }
-    );
+    } else {
+      confirmModalCreate(
+        this.props.isDarkMode,
+        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+        'Yes',
+        'Cancel',
+        async () => {
+          if (this.props.is_private === true) {
+            this.props.openGamePasswordModal();
+          } else {
+            await this.joinGame(selected_qs_position);
+          }
+        }
+      );
+    }
   };
   handleButtonClick = () => {
 
@@ -813,7 +819,7 @@ predictNext = (qs_list, gameType) => {
                 }.png`}
                 alt=""
                 style={{ width: '600px', maxWidth: '100%', borderRadius: '20px',
-                boxShadow: '0 0 20px #0e0e0e' }}
+                boxShadow: '0 0 20px #0e0e0e', filter: 'drop-shadow(2px 4px 6px black)' }}
               />
                       {this.renderButtons()}
 
@@ -823,20 +829,29 @@ predictNext = (qs_list, gameType) => {
          
           <TextField
             type="text"
-            pattern="[0-9]*"
             name="betamount"
-            id="betamount"
-            maxLength="9"
+            variant="outlined"
+                id="betamount"
+                label="BET AMOUNT"
             value={this.state.bet_amount}
             onChange={this.onChangeState}
             placeholder="BET AMOUNT"
+            inputProps={{
+              pattern: "[0-9]*",
+              maxLength: 9,
+            }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            InputProps={{
+              endAdornment: "BUSD",
+            }}
           />
-          <span style={{ marginLeft: '-3.2rem' }}>BUSD</span>
           <div className='max'>
-          <a id='max' onClick={() => this.handlehalfxButtonClick()}>0.5x</a>
-          <a id='max' onClick={() => this.handle2xButtonClick()}>2x</a>
-          <a id='max' onClick={() => this.handleMaxButtonClick()}>Max</a>
-</div>
+            <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
+          </div>
         </div>
             {/* <div className="qs-action-panel">
             

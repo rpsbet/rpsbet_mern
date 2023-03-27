@@ -17,106 +17,30 @@ import {
 
 const calcWinChance = (prevStates) => {
   let total = prevStates.length;
-  let rock = 0;
-  let paper = 0;
-  let scissors = 0;
-  prevStates.map((el) => {
-    if (el.drop === "R") {
-      rock++;
-    } else if (el.drop === "P") {
-      paper++;
-    } else if (el.drop === "S") {
-      scissors++;
+  let counts = {};
+  prevStates.forEach((state) => {
+    if (counts[state.drop_amount]) {
+      counts[state.drop_amount]++;
+    } else {
+      counts[state.drop_amount] = 1;
     }
   });
-  const rockWinChance = (rock / total) * 100;
-  const paperWinChance = (paper / total) * 100;
-  const scissorsWinChance = (scissors / total) * 100;
-  let lowest = rockWinChance;
-  let highest = rockWinChance;
-  if (paperWinChance < lowest) {
-    lowest = paperWinChance;
-  }
-  if (scissorsWinChance < lowest) {
-    lowest = scissorsWinChance;
-  }
-  if (paperWinChance > highest) {
-    highest = paperWinChance;
-  }
-  if (scissorsWinChance > highest) {
-    highest = scissorsWinChance;
-  }
+  let lowest = Infinity;
+  let highest = -Infinity;
+  Object.keys(counts).forEach((key) => {
+    const chance = (counts[key] / total) * 100;
+    if (chance < lowest) {
+      lowest = chance;
+    }
+    if (chance > highest) {
+      highest = chance;
+    }
+  });
   if (lowest === highest) {
     return lowest.toFixed(2) + "%";
   }
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 };
-
-const predictNext = (drop_list) => {
-  // console.log(drop_list);
-  // Create a transition matrix to store the probability of transitioning from one state to another
-  const transitionMatrix = {
-    R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-    P: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-    S: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-  };
-
-  // Iterate through the previous states to populate the transition matrix
-  for (let i = 0; i < drop_list.length - 3; i++) {
-    transitionMatrix[drop_list[i].drop][drop_list[i + 1].drop][drop_list[i + 2].drop][drop_list[i + 3].drop]++;
-  }
-
-  // Normalize the transition matrix
-  Object.keys(transitionMatrix).forEach((fromState1) => {
-    Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
-        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
-        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
-          transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-        });
-      });
-    });
-  });
-
-// Check for consistency
-const winChance = calcWinChance(drop_list);
-let deviation = 0;
-if (winChance !== "33.33%") {
-    deviation = (1 - (1 / 3)) / 2;
-}
-// Use the transition matrix to predict the next state based on the current state
-let currentState1 = drop_list[drop_list.length - 3].drop;
-let currentState2 = drop_list[drop_list.length - 2].drop;
-let currentState3 = drop_list[drop_list.length - 1].drop;
-let nextState = currentState3;
-let maxProb = 0;
-Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
-  if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
-    maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
-    nextState = state;
-  }
-});
-
-// Add randomness
-let randomNum = Math.random();
-if (randomNum < deviation) {
-  let randomState = '';
-  do {
-      randomNum = Math.random();
-      if (randomNum < (1 / 3)) {
-          randomState = 'R';
-      } else if (randomNum < (2 / 3)) {
-          randomState = 'P';
-      } else {
-          randomState = 'S';
-      }
-  } while (randomState === currentState3);
-  nextState = randomState;
-}
-return nextState;
-}
-
-
 
 class DropGame extends Component {
   constructor(props) {
@@ -128,11 +52,6 @@ class DropGame extends Component {
       winChance: 33,
       // is_other: (this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25 || this.props.bet_amount === 50 || this.props.bet_amount === 100) ? 'hidden' : '',
 
-      transitionMatrix: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-    },
 
     };
     // this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
@@ -152,31 +71,65 @@ class DropGame extends Component {
     return null;
   }
 
-  onAutoPlay = () => {
-    
-    if(this.props.drop_list.length > 2){
-      const prevStates = this.props.drop_list;
-
-      // console.log(this.props.drop_list)
-      const nextDrop = predictNext(prevStates, this.props.drop_list);
-      this.onAddRun(nextDrop);
-
-    }else {
-      alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
-      return;
-    }
-   
-  };
-
+ 
 
   onChangeWinChance = (winChance) => {
     this.setState({ winChance });
     // this.props.onChangeState({ winChance });
   };
-
- 
+  
+  predictNext = (dropAmounts) => {
+    const minValue = Math.min(...dropAmounts.map(drop => drop.drop_amount));
+    const maxValue = Math.max(...dropAmounts.map(drop => drop.drop_amount));
+    const rangeSize = Math.ceil((maxValue - minValue) / 200);
+  
+    const rangeCounts = {};
+    dropAmounts.forEach((drop) => {
+      const range = Math.floor((drop.drop_amount - minValue) / rangeSize);
+      rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
+    });
+  
+    const totalCounts = dropAmounts.length;
+    const rangeProbabilities = {};
+    Object.keys(rangeCounts).forEach((range) => {
+      const rangeProbability = rangeCounts[range] / totalCounts;
+      rangeProbabilities[range] = rangeProbability;
+    });
+  
+    let randomValue = Math.random();
+    let chosenRange = null;
+    Object.entries(rangeProbabilities).some(([range, probability]) => {
+      randomValue -= probability;
+      if (randomValue <= 0) {
+        chosenRange = range;
+        return true;
+      }
+      return false;
+    });
+  
+    const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
+    const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
+  
+    const getRandomNumberInRange = (min, max) => {
+      return Math.random() * (max - min) + min;
+    };
+  
+    return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+  };
   
 
+  onAutoPlay = () => {
+    if (this.props.drop_list.length > 2) {
+      const predictedNum = this.predictNext(this.props.drop_list);
+      this.onAddRun(predictedNum);
+    } else {
+      alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
+    }
+  };
+  
+
+  
+  
   onRemoveItem = index => {
     const newArray = this.props.drop_list.filter((elem, i) => i != index);
     // const bet_amount = calcBetAmount(newArray);
@@ -191,17 +144,27 @@ class DropGame extends Component {
   };
 
   onAddRun = (drop_amount) => {
+    // Ensure drop_amount is a number
+    const parsedDropAmount = parseFloat(drop_amount);
+    if (isNaN(parsedDropAmount)) {
+      alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER');
+      return;
+    }
+    drop_amount = parsedDropAmount;
+  
     this.setState({ drop_amount: drop_amount });
     const newArray = JSON.parse(JSON.stringify(this.props.drop_list));
-
+    console.log(this.props.drop_list);
+  
     // Check if the drop_list is empty and if the drop_amount value exceeds this.props.bet_amount
     if (newArray.length === 0 && drop_amount > this.props.bet_amount) {
       drop_amount = this.props.bet_amount; // Set the drop_amount value to this.props.bet_amount
     }
-
+  
     newArray.push({
       drop_amount: drop_amount
     });
+  
 
     const winChance = calcWinChance(newArray);
     this.props.onChangeState({
@@ -217,7 +180,7 @@ class DropGame extends Component {
     if (prevProps.drop_list !== this.props.drop_list) {
          //move this line after updating the state and the DOM
          const lastRow = document.querySelector("#runs tr:last-child");
-         lastRow.scrollIntoView({block: "end", behavior: "smooth", top: -200});
+         lastRow.scrollIntoView({block: "end", behavior: "smooth", top: 600});
     }
   }
 
@@ -307,8 +270,9 @@ class DropGame extends Component {
             <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
           </div>
               </div>
-              <div className='addRun'>
+              <div className='drop addRun'>
               <Button 
+              id="drop-button"
                   onClick={() => {
                     this.onAddRun(this.state.drop_amount);
 
@@ -322,7 +286,7 @@ class DropGame extends Component {
 </label> */}
 
           </div>
-          <div className="rps-add-run-table">
+          <div className="rps-add-run-table drop-add-run-table">
             <h3 className="game-sub-title">Training Data</h3>
             <table id="runs">
               <tbody>

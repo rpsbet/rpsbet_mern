@@ -201,8 +201,7 @@ class Spleesh extends Component {
 
   };
 
-  onBtnBetClick = () => {
-
+  onBtnBetClick = async (betAmount) => {
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
@@ -210,26 +209,35 @@ class Spleesh extends Component {
       );
       return;
     }
-
-    if (this.state.bet_amount > this.state.balance) {
+  
+    if (betAmount > this.state.balance) {
       alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
       return;
     }
-
-    confirmModalCreate(
-      this.props.isDarkMode,
-      'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-      'Yes',
-      'Cancel',
-      async () => {
-        if (this.props.is_private === true) {
-          this.props.openGamePasswordModal();
-        } else {
-          this.joinGame();
-        }
+  
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      if (this.props.is_private === true) {
+        this.props.openGamePasswordModal();
+      } else {
+        await this.joinGame();
       }
-    );
+    } else {
+      confirmModalCreate(
+        this.props.isDarkMode,
+        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+        'Yes',
+        'Cancel',
+        async () => {
+          if (this.props.is_private === true) {
+            this.props.openGamePasswordModal();
+          } else {
+            await this.joinGame();
+          }
+        }
+      );
+    }
   };
+  
 
   createNumberPanel = () => {
     let panel = [];
@@ -242,22 +250,24 @@ class Spleesh extends Component {
               : ''
           }
           onClick={() => {
+            const betAmount = i * this.props.spleesh_bet_unit;
+            const endgameAmount = this.props.spleesh_bet_unit * (55 - i);
             this.setState({
-              bet_amount: i * this.props.spleesh_bet_unit,
-              endgame_amount: this.props.spleesh_bet_unit * (55 - i)
+              bet_amount: betAmount,
+              endgame_amount: endgameAmount
+            }, () => {
+              this.onBtnBetClick(betAmount);
             });
-            this.onBtnBetClick();
           }}
           key={i}
         >
-          {convertToCurrency(
-            updateDigitToPoint2(i * this.props.spleesh_bet_unit)
-          )}
+          {convertToCurrency(updateDigitToPoint2(i * this.props.spleesh_bet_unit))}
         </Button>
       );
     }
     return panel;
   };
+  
 
   predictNext = (array1, array2) => {
     const frequencyMap = {};

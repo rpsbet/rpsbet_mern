@@ -924,7 +924,6 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     margin: auto !important;
 }
 .game-page .game-contents .summary-panel .summary-info .summary-item {
-    font-size: 0.75em;
     color: #060607;
     display: flex;
     justify-content: space-between;
@@ -969,7 +968,7 @@ overflow: hidden;
     font-size: 1em;
     border-radius: 6px;
     font-weight: 600;
-    margin: 0 5px 10px;
+    margin: 0 4px 10px;
     transform: translateY(-1px);
     color: #e5e5e5;
     background-image: linear-gradient(to top, #5a5a5a, #a39d9d);
@@ -2180,7 +2179,8 @@ margin-bottom: 10px;
     .rps-add-run-table {
         padding-left: 0;
     }
-
+    
+    
     .rps-add-run-panel>div.rps-add-run-form {
         padding-right: 0;
         border-right: none;

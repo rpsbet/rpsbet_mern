@@ -121,7 +121,7 @@ button {
 }
 
 .join-game-panel .qs-buttons button {
-  opacity: 0;
+  opacity: 1;
   transform: scale(3);
 }
 .qs-buttons button {
@@ -202,17 +202,17 @@ button#r {
 }
 
 button#tr {
-  right: 31%;
-  top: 20.5%;
+  right: 21%;
+  transform: translateY(-90px);
 }
 button#tl {
-  left: 30.85%;
-  top: 22%;
+  left: 20.85%;
+  transform: translateY(-90px);
 }
 
 button#c {
-  left: 47.5%;
-  top: 35%;
+  left: 45%;
+  transform: translateY(-50px);
 }
 
 button#cc {
@@ -221,13 +221,13 @@ button#cc {
 }
 
 button#br {
-  right: 31%;
-  bottom: 42.5%;
+  right: 21%;
+  transform: translateY(-10px);
 }
 
 button#bl {
-  left: 30.95%;
-  bottom: 42.3%;
+  left: 20.95%;
+  transform: translateY(-10px);
 }
 
 
@@ -389,7 +389,7 @@ div.table.my-chat-table .table-row > div.message-panel ,
 #aiplay {
   display: flex;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
   margin: 15px auto !important;
   height: 64px !important;
   min-width: 230px;
@@ -550,7 +550,14 @@ table#runs td {
   border-collapse: collapse;
   text-align: center;
 }
+.rps-add-run-table.drop-add-run-table #runs {
+  max-height: 44vh !important;
+}
 
+.drop.addRun button#drop-button{
+  margin: 0 !important;
+      }
+  
 
 #runs td {
   padding: 10px;
@@ -1171,9 +1178,6 @@ circle {
  }
  
 
-.rps-add-run-table {
-  padding-left: 0px !important;
-}
 
 
 .bet-amounts .other.active {
@@ -1273,15 +1277,15 @@ circle {
   }
   .qs-buttons button {
     position: absolute !important;
-      background: linear-gradient(184deg, #ffae00a8, #8116813d) !important;
+      background: linear-gradient(184deg, #48f304a8, #5be70a3d) !important;
       color: #fff !important;
       width: 2.75rem !important;
       height: 2.75rem !important;
       border-radius: 50% !important;
       margin: 0 !important;
-      border: 3px solid #ddd !important;
-      box-shadow: 0 0 6px 4px #ff0c8a;
-  transform: scale(1);
+      /* border: 3px solid #ddd !important; */
+      /* box-shadow: 0 0 6px 4px #ff0c8a; */
+  transform: scale(0.7);
   }
 
   .create-game-panel .qs-buttons button {
@@ -1342,7 +1346,7 @@ button#r {
   
   .qs-buttons button:hover,
   .qs-buttons button:focus{
-    transform: scale(1);
+    transform: scale(0.7);
   }
   
   button#l {
@@ -1358,15 +1362,16 @@ button#r {
   
   button#tr {
     right: 19%;
-    top: 3%;
+    transform: translateY(-73px);
   }
   button#tl {
-    left: 18.85%;
-    top: 2%;
+    left: 19%;
+    transform: translateY(-73px);
   }
   
   button#c {
-    left: 42.5%;
+    left: 43%;
+    transform: translateY(-43px);
   }
   
   button#cc {
@@ -1376,12 +1381,14 @@ button#r {
   
   button#br {
     right: 19%;
-    bottom: 32.5%;
+    transform: translateY(-14px);
+
   }
   
   button#bl {
-    left: 17.95%;
-    bottom: 29.3%;
+    left: 19%;
+    transform: translateY(-14px);
+
   }
   
   

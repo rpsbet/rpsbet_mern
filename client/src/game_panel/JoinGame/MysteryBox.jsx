@@ -95,19 +95,20 @@ class MysteryBox extends Component {
 
   onBoxClicked = e => {
     e.preventDefault();
-    if (e.target.getAttribute('status') === 'opened') {
+    
+    if (e.currentTarget.getAttribute('status') === 'opened') {
       return;
     }
-    const _id = e.target.getAttribute('_id');
-    const box_price = e.target.getAttribute('box_price');
-    this.setState({ selected_id: _id, bet_amount: box_price});
-    if (box_price > this.state.balance) {
-      alertModal(this.props.isDarkMode, `TOO BROKE!`);
-      return;
-    }
-
-    this.onBtnBetClick(e, _id);
+    
+    const _id = e.currentTarget.getAttribute('_id');
+    const box_price = e.currentTarget.getAttribute('box_price');
+    this.setState({ selected_id: _id, bet_amount: box_price }, () => {
+      console.log("box id", this.state.selected_id);
+      console.log("bet_amount", this.state.bet_amount);
+      this.onBtnBetClick();
+    });
   };
+  
 
   componentDidMount() {
          // Add event listener to detect end of scroll
@@ -361,71 +362,95 @@ joinGame2 = async (predictedBetAmount) => {
     this.props.refreshHistory();
   }
 };
+onBtnBetClick = async (e) => {
+  if (e) {
+    e.preventDefault();
+  }
+  if (this.props.creator_id === this.props.user_id) {
+    alertModal(
+      this.props.isDarkMode,
+      `DIS YOUR OWN STAKE CRAZY FOO-!`
+    );
+    return;
+  }
 
+  if (this.state.bet_amount > this.state.balance) {
+    alertModal(this.props.isDarkMode, `TOO BROKE!`);
+    return;
+  }
 
-
-  
-  onBtnBetClick = (e, selected_id) => {
-    if (e) {
-        e.preventDefault();
+  if (localStorage.getItem('hideConfirmModal') === 'true') {
+    if (this.props.is_private === true) {
+      this.props.openGamePasswordModal();
+    } else {
+      await this.joinGame();
     }
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
-      return;
-      
-    }
-
-    if (this.state.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `TOO BROKE!`);
-      return;
-    }
-
-    confirmModalCreate(
+  } else {
+    const result = await confirmModalCreate(
       this.props.isDarkMode,
       'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
       'Yes',
-      'Cancel',
-      async () => {
-        if (this.props.is_private === true) {
-          this.props.openGamePasswordModal();
-        } else if (this.state.bet_amount > this.state.balance) {
-          alertModal(this.props.isDarkMode, `TOO BROKE!`);
-          return;
-        } else {
-          this.props.join({
-            bet_amount: this.state.bet_amount,
-            selected_id: this.state.selected_id,
-            is_anonyopenModalmous: this.state.is_anonymous
-          });
-          // this.openModal();
-
-          this.setState({
-            // betResult: 0,
-            box_list: this.state.box_list.map(el =>
-              el._id === this.state.selected_id
-                ? { ...el, status: 'opened' }
-                : el
-            ),
-            isOpen: true
-
-          });
-          let stored_bet_array = JSON.parse(localStorage.getItem("bet_array")) || [];
-while (stored_bet_array.length >= 30) {
-  stored_bet_array.shift();
-}
-stored_bet_array.push({ bet: this.state.bet_amount });
-localStorage.setItem("bet_array", JSON.stringify(stored_bet_array));
-
-        }
-        this.props.refreshHistory();
-
-      }
-      
+      'Cancel'
     );
-  };
+
+    if (result) {
+      if (this.props.is_private === true) {
+        this.props.openGamePasswordModal();
+      } else {
+        await this.joinGame();
+      }
+      this.props.refreshHistory();
+    }
+  }
+};
+
+joinGame = async () => {
+  
+  let stored_bet_array = JSON.parse(localStorage.getItem('bet_array')) || [];
+  while (stored_bet_array.length >= 30) {
+    stored_bet_array.shift();
+  }
+  stored_bet_array.push({ bet: this.state.bet_amount });
+  localStorage.setItem('bet_array', JSON.stringify(stored_bet_array));
+  
+  this.setState({
+    box_list: this.state.box_list.map(el =>
+      el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+    ),
+    isOpen: true
+  });
+
+  const result = await this.props.join({
+    bet_amount: parseFloat(this.state.bet_amount),
+    selected_id: this.state.selected_id,
+    is_anonymous: this.state.is_anonymous,
+    // slippage: this.state.slippage
+  });
+  
+  const currentUser = this.props.user;
+  const currentRoom = this.props.room;
+  if (result.status === 'success') {
+    this.setState(prevState => ({
+      betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
+    }));
+    let text = 'HAHAA, YOU LOST!!!';
+
+    if (result.betResult === 1) {
+      this.props.updateBetResult('win')
+      text = 'NOT BAD, WINNER!';
+    } else if (result.betResult === 0) {
+      this.props.updateBetResult('draw')
+      text = 'DRAW, NO WINNER!';
+    }else{
+      this.props.updateBetResult('lose')
+    }
+
+    this.props.refreshHistory();
+  }
+};
+
+
+
   
   onBtnGoToMainGamesClicked = e => {
     e.preventDefault();
