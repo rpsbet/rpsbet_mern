@@ -285,6 +285,10 @@ border-bottom-right-radius: 0 !important;
     box-shadow: none !important;
 }
 
+.modal-body {
+    width: 400px;
+}
+
 .statistics-container {
     grid-template-columns: 100%;
 }
@@ -323,6 +327,7 @@ border-bottom-right-radius: 0 !important;
 .modal-body.edit-modal-body .modal-action-panel {
     margin-top: 40px;
     text-align: right;
+    
 }
 .modal-body.edit-modal-body .modal-action-panel button.btn-submit,
 .modal-body.edit-modal-body .modal-action-panel button.btn-back, 

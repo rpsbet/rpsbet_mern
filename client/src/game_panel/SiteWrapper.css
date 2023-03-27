@@ -258,7 +258,6 @@ ul[role=menu] li:hover {
 }
 
 .contents_wrapper {
-    height: calc(100vh - 48px);
     margin-top: 46px;
     overflow-y: auto;
     background-color: #f2f3f5;
@@ -300,7 +299,6 @@ ul[role=menu] li:hover {
     }
     .contents_wrapper {
         height: initial;
-        min-height: calc(100vh - 62px);
     }
 }
 .atag{

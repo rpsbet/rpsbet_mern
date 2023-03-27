@@ -47,8 +47,21 @@ class LoginModal extends Component {
         this.setState({password: e.target.value});
     }
 
-    componentDidMount() {
-    }
+    onKeyDownDocument = (event) => {
+        const { key } = event;
+        if (key === 'Enter') {
+          event.preventDefault();
+          this.onSubmitForm(event);
+        }
+      };
+      
+      componentDidMount() {
+        document.addEventListener('keydown', this.onKeyDownDocument);
+      }
+      
+      componentWillUnmount() {
+        document.removeEventListener('keydown', this.onKeyDownDocument);
+      }
 
     onSubmitForm = async (e) => {
         e.preventDefault();
@@ -84,31 +97,36 @@ class LoginModal extends Component {
                     <div className="modal-body">
                         <h4>WELCOME BACK! 🔫🤠</h4>
                         <form onSubmit={this.onSubmitForm}>
-                            <TextField
-                                type="text"
-                                className="form-control"
-                                variant="outlined"
-                                label="Email or Username"
-                                id="email"
-                                value={this.state.email}
-                                onChange={this.onChangeEmail}
-                            />
-                            <TextField
-                                type="password"
-                                className="form-control"
-                                id="password"
-                                value={this.state.password}
-                                label="Password"
-                                variant="outlined"      
-                                autoComplete="current-password"
-                                onChange={this.onChangePassword}
-                            />
+                        <TextField
+  type="text"
+  className="form-control"
+  variant="outlined"
+  label="Email or Username"
+  id="email"
+  value={this.state.email}
+  onChange={this.onChangeEmail}
+  autoComplete="on"
+/>
+<TextField
+  type="password"
+  className="form-control"
+  id="password"
+  value={this.state.password}
+  label="Password"
+  variant="outlined"
+  autoComplete="new-password"
+  onChange={this.onChangePassword}
+  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); this.onSubmitForm(e); }}}
+/>
+
                              {/* <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>FORGOT PASSWORD?</span> */}
                             <Button  onClick={this.onSubmitForm} className="btn-submit">Login</Button>
-                            <p className="m-0 sm-text-center">NEWBIE? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>GET REGISTERED →</button></p>
-                        </form>
+</form>
+                            <p className="m-0 sm-text-center" onClick={(e) => { e.preventDefault(); }}>
+  NEWBIE? <button onClick={(e) => { this.props.closeModal(); this.props.openSignupModal(); }}>GET REGISTERED →</button>
+</p>
+</div>
                     </div>
-                </div>
             </Modal>
         );
     }

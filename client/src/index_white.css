@@ -666,7 +666,6 @@ div[aria-label="How To Play Modal"] ul {
 }
 
 .contents_wrapper {
-  height: calc(100vh - 105px);
   margin-top: 105px;
   padding-bottom: 50px;
   padding-left: 5px !important;

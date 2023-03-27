@@ -1,5 +1,5 @@
 .chat-wrapper .chat-panel.global-chat {
-    height: calc(100vh - 170px);
+    height:calc(100% - 90px);
     overflow-y: scroll;
     width: 270px;
 }
@@ -28,6 +28,7 @@
     grid-template-columns: repeat(4, 1fr);
     grid-gap: 0.6em;
     padding: 15px;
+    z-index: 99;
 }
 
 .chat-wrapper .chat-input-panel .emoticon-panel > span {

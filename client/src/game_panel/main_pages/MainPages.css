@@ -54,7 +54,7 @@ button, button.btn {
     position: relative;
 }
 .contents_wrapper .main-game .sub-panel {
-    padding: 24px 24px 8px;
+    padding: 24px 18px 8px;
     position: initial;
     background-color: rgba(235, 237, 239, 0.5);
 }
@@ -487,6 +487,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     top: 12px;
     right: 0;
     margin-bottom: 15px;
+        margin-right: 5px;
 }
 .create-room-btn-panel label {
     margin-right: 24px;
