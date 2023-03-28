@@ -1462,7 +1462,7 @@ background-color: red;
 .game-page .game-contents.mystery-box-result-contents {
     width: 550px;
     max-width: 100%;
-    margin: 7px;
+    margin: 7px auto;
     text-align: center;
     background-color: #060607 !important;
 }
@@ -1638,8 +1638,8 @@ background-color: red;
     left: 16px;
 }
 .chat-page .chat-log-panel {
-    padding: 20px 80px;
-    /* height: calc(100vh - 228px); */
+    padding: 60px 80px;
+    height: 85vh    ;
     overflow-y: auto;
 }
 .chat-page .chat-log-panel::-webkit-scrollbar, .pre-summary-panel::-webkit-scrollbar {
@@ -1693,7 +1693,7 @@ background-color: red;
 }
 .chat-page .chat-input-panel {
     background-color: #f2f3f5;
-    margin: 24px 24px 0;
+    /* margin: 24px 24px 0; */
     display: flex;
     align-items: center;
     padding: 10px 16px;
@@ -2086,7 +2086,6 @@ margin-bottom: 10px;
     }
     .chat-page .chat-log-panel {
         padding: 80px 16px;
-        height: calc(100vh);
     }
     .chat-page .chat-input-panel {
         margin: 16px 0 0;

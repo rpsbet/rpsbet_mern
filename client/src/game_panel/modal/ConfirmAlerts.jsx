@@ -36,7 +36,7 @@ const showConfirm = (isDarkMode, text, icon, okayButtonTitle, cancelButtonTitle,
                             onChange={event => localStorage.setItem('hideConfirmModal', event.target.checked)}
                         />
                     }
-                    label="DON'T SHOW THIS AGAIN"
+                    label="DON'T SHOW ME THIS SH*T"
                 />
                
                         <div className="modal-action-panel">

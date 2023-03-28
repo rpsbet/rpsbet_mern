@@ -15,7 +15,9 @@ const send = (msg_type, to_id, data) => {
 
 
 module.exports.sendMessage = (to_user_id, data) => {
+  
   send('SEND_CHAT', to_user_id, data);
+  console.log({ data });
 };
 
 module.exports.newTransaction = transaction => {
@@ -124,7 +126,6 @@ module.exports.socketio = server => {
     });
 
     socket.on('SEND_CHAT', async data => {
-      console.log({ data });
       send('SEND_CHAT', data.to, data);
 
       const message = new Message(data);

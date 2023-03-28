@@ -161,18 +161,22 @@ button#r {
 
 .create-game-panel button#c {
   left: 45%;
+  transform: translateY(-5px);
 }
 
 .create-game-panel button#cc {
   left: 44.5%;
+  transform: translateY(-5px);
 }
 
 .create-game-panel #br {
   right: 18%;
+  transform: translateY(55px);
 }
 
 .create-game-panel button#bl {
   left: 18%;
+  transform: translateY(55px);
 }
 
 .create-game-panel button#l {
@@ -366,9 +370,7 @@ margin-bottom: 10px;
 
 .disclaimer p span { color: #c73128; font-weight: 600; }
 
-#root .site_wrapper, button {
-  text-transform: uppercase !important;
-}
+
 div.table.my-chat-table .table-row > div.message-panel ,
 .chat-log-panel .my-message .message-content,
 .dont-have-game-msg,
@@ -852,7 +854,7 @@ div.table .table-row .table-cell img.game-type-icon {
   margin-bottom: 20px;
 }
 .chat {
-  height: 80vh;
+  height: 100%;
   overflow-y: scroll;
 position: relative;
 top: 1vh;
@@ -1229,9 +1231,6 @@ circle {
     padding: 0px 6px 0px 16px !important;
 }
 
-.chat {
-  height: 75vh;
-}
 
   .main-game-page-tabs {
     position: fixed;
