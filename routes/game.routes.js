@@ -2253,9 +2253,10 @@ if (newBetAmount <= roomInfo['user_bet']) {
           created_at: moment(new Date()).format('LLL')
         });
         
-        if (req.io.sockets) {
-          req.io.sockets.emit('PLAY_SOUND',  { message: message.message })
-        }
+        // Emit PLAY_SOUND event only to the sender
+  const senderSocket = req.io.sockets.connected[socket.id];
+  senderSocket.emit('PLAY_SOUND', { message: message.message });
+      
       }
 
       res.json({
