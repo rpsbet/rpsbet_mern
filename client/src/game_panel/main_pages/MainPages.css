@@ -1462,9 +1462,9 @@ background-color: red;
 .game-page .game-contents.mystery-box-result-contents {
     width: 550px;
     max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 7px;
     text-align: center;
+    background-color: #060607 !important;
 }
 .game-page .game-contents.mystery-box-result-contents .mystery-box-result {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='138' height='148' fill='none' viewBox='0 0 138 148'%3E%3Cpath fill='%23845838' d='M62.742 40l-50.6 12.84 2.265 31.72h109.51V46.796L62.742 40z'/%3E%3Cpath fill='%23663D1F' d='M62.743 103.441V40l61.174 6.797v26.434l-61.174 30.21z'/%3E%3Cpath fill='url(%23paint0_linear)' d='M30 8c0-4.418 3.582-8 8-8h62c4.418 0 8 3.582 8 8v69H30V8z'/%3E%3Cpath fill='%23FEBE7E' d='M84.578 148l-72.437-16.341V53.188l72.437 10.875V148z'/%3E%3Cpath fill='%23C47D49' d='M123.917 122.68L84.578 148V64.063l39.339-17.066v75.683z'/%3E%3Cpath fill='%23FEDC98' d='M71.05 90.6L0 78.318l12.141-25.13 72.437 10.876L71.05 90.601z'/%3E%3Cpath fill='%23FEDC98' d='M132.98 70.21L96.729 91.356 84.349 64.21l39.568-17.412 9.063 23.413z'/%3E%3Cpath fill='%23A37452' d='M110.154 131.603l-9.026 5.8V120.95l9.026-4.852v15.505z'/%3E%3Cpath fill='%23BA835D' d='M53.152 140.916l-14.32-3.123v-16.23l14.32 2.176v17.177z'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear' x1='69' x2='69' y1='0' y2='77' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%23fff'/%3E%3Cstop offset='1' stop-color='%23EAEAEA'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E%0A");

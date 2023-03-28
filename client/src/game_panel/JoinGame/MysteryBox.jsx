@@ -103,8 +103,6 @@ class MysteryBox extends Component {
     const _id = e.currentTarget.getAttribute('_id');
     const box_price = e.currentTarget.getAttribute('box_price');
     this.setState({ selected_id: _id, bet_amount: box_price }, () => {
-      console.log("box id", this.state.selected_id);
-      console.log("bet_amount", this.state.bet_amount);
       this.onBtnBetClick();
     });
   };
@@ -342,25 +340,23 @@ joinGame2 = async (predictedBetAmount) => {
   });
   
   const currentUser = this.props.user;
-  const currentRoom = this.props.room;
-  if (result.status === 'success') {
-    this.setState(prevState => ({
-      betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
-    }));
-    let text = 'HAHAA, YOU LOST!!!';
-
-    if (result.betResult === 1) {
-      this.props.updateBetResult('win')
-      text = 'NOT BAD, WINNER!';
-    } else if (result.betResult === 0) {
-      this.props.updateBetResult('draw')
-      text = 'DRAW, NO WINNER!';
-    }else{
-      this.props.updateBetResult('lose')
-    }
-
-    this.props.refreshHistory();
+const currentRoom = this.props.room;
+if (result.status === 'success') {
+  let betResult = '';
+  if (result.betResult === 1) {
+    betResult = 'win';
+  } else if (result.betResult === 0) {
+    betResult = 'draw';
+  } else {
+    betResult = 'lose';
   }
+  this.props.updateBetResult(betResult);
+  this.setState(prevState => ({
+    betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
+  }));
+
+  this.props.refreshHistory();
+}
 };
 onBtnBetClick = async (e) => {
   if (e) {
@@ -390,17 +386,17 @@ onBtnBetClick = async (e) => {
       this.props.isDarkMode,
       'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
       'Yes',
-      'Cancel'
-    );
-
-    if (result) {
-      if (this.props.is_private === true) {
-        this.props.openGamePasswordModal();
-      } else {
-        await this.joinGame();
+      'Cancel',
+      async () => { // This should be a function
+        if (this.props.is_private === true) {
+          this.props.openGamePasswordModal();
+        } else {
+          await this.joinGame();
+        }
+        this.props.refreshHistory();
       }
-      this.props.refreshHistory();
-    }
+    );
+    
   }
 };
 
@@ -413,13 +409,7 @@ joinGame = async () => {
   stored_bet_array.push({ bet: this.state.bet_amount });
   localStorage.setItem('bet_array', JSON.stringify(stored_bet_array));
   
-  this.setState({
-    box_list: this.state.box_list.map(el =>
-      el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
-    ),
-    isOpen: true
-  });
-
+  
   const result = await this.props.join({
     bet_amount: parseFloat(this.state.bet_amount),
     selected_id: this.state.selected_id,
@@ -430,22 +420,30 @@ joinGame = async () => {
   const currentUser = this.props.user;
   const currentRoom = this.props.room;
   if (result.status === 'success') {
+    let betResult = '';
+    if (result.betResult === 1) {
+      betResult = 'win';
+    } else if (result.betResult === 0) {
+      betResult = 'draw';
+    } else {
+      betResult = 'lose';
+    }
+    this.props.updateBetResult(betResult);
+    this.setState({
+      box_list: this.state.box_list.map(el =>
+        el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+      ),
+      isOpen: true
+    });
+  
+    setTimeout(() => {
+      this.setState({ isOpen: false });
+    }, 1500);
     this.setState(prevState => ({
       betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
-    }));
-    let text = 'HAHAA, YOU LOST!!!';
-
-    if (result.betResult === 1) {
-      this.props.updateBetResult('win')
-      text = 'NOT BAD, WINNER!';
-    } else if (result.betResult === 0) {
-      this.props.updateBetResult('draw')
-      text = 'DRAW, NO WINNER!';
-    }else{
-      this.props.updateBetResult('lose')
-    }
-
-    this.props.refreshHistory();
+    }), () => {
+      this.props.refreshHistory();
+    });
   }
 };
 
@@ -629,11 +627,18 @@ joinGame = async () => {
       return true;
     });
     prizes.sort((a, b) => a.price - b.price);
-
+    let timeLeft = 1500; // duration of modal in milliseconds
+    const intervalId = setInterval(() => {
+        timeLeft -= 100;
+        if (timeLeft === 0) {
+            clearInterval(intervalId);
+        }
+    }, 100); // countdown interval
     return (
       <div className="game-page">
         <div className="game-contents mystery-box-result-contents">
           <div className="game-info-panel">
+            
           <div className={`mystery-box-result ${this.state.betResult === 0 ? 'failed' : 'success'}`}>
   {convertToCurrency(this.state.betResult)}
 </div>
@@ -648,24 +653,12 @@ joinGame = async () => {
     : `YOU WON!`}
 </p>
 
-            <h3 className="game-sub-title">ALL BOXES</h3>
-            <p className="box-prizes">
-            {prizes.map((item, key) => (
-                <span className={item.status} key={key}>
-                  {convertToCurrency(item.price === 0 ? 'EMPTY' : item.price)}
-                </span>
-              ))}
-            </p>
+
+ 
           </div>
-          <hr />
-          <div className="action-panel">
-            {/* <button id="btn-back" onClick={this.onBtnGoToMainGamesClicked}>
-              Live Stakes
-            </button> */}
-            <Button id="btn-submit" onClick={this.onBtnPlayAgainClicked}>
-              OKAY
-            </Button>
-          </div>
+          <div className="countdown-timer">
+                                <div className="countdown-bar" style={{ width: `${(timeLeft / 1500) * 100}%` }}></div>
+                            </div>
         </div>
       </div>
     );
@@ -704,8 +697,11 @@ joinGame = async () => {
             closeModal={this.onBtnPlayAgainClicked}
             style={customStyles}
           ><div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className='modal-header'>
+              <h2>PRIZE</h2>
+            <Button className="btn-close" onClick={this.onBtnPlayAgainClicked}>×</Button>
+            </div>
             <div className="modal-body edit-modal-body">
-            <button className="btn-close" onClick={this.onBtnPlayAgainClicked}>×</button>
             {this.getBetResultForm()}
             {/* <button onClick={this.onBtnPlayAgainClicked}>Okay</button> */}
             </div>

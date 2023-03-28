@@ -35,7 +35,7 @@ class Spleesh extends Component {
     return this.props.step === 1 ? (
       <div className="game-info-panel">
         <h3 className="game-sub-title">Game Type</h3>
-        <div className="select-buttons-panel">
+        <div id="select-buttons-panel">
           {[1, 10].map(item => (
             <button
               className={this.props.spleesh_bet_unit === item ? 'active' : ''}
@@ -57,7 +57,7 @@ class Spleesh extends Component {
     ) : (
       <div className="game-info-panel">
         <h3 className="game-sub-title">Your Number</h3>
-        <div className="select-buttons-panel bet-amounts">{this.createNumberPanel()}</div>
+        <div id="select-buttons-panel">{this.createNumberPanel()}</div>
         <p className="tip">
           Pick a number for players to guess (Your Bet Amount)
         </p>

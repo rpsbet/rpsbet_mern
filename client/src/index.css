@@ -322,8 +322,11 @@ button:hover,
   z-index: 1000;
   background-color: #495057;
 }
-.select-buttons-panel, .bet-amounts,
+.MuiCheckbox-root {
+  color: #ff409a !important;
+}
 #select-buttons-panel {
+  display: block !important;
   text-align: center !important;
   text-align: -webkit-center;
 }

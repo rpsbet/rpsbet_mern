@@ -464,7 +464,7 @@ joinGame2 = async (nextGuess) => {
 
             </p>
             <h3 className="game-sub-title">Your Number</h3>
-            <div id="select-buttons-panel bet-amounts">{this.createNumberPanel()}</div>
+            <div id="select-buttons-panel">{this.createNumberPanel()}</div>
             <button
             id="aiplay"
         onMouseDown={this.handleButtonClick}
