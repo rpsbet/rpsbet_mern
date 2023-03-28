@@ -370,7 +370,9 @@ margin-bottom: 10px;
 
 .disclaimer p span { color: #c73128; font-weight: 600; }
 
-
+#root .site_wrapper, button {
+  text-transform: uppercase !important;
+}
 div.table.my-chat-table .table-row > div.message-panel ,
 .chat-log-panel .my-message .message-content,
 .dont-have-game-msg,
