@@ -13,11 +13,16 @@ const send = (msg_type, to_id, data) => {
   }
 };
 
+module.exports.playSound = (from_user_id, data) => {
+  
+  send('PLAY_SOUND', from_user_id, data);
+
+};
 
 module.exports.sendMessage = (to_user_id, data) => {
   
   send('SEND_CHAT', to_user_id, data);
-  console.log({ data });
+
 };
 
 module.exports.newTransaction = transaction => {
