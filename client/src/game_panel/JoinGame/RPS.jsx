@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-import { updateBetResult } from '../../redux/Logic/logic.actions';
+// import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button, TextField  } from '@material-ui/core';
 
@@ -278,7 +278,7 @@ changeBgColor = async (result) => {
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
       this.state.isPasswordCorrect === true
     ) {
-      this.joinGame();
+      this.joinGame(this.state.selected_rps);
     }
   }
   joinGame = async (selected_rps, bet_amount) => {
@@ -294,26 +294,20 @@ changeBgColor = async (result) => {
     let text = 'HAHAA, YOU LOST!!!';
   
     if (result.betResult === 1) {
-      this.props.updateBetResult('win')
+      // this.props.updateBetResult('win')
       text = 'NOT BAD, WINNER!';
       this.changeBgColor(result.betResult); // Add this line
     } else if (result.betResult === 0) {
   
-      this.props.updateBetResult('draw')
+      // this.props.updateBetResult('draw')
       this.changeBgColor(result.betResult); // Add this line
       text = 'DRAW, NO WINNER!';
     }else{
       this.changeBgColor(result.betResult); // Add this line
-      this.props.updateBetResult('lose')
+      // this.props.updateBetResult('lose')
     }
   
-    let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
-  
-    while (stored_rps_array.length >= 30) {
-      stored_rps_array.shift();
-    }
-    stored_rps_array.push({ rps: selected_rps });
-    localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
+   
   
     gameResultModal(
       this.props.isDarkMode,
@@ -338,11 +332,23 @@ changeBgColor = async (result) => {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
+
+    let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
+    console.log(stored_rps_array)
+      while (stored_rps_array.length >= 30) {
+        stored_rps_array.shift();
+      }
+      stored_rps_array.push({ rps: selected_rps });
+      localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
   
     this.props.refreshHistory();
   };
   
   onBtnBetClick = async (selected_rps) => {
+      if (!this.props.isAuthenticated) {
+      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
+      return;
+    }
     // e.preventDefault();
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
@@ -351,6 +357,7 @@ changeBgColor = async (result) => {
       );
       return;
     }
+    
   
     if (isNaN(this.state.bet_amount)) {
       alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
@@ -372,27 +379,28 @@ changeBgColor = async (result) => {
       return;
     }
   
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (this.props.is_private === true) {
+    const passwordCorrect = localStorage.getItem('passwordCorrect');
+if (localStorage.getItem('hideConfirmModal') === 'true') {
+  if (this.props.is_private === true && passwordCorrect !== 'true') {
+    this.props.openGamePasswordModal();
+  } else {
+    await this.joinGame(selected_rps, this.state.bet_amount);
+  }
+} else {
+  confirmModalCreate(
+    this.props.isDarkMode,
+    'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+    'Yes',
+    'Cancel',
+    async () => {
+      if (this.props.is_private === true && passwordCorrect !== 'true') {
         this.props.openGamePasswordModal();
       } else {
         await this.joinGame(selected_rps, this.state.bet_amount);
       }
-    } else {
-      confirmModalCreate(
-        this.props.isDarkMode,
-        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-        'Yes',
-        'Cancel',
-        async () => {
-          if (this.props.is_private === true) {
-            this.props.openGamePasswordModal();
-          } else {
-            await this.joinGame(selected_rps, this.state.bet_amount);
-          }
-        }
-      );
     }
+  );
+}
   };
   
 
@@ -467,6 +475,18 @@ changeBgColor = async (result) => {
     navigator.clipboard.writeText(twitterLink)
   }
   handleButtonClick = () => {
+    if (!this.props.isAuthenticated) {
+        alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
+        return;
+      }
+    if (this.props.creator_id === this.props.user_id) {
+      alertModal(
+        this.props.isDarkMode,
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
+      );
+      return;
+    }
+
     if (!this.state.betting) {
       this.setState({
         timer: setInterval(() => {
@@ -494,18 +514,19 @@ changeBgColor = async (result) => {
   };
   startBetting = () => {
     
+    
     let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
     if (stored_rps_array.length  < 3) {
       alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
       return;
     }
-
     const intervalId = setInterval(() => {
+        const passwordCorrect = localStorage.getItem('passwordCorrect');
+
       const randomItem = predictNext(stored_rps_array);
-      if (this.props.is_private === true) {
+      if (this.props.is_private === true && passwordCorrect !== 'true') {
         this.props.openGamePasswordModal();
       } else {
-        // this.joinGame(selected_rps);
         this.joinGame2(randomItem, this.state.bet_amount);
       }
     }, 3500);
@@ -513,6 +534,7 @@ changeBgColor = async (result) => {
   
     this.setState({ intervalId,betting: true });
   };
+  
 
   stopBetting = () => {
     clearInterval(this.state.intervalId, this.state.timer);
@@ -526,13 +548,6 @@ if (this.state.bet_amount > this.state.bankroll) {
       return;
     }
 
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
-      return;
-    }
 
     if (isNaN(this.state.bet_amount)) {
       alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
@@ -568,16 +583,16 @@ if (this.state.bet_amount > this.state.bankroll) {
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
-        this.props.updateBetResult('win')
+        // this.props.updateBetResult('win')
         text = 'NOT BAD, WINNER!';
         this.changeBgColor(result.betResult); // Add this line
       } else if (result.betResult === 0) {
-        this.props.updateBetResult('draw')
+        // this.props.updateBetResult('draw')
         text = 'DRAW, NO WINNER!';
         this.changeBgColor(result.betResult); // Add this line
       }else{
         this.changeBgColor(result.betResult); // Add this line
-         this.props.updateBetResult('lose')
+        //  this.props.updateBetResult('lose')
       }
 
    
@@ -800,7 +815,8 @@ if (this.state.bet_amount > this.state.bankroll) {
 
 const mapStateToProps = state => ({
   socket: state.auth.socket,
-  auth: state.auth.isAuthenticated,
+  isAuthenticated: state.auth.isAuthenticated,
+
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
@@ -809,10 +825,10 @@ const mapStateToProps = state => ({
 
 });
 
-const mapDispatchToProps = dispatch => ({
-  openGamePasswordModal,
+const mapDispatchToProps = {
+  openGamePasswordModal
 
-  updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
-});
+  // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

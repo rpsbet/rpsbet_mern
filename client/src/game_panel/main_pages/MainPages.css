@@ -1033,8 +1033,7 @@ box-shadow:none !important;
 	height: 80px;
 	position: absolute;
 	z-index: 2;
-	top: 75px;
-    transform: translateX(-5px);
+    transform: translate(-5px, -10px);
 	background: linear-gradient(90deg, #151515, transparent);
     }
     
@@ -1043,7 +1042,7 @@ max-width: 450px;
         overflow-x: scroll;
     }
     .gradient-container .previous-guesses.drop span {
-    min-width: 100px;
+    min-width: 29%;
     max-height: 30px;
     line-height: 22px;
     }

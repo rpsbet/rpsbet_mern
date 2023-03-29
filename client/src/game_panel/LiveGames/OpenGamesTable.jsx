@@ -47,10 +47,10 @@ class OpenGamesTable extends Component {
     const creator_id = e.currentTarget.dataset.creatorId;
     const bet_amount = e.currentTarget.dataset.betAmount;
   
-    if (!this.props.isAuthenticated) {
-      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
-      return;
-    }
+    // if (!this.props.isAuthenticated) {
+    //   alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
+    //   return;
+    // }
   
     if (e.currentTarget.dataset.roomStatus === 'finished') {
       alertModal(this.props.isDarkMode, `THIS GAME HAS ENDED ALREADY`);

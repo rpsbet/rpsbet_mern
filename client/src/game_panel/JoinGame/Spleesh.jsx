@@ -199,10 +199,14 @@ class Spleesh extends Component {
   };
 
   onBtnBetClick = async (betAmount) => {
+    if (!this.props.isAuthenticated) {
+      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
+      return;
+    }
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
-        `THIS IS YOUR OWN STAKE? ARE YOU OKAY!?`
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
       );
       return;
     }
@@ -212,8 +216,10 @@ class Spleesh extends Component {
       return;
     }
   
+    const passwordCorrect = localStorage.getItem('passwordCorrect');
+    console.log(passwordCorrect)
     if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (this.props.is_private === true) {
+      if (this.props.is_private === true && passwordCorrect !== 'true') {
         this.props.openGamePasswordModal();
       } else {
         await this.joinGame();
@@ -225,7 +231,7 @@ class Spleesh extends Component {
         'Yes',
         'Cancel',
         async () => {
-          if (this.props.is_private === true) {
+          if (this.props.is_private === true && passwordCorrect !== 'true') {
             this.props.openGamePasswordModal();
           } else {
             await this.joinGame();
@@ -520,7 +526,7 @@ joinGame2 = async (nextGuess) => {
 
 const mapStateToProps = state => ({
   socket: state.auth.socket,
-  auth: state.auth.isAuthenticated,
+  isAuthenticated: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
