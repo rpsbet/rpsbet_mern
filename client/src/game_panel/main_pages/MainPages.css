@@ -389,9 +389,8 @@ div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status.
     background-color: rgb(87, 202, 34);
 }
 div.table.main-game-table .table-row .table-cell.cell-amount-info{
-    color: #aeaeae;
+    color: #e5e5e5;
     font-weight: bold;
-    background: #6c757d4d;
     border-radius: 7px;
     padding: 3px 8px;
     white-space: nowrap;
@@ -1027,11 +1026,56 @@ box-shadow:none !important;
     font-weight: 600;
     text-align: center;
 }
+
+.gradient-container .previous-guesses.drop:before  {
+    content: " ";
+	width: 80px;
+	height: 80px;
+	position: absolute;
+	z-index: 2;
+	top: 75px;
+    transform: translateX(-5px);
+	background: linear-gradient(90deg, #151515, transparent);
+    }
+    
+    .gradient-container .previous-guesses.drop {
+max-width: 450px;
+        overflow-x: scroll;
+    }
+    .gradient-container .previous-guesses.drop span {
+    min-width: 100px;
+    max-height: 30px;
+    line-height: 22px;
+    }
+
+    .previous-guesses.drop div {
+
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+  
+    
+    .previous-guesses.drop  {
+    display: inline-flex !important;
+ 
+    margin-bottom: 0 !important;
+    flex-direction: column;
+}
+
 .game-page .game-contents .game-info-panel .previous-guesses span{
     margin-bottom: 12px !important;
     margin-right: 10px !important;
     display: inline-block;
 }
+
+.game-page .game-contents .game-info-panel .previous-guesses.drop span {
+    margin-bottom: 0 !important;
+    margin-right: 0 !important;
+    color: #e5e5e5 !important;
+}
+
+
 .game-page .game-contents .game-info-panel .edit-amount-panel input,  #betamount {
     height: 40px;
     line-height: 32px;
@@ -2100,7 +2144,13 @@ margin-bottom: 10px;
     }
 }
 @media (max-width: 400px) {
-    
+    .previous-guesses.drop  {
+        width: 360px;
+    }
+
+    #no-guesses {
+        transform: translateX(-120px) !important;
+     }
 [role="tablist"] button{
     padding-top: 25px !important;
     padding-bottom: 10px !important;

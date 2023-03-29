@@ -42,7 +42,6 @@ class MyGamesTable extends Component {
     this.props.getMyGames({
       game_type: this.state.selectedGameType
     });
-    console.log('balance', this.state.balance)
   }
 
   // endRoom = (winnings, room_id) => {

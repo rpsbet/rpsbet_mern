@@ -35,116 +35,36 @@ const styles = {
   },
 };
 
-const options = [
-  { classname: 'rock', selection: 'R' },
-  { classname: 'paper', selection: 'P' },
-  { classname: 'scissors', selection: 'S' }
-];
 
 const twitterLink = window.location.href;
 
 const calcWinChance = (prevStates) => {
   let total = prevStates.length;
-  let rock = 0;
-  let paper = 0;
-  let scissors = 0;
-  prevStates.map((el) => {
-    if (el.drop === "R") {
-      rock++;
-    } else if (el.drop === "P") {
-      paper++;
-    } else if (el.drop === "S") {
-      scissors++;
+  let counts = {};
+  prevStates.forEach((state) => {
+    if (counts[state.drop_amount]) {
+      counts[state.drop_amount]++;
+    } else {
+      counts[state.drop_amount] = 1;
     }
   });
-  const rockWinChance = (rock / total) * 100;
-  const paperWinChance = (paper / total) * 100;
-  const scissorsWinChance = (scissors / total) * 100;
-  let lowest = rockWinChance;
-  let highest = rockWinChance;
-  if (paperWinChance < lowest) {
-    lowest = paperWinChance;
-  }
-  if (scissorsWinChance < lowest) {
-    lowest = scissorsWinChance;
-  }
-  if (paperWinChance > highest) {
-    highest = paperWinChance;
-  }
-  if (scissorsWinChance > highest) {
-    highest = scissorsWinChance;
-  }
+  let lowest = Infinity;
+  let highest = -Infinity;
+  Object.keys(counts).forEach((key) => {
+    const chance = (counts[key] / total) * 100;
+    if (chance < lowest) {
+      lowest = chance;
+    }
+    if (chance > highest) {
+      highest = chance;
+    }
+  });
   if (lowest === highest) {
     return lowest.toFixed(2) + "%";
   }
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 };
 
-
-
-
-const predictNext = (drop_list) => {
-  // Create a transition matrix to store the probability of transitioning from one state to another
-  const transitionMatrix = {
-    R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-    P: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-    S: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-  };
-
-  // Iterate through the previous states to populate the transition matrix
-  for (let i = 0; i < drop_list.length - 3; i++) {
-    transitionMatrix[drop_list[i].drop][drop_list[i + 1].drop][drop_list[i + 2].drop][drop_list[i + 3].drop]++;
-  }
-
-  // Normalize the transition matrix
-  Object.keys(transitionMatrix).forEach((fromState1) => {
-    Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
-        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
-        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
-          transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-        });
-      });
-    });
-  });
-
-// Check for consistency
-const winChance = calcWinChance(drop_list);
-let deviation = 0;
-if (winChance !== "33.33%") {
-    deviation = (1 - (1 / 3)) / 2;
-}
-// Use the transition matrix to predict the next state based on the current state
-let currentState1 = drop_list[drop_list.length - 3].drop;
-let currentState2 = drop_list[drop_list.length - 2].drop;
-let currentState3 = drop_list[drop_list.length - 1].drop;
-let nextState = currentState3;
-let maxProb = 0;
-Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
-  if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
-    maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
-    nextState = state;
-  }
-});
-
-// Add randomness
-let randomNum = Math.random();
-if (randomNum < deviation) {
-  let randomState = '';
-  do {
-      randomNum = Math.random();
-      if (randomNum < (1 / 3)) {
-          randomState = 'R';
-      } else if (randomNum < (2 / 3)) {
-          randomState = 'P';
-      } else {
-          randomState = 'S';
-      }
-  } while (randomState === currentState3);
-  nextState = randomState;
-}
-return nextState;
-}
 
 class DropGame extends Component {
   constructor(props) {
@@ -161,12 +81,11 @@ class DropGame extends Component {
       items: [],
       bgColorChanged: false,
       drop_guesses: [],
-      selected_drop: '',
       advanced_status: '',
       is_anonymous: false,
       bet_amount: 1,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
-      // bankroll: 0,
+      drop_guesses1Received: false,
       betResult: null,
       copied: false,
       balance: this.props.balance,
@@ -199,24 +118,65 @@ getPreviousBets() {
   return previousBets;
 }
 
-changeBgColor = async (result) => {
-  this.setState({ betResult: result, bgColorChanged: true });
-  await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
-  this.setState({ bgColorChanged: false });
-};
+// changeBgColor = async (result) => {
+//   this.setState({ betResult: result, bgColorChanged: true });
+//   await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+//   this.setState({ bgColorChanged: false });
+// };
 
 
   // handleClickOutside = e => {
   //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
+    //     this.setState({ settings_panel_opened: false });
+    //   }
   // };
+    static getDerivedStateFromProps(props, current_state) {
+      if (
+        current_state.balance !== props.balance ||
+        current_state.isPasswordCorrect !== props.isPasswordCorrect
+      ) {
+        return {
+          ...current_state,
+          isPasswordCorrect: props.isPasswordCorrect,
+          balance: props.balance
+        };
+      }
+      return null;
+    }
+  
+    componentDidUpdate(prevProps, prevState) {
+      if (prevProps.roomInfo && this.props.roomInfo) {
+        if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
+          this.setState({
+            bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
+          });
+        }
+      }
+  
+      if (
+        prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
+        this.state.isPasswordCorrect === true
+      ) {
+        this.joinGame();
+      }
+    }
 
   componentDidMount = () => {
       // Add event listener to detect end of scroll
   this.panelRef.current.addEventListener("scroll", this.handleScroll);
     
-  // Initialize items array
+  this.socket.on('DROP_GUESSES1', data => {
+    if (!this.state.drop_guesses1Received) {
+      this.setState({
+        drop_guesses: data,
+        drop_guesses1Received: true,
+      });
+    }
+  });
+  this.socket.on('DROP_GUESSES', data => {
+    this.setState({drop_guesses: data });
+  });
+
   const items = [
     {
       label: "Host",
@@ -252,44 +212,55 @@ changeBgColor = async (result) => {
     this.panelRef.current.removeEventListener("scroll", this.handleScroll);
   }; 
   
-  static getDerivedStateFromProps(props, current_state) {
-    if (
-      current_state.balance !== props.balance ||
-      current_state.isPasswordCorrect !== props.isPasswordCorrect
-    ) {
-      return {
-        ...current_state,
-        isPasswordCorrect: props.isPasswordCorrect,
-        balance: props.balance
-      };
-    }
-    return null;
-  }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.roomInfo && this.props.roomInfo) {
-      if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
-        this.setState({
-          bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
-        });
+  predictNext = (dropAmounts) => {
+    const minValue = Math.min(...dropAmounts.map(drop => drop.drop_amount));
+    const maxValue = Math.max(...dropAmounts.map(drop => drop.drop_amount));
+    const rangeSize = Math.ceil((maxValue - minValue) / 200);
+  
+    const rangeCounts = {};
+    dropAmounts.forEach((drop) => {
+      const range = Math.floor((drop.drop_amount - minValue) / rangeSize);
+      rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
+    });
+  
+    const totalCounts = dropAmounts.length;
+    const rangeProbabilities = {};
+    Object.keys(rangeCounts).forEach((range) => {
+      const rangeProbability = rangeCounts[range] / totalCounts;
+      rangeProbabilities[range] = rangeProbability;
+    });
+  
+    let randomValue = Math.random();
+    let chosenRange = null;
+    Object.entries(rangeProbabilities).some(([range, probability]) => {
+      randomValue -= probability;
+      if (randomValue <= 0) {
+        chosenRange = range;
+        return true;
       }
-    }
+      return false;
+    });
+  
+    const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
+    const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
+  
+    const getRandomNumberInRange = (min, max) => {
+      return Math.random() * (max - min) + min;
+    };
+  
+    return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+  };
+  
 
-    if (
-      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
-      this.state.isPasswordCorrect === true
-    ) {
-      this.joinGame();
-    }
-  }
-  joinGame = async (selected_drop, bet_amount) => {
-    this.setState({selected_drop: selected_drop, bet_amount: this.state.bet_amount});
+  joinGame = async () => {
+
+    this.setState({bet_amount: this.state.bet_amount});
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
-      selected_drop: selected_drop,
       is_anonymous: this.state.is_anonymous,
       drop_bet_item_id: this.props.drop_bet_item_id,
-      slippage: this.state.slippage
+      // slippage: this.state.slippage
     });
   
     let text = 'HAHAA, YOU LOST!!!';
@@ -297,14 +268,14 @@ changeBgColor = async (result) => {
     if (result.betResult === 1) {
       this.props.updateBetResult('win')
       text = 'NOT BAD, WINNER!';
-      this.changeBgColor(result.betResult); // Add this line
+      // this.changeBgColor(result.betResult); // Add this line
     } else if (result.betResult === 0) {
   
       this.props.updateBetResult('draw')
-      this.changeBgColor(result.betResult); // Add this line
+      // this.changeBgColor(result.betResult); // Add this line
       text = 'DRAW, NO WINNER!';
     }else{
-      this.changeBgColor(result.betResult); // Add this line
+      // this.changeBgColor(result.betResult); // Add this line
       this.props.updateBetResult('lose')
     }
   
@@ -313,10 +284,9 @@ changeBgColor = async (result) => {
     while (stored_drop_array.length >= 30) {
       stored_drop_array.shift();
     }
-    stored_drop_array.push({ drop: selected_drop });
+    stored_drop_array.push({ drop: this.state.bet_amount });
     localStorage.setItem("drop_array", JSON.stringify(stored_drop_array));
   
-    // console.log(stored_drop_array);
   
     gameResultModal(
       this.props.isDarkMode,
@@ -345,8 +315,8 @@ changeBgColor = async (result) => {
     this.props.refreshHistory();
   };
   
-  onBtnBetClick = async (selected_drop) => {
-    // e.preventDefault();
+  onBtnBetClick = async () => {
+
     if (this.props.creator_id === this.props.user_id) {
       alertModal(
         this.props.isDarkMode,
@@ -357,11 +327,6 @@ changeBgColor = async (result) => {
   
     if (isNaN(this.state.bet_amount)) {
       alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
-      return;
-    }
-  
-    if (this.state.bet_amount > this.state.bankroll) {
-      alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
       return;
     }
   
@@ -379,7 +344,7 @@ changeBgColor = async (result) => {
       if (this.props.is_private === true) {
         this.props.openGamePasswordModal();
       } else {
-        await this.joinGame(selected_drop, this.state.bet_amount);
+        await this.joinGame();
       }
     } else {
       confirmModalCreate(
@@ -391,7 +356,7 @@ changeBgColor = async (result) => {
           if (this.props.is_private === true) {
             this.props.openGamePasswordModal();
           } else {
-            await this.joinGame(selected_drop, this.state.bet_amount);
+            await this.joinGame();
           }
         }
       );
@@ -504,7 +469,7 @@ changeBgColor = async (result) => {
     }
 
     const intervalId = setInterval(() => {
-      const randomItem = predictNext(stored_drop_array);
+      const randomItem = this.predictNext(stored_drop_array);
       if (this.props.is_private === true) {
         this.props.openGamePasswordModal();
       } else {
@@ -573,13 +538,13 @@ if (this.state.bet_amount > this.state.bankroll) {
       if (result.betResult === 1) {
         this.props.updateBetResult('win')
         text = 'NOT BAD, WINNER!';
-        this.changeBgColor(result.betResult); // Add this line
+        // this.changeBgColor(result.betResult); // Add this line
       } else if (result.betResult === 0) {
         this.props.updateBetResult('draw')
         text = 'DRAW, NO WINNER!';
-        this.changeBgColor(result.betResult); // Add this line
+        // this.changeBgColor(result.betResult); // Add this line
       }else{
-        this.changeBgColor(result.betResult); // Add this line
+        // this.changeBgColor(result.betResult); // Add this line
          this.props.updateBetResult('lose')
       }
 
@@ -703,15 +668,42 @@ if (this.state.bet_amount > this.state.bankroll) {
             <div className="game-info-panel">
 
             <h3 className="game-sub-title">Previous Drops</h3>
-          <p className="previous-guesses">
-            
-          {this.state.drop_guesses.length > 0
-  ? this.state.drop_guesses.map((guess, index) => <span key={index} style={{background: '#d8171866', borderRadius: '6px', padding: '0.3em 0.9em', marginRight: '20px' }}> <InlineSVG id='busd' src={require('./busd.svg')} /> {guess.bet_amount + '.00'}</span>)
-  : `No guesses yet`}
+            <div className='gradient-container'>
 
-
+          <p className="previous-guesses drop">
+          <div>
+  {this.state.drop_guesses.length > 0 ? 
+    this.state.drop_guesses.map((guess, index) => 
+      <span key={index} 
+        style={{
+          background: guess.host_drop > guess.bet_amount ? '#e30303c2' : '#e3e103c2', 
+          padding: '0.3em 0.9em'
+        }}> 
+        <InlineSVG id='busd' src={require('./busd.svg')} /> {guess.host_drop}
+      </span>
+    ) 
+    : 
+    <span id="no-guesses">No drops yet</span>
+  }
+</div>
+<div>
+  {this.state.drop_guesses.length > 0 ? 
+    this.state.drop_guesses.map((guess, index) => 
+      <span key={index} 
+        style={{
+          background: guess.host_drop > guess.bet_amount ? '#e3e103c2' : '#e30303c2', 
+          padding: '0.3em 0.9em'
+        }}> 
+        <InlineSVG id='busd' src={require('./busd.svg')} /> {guess.bet_amount}
+      </span>
+    ) 
+    : 
+    <span id="no-guesses"></span>
+  }
+</div>
 
           </p>
+  </div>
   </div>
             <h3 className="game-sub-title">Drop an amount!</h3>
             <div className="your-bet-amount">
@@ -721,8 +713,8 @@ if (this.state.bet_amount > this.state.bankroll) {
                 variant="outlined"
                 id="betamount"
                 label="BET AMOUNT"
-                value={this.state.drop_amount}
-                onChange={(event) => this.setState({ drop_amount: event.target.value })}
+                value={this.state.bet_amount}
+                onChange={(event) => this.setState({ bet_amount: event.target.value })}
                 placeholder="DROP AMOUNT"
                 inputProps={{
                   pattern: "[0-9]*",
@@ -744,7 +736,7 @@ if (this.state.bet_amount > this.state.bankroll) {
           <Button
         className="place-bet"
         color="primary"
-        onClick={this.joinGame}
+        onClick={() => this.onBtnBetClick()}
         variant="contained"
         >
         DROP AMOUNT

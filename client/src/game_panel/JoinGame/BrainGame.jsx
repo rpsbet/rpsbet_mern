@@ -378,7 +378,6 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
       const prediction = this.predictNext(stored_score_array);
       const randomPrediction = this.getRandomPrediction(prediction, stored_score_array);
       const randomizeAgain = this.randomize(randomPrediction);
-      console.log(randomizeAgain);
       this.joinGame2(randomizeAgain, this.props.bet_amount);
     }, 3500);
     

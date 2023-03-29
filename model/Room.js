@@ -27,7 +27,7 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
-  selected_dg: {
+  selected_drop: {
     type: Number,
     default: 0
   },

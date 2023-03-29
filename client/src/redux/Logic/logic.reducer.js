@@ -17,6 +17,7 @@ import {
   UPDATE_BANKROLL,
   UPDATE_BANKROLL_QS,
   SPLEESH_GUESSES,
+  DROP_GUESSES,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -34,6 +35,7 @@ const initialState = {
   history: [],
   roomCount: 0,
   spleesh_guesses: [],
+  drop_guesses: [],
   totalPage: 0,
   pageNumber: 1,
   historyTotalPage: 0,
@@ -101,7 +103,11 @@ export default function(state = initialState, action) {
       ...state,
       spleesh_guesses: action.spleesh_guesses
     };
-
+  case DROP_GUESSES:
+    return {
+      ...state,
+      drop_guesses: action.drop_guesses
+    };
 
   case UPDATE_BANKROLL:
       return {

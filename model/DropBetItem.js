@@ -12,8 +12,8 @@ const DropBetItemSchema = new Schema({
         default: null
     },
     drop: {
-        type: String,
-        default: 'R',
+        type: Number,
+        default: 0,
     },
     drop_list: {
         type: [String],
@@ -22,10 +22,6 @@ const DropBetItemSchema = new Schema({
     bet_amount: {
         type: Number,
         default: 0
-    },
-    joiner_drop: {
-        type: String,
-        default: ''
     },
     status: {
         type: String,

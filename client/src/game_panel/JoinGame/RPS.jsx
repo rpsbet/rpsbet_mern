@@ -315,8 +315,6 @@ changeBgColor = async (result) => {
     stored_rps_array.push({ rps: selected_rps });
     localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
   
-    // console.log(stored_rps_array);
-  
     gameResultModal(
       this.props.isDarkMode,
       text,

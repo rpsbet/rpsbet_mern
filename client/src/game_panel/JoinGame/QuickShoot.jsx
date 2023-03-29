@@ -124,8 +124,6 @@ class QuickShoot extends Component {
   handlePositionSelection(position) {
     this.setState({ selected_qs_position: position });
     this.onBtnBetClick(position);
-    // console.log('selected qs', position);
-    // console.log('bet_amount', this.state.bet_amount);
   }
 
   // onLeftPositionButtonClicked = e => {
@@ -241,7 +239,6 @@ class QuickShoot extends Component {
       localStorage.setItem("qs_array_5", JSON.stringify(stored_qs_array));
     }
     
-    console.log(JSON.parse(localStorage.getItem("qs_array_" + this.props.qs_game_type)));
     this.props.refreshHistory();
     
   };
@@ -263,8 +260,6 @@ class QuickShoot extends Component {
       const multipliedBetAmount = this.state.bet_amount * 2;
       const limitedBetAmount = Math.min(multipliedBetAmount, this.state.balance);
       const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
-    // console.log(( (this.state.bet_amount * 2)/ (this.props.qs_game_type - 1)));
-    // console.log(this.state.bankroll);
       if (roundedBetAmount < -2330223) {
         alertModal(this.props.isDarkMode, "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?");
       } else if (( (this.state.bet_amount * 2)/ (this.props.qs_game_type - 1)) > (this.state.bankroll)) {
@@ -284,7 +279,6 @@ calcWinChance = (gametype, rounds) => {
       positionCounts[rounds[i].qs]++;
 
     }
-    // console.log('position counts', positionCounts)
     let entropy = 0;
     for (let i = 0; i < gametype; i++) {
       if (positionCounts[i] === 0) {
@@ -293,7 +287,6 @@ calcWinChance = (gametype, rounds) => {
       let probability = positionCounts[i] / rounds.length;
       entropy -= probability * Math.log2(probability);
     }
-    // console.log('entropy', entropy)
     let winChanceMin = Math.max(0, (1 - entropy / Math.log2(gametype)) / gametype);
     let winChanceMax = Math.min(1, (1 - entropy / Math.log2(gametype)));
     winChanceMin *= 100;
@@ -409,7 +402,6 @@ calcWinChance = (gametype, rounds) => {
     positionCounts[rounds[i].qs]++;
 
   }
-  // console.log('position counts', positionCounts)
   let entropy = 0;
   for (let i = 0; i < gametype; i++) {
     if (positionCounts[i] === 0) {
@@ -418,7 +410,6 @@ calcWinChance = (gametype, rounds) => {
     let probability = positionCounts[i] / rounds.length;
     entropy -= probability * Math.log2(probability);
   }
-  // console.log('entropy', entropy)
   let winChanceMin = Math.max(0, (1 - entropy / Math.log2(gametype)) / gametype);
   let winChanceMax = Math.min(1, (1 - entropy / Math.log2(gametype)));
   winChanceMin *= 100;
@@ -614,7 +605,6 @@ predictNext = (qs_list, gameType) => {
   
     const intervalId = setInterval(() => {
       const randomItem = this.predictNext(stored_qs_array, this.props.qs_game_type);
-      // console.log('wwedw', randomItem)
       this.joinGame2(randomItem, this.state.bet_amount);
     }, 3500);
   

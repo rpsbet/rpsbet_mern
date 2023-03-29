@@ -32,7 +32,6 @@ import DrawerButton from './DrawerButton';
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
-  console.log(result)
   for (let i = 0; i < result.length; i++) {
     result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
   }

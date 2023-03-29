@@ -100,6 +100,14 @@ module.exports.socketio = server => {
       socket.broadcast.emit('SPLEESH_GUESSES1', data);
     });
 
+    socket.on('DROP_GUESSES', (data) => {
+      socket.broadcast.emit('DROP_GUESSES', data);
+    });
+
+    socket.on('DROP_GUESSES1', (data) => {
+      socket.broadcast.emit('DROP_GUESSES1', data);
+    });
+
     socket.on('UPDATED_BANKROLL', (data) => {
       socket.broadcast.emit('UPDATED_BANKROLL', data);
     });

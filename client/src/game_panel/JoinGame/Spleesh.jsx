@@ -132,7 +132,6 @@ class Spleesh extends Component {
   
 
   joinGame = async () => {
-    console.log(this.state.spleesh_guesses);
     const result = await this.props.join({
       bet_amount: this.state.bet_amount,
       is_anonymous: this.state.is_anonymous
@@ -159,11 +158,9 @@ class Spleesh extends Component {
         }
         stored_spleesh_10_array.push({ spleesh: this.state.bet_amount });
         localStorage.setItem("spleesh_10_array", JSON.stringify(stored_spleesh_10_array));
-        console.log(stored_spleesh_10_array);
       } else {
         stored_spleesh_array.push({ spleesh: this.state.bet_amount });
         localStorage.setItem("spleesh_array", JSON.stringify(stored_spleesh_array));
-        console.log(stored_spleesh_array);
       }
       
       
@@ -457,7 +454,7 @@ joinGame2 = async (nextGuess) => {
             <p className="previous-guesses">
               
             {this.state.spleesh_guesses.length > 0
-    ? this.state.spleesh_guesses.map((guess, index) => <span key={index} style={{background: '#d8171866', borderRadius: '6px', padding: '0.3em 0.9em', marginRight: '20px' }}> <InlineSVG id='busd' src={require('./busd.svg')} /> {guess.bet_amount + '.00'}</span>)
+    ? this.state.spleesh_guesses.map((guess, index) => <span key={index} style={{background: '#6c757d66', borderRadius: '6px', padding: '0.3em 0.9em', marginRight: '20px' }}> <InlineSVG id='busd' src={require('./busd.svg')} /> {guess.bet_amount + '.00'}</span>)
     : `No guesses yet`}
 
 

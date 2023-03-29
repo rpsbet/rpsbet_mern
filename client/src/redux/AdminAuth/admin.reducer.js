@@ -20,8 +20,6 @@ const initialState = {
 
 export default function(state = initialState, action) {
   const { type, payload } = action;
-  // console.log('Admin Reducer', type, payload);
-
   switch (type) {
     case ADMIN_LOADED:
       return {

@@ -62,7 +62,6 @@ class HistoryTable extends Component {
 
   handleOpenPlayerModal = (creator_id) => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
-    console.log(this.state.selectedCreator)
   }
 
   

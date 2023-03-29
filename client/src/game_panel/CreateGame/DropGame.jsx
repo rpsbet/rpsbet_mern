@@ -7,22 +7,16 @@ import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import {
   alertModal
 } from '../modal/ConfirmAlerts';
-// const calcBetAmount = drop_list => {
-//   let bet_amount = 0;
-//   drop_list.map((el, i) => {
-//     bet_amount += el.bet_amount;
-//   });
-//   return bet_amount;
-// };
+
 
 const calcWinChance = (prevStates) => {
   let total = prevStates.length;
   let counts = {};
   prevStates.forEach((state) => {
-    if (counts[state.drop_amount]) {
-      counts[state.drop_amount]++;
+    if (counts[state.drop]) {
+      counts[state.drop]++;
     } else {
-      counts[state.drop_amount] = 1;
+      counts[state.drop] = 1;
     }
   });
   let lowest = Infinity;
@@ -47,7 +41,8 @@ class DropGame extends Component {
     super(props);
     this.state = {
       selected_drop: '',
-      drop_amount: 10.00,
+      bet_amount: 10.00,
+      drop: 1,
       balance: this.props.balance,
       winChance: 33,
       // is_other: (this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25 || this.props.bet_amount === 50 || this.props.bet_amount === 100) ? 'hidden' : '',
@@ -79,13 +74,13 @@ class DropGame extends Component {
   };
   
   predictNext = (dropAmounts) => {
-    const minValue = Math.min(...dropAmounts.map(drop => drop.drop_amount));
-    const maxValue = Math.max(...dropAmounts.map(drop => drop.drop_amount));
+    const minValue = Math.min(...dropAmounts.map(drop => drop.drop));
+    const maxValue = Math.max(...dropAmounts.map(drop => drop.drop));
     const rangeSize = Math.ceil((maxValue - minValue) / 200);
   
     const rangeCounts = {};
     dropAmounts.forEach((drop) => {
-      const range = Math.floor((drop.drop_amount - minValue) / rangeSize);
+      const range = Math.floor((drop.drop - minValue) / rangeSize);
       rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
     });
   
@@ -143,26 +138,26 @@ class DropGame extends Component {
 
   };
 
-  onAddRun = (drop_amount) => {
-    // Ensure drop_amount is a number
-    const parsedDropAmount = parseFloat(drop_amount);
+  onAddRun = (drop) => {
+    // Ensure drop is a number
+    const parsedDropAmount = parseFloat(drop);
     if (isNaN(parsedDropAmount)) {
       alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER');
       return;
     }
-    drop_amount = parsedDropAmount;
+    drop = parsedDropAmount;
   
-    this.setState({ drop_amount: drop_amount });
+    this.setState({ drop: drop });
     const newArray = JSON.parse(JSON.stringify(this.props.drop_list));
     console.log(this.props.drop_list);
   
-    // Check if the drop_list is empty and if the drop_amount value exceeds this.props.bet_amount
-    if (newArray.length === 0 && drop_amount > this.props.bet_amount) {
-      drop_amount = this.props.bet_amount; // Set the drop_amount value to this.props.bet_amount
+    // Check if the drop_list is empty and if the drop value exceeds this.props.bet_amount
+    if (newArray.length === 0 && drop > this.props.bet_amount) {
+      drop = this.props.bet_amount; // Set the drop value to this.props.bet_amount
     }
   
     newArray.push({
-      drop_amount: drop_amount
+      drop: drop
     });
   
 
@@ -170,7 +165,7 @@ class DropGame extends Component {
     this.props.onChangeState({
       drop_list: newArray,
       winChance: winChance,
-      drop_amount: this.state.drop_amount
+      drop: this.state.bet_amount
     });
     this.onChangeWinChance(winChance);
     this.setState({ winChance });
@@ -186,10 +181,10 @@ class DropGame extends Component {
 
 
   handlehalfxButtonClick() {
-    const multipliedBetAmount = this.state.drop_amount * 0.5;
+    const multipliedBetAmount = this.state.drop * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState({
-    drop_amount: roundedBetAmount
+    drop: roundedBetAmount
     }, () => {
     document.getElementById("betamount").focus();
     });
@@ -197,14 +192,14 @@ class DropGame extends Component {
 
   handle2xButtonClick() {
     const maxBetAmount = this.state.balance;
-    const multipliedBetAmount = this.state.drop_amount * 2;
+    const multipliedBetAmount = this.state.drop * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount, this.props.bet_amount);
     const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
     if (roundedBetAmount < -2330223) {
       alertModal(this.props.isDarkMode, "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?");
     } else {
       this.setState({
-        drop_amount: roundedBetAmount
+        drop: roundedBetAmount
       }, () => {
       document.getElementById("betamount").focus();
       });
@@ -215,13 +210,13 @@ class DropGame extends Component {
     handleMaxButtonClick() {
       const maxBetAmount = (this.state.balance).toFixed(2);
       this.setState({
-        drop_amount: Math.min(maxBetAmount, this.props.bet_amount)
+        drop: Math.min(maxBetAmount, this.props.bet_amount)
       }, () => {
       document.getElementById("betamount").focus();
       });
     }
   onChangeBetAmount = new_state => {
-    this.setState({ drop_amount: new_state.selected_bet_amount });
+    this.setState({ drop: new_state.selected_bet_amount });
   };
   render() {
     
@@ -256,8 +251,8 @@ class DropGame extends Component {
                 variant="outlined"
                 id="betamount"
                 maxLength="9"
-                value={this.state.drop_amount}
-                onChange={(event) => this.setState({ drop_amount: event.target.value })}
+                value={this.state.drop}
+                onChange={(event) => this.setState({ drop: event.target.value })}
                 placeholder="BET AMOUNT"
                 InputProps={{
                   endAdornment: "BUSD",
@@ -274,7 +269,7 @@ class DropGame extends Component {
               <Button 
               id="drop-button"
                   onClick={() => {
-                    this.onAddRun(this.state.drop_amount);
+                    this.onAddRun(this.state.drop);
 
                   }}>
                     Add Run
@@ -294,7 +289,7 @@ class DropGame extends Component {
                   this.props.drop_list.map((drop, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{drop.drop_amount}</td>
+                      <td>{drop.drop}</td>
                       <td>
                         <HighlightOffIcon
                           onClick={() => this.onRemoveItem(index)}

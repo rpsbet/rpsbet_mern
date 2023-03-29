@@ -100,7 +100,6 @@ class QuickShoot extends Component {
       positionCounts[rounds[i].qs]++;
 
     }
-    // console.log('position counts', positionCounts)
     let entropy = 0;
     for (let i = 0; i < gametype; i++) {
       if (positionCounts[i] === 0) {
@@ -109,7 +108,6 @@ class QuickShoot extends Component {
       let probability = positionCounts[i] / rounds.length;
       entropy -= probability * Math.log2(probability);
     }
-    // console.log('entropy', entropy)
     let winChanceMin = Math.max(0, (1 - entropy / Math.log2(gametype)) / gametype);
     let winChanceMax = Math.min(1, (1 - entropy / Math.log2(gametype)));
     winChanceMin *= 100;
@@ -118,7 +116,6 @@ class QuickShoot extends Component {
   }
 
  predictNext = (qs_list, gameType) => {
-  console.log('wee', qs_list);
     const options = [...Array(gameType).keys()];
     const transitionMatrix = {};
     options.forEach(option1 => {
@@ -311,10 +308,7 @@ class QuickShoot extends Component {
     
     if(this.props.qs_list.length > 2){
       const prevStates = this.props.qs_list;
-
-      // console.log(prevStates)
       const nextQS = this.predictNext(prevStates, this.props.qs_game_type);
-      // console.log('wankeer', nextQS)
       this.handlePositionSelection(nextQS);
     }else {
       alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');

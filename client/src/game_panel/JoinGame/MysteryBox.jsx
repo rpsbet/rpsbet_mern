@@ -157,7 +157,6 @@ componentDidUpdate(prevProps, prevState) {
     this.setState({ box_list: this.state.box_list });
     this.props.refreshHistory();
   }
-  // console.log(this.state.betResult);
   if (
     prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
     this.state.isPasswordCorrect === true

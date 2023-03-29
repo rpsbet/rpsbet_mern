@@ -270,10 +270,6 @@ class CreateGame extends Component {
       }
 
       if (this.state.bet_amount > this.state.balance) {
-        console.log({
-          bet_amount: this.state.bet_amount,
-          balance: this.state.balance
-        });
         alertModal(this.props.isDarkMode, 'MAKE A DEPOSIT, BROKIE!');
         return;
       }
@@ -343,10 +339,6 @@ class CreateGame extends Component {
   };
 
   onCreateRoom = async () => {
-    console.log({
-      bet_amount: this.state.bet_amount,
-      balance: this.state.balance
-    });
     confirmModalCreate(
       this.props.isDarkMode,
       'CONFIRM GAME SETTINGS?',

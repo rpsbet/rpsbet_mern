@@ -21,6 +21,7 @@ import {
   NEW_TRANSACTION,
   SET_BALANCE,
   SPLEESH_GUESSES,
+  DROP_GUESSES,
   ONLINE_USER_LIST_UPDATED,
   MSG_WARNING,
   SELECT_MAIN_TAB,
@@ -61,6 +62,23 @@ export function updateSpleeshGuesses() {
         // Dispatch the action to store the spleesh guesses in your state
         dispatch({
           type: SPLEESH_GUESSES,
+          payload: data
+        });
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+}
+export function updateDropGuesses() {
+  return dispatch => {
+    // Make a GET request to your server to retrieve the drop guesses
+    fetch('/api/drop/guesses')
+      .then(res => res.json())
+      .then(data => {
+        // Dispatch the action to store the drop guesses in your state
+        dispatch({
+          type: DROP_GUESSES,
           payload: data
         });
       })

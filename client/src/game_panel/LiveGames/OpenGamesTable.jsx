@@ -32,7 +32,6 @@ class OpenGamesTable extends Component {
 
  
   handleOpenPlayerModal = (creator_id) => {
-    console.log(creator_id);
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   }
 
@@ -185,8 +184,6 @@ class OpenGamesTable extends Component {
 
   render() {
     const gameTypePanel = this.generateGameTypePanel();
-    // console.log('Props being passed to PlayerModal: ', this.state.selectedRow);
-
     return (
       
       <div className="overflowX">

@@ -78,8 +78,6 @@ class PlayerModal extends Component {
     
       
     async componentDidMount() {
-        console.log('Props received in PlayerModal: ', this.props);
-    
         const result = await this.props.getCustomerStatisticsData(this.props.selectedCreator)
         const userData = await this.props.acGetCustomerInfo(this.props.selectedCreator)
         this.setState({

@@ -53,7 +53,6 @@ const calcWinChance = (prevStates) => {
 };
 
 const predictNext = (rps_list) => {
-  // console.log(rps_list);
   // Create a transition matrix to store the probability of transitioning from one state to another
   const transitionMatrix = {
     R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
@@ -143,7 +142,6 @@ class RPS extends Component {
     if(this.props.rps_list.length > 2){
       const prevStates = this.props.rps_list;
 
-      // console.log(this.props.rps_list)
       const nextRPS = predictNext(prevStates, this.props.rps_list);
       this.onAddRun(nextRPS);
 
