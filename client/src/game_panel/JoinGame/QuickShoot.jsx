@@ -5,6 +5,14 @@ import { updateDigitToPoint2 } from '../../util/helper';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { Button, TextField } from '@material-ui/core';
 
+import {
+  validateIsAuthenticated,
+  validateCreatorId,
+  validateBetAmount,
+  validateLocalStorageLength,
+  validateBankroll
+} from '../modal/betValidations';
+
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
 // import { updateBetResult } from '../../redux/Logic/logic.actions';
@@ -69,29 +77,9 @@ class QuickShoot extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
   }; 
 
-  handleScroll = (event) => {
-    const panel = event.target;
-    const scrollLeft = panel.scrollLeft;
-    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-    
-    if (scrollLeft >= maxScrollLeft) {
-      // Scrolled to or beyond end of panel, so append items to array and restart animation
-      const items = this.state.items.concat(this.state.items);
-      this.setState({ items }, () => {
-        panel.style.animation = "none";
-        panel.scrollTo({ left: 0, behavior: "auto" });
-        void panel.offsetWidth;
-        panel.style.animation = "ticker 20s linear infinite";
-      });
-    } else {
-      panel.style.animation = "none";
-    }
-  };
   
-
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -123,53 +111,37 @@ class QuickShoot extends Component {
 
   handlePositionSelection(position) {
     this.setState({ selected_qs_position: position });
-    this.onBtnBetClick(position);
+    this.onBtnBetClick();
   }
-
-  // onLeftPositionButtonClicked = e => {
-  //   e.preventDefault();
-  //   if (this.state.selected_qs_position > 0) {
-  //     this.setState({
-  //       selected_qs_position: this.state.selected_qs_position - 1
-  //     });
-  //   }
-  // };
-
-  // onRightPositionButtonClicked = e => {
-  //   e.preventDefault();
-  //   if (this.state.selected_qs_position < this.props.qs_game_type - 1) {
-  //     this.setState({
-  //       selected_qs_position: this.state.selected_qs_position + 1
-  //     });
-  //   }
-  // };
-
   
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.roomInfo && this.props.roomInfo) {
-      if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
+    const { roomInfo } = this.props;
+    const { isPasswordCorrect } = this.state;
+  
+    if (prevProps.roomInfo && roomInfo) {
+      if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
         this.setState({
-          bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
+          bankroll: parseFloat(roomInfo.bet_amount) - this.getPreviousBets()
         });
       }
     }
-    if (
-      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
-      this.state.isPasswordCorrect === true
-    ) {
+  
+    if (prevState.isPasswordCorrect !== isPasswordCorrect && isPasswordCorrect === true) {
       this.joinGame();
     }
   }
+  
 
-  joinGame = async (selected_qs_position, bet_amount) => {
-    this.setState({selected_qs_position: selected_qs_position, bet_amount: this.state.bet_amount});
+  joinGame = async () => {
+    const {qs_bet_item_id, isDarkMode, qs_game_type, refreshHistory} = this.props;
+    const {bet_amount, selected_qs_position, is_anonymous} = this.state;
 
     const result = await this.props.join({
-      bet_amount: parseFloat(this.state.bet_amount),
+      bet_amount: parseFloat(bet_amount),
 
       selected_qs_position: selected_qs_position,
-      is_anonymous: this.state.is_anonymous,
-      qs_bet_item_id: this.props.qs_bet_item_id,
+      is_anonymous: is_anonymous,
+      qs_bet_item_id: qs_bet_item_id,
 
     });
 
@@ -184,7 +156,7 @@ class QuickShoot extends Component {
 
       if (result.roomStatus === 'finished') {
         gameResultModal(
-          this.props.isDarkMode,
+          isDarkMode,
           text,
           result.betResult,
           'Okay',
@@ -196,7 +168,7 @@ class QuickShoot extends Component {
         );
       } else {
         gameResultModal(
-          this.props.isDarkMode,
+          isDarkMode,
           text,
           result.betResult,
           'Okay',
@@ -211,36 +183,34 @@ class QuickShoot extends Component {
       }
     } else {
       if (result.message) {
-        alertModal(this.props.isDarkMode, result.message);
+        alertModal(isDarkMode, result.message);
       }
     }
 
    
     let stored_qs_array;
 
-    if (this.props.qs_game_type === 2) {
+    if (qs_game_type === 2) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_2")) || [];
-    } else if (this.props.qs_game_type === 3) {
+    } else if (qs_game_type === 3) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_3")) || [];
-    } else if (this.props.qs_game_type === 4) {
+    } else if (qs_game_type === 4) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_4")) || [];
-    } else if (this.props.qs_game_type === 5) {
+    } else if (qs_game_type === 5) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
     }
-    stored_qs_array.push({qs: selected_qs_position, room_id: this.props.qs_bet_item_id});
+    stored_qs_array.push({qs: selected_qs_position, room_id: qs_bet_item_id});
     
-    if (this.props.qs_game_type === 2) {
+    if (qs_game_type === 2) {
       localStorage.setItem("qs_array_2", JSON.stringify(stored_qs_array));
-    } else if (this.props.qs_game_type === 3) {
+    } else if (qs_game_type === 3) {
       localStorage.setItem("qs_array_3", JSON.stringify(stored_qs_array));
-    } else if (this.props.qs_game_type === 4) {
+    } else if (qs_game_type === 4) {
       localStorage.setItem("qs_array_4", JSON.stringify(stored_qs_array));
-    } else if (this.props.qs_game_type === 5) {
+    } else if (qs_game_type === 5) {
       localStorage.setItem("qs_array_5", JSON.stringify(stored_qs_array));
     }
-    
-    this.props.refreshHistory();
-    
+    refreshHistory();
   };
 
   
@@ -479,85 +449,68 @@ predictNext = (qs_list, gameType) => {
   return nextState;
 };
 
-  onBtnBetClick = (selected_qs_position) => {
-    // e.preventDefault();
-
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
+  onBtnBetClick = () => {
+    const { isAuthenticated, isDarkMode, creator_id, user_id, balance, qs_game_type, is_private, roomInfo, openGamePasswordModal } = this.props;
+    const { bet_amount, bankroll } = this.state;
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-    if (isNaN(this.state.bet_amount)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
+    
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
-      }
-
-      if (((this.state.bet_amount / (this.props.qs_game_type - 1)) + parseFloat(this.state.bet_amount)) - (this.state.bankroll *  (this.props.qs_game_type - 1)) > (this.state.bankroll)) {
-        alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
-        return;
-      }
+    }
+    
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      return;
+    }
+    
+    if (!validateBankroll(((bet_amount / (qs_game_type - 1)) + parseFloat(bet_amount) )- (bankroll *  (qs_game_type - 1)), bankroll, isDarkMode)) {
+      return;
+    }
   
-      if (this.state.bet_amount <= 0) {
-        alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
-        return;
-      }
-
-
-    if (this.state.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
-      return;
-    }
     const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
-    const passwordCorrect = rooms[this.props.roomInfo._id];
+    const passwordCorrect = rooms[roomInfo._id];
         if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (this.props.is_private === true && passwordCorrect !== true) {
-        this.props.openGamePasswordModal();
+      if (is_private === true && passwordCorrect !== true) {
+        openGamePasswordModal();
       } else {
-        this.joinGame(selected_qs_position);
+        this.joinGame();
       }
     } else {
       confirmModalCreate(
-        this.props.isDarkMode,
+        isDarkMode,
         'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
         'Yes',
         'Cancel',
         async () => {
-          if (this.props.is_private === true && passwordCorrect !== true) {
-            this.props.openGamePasswordModal();
+          if (is_private === true && passwordCorrect !== true) {
+            openGamePasswordModal();
           } else {
-            await this.joinGame(selected_qs_position);
+            await this.joinGame();
           }
         }
       );
     }
   };
   handleButtonClick = () => {
+    const { isAuthenticated, isDarkMode, creator_id, user_id, balance, qs_game_type } = this.props;
+    const { bet_amount, bankroll } = this.state;
 
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-    if (isNaN(this.state.bet_amount)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
-      return;
-      }
-      if (this.state.bet_amount <= 0) {
-        alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
-        return;
-      }
-
-
-    if (this.state.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
 
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      return;
+    }
 
+    if (!validateBankroll(((bet_amount / (qs_game_type - 1)) + parseFloat(bet_amount) )- (bankroll *  (qs_game_type - 1)), bankroll, isDarkMode)) {
+      return;
+    }
 
     if (!this.state.betting) {
       this.setState({
@@ -587,38 +540,35 @@ predictNext = (qs_list, gameType) => {
 
   startBetting = () => {
     let stored_qs_array;
-  
-    if (this.props.qs_game_type === 2) {
+    const { isDarkMode, qs_game_type, roomInfo, is_private, openGamePasswordModal } = this.props;
+    
+    if (qs_game_type === 2) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_2")) || [];
-    } else if (this.props.qs_game_type === 3) {
+    } else if (qs_game_type === 3) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_3")) || [];
-    } else if (this.props.qs_game_type === 4) {
+    } else if (qs_game_type === 4) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_4")) || [];
-    } else if (this.props.qs_game_type === 5) {
+    } else if (qs_game_type === 5) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
     }
     
-
-  
-    if (stored_qs_array.length < 3) {
-      alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+    if (!validateLocalStorageLength(`qs_array_${qs_game_type}`, isDarkMode)) {
       return;
     }
-  
+
     const intervalId = setInterval(() => {
-      const randomItem = this.predictNext(stored_qs_array, this.props.qs_game_type);
+      const randomItem = this.predictNext(stored_qs_array, qs_game_type);
       const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
-      const passwordCorrect = rooms[this.props.roomInfo._id];
-          if (localStorage.getItem('hideConfirmModal') === 'true') {
-        if (this.props.is_private === true && passwordCorrect !== true) {
-          this.props.openGamePasswordModal();
+      const passwordCorrect = rooms[roomInfo._id];
+      
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
         } else {
-      this.joinGame2(randomItem, this.state.bet_amount);
+          this.joinGame2(randomItem);
         }
-      }
     }, 3500);
-  
-    this.setState({ intervalId, betting: true  });
+    
+    this.setState({ intervalId, betting: true});
   };
     
 
@@ -627,18 +577,22 @@ predictNext = (qs_list, gameType) => {
     this.setState({ intervalId: null,  betting: false, timerValue: 1000 });
   };
 
-  joinGame2 = async (selected_qs_position, bet_amount) => {
-    if ( ((this.state.bet_amount / (this.props.qs_game_type - 1)) + parseFloat(this.state.bet_amount) )- (this.state.bankroll *  (this.props.qs_game_type - 1)) > (this.state.bankroll)) {
-      alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
+  joinGame2 = async (randomItem) => {
+    const { isDarkMode, qs_game_type, qs_bet_item_id, refreshHistory} = this.props;
+    const { bet_amount, bankroll, is_anonymous, selected_qs_position, slippage } = this.state;
+    this.setState({ selected_qs_position: randomItem});
+
+
+    if (!validateBankroll(((bet_amount / (qs_game_type - 1)) + parseFloat(bet_amount) )- (bankroll *  (qs_game_type - 1)), bankroll, isDarkMode)) {
       return;
     }
-    this.setState({selected_qs_position: selected_qs_position, bet_amount: this.state.bet_amount});
+
     const result = await this.props.join({
-      bet_amount: parseFloat(this.state.bet_amount),
+      bet_amount: parseFloat(bet_amount),
       selected_qs_position: selected_qs_position,
-      is_anonymous: this.state.is_anonymous,
-      qs_bet_item_id: this.props.qs_bet_item_id,
-      slippage: this.state.slippage
+      is_anonymous: is_anonymous,
+      qs_bet_item_id: qs_bet_item_id,
+      slippage: slippage
     });
 
  
@@ -660,9 +614,8 @@ predictNext = (qs_list, gameType) => {
       }else{
         //  this.props.updateBetResult('lose')
       }
-
    
-    this.props.refreshHistory();
+    refreshHistory();
   };
 
   }
@@ -764,15 +717,13 @@ predictNext = (qs_list, gameType) => {
       position_short_name = ['tl', 'tr', 'bl', 'br'];
     }
 
-    const host_bet = this.props.bet_amount / (this.props.qs_game_type - 1);
-
     return (
       <div className="game-page">
         <div className="page-title">
           <h2>PLAY - Quick Shoot</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel">
         <div className="pre-summary-panel__inner">
           {[...Array(2)].map((_, i) => (
             <React.Fragment key={i}>
@@ -853,18 +804,6 @@ predictNext = (qs_list, gameType) => {
             <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
           </div>
         </div>
-            {/* <div className="qs-action-panel">
-            
-              <button
-                className="btn-left"
-                onClick={this.onLeftPositionButtonClicked}
-              ></button>
-              <label>{position_name[this.state.selected_qs_position]}</label>
-              <button
-                className="btn-right"
-                onClick={this.onRightPositionButtonClicked}
-              ></button>
-            </div> */}
             <Button
             id="aiplay"
         onMouseDown={this.handleButtonClick}
@@ -921,7 +860,7 @@ predictNext = (qs_list, gameType) => {
 
 const mapStateToProps = state => ({
   socket: state.auth.socket,
-  auth: state.auth.isAuthenticated,
+  isAuthenticated: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
   isDarkMode: state.auth.isDarkMode,

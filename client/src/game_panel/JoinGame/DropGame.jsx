@@ -7,6 +7,13 @@ import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button, TextField  } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
+import {
+  validateIsAuthenticated,
+  validateCreatorId,
+  validateBetAmount,
+  validateLocalStorageLength,
+  validateBankroll
+} from '../modal/betValidations';
 
 import animationData from '../LottieAnimations/spinningIcon';
 import Avatar from '../../components/Avatar';
@@ -316,45 +323,43 @@ getPreviousBets() {
   };
   
   onBtnBetClick = async () => {
-
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
+    const { openGamePasswordModal, isAuthenticated, isDarkMode, creator_id, user_id, balance, is_private, roomInfo } = this.props;
+    const { bet_amount, bankroll } = this.state;
+  
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
   
-    if (isNaN(this.state.bet_amount)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
   
-    if (this.state.bet_amount <= 0) {
-      alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      return;
+    }
+    
+    if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
   
-    if (this.state.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
-      return;
-    }
+    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+    const passwordCorrect = rooms[roomInfo._id];
   
     if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (this.props.is_private === true) {
-        this.props.openGamePasswordModal();
+      if (is_private === true && passwordCorrect !== true) {
+        openGamePasswordModal();
       } else {
         await this.joinGame();
       }
     } else {
       confirmModalCreate(
-        this.props.isDarkMode,
+        isDarkMode,
         'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
         'Yes',
         'Cancel',
         async () => {
-          if (this.props.is_private === true) {
-            this.props.openGamePasswordModal();
+          if (is_private === true && passwordCorrect !== true) {
+            openGamePasswordModal();
           } else {
             await this.joinGame();
           }
@@ -399,24 +404,6 @@ getPreviousBets() {
       document.getElementById("betamount").focus();
       });
     }
-  handleScroll = (event) => {
-    const panel = event.target;
-    const scrollLeft = panel.scrollLeft;
-    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-    
-    if (scrollLeft >= maxScrollLeft) {
-      // Scrolled to or beyond end of panel, so append items to array and restart animation
-      const items = this.state.items.concat(this.state.items);
-      this.setState({ items }, () => {
-        panel.style.animation = "none";
-        panel.scrollTo({ left: 0, behavior: "auto" });
-        void panel.offsetWidth;
-        panel.style.animation = "ticker 20s linear infinite";
-      });
-    } else {
-      panel.style.animation = "none";
-    }
-  };
   
   toggleBtnHandler = () => {
     this.setState({
@@ -461,13 +448,13 @@ getPreviousBets() {
     }
   };
   startBetting = () => {
-    
-    let stored_drop_array = JSON.parse(localStorage.getItem("drop_array")) || [];
-    if (stored_drop_array.length  < 3) {
-      alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+    const { isDarkMode } = this.props;
+
+    if (!validateLocalStorageLength("drop_array", isDarkMode)) {
       return;
     }
 
+    const stored_drop_array = JSON.parse(localStorage.getItem("drop_array")) || [];
     const intervalId = setInterval(() => {
       const randomItem = this.predictNext(stored_drop_array);
       if (this.props.is_private === true) {
@@ -478,9 +465,9 @@ getPreviousBets() {
       }
     }, 3500);
 
-  
-    this.setState({ intervalId,betting: true });
-  };
+    this.setState({ intervalId, betting: true });
+};
+
 
   stopBetting = () => {
     clearInterval(this.state.intervalId, this.state.timer);
@@ -488,76 +475,65 @@ getPreviousBets() {
   };
 
   joinGame2 = async (selected_drop, bet_amount) => {
-    
-if (this.state.bet_amount > this.state.bankroll) {
-      alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
+    const {
+      isAuthenticated,
+      isDarkMode,
+      balance,
+      user_id,
+      creator_id,
+      refreshHistory,
+      updateBetResult,
+      join,
+      drop_bet_item_id
+    } = this.props;
+  
+    const { is_anonymous, slippage } = this.state;
+  
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-
-    if (isNaN(this.state.bet_amount)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
-      return;
-      }
-
-    if (this.state.bet_amount <= 0) {
-      alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
+  
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-
-    if (this.state.bet_amount >this.state.balance) {
-      alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
-      return;
-    }
-
-
-    this.setState({selected_drop: selected_drop, bet_amount: this.state.bet_amount});
-    const result = await this.props.join({
-      bet_amount: parseFloat(this.state.bet_amount),
-      selected_drop: selected_drop,
-      is_anonymous: this.state.is_anonymous,
-      drop_bet_item_id: this.props.drop_bet_item_id,
-      slippage: this.state.slippage
+  
+    this.setState({ selected_drop, bet_amount });
+    const result = await join({
+      bet_amount: parseFloat(bet_amount),
+      selected_drop,
+      is_anonymous,
+      drop_bet_item_id,
+      slippage
     });
-
-    const currentUser = this.props.user;
-    const currentRoom = this.props.room;
+  
     if (result.status === 'success') {
       this.setState(prevState => ({
-        betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
-    }));
-      let text = 'HAHAA, YOU LOST!!!';
-
-      if (result.betResult === 1) {
-        this.props.updateBetResult('win')
-        text = 'NOT BAD, WINNER!';
-        // this.changeBgColor(result.betResult); // Add this line
-      } else if (result.betResult === 0) {
-        this.props.updateBetResult('draw')
-        text = 'DRAW, NO WINNER!';
-        // this.changeBgColor(result.betResult); // Add this line
-      }else{
-        // this.changeBgColor(result.betResult); // Add this line
-         this.props.updateBetResult('lose')
-      }
-
-   
-    this.props.refreshHistory();
-  };
-
-
-   
-  };
-
+        betResults: [...prevState.betResults, { ...result, user: this.props.user, room: this.props.room }]
+      }));
   
-
+      let text = 'HAHAA, YOU LOST!!!';
+  
+      if (result.betResult === 1) {
+        updateBetResult('win');
+        text = 'NOT BAD, WINNER!';
+      } else if (result.betResult === 0) {
+        updateBetResult('draw');
+        text = 'DRAW, NO WINNER!';
+      } else {
+        updateBetResult('lose');
+      }
+  
+      refreshHistory();
+    } else {
+      if (result.message) {
+        alertModal(isDarkMode, result.message);
+      }
+    }
+  };
 
   render() {
     const styles = ['copy-btn'];
@@ -810,10 +786,9 @@ const mapStateToProps = state => ({
 
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps  = {
   openGamePasswordModal,
-
-  updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
-});
+  // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(DropGame);

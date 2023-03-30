@@ -5,7 +5,13 @@ import { updateDigitToPoint2 } from '../../util/helper';
 import InlineSVG from 'react-inlinesvg';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { Button } from '@material-ui/core';
-
+import {
+  validateIsAuthenticated,
+  validateCreatorId,
+  validateBetAmount,
+  validateLocalStorageLength,
+  validateBankroll
+} from '../modal/betValidations';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
 import { FaClipboard } from 'react-icons/fa';
@@ -76,8 +82,6 @@ class Spleesh extends Component {
   };
 
   componentDidMount() {
-          // Add event listener to detect end of scroll
-  this.panelRef.current.addEventListener("scroll", this.handleScroll);
     this.socket.on('SPLEESH_GUESSES', data => {
       this.setState({spleesh_guesses: data });
     });
@@ -107,187 +111,134 @@ class Spleesh extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
   }; 
 
-  
-  handleScroll = (event) => {
-    const panel = event.target;
-    const scrollLeft = panel.scrollLeft;
-    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-    
-    if (scrollLeft >= maxScrollLeft) {
-      // Scrolled to or beyond end of panel, so append items to array and restart animation
-      const items = this.state.items.concat(this.state.items);
-      this.setState({ items }, () => {
-        panel.style.animation = "none";
-        panel.scrollTo({ left: 0, behavior: "auto" });
-        void panel.offsetWidth;
-        panel.style.animation = "ticker 20s linear infinite";
-      });
-    } else {
-      panel.style.animation = "none";
-    }
-  };
-  
-
   joinGame = async () => {
-    const result = await this.props.join({
-      bet_amount: this.state.bet_amount,
-      is_anonymous: this.state.is_anonymous
-    });
+    const { bet_amount, is_anonymous } = this.state;
+    const { join, isDarkMode, spleesh_bet_unit, refreshHistory } = this.props;
+  
+    const result = await join({ bet_amount, is_anonymous });
+  
     if (result.status === 'success') {
       let text = 'HAHAA, YOU LOST!!!';
-
+  
       if (result.betResult === 1) {
         text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
         text = 'DRAW, NO WINNER!';
       }
-
-      let stored_spleesh_array = JSON.parse(localStorage.getItem("spleesh_array")) || [];
-      let stored_spleesh_10_array = JSON.parse(localStorage.getItem("spleesh_10_array")) || [];
-
-      while (stored_spleesh_array.length >= 30) {
-        stored_spleesh_array.shift();
+  
+      const storageName = spleesh_bet_unit === 10 ? 'spleesh_10_array' : 'spleesh_array';
+      const storedArray = JSON.parse(localStorage.getItem(storageName)) || [];
+  
+      while (storedArray.length >= 30) {
+        storedArray.shift();
       }
-      
-      if (this.props.spleesh_bet_unit === 10) {
-        while (stored_spleesh_10_array.length >= 30) {
-          stored_spleesh_10_array.shift();
+  
+      storedArray.push({ spleesh: bet_amount });
+      localStorage.setItem(storageName, JSON.stringify(storedArray));
+  
+      const okCallback = () => {
+        if (result.roomStatus === 'finished') {
+          history.push('/');
         }
-        stored_spleesh_10_array.push({ spleesh: this.state.bet_amount });
-        localStorage.setItem("spleesh_10_array", JSON.stringify(stored_spleesh_10_array));
-      } else {
-        stored_spleesh_array.push({ spleesh: this.state.bet_amount });
-        localStorage.setItem("spleesh_array", JSON.stringify(stored_spleesh_array));
-      }
-
-
-      
-      if (result.roomStatus === 'finished') {
-        gameResultModal(
-          this.props.isDarkMode,
-          text,
-          result.betResult,
-          'Okay',
-          null,
-          () => {
-            history.push('/');
-          },
-          () => {}
-        );
-      } else {
-        gameResultModal(
-          this.props.isDarkMode,
-          text,
-          result.betResult,
-          'Okay',
-          null,
-          () => {
-            // history.push('/');
-          },
-          () => {}
-        );
-      }
+      };
+  
+      gameResultModal(
+        isDarkMode,
+        text,
+        result.betResult,
+        'Okay',
+        null,
+        okCallback,
+        () => {}
+      );
     } else {
       if (result.message) {
-        alertModal(this.props.isDarkMode, result.message);
+        alertModal(isDarkMode, result.message);
       }
     }
-    this.props.refreshHistory();
-
+  
+    refreshHistory();
   };
-
+  
   onBtnBetClick = async (bet_amount) => {
-    if (!this.props.isAuthenticated) {
-    alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
-    return;
-  }
-  // e.preventDefault();
-  if (this.props.creator_id === this.props.user_id) {
-    alertModal(
-      this.props.isDarkMode,
-      `DIS YOUR OWN STAKE CRAZY FOO-!`
-    );
-    return;
-  }
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      balance,
+      is_private,
+      roomInfo,
+      openGamePasswordModal,
+    } = this.props;
   
-
-  if (isNaN(this.state.bet_amount)) {
-    alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
-    return;
-  }
-
-  if (this.state.bet_amount > this.state.bankroll) {
-    alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
-    return;
-  }
-
-  if (this.state.bet_amount <= 0) {
-    alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
-    return;
-  }
-
-  if (this.state.bet_amount > this.state.balance) {
-    alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
-    return;
-  }
-
-  const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
-const passwordCorrect = rooms[this.props.roomInfo._id];
-if (localStorage.getItem('hideConfirmModal') === 'true') {
-if (this.props.is_private === true && passwordCorrect !== true) {
-  this.props.openGamePasswordModal();
-} else {
-  await this.joinGame(bet_amount);
-}
-} else {
-confirmModalCreate(
-  this.props.isDarkMode,
-  'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-  'Yes',
-  'Cancel',
-  async () => {
-    if (this.props.is_private === true && passwordCorrect !== true) {
-      this.props.openGamePasswordModal();
-    } else {
+    const { bankroll } = this.state;
+  
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
+      return;
+    }
+  
+    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+    const passwordCorrect = rooms[roomInfo._id];
+  
+    const hideConfirmModal = localStorage.getItem('hideConfirmModal') === 'true';
+  
+    if (hideConfirmModal || (is_private !== true || passwordCorrect === true)) {
       await this.joinGame(bet_amount);
+    } else {
+      openGamePasswordModal();
     }
-  }
-);
-}
-};
+  };
   
 
-  createNumberPanel = () => {
-    let panel = [];
-    for (let i = 1; i <= 10; i++) {
-      panel.push(
-        <Button
-          className={
-            this.state.bet_amount / this.props.spleesh_bet_unit === i
-              ? ' active'
-              : ''
-          }
-          onClick={() => {
-            const betAmount = i * this.props.spleesh_bet_unit;
-            const endgameAmount = this.props.spleesh_bet_unit * (55 - i);
-            this.setState({
-              bet_amount: betAmount,
-              endgame_amount: endgameAmount
-            }, () => {
-              this.onBtnBetClick(betAmount);
-            });
-          }}
-          key={i}
-        >
-          {convertToCurrency(updateDigitToPoint2(i * this.props.spleesh_bet_unit))}
-        </Button>
-      );
-    }
-    return panel;
-  };
+createNumberPanel = () => {
+  const { bet_amount } = this.state;
+  const { spleesh_bet_unit } = this.props;
+
+  const panel = [];
+
+  for (let i = 1; i <= 10; i++) {
+    const amount = i * spleesh_bet_unit;
+
+    panel.push(
+      <Button
+        className={bet_amount / spleesh_bet_unit === i ? ' active' : ''}
+        onClick={() => {
+          const endgameAmount = spleesh_bet_unit * (55 - i);
+          this.setState(
+            {
+              bet_amount: amount,
+              endgame_amount: endgameAmount,
+            },
+            () => {
+              this.onBtnBetClick(amount);
+            }
+          );
+        }}
+        key={i}
+      >
+        {convertToCurrency(updateDigitToPoint2(amount))}
+      </Button>
+    );
+  }
+
+  return panel;
+};
+
   
 
   predictNext = (array1, array2) => {
@@ -332,35 +283,37 @@ confirmModalCreate(
   }
   
   handleButtonClick = () => {
-    if (!this.props.isAuthenticated) {
-      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
+    const { isAuthenticated, creator_id, user_id, isDarkMode } = this.props;
+    const { betting, timer } = this.state;
+  
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-    if (!this.state.betting) {
+  
+    if (!betting) {
       this.setState({
         timer: setInterval(() => {
-          this.setState(state => {
+          this.setState((state) => {
             if (state.timerValue === 0) {
-              clearInterval(this.state.timer);
+              clearInterval(timer);
               this.startBetting();
               return { timerValue: 1000 };
             } else {
               return { timerValue: state.timerValue - 10 };
             }
           });
-        }, 10)
+        }, 10),
+        betting: true,
       });
     } else {
       this.stopBetting();
     }
   };
+  
 
   handleButtonRelease = () => {
     if (this.state.timer) {
@@ -369,22 +322,24 @@ confirmModalCreate(
     }
   };
   startBetting = () => {
+    const {roomInfo, isDarkMode, is_private, openGamePasswordModal} = this.props;
+    const {is_anonymous, spleesh_guesses} = this.state;
+
     const intervalId = setInterval(() => {
       let storageKey = "spleesh_array";
       if (this.props.spleesh_bet_unit === 10) {
         storageKey = "spleesh_10_array";
       }
 
-      if (storageKey.length < 3) {
-        alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+      if (!validateLocalStorageLength(storageKey, isDarkMode)) {
         return;
       }
+
       const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
-      const passwordCorrect = rooms[this.props.roomInfo._id];
-      const nextGuess = this.predictNext(JSON.parse(localStorage.getItem(storageKey)), this.state.spleesh_guesses);
-      console.log( storageKey)
-        if (this.props.is_private === true && passwordCorrect !== true) {
-          this.props.openGamePasswordModal();
+      const passwordCorrect = rooms[roomInfo._id];
+      const nextGuess = this.predictNext(JSON.parse(localStorage.getItem(storageKey)), spleesh_guesses);
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
 
         } else {
         this.joinGame2(nextGuess);
@@ -401,9 +356,12 @@ stopBetting = () => {
 };
 
 joinGame2 = async (nextGuess) => {
+const {refreshHistory} = this.props;
+const {is_anonymous} = this.state;
+
   const result = await this.props.join({
     bet_amount: nextGuess,
-    is_anonymous: this.state.is_anonymous
+    is_anonymous: is_anonymous
   });
   if (result.status === 'success') {
     let text = 'HAHAA, YOU LOST!!!';
@@ -415,12 +373,9 @@ joinGame2 = async (nextGuess) => {
     }
   }
    
-  this.props.refreshHistory();
+  refreshHistory();
 
 };
-
-
-
 
   toggleBtnHandler = () => {
     this.setState({
@@ -458,7 +413,7 @@ joinGame2 = async (nextGuess) => {
           </h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel">
         <div className="pre-summary-panel__inner spleesh">
           {[...Array(2)].map((_, i) => (
             <React.Fragment key={i}>
@@ -550,9 +505,6 @@ joinGame2 = async (nextGuess) => {
   <FaClipboard />&nbsp;{this.state.text}</a>
 
         </div>
-            {/* <button id="btn_bet" onClick={this.onBtnBetClick}>
-              Place Bet
-            </button> */}
           </div>
           </div>
         </div>

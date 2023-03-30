@@ -7,7 +7,13 @@ import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
 import {Button} from '@material-ui/core';
-
+import {
+  validateIsAuthenticated,
+  validateCreatorId,
+  validateBetAmount,
+  validateLocalStorageLength,
+  validateBankroll
+} from '../modal/betValidations';
 import { deductBalanceWhenStartBrainGame } from '../../redux/Logic/logic.actions';
 import {
   alertModal,
@@ -94,11 +100,7 @@ class BrainGame extends Component {
 
   onShowButtonClicked = e => {
     e.preventDefault();
-    // if (this.state.advanced_status === "") {
-    //     this.setState({advanced_status: "hidden"});
-    // } else {
-    //     this.setState({advanced_status: ""});
-    // }
+
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -128,7 +130,6 @@ class BrainGame extends Component {
 
   componentWillUnmount() {
     clearInterval(this.state.intervalId);
-    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
     if (this.state.is_started && this.state.remaining_time > 0) {
       this.props.join({
         bet_amount: this.props.bet_amount,
@@ -139,60 +140,48 @@ class BrainGame extends Component {
   }
 
 
-  handleScroll = (event) => {
-    const panel = event.target;
-    const scrollLeft = panel.scrollLeft;
-    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-    
-    if (scrollLeft >= maxScrollLeft) {
-      // Scrolled to or beyond end of panel, so append items to array and restart animation
-      const items = this.state.items.concat(this.state.items);
-      this.setState({ items }, () => {
-        panel.style.animation = "none";
-        panel.scrollTo({ left: 0, behavior: "auto" });
-        void panel.offsetWidth;
-        panel.style.animation = "ticker 20s linear infinite";
-      });
-    } else {
-      panel.style.animation = "none";
-    }
-  };
-  
-
   onStartGame = async e => {
     e.preventDefault();
-    
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
+  
+    const { isAuthenticated, isDarkMode, creator_id, roomInfo, user_id, balance, roomStatus, is_private, openGamePasswordModal, deductBalanceWhenStartBrainGame } = this.props;
+    const { bet_amount } = this.props;
+
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      return;
+    }
+  
+    if (roomStatus === 'finished') {
+      alertModal(isDarkMode, 'THIS STAKE HAS ENDED');
       return;
     }
 
-    if (this.props.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
-      return;
-    }
-
-    if (this.props.roomStatus === 'finished') {
-      alertModal(this.props.isDarkMode, 'THIS STAKE HAS ENDED');
-      return;
-    }
+    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+    const passwordCorrect = rooms[roomInfo._id];
+  
     confirmModalCreate(
-      this.props.isDarkMode,
+      isDarkMode,
       'YOU SURE YOU GOT THIS?',
       'Hell Yeah!',
       'Cancel',
       async () => {
-        if (this.props.is_private === true) {
-          this.props.openGamePasswordModal();
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
         } else {
-          const response = await this.props.deductBalanceWhenStartBrainGame({
-            bet_amount: this.props.bet_amount
+          const response = await deductBalanceWhenStartBrainGame({
+            bet_amount: bet_amount
           });
+  
           if (response) {
             const intervalId = setInterval(this.onCountDown, 1000);
+  
             this.setState({
               is_started: true,
               intervalId,
@@ -200,13 +189,14 @@ class BrainGame extends Component {
               answers: this.state.next_answers,
               remaining_time: 60
             });
-
+  
             this.getNextQuestion();
           }
         }
       }
     );
   };
+  
 
   onCountDown = async () => {
     const remaining_time = this.state.remaining_time - 1;
@@ -302,37 +292,31 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
   };
 
   handleButtonClick = () => {
-
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
+    const { isAuthenticated, isDarkMode, creator_id, user_id, balance } = this.props;
+    const { bet_amount, bankroll, betting, timerValue } = this.state;
+  
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-    // if (isNaN(this.state.bet_amount)) {
-    //   alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
-    //   return;
-    //   }
-    //   if (this.state.bet_amount <= 0) {
-    //     alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
-    //     return;
-    //   }
-
-
-    // if (this.state.bet_amount > this.state.balance) {
-    //   alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
-    //   return;
-    // }
-
-
-
-    if (!this.state.betting) {
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
+      return;
+    }
+  
+    if (!betting) {
       this.setState({
         timer: setInterval(() => {
           this.setState(state => {
             if (state.timerValue === 0) {
-              clearInterval(this.state.timer);
+              clearInterval(state.timer);
               this.startBetting();
               return { timerValue: 1000 };
             } else {
@@ -345,6 +329,7 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
       this.stopBetting();
     }
   };
+  
   predictNext = (score_array) => {
     if (score_array.length < 5) {
       return Math.round(score_array.reduce((total, item) => total + item.score, 0) / score_array.length);
@@ -486,7 +471,7 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
           <h2>Play - Brain Game</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel">
         <div className="pre-summary-panel__inner">
           {[...Array(2)].map((_, i) => (
             <React.Fragment key={i}>

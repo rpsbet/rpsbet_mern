@@ -6,6 +6,13 @@ import { updateDigitToPoint2 } from '../../util/helper';
 // import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button, TextField  } from '@material-ui/core';
+import {
+  validateIsAuthenticated,
+  validateCreatorId,
+  validateBetAmount,
+  validateLocalStorageLength,
+  validateBankroll
+} from '../modal/betValidations';
 
 import animationData from '../LottieAnimations/spinningIcon';
 import Avatar from '../../components/Avatar';
@@ -15,7 +22,7 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+// import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
 import { FaClipboard } from 'react-icons/fa';
 
@@ -78,9 +85,6 @@ const calcWinChance = (prevStates) => {
   }
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 };
-
-
-
 
 const predictNext = (rps_list) => {
   // Create a transition matrix to store the probability of transitioning from one state to another
@@ -176,7 +180,6 @@ class RPS extends Component {
       
     };
     this.panelRef = React.createRef();
-
     this.onChangeState = this.onChangeState.bind(this);
 
   }
@@ -247,7 +250,6 @@ changeBgColor = async (result) => {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
   }; 
   
   static getDerivedStateFromProps(props, current_state) {
@@ -265,146 +267,138 @@ changeBgColor = async (result) => {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.roomInfo && this.props.roomInfo) {
-
-
-
-      if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
+    const { roomInfo } = this.props;
+    const { isPasswordCorrect, selected_rps } = this.state;
+  
+    if (prevProps.roomInfo && roomInfo) {
+      if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
         this.setState({
-          bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
+          bankroll: parseFloat(roomInfo.bet_amount) - this.getPreviousBets()
         });
       }
     }
-
-    if (
-      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
-      this.state.isPasswordCorrect === true
-    ) {
-      this.joinGame(this.state.selected_rps);
+  
+    if (prevState.isPasswordCorrect !== isPasswordCorrect && isPasswordCorrect === true) {
+      this.joinGame(selected_rps);
     }
   }
-  joinGame = async (selected_rps, bet_amount) => {
-    this.setState({selected_rps: selected_rps, bet_amount: this.state.bet_amount});
-    const result = await this.props.join({
-      bet_amount: parseFloat(this.state.bet_amount),
+  
+
+  joinGame = async () => {
+    const {
+      rps_bet_item_id,
+      isDarkMode,
+      refreshHistory,
+      join,
+    } = this.props;
+  
+    const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
+  
+    const result = await join({
+      bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
-      is_anonymous: this.state.is_anonymous,
-      rps_bet_item_id: this.props.rps_bet_item_id,
-      slippage: this.state.slippage
+      is_anonymous: is_anonymous,
+      rps_bet_item_id: rps_bet_item_id,
+      slippage: slippage,
     });
   
-    let text = 'HAHAA, YOU LOST!!!';
-  
+    let text;
     if (result.betResult === 1) {
-      // this.props.updateBetResult('win')
       text = 'NOT BAD, WINNER!';
-      this.changeBgColor(result.betResult); // Add this line
+      this.changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
-  
-      // this.props.updateBetResult('draw')
-      this.changeBgColor(result.betResult); // Add this line
       text = 'DRAW, NO WINNER!';
-    }else{
-      this.changeBgColor(result.betResult); // Add this line
-      // this.props.updateBetResult('lose')
+      this.changeBgColor(result.betResult);
+    } else {
+      text = 'HAHAA, YOU LOST!!!';
+      this.changeBgColor(result.betResult);
     }
   
-   
-  
     gameResultModal(
-      this.props.isDarkMode,
+      isDarkMode,
       text,
       result.betResult,
       'Okay',
       null,
-      () => {
-        // history.push('/');
-      },
+      () => {},
       () => {}
     );
   
     if (result.status === 'success') {
-      const currentUser = this.props.user;
-      const currentRoom = this.props.room;
-      this.setState(prevState => ({
-        betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
+      const { user, room } = this.props;
+      this.setState((prevState) => ({
+        betResults: [
+          ...prevState.betResults,
+          { ...result, user: user, room: room },
+        ],
       }));
     } else {
       if (result.message) {
-        alertModal(this.props.isDarkMode, result.message);
+        alertModal(isDarkMode, result.message);
       }
     }
+  
+    const stored_rps_array = JSON.parse(
+      localStorage.getItem('rps_array')
+    ) || [];
+  
+    while (stored_rps_array.length >= 30) {
+      stored_rps_array.shift();
+    }
+  
+    stored_rps_array.push({ rps: selected_rps });
+    localStorage.setItem('rps_array', JSON.stringify(stored_rps_array));
+  
+    refreshHistory();
+  };
+  
+  
+  
+onBtnBetClick = async () => {
+  const { openGamePasswordModal, isAuthenticated, isDarkMode, creator_id, user_id, balance, is_private, roomInfo } = this.props;
+  const { bet_amount, bankroll } = this.state;
 
-    let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
-    console.log(stored_rps_array)
-      while (stored_rps_array.length >= 30) {
-        stored_rps_array.shift();
-      }
-      stored_rps_array.push({ rps: selected_rps });
-      localStorage.setItem("rps_array", JSON.stringify(stored_rps_array));
-  
-    this.props.refreshHistory();
-  };
-  
-  onBtnBetClick = async (selected_rps) => {
-      if (!this.props.isAuthenticated) {
-      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
-      return;
-    }
-    // e.preventDefault();
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
-      return;
-    }
-    
-  
-    if (isNaN(this.state.bet_amount)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
-      return;
-    }
-  
-    if (this.state.bet_amount > this.state.bankroll) {
-      alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
-      return;
-    }
-  
-    if (this.state.bet_amount <= 0) {
-      alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
-      return;
-    }
-  
-    if (this.state.bet_amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
-      return;
-    }
-    
-    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
-const passwordCorrect = rooms[this.props.roomInfo._id];
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-  if (this.props.is_private === true && passwordCorrect !== true) {
-    this.props.openGamePasswordModal();
-  } else {
-    await this.joinGame(selected_rps, this.state.bet_amount);
+  if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+    return;
   }
-} else {
-  confirmModalCreate(
-    this.props.isDarkMode,
-    'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-    'Yes',
-    'Cancel',
-    async () => {
-      if (this.props.is_private === true && passwordCorrect !== true) {
-        this.props.openGamePasswordModal();
-      } else {
-        await this.joinGame(selected_rps, this.state.bet_amount);
-      }
+
+  if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+    return;
+  }
+
+  if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+    return;
+  }
+  
+  if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
+    return;
+  }
+
+  const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+  const passwordCorrect = rooms[roomInfo._id];
+
+  if (localStorage.getItem('hideConfirmModal') === 'true') {
+    if (is_private === true && passwordCorrect !== true) {
+      openGamePasswordModal();
+    } else {
+      await this.joinGame();
     }
-  );
-}
-  };
+  } else {
+    confirmModalCreate(
+      isDarkMode,
+      'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+      'Yes',
+      'Cancel',
+      async () => {
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
+        } else {
+          await this.joinGame();
+        }
+      }
+    );
+  }
+};
   
 
   handlehalfxButtonClick() {
@@ -433,7 +427,6 @@ const passwordCorrect = rooms[this.props.roomInfo._id];
     }
   }
 
-  
     handleMaxButtonClick() {
       const maxBetAmount = (this.state.balance).toFixed(2);
       this.setState({
@@ -442,24 +435,7 @@ const passwordCorrect = rooms[this.props.roomInfo._id];
       document.getElementById("betamount").focus();
       });
     }
-  handleScroll = (event) => {
-    const panel = event.target;
-    const scrollLeft = panel.scrollLeft;
-    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-    
-    if (scrollLeft >= maxScrollLeft) {
-      // Scrolled to or beyond end of panel, so append items to array and restart animation
-      const items = this.state.items.concat(this.state.items);
-      this.setState({ items }, () => {
-        panel.style.animation = "none";
-        panel.scrollTo({ left: 0, behavior: "auto" });
-        void panel.offsetWidth;
-        panel.style.animation = "ticker 20s linear infinite";
-      });
-    } else {
-      panel.style.animation = "none";
-    }
-  };
+
   
   toggleBtnHandler = () => {
     this.setState({
@@ -477,20 +453,19 @@ const passwordCorrect = rooms[this.props.roomInfo._id];
   copy() {
     navigator.clipboard.writeText(twitterLink)
   }
+
   handleButtonClick = () => {
-    if (!this.props.isAuthenticated) {
-        alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
-        return;
-      }
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
+    const { isAuthenticated, isDarkMode, creator_id, user_id, betting } = this.props;
+  
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
 
-    if (!this.state.betting) {
+    if (!betting) {
       this.setState({
         timer: setInterval(() => {
           this.setState(state => {
@@ -509,80 +484,71 @@ const passwordCorrect = rooms[this.props.roomInfo._id];
     }
   };
 
-  handleButtonRelease = () => {
+handleButtonRelease = () => {
     if (this.state.timer) {
       clearInterval(this.state.timer);
       this.setState({ timerValue: 1000 });
     }
   };
+
   startBetting = () => {
-    let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
-    if (stored_rps_array.length  < 3) {
-      alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+    const { isDarkMode, is_private, openGamePasswordModal, roomInfo } = this.props;
+    
+    const storageName = "rps_array";
+    if (!validateLocalStorageLength(storageName, isDarkMode)) {
       return;
     }
+    const stored_rps_array = JSON.parse(localStorage.getItem(storageName)) || [];
+  
     const intervalId = setInterval(() => {
-        const passwordCorrect = localStorage.getItem('passwordCorrect');
-
       const randomItem = predictNext(stored_rps_array);
-      if (this.props.is_private === true && passwordCorrect !== 'true') {
-        this.props.openGamePasswordModal();
+      const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+      const passwordCorrect = rooms[roomInfo._id];
+      if (is_private === true && passwordCorrect !== 'true') {
+        openGamePasswordModal();
       } else {
-        this.joinGame2(randomItem, this.state.bet_amount);
+        this.joinGame2(randomItem);
       }
     }, 3500);
-
   
-    this.setState({ intervalId,betting: true });
+    this.setState({ intervalId, betting: true });
   };
-  
 
   stopBetting = () => {
-    clearInterval(this.state.intervalId, this.state.timer);
+
+    clearInterval(this.state.intervalId);
     this.setState({ intervalId: null, betting: false, timerValue: 1000 });
   };
 
-  joinGame2 = async (selected_rps, bet_amount) => {
-    
-if (this.state.bet_amount > this.state.bankroll) {
-      alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
+  joinGame2 = async (randomItem) => {
+    const { rps_bet_item_id, balance, isDarkMode, refreshHistory } = this.props;
+    const { bet_amount, bankroll, slippage, is_anonymous, selected_rps } = this.state;
+  
+    this.setState({ selected_rps: randomItem });
+
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      return;
+    }
+    if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
 
-
-    if (isNaN(this.state.bet_amount)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALILD NUMBER WANKER!');
-      return;
-      }
-
-    if (this.state.bet_amount <= 0) {
-      alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
-      return;
-    }
-
-    if (this.state.bet_amount >this.state.balance) {
-      alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
-      return;
-    }
-
-
-    this.setState({selected_rps: selected_rps, bet_amount: this.state.bet_amount});
     const result = await this.props.join({
-      bet_amount: parseFloat(this.state.bet_amount),
+      bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
-      is_anonymous: this.state.is_anonymous,
-      rps_bet_item_id: this.props.rps_bet_item_id,
-      slippage: this.state.slippage
+      is_anonymous: is_anonymous,
+      rps_bet_item_id: rps_bet_item_id,
+      slippage: slippage
     });
-
+  
     const currentUser = this.props.user;
     const currentRoom = this.props.room;
     if (result.status === 'success') {
       this.setState(prevState => ({
         betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
-    }));
+      }));
       let text = 'HAHAA, YOU LOST!!!';
-
+  
       if (result.betResult === 1) {
         // this.props.updateBetResult('win')
         text = 'NOT BAD, WINNER!';
@@ -591,21 +557,14 @@ if (this.state.bet_amount > this.state.bankroll) {
         // this.props.updateBetResult('draw')
         text = 'DRAW, NO WINNER!';
         this.changeBgColor(result.betResult); // Add this line
-      }else{
+      } else {
         this.changeBgColor(result.betResult); // Add this line
         //  this.props.updateBetResult('lose')
       }
-
-   
-    this.props.refreshHistory();
-  };
-
-
-   
-  };
-
   
-
+      refreshHistory();
+    }
+  };
 
   render() {
     const styles = ['copy-btn'];
@@ -621,7 +580,7 @@ if (this.state.bet_amount > this.state.bankroll) {
           <h2>PLAY - RPS</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
+        <div className="pre-summary-panel">
         <div className="pre-summary-panel__inner">
           {[...Array(2)].map((_, i) => (
             <React.Fragment key={i}>
