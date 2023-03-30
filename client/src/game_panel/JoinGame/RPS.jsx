@@ -241,7 +241,6 @@ changeBgColor = async (result) => {
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll })
     })
-
     document.addEventListener('mousedown', this.handleClickOutside);
   };
 
@@ -267,6 +266,9 @@ changeBgColor = async (result) => {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.roomInfo && this.props.roomInfo) {
+
+
+
       if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
         this.setState({
           bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
@@ -378,10 +380,11 @@ changeBgColor = async (result) => {
       alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
       return;
     }
-  
-    const passwordCorrect = localStorage.getItem('passwordCorrect');
-if (localStorage.getItem('hideConfirmModal') === 'true') {
-  if (this.props.is_private === true && passwordCorrect !== 'true') {
+    
+    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+const passwordCorrect = rooms[this.props.roomInfo._id];
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+  if (this.props.is_private === true && passwordCorrect !== true) {
     this.props.openGamePasswordModal();
   } else {
     await this.joinGame(selected_rps, this.state.bet_amount);
@@ -393,7 +396,7 @@ if (localStorage.getItem('hideConfirmModal') === 'true') {
     'Yes',
     'Cancel',
     async () => {
-      if (this.props.is_private === true && passwordCorrect !== 'true') {
+      if (this.props.is_private === true && passwordCorrect !== true) {
         this.props.openGamePasswordModal();
       } else {
         await this.joinGame(selected_rps, this.state.bet_amount);
@@ -513,8 +516,6 @@ if (localStorage.getItem('hideConfirmModal') === 'true') {
     }
   };
   startBetting = () => {
-    
-    
     let stored_rps_array = JSON.parse(localStorage.getItem("rps_array")) || [];
     if (stored_rps_array.length  < 3) {
       alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { updateBetResult } from '../../redux/Logic/logic.actions';
+// import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button } from '@material-ui/core';
 
@@ -297,7 +297,13 @@ startBetting = () => {
   }
   const intervalId = setInterval(() => {
     const nextBox = this.predictNext(stored_bet_array, this.state.box_list);
+    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+const passwordCorrect = rooms[this.props.roomInfo._id];
+  if (this.props.is_private === true && passwordCorrect !== true) {
+      this.props.openGamePasswordModal();
+    } else {
     this.joinGame2(nextBox.box_price);
+    }
   }, 3500);
 
   this.setState({ intervalId, betting: true });
@@ -349,7 +355,7 @@ if (result.status === 'success') {
   } else {
     betResult = 'lose';
   }
-  this.props.updateBetResult(betResult);
+  // this.props.updateBetResult(betResult);
   this.setState(prevState => ({
     betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
   }));
@@ -374,8 +380,10 @@ onBtnBetClick = async (e) => {
     return;
   }
 
-  if (localStorage.getItem('hideConfirmModal') === 'true') {
-    if (this.props.is_private === true) {
+  const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+const passwordCorrect = rooms[this.props.roomInfo._id];
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+  if (this.props.is_private === true && passwordCorrect !== true) {
       this.props.openGamePasswordModal();
     } else {
       await this.joinGame();
@@ -427,7 +435,7 @@ joinGame = async () => {
     } else {
       betResult = 'lose';
     }
-    this.props.updateBetResult(betResult);
+    // this.props.updateBetResult(betResult);
     this.setState({
       box_list: this.state.box_list.map(el =>
         el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
@@ -724,10 +732,10 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = {
   openGamePasswordModal,
-  updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
+  // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
 
-});
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(MysteryBox);

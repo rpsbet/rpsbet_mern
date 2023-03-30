@@ -147,7 +147,7 @@ class Spleesh extends Component {
 
       let stored_spleesh_array = JSON.parse(localStorage.getItem("spleesh_array")) || [];
       let stored_spleesh_10_array = JSON.parse(localStorage.getItem("spleesh_10_array")) || [];
-      
+
       while (stored_spleesh_array.length >= 30) {
         stored_spleesh_array.shift();
       }
@@ -162,7 +162,8 @@ class Spleesh extends Component {
         stored_spleesh_array.push({ spleesh: this.state.bet_amount });
         localStorage.setItem("spleesh_array", JSON.stringify(stored_spleesh_array));
       }
-      
+
+
       
       if (result.roomStatus === 'finished') {
         gameResultModal(
@@ -198,48 +199,65 @@ class Spleesh extends Component {
 
   };
 
-  onBtnBetClick = async (betAmount) => {
+  onBtnBetClick = async (bet_amount) => {
     if (!this.props.isAuthenticated) {
-      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
-      return;
-    }
-    if (this.props.creator_id === this.props.user_id) {
-      alertModal(
-        this.props.isDarkMode,
-        `DIS YOUR OWN STAKE CRAZY FOO-!`
-      );
-      return;
-    }
+    alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
+    return;
+  }
+  // e.preventDefault();
+  if (this.props.creator_id === this.props.user_id) {
+    alertModal(
+      this.props.isDarkMode,
+      `DIS YOUR OWN STAKE CRAZY FOO-!`
+    );
+    return;
+  }
   
-    if (betAmount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
-      return;
-    }
-  
-    const passwordCorrect = localStorage.getItem('passwordCorrect');
-    console.log(passwordCorrect)
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (this.props.is_private === true && passwordCorrect !== 'true') {
-        this.props.openGamePasswordModal();
-      } else {
-        await this.joinGame();
-      }
+
+  if (isNaN(this.state.bet_amount)) {
+    alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER WANKER!');
+    return;
+  }
+
+  if (this.state.bet_amount > this.state.bankroll) {
+    alertModal(this.props.isDarkMode, `NOT ENOUGHT BANKROLL!`);
+    return;
+  }
+
+  if (this.state.bet_amount <= 0) {
+    alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
+    return;
+  }
+
+  if (this.state.bet_amount > this.state.balance) {
+    alertModal(this.props.isDarkMode, `TOO BROKE FOR THIS BET`);
+    return;
+  }
+
+  const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+const passwordCorrect = rooms[this.props.roomInfo._id];
+if (localStorage.getItem('hideConfirmModal') === 'true') {
+if (this.props.is_private === true && passwordCorrect !== true) {
+  this.props.openGamePasswordModal();
+} else {
+  await this.joinGame(bet_amount);
+}
+} else {
+confirmModalCreate(
+  this.props.isDarkMode,
+  'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+  'Yes',
+  'Cancel',
+  async () => {
+    if (this.props.is_private === true && passwordCorrect !== true) {
+      this.props.openGamePasswordModal();
     } else {
-      confirmModalCreate(
-        this.props.isDarkMode,
-        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-        'Yes',
-        'Cancel',
-        async () => {
-          if (this.props.is_private === true && passwordCorrect !== 'true') {
-            this.props.openGamePasswordModal();
-          } else {
-            await this.joinGame();
-          }
-        }
-      );
+      await this.joinGame(bet_amount);
     }
-  };
+  }
+);
+}
+};
   
 
   createNumberPanel = () => {
@@ -314,6 +332,17 @@ class Spleesh extends Component {
   }
   
   handleButtonClick = () => {
+    if (!this.props.isAuthenticated) {
+      alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
+      return;
+    }
+    if (this.props.creator_id === this.props.user_id) {
+      alertModal(
+        this.props.isDarkMode,
+        `DIS YOUR OWN STAKE CRAZY FOO-!`
+      );
+      return;
+    }
     if (!this.state.betting) {
       this.setState({
         timer: setInterval(() => {
@@ -350,9 +379,16 @@ class Spleesh extends Component {
         alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
         return;
       }
-    
+      const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+      const passwordCorrect = rooms[this.props.roomInfo._id];
       const nextGuess = this.predictNext(JSON.parse(localStorage.getItem(storageKey)), this.state.spleesh_guesses);
-      this.joinGame2(nextGuess);
+      console.log( storageKey)
+        if (this.props.is_private === true && passwordCorrect !== true) {
+          this.props.openGamePasswordModal();
+
+        } else {
+        this.joinGame2(nextGuess);
+        }
     }, 3500);
   
     this.setState({ intervalId, betting: true });

@@ -38,7 +38,9 @@ class GamePasswordModal extends Component {
     onBtnOkClicked = async (e) => {
         const response = await this.props.checkGamePassword({room_id: this.props.roomId, password: this.state.password});
         if (response === true) {
-          localStorage.setItem(`passwordCorrect_${this.props.roomId}`, true);
+          const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+          rooms[this.props.roomId] = true;
+          localStorage.setItem("rooms", JSON.stringify(rooms));
           this.props.closeGamePasswordModal();
           this.props.setPasswordCorrect(true);
         } else {
@@ -47,7 +49,8 @@ class GamePasswordModal extends Component {
             `WRONG F*CKING PASSWORD!`
           );
         }
-      }
+      };
+      
       
       
 

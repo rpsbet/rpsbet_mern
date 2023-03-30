@@ -231,6 +231,7 @@ class JoinGame extends Component {
           <RPS
           refreshHistory={this.refreshHistory}
             join={this.join}
+            roomInfo={this.props.roomInfo}
             user_id={this.props.user_id}
             creator_id={this.props.roomInfo.creator_id}
             bet_amount={this.props.roomInfo.bet_amount}
@@ -247,6 +248,8 @@ class JoinGame extends Component {
             game_log_list={this.props.roomInfo.game_log_list || []}
             user_id={this.props.user_id}
             creator_id={this.props.roomInfo.creator_id}
+            roomInfo={this.props.roomInfo}
+
             is_private={this.props.roomInfo.is_private}
           />
         )}
@@ -260,6 +263,7 @@ class JoinGame extends Component {
               user_id={this.props.user_id}
               creator_id={this.props.roomInfo.creator_id}
               is_private={this.props.roomInfo.is_private}
+              roomInfo={this.props.roomInfo}
 
               betResult={this.state.betResult}
             />
@@ -279,6 +283,8 @@ class JoinGame extends Component {
                 : 0
             }
             is_private={this.props.roomInfo.is_private}
+            roomInfo={this.props.roomInfo}
+
           />
         )}
         {this.props.roomInfo.game_type === 'Quick Shoot' && (
@@ -292,6 +298,8 @@ class JoinGame extends Component {
             bankroll={this.state.bankroll}
             qs_bet_item_id={this.props.roomInfo.qs_bet_item_id}
             is_private={this.props.roomInfo.is_private}
+            roomInfo={this.props.roomInfo}
+
           />
         )}
         {this.props.roomInfo.game_type === 'Drop Game' && (
@@ -304,6 +312,8 @@ class JoinGame extends Component {
             bankroll={this.state.bankroll}
             drop_bet_item_id={this.props.roomInfo.drop_bet_item_id}
             is_private={this.props.roomInfo.is_private}
+            roomInfo={this.props.roomInfo}
+
           />
         )}
         

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { createTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
-import song from './sounds/tems.mp3';
 import LoadingOverlay from 'react-loading-overlay';
 import ReactApexChart from 'react-apexcharts';
 import Battle from './icons/Battle.js';
@@ -127,9 +126,6 @@ class SiteWrapper extends Component {
       showProfileModal: false,
       showPlayerModal: false,
       showHowToPlayModal: false,
-    
-      // Get audio file in a variable
-      audio: new Audio(song),
       // Set initial state of song
       isPlaying: false,
       showLoginModal: false,
@@ -656,26 +652,6 @@ if (message.includes('won')) {
   handleBalanceClick = () => {
     this.setState({ showGameLog: !this.state.showGameLog });
   };
-
-  // playPause = () => {
-  //   this.audio.loop = true;
-  //   // Get state of song
-  //   let isPlaying = this.state.isPlaying;
-
-  //   if (isPlaying) {
-  //     // Pause the song if it is playing
-  //     this.state.audio.pause();
-  //   } else {
-
-  //     // Play the song if it is paused
-  //     this.state.audio.play();
-  //   }
-
-  //   // Change the state of song
-  //   this.setState({ isPlaying: !isPlaying });
-    
-  // };
-
 
   disconnectWeb3 = async () => {
     this.setState({ web3account: null });

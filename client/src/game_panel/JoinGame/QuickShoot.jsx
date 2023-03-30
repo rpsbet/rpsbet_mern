@@ -7,7 +7,7 @@ import { Button, TextField } from '@material-ui/core';
 
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
-import { updateBetResult } from '../../redux/Logic/logic.actions';
+// import { updateBetResult } from '../../redux/Logic/logic.actions';
 import {
   alertModal,
   confirmModalCreate,
@@ -509,8 +509,10 @@ predictNext = (qs_list, gameType) => {
       alertModal(this.props.isDarkMode, `MAKE A DEPOSIT, BROKIE!`);
       return;
     }
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (this.props.is_private === true) {
+    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+    const passwordCorrect = rooms[this.props.roomInfo._id];
+        if (localStorage.getItem('hideConfirmModal') === 'true') {
+      if (this.props.is_private === true && passwordCorrect !== true) {
         this.props.openGamePasswordModal();
       } else {
         this.joinGame(selected_qs_position);
@@ -522,7 +524,7 @@ predictNext = (qs_list, gameType) => {
         'Yes',
         'Cancel',
         async () => {
-          if (this.props.is_private === true) {
+          if (this.props.is_private === true && passwordCorrect !== true) {
             this.props.openGamePasswordModal();
           } else {
             await this.joinGame(selected_qs_position);
@@ -605,7 +607,15 @@ predictNext = (qs_list, gameType) => {
   
     const intervalId = setInterval(() => {
       const randomItem = this.predictNext(stored_qs_array, this.props.qs_game_type);
+      const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+      const passwordCorrect = rooms[this.props.roomInfo._id];
+          if (localStorage.getItem('hideConfirmModal') === 'true') {
+        if (this.props.is_private === true && passwordCorrect !== true) {
+          this.props.openGamePasswordModal();
+        } else {
       this.joinGame2(randomItem, this.state.bet_amount);
+        }
+      }
     }, 3500);
   
     this.setState({ intervalId, betting: true  });
@@ -642,13 +652,13 @@ predictNext = (qs_list, gameType) => {
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
-        this.props.updateBetResult('win')
+        // this.props.updateBetResult('win')
         text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
-        this.props.updateBetResult('draw')
+        // this.props.updateBetResult('draw')
         text = 'DRAW, NO WINNER!';
       }else{
-         this.props.updateBetResult('lose')
+        //  this.props.updateBetResult('lose')
       }
 
    
@@ -920,8 +930,8 @@ const mapStateToProps = state => ({
   betResults: state.logic.betResults
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = {
   openGamePasswordModal,
-  updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
-});
+  // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
+};
 export default connect(mapStateToProps, mapDispatchToProps)(QuickShoot);
