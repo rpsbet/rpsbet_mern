@@ -777,7 +777,7 @@ getPreviousBets() {
 
 const mapStateToProps = state => ({
   socket: state.auth.socket,
-  auth: state.auth.isAuthenticated,
+  isAuthenticated: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,

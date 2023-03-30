@@ -702,7 +702,7 @@ joinGame = async () => {
 
 const mapStateToProps = state => ({
   socket: state.auth.socket,
-  auth: state.auth.isAuthenticated,
+  isAuthenticated: state.auth.isAuthenticated,
   balance: state.auth.balance,
   betResult: state.logic.betResult,
   roomStatus: state.logic.roomStatus,

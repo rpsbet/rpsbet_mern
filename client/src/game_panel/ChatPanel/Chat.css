@@ -89,7 +89,7 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 }
 
 .mat-chat .chat-wrapper{
-    background-color: #f9f9f9 !important;
+    background-color: #f9f9f9;
     padding-top: 43px;
     overflow: hidden;
     padding-bottom: 30px;

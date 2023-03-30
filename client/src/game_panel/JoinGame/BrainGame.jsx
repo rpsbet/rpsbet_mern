@@ -562,7 +562,7 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
 }
 
 const mapStateToProps = state => ({
-  auth: state.auth.isAuthenticated,
+  isAuthenticated: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
   isDarkMode: state.auth.isDarkMode,
