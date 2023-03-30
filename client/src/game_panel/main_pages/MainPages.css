@@ -1685,17 +1685,15 @@ background-color: red;
     height: 85vh    ;
     overflow-y: auto;
 }
-.chat-page .chat-log-panel::-webkit-scrollbar, .pre-summary-panel::-webkit-scrollbar {
+/* .chat-page .chat-log-panel::-webkit-scrollbar, .pre-summary-panel::-webkit-scrollbar {
     width: 5px;
     height: 5px;
     background: transparent;
-}
-.chat-page .chat-log-panel::-webkit-scrollbar-track {
-    background: transparent;
-}
-.chat-page .chat-log-panel::-webkit-scrollbar-thumb, .pre-summary-panel::-webkit-scrollbar-thumb {
+} */
+
+/* .chat-page .chat-log-panel::-webkit-scrollbar-thumb, .pre-summary-panel::-webkit-scrollbar-thumb {
     background-image: linear-gradient(to bottom, #ff409a, #c438ef);
-}
+} */
 .chat-log-panel .message-content {
     color: white;
     padding: 10px 20px;

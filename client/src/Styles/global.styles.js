@@ -34,8 +34,8 @@ body {
 ::-webkit-scrollBar-thumb {
     background-image:  linear-gradient(
         to right bottom,
-       #212529,
-       #212529 
+       #e5e5e5,
+       #e5e5e5 
     );
     border-radius: 3px;
     transition: all .2s ease-out;

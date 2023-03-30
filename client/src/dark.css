@@ -7,6 +7,18 @@
 	box-shadow: none;
 }
 
+.dark_mode  ::-webkit-scrollBar-thumb {
+    background-image:  linear-gradient(
+        to right bottom,
+       #212529,
+       #212529 
+    );
+}
+.dark_mode .qs-image-panel img {
+	box-shadow: 0 0 20px #0e0e0e;
+	filter: drop-shadow(2px 4px 6px black);
+  }
+
 .dark_mode .contents_wrapper .room-history-panel h2.room-history-title {
 	color: #8e9297;
 }
@@ -31,7 +43,9 @@ background: #060607;
     background-color: #fff;    
 }
 
-
+.dark_mode #footer-container {
+	background: #151515;
+   }
 
 .dark_mode 	.modal-body .modal-content-wrapper.drop-game h4 {
     background-image: url("/img/icons/modal-drop-game-dark-mode.svg");
@@ -120,6 +134,7 @@ background: #060607;
 }
 .dark_mode .main-game-page-tabs {
 	color: #8e9297;
+	background: #060607;
 }
 .dark_mode .main-game-page-tabs .Mui-selected {
 	color: #ef38d0;
@@ -239,7 +254,9 @@ background: #060607;
 .dark_mode .game-page .game-contents .game-info-panel .qs-action-panel label {
 	color: white;
 }
-
+.dark_mode .mat-chat .chat-wrapper {
+	background-color: #060607;
+}
 
 .dark_mode .modal-body,
 .dark_mode .modal-header{
@@ -380,6 +397,13 @@ border-color: #151515;
   .dark_mode .btn-back:hover {
 	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
   }
+
+
+  .dark_mode #balance {
+    color: white;
+    background: #101010;
+    border: 1px solid #151515;
+}
 
 .dark_mode .game-page .game-contents .game-info-panel .box-prizes {
 	background-color: #101010;

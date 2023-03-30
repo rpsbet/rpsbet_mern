@@ -103,14 +103,15 @@
   }
 
 
-.modal-body.edit-modal-body::-webkit-scrollbar-thumb,  #runs::-webkit-scrollbar-thumb {
+/* .modal-body.edit-modal-body::-webkit-scrollbar-thumb,  #runs::-webkit-scrollbar-thumb {
     background-image: linear-gradient(to bottom, #ff409a, #c438ef);
-}
+} */
 
 .modal-header {
     border-top-right-radius: 20px !important;
     border-top-left-radius: 20px !important;
     border-bottom: 0 !important;
+    background: #ffffff;
 }
 
 

@@ -22,7 +22,6 @@ const styles = (theme) => ({
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: '#151515',
         color: '#747f8d',
         fontSize: '0.7rem',
         fontWeight: '500',

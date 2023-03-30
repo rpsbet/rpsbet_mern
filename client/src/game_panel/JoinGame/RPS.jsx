@@ -215,8 +215,6 @@ changeBgColor = async (result) => {
   // };
 
   componentDidMount = () => {
-      // Add event listener to detect end of scroll
-  this.panelRef.current.addEventListener("scroll", this.handleScroll);
     
   // Initialize items array
   const items = [

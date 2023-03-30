@@ -769,8 +769,7 @@ predictNext = (qs_list, gameType) => {
                   position_short_name[this.state.selected_qs_position]
                 }.png`}
                 alt=""
-                style={{ width: '600px', maxWidth: '100%', borderRadius: '20px',
-                boxShadow: '0 0 20px #0e0e0e', filter: 'drop-shadow(2px 4px 6px black)' }}
+                style={{ width: '600px', maxWidth: '100%', borderRadius: '20px' }}
               />
                       {this.renderButtons()}
 

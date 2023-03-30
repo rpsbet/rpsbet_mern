@@ -104,6 +104,8 @@ input,textarea { border-radius: 0 !important; }
 
 .qs-image-panel img {
   position: absolute;
+  box-shadow: 0 0 20px #dadada;
+  filter: drop-shadow(2px 4px 6px rgb(253, 253, 253));
 }
 
 .create-game-panel .qs-buttons {
@@ -137,17 +139,8 @@ button {
     box-shadow: 0 0 6px 4px #ff0c8a;
 
 }
-
-
-button#l {
-  left: 10%;
-  top: 45%;
-}
-
-/* Right button */
-button#r {
-  right: 10%;
-  top: 45%;
+#footer-container {
+ background: #e5e5e5;
 }
 
 .create-game-panel button#tr {
@@ -195,14 +188,12 @@ button#r {
 } */
 
 button#l {
-  left: 10%;
-  top: 45%;
+  transform: translate(-123px, -12px);
 }
 
 /* Right button */
 button#r {
-  right: 10%;
-  top: 45%;
+  transform: translate(80px, -12px);
 }
 
 button#tr {
@@ -220,8 +211,7 @@ button#c {
 }
 
 button#cc {
-  left: 42.5%;
-  top: 45%;
+  transform: translate(-17px,-52px);
 }
 
 button#br {
@@ -1184,7 +1174,9 @@ circle {
   text-align: center;
  }
  
-
+.bet-amounts {
+  text-align: center;
+}
 
 
 .bet-amounts .other.active {
@@ -1237,7 +1229,7 @@ circle {
   .main-game-page-tabs {
     position: fixed;
     width: 100%;
-    background: #060607;
+    background: #ffffff;
     z-index: 999;
 }
 
@@ -1296,16 +1288,7 @@ circle {
     transform: scale(0.7);
   }
   
-button#l {
-  left: 10%;
-  top: 45%;
-}
 
-/* Right button */
-button#r {
-  right: 10%;
-  top: 45%;
-}
 
 .create-game-panel button#l {
   top: -45px;
@@ -1353,16 +1336,6 @@ button#r {
     transform: scale(0.7);
   }
   
-  button#l {
-    left: 19%;
-    top: 40%;
-  }
-  
-  /* Right button */
-  button#r {
-    right: 19%;
-    top: 40%;
-  }
   
   button#tr {
     right: 19%;
@@ -1377,10 +1350,17 @@ button#r {
     left: 43%;
     transform: translateY(-43px);
   }
+
+  button#l {
+    transform: translate(47px, -15px);
+  }
+  
+  button#r {
+    transform: translate(198px, -15px);
+  }
   
   button#cc {
-    left: 42.5%;
-    top: 45%;
+    transform: translate(122px,-45px);
   }
   
   button#br {
