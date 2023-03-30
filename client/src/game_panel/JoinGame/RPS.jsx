@@ -453,34 +453,36 @@ onBtnBetClick = async () => {
   }
 
   handleButtonClick = () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id, betting } = this.props;
-  
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      return;
-    }
-  
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      return;
-    }
+    const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
+    const { betting } = this.state;
 
-    if (!betting) {
-      this.setState({
-        timer: setInterval(() => {
-          this.setState(state => {
-            if (state.timerValue === 0) {
-              clearInterval(this.state.timer);
-              this.startBetting();
-              return { timerValue: 1000 };
-            } else {
-              return { timerValue: state.timerValue - 10 };
-            }
-          });
-        }, 10)
-      });
-    } else {
-      this.stopBetting();
-    }
-  };
+ if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+   return;
+ }
+
+ if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+   return;
+ }
+
+
+   if (!betting) {
+     this.setState({
+       timer: setInterval(() => {
+         this.setState(state => {
+           if (state.timerValue === 0) {
+             clearInterval(this.state.timer);
+             this.startBetting();
+             return { timerValue: 1000 };
+           } else {
+             return { timerValue: state.timerValue - 10 };
+           }
+         });
+       }, 10)
+     });
+   } else {
+     this.stopBetting();
+   }
+ };
 
 handleButtonRelease = () => {
     if (this.state.timer) {

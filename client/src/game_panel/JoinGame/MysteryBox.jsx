@@ -126,26 +126,30 @@ componentWillUnmount = () => {
   document.removeEventListener('mousedown', this.handleClickOutside);
 };
 
-componentDidUpdate(prevProps, prevState) {
-  const { box_list, isPasswordCorrect, bet_amount, selected_id, is_anonymous, join, refreshHistory } = this.props;
 
-  if (prevState.box_list !== box_list) {
-    this.setState({ box_list: box_list });
-    refreshHistory();
+componentDidUpdate(prevProps, prevState) {
+  if (prevState.box_list !== this.state.box_list) {
+    this.setState({ box_list: this.state.box_list });
+    this.props.refreshHistory();
   }
-  if (prevState.isPasswordCorrect !== isPasswordCorrect && isPasswordCorrect === true) {
-    join({
-      bet_amount: bet_amount,
-      selected_id: selected_id,
-      is_anonymous: is_anonymous,
+  // console.log(this.state.betResult);
+  if (
+    prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
+    this.state.isPasswordCorrect === true
+  ) {
+    this.props.join({
+      bet_amount: this.state.bet_amount,
+      selected_id: this.state.selected_id,
+      is_anonymous: this.state.is_anonymous
     });
 
     this.setState({
-      box_list: box_list.map((el) =>
-        el._id === selected_id ? { ...el, status: 'opened' } : el
-      ),
+      box_list: this.state.box_list.map(el =>
+        el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+      )
     });
   }
+  
 }
 
 predictNext = (betAmountArray, boxList) => {
@@ -227,8 +231,9 @@ predictNext = (betAmountArray, boxList) => {
 };
 
 handleButtonClick = () => {
-  const { isAuthenticated, isDarkMode, creator_id, user_id, betting } = this.props;
-  
+  const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
+  const { betting } = this.state;
+
   if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
     return;
   }
@@ -236,7 +241,6 @@ handleButtonClick = () => {
   if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
     return;
   }
-
   if (!betting) {
     this.setState({
       timer: setInterval(() => {
@@ -255,6 +259,8 @@ handleButtonClick = () => {
     this.stopBetting();
   }
 };
+
+
 
 handleButtonRelease = () => {
   if (this.state.timer) {
@@ -391,21 +397,19 @@ const passwordCorrect = rooms[roomInfo._id];
 };
 
 joinGame = async () => {
-  const {refreshHistory} = this.props;
-  const {bet_amount, box_list, is_anonymous, selected_id} = this.state;
-
+  
   let stored_bet_array = JSON.parse(localStorage.getItem('bet_array')) || [];
   while (stored_bet_array.length >= 30) {
     stored_bet_array.shift();
   }
-  stored_bet_array.push({ bet: bet_amount });
+  stored_bet_array.push({ bet: this.state.bet_amount });
   localStorage.setItem('bet_array', JSON.stringify(stored_bet_array));
   
   
   const result = await this.props.join({
-    bet_amount: parseFloat(bet_amount),
-    selected_id: selected_id,
-    is_anonymous: is_anonymous,
+    bet_amount: parseFloat(this.state.bet_amount),
+    selected_id: this.state.selected_id,
+    is_anonymous: this.state.is_anonymous,
     // slippage: this.state.slippage
   });
   
@@ -422,10 +426,11 @@ joinGame = async () => {
     }
     // this.props.updateBetResult(betResult);
     this.setState({
-      box_list: box_list.map(el =>
-        el._id === selected_id ? { ...el, status: 'opened' } : el
+      box_list: this.state.box_list.map(el =>
+        el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
       ),
-      isOpen: true
+      isOpen: true,
+      selected_id: ''
     });
   
     setTimeout(() => {
@@ -434,11 +439,10 @@ joinGame = async () => {
     this.setState(prevState => ({
       betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
     }), () => {
-      refreshHistory();
+      this.props.refreshHistory();
     });
   }
 };
-
 
 
   

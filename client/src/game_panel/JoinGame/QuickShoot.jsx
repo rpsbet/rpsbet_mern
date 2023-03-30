@@ -494,7 +494,7 @@ predictNext = (qs_list, gameType) => {
   };
   handleButtonClick = () => {
     const { isAuthenticated, isDarkMode, creator_id, user_id, balance, qs_game_type } = this.props;
-    const { bet_amount, bankroll } = this.state;
+    const { bet_amount, bankroll, betting } = this.state;
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
@@ -512,7 +512,7 @@ predictNext = (qs_list, gameType) => {
       return;
     }
 
-    if (!this.state.betting) {
+    if (!betting) {
       this.setState({
         timer: setInterval(() => {
           this.setState(state => {

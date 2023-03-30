@@ -2039,11 +2039,11 @@ if (newBetAmount <= roomInfo['user_bet']) {
   
             let boxPrizes = originalBoxList.map(box => box.box_prize);
   
-            // shuffle the box prizes
-            for (let i = boxPrizes.length - 1; i > 0; i--) {
-              let j = Math.floor(Math.random() * (i + 1));
-              [boxPrizes[i], boxPrizes[j]] = [boxPrizes[j], boxPrizes[i]];
-            }
+            // // shuffle the box prizes
+            // for (let i = boxPrizes.length - 1; i > 0; i--) {
+            //   let j = Math.floor(Math.random() * (i + 1));
+            //   [boxPrizes[i], boxPrizes[j]] = [boxPrizes[j], boxPrizes[i]];
+            // }
   
             let updatedBoxList = originalBoxList.map((box, index) => {
               let randomAmount = Math.floor(Math.random() * 5) - 2;

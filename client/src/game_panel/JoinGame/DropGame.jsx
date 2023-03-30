@@ -422,7 +422,17 @@ getPreviousBets() {
     navigator.clipboard.writeText(twitterLink)
   }
   handleButtonClick = () => {
-    if (!this.state.betting) {
+    const { isAuthenticated, creator_id, user_id, isDarkMode } = this.props;
+    const { betting, timer } = this.state;
+  
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      return;
+    }
+    if (!betting) {
       this.setState({
         timer: setInterval(() => {
           this.setState(state => {
