@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
-import { Button, TextField } from '@material-ui/core';
+import { IconButton, Button, TextField } from '@material-ui/core';
 
 import {
   validateIsAuthenticated,
@@ -51,6 +51,7 @@ class QuickShoot extends Component {
       copied: false,
       is_anonymous: false,
       bet_amount: 1,
+      bgColorChanged: false,
       potential_return: 1.25,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       balance: this.props.balance,
@@ -147,10 +148,15 @@ class QuickShoot extends Component {
 
     if (result.status === 'success') {
       let text = 'HAHAA, YOU SUCK!!!';
+      this.changeBgColor(result.betResult);
 
       if (result.betResult === 1) {
+        this.changeBgColor(result.betResult);
+
         text = 'NICE SHOT, WINNER!!';
       } else if (result.betResult === 0) {
+        this.changeBgColor(result.betResult);
+
         text = 'Draw, No Winner!';
       }
 
@@ -199,8 +205,13 @@ class QuickShoot extends Component {
     } else if (qs_game_type === 5) {
       stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
     }
-    stored_qs_array.push({qs: selected_qs_position, room_id: qs_bet_item_id});
-    
+
+    while (stored_qs_array.length >= 20) {
+      stored_qs_array.shift();
+    }
+
+    stored_qs_array.push({ qs: selected_qs_position, room_id: qs_bet_item_id });
+
     if (qs_game_type === 2) {
       localStorage.setItem("qs_array_2", JSON.stringify(stored_qs_array));
     } else if (qs_game_type === 3) {
@@ -210,10 +221,15 @@ class QuickShoot extends Component {
     } else if (qs_game_type === 5) {
       localStorage.setItem("qs_array_5", JSON.stringify(stored_qs_array));
     }
+
     refreshHistory();
   };
 
-  
+  changeBgColor = async (result) => {
+    this.setState({ betResult: result, bgColorChanged: true });
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+    this.setState({ bgColorChanged: false });
+  };
   
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
@@ -606,12 +622,18 @@ predictNext = (qs_list, gameType) => {
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
+        this.changeBgColor(result.betResult);
+
         // this.props.updateBetResult('win')
         text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
+        this.changeBgColor(result.betResult);
+
         // this.props.updateBetResult('draw')
         text = 'DRAW, NO WINNER!';
       }else{
+        this.changeBgColor(result.betResult);
+
         //  this.props.updateBetResult('lose')
       }
    
@@ -620,74 +642,61 @@ predictNext = (qs_list, gameType) => {
 
   }
 
+  renderButton(id, position) {
+    const { selected_qs_position, bgColorChanged, betResult } = this.state;
+  
+    const classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position ? ' lose-bg' : ''}${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${betResult === 1 && selected_qs_position === position ? ' win-bg' : ''}`;
+  
+    return (
+      <IconButton
+        id={id}
+        onClick={() => this.handlePositionSelection(position)}
+        className={classes}
+      />
+    );
+  }
+  
   renderButtons() {
     const { qs_game_type } = this.props;
-    
-
+  
     if (qs_game_type === 2) {
       return (
         <div className='qs-buttons'>
-          <button id="l" onClick={() => this.handlePositionSelection(0)}>
-            {/* Left */}
-          </button>
-          <button id="r" onClick={() => this.handlePositionSelection(1)}>
-            {/* Right */}
-          </button>
+          {this.renderButton('l', 0)}
+          {this.renderButton('r', 1)}
         </div>
       );
     } else if (qs_game_type === 3) {
       return (
         <div className='qs-buttons'>
-          <button id="l" onClick={() => this.handlePositionSelection(0)}>
-            {/* Left */}
-          </button>
-          <button id="cc" onClick={() => this.handlePositionSelection(1)}>
-            {/* Center */}
-          </button>
-          <button id="r" onClick={() => this.handlePositionSelection(2)}>
-            {/* Right */}
-          </button>
+          {this.renderButton('l', 0)}
+          {this.renderButton('cc', 1)}
+          {this.renderButton('r', 2)}
         </div>
       );
     } else if (qs_game_type === 4) {
       return (
         <div className='qs-buttons'>
-          <button id="tl" onClick={() => this.handlePositionSelection(0)}>
-            {/* Top Left */}
-          </button>
-          <button id="tr" onClick={() => this.handlePositionSelection(1)}>
-            {/* Top Right */}
-          </button>
-          <button id="bl" onClick={() => this.handlePositionSelection(2)}>
-            {/* Bottom Left */}
-          </button>
-          <button id="br" onClick={() => this.handlePositionSelection(3)}>
-            {/* Bottom Right */}
-          </button>
+          {this.renderButton('tl', 0)}
+          {this.renderButton('tr', 1)}
+          {this.renderButton('bl', 2)}
+          {this.renderButton('br', 3)}
         </div>
       );
     } else if (qs_game_type === 5) {
       return (
         <div className='qs-buttons'>
-          <button id="tl" onClick={() => this.handlePositionSelection(1)}>
-            {/* TL */}
-          </button>
-          <button id="tr"  onClick={() => this.handlePositionSelection(2)}>
-            {/* TR */}
-          </button>
-          <button id="bl"  onClick={() => this.handlePositionSelection(3)}>
-            {/* BL */}
-          </button>
-          <button id="br"  onClick={() => this.handlePositionSelection(4)}>
-            {/* BR */}
-          </button>
-          <button id="c"  onClick={() => this.handlePositionSelection(0)}>
-            {/* C */}
-          </button>
+          {this.renderButton('tl', 1)}
+          {this.renderButton('tr', 2)}
+          {this.renderButton('bl', 3)}
+          {this.renderButton('br', 4)}
+          {this.renderButton('c', 0)}
         </div>
       );
     }
   }
+  
+  
 
   render() {
     const styles = ['copy-btn'];

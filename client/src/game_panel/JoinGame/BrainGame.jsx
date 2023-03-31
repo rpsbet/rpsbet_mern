@@ -43,6 +43,7 @@ class BrainGame extends Component {
       brain_game_type: this.props.brain_game_type,
       advanced_status: '',
       betting: false,
+      bgColorChanged: false,
       timer: null,
       timerValue: 1000,
           clicked: true,
@@ -139,6 +140,12 @@ class BrainGame extends Component {
     }
   }
 
+  changeBgColor = async (result) => {
+    this.setState({ betResult: result, bgColorChanged: true });
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+    this.setState({ bgColorChanged: false });
+  };
+
 
   onStartGame = async e => {
     e.preventDefault();
@@ -223,11 +230,16 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
 
       if (result.status === 'success') {
         let text = 'HAHAA, WHAT A LOSER!!';
+        this.changeBgColor(result.betResult);
 
         if (result.betResult === 1) {
           text = 'NOT BAD, WINNER!';
+          this.changeBgColor(result.betResult);
+
         } else if (result.betResult === 0) {
           text = 'DRAW, NO WINNER!';
+          this.changeBgColor(result.betResult);
+
         }
 
         if (result.roomStatus === 'finished') {
@@ -413,10 +425,15 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
 
     if (result.status === 'success') {
       let text = 'HAHAA, WHAT A LOSER!!';
+      this.changeBgColor(result.betResult);
 
       if (result.betResult === 1) {
+        this.changeBgColor(result.betResult);
+
         text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
+        this.changeBgColor(result.betResult);
+
         text = 'DRAW, NO WINNER!';
       }
 

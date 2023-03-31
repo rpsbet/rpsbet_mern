@@ -6,7 +6,7 @@ button, button.btn {
     background: darkgray;
 }
 .your-bet-amount {
-    margin-top: 15px;
+    margin-top: 30px;
     margin-bottom: 25px;
     display: flex;
     flex-direction: column;
@@ -210,13 +210,13 @@ div.table .table-header {
     padding-bottom: 8px;
 }
 
-#rps-radio Button.active.lose-bg {
+.lose-bg {
     background-color: #FFD700 !important;
   }
-  #rps-radio Button.active.draw-bg {
+.draw-bg {
     background-color: #777777 !important;
   }
-  #rps-radio Button.active.win-bg {
+.win-bg {
     background-color: hwb(4 18% 17%) !important;
   }
 
@@ -296,7 +296,9 @@ div.table .table-row .table-cell button.active,
 .game_header .main_header .header_action_panel button#btn-login:active,
 div.table .table-row .table-cell button:last-child:active,
 .btn-create-room:focus,
-.btn-create-room.active {
+.btn-create-room.active,
+.qs-buttons button.active 
+    {
     background-color: #0ead12;
     box-shadow: none!important;
     transform: translate(0px, 1px);
@@ -964,7 +966,7 @@ overflow: hidden;
     padding: 0 20px;
 }
 .game-page .game-contents .game-info-panel button {
-    background: transparent;
+    /* background: transparent; */
     font-size: 1em;
     border-radius: 6px;
     font-weight: 600;
@@ -972,7 +974,7 @@ overflow: hidden;
     transform: translateY(-1px);
     color: #e5e5e5;
     background-image: linear-gradient(to top, #5a5a5a, #a39d9d);
-    box-shadow: 0 -1px 0px #555555,0 -4px #6d6d6d inset,0 2px #8f8e8e inset!important;
+    box-shadow: 0 -1px 0px #555555,0 -4px #6d6d6d inset,0 2px #8f8e8e inset;
 }
 .game-page .game-contents .game-info-panel button.other {
     border-radius: 6px;
@@ -980,7 +982,7 @@ overflow: hidden;
 .game-page .game-contents .game-info-panel button.active {
     color: #e5e5e5;
     background-image: linear-gradient(to top, #48ff00, #07c700);
-    box-shadow: 0 -1px 0px #52df00,0 -4px #2d7001 inset,0 2px #07c400 inset!important;
+    box-shadow: 0 -1px 0px #52df00,0 -4px #2d7001 inset,0 2px #07c400 inset;
 }
 .game-page .game-contents .game-info-panel button:hover {
     transition: 0.1s;
@@ -1379,7 +1381,7 @@ input {
 }
 
 .boxes-panel .box.active {
-    transform: scale(1.1);
+    box-shadow: unset !important;
     transition: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 

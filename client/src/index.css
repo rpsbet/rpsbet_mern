@@ -123,21 +123,23 @@ button {
 }
 
 .join-game-panel .qs-buttons button {
-  opacity: 1;
+  opacity: 0.8;
   transform: scale(3);
 }
 .qs-buttons button {
   position: absolute !important;
-    background: linear-gradient(184deg, #00fb39, #00ff3a4f) !important;
+    background-color:#00fb39;
     color: #fff !important;
     width: 2.75rem !important;
-  
+    background-image: unset !important;
     height: 2.75rem !important;
     border-radius: 50% !important;
     margin: 0 !important;
     border: 3px solid #ddd !important;
-    box-shadow: 0 0 6px 4px #ff0c8a;
+}
 
+.qs-buttons button.active {
+  box-shadow: unset !important;
 }
 #footer-container {
  background: #e5e5e5;
@@ -211,7 +213,7 @@ button#c {
 }
 
 button#cc {
-  transform: translate(-17px,-52px);
+  transform: translate(-22px,-49px);
 }
 
 button#br {

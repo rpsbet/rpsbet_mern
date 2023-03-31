@@ -340,7 +340,7 @@ changeBgColor = async (result) => {
       localStorage.getItem('rps_array')
     ) || [];
   
-    while (stored_rps_array.length >= 30) {
+    while (stored_rps_array.length >= 20) {
       stored_rps_array.shift();
     }
   
@@ -673,20 +673,18 @@ handleButtonRelease = () => {
           >
             <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
             <div id="rps-radio" style={{ zIndex: 1 }}>
-            {options.map(({ classname, selection }) => (
-  <Button
-  variant="contained"
-  id={`rps-${classname}`}
-  className={`rps-option ${classname}${
-    this.state.selected_rps === selection ? ' active' : ''
-  }${this.state.bgColorChanged && this.state.betResult === -1 && this.state.selected_rps === selection ? ' lose-bg' : ''}${this.state.betResult === 0 ? ' draw-bg' : ''}${this.state.betResult === 1 ? ' win-bg' : ''}`}
-  onClick={() => {
-    this.setState({ selected_rps: selection });
-    this.onBtnBetClick(selection);
-  }}
-/>
+              {options.map(({ classname, selection }) => (
+    <Button
+    variant="contained"
+    id={`rps-${classname}`}
+    className={`rps-option ${classname}${this.state.selected_rps === selection ? ' active' : ''}${this.state.bgColorChanged && this.state.betResult === -1 && this.state.selected_rps === selection ? ' lose-bg' : ''}${this.state.betResult === 0 && this.state.selected_rps === selection ? ' draw-bg' : ''}${this.state.betResult === 1 && this.state.selected_rps === selection ? ' win-bg' : ''}`}
+    onClick={() => {
+      this.setState({ selected_rps: selection });
+      this.onBtnBetClick(selection);
+    }}
+  />
 
-))}
+  ))}
 
 
 

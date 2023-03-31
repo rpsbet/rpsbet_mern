@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-import { updateBetResult } from '../../redux/Logic/logic.actions';
+// import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button, TextField  } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
@@ -125,11 +125,11 @@ getPreviousBets() {
   return previousBets;
 }
 
-// changeBgColor = async (result) => {
-//   this.setState({ betResult: result, bgColorChanged: true });
-//   await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
-//   this.setState({ bgColorChanged: false });
-// };
+changeBgColor = async (result) => {
+  this.setState({ betResult: result, bgColorChanged: true });
+  await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+  this.setState({ bgColorChanged: false });
+};
 
 
   // handleClickOutside = e => {
@@ -273,22 +273,22 @@ getPreviousBets() {
     let text = 'HAHAA, YOU LOST!!!';
   
     if (result.betResult === 1) {
-      this.props.updateBetResult('win')
+      // this.props.updateBetResult('win')
       text = 'NOT BAD, WINNER!';
-      // this.changeBgColor(result.betResult); // Add this line
+      this.changeBgColor(result.betResult); // Add this line
     } else if (result.betResult === 0) {
   
-      this.props.updateBetResult('draw')
-      // this.changeBgColor(result.betResult); // Add this line
+      // this.props.updateBetResult('draw')
+      this.changeBgColor(result.betResult); // Add this line
       text = 'DRAW, NO WINNER!';
     }else{
-      // this.changeBgColor(result.betResult); // Add this line
-      this.props.updateBetResult('lose')
+      this.changeBgColor(result.betResult); // Add this line
+      // this.props.updateBetResult('lose')
     }
   
     let stored_drop_array = JSON.parse(localStorage.getItem("drop_array")) || [];
   
-    while (stored_drop_array.length >= 30) {
+    while (stored_drop_array.length >= 20) {
       stored_drop_array.shift();
     }
     stored_drop_array.push({ drop: this.state.bet_amount });
@@ -492,7 +492,6 @@ getPreviousBets() {
       user_id,
       creator_id,
       refreshHistory,
-      updateBetResult,
       join,
       drop_bet_item_id
     } = this.props;
@@ -528,13 +527,19 @@ getPreviousBets() {
       let text = 'HAHAA, YOU LOST!!!';
   
       if (result.betResult === 1) {
-        updateBetResult('win');
+        this.changeBgColor(result.betResult);
+
+        // updateBetResult('win');
         text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
-        updateBetResult('draw');
+        this.changeBgColor(result.betResult);
+
+        // updateBetResult('draw');
         text = 'DRAW, NO WINNER!';
       } else {
-        updateBetResult('lose');
+        this.changeBgColor(result.betResult);
+
+        // updateBetResult('lose');
       }
   
       refreshHistory();

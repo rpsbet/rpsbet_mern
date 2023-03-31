@@ -70,6 +70,7 @@ class MysteryBox extends Component {
       isOpen: true,
       betting: false,
       timer: null,
+      bgColorChanged: false,
       timerValue: 1000,
         clicked: true,
         intervalId: null,
@@ -230,6 +231,12 @@ predictNext = (betAmountArray, boxList) => {
   return prediction;
 };
 
+changeBgColor = async (result) => {
+  this.setState({ betResult: result, bgColorChanged: true });
+  await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+  this.setState({ bgColorChanged: false });
+};
+
 handleButtonClick = () => {
   const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
   const { betting } = this.state;
@@ -299,22 +306,22 @@ stopBetting = () => {
   this.setState({ intervalId: null, betting: false, timerValue: 1000  });
 };
 
-joinGame2 = async (predictedBetAmount) => {
-  const {balance, isDarkMode, refreshHistory } = this.props;
-  const {bet_amount, box_list, is_anonymous} = this.state;
 
-  if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+joinGame2 = async (predictedBetAmount) => {
+
+  if (this.state.bet_amount > this.state.balance) {
+    alertModal(this.props.isDarkMode, `TOO BROKE!`);
     return;
   }
 
-  const availableBoxes = box_list.filter(
+  const availableBoxes = this.state.box_list.filter(
     box =>
       box.status === "init" &&
       (box.box_price <= predictedBetAmount + 8)
   );
   if (availableBoxes.length === 0) {
     alertModal(
-      isDarkMode,
+      this.props.isDarkMode,
       `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
     );
     return;
@@ -323,32 +330,51 @@ joinGame2 = async (predictedBetAmount) => {
   const randomIndex = Math.floor(Math.random() * availableBoxes.length);
   const selectedBox = availableBoxes[randomIndex];
   const result = await this.props.join({
-    bet_amount: parseFloat(bet_amount),
+    bet_amount: parseFloat(this.state.bet_amount),
     selected_id: selectedBox._id,
-    is_anonymous: is_anonymous,
+    is_anonymous: this.state.is_anonymous,
     // slippage: this.state.slippage
   });
-  
+  this.setState({ selected_id: selectedBox._id });
+
   const currentUser = this.props.user;
 const currentRoom = this.props.room;
 if (result.status === 'success') {
   let betResult = '';
   if (result.betResult === 1) {
     betResult = 'win';
+    this.changeBgColor(result.betResult);
+
   } else if (result.betResult === 0) {
     betResult = 'draw';
+    this.changeBgColor(result.betResult);
+
   } else {
     betResult = 'lose';
+    this.changeBgColor(result.betResult);
+
   }
+
+    // this.props.updateBetResult(betResult);
+    this.setState({
+      box_list: this.state.box_list.map(el =>
+        el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+      ),
+      isOpen: false
+    });
+  
+    // setTimeout(() => {
+    //   this.setState({ isOpen: false });
+    // }, 1500);
+
   // this.props.updateBetResult(betResult);
   this.setState(prevState => ({
     betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
   }));
 
-  refreshHistory();
+  this.props.refreshHistory();
 }
 };
-
 
 onBtnBetClick = async (e) => {
   const {creator_id, isAuthenticated, user_id, isDarkMode, is_private, openGamePasswordModal, roomInfo, balance, refreshHistory} = this.props;
@@ -399,7 +425,7 @@ const passwordCorrect = rooms[roomInfo._id];
 joinGame = async () => {
   
   let stored_bet_array = JSON.parse(localStorage.getItem('bet_array')) || [];
-  while (stored_bet_array.length >= 30) {
+  while (stored_bet_array.length >= 20) {
     stored_bet_array.shift();
   }
   stored_bet_array.push({ bet: this.state.bet_amount });
@@ -419,18 +445,24 @@ joinGame = async () => {
     let betResult = '';
     if (result.betResult === 1) {
       betResult = 'win';
+      this.changeBgColor(result.betResult);
+
     } else if (result.betResult === 0) {
       betResult = 'draw';
+      this.changeBgColor(result.betResult);
+
     } else {
       betResult = 'lose';
+      this.changeBgColor(result.betResult);
+
     }
+    
     // this.props.updateBetResult(betResult);
     this.setState({
       box_list: this.state.box_list.map(el =>
         el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
       ),
-      isOpen: true,
-      selected_id: ''
+      isOpen: true
     });
   
     setTimeout(() => {
@@ -527,8 +559,15 @@ joinGame = async () => {
     className={
       'box box-' +
       row.status +
-      (row._id === this.state.selected_id ? ' active' : '')
+      (this.state.selected_id && row._id === this.state.selected_id ? ' active' : '') +
+      (row._id === this.state.selected_id && this.state.bgColorChanged && this.state.betResult === -1 ? ' draw-bg' : '') +
+      (row._id === this.state.selected_id && this.state.betResult === 0 ? ' lose-bg' : '') +
+      (row._id === this.state.selected_id && this.state.betResult === 1 ? ' win-bg' : '')
     }
+    
+    
+    
+    
     status={row.status}
     _id={row._id}
     box_price={row.box_price}
@@ -543,6 +582,7 @@ joinGame = async () => {
     </CardContent>
   </Card>
 ))}
+
 
             </div>
             <Button
