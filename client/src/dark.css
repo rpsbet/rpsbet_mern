@@ -129,7 +129,7 @@ background: #060607;
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: #0c0c0c;
-	background-image: linear-gradient(-135deg, transparent, #0c0c0c 20%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6098421f3bd61f4427e780dd_Background.svg);
+	background-image: linear-gradient(-135deg, transparent, #0c0c0c 45%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec76a05cb1c80_Dots.svg) !important;
 
 }
 .dark_mode .main-game-page-tabs {
@@ -301,7 +301,7 @@ background: #060607;
 }
 
 .dark_mode .react-confirm-alert-overlay {
-    background: rgba(47, 49, 54, 0.8) !important;
+    background: rgba(19, 19, 19, 0.8) !important;
 }
 
 .dark_mode .availabletag {

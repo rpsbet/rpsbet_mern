@@ -47,6 +47,14 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0
     },
+    host_pr: {
+        type: Number,
+        default: 0
+    },
+    user_bet: {
+        type: Number,
+        default: 0
+    },
     is_anonymous: {
         type: Number,
         default: 0

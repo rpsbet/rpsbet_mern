@@ -217,7 +217,7 @@ div.table .table-header {
     background-color: #777777 !important;
   }
 .win-bg {
-    background-color: hwb(4 18% 17%) !important;
+    background-color: #ff0a28 !important;
   }
 
 .btn_modal_close:hover,
@@ -280,7 +280,8 @@ div.table .table-row .table-cell button:last-child,
 .boxes-panel.boxes-join .box,
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
-.game-page .game-contents .game-info-panel button.place-bet  {
+.game-page .game-contents .game-info-panel button.place-bet,
+.game-page .game-contents .game-info-panel button  {
     padding: 0;
     border-radius: 0.25em;
     color: white;
@@ -501,13 +502,13 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     box-shadow: 0 10px 27px #00ff0c1a,0 -3px #00913c inset,0 2px #35d87b inset!important;
     font-size: 16px;
     background: linear-gradient(to top, #15ea21, #28a745) padding-box, linear-gradient(to top, #28a745, #15ea21) border-box;
-    border-radius: 6px;
+    border-radius: 0.25em;
     font-weight: 600;
 }
 
 .contents_wrapper .main-game .main-panel,
 .contents_wrapper .main-game .sub-panel {
-	background-image: linear-gradient(-135deg, transparent, #f9f9f9 25%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6418078a5aac65a4cfa60ea8_vbbg-svg-svg.svg);
+	background-image: linear-gradient(-135deg, transparent, #f9f9f9 55%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec72434cb1c84_Dots%20Blue.svg) !important;
     background-repeat: no-repeat;
     background-position: top right;
 
@@ -966,15 +967,8 @@ overflow: hidden;
     padding: 0 20px;
 }
 .game-page .game-contents .game-info-panel button {
-    /* background: transparent; */
-    font-size: 1em;
-    border-radius: 6px;
-    font-weight: 600;
+    padding: 0 20px;
     margin: 0 4px 10px;
-    transform: translateY(-1px);
-    color: #e5e5e5;
-    background-image: linear-gradient(to top, #5a5a5a, #a39d9d);
-    box-shadow: 0 -1px 0px #555555,0 -4px #6d6d6d inset,0 2px #8f8e8e inset;
 }
 .game-page .game-contents .game-info-panel button.other {
     border-radius: 6px;
@@ -1139,19 +1133,21 @@ table#runs td svg {
 
 }
 
+
+
 #rps-radio Button {
-    background-size: 70%;
+    background-size: contain;
     background-repeat: no-repeat;
     display: inline-block;
-    width: 74px;
-    height: 74px !important;
+    width: 130px;
+    height: 200px !important;
     cursor: pointer;
     box-shadow: 0 -1px 0px #045308,0 -4px #50ee2c inset,0 2px #12c526 inset!important;
     background-color: #03c927;
     filter: drop-shadow(2px 4px 6px black);
-    border-radius: 12px;
     transition: all 0.2s ease-in-out;
     position: relative;
+    border-radius: 0.25em !important;
     transform-style: preserve-3d;
     }
 
@@ -1198,15 +1194,15 @@ table#runs td svg {
   
 #rps-radio Button.rock{
     background-position: center;
-    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif")
+    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/64294438e727411a8737e55d_rock-bg.gif")
 }
 #rps-radio Button.paper {
     background-position: center;
-    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif");
+    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/642944296b19ef77367075c0_paper-bg.gif");
 }
 #rps-radio Button.scissors {
     background-position: center;
-    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif")
+    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6429443717973b53f71d1981_scissors-bg.gif")
 }
 /* #rps-radio Button.rock {
     background-position: center;
@@ -1261,11 +1257,7 @@ button.btn-submit:active,
     box-shadow: none!important;
 }
 
-.game-page .game-contents .action-panel button:disabled {
-    background: white;
-    color: #747f8d;
-    border: 1px solid #d3d7db;
-}
+
 .game-page .game-contents .radio-button-group button.radio-button {
     background-color: rgba(242, 243, 245, 0.4);
     border-radius: 8px;
@@ -2047,10 +2039,9 @@ margin-bottom: 10px;
         padding-right: 0 !important;
     }
     #rps-radio Button {
-        width: 74px;
-        height: 74px !important;
+        width: 90px;
+        height: 150px !important;
         max-width: 100%;
-        background-size: 54px;
         margin: 4px !important;
     }
  

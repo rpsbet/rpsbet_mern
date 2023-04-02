@@ -108,6 +108,7 @@
 } */
 
 .modal-header {
+    transform: translateY(1px);
     border-top-right-radius: 20px !important;
     border-top-left-radius: 20px !important;
     border-bottom: 0 !important;
@@ -221,7 +222,7 @@ border-bottom-right-radius: 0 !important;
 }
 
 .react-confirm-alert-overlay {
-    background: rgba(47, 49, 54, 0.8) !important;
+    background: rgba(19, 19, 19, 0.8) !important;
     backdrop-filter: blur(4px);
 }
 .react-confirm-alert .modal-body.alert-body {

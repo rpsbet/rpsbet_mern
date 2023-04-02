@@ -44,6 +44,8 @@ export const createRoom = (room_info) => async dispatch => {
     if (res.data.success) {
       dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      // dispatch({ type: SET_BALANCE, payload: res.data.newTransaction });
+
     } else {
       dispatch({ type: MSG_WARNING, payload: res.data.message });
     }

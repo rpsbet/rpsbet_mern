@@ -253,6 +253,8 @@ class OpenGamesTable extends Component {
   <div className="table-cell desktop-only cell-joiners">
     <Battle />
     {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
+                        // <a className="player" onClick={() => this.handleOpenPlayerModal(row.curRoomInfo.j)}>                   
+
       <Avatar
         className="avatar"
         key={index}
@@ -260,6 +262,7 @@ class OpenGamesTable extends Component {
         alt=""
         darkMode={this.props.isDarkMode}
       />
+      // </a>
     ))}
   </div>
 ) : null}

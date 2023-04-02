@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setBalance } from '../../redux/Auth/user.actions';
-import { getMyGames, endGame, addNewTransaction } from '../../redux/Logic/logic.actions';
+import {
+  getMyGames,
+  endGame,
+  addNewTransaction
+} from '../../redux/Logic/logic.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalClosed } from '../modal/ConfirmAlerts';
 import Pagination from '../../components/Pagination';
@@ -13,19 +17,16 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
 import InlineSVG from 'react-inlinesvg';
 import IconButton from '@material-ui/core/IconButton';
-import {Box, Button} from '@material-ui/core';
-
+import { Box, Button } from '@material-ui/core';
 
 const defaultOptions = {
   loop: true,
   autoplay: true,
   animationData: animationData,
   rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice"
+    preserveAspectRatio: 'xMidYMid slice'
   }
 };
-
-
 
 class MyGamesTable extends Component {
   constructor(props) {
@@ -42,6 +43,7 @@ class MyGamesTable extends Component {
     this.props.getMyGames({
       game_type: this.state.selectedGameType
     });
+    console.log(this.props)
   }
 
   // endRoom = (winnings, room_id) => {
@@ -71,6 +73,7 @@ class MyGamesTable extends Component {
   // };
 
   handleButtonClick = (winnings, room_id) => {
+    console.log(winnings);
     let startTime = 2000;
     this.setState({
       [room_id]: {
@@ -82,40 +85,43 @@ class MyGamesTable extends Component {
             if (timeLeft === 0) {
               clearInterval(prevState[room_id].timer);
               this.endRoom(winnings, room_id);
-              this.props.addNewTransaction({ amount: winnings, room_id });
-              this.props.setBalance(this.state.balance += parseFloat(winnings));
-
             }
             return {
               [room_id]: {
                 ...prevState[room_id],
-                timeLeft,
-              },
+                timeLeft
+              }
             };
           });
-        }, 10),
-      },
+        }, 10)
+      }
     });
   };
-  
-    handleButtonRelease = (room_id) => {
-      if (this.state[room_id] && this.state[room_id].timer) {
-        clearTimeout(this.state[room_id].timer);
-      }
-      this.setState({
-        [room_id]: { holding: false },
+
+  handleButtonRelease = room_id => {
+    if (this.state[room_id] && this.state[room_id].timer) {
+      clearTimeout(this.state[room_id].timer);
+    }
+    this.setState({
+      [room_id]: { holding: false }
+    });
+  };
+
+  endRoom = async (winnings, room_id) => {
+    try {
+      await this.props.endGame(room_id);
+      await this.props.getMyGames({
+        game_type: this.state.selectedGameType
       });
-    };
-    
-    
-    endRoom = (winnings, room_id) => {
-    this.props.endGame(room_id, () => {
-    this.props.getMyGames({
-    game_type: this.state.selectedGameType
-    });
-    });
-    };
+      console.log(this.state.balance);
+      await this.props.addNewTransaction({ amount: winnings, room_id });
+      this.props.setBalance((this.state.balance += parseFloat(winnings)));
+    } catch (error) {
+      console.error('Error ending room:', error);
+    }
+  };
   
+
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
     this.props.getMyGames({
@@ -144,14 +150,15 @@ class MyGamesTable extends Component {
 
     const gameTypePanel = (
       <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
-       <Box item key="open-game-left-button">
+        <Box item key="open-game-left-button">
           <IconButton
             className="btn-arrow-left"
             onClick={this.handleBtnLeftClicked}
           >
             <ChevronLeftIcon />
           </IconButton>
-        </Box>,
+        </Box>
+        ,
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -168,7 +175,9 @@ class MyGamesTable extends Component {
             className={`btn-game-type btn-icon ${
               gameTypeStyleClass[gameType.short_name]
             } ${
-              this.state.selectedGameType === gameType.short_name ? 'active' : ''
+              this.state.selectedGameType === gameType.short_name
+                ? 'active'
+                : ''
             }`}
             key={index}
             onClick={() => {
@@ -187,7 +196,7 @@ class MyGamesTable extends Component {
         </IconButton>
       </Box>
     );
-    
+
     return gameTypePanel;
   };
 
@@ -268,10 +277,7 @@ class MyGamesTable extends Component {
           )}
           {this.props.myGames.length === 0 ? (
             <div className="dont-have-game-msg">
-              <Lottie 
-        options={defaultOptions}
-          width={50}
-        />
+              <Lottie options={defaultOptions} width={50} />
               <span>
                 FIRST SELECT A GAME <br />
                 THEN CLICK "CREATE BATTLE"
@@ -298,46 +304,64 @@ class MyGamesTable extends Component {
                       )}
                     </div>
                     <div className="table-cell bet-info">
-  <span className="bet-pr">
-    {'('}{convertToCurrency(updateDigitToPoint2(row.bet_amount))}{') '}
-    
-    {convertToCurrency(updateDigitToPoint2(row.pr))}
-  </span>
-  <span className="end-amount">
-    {convertToCurrency(updateDigitToPoint2(row.endgame_amount))}
-  </span>
-</div>
-<div className="table-cell winnings">
-  <span>{convertToCurrency(row.winnings)}</span>
-</div>
+                      <span className="bet-pr">
+                        {'('}
+                        {convertToCurrency(updateDigitToPoint2(row.bet_amount))}
+                        {') '}
+
+                        {convertToCurrency(updateDigitToPoint2(row.pr))}
+                      </span>
+                      <span className="end-amount">
+                        {convertToCurrency(
+                          updateDigitToPoint2(row.endgame_amount)
+                        )}
+                      </span>
+                    </div>
+                    <div className="table-cell winnings">
+                      <span>{convertToCurrency(row.winnings)}</span>
+                    </div>
 
                     <div className="table-cell action desktop-only">
-                    <Button
-      className="btn_end"
-      onMouseDown={() => this.handleButtonClick(row.winnings, row._id)}
-      onMouseUp={() => this.handleButtonRelease(row._id)}
-      onMouseLeave={() => this.handleButtonRelease(row._id)}
-      _id={row._id}
-    >
-      {this.state[row._id] && this.state[row._id].holding ? `${(this.state[row._id].timeLeft / 1000).toFixed(2)}s` : 'UNSTAKE'}
-    </Button>
+                      <Button
+                        className="btn_end"
+                        onMouseDown={() =>
+                          this.handleButtonClick(row.winnings, row._id)
+                        }
+                        onMouseUp={() => this.handleButtonRelease(row._id)}
+                        onMouseLeave={() => this.handleButtonRelease(row._id)}
+                        _id={row._id}
+                      >
+                        {this.state[row._id] && this.state[row._id].holding
+                          ? `${(this.state[row._id].timeLeft / 1000).toFixed(
+                              2
+                            )}s`
+                          : 'UNSTAKE'}
+                      </Button>
                     </div>
                   </div>
                   <div className="mobile-only">
                     <div className="table-cell room-id"></div>
                     <div className="table-cell action">
-                    <Button
-      className="btn_end"
-      onMouseDown={() => this.handleButtonClick(row.bet_amount, row._id)}
-      onMouseUp={() => this.handleButtonRelease(row._id)}
-      onMouseLeave={() => this.handleButtonRelease(row._id)}
-      onTouchStart={() => this.handleButtonClick(row.bet_amount, row._id)}
-  onTouchEnd={() => this.handleButtonRelease(row._id)}
-  onTouchCancel={() => this.handleButtonRelease(row._id)}
-      _id={row._id}
-    >
-      {this.state[row._id] && this.state[row._id].holding ? `${(this.state[row._id].timeLeft / 1000).toFixed(2)}s` : 'UNSTAKE'}
-    </Button>
+                      <Button
+                        className="btn_end"
+                        onMouseDown={() =>
+                          this.handleButtonClick(row.bet_amount, row._id)
+                        }
+                        onMouseUp={() => this.handleButtonRelease(row._id)}
+                        onMouseLeave={() => this.handleButtonRelease(row._id)}
+                        onTouchStart={() =>
+                          this.handleButtonClick(row.bet_amount, row._id)
+                        }
+                        onTouchEnd={() => this.handleButtonRelease(row._id)}
+                        onTouchCancel={() => this.handleButtonRelease(row._id)}
+                        _id={row._id}
+                      >
+                        {this.state[row._id] && this.state[row._id].holding
+                          ? `${(this.state[row._id].timeLeft / 1000).toFixed(
+                              2
+                            )}s`
+                          : 'UNSTAKE'}
+                      </Button>
                     </div>
                   </div>
                 </div>

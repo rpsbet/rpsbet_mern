@@ -59,7 +59,7 @@ class MysteryBox extends Component {
     this.state = {
       items: [],
       bet_amount: 0,
-      selected_id: '',
+      selected_id: this.props.box_list.length > 0 ? this.props.box_list[0]._id : '',
       box_list: this.props.box_list,
       advanced_status: '',
       is_anonymous: false,

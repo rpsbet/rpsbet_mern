@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import history from '../../redux/history';
 import Moment from 'moment';
 import { Button, Drawer } from "@material-ui/core";
+import LoadingOverlay from 'react-loading-overlay';
 
 import RPS from '../JoinGame/RPS';
 import Spleesh from '../JoinGame/Spleesh';
@@ -29,6 +30,7 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
+import Footer from './Footer';
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -44,6 +46,18 @@ const customStyles = {
     width: '50%',
     height: '48px'
   }
+};
+
+const gifUrls = [
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif',
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif'
+];
+
+
+const getRandomGifUrl = () => {
+  const randomIndex = Math.floor(Math.random() * gifUrls.length);
+  return gifUrls[randomIndex];
 };
 
 const defaultOptions = {
@@ -64,6 +78,7 @@ class JoinGame extends Component {
       selectedMobileTab: 'live_games',
       numToShow: 10,
       open: true,
+      joiningRoom: false,
       roomInfo: this.props.roomInfo,
       bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
       history: this.props.history
@@ -154,14 +169,18 @@ class JoinGame extends Component {
   }
 
   join = async betInfo => {
+    this.setState({ joiningRoom: true });
     const result = await this.props.bet({
       _id: this.state.roomInfo._id,
       game_type: this.props.roomInfo.game_type,
       ...betInfo
     });
-
+  
+    this.setState({ joiningRoom: false });
+  
     return result;
   };
+  
 
   refreshHistory = () => {
     this.props.getRoomInfo(this.props.match.params.id);
@@ -190,6 +209,27 @@ class JoinGame extends Component {
 
     return (
       <>
+     <LoadingOverlay
+  className="custom-loading-overlay"
+  active={this.state.joiningRoom}
+  spinner={
+    <div className="rpsLoader">
+      <img
+        src={getRandomGifUrl()}
+        alt="Random Spinner"
+        style={{
+          width: '40px',
+          display: 'block',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          marginBottom: '10px',
+        }}
+      />
+      <div>Joining Room...</div>
+    </div>
+  }
+>
+
       <div className="main-game"  style={{ gridTemplateColumns: this.state.open ? '260px calc(70% - 260px) 30%' : '70% 30%' }}>
        {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
           !this.state.is_mobile) &&
@@ -525,7 +565,11 @@ class JoinGame extends Component {
             </Button>
           </div>
         )}
+                              <Footer className="footer" open={this.state.open} style={{ marginLeft: this.state.open ? '270px' : '0' }} />
+
         </div>
+        </LoadingOverlay>
+
       </>
       
     );

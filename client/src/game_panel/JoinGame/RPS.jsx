@@ -25,6 +25,7 @@ import history from '../../redux/history';
 // import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
 import { FaClipboard } from 'react-icons/fa';
+import { LensOutlined } from '@material-ui/icons';
 
 const defaultOptions = {
   loop: true,
@@ -163,7 +164,6 @@ class RPS extends Component {
       intervalId: null,
       items: [],
       bgColorChanged: false,
-
       selected_rps: '',
       advanced_status: '',
       is_anonymous: false,
@@ -336,19 +336,21 @@ changeBgColor = async (result) => {
       }
     }
   
-    const stored_rps_array = JSON.parse(
+    let stored_rps_array = JSON.parse(
       localStorage.getItem('rps_array')
     ) || [];
   
     while (stored_rps_array.length >= 20) {
       stored_rps_array.shift();
     }
+    stored_rps_array = stored_rps_array.filter(item => item && item.rps);
   
     stored_rps_array.push({ rps: selected_rps });
     localStorage.setItem('rps_array', JSON.stringify(stored_rps_array));
   
     refreshHistory();
   };
+  
   
   
   
@@ -499,7 +501,6 @@ handleButtonRelease = () => {
       return;
     }
     const stored_rps_array = JSON.parse(localStorage.getItem(storageName)) || [];
-  
     const intervalId = setInterval(() => {
       const randomItem = predictNext(stored_rps_array);
       const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
