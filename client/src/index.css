@@ -1200,7 +1200,7 @@ circle {
 
 @media (min-width: 481px) and (max-width: 767px) {
   .custom-loading-overlay .rpsLoader {
-    transform: translateY(-600px); /* Adjust this value to move the spinner and text higher or lower */
+    transform: translateY(-300px); /* Adjust this value to move the spinner and text higher or lower */
   }
  
   
@@ -1214,7 +1214,7 @@ circle {
 @media (min-width: 320px) and (max-width: 480px) {
 
   .custom-loading-overlay .rpsLoader {
-    transform: translateY(-900px); /* Adjust this value to move the spinner and text higher or lower */
+    transform: translateY(-500px); /* Adjust this value to move the spinner and text higher or lower */
   }
   .contents_wrapper .main-game {
     grid-template-columns: unset !important;
