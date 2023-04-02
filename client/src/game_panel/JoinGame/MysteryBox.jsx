@@ -71,7 +71,7 @@ class MysteryBox extends Component {
       betting: false,
       timer: null,
       bgColorChanged: false,
-      timerValue: 1000,
+      timerValue: 2000,
         clicked: true,
         intervalId: null,
 
@@ -255,7 +255,7 @@ handleButtonClick = () => {
           if (state.timerValue === 0) {
             clearInterval(this.state.timer);
             this.startBetting();
-            return { timerValue: 1000 };
+            return { timerValue: 2000 };
           } else {
             return { timerValue: state.timerValue - 10 };
           }
@@ -272,7 +272,7 @@ handleButtonClick = () => {
 handleButtonRelease = () => {
   if (this.state.timer) {
     clearInterval(this.state.timer);
-    this.setState({ timerValue: 1000 });
+    this.setState({ timerValue: 2000 });
   }
 };
 
@@ -303,12 +303,14 @@ const passwordCorrect = rooms[roomInfo._id];
 
 stopBetting = () => {
   clearInterval(this.state.intervalId);
-  this.setState({ intervalId: null, betting: false, timerValue: 1000  });
+  this.setState({ intervalId: null, betting: false, timerValue: 2000  });
 };
 
 
 joinGame2 = async (predictedBetAmount) => {
-
+  if (!this.state.betting) {
+    return;
+  }
   if (this.state.bet_amount > this.state.balance) {
     alertModal(this.props.isDarkMode, `TOO BROKE!`);
     return;
@@ -602,9 +604,9 @@ joinGame = async () => {
           </div>
         ) : (
           <div>
-            {this.state.timerValue !== 1000 ? (
+            {this.state.timerValue !== 2000 ? (
               <span>
-                {(this.state.timerValue / 1000).toFixed(2)}s
+                {(this.state.timerValue / 2000).toFixed(2)}s
               </span>
             ) : (
               <span>AI Play</span>

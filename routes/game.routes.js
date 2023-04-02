@@ -1970,11 +1970,6 @@ if (newBetAmount <= roomInfo['user_bet']) {
           req.io.sockets.emit('SPLEESH_GUESSES', guesses);
         }
 
-        console.log('roomInfo[host_pr]', roomInfo['host_pr']);
-        console.log('roomInfo[pr]', roomInfo['pr']);
-        console.log('roomInfo[user_bet]', roomInfo['user_bet']);
-        console.log('roomInfo[bet_amount]', roomInfo['bet_amount']);
-
       } else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
         
         let selected_box = await RoomBoxPrize.findOne({

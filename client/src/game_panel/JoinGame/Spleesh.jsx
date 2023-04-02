@@ -44,7 +44,7 @@ class Spleesh extends Component {
     this.state = {
       betting: false,
       timer: null,
-      timerValue: 1000,
+      timerValue: 2000,
       holdTime: 0,
       clicked: true,
       intervalId: null,
@@ -331,7 +331,7 @@ class Spleesh extends Component {
             if (state.timerValue === 0) {
               clearInterval(this.state.timer);
               this.startBetting();
-              return { timerValue: 1000 };
+              return { timerValue: 2000 };
             } else {
               return { timerValue: state.timerValue - 10 };
             }
@@ -346,7 +346,7 @@ class Spleesh extends Component {
   handleButtonRelease = () => {
     if (this.state.timer) {
       clearInterval(this.state.timer);
-      this.setState({ timerValue: 1000 });
+      this.setState({ timerValue: 2000 });
     }
   };
   startBetting = () => {
@@ -361,12 +361,10 @@ class Spleesh extends Component {
         return;
       }
   
-      console.log('jamian', this.state.spleesh_guesses);
   
       const predictionResult = this.predictNext(JSON.parse(localStorage.getItem(storageKey)), this.state.spleesh_guesses);
       const nextGuess = predictionResult.prediction;
       const shouldStopBetting = predictionResult.shouldStopBetting;
-      console.log('nextGuess', nextGuess);
       this.joinGame2(nextGuess, shouldStopBetting);
     }, 3500);
   
@@ -376,7 +374,7 @@ class Spleesh extends Component {
 
 stopBetting = () => {
   clearInterval(this.state.intervalId);
-  this.setState({ intervalId: null, betting: false, timerValue: 1000 });
+  this.setState({ intervalId: null, betting: false, timerValue: 2000 });
 };
 
 joinGame2 = async (nextGuess, shouldStopBetting) => {
@@ -415,7 +413,7 @@ joinGame2 = async (nextGuess, shouldStopBetting) => {
         clicked:!this.state.clicked,
         text: ''
       });
-    }, 1000);
+    }, 2000);
   }
 
   copy() {
@@ -504,9 +502,9 @@ joinGame2 = async (nextGuess, shouldStopBetting) => {
           </div>
         ) : (
           <div>
-            {this.state.timerValue !== 1000 ? (
+            {this.state.timerValue !== 2000 ? (
               <span>
-                {(this.state.timerValue / 1000).toFixed(2)}s
+                {(this.state.timerValue / 2000).toFixed(2)}s
               </span>
             ) : (
               <span>AI Play</span>

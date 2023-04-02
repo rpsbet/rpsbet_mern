@@ -45,7 +45,7 @@ class BrainGame extends Component {
       betting: false,
       bgColorChanged: false,
       timer: null,
-      timerValue: 1000,
+      timerValue: 2000,
           clicked: true,
       is_anonymous: false,
       is_started: false,
@@ -115,7 +115,7 @@ class BrainGame extends Component {
         })
       ) {
 
-        const intervalId = setInterval(this.onCountDown, 1000);
+        const intervalId = setInterval(this.onCountDown, 2000);
         this.setState({
           is_started: true,
           intervalId,
@@ -134,7 +134,7 @@ class BrainGame extends Component {
     if (this.state.is_started && this.state.remaining_time > 0) {
       this.props.join({
         bet_amount: this.props.bet_amount,
-        brain_game_score: -1000,
+        brain_game_score: -2000,
         is_anonymous: this.state.is_anonymous
       });
     }
@@ -330,7 +330,7 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
             if (state.timerValue === 0) {
               clearInterval(state.timer);
               this.startBetting();
-              return { timerValue: 1000 };
+              return { timerValue: 2000 };
             } else {
               return { timerValue: state.timerValue - 10 };
             }
@@ -403,17 +403,19 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
   handleButtonRelease = () => {
     if (this.state.timer) {
       clearInterval(this.state.timer);
-      this.setState({ timerValue: 1000 });
+      this.setState({ timerValue: 2000 });
     }
   };
 
   stopBetting = () => {
     clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null,  betting: false, timerValue: 1000 });
+    this.setState({ intervalId: null,  betting: false, timerValue: 2000 });
   };
 
   joinGame2 = async (score, bet_amount) => {
-
+    if (!this.state.betting) {
+      return;
+    }
     const result = await this.props.join({
       bet_amount: bet_amount,
       brain_game_score: score,
@@ -554,9 +556,9 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
           </div>
         ) : (
           <div>
-            {this.state.timerValue !== 1000 ? (
+            {this.state.timerValue !== 2000 ? (
               <span>
-                {(this.state.timerValue / 1000).toFixed(2)}s
+                {(this.state.timerValue / 2000).toFixed(2)}s
               </span>
             ) : (
               <span>AI Play</span>

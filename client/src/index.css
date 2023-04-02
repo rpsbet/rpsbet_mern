@@ -126,7 +126,7 @@ button {
   opacity: 1;
   transform: scale(3);
 }
-.qs-buttons button {
+.game-page .game-contents .game-info-panel .qs-buttons button {
   position: absolute !important;
     background-color:#00fb39;
     color: #fff !important;
@@ -537,7 +537,7 @@ table#runs td {
 }
 
 #runs {
-  max-height: 19vh;
+  max-height: 55vh;
   display: flex;
   overflow-y: scroll;
   justify-content: center;
@@ -1175,9 +1175,7 @@ circle {
   text-align: center;
  }
  
-.bet-amounts {
-  text-align: center;
-}
+
 
 
 .bet-amounts .other.active {

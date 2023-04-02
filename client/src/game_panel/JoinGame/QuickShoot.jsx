@@ -43,7 +43,7 @@ class QuickShoot extends Component {
       items: [],
       betting: false,
     timer: null,
-    timerValue: 1000,
+    timerValue: 2000,
         clicked: true,
         intervalId: null,
       selected_qs_position: 0,
@@ -535,7 +535,7 @@ predictNext = (qs_list, gameType) => {
             if (state.timerValue === 0) {
               clearInterval(this.state.timer);
               this.startBetting();
-              return { timerValue: 1000 };
+              return { timerValue: 2000 };
             } else {
               return { timerValue: state.timerValue - 10 };
             }
@@ -550,7 +550,7 @@ predictNext = (qs_list, gameType) => {
   handleButtonRelease = () => {
     if (this.state.timer) {
       clearInterval(this.state.timer);
-      this.setState({ timerValue: 1000 });
+      this.setState({ timerValue: 2000 });
     }
   };
 
@@ -590,14 +590,17 @@ predictNext = (qs_list, gameType) => {
 
   stopBetting = () => {
     clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null,  betting: false, timerValue: 1000 });
+    this.setState({ intervalId: null,  betting: false, timerValue: 2000 });
   };
 
   joinGame2 = async (randomItem) => {
     const { isDarkMode, qs_game_type, qs_bet_item_id, refreshHistory} = this.props;
-    const { bet_amount, bankroll, is_anonymous, selected_qs_position, slippage } = this.state;
+    const { bet_amount, bankroll, is_anonymous, selected_qs_position, slippage, betting } = this.state;
     this.setState({ selected_qs_position: randomItem});
 
+    if (!betting) {
+      return;
+    }
 
     if (!validateBankroll(((bet_amount / (qs_game_type - 1)) + parseFloat(bet_amount) )- (bankroll *  (qs_game_type - 1)), bankroll, isDarkMode)) {
       return;
@@ -829,9 +832,9 @@ predictNext = (qs_list, gameType) => {
           </div>
         ) : (
           <div>
-            {this.state.timerValue !== 1000 ? (
+            {this.state.timerValue !== 2000 ? (
               <span>
-                {(this.state.timerValue / 1000).toFixed(2)}s
+                {(this.state.timerValue / 2000).toFixed(2)}s
               </span>
             ) : (
               <span>AI Play</span>

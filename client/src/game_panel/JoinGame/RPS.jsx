@@ -159,7 +159,7 @@ class RPS extends Component {
     this.state = {
       betting: false,
     timer: null,
-    timerValue: 1000,
+    timerValue: 2000,
       clicked: true,
       intervalId: null,
       items: [],
@@ -427,14 +427,15 @@ onBtnBetClick = async () => {
     }
   }
 
-    handleMaxButtonClick() {
-      const maxBetAmount = (this.state.balance).toFixed(2);
-      this.setState({
-        bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
-      }, () => {
+  handleMaxButtonClick() {
+    const maxBetAmount = Math.floor(this.state.balance * 100) / 100; // Round down to two decimal places
+    this.setState({
+      bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
+    }, () => {
       document.getElementById("betamount").focus();
-      });
-    }
+    });
+  }
+  
 
   
   toggleBtnHandler = () => {
@@ -474,7 +475,7 @@ onBtnBetClick = async () => {
            if (state.timerValue === 0) {
              clearInterval(this.state.timer);
              this.startBetting();
-             return { timerValue: 1000 };
+             return { timerValue: 2000 };
            } else {
              return { timerValue: state.timerValue - 10 };
            }
@@ -489,7 +490,7 @@ onBtnBetClick = async () => {
 handleButtonRelease = () => {
     if (this.state.timer) {
       clearInterval(this.state.timer);
-      this.setState({ timerValue: 1000 });
+      this.setState({ timerValue: 2000 });
     }
   };
 
@@ -518,13 +519,18 @@ handleButtonRelease = () => {
   stopBetting = () => {
 
     clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null, betting: false, timerValue: 1000 });
+    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
   };
 
   joinGame2 = async (randomItem) => {
     const { rps_bet_item_id, balance, isDarkMode, refreshHistory } = this.props;
-    const { bet_amount, bankroll, slippage, is_anonymous, selected_rps } = this.state;
+    const { bet_amount, bankroll, slippage, is_anonymous, selected_rps, betting } = this.state;
   
+ // Check if betting is true before continuing
+ if (!betting) {
+  return;
+}
+
     this.setState({ selected_rps: randomItem });
 
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
@@ -735,9 +741,9 @@ handleButtonRelease = () => {
           </div>
         ) : (
           <div>
-            {this.state.timerValue !== 1000 ? (
+            {this.state.timerValue !== 2000 ? (
               <span>
-                {(this.state.timerValue / 1000).toFixed(2)}s
+                {(this.state.timerValue / 2000).toFixed(2)}s
               </span>
             ) : (
               <span>AI Play</span>

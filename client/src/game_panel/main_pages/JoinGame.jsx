@@ -170,16 +170,24 @@ class JoinGame extends Component {
 
   join = async betInfo => {
     this.setState({ joiningRoom: true });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    this.setState({ joiningRoom: false });
+
+    
+  
     const result = await this.props.bet({
       _id: this.state.roomInfo._id,
       game_type: this.props.roomInfo.game_type,
       ...betInfo
     });
   
-    this.setState({ joiningRoom: false });
+    // // Set a delay of 500 milliseconds (i.e., 0.5 seconds) before the `joiningRoom` state is set to `false`
+  
+    // this.setState({ joiningRoom: false });
   
     return result;
   };
+  
   
 
   refreshHistory = () => {

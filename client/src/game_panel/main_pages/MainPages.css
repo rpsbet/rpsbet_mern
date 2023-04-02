@@ -516,6 +516,10 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     
 }
 
+.bet-amounts {
+    text-align: center;
+  }
+
 .create-room-btn-panel button.btn-create-room:active,
 .create-room-btn-panel button.btn-create-room.active {
     box-shadow: none !important;
@@ -976,7 +980,8 @@ overflow: hidden;
 .game-page .game-contents .game-info-panel button.active {
     color: #e5e5e5;
     background-image: linear-gradient(to top, #48ff00, #07c700);
-    box-shadow: 0 -1px 0px #52df00,0 -4px #2d7001 inset,0 2px #07c400 inset;
+    box-shadow: none !important;
+    /* box-shadow: 0 -1px 0px #52df00,0 -4px #2d7001 inset,0 2px #07c400 inset; */
 }
 .game-page .game-contents .game-info-panel button:hover {
     transition: 0.1s;
