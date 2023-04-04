@@ -99,10 +99,10 @@ class MysteryBox extends Component {
     let new_box_price = parseFloat(this.state.new_box_price);
     let new_box_prize = parseFloat(this.state.new_box_prize);
 
-    if (new_box_price < 0) {
+    if (new_box_price <= 0) {
       alertModal(
         this.props.isDarkMode,
-        `You can't make a box with negative price!`
+        `NOTHING IN LIFE IS FREE!`
       );
       return;
     }
@@ -110,7 +110,7 @@ class MysteryBox extends Component {
     if (new_box_prize < 0) {
       alertModal(
         this.props.isDarkMode,
-        `You can't make a box with negative prize!`
+        `WHAT KIND OF F*CKING PRIZE IS THAT?!`
       );
       return;
     }

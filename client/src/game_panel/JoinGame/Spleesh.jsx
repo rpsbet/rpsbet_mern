@@ -138,17 +138,22 @@ class Spleesh extends Component {
   
 
   joinGame = async () => {
+    const {is_anonymous, bet_amount} = this.state;
+    const {spleesh_bet_unit, playSound, refreshHistory, isDarkMode} = this.props;
+    
     const result = await this.props.join({
-      bet_amount: this.state.bet_amount,
-      is_anonymous: this.state.is_anonymous
+      bet_amount: bet_amount,
+      is_anonymous: is_anonymous
     });
     if (result.status === 'success') {
       let text = 'HAHAA, YOU LOST!!!';
-
+      playSound('lose');
       if (result.betResult === 1) {
         text = 'NOT BAD, WINNER!';
+        playSound('win');
       } else if (result.betResult === 0) {
         text = 'DRAW, NO WINNER!';
+        playSound('split');
       }
 
       let stored_spleesh_array = JSON.parse(localStorage.getItem("spleesh_array")) || [];
@@ -158,21 +163,21 @@ class Spleesh extends Component {
         stored_spleesh_array.shift();
       }
       
-      if (this.props.spleesh_bet_unit === 10) {
+      if (spleesh_bet_unit === 10) {
         while (stored_spleesh_10_array.length >= 30) {
           stored_spleesh_10_array.shift();
         }
-        stored_spleesh_10_array.push({ spleesh: this.state.bet_amount });
+        stored_spleesh_10_array.push({ spleesh: bet_amount });
         localStorage.setItem("spleesh_10_array", JSON.stringify(stored_spleesh_10_array));
       } else {
-        stored_spleesh_array.push({ spleesh: this.state.bet_amount });
+        stored_spleesh_array.push({ spleesh: bet_amount });
         localStorage.setItem("spleesh_array", JSON.stringify(stored_spleesh_array));
       }
       
       
       if (result.roomStatus === 'finished') {
         gameResultModal(
-          this.props.isDarkMode,
+          isDarkMode,
           text,
           result.betResult,
           'Okay',
@@ -184,7 +189,7 @@ class Spleesh extends Component {
         );
       } else {
         gameResultModal(
-          this.props.isDarkMode,
+          isDarkMode,
           text,
           result.betResult,
           'Okay',
@@ -197,10 +202,10 @@ class Spleesh extends Component {
       }
     } else {
       if (result.message) {
-        alertModal(this.props.isDarkMode, result.message);
+        alertModal(isDarkMode, result.message);
       }
     }
-    this.props.refreshHistory();
+    refreshHistory();
 
   };
 
@@ -378,25 +383,29 @@ stopBetting = () => {
 };
 
 joinGame2 = async (nextGuess, shouldStopBetting) => {
+  const {is_anonymous} = this.state;
+  const {playSound, refreshHistory} = this.props;
   if (shouldStopBetting) {
     this.stopBetting();
     return;
   }
   const result = await this.props.join({
     bet_amount: nextGuess,
-    is_anonymous: this.state.is_anonymous
+    is_anonymous: is_anonymous
   });
   if (result.status === 'success') {
     let text = 'HAHAA, YOU LOST!!!';
-
+    playSound('lose');
     if (result.betResult === 1) {
       text = 'NOT BAD, WINNER!';
+      playSound('win');
     } else if (result.betResult === 0) {
       text = 'DRAW, NO WINNER!';
+      playSound('split');
     }
   }
    
-  this.props.refreshHistory();
+  refreshHistory();
 
 };
 

@@ -157,6 +157,7 @@ class RPS extends Component {
     this.settingsRef = React.createRef();
     this.socket = this.props.socket;
     this.state = {
+     
       betting: false,
     timer: null,
     timerValue: 2000,
@@ -215,7 +216,8 @@ changeBgColor = async (result) => {
   // };
 
   componentDidMount = () => {
-    
+
+   
   // Initialize items array
   const items = [
     {
@@ -288,6 +290,7 @@ changeBgColor = async (result) => {
       isDarkMode,
       refreshHistory,
       join,
+      playSound,
     } = this.props;
   
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
@@ -302,13 +305,16 @@ changeBgColor = async (result) => {
   
     let text;
     if (result.betResult === 1) {
-      text = 'NOT BAD, WINNER!';
+      playSound('win');
+      text = 'WINNER, WINNER, VEGAN DINNER!';
       this.changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
-      text = 'DRAW, NO WINNER!';
+      text = 'SPLIT! EQUAL MATCH!';
+      playSound('split');
       this.changeBgColor(result.betResult);
     } else {
-      text = 'HAHAA, YOU LOST!!!';
+      text = 'TROLLOLOLOL! LOSER!';
+      playSound('lose');
       this.changeBgColor(result.betResult);
     }
   
@@ -523,7 +529,7 @@ handleButtonRelease = () => {
   };
 
   joinGame2 = async (randomItem) => {
-    const { rps_bet_item_id, balance, isDarkMode, refreshHistory } = this.props;
+    const { rps_bet_item_id, balance, isDarkMode, refreshHistory, playSound} = this.props;
     const { bet_amount, bankroll, slippage, is_anonymous, selected_rps, betting } = this.state;
   
  // Check if betting is true before continuing
@@ -557,16 +563,19 @@ handleButtonRelease = () => {
       let text = 'HAHAA, YOU LOST!!!';
   
       if (result.betResult === 1) {
-        // this.props.updateBetResult('win')
+        playSound('win');
+
         text = 'NOT BAD, WINNER!';
-        this.changeBgColor(result.betResult); // Add this line
+        this.changeBgColor(result.betResult);
       } else if (result.betResult === 0) {
-        // this.props.updateBetResult('draw')
+        playSound('split');
+
         text = 'DRAW, NO WINNER!';
-        this.changeBgColor(result.betResult); // Add this line
+        this.changeBgColor(result.betResult);
       } else {
         this.changeBgColor(result.betResult); // Add this line
-        //  this.props.updateBetResult('lose')
+        playSound('lose');
+
       }
   
       refreshHistory();
@@ -688,6 +697,7 @@ handleButtonRelease = () => {
     onClick={() => {
       this.setState({ selected_rps: selection });
       this.onBtnBetClick(selection);
+      this.props.playSound('select')
     }}
   />
 

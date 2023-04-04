@@ -30,7 +30,7 @@ const defaultOptions = {
   autoplay: true,
   animationData: animationData,
   rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice"
+    preserveAspectRatio: 'xMidYMid slice'
   }
 };
 const twitterLink = window.location.href;
@@ -42,10 +42,10 @@ class QuickShoot extends Component {
     this.state = {
       items: [],
       betting: false,
-    timer: null,
-    timerValue: 2000,
-        clicked: true,
-        intervalId: null,
+      timer: null,
+      timerValue: 2000,
+      clicked: true,
+      intervalId: null,
       selected_qs_position: 0,
       advanced_status: '',
       copied: false,
@@ -61,16 +61,13 @@ class QuickShoot extends Component {
     this.handlePositionSelection = this.handlePositionSelection.bind(this);
     this.onChangeState = this.onChangeState.bind(this);
     this.panelRef = React.createRef();
-
   }
 
-
   componentDidMount = () => {
-    
-    const { socket } = this.props
+    const { socket } = this.props;
     socket.on('UPDATED_BANKROLL_QS', data => {
-      this.setState({ bankroll: data.bankroll })
-    })
+      this.setState({ bankroll: data.bankroll });
+    });
 
     // document.addEventListener('mousedown', this.handleClickOutside);
   };
@@ -78,9 +75,7 @@ class QuickShoot extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-  }; 
-
-  
+  };
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -101,24 +96,23 @@ class QuickShoot extends Component {
     let previousBets = 0;
     if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
       this.props.roomInfo.game_log_list.forEach(room_history => {
-        if(room_history.bet_amount){
+        if (room_history.bet_amount) {
           previousBets += parseFloat(room_history.bet_amount);
         }
       });
     }
     return previousBets;
   }
-  
 
   handlePositionSelection(position) {
     this.setState({ selected_qs_position: position });
     this.onBtnBetClick();
   }
-  
+
   componentDidUpdate(prevProps, prevState) {
     const { roomInfo } = this.props;
     const { isPasswordCorrect } = this.state;
-  
+
     if (prevProps.roomInfo && roomInfo) {
       if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
         this.setState({
@@ -126,37 +120,44 @@ class QuickShoot extends Component {
         });
       }
     }
-  
-    if (prevState.isPasswordCorrect !== isPasswordCorrect && isPasswordCorrect === true) {
+
+    if (
+      prevState.isPasswordCorrect !== isPasswordCorrect &&
+      isPasswordCorrect === true
+    ) {
       this.joinGame();
     }
   }
-  
 
   joinGame = async () => {
-    const {qs_bet_item_id, isDarkMode, qs_game_type, refreshHistory} = this.props;
-    const {bet_amount, selected_qs_position, is_anonymous} = this.state;
+    const {
+      qs_bet_item_id,
+      isDarkMode,
+      qs_game_type,
+      refreshHistory,
+      playSound
+    } = this.props;
+    const { bet_amount, selected_qs_position, is_anonymous } = this.state;
 
     const result = await this.props.join({
       bet_amount: parseFloat(bet_amount),
 
       selected_qs_position: selected_qs_position,
       is_anonymous: is_anonymous,
-      qs_bet_item_id: qs_bet_item_id,
-
+      qs_bet_item_id: qs_bet_item_id
     });
 
     if (result.status === 'success') {
-      let text = 'HAHAA, YOU SUCK!!!';
+      let text = 'LOST, KEEPER SAVED IT!';
       this.changeBgColor(result.betResult);
-
+      playSound('lose');
       if (result.betResult === 1) {
         this.changeBgColor(result.betResult);
-
-        text = 'NICE SHOT, WINNER!!';
+        playSound('win');
+        text = 'WIN, EXCELLENT SHOT!';
       } else if (result.betResult === 0) {
         this.changeBgColor(result.betResult);
-
+        playSound('split');
         text = 'Draw, No Winner!';
       }
 
@@ -193,17 +194,16 @@ class QuickShoot extends Component {
       }
     }
 
-   
     let stored_qs_array;
 
     if (qs_game_type === 2) {
-      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_2")) || [];
+      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_2')) || [];
     } else if (qs_game_type === 3) {
-      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_3")) || [];
+      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_3')) || [];
     } else if (qs_game_type === 4) {
-      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_4")) || [];
+      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_4')) || [];
     } else if (qs_game_type === 5) {
-      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
+      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_5')) || [];
     }
 
     while (stored_qs_array.length >= 20) {
@@ -213,57 +213,67 @@ class QuickShoot extends Component {
     stored_qs_array.push({ qs: selected_qs_position, room_id: qs_bet_item_id });
 
     if (qs_game_type === 2) {
-      localStorage.setItem("qs_array_2", JSON.stringify(stored_qs_array));
+      localStorage.setItem('qs_array_2', JSON.stringify(stored_qs_array));
     } else if (qs_game_type === 3) {
-      localStorage.setItem("qs_array_3", JSON.stringify(stored_qs_array));
+      localStorage.setItem('qs_array_3', JSON.stringify(stored_qs_array));
     } else if (qs_game_type === 4) {
-      localStorage.setItem("qs_array_4", JSON.stringify(stored_qs_array));
+      localStorage.setItem('qs_array_4', JSON.stringify(stored_qs_array));
     } else if (qs_game_type === 5) {
-      localStorage.setItem("qs_array_5", JSON.stringify(stored_qs_array));
+      localStorage.setItem('qs_array_5', JSON.stringify(stored_qs_array));
     }
 
     refreshHistory();
   };
 
-  changeBgColor = async (result) => {
+  changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
     this.setState({ bgColorChanged: false });
   };
-  
+
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
-    this.setState({
-    bet_amount: roundedBetAmount
-    }, () => {
-    document.getElementById("betamount").focus();
-    });
-    }
-
-  
-    handle2xButtonClick = () => {
-      const multipliedBetAmount = this.state.bet_amount * 2;
-      const limitedBetAmount = Math.min(multipliedBetAmount, this.state.balance);
-      const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
-      if (roundedBetAmount < -2330223) {
-        alertModal(this.props.isDarkMode, "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?");
-      } else if (( (this.state.bet_amount * 2)/ (this.props.qs_game_type - 1)) > (this.state.bankroll)) {
-        alertModal(this.props.isDarkMode, "EXCEEDED BANKROLL");
-      } else {
-        this.setState({
-          bet_amount: roundedBetAmount
-        }, () => {
-        document.getElementById("betamount").focus();
-        });
+    this.setState(
+      {
+        bet_amount: roundedBetAmount
+      },
+      () => {
+        document.getElementById('betamount').focus();
       }
-    };
-        
-calcWinChance = (gametype, rounds) => {
+    );
+  }
+
+  handle2xButtonClick = () => {
+    const multipliedBetAmount = this.state.bet_amount * 2;
+    const limitedBetAmount = Math.min(multipliedBetAmount, this.state.balance);
+    const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
+    if (roundedBetAmount < -2330223) {
+      alertModal(
+        this.props.isDarkMode,
+        "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?"
+      );
+    } else if (
+      (this.state.bet_amount * 2) / (this.props.qs_game_type - 1) >
+      this.state.bankroll
+    ) {
+      alertModal(this.props.isDarkMode, 'EXCEEDED BANKROLL');
+    } else {
+      this.setState(
+        {
+          bet_amount: roundedBetAmount
+        },
+        () => {
+          document.getElementById('betamount').focus();
+        }
+      );
+    }
+  };
+
+  calcWinChance = (gametype, rounds) => {
     let positionCounts = new Array(gametype + 1).fill(0);
     for (let i = 0; i < rounds.length; i++) {
       positionCounts[rounds[i].qs]++;
-
     }
     let entropy = 0;
     for (let i = 0; i < gametype; i++) {
@@ -273,14 +283,17 @@ calcWinChance = (gametype, rounds) => {
       let probability = positionCounts[i] / rounds.length;
       entropy -= probability * Math.log2(probability);
     }
-    let winChanceMin = Math.max(0, (1 - entropy / Math.log2(gametype)) / gametype);
-    let winChanceMax = Math.min(1, (1 - entropy / Math.log2(gametype)));
+    let winChanceMin = Math.max(
+      0,
+      (1 - entropy / Math.log2(gametype)) / gametype
+    );
+    let winChanceMax = Math.min(1, 1 - entropy / Math.log2(gametype));
     winChanceMin *= 100;
     winChanceMax *= 100;
     return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
-  }
+  };
 
- predictNext = (qs_list, gameType) => {
+  predictNext = (qs_list, gameType) => {
     const options = [...Array(gameType).keys()];
     const transitionMatrix = {};
     options.forEach(option1 => {
@@ -295,198 +308,255 @@ calcWinChance = (gametype, rounds) => {
         });
       });
     });
-  
+
     for (let i = 0; i < qs_list.length - 3; i++) {
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
+        qs_list[i + 3].qs
+      ]++;
     }
-  
-    Object.keys(transitionMatrix).forEach((fromState1) => {
-      Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
-        Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
-          const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
-          Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
-            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-          });
-        });
+
+    Object.keys(transitionMatrix).forEach(fromState1 => {
+      Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
+        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
+          fromState3 => {
+            const totalTransitions = Object.values(
+              transitionMatrix[fromState1][fromState2][fromState3]
+            ).reduce((a, b) => a + b);
+            Object.keys(
+              transitionMatrix[fromState1][fromState2][fromState3]
+            ).forEach(toState => {
+              transitionMatrix[fromState1][fromState2][fromState3][
+                toState
+              ] /= totalTransitions;
+            });
+          }
+        );
       });
     });
-  
+
     const winChance = this.calcWinChance(this.props.qs_game_type, qs_list);
     let deviation = 0;
-    if (winChance !== "33.33%") {
-        deviation = (1 - (1 / gameType)) / 2;
+    if (winChance !== '33.33%') {
+      deviation = (1 - 1 / gameType) / 2;
     }
-  
+
     let currentState1 = qs_list[qs_list.length - 3].qs;
     let currentState2 = qs_list[qs_list.length - 2].qs;
     let currentState3 = qs_list[qs_list.length - 1].qs;
     let nextState = currentState3;
     let maxProb = 0;
-    Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
-      if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
-        maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
+    Object.keys(
+      transitionMatrix[currentState1][currentState2][currentState3]
+    ).forEach(state => {
+      if (
+        transitionMatrix[currentState1][currentState2][currentState3][state] >
+        maxProb
+      ) {
+        maxProb =
+          transitionMatrix[currentState1][currentState2][currentState3][state];
         nextState = state;
       }
     });
-  
+
     let randomNum = Math.random();
     if (randomNum < deviation) {
       let randomState = '';
       do {
-          randomNum = Math.random();
-          randomState = options[Math.floor(randomNum * gameType)];
+        randomNum = Math.random();
+        randomState = options[Math.floor(randomNum * gameType)];
       } while (randomState === nextState);
       nextState = randomState;
     }
-  
+
     return nextState;
   };
 
-
   handleMaxButtonClick() {
-    const maxBetAmount = (this.state.balance).toFixed(2);
-    
-    this.setState({
-      bet_amount: Math.min(maxBetAmount, this.state.bankroll * (this.props.qs_game_type - 1))
-    }, () => {
-    document.getElementById("betamount").focus();
-    });
+    const maxBetAmount = this.state.balance.toFixed(2);
+
+    this.setState(
+      {
+        bet_amount: Math.min(
+          maxBetAmount,
+          this.state.bankroll * (this.props.qs_game_type - 1)
+        )
+      },
+      () => {
+        document.getElementById('betamount').focus();
+      }
+    );
   }
-  
+
   toggleBtnHandler = () => {
     this.setState({
-      clicked:!this.state.clicked,
+      clicked: !this.state.clicked,
       text: 'LINK GRABBED'
     });
     setTimeout(() => {
       this.setState({
-        clicked:!this.state.clicked,
+        clicked: !this.state.clicked,
         text: ''
       });
     }, 1000);
-  }
+  };
 
   copy() {
-    navigator.clipboard.writeText(twitterLink)
+    navigator.clipboard.writeText(twitterLink);
   }
 
-
-updatePotentialReturn = () => {
-  this.setState({
-    potential_return: (this.state.bet_amount / (this.props.qs_game_type - 1)) + parseFloat(this.state.bet_amount)  /* 0.95 */
-  });
-};
+  updatePotentialReturn = () => {
+    this.setState({
+      potential_return:
+        this.state.bet_amount / (this.props.qs_game_type - 1) +
+        parseFloat(this.state.bet_amount) /* 0.95 */
+    });
+  };
 
   onChangeState(e) {
     this.setState({ bet_amount: e.target.value }, this.updatePotentialReturn);
-}
-
-
-calcWinChance = (gametype, rounds) => {
-  let positionCounts = new Array(gametype + 1).fill(0);
-  for (let i = 0; i < rounds.length; i++) {
-    positionCounts[rounds[i].qs]++;
-
   }
-  let entropy = 0;
-  for (let i = 0; i < gametype; i++) {
-    if (positionCounts[i] === 0) {
-      continue;
+
+  calcWinChance = (gametype, rounds) => {
+    let positionCounts = new Array(gametype + 1).fill(0);
+    for (let i = 0; i < rounds.length; i++) {
+      positionCounts[rounds[i].qs]++;
     }
-    let probability = positionCounts[i] / rounds.length;
-    entropy -= probability * Math.log2(probability);
-  }
-  let winChanceMin = Math.max(0, (1 - entropy / Math.log2(gametype)) / gametype);
-  let winChanceMax = Math.min(1, (1 - entropy / Math.log2(gametype)));
-  winChanceMin *= 100;
-  winChanceMax *= 100;
-  return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
-}
+    let entropy = 0;
+    for (let i = 0; i < gametype; i++) {
+      if (positionCounts[i] === 0) {
+        continue;
+      }
+      let probability = positionCounts[i] / rounds.length;
+      entropy -= probability * Math.log2(probability);
+    }
+    let winChanceMin = Math.max(
+      0,
+      (1 - entropy / Math.log2(gametype)) / gametype
+    );
+    let winChanceMax = Math.min(1, 1 - entropy / Math.log2(gametype));
+    winChanceMin *= 100;
+    winChanceMax *= 100;
+    return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
+  };
 
-predictNext = (qs_list, gameType) => {
-  const options = [...Array(gameType).keys()];
-  const transitionMatrix = {};
-  options.forEach(option1 => {
-    transitionMatrix[option1] = {};
-    options.forEach(option2 => {
-      transitionMatrix[option1][option2] = {};
-      options.forEach(option3 => {
-        transitionMatrix[option1][option2][option3] = {};
-        options.forEach(option4 => {
-          transitionMatrix[option1][option2][option3][option4] = 0;
+  predictNext = (qs_list, gameType) => {
+    const options = [...Array(gameType).keys()];
+    const transitionMatrix = {};
+    options.forEach(option1 => {
+      transitionMatrix[option1] = {};
+      options.forEach(option2 => {
+        transitionMatrix[option1][option2] = {};
+        options.forEach(option3 => {
+          transitionMatrix[option1][option2][option3] = {};
+          options.forEach(option4 => {
+            transitionMatrix[option1][option2][option3][option4] = 0;
+          });
         });
       });
     });
-  });
 
-  for (let i = 0; i < qs_list.length - 3; i++) {
-    transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
-  }
+    for (let i = 0; i < qs_list.length - 3; i++) {
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
+        qs_list[i + 3].qs
+      ]++;
+    }
 
-  Object.keys(transitionMatrix).forEach((fromState1) => {
-    Object.keys(transitionMatrix[fromState1]).forEach((fromState2) => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach((fromState3) => {
-        const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
-        Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach((toState) => {
-          transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-        });
+    Object.keys(transitionMatrix).forEach(fromState1 => {
+      Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
+        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
+          fromState3 => {
+            const totalTransitions = Object.values(
+              transitionMatrix[fromState1][fromState2][fromState3]
+            ).reduce((a, b) => a + b);
+            Object.keys(
+              transitionMatrix[fromState1][fromState2][fromState3]
+            ).forEach(toState => {
+              transitionMatrix[fromState1][fromState2][fromState3][
+                toState
+              ] /= totalTransitions;
+            });
+          }
+        );
       });
     });
-  });
 
-  const winChance = this.calcWinChance(this.props.qs_game_type, qs_list);
-  let deviation = 0;
-  if (winChance !== "33.33%") {
-      deviation = (1 - (1 / gameType)) / 2;
-  }
-
-  let currentState1 = qs_list[qs_list.length - 3].qs;
-  let currentState2 = qs_list[qs_list.length - 2].qs;
-  let currentState3 = qs_list[qs_list.length - 1].qs;
-  let nextState = currentState3;
-  let maxProb = 0;
-  Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
-    if (transitionMatrix[currentState1][currentState2][currentState3][state] > maxProb) {
-      maxProb = transitionMatrix[currentState1][currentState2][currentState3][state];
-      nextState = state;
+    const winChance = this.calcWinChance(this.props.qs_game_type, qs_list);
+    let deviation = 0;
+    if (winChance !== '33.33%') {
+      deviation = (1 - 1 / gameType) / 2;
     }
-  });
 
-  let randomNum = Math.random();
-  if (randomNum < deviation) {
-    let randomState = '';
-    do {
+    let currentState1 = qs_list[qs_list.length - 3].qs;
+    let currentState2 = qs_list[qs_list.length - 2].qs;
+    let currentState3 = qs_list[qs_list.length - 1].qs;
+    let nextState = currentState3;
+    let maxProb = 0;
+    Object.keys(
+      transitionMatrix[currentState1][currentState2][currentState3]
+    ).forEach(state => {
+      if (
+        transitionMatrix[currentState1][currentState2][currentState3][state] >
+        maxProb
+      ) {
+        maxProb =
+          transitionMatrix[currentState1][currentState2][currentState3][state];
+        nextState = state;
+      }
+    });
+
+    let randomNum = Math.random();
+    if (randomNum < deviation) {
+      let randomState = '';
+      do {
         randomNum = Math.random();
         randomState = options[Math.floor(randomNum * gameType)];
-    } while (randomState === nextState);
-    nextState = randomState;
-  }
+      } while (randomState === nextState);
+      nextState = randomState;
+    }
 
-  return nextState;
-};
+    return nextState;
+  };
 
   onBtnBetClick = () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id, balance, qs_game_type, is_private, roomInfo, openGamePasswordModal } = this.props;
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      balance,
+      qs_game_type,
+      is_private,
+      roomInfo,
+      openGamePasswordModal
+    } = this.props;
     const { bet_amount, bankroll } = this.state;
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-    
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-    
+
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-    
-    if (!validateBankroll(((bet_amount / (qs_game_type - 1)) + parseFloat(bet_amount) )- (bankroll *  (qs_game_type - 1)), bankroll, isDarkMode)) {
+
+    if (
+      !validateBankroll(
+        bet_amount / (qs_game_type - 1) +
+          parseFloat(bet_amount) -
+          bankroll * (qs_game_type - 1),
+        bankroll,
+        isDarkMode
+      )
+    ) {
       return;
     }
-  
-    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+
+    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-        if (localStorage.getItem('hideConfirmModal') === 'true') {
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
       if (is_private === true && passwordCorrect !== true) {
         openGamePasswordModal();
       } else {
@@ -509,13 +579,20 @@ predictNext = (qs_list, gameType) => {
     }
   };
   handleButtonClick = () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id, balance, qs_game_type } = this.props;
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      balance,
+      qs_game_type
+    } = this.props;
     const { bet_amount, bankroll, betting } = this.state;
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
@@ -524,7 +601,15 @@ predictNext = (qs_list, gameType) => {
       return;
     }
 
-    if (!validateBankroll(((bet_amount / (qs_game_type - 1)) + parseFloat(bet_amount) )- (bankroll *  (qs_game_type - 1)), bankroll, isDarkMode)) {
+    if (
+      !validateBankroll(
+        bet_amount / (qs_game_type - 1) +
+          parseFloat(bet_amount) -
+          bankroll * (qs_game_type - 1),
+        bankroll,
+        isDarkMode
+      )
+    ) {
       return;
     }
 
@@ -556,53 +641,79 @@ predictNext = (qs_list, gameType) => {
 
   startBetting = () => {
     let stored_qs_array;
-    const { isDarkMode, qs_game_type, roomInfo, is_private, openGamePasswordModal } = this.props;
-    
+    const {
+      isDarkMode,
+      qs_game_type,
+      roomInfo,
+      is_private,
+      openGamePasswordModal
+    } = this.props;
+
     if (qs_game_type === 2) {
-      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_2")) || [];
+      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_2')) || [];
     } else if (qs_game_type === 3) {
-      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_3")) || [];
+      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_3')) || [];
     } else if (qs_game_type === 4) {
-      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_4")) || [];
+      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_4')) || [];
     } else if (qs_game_type === 5) {
-      stored_qs_array = JSON.parse(localStorage.getItem("qs_array_5")) || [];
+      stored_qs_array = JSON.parse(localStorage.getItem('qs_array_5')) || [];
     }
-    
+
     if (!validateLocalStorageLength(`qs_array_${qs_game_type}`, isDarkMode)) {
       return;
     }
 
     const intervalId = setInterval(() => {
       const randomItem = this.predictNext(stored_qs_array, qs_game_type);
-      const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       const passwordCorrect = rooms[roomInfo._id];
-      
-        if (is_private === true && passwordCorrect !== true) {
-          openGamePasswordModal();
-        } else {
-          this.joinGame2(randomItem);
-        }
+
+      if (is_private === true && passwordCorrect !== true) {
+        openGamePasswordModal();
+      } else {
+        this.joinGame2(randomItem);
+      }
     }, 3500);
-    
-    this.setState({ intervalId, betting: true});
+
+    this.setState({ intervalId, betting: true });
   };
-    
 
   stopBetting = () => {
     clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null,  betting: false, timerValue: 2000 });
+    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
   };
 
-  joinGame2 = async (randomItem) => {
-    const { isDarkMode, qs_game_type, qs_bet_item_id, refreshHistory} = this.props;
-    const { bet_amount, bankroll, is_anonymous, selected_qs_position, slippage, betting } = this.state;
-    this.setState({ selected_qs_position: randomItem});
+  joinGame2 = async randomItem => {
+    const {
+      isDarkMode,
+      qs_game_type,
+      qs_bet_item_id,
+      refreshHistory,
+      playSound
+    } = this.props;
+    const {
+      bet_amount,
+      bankroll,
+      is_anonymous,
+      selected_qs_position,
+      slippage,
+      betting
+    } = this.state;
+    this.setState({ selected_qs_position: randomItem });
 
     if (!betting) {
       return;
     }
 
-    if (!validateBankroll(((bet_amount / (qs_game_type - 1)) + parseFloat(bet_amount) )- (bankroll *  (qs_game_type - 1)), bankroll, isDarkMode)) {
+    if (
+      !validateBankroll(
+        bet_amount / (qs_game_type - 1) +
+          parseFloat(bet_amount) -
+          bankroll * (qs_game_type - 1),
+        bankroll,
+        isDarkMode
+      )
+    ) {
       return;
     }
 
@@ -614,64 +725,70 @@ predictNext = (qs_list, gameType) => {
       slippage: slippage
     });
 
- 
-
     const currentUser = this.props.user;
     const currentRoom = this.props.room;
     if (result.status === 'success') {
       this.setState(prevState => ({
-        betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
-    }));
-      let text = 'HAHAA, YOU LOST!!!';
+        betResults: [
+          ...prevState.betResults,
+          { ...result, user: currentUser, room: currentRoom }
+        ]
+      }));
+      let text = 'LOST, KEEPER SAVED IT!';
 
       if (result.betResult === 1) {
         this.changeBgColor(result.betResult);
-
-        // this.props.updateBetResult('win')
-        text = 'NOT BAD, WINNER!';
+playSound('win');
+        text = 'WIN, EXCELLENT SHOT!';
       } else if (result.betResult === 0) {
         this.changeBgColor(result.betResult);
-
-        // this.props.updateBetResult('draw')
+        playSound('split');
         text = 'DRAW, NO WINNER!';
-      }else{
+      } else {
         this.changeBgColor(result.betResult);
-
-        //  this.props.updateBetResult('lose')
+        playSound('lose');
       }
-   
-    refreshHistory();
-  };
 
-  }
+      refreshHistory();
+    }
+  };
 
   renderButton(id, position) {
     const { selected_qs_position, bgColorChanged, betResult } = this.state;
-  
-    const classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position ? ' lose-bg' : ''}${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${betResult === 1 && selected_qs_position === position ? ' win-bg' : ''}`;
-  
+
+    const classes = `${selected_qs_position === position ? 'active' : ''}${
+      bgColorChanged && betResult === -1 && selected_qs_position === position
+        ? ' lose-bg'
+        : ''
+    }${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${
+      betResult === 1 && selected_qs_position === position ? ' win-bg' : ''
+    }`;
+
     return (
       <IconButton
         id={id}
-        onClick={() => this.handlePositionSelection(position)}
+        onClick={() => {
+          this.handlePositionSelection(position);
+          this.props.playSound('select');
+        }}
         className={classes}
       />
     );
   }
-  
+
   renderButtons() {
     const { qs_game_type } = this.props;
-  
+
     if (qs_game_type === 2) {
       return (
-        <div className='qs-buttons'>
+        <div className="qs-buttons">
           {this.renderButton('l', 0)}
           {this.renderButton('r', 1)}
         </div>
       );
     } else if (qs_game_type === 3) {
       return (
-        <div className='qs-buttons'>
+        <div className="qs-buttons">
           {this.renderButton('l', 0)}
           {this.renderButton('cc', 1)}
           {this.renderButton('r', 2)}
@@ -679,7 +796,7 @@ predictNext = (qs_list, gameType) => {
       );
     } else if (qs_game_type === 4) {
       return (
-        <div className='qs-buttons'>
+        <div className="qs-buttons">
           {this.renderButton('tl', 0)}
           {this.renderButton('tr', 1)}
           {this.renderButton('bl', 2)}
@@ -688,7 +805,7 @@ predictNext = (qs_list, gameType) => {
       );
     } else if (qs_game_type === 5) {
       return (
-        <div className='qs-buttons'>
+        <div className="qs-buttons">
           {this.renderButton('tl', 1)}
           {this.renderButton('tr', 2)}
           {this.renderButton('bl', 3)}
@@ -698,17 +815,15 @@ predictNext = (qs_list, gameType) => {
       );
     }
   }
-  
-  
 
   render() {
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
-   if (this.state.clicked) {
-   styles.push('clicked');
-   text = 'COPIED!';
-   }
+    if (this.state.clicked) {
+      styles.push('clicked');
+      text = 'COPIED!';
+    }
     let position_name = [
       'Center',
       'Top-Left',
@@ -735,42 +850,49 @@ predictNext = (qs_list, gameType) => {
           <h2>PLAY - Quick Shoot</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel">
-        <div className="pre-summary-panel__inner">
-          {[...Array(2)].map((_, i) => (
-            <React.Fragment key={i}>
-              <div className="data-item">
-                <div>
-                  <div className="label host-display-name">Host</div>
-                </div>
-                <div className="value">{this.props.creator}</div>
-              </div>
-              <div className="data-item">
-                <div>
-                  <div className="label your-bet-amount">Bankroll</div>
-                </div>
-                <div className="value">{convertToCurrency(this.state.bankroll)}</div>
-              </div>
-              <div className="data-item">
-                <div>
-                  <div className="label your-bet-amount">Bet Amount</div>
-                </div>
-                <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
-              </div>
-              <div className="data-item">
-                <div>
-                  <div className="label your-max-return">Potential Return</div>
-                </div>
-                <div className="value">
-                  {convertToCurrency(
-                  (this.state.bet_amount / (this.props.qs_game_type - 1)) + parseFloat(this.state.bet_amount)  /* 0.95 */
-                  )}
-                </div>
-              </div>
-            </React.Fragment>
-          ))}
-    </div>
-</div>
+          <div className="pre-summary-panel">
+            <div className="pre-summary-panel__inner">
+              {[...Array(2)].map((_, i) => (
+                <React.Fragment key={i}>
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-bet-amount">Bankroll</div>
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(this.state.bankroll)}
+                    </div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-bet-amount">Bet Amount</div>
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(this.state.bet_amount)}
+                    </div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-max-return">
+                        Potential Return
+                      </div>
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(
+                        this.state.bet_amount / (this.props.qs_game_type - 1) +
+                          parseFloat(this.state.bet_amount) /* 0.95 */
+                      )}
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
             <div className="qs-image-panel">
@@ -781,87 +903,113 @@ predictNext = (qs_list, gameType) => {
                   position_short_name[this.state.selected_qs_position]
                 }.png`}
                 alt=""
-                style={{ width: '600px', maxWidth: '100%', borderRadius: '20px' }}
+                style={{
+                  width: '600px',
+                  maxWidth: '100%',
+                  borderRadius: '20px'
+                }}
               />
-                      {this.renderButtons()}
-
+              {this.renderButtons()}
             </div>
-            
+
             <div className="your-bet-amount">
-         
-          <TextField
-            type="text"
-            name="betamount"
-            variant="outlined"
+              <TextField
+                type="text"
+                name="betamount"
+                variant="outlined"
                 id="betamount"
                 label="BET AMOUNT"
-            value={this.state.bet_amount}
-            onChange={this.onChangeState}
-            placeholder="BET AMOUNT"
-            inputProps={{
-              pattern: "[0-9]*",
-              maxLength: 9,
-            }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            InputProps={{
-              endAdornment: "BUSD",
-            }}
-          />
-          <div className='max'>
-            <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
-            <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
-            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
-          </div>
-        </div>
+                value={this.state.bet_amount}
+                onChange={this.onChangeState}
+                placeholder="BET AMOUNT"
+                inputProps={{
+                  pattern: '[0-9]*',
+                  maxLength: 9
+                }}
+                InputLabelProps={{
+                  shrink: true
+                }}
+                InputProps={{
+                  endAdornment: 'BUSD'
+                }}
+              />
+              <div className="max">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => this.handlehalfxButtonClick()}
+                >
+                  0.5x
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => this.handle2xButtonClick()}
+                >
+                  2x
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => this.handleMaxButtonClick()}
+                >
+                  Max
+                </Button>
+              </div>
+            </div>
             <Button
-            id="aiplay"
-        onMouseDown={this.handleButtonClick}
-        onMouseUp={this.handleButtonRelease}
-        onTouchStart={this.handleButtonClick}
-        onTouchEnd={this.handleButtonRelease}
-        >
-        {this.state.betting ? (
-          <div id="stop">
-            <span>Stop</span>
-           <Lottie 
-        options={defaultOptions}
-          width={22}
-        />
+              id="aiplay"
+              onMouseDown={this.handleButtonClick}
+              onMouseUp={this.handleButtonRelease}
+              onTouchStart={this.handleButtonClick}
+              onTouchEnd={this.handleButtonRelease}
+            >
+              {this.state.betting ? (
+                <div id="stop">
+                  <span>Stop</span>
+                  <Lottie options={defaultOptions} width={22} />
+                </div>
+              ) : (
+                <div>
+                  {this.state.timerValue !== 2000 ? (
+                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
+                  ) : (
+                    <span>AI Play</span>
+                  )}
+                </div>
+              )}
+            </Button>
           </div>
-        ) : (
-          <div>
-            {this.state.timerValue !== 2000 ? (
-              <span>
-                {(this.state.timerValue / 2000).toFixed(2)}s
-              </span>
-            ) : (
-              <span>AI Play</span>
-            )}
-          </div>
-        )}
-        </Button>
-          </div>
-      
-          <div className="action-panel">
-          <div className="share-options">
-          <TwitterShareButton
-    url={twitterLink}
-    title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-    className="Demo__some-network__share-button"
-  >
-    <TwitterIcon size={32} round />
-  </TwitterShareButton>
-  {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-  <a className={styles.join('')} onClick={() => {
-                                    this.toggleBtnHandler();
-                                    this.copy();
-                                }}>{this.state.clicked ? <input type="text" value={twitterLink} readOnly onClick={this.toggleBtnHandler}/> : null }
-  <FaClipboard />&nbsp;{this.state.text}</a>
 
-        </div>
-           
+          <div className="action-panel">
+            <div className="share-options">
+              <TwitterShareButton
+                url={twitterLink}
+                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
+                className="Demo__some-network__share-button"
+              >
+                <TwitterIcon size={32} round />
+              </TwitterShareButton>
+              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
+              <a
+                className={styles.join('')}
+                onClick={() => {
+                  this.toggleBtnHandler();
+                  this.copy();
+                }}
+              >
+                {this.state.clicked ? (
+                  <input
+                    type="text"
+                    value={twitterLink}
+                    readOnly
+                    onClick={this.toggleBtnHandler}
+                  />
+                ) : null}
+                <FaClipboard />
+                &nbsp;{this.state.text}
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -881,7 +1029,6 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  openGamePasswordModal,
-  // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
+  openGamePasswordModal
 };
 export default connect(mapStateToProps, mapDispatchToProps)(QuickShoot);

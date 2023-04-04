@@ -31,6 +31,9 @@ import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
 import Footer from './Footer';
+import {
+  toggleMute
+} from '../../redux/Auth/user.actions';
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -81,7 +84,15 @@ class JoinGame extends Component {
       joiningRoom: false,
       roomInfo: this.props.roomInfo,
       bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
-      history: this.props.history
+      history: this.props.history,
+      sounds: {
+        win: new Audio('/sounds/win-sound.mp3'),
+        split: new Audio('/sounds/split-sound.mp3'),
+        lose: new Audio('/sounds/lose-sound.mp3'),
+        start: new Audio('/sounds/start.mp3'),
+        stop: new Audio('/sounds/stop.mp3'),
+        select: new Audio('/sounds/select.mp3'),
+      },
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);
     this.toggleDrawer = this.toggleDrawer.bind(this);
@@ -112,6 +123,9 @@ class JoinGame extends Component {
   }
 
   componentDidMount() {
+    Object.values(this.state.sounds).forEach(sound => {
+      sound.load();
+    });
     this.props.getHistory();
     this.props.getGameTypeList();
     if (this.props.isAuthenticated) {
@@ -188,6 +202,13 @@ class JoinGame extends Component {
     return result;
   };
   
+  playSound = sound => {
+    if (!this.props.isMuted) {
+      const audio = this.state.sounds[sound];
+      audio.currentTime = 0;
+      audio.play();
+    }
+  };
   
 
   refreshHistory = () => {
@@ -278,6 +299,7 @@ class JoinGame extends Component {
         {(this.props.roomInfo.game_type === 'RPS' && (
           <RPS
           refreshHistory={this.refreshHistory}
+          playSound = {this.playSound}
             join={this.join}
             roomInfo={this.props.roomInfo}
             user_id={this.props.user_id}
@@ -297,6 +319,7 @@ class JoinGame extends Component {
             user_id={this.props.user_id}
             creator_id={this.props.roomInfo.creator_id}
             roomInfo={this.props.roomInfo}
+            playSound = {this.playSound}
 
             is_private={this.props.roomInfo.is_private}
           />
@@ -312,6 +335,7 @@ class JoinGame extends Component {
               creator_id={this.props.roomInfo.creator_id}
               is_private={this.props.roomInfo.is_private}
               roomInfo={this.props.roomInfo}
+              playSound = {this.playSound}
 
               betResult={this.state.betResult}
             />
@@ -332,6 +356,7 @@ class JoinGame extends Component {
             }
             is_private={this.props.roomInfo.is_private}
             roomInfo={this.props.roomInfo}
+            playSound = {this.playSound}
 
           />
         )}
@@ -347,6 +372,7 @@ class JoinGame extends Component {
             qs_bet_item_id={this.props.roomInfo.qs_bet_item_id}
             is_private={this.props.roomInfo.is_private}
             roomInfo={this.props.roomInfo}
+            playSound = {this.playSound}
 
           />
         )}
@@ -361,6 +387,7 @@ class JoinGame extends Component {
             drop_bet_item_id={this.props.roomInfo.drop_bet_item_id}
             is_private={this.props.roomInfo.is_private}
             roomInfo={this.props.roomInfo}
+            playSound = {this.playSound}
 
           />
         )}
@@ -589,13 +616,14 @@ const mapStateToProps = state => ({
   history: state.logic.history,
   roomInfo: state.logic.curRoomInfo,
   user_id: state.auth.user._id,
-  selectedMainTabIndex: state.logic.selectedMainTabIndex
-  
+  isMuted: state.auth.isMuted,
+  selectedMainTabIndex: state.logic.selectedMainTabIndex,
 });
 
 const mapDispatchToProps = {
   getRoomInfo,
   bet,
+  toggleMute,
   setCurRoomInfo,
   loadRoomInfo,
   getMyChat,

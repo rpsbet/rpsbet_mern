@@ -100,7 +100,8 @@ class MysteryBox extends Component {
 
   onBoxClicked = e => {
     e.preventDefault();
-    
+    this.props.playSound('select');
+
     if (e.currentTarget.getAttribute('status') === 'opened') {
       return;
     }
@@ -308,22 +309,24 @@ stopBetting = () => {
 
 
 joinGame2 = async (predictedBetAmount) => {
-  if (!this.state.betting) {
+  const {bet_amount, balance, betting, box_list, selected_id, is_anonymous} = this.state;
+  const {playSound, isDarkMode} = this.props;
+  if (!betting) {
     return;
   }
-  if (this.state.bet_amount > this.state.balance) {
-    alertModal(this.props.isDarkMode, `TOO BROKE!`);
+  if (bet_amount > balance) {
+    alertModal(isDarkMode, `TOO BROKE!`);
     return;
   }
 
-  const availableBoxes = this.state.box_list.filter(
+  const availableBoxes = box_list.filter(
     box =>
       box.status === "init" &&
       (box.box_price <= predictedBetAmount + 8)
   );
   if (availableBoxes.length === 0) {
     alertModal(
-      this.props.isDarkMode,
+      isDarkMode,
       `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
     );
     return;
@@ -332,9 +335,9 @@ joinGame2 = async (predictedBetAmount) => {
   const randomIndex = Math.floor(Math.random() * availableBoxes.length);
   const selectedBox = availableBoxes[randomIndex];
   const result = await this.props.join({
-    bet_amount: parseFloat(this.state.bet_amount),
+    bet_amount: parseFloat(bet_amount),
     selected_id: selectedBox._id,
-    is_anonymous: this.state.is_anonymous,
+    is_anonymous: is_anonymous,
     // slippage: this.state.slippage
   });
   this.setState({ selected_id: selectedBox._id });
@@ -345,31 +348,28 @@ if (result.status === 'success') {
   let betResult = '';
   if (result.betResult === 1) {
     betResult = 'win';
+    playSound('win');
     this.changeBgColor(result.betResult);
 
   } else if (result.betResult === 0) {
     betResult = 'draw';
+    playSound('split');
     this.changeBgColor(result.betResult);
 
   } else {
     betResult = 'lose';
+    playSound('lose');
     this.changeBgColor(result.betResult);
 
   }
 
-    // this.props.updateBetResult(betResult);
     this.setState({
-      box_list: this.state.box_list.map(el =>
-        el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+      box_list: box_list.map(el =>
+        el._id === selected_id ? { ...el, status: 'opened' } : el
       ),
       isOpen: false
     });
-  
-    // setTimeout(() => {
-    //   this.setState({ isOpen: false });
-    // }, 1500);
 
-  // this.props.updateBetResult(betResult);
   this.setState(prevState => ({
     betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
   }));
@@ -426,18 +426,21 @@ const passwordCorrect = rooms[roomInfo._id];
 
 joinGame = async () => {
   
+  const {bet_amount, betting, box_list, selected_id, is_anonymous} = this.state;
+  const {playSound,  refreshHistory} = this.props;
+
   let stored_bet_array = JSON.parse(localStorage.getItem('bet_array')) || [];
   while (stored_bet_array.length >= 20) {
     stored_bet_array.shift();
   }
-  stored_bet_array.push({ bet: this.state.bet_amount });
+  stored_bet_array.push({ bet: bet_amount });
   localStorage.setItem('bet_array', JSON.stringify(stored_bet_array));
   
   
   const result = await this.props.join({
-    bet_amount: parseFloat(this.state.bet_amount),
-    selected_id: this.state.selected_id,
-    is_anonymous: this.state.is_anonymous,
+    bet_amount: parseFloat(bet_amount),
+    selected_id: selected_id,
+    is_anonymous: is_anonymous,
     // slippage: this.state.slippage
   });
   
@@ -447,22 +450,25 @@ joinGame = async () => {
     let betResult = '';
     if (result.betResult === 1) {
       betResult = 'win';
+      playSound('win');
       this.changeBgColor(result.betResult);
 
     } else if (result.betResult === 0) {
       betResult = 'draw';
+      playSound('split');
       this.changeBgColor(result.betResult);
 
     } else {
       betResult = 'lose';
+      playSound('lose');
       this.changeBgColor(result.betResult);
 
     }
     
     // this.props.updateBetResult(betResult);
     this.setState({
-      box_list: this.state.box_list.map(el =>
-        el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+      box_list: box_list.map(el =>
+        el._id === selected_id ? { ...el, status: 'opened' } : el
       ),
       isOpen: true
     });
@@ -473,7 +479,7 @@ joinGame = async () => {
     this.setState(prevState => ({
       betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
     }), () => {
-      this.props.refreshHistory();
+      refreshHistory();
     });
   }
 };

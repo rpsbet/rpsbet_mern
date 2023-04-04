@@ -66,6 +66,7 @@ const showResultModal = (isDarkMode, text, icon, cancelButtonTitle, callback, ca
         }
     }, 100); // countdown interval
     confirmAlert({
+        overlayClassName: "overlay-result",
         closeOnEscape: false,
         closeOnClickOutside: false,
         customUI: ({ onClose }) => {

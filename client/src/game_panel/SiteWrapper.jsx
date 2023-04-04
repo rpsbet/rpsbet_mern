@@ -8,13 +8,16 @@ import BattleHover from './icons/BattleHover';
 import Manage from './icons/Manage.js';
 import ManageHover from './icons/ManageHover';
 import HowTo from './icons/HowTo.js';
+import CountUp from 'react-countup';
+
 import HowToHover from './icons/HowToHover';
 import {
   setSocket,
   userSignOut,
   getUser,
   setUnreadMessageCount,
-  setDarkMode
+  setDarkMode,
+  toggleMute
 } from '../redux/Auth/user.actions';
 import {
   setRoomList,
@@ -66,7 +69,6 @@ import WithdrawModal from './modal/WithdrawModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
 
 import Moment from 'moment';
-import DarkModeToggle from 'react-dark-mode-toggle';
 import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css';
 import Avatar from '../components/Avatar';
@@ -76,8 +78,6 @@ import { tokenAddr } from '../config/index.js';
 import { convertToCurrency } from '../util/conversion';
 
 LoadingOverlay.propTypes = undefined;
-
-
 
 const mainTheme = createTheme({
   palette: {
@@ -120,6 +120,7 @@ class SiteWrapper extends Component {
           : `http://${window.location.hostname}:5001`,
       userName: this.props.userName,
       balance: this.props.balance,
+      oldBalance: this.props.balance,
       hoverTabIndex: -1,
       isMuted: false,
       betResult: this.props.betResult,
@@ -138,14 +139,12 @@ class SiteWrapper extends Component {
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
       anchorEl: null,
-      
+
       web3: null,
       web3account: '',
-      web3balance: 0,
-    }
-    
+      web3balance: 0
+    };
   }
-  
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -172,21 +171,19 @@ class SiteWrapper extends Component {
       history.push('/');
     }
     this.props.selectMainTab(newValue);
-    
   };
 
-  handleMouseEnter = (index) => {
+  handleMouseEnter = index => {
     this.setState({ hoverTabIndex: index });
-  }
-  
+  };
+
   handleMouseLeave = () => {
     this.setState({ hoverTabIndex: -1 });
-  }
-  
+  };
   
   handleMute = () => {
-    this.setState({ isMuted: true });
-  
+   
+
     this.audioWin.pause();
     this.audioWin.muted = true;
     this.audioSplit.pause();
@@ -203,15 +200,13 @@ class SiteWrapper extends Component {
     this.oohBaby.muted = true;
     this.cashRegister.pause();
     this.cashRegister.muted = true;
-  
+
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
   };
   
   handleUnmute = () => {
-    this.setState({ isMuted: false });
-  
     this.audioWin.muted = false;
     this.audioSplit.muted = false;
     this.audioLose.muted = false;
@@ -221,7 +216,6 @@ class SiteWrapper extends Component {
     this.oohBaby.muted = false;
     this.cashRegister.muted = false;
   };
-  
 
   speak(message) {
     if (!this.state.isMuted) {
@@ -233,7 +227,6 @@ class SiteWrapper extends Component {
       }
     }
   }
-  
 
   handleClickMenu = e => {
     this.setState({ anchorEl: e.currentTarget });
@@ -265,9 +258,86 @@ class SiteWrapper extends Component {
 
     socket.on('PLAY_SOUND', data => {
       let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
-    
+
+      const message = data.message.toLowerCase();
+      if (message.includes('lost')) {
+        let value;
+        if (message.match(/\d+\.\d{2}/)) {
+          value = message.match(/\d+\.\d{2}/)[0];
+        } else if (message.match(/\d+/)) {
+          value = message.match(/\d+/)[0];
+        }
+        if (value) {
+          const formattedValue = parseFloat(value).toFixed(2);
+          const spokenValue = formattedValue.endsWith('.00')
+            ? parseFloat(formattedValue).toString()
+            : formattedValue;
+          this.speak(`Lost, ${spokenValue}`);
+        }
+        if (value >= 0 && value <= 2) {
+          this.audioSplit.play();
+        } else if (value > 25 && value <= 100) {
+          this.audioLose.play();
+        } else if (value > 100) {
+          this.fatality.play();
+        }
+        winCounter = 0;
+      } else if (message.includes('split')) {
+        let value;
+        if (message.match(/\d+\.\d{2}/)) {
+          value = message.match(/\d+\.\d{2}/)[0];
+        } else if (message.match(/\d+/)) {
+          value = message.match(/\d+/)[0];
+        }
+        if (value) {
+          const formattedValue = parseFloat(value).toFixed(2);
+          const spokenValue = formattedValue.endsWith('.00')
+            ? parseFloat(formattedValue).toString()
+            : formattedValue;
+          this.speak(`Split, ${spokenValue}`);
+        }
+        winCounter = 0;
+      } else if (message.includes('won')) {
+        winCounter++;
+        if (winCounter === 3) {
+          this.oohBaby.play();
+          winCounter = 0;
+        }
+        let value;
+        if (message.match(/\d+\.\d{2}/)) {
+          value = message.match(/\d+\.\d{2}/)[0];
+        } else if (message.match(/\d+/)) {
+          value = message.match(/\d+/)[0];
+        }
+        if (value) {
+          const formattedValue = parseFloat(value).toFixed(2);
+          const spokenValue = formattedValue.endsWith('.00')
+            ? parseFloat(formattedValue).toString()
+            : formattedValue;
+          this.speak(`Won, ${spokenValue}`);
+        }
+        if (value >= 0 && value <= 2) {
+          this.audioSplit.play();
+        } else if (value >= 15 && value <= 50) {
+          this.cashRegister.play();
+        } else if (value > 50 && value <= 250) {
+          this.audioWin.play();
+        } else if (value > 250 && value <= 1000) {
+          this.topG.play();
+        } else if (value > 1000) {
+          this.nyan.play();
+        }
+      }
+
+      localStorage.setItem('winCounter', winCounter);
+    });
+
+    socket.on('SEND_CHAT', data => {
+      try {
+        let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
+
         const message = data.message.toLowerCase();
-        if (message.includes('lost')) {
+        if (message.includes('won')) {
           let value;
           if (message.match(/\d+\.\d{2}/)) {
             value = message.match(/\d+\.\d{2}/)[0];
@@ -276,7 +346,9 @@ class SiteWrapper extends Component {
           }
           if (value) {
             const formattedValue = parseFloat(value).toFixed(2);
-            const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
+            const spokenValue = formattedValue.endsWith('.00')
+              ? parseFloat(formattedValue).toString()
+              : formattedValue;
             this.speak(`Lost, ${spokenValue}`);
           }
           if (value >= 0 && value <= 2) {
@@ -296,11 +368,13 @@ class SiteWrapper extends Component {
           }
           if (value) {
             const formattedValue = parseFloat(value).toFixed(2);
-            const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
+            const spokenValue = formattedValue.endsWith('.00')
+              ? parseFloat(formattedValue).toString()
+              : formattedValue;
             this.speak(`Split, ${spokenValue}`);
           }
           winCounter = 0;
-        } else if (message.includes('won')) {
+        } else if (message.includes('lost')) {
           winCounter++;
           if (winCounter === 3) {
             this.oohBaby.play();
@@ -314,100 +388,28 @@ class SiteWrapper extends Component {
           }
           if (value) {
             const formattedValue = parseFloat(value).toFixed(2);
-            const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
+            const spokenValue = formattedValue.endsWith('.00')
+              ? parseFloat(formattedValue).toString()
+              : formattedValue;
             this.speak(`Won, ${spokenValue}`);
           }
           if (value >= 0 && value <= 2) {
             this.audioSplit.play();
-          } else if (value >= 15  && value <= 50) {
+          } else if (value >= 15 && value <= 50) {
             this.cashRegister.play();
-          } else if (value > 50  && value <= 250) {
+          } else if (value > 50 && value <= 250) {
             this.audioWin.play();
-          } else if (value > 250  && value <= 1000) {
+          } else if (value > 250 && value <= 1000) {
             this.topG.play();
-          } else if (value > 1000 ) {
+          } else if (value > 1000) {
             this.nyan.play();
           }
         }
 
-        localStorage.setItem('winCounter', winCounter); 
-        
+        localStorage.setItem('winCounter', winCounter);
 
-    });
-    
-
-    socket.on('SEND_CHAT', data => {
-      try {
-        let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
-    
-        const message = data.message.toLowerCase();
-if (message.includes('won')) {
-  let value;
-  if (message.match(/\d+\.\d{2}/)) {
-    value = message.match(/\d+\.\d{2}/)[0];
-  } else if (message.match(/\d+/)) {
-    value = message.match(/\d+/)[0];
-  }
-  if (value) {
-    const formattedValue = parseFloat(value).toFixed(2);
-    const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
-    this.speak(`Lost, ${spokenValue}`);
-  }
-  if (value >= 0 && value <= 2) {
-    this.audioSplit.play();
-  } else if (value > 25 && value <= 100) {
-    this.audioLose.play();
-  } else if (value > 100) {
-    this.fatality.play();
-  }
-  winCounter = 0;
-} else if (message.includes('split')) {
-  let value;
-  if (message.match(/\d+\.\d{2}/)) {
-    value = message.match(/\d+\.\d{2}/)[0];
-  } else if (message.match(/\d+/)) {
-    value = message.match(/\d+/)[0];
-  }
-  if (value) {
-    const formattedValue = parseFloat(value).toFixed(2);
-    const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
-    this.speak(`Split, ${spokenValue}`);
-  }
-  winCounter = 0;
-} else if (message.includes('lost')) {
-  winCounter++;
-  if (winCounter === 3) {
-    this.oohBaby.play();
-    winCounter = 0;
-  }
-  let value;
-  if (message.match(/\d+\.\d{2}/)) {
-    value = message.match(/\d+\.\d{2}/)[0];
-  } else if (message.match(/\d+/)) {
-    value = message.match(/\d+/)[0];
-  }
-  if (value) {
-    const formattedValue = parseFloat(value).toFixed(2);
-    const spokenValue = formattedValue.endsWith('.00') ? parseFloat(formattedValue).toString() : formattedValue;
-    this.speak(`Won, ${spokenValue}`);
-  }
-  if (value >= 0 && value <= 2) {
-    this.audioSplit.play();
-  } else if (value >= 15  && value <= 50) {
-    this.cashRegister.play();
-  } else if (value > 50  && value <= 250) {
-    this.audioWin.play();
-  } else if (value > 250  && value <= 1000) {
-    this.topG.play();
-  } else if (value > 1000 ) {
-    this.nyan.play();
-  }
-}
-
-        localStorage.setItem('winCounter', winCounter); 
-        
         this.props.addChatLog(data);
-    
+
         if (history.location.pathname.substr(0, 5) === '/chat') {
           socket.emit('READ_MESSAGE', {
             to: this.props.user._id,
@@ -422,29 +424,29 @@ if (message.includes('won')) {
         console.log(e);
       }
     });
-    
+
     socket.on('UPDATE_BET_RESULT', data => {
       this.props.updateBetResult(data);
     });
-    
+
     socket.on('NEW_TRANSACTION', data => {
       this.props.addNewTransaction(data);
     });
-    
+
     socket.on('SET_UNREAD_MESSAGE_COUNT', data => {
       this.props.setUnreadMessageCount(data);
     });
-    
+
     socket.on('ONLINE_STATUS_UPDATED', data => {
       this.props.updateOnlineUserList(data.user_list);
     });
-    
+
     socket.on('GLOBAL_CHAT_RECEIVED', data => {
       this.props.globalChatReceived(data);
     });
-    
+
     socket.on('SET_GLOBAL_CHAT', this.props.setGlobalChat);
-    
+
     this.props.setSocket(socket);
   };
   loadWeb3 = async () => {
@@ -467,12 +469,14 @@ if (message.includes('won')) {
     }
   };
   async componentDidMount() {
+    console.log('wedewd', this.props
+    )
     let currentUrl = window.location.pathname;
-    if(currentUrl.indexOf('create') !== -1) {
-    this.setState({
-    selectedMainTabIndex: this.props.selectMainTab(1),
-    // selectedMobileTabIndex: this.props.selectMobileTab(1)
-    });
+    if (currentUrl.indexOf('create') !== -1) {
+      this.setState({
+        selectedMainTabIndex: this.props.selectMainTab(1)
+        // selectedMobileTabIndex: this.props.selectMobileTab(1)
+      });
     }
 
     try {
@@ -495,7 +499,7 @@ if (message.includes('won')) {
     } catch (e) {
       console.log(e);
     }
-    
+
     this.initSocket();
     const result = await this.props.getUser(true);
     if (result.status === 'success') {
@@ -514,60 +518,64 @@ if (message.includes('won')) {
       });
     }
     this.loadWeb3();
-      this.fetchData();
-      setInterval(() => this.fetchData(), 2000); // Call the fetchData method every 2 seconds
-    }
-    
-    async fetchData() {
-      const transactions = this.props.transactions;
-    
-      let categories = [];
-      let data = [];
-      let currentBalance = 0;
-    
-      transactions.forEach(transaction => {
-        categories.push(transaction.created_at);
-        currentBalance += transaction.amount;
-        data.push({
-          x: categories.length - 1,
-          y: currentBalance,
-          color: transaction.amount >= 0 ? 'green' : 'red',
-        });
+    this.fetchData();
+    setInterval(() => this.fetchData(), 2000); // Call the fetchData method every 2 seconds
+  }
+
+  async fetchData() {
+    const transactions = this.props.transactions;
+
+    let categories = [];
+    let data = [];
+    let currentBalance = 0;
+
+    transactions.forEach(transaction => {
+      categories.push(transaction.created_at);
+      currentBalance += transaction.amount;
+      data.push({
+        x: categories.length - 1,
+        y: currentBalance,
+        color: transaction.amount >= 0 ? 'green' : 'red'
       });
-    
-      this.setState({
-        options: {
-          chart: {
-            id: 'balance-chart',
-            toolbar: {
-              show: false
-            },
-            markers: {
-              size: 0,
-            },
-            grid: {
-              show: false,
-            },
-            tooltip: {
-              enabled: false,
-            },
+    });
+    this.setState(prevState => ({
+      balance: currentBalance,
+      oldBalance: prevState.balance // update oldBalance
+    }));
+
+    this.setState({
+      options: {
+        chart: {
+          id: 'balance-chart',
+          toolbar: {
+            show: false
           },
-          xaxis: {
-            categories,
+          markers: {
+            size: 0
           },
-          yaxis: {
-            opposite: true,
+          grid: {
+            show: false
           },
-          interactions: [],
+          tooltip: {
+            enabled: false
+          }
         },
-    
-        series: [
-          {
-            data,
-          },
-        ],
-      });
-    }
+        xaxis: {
+          categories
+        },
+        yaxis: {
+          opposite: true
+        },
+        interactions: []
+      },
+
+      series: [
+        {
+          data
+        }
+      ]
+    });
+  }
 
   componentWillUnmount() {
     if (this.props.socket) {
@@ -620,7 +628,6 @@ if (message.includes('won')) {
     this.setState({ showPlayerModal: false });
   };
 
-
   handleOpenHowToPlayModal = () => {
     this.setState({ showHowToPlayModal: true });
   };
@@ -659,34 +666,8 @@ if (message.includes('won')) {
   };
 
   render() {
-   
-    const { isMuted } = this.state;
+    const { isMuted, balance, oldBalance } = this.state;
 
-    // const texts = [
-    //   'FRANKLY, IDC 😎', 'FAIL FASTER 💥', 'DOING WINS 🔥', 'PLAY THE INFINITE GAME ♾',
-    //   'BRING YOUR SEED 🌱', 'STILL, I RISE 📈',  'AIM FOR THE MOON 🚀', 'LOSERS QUIT 💪',
-    //   'TIME COSTS LIVES 🔪', 'LOSERS REACT 🤬', 'LEADERS ANTICIPATE 👀', 'THINGS HAPPEN JUST 🎯',
-    //   'BUY THE RUMOR 💲', 'THINK HARDER 🤔',  'WE HAVE 6 SENSES 👃', 'AVERAGE SUCKS! 🐂',
-    //   'TIME COSTS LIVES 🔪', 'NEVER SETTLE 🏆', 'BE FEARLESS ⚔', 'BE UNSTOPPABLE 🧨',
-    //   'IF I CAN, I WILL 🤧', 'STAY HUNGRY 🥐',  'WE HAVE 6 SENSES 🥱', 'PLAY TO WIN 🥊',
-    //   'NEVER BE BORED 🥱', 'FORGIVE NOT FORGET 🧐', 'RIDE OR DIE 🔫', 'NEVER SHARE DOUBTS 😖',
-    //   'FEAR IS STRONGER THAN LOVE 👿', 'SOME THINGS WILL NEVER CHANGE 👹',  'GIVE FIRST 🎁', 'MONEY IS GOOD 💰',
-    //   'PROGRESS IS IN SIMPLICITY 🧗‍♂️', 'FORGIVE NOT FORGET 🧐', 'WHAT YOU BECOME 🤠', 'WHAT GOES AROUND... 🌍',
-    //   'AVOID BEING REALISTIC 🌴', 'INTELLECTS LOVE ❤',  'ATTITUDE IS PRICELESS 💳', 'GENIUSES ARE MADE 🧠'
-    // ];
-        const texts = [
-      '😎', '💥', '🔥', '♾',
-      '🌱', '📈',  '🚀', '💪',
-      '🔪', '🤬', '👀', '🎯',
-      '💲', '🤔',  '👃', '🐂',
-      '🔪', '🏆', '⚔', '🧨',
-      '🤧', '🥐',  '🥱', '🥊',
-      '🥱', '🧐', '🔫', '😖',
-      '👿', '👹',  '🎁', '💰',
-      '🧗‍♂️', '🧐', '🤠', '🌍',
-      '🌴', '❤',  '💳', '🧠'
-    ];
-const randomText = texts[Math.floor(Math.random() * texts.length)];
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
         <div
@@ -694,7 +675,6 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
             this.props.isDarkMode ? 'dark_mode' : ''
           }`}
         >
-          
           {/* <LoadingOverlay
             active={this.state.isActiveLoadingOverlay}
             spinner
@@ -720,48 +700,43 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                 {' '}
               </a>
               <Tabs
-  value={this.props.selectedMainTabIndex}
-  onChange={this.handleMainTabChange}
-  TabIndicatorProps={{ style: { background: '#c438ef' } }}
-  className="main-game-page-tabs desktop-only"
->
-  <Tab
-  className="custom-tab"
-    icon={
-      this.state.hoverTabIndex === 0 || this.props.selectedMainTabIndex === 0 ? (
-        <BattleHover />
-      ) : (
-        <Battle />
-      )
-    }
-    style={customStyles.tabRoot}
-    onMouseEnter={() => this.handleMouseEnter(0)}
-    onMouseLeave={this.handleMouseLeave}
-  />
-  <Tab
-  className="custom-tab"
-    icon={
-      this.state.hoverTabIndex === 1 || this.props.selectedMainTabIndex === 1 ? (
-        <ManageHover />
-      ) : (
-        <Manage />
-      )
-    }
-    style={customStyles.tabRoot}
-    onMouseEnter={() => this.handleMouseEnter(1)}
-    onMouseLeave={this.handleMouseLeave}
-  />
-</Tabs>
+                value={this.props.selectedMainTabIndex}
+                onChange={this.handleMainTabChange}
+                TabIndicatorProps={{ style: { background: '#c438ef' } }}
+                className="main-game-page-tabs desktop-only"
+              >
+                <Tab
+                  className="custom-tab"
+                  icon={
+                    this.state.hoverTabIndex === 0 ||
+                    this.props.selectedMainTabIndex === 0 ? (
+                      <BattleHover />
+                    ) : (
+                      <Battle />
+                    )
+                  }
+                  style={customStyles.tabRoot}
+                  onMouseEnter={() => this.handleMouseEnter(0)}
+                  onMouseLeave={this.handleMouseLeave}
+                />
+                <Tab
+                  className="custom-tab"
+                  icon={
+                    this.state.hoverTabIndex === 1 ||
+                    this.props.selectedMainTabIndex === 1 ? (
+                      <ManageHover />
+                    ) : (
+                      <Manage />
+                    )
+                  }
+                  style={customStyles.tabRoot}
+                  onMouseEnter={() => this.handleMouseEnter(1)}
+                  onMouseLeave={this.handleMouseLeave}
+                />
+              </Tabs>
 
-
-
-
-
-              
               <div className="header_action_panel">
-              <div>
-      
-    </div>
+                <div></div>
                 {
                   /*<a
                   href="#"
@@ -774,29 +749,46 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                   Leaderboards
                 </a>
                 */
-                <a
-                onClick={this.handleOpenHowToPlayModal}
-                id="btn_how_to_play"
-                onMouseEnter={() => this.handleMouseEnter(2)}
-                onMouseLeave={this.handleMouseLeave}
-              >
-                {this.state.hoverTabIndex === 2 ? <HowToHover /> : <HowTo />}
-              </a>
-              
-              
+                  <a
+                    onClick={this.handleOpenHowToPlayModal}
+                    id="btn_how_to_play"
+                    onMouseEnter={() => this.handleMouseEnter(2)}
+                    onMouseLeave={this.handleMouseLeave}
+                  >
+                    {this.state.hoverTabIndex === 2 ? (
+                      <HowToHover />
+                    ) : (
+                      <HowTo />
+                    )}
+                  </a>
                 }
                 {this.props.isAuthenticated ? (
                   <>
-                  <div id='balance'>
+                    <div id="balance">
+                      <CountUp
+                        start={oldBalance}
+                        end={balance}
+                        prefix="$"
+                        separator=","
+                        decimal="."
+                        decimals={2}
+                        duration={1.5}
+                        redraw={true}
+                        preserveValue={true}
+                        onEnd={() => {
+                          this.setState({ oldBalance: balance }); // update oldBalance after animation completes
+                        }}
+                      />
+                      <Button
+                        style={{ minWidth: '32px', maxHeight: '32px' }}
+                        onClick={this.handleBalanceClick}
+                      >
+                        <AccountBalanceWallet
+                          style={{ width: '22px', height: '22px' }}
+                        />
+                      </Button>
+                    </div>
 
-                      <span >
-                        {convertToCurrency(this.state.balance)}
-                      </span>
-                     <Button  style={{ minWidth: "32px", maxHeight: "32px"}} onClick={this.handleBalanceClick} >
-                      <AccountBalanceWallet  style={{ width: "22px", height: "22px"}} />
-                    </Button>
-                  </div>
-                    
                     <Button
                       area-constrols="profile-menu"
                       aria-haspopup="true"
@@ -819,7 +811,6 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                       open={Boolean(this.state.anchorEl)}
                       onClose={this.handleCloseMenu}
                       isDarkMode={this.props.isDarkMode}
-                      
                       anchorOrigin={{
                         vertical: 'bottom',
                         horizontal: 'center'
@@ -831,7 +822,9 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                       PaperProps={{
                         style: {
                           width: '200px',
-                          background: this.props.isDarkMode ? '#060607' : 'white'
+                          background: this.props.isDarkMode
+                            ? '#060607'
+                            : 'white'
                         }
                       }}
                     >
@@ -842,114 +835,117 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                         <ListItemText>PROFILE</ListItemText>
                       </MenuItem>
                       <MenuItem onClick={this.playPause}>
-                        
-                      <ReactApexChart
-        options={{
-          chart: {
-            animations: {
-              enabled: false
-            },
-            toolbar: {
-              show: false
-            },
-            events: {},
-            zoom: {
-              enabled: false
-            },
-            
-          },
-          grid: {
-            show: false
-          },
-          tooltip: {
-            enabled: false
-          },
-          fill: {
-            type: 'gradient',
-            gradient: {
-              shade: 'light',
-              gradientToColors: ['#8F7CC3'],
-              shadeIntensity: 1,
-              type: 'vertical',
-              opacityFrom: 0.7,
-              opacityTo: 0.9,
-              stops: [0, 100, 100]
-            }
-          },
-          stroke: {
-            curve: 'smooth'
-          },
-          xaxis: {
-            labels: {
-              show: false
-            },
-            axisTicks: {
-              show: false
-            },
-            axisBorder: {
-              show: false
-            },
-          },
-          yaxis: {
-            labels: {
-              show: false
-            },
-            axisTicks: {
-              show: false
-            },
-            axisBorder: {
-              show: false
-            },
-          },
-          
-        }}
-        series={this.state.series}
-        type="line"
-        height="80"
-      />
-
-
-                        {/* <ListItemText>{this.state.isPlaying ? <div className="playBtn">
-                        <ListItemIcon>
-                          <PauseCircleOutlineIcon /></ListItemIcon> PAUSE</div>
-                          : 
-                          <div className="playBtn"><ListItemIcon>
-                            <PlayCircleOutlineIcon/> </ListItemIcon> PLAY</div>}</ListItemText> */}
+                        <ReactApexChart
+                          options={{
+                            chart: {
+                              animations: {
+                                enabled: false
+                              },
+                              toolbar: {
+                                show: false
+                              },
+                              events: {},
+                              zoom: {
+                                enabled: false
+                              }
+                            },
+                            grid: {
+                              show: false
+                            },
+                            tooltip: {
+                              enabled: false
+                            },
+                            fill: {
+                              type: 'gradient',
+                              gradient: {
+                                shade: 'light',
+                                gradientToColors: ['#8F7CC3'],
+                                shadeIntensity: 1,
+                                type: 'vertical',
+                                opacityFrom: 0.7,
+                                opacityTo: 0.9,
+                                stops: [0, 100, 100]
+                              }
+                            },
+                            stroke: {
+                              curve: 'smooth'
+                            },
+                            xaxis: {
+                              labels: {
+                                show: false
+                              },
+                              axisTicks: {
+                                show: false
+                              },
+                              axisBorder: {
+                                show: false
+                              }
+                            },
+                            yaxis: {
+                              labels: {
+                                show: false
+                              },
+                              axisTicks: {
+                                show: false
+                              },
+                              axisBorder: {
+                                show: false
+                              }
+                            }
+                          }}
+                          series={this.state.series}
+                          type="line"
+                          height="80"
+                        />
                       </MenuItem>
                       <Divider />
 
                       <MenuItem>
-                      <ListItemText>
-  {this.state.isMuted ? (
-    <div className="playBtn" onClick={this.handleUnmute}>
-      <ListItemIcon>
-        <VolumeOffIcon />
-      </ListItemIcon>
-      UNMUTE
-    </div>
-  ) : (
-    <div className="playBtn" onClick={this.handleMute}>
-      <ListItemIcon>
-        <VolumeUpIcon />
-      </ListItemIcon>
-      MUTE
-    </div>
-  )}
-</ListItemText>
-</MenuItem>  
-                      <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
-  <ListItemIcon>
-    {this.props.isDarkMode ? (
-      <Brightness7Icon />
-    ) : (
-      <Brightness4Icon />
-    )}
-  </ListItemIcon>
-  <ListItemText>
-    {this.props.isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
-  </ListItemText>
-</MenuItem>
-<Divider />
+                        <ListItemText>
+                          {this.props.isMuted ? (
+                            <div
+                              className="playBtn"
+                              onClick={e => {
+                                this.props.toggleMute(!this.props.isMuted);
+                                this.handleMute();
+                              }}                            >
+                              <ListItemIcon>
+                                <VolumeOffIcon />
+                              </ListItemIcon>
+                              UNMUTE
+                            </div>
+                          ) : (
+                            <div className="playBtn"
+                            onClick={e => {
+                              this.props.toggleMute(!this.props.isMuted);
+                              this.handleUnmute();
+                            }}
+                            >
+                              <ListItemIcon>
+                                <VolumeUpIcon />
+                              </ListItemIcon>
+                              MUTE
+                            </div>
+                          )}
+                        </ListItemText>
+                      </MenuItem>
+                      <MenuItem
+                        onClick={e => {
+                          this.props.setDarkMode(!this.props.isDarkMode);
+                        }}
+                      >
+                        <ListItemIcon>
+                          {this.props.isDarkMode ? (
+                            <Brightness7Icon />
+                          ) : (
+                            <Brightness4Icon />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText>
+                          {this.props.isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
+                        </ListItemText>
+                      </MenuItem>
+                      <Divider />
                       <MenuItem
                         onClick={e => {
                           this.handleLogout(true);
@@ -960,7 +956,6 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                         </ListItemIcon>
                         <ListItemText>LOG OUT</ListItemText>
                       </MenuItem>
-                    
 
                       {/* <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
                 
@@ -987,7 +982,6 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                     </Button>
                   </>
                 )}
-               
               </div>
             </div>
             <div
@@ -1013,17 +1007,21 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                                 'amount ' + (row.amount > 0 ? 'green' : 'red')
                               }
                             >
-                              {row.amount > 0
-                                ? <>
-                                    {'+ '}
-                                    {convertToCurrency(updateDigitToPoint2(row.amount))}
-                                  </>
-                                : <>
-                                    {'- '}
-                                    {convertToCurrency(updateDigitToPoint2(Math.abs(row.amount)))}
-                                  </>
-                              }
-
+                              {row.amount > 0 ? (
+                                <>
+                                  {'+ '}
+                                  {convertToCurrency(
+                                    updateDigitToPoint2(row.amount)
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {'- '}
+                                  {convertToCurrency(
+                                    updateDigitToPoint2(Math.abs(row.amount))
+                                  )}
+                                </>
+                              )}
                             </td>
                             <td className="fromNow">{row.from_now}</td>
                           </tr>
@@ -1049,29 +1047,31 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
                   </Button>
                   <hr />
                   {this.state.web3account ? (
-          <>
-            <input id="wallet-address" type="text" value={this.state.web3account} readOnly />
-            <Button className="connect" onClick={this.disconnectWeb3}>Disconnect</Button>
-          </>
-        ) : (
-          <Button className="connect" onClick={this.loadWeb3}>Wallet Not connected</Button>
-        )}
+                    <>
+                      <input
+                        id="wallet-address"
+                        type="text"
+                        value={this.state.web3account}
+                        readOnly
+                      />
+                      <Button className="connect" onClick={this.disconnectWeb3}>
+                        Disconnect
+                      </Button>
+                    </>
+                  ) : (
+                    <Button className="connect" onClick={this.loadWeb3}>
+                      Wallet Not connected
+                    </Button>
+                  )}
                 </div>
-                
-
-
-
               </div>
-              
             </div>
-            
           </div>
-          
+
           <div className="game_wrapper">
-            
             <div className="contents_wrapper">{this.props.children}</div>
           </div>
-         
+
           {this.state.showProfileModal && (
             <ProfileModal
               modalIsOpen={this.state.showProfileModal}
@@ -1090,9 +1090,8 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
               balance={this.state.balance}
               avatar={this.props.user.avatar}
             />
-          )}            
+          )}
           {this.state.showHowToPlayModal && (
-
             <HowToPlayModal
               modalIsOpen={this.state.showHowToPlayModal}
               closeModal={this.handleCloseHowToPlayModal}
@@ -1151,7 +1150,6 @@ const randomText = texts[Math.floor(Math.random() * texts.length)];
           )}
           <GamePasswordModal />
         </div>
-        
       </MuiThemeProvider>
     );
   }
@@ -1163,13 +1161,14 @@ const mapStateToProps = state => ({
   socket: state.auth.socket,
   balance: state.auth.balance,
   userName: state.auth.userName,
+  isMuted: state.auth.isMuted,
   user: state.auth.user,
   unreadMessageCount: state.auth.unreadMessageCount,
   isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   transactions: state.auth.transactions,
   isDarkMode: state.auth.isDarkMode,
-  betResult: state.logic.betResult,
+  betResult: state.logic.betResult
 });
 
 const mapDispatchToProps = {
@@ -1187,6 +1186,7 @@ const mapDispatchToProps = {
   updateOnlineUserList,
   selectMainTab,
   globalChatReceived,
+  toggleMute,
   setGlobalChat,
   updateBetResult
 };

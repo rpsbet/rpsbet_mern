@@ -55,14 +55,14 @@ class Summary extends Component {
             {convertToCurrency(updateDigitToPoint2(this.props.bet_amount))}
           </div>
         </div>
-        {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
+        {/* {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
           this.props.game_mode
         ) && (
           <div className="data-item">
             <div className="label public-bet-amount">THEIR BET</div>
             <div className="value">{public_bet_amount}</div>
           </div>
-        )}
+        )} */}
         <div className="data-item">
           <div className="label your-max-return">TARGET ROI</div>
           <div className="value">
@@ -75,16 +75,16 @@ class Summary extends Component {
             )}
           </div>
         </div>
-        {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
+        {/* {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
           this.props.game_mode
         ) && (
           <div className="data-item">
-            <div className="label public-max-return">Their Return</div>
+            +<div className="label public-max-return">Their Return</div>
             <div className="value">{public_max_return}</div>
           </div>
-        )}
+        )} */}
         <div className="data-item">
-          <div className="label win-chance">Win Chance</div>
+          <div className="label win-chance">Expected Value</div>
           <div className="value">{this.props.winChance}</div>
         </div>
       </div>
@@ -131,7 +131,7 @@ class Summary extends Component {
         <h3 className="game-sub-title">Stake Summary</h3>
         <div className="summary-info">
           <div className="summary-item">
-            <div className="summary-item-name">Win Chance</div>
+            <div className="summary-item-name">Expected Value</div>
             <div className="summary-item-value">{this.props.winChance}</div>
           </div>
           <div className="summary-item">

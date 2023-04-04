@@ -15,7 +15,8 @@ import {
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
-  SET_REFERRAL_CODE
+  SET_REFERRAL_CODE,
+  TOGGLE_MUTE
 } from '../types';
 
 const initialState = {
@@ -24,8 +25,9 @@ const initialState = {
   isAuthenticated: localStorage.getItem('isAuthenticated'),
   isDarkMode: localStorage.getItem('darkMode') === 'false' ? false : true,
   isAdmin: false,
+  isMuted: localStorage.getItem('isMuted') === 'false' ? false : true,
   loading: true,
-  user: {_id:null, email:'', password:''},
+  user: { _id: null, email: '', password: '' },
   unreadMessageCount: 0,
   balance: 0,
   isActivated: true,
@@ -42,33 +44,48 @@ export default function(state = initialState, action) {
     case SET_DARK_MODE:
       localStorage.setItem('darkMode', payload);
       return {
-        ...state, isDarkMode: payload
-      }
+        ...state,
+        isDarkMode: payload
+      };
+    case TOGGLE_MUTE:
+      localStorage.setItem('isMuted', payload);
+      return {
+        ...state,
+        isMuted: payload
+      };
     case SET_SOCKET:
       return {
-        ...state, socket: payload
+        ...state,
+        socket: payload
       };
     case TRANSACTION_LOADED:
       return {
-        ...state, transactions: payload
+        ...state,
+        transactions: payload
       };
     case NEW_TRANSACTION:
-      const newTransactions = [payload].concat(JSON.parse(JSON.stringify(state.transactions))).slice(0, 4);
+      const newTransactions = [payload]
+        .concat(JSON.parse(JSON.stringify(state.transactions)))
+        .slice(0, 4);
       return {
-        ...state, transactions: newTransactions
-      }
+        ...state,
+        transactions: newTransactions
+      };
     case SET_AVATAR:
       return {
-        ...state, user: {...state.user, avatar: payload}
-      }
+        ...state,
+        user: { ...state.user, avatar: payload }
+      };
     case SET_USERNAME_PASSWORD:
       return {
-        ...state, user: {...state.user, ...payload}
-      }
+        ...state,
+        user: { ...state.user, ...payload }
+      };
     case SET_UNREAD_MESSAGE_COUNT:
       return {
-        ...state, unreadMessageCount: payload
-      }
+        ...state,
+        unreadMessageCount: payload
+      };
     case USER_LOADED:
       return {
         ...state,
@@ -97,7 +114,7 @@ export default function(state = initialState, action) {
     case VERIFICATION_SUCCESS:
       return {
         ...state,
-        isActivated: payload,
+        isActivated: payload
       };
     case REGISTER_FAIL:
     case AUTH_ERROR:
@@ -117,17 +134,17 @@ export default function(state = initialState, action) {
       return {
         ...state,
         balance: payload
-      }
+      };
     case SET_URL:
       return {
         ...state,
         liveUrl: payload
       };
-      case SET_REFERRAL_CODE:
-  return {
-    ...state,
-    referralCode: payload
-  };
+    case SET_REFERRAL_CODE:
+      return {
+        ...state,
+        referralCode: payload
+      };
     default:
       return state;
   }

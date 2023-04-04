@@ -974,9 +974,7 @@ overflow: hidden;
     padding: 0 20px;
     margin: 0 4px 10px;
 }
-.game-page .game-contents .game-info-panel button.other {
-    border-radius: 6px;
-}
+
 .game-page .game-contents .game-info-panel button.active {
     color: #e5e5e5;
     background-image: linear-gradient(to top, #48ff00, #07c700);

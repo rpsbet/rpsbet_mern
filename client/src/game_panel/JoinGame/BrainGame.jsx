@@ -149,9 +149,9 @@ class BrainGame extends Component {
 
   onStartGame = async e => {
     e.preventDefault();
+    const { playSound, bet_amount, isAuthenticated, isDarkMode, creator_id, roomInfo, user_id, balance, roomStatus, is_private, openGamePasswordModal, deductBalanceWhenStartBrainGame } = this.props;
   
-    const { isAuthenticated, isDarkMode, creator_id, roomInfo, user_id, balance, roomStatus, is_private, openGamePasswordModal, deductBalanceWhenStartBrainGame } = this.props;
-    const { bet_amount } = this.props;
+    playSound('select');
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
@@ -206,15 +206,19 @@ class BrainGame extends Component {
   
 
   onCountDown = async () => {
+    const { playSound, isDarkMode, bet_amount, refreshHistory, brain_game_type } = this.props;
+    const { is_anonymous , score } = this.state;
+
+
     const remaining_time = this.state.remaining_time - 1;
     this.setState({ remaining_time });
 
     if (remaining_time === 0) {
-      let stored_score_array = JSON.parse(localStorage.getItem(`score_array_${this.props.brain_game_type}`)) || [];
+      let stored_score_array = JSON.parse(localStorage.getItem(`score_array_${brain_game_type}`)) || [];
 
-stored_score_array.push({score: this.state.score, room_id: this.props.brain_game_type});
+stored_score_array.push({score: score, room_id: brain_game_type});
 
-localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify(stored_score_array));
+localStorage.setItem(`score_array_${brain_game_type}`, JSON.stringify(stored_score_array));
 
       clearInterval(this.state.intervalId);
       this.setState({
@@ -223,28 +227,28 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
       });
 
       const result = await this.props.join({
-        bet_amount: this.props.bet_amount,
-        brain_game_score: this.state.score,
-        is_anonymous: this.state.is_anonymous
+        bet_amount: bet_amount,
+        brain_game_score: score,
+        is_anonymous: is_anonymous
       });
 
       if (result.status === 'success') {
         let text = 'HAHAA, WHAT A LOSER!!';
         this.changeBgColor(result.betResult);
-
+        playSound('lose');
         if (result.betResult === 1) {
           text = 'NOT BAD, WINNER!';
           this.changeBgColor(result.betResult);
-
+          playSound('win');
         } else if (result.betResult === 0) {
           text = 'DRAW, NO WINNER!';
           this.changeBgColor(result.betResult);
-
+          playSound('split');
         }
 
         if (result.roomStatus === 'finished') {
           gameResultModal(
-            this.props.isDarkMode,
+            isDarkMode,
             text,
             result.betResult,
             'Okay',
@@ -256,7 +260,7 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
           );
         } else {
           gameResultModal(
-            this.props.isDarkMode,
+            isDarkMode,
             text,
             result.betResult,
             'Try again',
@@ -271,10 +275,10 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
         }
       } else {
         if (result.message) {
-          alertModal(this.props.isDarkMode, result.message);
+          alertModal(isDarkMode, result.message);
         }
       }
-      this.props.refreshHistory();
+      refreshHistory();
 
     }
   };
@@ -413,13 +417,16 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
   };
 
   joinGame2 = async (score, bet_amount) => {
-    if (!this.state.betting) {
+    const {betting, is_anonymous } = this.state;
+    const {refreshHistory, playSound } = this.props;
+
+    if (!betting) {
       return;
     }
     const result = await this.props.join({
       bet_amount: bet_amount,
       brain_game_score: score,
-      is_anonymous: this.state.is_anonymous
+      is_anonymous: is_anonymous
     });
     this.props.deductBalanceWhenStartBrainGame({
       bet_amount: bet_amount
@@ -428,21 +435,21 @@ localStorage.setItem(`score_array_${this.props.brain_game_type}`, JSON.stringify
     if (result.status === 'success') {
       let text = 'HAHAA, WHAT A LOSER!!';
       this.changeBgColor(result.betResult);
-
+playSound('lose');
       if (result.betResult === 1) {
         this.changeBgColor(result.betResult);
-
+playSound('win');
         text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
         this.changeBgColor(result.betResult);
-
+        playSound('split');
         text = 'DRAW, NO WINNER!';
       }
 
          
     }
     this.setState({ is_started: false});
-    this.props.refreshHistory();
+    refreshHistory();
   };
 
   

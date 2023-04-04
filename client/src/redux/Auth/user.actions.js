@@ -17,9 +17,10 @@ import {
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
+  TOGGLE_MUTE,
   START_LOADING,
   END_LOADING,
-  SET_REFERRAL_CODE // <- import the new action type
+  SET_REFERRAL_CODE
 
 } from '../types';
 import axios from '../../util/Api';
@@ -249,6 +250,11 @@ export const setUrl = url => dispatch => {
 export const setBalance = balance => dispatch => {
   dispatch({ type: SET_BALANCE, payload: balance });
 }
+
+export const toggleMute = isMuted => dispatch => {
+  dispatch({ type: TOGGLE_MUTE, payload: isMuted });
+}
+
 
 export const setDarkMode = isDarkMode => dispatch => {
   dispatch({ type: SET_DARK_MODE, payload: isDarkMode });

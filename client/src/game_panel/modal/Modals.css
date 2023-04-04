@@ -222,15 +222,43 @@ border-bottom-right-radius: 0 !important;
 }
 
 .react-confirm-alert-overlay {
-    background: rgba(19, 19, 19, 0.8) !important;
-    backdrop-filter: blur(4px);
+    background: rgba(19, 19, 19, 0.2) !important;
+    backdrop-filter: blur(2px);
 }
+
+@keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  
+.react-confirm-alert .modal-body.alert-body.result-body{
+      animation: pulse 1s ease-in-out infinite;
+    padding: 15px 0px 15px 15px !important;
+    min-width: unset !important;
+}
+
+  
 .react-confirm-alert .modal-body.alert-body {
     width: 400px;
     max-width: 95vw;
     padding: 32px 64px;
     text-align: center;
 }
+
+/* .snackbar-content {
+    display: grid;
+    align-items: center;
+    grid-template-columns:  1fr 2fr;	 
+
+}*/
 
 .align-center img,
 .AvatarDropzone img {
@@ -253,7 +281,7 @@ border-bottom-right-radius: 0 !important;
     font-weight: 700;
 }
 .modal-body.result-body .modal-icon {
-    height: 100px;
+    margin-bottom: 0 !important;
 }
 .modal-body .modal-icon.alert-icon {
     background-image: url("/img/icons/alert-icon.svg");
