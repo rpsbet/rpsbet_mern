@@ -114,6 +114,11 @@ input,textarea { border-radius: 0 !important; }
     -webkit-transform: scaleY(-1);
     transform: scaleY(-1);
 }
+.custom-loading-overlay .rpsLoader {
+  position: absolute !important;
+  top: 40vh !important;
+  transform: translate(-50%, -50%);
+}
 
 button {
   height: 45px !important;
@@ -1114,9 +1119,9 @@ circle {
   display: none;
 }
 
-.custom-loading-overlay .rpsLoader {
-  transform: translateY(-200px); /* Adjust this value to move the spinner and text higher or lower */
-}
+/* .custom-loading-overlay .rpsLoader {
+  transform: translateY(-50%); 
+} */
 
 /* 
   ##Device = Desktops
@@ -1195,9 +1200,7 @@ circle {
 */
 
 @media (min-width: 481px) and (max-width: 767px) {
-  .custom-loading-overlay .rpsLoader {
-    transform: translateY(-300px); /* Adjust this value to move the spinner and text higher or lower */
-  }
+
  
   
 }
@@ -1209,9 +1212,7 @@ circle {
 
 @media (min-width: 320px) and (max-width: 480px) {
 
-  .custom-loading-overlay .rpsLoader {
-    transform: translateY(-500px); /* Adjust this value to move the spinner and text higher or lower */
-  }
+
   .contents_wrapper .main-game {
     grid-template-columns: unset !important;
     display: block !important;
