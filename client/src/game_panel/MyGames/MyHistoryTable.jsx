@@ -116,7 +116,7 @@ class MyHistoryTable extends Component {
     };
 
     const gameTypePanel = (
-      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
+      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap"  gap="15px">
         <Box key="open-game-left-button">
           <IconButton
             className="btn-arrow-left"

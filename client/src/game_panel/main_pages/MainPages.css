@@ -429,35 +429,35 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     background: transparent;
 }
 .game-type-panel .btn-game-type {
-    margin-right: 14px;
     text-align: center;
     cursor: pointer;
     font-size: 1.2em;
     line-height: 1.71;
     background-color: transparent;
     color: #495057cc;
-    padding: 8px 16px;
+    padding: 6px 1.2em;
     white-space: nowrap;
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     font-weight: 600;
     filter: brightness(0.6);
 }
-.game-type-panel .btn-game-type img {
+/* .game-type-panel .btn-game-type img {
     width: 32px;
     height: 32px;
     margin-right: 8px;
     filter: invert(61%) sepia(7%) saturate(233%) hue-rotate(173deg) brightness(94%) contrast(89%);
-}
+} */
 .drop-game img {
     width: 32px !important;
     height: 32px !important;
     padding: 5px !important;
 }
 
-.game-type-panel .btn-game-type:hover img {
+/* .game-type-panel .btn-game-type:hover img {
     filter: invert(61%) sepia(7%) saturate(233%) hue-rotate(173deg) brightness(94%) contrast(89%);
-} 
+}  */
 
 .game-type-panel .btn-arrow-left,
 .game-type-panel .btn-arrow-right {
@@ -1874,12 +1874,12 @@ bottom: 0px;
         width: 100%;
         overflow-x: auto;
     }
-    .game-type-panel .btn-game-type.btn-icon {
+    /* .game-type-panel .btn-game-type.btn-icon {
         display: block;
         width: 130px;
         font-size: 10px;
         padding: 0;
-    }
+    } */
     /* .game-type-panel .btn-game-type.btn-icon.active,
     .game-type-panel .btn-game-type.btn-icon:hover {
         background: transparent;
@@ -2198,9 +2198,20 @@ margin-bottom: 10px;
     .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
         display: flex;
         flex-direction: column;
+        gap: 15px 0px;
+        margin-right: unset;
+        margin-left: 15px;
     }
     .rps-add-run-panel {
         flex-direction: column-reverse;
+    }
+    .game-page .game-contents .game-info-panel .create-box-panel .box-btn-row button:first-child {
+        margin-left: 15px;
+    }
+
+    #reset {
+        float: right;
+        margin-top: 20px;
     }
 
     .pre-summary-panel {

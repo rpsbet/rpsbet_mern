@@ -265,7 +265,9 @@ class MysteryBox extends Component {
               Add 10 boxes
             </Button>
           </div>
+
           <Button
+        id="reset"
             href="/#"
             onClick={this.onEmptyBoxes}
             title="Empty all boxes?"

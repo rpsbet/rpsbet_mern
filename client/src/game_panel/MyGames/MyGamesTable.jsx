@@ -151,7 +151,7 @@ class MyGamesTable extends Component {
     };
 
     const gameTypePanel = (
-      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
+      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap"  gap="15px">
         <Box item key="open-game-left-button">
           <IconButton
             className="btn-arrow-left"
@@ -160,7 +160,6 @@ class MyGamesTable extends Component {
             <ChevronLeftIcon />
           </IconButton>
         </Box>
-        ,
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''

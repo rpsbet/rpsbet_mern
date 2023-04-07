@@ -70,7 +70,10 @@ class StatisticsForm extends React.Component {
             download:false // <== line to add
           }
         },
-        
+        pan: {
+          enabled: true,
+          type: "x"
+        },
         zoom: {
           type: 'x',
           enabled: true,
@@ -126,7 +129,10 @@ class StatisticsForm extends React.Component {
         enabled: false
         },
       xaxis: {
-        // range: 1000,
+        // range: 1500,
+        // min: 0,
+        // max: 1500,
+        forceNiceScale: true,
         labels: {
           show: false,
           rotate: 0,

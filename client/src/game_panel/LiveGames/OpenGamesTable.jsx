@@ -100,7 +100,7 @@ class OpenGamesTable extends Component {
     };
 
     const gameTypePanel = (
-      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
+      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap" gap="15px">
         <Box item key="open-game-left-button">
           <IconButton
             className="btn-arrow-left"
@@ -149,6 +149,7 @@ class OpenGamesTable extends Component {
 
     return gameTypePanel;
   };
+
 
   componentDidMount() {
     window.addEventListener('load', () => {
