@@ -94,12 +94,15 @@ class HistoryTable extends Component {
   };
 
   handleBtnLeftClicked = e => {
-    this.game_type_panel.scrollLeft = 0;
+    const scrollAmount = 200; // Change this value to adjust the scroll amount
+    this.game_type_panel.scrollLeft -= scrollAmount;
   };
 
   handleBtnRightClicked = e => {
-    this.game_type_panel.scrollLeft = this.game_type_panel.scrollWidth;
+    const scrollAmount = 200; // Change this value to adjust the scroll amount
+    this.game_type_panel.scrollLeft += scrollAmount;
   };
+
 
   generateGameTypePanel = () => {
     const gameTypeStyleClass = {

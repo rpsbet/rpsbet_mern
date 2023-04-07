@@ -5,13 +5,6 @@ import { Button } from '@material-ui/core';
 
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
-// const calcBetAmount = rps_list => {
-//   let bet_amount = 0;
-//   rps_list.map((el, i) => {
-//     bet_amount += el.bet_amount;
-//   });
-//   return bet_amount;
-// };
 
 const calcWinChance = prevStates => {
   let total = prevStates.length;
@@ -27,26 +20,33 @@ const calcWinChance = prevStates => {
       scissors++;
     }
   });
-  const rockWinChance = (rock / total) * 100;
-  const paperWinChance = (paper / total) * 100;
-  const scissorsWinChance = (scissors / total) * 100;
-  let lowest = rockWinChance;
-  let highest = rockWinChance;
-  if (paperWinChance < lowest) {
-    lowest = paperWinChance;
-  }
-  if (scissorsWinChance < lowest) {
-    lowest = scissorsWinChance;
-  }
-  if (paperWinChance > highest) {
-    highest = paperWinChance;
-  }
-  if (scissorsWinChance > highest) {
-    highest = scissorsWinChance;
-  }
 
-  return lowest.toFixed(2) + '% - ' + highest.toFixed(2) + '%';
+  // Calculate the base win chances
+  const baseWinChance = (100 / 3).toFixed(2);
+
+  const rockWinChance = parseFloat(baseWinChance);
+  const paperWinChance = parseFloat(baseWinChance);
+  const scissorsWinChance = parseFloat(baseWinChance);
+
+  // Calculate the range of frequencies
+  const freq = { rock, paper, scissors };
+  const freqValues = Object.values(freq);
+  const range = Math.max(...freqValues) - Math.min(...freqValues);
+
+  // Adjust probabilities based on the range of frequencies
+  const sensitivityFactor = (range / 100) * total; // You can adjust this value to increase or decrease sensitivity
+  const adjustmentFactor = (range / total) * sensitivityFactor;
+
+  const adjustedRockWinChance = (rockWinChance + rock * adjustmentFactor).toFixed(2);
+  const adjustedPaperWinChance = (paperWinChance + paper * adjustmentFactor).toFixed(2);
+  const adjustedScissorsWinChance = (scissorsWinChance + scissors * adjustmentFactor).toFixed(2);
+
+  const lowest = Math.min(adjustedRockWinChance, adjustedPaperWinChance, adjustedScissorsWinChance);
+  const highest = Math.max(adjustedRockWinChance, adjustedPaperWinChance, adjustedScissorsWinChance);
+
+  return `${lowest.toFixed(2)}% - ${highest.toFixed(2)}%`;
 };
+
 
 const calcEV = (calcWinChance, wager, winPayout, lossPayout, tiePayout) => {
   const winChance = calcWinChance;
@@ -222,14 +222,7 @@ class RPS extends Component {
   };
 
   onChangeWinChance = winChance => {
-    //   const wager = 1;
-    // const winPayout = 2;
-    // const lossPayout = 0;
-    // const tiePayout = 1;
-    //   const EV = calcEV(winChance, wager, winPayout, lossPayout, tiePayout);
-
     this.setState({ winChance });
-    // this.props.onChangeState({ winChance });
   };
 
   onRemoveItem = index => {
@@ -238,7 +231,6 @@ class RPS extends Component {
     const lossPayout = 0;
     const tiePayout = 1;
     const newArray = this.props.rps_list.filter((elem, i) => i != index);
-    // const bet_amount = calcBetAmount(newArray);
     const winChance = calcWinChance(newArray);
     const winChanceEV = calcEV(
       winChance,
@@ -250,8 +242,6 @@ class RPS extends Component {
 
     this.props.onChangeState({
       rps_list: newArray,
-      // bet_amount: bet_amount,
-      // max_return: bet_amount * 2 /* 0.95 */,
       winChance: winChanceEV
     });
   };

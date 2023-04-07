@@ -18,6 +18,7 @@ import {
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   TOGGLE_MUTE,
+  TOGGLE_DRAWER,
   START_LOADING,
   END_LOADING,
   SET_REFERRAL_CODE
@@ -255,6 +256,9 @@ export const toggleMute = isMuted => dispatch => {
   dispatch({ type: TOGGLE_MUTE, payload: isMuted });
 }
 
+export const toggleDrawer = isDrawerOpen => dispatch => {
+  dispatch({ type: TOGGLE_DRAWER, payload: isDrawerOpen });
+}
 
 export const setDarkMode = isDarkMode => dispatch => {
   dispatch({ type: SET_DARK_MODE, payload: isDarkMode });

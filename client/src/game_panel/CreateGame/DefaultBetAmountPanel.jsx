@@ -19,33 +19,32 @@ class DefaultBetAmountPanel extends Component {
     };
   }
   handleMaxButtonClick() {
-    const maxBetAmount = (this.props.balance).toFixed(2);
+    const maxBetAmount = this.props.balance.toFixed(2);
     if (this.props.game_type === 'Brain Game') {
-    this.props.onChangeState({
-    bet_amount: maxBetAmount
-    });
+      this.props.onChangeState({
+        bet_amount: maxBetAmount
+      });
     } else if (this.props.game_type === 'Quick Shoot') {
-    this.props.onChangeState({
-    bet_amount: maxBetAmount,
-    public_bet_amount: convertToCurrency(
-    (this.props.qs_game_type - 1) * maxBetAmount
-    ),
-    max_return: this.props.qs_game_type * maxBetAmount
-    });
+      this.props.onChangeState({
+        bet_amount: maxBetAmount,
+        public_bet_amount: convertToCurrency(
+          (this.props.qs_game_type - 1) * maxBetAmount
+        ),
+        max_return: this.props.qs_game_type * maxBetAmount
+      });
     } else {
-    this.props.onChangeState({
-    bet_amount: maxBetAmount,
-    max_return: maxBetAmount * 2
-    });
+      this.props.onChangeState({
+        bet_amount: maxBetAmount,
+        max_return: maxBetAmount * 2
+      });
     }
-    }
+  }
 
-    componentDidUpdate(prevProps) {
-      if (this.props.bet_amount !== prevProps.bet_amount) {
-        document.getElementById("betamount").focus();
-      }
+  componentDidUpdate(prevProps) {
+    if (this.props.bet_amount !== prevProps.bet_amount) {
+      document.getElementById('betamount').focus();
     }
-    
+  }
 
   render() {
     return (
@@ -95,22 +94,21 @@ class DefaultBetAmountPanel extends Component {
         <div
           className={`edit-amount-panel ${this.state.is_other ? '' : 'hidden'}`}
         >
-                 
-   
           <TextField
             type="text"
             name="betamount"
             id="betamount"
+            variant="outlined"
             value={this.props.bet_amount}
             inputProps={{
-              pattern: "[0-9]*",
-              maxLength: 9,
+              pattern: '[0-9]*',
+              maxLength: 9
             }}
             InputLabelProps={{
-              shrink: true,
+              shrink: true
             }}
             InputProps={{
-              endAdornment: "BUSD",
+              endAdornment: 'BUSD'
             }}
             onChange={e => {
               if (this.props.game_type === 'Brain Game') {
@@ -135,10 +133,16 @@ class DefaultBetAmountPanel extends Component {
             }}
             placeholder="BET AMOUNT"
           />
-          <div className='max'>
+          <div className="max">
             {/* <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
             <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button> */}
-            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => this.handleMaxButtonClick()}
+            >
+              Max
+            </Button>
           </div>
         </div>
         {this.props.game_type === 'RPS' ? (
@@ -154,9 +158,11 @@ class DefaultBetAmountPanel extends Component {
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   socket: state.auth.socket,
-  balance: state.auth.balance,
+  balance: state.auth.balance
 });
 
-const mapDispatchToProps = {
-};
-export default connect(mapStateToProps, mapDispatchToProps)(DefaultBetAmountPanel);
+const mapDispatchToProps = {};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(DefaultBetAmountPanel);

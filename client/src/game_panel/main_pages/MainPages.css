@@ -7,7 +7,7 @@ button, button.btn {
 }
 .your-bet-amount {
     margin-top: 30px;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -829,7 +829,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 
 
 .game-page .pre-summary-panel > div {
-    padding-left: 48px;
+    padding: 0 60px;
     background-repeat: no-repeat;
     background-position: left center;
     font-size: 16px;
@@ -837,7 +837,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     line-height: 32px;
 }
 .game-page .pre-summary-panel > div ~ div {
-    margin-left: 90px;
+    margin: 0 45px;
 }
 .game-page .page-title > .pre-summary-panel {
     background-color: white;
@@ -1002,7 +1002,6 @@ box-shadow:none !important;
 }
 .game-page .game-contents .game-info-panel.payout-info-panel .edit-amount-panel {
     margin: 0;
-    display: inline-block;
     white-space: nowrap;
 }
 
@@ -1476,6 +1475,7 @@ input {
 }
 .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
     display: flex;
+    margin-right: 15px;
 }
 .game-page .game-contents .game-info-panel .create-box-panel .edit-amount-panel {
     margin: 0 50px 0 0;
@@ -1483,14 +1483,7 @@ input {
 .game-page .game-contents .game-info-panel .create-box-panel button {
     margin: 0;
 }
-.game-page .game-contents .game-info-panel .create-box-panel a.btn-empty-boxes {
-    font-size: 16px;
-    line-height: 36px;
-    margin-left: 16px;
-    color: #ff409a;
-    cursor: pointer;
-    text-decoration: underline;
-}
+
 .msgtooltip {
     width: 100%;
     height: 100%;
@@ -2140,7 +2133,7 @@ margin-bottom: 10px;
     .previous-guesses.drop  {
         width: 360px;
     }
-
+   
     #no-guesses {
         transform: translateX(-120px) !important;
      }
@@ -2162,8 +2155,6 @@ margin-bottom: 10px;
     }
 
     .your-bet-amount {
-        padding: 4% 14% 0% 14%;
-            margin-bottom: 30px;
         display: inline-flex;
         justify-content: center;
         align-content: center;

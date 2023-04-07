@@ -6,7 +6,7 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 import Battle from '../icons/Battle';
 import IconButton from '@material-ui/core/IconButton';
-import {Box, Button} from '@material-ui/core';
+import { Box, Button } from '@material-ui/core';
 
 import { updateDigitToPoint2 } from '../../util/helper';
 
@@ -17,7 +17,6 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Pagination from '../../components/Pagination';
 import { convertToCurrency } from '../../util/conversion';
 
-
 class OpenGamesTable extends Component {
   constructor(props) {
     super(props);
@@ -26,37 +25,33 @@ class OpenGamesTable extends Component {
       showPlayerModal: false,
       selectedCreator: '',
       mouseDown: false
-
     };
   }
 
- 
-  handleOpenPlayerModal = (creator_id) => {
+  handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
-  }
+  };
 
-  
   handleClosePlayerModal = () => {
     this.setState({ showPlayerModal: false });
   };
 
-
-  joinRoom = (e) => {
+  joinRoom = e => {
     this.setState({ isClicked: true });
-  
+
     const creator_id = e.currentTarget.dataset.creatorId;
     const bet_amount = e.currentTarget.dataset.betAmount;
-  
+
     // if (!this.props.isAuthenticated) {
     //   alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
     //   return;
     // }
-  
+
     if (e.currentTarget.dataset.roomStatus === 'finished') {
       alertModal(this.props.isDarkMode, `THIS GAME HAS ENDED ALREADY`);
       return;
     }
-  
+
     const room_id = e.currentTarget.dataset.id;
     this.props.setCurRoomInfo({
       _id: room_id,
@@ -69,13 +64,13 @@ class OpenGamesTable extends Component {
       box_list: [],
       brain_game_type: {
         _id: e.currentTarget.dataset.brainGameTypeId,
-        game_type_name: e.currentTarget.dataset.brainGameTypeName,
+        game_type_name: e.currentTarget.dataset.brainGameTypeName
       },
-      brain_game_score: e.currentTarget.dataset.brainGameScore,
+      brain_game_score: e.currentTarget.dataset.brainGameScore
     });
     history.push('/join/' + room_id);
   };
-  
+
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
     this.props.getRoomList({
@@ -85,11 +80,13 @@ class OpenGamesTable extends Component {
   };
 
   handleBtnLeftClicked = e => {
-    this.game_type_panel.scrollLeft = 0;
+    const scrollAmount = 200; // Change this value to adjust the scroll amount
+    this.game_type_panel.scrollLeft -= scrollAmount;
   };
 
   handleBtnRightClicked = e => {
-    this.game_type_panel.scrollLeft = this.game_type_panel.scrollWidth;
+    const scrollAmount = 200; // Change this value to adjust the scroll amount
+    this.game_type_panel.scrollLeft += scrollAmount;
   };
 
   generateGameTypePanel = () => {
@@ -101,10 +98,10 @@ class OpenGamesTable extends Component {
       QS: 'quick-shoot',
       DG: 'drop-game'
     };
-  
+
     const gameTypePanel = (
       <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap">
-       <Box item key="open-game-left-button">
+        <Box item key="open-game-left-button">
           <IconButton
             className="btn-arrow-left"
             onClick={this.handleBtnLeftClicked}
@@ -128,7 +125,9 @@ class OpenGamesTable extends Component {
             className={`btn-game-type btn-icon ${
               gameTypeStyleClass[gameType.short_name]
             } ${
-              this.state.selectedGameType === gameType.short_name ? 'active' : ''
+              this.state.selectedGameType === gameType.short_name
+                ? 'active'
+                : ''
             }`}
             key={index}
             onClick={() => {
@@ -147,7 +146,7 @@ class OpenGamesTable extends Component {
         </IconButton>
       </Box>
     );
-    
+
     return gameTypePanel;
   };
 
@@ -156,9 +155,7 @@ class OpenGamesTable extends Component {
       this.setState({ loaded: true });
     });
   }
-  
 
-  
   handlePageNumberClicked = page => {
     this.props.getRoomList({
       page: page,
@@ -185,7 +182,6 @@ class OpenGamesTable extends Component {
   render() {
     const gameTypePanel = this.generateGameTypePanel();
     return (
-      
       <div className="overflowX">
         <div className="game-type-container">
           <div
@@ -203,15 +199,15 @@ class OpenGamesTable extends Component {
               <div>NO BATTLES YET, GO TO 'MY BATTLES'</div>
             </div>
           )}
-           {this.state.showPlayerModal &&
+          {this.state.showPlayerModal && (
             <PlayerModal
               selectedCreator={this.state.selectedCreator}
               modalIsOpen={this.state.showPlayerModal}
               closeModal={this.handleClosePlayerModal}
               // {...this.state.selectedRow}
             />
-          }
-   
+          )}
+
           {this.props.roomList.map(
             (row, key) => (
               <div className="table-row" key={row._id}>
@@ -230,15 +226,17 @@ class OpenGamesTable extends Component {
                     </div>
                   </div>
                   <div className="table-cell desktop-only cell-user-name">
-                  <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}>                   
-
-                    <Avatar
-                      className="avatar"
-                      src={row.creator_avatar}
-                      alt=""
-                      darkMode={this.props.isDarkMode}
-                    />
-                    {/* <span>{row.creator}</span> */}
+                    <a
+                      className="player"
+                      onClick={() => this.handleOpenPlayerModal(row.creator_id)}
+                    >
+                      <Avatar
+                        className="avatar"
+                        src={row.creator_avatar}
+                        alt=""
+                        darkMode={this.props.isDarkMode}
+                      />
+                      {/* <span>{row.creator}</span> */}
                     </a>
                     <i
                       className={`online-status${
@@ -250,103 +248,107 @@ class OpenGamesTable extends Component {
                       }`}
                     ></i>
                     {row.joiners && row.joiners.length > 0 ? (
-  <div className="table-cell desktop-only cell-joiners">
-    <Battle />
-    {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
-                        // <a className="player" onClick={() => this.handleOpenPlayerModal(row.curRoomInfo.j)}>                   
+                      <div className="table-cell desktop-only cell-joiners">
+                        <Battle />
+                        {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
+                          // <a className="player" onClick={() => this.handleOpenPlayerModal(row.curRoomInfo.j)}>
 
-      <Avatar
-        className="avatar"
-        key={index}
-        src={avatar}
-        alt=""
-        darkMode={this.props.isDarkMode}
-      />
-      // </a>
-    ))}
-  </div>
-) : null}
+                          <Avatar
+                            className="avatar"
+                            key={index}
+                            src={avatar}
+                            alt=""
+                            darkMode={this.props.isDarkMode}
+                          />
+                          // </a>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="table-cell desktop-only cell-amount-info">
-                 
-  {row.game_type.game_type_name === 'Spleesh!'
-    ? <>
-      {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
-      {convertToCurrency(row.spleesh_bet_unit * 10)}
-       {/* / 
+                    {row.game_type.game_type_name === 'Spleesh!' ? (
+                      <>
+                        {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
+                        {convertToCurrency(row.spleesh_bet_unit * 10)}
+                        {/* / 
       '???' */}
-    </>
-    : <>
-      {convertToCurrency(updateDigitToPoint2(row.user_bet))}
-       {/* / 
+                      </>
+                    ) : row.game_type.game_type_name === 'Mystery Box' ? (
+                      <>
+                        {convertToCurrency(row.pr)}
+                      </>
+                    ) : (
+                      <>
+                        {convertToCurrency(updateDigitToPoint2(row.user_bet))}
+                        {/* / 
       {convertToCurrency(row.winnings)} */}
-    </>
-  }
-</div>
+                      </>
+                    )}
+                  </div>
                   <div className="table-cell cell-action">
-                    
-<Button
-  className="btn_join"
-  onMouseDown={(event) => {
-    this.setState({ mouseDown: true });
-    event.currentTarget.classList.add('active');
-  }}
-  onMouseUp={(event) => {
-    this.setState({ mouseDown: false });
-    event.currentTarget.classList.remove('active');
-    this.joinRoom(event);
-  }}
-  onTouchStart={(event) => {
-    this.setState({ mouseDown: true });
-    event.currentTarget.classList.add('active');
-  }}
-  onTouchEnd={(event) => {
-    this.setState({ mouseDown: false });
-    event.currentTarget.classList.remove('active');
-    this.joinRoom(event);
-  }}
-  data-id={row._id}
-  data-creator-id={row.creator_id}
-  data-room-status={row.status}
-  data-game-type={row.game_type.game_type_name}
-  data-bet-amount={row.user_bet}
-  data-spleesh-bet-unit={row.spleesh_bet_unit}
-  data-box-price={row.box_price}
-  data-brain-game-type-id={
-    row.brain_game_type ? row.brain_game_type._id : ''
-  }
-  data-brain-game-type-name={
-    row.brain_game_type
-      ? row.brain_game_type.game_type_name
-      : ''
-  }
-  data-brain-game-score={
-    row.brain_game_score ? row.brain_game_score : 0
-  }
->
-  {row.is_private && (
-    <img
-      src="/img/icon-lock.png"
-      alt=""
-      className="lock-icon"
-    />
-  )}
-  PLAY
-</Button>
+                    <Button
+                      className="btn_join"
+                      onMouseDown={event => {
+                        this.setState({ mouseDown: true });
+                        event.currentTarget.classList.add('active');
+                      }}
+                      onMouseUp={event => {
+                        this.setState({ mouseDown: false });
+                        event.currentTarget.classList.remove('active');
+                        this.joinRoom(event);
+                      }}
+                      onTouchStart={event => {
+                        this.setState({ mouseDown: true });
+                        event.currentTarget.classList.add('active');
+                      }}
+                      onTouchEnd={event => {
+                        this.setState({ mouseDown: false });
+                        event.currentTarget.classList.remove('active');
+                        this.joinRoom(event);
+                      }}
+                      data-id={row._id}
+                      data-creator-id={row.creator_id}
+                      data-room-status={row.status}
+                      data-game-type={row.game_type.game_type_name}
+                      data-bet-amount={row.user_bet}
+                      data-spleesh-bet-unit={row.spleesh_bet_unit}
+                      data-box-price={row.box_price}
+                      data-brain-game-type-id={
+                        row.brain_game_type ? row.brain_game_type._id : ''
+                      }
+                      data-brain-game-type-name={
+                        row.brain_game_type
+                          ? row.brain_game_type.game_type_name
+                          : ''
+                      }
+                      data-brain-game-score={
+                        row.brain_game_score ? row.brain_game_score : 0
+                      }
+                    >
+                      {row.is_private && (
+                        <img
+                          src="/img/icon-lock.png"
+                          alt=""
+                          className="lock-icon"
+                        />
+                      )}
+                      PLAY
+                    </Button>
                   </div>
                 </div>
                 <div className="mobile-only">
-
                   <div className="table-cell cell-user-name">
-                  <a className="player" onClick={() => this.handleOpenPlayerModal(row.creator_id)}>                   
-       
-                    <Avatar
-                      className="avatar"
-                      src={row.creator_avatar}
-                      alt=""
-                      darkMode={this.props.isDarkMode}
-                    />
-                    {/* <span>{row.creator}</span> */}
+                    <a
+                      className="player"
+                      onClick={() => this.handleOpenPlayerModal(row.creator_id)}
+                    >
+                      <Avatar
+                        className="avatar"
+                        src={row.creator_avatar}
+                        alt=""
+                        darkMode={this.props.isDarkMode}
+                      />
+                      {/* <span>{row.creator}</span> */}
                     </a>
                     <i
                       className={`online-status${
@@ -358,35 +360,39 @@ class OpenGamesTable extends Component {
                       }`}
                     ></i>
                     {row.joiners && row.joiners.length > 0 ? (
-  <div className="table-cell mobile-only cell-joiners">
-    <Battle />
-    {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
-      <Avatar
-        className="avatar"
-        key={index}
-        src={avatar}
-        alt=""
-        darkMode={this.props.isDarkMode}
-      />
-    ))}
-  </div>
-) : null}
-
+                      <div className="table-cell mobile-only cell-joiners">
+                        <Battle />
+                        {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
+                          <Avatar
+                            className="avatar"
+                            key={index}
+                            src={avatar}
+                            alt=""
+                            darkMode={this.props.isDarkMode}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="table-cell cell-amount-info">
-                  {row.game_type.game_type_name === 'Spleesh!'
-    ? <>
-      {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
-      {convertToCurrency(row.spleesh_bet_unit * 10)}
-       {/* / 
+                    {row.game_type.game_type_name === 'Spleesh!' ? (
+                      <>
+                        {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
+                        {convertToCurrency(row.spleesh_bet_unit * 10)}
+                        {/* / 
       '???' */}
-    </>
-    : <>
-      {convertToCurrency(updateDigitToPoint2(row.user_bet))}
-       {/* / 
+                      </>
+                    ) : row.game_type.game_type_name === 'Mystery Box' ? (
+                      <>
+                        {convertToCurrency(row.pr)}
+                      </>
+                    ) : (
+                      <>
+                        {convertToCurrency(updateDigitToPoint2(row.user_bet))}
+                        {/* / 
       {convertToCurrency(row.winnings)} */}
-    </>
-  }
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -394,7 +400,7 @@ class OpenGamesTable extends Component {
             this
           )}
         </div>
-       
+
         {this.props.roomList.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
@@ -405,7 +411,6 @@ class OpenGamesTable extends Component {
             prefix="LiveGames"
           />
         )}
-        
       </div>
     );
   }
@@ -414,12 +419,11 @@ class OpenGamesTable extends Component {
 const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   joiners: state.logic.curRoomInfo.joiners
-
 });
 
 const mapDispatchToProps = {
   getRoomList,
-  setCurRoomInfo,
+  setCurRoomInfo
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);

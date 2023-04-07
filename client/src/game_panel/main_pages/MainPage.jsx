@@ -11,6 +11,9 @@ import {
   getMyChat,
   getGameTypeList
 } from '../../redux/Logic/logic.actions';
+import {
+  toggleDrawer
+} from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import ShowHistory from '../icons/ShowHistory.js';
@@ -56,7 +59,7 @@ class MainPage extends Component {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
       show_open_game: 0,
-      open: true
+      isDrawerOpen: true
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
 
@@ -83,7 +86,7 @@ class MainPage extends Component {
   };
 
   toggleDrawer = () => {
-    this.setState(prevState => ({ open: !prevState.open }));
+    this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
 
   getActiveTabText = () =>
@@ -97,20 +100,20 @@ class MainPage extends Component {
       : 'My Battles';
 
   render() {
-    const { open } = this.state;
+    const { isDrawerOpen } = this.props;
 
     return (
       
-      <div className="main-game" style={{ gridTemplateColumns: this.state.open ? '260px calc(70% - 260px) 30%' : '70% 30%' }}>
+      <div className="main-game" style={{ gridTemplateColumns: this.props.isDrawerOpen ? '260px calc(70% - 260px) 30%' : '70% 30%' }}>
         {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
           !this.state.is_mobile) &&
           
           <Drawer
           
-          className="mat-chat" style={{ display: this.state.open ? 'flex' : 'none' }}
+          className="mat-chat" style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
         variant="persistent"
           anchor="left"
-          open={open}
+          open={isDrawerOpen}
           >
             <ChatPanel />
           </Drawer>
@@ -190,7 +193,7 @@ class MainPage extends Component {
             <HistoryTable />
           )}
           <DrawerButton
-            open={this.state.open}
+            open={this.props.isDrawerOpen}
             toggleDrawer={this.toggleDrawer}
         />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
@@ -343,7 +346,7 @@ class MainPage extends Component {
             </Button>
           </div>
         )}
-            <Footer className="footer" open={this.state.open} style={{ marginLeft: this.state.open ? '270px' : '0' }} />
+            <Footer className="footer" open={this.props.isDrawerOpen} style={{ marginLeft: this.props.isDrawerOpen ? '270px' : '0' }} />
 
 
       </div>
@@ -362,6 +365,7 @@ const mapStateToProps = state => ({
   user: state.auth.user,
   isDarkMode: state.auth.isDarkMode,
   onlineUserList: state.logic.onlineUserList,
+  isDrawerOpen: state.auth.isDrawerOpen,
   gameTypeList: state.logic.gameTypeList,
   selectedMainTabIndex: state.logic.selectedMainTabIndex
 });
@@ -375,7 +379,8 @@ const mapDispatchToProps = {
   getMyGames,
   getMyHistory,
   getGameTypeList,
-  getMyChat
+  getMyChat,
+  toggleDrawer
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MainPage);

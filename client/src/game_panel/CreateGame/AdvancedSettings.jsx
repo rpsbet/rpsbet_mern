@@ -2,41 +2,7 @@ import React, { Component } from 'react';
 import { Button, TextField } from '@material-ui/core';
 
 class AdvancedSettings extends Component {
-  calcWinChance = (boxes, revenueLimit) => {
-    let emptyBoxesWithCost4 = 0;
-    let prizeBoxCount = 0;
-    let costOfPrizes = 0;
   
-    // Count the number of empty boxes and prize boxes, and total the cost of prizes
-    boxes.forEach(box => {
-      if (box.box_prize) {
-        prizeBoxCount++;
-        costOfPrizes += box.box_price;
-      } else {
-        emptyBoxesWithCost4++;
-      }
-    });
-  
-    // Calculate the maximum number of guesses the guesser can make
-    let maxGuesses = Math.floor((revenueLimit - costOfPrizes) / boxes[0].box_price);
-  
-    // Calculate the probability of the creator winning when the guesser chooses a box with cost 4
-    let probabilityOfCreatorWinningWithCost4 = 0;
-    for (let i = 0; i < prizeBoxCount && i < maxGuesses; i++) {
-      let probability = 1;
-      for (let j = 0; j < i; j++) {
-        probability *= emptyBoxesWithCost4 / (boxes.length - j);
-      }
-      probability *= prizeBoxCount / (boxes.length - i);
-      probabilityOfCreatorWinningWithCost4 += probability;
-    }
-  
- // Calculate the overall probability of the creator winning
- let probabilityOfCreatorWinning = ((probabilityOfCreatorWinningWithCost4 * (emptyBoxesWithCost4 / boxes.length)) * 100).toFixed(2);
-  
- return probabilityOfCreatorWinning +  '%';
-};
- 
   render() {
     return (
       <div id="advanced_panel">
@@ -45,9 +11,7 @@ class AdvancedSettings extends Component {
             <h3 className="game-sub-title">Privacy</h3>
             <div className="radio-button-group bet-amounts">
               <Button
-                className={
-                 (!this.props.is_private ? ' active' : '')
-                }
+                className={!this.props.is_private ? ' active' : ''}
                 onClick={() => {
                   this.props.onChangeState({
                     is_private: false,
@@ -58,9 +22,7 @@ class AdvancedSettings extends Component {
                 Public
               </Button>
               <Button
-                className={
-                  (this.props.is_private ? ' active' : '')
-                }
+                className={this.props.is_private ? ' active' : ''}
                 onClick={() => {
                   this.props.onChangeState({ is_private: true });
                 }}
@@ -70,8 +32,9 @@ class AdvancedSettings extends Component {
               <TextField
                 type="text"
                 id="betamount"
+                variant="outlined"
                 InputLabelProps={{
-                  shrink: true,
+                  shrink: true
                 }}
                 value={this.props.room_password}
                 onChange={e => {
@@ -109,40 +72,45 @@ class AdvancedSettings extends Component {
                   this.props.endgame_type ? '' : 'hidden'
                 }`}
               >
-               
                 <TextField
                   type="text"
+                  variant="outlined"
                   name="endgame_amount"
                   id="endgame_amount"
                   value={this.props.endgame_amount}
                   inputProps={{
-                    pattern: "[0-9]*",
-                    maxLength: 9,
+                    pattern: '[0-9]*',
+                    maxLength: 9
                   }}
                   InputLabelProps={{
-                    shrink: true,
+                    shrink: true
                   }}
                   InputProps={{
-                    endAdornment: "BUSD",
+                    endAdornment: 'BUSD'
                   }}
                   onChange={e => {
-
                     if (this.props.game_mode === 'Mystery Box') {
                       this.props.onChangeState({
                         endgame_amount: e.target.value,
-                        winChance: this.calcWinChance(this.props.box_list, this.props.endgame_amount) 
-
+                        winChance: this.props.calcMysteryBoxEV(
+                          this.props.box_list,
+                          e.target.value,
+                          this.props.max_return
+                        )
                       });
-                      
-
+                    } else if (this.props.game_mode === 'Spleesh!') {
+                      this.props.onChangeState({
+                        endgame_amount: e.target.value,
+                        winChance: this.props.calculateEV(
+                          this.props.bet_amount,
+                          e.target.value, this.props.spleesh_bet_unit)
+                      });
                     } else {
-                    this.props.onChangeState({
-                      endgame_amount: e.target.value
-                    })
+                      this.props.onChangeState({
+                        endgame_amount: e.target.value
+                      });
                     }
-                    ;
                     // this.calcWinChance(this.state.boxList, e.target.value);
-
                   }}
                   placeholder="PAYOUT"
                 />
@@ -176,7 +144,7 @@ class AdvancedSettings extends Component {
           </div>
         )} */}
 
-{/* 
+        {/* 
         <hr/>
 				<label className="lbl_game_option">Anonymous Bet</label>
 				<div >
@@ -184,7 +152,8 @@ class AdvancedSettings extends Component {
 					<label className={"radio-inline" + (this.props.is_anonymous === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: false}); }}>No</label>
 				</div>
 				<div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. RPS 0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your RPS 0.10 back.</div>
-      */}</div> 
+      */}
+      </div>
     );
   }
 }

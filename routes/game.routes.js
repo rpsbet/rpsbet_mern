@@ -144,6 +144,7 @@ router.get('/room/:id', async (req, res) => {
         spleesh_bet_unit: room['spleesh_bet_unit'],
         brain_game_type: room['brain_game_type'],
         host_pr: room['host_pr'],
+        new_host_pr:  room['new_host_pr'],
         user_bet: room['user_bet'],
         brain_game_score: room['brain_game_score'],
         qs_game_type: room['qs_game_type'],
@@ -315,9 +316,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
               updateDigitToPoint2(
                 (gameLog['bet_amount'] / (gameLog['room']['qs_game_type'] - 1)) + gameLog['bet_amount']
               )
-            )} (${(updateDigitToPoint2(
+            )} (${((updateDigitToPoint2(
               (gameLog['bet_amount'] / (gameLog['room']['qs_game_type'] - 1)) + gameLog['bet_amount']
-            )) / gameLog['bet_amount'] }X)
+            )) / gameLog['bet_amount']).toFixed(2) }X)
 						</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
@@ -381,26 +382,29 @@ temp.history = `${creator_link} unstaked
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Mystery Box') {
         if (gameLog.game_result === 0) {
-          temp.history = `${joined_user_link} opened a box <span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} opened a box <span style='color: #ffdd15;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
             )}</span>
-						and found <span style='color: #02c526;'>Nothing</span> in ${room_name}`;
+						and didn't get <span style='color: #ffdd15;'>shit (0.00x)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
-          temp.history = `${creator_link} just received a payout 💰 from their game ${room_name}`;
+          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+            updateDigitToPoint2((gameLog['bet_amount'] - gameLog['room']['endgame_amount']))
+          )}</span> from their game ${room_name}`;
         }  else if (gameLog.game_result === -100) {
           //end game
-          temp.history = `${creator_link} ended ${room_name} and earned <span style='color: #02c526;'>${convertToCurrency(
-              updateDigitToPoint2(gameLog['room']['pr'] + parseFloat(gameLog['room']['user_bet']))
-            )}</span>`;
+          temp.history = `${creator_link} unstaked 
+          <span
+          style='color: ${(parseFloat(gameLog['room']['pr'] + gameLog['room']['user_bet']) / gameLog['room']['bet_amount']
+          ).toFixed(2) < 1 ? '#ffdd15' : '#ff0a28'};'
+          >${convertToCurrency(
+            updateDigitToPoint2(gameLog['room']['pr'] + parseFloat(gameLog['room']['user_bet']))
+          )} (${parseFloat((gameLog['room']['pr'] + parseFloat(gameLog['room']['user_bet']))
+           / gameLog['room']['bet_amount']).toFixed(2)}X)</span> in ${room_name}`;
         } else {
-          temp.history = `${joined_user_link} opened a box <span style='color: #02c526;'>${convertToCurrency(
-              updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span>
-						and won <span style='color: #02c526;'>${convertToCurrency(
-              updateDigitToPoint2(gameLog['game_result'])
-            )}</span> in ${room_name}`;
+          temp.history = `${joined_user_link} opened a box and won <span style="color: ${(parseFloat(gameLog['game_result']) / gameLog['room']['bet_amount']) < 1 ? '#ffdd15' : '#ff0a28'}">${convertToCurrency(updateDigitToPoint2(gameLog['game_result']))} (${(gameLog['game_result'] / gameLog['bet_amount']).toFixed(2)}X)</span> in ${room_name}`;
         }
+        
       } else if (gameLog['game_type']['game_type_name'] === 'Brain Game') {
         if (gameLog.game_result === 0) {
           //draw          Draw, No Winner! PR will be split.
@@ -574,6 +578,7 @@ const getRoomList = async (pagination, page, game_type) => {
       } else if (temp.game_type.game_type_id === 3) {
         temp.winnings = updateDigitToPoint2(room['pr']);
       } else if (temp.game_type.game_type_id === 4) {
+        // mystery box
         temp.winnings = parseFloat(room['host_pr']) + parseFloat(room['user_bet']);
       } else if (temp.game_type.game_type_id === 5) {
         // quick shoot
@@ -1981,7 +1986,7 @@ if (newBetAmount <= roomInfo['user_bet']) {
         
         newGameLog.game_result = selected_box.box_prize;
         newGameLog.bet_amount = req.body.bet_amount;
-        
+
         if (selected_box.box_price > req.user.balance) {
           return res.json({
             success: false,
@@ -2113,10 +2118,11 @@ if (newBetAmount <= roomInfo['user_bet']) {
 
           
           newTransactionC.amount += new_host_pr - roomInfo.endgame_amount;
-          newGameLog.new_host_pr = new_host_pr;
+          
           
           roomInfo.user_bet = parseFloat(roomInfo.user_bet) + roomInfo.endgame_amount - roomInfo.bet_amount;
-          new_host_pr = roomInfo.bet_amount;
+
+          
           /*lowest_box_price === -1 ? 0 : lowest_box_price; */
           
           // newTransactionC.amount += new_host_pr * ((100 - commission.value) / 100);
@@ -2145,6 +2151,8 @@ if (newBetAmount <= roomInfo['user_bet']) {
             game_result: 3
           });
           await newGameLogC.save();
+          newGameLog.new_host_pr = new_host_pr;
+          new_host_pr = roomInfo.bet_amount;
 
           const originalBoxList = await RoomBoxPrize.find({ room: roomInfo }).select('box_prize box_price');
 
@@ -2186,10 +2194,12 @@ if (newBetAmount <= roomInfo['user_bet']) {
 
         }
        
-
+        roomInfo.new_host_pr = new_host_pr
         // new_host_pr -= roomInfo.endgame_amount;
         roomInfo.host_pr = new_host_pr;
         roomInfo.pr = max_prize;
+          console.log('7823', roomInfo.new_host_pr)
+
         newGameLog.selected_box = selected_box;
       } else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
         newGameLog.bet_amount = roomInfo['bet_amount'];

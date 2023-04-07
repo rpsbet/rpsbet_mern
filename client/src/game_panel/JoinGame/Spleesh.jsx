@@ -28,18 +28,16 @@ const defaultOptions = {
   autoplay: true,
   animationData: animationData,
   rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice"
+    preserveAspectRatio: 'xMidYMid slice'
   }
 };
 
-
 const twitterLink = window.location.href;
-
 
 class Spleesh extends Component {
   constructor(props) {
     super(props);
-        this.socket = this.props.socket;
+    this.socket = this.props.socket;
 
     this.state = {
       betting: false,
@@ -59,7 +57,6 @@ class Spleesh extends Component {
       isPasswordCorrect: false
     };
     this.panelRef = React.createRef();
-
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -82,21 +79,20 @@ class Spleesh extends Component {
   };
 
   componentDidMount() {
-          // Add event listener to detect end of scroll
-  this.panelRef.current.addEventListener("scroll", this.handleScroll);
+    // Add event listener to detect end of scroll
+    this.panelRef.current.addEventListener('scroll', this.handleScroll);
     this.socket.on('SPLEESH_GUESSES', data => {
-      this.setState({spleesh_guesses: data });
+      this.setState({ spleesh_guesses: data });
     });
     this.socket.on('SPLEESH_GUESSES1', data => {
       if (!this.state.spleesh_guesses1Received) {
         this.setState({
           spleesh_guesses: data,
-          spleesh_guesses1Received: true,
+          spleesh_guesses1Received: true
         });
       }
     });
   }
-  
 
   componentDidUpdate(prevProps, prevState) {
     if (
@@ -113,34 +109,37 @@ class Spleesh extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    this.panelRef.current.removeEventListener("scroll", this.handleScroll);
-  }; 
+    this.panelRef.current.removeEventListener('scroll', this.handleScroll);
+  };
 
-  
-  handleScroll = (event) => {
+  handleScroll = event => {
     const panel = event.target;
     const scrollLeft = panel.scrollLeft;
     const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-    
+
     if (scrollLeft >= maxScrollLeft) {
       // Scrolled to or beyond end of panel, so append items to array and restart animation
       const items = this.state.items.concat(this.state.items);
       this.setState({ items }, () => {
-        panel.style.animation = "none";
-        panel.scrollTo({ left: 0, behavior: "auto" });
+        panel.style.animation = 'none';
+        panel.scrollTo({ left: 0, behavior: 'auto' });
         void panel.offsetWidth;
-        panel.style.animation = "ticker 20s linear infinite";
+        panel.style.animation = 'ticker 20s linear infinite';
       });
     } else {
-      panel.style.animation = "none";
+      panel.style.animation = 'none';
     }
   };
-  
 
   joinGame = async () => {
-    const {is_anonymous, bet_amount} = this.state;
-    const {spleesh_bet_unit, playSound, refreshHistory, isDarkMode} = this.props;
-    
+    const { is_anonymous, bet_amount } = this.state;
+    const {
+      spleesh_bet_unit,
+      playSound,
+      refreshHistory,
+      isDarkMode
+    } = this.props;
+
     const result = await this.props.join({
       bet_amount: bet_amount,
       is_anonymous: is_anonymous
@@ -156,25 +155,32 @@ class Spleesh extends Component {
         playSound('split');
       }
 
-      let stored_spleesh_array = JSON.parse(localStorage.getItem("spleesh_array")) || [];
-      let stored_spleesh_10_array = JSON.parse(localStorage.getItem("spleesh_10_array")) || [];
-      
+      let stored_spleesh_array =
+        JSON.parse(localStorage.getItem('spleesh_array')) || [];
+      let stored_spleesh_10_array =
+        JSON.parse(localStorage.getItem('spleesh_10_array')) || [];
+
       while (stored_spleesh_array.length >= 30) {
         stored_spleesh_array.shift();
       }
-      
+
       if (spleesh_bet_unit === 10) {
         while (stored_spleesh_10_array.length >= 30) {
           stored_spleesh_10_array.shift();
         }
         stored_spleesh_10_array.push({ spleesh: bet_amount });
-        localStorage.setItem("spleesh_10_array", JSON.stringify(stored_spleesh_10_array));
+        localStorage.setItem(
+          'spleesh_10_array',
+          JSON.stringify(stored_spleesh_10_array)
+        );
       } else {
         stored_spleesh_array.push({ spleesh: bet_amount });
-        localStorage.setItem("spleesh_array", JSON.stringify(stored_spleesh_array));
+        localStorage.setItem(
+          'spleesh_array',
+          JSON.stringify(stored_spleesh_array)
+        );
       }
-      
-      
+
       if (result.roomStatus === 'finished') {
         gameResultModal(
           isDarkMode,
@@ -206,10 +212,9 @@ class Spleesh extends Component {
       }
     }
     refreshHistory();
-
   };
 
-  onBtnBetClick = async (bet_amount) => {
+  onBtnBetClick = async bet_amount => {
     const {
       isAuthenticated,
       isDarkMode,
@@ -218,44 +223,49 @@ class Spleesh extends Component {
       balance,
       is_private,
       roomInfo,
-      openGamePasswordModal,
+      openGamePasswordModal
     } = this.props;
-  
+
     const { bankroll } = this.state;
 
-    if (this.state.spleesh_guesses.some(item => item.bet_amount === bet_amount)) {
-      alertModal(isDarkMode, 'ALREADY BEEN GUESSED IN THIS CURRENT GAME STUPID MTF!');
+    if (
+      this.state.spleesh_guesses.some(item => item.bet_amount === bet_amount)
+    ) {
+      alertModal(
+        isDarkMode,
+        'ALREADY BEEN GUESSED IN THIS CURRENT GAME STUPID MTF!'
+      );
       return;
     }
-  
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
-  
+
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-  
-    const hideConfirmModal = localStorage.getItem('hideConfirmModal') === 'true';
-  
-    if (hideConfirmModal || (is_private !== true || passwordCorrect === true)) {
+
+    const hideConfirmModal =
+      localStorage.getItem('hideConfirmModal') === 'true';
+
+    if (hideConfirmModal || is_private !== true || passwordCorrect === true) {
       await this.joinGame(bet_amount);
     } else {
       openGamePasswordModal();
     }
   };
-  
 
   createNumberPanel = () => {
     let panel = [];
@@ -270,53 +280,59 @@ class Spleesh extends Component {
           onClick={() => {
             const betAmount = i * this.props.spleesh_bet_unit;
             const endgameAmount = this.props.spleesh_bet_unit * (55 - i);
-            this.setState({
-              bet_amount: betAmount,
-              endgame_amount: endgameAmount
-            }, () => {
-              this.onBtnBetClick(betAmount);
-            });
+            this.setState(
+              {
+                bet_amount: betAmount,
+                endgame_amount: endgameAmount
+              },
+              () => {
+                this.onBtnBetClick(betAmount);
+                this.props.playSound('select');
+              }
+            );
           }}
           key={i}
         >
-          {convertToCurrency(updateDigitToPoint2(i * this.props.spleesh_bet_unit))}
+          {convertToCurrency(
+            updateDigitToPoint2(i * this.props.spleesh_bet_unit)
+          )}
         </Button>
       );
     }
     return panel;
   };
-  
 
   predictNext = (array1, array2) => {
     const frequencyMap = {};
     let maxValue = 0;
     let maxKey = 0;
-  
+
     // Create a frequency map of the spleesh values in array1
     array1.forEach(item => {
       if (!frequencyMap[item.spleesh]) {
         frequencyMap[item.spleesh] = 0;
       }
       frequencyMap[item.spleesh] += 1;
-  
+
       // Keep track of the spleesh value with the highest frequency
       if (frequencyMap[item.spleesh] > maxValue) {
         maxValue = frequencyMap[item.spleesh];
         maxKey = item.spleesh;
       }
     });
-  
+
     // Get all the spleesh values from the frequency map
     const spleeshValues = Object.keys(frequencyMap);
-  
+
     let prediction = maxKey;
     let i = 0;
     const maxAttempts = spleeshValues.length * 1; // set a maximum number of attempts to find a value
     let shouldStopBetting = false;
-    while (array2.some(item => item.bet_amount === prediction)) {      // Randomize a value from the spleesh values until one is found that doesn't exist in array2 or until the maximum number of attempts is reached
+    while (array2.some(item => item.bet_amount === prediction)) {
+      // Randomize a value from the spleesh values until one is found that doesn't exist in array2 or until the maximum number of attempts is reached
       const randomIndex = Math.floor(Math.random() * spleeshValues.length);
       prediction = Number(spleeshValues[randomIndex]);
-  
+
       i++;
       if (i >= maxAttempts) {
         alertModal(this.props.isDarkMode, `NO MORE AVAILABLE OPTIONS MTF!!`);
@@ -324,11 +340,12 @@ class Spleesh extends Component {
         break;
       }
     }
-  
+
     return { prediction, shouldStopBetting };
   };
-  
+
   handleButtonClick = () => {
+    this.props.playSound('select');
     if (!this.state.betting) {
       this.setState({
         timer: setInterval(() => {
@@ -355,90 +372,87 @@ class Spleesh extends Component {
     }
   };
   startBetting = () => {
+    this.props.playSound('start');
     const intervalId = setInterval(() => {
-      let storageKey = "spleesh_array";
+      let storageKey = 'spleesh_array';
       if (this.props.spleesh_bet_unit === 10) {
-        storageKey = "spleesh_10_array";
+        storageKey = 'spleesh_10_array';
       }
-  
+
       if (storageKey.length < 3) {
-        alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+        alertModal(this.props.isDarkMode, 'MORE TRAINING DATA NEEDED!');
         return;
       }
-  
-  
-      const predictionResult = this.predictNext(JSON.parse(localStorage.getItem(storageKey)), this.state.spleesh_guesses);
+
+      const predictionResult = this.predictNext(
+        JSON.parse(localStorage.getItem(storageKey)),
+        this.state.spleesh_guesses
+      );
       const nextGuess = predictionResult.prediction;
       const shouldStopBetting = predictionResult.shouldStopBetting;
       this.joinGame2(nextGuess, shouldStopBetting);
     }, 3500);
-  
+
     this.setState({ intervalId, betting: true });
   };
-  
 
-stopBetting = () => {
-  clearInterval(this.state.intervalId);
-  this.setState({ intervalId: null, betting: false, timerValue: 2000 });
-};
+  stopBetting = () => {
+    this.props.playSound('stop');
+    clearInterval(this.state.intervalId);
+    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
+  };
 
-joinGame2 = async (nextGuess, shouldStopBetting) => {
-  const {is_anonymous} = this.state;
-  const {playSound, refreshHistory} = this.props;
-  if (shouldStopBetting) {
-    this.stopBetting();
-    return;
-  }
-  const result = await this.props.join({
-    bet_amount: nextGuess,
-    is_anonymous: is_anonymous
-  });
-  if (result.status === 'success') {
-    let text = 'HAHAA, YOU LOST!!!';
-    playSound('lose');
-    if (result.betResult === 1) {
-      text = 'NOT BAD, WINNER!';
-      playSound('win');
-    } else if (result.betResult === 0) {
-      text = 'DRAW, NO WINNER!';
-      playSound('split');
+  joinGame2 = async (nextGuess, shouldStopBetting) => {
+    const { is_anonymous } = this.state;
+    const { playSound, refreshHistory } = this.props;
+    if (shouldStopBetting) {
+      this.stopBetting();
+      return;
     }
-  }
-   
-  refreshHistory();
+    const result = await this.props.join({
+      bet_amount: nextGuess,
+      is_anonymous: is_anonymous
+    });
+    if (result.status === 'success') {
+      let text = 'HAHAA, YOU LOST!!!';
+      playSound('lose');
+      if (result.betResult === 1) {
+        text = 'NOT BAD, WINNER!';
+        playSound('win');
+      } else if (result.betResult === 0) {
+        text = 'DRAW, NO WINNER!';
+        playSound('split');
+      }
+    }
 
-};
-
-
-
+    refreshHistory();
+  };
 
   toggleBtnHandler = () => {
     this.setState({
-      clicked:!this.state.clicked,
+      clicked: !this.state.clicked,
       text: 'LINK GRABBED'
     });
     setTimeout(() => {
       this.setState({
-        clicked:!this.state.clicked,
+        clicked: !this.state.clicked,
         text: ''
       });
     }, 2000);
-  }
+  };
 
   copy() {
-    navigator.clipboard.writeText(twitterLink)
+    navigator.clipboard.writeText(twitterLink);
   }
 
-
   render() {
-
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
-   if (this.state.clicked) {
-   styles.push('clicked');
-   text = 'COPIED!';
-   }
+    if (this.state.clicked) {
+      styles.push('clicked');
+      text = 'COPIED!';
+    }
 
     return (
       <div className="game-page">
@@ -448,105 +462,133 @@ joinGame2 = async (nextGuess, shouldStopBetting) => {
           </h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel" ref={this.panelRef} onScroll={this.handleScroll}>
-        <div className="pre-summary-panel__inner spleesh">
-          {[...Array(2)].map((_, i) => (
-            <React.Fragment key={i}>
-              <div className="data-item">
-                <div>
-                  <div className="label host-display-name">Host</div>
-                </div>
-                <div className="value">{this.props.creator}</div>
-              </div>
-              
-              <div className="data-item">
-                <div>
-                  <div className="label your-bet-amount">Bet Amount</div>
-                </div>
-                <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
-              </div>
-              <div className="data-item">
-        <div className="label your-max-return">Potential Return</div>
-        <div className="value">
-            {convertToCurrency(
-                updateDigitToPoint2(
-                  this.state.spleesh_guesses.reduce((a, b) => a + b.bet_amount, 0) +
-                    // this.props.game_log_list.reduce((a, b) => a + b, 0) +
-                    this.state.bet_amount * 2 /* 0.9 */
-                )
-            )}
-        </div>
-    </div>
-            </React.Fragment>
-          ))}
-    </div>
-</div>
+          <div
+            className="pre-summary-panel"
+            ref={this.panelRef}
+            onScroll={this.handleScroll}
+          >
+            <div className="pre-summary-panel__inner spleesh">
+              {[...Array(2)].map((_, i) => (
+                <React.Fragment key={i}>
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
+                  </div>
+
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-bet-amount">Bet Amount</div>
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(this.state.bet_amount)}
+                    </div>
+                  </div>
+                  <div className="data-item">
+                    <div className="label your-max-return">
+                      Potential Return
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(
+                        updateDigitToPoint2(
+                          this.state.spleesh_guesses.reduce(
+                            (a, b) => a + b.bet_amount,
+                            0
+                          ) +
+                            // this.props.game_log_list.reduce((a, b) => a + b, 0) +
+                            this.state.bet_amount * 2 /* 0.9 */
+                        )
+                      )}
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Previous Guesses</h3>
             <p className="previous-guesses">
-              
-            {this.state.spleesh_guesses.length > 0
-    ? this.state.spleesh_guesses.map((guess, index) => <span key={index} style={{color: '#fff', background: 'rgba(227, 3, 3, 0.76)', borderRadius: '6px', padding: '0.3em 0.9em', marginRight: '20px' }}> <InlineSVG id='busd' src={require('./busd.svg')} /> {guess.bet_amount + '.00'}</span>)
-    : `No guesses yet`}
-
-
-
+              {this.state.spleesh_guesses.length > 0
+                ? this.state.spleesh_guesses.map((guess, index) => (
+                    <span
+                      key={index}
+                      style={{
+                        color: '#fff',
+                        background: 'rgba(227, 3, 3, 0.76)',
+                        borderRadius: '6px',
+                        padding: '0.3em 0.9em',
+                        marginRight: '20px'
+                      }}
+                    >
+                      {' '}
+                      <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
+                      {guess.bet_amount + '.00'}
+                    </span>
+                  ))
+                : `No guesses yet`}
             </p>
             <h3 className="game-sub-title">Your Number</h3>
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>
             <button
-            id="aiplay"
-        onMouseDown={this.handleButtonClick}
-        onMouseUp={this.handleButtonRelease}
-        onTouchStart={this.handleButtonClick}
-        onTouchEnd={this.handleButtonRelease}
-        >
-        {this.state.betting ? (
-          <div id="stop">
-            <span>Stop</span>
-           <Lottie 
-        options={defaultOptions}
-          width={22}
-        />
+              id="aiplay"
+              onMouseDown={this.handleButtonClick}
+              onMouseUp={this.handleButtonRelease}
+              onTouchStart={this.handleButtonClick}
+              onTouchEnd={this.handleButtonRelease}
+            >
+              {this.state.betting ? (
+                <div id="stop">
+                  <span>Stop</span>
+                  <Lottie options={defaultOptions} width={22} />
+                </div>
+              ) : (
+                <div>
+                  {this.state.timerValue !== 2000 ? (
+                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
+                  ) : (
+                    <span>AI Play</span>
+                  )}
+                </div>
+              )}
+            </button>
           </div>
-        ) : (
-          <div>
-            {this.state.timerValue !== 2000 ? (
-              <span>
-                {(this.state.timerValue / 2000).toFixed(2)}s
-              </span>
-            ) : (
-              <span>AI Play</span>
-            )}
-          </div>
-        )}
-        </button>
-          </div>
-       
-          <div className="action-panel">
-          <div className="share-options">
-          <TwitterShareButton
-    url={twitterLink}
-    title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-    className="Demo__some-network__share-button"
-  >
-    <TwitterIcon size={32} round />
-  </TwitterShareButton>
-  {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-  <a className={styles.join('')} onClick={() => {
-                                    this.toggleBtnHandler();
-                                    this.copy();
-                                }}>{this.state.clicked ? <input type="text" value={twitterLink} readOnly onClick={this.toggleBtnHandler}/> : null }
-  <FaClipboard />&nbsp;{this.state.text}</a>
 
-        </div>
+          <div className="action-panel">
+            <div className="share-options">
+              <TwitterShareButton
+                url={twitterLink}
+                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
+                className="Demo__some-network__share-button"
+              >
+                <TwitterIcon size={32} round />
+              </TwitterShareButton>
+              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
+              <a
+                className={styles.join('')}
+                onClick={() => {
+                  this.toggleBtnHandler();
+                  this.copy();
+                }}
+              >
+                {this.state.clicked ? (
+                  <input
+                    type="text"
+                    value={twitterLink}
+                    readOnly
+                    onClick={this.toggleBtnHandler}
+                  />
+                ) : null}
+                <FaClipboard />
+                &nbsp;{this.state.text}
+              </a>
+            </div>
           </div>
-          </div>
         </div>
+      </div>
     );
   }
 }
-
 
 const mapStateToProps = state => ({
   socket: state.auth.socket,

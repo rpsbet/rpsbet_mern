@@ -6,7 +6,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
-import {Button} from '@material-ui/core';
+import { Button } from '@material-ui/core';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -30,7 +30,7 @@ const defaultOptions = {
   autoplay: true,
   animationData: animationData,
   rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice"
+    preserveAspectRatio: 'xMidYMid slice'
   }
 };
 
@@ -46,7 +46,7 @@ class BrainGame extends Component {
       bgColorChanged: false,
       timer: null,
       timerValue: 2000,
-          clicked: true,
+      clicked: true,
       is_anonymous: false,
       is_started: false,
       remaining_time: 60,
@@ -62,7 +62,6 @@ class BrainGame extends Component {
       isPasswordCorrect: this.props.isPasswordCorrect
     };
     this.panelRef = React.createRef();
-
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -101,7 +100,6 @@ class BrainGame extends Component {
 
   onShowButtonClicked = e => {
     e.preventDefault();
-
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -114,7 +112,6 @@ class BrainGame extends Component {
           bet_amount: this.props.bet_amount
         })
       ) {
-
         const intervalId = setInterval(this.onCountDown, 2000);
         this.setState({
           is_started: true,
@@ -140,39 +137,51 @@ class BrainGame extends Component {
     }
   }
 
-  changeBgColor = async (result) => {
+  changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
     this.setState({ bgColorChanged: false });
   };
 
-
   onStartGame = async e => {
     e.preventDefault();
-    const { playSound, bet_amount, isAuthenticated, isDarkMode, creator_id, roomInfo, user_id, balance, roomStatus, is_private, openGamePasswordModal, deductBalanceWhenStartBrainGame } = this.props;
-  
+    const {
+      playSound,
+      bet_amount,
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      roomInfo,
+      user_id,
+      balance,
+      roomStatus,
+      is_private,
+      openGamePasswordModal,
+      deductBalanceWhenStartBrainGame
+    } = this.props;
+
     playSound('select');
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-  
+
     if (roomStatus === 'finished') {
       alertModal(isDarkMode, 'THIS STAKE HAS ENDED');
       return;
     }
 
-    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
+    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-  
+
     confirmModalCreate(
       isDarkMode,
       'YOU SURE YOU GOT THIS?',
@@ -185,10 +194,10 @@ class BrainGame extends Component {
           const response = await deductBalanceWhenStartBrainGame({
             bet_amount: bet_amount
           });
-  
+
           if (response) {
             const intervalId = setInterval(this.onCountDown, 1000);
-  
+
             this.setState({
               is_started: true,
               intervalId,
@@ -196,29 +205,38 @@ class BrainGame extends Component {
               answers: this.state.next_answers,
               remaining_time: 60
             });
-  
+
             this.getNextQuestion();
           }
         }
       }
     );
   };
-  
 
   onCountDown = async () => {
-    const { playSound, isDarkMode, bet_amount, refreshHistory, brain_game_type } = this.props;
-    const { is_anonymous , score } = this.state;
-
+    const {
+      playSound,
+      isDarkMode,
+      bet_amount,
+      refreshHistory,
+      brain_game_type
+    } = this.props;
+    const { is_anonymous, score } = this.state;
 
     const remaining_time = this.state.remaining_time - 1;
     this.setState({ remaining_time });
 
     if (remaining_time === 0) {
-      let stored_score_array = JSON.parse(localStorage.getItem(`score_array_${brain_game_type}`)) || [];
+      let stored_score_array =
+        JSON.parse(localStorage.getItem(`score_array_${brain_game_type}`)) ||
+        [];
 
-stored_score_array.push({score: score, room_id: brain_game_type});
+      stored_score_array.push({ score: score, room_id: brain_game_type });
 
-localStorage.setItem(`score_array_${brain_game_type}`, JSON.stringify(stored_score_array));
+      localStorage.setItem(
+        `score_array_${brain_game_type}`,
+        JSON.stringify(stored_score_array)
+      );
 
       clearInterval(this.state.intervalId);
       this.setState({
@@ -279,7 +297,6 @@ localStorage.setItem(`score_array_${brain_game_type}`, JSON.stringify(stored_sco
         }
       }
       refreshHistory();
-
     }
   };
 
@@ -308,25 +325,31 @@ localStorage.setItem(`score_array_${brain_game_type}`, JSON.stringify(stored_sco
   };
 
   handleButtonClick = () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id, balance } = this.props;
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      balance
+    } = this.props;
     const { bet_amount, bankroll, betting, timerValue } = this.state;
-  
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
-  
+
     if (!betting) {
       this.setState({
         timer: setInterval(() => {
@@ -345,64 +368,78 @@ localStorage.setItem(`score_array_${brain_game_type}`, JSON.stringify(stored_sco
       this.stopBetting();
     }
   };
-  
-  predictNext = (score_array) => {
+
+  predictNext = score_array => {
     if (score_array.length < 5) {
-      return Math.round(score_array.reduce((total, item) => total + item.score, 0) / score_array.length);
+      return Math.round(
+        score_array.reduce((total, item) => total + item.score, 0) /
+          score_array.length
+      );
     }
-  
+
     const oldScores = score_array.slice(0, 5).map(item => item.score);
-    const newScores = score_array.slice(score_array.length - 5).map(item => item.score);
-  
-    const oldAvg = oldScores.reduce((total, score) => total + score, 0) / oldScores.length;
-    const newAvg = newScores.reduce((total, score) => total + score, 0) / newScores.length;
-  
+    const newScores = score_array
+      .slice(score_array.length - 5)
+      .map(item => item.score);
+
+    const oldAvg =
+      oldScores.reduce((total, score) => total + score, 0) / oldScores.length;
+    const newAvg =
+      newScores.reduce((total, score) => total + score, 0) / newScores.length;
+
     if (newAvg > oldAvg) {
       let diff = newAvg - oldAvg;
       return Math.round(score_array[score_array.length - 1].score + diff);
     } else {
-      return Math.round(score_array.reduce((total, item) => total + item.score, 0) / score_array.length);
+      return Math.round(
+        score_array.reduce((total, item) => total + item.score, 0) /
+          score_array.length
+      );
     }
   };
-  
-  
+
   startBetting = () => {
     let stored_score_array;
-    stored_score_array = JSON.parse(localStorage.getItem(`score_array_${this.props.brain_game_type}`)) || [];
-    
+    stored_score_array =
+      JSON.parse(
+        localStorage.getItem(`score_array_${this.props.brain_game_type}`)
+      ) || [];
+
     if (stored_score_array.length < 1) {
-      alertModal(this.props.isDarkMode, "MORE TRAINING DATA NEEDED!");
+      alertModal(this.props.isDarkMode, 'MORE TRAINING DATA NEEDED!');
       return;
     }
-    
+
     const intervalId = setInterval(() => {
       const prediction = this.predictNext(stored_score_array);
-      const randomPrediction = this.getRandomPrediction(prediction, stored_score_array);
+      const randomPrediction = this.getRandomPrediction(
+        prediction,
+        stored_score_array
+      );
       const randomizeAgain = this.randomize(randomPrediction);
       this.joinGame2(randomizeAgain, this.props.bet_amount);
     }, 3500);
-    
+    this.props.playSound('start');
     this.setState({ intervalId, betting: true, is_started: true });
   };
-  
-    randomize = (prediction) => {
+
+  randomize = prediction => {
     const randomOffset = Math.floor(Math.random() * 8) - 3;
     return prediction + randomOffset;
   };
-  
+
   getRandomPrediction = (prediction, score_array) => {
     const random = Math.random();
-    
+
     if (score_array && score_array.length > 0 && random < 0.4) {
       const randomIndex = Math.floor(Math.random() * score_array.length);
       return score_array[randomIndex].score;
     } else {
       const offset = Math.floor(Math.random() * 2) + 1; // either 1 or 2
       const sign = Math.random() < 0.5 ? -1 : 1; // either -1 or 1
-      return prediction + (offset * sign);
+      return prediction + offset * sign;
     }
-  }
-  
+  };
 
   handleButtonRelease = () => {
     if (this.state.timer) {
@@ -412,13 +449,14 @@ localStorage.setItem(`score_array_${brain_game_type}`, JSON.stringify(stored_sco
   };
 
   stopBetting = () => {
+    this.props.playSound('stop');
     clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null,  betting: false, timerValue: 2000 });
+    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
   };
 
   joinGame2 = async (score, bet_amount) => {
-    const {betting, is_anonymous } = this.state;
-    const {refreshHistory, playSound } = this.props;
+    const { betting, is_anonymous } = this.state;
+    const { refreshHistory, playSound } = this.props;
 
     if (!betting) {
       return;
@@ -430,30 +468,25 @@ localStorage.setItem(`score_array_${brain_game_type}`, JSON.stringify(stored_sco
     });
     this.props.deductBalanceWhenStartBrainGame({
       bet_amount: bet_amount
-    })
+    });
 
     if (result.status === 'success') {
       let text = 'HAHAA, WHAT A LOSER!!';
       this.changeBgColor(result.betResult);
-playSound('lose');
+      playSound('lose');
       if (result.betResult === 1) {
         this.changeBgColor(result.betResult);
-playSound('win');
+        playSound('win');
         text = 'NOT BAD, WINNER!';
       } else if (result.betResult === 0) {
         this.changeBgColor(result.betResult);
         playSound('split');
         text = 'DRAW, NO WINNER!';
       }
-
-         
     }
-    this.setState({ is_started: false});
+    this.setState({ is_started: false });
     refreshHistory();
   };
-
-  
-
 
   render() {
     const { is_started } = this.state;
@@ -497,84 +530,82 @@ playSound('win');
           <h2>Play - Brain Game</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel">
-        <div className="pre-summary-panel__inner">
-          {[...Array(2)].map((_, i) => (
-            <React.Fragment key={i}>
-              <div className="data-item">
-                <div>
-                  <div className="label host-display-name">Host</div>
-                </div>
-                <div className="value">{this.props.creator}</div>
-              </div>
-              
-              <div className="data-item">
-                <div>
-                  <div className="label your-bet-amount">Bet Amount</div>
-                </div>
-                <div className="value">{convertToCurrency(this.props.bet_amount)}</div>
-              </div>
-              <div className="data-item">
-                  <div className="label public-max-return">Pot</div>
-                  <div className="value">
-                      {convertToCurrency(
-                          updateDigitToPoint2(
-                              this.props.bet_amount * this.props.joined_count
-                          )
-                      )}
+          <div className="pre-summary-panel">
+            <div className="pre-summary-panel__inner">
+              {[...Array(2)].map((_, i) => (
+                <React.Fragment key={i}>
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
                   </div>
-              </div>
-              <div className="data-item">
-        <div className="label your-max-return">Potential Return</div>
-        <div className="value">
-            {convertToCurrency(
-                updateDigitToPoint2(
-                    this.props.bet_amount *
-                    (this.props.joined_count + 2) /* 0.9 */
-                )
-            )}
-        </div>
-    </div>
-            
-            </React.Fragment>
-          ))}
-    </div>
-</div>
-      
+
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-bet-amount">Bet Amount</div>
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(this.props.bet_amount)}
+                    </div>
+                  </div>
+                  <div className="data-item">
+                    <div className="label public-max-return">Pot</div>
+                    <div className="value">
+                      {convertToCurrency(
+                        updateDigitToPoint2(
+                          this.props.bet_amount * this.props.joined_count
+                        )
+                      )}
+                    </div>
+                  </div>
+                  <div className="data-item">
+                    <div className="label your-max-return">
+                      Potential Return
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(
+                        updateDigitToPoint2(
+                          this.props.bet_amount *
+                            (this.props.joined_count + 2) /* 0.9 */
+                        )
+                      )}
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
           <div className="game-info-panel">
             <h3 className="game-sub-title">Game Type:</h3>
             <p>{this.props.brain_game_type.game_type_name}</p>
             <h3 className="game-sub-title">Score to BEAT:</h3>
             <p>{this.props.brain_game_score}</p>
             <Button
-            id="aiplay"
-        onMouseDown={this.handleButtonClick}
-        onMouseUp={this.handleButtonRelease}
-        onTouchStart={this.handleButtonClick}
-        onTouchEnd={this.handleButtonRelease}
-        >
-        {this.state.betting ? (
-          <div id="stop">
-            <span>Stop</span>
-           <Lottie 
-        options={defaultOptions}
-          width={22}
-        />
+              id="aiplay"
+              onMouseDown={this.handleButtonClick}
+              onMouseUp={this.handleButtonRelease}
+              onTouchStart={this.handleButtonClick}
+              onTouchEnd={this.handleButtonRelease}
+            >
+              {this.state.betting ? (
+                <div id="stop">
+                  <span>Stop</span>
+                  <Lottie options={defaultOptions} width={22} />
+                </div>
+              ) : (
+                <div>
+                  {this.state.timerValue !== 2000 ? (
+                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
+                  ) : (
+                    <span>AI Play</span>
+                  )}
+                </div>
+              )}
+            </Button>
           </div>
-        ) : (
-          <div>
-            {this.state.timerValue !== 2000 ? (
-              <span>
-                {(this.state.timerValue / 2000).toFixed(2)}s
-              </span>
-            ) : (
-              <span>AI Play</span>
-            )}
-          </div>
-        )}
-        </Button>
-          </div>
-       
+
           <div className="action-panel">
             <span></span>
             <Button id="btn_bet" onClick={this.onStartGame}>

@@ -296,6 +296,8 @@ class QuickShoot extends Component {
   predictNext = (qs_list, gameType) => {
     const options = [...Array(gameType).keys()];
     const transitionMatrix = {};
+    const randomnessFactor = 0.2; // Adjust this value to control the level of randomness
+  
     options.forEach(option1 => {
       transitionMatrix[option1] = {};
       options.forEach(option2 => {
@@ -308,68 +310,57 @@ class QuickShoot extends Component {
         });
       });
     });
-
+  
+    // Count transitions
     for (let i = 0; i < qs_list.length - 3; i++) {
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
-        qs_list[i + 3].qs
-      ]++;
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
     }
-
+  
+    // Normalize transition probabilities
     Object.keys(transitionMatrix).forEach(fromState1 => {
       Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-          fromState3 => {
-            const totalTransitions = Object.values(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).reduce((a, b) => a + b);
-            Object.keys(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).forEach(toState => {
-              transitionMatrix[fromState1][fromState2][fromState3][
-                toState
-              ] /= totalTransitions;
-            });
-          }
-        );
+        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(fromState3 => {
+          const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
+          Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach(toState => {
+            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
+          });
+        });
       });
     });
-
-    const winChance = this.calcWinChance(this.props.qs_game_type, qs_list);
-    let deviation = 0;
-    if (winChance !== '33.33%') {
-      deviation = (1 - 1 / gameType) / 2;
-    }
-
+  
+    // Calculate winChance and deviation
+    const winChance = this.calcWinChance(gameType, qs_list);
+    const targetProbability = 100 / gameType;
+    const deviation = Math.abs(winChance - targetProbability);
+  
+    // Choose next state based on transition probabilities and deviation
     let currentState1 = qs_list[qs_list.length - 3].qs;
     let currentState2 = qs_list[qs_list.length - 2].qs;
     let currentState3 = qs_list[qs_list.length - 1].qs;
-    let nextState = currentState3;
-    let maxProb = 0;
-    Object.keys(
-      transitionMatrix[currentState1][currentState2][currentState3]
-    ).forEach(state => {
-      if (
-        transitionMatrix[currentState1][currentState2][currentState3][state] >
-        maxProb
-      ) {
-        maxProb =
-          transitionMatrix[currentState1][currentState2][currentState3][state];
-        nextState = state;
+  
+    // Weighted random choice based on transition probabilities
+    const weightedOptions = [];
+    Object.entries(transitionMatrix[currentState1][currentState2][currentState3]).forEach(([state, prob]) => {
+      for (let i = 0; i < Math.floor(prob * 100); i++) {
+        weightedOptions.push(state);
       }
     });
-
-    let randomNum = Math.random();
-    if (randomNum < deviation) {
-      let randomState = '';
-      do {
-        randomNum = Math.random();
-        randomState = options[Math.floor(randomNum * gameType)];
-      } while (randomState === nextState);
-      nextState = randomState;
+  
+    let nextState;
+    if (weightedOptions.length > 0) {
+      nextState = weightedOptions[Math.floor(Math.random() * weightedOptions.length)];
+    } else {
+      nextState = options[Math.floor(Math.random() * options.length)];
     }
-
+  
+    // Introduce randomness based on the randomnessFactor
+    if (Math.random() < randomnessFactor) {
+      nextState = options[Math.floor(Math.random() * options.length)];
+    }
+  
     return nextState;
   };
+  
 
   handleMaxButtonClick() {
     const maxBetAmount = this.state.balance.toFixed(2);
@@ -646,7 +637,8 @@ class QuickShoot extends Component {
       qs_game_type,
       roomInfo,
       is_private,
-      openGamePasswordModal
+      openGamePasswordModal,
+      playSound
     } = this.props;
 
     if (qs_game_type === 2) {
@@ -674,11 +666,12 @@ class QuickShoot extends Component {
         this.joinGame2(randomItem);
       }
     }, 3500);
-
+    playSound('start');
     this.setState({ intervalId, betting: true });
   };
 
   stopBetting = () => {
+    this.props.playSound('stop');
     clearInterval(this.state.intervalId);
     this.setState({ intervalId: null, betting: false, timerValue: 2000 });
   };
@@ -738,7 +731,7 @@ class QuickShoot extends Component {
 
       if (result.betResult === 1) {
         this.changeBgColor(result.betResult);
-playSound('win');
+        playSound('win');
         text = 'WIN, EXCELLENT SHOT!';
       } else if (result.betResult === 0) {
         this.changeBgColor(result.betResult);

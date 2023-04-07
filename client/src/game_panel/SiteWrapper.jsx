@@ -79,25 +79,60 @@ import { convertToCurrency } from '../util/conversion';
 
 LoadingOverlay.propTypes = undefined;
 
+const customTextFieldStyles = {
+  MuiOutlinedInput: {
+    root: {
+      '&:hover $notchedOutline': {
+        borderColor: 'currentColor',
+      },
+      '&$focused $notchedOutline': {
+        borderColor: 'currentColor',
+      },
+      '& input:-webkit-autofill': {
+        '-webkit-box-shadow': '0 0 0 100px transparent inset',
+        '-webkit-text-fill-color': 'currentColor',
+      },
+    },
+    notchedOutline: {},
+    focused: {},
+  },
+  MuiInputBase: {
+    input: {
+      '&$focused': {
+        backgroundColor: 'transparent',
+      },
+      '&:-webkit-autofill': {
+        '-webkit-box-shadow': '0 0 0 100px inherit inset',
+        '-webkit-text-fill-color': 'currentColor',
+      },
+    },
+    focused: {},
+  },
+};
+
+
 const mainTheme = createTheme({
   palette: {
-    type: 'light'
-  }
+    type: 'light',
+  },
+  overrides: customTextFieldStyles, // Add the TextField style overrides
 });
 
 const darkTheme = createTheme({
   palette: {
-    type: 'dark'
-  }
+    type: 'dark',
+  },
+  overrides: customTextFieldStyles, // Add the TextField style overrides
 });
 
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
     height: '48px',
-    minWidth: '80px'
-  }
+    minWidth: '80px',
+  },
 };
+
 
 const { SpeechSynthesis } = window.speechSynthesis;
 
@@ -122,7 +157,6 @@ class SiteWrapper extends Component {
       balance: this.props.balance,
       oldBalance: this.props.balance,
       hoverTabIndex: -1,
-      isMuted: false,
       betResult: this.props.betResult,
       showProfileModal: false,
       showPlayerModal: false,
@@ -182,8 +216,6 @@ class SiteWrapper extends Component {
   };
   
   handleMute = () => {
-   
-
     this.audioWin.pause();
     this.audioWin.muted = true;
     this.audioSplit.pause();
@@ -218,7 +250,7 @@ class SiteWrapper extends Component {
   };
 
   speak(message) {
-    if (!this.state.isMuted) {
+    if (!this.props.isMuted) {
       if (window.speechSynthesis) {
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
@@ -257,6 +289,7 @@ class SiteWrapper extends Component {
     });
 
     socket.on('PLAY_SOUND', data => {
+      if (!this.props.isMuted) {
       let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
 
       const message = data.message.toLowerCase();
@@ -330,10 +363,12 @@ class SiteWrapper extends Component {
       }
 
       localStorage.setItem('winCounter', winCounter);
+    }
     });
 
     socket.on('SEND_CHAT', data => {
       try {
+        if (!this.props.isMuted) {
         let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
 
         const message = data.message.toLowerCase();
@@ -407,7 +442,7 @@ class SiteWrapper extends Component {
         }
 
         localStorage.setItem('winCounter', winCounter);
-
+      }
         this.props.addChatLog(data);
 
         if (history.location.pathname.substr(0, 5) === '/chat') {
@@ -469,8 +504,6 @@ class SiteWrapper extends Component {
     }
   };
   async componentDidMount() {
-    console.log('wedewd', this.props
-    )
     let currentUrl = window.location.pathname;
     if (currentUrl.indexOf('create') !== -1) {
       this.setState({

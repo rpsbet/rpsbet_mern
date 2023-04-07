@@ -28,28 +28,27 @@ const defaultOptions = {
   autoplay: true,
   animationData: animationData,
   rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice"
+    preserveAspectRatio: 'xMidYMid slice'
   }
 };
 
 const customStyles = {
   overlay: {
-      zIndex: 3,
-      backgroundColor: 'rgba(47, 49, 54, 0.8)',
-      backdropFilter: 'blur(4px)'
+    zIndex: 3,
+    backgroundColor: 'rgba(47, 49, 54, 0.8)',
+    backdropFilter: 'blur(4px)'
   },
   content: {
-      top         : '50%',
-      left        : '50%',
-      right       : 'auto',
-      bottom      : 'auto',
-      transform   : 'translate(-50%, -50%)',
-      background: 'transparent',
-      padding: 0,
-      border: 0
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    transform: 'translate(-50%, -50%)',
+    background: 'transparent',
+    padding: 0,
+    border: 0
   }
-}
-
+};
 
 class MysteryBox extends Component {
   constructor(props) {
@@ -59,7 +58,8 @@ class MysteryBox extends Component {
     this.state = {
       items: [],
       bet_amount: 0,
-      selected_id: this.props.box_list.length > 0 ? this.props.box_list[0]._id : '',
+      selected_id:
+        this.props.box_list.length > 0 ? this.props.box_list[0]._id : '',
       box_list: this.props.box_list,
       advanced_status: '',
       is_anonymous: false,
@@ -72,11 +72,9 @@ class MysteryBox extends Component {
       timer: null,
       bgColorChanged: false,
       timerValue: 2000,
-        clicked: true,
-        intervalId: null,
-
+      clicked: true,
+      intervalId: null
     };
-
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -93,8 +91,6 @@ class MysteryBox extends Component {
       };
     }
 
-    
-
     return null;
   }
 
@@ -105,387 +101,406 @@ class MysteryBox extends Component {
     if (e.currentTarget.getAttribute('status') === 'opened') {
       return;
     }
-    
+
     const _id = e.currentTarget.getAttribute('_id');
     const box_price = e.currentTarget.getAttribute('box_price');
     this.setState({ selected_id: _id, bet_amount: box_price }, () => {
       this.onBtnBetClick();
     });
   };
-  
 
   componentDidMount() {
-    const { socket } = this.props
+    const { socket } = this.props;
     socket.on('UPDATED_BOX_LIST', data => {
-
-      this.setState({ box_list: data.box_list })
-    })
-}
-
-
-componentWillUnmount = () => {
-  clearInterval(this.state.intervalId);
-  document.removeEventListener('mousedown', this.handleClickOutside);
-};
-
-
-componentDidUpdate(prevProps, prevState) {
-  if (prevState.box_list !== this.state.box_list) {
-    this.setState({ box_list: this.state.box_list });
-    this.props.refreshHistory();
-  }
-  // console.log(this.state.betResult);
-  if (
-    prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
-    this.state.isPasswordCorrect === true
-  ) {
-    this.props.join({
-      bet_amount: this.state.bet_amount,
-      selected_id: this.state.selected_id,
-      is_anonymous: this.state.is_anonymous
-    });
-
-    this.setState({
-      box_list: this.state.box_list.map(el =>
-        el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
-      )
+      this.setState({ box_list: data.box_list });
     });
   }
-  
-}
 
-predictNext = (betAmountArray, boxList) => {
-  let transitions = {};
-  let probabilities = {};
-  let startProbabilities = {};
-  let distinctBoxes = [...new Set(boxList)];
+  componentWillUnmount = () => {
+    clearInterval(this.state.intervalId);
+    document.removeEventListener('mousedown', this.handleClickOutside);
+  };
 
-  // Calculate start probabilities
-  for (let i = 0; i < boxList.length; i++) {
-    if (startProbabilities[boxList[i]]) {
-      startProbabilities[boxList[i]]++;
-    } else {
-      startProbabilities[boxList[i]] = 1;
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.box_list !== this.state.box_list) {
+      this.setState({ box_list: this.state.box_list });
+      this.props.refreshHistory();
+    }
+    // console.log(this.state.betResult);
+    if (
+      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
+      this.state.isPasswordCorrect === true
+    ) {
+      this.props.join({
+        bet_amount: this.state.bet_amount,
+        selected_id: this.state.selected_id,
+        is_anonymous: this.state.is_anonymous
+      });
+
+      this.setState({
+        box_list: this.state.box_list.map(el =>
+          el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+        )
+      });
     }
   }
 
-  let totalStartStates = Object.values(startProbabilities).reduce(
-    (a, b) => a + b
-  );
+  predictNext = (betAmountArray, boxList) => {
+    let transitions = {};
+    let probabilities = {};
+    let startProbabilities = {};
+    let distinctBoxes = [...new Set(boxList)];
 
-  for (let box in startProbabilities) {
-    startProbabilities[box] /= totalStartStates;
-  }
-
-  // Calculate transition probabilities
-  for (let i = 0; i < boxList.length - 1; i++) {
-    let currentBox = boxList[i];
-    let nextBox = boxList[i + 1];
-
-    if (transitions[currentBox]) {
-      if (transitions[currentBox][nextBox]) {
-        transitions[currentBox][nextBox]++;
+    // Calculate start probabilities
+    for (let i = 0; i < boxList.length; i++) {
+      if (startProbabilities[boxList[i]]) {
+        startProbabilities[boxList[i]]++;
       } else {
+        startProbabilities[boxList[i]] = 1;
+      }
+    }
+
+    let totalStartStates = Object.values(startProbabilities).reduce(
+      (a, b) => a + b
+    );
+
+    for (let box in startProbabilities) {
+      startProbabilities[box] /= totalStartStates;
+    }
+
+    // Calculate transition probabilities
+    for (let i = 0; i < boxList.length - 1; i++) {
+      let currentBox = boxList[i];
+      let nextBox = boxList[i + 1];
+
+      if (transitions[currentBox]) {
+        if (transitions[currentBox][nextBox]) {
+          transitions[currentBox][nextBox]++;
+        } else {
+          transitions[currentBox][nextBox] = 1;
+        }
+      } else {
+        transitions[currentBox] = {};
         transitions[currentBox][nextBox] = 1;
       }
-    } else {
-      transitions[currentBox] = {};
-      transitions[currentBox][nextBox] = 1;
     }
-  }
 
-  for (let currentBox in transitions) {
-    let currentBoxTransitions = transitions[currentBox];
-    let totalCurrentBoxTransitions = Object.values(
-      currentBoxTransitions
-    ).reduce((a, b) => a + b);
+    for (let currentBox in transitions) {
+      let currentBoxTransitions = transitions[currentBox];
+      let totalCurrentBoxTransitions = Object.values(
+        currentBoxTransitions
+      ).reduce((a, b) => a + b);
 
-    probabilities[currentBox] = {};
+      probabilities[currentBox] = {};
 
-    for (let nextBox in currentBoxTransitions) {
-      probabilities[currentBox][nextBox] =
-        currentBoxTransitions[nextBox] / totalCurrentBoxTransitions;
-    }
-  }
-
-  // Make prediction
-  let prediction = null;
-  let maxProbability = -1;
-
-  const maxBetAmount = Math.max(...betAmountArray);
-  betAmountArray = [boxList[boxList.length - 1]];
-  for (let i = 0; i < distinctBoxes.length; i++) {
-    let currentBox = distinctBoxes[i];
-    if (currentBox > maxBetAmount) {
-      continue;
-    }
-    let currentBoxProbability =
-      startProbabilities[currentBox] *
-      probabilities[currentBox][betAmountArray[betAmountArray.length - 1]];
-
-    if (currentBoxProbability > maxProbability) {
-      maxProbability = currentBoxProbability;
-      prediction = currentBox;
-    }
-  }
-
-  return prediction;
-};
-
-changeBgColor = async (result) => {
-  this.setState({ betResult: result, bgColorChanged: true });
-  await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 1 second
-  this.setState({ bgColorChanged: false });
-};
-
-handleButtonClick = () => {
-  const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
-  const { betting } = this.state;
-
-  if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-    return;
-  }
-
-  if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-    return;
-  }
-  if (!betting) {
-    this.setState({
-      timer: setInterval(() => {
-        this.setState(state => {
-          if (state.timerValue === 0) {
-            clearInterval(this.state.timer);
-            this.startBetting();
-            return { timerValue: 2000 };
-          } else {
-            return { timerValue: state.timerValue - 10 };
-          }
-        });
-      }, 10)
-    });
-  } else {
-    this.stopBetting();
-  }
-};
-
-
-
-handleButtonRelease = () => {
-  if (this.state.timer) {
-    clearInterval(this.state.timer);
-    this.setState({ timerValue: 2000 });
-  }
-};
-
-startBetting = () => {
-  const { isDarkMode, is_private, roomInfo, openGamePasswordModal } = this.props;
-  const { box_list } = this.state;
-
-  const storageName = "bet_array";
-  if (!validateLocalStorageLength(storageName, isDarkMode)) {
-    return;
-  }
-  const intervalId = setInterval(() => {
-    const stored_bet_array = JSON.parse(localStorage.getItem(storageName)) || [];
-
-    const nextBox = this.predictNext(stored_bet_array, box_list);
-    const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
-const passwordCorrect = rooms[roomInfo._id];
-  if (is_private === true && passwordCorrect !== true) {
-      openGamePasswordModal();
-    } else {
-    this.joinGame2(nextBox.box_price);
-    }
-  }, 3500);
-
-  this.setState({ intervalId, betting: true });
-};
-
-
-stopBetting = () => {
-  clearInterval(this.state.intervalId);
-  this.setState({ intervalId: null, betting: false, timerValue: 2000  });
-};
-
-
-joinGame2 = async (predictedBetAmount) => {
-  const {bet_amount, balance, betting, box_list, selected_id, is_anonymous} = this.state;
-  const {playSound, isDarkMode} = this.props;
-  if (!betting) {
-    return;
-  }
-  if (bet_amount > balance) {
-    alertModal(isDarkMode, `TOO BROKE!`);
-    return;
-  }
-
-  const availableBoxes = box_list.filter(
-    box =>
-      box.status === "init" &&
-      (box.box_price <= predictedBetAmount + 8)
-  );
-  if (availableBoxes.length === 0) {
-    alertModal(
-      isDarkMode,
-      `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
-    );
-    return;
-  }
-  
-  const randomIndex = Math.floor(Math.random() * availableBoxes.length);
-  const selectedBox = availableBoxes[randomIndex];
-  const result = await this.props.join({
-    bet_amount: parseFloat(bet_amount),
-    selected_id: selectedBox._id,
-    is_anonymous: is_anonymous,
-    // slippage: this.state.slippage
-  });
-  this.setState({ selected_id: selectedBox._id });
-
-  const currentUser = this.props.user;
-const currentRoom = this.props.room;
-if (result.status === 'success') {
-  let betResult = '';
-  if (result.betResult === 1) {
-    betResult = 'win';
-    playSound('win');
-    this.changeBgColor(result.betResult);
-
-  } else if (result.betResult === 0) {
-    betResult = 'draw';
-    playSound('split');
-    this.changeBgColor(result.betResult);
-
-  } else {
-    betResult = 'lose';
-    playSound('lose');
-    this.changeBgColor(result.betResult);
-
-  }
-
-    this.setState({
-      box_list: box_list.map(el =>
-        el._id === selected_id ? { ...el, status: 'opened' } : el
-      ),
-      isOpen: false
-    });
-
-  this.setState(prevState => ({
-    betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
-  }));
-
-  this.props.refreshHistory();
-}
-};
-
-onBtnBetClick = async (e) => {
-  const {creator_id, isAuthenticated, user_id, isDarkMode, is_private, openGamePasswordModal, roomInfo, balance, refreshHistory} = this.props;
-  const {bet_amount} = this.state;
-
-  if (e) {
-    e.preventDefault();
-  }
-  if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-    return;
-  }
-
-  if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-    return;
-  }
-
-  if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-    return;
-  }
-
-  const rooms = JSON.parse(localStorage.getItem("rooms")) || {};
-const passwordCorrect = rooms[roomInfo._id];
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-  if (is_private === true && passwordCorrect !== true) {
-      openGamePasswordModal();
-    } else {
-      await this.joinGame();
-    }
-  } else {
-    const result = await confirmModalCreate(
-      isDarkMode,
-      'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-      'Yes',
-      'Cancel',
-      async () => { // This should be a function
-        if (is_private === true) {
-          openGamePasswordModal();
-        } else {
-          await this.joinGame();
-        }
-        refreshHistory();
+      for (let nextBox in currentBoxTransitions) {
+        probabilities[currentBox][nextBox] =
+          currentBoxTransitions[nextBox] / totalCurrentBoxTransitions;
       }
-    );
-    
-  }
-};
-
-joinGame = async () => {
-  
-  const {bet_amount, betting, box_list, selected_id, is_anonymous} = this.state;
-  const {playSound,  refreshHistory} = this.props;
-
-  let stored_bet_array = JSON.parse(localStorage.getItem('bet_array')) || [];
-  while (stored_bet_array.length >= 20) {
-    stored_bet_array.shift();
-  }
-  stored_bet_array.push({ bet: bet_amount });
-  localStorage.setItem('bet_array', JSON.stringify(stored_bet_array));
-  
-  
-  const result = await this.props.join({
-    bet_amount: parseFloat(bet_amount),
-    selected_id: selected_id,
-    is_anonymous: is_anonymous,
-    // slippage: this.state.slippage
-  });
-  
-  const currentUser = this.props.user;
-  const currentRoom = this.props.room;
-  if (result.status === 'success') {
-    let betResult = '';
-    if (result.betResult === 1) {
-      betResult = 'win';
-      playSound('win');
-      this.changeBgColor(result.betResult);
-
-    } else if (result.betResult === 0) {
-      betResult = 'draw';
-      playSound('split');
-      this.changeBgColor(result.betResult);
-
-    } else {
-      betResult = 'lose';
-      playSound('lose');
-      this.changeBgColor(result.betResult);
-
     }
-    
-    // this.props.updateBetResult(betResult);
-    this.setState({
-      box_list: box_list.map(el =>
-        el._id === selected_id ? { ...el, status: 'opened' } : el
-      ),
-      isOpen: true
-    });
-  
-    setTimeout(() => {
-      this.setState({ isOpen: false });
-    }, 1500);
-    this.setState(prevState => ({
-      betResults: [...prevState.betResults, {...result, user: currentUser, room: currentRoom}]
-    }), () => {
-      refreshHistory();
-    });
-  }
-};
 
+    // Make prediction
+    let prediction = null;
+    let maxProbability = -1;
 
-  
+    const maxBetAmount = Math.max(...betAmountArray);
+    betAmountArray = [boxList[boxList.length - 1]];
+    for (let i = 0; i < distinctBoxes.length; i++) {
+      let currentBox = distinctBoxes[i];
+      if (currentBox > maxBetAmount) {
+        continue;
+      }
+      let currentBoxProbability =
+        startProbabilities[currentBox] *
+        probabilities[currentBox][betAmountArray[betAmountArray.length - 1]];
+
+      if (currentBoxProbability > maxProbability) {
+        maxProbability = currentBoxProbability;
+        prediction = currentBox;
+      }
+    }
+
+    return prediction;
+  };
+
+  changeBgColor = async result => {
+    this.setState({ betResult: result, bgColorChanged: true });
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
+    this.setState({ bgColorChanged: false });
+  };
+
+  handleButtonClick = () => {
+    const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
+    const { betting } = this.state;
+
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      return;
+    }
+
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      return;
+    }
+    if (!betting) {
+      this.setState({
+        timer: setInterval(() => {
+          this.setState(state => {
+            if (state.timerValue === 0) {
+              clearInterval(this.state.timer);
+              this.startBetting();
+              return { timerValue: 2000 };
+            } else {
+              return { timerValue: state.timerValue - 10 };
+            }
+          });
+        }, 10)
+      });
+    } else {
+      this.stopBetting();
+    }
+  };
+
+  handleButtonRelease = () => {
+    if (this.state.timer) {
+      clearInterval(this.state.timer);
+      this.setState({ timerValue: 2000 });
+    }
+  };
+
+  startBetting = () => {
+    const {
+      isDarkMode,
+      is_private,
+      roomInfo,
+      openGamePasswordModal,
+      playSound
+    } = this.props;
+    const { box_list } = this.state;
+
+    const storageName = 'bet_array';
+    if (!validateLocalStorageLength(storageName, isDarkMode)) {
+      return;
+    }
+    const intervalId = setInterval(() => {
+      const stored_bet_array =
+        JSON.parse(localStorage.getItem(storageName)) || [];
+
+      const nextBox = this.predictNext(stored_bet_array, box_list);
+      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+      const passwordCorrect = rooms[roomInfo._id];
+      if (is_private === true && passwordCorrect !== true) {
+        openGamePasswordModal();
+      } else {
+        this.joinGame2(nextBox.box_price);
+      }
+    }, 3500);
+    playSound('start');
+    this.setState({ intervalId, betting: true });
+  };
+
+  stopBetting = () => {
+    this.props.playSound('stop');
+    clearInterval(this.state.intervalId);
+    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
+  };
+
+  joinGame2 = async predictedBetAmount => {
+    const {
+      bet_amount,
+      balance,
+      betting,
+      box_list,
+      selected_id,
+      is_anonymous
+    } = this.state;
+    const { playSound, isDarkMode } = this.props;
+    if (!betting) {
+      return;
+    }
+    if (bet_amount > balance) {
+      alertModal(isDarkMode, `TOO BROKE!`);
+      return;
+    }
+
+    const availableBoxes = box_list.filter(
+      box => box.status === 'init' && box.box_price <= predictedBetAmount + 8
+    );
+    if (availableBoxes.length === 0) {
+      alertModal(
+        isDarkMode,
+        `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
+      );
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * availableBoxes.length);
+    const selectedBox = availableBoxes[randomIndex];
+    const result = await this.props.join({
+      bet_amount: parseFloat(bet_amount),
+      selected_id: selectedBox._id,
+      is_anonymous: is_anonymous
+      // slippage: this.state.slippage
+    });
+    this.setState({ selected_id: selectedBox._id });
+
+    const currentUser = this.props.user;
+    const currentRoom = this.props.room;
+    if (result.status === 'success') {
+      let betResult = '';
+      if (result.betResult === 1) {
+        betResult = 'win';
+        playSound('win');
+        this.changeBgColor(result.betResult);
+      } else if (result.betResult === 0) {
+        betResult = 'draw';
+        playSound('split');
+        this.changeBgColor(result.betResult);
+      } else {
+        betResult = 'lose';
+        playSound('lose');
+        this.changeBgColor(result.betResult);
+      }
+
+      this.setState({
+        box_list: box_list.map(el =>
+          el._id === selected_id ? { ...el, status: 'opened' } : el
+        ),
+        isOpen: false
+      });
+
+      this.setState(prevState => ({
+        betResults: [
+          ...prevState.betResults,
+          { ...result, user: currentUser, room: currentRoom }
+        ]
+      }));
+
+      this.props.refreshHistory();
+    }
+  };
+
+  onBtnBetClick = async e => {
+    const {
+      creator_id,
+      isAuthenticated,
+      user_id,
+      isDarkMode,
+      is_private,
+      openGamePasswordModal,
+      roomInfo,
+      balance,
+      refreshHistory
+    } = this.props;
+    const { bet_amount } = this.state;
+
+    if (e) {
+      e.preventDefault();
+    }
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      return;
+    }
+
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      return;
+    }
+
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      return;
+    }
+
+    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+    const passwordCorrect = rooms[roomInfo._id];
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      if (is_private === true && passwordCorrect !== true) {
+        openGamePasswordModal();
+      } else {
+        await this.joinGame();
+      }
+    } else {
+      const result = await confirmModalCreate(
+        isDarkMode,
+        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+        'Yes',
+        'Cancel',
+        async () => {
+          // This should be a function
+          if (is_private === true) {
+            openGamePasswordModal();
+          } else {
+            await this.joinGame();
+          }
+          refreshHistory();
+        }
+      );
+    }
+  };
+
+  joinGame = async () => {
+    const {
+      bet_amount,
+      betting,
+      box_list,
+      selected_id,
+      is_anonymous
+    } = this.state;
+    const { playSound, refreshHistory } = this.props;
+
+    let stored_bet_array = JSON.parse(localStorage.getItem('bet_array')) || [];
+    while (stored_bet_array.length >= 20) {
+      stored_bet_array.shift();
+    }
+    stored_bet_array.push({ bet: bet_amount });
+    localStorage.setItem('bet_array', JSON.stringify(stored_bet_array));
+
+    const result = await this.props.join({
+      bet_amount: parseFloat(bet_amount),
+      selected_id: selected_id,
+      is_anonymous: is_anonymous
+      // slippage: this.state.slippage
+    });
+
+    const currentUser = this.props.user;
+    const currentRoom = this.props.room;
+    if (result.status === 'success') {
+      let betResult = '';
+      if (result.betResult === 1) {
+        betResult = 'win';
+        playSound('win');
+        this.changeBgColor(result.betResult);
+      } else if (result.betResult === 0) {
+        betResult = 'draw';
+        playSound('split');
+        this.changeBgColor(result.betResult);
+      } else {
+        betResult = 'lose';
+        playSound('lose');
+        this.changeBgColor(result.betResult);
+      }
+
+      // this.props.updateBetResult(betResult);
+      this.setState({
+        box_list: box_list.map(el =>
+          el._id === selected_id ? { ...el, status: 'opened' } : el
+        ),
+        isOpen: true
+      });
+
+      setTimeout(() => {
+        this.setState({ isOpen: false });
+      }, 1500);
+      this.setState(
+        prevState => ({
+          betResults: [
+            ...prevState.betResults,
+            { ...result, user: currentUser, room: currentRoom }
+          ]
+        }),
+        () => {
+          refreshHistory();
+        }
+      );
+    }
+  };
+
   onBtnGoToMainGamesClicked = e => {
     e.preventDefault();
     history.push('/');
@@ -505,14 +520,14 @@ joinGame = async () => {
       return true;
     });
     prizes.sort((a, b) => a.price - b.price);
-    
+
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
-   if (this.state.clicked) {
-   styles.push('clicked');
-   text = 'COPIED!';
-   }
+    if (this.state.clicked) {
+      styles.push('clicked');
+      text = 'COPIED!';
+    }
 
     return (
       <div className="game-page">
@@ -520,36 +535,38 @@ joinGame = async () => {
           <h2>PLAY - Mystery Box</h2>
         </div>
         <div className="game-contents">
-        <div className="pre-summary-panel">
-        <div className="pre-summary-panel__inner mystery-box">
-          {[...Array(2)].map((_, i) => (
-            <React.Fragment key={i}>
-              <div className="data-item">
-                <div>
-                  <div className="label host-display-name">Host</div>
-                </div>
-                <div className="value">{this.props.creator}</div>
-              </div>
-              <div className="data-item">
-                <div>
-                  <div className="label your-bet-amount">Bet Amount</div>
-                </div>
-                <div className="value">{convertToCurrency(this.state.bet_amount)}</div>
-              </div>
-              <div className="data-item">
-                <div>
-                  <div className="label your-max-return">Potential Return</div>
-                </div>
-                <div className="value">
-                  {convertToCurrency(
-                    updateDigitToPoint2(pr)
-                  )}
-                </div>
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-        </div>
+          <div className="pre-summary-panel">
+            <div className="pre-summary-panel__inner mystery-box">
+              {[...Array(2)].map((_, i) => (
+                <React.Fragment key={i}>
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-bet-amount">Bet Amount</div>
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(this.state.bet_amount)}
+                    </div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-max-return">
+                        Potential Return
+                      </div>
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(updateDigitToPoint2(pr))}
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Prizes</h3>
             <p className="box-prizes">
@@ -561,84 +578,98 @@ joinGame = async () => {
             </p>
             <h3 className="game-sub-title">Select a Box</h3>
             <div className="boxes-panel boxes-join">
-            {this.state.box_list.map((row, index) => (
-  <Card
-    variant="outlined"
-    className={
-      'box box-' +
-      row.status +
-      (this.state.selected_id && row._id === this.state.selected_id ? ' active' : '') +
-      (row._id === this.state.selected_id && this.state.bgColorChanged && this.state.betResult === -1 ? ' draw-bg' : '') +
-      (row._id === this.state.selected_id && this.state.betResult === 0 ? ' lose-bg' : '') +
-      (row._id === this.state.selected_id && this.state.betResult === 1 ? ' win-bg' : '')
-    }
-    
-    
-    
-    
-    status={row.status}
-    _id={row._id}
-    box_price={row.box_price}
-    index={index}
-    key={row._id}
-    onClick={this.onBoxClicked}
-  >
-    <CardContent>
-      <Typography color="textSecondary">
-        {convertToCurrency(row.box_price)}
-      </Typography>
-    </CardContent>
-  </Card>
-))}
-
-
+              {this.state.box_list.map((row, index) => (
+                <Card
+                  variant="outlined"
+                  className={
+                    'box box-' +
+                    row.status +
+                    (this.state.selected_id &&
+                    row._id === this.state.selected_id
+                      ? ' active'
+                      : '') +
+                    (row._id === this.state.selected_id &&
+                    this.state.bgColorChanged &&
+                    this.state.betResult === -1
+                      ? ' draw-bg'
+                      : '') +
+                    (row._id === this.state.selected_id &&
+                    this.state.betResult === 0
+                      ? ' lose-bg'
+                      : '') +
+                    (row._id === this.state.selected_id &&
+                    this.state.betResult === 1
+                      ? ' win-bg'
+                      : '')
+                  }
+                  status={row.status}
+                  _id={row._id}
+                  box_price={row.box_price}
+                  index={index}
+                  key={row._id}
+                  onClick={this.onBoxClicked}
+                >
+                  <CardContent>
+                    <Typography color="textSecondary">
+                      {convertToCurrency(row.box_price)}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
             <Button
-            id="aiplay"
-        onMouseDown={this.handleButtonClick}
-        onMouseUp={this.handleButtonRelease}
-        onTouchStart={this.handleButtonClick}
-        onTouchEnd={this.handleButtonRelease}
-        >
-        {this.state.betting ? (
-          <div id="stop">
-            <span>Stop</span>
-           <Lottie 
-        options={defaultOptions}
-          width={22}
-        />
+              id="aiplay"
+              onMouseDown={this.handleButtonClick}
+              onMouseUp={this.handleButtonRelease}
+              onTouchStart={this.handleButtonClick}
+              onTouchEnd={this.handleButtonRelease}
+            >
+              {this.state.betting ? (
+                <div id="stop">
+                  <span>Stop</span>
+                  <Lottie options={defaultOptions} width={22} />
+                </div>
+              ) : (
+                <div>
+                  {this.state.timerValue !== 2000 ? (
+                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
+                  ) : (
+                    <span>AI Play</span>
+                  )}
+                </div>
+              )}
+            </Button>
           </div>
-        ) : (
-          <div>
-            {this.state.timerValue !== 2000 ? (
-              <span>
-                {(this.state.timerValue / 2000).toFixed(2)}s
-              </span>
-            ) : (
-              <span>AI Play</span>
-            )}
-          </div>
-        )}
-        </Button>
-          </div>
- 
-          <div className="action-panel">
-          <div className="share-options">
-          <TwitterShareButton
-    url={twitterLink}
-    title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-    className="Demo__some-network__share-button"
-  >
-    <TwitterIcon size={32} round />
-  </TwitterShareButton>
-  {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-  <a className={styles.join('')} onClick={() => {
-                                    this.toggleBtnHandler();
-                                    this.copy();
-                                }}>{this.state.clicked ? <input type="text" value={twitterLink} readOnly onClick={this.toggleBtnHandler}/> : null }
-  <FaClipboard />&nbsp;{this.state.text}</a>
 
-        </div>
+          <div className="action-panel">
+            <div className="share-options">
+              <TwitterShareButton
+                url={twitterLink}
+                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
+                className="Demo__some-network__share-button"
+              >
+                <TwitterIcon size={32} round />
+              </TwitterShareButton>
+              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
+              <a
+                className={styles.join('')}
+                onClick={() => {
+                  this.toggleBtnHandler();
+                  this.copy();
+                }}
+              >
+                {this.state.clicked ? (
+                  <input
+                    type="text"
+                    value={twitterLink}
+                    readOnly
+                    onClick={this.toggleBtnHandler}
+                  />
+                ) : null}
+                <FaClipboard />
+                &nbsp;{this.state.text}
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -652,10 +683,8 @@ joinGame = async () => {
       history.go('/');
     } else {
       this.setState({ isOpen: false });
-      
     }
   };
-  
 
   getBetResultForm = () => {
     let prizes = [];
@@ -669,85 +698,87 @@ joinGame = async () => {
     prizes.sort((a, b) => a.price - b.price);
     let timeLeft = 1500; // duration of modal in milliseconds
     const intervalId = setInterval(() => {
-        timeLeft -= 100;
-        if (timeLeft === 0) {
-            clearInterval(intervalId);
-        }
+      timeLeft -= 100;
+      if (timeLeft === 0) {
+        clearInterval(intervalId);
+      }
     }, 100); // countdown interval
     return (
       <div className="game-page">
         <div className="game-contents mystery-box-result-contents">
           <div className="game-info-panel">
-            
-          <div className={`mystery-box-result ${this.state.betResult === 0 ? 'failed' : 'success'}`}>
-  {convertToCurrency(this.state.betResult)}
-</div>
-<h4 className="game-sub-title">
-  {this.state.betResult === 0
-    ? `PAHAH WRONG BOX DICKHEAD!`
-    : `NICE 😎 ISSA MONEY BOX`}
-</h4>
-<p>
-  {this.state.betResult === 0
-    ? `THIS BOX IS EMPTY`
-    : `YOU WON!`}
-</p>
-
-
- 
+            <div
+              className={`mystery-box-result ${
+                this.state.betResult === 0 ? 'failed' : 'success'
+              }`}
+            >
+              {convertToCurrency(this.state.betResult)}
+            </div>
+            <h4 className="game-sub-title">
+              {this.state.betResult === 0
+                ? `PAHAH WRONG BOX DICKHEAD!`
+                : `NICE 😎 ISSA MONEY BOX`}
+            </h4>
+            <p>
+              {this.state.betResult === 0 ? `THIS BOX IS EMPTY` : `YOU WON!`}
+            </p>
           </div>
           <div className="countdown-timer">
-                                <div className="countdown-bar" style={{ width: `${(timeLeft / 1500) * 100}%` }}></div>
-                            </div>
+            <div
+              className="countdown-bar"
+              style={{ width: `${(timeLeft / 1500) * 100}%` }}
+            ></div>
+          </div>
         </div>
       </div>
     );
   };
 
-
   toggleBtnHandler = () => {
     this.setState({
-      clicked:!this.state.clicked,
+      clicked: !this.state.clicked,
       text: 'LINK GRABBED'
     });
     setTimeout(() => {
       this.setState({
-        clicked:!this.state.clicked,
+        clicked: !this.state.clicked,
         text: ''
       });
     }, 1000);
-  }
+  };
 
   copy() {
-    navigator.clipboard.writeText(twitterLink)
+    navigator.clipboard.writeText(twitterLink);
   }
 
-
   render() {
-    
     return (
       <div>
         {this.getBetForm()}
-        { this.state.betResult !== -1 && 
-  this.state.isOpen && 
-  ( <ReactModal 
-    
+        {this.state.betResult !== -1 && this.state.isOpen && (
+          <ReactModal
             isOpen={this.state.isOpen}
             contentLabel="Prizes"
             closeModal={this.onBtnPlayAgainClicked}
             style={customStyles}
-          ><div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-            <div className='modal-header'>
-              <h2>PRIZE</h2>
-            <Button className="btn-close" onClick={this.onBtnPlayAgainClicked}>×</Button>
-            </div>
-            <div className="modal-body edit-modal-body">
-            {this.getBetResultForm()}
-            </div>
+          >
+            <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+              <div className="modal-header">
+                <h2>PRIZE</h2>
+                <Button
+                  className="btn-close"
+                  onClick={this.onBtnPlayAgainClicked}
+                >
+                  ×
+                </Button>
+              </div>
+              <div className="modal-body edit-modal-body">
+                {this.getBetResultForm()}
+              </div>
             </div>
           </ReactModal>
-         )}
-        </div>
+        )}
+      </div>
     );
   }
 }
@@ -765,9 +796,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  openGamePasswordModal,
+  openGamePasswordModal
   // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
-
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MysteryBox);

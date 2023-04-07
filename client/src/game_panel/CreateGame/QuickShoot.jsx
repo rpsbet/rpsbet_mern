@@ -65,32 +65,51 @@ class QuickShoot extends Component {
     this.setState({ winChance });
   };
 
-  calcWinChance = (gametype, rounds) => {
-    let positionCounts = new Array(gametype + 1).fill(0);
-    for (let i = 0; i < rounds.length; i++) {
-      positionCounts[rounds[i].qs]++;
+   calcWinChance = (gameType, rounds) => {
+    // Calculate base probabilities
+    let probWin = (100 / gameType).toFixed(2);
+    let probLose = (100 - probWin).toFixed(2);
+  
+    // Initialize the frequency of each unique qs value to 0
+    const freq = {};
+    for (let i = 0; i < gameType; i++) {
+      freq[i] = 0;
     }
-    let entropy = 0;
-    for (let i = 0; i < gametype; i++) {
-      if (positionCounts[i] === 0) {
-        continue;
-      }
-      let probability = positionCounts[i] / rounds.length;
-      entropy -= probability * Math.log2(probability);
-    }
-    let winChanceMin = Math.max(
-      0,
-      (1 - entropy / Math.log2(gametype)) / gametype
-    );
-    let winChanceMax = Math.min(1, 1 - entropy / Math.log2(gametype));
-    winChanceMin *= 100;
-    winChanceMax *= 100;
-    return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
+  
+    // Count the frequency of each unique qs value
+    rounds.forEach(round => {
+      freq[round.qs]++;
+    });
+  
+    // Calculate the range of frequencies
+    const freqValues = Object.values(freq);
+    const range = Math.max(...freqValues) - Math.min(...freqValues);
+  
+    // Adjust probabilities based on the range of frequencies
+    const sensitivityFactor = (range / 100) * gameType; // You can adjust this value to increase or decrease sensitivity
+    const adjustmentFactor = (range / gameType) * sensitivityFactor;
+    probWin = (+probWin - adjustmentFactor).toFixed(2);
+    probLose = (+probLose + adjustmentFactor).toFixed(2);
+  
+    return `${probWin}% - ${probLose}%`;
+  };
+  
+   calcEV = (gameType, betAmount, winLoseProb) => {
+    const winAmount = betAmount * (gameType - 1);
+    const loseAmount = betAmount;
+  
+    // Extract the probWin and probLose values from the winLoseProb string
+    const [probWin, probLose] = winLoseProb.split(" - ").map(prob => parseFloat(prob));
+  
+    const ev = (probWin * winAmount - probLose * loseAmount) / 100;
+    return ev.toFixed(2);
   };
 
   predictNext = (qs_list, gameType) => {
     const options = [...Array(gameType).keys()];
     const transitionMatrix = {};
+    const randomnessFactor = 0.15; // Adjust this value to control the level of randomness
+  
     options.forEach(option1 => {
       transitionMatrix[option1] = {};
       options.forEach(option2 => {
@@ -103,68 +122,58 @@ class QuickShoot extends Component {
         });
       });
     });
-
+  
+    // Count transitions
     for (let i = 0; i < qs_list.length - 3; i++) {
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
-        qs_list[i + 3].qs
-      ]++;
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
     }
-
+  
+    // Normalize transition probabilities
     Object.keys(transitionMatrix).forEach(fromState1 => {
       Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-          fromState3 => {
-            const totalTransitions = Object.values(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).reduce((a, b) => a + b);
-            Object.keys(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).forEach(toState => {
-              transitionMatrix[fromState1][fromState2][fromState3][
-                toState
-              ] /= totalTransitions;
-            });
-          }
-        );
+        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(fromState3 => {
+          const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
+          Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach(toState => {
+            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
+          });
+        });
       });
     });
-
-    const winChance = this.calcWinChance(this.props.qs_game_type, qs_list);
-    let deviation = 0;
-    if (winChance !== '33.33%') {
-      deviation = (1 - 1 / gameType) / 2;
-    }
-
+  
+    // Calculate winChance and deviation
+    const winChance = this.calcWinChance(gameType, qs_list);
+    const targetProbability = 100 / gameType;
+    const deviation = Math.abs(winChance - targetProbability);
+  
+    // Choose next state based on transition probabilities and deviation
     let currentState1 = qs_list[qs_list.length - 3].qs;
     let currentState2 = qs_list[qs_list.length - 2].qs;
     let currentState3 = qs_list[qs_list.length - 1].qs;
-    let nextState = currentState3;
-    let maxProb = 0;
-    Object.keys(
-      transitionMatrix[currentState1][currentState2][currentState3]
-    ).forEach(state => {
-      if (
-        transitionMatrix[currentState1][currentState2][currentState3][state] >
-        maxProb
-      ) {
-        maxProb =
-          transitionMatrix[currentState1][currentState2][currentState3][state];
-        nextState = state;
+  
+    // Weighted random choice based on transition probabilities
+    const weightedOptions = [];
+    Object.entries(transitionMatrix[currentState1][currentState2][currentState3]).forEach(([state, prob]) => {
+      for (let i = 0; i < Math.floor(prob * 100); i++) {
+        weightedOptions.push(state);
       }
     });
-
-    let randomNum = Math.random();
-    if (randomNum < deviation) {
-      let randomState = '';
-      do {
-        randomNum = Math.random();
-        randomState = options[Math.floor(randomNum * gameType)];
-      } while (randomState === nextState);
-      nextState = randomState;
+  
+    let nextState;
+    if (weightedOptions.length > 0) {
+      nextState = weightedOptions[Math.floor(Math.random() * weightedOptions.length)];
+    } else {
+      nextState = options[Math.floor(Math.random() * options.length)];
     }
-
+  
+    // Introduce randomness based on the randomnessFactor
+    if (Math.random() < randomnessFactor) {
+      nextState = options[Math.floor(Math.random() * options.length)];
+    }
+  
     return nextState;
   };
+  
+  
 
   onAddRun = selected_qs_position => {
     this.setState({ selected_qs_position: selected_qs_position });
@@ -172,10 +181,15 @@ class QuickShoot extends Component {
     newArray.push({
       qs: selected_qs_position
     });
-
     const winChance = this.calcWinChance(this.props.qs_game_type, newArray);
+    const betAmount = 1;
+    const winChanceEV = this.calcEV(
+      this.props.qs_game_type,
+      betAmount,
+      winChance,
+    );
     this.props.onChangeState({
-      winChance: winChance,
+      winChance: winChanceEV,
       qs_list: newArray
     });
     this.onChangeWinChance(winChance);
@@ -216,8 +230,10 @@ class QuickShoot extends Component {
         this.props.qs_game_type,
         updatedQsList
       );
+      const betAmount = 1;
+      const winChanceEV = this.calcEV(this.props.qs_game_type, betAmount, winChance)
       this.props.onChangeState({
-        winChance: winChance,
+        winChance: winChanceEV,
         qs_list: updatedQsList
       });
       return { qs_list: updatedQsList, winChance };

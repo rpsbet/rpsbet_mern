@@ -4,6 +4,19 @@ import { Button } from '@material-ui/core';
 
 
 class Spleesh extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      winChance: this.props.winChance,
+    }
+  }
+
+
+  
+  
+  onChangeWinChance = winChance => {
+    this.setState({ winChance });
+  };
   createNumberPanel() {
     // console.log(this.props.spleesh_bet_unit)
     let panel = [];
@@ -16,10 +29,12 @@ class Spleesh extends Component {
               : ''
           }
           onClick={() => {
+
             this.props.onChangeState({
               bet_amount: i * this.props.spleesh_bet_unit,
               endgame_amount: this.props.spleesh_bet_unit * (55 - i),
-              max_return: this.props.spleesh_bet_unit * (55 - i)
+              max_return: this.props.spleesh_bet_unit * (55 - i),
+              winChance: this.props.calculateEV(i, this.props.spleesh_bet_unit * (55 - i), this.props.spleesh_bet_unit)
             });
           }}
           key={i}

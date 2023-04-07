@@ -16,7 +16,8 @@ import {
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   SET_REFERRAL_CODE,
-  TOGGLE_MUTE
+  TOGGLE_MUTE,
+  TOGGLE_DRAWER
 } from '../types';
 
 const initialState = {
@@ -26,6 +27,7 @@ const initialState = {
   isDarkMode: localStorage.getItem('darkMode') === 'false' ? false : true,
   isAdmin: false,
   isMuted: localStorage.getItem('isMuted') === 'false' ? false : true,
+  isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : true,
   loading: true,
   user: { _id: null, email: '', password: '' },
   unreadMessageCount: 0,
@@ -53,6 +55,12 @@ export default function(state = initialState, action) {
         ...state,
         isMuted: payload
       };
+      case TOGGLE_DRAWER:
+        localStorage.setItem('isDrawerOpen', payload);
+        return {
+          ...state,
+          isDrawerOpen: payload
+        };
     case SET_SOCKET:
       return {
         ...state,

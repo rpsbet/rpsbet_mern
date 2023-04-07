@@ -85,7 +85,8 @@ class Summary extends Component {
         )} */}
         <div className="data-item">
           <div className="label win-chance">Expected Value</div>
-          <div className="value">{this.props.winChance}</div>
+          <div className="value">{convertToCurrency(this.props.winChance) === -0 ? convertToCurrency(0.00).toFixed(2) : convertToCurrency(this.props.winChance)}</div>
+
         </div>
       </div>
     );
@@ -132,7 +133,7 @@ class Summary extends Component {
         <div className="summary-info">
           <div className="summary-item">
             <div className="summary-item-name">Expected Value</div>
-            <div className="summary-item-value">{this.props.winChance}</div>
+            <div className="summary-item-value">{convertToCurrency(this.props.winChance)}</div>
           </div>
           <div className="summary-item">
             <div className="summary-item-name">Bet Amount</div>

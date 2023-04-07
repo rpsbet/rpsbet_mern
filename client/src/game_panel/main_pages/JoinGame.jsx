@@ -2,9 +2,9 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import Moment from 'moment';
-import { Button, Drawer } from "@material-ui/core";
+import { Button, Drawer } from '@material-ui/core';
 import LoadingOverlay from 'react-loading-overlay';
-
+import { toggleDrawer } from '../../redux/Auth/user.actions';
 import RPS from '../JoinGame/RPS';
 import Spleesh from '../JoinGame/Spleesh';
 import MysteryBox from '../JoinGame/MysteryBox';
@@ -31,9 +31,7 @@ import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
 import Footer from './Footer';
-import {
-  toggleMute
-} from '../../redux/Auth/user.actions';
+import { toggleMute } from '../../redux/Auth/user.actions';
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -57,7 +55,6 @@ const gifUrls = [
   'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif'
 ];
 
-
 const getRandomGifUrl = () => {
   const randomIndex = Math.floor(Math.random() * gifUrls.length);
   return gifUrls[randomIndex];
@@ -68,10 +65,9 @@ const defaultOptions = {
   autoplay: true,
   animationData: animationData,
   rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice"
+    preserveAspectRatio: 'xMidYMid slice'
   }
 };
-
 
 class JoinGame extends Component {
   constructor(props) {
@@ -80,10 +76,10 @@ class JoinGame extends Component {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
       numToShow: 10,
-      open: true,
       joiningRoom: false,
       roomInfo: this.props.roomInfo,
-      bankroll: parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
+      bankroll:
+        parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
       history: this.props.history,
       sounds: {
         win: new Audio('/sounds/win-sound.mp3'),
@@ -91,12 +87,11 @@ class JoinGame extends Component {
         lose: new Audio('/sounds/lose-sound.mp3'),
         start: new Audio('/sounds/start.mp3'),
         stop: new Audio('/sounds/stop.mp3'),
-        select: new Audio('/sounds/select.mp3'),
-      },
+        select: new Audio('/sounds/select.mp3')
+      }
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);
     this.toggleDrawer = this.toggleDrawer.bind(this);
-
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -113,9 +108,8 @@ class JoinGame extends Component {
     }
     if (current_state.roomInfo._id !== props.roomInfo._id) {
       return {
-        roomInfo: props.roomInfo,
+        roomInfo: props.roomInfo
         // bankroll: props.roomInfo.bet_amount - this.getPreviousBets()
-
       };
     }
 
@@ -135,46 +129,43 @@ class JoinGame extends Component {
     }
     this.props.getRoomInfo(this.props.match.params.id);
   }
-  
+
   componentWillUnmount() {
     clearInterval(this.interval);
   }
-  
-   handleLoadMore() {
-     this.setState({
-       numToShow: this.state.numToShow + 10,
-     });
-   }
 
-   toggleDrawer = () => {
-    this.setState(prevState => ({ open: !prevState.open }));
+  handleLoadMore() {
+    this.setState({
+      numToShow: this.state.numToShow + 10
+    });
+  }
+
+  toggleDrawer = () => {
+    this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
 
-  
   componentDidUpdate(prevProps) {
     if (prevProps.history !== this.props.history) {
       this.setState({ history: updateFromNow(this.props.history) });
-  }
+    }
     if (this.props.match.params.id !== prevProps.match.params.id) {
-      if(this.props.isAuthenticated){
-        if(this.props.roomInfo.status !== 'finished'){
+      if (this.props.isAuthenticated) {
+        if (this.props.roomInfo.status !== 'finished') {
           this.refreshHistory();
         }
       }
     }
   }
 
-
   updateReminderTime = () => {
     this.setState({ history: updateFromNow(this.state.history) });
   };
 
-  
   getPreviousBets() {
     let previousBets = 0;
     if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
       this.props.roomInfo.game_log_list.forEach(room_history => {
-        if(room_history.bet_amount){
+        if (room_history.bet_amount) {
           previousBets += parseFloat(room_history.bet_amount);
         }
       });
@@ -184,24 +175,19 @@ class JoinGame extends Component {
 
   join = async betInfo => {
     this.setState({ joiningRoom: true });
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    this.setState({ joiningRoom: false });
+    // await new Promise(resolve => setTimeout(resolve, 1000));
 
-    
-  
     const result = await this.props.bet({
       _id: this.state.roomInfo._id,
       game_type: this.props.roomInfo.game_type,
       ...betInfo
     });
-  
-    // // Set a delay of 500 milliseconds (i.e., 0.5 seconds) before the `joiningRoom` state is set to `false`
-  
-    // this.setState({ joiningRoom: false });
-  
+
+    this.setState({ joiningRoom: false });
+
     return result;
   };
-  
+
   playSound = sound => {
     if (!this.props.isMuted) {
       const audio = this.state.sounds[sound];
@@ -209,11 +195,10 @@ class JoinGame extends Component {
       audio.play();
     }
   };
-  
 
   refreshHistory = () => {
     this.props.getRoomInfo(this.props.match.params.id);
-  }
+  };
 
   showOpenGameOrHistory = (e, newValue) => {
     e.preventDefault();
@@ -222,303 +207,318 @@ class JoinGame extends Component {
     });
   };
 
-
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
-    (!this.state.is_mobile && this.props.selectedMainTabIndex === 0)
-      ? <div id="liveStakes">{this.props.roomCount} LIVE STAKES
-      <Lottie 
-        options={defaultOptions}
-          width={40}
-        /></div>
-      : 'My Stakes';
+    (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
+      <div id="liveStakes">
+        {this.props.roomCount} LIVE STAKES
+        <Lottie options={defaultOptions} width={40} />
+      </div>
+    ) : (
+      'My Stakes'
+    );
 
   render() {
-    const { open } = this.state;
+    const { open } = this.props;
 
     return (
       <>
-     <LoadingOverlay
-  className="custom-loading-overlay"
-  active={this.state.joiningRoom}
-  spinner={
-    <div className="rpsLoader">
-      <img
-        src={getRandomGifUrl()}
-        alt="Random Spinner"
-        style={{
-          width: '40px',
-          display: 'block',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          marginBottom: '10px',
-        }}
-      />
-      <div>Joining Room...</div>
-    </div>
-  }
->
-
-      <div className="main-game"  style={{ gridTemplateColumns: this.state.open ? '260px calc(70% - 260px) 30%' : '70% 30%' }}>
-       {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
-          !this.state.is_mobile) &&
-          <Drawer
-          
-          className="mat-chat" style={{ display: this.state.open ? 'flex' : 'none' }}
-        variant="persistent"
-          anchor="left"
-          open={open}
-          >
-
-          <ChatPanel />
-          </Drawer>
-          }
-        {!this.state.is_mobile &&
-          (!this.state.selectedMobileTab === 'live_games' ||
-            !this.state.selectedMobileTab === 'my_games') && (
-            <Tabs
-              value={this.state.show_open_game}
-              onChange={this.showOpenGameOrHistory}
-              TabIndicatorProps={{ style: { background: '#c438ef' } }}
-              className="main-game-page-tabs"
-            >
-              <Tab
-                label={
-                  this.state.selectedMobileTab === 'live_games'
-                    ? 'Live Stakes' 
-                    : 'My Stakes'
-                }
-                style={customStyles.tabRoot}
+        <LoadingOverlay
+          className="custom-loading-overlay"
+          active={this.state.joiningRoom}
+          spinner={
+            <div className="rpsLoader">
+              <img
+                src={getRandomGifUrl()}
+                alt="Random Spinner"
+                style={{
+                  width: '40px',
+                  display: 'block',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                  marginBottom: '10px'
+                }}
               />
-              <Tab label="History" style={customStyles.tabRoot} />
-            </Tabs>
-          )}
-          
-          <div className='main-panel'>
-            <div className='join-game-panel'>
-        {(this.props.roomInfo.game_type === 'RPS' && (
-          <RPS
-          refreshHistory={this.refreshHistory}
-          playSound = {this.playSound}
-            join={this.join}
-            roomInfo={this.props.roomInfo}
-            user_id={this.props.user_id}
-            creator_id={this.props.roomInfo.creator_id}
-            bet_amount={this.props.roomInfo.bet_amount}
-            bankroll={this.state.bankroll}
-            rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
-            is_private={this.props.roomInfo.is_private}
-          />
-        ))}
-        {this.props.roomInfo.game_type === 'Spleesh!' && (
-          <Spleesh
-          refreshHistory={this.refreshHistory}
-            join={this.join}
-            spleesh_bet_unit={this.props.roomInfo.spleesh_bet_unit}
-            game_log_list={this.props.roomInfo.game_log_list || []}
-            user_id={this.props.user_id}
-            creator_id={this.props.roomInfo.creator_id}
-            roomInfo={this.props.roomInfo}
-            playSound = {this.playSound}
+              <div>Joining Room...</div>
+            </div>
+          }
+        >
+          <div
+            className="main-game"
+            style={{
+              gridTemplateColumns: this.props.isDrawerOpen
+                ? '260px calc(70% - 260px) 30%'
+                : '70% 30%'
+            }}
+          >
+            {((this.state.is_mobile &&
+              this.state.selectedMobileTab === 'chat') ||
+              !this.state.is_mobile) && (
+              <Drawer
+                className="mat-chat"
+                style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
+                variant="persistent"
+                anchor="left"
+                open={this.props.isDrawerOpen}
+              >
+                <ChatPanel />
+              </Drawer>
+            )}
+            {!this.state.is_mobile &&
+              (!this.state.selectedMobileTab === 'live_games' ||
+                !this.state.selectedMobileTab === 'my_games') && (
+                <Tabs
+                  value={this.state.show_open_game}
+                  onChange={this.showOpenGameOrHistory}
+                  TabIndicatorProps={{ style: { background: '#c438ef' } }}
+                  className="main-game-page-tabs"
+                >
+                  <Tab
+                    label={
+                      this.state.selectedMobileTab === 'live_games'
+                        ? 'Live Stakes'
+                        : 'My Stakes'
+                    }
+                    style={customStyles.tabRoot}
+                  />
+                  <Tab label="History" style={customStyles.tabRoot} />
+                </Tabs>
+              )}
 
-            is_private={this.props.roomInfo.is_private}
-          />
-        )}
-        {this.props.roomInfo.game_type === 'Mystery Box' &&
-          this.props.roomInfo.box_list.length > 0 && (
-            <MysteryBox
-            refreshHistory={this.refreshHistory}
-              join={this.join}
-              box_list={this.props.roomInfo.box_list}
-              box_price={this.props.roomInfo.box_price}
-              user_id={this.props.user_id}
-              creator_id={this.props.roomInfo.creator_id}
-              is_private={this.props.roomInfo.is_private}
-              roomInfo={this.props.roomInfo}
-              playSound = {this.playSound}
+            <div className="main-panel">
+              <div className="join-game-panel">
+                {this.props.roomInfo.game_type === 'RPS' && (
+                  <RPS
+                    refreshHistory={this.refreshHistory}
+                    playSound={this.playSound}
+                    join={this.join}
+                    roomInfo={this.props.roomInfo}
+                    user_id={this.props.user_id}
+                    creator_id={this.props.roomInfo.creator_id}
+                    bet_amount={this.props.roomInfo.bet_amount}
+                    bankroll={this.state.bankroll}
+                    rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
+                    is_private={this.props.roomInfo.is_private}
+                  />
+                )}
+                {this.props.roomInfo.game_type === 'Spleesh!' && (
+                  <Spleesh
+                    refreshHistory={this.refreshHistory}
+                    join={this.join}
+                    spleesh_bet_unit={this.props.roomInfo.spleesh_bet_unit}
+                    game_log_list={this.props.roomInfo.game_log_list || []}
+                    user_id={this.props.user_id}
+                    creator_id={this.props.roomInfo.creator_id}
+                    roomInfo={this.props.roomInfo}
+                    playSound={this.playSound}
+                    is_private={this.props.roomInfo.is_private}
+                  />
+                )}
+                {this.props.roomInfo.game_type === 'Mystery Box' &&
+                  this.props.roomInfo.box_list.length > 0 && (
+                    <MysteryBox
+                      refreshHistory={this.refreshHistory}
+                      join={this.join}
+                      box_list={this.props.roomInfo.box_list}
+                      box_price={this.props.roomInfo.box_price}
+                      user_id={this.props.user_id}
+                      creator_id={this.props.roomInfo.creator_id}
+                      is_private={this.props.roomInfo.is_private}
+                      roomInfo={this.props.roomInfo}
+                      playSound={this.playSound}
+                      betResult={this.state.betResult}
+                    />
+                  )}
+                {this.props.roomInfo.game_type === 'Brain Game' && (
+                  <BrainGame
+                    refreshHistory={this.refreshHistory}
+                    join={this.join}
+                    brain_game_type={this.props.roomInfo.brain_game_type}
+                    brain_game_score={this.props.roomInfo.brain_game_score}
+                    bet_amount={this.props.roomInfo.bet_amount}
+                    user_id={this.props.user_id}
+                    creator_id={this.props.roomInfo.creator_id}
+                    joined_count={
+                      this.props.roomInfo.game_log_list
+                        ? this.props.roomInfo.game_log_list.length
+                        : 0
+                    }
+                    is_private={this.props.roomInfo.is_private}
+                    roomInfo={this.props.roomInfo}
+                    playSound={this.playSound}
+                  />
+                )}
+                {this.props.roomInfo.game_type === 'Quick Shoot' && (
+                  <QuickShoot
+                    refreshHistory={this.refreshHistory}
+                    join={this.join}
+                    user_id={this.props.user_id}
+                    creator_id={this.props.roomInfo.creator_id}
+                    qs_game_type={this.props.roomInfo.qs_game_type}
+                    bet_amount={this.props.roomInfo.bet_amount}
+                    bankroll={this.state.bankroll}
+                    qs_bet_item_id={this.props.roomInfo.qs_bet_item_id}
+                    is_private={this.props.roomInfo.is_private}
+                    roomInfo={this.props.roomInfo}
+                    playSound={this.playSound}
+                  />
+                )}
+                {this.props.roomInfo.game_type === 'Drop Game' && (
+                  <DropGame
+                    refreshHistory={this.refreshHistory}
+                    join={this.join}
+                    user_id={this.props.user_id}
+                    creator_id={this.props.roomInfo.creator_id}
+                    bet_amount={this.props.roomInfo.bet_amount}
+                    bankroll={this.state.bankroll}
+                    drop_bet_item_id={this.props.roomInfo.drop_bet_item_id}
+                    is_private={this.props.roomInfo.is_private}
+                    roomInfo={this.props.roomInfo}
+                    playSound={this.playSound}
+                  />
+                )}
 
-              betResult={this.state.betResult}
-            />
-          )}
-        {this.props.roomInfo.game_type === 'Brain Game' && (
-          <BrainGame
-          refreshHistory={this.refreshHistory}
-            join={this.join}
-            brain_game_type={this.props.roomInfo.brain_game_type}
-            brain_game_score={this.props.roomInfo.brain_game_score}
-            bet_amount={this.props.roomInfo.bet_amount}
-            user_id={this.props.user_id}
-            creator_id={this.props.roomInfo.creator_id}
-            joined_count={
-              this.props.roomInfo.game_log_list
-                ? this.props.roomInfo.game_log_list.length
-                : 0
-            }
-            is_private={this.props.roomInfo.is_private}
-            roomInfo={this.props.roomInfo}
-            playSound = {this.playSound}
-
-          />
-        )}
-        {this.props.roomInfo.game_type === 'Quick Shoot' && (
-          <QuickShoot
-          refreshHistory={this.refreshHistory}
-            join={this.join}
-            user_id={this.props.user_id}
-            creator_id={this.props.roomInfo.creator_id}
-            qs_game_type={this.props.roomInfo.qs_game_type}
-            bet_amount={this.props.roomInfo.bet_amount}
-            bankroll={this.state.bankroll}
-            qs_bet_item_id={this.props.roomInfo.qs_bet_item_id}
-            is_private={this.props.roomInfo.is_private}
-            roomInfo={this.props.roomInfo}
-            playSound = {this.playSound}
-
-          />
-        )}
-        {this.props.roomInfo.game_type === 'Drop Game' && (
-          <DropGame
-          refreshHistory={this.refreshHistory}
-            join={this.join}
-            user_id={this.props.user_id}
-            creator_id={this.props.roomInfo.creator_id}
-            bet_amount={this.props.roomInfo.bet_amount}
-            bankroll={this.state.bankroll}
-            drop_bet_item_id={this.props.roomInfo.drop_bet_item_id}
-            is_private={this.props.roomInfo.is_private}
-            roomInfo={this.props.roomInfo}
-            playSound = {this.playSound}
-
-          />
-        )}
-        
-        <div className="room-history-panel">
-        <h2 className="room-history-title">Battle History</h2>
-        {this.props.roomInfo && this.props.roomInfo.room_history && this.props.roomInfo.room_history.length > 0 ? (
-          <div className="table main-history-table">
-            {this.props.roomInfo.room_history.slice(0, this.state.numToShow).map(
-              (row, key) => (
-                <div className="table-row" key={'history' + row._id}>
-                  <div>
-                    <div className="table-cell">
-                      <div className="room-id">{row.room_name}</div>
-                      <div dangerouslySetInnerHTML={{ __html: row.history }}></div>
-                      <div className="table-cell">{row.from_now}</div>
+                <div className="room-history-panel">
+                  <h2 className="room-history-title">Battle History</h2>
+                  {this.props.roomInfo &&
+                  this.props.roomInfo.room_history &&
+                  this.props.roomInfo.room_history.length > 0 ? (
+                    <div className="table main-history-table">
+                      {this.props.roomInfo.room_history
+                        .slice(0, this.state.numToShow)
+                        .map((row, key) => (
+                          <div className="table-row" key={'history' + row._id}>
+                            <div>
+                              <div className="table-cell">
+                                <div className="room-id">{row.room_name}</div>
+                                <div
+                                  dangerouslySetInnerHTML={{
+                                    __html: row.history
+                                  }}
+                                ></div>
+                                <div className="table-cell">{row.from_now}</div>
+                              </div>
+                            </div>
+                            {key ===
+                              this.props.roomInfo.room_history.length - 1 && (
+                              <div ref={this.lastItemRef}></div>
+                            )}
+                          </div>
+                        ))}
+                      {this.state.numToShow <
+                        this.props.roomInfo.room_history.length && (
+                        <div className="load-more-btn">
+                          <Button
+                            id="load-btn"
+                            variant="contained"
+                            color="primary"
+                            onClick={this.handleLoadMore}
+                          >
+                            Load More
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  {key === this.props.roomInfo.room_history.length - 1 && (
-                    <div ref={this.lastItemRef}></div>
+                  ) : (
+                    <p>No History Yet</p>
                   )}
                 </div>
-              )
-            )}
-            {this.state.numToShow < this.props.roomInfo.room_history.length && (
-              <div className="load-more-btn">
-                <Button id="load-btn" variant="contained" color="primary" onClick={this.handleLoadMore}>
-                  Load More
-                </Button>
               </div>
-            )}
-          </div>
-        ) : (
-          <p>No History Yet</p>
-        )}
-      </div>
-
-        </div>
-        <div>
-        {((!this.state.is_mobile && this.props.selectedMainTabIndex === 1) ||
-            (this.state.is_mobile &&
-              this.state.selectedMobileTab === 'my_games' &&
-              this.state.show_open_game === 0)) && (
-            <MyGamesTable gameTypeList={this.props.gameTypeList} />
-          )}
-          {this.state.is_mobile &&
-            this.state.selectedMobileTab === 'live_games' &&
-            this.state.show_open_game === 1 && <HistoryTable />}
-          {this.state.is_mobile &&
-            this.state.selectedMobileTab === 'my_games' &&
-            this.state.show_open_game === 1 && <MyHistoryTable />}
-        </div>
-        </div>
-        <div className="sub-panel">
-          <h2 className="main-title desktop-only">HISTORY</h2>
-          {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
-            <HistoryTable />
-          )}
-           <DrawerButton
-            open={this.state.open}
-            toggleDrawer={this.toggleDrawer}
-        />
-          {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
-            <MyHistoryTable />
-          )}
-        </div>
-        {!this.state.is_mobile && (
-          <div className="mobile-only main-page-nav-button-group">
-            <Button
-              className={`mobile-tab-live ${
-                this.state.selectedMobileTab === 'live_games' ? 'active' : ''
-              }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'live_games' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                fill="none"
-                viewBox="0 0 32 32"
-              >
-                <path
-                  stroke={
+              <div>
+                {((!this.state.is_mobile &&
+                  this.props.selectedMainTabIndex === 1) ||
+                  (this.state.is_mobile &&
+                    this.state.selectedMobileTab === 'my_games' &&
+                    this.state.show_open_game === 0)) && (
+                  <MyGamesTable gameTypeList={this.props.gameTypeList} />
+                )}
+                {this.state.is_mobile &&
+                  this.state.selectedMobileTab === 'live_games' &&
+                  this.state.show_open_game === 1 && <HistoryTable />}
+                {this.state.is_mobile &&
+                  this.state.selectedMobileTab === 'my_games' &&
+                  this.state.show_open_game === 1 && <MyHistoryTable />}
+              </div>
+            </div>
+            <div className="sub-panel">
+              <h2 className="main-title desktop-only">HISTORY</h2>
+              {!this.state.is_mobile &&
+                this.props.selectedMainTabIndex === 0 && <HistoryTable />}
+              <DrawerButton
+                open={this.props.isDrawerOpen}
+                toggleDrawer={this.toggleDrawer}
+              />
+              {!this.state.is_mobile &&
+                this.props.selectedMainTabIndex === 1 && <MyHistoryTable />}
+            </div>
+            {!this.state.is_mobile && (
+              <div className="mobile-only main-page-nav-button-group">
+                <Button
+                  className={`mobile-tab-live ${
                     this.state.selectedMobileTab === 'live_games'
-                      ? '#fff'
-                      : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                  d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
-                />
-              </svg>
-              {this.state.selectedMobileTab === 'live_games' && 'LIVE STAKES'}
-            </Button>
-            <Button
-              className={`mobile-tab-my ${
-                this.state.selectedMobileTab === 'my_games' ? 'active' : ''
-              }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'my_games' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="33"
-                height="32"
-                fill="none"
-                viewBox="0 0 33 32"
-              >
-                <path
-                  stroke={
-                    this.state.selectedMobileTab === 'my_games'
-                      ? '#fff'
-                      : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                  d="M27.5 27.5c0-2.917-1.159-5.715-3.222-7.778-2.063-2.063-4.86-3.222-7.778-3.222-2.917 0-5.715 1.159-7.778 3.222C6.659 21.785 5.5 24.582 5.5 27.5"
-                />
-                <path
-                  fill={
-                    this.state.selectedMobileTab === 'my_games'
-                      ? '#fff'
-                      : '#8E9297'
-                  }
-                  d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
-                />
-              </svg>
-              {this.state.selectedMobileTab === 'my_games' && 'MY STAKES'}
-            </Button>
-            {/* <button
+                      ? 'active'
+                      : ''
+                  }`}
+                  onClick={e => {
+                    this.setState({ selectedMobileTab: 'live_games' });
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    fill="none"
+                    viewBox="0 0 32 32"
+                  >
+                    <path
+                      stroke={
+                        this.state.selectedMobileTab === 'live_games'
+                          ? '#fff'
+                          : '#8E9297'
+                      }
+                      strokeWidth="1.5"
+                      d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
+                    />
+                  </svg>
+                  {this.state.selectedMobileTab === 'live_games' &&
+                    'LIVE STAKES'}
+                </Button>
+                <Button
+                  className={`mobile-tab-my ${
+                    this.state.selectedMobileTab === 'my_games' ? 'active' : ''
+                  }`}
+                  onClick={e => {
+                    this.setState({ selectedMobileTab: 'my_games' });
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="33"
+                    height="32"
+                    fill="none"
+                    viewBox="0 0 33 32"
+                  >
+                    <path
+                      stroke={
+                        this.state.selectedMobileTab === 'my_games'
+                          ? '#fff'
+                          : '#8E9297'
+                      }
+                      strokeWidth="1.5"
+                      d="M27.5 27.5c0-2.917-1.159-5.715-3.222-7.778-2.063-2.063-4.86-3.222-7.778-3.222-2.917 0-5.715 1.159-7.778 3.222C6.659 21.785 5.5 24.582 5.5 27.5"
+                    />
+                    <path
+                      fill={
+                        this.state.selectedMobileTab === 'my_games'
+                          ? '#fff'
+                          : '#8E9297'
+                      }
+                      d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
+                    />
+                  </svg>
+                  {this.state.selectedMobileTab === 'my_games' && 'MY STAKES'}
+                </Button>
+                {/* <button
               className={`mobile-tab-leaderboards ${
                 this.state.selectedMobileTab === 'leaderboards' ? 'active' : ''
               }`}
@@ -546,67 +546,76 @@ class JoinGame extends Component {
               {this.state.selectedMobileTab === 'leaderboards' &&
                 'LEADERBOARDS'}
             </button> */}
-            <Button
-              className={`mobile-tab-chat ${
-                this.state.selectedMobileTab === 'chat' ? 'active' : ''
-              }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'chat' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="33"
-                height="32"
-                fill="none"
-                viewBox="0 0 33 32"
-              >
-                <path
-                  stroke={
-                    this.state.selectedMobileTab === 'chat' ? '#fff' : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                  d="M28 16c0 6.351-5.149 11.5-11.5 11.5-1.407 0-2.754-.253-4-.715-2.75-1.02-4.091 1.378-4.75.965-.685-.43 1.328-2.929.75-3.489C6.342 22.171 5 19.242 5 16 5 9.649 10.149 4.5 16.5 4.5S28 9.649 28 16z"
-                />
-                <circle
-                  cx="10.5"
-                  cy="16"
-                  r="2"
-                  stroke={
-                    this.state.selectedMobileTab === 'chat' ? '#fff' : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                />
-                <circle
-                  cx="16.5"
-                  cy="16"
-                  r="2"
-                  stroke={
-                    this.state.selectedMobileTab === 'chat' ? '#fff' : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                />
-                <circle
-                  cx="22.5"
-                  cy="16"
-                  r="2"
-                  stroke={
-                    this.state.selectedMobileTab === 'chat' ? '#fff' : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                />
-              </svg>
-              {this.state.selectedMobileTab === 'chat' && 'CHAT'}
-            </Button>
+                <Button
+                  className={`mobile-tab-chat ${
+                    this.state.selectedMobileTab === 'chat' ? 'active' : ''
+                  }`}
+                  onClick={e => {
+                    this.setState({ selectedMobileTab: 'chat' });
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="33"
+                    height="32"
+                    fill="none"
+                    viewBox="0 0 33 32"
+                  >
+                    <path
+                      stroke={
+                        this.state.selectedMobileTab === 'chat'
+                          ? '#fff'
+                          : '#8E9297'
+                      }
+                      strokeWidth="1.5"
+                      d="M28 16c0 6.351-5.149 11.5-11.5 11.5-1.407 0-2.754-.253-4-.715-2.75-1.02-4.091 1.378-4.75.965-.685-.43 1.328-2.929.75-3.489C6.342 22.171 5 19.242 5 16 5 9.649 10.149 4.5 16.5 4.5S28 9.649 28 16z"
+                    />
+                    <circle
+                      cx="10.5"
+                      cy="16"
+                      r="2"
+                      stroke={
+                        this.state.selectedMobileTab === 'chat'
+                          ? '#fff'
+                          : '#8E9297'
+                      }
+                      strokeWidth="1.5"
+                    />
+                    <circle
+                      cx="16.5"
+                      cy="16"
+                      r="2"
+                      stroke={
+                        this.state.selectedMobileTab === 'chat'
+                          ? '#fff'
+                          : '#8E9297'
+                      }
+                      strokeWidth="1.5"
+                    />
+                    <circle
+                      cx="22.5"
+                      cy="16"
+                      r="2"
+                      stroke={
+                        this.state.selectedMobileTab === 'chat'
+                          ? '#fff'
+                          : '#8E9297'
+                      }
+                      strokeWidth="1.5"
+                    />
+                  </svg>
+                  {this.state.selectedMobileTab === 'chat' && 'CHAT'}
+                </Button>
+              </div>
+            )}
+            <Footer
+              className="footer"
+              open={this.props.isDrawerOpen}
+              style={{ marginLeft: this.props.isDrawerOpen ? '270px' : '0' }}
+            />
           </div>
-        )}
-                              <Footer className="footer" open={this.state.open} style={{ marginLeft: this.state.open ? '270px' : '0' }} />
-
-        </div>
         </LoadingOverlay>
-
       </>
-      
     );
   }
 }
@@ -618,6 +627,7 @@ const mapStateToProps = state => ({
   user_id: state.auth.user._id,
   isMuted: state.auth.isMuted,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
+  isDrawerOpen: state.auth.isDrawerOpen
 });
 
 const mapDispatchToProps = {
@@ -630,6 +640,7 @@ const mapDispatchToProps = {
   getMyGames,
   getMyHistory,
   getHistory,
+  toggleDrawer,
   getGameTypeList
 };
 

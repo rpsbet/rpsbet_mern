@@ -10,6 +10,7 @@ import PlayBrainGame from '../CreateGame/PlayBrainGame';
 import QuickShoot from '../CreateGame/QuickShoot';
 import { Button } from '@material-ui/core';
 import Footer from './Footer';
+import { toggleDrawer } from '../../redux/Auth/user.actions';
 import Summary from '../CreateGame/Summary';
 import {
   createRoom,
@@ -68,7 +69,6 @@ class CreateGame extends Component {
       rps_list: [],
       drop_list: [],
       qs_list: [],
-      open: true,
       qs_game_type: 2,
       qs_nation: 0,
       selected_rps: '',
@@ -114,9 +114,57 @@ class CreateGame extends Component {
   };
 
   toggleDrawer = () => {
-    this.setState(prevState => ({ open: !prevState.open }));
+    this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
 
+  calculateEV(originalBet, maxSum, spleesh_bet_unit) {
+    const sum = (55 * spleesh_bet_unit) - originalBet; // sum of all possible wrong guesses
+    const n = originalBet; // number of possible guesses
+    const p = 1 / n; // probability of guessing correctly
+    let expectedValue = (originalBet * (sum - maxSum) * p) - ((sum - maxSum) * (1 - p));
+  
+    let scale = 1;
+    if (maxSum < originalBet) {
+      scale = (maxSum / originalBet) ** 2;
+    } else if (maxSum > sum) {
+      expectedValue *= -1;
+      scale = -1;
+    } else {
+      scale = 1 - ((sum - maxSum) / (sum - originalBet));
+      scale = 1 - scale ** 2; // adjust scale based on quadratic function
+    }
+  
+    expectedValue *= scale;
+    return expectedValue / p;
+  }
+
+  calcMysteryBoxEV(boxList, targetSum, max_return) {
+    const totalBoxes = boxList.length;
+    const probability = 1 / totalBoxes;
+    let expectedValue = 0;
+    const totalPrizes = boxList.reduce((acc, curr) => acc + curr.box_prize, 0);
+    const targetDiff = Math.abs(targetSum - totalPrizes);
+    const maxDiff = Math.abs(max_return - totalPrizes);
+    
+    for (let i = 0; i < totalBoxes; i++) {
+      const boxPrice = boxList[i].box_price;
+      const boxPrize = boxList[i].box_prize;
+      const boxEV = (boxPrice - boxPrize) * (1 - probability) - (boxPrize * probability);
+      expectedValue += boxEV;
+    }
+    
+    let scale = 1;
+    if (targetSum >= totalPrizes && targetSum <= max_return) {
+      scale = 1 - (targetDiff / maxDiff);
+    } else if (targetSum > max_return) {
+      expectedValue *= -1;
+    }
+    
+    expectedValue *= scale;
+    return expectedValue;
+  }  
+    
+  
   async componentDidMount() {
     this.IsAuthenticatedReroute();
     this.props.getHistory();
@@ -330,7 +378,24 @@ class CreateGame extends Component {
         });
         return;
       }
-    } else if (this.state.step === 3) {
+    } else if (this.state.child_step === 2 && this.state.game_mode === 'Spleesh!') {
+      if ((this.state.spleesh_bet_unit === 1 && this.state.endgame_amount < 34) || (this.state.spleesh_bet_unit === 10 && this.state.endgame_amount < 340)) {
+        alertModal(
+          this.props.isDarkMode,
+          `TOO PROFITABLE! PAYOUT MUST BE MORE THAN ${35 * this.state.spleeshh_bet_unit}`
+        );
+        return;
+      }
+      
+     } else if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
+      if (this.state.max_return > (this.state.bet_amount * 4)) {
+        alertModal(
+          this.props.isDarkMode,
+          `TOO PROFITABLE! GAME IS UNFAIR`
+        );
+        return;
+      }
+     } else if (this.state.step === 3) {
       if (this.state.is_private === true && this.state.room_password === '') {
         alertModal(
           this.props.isDarkMode,
@@ -394,11 +459,13 @@ class CreateGame extends Component {
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
           rps_game_type={this.state.rps_game_type}
+       
         />
       );
     } else if (this.state.game_mode === 'Spleesh!') {
       return (
         <Spleesh
+        calculateEV={this.calculateEV}
           onChangeState={this.onChangeState}
           bet_amount={this.state.bet_amount}
           spleesh_bet_unit={this.state.spleesh_bet_unit}
@@ -414,6 +481,7 @@ class CreateGame extends Component {
     } else if (this.state.game_mode === 'Mystery Box') {
       return (
         <MysteryBox
+        calcMysteryBoxEV={this.calcMysteryBoxEV}
           onChangeState={this.onChangeState}
           box_list={this.state.box_list}
           bet_amount={this.state.bet_amount}
@@ -517,7 +585,7 @@ class CreateGame extends Component {
     );
 
   render() {
-    const { open } = this.state;
+    const { isDrawerOpen } = this.props;
     return (
       <LoadingOverlay
       className="custom-loading-overlay"
@@ -542,7 +610,7 @@ class CreateGame extends Component {
         <div
           className="main-game"
           style={{
-            gridTemplateColumns: this.state.open
+            gridTemplateColumns: this.props.isDrawerOpen
               ? '260px calc(70% - 260px) 30%'
               : '70% 30%'
           }}
@@ -551,10 +619,10 @@ class CreateGame extends Component {
             !this.state.is_mobile) && (
             <Drawer
               className="mat-chat"
-              style={{ display: this.state.open ? 'flex' : 'none' }}
+              style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
               variant="persistent"
               anchor="left"
-              open={open}
+              open={this.props.isDrawerOpen}
             >
               <ChatPanel />
             </Drawer>
@@ -630,9 +698,13 @@ class CreateGame extends Component {
                   {this.state.step === 2 && this.step2()}
                   {this.state.step === 3 && (
                     <AdvancedSettings
-                      calcWinChance={this.calcWinChance}
+                    calculateEV={this.calculateEV}
+                    max_return={this.state.max_return}
+                    calcMysteryBoxEV={this.calcMysteryBoxEV}
+                      spleesh_bet_unit={this.state.spleesh_bet_unit}
                       onChangeState={this.onChangeState}
                       winChance={this.state.winChance}
+                      bet_amount={this.state.bet_amount}
                       is_private={this.state.is_private}
                       room_password={this.state.room_password}
                       game_mode={this.state.game_mode}
@@ -669,7 +741,7 @@ class CreateGame extends Component {
               <MyHistoryTable />
             )}
             <DrawerButton
-              open={this.state.open}
+              open={this.props.isDrawerOpen}
               toggleDrawer={this.toggleDrawer}
             />
           </div>
@@ -827,7 +899,7 @@ class CreateGame extends Component {
               </Button>
             </div>
           )}
-                      <Footer className="footer" open={this.state.open} style={{ marginLeft: this.state.open ? '270px' : '0' }} />
+                      <Footer className="footer" open={this.props.isDrawerOpen} style={{ marginLeft: this.props.isDrawerOpen ? '270px' : '0' }} />
 
         </div>
       </LoadingOverlay>
@@ -851,7 +923,8 @@ const mapStateToProps = state => ({
   socket: state.auth.socket,
   balance: state.auth.balance,
   brain_game_type: state.questionReducer.brain_game_type,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  isDrawerOpen: state.auth.isDrawerOpen
 });
 
 const mapDispatchToProps = {
@@ -862,7 +935,8 @@ const mapDispatchToProps = {
   getMyGames,
   getMyHistory,
   getGameTypeList,
-  getMyChat
+  getMyChat,
+  toggleDrawer
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(CreateGame);

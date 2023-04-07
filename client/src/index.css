@@ -96,10 +96,8 @@ input,textarea { border-radius: 0 !important; }
 
 .join-game-panel .qs-image-panel {
   position: relative;
-  padding-top: 25%;
-    padding-bottom: 25%;
     width: 100%;
-    height: 0;
+    height: 230px;
 }
 
 .qs-image-panel img {
@@ -143,11 +141,11 @@ button {
 
 .create-game-panel button#tr {
   right: 18%;
-  top: 54px;
+  transform: translateY(55px);
 }
 .create-game-panel button#tl {
   left: 18%;
-  top: 54px;
+  transform: translateY(55px);
 }
 
 .create-game-panel button#c {
@@ -162,12 +160,12 @@ button {
 
 .create-game-panel #br {
   right: 18%;
-  transform: translateY(55px);
+  transform: translateY(-45px);
 }
 
 .create-game-panel button#bl {
   left: 18%;
-  transform: translateY(55px);
+  transform: translateY(-45px);
 }
 
 .create-game-panel button#l {
@@ -1278,7 +1276,6 @@ circle {
   }
   .qs-buttons button {
     position: absolute !important;
-      background: linear-gradient(184deg, #48f304a8, #5be70a3d) !important;
       color: #fff !important;
       width: 2.75rem !important;
       height: 2.75rem !important;
@@ -1291,46 +1288,49 @@ circle {
 
   .create-game-panel .qs-buttons button {
     transform: scale(0.7);
+    opacity: 0.7;
   }
   
 
 
 .create-game-panel button#l {
-  top: -45px;
+  transform: translate(47px, -55px);
+
 }
 
 /* Right button */
 .create-game-panel button#r {
-  top: -45px;
+  transform: translate(195px, -55px);
+
 }
 
 .create-game-panel button#tr {
   right: 18%;
-  top: -10px;
+  transform: translateY(-10px);
 }
 .create-game-panel button#tl {
   left: 18%;
-  top: -10px;
+  transform: translateY(-10px);
 }
 
 .create-game-panel button#c {
   left: 42.5%;
-  top: -30px;
+  transform: translateY(-35px);
 }
 
 .create-game-panel button#cc {
   left: 42.5%;
-  top: -30px;
+  transform: translateY(-35px);
 }
 
 .create-game-panel #br {
   right: 18%;
-  bottom: 10px;
+  transform: translateY(-65px);
 }
 
 .create-game-panel button#bl {
   left: 18%;
-  bottom: 10px;
+  transform: translateY(-65px);
 }
 
 
