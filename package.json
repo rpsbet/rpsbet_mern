@@ -31,6 +31,7 @@
     "date-fns": "^2.0.1",
     "dotenv": "^7.0.0",
     "ether.js": "^1.0.0",
+    "ethereum-blockies": "^0.1.1",
     "ethers": "^5.5.1",
     "express": "^4.16.4",
     "express-fileupload": "^1.1.6-alpha.5",
