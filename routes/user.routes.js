@@ -2,7 +2,8 @@ const express = require('express');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const gravatar = require('gravatar');
+const Identicon = require('identicon.js');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const auth = require('../middleware/auth');
@@ -146,20 +147,33 @@ router.post('/', async (req, res) => {
   if (referralCode) {
     referralOwner = await User.findOne({ referralCode });
   }
-  
-  const newUser = new User({
-    username,
-    email,
-    password,
-    bio,
-    balance: 0,
-    rewards: 0,
-    status: 'off',
-    avatar,
-    verification_code,
-    referralCode: generateReferralCode(),
-    referralId: referralOwner ? referralOwner._id : null
-  });
+ // Generate an identicon for the user with the given ID
+ const generateAvatar = (userId) => {
+  const hash = crypto.createHash('sha256').update(userId.toString()).digest('hex');
+  const options = {
+    foreground: [255, 255, 255, 255],
+    background: [0, 0, 0, 255],
+    format: 'svg'
+  };
+  const svg = new Identicon(hash, options).toString();
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+};
+
+const newUser = new User({
+  username,
+  email,
+  password,
+  bio,
+  balance: 0,
+  rewards: 0,
+  status: 'off',
+  avatar: '',
+  referralCode: generateReferralCode(),
+  referralId: referralOwner ? referralOwner._id : null
+});
+
+// Generate avatar for the user
+newUser.avatar = generateAvatar(newUser._id);
 
   // Create salt & hash
   bcrypt.genSalt(10, (err, salt) => {
