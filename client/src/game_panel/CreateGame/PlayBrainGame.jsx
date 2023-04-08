@@ -20,6 +20,7 @@ class PlayBrainGame extends Component {
 
 	getNextQuestion = async () => {
 		try {
+			
 			const res = await axios.get('/game/question/' + this.props.brain_game_type);
 			if (res.data.success) {
 				if (this.state.question._id === '') {
@@ -41,6 +42,7 @@ class PlayBrainGame extends Component {
 	}
 
 	async componentDidMount() {
+
 		await this.getNextQuestion();
 		const intervalId = setInterval(this.onCountDown, 1000);
 		this.setState({
@@ -52,6 +54,9 @@ class PlayBrainGame extends Component {
 	onCountDown = () => {
 		const remaining_time = this.state.remaining_time - 1;
 		this.setState({ remaining_time });
+		if (remaining_time === 10) {
+			this.props.playSound('countDown');
+		}
 
 		if (remaining_time === 0) {
 			clearInterval(this.state.intervalId);
@@ -73,43 +78,36 @@ class PlayBrainGame extends Component {
 		}
 	}
 
-	onClickAnswer = async (e) => {
+	onClickAnswer = async e => {
 		try {
-			const answer_id = e.target.getAttribute('_id');
-			if (this.state.remaining_time === 'FIN' || !answer_id) {
-				return;
-			}
-			const data = {
-				question_id: this.state.question._id,
-				answer_id: answer_id
-			}
-
-			const res = await axios.post('/game/answer/', data);
-			if (res.data.success) {
-				this.setState({
-					score: this.state.score + res.data.answer_result
-				});
-			}
-
+		  const data = {
+			question_id: this.state.question._id,
+			answer_id: e.target.getAttribute('_id')
+		  };
+	
+		  const res = await axios.post('/game/answer/', data);
+		  if (res.data.success) {
 			this.setState({
-				question: this.state.next_question,
-				answers: this.state.next_answers,
-				next_question: { _id: '', question: '' },
-				next_answers: ['','','','']
+			  score: this.state.score + res.data.answer_result
 			});
-
-			this.getNextQuestion();
+		  }
+	
+		  this.setState({
+			question: this.state.next_question,
+			answers: this.state.next_answers
+		  });
 		} catch (err) {
-			console.log('err***', err);
+		  console.log('err***', err);
 		}
-	}
+		this.getNextQuestion();
+	  };
 
 	render() {
 		return (
 			<div className="game-info-panel brain-game-play-panel">
 				<div className="play-panel-header">
 					<div className="timer">
-						<div className="timer-title">Timer :</div>
+						<div className="timer-title">Timer: </div>
 						<div className="countdown">{this.state.remaining_time}</div>
 						<div className="timer-footer">seconds left</div>
 						<div className="timer-footer2">S</div>

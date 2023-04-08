@@ -89,7 +89,17 @@ class CreateGame extends Component {
       endgame_type: true,
       box_list: [],
       brain_game_type: this.props.brain_game_type,
-      rps_game_type: 0
+      rps_game_type: 0,
+      sounds: {
+        boop: new Audio('/sounds/boop.mp3'),
+        countDown: new Audio('/sounds/countDown.mp3'),
+        grunt2: new Audio('/sounds/grunt2.mp3'),
+        grunt: new Audio('/sounds/grunt.mp3'),
+        select: new Audio('/sounds/select.mp3'),
+        addTen: new Audio('/sounds/addTen.mp3'),
+        tap: new Audio('/sounds/tap.mp3'),
+        addBox: new Audio('/sounds/addBox.mp3')
+      }
     };
   }
 
@@ -166,6 +176,9 @@ class CreateGame extends Component {
     
   
   async componentDidMount() {
+    Object.values(this.state.sounds).forEach(sound => {
+      sound.load();
+    });
     this.IsAuthenticatedReroute();
     this.props.getHistory();
     // this.props.getGameTypeList();
@@ -267,19 +280,27 @@ class CreateGame extends Component {
 
   onStartBrainGame = e => {
     e.preventDefault();
-    confirmModalCreate(
-      this.props.isDarkMode,
-      'ARE YOU SURE YOU CANNOT BET MORE, BROKIE?',
-      'Okay',
-      'Cancel',
-      () => {
-        this.setState({
-          step: 5,
-          isPlayingBrain: true
-        });
-      }
-    );
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      this.setState({
+        step: 5,
+        isPlayingBrain: true
+      });
+    } else {
+      confirmModalCreate(
+        this.props.isDarkMode,
+        'ARE YOU SURE YOU CANNOT BET MORE, BROKIE?',
+        'Okay',
+        'Cancel',
+        () => {
+          this.setState({
+            step: 5,
+            isPlayingBrain: true
+          });
+        }
+      );
+    }
   };
+  
 
   onPrevButtonClicked = () => {
     if (this.state.game_mode !== 'Mystery Box' && this.state.step < 4) {
@@ -425,6 +446,15 @@ class CreateGame extends Component {
     });
   };
 
+  playSound = sound => {
+    if (!this.props.isMuted) {
+      const audio = this.state.sounds[sound];
+      audio.currentTime = 0;
+      audio.play();
+    }
+  };
+
+
   onCreateRoom = async () => {
     if (localStorage.getItem('hideConfirmModal') === 'true') {
       this.setState({ creatingRoom: true });
@@ -449,6 +479,8 @@ class CreateGame extends Component {
     if (this.state.game_mode === 'RPS') {
       return (
         <RPS
+        playSound={this.playSound}
+
           onChangeState={this.onChangeState}
           rps_list={this.state.rps_list}
           bet_amount={this.state.bet_amount}
@@ -465,6 +497,8 @@ class CreateGame extends Component {
     } else if (this.state.game_mode === 'Spleesh!') {
       return (
         <Spleesh
+        playSound={this.playSound}
+
         calculateEV={this.calculateEV}
           onChangeState={this.onChangeState}
           bet_amount={this.state.bet_amount}
@@ -481,6 +515,7 @@ class CreateGame extends Component {
     } else if (this.state.game_mode === 'Mystery Box') {
       return (
         <MysteryBox
+        playSound={this.playSound}
         calcMysteryBoxEV={this.calcMysteryBoxEV}
           onChangeState={this.onChangeState}
           box_list={this.state.box_list}
@@ -495,6 +530,8 @@ class CreateGame extends Component {
     } else if (this.state.game_mode === 'Brain Game') {
       return (
         <BrainGame
+        playSound={this.playSound}
+
           onChangeState={this.onChangeState}
           bet_amount={this.state.bet_amount}
           winChance={this.state.winChance}
@@ -506,6 +543,8 @@ class CreateGame extends Component {
     } else if (this.state.game_mode === 'Quick Shoot') {
       return (
         <QuickShoot
+        playSound={this.playSound}
+
           onChangeState={this.onChangeState}
           qs_list={this.state.qs_list}
           bet_amount={this.state.bet_amount}
@@ -523,6 +562,8 @@ class CreateGame extends Component {
     } else if (this.state.game_mode === 'Drop Game') {
       return (
         <DropGame
+        playSound={this.playSound}
+
           onChangeState={this.onChangeState}
           drop_list={this.state.drop_list}
           bet_amount={this.state.bet_amount}

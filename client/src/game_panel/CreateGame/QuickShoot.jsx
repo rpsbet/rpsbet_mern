@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Button } from '@material-ui/core';
+import { IconButton, Button } from '@material-ui/core';
 
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { getQsLottieAnimation } from '../../util/helper';
@@ -14,7 +14,7 @@ class QuickShoot extends Component {
     super(props);
     this.state = {
       is_other: 'hidden',
-      selected_qs_position: 0,
+      selected_qs_position: '',
       qs_list: [],
       winChance: 33,
       animation: <div />
@@ -26,31 +26,38 @@ class QuickShoot extends Component {
       selected_qs_position: selected_qs_position
     });
     this.onAddRun(selected_qs_position);
+    
     this.updateAnimation();
+
+
   }
 
   updateAnimation = async () => {
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-
+  
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
+      
     } else if (this.props.qs_game_type === 3) {
       position_short_name = ['bl', 'center', 'br'];
     } else if (this.props.qs_game_type === 4) {
       position_short_name = ['tl', 'tr', 'bl', 'br'];
     }
 
+    
+    
     const animationData = await getQsLottieAnimation(
       this.props.qs_nation,
       position_short_name[this.props.selected_qs_position]
-    );
+      );
+   
 
     this.setState({
       animation: (
         <div className="qs-image-panel">
           <Lottie
             options={{
-              loop: true,
+              loop: false,
               autoplay: true,
               animationData
             }}
@@ -176,6 +183,8 @@ class QuickShoot extends Component {
   
 
   onAddRun = selected_qs_position => {
+
+    this.props.playSound('boop');
     this.setState({ selected_qs_position: selected_qs_position });
     const newArray = JSON.parse(JSON.stringify(this.props.qs_list));
     newArray.push({
@@ -203,6 +212,13 @@ class QuickShoot extends Component {
       position_short_name = ['tl', 'tr', 'bl', 'br'];
     }
 
+    if (position_short_name[this.props.selected_qs_position] === 'center') {
+      this.props.playSound('grunt2');
+
+      } else {
+        this.props.playSound('grunt')
+      }
+
     this.setState(prevState => {
       const updatedQsList = [
         ...prevState.qs_list,
@@ -223,6 +239,8 @@ class QuickShoot extends Component {
   }
 
   onRemoveItem = index => {
+        this.props.playSound('tap');
+
     this.setState(prevState => {
       const updatedQsList = [...prevState.qs_list];
       updatedQsList.splice(index, 1);
@@ -246,72 +264,72 @@ class QuickShoot extends Component {
 
   renderButtons() {
     const { qs_game_type } = this.props;
-
+  
     if (qs_game_type === 2) {
       return (
         <div className="qs-buttons">
-          <button id="l" onClick={() => this.handlePositionSelection(0)}>
+          <IconButton id="l" onClick={() => {this.handlePositionSelection(0);}}>
             {/* Left */}
-          </button>
-          <button id="r" onClick={() => this.handlePositionSelection(1)}>
+          </IconButton>
+          <IconButton id="r" onClick={() => {this.handlePositionSelection(1);}}>
             {/* Right */}
-          </button>
+          </IconButton>
         </div>
       );
     } else if (qs_game_type === 3) {
       return (
         <div className="qs-buttons">
-          <button id="l" onClick={() => this.handlePositionSelection(0)}>
+          <IconButton id="l" onClick={() => {this.handlePositionSelection(0);}}>
             {/* Left */}
-          </button>
-          <button id="cc" onClick={() => this.handlePositionSelection(1)}>
+          </IconButton>
+          <IconButton id="cc" onClick={() => {this.handlePositionSelection(1);}}>
             {/* Center */}
-          </button>
-          <button id="r" onClick={() => this.handlePositionSelection(2)}>
+          </IconButton>
+          <IconButton id="r" onClick={() => {this.handlePositionSelection(2); }}>
             {/* Right */}
-          </button>
+          </IconButton>
         </div>
       );
     } else if (qs_game_type === 4) {
       return (
         <div className="qs-buttons">
-          <button id="tl" onClick={() => this.handlePositionSelection(0)}>
+          <IconButton id="tl" onClick={() => {this.handlePositionSelection(0);}}>
             {/* Top Left */}
-          </button>
-          <button id="tr" onClick={() => this.handlePositionSelection(1)}>
+          </IconButton>
+          <IconButton id="tr" onClick={() => {this.handlePositionSelection(1);}}>
             {/* Top Right */}
-          </button>
-          <button id="bl" onClick={() => this.handlePositionSelection(2)}>
+          </IconButton>
+          <IconButton id="bl" onClick={() => {this.handlePositionSelection(2);}}>
             {/* Bottom Left */}
-          </button>
-          <button id="br" onClick={() => this.handlePositionSelection(3)}>
+          </IconButton>
+          <IconButton id="br" onClick={() => {this.handlePositionSelection(3);}}>
             {/* Bottom Right */}
-          </button>
+          </IconButton>
         </div>
       );
     } else if (qs_game_type === 5) {
       return (
         <div className="qs-buttons">
-          <button id="tl" onClick={() => this.handlePositionSelection(1)}>
+          <IconButton id="tl" onClick={() => {this.handlePositionSelection(1);}}>
             {/* TL */}
-          </button>
-          <button id="tr" onClick={() => this.handlePositionSelection(2)}>
+          </IconButton>
+          <IconButton id="tr" onClick={() => {this.handlePositionSelection(2);}}>
             {/* TR */}
-          </button>
-          <button id="bl" onClick={() => this.handlePositionSelection(3)}>
+          </IconButton>
+          <IconButton id="bl" onClick={() => {this.handlePositionSelection(3);}}>
             {/* BL */}
-          </button>
-          <button id="br" onClick={() => this.handlePositionSelection(4)}>
+          </IconButton>
+          <IconButton id="br" onClick={() => {this.handlePositionSelection(4);}}>
             {/* BR */}
-          </button>
-          <button id="c" onClick={() => this.handlePositionSelection(0)}>
+          </IconButton>
+          <IconButton id="c" onClick={() => {this.handlePositionSelection(0);;}}>
             {/* C */}
-          </button>
+          </IconButton>
         </div>
       );
     }
   }
-
+  
   onAutoPlay = () => {
     if (this.props.qs_list.length > 2) {
       const prevStates = this.props.qs_list;

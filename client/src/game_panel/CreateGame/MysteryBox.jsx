@@ -57,6 +57,7 @@ class MysteryBox extends Component {
 
   addBoxes = (e, numBoxes) => {
     e.preventDefault();
+  
     let new_box_price = parseFloat(this.state.new_box_price);
     let new_box_prize = parseFloat(this.state.new_box_prize);
   
@@ -82,54 +83,66 @@ class MysteryBox extends Component {
     new_box_prize = isNaN(new_box_prize) ? 0 : new_box_prize;
   
     let box_list = this.props.box_list;
-    for (let i = 0; i < numBoxes; i++) {
-      box_list = box_list.concat({
-        box_price: new_box_price,
-        box_prize: new_box_prize
-      });
-    }
   
-    const bet_amount = box_list.reduce(
-      (totalAmount, box) => totalAmount + box.box_prize,
-      0
-    );
-    const max_return = this.calcMaxReturn(box_list);
+    const delay = 1000 / numBoxes;
+    let timeDelay = 0;
+  
+    for (let i = 0; i < numBoxes; i++) {
+      setTimeout(() => {
+        box_list = box_list.concat({
+          box_price: new_box_price,
+          box_prize: new_box_prize,
+        });
+  
+        const bet_amount = box_list.reduce(
+          (totalAmount, box) => totalAmount + box.box_prize,
+          0
+        );
+        const max_return = this.calcMaxReturn(box_list);
+  
+        this.props.onChangeState({
+          box_list: box_list,
+          winChance: this.props.calcMysteryBoxEV(
+            box_list,
+            max_return['max_return'],
+            max_return['max_return']
+          ),
+          bet_amount: bet_amount,
+          max_return: max_return['max_return'],
+          max_prize: max_return['max_prize'],
+          endgame_amount: max_return['max_return'],
+          lowest_box_price: max_return['lowest_box_price'],
+          public_bet_amount:
+            max_return['lowest_box_price'] === max_return['highest_box_price'] ? (
+              convertToCurrency(max_return['lowest_box_price'])
+            ) : (
+              <>
+                {convertToCurrency(max_return['lowest_box_price'])} -{' '}
+                {convertToCurrency(max_return['highest_box_price'])}
+              </>
+            ),
+        });
+      }, timeDelay);
+  
+      timeDelay += delay;
+    }
   
     this.setState({
       new_box_price: '',
-      new_box_prize: ''
+      new_box_prize: '',
     });
   
-    this.props.onChangeState({
-      box_list: box_list,
-      winChance: this.props.calcMysteryBoxEV(box_list, max_return['max_return'],  max_return['max_return']),
-      bet_amount: bet_amount,
-      max_return: max_return['max_return'],
-      max_prize: max_return['max_prize'],
-      endgame_amount: max_return['max_return'],
-      lowest_box_price: max_return['lowest_box_price'],
-      public_bet_amount:
-        max_return['lowest_box_price'] === max_return['highest_box_price'] ? (
-          convertToCurrency(max_return['lowest_box_price'])
-        ) : (
-          <>
-            {convertToCurrency(max_return['lowest_box_price'])} -{' '}
-            {convertToCurrency(max_return['highest_box_price'])}
-          </>
-        )
-    });
-    
-    console.log(box_list);
   };
   
 
   onAddBox = e => {
-    
     this.addBoxes(e, 1);
+    this.props.playSound('addBox');
   };
 
   onAddTenBoxes = e => {
     this.addBoxes(e, 10);
+    this.props.playSound('addTen');
   };
 
   updateBoxList = newBoxList => {
@@ -168,6 +181,7 @@ class MysteryBox extends Component {
 
   onRemoveBox = e => {
     e.preventDefault();
+    this.props.playSound('tap');
     let box_list = this.props.box_list;
     box_list.splice(e.target.getAttribute('index'), 1);
     this.updateBoxList(box_list);

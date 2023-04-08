@@ -1582,8 +1582,7 @@ background-color: red;
 }
 .brain-game-play-panel .quiz-panel .answer-panel {
     display: grid;
-    grid-template-columns: 200px 200px;
-    grid-gap: 12px 22px;
+    grid-gap: 2px;
     margin-bottom: 30px;
     justify-content: center;
 }
@@ -1594,12 +1593,7 @@ background-color: red;
     font-weight: 600;
     height: 45px;
 }
-.brain-game-play-panel .quiz-panel .answer-panel button:hover {
-    color: white;
-    background: linear-gradient(#ff409a, #c438ef);
-    border: 0;
-    box-shadow: 0 10px 27px #c438ef1a,0 -3px #ff409a inset,0 2px #c438ef inset!important;
-}
+
 .game-info-panel .qs-image-panel,
 .game-info-panel .qs-action-panel {
     display: flex;

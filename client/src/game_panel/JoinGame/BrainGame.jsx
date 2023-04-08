@@ -82,7 +82,8 @@ class BrainGame extends Component {
     try {
       const res = await axios.get(
         '/game/question/' + this.state.brain_game_type._id
-      );
+        );
+
       if (res.data.success) {
         this.setState({
           next_question: res.data.question,

@@ -29,7 +29,7 @@ class Spleesh extends Component {
               : ''
           }
           onClick={() => {
-
+this.props.playSound('boop');
             this.props.onChangeState({
               bet_amount: i * this.props.spleesh_bet_unit,
               endgame_amount: this.props.spleesh_bet_unit * (55 - i),

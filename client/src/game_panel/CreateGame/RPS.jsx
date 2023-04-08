@@ -226,6 +226,8 @@ class RPS extends Component {
   };
 
   onRemoveItem = index => {
+    this.props.playSound('tap');
+
     const wager = 1;
     const winPayout = 2;
     const lossPayout = 0;
@@ -247,6 +249,7 @@ class RPS extends Component {
   };
 
   onAddRun = selected_rps => {
+    this.props.playSound('boop');
     const wager = 1;
     const winPayout = 2;
     const lossPayout = 0;

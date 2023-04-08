@@ -167,6 +167,7 @@ router.get('/room/:id', async (req, res) => {
 });
 
 router.get('/question/:brain_game_type', async (req, res) => {
+
   try {
     const question = await Question.aggregate([
       {
@@ -235,10 +236,22 @@ router.post('/answer', async (req, res) => {
       question: new ObjectId(req.body.question_id),
       is_correct_answer: true
     });
-    res.json({
-      success: true,
-      answer_result: count > 0 ? 1 : -1
-    });
+    if (count > 0) {
+      if (req.io && req.io.sockets) {
+        req.io.sockets.emit('PLAY_CORRECT_SOUND');
+      }
+      res.json({
+        success: true,
+        answer_result: 1
+      });
+    } else {
+      req.io.sockets.emit('PLAY_WRONG_SOUND');
+
+      res.json({
+        success: true,
+        answer_result: -1
+      });
+    }
   } catch (err) {
     res.json({
       success: false,
@@ -246,6 +259,7 @@ router.post('/answer', async (req, res) => {
     });
   }
 });
+
 
 const convertGameLogToHistoryStyle = async gameLogList => {
   let result = [];

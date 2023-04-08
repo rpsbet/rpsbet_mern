@@ -288,6 +288,21 @@ class SiteWrapper extends Component {
       this.props.getHistory();
     });
 
+    socket.on('PLAY_CORRECT_SOUND', () => {
+      if (!this.props.isMuted) {
+      const audio = new Audio('/sounds/correct.mp3');
+      audio.play();
+      }
+    });
+
+    socket.on('PLAY_WRONG_SOUND', () => {
+      if (!this.props.isMuted) {
+
+      const audio = new Audio('/sounds/wrong.mp3');
+      audio.play();
+      }
+    });
+
     socket.on('PLAY_SOUND', data => {
       if (!this.props.isMuted) {
       let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
