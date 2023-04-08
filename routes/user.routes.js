@@ -2,8 +2,8 @@ const express = require('express');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const Identicon = require('identicon.js');
-const crypto = require('crypto');
+const blockies = require('ethereum-blockies');
+
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const auth = require('../middleware/auth');
@@ -151,12 +151,15 @@ router.post('/', async (req, res) => {
  const generateAvatar = (userId) => {
   const hash = crypto.createHash('sha256').update(userId.toString()).digest('hex');
   const options = {
-    foreground: [255, 255, 255, 255],
-    background: [0, 0, 0, 255],
-    format: 'svg'
+    seed: hash,
+    scale: 4,
+    color: '#dfe',
+    bgcolor: '#a71',
+    size: 8,
+    spotcolor: '#000',
   };
-  const svg = new Identicon(hash, options).toString();
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+  const svg = blockies.create(options).toDataURL();
+  return svg;
 };
 
 const newUser = new User({
