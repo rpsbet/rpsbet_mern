@@ -176,7 +176,7 @@ const newUser = new User({
 });
 
 // Generate avatar for the user
-// newUser.avatar = generateAvatar(newUser._id);
+newUser.avatar = generateAvatar(newUser._id);
 
   // Create salt & hash
   bcrypt.genSalt(10, (err, salt) => {
