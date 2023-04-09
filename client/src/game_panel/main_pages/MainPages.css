@@ -7,7 +7,6 @@ button, button.btn {
 }
 .your-bet-amount {
     margin-top: 30px;
-    margin-bottom: 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1282,24 +1281,33 @@ button.btn-submit:active,
 }
 
 #btn-rps-settings {
-    position: absolute;
-    right: 0;
+    /* bottom: -3.1rem; */
+    position: relative;
+    transform: translate(6em, 2.5em);
     cursor: pointer;
-    z-index: 1;
+    z-index: 999;
 }
-.game-page .pre-summary-panel .transaction-settings {
+
+.disabled {
+    background: grey !important;
+    box-shadow: none !important;
+    pointer-events: none !important;
+    cursor: none !important;
+    filter: grayscale(1);
+}
+.transaction-settings {
     position: absolute;
-    right: 0;
-    top: 70px;
-    padding: 20px 30px;
-    background: #2f3136;
-    border-radius: 8px;
+    transform: translate(0%, 12vh);
+
+    padding: 20px 30px !important;
+    background: #111111;
+    border-radius: 9px;
     opacity: 0;
     transition: .2s;
-}
-.game-page .pre-summary-panel .transaction-settings.active {
-    opacity: 1;
     z-index: 999;
+}
+.transaction-settings.active {
+    opacity: 1;
 }
 input {
     border-radius: 8px !important;
@@ -2114,6 +2122,10 @@ margin-bottom: 10px;
     .previous-guesses.drop  {
         width: 360px;
     }
+
+    .transaction-settings {
+        transform: translate(0%, 42vh);
+    }    
    
     #no-guesses {
         transform: translateX(-120px) !important;

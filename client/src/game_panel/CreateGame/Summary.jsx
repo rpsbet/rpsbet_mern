@@ -129,7 +129,7 @@ class Summary extends Component {
 
     return (
       <div className="summary-panel">
-        <h3 className="game-sub-title">Stake Summary</h3>
+        <h3 className="game-sub-title">AI Summary</h3>
         <div className="summary-info">
           <div className="summary-item">
             <div className="summary-item-name">Expected Value</div>

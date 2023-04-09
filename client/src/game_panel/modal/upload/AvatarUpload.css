@@ -53,6 +53,11 @@
   margin-left: 32px;
 }
 
+.AvatarPreviewPanel img,
+.AvatarPreviewPanel div {
+  border-radius: 18px;
+}
+
 .ProgressWrapper {
   display: flex;
   flex: 1;

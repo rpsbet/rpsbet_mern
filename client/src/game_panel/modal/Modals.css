@@ -520,10 +520,7 @@ div[role="presentation"] li:last-child {
         align-items: center;
     }
 
-    .AvatarDropzone {
-        display: flex;
-        flex-direction: revert !important;
-    }
+ 
     .modal-body p.sm-text-center {
         text-align: center;
     }

@@ -22,6 +22,7 @@ import {
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 const defaultOptions = {
   loop: true,
@@ -38,6 +39,7 @@ class Spleesh extends Component {
   constructor(props) {
     super(props);
     this.socket = this.props.socket;
+    this.settingsRef = React.createRef();
 
     this.state = {
       betting: false,
@@ -54,7 +56,9 @@ class Spleesh extends Component {
       spleesh_guesses: [],
       is_anonymous: false,
       balance: this.props.balance,
-      isPasswordCorrect: false
+      isPasswordCorrect: false,
+      settings_panel_opened: false
+
     };
     this.panelRef = React.createRef();
   }
@@ -76,6 +80,12 @@ class Spleesh extends Component {
 
   onShowButtonClicked = e => {
     e.preventDefault();
+  };
+
+  handleClickOutside = e => {
+    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+      this.setState({ settings_panel_opened: false });
+    }
   };
 
   componentDidMount() {
@@ -530,7 +540,57 @@ class Spleesh extends Component {
             </p>
             <h3 className="game-sub-title">Your Number</h3>
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>
-            <button
+            <SettingsOutlinedIcon
+              id="btn-rps-settings"
+              onClick={() =>
+                this.setState({
+                  settings_panel_opened: !this.state.settings_panel_opened
+                })
+              }
+            />
+            <div
+              ref={this.settingsRef}
+              className={`transaction-settings game-info-panel ${
+                this.state.settings_panel_opened ? 'active' : ''
+              }`}
+            >
+              <h5>AI Play Settings</h5>
+              <p>CHOOSE AN ALGORITHM</p>
+              <div className="slippage-select-panel">
+                <Button
+                  className={this.state.slippage === 100 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 100 });
+                  }}
+                >
+                  V1
+                </Button>
+                <Button
+                                className='disabled'
+
+                  // className={this.state.slippage === 200 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 200 });
+                  }}
+                  disabled={this.state.isDisabled}
+
+                >
+                  V2
+                </Button>
+                <Button
+                className='disabled'
+                  // className={this.state.slippage === 500 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 500 });
+                  }}
+                    disabled={this.state.isDisabled}
+
+                >
+                  V3
+                </Button>
+              </div>
+            </div>
+            <Button
               id="aiplay"
               onMouseDown={this.handleButtonClick}
               onMouseUp={this.handleButtonRelease}
@@ -551,7 +611,7 @@ class Spleesh extends Component {
                   )}
                 </div>
               )}
-            </button>
+            </Button>
           </div>
 
           <div className="action-panel">

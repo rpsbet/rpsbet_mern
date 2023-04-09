@@ -6,6 +6,7 @@ import { updateDigitToPoint2 } from '../../util/helper';
 // import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button, TextField } from '@material-ui/core';
+
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -22,7 +23,7 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
-// import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
 import { FaClipboard } from 'react-icons/fa';
 import { LensOutlined } from '@material-ui/icons';
@@ -269,11 +270,11 @@ class RPS extends Component {
     this.setState({ bgColorChanged: false });
   };
 
-  // handleClickOutside = e => {
-  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
-  // };
+  handleClickOutside = e => {
+    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
 
   componentDidMount = () => {
     // Initialize items array
@@ -690,11 +691,14 @@ class RPS extends Component {
     }
     return (
       <div className="game-page">
+        
         <div className="page-title">
           <h2>PLAY - RPS</h2>
         </div>
         <div className="game-contents">
+          
           <div className="pre-summary-panel">
+            
             <div className="pre-summary-panel__inner">
               {[...Array(2)].map((_, i) => (
                 <React.Fragment key={i}>
@@ -737,57 +741,7 @@ class RPS extends Component {
                 </React.Fragment>
               ))}
             </div>
-            {/* <SettingsOutlinedIcon
-              id="btn-rps-settings"
-              onClick={() =>
-                this.setState({
-                  settings_panel_opened: !this.state.settings_panel_opened
-                })
-              }
-            />
-            <div
-              ref={this.settingsRef}
-              className={`transaction-settings game-info-panel ${
-                this.state.settings_panel_opened ? 'active' : ''
-              }`}
-            >
-              <h5>Transaction Settings</h5>
-              <p>Slippage tolerance</p>
-              <div className="slippage-select-panel">
-                <button
-                  className={this.state.slippage === 100 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 100 });
-                  }}
-                >
-                  100%
-                </button>
-                <button
-                  className={this.state.slippage === 200 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 200 });
-                  }}
-                >
-                  200%
-                </button>
-                <button
-                  className={this.state.slippage === 500 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 500 });
-                  }}
-                >
-                  500%
-                </button>
-                <button
-                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 'unlimited' });
-                  }}
-                >
-                  Unlimited
-                </button>
-              </div>
-            </div> */}
+            
           </div>
           <div
             className="game-info-panel"
@@ -868,6 +822,64 @@ class RPS extends Component {
                 >
                   Max
                 </Button>
+              </div>
+            </div>
+            <SettingsOutlinedIcon
+              id="btn-rps-settings"
+              onClick={() =>
+                this.setState({
+                  settings_panel_opened: !this.state.settings_panel_opened
+                })
+              }
+            />
+            <div
+              ref={this.settingsRef}
+              className={`transaction-settings game-info-panel ${
+                this.state.settings_panel_opened ? 'active' : ''
+              }`}
+            >
+              <h5>AI Play Settings</h5>
+              <p>CHOOSE AN ALGORITHM</p>
+              <div className="slippage-select-panel">
+                <Button
+                  className={this.state.slippage === 100 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 100 });
+                  }}
+                >
+                  V1
+                </Button>
+                <Button
+                                className='disabled'
+
+                  // className={this.state.slippage === 200 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 200 });
+                  }}
+                  disabled={this.state.isDisabled}
+
+                >
+                  V2
+                </Button>
+                <Button
+                className='disabled'
+                  // className={this.state.slippage === 500 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 500 });
+                  }}
+                    disabled={this.state.isDisabled}
+
+                >
+                  V3
+                </Button>
+                {/* <button
+                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 'unlimited' });
+                  }}
+                >
+                  V4
+                </button> */}
               </div>
             </div>
             <Button

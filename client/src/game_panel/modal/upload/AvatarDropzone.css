@@ -5,9 +5,8 @@
   flex-direction: column;
     text-align-last: center;
 }
-
 .AvatarPreviewPanel {
-  border-radius: 50%;
+  border-radius: 18px !important;
 }
 
 .AvatarHighlight {
@@ -26,8 +25,15 @@
 
 .AvatarControlPanel {
   margin: 24px 0;
+  display: flex;
+  flex-direction: column;
+    align-items: center;
+ 
 }
-
+.AvatarButtonPanel {
+  display: flex;
+  gap: 5px;
+}
 .AvatarButtonPanel button {
   height: 31px;
   background: transparent;
@@ -36,7 +42,6 @@
   border-radius: 9px;
   padding: 0 20px;
   font-weight: 600;
-  margin-right: 20px;
 }
 
 @media (max-width: 768px) {
@@ -44,7 +49,6 @@
     align-items: normal;
   }
   .AvatarButtonPanel button:first-child {
-    margin-right: 0;
     margin-bottom: 16px;
   }
 }

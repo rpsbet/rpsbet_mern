@@ -119,6 +119,30 @@ class AdvancedSettings extends Component {
             <p className="tip">AUTOMATIC PAYOUTS WHEN BANKROLL HITS VALUE</p>
           </div>
         )}
+         {this.props.step === 3 && (
+          <div className="game-privacy-panel game-info-panel">
+            <h3 className="game-sub-title">AI Play Algorithm</h3>
+            <div className="radio-button-group">
+              <button
+                className={
+                  'radio-button' + (this.props.is_anonymous === true ? ' checked' : '')
+                }
+                onClick={() => { this.props.onChangeState({is_anonymous: true}); }}
+              >
+                V1
+              </button>
+              <button
+                className={
+                  'radio-button' + (this.props.is_anonymous === false ? ' checked' : '')
+                }
+                onClick={() => { this.props.onChangeState({is_anonymous: false}); }}
+              >
+                V2
+              </button>
+            </div>
+            <p>Click 'i' for more info.</p>
+          </div>
+        )}
         {/* {this.props.step === 3 && (
           <div className="game-privacy-panel game-info-panel">
             <h3 className="game-sub-title">Anonymous</h3>

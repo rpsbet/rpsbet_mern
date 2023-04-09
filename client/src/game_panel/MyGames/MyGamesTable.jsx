@@ -258,12 +258,12 @@ class MyGamesTable extends Component {
           </div>
         </div>
         <div className="create-room-btn-panel">
-          <label>BECOME THE HOUSE ➜</label>
+          <label>FULLY AUTONOMOUS ➜</label>
           <Button
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}
           >
-            CREATE BATTLE
+            CREATE AI
           </Button>
         </div>
         <div className="table my-open-game-table">
@@ -280,8 +280,8 @@ class MyGamesTable extends Component {
             <div className="dont-have-game-msg">
               <Lottie options={defaultOptions} width={50} />
               <span>
-                FIRST SELECT A GAME <br />
-                THEN CLICK "CREATE BATTLE"
+                SELECT A GAME <br />
+                AND CLICK "CREATE AI"
               </span>
             </div>
           ) : (

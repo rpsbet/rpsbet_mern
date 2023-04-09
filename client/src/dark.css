@@ -7,6 +7,10 @@
 	box-shadow: none;
 }
 
+.transaction-settings {
+	background: #101010;
+}
+
 .dark_mode  ::-webkit-scrollBar-thumb {
     background-image:  linear-gradient(
         to right bottom,

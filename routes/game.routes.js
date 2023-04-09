@@ -790,7 +790,6 @@ router.post('/rooms', auth, async (req, res) => {
           // bet_amount: rps.bet_amount
         });
         newQs.save();
-        // console.log(`Saved QsBetItem: ${JSON.stringify(newQs)}`);
 
       });
     } else if (gameType.game_type_name === 'Drop Game') {
@@ -801,7 +800,6 @@ router.post('/rooms', auth, async (req, res) => {
           // bet_amount: rps.bet_amount
         });
         newDrop.save();
-        console.log(`Saved DropBetItem: ${JSON.stringify(newDrop)}`);
 
       });
     }
@@ -2017,6 +2015,7 @@ if (newBetAmount <= roomInfo['user_bet']) {
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
+    
         } else {
           message.message =
             'I won ' +
@@ -2025,6 +2024,7 @@ if (newBetAmount <= roomInfo['user_bet']) {
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
+
         }
 
         opened_amount = 0;
@@ -2063,16 +2063,16 @@ if (newBetAmount <= roomInfo['user_bet']) {
           roomInfo.joiners.addToSet(req.user);
           await roomInfo.save();
         }
-        
+     
         if (
           (roomInfo['endgame_type'] && new_host_pr >= roomInfo.endgame_amount) ||
           max_prize === 0
         ) {
+       
           if (max_prize === 0) {
             if (parseFloat(roomInfo.user_bet) - roomInfo.bet_amount >= 0) {
              roomInfo.user_bet = parseFloat(roomInfo.user_bet) - roomInfo.bet_amount;
-            
-            const originalBoxList = await RoomBoxPrize.find({ room: roomInfo }).select('box_prize box_price');
+             const originalBoxList = await RoomBoxPrize.find({ room: roomInfo }).select('box_prize box_price');
 
             let originalHasZero = originalBoxList.some(box => box.box_price === 0);
             await RoomBoxPrize.deleteMany({ room: roomInfo });
@@ -2129,8 +2129,6 @@ if (newBetAmount <= roomInfo['user_bet']) {
   
             }
           } else {
-
-          
           newTransactionC.amount += new_host_pr - roomInfo.endgame_amount;
           
           
@@ -2198,7 +2196,6 @@ if (newBetAmount <= roomInfo['user_bet']) {
             return newBox;
           });
 
-
           if (req.io.sockets) {
             req.io.sockets.emit('UPDATED_BOX_LIST', {
               box_list: updatedBoxList
@@ -2212,8 +2209,6 @@ if (newBetAmount <= roomInfo['user_bet']) {
         // new_host_pr -= roomInfo.endgame_amount;
         roomInfo.host_pr = new_host_pr;
         roomInfo.pr = max_prize;
-          console.log('7823', roomInfo.new_host_pr)
-
         newGameLog.selected_box = selected_box;
       } else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
         newGameLog.bet_amount = roomInfo['bet_amount'];

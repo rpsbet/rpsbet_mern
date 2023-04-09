@@ -695,7 +695,7 @@ class CreateGame extends Component {
             <div className="create-game-panel">
               <div className="game-page">
                 <div className="page-title">
-                  <h2>CREATE - ({this.state.game_mode})</h2>
+                  <h2>CREATE {this.state.game_mode} AI</h2>
                   {this.state.step === 5 &&
                   this.state.game_mode === 'Brain Game' &&
                   this.state.isPlayingBrain ? (

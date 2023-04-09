@@ -132,11 +132,11 @@ changeBgColor = async (result) => {
 };
 
 
-  // handleClickOutside = e => {
-  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-    //     this.setState({ settings_panel_opened: false });
-    //   }
-  // };
+  handleClickOutside = e => {
+    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+        this.setState({ settings_panel_opened: false });
+      }
+  };
     static getDerivedStateFromProps(props, current_state) {
       if (
         current_state.balance !== props.balance ||
@@ -600,57 +600,7 @@ changeBgColor = async (result) => {
             </React.Fragment>
           ))}
         </div>
-            {/* <SettingsOutlinedIcon
-              id="btn-drop-settings"
-              onClick={() =>
-                this.setState({
-                  settings_panel_opened: !this.state.settings_panel_opened
-                })
-              }
-            />
-            <div
-              ref={this.settingsRef}
-              className={`transaction-settings game-info-panel ${
-                this.state.settings_panel_opened ? 'active' : ''
-              }`}
-            >
-              <h5>Transaction Settings</h5>
-              <p>Slippage tolerance</p>
-              <div className="slippage-select-panel">
-                <button
-                  className={this.state.slippage === 100 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 100 });
-                  }}
-                >
-                  100%
-                </button>
-                <button
-                  className={this.state.slippage === 200 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 200 });
-                  }}
-                >
-                  200%
-                </button>
-                <button
-                  className={this.state.slippage === 500 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 500 });
-                  }}
-                >
-                  500%
-                </button>
-                <button
-                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 'unlimited' });
-                  }}
-                >
-                  Unlimited
-                </button>
-              </div>
-            </div> */}
+       
           </div>
           <div
             className="game-info-panel"
@@ -735,6 +685,64 @@ changeBgColor = async (result) => {
               </div>
 
         </div>
+        <SettingsOutlinedIcon
+              id="btn-rps-settings"
+              onClick={() =>
+                this.setState({
+                  settings_panel_opened: !this.state.settings_panel_opened
+                })
+              }
+            />
+            <div
+              ref={this.settingsRef}
+              className={`transaction-settings game-info-panel ${
+                this.state.settings_panel_opened ? 'active' : ''
+              }`}
+            >
+              <h5>AI Play Settings</h5>
+              <p>CHOOSE AN ALGORITHM</p>
+              <div className="slippage-select-panel">
+                <Button
+                  className={this.state.slippage === 100 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 100 });
+                  }}
+                >
+                  V1
+                </Button>
+                <Button
+                                className='disabled'
+
+                  // className={this.state.slippage === 200 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 200 });
+                  }}
+                  disabled={this.state.isDisabled}
+
+                >
+                  V2
+                </Button>
+                <Button
+                className='disabled'
+                  // className={this.state.slippage === 500 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 500 });
+                  }}
+                    disabled={this.state.isDisabled}
+
+                >
+                  V3
+                </Button>
+                {/* <button
+                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 'unlimited' });
+                  }}
+                >
+                  V4
+                </button> */}
+              </div>
+            </div>
         <Button
         id="aiplay"
         variant="contained"

@@ -4,6 +4,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { IconButton, Button, TextField } from '@material-ui/core';
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 import {
   validateIsAuthenticated,
@@ -38,6 +39,8 @@ const twitterLink = window.location.href;
 class QuickShoot extends Component {
   constructor(props) {
     super(props);
+    this.settingsRef = React.createRef();
+
     this.socket = this.props.socket;
     this.state = {
       items: [],
@@ -56,6 +59,7 @@ class QuickShoot extends Component {
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       balance: this.props.balance,
       betResults: props.betResults,
+      settings_panel_opened: false,
       isPasswordCorrect: this.props.isPasswordCorrect
     };
     this.handlePositionSelection = this.handlePositionSelection.bind(this);
@@ -69,7 +73,7 @@ class QuickShoot extends Component {
       this.setState({ bankroll: data.bankroll });
     });
 
-    // document.addEventListener('mousedown', this.handleClickOutside);
+    document.addEventListener('mousedown', this.handleClickOutside);
   };
 
   componentWillUnmount = () => {
@@ -108,6 +112,12 @@ class QuickShoot extends Component {
     this.setState({ selected_qs_position: position });
     this.onBtnBetClick();
   }
+
+  handleClickOutside = e => {
+    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
 
   componentDidUpdate(prevProps, prevState) {
     const { roomInfo } = this.props;
@@ -948,6 +958,64 @@ class QuickShoot extends Component {
                 >
                   Max
                 </Button>
+              </div>
+            </div>
+            <SettingsOutlinedIcon
+              id="btn-rps-settings"
+              onClick={() =>
+                this.setState({
+                  settings_panel_opened: !this.state.settings_panel_opened
+                })
+              }
+            />
+            <div
+              ref={this.settingsRef}
+              className={`transaction-settings game-info-panel ${
+                this.state.settings_panel_opened ? 'active' : ''
+              }`}
+            >
+              <h5>AI Play Settings</h5>
+              <p>CHOOSE AN ALGORITHM</p>
+              <div className="slippage-select-panel">
+                <Button
+                  className={this.state.slippage === 100 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 100 });
+                  }}
+                >
+                  V1
+                </Button>
+                <Button
+                                className='disabled'
+
+                  // className={this.state.slippage === 200 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 200 });
+                  }}
+                  disabled={this.state.isDisabled}
+
+                >
+                  V2
+                </Button>
+                <Button
+                className='disabled'
+                  // className={this.state.slippage === 500 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 500 });
+                  }}
+                    disabled={this.state.isDisabled}
+
+                >
+                  V3
+                </Button>
+                {/* <button
+                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 'unlimited' });
+                  }}
+                >
+                  V4
+                </button> */}
               </div>
             </div>
             <Button

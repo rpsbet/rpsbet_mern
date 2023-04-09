@@ -20,6 +20,7 @@ import ReactModal from 'react-modal';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { FaClipboard } from 'react-icons/fa';
 import { Card, CardContent, Typography } from '@material-ui/core';
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 const twitterLink = window.location.href;
 
@@ -54,6 +55,7 @@ class MysteryBox extends Component {
   constructor(props) {
     super(props);
     this.socket = this.props.socket;
+    this.settingsRef = React.createRef();
 
     this.state = {
       items: [],
@@ -73,7 +75,9 @@ class MysteryBox extends Component {
       bgColorChanged: false,
       timerValue: 2000,
       clicked: true,
-      intervalId: null
+      intervalId: null,
+      settings_panel_opened: false
+
     };
   }
 
@@ -123,27 +127,34 @@ class MysteryBox extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.box_list !== this.state.box_list) {
-      this.setState({ box_list: this.state.box_list });
-      this.props.refreshHistory();
-    }
-    // console.log(this.state.betResult);
-    if (
-      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
-      this.state.isPasswordCorrect === true
-    ) {
-      this.props.join({
-        bet_amount: this.state.bet_amount,
-        selected_id: this.state.selected_id,
-        is_anonymous: this.state.is_anonymous
-      });
-
-      this.setState({
-        box_list: this.state.box_list.map(el =>
-          el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
-        )
+      this.props.refreshHistory(() => {
+        if (
+          this.state.isPasswordCorrect === true &&
+          this.state.selected_id !== null
+        ) {
+          this.props.join({
+            bet_amount: this.state.bet_amount,
+            selected_id: this.state.selected_id,
+            is_anonymous: this.state.is_anonymous,
+          });
+  
+          const updatedBoxList = this.state.box_list.map((el) =>
+            el._id === this.state.selected_id
+              ? { ...el, status: 'opened' }
+              : el
+          );
+  
+          this.setState({ box_list: updatedBoxList });
+        }
       });
     }
   }
+  
+  handleClickOutside = e => {
+    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
 
   predictNext = (betAmountArray, boxList) => {
     let transitions = {};
@@ -360,12 +371,16 @@ class MysteryBox extends Component {
         this.changeBgColor(result.betResult);
       }
 
-      this.setState({
-        box_list: box_list.map(el =>
+      this.setState(prevState => ({
+        box_list: prevState.box_list.map(el =>
           el._id === selected_id ? { ...el, status: 'opened' } : el
         ),
-        isOpen: false
-      });
+        isOpen: true,
+        betResults: [
+          ...prevState.betResults,
+          { ...result, user: currentUser, room: currentRoom }
+        ]
+      }));
 
       this.setState(prevState => ({
         betResults: [
@@ -477,12 +492,16 @@ class MysteryBox extends Component {
       }
 
       // this.props.updateBetResult(betResult);
-      this.setState({
-        box_list: box_list.map(el =>
+      this.setState(prevState => ({
+        box_list: prevState.box_list.map(el =>
           el._id === selected_id ? { ...el, status: 'opened' } : el
         ),
-        isOpen: true
-      });
+        isOpen: true,
+        betResults: [
+          ...prevState.betResults,
+          { ...result, user: currentUser, room: currentRoom }
+        ]
+      }));
 
       setTimeout(() => {
         this.setState({ isOpen: false });
@@ -616,6 +635,64 @@ class MysteryBox extends Component {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+            <SettingsOutlinedIcon
+              id="btn-rps-settings"
+              onClick={() =>
+                this.setState({
+                  settings_panel_opened: !this.state.settings_panel_opened
+                })
+              }
+            />
+            <div
+              ref={this.settingsRef}
+              className={`transaction-settings game-info-panel ${
+                this.state.settings_panel_opened ? 'active' : ''
+              }`}
+            >
+              <h5>AI Play Settings</h5>
+              <p>CHOOSE AN ALGORITHM</p>
+              <div className="slippage-select-panel">
+                <Button
+                  className={this.state.slippage === 100 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 100 });
+                  }}
+                >
+                  V1
+                </Button>
+                <Button
+                                className='disabled'
+
+                  // className={this.state.slippage === 200 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 200 });
+                  }}
+                  disabled={this.state.isDisabled}
+
+                >
+                  V2
+                </Button>
+                <Button
+                className='disabled'
+                  // className={this.state.slippage === 500 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 500 });
+                  }}
+                    disabled={this.state.isDisabled}
+
+                >
+                  V3
+                </Button>
+                {/* <button
+                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 'unlimited' });
+                  }}
+                >
+                  V4
+                </button> */}
+              </div>
             </div>
             <Button
               id="aiplay"

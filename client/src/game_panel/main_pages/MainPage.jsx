@@ -227,7 +227,7 @@ class MainPage extends Component {
                   d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
                 />
               </svg>
-              {this.state.selectedMobileTab === 'live_games' && 'LIVE STAKES'}
+              {this.state.selectedMobileTab === 'live_games' && 'LIVE BATTLES'}
             </Button>
             <Button
               className={`mobile-tab-my ${
