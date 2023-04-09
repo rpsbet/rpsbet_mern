@@ -2,7 +2,8 @@ const express = require('express');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const blockies = require('ethereum-blockies');
+const jdenticon = require('jdenticon');
+const crypto = require('crypto');
 
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
@@ -147,20 +148,14 @@ router.post('/', async (req, res) => {
   if (referralCode) {
     referralOwner = await User.findOne({ referralCode });
   }
- // Generate an identicon for the user with the given ID
- const generateAvatar = (userId) => {
-  const hash = crypto.createHash('sha256').update(userId.toString()).digest('hex');
-  const options = {
-    seed: hash,
-    scale: 4,
-    color: '#dfe',
-    bgcolor: '#a71',
-    size: 8,
-    spotcolor: '#000',
-  };
-  const svg = blockies.create(options).toDataURL();
-  return svg;
-};
+
+  function generateAvatar(userId) {
+    const hash = crypto.createHash('sha256').update(userId).digest('hex');
+    const svg = jdenticon.toSvg(hash, 64, {padding: 0});
+    const encodedSvg = encodeURIComponent(svg);
+    const dataUri = `data:image/svg+xml,${encodedSvg}`;
+    return dataUri;
+  }
 
 const newUser = new User({
   username,
@@ -170,13 +165,13 @@ const newUser = new User({
   balance: 0,
   rewards: 0,
   status: 'off',
-  avatar: '',
+  avatar,
   referralCode: generateReferralCode(),
   referralId: referralOwner ? referralOwner._id : null
 });
 
 // Generate avatar for the user
-newUser.avatar = generateAvatar(newUser._id);
+newUser.avatar = generateAvatar(newUser.username);
 
   // Create salt & hash
   bcrypt.genSalt(10, (err, salt) => {

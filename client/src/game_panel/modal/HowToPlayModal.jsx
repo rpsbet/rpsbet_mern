@@ -33,6 +33,7 @@ const customStyles = {
 
 class HowToPlayModal extends Component {
   render() {
+
     return (
       <Modal
         isOpen={this.props.modalIsOpen}
