@@ -270,9 +270,8 @@ border-radius: unset !important;
 }
 
 
-.cell-joiners img {
+.cell-joiners .avatar {
   margin-right: -15px !important;
-  filter: hue-rotate(45deg);
 }
 
 

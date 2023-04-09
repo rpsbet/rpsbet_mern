@@ -202,7 +202,6 @@ cursor: pointer;
     height: 30px;
     border-radius: 9px;
     margin-right: 6px;
-    border: 2px solid #dc3ccd;
 }
 
 .game-page .pre-summary-panel > div.host-display-name {

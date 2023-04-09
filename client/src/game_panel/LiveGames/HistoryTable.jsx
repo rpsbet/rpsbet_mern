@@ -83,13 +83,11 @@ class HistoryTable extends Component {
     clearInterval(this.interval);
   }
 
-  handleGameTypeButtonClicked = async e => {
-    const short_name = e.target.getAttribute('short_name');
+  handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
     this.props.getHistory({
       game_type: short_name
     });
-    return;
   };
 
   handleBtnLeftClicked = e => {

@@ -128,9 +128,7 @@ div.table.main-history-table .table-row > div > .room-id {
 div.table.main-history-table .table-row .table-cell img.avatar {
     width: 16px;
     height: 16px;
-    border-radius: 4px;
-    border: 1px solid #ff409a;
-    box-shadow: 0px 0 2px 0px #c438ef;
+    border-radius: 9px;
 
 }
 div.table.my-chat-table {
@@ -245,10 +243,6 @@ div.table .table-row .table-cell img.game-type-icon[src='/img/gametype/icons/DG.
     transition:cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
-a img {
-    margin: 0 5px 3px 2px !important;
-}
-
 a {
     color: #b9bbbe;
     font-weight: 600;
@@ -269,12 +263,11 @@ div.table .table-row .table-cell img.game-type-icon {
     filter: brightness(0.5);
     /* transform: scale(1.5); */
 }
-div.table .table-row .table-cell img.avatar {
+.avatar {
     width: 32px;
     height: 32px;
     margin-right: 10px;
     border-radius: 9px;
-        border: 3px solid #dc3ccd;
 }
 div.table .table-row .table-cell button:last-child,
 .boxes-panel.boxes-join .box,
@@ -374,6 +367,8 @@ div.table.main-game-table .table-row .table-cell.cell-room-info{
 }
 div.table.main-game-table .table-row .table-cell.cell-user-name {
     width: 35%;
+    display: flex;
+    justify-content: center;
     text-align: center;
 }
 div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
@@ -1711,7 +1706,6 @@ background-color: red;
     width: 32px;
     height: 32px;
     border-radius: 9px;
-    border: solid 1px #fa3fa0;
 }
 .chat-log-panel .my-message .message-header {
     justify-content: flex-end;
@@ -1916,15 +1910,8 @@ bottom: 0px;
     .desktop-only {
         display: none !important;
     }
-    .mobile-only {
-        display: initial;
-    }
-    div.table div.table-row div.mobile-only {
-        margin-top: 16px;
-    }
+
     div.table .table-row .table-cell img.avatar {
-        border: 2px solid #dc3ccd;
-        /* box-shadow: 0 0 1px 0 #c438ef; */
         margin-left: 2px;
         margin-bottom: 3px;
     }

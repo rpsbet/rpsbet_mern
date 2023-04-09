@@ -24,7 +24,9 @@ class OpenGamesTable extends Component {
       selectedGameType: 'All',
       showPlayerModal: false,
       selectedCreator: '',
-      mouseDown: false
+      mouseDown: false,
+      borderColor: '',
+
     };
   }
 
@@ -62,6 +64,7 @@ class OpenGamesTable extends Component {
       box_price: parseFloat(e.currentTarget.dataset.boxPrice),
       game_log_list: [],
       box_list: [],
+      borderColor: '',
       brain_game_type: {
         _id: e.currentTarget.dataset.brainGameTypeId,
         game_type_name: e.currentTarget.dataset.brainGameTypeName
@@ -152,6 +155,7 @@ class OpenGamesTable extends Component {
 
 
   componentDidMount() {
+
     window.addEventListener('load', () => {
       this.setState({ loaded: true });
     });
