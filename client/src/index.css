@@ -436,7 +436,6 @@ h3.game-sub-title {
 }
 
 .align-center {
-  display: flex;
   justify-content: center;
 }
 /* 

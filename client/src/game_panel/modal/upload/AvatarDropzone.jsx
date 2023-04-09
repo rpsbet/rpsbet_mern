@@ -83,7 +83,7 @@ class Dropzone extends Component {
             <Button onClick={(e)=>{this.props.setImageFilename("")}}>Remove Photo</Button>
             <Button onClick={this.openFileDialog}>Upload Photo</Button>
           </div>
-          <p className="mt-1">CHOOSE A SMALLISH SIZE</p>
+          <p className="mt-1">CHOOSE SOMETHING SEXY</p>
         </div>
       </div>
     );

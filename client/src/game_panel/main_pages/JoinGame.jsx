@@ -211,11 +211,11 @@ class JoinGame extends Component {
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
       <div id="liveStakes">
-        {this.props.roomCount} LIVE STAKES
+        {this.props.roomCount} LIVE BATTLES
         <Lottie options={defaultOptions} width={40} />
       </div>
     ) : (
-      'My Stakes'
+      'My Battles'
     );
 
   render() {
@@ -276,8 +276,8 @@ class JoinGame extends Component {
                   <Tab
                     label={
                       this.state.selectedMobileTab === 'live_games'
-                        ? 'Live Stakes'
-                        : 'My Stakes'
+                        ? 'Live Battles'
+                        : 'My Battles'
                     }
                     style={customStyles.tabRoot}
                   />
@@ -481,7 +481,7 @@ class JoinGame extends Component {
                     />
                   </svg>
                   {this.state.selectedMobileTab === 'live_games' &&
-                    'LIVE STAKES'}
+                    'LIVE BATTLES'}
                 </Button>
                 <Button
                   className={`mobile-tab-my ${

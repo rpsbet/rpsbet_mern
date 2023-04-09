@@ -510,11 +510,7 @@ div[role="presentation"] li:last-child {
     .accordion {
       margin-top: 15px;
     }
-    .align-center img, .AvatarDropzone img {
-        margin-right: 10px !important;
 
-        margin-left: 10px !important;
-    }
     .modal-body {
         width: 90vw;
     }
