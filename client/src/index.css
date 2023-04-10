@@ -1166,10 +1166,6 @@ circle {
     max-height: 25vh;
   }
  
-.game-info-panel table th:first-child, .game-info-panel table td:first-child  {
- display: none;
-}
-
 .game-info-panel table th:last-child, .game-info-panel table#runs td:last-child  {
   border-color: #282a2d !important;
   background: none;

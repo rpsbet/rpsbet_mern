@@ -1290,7 +1290,7 @@ button.btn-submit:active,
     padding: 8px;
     text-align: center;
     position: relative;
-    min-width: 100px;
+    min-width: 70px;
   }
   
   .tiers td .bar {
@@ -1334,7 +1334,7 @@ button.btn-submit:active,
     position: relative;
     transform: translate(6em, 2.5em);
     cursor: pointer;
-    z-index: 999;
+    z-index: 99;
 }
 
 .disabled {
@@ -1345,8 +1345,8 @@ button.btn-submit:active,
     filter: grayscale(1);
 }
 .transaction-settings {
-    position: absolute;
-    transform: translate(0%, 12vh);
+    position: fixed;
+    transform: translate(0%, 2vh);
 
     padding: 20px 30px !important;
     background: #111111;
@@ -1357,7 +1357,7 @@ button.btn-submit:active,
 }
 .transaction-settings.active {
     opacity: 1;
-    z-index: 99;
+    z-index: 100;
 }
 input {
     border-radius: 8px !important;
