@@ -970,12 +970,36 @@ class QuickShoot extends Component {
             />
             <div
               ref={this.settingsRef}
-              className={`transaction-settings game-info-panel ${
+              className={`transaction-settings${
                 this.state.settings_panel_opened ? 'active' : ''
               }`}
             >
               <h5>AI Play Settings</h5>
               <p>CHOOSE AN ALGORITHM</p>
+              <div className='tiers'>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Speed</td>
+                  <td><div className="bar" style={{width: "100%"}}></div></td>
+                  <td><div className="bar" style={{width: "100%"}}></div></td>
+                  <td><div className="bar" style={{width: "80%"}}></div></td>
+                </tr>
+                <tr>
+                  <td>Reasoning</td>
+                  <td><div className="bar" style={{width: "80%"}}></div></td>
+                  <td><div className="bar" style={{width: "0%"}}></div></td>
+                  <td><div className="bar" style={{width: "0%"}}></div></td>
+                </tr>
+                <tr>
+                  <td>Abilities</td>
+                  <td><div className="bar" style={{width: "30%"}}></div></td>
+                  <td><div className="bar" style={{width: "0%"}}></div></td>
+                  <td><div className="bar" style={{width: "0%"}}></div></td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
               <div className="slippage-select-panel">
                 <Button
                   className={this.state.slippage === 100 ? 'active' : ''}
@@ -983,7 +1007,7 @@ class QuickShoot extends Component {
                     this.setState({ slippage: 100 });
                   }}
                 >
-                  V1
+                  Markov
                 </Button>
                 <Button
                                 className='disabled'
@@ -995,7 +1019,7 @@ class QuickShoot extends Component {
                   disabled={this.state.isDisabled}
 
                 >
-                  V2
+                  Carlo
                 </Button>
                 <Button
                 className='disabled'
@@ -1006,7 +1030,7 @@ class QuickShoot extends Component {
                     disabled={this.state.isDisabled}
 
                 >
-                  V3
+                  Q Bot
                 </Button>
                 {/* <button
                   className={this.state.slippage === 'unlimited' ? 'active' : ''}

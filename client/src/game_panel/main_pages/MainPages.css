@@ -1280,6 +1280,55 @@ button.btn-submit:active,
     box-shadow: 0 0 0px 7px #fff inset;
 }
 
+.tiers table {
+    border-collapse: collapse;
+    margin: 5px auto 15px;
+    font-size: 14px;
+  }
+  
+  .tiers td {
+    padding: 8px;
+    text-align: center;
+    position: relative;
+    min-width: 100px;
+  }
+  
+  .tiers td .bar {
+    height: 10px;
+    background-color: #52df00;
+    border-radius: 5px;
+  }
+  
+  .tiers td .bar::after {
+    content: "";
+    display: block;
+    height: 100%;
+    background-color: #48ff00;
+    border-radius: 5px;
+  }
+  
+  
+  .tiers td .bar:hover::after {
+    background-color: #07c700;
+  }
+  
+  .tiers td .bar:hover {
+    cursor: pointer;
+  }
+  
+
+  .tiers td .bar::before {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 0;
+    width: 0;
+    z-index: -1;
+  }
+  
+  
+
 #btn-rps-settings {
     /* bottom: -3.1rem; */
     position: relative;
@@ -1304,10 +1353,11 @@ button.btn-submit:active,
     border-radius: 9px;
     opacity: 0;
     transition: .2s;
-    z-index: 999;
+    z-index: -1;
 }
 .transaction-settings.active {
     opacity: 1;
+    z-index: 99;
 }
 input {
     border-radius: 8px !important;
@@ -2124,7 +2174,7 @@ margin-bottom: 10px;
     }
 
     .transaction-settings {
-        transform: translate(0%, 42vh);
+        transform: translate(0%, 10vh);
     }    
    
     #no-guesses {

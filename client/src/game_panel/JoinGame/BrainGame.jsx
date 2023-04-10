@@ -24,6 +24,7 @@ import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import { FaClipboard } from 'react-icons/fa';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 const defaultOptions = {
   loop: true,
@@ -39,6 +40,8 @@ const twitterLink = window.location.href;
 class BrainGame extends Component {
   constructor(props) {
     super(props);
+    this.settingsRef = React.createRef();
+
     this.state = {
       brain_game_type: this.props.brain_game_type,
       advanced_status: '',
@@ -59,7 +62,9 @@ class BrainGame extends Component {
       items: [],
       next_question: null,
       next_answers: [],
-      isPasswordCorrect: this.props.isPasswordCorrect
+      isPasswordCorrect: this.props.isPasswordCorrect,
+      settings_panel_opened: false
+
     };
     this.panelRef = React.createRef();
   }
@@ -92,6 +97,12 @@ class BrainGame extends Component {
       }
     } catch (err) {
       console.log('err***', err);
+    }
+  };
+
+  handleClickOutside = e => {
+    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+      this.setState({ settings_panel_opened: false });
     }
   };
 
@@ -583,6 +594,81 @@ class BrainGame extends Component {
             <p>{this.props.brain_game_type.game_type_name}</p>
             <h3 className="game-sub-title">Score to BEAT:</h3>
             <p>{this.props.brain_game_score}</p>
+            <SettingsOutlinedIcon
+              id="btn-rps-settings"
+              onClick={() =>
+                this.setState({
+                  settings_panel_opened: !this.state.settings_panel_opened
+                })
+              }
+            />
+            <div
+              ref={this.settingsRef}
+              className={`transaction-settings ${
+                this.state.settings_panel_opened ? 'active' : ''
+              }`}
+            >
+              <h5>AI Play Settings</h5>
+              <p>CHOOSE AN ALGORITHM</p>
+              <div className='tiers'>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Speed</td>
+                  <td><div className="bar" style={{width: "100%"}}></div></td>
+                  <td><div className="bar" style={{width: "100%"}}></div></td>
+                  <td><div className="bar" style={{width: "80%"}}></div></td>
+                </tr>
+                <tr>
+                  <td>Reasoning</td>
+                  <td><div className="bar" style={{width: "80%"}}></div></td>
+                  <td><div className="bar" style={{width: "0%"}}></div></td>
+                  <td><div className="bar" style={{width: "0%"}}></div></td>
+                </tr>
+                <tr>
+                  <td>Abilities</td>
+                  <td><div className="bar" style={{width: "30%"}}></div></td>
+                  <td><div className="bar" style={{width: "0%"}}></div></td>
+                  <td><div className="bar" style={{width: "0%"}}></div></td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+              <div className="slippage-select-panel">
+                <Button
+                  className={this.state.slippage === 100 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 100 });
+                  }}
+                >
+                  Markov
+                </Button>
+                <Button
+                                className='disabled'
+
+                  // className={this.state.slippage === 200 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 200 });
+                  }}
+                  disabled={this.state.isDisabled}
+
+                >
+                  Carlo
+                </Button>
+                <Button
+                className='disabled'
+                  // className={this.state.slippage === 500 ? 'active' : ''}
+                  onClick={() => {
+                    this.setState({ slippage: 500 });
+                  }}
+                    disabled={this.state.isDisabled}
+
+                >
+                  Q Bot
+                </Button>
+          
+              </div>
+            </div>
             <Button
               id="aiplay"
               onMouseDown={this.handleButtonClick}
