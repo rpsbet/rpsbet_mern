@@ -52,7 +52,7 @@ this.props.playSound('boop');
         <h3 className="game-sub-title">Game Type</h3>
         <div id="select-buttons-panel">
           {[1, 10].map(item => (
-            <button
+            <Button
               className={this.props.spleesh_bet_unit === item ? 'active' : ''}
               onClick={() => {
                 this.props.onChangeState({
@@ -64,7 +64,7 @@ this.props.playSound('boop');
               }}
             >
               {convertToCurrency(item)} - {convertToCurrency(item * 10)}
-            </button>
+            </Button>
           ))}
         
         </div>

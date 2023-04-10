@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
+import BetArray from '../../components/BetArray';
+
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
@@ -10,7 +12,6 @@ import { Button } from '@material-ui/core';
 import {
   validateIsAuthenticated,
   validateCreatorId,
-  validateBetAmount,
   validateLocalStorageLength,
   validateBankroll
 } from '../modal/betValidations';
@@ -108,6 +109,8 @@ class BrainGame extends Component {
 
   componentDidMount() {
     this.getNextQuestion();
+    document.addEventListener('mousedown', this.handleClickOutside);
+
   }
 
   onShowButtonClicked = e => {
@@ -147,6 +150,8 @@ class BrainGame extends Component {
         is_anonymous: this.state.is_anonymous
       });
     }
+    document.removeEventListener('mousedown', this.handleClickOutside);
+
   }
 
   changeBgColor = async result => {
@@ -182,9 +187,7 @@ class BrainGame extends Component {
       return;
     }
 
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
+   
 
     if (roomStatus === 'finished') {
       alertModal(isDarkMode, 'THIS STAKE HAS ENDED');
@@ -354,9 +357,6 @@ class BrainGame extends Component {
       return;
     }
 
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
 
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
@@ -502,7 +502,7 @@ class BrainGame extends Component {
 
   render() {
     const { is_started } = this.state;
-
+    let arrayName = `score_array_${this.props.brain_game_type}`
     return is_started === true ? (
       <div className="game-page">
         <div className="game-contents">
@@ -692,6 +692,7 @@ class BrainGame extends Component {
               )}
             </Button>
           </div>
+          <BetArray arrayName={arrayName} label="score"/>
 
           <div className="action-panel">
             <span></span>

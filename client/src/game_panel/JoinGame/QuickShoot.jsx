@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import { updateDigitToPoint2 } from '../../util/helper';
+import BetArray from '../../components/BetArray';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { IconButton, Button, TextField } from '@material-ui/core';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
@@ -818,8 +818,27 @@ class QuickShoot extends Component {
       );
     }
   }
+  handleScroll = event => {
+    const panel = event.target;
+    const scrollLeft = panel.scrollLeft;
+    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+
+    if (scrollLeft >= maxScrollLeft) {
+      // Scrolled to or beyond end of panel, so append items to array and restart animation
+      const items = this.state.items.concat(this.state.items);
+      this.setState({ items }, () => {
+        panel.style.animation = 'none';
+        panel.scrollTo({ left: 0, behavior: 'auto' });
+        void panel.offsetWidth;
+        panel.style.animation = 'ticker 20s linear infinite';
+      });
+    } else {
+      panel.style.animation = 'none';
+    }
+  };
 
   render() {
+    const {qs_game_type} = this.props;
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
@@ -835,16 +854,24 @@ class QuickShoot extends Component {
       'Bottom-Right'
     ];
     let position_short_name = ['c', 'tl', 'tr', 'bl', 'br'];
-
-    if (this.props.qs_game_type === 2) {
+ let arrayName;
+    if (qs_game_type === 2) {
       position_name = ['Left', 'Right'];
       position_short_name = ['bl', 'br'];
-    } else if (this.props.qs_game_type === 3) {
+      arrayName = 'qs_array_2';
+
+    } else if (qs_game_type === 3) {
       position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
       position_short_name = ['bl', 'c', 'br'];
-    } else if (this.props.qs_game_type === 4) {
+      arrayName = 'qs_array_3';
+
+    } else if (qs_game_type === 4) {
       position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
       position_short_name = ['tl', 'tr', 'bl', 'br'];
+      arrayName = 'qs_array_4';
+
+    } else if (qs_game_type === 5) {
+      arrayName = 'qs_array_5';
     }
 
     return (
@@ -853,7 +880,11 @@ class QuickShoot extends Component {
           <h2>PLAY - Quick Shoot</h2>
         </div>
         <div className="game-contents">
-          <div className="pre-summary-panel">
+        <div
+            className="pre-summary-panel"
+            ref={this.panelRef}
+            onScroll={this.handleScroll}
+          >
             <div className="pre-summary-panel__inner">
               {[...Array(2)].map((_, i) => (
                 <React.Fragment key={i}>
@@ -970,7 +1001,7 @@ class QuickShoot extends Component {
             />
             <div
               ref={this.settingsRef}
-              className={`transaction-settings${
+              className={`transaction-settings ${
                 this.state.settings_panel_opened ? 'active' : ''
               }`}
             >
@@ -1065,6 +1096,7 @@ class QuickShoot extends Component {
               )}
             </Button>
           </div>
+          <BetArray arrayName={arrayName} label="qs"/>
 
           <div className="action-panel">
             <div className="share-options">

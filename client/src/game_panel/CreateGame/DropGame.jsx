@@ -42,7 +42,7 @@ class DropGame extends Component {
     this.state = {
       selected_drop: '',
       bet_amount: 10.00,
-      drop: 1,
+      drop: 0.01,
       balance: this.props.balance,
       winChance: 33,
       // is_other: (this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25 || this.props.bet_amount === 50 || this.props.bet_amount === 100) ? 'hidden' : '',
@@ -74,48 +74,58 @@ class DropGame extends Component {
   };
   
   predictNext = (dropAmounts) => {
-    const minValue = Math.min(...dropAmounts.map(drop => drop.drop));
-    const maxValue = Math.max(...dropAmounts.map(drop => drop.drop));
-    const rangeSize = Math.ceil((maxValue - minValue) / 200);
-  
-    const rangeCounts = {};
-    dropAmounts.forEach((drop) => {
-      const range = Math.floor((drop.drop - minValue) / rangeSize);
-      rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
-    });
-  
-    const totalCounts = dropAmounts.length;
-    const rangeProbabilities = {};
-    Object.keys(rangeCounts).forEach((range) => {
-      const rangeProbability = rangeCounts[range] / totalCounts;
-      rangeProbabilities[range] = rangeProbability;
-    });
-  
-    let randomValue = Math.random();
-    let chosenRange = null;
-    Object.entries(rangeProbabilities).some(([range, probability]) => {
-      randomValue -= probability;
-      if (randomValue <= 0) {
-        chosenRange = range;
-        return true;
-      }
-      return false;
-    });
-  
-    const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
-    const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
-  
-    const getRandomNumberInRange = (min, max) => {
-      return Math.random() * (max - min) + min;
-    };
-  
-    return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+    // Find the unique values in dropAmounts
+    const uniqueValues = [...new Set(dropAmounts.map(drop => drop.drop))];
+    
+    if (uniqueValues.length === 1) {
+      // If there is only one unique value, return that value
+      return uniqueValues[0];
+    } else {
+      // Otherwise, compute the range and generate a random number within that range
+      const minValue = Math.min(...uniqueValues);
+      const maxValue = Math.max(...uniqueValues);
+      const rangeSize = Math.ceil((maxValue - minValue) / 200);
+    
+      const rangeCounts = {};
+      dropAmounts.forEach((drop) => {
+        const range = Math.floor((drop.drop - minValue) / rangeSize);
+        rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
+      });
+    
+      const totalCounts = dropAmounts.length;
+      const rangeProbabilities = {};
+      Object.keys(rangeCounts).forEach((range) => {
+        const rangeProbability = rangeCounts[range] / totalCounts;
+        rangeProbabilities[range] = rangeProbability;
+      });
+    
+      let randomValue = Math.random();
+      let chosenRange = null;
+      Object.entries(rangeProbabilities).some(([range, probability]) => {
+        randomValue -= probability;
+        if (randomValue <= 0) {
+          chosenRange = range;
+          return true;
+        }
+        return false;
+      });
+   
+      const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
+      const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
+    
+      const getRandomNumberInRange = (min, max) => {
+        return Math.random() * (max - min) + min;
+      };
+      return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+    }
   };
+  
   
 
   onAutoPlay = () => {
     if (this.props.drop_list.length > 2) {
       const predictedNum = this.predictNext(this.props.drop_list);
+
       this.onAddRun(predictedNum);
     } else {
       alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
@@ -126,6 +136,8 @@ class DropGame extends Component {
   
   
   onRemoveItem = index => {
+    this.props.playSound('tap');
+
     const newArray = this.props.drop_list.filter((elem, i) => i != index);
     // const bet_amount = calcBetAmount(newArray);
     const winChance = calcWinChance(newArray);
@@ -139,17 +151,20 @@ class DropGame extends Component {
   };
 
   onAddRun = (drop) => {
+    this.props.playSound('boop');
+
     // Ensure drop is a number
     const parsedDropAmount = parseFloat(drop);
-    if (isNaN(parsedDropAmount)) {
+
+    drop = parsedDropAmount;
+    if (isNaN(drop)) {
       alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER');
       return;
     }
-    drop = parsedDropAmount;
   
     this.setState({ drop: drop });
     const newArray = JSON.parse(JSON.stringify(this.props.drop_list));
-    console.log(this.props.drop_list);
+
   
     // Check if the drop_list is empty and if the drop value exceeds this.props.bet_amount
     if (newArray.length === 0 && drop > this.props.bet_amount) {
@@ -159,7 +174,7 @@ class DropGame extends Component {
     newArray.push({
       drop: drop
     });
-  
+
 
     const winChance = calcWinChance(newArray);
     this.props.onChangeState({
@@ -172,10 +187,11 @@ class DropGame extends Component {
   };
 
   componentDidUpdate(prevProps) {
-    if (prevProps.drop_list !== this.props.drop_list) {
-         //move this line after updating the state and the DOM
-         const lastRow = document.querySelector("#runs tr:last-child");
-         lastRow.scrollIntoView({block: "end", behavior: "smooth", top: 600});
+    if (prevProps.drop_list.length !== this.props.drop_list.length) {
+      const table = document.getElementById('runs');
+      if (table) {
+        table.scrollTop = table.scrollHeight;
+      }
     }
   }
 
@@ -235,8 +251,10 @@ class DropGame extends Component {
      
       </div>
     ) : (
+      
       <div className="game-info-panel">
-        <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+                          <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+
         <div className="rps-add-run-panel">
         <div className="drop-add-run-form">
            

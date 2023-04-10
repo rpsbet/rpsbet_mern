@@ -5,6 +5,8 @@ import { updateDigitToPoint2 } from '../../util/helper';
 import InlineSVG from 'react-inlinesvg';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { Button } from '@material-ui/core';
+import BetArray from '../../components/BetArray';
+
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -102,6 +104,8 @@ class Spleesh extends Component {
         });
       }
     });
+    document.addEventListener('mousedown', this.handleClickOutside);
+
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -456,12 +460,22 @@ class Spleesh extends Component {
   }
 
   render() {
+    const {spleesh_bet_unit} = this.props;
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
     if (this.state.clicked) {
       styles.push('clicked');
       text = 'COPIED!';
+    }
+
+    let arrayName;
+    if (spleesh_bet_unit === 1) {
+      arrayName = 'spleesh_array';
+
+    } else if (spleesh_bet_unit === 10) {
+      arrayName = 'spleesh_10_array';
+
     }
 
     return (
@@ -637,6 +651,7 @@ class Spleesh extends Component {
               )}
             </Button>
           </div>
+          <BetArray arrayName={arrayName} label="spleesh"/>
 
           <div className="action-panel">
             <div className="share-options">

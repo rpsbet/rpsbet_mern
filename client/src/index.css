@@ -115,7 +115,7 @@ input,textarea { border-radius: 0 !important; }
     transform: scaleY(-1);
 }
 .custom-loading-overlay .rpsLoader {
-  position: absolute !important;
+  position: fixed !important;
   top: 40vh !important;
   transform: translate(-50%, -50%);
 }

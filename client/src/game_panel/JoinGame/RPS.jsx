@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import BetArray from '../../components/BetArray';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -345,6 +346,26 @@ class RPS extends Component {
     }
   }
 
+  handleScroll = event => {
+    const panel = event.target;
+    const scrollLeft = panel.scrollLeft;
+    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+
+    if (scrollLeft >= maxScrollLeft) {
+      // Scrolled to or beyond end of panel, so append items to array and restart animation
+      const items = this.state.items.concat(this.state.items);
+      this.setState({ items }, () => {
+        panel.style.animation = 'none';
+        panel.scrollTo({ left: 0, behavior: 'auto' });
+        void panel.offsetWidth;
+        panel.style.animation = 'ticker 20s linear infinite';
+      });
+    } else {
+      panel.style.animation = 'none';
+    }
+  };
+
+
   joinGame = async () => {
     const {
       rps_bet_item_id,
@@ -404,7 +425,6 @@ class RPS extends Component {
     }
 
     let stored_rps_array = JSON.parse(localStorage.getItem('rps_array')) || [];
-
     while (stored_rps_array.length >= 20) {
       stored_rps_array.shift();
     }
@@ -697,7 +717,11 @@ class RPS extends Component {
         </div>
         <div className="game-contents">
           
-          <div className="pre-summary-panel">
+        <div
+            className="pre-summary-panel"
+            ref={this.panelRef}
+            onScroll={this.handleScroll}
+          >
             
             <div className="pre-summary-panel__inner">
               {[...Array(2)].map((_, i) => (
@@ -930,6 +954,7 @@ class RPS extends Component {
               )}
             </Button>
           </div>
+          <BetArray arrayName="rps_array" label="rps"/>
 
           <div className="action-panel">
             <div className="share-options">

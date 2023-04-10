@@ -333,13 +333,56 @@ div.table .table-cell button.btn_join img {
     margin-right: 4px;
 }
 div.table .table-cell button.btn_end {
-    width: 94px;
+    width: 140px;
     height: 32px;
 }
 div.table.main-game-table::-webkit-scrollbar, div.table.main-history-table::-webkit-scrollbar, div.table.my-open-game-table::-webkit-scrollbar {
     
   display: none;
 }
+.gamified-container {
+    border: 2px solid #333;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px;
+  }
+  
+  .gamified-heading {
+    font-size: 1em;
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .button-container {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .no-data-msg {
+    font-size: 0.75em !important;
+opacity: 0.6;
+  }
+  .clear-storage-btn {
+    margin: auto !important;
+    display: block;
+  }
+  .gamified-content {
+    text-align: center;
+  }
+  
+  .bet-array-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    gap: 0.1rem;
+  }
+  
+  .array-item {
+    padding: 0.1rem;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+  
 
 div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-table {
     overflow-y: auto;
@@ -523,11 +566,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 div.table.my-open-game-table {
     text-align: center;
 }
-div.table.my-open-game-table .table-cell.room-id,
-div.table.my-open-game-table .table-cell.winnings,
-div.table.my-open-game-table .table-cell.action {
-    width: 20%;
-}
+
 div.table.my-open-game-table .table-row .table-cell.winnings span {
     color: rgb(87, 202, 34);
     font-weight: bold;
@@ -965,7 +1004,7 @@ overflow: hidden;
     padding: 0 20px;
 }
 .game-page .game-contents .game-info-panel button {
-    padding: 0 20px;
+    padding: 0 15px;
     margin: 0 4px 10px;
 }
 
@@ -1346,18 +1385,19 @@ button.btn-submit:active,
 }
 .transaction-settings {
     position: fixed;
-    transform: translate(0%, 2vh);
+    transform: translate(0%, -10vh);
 
     padding: 20px 30px !important;
     background: #111111;
     border-radius: 9px;
     opacity: 0;
     transition: .2s;
-    z-index: -1;
+    z-index: 100;
+    display: none;
 }
 .transaction-settings.active {
     opacity: 1;
-    z-index: 100;
+    display: block;
 }
 input {
     border-radius: 8px !important;

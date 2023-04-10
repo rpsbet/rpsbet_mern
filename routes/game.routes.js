@@ -147,6 +147,7 @@ router.get('/room/:id', async (req, res) => {
         new_host_pr:  room['new_host_pr'],
         user_bet: room['user_bet'],
         brain_game_score: room['brain_game_score'],
+        selected_drop: room['selected_drop'],
         qs_game_type: room['qs_game_type'],
         room_history: roomHistory,
         box_list: boxPrizeList,
@@ -245,8 +246,9 @@ router.post('/answer', async (req, res) => {
         answer_result: 1
       });
     } else {
-      req.io.sockets.emit('PLAY_WRONG_SOUND');
-
+      if (req.io && req.io.sockets) {
+        req.io.sockets.emit('PLAY_WRONG_SOUND');
+      }
       res.json({
         success: true,
         answer_result: -1
@@ -350,11 +352,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
       } else if (gameLog['game_type']['game_type_name'] === 'Drop Game') {
         if (gameLog.game_result === 1) {
           temp.history = `
-         ${joined_user_link} won <span style='color: #02c526;'>${convertToCurrency(
+         ${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
               updateDigitToPoint2(
-                parseFloat(gameLog['bet_amount'] + gameLog['room']['pr'])
+                parseFloat(gameLog['bet_amount'] + gameLog['selected_drop'])
               )
-            )} 
+            )} (${parseFloat((gameLog['bet_amount'] + gameLog['selected_drop']) / gameLog['bet_amount']).toFixed(2)}X)
 						</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
@@ -367,9 +369,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
               )
             )}</span> from their game ${room_name}`;
         } else {
-          temp.history = `${joined_user_link} lost <span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
               updateDigitToPoint2(gameLog['bet_amount'])
-            )}</span> in ${room_name}`;
+            )} (0.00X)</span> in ${room_name}`;
         }
       }  else if (gameLog['game_type']['game_type_name'] === 'Spleesh!') {
         if (gameLog.game_result === 1) {
@@ -430,12 +432,10 @@ temp.history = `${creator_link} unstaked
             )}</span> in ${room_name}`;
         } else if (gameLog.game_result === 1) {
           //win       WOW, What a BRAIN BOX - You WIN!
-          temp.history = `${joined_user_link} bet <span style='color: #02c526;'>${convertToCurrency(
-              gameLog['bet_amount']
-            )}</span>, scored ${gameLog['brain_game_score']}
-						and won <span style='color: #02c526;'>${convertToCurrency(
-              updateDigitToPoint2(gameLog['room']['pr'])
-            )}</span> in ${room_name}`;
+          temp.history = `${joined_user_link} scored ${gameLog['brain_game_score']}
+						and won <span style='color: #ff0a28;'>${convertToCurrency(
+              updateDigitToPoint2(gameLog['bet_amount'] * 2)
+            )} (2.00X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           //dividends
           temp.history = `${creator_link} just received a payout 💰 from their game ${room_name}`;
@@ -1541,19 +1541,17 @@ if (roomInfo['user_bet'] <= 0) {
         });
 
         let bet_item = availableBetItem;
-        if (!bet_item) {
+        if (bet_item) {
           // Get next available item
           bet_item = await QsBetItem.findOne({
             room: new ObjectId(req.body._id),
             joiner_qs: ''
           }).sort({ _id: 'asc' });
-        }
-
-        if (!bet_item) {
+        } else {
           // Create new QsBetItem with predicted qs value
           const allBetItems = await QsBetItem.find({ room: new ObjectId(req.body._id) });
-          const nextItem = predictNextQs(allBetItems, roomInfo['qs_game_type']);
 
+          const nextItem = predictNextQs(allBetItems, roomInfo['qs_game_type']);
           bet_item = new QsBetItem({
             room: new ObjectId(req.body._id),
             qs: nextItem
@@ -1694,6 +1692,7 @@ if (roomInfo['user_bet'] <= 0) {
         if (
           (bet_item.drop < req.body.bet_amount) 
         ) {
+          newGameLog.selected_drop = bet_item.drop
           newGameLog.game_result = 1;
           newTransactionJ.amount += ((parseFloat(req.body.bet_amount) + bet_item.drop) * ((100 - commission.value) / 100));
           roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
@@ -2086,10 +2085,10 @@ if (newBetAmount <= roomInfo['user_bet']) {
             }
   
             let updatedBoxList = originalBoxList.map((box, index) => {
-              let randomAmount = Math.floor(Math.random() * 5) - 2;
+              let randomAmount = (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * 2) + 1;
               let newPrice = box.box_price + randomAmount;
               while (newPrice <= 0) {
-                randomAmount = Math.floor(Math.random() * 5) - 2;
+                randomAmount = (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * 2) + 1;
                 newPrice = box.box_price + randomAmount;
               }
               let newBox = new RoomBoxPrize({
@@ -2180,10 +2179,10 @@ if (newBetAmount <= roomInfo['user_bet']) {
           }
 
           let updatedBoxList = originalBoxList.map((box, index) => {
-            let randomAmount = Math.floor(Math.random() * 5) - 2;
+            let randomAmount = (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * 2) + 1;
             let newPrice = box.box_price + randomAmount;
             while (newPrice <= 0) {
-              randomAmount = Math.floor(Math.random() * 5) - 2;
+              randomAmount = (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * 2) + 1;
               newPrice = box.box_price + randomAmount;
             }
             let newBox = new RoomBoxPrize({

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-// import { updateBetResult } from '../../redux/Logic/logic.actions';
+import BetArray from '../../components/BetArray';
 import Lottie from 'react-lottie';
 import { Button } from '@material-ui/core';
 import {
@@ -118,6 +118,8 @@ class MysteryBox extends Component {
     socket.on('UPDATED_BOX_LIST', data => {
       this.setState({ box_list: data.box_list });
     });
+    document.addEventListener('mousedown', this.handleClickOutside);
+
   }
 
   componentWillUnmount = () => {
@@ -149,6 +151,25 @@ class MysteryBox extends Component {
       });
     }
   }
+
+  handleScroll = event => {
+    const panel = event.target;
+    const scrollLeft = panel.scrollLeft;
+    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+
+    if (scrollLeft >= maxScrollLeft) {
+      // Scrolled to or beyond end of panel, so append items to array and restart animation
+      const items = this.state.items.concat(this.state.items);
+      this.setState({ items }, () => {
+        panel.style.animation = 'none';
+        panel.scrollTo({ left: 0, behavior: 'auto' });
+        void panel.offsetWidth;
+        panel.style.animation = 'ticker 20s linear infinite';
+      });
+    } else {
+      panel.style.animation = 'none';
+    }
+  };
   
   handleClickOutside = e => {
     if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
@@ -375,7 +396,7 @@ class MysteryBox extends Component {
         box_list: prevState.box_list.map(el =>
           el._id === selected_id ? { ...el, status: 'opened' } : el
         ),
-        isOpen: true,
+        isOpen: false,
         betResults: [
           ...prevState.betResults,
           { ...result, user: currentUser, room: currentRoom }
@@ -463,6 +484,7 @@ class MysteryBox extends Component {
     while (stored_bet_array.length >= 20) {
       stored_bet_array.shift();
     }
+    
     stored_bet_array.push({ bet: bet_amount });
     localStorage.setItem('bet_array', JSON.stringify(stored_bet_array));
 
@@ -554,7 +576,11 @@ class MysteryBox extends Component {
           <h2>PLAY - Mystery Box</h2>
         </div>
         <div className="game-contents">
-          <div className="pre-summary-panel">
+        <div
+            className="pre-summary-panel"
+            ref={this.panelRef}
+            onScroll={this.handleScroll}
+          >
             <div className="pre-summary-panel__inner mystery-box">
               {[...Array(2)].map((_, i) => (
                 <React.Fragment key={i}>
@@ -741,6 +767,7 @@ class MysteryBox extends Component {
               )}
             </Button>
           </div>
+          <BetArray arrayName="bet_array" label="bet"/>
 
           <div className="action-panel">
             <div className="share-options">

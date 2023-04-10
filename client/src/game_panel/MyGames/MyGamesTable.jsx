@@ -74,7 +74,7 @@ class MyGamesTable extends Component {
 
   handleButtonClick = (winnings, room_id) => {
     console.log(winnings);
-    let startTime = 2000;
+    let startTime = 1500;
     this.setState({
       [room_id]: {
         holding: true,
@@ -269,11 +269,11 @@ class MyGamesTable extends Component {
         <div className="table my-open-game-table">
           {this.props.myGames.length > 0 && (
             <div className="table-header">
-              <div className="table-cell room-id">Room ID</div>
-              <div className="table-cell bet-info">BANKROLL</div>
-              <div className="table-cell payout">PAYOUT</div>
-              <div className="table-cell winnings">WINNINGS</div>
-              <div className="table-cell action desktop-only">Action</div>
+              {/* <div className="table-cell room-id">Room ID</div> */}
+              {/* <div className="table-cell bet-info">BANKROLL</div> */}
+              <div className="table-cell payout">YOUR GAMES</div>
+              {/* <div className="table-cell winnings">WINNINGS</div> */}
+              {/* <div className="table-cell action desktop-only">Action</div> */}
             </div>
           )}
           {this.props.myGames.length === 0 ? (
@@ -318,9 +318,9 @@ class MyGamesTable extends Component {
                         )}
                       </span>
                     </div>
-                    <div className="table-cell winnings">
+                    {/* <div className="table-cell winnings">
                       <span>{convertToCurrency(row.winnings)}</span>
-                    </div>
+                    </div> */}
 
                     <div className="table-cell action desktop-only">
                       <Button
@@ -332,12 +332,13 @@ class MyGamesTable extends Component {
                         onMouseLeave={() => this.handleButtonRelease(row._id)}
                         _id={row._id}
                       >
-                        {this.state[row._id] && this.state[row._id].holding
-                          ? `${(this.state[row._id].timeLeft / 1000).toFixed(
-                              2
-                            )}s`
-                          : 'UNSTAKE'}
-                      </Button>
+                      {this.state[row._id] && this.state[row._id].holding
+                        ? `${(this.state[row._id].timeLeft / 1000).toFixed(
+                            2
+                          )}s`
+                        : <> TAKE&nbsp;<span>{convertToCurrency(row.winnings)}</span>
+                        </>}
+                    </Button>
                     </div>
                   </div>
                   <div className="mobile-only">
@@ -358,10 +359,11 @@ class MyGamesTable extends Component {
                         _id={row._id}
                       >
                         {this.state[row._id] && this.state[row._id].holding
-                          ? `${(this.state[row._id].timeLeft / 1000).toFixed(
+                          ? `${(this.state[row._id].timeLeft / 2000).toFixed(
                               2
                             )}s`
-                          : 'UNSTAKE'}
+                          : <> TAKE&nbsp;<span>{convertToCurrency(row.winnings)}</span>
+                          </>}
                       </Button>
                     </div>
                   </div>

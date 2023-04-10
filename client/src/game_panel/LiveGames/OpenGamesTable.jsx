@@ -278,6 +278,10 @@ class OpenGamesTable extends Component {
                         {/* / 
       '???' */}
                       </>
+                    ) : row.game_type.game_type_name === 'Drop Game' ? (
+                      <>
+                        ???
+                      </>
                     ) : row.game_type.game_type_name === 'Mystery Box' ? (
                       <>
                         {convertToCurrency(row.pr)}
@@ -386,6 +390,10 @@ class OpenGamesTable extends Component {
                         {convertToCurrency(row.spleesh_bet_unit * 10)}
                         {/* / 
       '???' */}
+                      </>
+                    ) : row.game_type.game_type_name === 'Drop Game' ? (
+                      <>
+                        ???
                       </>
                     ) : row.game_type.game_type_name === 'Mystery Box' ? (
                       <>

@@ -1,6 +1,35 @@
+const calcWinChanceQs = (gameType, rounds) => {
+  // Calculate base probabilities
+  let probWin = (100 / gameType).toFixed(2);
+  let probLose = (100 - probWin).toFixed(2);
 
+  // Initialize the frequency of each unique qs value to 0
+  const freq = {};
+  for (let i = 0; i < gameType; i++) {
+    freq[i] = 0;
+  }
+
+  // Count the frequency of each unique qs value
+  rounds.forEach(round => {
+    freq[round.qs]++;
+  });
+
+  // Calculate the range of frequencies
+  const freqValues = Object.values(freq);
+  const range = Math.max(...freqValues) - Math.min(...freqValues);
+
+  // Adjust probabilities based on the range of frequencies
+  const sensitivityFactor = (range / 100) * gameType; // You can adjust this value to increase or decrease sensitivity
+  const adjustmentFactor = (range / gameType) * sensitivityFactor;
+  probWin = (+probWin - adjustmentFactor).toFixed(2);
+  probLose = (+probLose + adjustmentFactor).toFixed(2);
+
+  return `${probWin}% - ${probLose}%`;
+};
 
 const predictNextQs = (qs_list, gameType) => {
+  
+
   const options = [...Array(gameType).keys()];
   const transitionMatrix = {};
   const randomnessFactor = 0.15; // Adjust this value to control the level of randomness
@@ -36,7 +65,7 @@ const predictNextQs = (qs_list, gameType) => {
   });
 
   // Calculate winChance and deviation
-  const winChance = this.calcWinChance(gameType, qs_list);
+  const winChance = calcWinChanceQs(gameType, qs_list);
   const targetProbability = 100 / gameType;
   const deviation = Math.abs(winChance - targetProbability);
 
@@ -68,28 +97,7 @@ const predictNextQs = (qs_list, gameType) => {
   return nextState;
 };
 
-  const  calcWinChanceQs = (gametype, rounds) => {
-  let positionCounts = new Array(gametype + 1).fill(0);
-  for (let i = 0; i < rounds.length; i++) {
-    positionCounts[rounds[i].qs]++;
 
-  }
-  // console.log('position counts', positionCounts)
-  let entropy = 0;
-  for (let i = 0; i < gametype; i++) {
-    if (positionCounts[i] === 0) {
-      continue;
-    }
-    let probability = positionCounts[i] / rounds.length;
-    entropy -= probability * Math.log2(probability);
-  }
-  // console.log('entropy', entropy)
-  let winChanceMin = Math.max(0, (1 - entropy / Math.log2(gametype)) / gametype);
-  let winChanceMax = Math.min(1, (1 - entropy / Math.log2(gametype)));
-  winChanceMin *= 100;
-  winChanceMax *= 100;
-  return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
-}
 
   
   module.exports = {

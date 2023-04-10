@@ -54,9 +54,9 @@ class PlayBrainGame extends Component {
 	onCountDown = () => {
 		const remaining_time = this.state.remaining_time - 1;
 		this.setState({ remaining_time });
-		if (remaining_time === 10) {
-			this.props.playSound('countDown');
-		}
+		// if (remaining_time === 10) {
+		// 	this.props.playSound('countDown');
+		// }
 
 		if (remaining_time === 0) {
 			clearInterval(this.state.intervalId);

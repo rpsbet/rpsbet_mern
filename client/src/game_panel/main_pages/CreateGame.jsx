@@ -416,6 +416,14 @@ class CreateGame extends Component {
         );
         return;
       }
+     } else if (this.state.child_step === 2) {
+      if (this.state.endgame_type && isNaN(this.state.endgame_amount)) {
+        alertModal(
+          this.props.isDarkMode,
+          `ENTER A VALID NUMBER, WANKER!`
+        );
+        return;
+      }
      } else if (this.state.step === 3) {
       if (this.state.is_private === true && this.state.room_password === '') {
         alertModal(
