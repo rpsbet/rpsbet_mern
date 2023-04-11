@@ -281,15 +281,15 @@ class DropGame extends Component {
     if (result.betResult === 1) {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN DINNER!';
-      this.changeBgColor(result.betResult);
+      // this.changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
       text = 'SPLIT! EQUAL MATCH!';
       playSound('split');
-      this.changeBgColor(result.betResult);
+      // this.changeBgColor(result.betResult);
     } else {
       text = 'TROLLOLOLOL! LOSER!';
       playSound('lose');
-      this.changeBgColor(result.betResult);
+      // this.changeBgColor(result.betResult);
     }
 
     let stored_drop_array =
@@ -400,11 +400,7 @@ class DropGame extends Component {
   handle2xButtonClick() {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
-    const limitedBetAmount = Math.min(
-      multipliedBetAmount,
-      maxBetAmount,
-      this.props.bet_amount
-    );
+    const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
     const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
     if (roundedBetAmount < -2330223) {
       alertModal(
@@ -424,10 +420,10 @@ class DropGame extends Component {
   }
 
   handleMaxButtonClick() {
-    const maxBetAmount = this.state.balance.toFixed(2);
+    const maxBetAmount = this.state.balance;
     this.setState(
       {
-        bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
+        bet_amount: maxBetAmount
       },
       () => {
         document.getElementById('betamount').focus();
@@ -554,7 +550,7 @@ class DropGame extends Component {
 
     const currentUser = this.props.user;
     const currentRoom = this.props.room;
-    
+
     if (result.status === 'success') {
       this.setState(prevState => ({
         betResults: [
@@ -568,34 +564,32 @@ class DropGame extends Component {
         playSound('win');
 
         text = 'NOT BAD, WINNER!';
-        this.changeBgColor(result.betResult);
+        // this.changeBgColor(result.betResult);
       } else if (result.betResult === 0) {
         playSound('split');
 
         text = 'DRAW, NO WINNER!';
-        this.changeBgColor(result.betResult);
+        // this.changeBgColor(result.betResult);
       } else {
-        this.changeBgColor(result.betResult); // Add this line
+        // this.changeBgColor(result.betResult);
         playSound('lose');
       }
-      
-    gameResultModal(
-      this.props.isDarkMode,
-      text,
-      result.betResult,
-      'Okay',
-      null,
-      () => {
-        // history.push('/');
-      },
-      () => {}
-    );
 
+      // gameResultModal(
+      //   this.props.isDarkMode,
+      //   text,
+      //   result.betResult,
+      //   'Okay',
+      //   null,
+      //   () => {
+      //     // history.push('/');
+      //   },
+      //   () => {}
+      // );
 
       refreshHistory();
     }
   };
-
 
   render() {
     const styles = ['copy-btn'];
@@ -606,9 +600,8 @@ class DropGame extends Component {
       text = 'COPIED!';
     }
     return (
-      
       <div className="game-page">
-                  <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="page-title">
           <h2>PLAY - Drop Game</h2>
@@ -682,7 +675,7 @@ class DropGame extends Component {
                           }}
                         >
                           <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
-                          {guess.host_drop}
+                          {guess.host_drop.toFixed(2)}
                         </span>
                       ))
                     ) : (
@@ -703,7 +696,7 @@ class DropGame extends Component {
                           }}
                         >
                           <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
-                          {guess.bet_amount}
+                          {guess.bet_amount.toFixed(2)}
                         </span>
                       ))
                     ) : (
@@ -892,7 +885,7 @@ class DropGame extends Component {
               )}
             </Button>
           </div>
-          <BetArray arrayName="drop_array" label="drop"/>
+          <BetArray arrayName="drop_array" label="drop" />
 
           <div className="action-panel">
             <div className="share-options">

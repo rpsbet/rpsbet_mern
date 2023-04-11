@@ -1073,7 +1073,7 @@ max-width: 450px;
         overflow-x: scroll;
     }
     .gradient-container .previous-guesses.drop span {
-    min-width: 29%;
+    min-width: 31%;
     max-height: 30px;
     line-height: 22px;
     }

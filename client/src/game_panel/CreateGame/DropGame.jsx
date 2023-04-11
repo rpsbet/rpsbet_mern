@@ -166,10 +166,10 @@ class DropGame extends Component {
     const newArray = JSON.parse(JSON.stringify(this.props.drop_list));
 
   
-    // Check if the drop_list is empty and if the drop value exceeds this.props.bet_amount
-    if (newArray.length === 0 && drop > this.props.bet_amount) {
-      drop = this.props.bet_amount; // Set the drop value to this.props.bet_amount
-    }
+    // // Check if the drop_list is empty and if the drop value exceeds this.props.bet_amount
+    // if (newArray.length === 0 && drop > this.props.bet_amount) {
+    //   drop = this.props.bet_amount; // Set the drop value to this.props.bet_amount
+    // }
   
     newArray.push({
       drop: drop
@@ -253,7 +253,7 @@ class DropGame extends Component {
     ) : (
       
       <div className="game-info-panel">
-                          <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+                          {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="rps-add-run-panel">
         <div className="drop-add-run-form">

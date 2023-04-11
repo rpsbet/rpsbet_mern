@@ -1,4 +1,5 @@
 const predictNextDrop = (dropAmounts) => {
+  console.log('22', dropAmounts)
   // Find the unique values in dropAmounts
   const uniqueValues = [...new Set(dropAmounts.map(drop => drop.drop))];
   
