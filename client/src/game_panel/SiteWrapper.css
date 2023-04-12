@@ -213,8 +213,37 @@ cursor: pointer;
     height: 32px !important;
     
 }
-
-
+.level-number {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .stars {
+    font-size: 0.85em;
+    text-align: center;
+    line-height: 0.8;
+    color: #ffb000;
+  }
+  
+  .rank-badge {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .rank-badge h2 {
+    margin: 0;
+  }
+  
+  .rank-badge div {
+    margin: 0;
+  }
+  
+  
 
 .dark_mode_toggle {
     margin: 10px;

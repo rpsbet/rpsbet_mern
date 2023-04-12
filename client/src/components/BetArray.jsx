@@ -16,10 +16,13 @@ function BetArray({ arrayName, label }) {
         <div className="bet-array-grid">
           {stored_bet_array.map((item, index) => (
             <div key={index} className="array-item">
-              {item[label]}
+              {typeof item[label] === 'number'
+                ? item[label].toFixed(2)
+                : item[label]}
             </div>
           ))}
         </div>
+
         {stored_bet_array.length > 0 && (
           <div className="button-container">
             <Button
@@ -31,9 +34,7 @@ function BetArray({ arrayName, label }) {
           </div>
         )}
         {stored_bet_array.length === 0 && (
-          <div className="no-data-msg">
-            Play normally to train the AI
-          </div>
+          <div className="no-data-msg">Play normally to train the AI</div>
         )}
       </div>
     </div>

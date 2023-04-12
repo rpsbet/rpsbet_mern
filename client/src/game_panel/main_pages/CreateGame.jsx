@@ -91,6 +91,8 @@ class CreateGame extends Component {
       brain_game_type: this.props.brain_game_type,
       rps_game_type: 0,
       sounds: {
+        wrong: new Audio('/sounds/wrong.mp3'),
+        correct: new Audio('/sounds/correct.mp3'),
         boop: new Audio('/sounds/boop.mp3'),
         countDown: new Audio('/sounds/countDown.mp3'),
         grunt2: new Audio('/sounds/grunt2.mp3'),
@@ -413,6 +415,12 @@ class CreateGame extends Component {
         alertModal(
           this.props.isDarkMode,
           `TOO PROFITABLE! GAME IS UNFAIR`
+        );
+        return;
+      } else if (this.state.endgame_amount < this.state.bet_amount) {
+        alertModal(
+          this.props.isDarkMode,
+          `THIS GAME REQUIRES A PAYOUT MORE THAN BET AMOUNT`
         );
         return;
       }
@@ -768,6 +776,7 @@ class CreateGame extends Component {
                     this.state.game_mode === 'Brain Game' &&
                     this.state.isPlayingBrain && (
                       <PlayBrainGame
+                      playSound={this.playSound}
                         brain_game_type={this.state.brain_game_type}
                         bet_amount={this.state.bet_amount}
                         is_private={this.state.is_private}

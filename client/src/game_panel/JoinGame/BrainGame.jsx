@@ -36,12 +36,14 @@ const defaultOptions = {
   }
 };
 
+
+
 const twitterLink = window.location.href;
 
 class BrainGame extends Component {
   constructor(props) {
     super(props);
-    this.settingsRef = React.createRef();
+    // this.settingsRef = React.createRef();
 
     this.state = {
       brain_game_type: this.props.brain_game_type,
@@ -51,6 +53,7 @@ class BrainGame extends Component {
       timer: null,
       timerValue: 2000,
       clicked: true,
+      copied: false,
       is_anonymous: false,
       is_started: false,
       remaining_time: 60,
@@ -68,6 +71,23 @@ class BrainGame extends Component {
 
     };
     this.panelRef = React.createRef();
+  }
+
+  toggleBtnHandler = () => {
+    this.setState({
+      clicked: !this.state.clicked,
+      text: 'LINK GRABBED'
+    });
+    setTimeout(() => {
+      this.setState({
+        clicked: !this.state.clicked,
+        text: ''
+      });
+    }, 1000);
+  };
+
+  copy() {
+    navigator.clipboard.writeText(twitterLink);
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -101,15 +121,15 @@ class BrainGame extends Component {
     }
   };
 
-  handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
+  // handleClickOutside = e => {
+  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+  //     this.setState({ settings_panel_opened: false });
+  //   }
+  // };
 
   componentDidMount() {
     this.getNextQuestion();
-    document.addEventListener('mousedown', this.handleClickOutside);
+    // document.addEventListener('mousedown', this.handleClickOutside);
 
   }
 
@@ -150,7 +170,7 @@ class BrainGame extends Component {
         is_anonymous: this.state.is_anonymous
       });
     }
-    document.removeEventListener('mousedown', this.handleClickOutside);
+    // document.removeEventListener('mousedown', this.handleClickOutside);
 
   }
 
@@ -197,16 +217,23 @@ class BrainGame extends Component {
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
 
-    confirmModalCreate(
-      isDarkMode,
-      'YOU SURE YOU GOT THIS?',
-      'Hell Yeah!',
-      'Cancel',
-      async () => {
-        if (is_private === true && passwordCorrect !== true) {
-          openGamePasswordModal();
-        } else {
-          const response = await deductBalanceWhenStartBrainGame({
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      if (is_private === true && passwordCorrect !== true) {
+        openGamePasswordModal();
+      } else {
+        await this.joinGame();
+      }
+    } else {
+      confirmModalCreate(
+        isDarkMode,
+        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+        'Yes',
+        'Cancel',
+        async () => {
+          if (is_private === true && passwordCorrect !== true) {
+            openGamePasswordModal();
+          } else {
+            const response = await deductBalanceWhenStartBrainGame({
             bet_amount: bet_amount
           });
 
@@ -227,7 +254,7 @@ class BrainGame extends Component {
       }
     );
   };
-
+  }
   onCountDown = async () => {
     const {
       playSound,
@@ -240,6 +267,11 @@ class BrainGame extends Component {
 
     const remaining_time = this.state.remaining_time - 1;
     this.setState({ remaining_time });
+
+    if (remaining_time === 10) {
+			playSound('countDown');
+		}
+
 
     if (remaining_time === 0) {
       let stored_score_array =
@@ -315,29 +347,34 @@ class BrainGame extends Component {
     }
   };
 
-  onClickAnswer = async e => {
+  onClickAnswer = async (e) => {
     try {
       const data = {
         question_id: this.state.question._id,
-        answer_id: e.target.getAttribute('_id')
+        answer_id: e.target.getAttribute('_id'),
       };
-
+  
       const res = await axios.post('/game/answer/', data);
       if (res.data.success) {
+        const answerResult = res.data.answer_result;
+        if (answerResult === 1) {
+          this.props.playSound('correct');
+        } else if (answerResult === -1) {
+          this.props.playSound('wrong');
+        }
         this.setState({
-          score: this.state.score + res.data.answer_result
+          score: this.state.score + answerResult,
+          question: this.state.next_question,
+          answers: this.state.next_answers,
+        }, () => {
+          this.getNextQuestion();
         });
       }
-
-      this.setState({
-        question: this.state.next_question,
-        answers: this.state.next_answers
-      });
     } catch (err) {
       console.log('err***', err);
     }
-    this.getNextQuestion();
   };
+  
 
   handleButtonClick = () => {
     const {
@@ -501,6 +538,13 @@ class BrainGame extends Component {
   };
 
   render() {
+    const styles = ['copy-btn'];
+    let text = 'COPY CONTRACT';
+
+    if (this.state.clicked) {
+      styles.push('clicked');
+      text = 'COPIED!';
+    }
     const { is_started } = this.state;
     let arrayName = `score_array_${this.props.brain_game_type}`
     return is_started === true ? (
@@ -522,14 +566,14 @@ class BrainGame extends Component {
               <div className="question">{this.state.question.question}</div>
               <div className="answer-panel">
                 {this.state.answers.map((answer, index) => (
-                  <Button
+                  <button
                     key={index}
                     className="answer other"
                     onClick={this.onClickAnswer}
                     _id={answer._id}
                   >
                     {answer.answer}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </div>
@@ -589,11 +633,15 @@ class BrainGame extends Component {
             </div>
           </div>
 
-          <div className="game-info-panel">
-            <h3 className="game-sub-title">Game Type:</h3>
-            <p>{this.props.brain_game_type.game_type_name}</p>
-            <h3 className="game-sub-title">Score to BEAT:</h3>
-            <p>{this.props.brain_game_score}</p>
+          <div className="game-info-panel brain-game">
+          <h3 className="game-sub-title">Game Type:</h3>
+          <p className="game-type">{this.props.brain_game_type.game_type_name}</p>
+          <h3 className="game-sub-title">Score to Beat:</h3>
+          <p>{this.props.brain_game_score}</p>
+            
+            <Button id="btn_bet" onClick={this.onStartGame}>
+              Start
+            </Button>
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>
@@ -603,7 +651,7 @@ class BrainGame extends Component {
               }
             />
             <div
-              ref={this.settingsRef}
+              // ref={this.settingsRef}
               className={`transaction-settings ${
                 this.state.settings_panel_opened ? 'active' : ''
               }`}
@@ -695,10 +743,36 @@ class BrainGame extends Component {
           <BetArray arrayName={arrayName} label="score"/>
 
           <div className="action-panel">
-            <span></span>
-            <Button id="btn_bet" onClick={this.onStartGame}>
-              Start
-            </Button>
+          <div className="action-panel">
+            <div className="share-options">
+              <TwitterShareButton
+                url={twitterLink}
+                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
+                className="Demo__some-network__share-button"
+              >
+                <TwitterIcon size={32} round />
+              </TwitterShareButton>
+              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
+              <a
+                className={styles.join('')}
+                onClick={() => {
+                  this.toggleBtnHandler();
+                  this.copy();
+                }}
+              >
+                {this.state.clicked ? (
+                  <input
+                    type="text"
+                    value={twitterLink}
+                    readOnly
+                    onClick={this.toggleBtnHandler}
+                  />
+                ) : null}
+                <FaClipboard />
+                &nbsp;{this.state.text}
+              </a>
+            </div>
+          </div>
           </div>
         </div>
       </div>

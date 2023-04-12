@@ -86,8 +86,11 @@ class JoinGame extends Component {
         split: new Audio('/sounds/split-sound.mp3'),
         lose: new Audio('/sounds/lose-sound.mp3'),
         start: new Audio('/sounds/start.mp3'),
+        countDown: new Audio('/sounds/countDown.mp3'),
         stop: new Audio('/sounds/stop.mp3'),
-        select: new Audio('/sounds/select.mp3')
+        select: new Audio('/sounds/select.mp3'),
+        wrong: new Audio('/sounds/wrong.mp3'),
+        correct: new Audio('/sounds/correct.mp3'),
       }
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);

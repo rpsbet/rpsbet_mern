@@ -274,12 +274,12 @@ class SiteWrapper extends Component {
 
   initSocket = () => {
     const socket = socketIOClient(this.state.endpoint);
-
+  
     socket.on('CONNECTED', data => {
       socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
       socket.emit('FETCH_GLOBAL_CHAT');
     });
-
+  
     socket.on('UPDATED_ROOM_LIST', data => {
       this.props.setRoomList(data);
       this.props.getUser(true);
@@ -287,21 +287,21 @@ class SiteWrapper extends Component {
       this.props.getMyHistory();
       this.props.getHistory();
     });
-
-    socket.on('PLAY_CORRECT_SOUND', () => {
-      if (!this.props.isMuted) {
-      const audio = new Audio('/sounds/correct.mp3');
-      audio.play();
+  
+    socket.on('PLAY_CORRECT_SOUND', (socketId) => {
+      if (socket.id === socketId && !this.props.isMuted) {
+        const audio = new Audio('/sounds/correct.mp3');
+        audio.play();
       }
     });
-
-    socket.on('PLAY_WRONG_SOUND', () => {
-      if (!this.props.isMuted) {
-
-      const audio = new Audio('/sounds/wrong.mp3');
-      audio.play();
+  
+    socket.on('PLAY_WRONG_SOUND', (socketId) => {
+      if (socket.id === socketId && !this.props.isMuted) {
+        const audio = new Audio('/sounds/wrong.mp3');
+        audio.play();
       }
     });
+    
 
     socket.on('PLAY_SOUND', data => {
       if (!this.props.isMuted) {

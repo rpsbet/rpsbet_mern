@@ -54,9 +54,9 @@ class PlayBrainGame extends Component {
 	onCountDown = () => {
 		const remaining_time = this.state.remaining_time - 1;
 		this.setState({ remaining_time });
-		// if (remaining_time === 10) {
-		// 	this.props.playSound('countDown');
-		// }
+		if (remaining_time === 10) {
+			this.props.playSound('countDown');
+		}
 
 		if (remaining_time === 0) {
 			clearInterval(this.state.intervalId);
@@ -78,29 +78,43 @@ class PlayBrainGame extends Component {
 		}
 	}
 
-	onClickAnswer = async e => {
+	onClickAnswer = async (e) => {
 		try {
+		  const answerId = e.target.getAttribute('_id');
+		  if (this.state.remaining_time === 'FIN' || !answerId) {
+			return;
+		  }
+	  
 		  const data = {
 			question_id: this.state.question._id,
-			answer_id: e.target.getAttribute('_id')
+			answer_id: answerId,
 		  };
-	
-		  const res = await axios.post('/game/answer/', data);
-		  if (res.data.success) {
-			this.setState({
-			  score: this.state.score + res.data.answer_result
+	  
+		  const response = await axios.post('/game/answer/', data);
+		  if (response.data.success) {
+			const answerResult = response.data.answer_result;
+			console.log(answerResult)
+			if (answerResult === 1) {
+			  this.props.playSound('correct');
+			} else if (answerResult === -1) {
+			  this.props.playSound('wrong');
+			}
+			this.setState((prevState) => ({
+			  score: prevState.score + answerResult,
+			  question: prevState.next_question,
+			  answers: prevState.next_answers,
+			}), () => {
+			  this.getNextQuestion();
 			});
+		  } else {
+			console.log('Error:', response.data.error);
 		  }
-	
-		  this.setState({
-			question: this.state.next_question,
-			answers: this.state.next_answers
-		  });
-		} catch (err) {
-		  console.log('err***', err);
+		} catch (error) {
+		  console.log('Error:', error);
 		}
-		this.getNextQuestion();
 	  };
+	  
+	  
 
 	render() {
 		return (
@@ -122,7 +136,7 @@ class PlayBrainGame extends Component {
 					</div>
 					<div className="answer-panel">
 						{this.state.answers.map((answer, index) => (
-							<Button key={index} className="answer other" onClick={this.onClickAnswer} _id={answer._id}>{answer.answer}</Button>
+							<button key={index} className="answer other" onClick={this.onClickAnswer} _id={answer._id}>{answer.answer}</button>
 						))}
 					</div>
 				</div>

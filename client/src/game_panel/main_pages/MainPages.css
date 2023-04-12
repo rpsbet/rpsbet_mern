@@ -1680,12 +1680,27 @@ background-color: red;
     justify-content: center;
 }
 .brain-game-play-panel .quiz-panel .answer-panel button {
-    width: 350px;
+    min-width: 300px;
     max-width: 100%;
     font-size: 1.1em;
     font-weight: 600;
     height: 45px;
 }
+
+  .brain-game p {
+    border: #333 solid;
+    border-radius: 0.25em;
+ padding: 20px;
+ margin-top: unset !important;
+    margin-bottom: 30px;
+  }
+  
+
+  .game-type {
+    margin-bottom: 0px !important;
+  }
+ 
+  
 
 .game-info-panel .qs-image-panel,
 .game-info-panel .qs-action-panel {
