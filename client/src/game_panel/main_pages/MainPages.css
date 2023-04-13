@@ -1054,7 +1054,7 @@ box-shadow:none !important;
 .game-page .game-contents .game-info-panel .previous-guesses {
     color: #8e9297;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 400;
     text-align: center;
 }
 
@@ -1073,9 +1073,9 @@ max-width: 450px;
         overflow-x: scroll;
     }
     .gradient-container .previous-guesses.drop span {
-    min-width: 31%;
+    min-width: 23%;
     max-height: 30px;
-    line-height: 22px;
+    line-height: 16px;
     }
 
     .previous-guesses.drop div {
@@ -1094,15 +1094,14 @@ max-width: 450px;
 }
 
 .game-page .game-contents .game-info-panel .previous-guesses span{
-    margin-bottom: 12px !important;
-    margin-right: 10px !important;
     display: inline-block;
 }
 
 .game-page .game-contents .game-info-panel .previous-guesses.drop span {
-    margin-bottom: 0 !important;
-    margin-right: 0 !important;
+    margin-bottom: 3px !important;
+    margin-right: 3px !important;
     color: #e5e5e5 !important;
+    border-radius: 0.25em;
 }
 
 

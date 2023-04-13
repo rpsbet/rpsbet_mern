@@ -112,6 +112,17 @@ module.exports.socketio = server => {
       socket.broadcast.emit('UPDATED_BANKROLL', data);
     });
 
+    socket.on('BANG_GUESSES', (data) => {
+      socket.broadcast.emit('BANG_GUESSES', data);
+    });
+
+    socket.on('BANG_GUESSES1', (data) => {
+      socket.broadcast.emit('BANG_GUESSES1', data);
+    });
+
+    socket.on('BANG_PREDICTION', (data) => {
+      socket.broadcast.emit('BANG_PREDICTION', data);
+    });
     socket.on('error', err => {
       console.log(err.stack);
     });

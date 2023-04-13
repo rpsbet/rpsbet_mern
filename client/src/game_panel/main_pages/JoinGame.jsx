@@ -11,6 +11,7 @@ import MysteryBox from '../JoinGame/MysteryBox';
 import BrainGame from '../JoinGame/BrainGame';
 import QuickShoot from '../JoinGame/QuickShoot';
 import DropGame from '../JoinGame/DropGame';
+import Bang from '../JoinGame/Bang';
 import {
   bet,
   getRoomInfo,
@@ -375,6 +376,20 @@ class JoinGame extends Component {
                     bet_amount={this.props.roomInfo.bet_amount}
                     bankroll={this.state.bankroll}
                     drop_bet_item_id={this.props.roomInfo.drop_bet_item_id}
+                    is_private={this.props.roomInfo.is_private}
+                    roomInfo={this.props.roomInfo}
+                    playSound={this.playSound}
+                  />
+                )}
+                {this.props.roomInfo.game_type === 'Bang!' && (
+                  <Bang
+                    refreshHistory={this.refreshHistory}
+                    join={this.join}
+                    user_id={this.props.user_id}
+                    creator_id={this.props.roomInfo.creator_id}
+                    bet_amount={this.props.roomInfo.bet_amount}
+                    bankroll={this.state.bankroll}
+                    bang_bet_item_id={this.props.roomInfo.bang_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}

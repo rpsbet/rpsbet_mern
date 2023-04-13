@@ -671,7 +671,13 @@ class DropGame extends Component {
                               guess.host_drop > guess.bet_amount
                                 ? '#e30303c2'
                                 : '#e3e103c2',
-                            padding: '0.3em 0.9em'
+                            
+                                border: '3px solid',
+                                borderColor:
+                                guess.host_drop > guess.bet_amount
+                                  ? '#e30303'
+                                  : '#e3e103',
+                              padding: '0.3em 0.2em',
                           }}
                         >
                           <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
@@ -692,7 +698,13 @@ class DropGame extends Component {
                               guess.host_drop > guess.bet_amount
                                 ? '#e3e103c2'
                                 : '#e30303c2',
-                            padding: '0.3em 0.9em'
+                                border: '3px solid',
+                                borderColor:
+                                guess.host_drop > guess.bet_amount
+                                  ? '#e3e103'
+                                  : '#e30303',
+                              padding: '0.3em 0.2em',
+                              
                           }}
                         >
                           <InlineSVG id="busd" src={require('./busd.svg')} />{' '}

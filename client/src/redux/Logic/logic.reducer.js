@@ -18,6 +18,7 @@ import {
   UPDATE_BANKROLL_QS,
   SPLEESH_GUESSES,
   DROP_GUESSES,
+  BANG_GUESSES,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -36,6 +37,7 @@ const initialState = {
   roomCount: 0,
   spleesh_guesses: [],
   drop_guesses: [],
+  bangs: [],
   totalPage: 0,
   pageNumber: 1,
   historyTotalPage: 0,
@@ -47,6 +49,7 @@ const initialState = {
     { game_type_name: 'Mystery Box' },
     { game_type_name: 'Quick Shoot' },
     { game_type_name: 'Drop Game' },
+    { game_type_name: 'Bang!' },
   ],
   curRoomInfo: {
     _id: 0,
@@ -107,6 +110,11 @@ export default function(state = initialState, action) {
     return {
       ...state,
       drop_guesses: action.drop_guesses
+    };
+    case BANG_GUESSES:
+    return {
+      ...state,
+      bang_guesses: action.bang_guesses
     };
 
   case UPDATE_BANKROLL:

@@ -36,8 +36,6 @@ const defaultOptions = {
   }
 };
 
-
-
 const twitterLink = window.location.href;
 
 class BrainGame extends Component {
@@ -68,7 +66,6 @@ class BrainGame extends Component {
       next_answers: [],
       isPasswordCorrect: this.props.isPasswordCorrect,
       settings_panel_opened: false
-
     };
     this.panelRef = React.createRef();
   }
@@ -108,7 +105,7 @@ class BrainGame extends Component {
     try {
       const res = await axios.get(
         '/game/question/' + this.state.brain_game_type._id
-        );
+      );
 
       if (res.data.success) {
         this.setState({
@@ -130,7 +127,6 @@ class BrainGame extends Component {
   componentDidMount() {
     this.getNextQuestion();
     // document.addEventListener('mousedown', this.handleClickOutside);
-
   }
 
   onShowButtonClicked = e => {
@@ -171,7 +167,6 @@ class BrainGame extends Component {
       });
     }
     // document.removeEventListener('mousedown', this.handleClickOutside);
-
   }
 
   changeBgColor = async result => {
@@ -207,8 +202,6 @@ class BrainGame extends Component {
       return;
     }
 
-   
-
     if (roomStatus === 'finished') {
       alertModal(isDarkMode, 'THIS STAKE HAS ENDED');
       return;
@@ -221,40 +214,38 @@ class BrainGame extends Component {
       if (is_private === true && passwordCorrect !== true) {
         openGamePasswordModal();
       } else {
-        await this.joinGame();
-      }
-    } else {
-      confirmModalCreate(
-        isDarkMode,
-        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-        'Yes',
-        'Cancel',
-        async () => {
-          if (is_private === true && passwordCorrect !== true) {
-            openGamePasswordModal();
-          } else {
-            const response = await deductBalanceWhenStartBrainGame({
-            bet_amount: bet_amount
-          });
+        confirmModalCreate(
+          isDarkMode,
+          'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+          'Yes',
+          'Cancel',
+          async () => {
+            if (is_private === true && passwordCorrect !== true) {
+              openGamePasswordModal();
+            } else {
+              const response = await deductBalanceWhenStartBrainGame({
+                bet_amount: bet_amount
+              });
 
-          if (response) {
-            const intervalId = setInterval(this.onCountDown, 1000);
+              if (response) {
+                const intervalId = setInterval(this.onCountDown, 1000);
 
-            this.setState({
-              is_started: true,
-              intervalId,
-              question: this.state.next_question,
-              answers: this.state.next_answers,
-              remaining_time: 60
-            });
+                this.setState({
+                  is_started: true,
+                  intervalId,
+                  question: this.state.next_question,
+                  answers: this.state.next_answers,
+                  remaining_time: 60
+                });
 
-            this.getNextQuestion();
+                this.getNextQuestion();
+              }
+            }
           }
-        }
+        );
       }
-    );
+    }
   };
-  }
   onCountDown = async () => {
     const {
       playSound,
@@ -269,9 +260,8 @@ class BrainGame extends Component {
     this.setState({ remaining_time });
 
     if (remaining_time === 10) {
-			playSound('countDown');
-		}
-
+      playSound('countDown');
+    }
 
     if (remaining_time === 0) {
       let stored_score_array =
@@ -347,13 +337,13 @@ class BrainGame extends Component {
     }
   };
 
-  onClickAnswer = async (e) => {
+  onClickAnswer = async e => {
     try {
       const data = {
         question_id: this.state.question._id,
-        answer_id: e.target.getAttribute('_id'),
+        answer_id: e.target.getAttribute('_id')
       };
-  
+
       const res = await axios.post('/game/answer/', data);
       if (res.data.success) {
         const answerResult = res.data.answer_result;
@@ -362,19 +352,21 @@ class BrainGame extends Component {
         } else if (answerResult === -1) {
           this.props.playSound('wrong');
         }
-        this.setState({
-          score: this.state.score + answerResult,
-          question: this.state.next_question,
-          answers: this.state.next_answers,
-        }, () => {
-          this.getNextQuestion();
-        });
+        this.setState(
+          {
+            score: this.state.score + answerResult,
+            question: this.state.next_question,
+            answers: this.state.next_answers
+          },
+          () => {
+            this.getNextQuestion();
+          }
+        );
       }
     } catch (err) {
       console.log('err***', err);
     }
   };
-  
 
   handleButtonClick = () => {
     const {
@@ -393,7 +385,6 @@ class BrainGame extends Component {
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-
 
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
@@ -546,7 +537,7 @@ class BrainGame extends Component {
       text = 'COPIED!';
     }
     const { is_started } = this.state;
-    let arrayName = `score_array_${this.props.brain_game_type}`
+    let arrayName = `score_array_${this.props.brain_game_type}`;
     return is_started === true ? (
       <div className="game-page">
         <div className="game-contents">
@@ -634,11 +625,13 @@ class BrainGame extends Component {
           </div>
 
           <div className="game-info-panel brain-game">
-          <h3 className="game-sub-title">Game Type:</h3>
-          <p className="game-type">{this.props.brain_game_type.game_type_name}</p>
-          <h3 className="game-sub-title">Score to Beat:</h3>
-          <p>{this.props.brain_game_score}</p>
-            
+            <h3 className="game-sub-title">Game Type:</h3>
+            <p className="game-type">
+              {this.props.brain_game_type.game_type_name}
+            </p>
+            <h3 className="game-sub-title">Score to Beat:</h3>
+            <p>{this.props.brain_game_score}</p>
+
             <Button id="btn_bet" onClick={this.onStartGame}>
               Start
             </Button>
@@ -658,30 +651,48 @@ class BrainGame extends Component {
             >
               <h5>AI Play Settings</h5>
               <p>CHOOSE AN ALGORITHM</p>
-              <div className='tiers'>
-            <table>
-              <tbody>
-                <tr>
-                  <td>Speed</td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "80%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Reasoning</td>
-                  <td><div className="bar" style={{width: "80%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Abilities</td>
-                  <td><div className="bar" style={{width: "30%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-              </tbody>
-            </table>
-            </div>
+              <div className="tiers">
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '80%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '80%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '30%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
               <div className="slippage-select-panel">
                 <Button
                   className={this.state.slippage === 100 ? 'active' : ''}
@@ -692,29 +703,25 @@ class BrainGame extends Component {
                   Markov
                 </Button>
                 <Button
-                                className='disabled'
-
+                  className="disabled"
                   // className={this.state.slippage === 200 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
                   disabled={this.state.isDisabled}
-
                 >
                   Carlo
                 </Button>
                 <Button
-                className='disabled'
+                  className="disabled"
                   // className={this.state.slippage === 500 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                    disabled={this.state.isDisabled}
-
+                  disabled={this.state.isDisabled}
                 >
                   Q Bot
                 </Button>
-          
               </div>
             </div>
             <Button
@@ -740,39 +747,39 @@ class BrainGame extends Component {
               )}
             </Button>
           </div>
-          <BetArray arrayName={arrayName} label="score"/>
+          <BetArray arrayName={arrayName} label="score" />
 
           <div className="action-panel">
-          <div className="action-panel">
-            <div className="share-options">
-              <TwitterShareButton
-                url={twitterLink}
-                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                className="Demo__some-network__share-button"
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-              <a
-                className={styles.join('')}
-                onClick={() => {
-                  this.toggleBtnHandler();
-                  this.copy();
-                }}
-              >
-                {this.state.clicked ? (
-                  <input
-                    type="text"
-                    value={twitterLink}
-                    readOnly
-                    onClick={this.toggleBtnHandler}
-                  />
-                ) : null}
-                <FaClipboard />
-                &nbsp;{this.state.text}
-              </a>
+            <div className="action-panel">
+              <div className="share-options">
+                <TwitterShareButton
+                  url={twitterLink}
+                  title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
+                  className="Demo__some-network__share-button"
+                >
+                  <TwitterIcon size={32} round />
+                </TwitterShareButton>
+                {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
+                <a
+                  className={styles.join('')}
+                  onClick={() => {
+                    this.toggleBtnHandler();
+                    this.copy();
+                  }}
+                >
+                  {this.state.clicked ? (
+                    <input
+                      type="text"
+                      value={twitterLink}
+                      readOnly
+                      onClick={this.toggleBtnHandler}
+                    />
+                  ) : null}
+                  <FaClipboard />
+                  &nbsp;{this.state.text}
+                </a>
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </div>

@@ -147,7 +147,8 @@ class MyGamesTable extends Component {
       MB: 'mystery-box',
       BG: 'brain-game',
       QS: 'quick-shoot',
-      DG: 'drop-game'
+      DG: 'drop-game',
+      'B!': 'bang'
     };
 
     const gameTypePanel = (

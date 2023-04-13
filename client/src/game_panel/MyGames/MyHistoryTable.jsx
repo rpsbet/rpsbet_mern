@@ -113,6 +113,7 @@ class MyHistoryTable extends Component {
       BG: 'brain-game',
       QS: 'quick-shoot',
       DG: 'drop-game',
+      'B!': 'bang'
     };
 
     const gameTypePanel = (

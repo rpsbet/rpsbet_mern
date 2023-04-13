@@ -51,6 +51,10 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0
     },
+    selected_bang: {
+        type: Number,
+        default: 0
+    },
     new_host_pr: {
         type: Number,
         default: 0

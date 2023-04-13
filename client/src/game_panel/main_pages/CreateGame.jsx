@@ -8,6 +8,7 @@ import DropGame from '../CreateGame/DropGame';
 import BrainGame from '../CreateGame/BrainGame';
 import PlayBrainGame from '../CreateGame/PlayBrainGame';
 import QuickShoot from '../CreateGame/QuickShoot';
+import Bang from '../CreateGame/Bang';
 import { Button } from '@material-ui/core';
 import Footer from './Footer';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
@@ -68,11 +69,13 @@ class CreateGame extends Component {
       isPlayingBrain: false,
       rps_list: [],
       drop_list: [],
+      bang_list: [],
       qs_list: [],
       qs_game_type: 2,
       qs_nation: 0,
       selected_rps: '',
       selected_drop: '',
+      selected_bang: '',
       selected_qs_position: 0,
       bet_amount: 1,
       endgame_amount: 0,
@@ -256,6 +259,14 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 6,
+        winChance: 0,
+        bet_amount: 0,
+        endgame_amount: 0
+      };
+    } else if (gameTypeName === 'Bang!') {
+      newState = {
+        ...newState,
+        game_type: 7,
         winChance: 0,
         bet_amount: 0,
         endgame_amount: 0
@@ -582,6 +593,22 @@ class CreateGame extends Component {
 
           onChangeState={this.onChangeState}
           drop_list={this.state.drop_list}
+          bet_amount={this.state.bet_amount}
+          winChance={this.state.winChance}
+          is_private={this.state.is_private}
+          is_anonymous={this.state.is_anonymous}
+          room_password={this.state.room_password}
+          step={this.state.child_step}
+          endgame_amount={this.state.endgame_amount}
+        />
+      );
+    } else if (this.state.game_mode === 'Bang!') {
+      return (
+        <Bang
+        playSound={this.playSound}
+
+          onChangeState={this.onChangeState}
+          bang_list={this.state.bang_list}
           bet_amount={this.state.bet_amount}
           winChance={this.state.winChance}
           is_private={this.state.is_private}

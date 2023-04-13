@@ -22,6 +22,7 @@ import {
   SET_BALANCE,
   SPLEESH_GUESSES,
   DROP_GUESSES,
+  BANG_GUESSES,
   ONLINE_USER_LIST_UPDATED,
   MSG_WARNING,
   SELECT_MAIN_TAB,
@@ -81,6 +82,21 @@ export function updateDropGuesses() {
         // Dispatch the action to store the drop guesses in your state
         dispatch({
           type: DROP_GUESSES,
+          payload: data
+        });
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+}
+export function updateBangGuesses() {
+  return dispatch => {
+    fetch('/api/bang/guesses')
+      .then(res => res.json())
+      .then(data => {
+        dispatch({
+          type: BANG_GUESSES,
           payload: data
         });
       })

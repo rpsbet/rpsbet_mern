@@ -21,6 +21,8 @@ class Summary extends Component {
       this.state.winChance = '0 - 100'
     } else if(this.props.game_mode === 'Drop Game'){
       this.state.winChance = 42
+    } else if(this.props.game_mode === 'Bang!'){
+      this.state.winChance = 42
     }
   }
   pre_summery() {
@@ -106,6 +108,8 @@ class Summary extends Component {
       } else if(this.props.game_mode === 'Brain Game'){
         this.setState({ winChance: '0 - 100' })
       } else if(this.props.game_mode === 'Drop Game'){
+        this.setState({ winChance: 42 })
+      } else if(this.props.game_mode === 'Bang!'){
         this.setState({ winChance: 42 })
       }
     }

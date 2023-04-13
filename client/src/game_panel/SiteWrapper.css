@@ -262,6 +262,18 @@ ul[role=menu] li:hover {
     border-radius: 20px !important;
 }
 
+.your-multiplier {
+    margin-top: 0px;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+
+.your-multiplier div {
+    width: 100%; 
+}
+
+
 .room-history-panel,
 .action-panel {
     padding: 20px 0;
