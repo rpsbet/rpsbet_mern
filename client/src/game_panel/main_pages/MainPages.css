@@ -1084,6 +1084,61 @@ max-width: 450px;
         flex-direction: row;
         justify-content: flex-end;
     }
+    #x {
+        position: absolute;
+        transform: translate(-50px, -10px);
+        font-size: small;
+    }
+
+    .bangTimer {
+        position: relative;
+        font-size: 36px;
+        text-align: center;
+        padding: 50px;
+      }
+      
+      .bangTimer span {
+        display: inline-block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: bounce 0.5s linear;
+      }
+      
+      @keyframes bounce {
+        0% {
+          transform: translateY(-50%);
+        }
+        25% {
+          transform: translateY(-70%);
+        }
+        50% {
+          transform: translateY(-50%);
+        }
+        75% {
+          transform: translateY(-30%);
+        }
+        100% {
+          transform: translateY(-50%);
+        }
+      }
+      
+      #no-guesses {
+        font-size: 24px;
+        text-align: center;
+        margin: 50px auto;
+      }
+      
+      .countup {
+        position: relative;
+        display: inline-block;
+        font-size: 48px;
+        text-align: center;
+        padding: 50px;
+      }
+      
+     
   
     
     .previous-guesses.drop  {

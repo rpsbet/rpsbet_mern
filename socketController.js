@@ -117,9 +117,10 @@ module.exports.socketio = server => {
     });
 
     socket.on('BANG_GUESSES1', (data) => {
-      socket.broadcast.emit('BANG_GUESSES1', data);
+      const roomId = data.roomId; // assuming roomId is passed in the data object
+      socket.to(roomId).emit('BANG_GUESSES1', data);
     });
-
+    
     socket.on('BANG_PREDICTION', (data) => {
       socket.broadcast.emit('BANG_PREDICTION', data);
     });

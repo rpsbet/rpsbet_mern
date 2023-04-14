@@ -925,37 +925,48 @@ router.post('/rooms', auth, async (req, res) => {
         });
         newDrop.save();
       });
-    } else if (gameType.game_type_name === 'Bang!') {
+    } 
+    // server side code
+
+    else if (gameType.game_type_name === 'Bang!') {
       let bangGuesses = [];
       let intervalId;
     
-      const intervalFn = async () => {
-        const predictedBang = await predictNextBang(req.body.bang_list);
-        bangGuesses.push(predictedBang);
-    
+      const emitBangGuesses = () => {
         if (req.io.sockets) {
           req.io.sockets.emit('BANG_GUESSES1', bangGuesses);
         }
-    
-        const nextBangPrediction = await predictNextBang(req.body.bang_list);
-        const intervalTime = nextBangPrediction + 15000;
-        clearInterval(intervalId);
-        intervalId = setInterval(intervalFn, intervalTime);
       };
     
-      intervalId = setInterval(intervalFn, 5000);
+      const predictAndEmit = async () => {
+        const nextBangPrediction = await predictNextBang(req.body.bang_list);
+        bangGuesses.push(nextBangPrediction);
+        emitBangGuesses();
+    
+        // Schedule the next round after value + 10 seconds
+        setTimeout(predictAndEmit, (nextBangPrediction * 1000) + 10000);
+      };
+    
+      // Initialize the first round and emit the initial state of bang guesses
+      const initializeRound = async () => {
+        const nextBangPrediction = await predictNextBang(req.body.bang_list);
+        bangGuesses.push(nextBangPrediction);
+        emitBangGuesses();
+    
+        // Schedule the next round after value + 10 seconds
+        setTimeout(predictAndEmit, (nextBangPrediction * 1000) + 10000);
+      };
+      initializeRound();
     
       req.body.bang_list.forEach(bang => {
-        console.log(bang); // log the box item to the console
-    
         newBang = new BangBetItem({
           room: newRoom,
           bang: bang.bang
-          // bet_amount: rps.bet_amount
         });
         newBang.save();
       });
     }
+    
     
     
     newTransaction = new Transaction({

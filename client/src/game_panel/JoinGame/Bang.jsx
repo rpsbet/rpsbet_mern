@@ -85,7 +85,7 @@ class Bang extends Component {
       timerValue: 2000,
       clicked: true,
       intervalId: null,
-      nextBangTime: null,
+      nextBangInterval: null,
       countdown: null,
       items: [],
       bgColorChanged: false,
@@ -152,22 +152,7 @@ class Bang extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.bang_guesses !== this.state.bang_guesses) {
-      const lastBang = this.state.bang_guesses[this.state.bang_guesses.length - 1];
-      const intervalTime = lastBang * 1000;
-      clearInterval(this.countdownTimer);
-      this.setState({
-        nextBangInterval: intervalTime,
-        nextBangCountdown: intervalTime,
-        countdown: 15
-      });
-      this.countdownTimer = setInterval(() => {
-        this.setState(prevState => ({
-          nextBangCountdown: prevState.nextBangCountdown - 1000,
-          countdown: Math.floor((prevState.nextBangCountdown - 1000) / 1000)
-        }));
-      }, 1000);
-    }
+    
     if (prevProps.roomInfo && this.props.roomInfo) {
       if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
         this.setState({
@@ -176,7 +161,7 @@ class Bang extends Component {
         });
       }
     }
-
+  
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
       this.state.isPasswordCorrect === true
@@ -184,30 +169,28 @@ class Bang extends Component {
       this.joinGame();
     }
   }
-
+  
   componentDidMount = () => {
     // Add event listener to detect end of scroll
     this.panelRef.current.addEventListener('scroll', this.handleScroll);
-   this.socket.on('BANG_GUESSES1', data => {
-    if (!this.state.bang_guesses.length) {
-      this.setState({
-        bang_guesses: data,
-        nextBangInterval: data[data.length - 1] * 1000,
-        nextBangCountdown: data[data.length - 1] * 1000
-      });
-      
-      // Start countdown timer
-      this.countdownTimer = setInterval(() => {
-        this.setState(prevState => ({
-          nextBangCountdown: prevState.nextBangCountdown - 1000
-        }));
-      }, 1000);
-    } else {
-      this.setState({ bang_guesses: data });
-    }
-  });
+    this.socket.on('BANG_GUESSES1', data => {
+      // console.log('Received BANG_GUESSES1:', data);
+      if (data.length > 0) {
+        const lastBang = data[data.length - 1];
+ 
+        this.setState({
+          bang_guesses: data,
+          nextBangInterval: lastBang,
+
+        });
+        // console.log('nextBangInterval:', this.state.nextBangInterval);
+
+      }
+    });
+
+    
     this.socket.on('BANG_GUESSES', data => {
-      console.log('bang BANG_GUESSES', data);
+      // console.log('bang BANG_GUESSES', data);
       this.setState({ bang_guesses: data });
     });
 
@@ -624,6 +607,56 @@ class Bang extends Component {
   };
 
   render() {
+    const { bang_guesses, nextBangInterval, showBang, showCountdown } = this.state;
+
+    // Determine whether to show the countup animation or the bang message
+    let content;
+    if (showBang) {
+        content = <span>BANG!</span>;
+    } else if (showCountdown) {
+        content = <span>{this.state.countdown}</span>;
+    } else {
+        content = (
+            <div>
+                <p>
+                    <div id='x'>x</div> <CountUp
+                        start={1}
+                        end={nextBangInterval}
+                        decimals={2}
+                        duration={nextBangInterval}
+                        useEasing={false}
+                        onEnd={() => {
+                            // Show the bang message for 2 seconds, then start the countdown
+                            this.setState({ showBang: true });
+                            setTimeout(() => {
+                                this.setState({
+                                    showBang: false,
+                                    showCountdown: true,
+                                    countdown: 8,
+                                });
+
+                                // Start the countdown
+                                const countdownTimer = setInterval(() => {
+                                    const countdown = this.state.countdown - 1;
+                                    if (countdown === 0) {
+                                        // Countdown is finished, restart everything
+                                        clearInterval(countdownTimer);
+                                        this.setState({
+                                            showCountdown: false,
+                                            countdown: null,
+                                        });
+                                    } else {
+                                        this.setState({ countdown });
+                                    }
+                                }, 1000);
+                            }, 2000);
+                        }}
+                    />
+                </p>
+            </div>
+        );
+    }
+
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
@@ -745,22 +778,9 @@ class Bang extends Component {
                 </p>
               </div>
             </div>
-            <div className='bangTimer'>
-      {this.state.bang_guesses.length ? (
-        <div>
-          <h2>Next Bang in:</h2>
-          <p>
-           {this.state.countdown}
-          </p>
-          <p>
-          x <CountUp end={this.state.nextBangInterval} duration={15}
- useEasing={false} />
-          </p>
+           <div className='bangTimer'>
+            {bang_guesses.length ? content : <span id="no-guesses">Please wait...</span>}
         </div>
-      ) : (
-        <span id="no-guesses">No bangs yet</span>
-      )}
-    </div>
             <div className="your-bet-amount">
               <TextField
                 type="text"
