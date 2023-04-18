@@ -15,10 +15,10 @@ const BangBetItemSchema = new Schema({
         type: Number,
         default: 0,
     },
-    bang_list: {
-        type: [String],
-        default: []
-    },
+    serverTime: {
+        type: Date,  // Add a field to store the server time
+        default: Date.now
+      },
     bet_amount: {
         type: Number,
         default: 0

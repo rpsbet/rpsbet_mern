@@ -1,6 +1,7 @@
 const ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
 const socket = require('../socketController.js');
+const ntpClient = require('ntp-client'); // Import the NTP client library
 
 const router = express.Router();
 
@@ -134,19 +135,40 @@ router.get('/room/:id', async (req, res) => {
 
     emitDropGuesses(req);
 
-    // let hasBangEmitted = false;
+    async function getCurrentTime() {
+      return new Promise((resolve, reject) => {
+        ntpClient.getNetworkTime("time.google.com", 123, function(err, date) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(date);
+          }
+        });
+      });
+    }
 
-    // async function emitBangGuesses(req) {
-    //   if (!hasBangEmitted) {
-    //     const bang_guesses = await BangGuess.find({ room: room });
-    //     if (req.io.sockets) {
-    //       req.io.sockets.emit('BANG_GUESSES1', bang_guesses);
-    //     }
-    //     hasBangEmitted = true;
-    //   }
-    // }
+    let hasBangEmitted = false;
 
-    // emitBangGuesses(req);
+    async function emitBangGuesses(req, room) {
+      if (!hasBangEmitted) {
+        const bang_guesses = await BangBetItem.find({ room: room });
+        const bangs = bang_guesses.map((guess) => guess.bang);
+    
+        // Calculate elapsed time from when the function was called
+        const currentTime = await getCurrentTime();
+        const lastBangTime = bang_guesses.length > 0 ? bang_guesses[bang_guesses.length - 1].created_at : currentTime;
+        const elapsedTime = currentTime - lastBangTime;
+        const roomId = room._id
+        const socketName = `BANG_GUESSES1_${roomId}`;
+            if (req.io.sockets) {
+          req.io.sockets.emit(socketName, { bangs, elapsedTime });
+        }
+        hasBangEmitted = true;
+      }
+    }
+    
+    emitBangGuesses(req, room);
+    
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
 
     res.json({
@@ -926,44 +948,78 @@ router.post('/rooms', auth, async (req, res) => {
         newDrop.save();
       });
     } 
-    // server side code
-
     else if (gameType.game_type_name === 'Bang!') {
-      let bangGuesses = [];
-      let intervalId;
+
+      const roomBets = [];
+    const roomId = newRoom.id;
     
-      const emitBangGuesses = () => {
-        if (req.io.sockets) {
-          req.io.sockets.emit('BANG_GUESSES1', bangGuesses);
-        }
-      };
+    const emitBangGuesses = () => {
+      if (req.io.sockets) {
+        const bangs = roomBets.map(bet => bet.bang);
+        const socketName = `BANG_GUESSES_${roomId}`;
+        const elapsedTime = "";
+        req.io.sockets.emit(socketName, { bangs: bangs, elapsedTime });
+      }
+    };
     
       const predictAndEmit = async () => {
         const nextBangPrediction = await predictNextBang(req.body.bang_list);
-        bangGuesses.push(nextBangPrediction);
+        // console.log(nextBangPrediction)
+        const currentTime = await getCurrentTime();
+        const newBet = new BangBetItem({
+          room: newRoom,
+          bang: nextBangPrediction,
+          created_at: currentTime // Save the current time as the 'created_at' field
+        });
+        await newBet.save();
+        roomBets.push(newBet);
         emitBangGuesses();
-    
-        // Schedule the next round after value + 10 seconds
-        setTimeout(predictAndEmit, (nextBangPrediction * 1000) + 10000);
+      
+        setTimeout(predictAndEmit, (nextBangPrediction * 1000) + 7000);
+        // console.log("time", ((Math.log(nextBangPrediction) / Math.log(1.5)) * 5 * 1000) + 7000);
       };
-    
+      
       // Initialize the first round and emit the initial state of bang guesses
       const initializeRound = async () => {
         const nextBangPrediction = await predictNextBang(req.body.bang_list);
-        bangGuesses.push(nextBangPrediction);
+        // console.log(nextBangPrediction)
+
+        const currentTime = await getCurrentTime(); // Get the current time using NTP
+        const newBet = new BangBetItem({
+          room: newRoom,
+          bang: nextBangPrediction,
+          created_at: currentTime // Save the current time as the 'created_at' field
+        });
+        await newBet.save();
+        roomBets.push(newBet);
         emitBangGuesses();
     
         // Schedule the next round after value + 10 seconds
-        setTimeout(predictAndEmit, (nextBangPrediction * 1000) + 10000);
+        setTimeout(predictAndEmit, (nextBangPrediction * 1000) + 7000);
+        // console.log("time", ((Math.log(nextBangPrediction) / Math.log(1.5)) * 5 * 1000) + 7000);
       };
       initializeRound();
     
-      req.body.bang_list.forEach(bang => {
-        newBang = new BangBetItem({
+      req.body.bang_list.forEach(async bang => {
+        const currentTime = await getCurrentTime(); // Get the current time using NTP
+        const newBang = new BangBetItem({
           room: newRoom,
-          bang: bang.bang
+          bang: bang.bang,
+          created_at: currentTime // Save the current time as the 'created_at' field
         });
-        newBang.save();
+        await newBang.save();
+        roomBets.push(newBang);
+      });
+    }
+    async function getCurrentTime() {
+      return new Promise((resolve, reject) => {
+        ntpClient.getNetworkTime("time.google.com", 123, function(err, date) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(date);
+          }
+        });
       });
     }
     

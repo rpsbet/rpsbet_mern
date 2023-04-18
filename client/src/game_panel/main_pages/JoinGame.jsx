@@ -92,6 +92,8 @@ class JoinGame extends Component {
         select: new Audio('/sounds/select.mp3'),
         wrong: new Audio('/sounds/wrong.mp3'),
         correct: new Audio('/sounds/correct.mp3'),
+        bang: new Audio('/sounds/bang.mp3'),
+        fuse: new Audio('/sounds/fuse.mp3'),
       }
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);
@@ -199,6 +201,7 @@ class JoinGame extends Component {
       audio.play();
     }
   };
+  
 
   refreshHistory = () => {
     this.props.getRoomInfo(this.props.match.params.id);

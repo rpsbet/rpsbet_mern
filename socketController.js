@@ -116,14 +116,18 @@ module.exports.socketio = server => {
       socket.broadcast.emit('BANG_GUESSES', data);
     });
 
+    // socketcontroller.js
+
     socket.on('BANG_GUESSES1', (data) => {
       const roomId = data.roomId; // assuming roomId is passed in the data object
       socket.to(roomId).emit('BANG_GUESSES1', data);
     });
-    
-    socket.on('BANG_PREDICTION', (data) => {
-      socket.broadcast.emit('BANG_PREDICTION', data);
+
+    socket.on('INITIAL_STATE', (data) => {
+      const roomId = data.roomId; // assuming roomId is passed in the data object
+      socket.to(roomId).emit('INITIAL_STATE', data);
     });
+
     socket.on('error', err => {
       console.log(err.stack);
     });
