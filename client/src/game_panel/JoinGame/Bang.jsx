@@ -90,6 +90,9 @@ class Bang extends Component {
       countdown: null,
       items: [],
       bgColorChanged: false,
+      countupValue: 0,
+      buttonClicked: false,
+      cashoutAmount: 0,
       bang_guesses: [],
       advanced_status: '',
       is_anonymous: false,
@@ -107,6 +110,7 @@ class Bang extends Component {
       settings_panel_opened: false
     };
     this.panelRef = React.createRef();
+    this.handleUpdate = this.handleUpdate.bind(this);
 
     this.onChangeState = this.onChangeState.bind(this);
   }
@@ -154,6 +158,7 @@ class Bang extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+
     if (prevProps.roomInfo && this.props.roomInfo) {
       if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
         this.setState({
@@ -177,7 +182,7 @@ class Bang extends Component {
     this.socket.on(`BANG_GUESSES_${roomId}`, data => {
       if (data && data.bangs && data.bangs.length > 0) {
         const lastBang = data.bangs[data.bangs.length - 1];
-        console.log('lastBang', lastBang);
+        // console.log('lastBang', lastBang);
         const nextBangInterval = lastBang;
         this.setState({
           bang_guesses: data.bangs,
@@ -189,7 +194,7 @@ class Bang extends Component {
     this.socket.on(`BANG_GUESSES1_${roomId}`, data => {
       if (data && data.bangs && data.bangs.length > 0 && this.state.listen) {
         const lastBang = data.bangs[data.bangs.length - 1];
-        console.log('lastBang', lastBang);
+        // console.log('lastBang', lastBang);
         const nextBangInterval = lastBang;
         this.setState({
           bang_guesses: data.bangs,
@@ -197,7 +202,7 @@ class Bang extends Component {
           elapsedTime: data.elapsedTime,
           listen: false
         });
-        console.log('elapsedTime', this.state.elapsedTime);
+        // console.log('elapsedTime', this.state.elapsedTime);
       }
     });
 
@@ -358,8 +363,6 @@ class Bang extends Component {
   };
 
   onBtnBetClick = async () => {
-    this.props.playSound('select');
-
     const {
       openGamePasswordModal,
       isAuthenticated,
@@ -370,7 +373,7 @@ class Bang extends Component {
       is_private,
       roomInfo
     } = this.props;
-    const { bet_amount, bankroll } = this.state;
+    const { bet_amount, buttonClicked, countupValue } = this.state;
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
@@ -380,36 +383,37 @@ class Bang extends Component {
       return;
     }
 
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
-
-    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-    const passwordCorrect = rooms[roomInfo._id];
-
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (is_private === true && passwordCorrect !== true) {
-        openGamePasswordModal();
-      } else {
-        await this.joinGame();
-      }
+    if (!buttonClicked) {
+      const cashoutAmount = bet_amount * countupValue;
+      this.setState({ buttonClicked: true, cashoutAmount });
     } else {
-      confirmModalCreate(
-        isDarkMode,
-        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-        'Yes',
-        'Cancel',
-        async () => {
-          if (is_private === true && passwordCorrect !== true) {
-            openGamePasswordModal();
-          } else {
-            await this.joinGame();
-          }
+      await validateBetAmount(this.state.cashoutAmount, balance, isDarkMode);
+      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+      const passwordCorrect = rooms[roomInfo._id];
+
+      if (localStorage.getItem('hideConfirmModal') === 'true') {
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
+        } else {
+          await this.joinGame();
         }
-      );
+      } else {
+        confirmModalCreate(
+          isDarkMode,
+          'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+          'Yes',
+          'Cancel',
+          async () => {
+            if (is_private === true && passwordCorrect !== true) {
+              openGamePasswordModal();
+            } else {
+              await this.joinGame();
+            }
+          }
+        );
+      }
     }
   };
-
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
@@ -617,7 +621,24 @@ class Bang extends Component {
     }
   };
 
+  handleUpdate = (value) => {
+    this.setState({
+      countupValue: value,
+    });
+    console.log('Countup value updated:', this.state.countupValue);
+    // if (this.state.btnClicked) {
+    //   this.setState({ countupValue: value });
+    //   const cashoutAmount = this.state.betAmount * value;
+    //   this.setState({ cashoutAmount });
+    // }
+  }
   
+
+  handleMultiplierChange = event => {
+    const multiplier = event.target.value;
+    console.log('Multiplier value changed to:', multiplier);
+    this.setState({ multiplier });
+  };
 
   render() {
     const {
@@ -627,7 +648,7 @@ class Bang extends Component {
       elapsedTime,
       showCountdown
     } = this.state;
-    const { playSound } = this.props;
+    const { playSound, playSoundLoop, stopSound } = this.props;
     // Determine whether to show the countup animation or the bang message
     let content;
     if (showBang) {
@@ -637,6 +658,7 @@ class Bang extends Component {
         elapsedTime / 1000 < nextBangInterval + 2
       ) {
         const bangDuration = 2 - (elapsedTime / 1000 - nextBangInterval);
+        stopSound();
         playSound('bang');
         content = (
           <span>
@@ -665,6 +687,7 @@ class Bang extends Component {
           </span>
         );
       } else {
+        stopSound();
         playSound('bang');
         content = (
           <span>
@@ -688,14 +711,15 @@ class Bang extends Component {
         );
       }
     } else if (showCountdown) {
-      
       content = <span>Next Bang in...{this.state.countdown}</span>;
     } else {
       let countupStart;
       if (elapsedTime && elapsedTime / 1000 > nextBangInterval + 2) {
         countupStart = nextBangInterval;
         // console.log("p sherman");
-        const countdownStart = 5 - (elapsedTime / 1000 - nextBangInterval - 2);
+        const countdownStart = Math.ceil(
+          5 - (elapsedTime / 1000 - nextBangInterval - 2)
+        );
         if (countdownStart > 0) {
           setTimeout(() => {
             this.setState({
@@ -704,7 +728,8 @@ class Bang extends Component {
               countdown: countdownStart,
               elapsedTime: ''
             });
-
+            stopSound();
+            playSound('countDown');
             // Start the countdown
             const countdownTimer = setInterval(() => {
               const countdown = this.state.countdown - 1;
@@ -722,7 +747,8 @@ class Bang extends Component {
             }, 1000);
           });
         } else {
-          playSound('fuse');
+          stopSound();
+          playSoundLoop('fuse');
           content = (
             <div>
               <Lottie
@@ -751,6 +777,7 @@ class Bang extends Component {
                       : nextBangInterval
                   }
                   useEasing={false}
+                  onUpdate={this.handleUpdate}
                   // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
                   onEnd={() => {
                     // Show the bang message for 2 seconds, then start the countdown
@@ -762,7 +789,8 @@ class Bang extends Component {
                         countdown: 5,
                         elapsedTime: ''
                       });
-
+                      stopSound();
+                      playSound('countDown');
                       // Start the countdown
                       const countdownTimer = setInterval(() => {
                         const countdown = this.state.countdown - 1;
@@ -788,6 +816,7 @@ class Bang extends Component {
         }
       } else if (elapsedTime && elapsedTime / 1000 > nextBangInterval) {
         const bangStart = nextBangInterval;
+        stopSound();
         playSound('bang');
         const bangDuration =
           2000 - (elapsedTime / 1000 - nextBangInterval) * 1000;
@@ -813,7 +842,8 @@ class Bang extends Component {
             </span>
           );
         } else {
-          playSound('fuse');
+          stopSound();
+          playSoundLoop('fuse');
           content = (
             <div>
               <Lottie
@@ -842,9 +872,8 @@ class Bang extends Component {
                       : nextBangInterval
                   }
                   useEasing={false}
-                  // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
+                  onUpdate={this.handleUpdate}                // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
                   onEnd={() => {
-                    // Show the bang message for 2 seconds, then start the countdown
                     this.setState({ showBang: true });
                     setTimeout(() => {
                       this.setState({
@@ -852,7 +881,8 @@ class Bang extends Component {
                         showCountdown: true,
                         countdown: 5
                       });
-
+                      stopSound();
+                      playSound('countDown');
                       // Start the countdown
                       const countdownTimer = setInterval(() => {
                         const countdown = this.state.countdown - 1;
@@ -877,7 +907,8 @@ class Bang extends Component {
         }
       } else {
         countupStart = elapsedTime ? elapsedTime / 1000 : 1;
-        playSound('fuse');
+        stopSound();
+        playSoundLoop('fuse');
         content = (
           <div>
             <Lottie
@@ -906,7 +937,7 @@ class Bang extends Component {
                     : nextBangInterval
                 }
                 useEasing={false}
-                // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
+                onUpdate={this.handleUpdate}
                 onEnd={() => {
                   // Show the bang message for 2 seconds, then start the countdown
                   this.setState({ showBang: true });
@@ -916,7 +947,8 @@ class Bang extends Component {
                       showCountdown: true,
                       countdown: 5
                     });
-
+                    stopSound();
+                    playSound('countDown');
                     // Start the countdown
                     const countdownTimer = setInterval(() => {
                       const countdown = this.state.countdown - 1;
@@ -1140,7 +1172,9 @@ class Bang extends Component {
                 onClick={() => this.onBtnBetClick()}
                 variant="contained"
               >
-                BANG OUT
+                {this.state.buttonClicked
+                  ? `Cash Out @ ${this.state.cashoutAmount.toFixed(2)}`
+                  : 'BANG OUT'}
               </Button>
             </div>
             <SettingsOutlinedIcon

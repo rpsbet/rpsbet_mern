@@ -94,7 +94,8 @@ class JoinGame extends Component {
         correct: new Audio('/sounds/correct.mp3'),
         bang: new Audio('/sounds/bang.mp3'),
         fuse: new Audio('/sounds/fuse.mp3'),
-      }
+      },
+      currentSound: null,
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);
     this.toggleDrawer = this.toggleDrawer.bind(this);
@@ -197,12 +198,61 @@ class JoinGame extends Component {
   playSound = sound => {
     if (!this.props.isMuted) {
       const audio = this.state.sounds[sound];
-      audio.currentTime = 0;
-      audio.play();
+      if (audio.paused) { // Check if the sound is not already playing
+        audio.currentTime = 0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log(`Error playing sound "${sound}":`, error);
+          });
+        }
+        this.setState({ currentSound: audio }); // Store a reference to the currently playing sound
+      }
     }
   };
   
-
+  playSoundLoop = sound => {
+    if (!this.props.isMuted) {
+      const audio = this.state.sounds[sound];
+      if (audio.paused) { // Check if the sound is not already playing
+        audio.currentTime = 3; // Set the starting time to 3 seconds
+        audio.loop = true; // Enable looping
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log(`Error playing sound "${sound}":`, error);
+          });
+        }
+        this.setState({ currentSound: audio }); // Store a reference to the currently playing sound
+      }
+    }
+  };
+  
+  // fadeOutSound = () => {
+  //   const { currentSound } = this.state;
+  //   if (currentSound) {
+  //     const fadeOutInterval = setInterval(() => {
+  //       currentSound.volume -= 0.1;
+  //       if (currentSound.volume <= 0.1) {
+  //         clearInterval(fadeOutInterval);
+  //         currentSound.pause();
+  //         currentSound.currentTime = 0;
+  //         currentSound.volume = 1;
+  //         this.setState({ currentSound: null }); // Clear the reference to the currently playing sound
+  //       }
+  //     }, 100);
+  //   }
+  // };
+  
+  stopSound = () => {
+    const { currentSound } = this.state;
+    if (currentSound) {
+      currentSound.pause();
+      currentSound.currentTime = 0;
+      this.setState({ currentSound: null }); // Clear the reference to the currently playing sound
+    }
+  };
+  
   refreshHistory = () => {
     this.props.getRoomInfo(this.props.match.params.id);
   };
@@ -396,6 +446,8 @@ class JoinGame extends Component {
                     is_private={this.props.roomInfo.is_private}
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
+                    playSoundLoop={this.playSoundLoop}
+                    stopSound={this.stopSound}
                   />
                 )}
 
