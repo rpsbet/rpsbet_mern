@@ -1430,6 +1430,12 @@ button.btn-submit:active,
     z-index: 99;
 }
 
+@keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
 .disabled {
     background: grey !important;
     box-shadow: none !important;
