@@ -89,6 +89,7 @@ class Bang extends Component {
       nextBangInterval: null,
       countdown: null,
       items: [],
+      executeBet: false,
       newRound: false,
       bgColorChanged: false,
       countupValue: 0,
@@ -159,11 +160,14 @@ class Bang extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { waiting, newRound, showBang, showCountdown } = this.state;
-    if (!showBang && !showCountdown && waiting && newRound) {
-
-      this.setState({ newRound: false });
-      this.onBtnBetClick();
+    const { waiting, newRound, showBang, showCountdown, executeBet } = this.state;
+    if (!showBang && !showCountdown && waiting && newRound && !executeBet) {
+      this.setState({ 
+        newRound: false,
+        executeBet: true
+      }, () => {
+        this.onBtnBetClick();
+      });
     }
 
     if (prevProps.roomInfo && this.props.roomInfo) {
@@ -371,52 +375,86 @@ class Bang extends Component {
 
   onBtnBetClick = async () => {
     const {
-      openGamePasswordModal,
       isAuthenticated,
       isDarkMode,
       creator_id,
       user_id,
+    } = this.props;
+    const {
+      bet_amount,
+      buttonClicked,
+      waiting,
+      cashoutAmount,
+      interval,
+      multiplier,
+      executeBet
+    } = this.state;
+  
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      return;
+    }
+  
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      return;
+    }
+  
+    if (!buttonClicked) {
+      if (!waiting) {
+        this.setState({ waiting: true });
+      } else if (!executeBet) {
+  
+        this.setState({
+          cashoutAmount: 1,
+          newRound: false,
+          waiting: false
+        });
+      } else {
+        this.setState(prevState => {
+          let cashoutAmount = prevState.cashoutAmount + 1;
+          let autoCashoutAmount = prevState.autoCashoutAmount + 1;
+          const increment = 0.01;
+          const interval = setInterval(() => {
+            autoCashoutAmount += increment;
+            cashoutAmount += increment * bet_amount;
+            this.setState({ cashoutAmount });
+        
+            if (autoCashoutAmount >= multiplier) {
+              clearInterval(interval);
+              this.executeBet();
+            }
+          }, 0); // 10 milliseconds = 0.01 secondsilliseconds = 0.01 seconds
+        })
+        this.setState({
+          buttonClicked: true,
+          executeBet: false,
+          cashoutAmount,
+          interval
+        });
+      }
+    } else {
+      this.executeBet();
+      
+    }
+  };
+  
+  executeBet = async () => {
+    const {
+      openGamePasswordModal,
+      isDarkMode,
       balance,
       is_private,
       roomInfo
     } = this.props;
     const {
-      bet_amount,
-      buttonClicked,
-      showBang,
-      showCountdown,
-      newRound,
-      waiting
+      cashoutAmount,
+      interval
     } = this.state;
-
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      return;
-    }
-
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      return;
-    }
-
-
-    if (!buttonClicked) {
-      if (!waiting) {
-    this.setState({ waiting: true })
-      } else {
-        let cashoutAmount = 1;
-        const increment = 0.01;
-        const interval = setInterval(() => {
-          cashoutAmount += increment * this.state.bet_amount;
-          this.setState({ cashoutAmount });
-        }, 10); // 10 milliseconds = 0.01 seconds
-
-        this.setState({ buttonClicked: true, cashoutAmount, interval });
-      }
-    } else {
-      clearInterval(this.state.interval); // stop the incrementing
-      await validateBetAmount(this.state.cashoutAmount, balance, isDarkMode);
+    // Process the rest of the onBtnBetClick function here, using this.state.cashoutAmount
+    clearInterval(interval); // stop the incrementing
+      await validateBetAmount(cashoutAmount, balance, isDarkMode);
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       const passwordCorrect = rooms[roomInfo._id];
-
+  
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         if (is_private === true && passwordCorrect !== true) {
           openGamePasswordModal();
@@ -426,7 +464,8 @@ class Bang extends Component {
             buttonClicked: false,
             cashoutAmount: 1,
             newRound: false,
-            waiting: false
+            waiting: false,
+            executeBet: false
           }); // reset button state
         }
       } else {
@@ -444,14 +483,14 @@ class Bang extends Component {
                 buttonClicked: false,
                 cashoutAmount: 1,
                 newRound: false,
-                waiting: false
+                waiting: false,
+                executeBet: false
               }); // reset button state
             }
           }
         );
       }
-    }
-  };
+  }
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
@@ -811,16 +850,15 @@ class Bang extends Component {
                   onEnd={() => {
                     // Show the bang message for 2 seconds, then start the countdown
                     this.setState({
-                      showBang: true,
+                      showBang: true
                     });
-                    console.log("newRound", newRound);
+                    console.log('newRound', newRound);
                     setTimeout(() => {
                       this.setState({
                         showBang: false,
                         showCountdown: true,
                         countdown: 5,
-                        elapsedTime: '',
-
+                        elapsedTime: ''
                       });
                       stopSound();
                       playSound('countDown');
@@ -833,15 +871,13 @@ class Bang extends Component {
                           this.setState({
                             showCountdown: false,
                             countdown: null,
-                            elapsedTime: '',
-
+                            elapsedTime: ''
                           });
                           if (this.state.waiting) {
                             this.setState({ newRound: true });
                           }
                         } else {
-                          this.setState({ countdown, elapsedTime: ''});
-                          
+                          this.setState({ countdown, elapsedTime: '' });
                         }
                       }, 1000);
                     }, 2000);
@@ -931,7 +967,7 @@ class Bang extends Component {
                           clearInterval(countdownTimer);
                           this.setState({
                             showCountdown: false,
-                            countdown: null,
+                            countdown: null
                           });
                           if (this.state.waiting) {
                             this.setState({ newRound: true });
@@ -941,13 +977,12 @@ class Bang extends Component {
                         }
                       }, 10);
                     }, 2000);
-                  }
-                }
+                  }}
                 />
               </p>
             </div>
           );
-          this.setState({ elapsedTime: ''});
+          this.setState({ elapsedTime: '' });
         }
       } else {
         countupStart = elapsedTime ? elapsedTime / 1000 : 1;
@@ -1216,19 +1251,21 @@ class Bang extends Component {
               </div>
 
               <Button
-  className="place-bet"
-  color="primary"
-  onClick={() => this.onBtnBetClick()}
-  variant="contained"
->
-  {this.state.buttonClicked
-    ? `Cash Out @ ${this.state.cashoutAmount.toFixed(2)}`
-    : this.state.waiting
-    ? <span style={{ animation: 'blink 0.75s linear infinite' }}>Joining Next Round</span>
-    : 'BANG OUT'
-  }
-</Button>
-
+                className="place-bet"
+                color="primary"
+                onClick={() => this.onBtnBetClick()}
+                variant="contained"
+              >
+                {this.state.buttonClicked ? (
+                  `Cash Out @ ${this.state.cashoutAmount.toFixed(2)}`
+                ) : this.state.waiting ? (
+                  <span style={{ animation: 'blink 0.75s linear infinite' }}>
+                    Joining Next Round
+                  </span>
+                ) : (
+                  'BANG OUT'
+                )}
+              </Button>
             </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"
