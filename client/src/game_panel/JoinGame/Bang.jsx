@@ -422,7 +422,7 @@ class Bang extends Component {
               clearInterval(interval);
               this.executeBet();
             }
-          }, 0); // 10 milliseconds = 0.01 secondsilliseconds = 0.01 seconds
+          }, 10); // 10 milliseconds = 0.01 secondsilliseconds = 0.01 seconds
         })
         this.setState({
           buttonClicked: true,
