@@ -298,22 +298,8 @@ class OpenGamesTable extends Component {
                   <div className="table-cell cell-action">
                     <Button
                       className="btn_join"
-                      onMouseDown={event => {
-                        this.setState({ mouseDown: true });
+                      onClick={event => {
                         event.currentTarget.classList.add('active');
-                      }}
-                      onMouseUp={event => {
-                        this.setState({ mouseDown: false });
-                        event.currentTarget.classList.remove('active');
-                        this.joinRoom(event);
-                      }}
-                      onTouchStart={event => {
-                        this.setState({ mouseDown: true });
-                        event.currentTarget.classList.add('active');
-                      }}
-                      onTouchEnd={event => {
-                        this.setState({ mouseDown: false });
-                        event.currentTarget.classList.remove('active');
                         this.joinRoom(event);
                       }}
                       data-id={row._id}

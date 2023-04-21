@@ -124,6 +124,8 @@ class JoinGame extends Component {
   }
 
   componentDidMount() {
+    window.addEventListener('unload', this.handleUnload);
+
     Object.values(this.state.sounds).forEach(sound => {
       sound.load();
     });
@@ -136,9 +138,23 @@ class JoinGame extends Component {
     }
     this.props.getRoomInfo(this.props.match.params.id);
   }
+  handleUnload = () => {
+    this.stopAllSounds();
+  }
 
   componentWillUnmount() {
+    window.removeEventListener('unload', this.handleUnload);
+
     clearInterval(this.interval);
+  }
+
+  stopAllSounds = () => {
+    const { currentSound } = this.state;
+    if (currentSound) {
+      currentSound.pause();
+      currentSound.currentTime = 0;
+      this.setState({ currentSound: null });
+    }
   }
 
   handleLoadMore() {
@@ -198,16 +214,17 @@ class JoinGame extends Component {
   playSound = sound => {
     if (!this.props.isMuted) {
       const audio = this.state.sounds[sound];
-      if (audio.paused) { // Check if the sound is not already playing
-        audio.currentTime = 0;
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.log(`Error playing sound "${sound}":`, error);
-          });
-        }
-        this.setState({ currentSound: audio }); // Store a reference to the currently playing sound
+      if (!audio.paused) {
+        return; // Sound is already playing, so just return
       }
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log(`Error playing sound "${sound}":`, error);
+        });
+      }
+      this.setState({ currentSound: audio }); // Store a reference to the currently playing sound
     }
   };
   
@@ -244,14 +261,15 @@ class JoinGame extends Component {
   //   }
   // };
   
-  stopSound = () => {
+  stopSound = (sound) => {
     const { currentSound } = this.state;
-    if (currentSound) {
+    if (currentSound && currentSound.src.includes(sound)) {
       currentSound.pause();
       currentSound.currentTime = 0;
       this.setState({ currentSound: null }); // Clear the reference to the currently playing sound
     }
   };
+  
   
   refreshHistory = () => {
     this.props.getRoomInfo(this.props.match.params.id);

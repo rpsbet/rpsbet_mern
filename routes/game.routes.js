@@ -137,7 +137,7 @@ router.get('/room/:id', async (req, res) => {
 
     async function getCurrentTime() {
       return new Promise((resolve, reject) => {
-        ntpClient.getNetworkTime("time.google.com", 123, function(err, date) {
+        ntpClient.getNetworkTime('time.google.com', 123, function(err, date) {
           if (err) {
             reject(err);
           } else {
@@ -152,23 +152,26 @@ router.get('/room/:id', async (req, res) => {
     async function emitBangGuesses(req, room) {
       if (!hasBangEmitted) {
         const bang_guesses = await BangBetItem.find({ room: room });
-        const bangs = bang_guesses.map((guess) => guess.bang);
-    
+        const bangs = bang_guesses.map(guess => guess.bang);
+
         // Calculate elapsed time from when the function was called
         const currentTime = await getCurrentTime();
-        const lastBangTime = bang_guesses.length > 0 ? bang_guesses[bang_guesses.length - 1].created_at : currentTime;
+        const lastBangTime =
+          bang_guesses.length > 0
+            ? bang_guesses[bang_guesses.length - 1].created_at
+            : currentTime;
         const elapsedTime = currentTime - lastBangTime;
-        const roomId = room._id
+        const roomId = room._id;
         const socketName = `BANG_GUESSES1_${roomId}`;
-            if (req.io.sockets) {
+        if (req.io.sockets) {
           req.io.sockets.emit(socketName, { bangs, elapsedTime });
         }
         hasBangEmitted = true;
       }
     }
-    
+
     emitBangGuesses(req, room);
-    
+
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
 
     res.json({
@@ -248,7 +251,6 @@ router.get('/question/:brain_game_type', async (req, res) => {
     ];
 
     wrongAnswers.forEach(answer => {
-
       answers.push({
         _id: answer._id,
         answer: answer.answer
@@ -290,7 +292,6 @@ router.post('/answer', async (req, res) => {
     });
   }
 });
-
 
 const convertGameLogToHistoryStyle = async gameLogList => {
   let result = [];
@@ -557,9 +558,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         } else if (gameLog.game_result === 3) {
           //dividends
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            updateDigitToPoint2(
-              gameLog['bet_amount']
-            )
+            updateDigitToPoint2(gameLog['bet_amount'])
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           //end game
@@ -574,7 +573,6 @@ const convertGameLogToHistoryStyle = async gameLogList => {
               : '#ff0a28'
           };'
           >${convertToCurrency(
-            
             updateDigitToPoint2(
               gameLog['room']['pr'] + parseFloat(gameLog['room']['user_bet'])
             )
@@ -582,10 +580,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             (gameLog['room']['pr'] + parseFloat(gameLog['room']['user_bet'])) /
               gameLog['room']['bet_amount']
           ).toFixed(2)}X)</span> in ${room_name}`;
-
         } else {
           //failed    Oops, back to school for you loser!!
-          temp.history = `${joined_user_link} scored ${gameLog['brain_game_score']} and lost <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${joined_user_link} scored ${
+            gameLog['brain_game_score']
+          } and lost <span style='color: #ff0a28;'>${convertToCurrency(
             updateDigitToPoint2(gameLog['bet_amount'])
           )} (0.00X)</span> in ${room_name}`;
         }
@@ -947,21 +946,19 @@ router.post('/rooms', auth, async (req, res) => {
         });
         newDrop.save();
       });
-    } 
-    else if (gameType.game_type_name === 'Bang!') {
-
+    } else if (gameType.game_type_name === 'Bang!') {
       const roomBets = [];
-    const roomId = newRoom.id;
-    
-    const emitBangGuesses = () => {
-      if (req.io.sockets) {
-        const bangs = roomBets.map(bet => bet.bang);
-        const socketName = `BANG_GUESSES_${roomId}`;
-        const elapsedTime = "";
-        req.io.sockets.emit(socketName, { bangs: bangs, elapsedTime });
-      }
-    };
-    
+      const roomId = newRoom.id;
+
+      const emitBangGuesses = () => {
+        if (req.io.sockets) {
+          const bangs = roomBets.map(bet => bet.bang);
+          const socketName = `BANG_GUESSES_${roomId}`;
+          const elapsedTime = '';
+          req.io.sockets.emit(socketName, { bangs: bangs, elapsedTime });
+        }
+      };
+
       const predictAndEmit = async () => {
         const nextBangPrediction = await predictNextBang(req.body.bang_list);
         // console.log(nextBangPrediction)
@@ -974,11 +971,11 @@ router.post('/rooms', auth, async (req, res) => {
         await newBet.save();
         roomBets.push(newBet);
         emitBangGuesses();
-      
-        setTimeout(predictAndEmit, (nextBangPrediction * 1000) + 7000);
+
+        setTimeout(predictAndEmit, nextBangPrediction * 1000 + 7000);
         // console.log("time", ((Math.log(nextBangPrediction) / Math.log(1.5)) * 5 * 1000) + 7000);
       };
-      
+
       // Initialize the first round and emit the initial state of bang guesses
       const initializeRound = async () => {
         const nextBangPrediction = await predictNextBang(req.body.bang_list);
@@ -993,13 +990,13 @@ router.post('/rooms', auth, async (req, res) => {
         await newBet.save();
         roomBets.push(newBet);
         emitBangGuesses();
-    
+
         // Schedule the next round after value + 10 seconds
-        setTimeout(predictAndEmit, (nextBangPrediction * 1000) + 7000);
+        setTimeout(predictAndEmit, nextBangPrediction * 1000 + 7000);
         // console.log("time", ((Math.log(nextBangPrediction) / Math.log(1.5)) * 5 * 1000) + 7000);
       };
       initializeRound();
-    
+
       req.body.bang_list.forEach(async bang => {
         const currentTime = await getCurrentTime(); // Get the current time using NTP
         const newBang = new BangBetItem({
@@ -1013,7 +1010,7 @@ router.post('/rooms', auth, async (req, res) => {
     }
     async function getCurrentTime() {
       return new Promise((resolve, reject) => {
-        ntpClient.getNetworkTime("time.google.com", 123, function(err, date) {
+        ntpClient.getNetworkTime('time.google.com', 123, function(err, date) {
           if (err) {
             reject(err);
           } else {
@@ -1022,9 +1019,7 @@ router.post('/rooms', auth, async (req, res) => {
         });
       });
     }
-    
-    
-    
+
     newTransaction = new Transaction({
       user: req.user,
       amount: 0,
@@ -1295,7 +1290,7 @@ router.post('/end_game', auth, async (req, res) => {
           roomInfo['game_type']['short_name'] +
           '-' +
           roomInfo['room_number'];
-      }  else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
+      } else if (roomInfo['game_type']['game_type_name'] === 'Mystery Box') {
         newTransaction.amount +=
           roomInfo['host_pr'] + parseFloat(roomInfo['user_bet']);
         message.message =
@@ -1733,7 +1728,7 @@ router.post('/bet', auth, async (req, res) => {
               parseFloat(
                 roomInfo['endgame_amount']
               ); /* ((100 - commission.value) / 100); */
-            
+
             const newGameLogC = new GameLog({
               room: roomInfo,
               creator: roomInfo['creator'],
@@ -1852,7 +1847,7 @@ router.post('/bet', auth, async (req, res) => {
               parseFloat(
                 roomInfo['endgame_amount']
               ); /* ((100 - commission.value) / 100); */
-           
+
             const newGameLogC = new GameLog({
               room: roomInfo,
               creator: roomInfo['creator'],
@@ -2452,7 +2447,7 @@ router.post('/bet', auth, async (req, res) => {
               parseFloat(
                 roomInfo['endgame_amount']
               ); /* ((100 - commission.value) / 100); **/
-            
+
             const newGameLogC = new GameLog({
               room: roomInfo,
               creator: roomInfo['creator'],
@@ -2606,7 +2601,10 @@ router.post('/bet', auth, async (req, res) => {
                   box_list: updatedBoxList
                 });
               }
-            } else if (roomInfo.endgame_amount && (new_host_pr - roomInfo.endgame_amount <= 0)) {
+            } else if (
+              roomInfo.endgame_amount &&
+              new_host_pr - roomInfo.endgame_amount <= 0
+            ) {
               console.log('room status finished');
               newTransactionC.amount +=
                 parseFloat(roomInfo.user_bet) + parseFloat(new_host_pr);
@@ -2655,7 +2653,10 @@ router.post('/bet', auth, async (req, res) => {
               game_result: 3
             });
             await newGameLogC.save();
-            roomInfo.user_bet = parseFloat(roomInfo.user_bet) + roomInfo.endgame_amount - roomInfo.bet_amount;
+            roomInfo.user_bet =
+              parseFloat(roomInfo.user_bet) +
+              roomInfo.endgame_amount -
+              roomInfo.bet_amount;
             newGameLog.new_host_pr = new_host_pr;
             new_host_pr = roomInfo.bet_amount;
 
@@ -2775,7 +2776,7 @@ router.post('/bet', auth, async (req, res) => {
 
             newTransactionC.amount +=
               roomInfo['bet_amount']; /* ((100 - commission.value) / 100);*/
-        
+
             const newGameLogC = new GameLog({
               room: roomInfo,
               creator: roomInfo['creator'],
@@ -2789,7 +2790,6 @@ router.post('/bet', auth, async (req, res) => {
 
             roomInfo['host_pr'] = parseFloat(roomInfo['endgame_amount']);
             roomInfo['pr'] = parseFloat(roomInfo['endgame_amount']);
-
           }
         }
       }
@@ -2823,7 +2823,7 @@ router.post('/bet', auth, async (req, res) => {
       if (newTransactionJ.amount !== 0) {
         newTransactionJ.save();
       }
-
+    
       if (newTransactionC.amount !== 0) {
         newTransactionC.save();
         socket.newTransaction(newTransactionC);
