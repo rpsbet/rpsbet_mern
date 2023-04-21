@@ -375,34 +375,38 @@ class Bang extends Component {
 
   onBtnBetClick = async () => {
     const {
+      openGamePasswordModal,
       isAuthenticated,
       isDarkMode,
       creator_id,
       user_id,
+      balance,
+      is_private,
+      roomInfo
     } = this.props;
     const {
       bet_amount,
       buttonClicked,
+      showBang,
+      showCountdown,
+      newRound,
       waiting,
-      cashoutAmount,
-      interval,
-      multiplier,
       executeBet
     } = this.state;
-  
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-  
+
     if (!buttonClicked) {
       if (!waiting) {
         this.setState({ waiting: true });
       } else if (!executeBet) {
-  
+
         this.setState({
           cashoutAmount: 1,
           newRound: false,
@@ -410,51 +414,64 @@ class Bang extends Component {
         });
       } else {
         this.setState(prevState => {
-          let cashoutAmount = prevState.cashoutAmount + 1;
-          let autoCashoutAmount = prevState.autoCashoutAmount + 1;
-          const increment = 0.01;
-          const interval = setInterval(() => {
-            autoCashoutAmount += increment;
-            cashoutAmount += increment * bet_amount;
-            this.setState({ cashoutAmount });
+          const { cashoutAmount, autoCashoutAmount } = prevState;
+          const { bet_amount, multiplier } = this.state;
+          const increment = 0.001;
+          let requestId;
         
-            if (autoCashoutAmount >= multiplier) {
-              clearInterval(interval);
+          const updateState = (timestamp) => {
+            const elapsed = timestamp - start + 1000;
+            const newAutoCashoutAmount = autoCashoutAmount + (increment * elapsed);
+            const newCashoutAmount = cashoutAmount + (increment * bet_amount * elapsed);
+            if (newAutoCashoutAmount >= multiplier) {
               this.executeBet();
+            } else {
+              requestId = requestAnimationFrame(updateState);
             }
-          }, 10); // 10 milliseconds = 0.01 secondsilliseconds = 0.01 seconds
-        })
-        this.setState({
-          buttonClicked: true,
-          executeBet: false,
-          cashoutAmount,
-          interval
+            this.setState({
+              cashoutAmount: newCashoutAmount,
+              autoCashoutAmount: newAutoCashoutAmount,
+              requestId,
+            });
+          };
+        
+          const start = performance.now() + 1000;
+          requestId = requestAnimationFrame(updateState);
+        
+          return {
+            cashoutAmount,
+            autoCashoutAmount,
+            requestId,
+          };
+        }, () => {
+          this.setState({
+            buttonClicked: true,
+            executeBet: false,
+          });
         });
-      }
+      }        
     } else {
-      this.executeBet();
-      
-    }
-  };
-  
-  executeBet = async () => {
-    const {
-      openGamePasswordModal,
-      isDarkMode,
-      balance,
-      is_private,
-      roomInfo
-    } = this.props;
-    const {
-      cashoutAmount,
-      interval
-    } = this.state;
-    // Process the rest of the onBtnBetClick function here, using this.state.cashoutAmount
-    clearInterval(interval); // stop the incrementing
-      await validateBetAmount(cashoutAmount, balance, isDarkMode);
+      cancelAnimationFrame(this.state.requestId); // stop the incrementing
+      await validateBetAmount(this.state.cashoutAmount, balance, isDarkMode);
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       const passwordCorrect = rooms[roomInfo._id];
-  
+    
+      const onConfirm = async () => {
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
+        } else {
+          await this.joinGame();
+          this.setState({
+            buttonClicked: false,
+            cashoutAmount: 1,
+            newRound: false,
+            waiting: false,
+            executeBet: false,
+            requestId: null,
+          }); // reset button state
+        }
+      };
+    
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         if (is_private === true && passwordCorrect !== true) {
           openGamePasswordModal();
@@ -465,7 +482,8 @@ class Bang extends Component {
             cashoutAmount: 1,
             newRound: false,
             waiting: false,
-            executeBet: false
+            executeBet: false,
+            requestId: null,
           }); // reset button state
         }
       } else {
@@ -474,23 +492,11 @@ class Bang extends Component {
           'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
           'Yes',
           'Cancel',
-          async () => {
-            if (is_private === true && passwordCorrect !== true) {
-              openGamePasswordModal();
-            } else {
-              await this.joinGame();
-              this.setState({
-                buttonClicked: false,
-                cashoutAmount: 1,
-                newRound: false,
-                waiting: false,
-                executeBet: false
-              }); // reset button state
-            }
-          }
+          onConfirm
         );
       }
-  }
+    };
+  }    
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
