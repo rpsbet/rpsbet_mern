@@ -22,6 +22,7 @@ class OpenGamesTable extends Component {
     super(props);
     this.state = {
       selectedGameType: 'All',
+      isLoading: false,
       showPlayerModal: false,
       selectedCreator: '',
       mouseDown: false,
@@ -75,13 +76,16 @@ class OpenGamesTable extends Component {
   };
 
   handleGameTypeButtonClicked = async short_name => {
-    this.setState({ selectedGameType: short_name });
-    this.props.getRoomList({
-      game_type: short_name
-    });
+    this.setState({ selectedGameType: short_name, isLoading: true });
+    try {
+      await this.props.getRoomList({
+        game_type: short_name
+      });
+    } catch (error) {
+      this.setState({ isLoading: false });
+    }
     return;
   };
-
   handleBtnLeftClicked = e => {
     const scrollAmount = 200; // Change this value to adjust the scroll amount
     this.game_type_panel.scrollLeft -= scrollAmount;
@@ -113,6 +117,7 @@ class OpenGamesTable extends Component {
             <ChevronLeftIcon />
           </IconButton>
         </Box>
+        
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -150,13 +155,17 @@ class OpenGamesTable extends Component {
         </IconButton>
       </Box>
     );
-
+  
     return gameTypePanel;
   };
 
-
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.roomList !== this.props.roomList) {
+      this.setState({ isLoading: false });
+    }
+  }
+  
   componentDidMount() {
-
     window.addEventListener('load', () => {
       this.setState({ loaded: true });
     });
@@ -186,6 +195,13 @@ class OpenGamesTable extends Component {
   };
 
   render() {
+    const gifUrls = [
+      'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
+      'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif',
+      'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif'
+    ];
+    const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
+
     const gameTypePanel = this.generateGameTypePanel();
     return (
       <div className="overflowX">
@@ -199,7 +215,13 @@ class OpenGamesTable extends Component {
             {gameTypePanel}
           </div>
         </div>
+        {this.state.isLoading ? (
+        <div className="loading-gif-container">
+          <img src={randomGifUrl} id="isLoading" alt="loading" />
+        </div>
+      ) : (
         <div className="table main-game-table">
+       
           {this.props.roomList.length === 0 && (
             <div className="dont-have-game-msg">
               <div>NO BATTLES YET, GO TO 'MY BATTLES'</div>
@@ -400,8 +422,8 @@ class OpenGamesTable extends Component {
             this
           )}
         </div>
-
-        {this.props.roomList.length > 0 && (
+      )}
+        {!this.state.isLoading && this.props.roomList.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
             handlePrevPageClicked={this.handlePrevPageClicked}

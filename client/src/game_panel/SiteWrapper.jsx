@@ -755,6 +755,8 @@ class SiteWrapper extends Component {
               >
                 <Tab
                   className="custom-tab"
+                  // label="Live Bots"
+                  // labelPlacement="left"
                   icon={
                     this.state.hoverTabIndex === 0 ||
                     this.props.selectedMainTabIndex === 0 ? (
@@ -777,6 +779,8 @@ class SiteWrapper extends Component {
                       <Manage />
                     )
                   }
+                  // label="My Bots"
+                  // labelPlacement="left"
                   style={customStyles.tabRoot}
                   onMouseEnter={() => this.handleMouseEnter(1)}
                   onMouseLeave={this.handleMouseLeave}
