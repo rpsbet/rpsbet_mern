@@ -385,10 +385,17 @@ border-bottom-right-radius: 0 !important;
     background-image: url("/img/icons/modal-brain-game.svg");
 }
 
+.modal-body .modal-content-wrapper.bang h4 {
+    background-image: url("/img/icons/modal-bang.svg");
+    background-size: 26px;
+    background-position: 4.2% center;
+}
+
+
 .modal-body .modal-content-wrapper.drop-game h4 {
     background-image: url("/img/icons/modal-drop-game.svg");
     background-size: 26px;
-    background-position: 4.5% center;
+    background-position: 4.2% center;
 }
 
 .modal-body .modal-content-wrapper.house-edge h4 {

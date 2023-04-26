@@ -50,301 +50,99 @@ class HowToPlayModal extends Component {
 </div>
           <div className="modal-body edit-modal-body how-to-play-modal-body">
             <Accordion>
-            <AccordionItem>
-                <AccordionItemHeading>
-                  <AccordionItemButton>
-                    <div className="modal-content-wrapper drop-game">
-                      <h4>Word Jumble - Coming Soon!</h4>
-                    </div>
-                  </AccordionItemButton>
-                </AccordionItemHeading>
-                <AccordionItemPanel>
-                  {/* <div className="modal-content-wrapper quick-shoot">
-                    <div className="modal-content-panel">
-                      <h5>CREATE</h5>
-                      <ol>
-                        <li>
-                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
-                          etc.)
-                        </li>
-                        <li>Set Your Bet Amount</li>
-                        <li>Choose Where to Save</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5>PLAY</h5>
-                      <ol>
-                        <li>Choose Where to Shoot</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
-                      <p>e.g.</p>
-                      <p>
-                        Your Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(5)}
-                        </span>
-                      </p>
-                      <p>
-                        Game Type ={' '}
-                        <span style={{ color: '#f6b22a' }}>
-                          <u>5 (5x)</u>
-                        </span>
-                      </p>
-                      <p>
-                        Public Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {`${convertToCurrency(20)} [${convertToCurrency(
-                            5
-                          )} * 4]`}
-                        </span>
-                      </p>
-                      <p>
-                        Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(25)}
-                        </span>
-                      </p>
-                    </div>
-                  </div> */}
-                </AccordionItemPanel>
-              </AccordionItem>
+            
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
-                    <div className="modal-content-wrapper drop-game">
-                      <h4>Slots - Coming Soon!</h4>
+                    <div className="modal-content-wrapper bang">
+                      <h4>Bang! - GAME</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
                 <AccordionItemPanel>
-                  {/* <div className="modal-content-wrapper quick-shoot">
+                  <div className="modal-content-wrapper bang">
                     <div className="modal-content-panel">
-                      <h5>CREATE</h5>
+                      <h5>Objective</h5>
+                      <p>To cashout the multiplier before the 'Bang!'</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
                       <ol>
-                        <li>
-                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
-                          etc.)
-                        </li>
-                        <li>Set Your Bet Amount</li>
-                        <li>Choose Where to Save</li>
+                        <li>Enter in a predetermined Bet Amount. Optionally, alter the predetermined Autocashout Amount as the counter can increment quickly</li>
+                        <li>Click 'Bang Out' when you are happy and wait for the next round</li>
+                        <li>Once you see the bomb, the round will have started and you have to cashout before the 'BANG!' by re-clicking same button which should now say 'Cashout @ $x.xx'</li>
+                        <li>If you successfully manage to cashout in time, your winnings is equal to your Bet Amount multiplied by your final multiplier</li>
+
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>PLAY</h5>
-                      <ol>
-                        <li>Choose Where to Shoot</li>
-                      </ol>
+                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
+                      <p>If you're looking for a quick flip, hold onto the bomb for as long as you can lift your balls - otherwise, if you're looking for a long-term, attractive money-spinner, this is the game for you. Just remember to set up with more 1's then high numbers whilst still throwing in a few random numbers into the mix too.
+                        </p>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
-                      <p>e.g.</p>
-                      <p>
-                        Your Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(5)}
-                        </span>
-                      </p>
-                      <p>
-                        Game Type ={' '}
-                        <span style={{ color: '#f6b22a' }}>
-                          <u>5 (5x)</u>
-                        </span>
-                      </p>
-                      <p>
-                        Public Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {`${convertToCurrency(20)} [${convertToCurrency(
-                            5
-                          )} * 4]`}
-                        </span>
-                      </p>
-                      <p>
-                        Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(25)}
-                        </span>
-                      </p>
-                    </div>
-                  </div> */}
-                </AccordionItemPanel>
-              </AccordionItem>
-              <AccordionItem>
-                <AccordionItemHeading>
-                  <AccordionItemButton>
-                    <div className="modal-content-wrapper drop-game">
-                      <h4>Blackjack- Coming Soon!</h4>
-                    </div>
-                  </AccordionItemButton>
-                </AccordionItemHeading>
-                <AccordionItemPanel>
-                  {/* <div className="modal-content-wrapper quick-shoot">
-                    <div className="modal-content-panel">
-                      <h5>CREATE</h5>
-                      <ol>
-                        <li>
-                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
-                          etc.)
-                        </li>
-                        <li>Set Your Bet Amount</li>
-                        <li>Choose Where to Save</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5>PLAY</h5>
-                      <ol>
-                        <li>Choose Where to Shoot</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
-                      <p>e.g.</p>
-                      <p>
-                        Your Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(5)}
-                        </span>
-                      </p>
-                      <p>
-                        Game Type ={' '}
-                        <span style={{ color: '#f6b22a' }}>
-                          <u>5 (5x)</u>
-                        </span>
-                      </p>
-                      <p>
-                        Public Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {`${convertToCurrency(20)} [${convertToCurrency(
-                            5
-                          )} * 4]`}
-                        </span>
-                      </p>
-                      <p>
-                        Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(25)}
-                        </span>
-                      </p>
-                    </div>
-                  </div> */}
+                  </div>
                 </AccordionItemPanel>
               </AccordionItem>
             <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper drop-game">
-                      <h4>Drop Game - Coming Soon!</h4>
+                      <h4>Drop Game - GAME</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
                 <AccordionItemPanel>
-                  {/* <div className="modal-content-wrapper quick-shoot">
+                  <div className="modal-content-wrapper drop-game">
                     <div className="modal-content-panel">
-                      <h5>CREATE</h5>
+                      <h5>Objective</h5>
+                      <p>To drop a higher value</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
                       <ol>
                         <li>
-                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
-                          etc.)
+                          Enter a Bet Amount to drop against the AI
                         </li>
-                        <li>Set Your Bet Amount</li>
-                        <li>Choose Where to Save</li>
+                        <li>
+                          If your Bet Amount is higher than the AI's, you win both Bet Amount's, but if it's lower, the AI takes both Amounts.
+                        </li>
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>PLAY</h5>
-                      <ol>
-                        <li>Choose Where to Shoot</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
-                      <p>e.g.</p>
-                      <p>
-                        Your Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(5)}
-                        </span>
-                      </p>
-                      <p>
-                        Game Type ={' '}
-                        <span style={{ color: '#f6b22a' }}>
-                          <u>5 (5x)</u>
-                        </span>
-                      </p>
-                      <p>
-                        Public Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {`${convertToCurrency(20)} [${convertToCurrency(
-                            5
-                          )} * 4]`}
-                        </span>
-                      </p>
-                      <p>
-                        Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(25)}
-                        </span>
+                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
+                      <p>Well, let's face it, this game is a guaranteed profit if you're rich. But remember, there's always someone richer than you.
                       </p>
                     </div>
-                  </div> */}
+                  </div>
                 </AccordionItemPanel>
               </AccordionItem>
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper quick-shoot">
-                      <h4>Quick Shoot - Tutorial</h4>
+                      <h4>Quick Shoot - GAME</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper quick-shoot">
                     <div className="modal-content-panel">
-                      <h5>CREATE</h5>
+                      <h5>Objective</h5>
+                      <p>To score a goal past the keeper</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
                       <ol>
-                        <li>
-                          Set the Game Type (Returns Multiplier e.g. 2x, 3x
-                          etc.)
+                      <li>
+                          Enter a predetermined Bet Amount.
                         </li>
-                        <li>Set Your Bet Amount</li>
-                        <li>Choose Where to Save</li>
+                        <li>Depending on the game type, you will have 2 - 5 directions to shoot your shot against the AI</li>
+                        <li>Depending on the game type, If you can score past the AI keeper, you will win from 1.25x - 2x your original Bet Amount</li>
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>PLAY</h5>
-                      <ol>
-                        <li>Choose Where to Shoot</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
-                      <p>e.g.</p>
-                      <p>
-                        Your Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(5)}
-                        </span>
-                      </p>
-                      <p>
-                        Game Type ={' '}
-                        <span style={{ color: '#f6b22a' }}>
-                          <u>5 (5x)</u>
-                        </span>
-                      </p>
-                      <p>
-                        Public Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(20)} [{convertToCurrency(
-                            5
-                          )} * 4]
-                        </span>
-                      </p>
-                      <p>
-                        Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(25)}
-                        </span>
+                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
+                      <p>If you're not hosting, you're playing at random and it's just 1 shot, then yes you're most likely going to win if you have 5 directions you can shoot in. Specifically your odds are 5/4 whereby if you put $4 on you can get expect $5 back. If you're hosting and setting up the game, then it's opposite but overall, as long as you avoid training your AI with predictable patterns then the Profit Guarantee is similar to that of the Rock Paper Scissors game. A zero-sum game.
                       </p>
                     </div>
                   </div>
@@ -354,46 +152,33 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper brain-game">
-                      <h4>Brain Game - Tutorial</h4>
+                      <h4>Brain Game - GAME</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper brain-game">
                     <div className="modal-content-panel">
-                      <h5>CREATE</h5>
+                      <h5>Objective</h5>
+                      <p>To score higher in the quiz</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
                       <ol>
-                        <li>Set a global Bet Amount</li>
-                        <li>Set Payout for an Automatic cash out (optional)</li>
-                        <li>Set a score for players to try beat</li>
+                        <li>
+                          Before starting the quiz, beware of the 60 second time limit to answer as many questions as possible, as well as the category of questions that will be asked.
+                        </li>
+                        <li>
+                          During the quiz, choose the correct answer out of the 4 answers. A correct answers adds 1 point whilst an incorrect answer deducts 1 point.
+                        </li>
+                        <li>
+                          If you score higher than the AI, you will win 2x your Bet Amount
+                        </li>
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>PLAY</h5>
-                      <ol>
-                        <li>Try to Win</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
-                      <p>e.g.</p>
-                      <p>
-                        Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(5)}
-                        </span>
-                      </p>
-                      <p>
-                        Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>
-                          Automatic({convertToCurrency(30)})
-                        </span>
-                      </p>
-                      <p>
-                        Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(30)}
-                        </span>
+                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
+                      <p>A profit is always guaranteed for as long as you know the answers. So when you're setting up, go ahead click the 'create your own' option. But with every profitable game, is it attractive enough to encourage the gamblers? Well, no - gamblers come to earn not learn. But like I said, as long as you know your stuff, you can guarantee profit for those times when you're desperately low and need to rely purely on what you know. Besides, not every Brain Game has to be so mentally intensive, have fun in the creation process.
                       </p>
                     </div>
                   </div>
@@ -403,72 +188,30 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper mystery-box">
-                      <h4>Mystery Box - Tutorial</h4>
+                      <h4>Mystery Box - GAME</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper quick-shoot">
                     <div className="modal-content-panel">
-                      <h5>CREATE</h5>
+                      <h5>Objective</h5>
+                      <p>To correctly open profitable boxes</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
                       <ol>
                         <li>
-                          Add boxes by setting the <u>Prize</u> (or Empty) and{' '}
-                          <u>Price</u>{' '}
-                          <i>
-                            to open. Check the Order of the boxes as the boxes
-                            will <u>NOT</u> be randomized.
-                          </i>
-                        </li>
-                        <li>Set Payout for an Automatic cash out (optional)</li>
+                          Each box has a Price to pay to open the box but can either be Empty or contain a Prize (Prices may not determine the Prize amount!)
+                          </li>
+                          <li>
+                          The host can set the game up to account for multiple guesses or a single guess before the algorithm re-shuffles the boxes.
+                          </li>
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>PLAY</h5>
-                      <ol>
-                        <li>Open a box and hope to win a Prize</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
-                      <p>e.g.</p>
-                      <p>
-                        The following boxes are set (Prize/Price):{' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(25)}/{convertToCurrency(
-                            4
-                          )}, {convertToCurrency(0)}/{convertToCurrency(
-                            6
-                          )}, {convertToCurrency(0)}/{convertToCurrency(
-                            10
-                          )}
-                        </span>
-                      </p>
-                      <p>
-                        Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>
-                          Automatic({convertToCurrency(
-                            41
-                          )}) [{convertToCurrency(
-                            25
-                          )} + {convertToCurrency(
-                            6
-                          )} + {convertToCurrency(10)}]
-                        </span>
-                      </p>
-                      <p>
-                        Host Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(41)}
-                        </span>
-                      </p>
-                      <p>
-                        <i>
-                          If the {convertToCurrency(
-                            25
-                          )} Prize box is opened, the host still
-                          receives the {convertToCurrency(4)} (Price).
-                        </i>
+                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
+                      <p>If you're setting up a Mystery Box AI, it can take some skill to master. Without a bit of practice, your AI can be very unattractive to play with and worse it can go south quickly. Think of your boxes like the classic <a href="https://en.wikipedia.org/wiki/Shell_game">Shell Game</a> as long as they think they always stand a chance, they will always play, and as long as you set it up right, you will always stand to make a profit. So here's an example of a well balanced game that has a positive EV (Estimated Value): 5 boxes, each costing $10.50 each to open, with one box containing a $50 prize. In this case, as long as your boxes cost more to open than the odds, you can guarantee an edge (a positive EV) and therefore will win money in the long run, if you can survive the short run.
                       </p>
                     </div>
                   </div>
@@ -479,7 +222,7 @@ class HowToPlayModal extends Component {
                   <AccordionItemButton>
                     <div className="modal-content-wrapper spleesh">
                       <h4>
-                        <i>Spleesh!</i> - Tutorial
+                        <i>Spleesh!</i> - GAME
                       </h4>
                     </div>
                   </AccordionItemButton>
@@ -487,51 +230,26 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
-                      <h5>CREATE</h5>
+                      <h5>Objective</h5>
+                      <p>To correctly guess the number within 3-9 guesses</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
                       <ol>
                         <li>
-                          Pick Your Number (Your Bet Amount): {convertToCurrency(1)}-{convertToCurrency(10)} or
-                          {convertToCurrency(10)}-{convertToCurrency(100)}
+                          Pick a number from the panel, your choice of number determines your Bet Amount
                         </li>
-                        <li>Set Payout for an Automatic cash out (optional)</li>
+                        <li>
+                          If you guess incorrectly, your Bet Amount is added to a pot which can be won when you guess correctly and includes the number to be guessed.
+                        </li>
+                        <li>
+                          You lose when the pot reaches a limit set by the Host at which point is won by the Host and a new number is selected, effectively starting a new round.
+                        </li>
                       </ol>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>PLAY</h5>
-                      <ol>
-                        <li>Guess the Host's Number</li>
-                      </ol>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
-                      <p>e.g.</p>
-                      <p>
-                        Host's Number (Bet Amount) ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(70)}
-                        </span>
-                      </p>
-                      <p>
-                        Payout ={' '}
-                        <span style={{ color: '#f6b22a' }}>
-                          Automatic({convertToCurrency(30)})
-                        </span>
-                      </p>
-                      <p>
-                        Guesses (in order): {convertToCurrency(
-                          10
-                        )}, {convertToCurrency(20)}, {convertToCurrency(
-                          100
-                        )}, {convertToCurrency(90)},
-                        {convertToCurrency(50)}, {convertToCurrency(
-                          80
-                        )}- <i>*Game ENDs automatically*</i>
-                      </p>
-                      <p>
-                        Host Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(42)}
-                        </span>
+                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
+                      <p>If you're hosting, the short answer is yes - one of the very few games that can always guarantee profit, just set your payout as low as possible, bearing in mind a lower payout makes a less attractive game (35 is minimum for gametype 1-10). But does that make it fair for both parties? Yes, like any standard casino game, the House is always at risk in the short-run, but as more players lose, their safety funds become more stable. If you're not hosting, invite the gang - split the risk!
                       </p>
                     </div>
                   </div>
@@ -541,50 +259,33 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper rps">
-                      <h4>RPS - Tutorial</h4>
+                      <h4>RPS - GAME</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper rps">
                     <div className="modal-content-panel">
-                      <h5>CREATE</h5>
-                      <ol>
-                        <li>
-                          Set the Game Type (Freeplay to allow players to bet
-                          freely; Fixed to have set bets).
-                        </li>
-                        <li>
-                          (skip this step if Game Type is Fixed) Set the
-                          Bankroll.
-                        </li>
-                        <li>Set the runs.</li>
-                      </ol>
+                      <h5>Objective</h5>
+                      <p>To correctly predict the correct 'hand' guesture</p>
                     </div>
                     <div className="modal-content-panel">
-                      <h5>PLAY</h5>
+                      <h5>Gameplay</h5>
                       <ol>
                         <li>
-                          Rock BEATS Scissors, Paper BEATS Rock and Scissors
-                          BEATS Paper!
+                          Enter a predetermined Bet Amount.
+                        </li>
+                        <li>
+                          Choose "Rock", "Paper" or "Scissors" to play against the AI.
+                        </li>
+                        <li>
+                          The winner is determined by the following rules: rock beats scissors, scissors beats paper, and paper beats rock. The winner receives 2x their Bet Amount. If both players choose the same, the round is a tie and no money or fees are taken.
                         </li>
                       </ol>
-                      <h5 style={{ color: '#02c526' }}>WINNINGS</h5>
+                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
 
-                      <p>e.g.</p>
-                      <p>Game Type = Freeplay</p>
-                      <p>
-                        Bet Amount ={' '}
-                        <span style={{ color: '#b52c22' }}>
-                          {convertToCurrency(50)}
-                        </span>
-                      </p>
-                      <p>
-                        Winnings ={' '}
-                        <span style={{ color: '#02c526' }}>
-                          {convertToCurrency(100)}
-                        </span>
-                      </p>
+                      <p>Although Rock-Paper-Scissors is often considered a game of chance, with PVP, players can use their skill and knowledge of psychology to try predict outcomes. For example, most will lead with Rock, most will alternate and most will definitely find difficulty in randomizing their choices. Knowing these traits for profit is just mind money. Oh, and if you're setting up a game try keep your EV as close to 0 as possible...wait actually - that means people can count and make better decisions for example if 7 Rocks and 5 Papers have been played in the last 15 turns, then you can bet a lot of money on playing scissors next as it likely be a tie or a W but only IF you can be confident their EV is 0. So hopefully that answers the question ;)
+</p>
                     </div>
                   </div>
                 </AccordionItemPanel>
@@ -601,7 +302,7 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        All our games are 100% Player vs. Player(s) and there
+                        {/* All our games are 100% Player vs. Player(s) and there
                         are zero random factors affecting the outcome of games,
                         players have complete control. Skilled players can
                         improve over time. If you want to read more, you can go
@@ -609,7 +310,7 @@ class HowToPlayModal extends Component {
                         <a href="https://bitcointalk.org/index.php?topic=5194336.0">
                           this forum here
                         </a>
-                        .
+                        . */}
                       </p>
                     </div>
                   </div>
@@ -619,7 +320,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper house-edge">
-                      <h4>Fees - House Edge</h4>
+                      <h4>FEES</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -633,15 +334,15 @@ class HowToPlayModal extends Component {
                       <table id="howto-modal">
                         <tbody>
                           <tr>
-                            <th>DEPOSIT FEES</th>
-                            <th>WINNINGS TAX</th>
+                            <th>HOST FEES</th>
+                            <th>JOINING TAX</th>
                             <th>WITHDRAWAL FEES</th>
                           </tr>
                           <tr>
                             <td>
-                              <u>$0.07 - $0.30 BNB-CHAIN GAS</u>
+                              <u>0</u>
                             </td>
-                            <td className="gamemode">2%</td>
+                            <td className="gamemode">0.5%</td>
                             <td rowSpan="6">
                               <u>FREE (WE'LL PAY THIS)</u>
                             </td>
@@ -656,17 +357,17 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper support">
-                      <h4>FAQ - IS THIS SITE A SCAM?</h4>
+                      <h4>SUPPORT</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
-                      <p>
+                      {/* <p>
                         No.{' '} 
                         As there is no randomness, we don't need <a href='https://en.wiktionary.org/wiki/RNG'><u style={{ color: '#f5b22d' }}>RNG's or oracles</u></a>.
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </AccordionItemPanel>
