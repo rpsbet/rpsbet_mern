@@ -112,11 +112,11 @@ module.exports.socketio = server => {
       socket.broadcast.emit('UPDATED_BANKROLL', data);
     });
 
-    socket.on('BANG_GUESSES', (data) => {
-      socket.broadcast.emit('BANG_GUESSES', data);
-    });
+    // socket.on('BANG_GUESSES', (data) => {
+    //   socket.broadcast.emit('BANG_GUESSES', data);
+    // });
 
-    // socketcontroller.js
+    // // socketcontroller.js
 
     socket.on('BANG_GUESSES1', (data) => {
       const roomId = data.roomId; // assuming roomId is passed in the data object

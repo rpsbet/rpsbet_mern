@@ -23,14 +23,10 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
-  selected_bang: {
-    type: Number,
-    default: 0
-  },
-  global_timer: {
-    type: Number,
-    default: 0
-  },
+  crashed: {
+    type: Boolean,
+    default: false
+},
   selected_qs_position: {
     type: Number,
     default: 0

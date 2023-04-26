@@ -1085,9 +1085,22 @@ max-width: 450px;
         justify-content: flex-end;
     }
     #x {
-        position: absolute;
-        transform: translate(-50px, -10px);
+        transform: translate(-55px, -90px);
         font-size: small;
+    }
+
+    #bang-text {
+        color: red;
+        font-size: 0.75em;
+        font-weight: 600;
+        line-height: 1.5em;
+    }
+    .bangTimer div[aria-label="animation"] {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        justify-items: center;
     }
 
     .bangTimer {
@@ -1101,7 +1114,6 @@ max-width: 450px;
     align-content: center;
     justify-items: center;
     line-height: 1.3em;
-    margin: auto;
     height: 200px;
     border: 3px solid #333;
     width: 290px;
@@ -1117,9 +1129,14 @@ max-width: 450px;
         animation: bounce 0.5s linear;
       }
       
+#nextBangIn {
+    font-size: 0.5em;
+    line-height: 1.4em;
+}
+/* 
       @keyframes bounce {
         0% {
-          transform: translateY(-50%);
+          transform: translateY(-20%);
         }
         25% {
           transform: translateY(-70%);
@@ -1133,7 +1150,7 @@ max-width: 450px;
         100% {
           transform: translateY(-50%);
         }
-      }
+      } */
       
       #no-guesses {
         font-size: 24px;

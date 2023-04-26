@@ -51,7 +51,7 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0
     },
-    selected_bang: {
+    cashoutAmount: {
         type: Number,
         default: 0
     },

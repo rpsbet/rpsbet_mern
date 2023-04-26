@@ -6,22 +6,9 @@ const BangBetItemSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Room'
     },
-    joiner: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        default: null
-    },
     bang: {
         type: Number,
         default: 0,
-    },
-    serverTime: {
-        type: Date,  // Add a field to store the server time
-        default: Date.now
-      },
-    bet_amount: {
-        type: Number,
-        default: 0
     },
     status: {
         type: String,
