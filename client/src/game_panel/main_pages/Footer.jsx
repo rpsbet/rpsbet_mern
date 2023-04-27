@@ -99,7 +99,7 @@ class Footer extends Component {
     }
 
     componentDidMount() {
-        this.IsAuthenticatedReroute();
+        // this.IsAuthenticatedReroute();
     }
     
     IsAuthenticatedReroute = () => {
@@ -184,7 +184,7 @@ class Footer extends Component {
                     <a className={classes.link} href="#">Fair</a>
                 </div>
                 <div className={classes.address}>
-                    <p>RPSBET.IO is operated by RPSBET Ltd. (Registration No. 12175962), having its registered address at 84 Ladysmith Road, Plymouth, UK
+                    <p>RPS.GAME is operated by RPSBET Ltd. (Registration No. 12175962), having its registered address at 84 Ladysmith Road, Plymouth, UK
 </p>
                     <p>Payments may be handled on behalf of RPS Finance Limited (UK) (Registration No. 13823533), having its registered address at 84 Ladysmith Road, Plymouth, UK
 </p>

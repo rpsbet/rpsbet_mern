@@ -187,7 +187,7 @@ input,textarea { border-radius: 0 !important; }
 }
 
 .login_form .form-control {
-  background-color: #fffc;
+  background-color: #fdfeff;
   color: #333;
 }
 
@@ -344,7 +344,7 @@ input,textarea { border-radius: 0 !important; }
 }
 
 .sub_header {
-  background-color: #fff;
+  background-color: #fdfeff;
   height: 55px;
   border-top: 10px solid #C83228;
   padding: 0 10px;
@@ -420,7 +420,7 @@ div[aria-label="How To Play Modal"] th {
     font-family: 'Prototype';
   }
   div[aria-label="How To Play Modal"] td {
-    border: 1px solid #fff;
+    border: 1px solid #fdfeff;
     padding: 5px 15px;
     text-align: center;
   }
@@ -432,7 +432,6 @@ div[aria-label="How To Play Modal"] ul {
 .gamemode {
     color: #C83228;
     background: #33271f;
-    border: none !important;
     font-family: 'Prototype';
 }
 
@@ -457,7 +456,7 @@ div[aria-label="How To Play Modal"] ul {
 }
 .modal-body h4 {
   color: #ebddca;
-    border-bottom: 5px solid #fff !important;
+    border-bottom: 5px solid #fdfeff !important;
     padding: 20px;
     margin: 20px 0;
     border-top-left-radius: 20px;
@@ -609,7 +608,7 @@ div[aria-label="How To Play Modal"] ul {
 }
 
 .game_wrapper {
-  background: #ffffff;
+  background: #fdfeff;
 }
 
 .game_wrapper .left_sidebar {
@@ -712,15 +711,15 @@ label.lbl_game_option {
   margin-bottom: 0px;
   margin-right: 5px;
   border-top-right-radius: 500px;
-  border-top: 10px solid #fff;
-  border-right: 10px solid #fff;
+  border-top: 10px solid #fdfeff;
+  border-right: 10px solid #fdfeff;
   display: block;
   font-weight: 700;
   font-size: 1.8em;
   box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
   font-family: 'Prototype';
   color: #fff;
-  background: linear-gradient(90deg, #f6b229 -20%, #fff 100%);
+  background: linear-gradient(90deg, #f6b229 -20%, #fdfeff 100%);
 }
 
 .summary_panel .summary_item div:last-child{
@@ -1241,7 +1240,7 @@ button, button.btn {
 }
 
 .history table.table-striped tbody tr:nth-child(even) {
- background: linear-gradient(90deg, #ffffff 0%, #e9ecef 100%);
+ background: linear-gradient(90deg, #fdfeff 0%, #e9ecef 100%);
   color: #495057;
 }
 
@@ -1267,7 +1266,7 @@ button, button.btn {
   text-transform: uppercase;
   font-size: 20px;
   font-weight: 700;
-  border: 3px solid #fff;
+  border: 3px solid #fdfeff;
   border-right: 0 !important;
   -webkit-box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.2);
   -moz-box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.2);
@@ -1305,13 +1304,13 @@ button, button.btn {
     font-size: 30px;
     font-weight: 700;
     line-height: 1.1;
-    background: #fff;
+    background: #fdfeff;
     -webkit-box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
     -moz-box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
     background: linear-gradient(90deg, #f6b229 -20%, #fff 100%);
     box-shadow: 0 -10px 12px 0px rgba(200, 200, 200, 0.4);
-    border-top: 10px solid #fff;
-    border-right: 10px solid #fff;
+    border-top: 10px solid #fdfeff;
+    border-right: 10px solid #fdfeff;
 }
 
 .my-open-games { overflow-x: scroll;}
@@ -1333,7 +1332,7 @@ button, button.btn {
 }
 
 .overflowX {
-  background: #ffffff;
+  background: #fdfeff;
   overflow-x: auto;
   -webkit-box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.4);
   -moz-box-shadow: 0px 0px 12px 4px rgb(200 200 200 / 0.4);
@@ -1509,7 +1508,7 @@ button, button.btn {
 table.normal_table tbody td button.btn_finish {
   background-color: #ffc107 !important;
   border: 3px solid #f6b229 !important;
-  color: #ffffff !important;
+  color: #fdfeff !important;
   padding: 2.5px 15px;
   border-radius: 100px;
   font-weight: 800;
@@ -1639,7 +1638,7 @@ div.brain_score label {
 div.question_panel {
   font-size: 30px;
   color: #33271d;
-  background: #fff;
+  background: #fdfeff;
   border-bottom: 3px solid;
   border-color: #dedede;
   padding: 7.5px;
@@ -1776,7 +1775,7 @@ label.answer {
 
 .contents_wrapper .chat_input_panel .emoticon_panel {
   width: 10%;
-  background: #fff;
+  background: #fdfeff;
 }
 
 .contents_wrapper .chat_input_panel .emoticon_panel span {
@@ -2184,8 +2183,8 @@ label.lbl_game_option {
 
 .tbl_title {
   font-size: 16px;
-  border-top: 4px solid #fff;
-  border-right: 4px solid #fff;
+  border-top: 4px solid #fdfeff;
+  border-right: 4px solid #fdfeff;
   }
 
 .search_panel {

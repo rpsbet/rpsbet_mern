@@ -316,7 +316,7 @@ class Bang extends Component {
                   ))
                 ) : (
                   <tr>
-                    <td id="add-run" colSpan="4">Please add a run</td>
+                    <td id="add-run" colSpan="4">Provide the AI with example outputs</td>
                   </tr>
                 )}
               </tbody>

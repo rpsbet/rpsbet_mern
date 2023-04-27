@@ -875,7 +875,7 @@ class RPS extends Component {
                 </tr>
                 <tr>
                   <td>Reasoning</td>
-                  <td><div className="bar" style={{width: "80%"}}></div></td>
+                  <td><div className="bar" style={{width: "50%"}}></div></td>
                   <td><div className="bar" style={{width: "0%"}}></div></td>
                   <td><div className="bar" style={{width: "0%"}}></div></td>
                 </tr>

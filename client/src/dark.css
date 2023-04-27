@@ -7,9 +7,28 @@
 	box-shadow: none;
 }
 
-.transaction-settings {
-	background: #101010;
+.dark_mode .bangTimer {
+	border: 3px solid #333;
 }
+
+.dark_mode 
+.gradient-container .previous-guesses.drop:before  {
+	background: linear-gradient(90deg, #151515, transparent);
+    }
+    
+
+.dark_mode .game-page .game-contents .game-info-panel .max  button {
+	background: transparent  !important;
+  }
+
+  .dark_mode .gamified-container {
+	border: 2px solid #333;
+  }
+
+ .dark_mode .transaction-settings {
+	background: #101010;
+	color: #e9ecef;
+ }
 
 .dark_mode  ::-webkit-scrollBar-thumb {
     background-image:  linear-gradient(
@@ -34,6 +53,11 @@
 .dark_mode div.main-page-nav-button-group {
 	border-top: 1px solid #111;
 background: #060607;
+}
+
+.dark_mode div.table.my-chat-table .table-row > div.message-panel,
+.dark_mode div.table.main-game-table .table-row .table-cell.cell-amount-info {
+    color: #fff;
 }
 
 .dark_mode .mobile-only .active,

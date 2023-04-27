@@ -77,7 +77,7 @@ class HowToPlayModal extends Component {
                     </div>
                     <div className="modal-content-panel">
                       <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>If you're looking for a quick flip, hold onto the bomb for as long as you can lift your balls - otherwise, if you're looking for a long-term, attractive money-spinner, this is the game for you. Just remember to set up with more 1's then high numbers whilst still throwing in a few random numbers into the mix too.
+                      <p>If you're looking for a quick flip, hold onto the bomb for as long as you can lift your balls - otherwise, if you're looking for a long-term, attractive money-spinner, this is the game for you. Just remember to set up (Host) with more 1's then high numbers whilst still throwing in a few random numbers into the mix too.
                         </p>
                     </div>
                   </div>
@@ -294,7 +294,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper provably-fair">
-                      <h4>Games of Skill</h4>
+                      <h4>AI Games of Skill</h4>
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
@@ -302,16 +302,182 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        {/* All our games are 100% Player vs. Player(s) and there
-                        are zero random factors affecting the outcome of games,
-                        players have complete control. Skilled players can
-                        improve over time. If you want to read more, you can go
-                        through{' '}
-                        <a href="https://bitcointalk.org/index.php?topic=5194336.0">
-                          this forum here
-                        </a>
-                        . */}
+                        When we're talking cash, most of us would prefer betting on randomness (RNGs) to give us a level playing field. But in return, you have to give up some house edge. The downside of this, is that in the long-run you have to lose to pay for the casino's operating costs. But it doesn't have to be like this. If you think of any platform currently in operation, its users always do better in the long-run. Meaning, the more they use the app, the better their experience will be. So why should a casino be any different. RPS.GAME utilizes AI and PVP to make it beneficial for its users in the long-run without sacrificing the 'provably-fairness' experience like you would in traditional casinos. You set the odds, you create your own outcome. Decide what results you want, and let the AI do the work for you.
                       </p>
+                      <div className="tiers">
+                        <br />
+                      <h5>Markov</h5>
+                      <p>Markov the 'mimicker' is a pattern prediction model whilst throwing in a bit of maths to prevent being too predictable. For example, if you feed Markov 'Rock', 'Paper, 'Rock', 'Paper' etc. it will still throw in some 'Scissors' so, yes Markov might be simple but its reliable.</p>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '80%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '50%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '30%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <br />
+                <h5>Carlo (Unlocked at Level 26)</h5>
+                      <p>Carlo, named after Monte Carlo's famous casino as well as the Monte Carlo Simulation used for decision making and overall much more advanced than Markov. Carlo can make decisions such as altering your Bet Amount, autonomous game creation / unstaking as well as executing at the perfect times all calibrated from its user's actions.</p>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '10%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '00%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '70%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <br />
+                <h5>Q Bot (Unlocked at Level 42)</h5>
+                <p>Q Bot has a personality of its own, in fact it's the only AI that inherits self-learning. That's right, turn it on then just sit back and watch the money come in. Is it smarter than a Human you ask? Maybe... It's only downside is that it's so OP, it might scare other users from playing against it.</p>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '10%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '70%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '80%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <br />
+                <h5>ELMo (Unlocked at Level 60)</h5>
+                <p>ELMo is a language model and cannot be used in most games, on the other side, some games cannot be played without ELMo.</p>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '10%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '10%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '50%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '00%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
                     </div>
                   </div>
                 </AccordionItemPanel>
@@ -328,7 +494,7 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        See table below for fees
+                        Hosting games i.e. operating as 'The House' is 100% free as there are games that are zero-sum and we want to offer something for them risking their capital. 
                         {' '}
                       </p>
                       <table id="howto-modal">
@@ -340,7 +506,7 @@ class HowToPlayModal extends Component {
                           </tr>
                           <tr>
                             <td>
-                              <u>0</u>
+                              <u>FREE</u>
                             </td>
                             <td className="gamemode">0.5%</td>
                             <td rowSpan="6">
@@ -364,10 +530,11 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
-                      {/* <p>
-                        No.{' '} 
-                        As there is no randomness, we don't need <a href='https://en.wiktionary.org/wiki/RNG'><u style={{ color: '#f5b22d' }}>RNG's or oracles</u></a>.
-                      </p> */}
+                      <p>You can simply use the chat panel here, or you can reach out to us via one of these:</p>
+                      <Button><a href="https://twitter.com/officialrpsgame">Twitter</a></Button>
+                      <Button><a href="https://t.me/rps_finance">Telegram</a></Button>
+                      <Button><a href="https://discord.gg/anMJntW4AD">Discord</a></Button>
+                      <Button><a href="mailto:lenny@rps.finance">Email</a></Button>
                     </div>
                   </div>
                 </AccordionItemPanel>

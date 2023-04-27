@@ -1093,7 +1093,7 @@ console.log(this.state.crashed);
 
     return (
       <div className="game-page">
-        <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="page-title">
           <h2>PLAY - Bang!</h2>
@@ -1329,7 +1329,7 @@ console.log(this.state.crashed);
                     <tr>
                       <td>Reasoning</td>
                       <td>
-                        <div className="bar" style={{ width: '80%' }}></div>
+                        <div className="bar" style={{ width: '50%' }}></div>
                       </td>
                       <td>
                         <div className="bar" style={{ width: '0%' }}></div>
@@ -1394,6 +1394,7 @@ console.log(this.state.crashed);
             </div>
             <Button
               id="aiplay"
+              className='disabled'
               variant="contained"
               onMouseDown={this.handleButtonClick}
               onMouseUp={this.handleButtonRelease}
@@ -1410,7 +1411,7 @@ console.log(this.state.crashed);
                   {this.state.timerValue !== 2000 ? (
                     <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
                   ) : (
-                    <span>AI Play</span>
+                    <span>AI Play (Coming Soon)</span>
                   )}
                 </div>
               )}

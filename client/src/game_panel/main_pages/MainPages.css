@@ -83,9 +83,9 @@ button, button.btn {
     margin: 16px 0;
 }
 .search_panel {
-    background: #fff;
+    background: #fdfeff;
     padding-left: 10px;
-    border: 3px solid #fff;
+    border: 3px solid #fdfeff;
     border-radius: 8px;
 }
 .search_panel input.search_text{
@@ -139,7 +139,7 @@ div.table.my-chat-table .table-row > div {
     letter-spacing: 1px;
 }
 div.table.my-chat-table .table-row > div.message-panel {
-    color: white;
+    color: #6c757d;
 }
 div.table.my-chat-table .table-row .table-cell {
     padding: 5px;
@@ -341,7 +341,7 @@ div.table.main-game-table::-webkit-scrollbar, div.table.main-history-table::-web
   display: none;
 }
 .gamified-container {
-    border: 2px solid #333;
+    border: 2px solid #b9bbbe;
     border-radius: 10px;
     padding: 20px;
     margin: 20px;
@@ -429,7 +429,7 @@ div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status.
     background-color: rgb(87, 202, 34);
 }
 div.table.main-game-table .table-row .table-cell.cell-amount-info{
-    color: #e5e5e5;
+    color: #747f8d;
     font-weight: bold;
     border-radius: 7px;
     padding: 3px 8px;
@@ -829,7 +829,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     padding-left: 56px;
     font-size: 24px;
     font-weight: bold;
-    color: #060607;
+    color: #343a40;
 }
 .contents_wrapper .game-page .page-title span {
     font-size: 16px;
@@ -980,7 +980,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 
 .game-page .game-contents h3.game-sub-title {
     font-size: 16px;
-    color: #060607;
+    color: #343a40;
     line-height: 19px;
     margin: 0 0 15px;
     display: flex;
@@ -1005,7 +1005,7 @@ overflow: hidden;
 }
 .game-page .game-contents .game-info-panel button {
     padding: 0 15px;
-    margin: 0 4px 10px;
+    margin: 10px 4px 15px;
 }
 
 .game-page .game-contents .game-info-panel button.active {
@@ -1049,7 +1049,7 @@ box-shadow:none !important;
 }
 .game-page .game-contents .game-info-panel .edit-amount-panel span {
     font-size: 16px;
-    color: #060607;
+    /* color: #060607; */
 }
 .game-page .game-contents .game-info-panel .previous-guesses {
     color: #8e9297;
@@ -1065,7 +1065,7 @@ box-shadow:none !important;
 	position: absolute;
 	z-index: 2;
     transform: translate(-5px, -10px);
-	background: linear-gradient(90deg, #151515, transparent);
+	background: linear-gradient(90deg, #fdfeff, transparent);
     }
     
     .gradient-container .previous-guesses.drop {
@@ -1115,7 +1115,7 @@ max-width: 450px;
     justify-items: center;
     line-height: 1.3em;
     height: 200px;
-    border: 3px solid #333;
+    border: 3px solid #b9bbbe;
     width: 290px;
     border-radius: 0.25em;
       }
@@ -1398,7 +1398,7 @@ button.btn-submit:active,
 .game-page .game-contents .radio-button-group button.radio-button.selected::before {
     background-color: #e9ecef;
     border: 2px solid #e9ecef;
-    box-shadow: 0 0 0px 7px #fff inset;
+    box-shadow: 0 0 0px 7px #fdfeff inset;
 }
 
 .tiers table {
@@ -1489,9 +1489,9 @@ button.btn-submit:active,
 .transaction-settings {
     position: fixed;
     transform: translate(0%, -10vh);
-
+color: #e5e5e5;
     padding: 20px 30px !important;
-    background: #111111;
+    background: #a9a9a9;
     border-radius: 9px;
     opacity: 0;
     transition: .2s;

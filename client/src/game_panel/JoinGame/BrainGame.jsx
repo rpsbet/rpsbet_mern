@@ -669,7 +669,7 @@ class BrainGame extends Component {
                     <tr>
                       <td>Reasoning</td>
                       <td>
-                        <div className="bar" style={{ width: '80%' }}></div>
+                        <div className="bar" style={{ width: '50%' }}></div>
                       </td>
                       <td>
                         <div className="bar" style={{ width: '0%' }}></div>

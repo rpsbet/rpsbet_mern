@@ -756,7 +756,7 @@ class CreateGame extends Component {
                       public_bet_amount={this.state.public_bet_amount}
                     />
                   ) : (
-                    <span>Click ‘HELP’ at the top for more game help.</span>
+                    <span>Click the manual icon at the top for more game help.</span>
                   )}
                 </div>
                 <div className="game-contents">
