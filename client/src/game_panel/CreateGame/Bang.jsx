@@ -252,7 +252,7 @@ class Bang extends Component {
     ) : (
       
       <div className="game-info-panel">
-                          <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+                          {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="rps-add-run-panel">
         <div className="bang-add-run-form">
