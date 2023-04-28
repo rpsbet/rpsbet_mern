@@ -126,7 +126,7 @@ class Bang extends Component {
       
       const randomChance = Math.random();
       const newValue = parseFloat(getRandomNumberInRange(1, 1.15).toFixed(2));
-      const isChanged = randomChance <= 0.15;
+      const isChanged = randomChance <= 0.175;
       
       if(isChanged){
         return newValue;
