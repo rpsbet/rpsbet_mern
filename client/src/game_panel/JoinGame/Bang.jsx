@@ -344,7 +344,6 @@ class Bang extends Component {
       // slippage: this.state.slippage
     });
     
-console.log(this.state.crashed);
     let text = 'HAHAA, YOU LOST!!!';
 
     if (result.betResult === 1) {
@@ -732,7 +731,6 @@ console.log(this.state.crashed);
 
   handleMultiplierChange = event => {
     const multiplier = event.target.value;
-    console.log('Multiplier value changed to:', multiplier);
     this.setState({ multiplier });
   };
 
@@ -883,7 +881,6 @@ console.log(this.state.crashed);
                     this.setState({
                       showBang: true
                     });
-                    console.log('newRound', newRound);
                     setTimeout(() => {
                       this.setState({
                         showBang: false,
@@ -1132,15 +1129,15 @@ console.log(this.state.crashed);
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
-                        Potential Return
+                        Average Multiplier
                       </div>
                     </div>
                     <div className="value">
                       {convertToCurrency(
                         updateDigitToPoint2(
-                          this.state.bet_amount * 2 /* * 0.95 */
+                          this.props.aveMultiplier /* * 0.95 */
                         )
-                      )}
+                      )}x
                     </div>
                   </div>
                 </React.Fragment>

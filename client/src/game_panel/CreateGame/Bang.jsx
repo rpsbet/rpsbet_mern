@@ -36,6 +36,17 @@ const calcWinChance = (prevStates) => {
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 };
 
+const calcAveMultiplier = (list) => {
+  let sum = 0;
+  for (let i = 0; i < list.length; i++) {
+    sum += parseFloat(list[i].bang);
+  }
+  const average = sum / list.length;
+  return parseFloat(average.toFixed(2));
+};
+
+
+
 class Bang extends Component {
   constructor(props) {
     super(props);
@@ -45,15 +56,10 @@ class Bang extends Component {
       bang: 1.00,
       balance: this.props.balance,
       winChance: 33,
-      // is_other: (this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25 || this.props.bet_amount === 50 || this.props.bet_amount === 100) ? 'hidden' : '',
-
-
+      aveMultiplier: 0
     };
-    // this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
-
   }
 
-    
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance
@@ -66,17 +72,18 @@ class Bang extends Component {
     return null;
   }
 
- 
-
   onChangeWinChance = (winChance) => {
     this.setState({ winChance });
-    // this.props.onChangeState({ winChance });
+  };
+
+  onChangeAveMultiplier = (aveMultiplier) => {
+    this.setState({ aveMultiplier });
   };
   
   predictNext = (bangAmounts) => {
     // Find the unique values in bangAmounts
     const uniqueValues = [...new Set(bangAmounts.map(bang => bang.bang))];
-    
+  
     if (uniqueValues.length === 1) {
       // If there is only one unique value, return that value
       return uniqueValues[0];
@@ -85,20 +92,20 @@ class Bang extends Component {
       const minValue = Math.min(...uniqueValues);
       const maxValue = Math.max(...uniqueValues);
       const rangeSize = Math.ceil((maxValue - minValue) / 200);
-    
+  
       const rangeCounts = {};
       bangAmounts.forEach((bang) => {
         const range = Math.floor((bang.bang - minValue) / rangeSize);
         rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
       });
-    
+  
       const totalCounts = bangAmounts.length;
       const rangeProbabilities = {};
       Object.keys(rangeCounts).forEach((range) => {
         const rangeProbability = rangeCounts[range] / totalCounts;
         rangeProbabilities[range] = rangeProbability;
       });
-    
+  
       let randomValue = Math.random();
       let chosenRange = null;
       Object.entries(rangeProbabilities).some(([range, probability]) => {
@@ -109,16 +116,26 @@ class Bang extends Component {
         }
         return false;
       });
-   
+  
       const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
       const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
-    
+  
       const getRandomNumberInRange = (min, max) => {
         return Math.random() * (max - min) + min;
       };
-      return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+      
+      const randomChance = Math.random();
+      const newValue = parseFloat(getRandomNumberInRange(1, 1.15).toFixed(2));
+      const isChanged = randomChance <= 0.15;
+      
+      if(isChanged){
+        return newValue;
+      } else {
+        return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+      }
     }
   };
+  
   
   
 
@@ -141,11 +158,11 @@ class Bang extends Component {
     const newArray = this.props.bang_list.filter((elem, i) => i != index);
     // const bet_amount = calcBetAmount(newArray);
     const winChance = calcWinChance(newArray);
+    const aveMultiplier = calcAveMultiplier(newArray);
     this.props.onChangeState({
       bang_list: newArray,
-      // bet_amount: bet_amount,
-      // max_return: bet_amount * 2 /* 0.95 */,
-      winChance: winChance
+      winChance: winChance,
+      aveMultiplier: aveMultiplier
     });
 
   };
@@ -174,15 +191,18 @@ class Bang extends Component {
       bang: bang.toFixed(2)
     });
 
-
+    const aveMultiplier = calcAveMultiplier(newArray);
     const winChance = calcWinChance(newArray);
     this.props.onChangeState({
       bang_list: newArray,
       winChance: winChance,
+      aveMultiplier: aveMultiplier,
       bang: this.state.bet_amount
     });
     this.onChangeWinChance(winChance);
-    this.setState({ winChance });
+
+    this.onChangeAveMultiplier(aveMultiplier);
+    this.setState({ winChance, aveMultiplier });
   };
 
   componentDidUpdate(prevProps) {

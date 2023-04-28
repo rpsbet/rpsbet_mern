@@ -35,6 +35,10 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
+  aveMultiplier: {
+    type: Number,
+    default: 1
+  },
   qs_game_type: {
     type: Number,
     default: 2

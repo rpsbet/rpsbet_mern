@@ -54,6 +54,7 @@ const initialState = {
   curRoomInfo: {
     _id: 0,
     creator_id: '',
+    aveMultiplier: '',
     joiners: {},
     game_type: '',
     bet_amount: 0,

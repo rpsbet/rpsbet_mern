@@ -89,6 +89,7 @@ class CreateGame extends Component {
       is_private: false,
       is_anonymous: false,
       room_password: '',
+      aveMultiplier: 0,
       endgame_type: true,
       box_list: [],
       brain_game_type: this.props.brain_game_type,
@@ -269,7 +270,8 @@ class CreateGame extends Component {
         game_type: 7,
         winChance: 0,
         bet_amount: 0,
-        endgame_amount: 0
+        endgame_amount: 0,
+        aveMultiplier: 0,
       };
     }
 
@@ -611,6 +613,7 @@ class CreateGame extends Component {
           bang_list={this.state.bang_list}
           bet_amount={this.state.bet_amount}
           winChance={this.state.winChance}
+          aveMultiplier={this.state.aveMultiplier}
           is_private={this.state.is_private}
           is_anonymous={this.state.is_anonymous}
           room_password={this.state.room_password}
@@ -749,6 +752,7 @@ class CreateGame extends Component {
                       endgame_amount={this.state.endgame_amount}
                       is_private={this.state.is_private}
                       step={this.state.step}
+                      aveMultiplier={this.state.aveMultiplier}
                       child_step={this.state.child_step}
                       game_mode={this.state.game_mode}
                       max_prize={this.state.max_prize}
@@ -770,6 +774,8 @@ class CreateGame extends Component {
                       endgame_amount={this.state.endgame_amount}
                       is_private={this.state.is_private}
                       step={this.state.step}
+                      aveMultiplier={this.state.aveMultiplier}
+                      calcAveMultiplier={this.props.calcAveMultiplier}
                       child_step={this.state.child_step}
                       game_mode={this.state.game_mode}
                       max_prize={this.state.max_prize}

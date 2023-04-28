@@ -7,7 +7,8 @@ class Summary extends Component {
     super(props);
     this.state = {
       winChance: 0,
-      public_bet_amount: 0
+      aveMultiplier: 0,
+      public_bet_amount: 0,
     }
     if(this.props.game_mode === 'RPS'){
       this.state.winChance = 33
@@ -77,14 +78,14 @@ class Summary extends Component {
             )}
           </div>
         </div>
-        {/* {['Mystery Box', 'Spleesh!', 'Quick Shoot'].includes(
+        {['Bang!'].includes(
           this.props.game_mode
         ) && (
           <div className="data-item">
-            +<div className="label public-max-return">Their Return</div>
-            <div className="value">{public_max_return}</div>
+            <div className="label public-max-return">Average Multiplier</div>
+            <div className="value">{this.props.aveMultiplier}x</div>
           </div>
-        )} */}
+        )}
         <div className="data-item">
           <div className="label win-chance">Expected Value</div>
           <div className="value">{convertToCurrency(this.props.winChance) === -0 ? convertToCurrency(0.00).toFixed(2) : convertToCurrency(this.props.winChance)}</div>
@@ -154,6 +155,12 @@ class Summary extends Component {
             <div className="summary-item">
               <div className="summary-item-name">Public Max Return</div>
               <div className="summary-item-value">{public_max_return}</div>
+            </div>
+          )}
+          {this.props.game_mode === 'Bang!' && (
+            <div className="summary-item">
+              <div className="summary-item-name">Average Multiplier</div>
+              <div className="summary-item-value">{this.props.aveMultiplier}x</div>
             </div>
           )}
           <div className="summary-item">

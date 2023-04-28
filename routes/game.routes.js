@@ -163,6 +163,7 @@ router.get('/room/:id', async (req, res) => {
       roomInfo: {
         _id: room['_id'],
         creator_id: room['creator'],
+        aveMultiplier: room['aveMultiplier'],
         creator_name: creator['username'],
         joiners: joiners,
         game_type: room['game_type']['game_type_name'],
@@ -176,6 +177,7 @@ router.get('/room/:id', async (req, res) => {
         brain_game_score: room['brain_game_score'],
         selected_drop: room['selected_drop'],
         cashoutAmount: room['cashoutAmount'],
+        aveMultiplier: room['aveMultiplier'],
         qs_game_type: room['qs_game_type'],
         room_history: roomHistory,
         box_list: boxPrizeList,
@@ -666,6 +668,7 @@ const getRoomList = async (pagination, page, game_type) => {
             ? room['creator']['username']
             : '',
         creator_id: room['creator']['_id'],
+        aveMultiplier: room['aveMultiplier'],
         joiners: room['joiners'],
         joiner_avatars: joinerAvatars,
         creator_avatar: room['creator']['avatar'],
@@ -880,11 +883,11 @@ router.post('/rooms', auth, async (req, res) => {
       host_pr = parseFloat(req.body.bet_amount);
       user_bet = parseFloat(req.body.bet_amount);
     }
-
     const roomCount = await Room.countDocuments({});
     newRoom = new Room({
       ...req.body,
       creator: req.user,
+      aveMultiplier: req.body.aveMultiplier,
       joiners: [],
       game_type: gameType,
       user_bet: user_bet,
