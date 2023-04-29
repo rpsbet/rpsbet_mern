@@ -74,6 +74,32 @@ router.post('/checkGamePassword', async (req, res) => {
   }
 });
 
+router.patch('/room/:id/:type', auth, async (req, res) => {
+  const { id, type } = req.params;
+  if (!['like', 'dislike'].includes(type)) {
+    return res.status(400).json({ success: false, message: 'Invalid type' });
+  }
+  Room.findOneAndUpdate(
+    { _id: id },
+    [{
+      $set: {
+        [`${type}s`]: {
+          $cond: [
+            { $in: [req.user._id, `$${type}s`] },
+            { $setDifference: [`$${type}s`, [req.user._id]] },
+            { $concatArrays: [`$${type}s`, [req.user._id]] }
+          ]
+        }
+      }
+    }]
+  ).then((room) => {
+    res.json({ success: true, room });
+  })
+  .catch((e) => res.status(500).json({ success: false, message: e.message }))
+  // 63f628942fa1b221f3a0653f
+  // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzZjYyNzY2MmZhMWIyMjFmM2EwNjMwNSIsImlzX2FkbWluIjowLCJpYXQiOjE2ODI3NTY5MjIsImV4cCI6MTY4MzM2MTcyMn0.8O92Z2e58xdxPR__RXMlRlOmi50az7OjR7fM2vynt8o
+})
+
 // /api/room/:id call
 router.get('/room/:id', async (req, res) => {
   try {
@@ -694,7 +720,9 @@ const getRoomList = async (pagination, page, game_type) => {
         brain_game_type: room['brain_game_type'],
         status: room['status'],
         index: room['room_number'],
-        created_at: moment(room['created_at']).format('YYYY-MM-DD HH:mm')
+        created_at: moment(room['created_at']).format('YYYY-MM-DD HH:mm'),
+        likes: room['likes'],
+        dislikes: room['dislikes'],
       };
 
       if (temp.game_type.game_type_id === 1) {
@@ -899,7 +927,7 @@ router.post('/rooms', auth, async (req, res) => {
       pr: pr,
       host_pr: host_pr,
       room_number: roomCount + 1,
-      status: 'open'
+      status: 'open',
     });
     await newRoom.save();
 

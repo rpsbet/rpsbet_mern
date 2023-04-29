@@ -1,4 +1,5 @@
 import {
+  ACTION_ROOM,
   GAMETYPE_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
@@ -62,7 +63,11 @@ const initialState = {
     box_price: 0,
     room_history: [],
     box_list: [],
-    qs_game_type: 2
+    qs_game_type: 2,
+    likes: 0,
+    dislikes: 0,
+    liked: false,
+    disliked: false,
   },
   betResult: -1,
   betResults: [],
@@ -217,6 +222,13 @@ export default function(state = initialState, action) {
           ...state,
           globalChatList: payload
         }
+    case ACTION_ROOM:
+      return {
+        ...state,
+        roomList: state.roomList.map((room) =>
+          room.id === payload.id ? { ...room, ...payload } : room
+        )
+      }
     default:
       return state;
   }

@@ -79,6 +79,7 @@ export const PAGINATION_FOR_LANDING = 'PAGINATION_FOR_LANDING';
 export const ADD_LANDING_TOTAL = 'ADD_LANDING_TOTAL';
 
 //action logic
+export const ACTION_ROOM = 'ACTION_ROOM';
 export const SET_SOCKET = 'SET_SOCKET';
 export const GAMETYPE_LOADED = 'GAMETYPE_LOADED';
 export const ROOMINFO_LOADED = 'ROOMINFO_LOADED';

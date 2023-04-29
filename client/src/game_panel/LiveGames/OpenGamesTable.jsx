@@ -1,12 +1,20 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { getRoomList, setCurRoomInfo } from '../../redux/Logic/logic.actions';
+import { actionRoom, getRoomList, setCurRoomInfo } from '../../redux/Logic/logic.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 import Battle from '../icons/Battle';
-import IconButton from '@material-ui/core/IconButton';
-import { Box, Button } from '@material-ui/core';
+import ThumbUpIcon from '@material-ui/icons/ThumbUp';
+import ThumbDownIcon from '@material-ui/icons/ThumbDown';
+import ThumbUpOutlinedIcon from '@material-ui/icons/ThumbUpOutlined';
+import ThumbDownOutlinedIcon from '@material-ui/icons/ThumbDownOutlined';
+import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
+import WarningIcon from '@material-ui/icons/Warning';
+
+
+
+import { Box, Button, Typography, IconButton } from '@material-ui/core';
 
 import { updateDigitToPoint2 } from '../../util/helper';
 
@@ -27,7 +35,10 @@ class OpenGamesTable extends Component {
       selectedCreator: '',
       mouseDown: false,
       borderColor: '',
-
+      likes: [],
+      dislikes: [],
+      liked: false,
+  disliked: false
     };
   }
 
@@ -38,6 +49,33 @@ class OpenGamesTable extends Component {
   handleClosePlayerModal = () => {
     this.setState({ showPlayerModal: false });
   };
+
+  handleLike = ({ _id }) => {
+    if (!this.state.liked) {
+      this.setState({ liked: true, disliked: false });
+      this.handleAction({ roomId: _id, type: 'like' });
+    }
+  };
+  
+  handleDislike = ({ _id }) => {
+    if (!this.state.disliked) {
+      this.setState({ liked: false, disliked: true });
+      this.handleAction({ roomId: _id, type: 'dislike' });
+    }
+  };
+  
+
+  handleLike = ({ _id }) => this.handleAction({ roomId: _id, type: 'like' });
+  handleDislike = ({ _id }) => this.handleAction({ roomId: _id, type: 'dislike' });
+
+  handleAction = ({ roomId, type }) => {
+    if (this.props.user?._id) {
+      this.props.actionRoom({ roomId, type, conditions: {
+        page: this.props.pageNumber ?? 0,
+        game_type: this.state.selectedGameType
+      } })
+    }
+  }
 
   joinRoom = e => {
     this.setState({ isClicked: true });
@@ -108,7 +146,12 @@ class OpenGamesTable extends Component {
     };
 
     const gameTypePanel = (
-      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap" gap="15px">
+      <Box
+        display="flex"
+        justifyContent="space-evenly"
+        flexWrap="nowrap"
+        gap="15px"
+      >
         <Box item key="open-game-left-button">
           <IconButton
             className="btn-arrow-left"
@@ -117,7 +160,7 @@ class OpenGamesTable extends Component {
             <ChevronLeftIcon />
           </IconButton>
         </Box>
-        
+
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -155,7 +198,7 @@ class OpenGamesTable extends Component {
         </IconButton>
       </Box>
     );
-  
+
     return gameTypePanel;
   };
 
@@ -164,7 +207,7 @@ class OpenGamesTable extends Component {
       this.setState({ isLoading: false });
     }
   }
-  
+
   componentDidMount() {
     window.addEventListener('load', () => {
       this.setState({ loaded: true });
@@ -216,213 +259,226 @@ class OpenGamesTable extends Component {
           </div>
         </div>
         {this.state.isLoading ? (
-        <div className="loading-gif-container">
-          <img src={randomGifUrl} id="isLoading" alt="loading" />
-        </div>
-      ) : (
-        <div className="table main-game-table">
-       
-          {this.props.roomList.length === 0 && (
-            <div className="dont-have-game-msg">
-              <div>NO BATTLES YET, GO TO 'MY BATTLES'</div>
-            </div>
-          )}
-          {this.state.showPlayerModal && (
-            <PlayerModal
-              selectedCreator={this.state.selectedCreator}
-              modalIsOpen={this.state.showPlayerModal}
-              closeModal={this.handleClosePlayerModal}
-              // {...this.state.selectedRow}
-            />
-          )}
+          <div className="loading-gif-container">
+            <img src={randomGifUrl} id="isLoading" alt="loading" />
+          </div>
+        ) : (
+          <div className="table main-game-table">
+            {this.props.roomList.length === 0 && (
+              <div className="dont-have-game-msg">
+                <div>NO BATTLES YET, GO TO 'MY BATTLES'</div>
+              </div>
+            )}
+            {this.state.showPlayerModal && (
+              <PlayerModal
+                selectedCreator={this.state.selectedCreator}
+                modalIsOpen={this.state.showPlayerModal}
+                closeModal={this.handleClosePlayerModal}
+                // {...this.state.selectedRow}
+              />
+            )}
 
-          {this.props.roomList.map(
-            (row, key) => (
-              <div className="table-row" key={row._id}>
-                <div>
-                  <div className="table-cell cell-room-info">
-                    <img
-                      src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                      alt=""
-                      className="game-type-icon"
-                    />
-                    <div>
-                      {/* <div className="cell-game-type">
+            {this.props.roomList.map(
+              (row, key) => (
+                <div className="table-row" key={row._id}>
+                  <div>
+                    <div className="table-cell cell-room-info">
+                      <img
+                        src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                        alt=""
+                        className="game-type-icon"
+                      />
+                      <div>
+                        {/* <div className="cell-game-type">
                         {row.game_type.game_type_name}
                       </div> */}
-                      <div className="cell-game-id">{'#' + row.index}</div>
+                        <div className="cell-game-id">{'#' + row.index}</div>
+                      </div>
+                    </div>
+                    <div className="table-cell desktop-only cell-user-name">
+                      <a
+                        className="player"
+                        onClick={() =>
+                          this.handleOpenPlayerModal(row.creator_id)
+                        }
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={row.creator_avatar}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                        {/* <span>{row.creator}</span> */}
+                      </a>
+                      <i
+                        className={`online-status${
+                          this.props.onlineUserList.filter(
+                            user => user === row.creator_id
+                          ).length > 0
+                            ? ' online'
+                            : ''
+                        }`}
+                      ></i>
+                      {row.joiners && row.joiners.length > 0 ? (
+                        <div className="table-cell desktop-only cell-joiners">
+                          <Battle />
+                          {row.joiner_avatars
+                            .slice(0, 5)
+                            .map((avatar, index) => (
+                              // <a className="player" onClick={() => this.handleOpenPlayerModal(row.curRoomInfo.j)}>
+
+                              <Avatar
+                                className="avatar"
+                                key={index}
+                                src={avatar}
+                                alt=""
+                                darkMode={this.props.isDarkMode}
+                              />
+                              // </a>
+                            ))}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="table-cell desktop-only cell-amount-info">
+                      {row.game_type.game_type_name === 'Spleesh!' ? (
+                        <>
+                          {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
+                          {convertToCurrency(row.spleesh_bet_unit * 10)}
+                          {/* / 
+      '???' */}
+                        </>
+                      ) : row.game_type.game_type_name === 'Drop Game' ? (
+                        <>???</>
+                      ) : row.game_type.game_type_name === 'Mystery Box' ? (
+                        <>{convertToCurrency(row.pr)}</>
+                      ) : (
+                        <>
+                          {convertToCurrency(updateDigitToPoint2(row.user_bet))}
+                          {/* / 
+      {convertToCurrency(row.winnings)} */}
+                        </>
+                      )}
+                    </div>
+                    <div className="table-cell cell-likes">
+                      <div>
+                    <IconButton onClick={() => this.handleLike(row)}>
+    {row.likes?.includes(this.props.user.id) ? <span role="img" aria-label="Thumbs up">&#x1F44D;</span> : <span style={{ fontSize: '1rem' }}  role="img" aria-label="Money face">&#x1f4b0;</span>}
+</IconButton>
+<Typography variant="body1">{row.likes?.length || 0}</Typography>
+</div>
+<div>
+<IconButton onClick={() => this.handleDislike(row)}>
+    {row.dislikes?.includes(this.props.user.id) ? <span role="img" aria-label="Thumbs down">&#x1F44E;</span> : <span style={{ fontSize: '1rem' }}  role="img" aria-label="Angry swearing">&#x1f92c;</span>}
+</IconButton>
+<Typography variant="body1">{row.dislikes?.length || 0}</Typography>
+</div>
+</div>
+                    <div className="table-cell cell-action">
+                      <Button
+                        className="btn_join"
+                        onClick={event => {
+                          event.currentTarget.classList.add('active');
+                          this.joinRoom(event);
+                        }}
+                        data-id={row._id}
+                        data-creator-id={row.creator_id}
+                        data-room-status={row.status}
+                        data-game-type={row.game_type.game_type_name}
+                        data-bet-amount={row.user_bet}
+                        data-spleesh-bet-unit={row.spleesh_bet_unit}
+                        data-box-price={row.box_price}
+                        data-brain-game-type-id={
+                          row.brain_game_type ? row.brain_game_type._id : ''
+                        }
+                        data-brain-game-type-name={
+                          row.brain_game_type
+                            ? row.brain_game_type.game_type_name
+                            : ''
+                        }
+                        data-brain-game-score={
+                          row.brain_game_score ? row.brain_game_score : 0
+                        }
+                      >
+                        {row.is_private && (
+                          <img
+                            src="/img/icon-lock.png"
+                            alt=""
+                            className="lock-icon"
+                          />
+                        )}
+                        PLAY
+                      </Button>
                     </div>
                   </div>
-                  <div className="table-cell desktop-only cell-user-name">
-                    <a
-                      className="player"
-                      onClick={() => this.handleOpenPlayerModal(row.creator_id)}
-                    >
-                      <Avatar
-                        className="avatar"
-                        src={row.creator_avatar}
-                        alt=""
-                        darkMode={this.props.isDarkMode}
-                      />
-                      {/* <span>{row.creator}</span> */}
-                    </a>
-                    <i
-                      className={`online-status${
-                        this.props.onlineUserList.filter(
-                          user => user === row.creator_id
-                        ).length > 0
-                          ? ' online'
-                          : ''
-                      }`}
-                    ></i>
-                    {row.joiners && row.joiners.length > 0 ? (
-                      <div className="table-cell desktop-only cell-joiners">
-                        <Battle />
-                        {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
-                          // <a className="player" onClick={() => this.handleOpenPlayerModal(row.curRoomInfo.j)}>
-
-                          <Avatar
-                            className="avatar"
-                            key={index}
-                            src={avatar}
-                            alt=""
-                            darkMode={this.props.isDarkMode}
-                          />
-                          // </a>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="table-cell desktop-only cell-amount-info">
-                    {row.game_type.game_type_name === 'Spleesh!' ? (
-                      <>
-                        {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
-                        {convertToCurrency(row.spleesh_bet_unit * 10)}
-                        {/* / 
-      '???' */}
-                      </>
-                    ) : row.game_type.game_type_name === 'Drop Game' ? (
-                      <>
-                        ???
-                      </>
-                    ) : row.game_type.game_type_name === 'Mystery Box' ? (
-                      <>
-                        {convertToCurrency(row.pr)}
-                      </>
-                    ) : (
-                      <>
-                        {convertToCurrency(updateDigitToPoint2(row.user_bet))}
-                        {/* / 
-      {convertToCurrency(row.winnings)} */}
-                      </>
-                    )}
-                  </div>
-                  <div className="table-cell cell-action">
-                    <Button
-                      className="btn_join"
-                      onClick={event => {
-                        event.currentTarget.classList.add('active');
-                        this.joinRoom(event);
-                      }}
-                      data-id={row._id}
-                      data-creator-id={row.creator_id}
-                      data-room-status={row.status}
-                      data-game-type={row.game_type.game_type_name}
-                      data-bet-amount={row.user_bet}
-                      data-spleesh-bet-unit={row.spleesh_bet_unit}
-                      data-box-price={row.box_price}
-                      data-brain-game-type-id={
-                        row.brain_game_type ? row.brain_game_type._id : ''
-                      }
-                      data-brain-game-type-name={
-                        row.brain_game_type
-                          ? row.brain_game_type.game_type_name
-                          : ''
-                      }
-                      data-brain-game-score={
-                        row.brain_game_score ? row.brain_game_score : 0
-                      }
-                    >
-                      {row.is_private && (
-                        <img
-                          src="/img/icon-lock.png"
+                  <div className="mobile-only">
+                    <div className="table-cell cell-user-name">
+                      <a
+                        className="player"
+                        onClick={() =>
+                          this.handleOpenPlayerModal(row.creator_id)
+                        }
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={row.creator_avatar}
                           alt=""
-                          className="lock-icon"
+                          darkMode={this.props.isDarkMode}
                         />
-                      )}
-                      PLAY
-                    </Button>
-                  </div>
-                </div>
-                <div className="mobile-only">
-                  <div className="table-cell cell-user-name">
-                    <a
-                      className="player"
-                      onClick={() => this.handleOpenPlayerModal(row.creator_id)}
-                    >
-                      <Avatar
-                        className="avatar"
-                        src={row.creator_avatar}
-                        alt=""
-                        darkMode={this.props.isDarkMode}
-                      />
-                      {/* <span>{row.creator}</span> */}
-                    </a>
-                    <i
-                      className={`online-status${
-                        this.props.onlineUserList.filter(
-                          user => user === row.creator_id
-                        ).length > 0
-                          ? ' online'
-                          : ''
-                      }`}
-                    ></i>
-                    {row.joiners && row.joiners.length > 0 ? (
-                      <div className="table-cell mobile-only cell-joiners">
-                        <Battle />
-                        {row.joiner_avatars.slice(0, 5).map((avatar, index) => (
-                          <Avatar
-                            className="avatar"
-                            key={index}
-                            src={avatar}
-                            alt=""
-                            darkMode={this.props.isDarkMode}
-                          />
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="table-cell cell-amount-info">
-                    {row.game_type.game_type_name === 'Spleesh!' ? (
-                      <>
-                        {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
-                        {convertToCurrency(row.spleesh_bet_unit * 10)}
-                        {/* / 
+                        {/* <span>{row.creator}</span> */}
+                      </a>
+                      <i
+                        className={`online-status${
+                          this.props.onlineUserList.filter(
+                            user => user === row.creator_id
+                          ).length > 0
+                            ? ' online'
+                            : ''
+                        }`}
+                      ></i>
+                      {row.joiners && row.joiners.length > 0 ? (
+                        <div className="table-cell mobile-only cell-joiners">
+                          <Battle />
+                          {row.joiner_avatars
+                            .slice(0, 5)
+                            .map((avatar, index) => (
+                              <Avatar
+                                className="avatar"
+                                key={index}
+                                src={avatar}
+                                alt=""
+                                darkMode={this.props.isDarkMode}
+                              />
+                            ))}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="table-cell cell-amount-info">
+                      {row.game_type.game_type_name === 'Spleesh!' ? (
+                        <>
+                          {/* {convertToCurrency(row.spleesh_bet_unit)} -  */}
+                          {convertToCurrency(row.spleesh_bet_unit * 10)}
+                          {/* / 
       '???' */}
-                      </>
-                    ) : row.game_type.game_type_name === 'Drop Game' ? (
-                      <>
-                        ???
-                      </>
-                    ) : row.game_type.game_type_name === 'Mystery Box' ? (
-                      <>
-                        {convertToCurrency(row.pr)}
-                      </>
-                    ) : (
-                      <>
-                        {convertToCurrency(updateDigitToPoint2(row.user_bet))}
-                        {/* / 
+                        </>
+                      ) : row.game_type.game_type_name === 'Drop Game' ? (
+                        <>???</>
+                      ) : row.game_type.game_type_name === 'Mystery Box' ? (
+                        <>{convertToCurrency(row.pr)}</>
+                      ) : (
+                        <>
+                          {convertToCurrency(updateDigitToPoint2(row.user_bet))}
+                          {/* / 
       {convertToCurrency(row.winnings)} */}
-                      </>
-                    )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ),
-            this
-          )}
-        </div>
-      )}
+              ),
+              this
+            )}
+          </div>
+        )}
         {!this.state.isLoading && this.props.roomList.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
@@ -440,12 +496,16 @@ class OpenGamesTable extends Component {
 
 const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
-  joiners: state.logic.curRoomInfo.joiners
+  joiners: state.logic.curRoomInfo.joiners,
+  isAuthenticated: state.auth.isAuthenticated,
+  userName: state.auth.userName,
+  user: state.auth.user,
 });
 
 const mapDispatchToProps = {
   getRoomList,
-  setCurRoomInfo
+  setCurRoomInfo,
+  actionRoom
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);

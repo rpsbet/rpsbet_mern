@@ -436,7 +436,12 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     white-space: nowrap;
 }
 
-
+.cell-likes {
+    text-align: center;
+    color: #333;
+    display: flex;
+    
+}
 
 /* div.table.my-chat-table .table-row > div.message-panel {
     filter: brightness(0.5);

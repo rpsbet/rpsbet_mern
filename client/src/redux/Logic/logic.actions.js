@@ -1,4 +1,5 @@
 import {
+  ACTION_ROOM,
   GAMETYPE_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
@@ -73,6 +74,7 @@ export function updateSpleeshGuesses() {
       });
   };
 }
+
 export function updateDropGuesses() {
   return dispatch => {
     // Make a GET request to your server to retrieve the drop guesses
@@ -476,4 +478,20 @@ export const selectMainTab = (index) => dispatch => {
 
 export const globalChatReceived = (data) => dispatch => {
   dispatch({ type: GLOBAL_CHAT_RECEIVED, payload: data });
+}
+
+export const actionRoom = ({ roomId, type, conditions }) => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING })
+    const res = await axios.patch(`/game/room/${roomId}/${type}`)
+    dispatch({ type: END_LOADING })
+    if (res.data.success) {
+      dispatch(getRoomList(conditions))
+    } else {
+      dispatch({ type: MSG_WARNING, payload: res.data.message })
+    }
+  } catch (err) {
+    dispatch({ type: MSG_WARNING, payload: err });
+    
+  }
 }

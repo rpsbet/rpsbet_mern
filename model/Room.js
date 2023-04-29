@@ -96,6 +96,16 @@ const RoomSchema = new Schema({
     type: String,
     default: ''
   },
+  likes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
+  dislikes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
   status: { type: String },
   created_at: {
     type: Date,
