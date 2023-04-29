@@ -50,7 +50,38 @@ class HowToPlayModal extends Component {
 </div>
           <div className="modal-body edit-modal-body how-to-play-modal-body">
             <Accordion>
-            
+            <AccordionItem>
+                <AccordionItemHeading>
+                  <AccordionItemButton>
+                    <div className="modal-content-wrapper roll">
+                      <h4>Roll - GAME (Coming Soon)</h4>
+                    </div>
+                  </AccordionItemButton>
+                </AccordionItemHeading>
+                <AccordionItemPanel>
+                  {/* <div className="modal-content-wrapper bang">
+                    <div className="modal-content-panel">
+                      <h5>Objective</h5>
+                      <p>To cashout the multiplier before the 'Bang!'</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
+                      <ol>
+                        <li>Enter in a predetermined Bet Amount. Optionally, alter the predetermined Autocashout Amount as the counter can increment quickly</li>
+                        <li>Click 'Bang Out' when you are happy and wait for the next round</li>
+                        <li>Once you see the bomb, the round will have started and you have to cashout before the 'BANG!' by re-clicking same button which should now say 'Cashout @ $x.xx'</li>
+                        <li>If you successfully manage to cashout in time, your winnings is equal to your Bet Amount multiplied by your final multiplier</li>
+
+                      </ol>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
+                      <p>If you're looking for a quick flip, hold onto the bomb for as long as you can lift your balls - otherwise, if you're looking for a long-term, attractive money-spinner, this is the game for you. Just remember to set up (Host) with more 1's then high numbers whilst still throwing in a few random numbers into the mix too.
+                        </p>
+                    </div>
+                  </div> */}
+                </AccordionItemPanel>
+              </AccordionItem>
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>

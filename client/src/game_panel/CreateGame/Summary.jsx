@@ -24,6 +24,8 @@ class Summary extends Component {
       this.state.winChance = 42
     } else if(this.props.game_mode === 'Bang!'){
       this.state.winChance = 42
+    } else if(this.props.game_mode === 'Roll'){
+      this.state.winChance = 42
     }
   }
   pre_summery() {

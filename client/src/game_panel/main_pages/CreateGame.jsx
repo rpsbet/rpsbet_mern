@@ -9,6 +9,7 @@ import BrainGame from '../CreateGame/BrainGame';
 import PlayBrainGame from '../CreateGame/PlayBrainGame';
 import QuickShoot from '../CreateGame/QuickShoot';
 import Bang from '../CreateGame/Bang';
+import Roll from '../CreateGame/Roll';
 import { Button } from '@material-ui/core';
 import Footer from './Footer';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
@@ -70,6 +71,7 @@ class CreateGame extends Component {
       rps_list: [],
       drop_list: [],
       bang_list: [],
+      roll_list: [],
       qs_list: [],
       qs_game_type: 2,
       qs_nation: 0,
@@ -268,6 +270,15 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 7,
+        winChance: 0,
+        bet_amount: 0,
+        endgame_amount: 0,
+        aveMultiplier: 0,
+      };
+    } else if (gameTypeName === 'Roll') {
+      newState = {
+        ...newState,
+        game_type: 8,
         winChance: 0,
         bet_amount: 0,
         endgame_amount: 0,
@@ -611,6 +622,23 @@ class CreateGame extends Component {
 
           onChangeState={this.onChangeState}
           bang_list={this.state.bang_list}
+          bet_amount={this.state.bet_amount}
+          winChance={this.state.winChance}
+          aveMultiplier={this.state.aveMultiplier}
+          is_private={this.state.is_private}
+          is_anonymous={this.state.is_anonymous}
+          room_password={this.state.room_password}
+          step={this.state.child_step}
+          endgame_amount={this.state.endgame_amount}
+        />
+      );
+    } else if (this.state.game_mode === 'Roll') {
+      return (
+        <Roll
+        playSound={this.playSound}
+
+          onChangeState={this.onChangeState}
+          Roll_list={this.state.bang_list}
           bet_amount={this.state.bet_amount}
           winChance={this.state.winChance}
           aveMultiplier={this.state.aveMultiplier}

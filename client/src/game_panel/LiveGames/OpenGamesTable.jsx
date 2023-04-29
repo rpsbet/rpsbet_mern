@@ -142,7 +142,8 @@ class OpenGamesTable extends Component {
       BG: 'brain-game',
       QS: 'quick-shoot',
       DG: 'drop-game',
-      'B!': 'bang'
+      'B!': 'bang',
+      R: 'roll'
     };
 
     const gameTypePanel = (

@@ -273,14 +273,14 @@ div.table .table-row .table-cell button:last-child,
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
 .game-page .game-contents .game-info-panel button.place-bet,
-.game-page .game-contents .game-info-panel button  {
+.game-contents .game-info-panel button  {
     padding: 0;
     border-radius: 0.25em;
     color: white;
     line-height: 40px;
     font-weight: 600;
     background: linear-gradient(to top, #15ea21, #28a745) padding-box, linear-gradient(to top, #28a745, #15ea21) border-box;
-    box-shadow: 0 10px 27px #00ff0c1a,0 -3px #00913c inset,0 2px #35d87b inset!important;
+    box-shadow: 0 10px 27px #00ff0c1a,0 -3px #00913c inset,0 2px #35d87b inset !important;
 }
 div.table .table-row .table-cell button.active,
 #balance button:active,
@@ -307,6 +307,46 @@ div.table .table-row .table-cell button:last-child:active,
     display: flex !important;
     margin: auto !important;
     width: 100%;
+}
+
+#roll Button span {
+    transform: translateY(20px);
+}
+#roll Button {
+    height: 80px !important;
+    width: 60px;
+    background-size: 50px;
+    margin: 10px 1px 15px;
+    background-color: #03d834;
+    background-repeat: no-repeat;
+    background-position: 7.5px 7.5px;
+}
+
+#roll Button.whale {
+
+    background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d56f5333d09719df811b8_whale.svg') !important;
+}
+
+#roll Button.bear {
+
+    background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d5749333d092d0cf81522_Bear.svg') !important;
+        
+}
+#roll Button.rock {
+
+    background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d573ef16953e6b2f5828e_Rock.svg') !important;
+}
+#roll Button.paper {
+
+    background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d57421c911684423e8848_Paper.svg') !important;
+}
+#roll Button.scissors {
+
+    background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d5739333d096545f81475_Scissors.svg') !important;
+}
+#roll Button.bull {
+
+    background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d5745fa71d906235b6736_Bull.svg') !important;
 }
 
 .cell-joiners svg {
@@ -425,6 +465,8 @@ div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status 
     margin-left: -19px;
     transform: translate(-1px, 15px);
 }
+
+
 div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status.online {
     background-color: rgb(87, 202, 34);
 }
@@ -440,7 +482,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     text-align: center;
     color: #333;
     display: flex;
-    
+
 }
 
 /* div.table.my-chat-table .table-row > div.message-panel {

@@ -85,6 +85,10 @@ background: #060607;
     background-image: url("/img/icons/modal-drop-game-dark-mode.svg");
 }
 
+.dark_mode 	.modal-body .modal-content-wrapper.roll h4 {
+    background-image: url("/img/icons/modal-roll-dark-mode.svg");
+}
+
 .dark_mode 	.modal-body .modal-content-wrapper.bang h4 {
     background-image: url("/img/icons/modal-bang-dark.svg");
 }

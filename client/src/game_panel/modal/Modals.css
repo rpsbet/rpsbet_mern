@@ -369,6 +369,12 @@ border-bottom-right-radius: 0 !important;
     border-radius: 13px !important;
     margin: 4px !important;
 }
+.modal-body .modal-content-wrapper.roll h4 {
+    background-image: url("/img/icons/modal-roll.png");
+    background-size: 30px;
+    background-position: 22px;
+}
+
 .modal-body .modal-content-wrapper.quick-shoot h4 {
     background-image: url("/img/icons/modal-quick-shoot.svg");
 }
