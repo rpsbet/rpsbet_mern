@@ -151,7 +151,7 @@ class SiteWrapper extends Component {
     this.state = {
       endpoint:
         process.env.NODE_ENV === 'production'
-          ? 'https://rpsbet.io'
+          ? 'https://rps.game'
           : `http://${window.location.hostname}:5001`,
       userName: this.props.userName,
       balance: this.props.balance,

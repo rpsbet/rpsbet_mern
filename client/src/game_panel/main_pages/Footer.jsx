@@ -133,7 +133,7 @@ class Footer extends Component {
                     <a href="https://discord.gg/anMJntW4AD">
                         <FontAwesomeIcon icon={faDiscord} />
                     </a>
-                    <a href="https://twitter.com/rpsbet">
+                    <a href="https://twitter.com/officialrpsgame">
                         <FontAwesomeIcon icon={faTwitter} />
                     </a>
                     <a href="https://t.me/rpsfinance">
@@ -142,7 +142,7 @@ class Footer extends Component {
                     <a href="https://www.youtube.com/channel/UCJRXf1HVpAdBy3Uf6eNGHkA">
                         <FontAwesomeIcon icon={faYoutube} />
                     </a>
-                    <a href="https://www.instagram.com/rpsbet.io/">
+                    <a href="https://www.instagram.com/rps.game/">
                         <FontAwesomeIcon icon={faInstagram} />
                     </a>
                     <a href="https://www.twitch.tv/rpsbet">
@@ -164,9 +164,9 @@ class Footer extends Component {
 
                               </div>
                 <div className={classes.links}>
-                <a className={classes.link} href="#">Contact</a>&nbsp;✗&nbsp;
-                    <a className={classes.link} href="#">Blog</a>&nbsp;✗&nbsp;
-                    <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp;
+                {/* <a className={classes.link} href="#">Contact</a>&nbsp;✗&nbsp; */}
+                    {/* <a className={classes.link} href="#">Blog</a>&nbsp;✗&nbsp; */}
+                    {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
                     <a className={classes.link}
                     href="#terms"
                     id="terms"
@@ -180,8 +180,8 @@ class Footer extends Component {
                         onClick={this.handleOpenPrivacyModal}
                     >
                         Privacy
-                    </a>&nbsp;✗&nbsp;
-                    <a className={classes.link} href="#">Fair</a>
+                    </a>
+                    {/* <a className={classes.link} href="#">Fair</a> */}
                 </div>
                 <div className={classes.address}>
                     <p>RPS.GAME is operated by RPSBET Ltd. (Registration No. 12175962), having its registered address at 84 Ladysmith Road, Plymouth, UK

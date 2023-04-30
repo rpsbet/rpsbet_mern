@@ -92,7 +92,7 @@ a#btn_how_to_play {
 }
 
 .game_header .main_header a.game_logo {
-    width: 100px;
+    width: 127px;
     height: 34px;
     background-image: url("/img/game-logo.svg");
     background-repeat: no-repeat;
@@ -243,7 +243,14 @@ cursor: pointer;
     margin: 0;
   }
   
-  
+  #view svg{
+    width: 35px;
+    height: 35px;
+    margin-top: 7px;
+    padding: 8px;
+    margin-right: 3px;
+    margin-bottom: 3px;
+}
 
 .dark_mode_toggle {
     margin: 10px;
@@ -305,9 +312,15 @@ ul[role=menu] li:hover {
 .hidden {
     display: none !important;
 }
+.cell-likes div {
+    margin-left: -5px;
+    margin-right: -5px;
+}
 
 @media (max-width: 768px) {
-
+    .cell-likes div {
+        margin-left: unset;
+    }
     div.table .dont-have-game-msg div {
         font-size: 0.75em;
         font-weight: 600;
@@ -318,9 +331,13 @@ ul[role=menu] li:hover {
     .game_header .main_header {
         padding: 8px 16px;
     }
+
+    div.table div.table-row div.table-cell button {
+        margin-bottom: -5px;
+    }
     .game_header .main_header a.game_logo {
-        width: 64px;
-        height: 24px;
+        width: 84px;
+        height: 34px;
         margin-right: 20px;
         background-image: url("/img/game-logo-mobile.svg");
     }

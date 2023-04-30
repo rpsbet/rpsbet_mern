@@ -638,7 +638,7 @@ class CreateGame extends Component {
         playSound={this.playSound}
 
           onChangeState={this.onChangeState}
-          Roll_list={this.state.bang_list}
+          roll_list={this.state.roll_list}
           bet_amount={this.state.bet_amount}
           winChance={this.state.winChance}
           aveMultiplier={this.state.aveMultiplier}

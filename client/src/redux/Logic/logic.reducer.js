@@ -20,6 +20,7 @@ import {
   SPLEESH_GUESSES,
   DROP_GUESSES,
   BANG_GUESSES,
+  ROLL_GUESSES,
   HISTORY_LOADED,
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
@@ -39,6 +40,7 @@ const initialState = {
   spleesh_guesses: [],
   drop_guesses: [],
   bangs: [],
+  rolls: [],
   totalPage: 0,
   pageNumber: 1,
   historyTotalPage: 0,
@@ -51,6 +53,7 @@ const initialState = {
     { game_type_name: 'Quick Shoot' },
     { game_type_name: 'Drop Game' },
     { game_type_name: 'Bang!' },
+    { game_type_name: 'Roll' },
   ],
   curRoomInfo: {
     _id: 0,
@@ -66,6 +69,7 @@ const initialState = {
     qs_game_type: 2,
     likes: 0,
     dislikes: 0,
+    views: 0,
     liked: false,
     disliked: false,
   },
@@ -122,6 +126,11 @@ export default function(state = initialState, action) {
       ...state,
       bang_guesses: action.bang_guesses
     };
+    case ROLL_GUESSES:
+      return {
+        ...state,
+        roll_guesses: action.roll_guesses
+      };
 
   case UPDATE_BANKROLL:
       return {

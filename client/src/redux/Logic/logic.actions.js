@@ -24,6 +24,7 @@ import {
   SPLEESH_GUESSES,
   DROP_GUESSES,
   BANG_GUESSES,
+  ROLL_GUESSES,
   ONLINE_USER_LIST_UPDATED,
   MSG_WARNING,
   SELECT_MAIN_TAB,
@@ -107,7 +108,21 @@ export function updateBangGuesses() {
       });
   };
 }
-
+export function updateRollGuesses() {
+  return dispatch => {
+    fetch('/api/roll/guesses')
+      .then(res => res.json())
+      .then(data => {
+        dispatch({
+          type: ROLL_GUESSES,
+          payload: data
+        });
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+}
 
 // joinRoom
 export const bet = (bet_info) => async dispatch => {

@@ -53,10 +53,12 @@ class Roll extends Component {
     this.state = {
       selected_roll: '',
       bet_amount: 10.00,
-      roll: 1.00,
+      roll: '',
+      roll_list: [],
+      face: '',
       balance: this.props.balance,
       winChance: 33,
-      aveMultiplier: 0
+      aveMultiplier: 0,
     };
   }
 
@@ -79,75 +81,59 @@ class Roll extends Component {
   onChangeAveMultiplier = (aveMultiplier) => {
     this.setState({ aveMultiplier });
   };
+  predictNext = (roll_list) => {
+    const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
+    const occurrences = {};
+    const nextStates = {};
   
-  predictNext = (rollAmounts) => {
-    // Find the unique values in rollAmounts
-    const uniqueValues = [...new Set(rollAmounts.map(roll => roll.roll))];
+    // Count the number of occurrences of each face in the roll_list
+    roll_list.forEach((roll) => {
+      occurrences[roll.face] = (occurrences[roll.face] || 0) + 1;
+    });
   
-    if (uniqueValues.length === 1) {
-      // If there is only one unique value, return that value
-      return uniqueValues[0];
-    } else {
-      // Otherwise, compute the range and generate a random number within that range
-      const minValue = Math.min(...uniqueValues);
-      const maxValue = Math.max(...uniqueValues);
-      const rangeSize = Math.ceil((maxValue - minValue) / 200);
+    // Determine the probability of each face occurring next
+    faces.forEach((face) => {
+      const count = occurrences[face] || 0;
+      nextStates[face] = count / Math.min(20, roll_list.length);
+    });
   
-      const rangeCounts = {};
-      rollAmounts.forEach((roll) => {
-        const range = Math.floor((roll.roll - minValue) / rangeSize);
-        rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
-      });
-  
-      const totalCounts = rollAmounts.length;
-      const rangeProbabilities = {};
-      Object.keys(rangeCounts).forEach((range) => {
-        const rangeProbability = rangeCounts[range] / totalCounts;
-        rangeProbabilities[range] = rangeProbability;
-      });
-  
-      let randomValue = Math.random();
-      let chosenRange = null;
-      Object.entries(rangeProbabilities).some(([range, probability]) => {
-        randomValue -= probability;
-        if (randomValue <= 0) {
-          chosenRange = range;
-          return true;
-        }
-        return false;
-      });
-  
-      const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
-      const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
-  
-      const getRandomNumberInRange = (min, max) => {
-        return Math.random() * (max - min) + min;
-      };
-      
-      const randomChance = Math.random();
-      const newValue = parseFloat(getRandomNumberInRange(1, 1.1).toFixed(2));
-      const isChanged = randomChance <= 0.1;
-      
-      if(isChanged){
-        return newValue;
-      } else {
-        return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+    // Randomly select the next face based on probabilities
+    let nextStateFace = '';
+    let randomNum = Math.random();
+    let cumulativeProbability = 0;
+    for (const face in nextStates) {
+      cumulativeProbability += nextStates[face];
+      if (randomNum <= cumulativeProbability) {
+        nextStateFace = face;
+        break;
       }
     }
-  };
   
-  
-  
-
-  onAutoPlay = () => {
-    if (this.props.roll_list.length > 2) {
-      const predictedNum = this.predictNext(this.props.roll_list);
-
-      this.onAddRun(predictedNum);
-    } else {
-      alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
+    // Use the switch statement to determine the rollNumber for the predicted face
+    let rollNumber;
+    switch (nextStateFace) {
+      case 'R':
+      case 'P':
+      case 'S':
+        rollNumber = '2';
+        break;
+      case 'W':
+        rollNumber = '14';
+        break;
+      case 'B':
+        rollNumber = '1.5';
+        break;
+      case 'Bu':
+        rollNumber = '7';
+        break;
+      default:
+        rollNumber = '2';
     }
+  
+    return { roll: rollNumber, face: nextStateFace };
   };
+  
+  
   
 
   
@@ -166,29 +152,30 @@ class Roll extends Component {
     });
 
   };
-
-  onAddRun = (roll) => {
-    this.props.playSound('boop');
-
-    // Ensure roll is a number
-    const parsedDropAmount = parseFloat(roll);
-
-    roll = parsedDropAmount;
-    if (isNaN(roll)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER');
+  onAutoPlay = () => {
+    const { roll_list } = this.props;
+  
+    if (roll_list.length < 3) {
+      alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
       return;
     }
+  console.log(roll_list)
+    const predictedState = this.predictNext(roll_list);
+    this.onAddRun(predictedState.roll, predictedState.face);
+  };
   
-    this.setState({ roll: roll });
+
+  onAddRun = (roll, face) => {
+    console.log(this.props.roll_list)
+    this.props.playSound('boop');
+  
+
     const newArray = JSON.parse(JSON.stringify(this.props.roll_list));
 
-  
-    if (roll < 1) {
-      roll = 1; 
-    }
-  
+ 
     newArray.push({
-      roll: roll.toFixed(2)
+      roll: roll,
+      face: face
     });
 
     const aveMultiplier = calcAveMultiplier(newArray);
@@ -196,8 +183,7 @@ class Roll extends Component {
     this.props.onChangeState({
       roll_list: newArray,
       winChance: winChance,
-      aveMultiplier: aveMultiplier,
-      roll: this.state.bet_amount
+      aveMultiplier: aveMultiplier
     });
     this.onChangeWinChance(winChance);
 
@@ -206,50 +192,15 @@ class Roll extends Component {
   };
 
   componentDidUpdate(prevProps) {
-    // if (prevProps.roll_list.length !== this.props.roll_list.length) {
-    //   const table = document.getElementById('runs');
-    //   if (table) {
-    //     table.scrollTop = table.scrollHeight;
-    //   }
-    // }
-  }
-
-
-  handlehalfxButtonClick() {
-    const multipliedBetAmount = this.state.roll * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
-    this.setState({
-    roll: roundedBetAmount
-    }, () => {
-    document.getElementById("betamount").focus();
-    });
-    }
-
-  handle2xButtonClick() {
-    const maxBetAmount = this.state.balance;
-    const multipliedBetAmount = this.state.roll * 2;
-    const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount, this.props.bet_amount);
-    const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
-    if (roundedBetAmount < -2330223) {
-      alertModal(this.props.isDarkMode, "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?");
-    } else {
-      this.setState({
-        roll: roundedBetAmount
-      }, () => {
-      document.getElementById("betamount").focus();
-      });
+    if (prevProps.roll_list.length !== this.props.roll_list.length) {
+      const table = document.getElementById('runs');
+      if (table) {
+        table.scrollTop = table.scrollHeight;
+      }
     }
   }
 
-  
-    handleMaxButtonClick() {
-      const maxBetAmount = (this.state.balance).toFixed(2);
-      this.setState({
-        roll: Math.min(maxBetAmount, this.props.bet_amount)
-      }, () => {
-      document.getElementById("betamount").focus();
-      });
-    }
+
   onChangeBetAmount = new_state => {
     this.setState({ roll: new_state.selected_bet_amount });
   };
@@ -283,11 +234,11 @@ class Roll extends Component {
 <div id="roll">
   <Button
     className={
-      'rock button-2x-r' + (this.state.selected_rps === 'R' ? ' active' : '')
+      'rock button-2x-r' + (this.state.selected_roll === 'R' ? ' active' : '')
     }
     variant="contained"
     onClick={() => {
-      this.onAddRun('R');
+      this.onAddRun('2', 'R');
       const currentActive = document.querySelector('.active');
       if (currentActive) {
         currentActive.style.animation = 'none';
@@ -295,14 +246,14 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  >2x</Button>
+  ><span>2x</span></Button>
   <Button
     className={
-      'paper button-2x-p' + (this.state.selected_rps === 'P' ? ' active' : '')
+      'paper button-2x-p' + (this.state.selected_roll === 'P' ? ' active' : '')
     }
     variant="contained"
     onClick={() => {
-      this.onAddRun('P');
+      this.onAddRun('2', 'P');
       const currentActive = document.querySelector('.active');
       if (currentActive) {
         currentActive.style.animation = 'none';
@@ -310,15 +261,15 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  >2x</Button>
+  ><span>2x</span></Button>
   <Button
     className={
       'scissors button-2x-s' +
-      (this.state.selected_rps === 'S' ? ' active' : '')
+      (this.state.selected_roll === 'S' ? ' active' : '')
     }
     variant="contained"
     onClick={() => {
-      this.onAddRun('S');
+      this.onAddRun('2', 'S');
       const currentActive = document.querySelector('.active');
       if (currentActive) {
         currentActive.style.animation = 'none';
@@ -326,15 +277,15 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  >2x</Button>
+  ><span>2x</span></Button>
   <Button
     className={
       'whale button-14x' +
-      (this.state.selected_rps === 'W' ? ' active' : '')
+      (this.state.selected_roll === 'W' ? ' active' : '')
     }
     variant="contained"
     onClick={() => {
-      this.onAddRun('W');
+      this.onAddRun('14', 'W');
       const currentActive = document.querySelector('.active');
       if (currentActive) {
         currentActive.style.animation = 'none';
@@ -342,15 +293,15 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  >14x</Button>
+  ><span>14x</span></Button>
   <Button
     className={
       'bear button-15x' +
-      (this.state.selected_rps === 'B' ? ' active' : '')
+      (this.state.selected_roll === 'B' ? ' active' : '')
     }
     variant="contained"
     onClick={() => {
-      this.onAddRun('B');
+      this.onAddRun('1.5', 'B');
       const currentActive = document.querySelector('.active');
       if (currentActive) {
         currentActive.style.animation = 'none';
@@ -358,14 +309,14 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  >1.5x</Button>
+  ><span>1.5x</span></Button>
   <Button
     className={
-      'bull button-7x' + (this.state.selected_rps === 'Bu' ? ' active' : '')
+      'bull button-7x' + (this.state.selected_roll === 'Bu' ? ' active' : '')
     }
     variant="contained"
     onClick={() => {
-      this.onAddRun('Bu');
+      this.onAddRun('7', 'Bu');
       const currentActive = document.querySelector('.active');
       if (currentActive) {
         currentActive.style.animation = 'none';
@@ -373,10 +324,10 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  >7x</Button>
+  ><span>7x</span></Button>
 </div>
 
-            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</Button>
+            <Button id="aiplay" className="disabled" onClick={this.onAutoPlay}>Test AI Play</Button>
             {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
 </label> */}
 
@@ -389,7 +340,7 @@ class Roll extends Component {
                   this.props.roll_list.map((roll, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{roll.roll}x</td>
+                      <td>{roll.roll}x {roll.face}</td>
                       <td>
                         <HighlightOffIcon
                           onClick={() => this.onRemoveItem(index)}

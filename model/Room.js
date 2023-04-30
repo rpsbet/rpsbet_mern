@@ -35,6 +35,10 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
+  selected_roll: {
+    type: Number,
+    default: 0
+  },
   aveMultiplier: {
     type: Number,
     default: 1
@@ -102,6 +106,11 @@ const RoomSchema = new Schema({
     default: []
   }],
   dislikes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
+  views: [{
     type: Schema.Types.ObjectId,
     ref: 'User',
     default: []

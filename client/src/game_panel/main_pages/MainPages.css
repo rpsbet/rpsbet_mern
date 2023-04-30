@@ -214,7 +214,7 @@ div.table .table-header {
     background-color: #777777 !important;
   }
 .win-bg {
-    background-color: #ff0a28 !important;
+    background-color: #0cff00  !important;
   }
 
 .btn_modal_close:hover,
@@ -276,11 +276,11 @@ div.table .table-row .table-cell button:last-child,
 .game-contents .game-info-panel button  {
     padding: 0;
     border-radius: 0.25em;
-    color: white;
+    color: #fff;
     line-height: 40px;
     font-weight: 600;
-    background: linear-gradient(to top, #15ea21, #28a745) padding-box, linear-gradient(to top, #28a745, #15ea21) border-box;
-    box-shadow: 0 10px 27px #00ff0c1a,0 -3px #00913c inset,0 2px #35d87b inset !important;
+    background: linear-gradient(0deg,#d81719,#a60014) padding-box,linear-gradient(0deg,#a60014,#d81719) border-box;
+    box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000, inset 0 2px #ff2525 !important;
 }
 div.table .table-row .table-cell button.active,
 #balance button:active,
@@ -292,7 +292,7 @@ div.table .table-row .table-cell button:last-child:active,
 .btn-create-room.active,
 .qs-buttons button.active 
     {
-    background-color: #0ead12;
+    background-color: #d81719;
     box-shadow: none!important;
     transform: translate(0px, 1px);
 }
@@ -308,8 +308,11 @@ div.table .table-row .table-cell button:last-child:active,
     margin: auto !important;
     width: 100%;
 }
+#roll {
+    text-align: center;
+}
 
-#roll Button span {
+#roll Button span span {
     transform: translateY(20px);
 }
 #roll Button {
@@ -317,7 +320,7 @@ div.table .table-row .table-cell button:last-child:active,
     width: 60px;
     background-size: 50px;
     margin: 10px 1px 15px;
-    background-color: #03d834;
+    background-color: #d81719;
     background-repeat: no-repeat;
     background-position: 7.5px 7.5px;
 }
@@ -585,9 +588,10 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     color: #f9f9f9;
     box-shadow: 0 10px 27px #00ff0c1a,0 -3px #00913c inset,0 2px #35d87b inset!important;
     font-size: 16px;
-    background: linear-gradient(to top, #15ea21, #28a745) padding-box, linear-gradient(to top, #28a745, #15ea21) border-box;
-    border-radius: 0.25em;
+   border-radius: 0.25em;
     font-weight: 600;
+    background: linear-gradient(0deg,#d81719,#a60014) padding-box,linear-gradient(0deg,#a60014,#d81719) border-box;
+    box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000, inset 0 2px #ff2525 !important;
 }
 
 .contents_wrapper .main-game .main-panel,
@@ -602,6 +606,8 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 
 .bet-amounts {
     text-align: center;
+    display: flex;
+    align-items: baseline;
   }
 
 .create-room-btn-panel button.btn-create-room:active,
@@ -1057,9 +1063,8 @@ overflow: hidden;
 
 .game-page .game-contents .game-info-panel button.active {
     color: #e5e5e5;
-    background-image: linear-gradient(to top, #48ff00, #07c700);
+    background-image: linear-gradient(to top, #c53c3c, #f50000);
     box-shadow: none !important;
-    /* box-shadow: 0 -1px 0px #52df00,0 -4px #2d7001 inset,0 2px #07c400 inset; */
 }
 .game-page .game-contents .game-info-panel button:hover {
     transition: 0.1s;
@@ -1070,7 +1075,7 @@ overflow: hidden;
 .game-page .game-contents .game-info-panel button:focus,
 .game-page .game-contents .game-info-panel button:active {
     transform: translateY(0px);
-    background-image: linear-gradient(to top, #48ff00, #07c700);
+    background-image: linear-gradient(to top, #ff0000, #db0000);
 box-shadow:none !important;
 }
 .game-page .game-contents .game-info-panel .edit-amount-panel {
@@ -1306,8 +1311,11 @@ table#runs td svg {
     width: 130px;
     height: 200px !important;
     cursor: pointer;
-    box-shadow: 0 -1px 0px #045308,0 -4px #50ee2c inset,0 2px #12c526 inset!important;
-    background-color: #03c927;
+    /* background: linear-gradient(0deg,#d81719,#a60014) padding-box,linear-gradient(0deg,#a60014,#d81719) border-box;
+
+    box-shadow: 0 -1px 0px #a60014,0 -4px #af0000 inset,0 2px #ff2525 inset!important; */
+    box-shadow: 0 -1px 0px #d81719,0 -4px #af0000 inset,0 2px #a60014 inset!important;
+    background-color: #c20017;
     filter: drop-shadow(2px 4px 6px black);
     transition: all 0.2s ease-in-out;
     position: relative;
@@ -1347,7 +1355,7 @@ table#runs td svg {
 
     #rps-radio Button.active,#rps-radio Button:active  {
         transform: translateY(0);
-        background-color: #049c20;
+        background-color: #ff0606;
         box-shadow: none !important;
     }
     
@@ -1628,7 +1636,7 @@ input {
     cursor: pointer;
     border: unset !important;
     background-size: 2.7em;
-    background-color: #15ea21;
+    background-color: #d81719;
 }
 
 
@@ -2370,6 +2378,21 @@ margin-bottom: 10px;
     .previous-guesses.drop  {
         width: 360px;
     }
+    #view svg{
+        margin-bottom: -2px;
+    }
+    .cell-likes div {
+        margin-right: -12px;
+        font-size: 0.6em;
+    }
+
+    .modal-body .modal-content-wrapper.roll h4 {
+        background-size: 22px;
+        background-position: 12px;
+    }
+    .bet-amounts {
+        display: block;
+      }
 
     .transaction-settings {
         transform: translate(0%, 10vh);
