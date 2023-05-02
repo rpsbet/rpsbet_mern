@@ -8,33 +8,40 @@ const emitRollGuesses = (socket, room_Id) => {
   if (socket) {
     const roomBetsForRoom = roomBets.get(room_Id) || [];
     const rolls = roomBetsForRoom.map(bet => bet.roll);
+    const faces = roomBetsForRoom.map(bet => bet.face); // get face values
     const socketName = `ROLL_GUESSES_${room_Id}`;
     const elapsedTime = '';
-    socket.emit(socketName, { rolls: rolls, elapsedTime });
-    // console.log(`Sent data to socket ${socketName}:`, { rolls, elapsedTime });
+    socket.emit(socketName, { rolls: rolls, faces: faces, elapsedTime }); // include faces in the emitted data
+    console.log(`Sent data to socket ${socketName}:`, { rolls, faces, elapsedTime });
   }
 };
 
-const predictAndEmit = async (roll_list, room, socket, room_Id) => {
+const predictAndEmit = async (roll_list, room, socket, room_Id, numRolls) => {
+  const rolls = [];
 
-  const nextRollPrediction = await predictNextRoll(roll_list);
-  const currentTime = await getCurrentTime();
-  const newBet = new RollBetItem({
-    room: room,
-    roll: nextRollPrediction,
-    created_at: currentTime
-  });
-  await newBet.save();
+  for (let i = 0; i < numRolls; i++) {
+    const { roll: rollNumber, face: nextStateFace } = await predictNextRoll(roll_list);
+    const currentTime = await getCurrentRollTime();
+    const newBet = new RollBetItem({
+      room: room,
+      roll: rollNumber,
+      face: nextStateFace,
+      created_at: currentTime
+    });
+    await newBet.save();
 
-  const roomBetsForRoom = roomBets.get(room_Id) || [];
-  roomBetsForRoom.push(newBet);
-  roomBets.set(room_Id, roomBetsForRoom);
+    const roomBetsForRoom = roomBets.get(room_Id) || [];
+    roomBetsForRoom.push(newBet);
+    roomBets.set(room_Id, roomBetsForRoom);
+
+    rolls.push(rollNumber);
+  }
 
   emitRollGuesses(socket, room_Id);
 
   const timeoutId = setTimeout(
-    () => predictAndEmit(roll_list, room, socket, room_Id),
-    nextRollPrediction * 1000 + 7000
+    () => predictAndEmit(roll_list, room, socket, room_Id, numRolls),
+    25000
   );
   const timeoutIdsForRoom = timeoutIds.get(room_Id) || [];
   timeoutIdsForRoom.push(timeoutId);
@@ -42,35 +49,28 @@ const predictAndEmit = async (roll_list, room, socket, room_Id) => {
 };
 
 const initializeRollRound = async (roll_list, room, socket, room_Id) => {
-  // console.log("di")
-  const nextRollPrediction = await predictNextRoll(roll_list);
-
-  const currentTime = await getCurrentTime();
-  const newBet = new RollBetItem({
-    room: room,
-    roll: nextRollPrediction,
-    created_at: currentTime
+  const numRolls = 20;
+  const timeoutIdsForRoom = timeoutIds.get(room_Id) || [];
+  timeoutIdsForRoom.forEach((timeoutId) => {
+    clearTimeout(timeoutId);
   });
-  await newBet.save();
+  timeoutIdsForRoom.length = 0;
 
-  const roomBetsForRoom = roomBets.get(room_Id) || [];
-  roomBetsForRoom.push(newBet);
-  roomBets.set(room_Id, roomBetsForRoom);
-
-  emitRollGuesses(socket, room_Id);
+  predictAndEmit(roll_list, room, socket, room_Id, numRolls);
 
   const timeoutId = setTimeout(
-    () => predictAndEmit(roll_list, room, socket, room_Id),
-    nextRollPrediction * 1000 + 7000
+    () => initializeRollRound(roll_list, room, socket, room_Id),
+    25000
   );
-  const timeoutIdsForRoom = timeoutIds.get(room_Id) || [];
   timeoutIdsForRoom.push(timeoutId);
   timeoutIds.set(room_Id, timeoutIdsForRoom);
 };
 
+
+
 const closeRoomSocket = (socket, room_Id) => {
   if (socket) {
-    const socketName = `BANG_GUESSES_${room_Id}`;
+    const socketName = `ROLL_GUESSES_${room_Id}`;
     // socket.emit(socketName, { rolls: [], elapsedTime: '' });
     socket.disconnect(true);
     console.log(`Closed socket ${socketName}`);
@@ -86,62 +86,67 @@ const stopRollGame = (room_Id, socket) => {
 };
 
 
-const predictNextRoll = rollAmounts => {
-    // Find the unique values in rollAmounts
-    const uniqueValues = [...new Set(rollAmounts.map(roll => roll.roll))];
+const predictNextRoll = roll_list => {
+    const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
+    const sequence = roll_list.map(roll => roll.face); // New array to store sequence of faces
+    const nextStates = {};
   
-    if (uniqueValues.length === 1) {
-      // If there is only one unique value, return that value
-      return uniqueValues[0];
-    } else {
-      // Otherwise, compute the range and generate a random number within that range
-      const minValue = Math.min(...uniqueValues);
-      const maxValue = Math.max(...uniqueValues);
-      const rangeSize = Math.ceil((maxValue - minValue) / 200);
+    // Determine the probability of each face occurring next based on the previous sequence of faces
+    faces.forEach((face) => {
+      const count = sequence.filter((f, i) => i > 0 && sequence[i-1] === face).length;
+      nextStates[face] = count / Math.max(1, sequence.length - 1);
+    });
   
-      const rangeCounts = {};
-      rollAmounts.forEach((roll) => {
-        const range = Math.floor((roll.roll - minValue) / rangeSize);
-        rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
+    // Check if all probabilities are either 0 or 1
+    const allProbabilitiesOneOrZero = Object.values(nextStates).every(probability => probability === 0 || probability === 1);
+  
+    // Use the original method of predicting if all probabilities are either 0 or 1
+    if (allProbabilitiesOneOrZero) {
+      const occurrences = {};
+      roll_list.forEach((roll) => {
+        occurrences[roll.face] = (occurrences[roll.face] || 0) + 1;
       });
+      let randomIndex = Math.floor(Math.random() * roll_list.length);
+      let nextState = roll_list[randomIndex];
+      return { roll: nextState.roll, face: nextState.face };
+    }
   
-      const totalCounts = rollAmounts.length;
-      const rangeProbabilities = {};
-      Object.keys(rangeCounts).forEach((range) => {
-        const rangeProbability = rangeCounts[range] / totalCounts;
-        rangeProbabilities[range] = rangeProbability;
-      });
-  
-      let randomValue = Math.random();
-      let chosenRange = null;
-      Object.entries(rangeProbabilities).some(([range, probability]) => {
-        randomValue -= probability;
-        if (randomValue <= 0) {
-          chosenRange = range;
-          return true;
-        }
-        return false;
-      });
-  
-      const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
-      const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
-  
-      const getRandomNumberInRange = (min, max) => {
-        return Math.random() * (max - min) + min;
-      };
-      
-      const randomChance = Math.random();
-      const newValue = parseFloat(getRandomNumberInRange(1, 1.1).toFixed(2));
-      const isChanged = randomChance <= 0.1;
-      
-      if(isChanged){
-        return newValue;
-      } else {
-        return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+    // Randomly select the next face based on probabilities
+    let nextStateFace = '';
+    let randomNum = Math.random();
+    let cumulativeProbability = 0;
+    for (const face in nextStates) {
+      cumulativeProbability += nextStates[face];
+      if (randomNum <= cumulativeProbability) {
+        nextStateFace = face;
+        break;
       }
     }
+  
+    // Use the switch statement to determine the rollNumber for the predicted face
+    let rollNumber;
+    switch (nextStateFace) {
+      case 'R':
+      case 'P':
+      case 'S':
+        rollNumber = '2';
+        break;
+      case 'W':
+        rollNumber = '14';
+        break;
+      case 'B':
+        rollNumber = '1.5';
+        break;
+      case 'Bu':
+        rollNumber = '7';
+        break;
+      default:
+        rollNumber = '2';
+    }
+  
+    return { roll: rollNumber, face: nextStateFace };
   };
-
+  
 const getCurrentRollTime = async () => {
   // console.log("time" );
   return new Promise((resolve, reject) => {

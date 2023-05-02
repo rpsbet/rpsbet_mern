@@ -83,19 +83,28 @@ class Roll extends Component {
   };
   predictNext = (roll_list) => {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
-    const occurrences = {};
+    const sequence = roll_list.map(roll => roll.face); // New array to store sequence of faces
     const nextStates = {};
   
-    // Count the number of occurrences of each face in the roll_list
-    roll_list.forEach((roll) => {
-      occurrences[roll.face] = (occurrences[roll.face] || 0) + 1;
+    // Determine the probability of each face occurring next based on the previous sequence of faces
+    faces.forEach((face) => {
+      const count = sequence.filter((f, i) => i > 0 && sequence[i-1] === face).length;
+      nextStates[face] = count / Math.max(1, sequence.length - 1);
     });
   
-    // Determine the probability of each face occurring next
-    faces.forEach((face) => {
-      const count = occurrences[face] || 0;
-      nextStates[face] = count / Math.min(20, roll_list.length);
-    });
+    // Check if all probabilities are either 0 or 1
+    const allProbabilitiesOneOrZero = Object.values(nextStates).every(probability => probability === 0 || probability === 1);
+  
+    // Use the original method of predicting if all probabilities are either 0 or 1
+    if (allProbabilitiesOneOrZero) {
+      const occurrences = {};
+      roll_list.forEach((roll) => {
+        occurrences[roll.face] = (occurrences[roll.face] || 0) + 1;
+      });
+      let randomIndex = Math.floor(Math.random() * roll_list.length);
+      let nextState = roll_list[randomIndex];
+      return { roll: nextState.roll, face: nextState.face };
+    }
   
     // Randomly select the next face based on probabilities
     let nextStateFace = '';
@@ -133,11 +142,6 @@ class Roll extends Component {
     return { roll: rollNumber, face: nextStateFace };
   };
   
-  
-  
-
-  
-  
   onRemoveItem = index => {
     this.props.playSound('tap');
 
@@ -159,14 +163,14 @@ class Roll extends Component {
       alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
       return;
     }
-  console.log(roll_list)
+  // console.log(roll_list)
     const predictedState = this.predictNext(roll_list);
     this.onAddRun(predictedState.roll, predictedState.face);
   };
   
 
   onAddRun = (roll, face) => {
-    console.log(this.props.roll_list)
+    // console.log(this.props.roll_list)
     this.props.playSound('boop');
   
 
@@ -327,7 +331,7 @@ class Roll extends Component {
   ><span>7x</span></Button>
 </div>
 
-            <Button id="aiplay" className="disabled" onClick={this.onAutoPlay}>Test AI Play</Button>
+            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</Button>
             {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
 </label> */}
 

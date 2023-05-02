@@ -12,6 +12,7 @@ import BrainGame from '../JoinGame/BrainGame';
 import QuickShoot from '../JoinGame/QuickShoot';
 import DropGame from '../JoinGame/DropGame';
 import Bang from '../JoinGame/Bang';
+import Roll from '../JoinGame/Roll';
 import {
   bet,
   getRoomInfo,
@@ -464,6 +465,25 @@ class JoinGame extends Component {
                     cashoutAmount={this.props.roomInfo.cashoutAmount}
                     bankroll={this.state.bankroll}
                     bang_bet_item_id={this.props.roomInfo.bang_bet_item_id}
+                    is_private={this.props.roomInfo.is_private}
+                    roomInfo={this.props.roomInfo}
+                    playSound={this.playSound}
+                    playSoundLoop={this.playSoundLoop}
+                    stopSound={this.stopSound}
+                  />
+                )}
+                {this.props.roomInfo.game_type === 'Roll' && (
+                  <Roll
+                    refreshHistory={this.refreshHistory}
+                    join={this.join}
+                    user_id={this.props.user_id}
+                    creator_id={this.props.roomInfo.creator_id}
+                    aveMultiplier={this.props.roomInfo.aveMultiplier}
+                    bet_amount={this.props.roomInfo.bet_amount}
+                    crashed={this.props.roomInfo.crashed}
+                    cashoutAmount={this.props.roomInfo.cashoutAmount}
+                    bankroll={this.state.bankroll}
+                    roll_bet_item_id={this.props.roomInfo.roll_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}

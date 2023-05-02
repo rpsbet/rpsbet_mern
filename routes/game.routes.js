@@ -207,6 +207,33 @@ router.get('/room/:id', async (req, res) => {
 
     emitBangElapsedTime(req, room);
 
+    let hasRollEmitted = false;
+
+async function emitRollElapsedTime(req, room) {
+  if (!hasRollEmitted && room.status === 'open') {
+    const roll_guesses = await RollBetItem.find({ room: room });
+    const rolls = roll_guesses.map(guess => guess.roll);
+    const faces = roll_guesses.map(guess => guess.face); // get the faces for each guess
+
+    // Calculate elapsed time from when the function was called
+    const currentTime = await getCurrentRollTime();
+    const lastRollTime =
+      roll_guesses.length > 0
+        ? roll_guesses[roll_guesses.length - 1].created_at
+        : currentTime;
+    const elapsedTime = currentTime - lastRollTime;
+    const roomId = room._id;
+    const socketName = `ROLL_GUESSES1_${roomId}`;
+    if (req.io.sockets) {
+      req.io.sockets.emit(socketName, { rolls, faces, elapsedTime }); // include faces in the emitted object
+    }
+    hasRollEmitted = true;
+  }
+}
+
+emitRollElapsedTime(req, room);
+
+
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
 
     res.json({
@@ -1039,7 +1066,7 @@ router.post('/rooms', auth, async (req, res) => {
     } else if (gameType.game_type_name === 'Roll') {
       const roomId = newRoom.id;
 
-      initializeRound(req.body.roll_list, newRoom, req.io.sockets, roomId);
+      initializeRollRound(req.body.roll_list, newRoom, req.io.sockets, roomId);
     
     }
     

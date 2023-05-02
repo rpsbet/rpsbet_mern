@@ -16,8 +16,6 @@ import {
   validateBetAmount,
   validateLocalStorageLength
 } from '../modal/betValidations';
-import bomb from '../LottieAnimations/bomb.json';
-import explosion from '../LottieAnimations/explosion.json';
 import animationData from '../LottieAnimations/spinningIcon';
 import Avatar from '../../components/Avatar';
 import {
@@ -87,7 +85,7 @@ class Roll extends Component {
       clicked: true,
       intervalId: null,
       requestId: null,
-      nextRollInterval: null,
+      nextRollInterval: 20,
       countdown: null,
       items: [],
       executeBet: false,
@@ -115,6 +113,7 @@ class Roll extends Component {
       settings_panel_opened: false
     };
     this.panelRef = React.createRef();
+    this.sliderRef = React.createRef();
 
     this.onChangeState = this.onChangeState.bind(this);
   }
@@ -162,9 +161,16 @@ class Roll extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { waiting, newRound, showRoll, showCountdown, executeBet, cashoutAmount } = this.state;
+    const {
+      waiting,
+      newRound,
+      showRoll,
+      showCountdown,
+      executeBet,
+      cashoutAmount
+    } = this.state;
 
-    const {playSound, playSoundLoop, stopSound } = this.props;
+    const { playSound, playSoundLoop, stopSound } = this.props;
 
     if (!showRoll && !showCountdown) {
       stopSound('countDown');
@@ -179,14 +185,17 @@ class Roll extends Component {
     }
 
     if (!showRoll && !showCountdown && waiting && newRound && !executeBet) {
-      this.setState({ 
-        newRound: false,
-        executeBet: true,
-        crashed: false,
-        cashoutAmount: cashoutAmount
-      }, () => {
-        this.onBtnBetClick();
-      });
+      this.setState(
+        {
+          newRound: false,
+          executeBet: true,
+          crashed: false,
+          cashoutAmount: cashoutAmount
+        },
+        () => {
+          this.onBtnBetClick();
+        }
+      );
     }
 
     if (prevProps.roomInfo && this.props.roomInfo) {
@@ -210,35 +219,32 @@ class Roll extends Component {
     this.panelRef.current.addEventListener('scroll', this.handleScroll);
     const roomId = this.props.roomInfo._id;
     this.socket.on(`ROLL_GUESSES_${roomId}`, data => {
-      // console.log(`Received data from socket ROLL_GUESSES_${roomId}:`);
-
+      console.log(`Received data from socket ROLL_GUESSES_${roomId}:`);
+    
       if (data && data.rolls && data.rolls.length > 0) {
-        const lastRoll = data.rolls[data.rolls.length - 1];
-        // console.log('lastRoll', lastRoll);
-        const nextRollInterval = lastRoll;
+        const roll_guesses = data.rolls.map((roll, i) => ({ roll, face: data.faces[i] })); // combine roll and face values
         this.setState({
-          roll_guesses: data.rolls,
-          nextRollInterval: nextRollInterval
+          roll_guesses: roll_guesses
         });
       }
     });
-
+    
     this.socket.on(`ROLL_GUESSES1_${roomId}`, data => {
-      // console.log(`Received data from socket ROLL_GUESSES1_${roomId}:`, data);
-
+      console.log(`Received data from socket ROLL_GUESSES1_${roomId}:`, data);
+    
       if (data && data.rolls && data.rolls.length > 0 && this.state.listen) {
         const lastRoll = data.rolls[data.rolls.length - 1];
-        // console.log('lastRoll', lastRoll);
-        const nextRollInterval = lastRoll;
+        const lastFace = data.faces[data.faces.length - 1]; // get the last face value
+
+        const roll_guesses = data.rolls.map((roll, i) => ({ roll, face: data.faces[i] })); // combine roll and face values
         this.setState({
-          roll_guesses: data.rolls,
-          nextRollInterval: nextRollInterval,
+          roll_guesses: roll_guesses,
           elapsedTime: data.elapsedTime,
           listen: false
         });
-        // console.log('elapsedTime', this.state.elapsedTime);
       }
     });
+    
 
     // this.socket.on('ROLL_GUESSES', data => {
     //   console.log('roll ROLL_GUESSES', data);
@@ -275,59 +281,71 @@ class Roll extends Component {
   };
 
   componentWillUnmount = () => {
-    clearInterval(this.state.intervalId);
+    clearInterval(this.state.intervalId, this.timer);
     document.removeEventListener('mousedown', this.handleClickOutside);
     this.panelRef.current.removeEventListener('scroll', this.handleScroll);
     this.socket.off('ROLL_GUESSES1');
   };
 
-  predictNext = rollAmounts => {
-    // Find the unique values in rollAmounts
-    const uniqueValues = [...new Set(rollAmounts.map(roll => roll.roll))];
-
-    if (uniqueValues.length === 1) {
-      // If there is only one unique value, return that value
-      return uniqueValues[0];
-    } else {
-      // Otherwise, compute the range and generate a random number within that range
-      const minValue = Math.min(...uniqueValues);
-      const maxValue = Math.max(...uniqueValues);
-      const rangeSize = Math.ceil((maxValue - minValue) / 200);
-
-      const rangeCounts = {};
-      rollAmounts.forEach(roll => {
-        const range = Math.floor((roll.roll - minValue) / rangeSize);
-        rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
+  predictNext = (roll_list) => {
+    const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
+    const sequence = roll_list.map(roll => roll.face); // New array to store sequence of faces
+    const nextStates = {};
+  
+    // Determine the probability of each face occurring next based on the previous sequence of faces
+    faces.forEach((face) => {
+      const count = sequence.filter((f, i) => i > 0 && sequence[i-1] === face).length;
+      nextStates[face] = count / Math.max(1, sequence.length - 1);
+    });
+  
+    // Check if all probabilities are either 0 or 1
+    const allProbabilitiesOneOrZero = Object.values(nextStates).every(probability => probability === 0 || probability === 1);
+  
+    // Use the original method of predicting if all probabilities are either 0 or 1
+    if (allProbabilitiesOneOrZero) {
+      const occurrences = {};
+      roll_list.forEach((roll) => {
+        occurrences[roll.face] = (occurrences[roll.face] || 0) + 1;
       });
-
-      const totalCounts = rollAmounts.length;
-      const rangeProbabilities = {};
-      Object.keys(rangeCounts).forEach(range => {
-        const rangeProbability = rangeCounts[range] / totalCounts;
-        rangeProbabilities[range] = rangeProbability;
-      });
-
-      let randomValue = Math.random();
-      let chosenRange = null;
-      Object.entries(rangeProbabilities).some(([range, probability]) => {
-        randomValue -= probability;
-        if (randomValue <= 0) {
-          chosenRange = range;
-          return true;
-        }
-        return false;
-      });
-
-      const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
-      const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
-
-      const getRandomNumberInRange = (min, max) => {
-        return Math.random() * (max - min) + min;
-      };
-      return parseFloat(
-        getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2)
-      );
+      let randomIndex = Math.floor(Math.random() * roll_list.length);
+      let nextState = roll_list[randomIndex];
+      return { roll: nextState.roll, face: nextState.face };
     }
+  
+    // Randomly select the next face based on probabilities
+    let nextStateFace = '';
+    let randomNum = Math.random();
+    let cumulativeProbability = 0;
+    for (const face in nextStates) {
+      cumulativeProbability += nextStates[face];
+      if (randomNum <= cumulativeProbability) {
+        nextStateFace = face;
+        break;
+      }
+    }
+  
+    // Use the switch statement to determine the rollNumber for the predicted face
+    let rollNumber;
+    switch (nextStateFace) {
+      case 'R':
+      case 'P':
+      case 'S':
+        rollNumber = '2';
+        break;
+      case 'W':
+        rollNumber = '14';
+        break;
+      case 'B':
+        rollNumber = '1.5';
+        break;
+      case 'Bu':
+        rollNumber = '7';
+        break;
+      default:
+        rollNumber = '2';
+    }
+  
+    return { roll: rollNumber, face: nextStateFace };
   };
 
   joinGame = async () => {
@@ -343,7 +361,7 @@ class Roll extends Component {
       cashoutAmount: this.state.cashoutAmount
       // slippage: this.state.slippage
     });
-    
+
     let text = 'HAHAA, YOU LOST!!!';
 
     if (result.betResult === 1) {
@@ -399,29 +417,18 @@ class Roll extends Component {
     this.props.refreshHistory();
   };
 
-  
-  
   onBtnBetClick = async () => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-    } = this.props;
-    const {
-      buttonClicked,
-      waiting,
-      executeBet
-    } = this.state;
-  
+    const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
+    const { buttonClicked, waiting, executeBet } = this.state;
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-  
+
     if (!buttonClicked) {
       if (!waiting) {
         this.setState({ waiting: true });
@@ -434,7 +441,7 @@ class Roll extends Component {
       this.pushBet();
     }
   };
-  
+
   pushBet = async () => {
     const {
       openGamePasswordModal,
@@ -444,13 +451,13 @@ class Roll extends Component {
       roomInfo
     } = this.props;
     const { cashoutAmount } = this.state;
-  
+
     cancelAnimationFrame(this.state.requestId);
     await validateBetAmount(cashoutAmount, balance, isDarkMode);
-  
+
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-  
+
     if (is_private === true && passwordCorrect !== true) {
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         openGamePasswordModal();
@@ -471,7 +478,7 @@ class Roll extends Component {
       this.resetButtonState();
     }
   };
-  
+
   resetButtonState = () => {
     this.setState({
       buttonClicked: false,
@@ -479,49 +486,29 @@ class Roll extends Component {
       newRound: false,
       waiting: false,
       executeBet: false,
-      requestId: null,
+      requestId: null
     });
   };
-  
-  
-  startAutoCashout = () => {
-    const { bet_amount, multiplier } = this.state;
-    let cashoutAmount = 1;
-    const increment = 0.01;
-    let previousTimestamp = null;
-    const animate = (timestamp) => {
-      if (!previousTimestamp) {
-        previousTimestamp = timestamp;
-      }
-      const elapsed = timestamp - previousTimestamp;
-      if (elapsed >= 8.3303) {
-        cashoutAmount += increment * Math.floor(elapsed / 8.3303);
-        this.setState({ cashoutAmount });
-        previousTimestamp = timestamp;
-      }
-      if (cashoutAmount >= multiplier) {
-        this.setState({ cashoutAmount: multiplier, crashed: false },
-          () => {
-            this.pushBet();
-          });
-        return;
-      } else if (cashoutAmount >= this.state.nextRollInterval) {
-        this.setState({ crashed: true },
-          () => {
-            this.pushBet();
-          });
-        return;
-      }
-      const requestId = window.requestAnimationFrame(animate);
-      this.setState({ requestId });
+
+  startSlider = () => {
+    const slider = this.sliderRef.current;
+    let position = 0;
+
+    const updatePosition = () => {
+      position -= 10;
+      slider.style.transform = `translateX(${position}px)`;
+      requestAnimationFrame(updatePosition);
     };
-    const requestId = window.requestAnimationFrame(animate);
-    this.setState({ buttonClicked: true, cashoutAmount, requestId });
+
+    const timer = setTimeout(() => {
+      cancelAnimationFrame(updatePosition);
+    }, 7000);
+
+    updatePosition();
+
+    this.timer = timer;
   };
-  
-  
-  
-  
+
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
@@ -758,24 +745,14 @@ class Roll extends Component {
         content = (
           <div>
             {' '}
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: explosion
-              }}
-              style={{
-                filter: 'hue-rotate(45deg)',
-                maxWidth: '100%',
-                width: '300px',
-                marginBottom: '-50px',
-                
-                // position: 'absolute',
-                // transform: 'translate: (50%, 50%)'
-              }}
-            />
-           <span  id="roll-text"> ROLL
-            <br /> @ x{nextRollInterval.toFixed(2)}!</span>
+            <div className="slider-images" ref={this.sliderRef}>
+              {/* Add your images here */}
+            </div>
+            <span id="roll-text">
+              {' '}
+              ROLL
+              <br /> {nextRollInterval.toFixed(2)}
+            </span>
             <br />
             {setTimeout(
               () => this.setState({ elapsedTime: '' }),
@@ -787,27 +764,21 @@ class Roll extends Component {
         content = (
           <div>
             {' '}
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: explosion
-              }}
-              style={{
-                maxWidth: '100%',
-                width: '300px',
-                marginBottom: '-50px'
-                // position: 'absolute',
-                // transform: 'translate: (50%, 50%)'
-              }}
-            />
-            <span id="roll-text"> ROLL
-            <br /> @ x{nextRollInterval.toFixed(2)}!</span>
+            <div className="slider-images" ref={this.sliderRef}>
+              {/* Add your images here */}
+            </div>
+            <span id="roll-text">
+              {' '}
+              ROLL
+              <br /> = {nextRollInterval.toFixed(2)}
+            </span>
           </div>
         );
       }
     } else if (showCountdown) {
-      content = <span id="nextRollIn">Next Roll in...{this.state.countdown}</span>;
+      content = (
+        <span id="nextRollIn">Next Roll in...{this.state.countdown}</span>
+      );
     } else {
       let countupStart;
       if (elapsedTime && elapsedTime / 1000 > nextRollInterval + 2) {
@@ -846,23 +817,9 @@ class Roll extends Component {
         } else {
           content = (
             <div>
-              <Lottie
-              id="bomb"
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: bomb
-                }}
-                style={{
-                  filter: 'hue-rotate(45deg)',
-                  maxWidth: '100%',
-                  width: '250px',
-                  // position: 'absolute',
-                  marginRight: '-30px',
-                  marginBottom: '-30px',
-                  transform: 'translateY(20px)'
-                                }}
-              />
+              <div className="slider-images" ref={this.sliderRef}>
+                {/* Add your images here */}
+              </div>
               <p>
                 <div id="x">x</div>
                 <CountUp
@@ -921,49 +878,23 @@ class Roll extends Component {
         if (rollDuration > 0) {
           content = (
             <div>
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: explosion
-                }}
-                style={{
-                  filter: 'hue-rotate(45deg)',
-                  maxWidth: '100%',
-                  width: '300px',
-                  marginBottom: '-50px'
-
-                  // position: 'absolute',
-                  // transform: 'translate: (50%, 50%)'
-                }}
-              />
-              <span id="roll-text"> ROLL
-            <br /> @ x{nextRollInterval.toFixed(2)}!</span>
+              <div className="slider-images" ref={this.sliderRef}>
+                {/* Add your images here */}
+              </div>
+              <span id="roll-text">
+                {' '}
+                ROLL
+                <br /> = {nextRollInterval.toFixed(2)}
+              </span>
             </div>
           );
         } else {
           content = (
             <div>
-              <Lottie
-                id="bomb"
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: bomb
-                }}
-                style={{
-                  filter: 'hue-rotate(45deg)',
-                  maxWidth: '100%',
-                  width: '250px',
-                  // position: 'absolute',
-                  marginRight: '-30px',
-                  marginBottom: '-30px',
-                  transform: 'translateY(20px)'
-                
-                }}
-              />
+              <div className="slider-images" ref={this.sliderRef}>
+                {/* Add your images here */}
+              </div>
               <p>
-                <div id="x">x</div>
                 <CountUp
                   start={countupStart}
                   end={nextRollInterval}
@@ -1014,25 +945,10 @@ class Roll extends Component {
         countupStart = elapsedTime ? elapsedTime / 1000 : 1;
         content = (
           <div>
-            <Lottie
-            id="bomb"
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: bomb
-              }}
-              style={{
-                filter: 'hue-rotate(45deg)',
-                maxWidth: '100%',
-                width: '250px',
-                // position: 'absolute',
-                marginRight: '-30px',
-                marginBottom: '-30px',
-                transform: 'translateY(20px)'
-              }}
-            />
+            <div className="slider-images" ref={this.sliderRef}>
+              {/* Add your images here */}
+            </div>
             <p>
-              <div id="x">x</div>
               <CountUp
                 start={countupStart}
                 end={nextRollInterval}
@@ -1090,7 +1006,7 @@ class Roll extends Component {
 
     return (
       <div className="game-page">
-        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
+        <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
 
         <div className="page-title">
           <h2>PLAY - Roll!</h2>
@@ -1137,7 +1053,8 @@ class Roll extends Component {
                         updateDigitToPoint2(
                           this.props.aveMultiplier /* * 0.95 */
                         )
-                      )}x
+                      )}
+                      x
                     </div>
                   </div>
                 </React.Fragment>
@@ -1149,51 +1066,33 @@ class Roll extends Component {
             style={{ position: 'relative', zIndex: 10 }}
           >
             <div className="game-info-panel">
-              <h3 className="game-sub-title">Previous Rolls</h3>
+              {/* <h3 className="game-sub-title">Rolls</h3> */}
               <div className="gradient-container">
-                <p className="previous-guesses drop">
-                  <div>
-                    {this.state.roll_guesses.length > 0 ? (
-                      this.state.roll_guesses
-                        .slice(0, -1)
-                        .map((guess, index) => (
-                          <span
-                            key={index}
-                            style={{
-                              background: guess < 2 ? '#e3e103c2' : '#e30303c2',
-                              border: '3px solid',
-                              borderColor: guess < 2 ? '#e3e103' : '#e30303',
-                              padding: '0.3em 0.2em'
-                            }}
-                          >
-                            x{guess.toFixed(2)}
-                          </span>
-                        ))
-                    ) : (
-                      <span id="no-guesses"></span>
-                    )}
+                <p className="previous-guesses roll">
+                  <div style={{ display: 'flex', flexDirection: 'row'}}>
+                  {this.state.roll_guesses.length > 0 ? (
+  this.state.roll_guesses
+    .slice(-25)
+    .map((guess, index) => (
+      <div
+      style={{
+        width: '60px',
+        height: '60px',
+        backgroundPosition: 'center',
+        backgroundSize: 'contain'
+      }}
+      
+        key={index}
+        alt={guess.face}
+        className={guess.face === 'R' ? 'rock' : guess.face === 'P' ? 'paper' : guess.face === 'S' ? 'scissors' : guess.face === 'W' ? 'whale' : guess.face === 'B' ? 'bear' : guess.face === 'Bu' ? 'bull' : ''}
+      />
+    ))
+) : (
+  <span id="no-guesses"></span>
+)}
+
                   </div>
-                  {/* <div>
-                    {this.state.roll_guesses.length > 0 ? (
-                      this.state.roll_guesses.map((guess, index) => (
-                        <span
-                          key={index}
-                          style={{
-                            background:
-                              guess.host_roll > guess.bet_amount
-                                ? '#e3e103c2'
-                                : '#e30303c2',
-                            padding: '0.3em 0.9em'
-                          }}
-                        >
-                          <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
-                          {guess.bet_amount.toFixed(2)}
-                        </span>
-                      ))
-                    ) : (
-                      <span id="no-guesses"></span>
-                    )}
-                  </div> */}
+                  
                 </p>
               </div>
             </div>
@@ -1251,46 +1150,116 @@ class Roll extends Component {
                 </Button>
               </div>
 
-              <div className="your-multiplier">
-                <TextField
-                  type="text"
-                  name="multiplier"
-                  variant="outlined"
-                  id="betamount"
-                  label="AUTO CASH OUT"
-                  value={this.state.multiplier}
-                  onChange={event =>
-                    this.setState({ multiplier: event.target.value })
+              <div id="roll">
+                <Button
+                  className={
+                    'rock button-2x-r' +
+                    (this.state.selected_roll === 'R' ? ' active' : '')
                   }
-                  inputProps={{
-                    pattern: '[0-9]*',
-                    maxLength: 9
+                  variant="contained"
+                  onClick={() => {
+                    this.onAddRun('2', 'R');
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
                   }}
-                  InputLabelProps={{
-                    shrink: true
+                >
+                  <span>2x</span>
+                </Button>
+                <Button
+                  className={
+                    'paper button-2x-p' +
+                    (this.state.selected_roll === 'P' ? ' active' : '')
+                  }
+                  variant="contained"
+                  onClick={() => {
+                    this.onAddRun('2', 'P');
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
                   }}
-                  InputProps={{
-                    endAdornment: 'x'
+                >
+                  <span>2x</span>
+                </Button>
+                <Button
+                  className={
+                    'scissors button-2x-s' +
+                    (this.state.selected_roll === 'S' ? ' active' : '')
+                  }
+                  variant="contained"
+                  onClick={() => {
+                    this.onAddRun('2', 'S');
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
                   }}
-                />
+                >
+                  <span>2x</span>
+                </Button>
+                <Button
+                  className={
+                    'whale button-14x' +
+                    (this.state.selected_roll === 'W' ? ' active' : '')
+                  }
+                  variant="contained"
+                  onClick={() => {
+                    this.onAddRun('14', 'W');
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
+                  }}
+                >
+                  <span>14x</span>
+                </Button>
+                <Button
+                  className={
+                    'bear button-15x' +
+                    (this.state.selected_roll === 'B' ? ' active' : '')
+                  }
+                  variant="contained"
+                  onClick={() => {
+                    this.onAddRun('1.5', 'B');
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
+                  }}
+                >
+                  <span>1.5x</span>
+                </Button>
+                <Button
+                  className={
+                    'bull button-7x' +
+                    (this.state.selected_roll === 'Bu' ? ' active' : '')
+                  }
+                  variant="contained"
+                  onClick={() => {
+                    this.onAddRun('7', 'Bu');
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
+                  }}
+                >
+                  <span>7x</span>
+                </Button>
               </div>
-
-              <Button
-                className="place-bet"
-                color="primary"
-                onClick={() => this.onBtnBetClick()}
-                variant="contained"
-              >
-                {this.state.buttonClicked ? (
-                  `Cash Out @ ${(parseFloat(this.state.cashoutAmount)).toFixed(2)}`
-                ) : this.state.waiting ? (
-                  <span style={{ animation: 'blink 0.75s linear infinite' }}>
-                    Joining Next Round
-                  </span>
-                ) : (
-                  'ROLL OUT'
-                )}
-              </Button>
             </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"
@@ -1391,7 +1360,7 @@ class Roll extends Component {
             </div>
             <Button
               id="aiplay"
-              className='disabled'
+              className="disabled"
               variant="contained"
               onMouseDown={this.handleButtonClick}
               onMouseUp={this.handleButtonRelease}
@@ -1401,7 +1370,9 @@ class Roll extends Component {
               {this.state.betting ? (
                 <div id="stop">
                   <span>Stop</span>
-                  <Lottie options={defaultOptions} width={22} />
+                  <div className="slider-images" ref={this.sliderRef}>
+                    {/* Add your images here */}
+                  </div>{' '}
                 </div>
               ) : (
                 <div>
