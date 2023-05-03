@@ -631,7 +631,6 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 .contents_wrapper .main-game .main-panel,
 .contents_wrapper .main-game .sub-panel {
 	background-image: linear-gradient(-135deg, transparent, #f9f9f9 55%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec72434cb1c84_Dots%20Blue.svg) !important;
-    background-repeat: no-repeat;
     background-position: top right;
 
     background-size: cover;
@@ -1400,15 +1399,15 @@ table#runs td svg {
   
 #rps-radio Button.rock{
     background-position: center;
-    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/64294438e727411a8737e55d_rock-bg.gif")
+    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/64294438e727411a8737e55d_rock-bg.gif") !important
 }
 #rps-radio Button.paper {
     background-position: center;
-    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/642944296b19ef77367075c0_paper-bg.gif");
+    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/642944296b19ef77367075c0_paper-bg.gif") !important;
 }
 #rps-radio Button.scissors {
     background-position: center;
-    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6429443717973b53f71d1981_scissors-bg.gif")
+    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6429443717973b53f71d1981_scissors-bg.gif") !important
 }
 /* #rps-radio Button.rock {
     background-position: center;

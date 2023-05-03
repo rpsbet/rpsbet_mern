@@ -108,7 +108,7 @@ input,textarea { border-radius: 0 !important; }
 
 .create-game-panel .qs-buttons {
   position: sticky !important;
-  translate: 0 -115px;
+  translate: 0 -130px;
   -moz-transform: scaleY(-1);
     -o-transform: scaleY(-1);
     -webkit-transform: scaleY(-1);
@@ -1320,12 +1320,12 @@ circle {
 
 .create-game-panel #br {
   right: 18%;
-  transform: translateY(-65px);
+  transform: translateY(-52px);
 }
 
 .create-game-panel button#bl {
   left: 18%;
-  transform: translateY(-65px);
+  transform: translateY(-52px);
 }
 
 

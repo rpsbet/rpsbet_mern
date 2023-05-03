@@ -406,17 +406,17 @@ border-bottom-right-radius: 0 !important;
 
 .modal-body .modal-content-wrapper.house-edge h4 {
     background-image: url("/img/icons/modal-house-edge.svg");
-    background-size: 27px;
+    background-size: 24px;
     background-position: 4% center;
 }
 .modal-body .modal-content-wrapper.provably-fair h4 {
     background-image: url("/img/icons/modal-provably-fair.svg");
-    background-size: 28px;
+    background-size: 24px;
     background-position: 4% center;
 }
 .modal-body .modal-content-wrapper.support h4 {
     background-image: url("/img/icons/modal-support.svg");
-    background-size: 25px;
+    background-size: 24px;
     background-position: 4% center;
 }
 .modal-body .modal-content-wrapper div.modal-content-panel {
