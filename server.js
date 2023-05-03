@@ -12,14 +12,7 @@ const socketContoller = require('./socketController.js');
 
 const app = express();
 
-const server = process.env.NODE_ENV === 'production' ? https.createServer({
-    key: fs.readFileSync('./ssl/rps_game.p7b'),
-    cert: fs.readFileSync('./ssl/rps_game.crt')
-  },
-  app
-).listen(process.env.PORT, () =>
-  console.log(`server running on port ${process.env.PORT}`)
-) : app.listen(process.env.PORT, () =>
+const server = app.listen(process.env.PORT, () =>
   console.log(`server running on port ${process.env.PORT}`)
 );
 
