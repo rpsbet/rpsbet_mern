@@ -278,6 +278,7 @@ div.table .table-row .table-cell button:last-child,
     border-radius: 0.25em;
     color: #fff;
     line-height: 40px;
+    overflow: hidden;
     font-weight: 600;
     background: linear-gradient(0deg,#d81719,#a60014) padding-box,linear-gradient(0deg,#a60014,#d81719) border-box;
     box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000, inset 0 2px #ff2525 !important;
@@ -296,6 +297,39 @@ div.table .table-row .table-cell button:last-child:active,
     box-shadow: none!important;
     transform: translate(0px, 1px);
 }
+
+div.table .table-row .table-cell button span,
+.create-room-btn-panel button.btn-create-room span,
+.game_header .main_header .header_action_panel button#btn-login span {
+    z-index: 2px !important;
+    position: inherit;
+}
+
+div.table .table-row .table-cell button:last-child:before,
+.create-room-btn-panel button.btn-create-room:before,
+.game_header .main_header .header_action_panel button#btn-login:before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    z-index: 0;
+    opacity: 0.4;
+    filter: brightness(0.15);
+    height: 200%;
+    background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6452ae1e8a3838b5dbbd31c1_rock.png");
+    background-size: 100% auto;
+    animation: move-diagonal 10s linear infinite;
+}
+
+@keyframes move-diagonal {
+    from {
+      transform: translate(-25%, -25%);
+    }
+    to {
+      transform: translate(25%, 25%);
+    }
+  }
 
 .cell-joiners {
     display: inline-flex;

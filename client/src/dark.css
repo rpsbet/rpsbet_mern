@@ -171,7 +171,7 @@ background: #060607;
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: #0c0c0c;
-	background-image: linear-gradient(-135deg, transparent, #0c0c0c 45%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec76a05cb1c80_Dots.svg) !important;
+	background-image: linear-gradient(-135deg, transparent, #0c0c0c 75%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6452b60506b4289cb579941f_scattered-forcefields.svg) !important;
 
 }
 .dark_mode .main-game-page-tabs {
