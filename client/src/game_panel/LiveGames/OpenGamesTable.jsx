@@ -463,6 +463,7 @@ class OpenGamesTable extends Component {
       </>
     )}
     {row.game_type.game_type_name !== 'Spleesh!' &&
+    row.game_type.game_type_name !== 'Drop Game' && 
       row.game_type.game_type_name !== 'Mystery Box' && (
       <>
         WIN {convertToCurrency(updateDigitToPoint2(row.user_bet))}
