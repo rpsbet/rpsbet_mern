@@ -114,6 +114,7 @@ class Roll extends Component {
     };
     this.panelRef = React.createRef();
     this.sliderRef = React.createRef();
+    this.sliderRef2 = React.createRef();
 
     this.onChangeState = this.onChangeState.bind(this);
   }
@@ -219,23 +220,29 @@ class Roll extends Component {
     const roomId = this.props.roomInfo._id;
     this.socket.on(`ROLL_GUESSES_${roomId}`, data => {
       console.log(`Received data from socket ROLL_GUESSES_${roomId}:`);
-    
+
       if (data && data.rolls && data.rolls.length > 0) {
-        const roll_guesses = data.rolls.map((roll, i) => ({ roll, face: data.faces[i] })); // combine roll and face values
+        const roll_guesses = data.rolls.map((roll, i) => ({
+          roll,
+          face: data.faces[i]
+        })); // combine roll and face values
         this.setState({
           roll_guesses: roll_guesses
         });
       }
     });
-    
+
     this.socket.on(`ROLL_GUESSES1_${roomId}`, data => {
       console.log(`Received data from socket ROLL_GUESSES1_${roomId}:`, data);
-    
+
       if (data && data.rolls && data.rolls.length > 0 && this.state.listen) {
         const lastRoll = data.rolls[data.rolls.length - 1];
         const lastFace = data.faces[data.faces.length - 1]; // get the last face value
 
-        const roll_guesses = data.rolls.map((roll, i) => ({ roll, face: data.faces[i] })); // combine roll and face values
+        const roll_guesses = data.rolls.map((roll, i) => ({
+          roll,
+          face: data.faces[i]
+        })); // combine roll and face values
         this.setState({
           roll_guesses: roll_guesses,
           elapsedTime: data.elapsedTime,
@@ -243,7 +250,6 @@ class Roll extends Component {
         });
       }
     });
-    
 
     // this.socket.on('ROLL_GUESSES', data => {
     //   console.log('roll ROLL_GUESSES', data);
@@ -286,31 +292,34 @@ class Roll extends Component {
     this.socket.off('ROLL_GUESSES1');
   };
 
-  predictNext = (roll_list) => {
+  predictNext = roll_list => {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
     const sequence = roll_list.map(roll => roll.face); // New array to store sequence of faces
     const nextStates = {};
-  
+
     // Determine the probability of each face occurring next based on the previous sequence of faces
-    faces.forEach((face) => {
-      const count = sequence.filter((f, i) => i > 0 && sequence[i-1] === face).length;
+    faces.forEach(face => {
+      const count = sequence.filter((f, i) => i > 0 && sequence[i - 1] === face)
+        .length;
       nextStates[face] = count / Math.max(1, sequence.length - 1);
     });
-  
+
     // Check if all probabilities are either 0 or 1
-    const allProbabilitiesOneOrZero = Object.values(nextStates).every(probability => probability === 0 || probability === 1);
-  
+    const allProbabilitiesOneOrZero = Object.values(nextStates).every(
+      probability => probability === 0 || probability === 1
+    );
+
     // Use the original method of predicting if all probabilities are either 0 or 1
     if (allProbabilitiesOneOrZero) {
       const occurrences = {};
-      roll_list.forEach((roll) => {
+      roll_list.forEach(roll => {
         occurrences[roll.face] = (occurrences[roll.face] || 0) + 1;
       });
       let randomIndex = Math.floor(Math.random() * roll_list.length);
       let nextState = roll_list[randomIndex];
       return { roll: nextState.roll, face: nextState.face };
     }
-  
+
     // Randomly select the next face based on probabilities
     let nextStateFace = '';
     let randomNum = Math.random();
@@ -322,7 +331,7 @@ class Roll extends Component {
         break;
       }
     }
-  
+
     // Use the switch statement to determine the rollNumber for the predicted face
     let rollNumber;
     switch (nextStateFace) {
@@ -343,7 +352,7 @@ class Roll extends Component {
       default:
         rollNumber = '2';
     }
-  
+
     return { roll: rollNumber, face: nextStateFace };
   };
 
@@ -488,24 +497,55 @@ class Roll extends Component {
       requestId: null
     });
   };
-
   startSlider = () => {
-    const slider = this.sliderRef.current;
-    let position = 0;
+    const sliderImages = this.sliderRef.current;
+    if (!sliderImages) return; // add null check here
+    let currentPos = 0;
+    let startTime = null;
 
-    const updatePosition = () => {
-      position -= 10;
-      slider.style.transform = `translateX(${position}px)`;
-      requestAnimationFrame(updatePosition);
-    };
+    function animate(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsedTime = timestamp - startTime;
+      const progress = Math.min(elapsedTime / 20000, 1); // 20 seconds
+      const ease = 1 - Math.pow(1 - progress, 10); // cubic easing
 
-    const timer = setTimeout(() => {
-      cancelAnimationFrame(updatePosition);
-    }, 7000);
+      currentPos = ease * 1 * sliderImages.offsetWidth;
 
-    updatePosition();
+      sliderImages.style.transform = `translateX(${sliderImages.offsetWidth /
+        1.5 -
+        currentPos}px)`;
 
-    this.timer = timer;
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  };
+  startSlider2 = () => {
+    const sliderImages = this.sliderRef2.current;
+    if (!sliderImages) return; // add null check here
+    let currentPos = 0;
+    let startTime = null;
+
+    function animate(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsedTime = timestamp - startTime;
+      const progress = Math.min(elapsedTime / 20000, 1); // 20 seconds
+      const ease = 1 - Math.pow(1 - progress, 10); // cubic easing
+
+      currentPos = ease * 1 * sliderImages.offsetWidth;
+
+      sliderImages.style.transform = `translateX(${sliderImages.offsetWidth /
+        0.61 -
+        currentPos}px)`;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    }
+
+    requestAnimationFrame(animate);
   };
 
   handlehalfxButtonClick() {
@@ -743,10 +783,6 @@ class Roll extends Component {
 
         content = (
           <div>
-            {' '}
-            <div className="slider-images" ref={this.sliderRef}>
-              {/* Add your images here */}
-            </div>
             <span id="roll-text">
               {' '}
               ROLL
@@ -762,10 +798,6 @@ class Roll extends Component {
       } else {
         content = (
           <div>
-            {' '}
-            <div className="slider-images" ref={this.sliderRef}>
-              {/* Add your images here */}
-            </div>
             <span id="roll-text">
               {' '}
               ROLL
@@ -814,13 +846,11 @@ class Roll extends Component {
             }, 1000);
           });
         } else {
+          this.startSlider();
+          this.startSlider2();
           content = (
             <div>
-              <div className="slider-images" ref={this.sliderRef}>
-                {/* Add your images here */}
-              </div>
               <p>
-                <div id="x">x</div>
                 <CountUp
                   start={countupStart}
                   end={nextRollInterval}
@@ -877,9 +907,6 @@ class Roll extends Component {
         if (rollDuration > 0) {
           content = (
             <div>
-              <div className="slider-images" ref={this.sliderRef}>
-                {/* Add your images here */}
-              </div>
               <span id="roll-text">
                 {' '}
                 ROLL
@@ -888,11 +915,10 @@ class Roll extends Component {
             </div>
           );
         } else {
+          this.startSlider();
+          this.startSlider2();
           content = (
             <div>
-              <div className="slider-images" ref={this.sliderRef}>
-                {/* Add your images here */}
-              </div>
               <p>
                 <CountUp
                   start={countupStart}
@@ -941,12 +967,11 @@ class Roll extends Component {
           this.setState({ elapsedTime: '' });
         }
       } else {
+        this.startSlider();
+        this.startSlider2();
         countupStart = elapsedTime ? elapsedTime / 1000 : 1;
         content = (
           <div>
-            <div className="slider-images" ref={this.sliderRef}>
-              {/* Add your images here */}
-            </div>
             <p>
               <CountUp
                 start={countupStart}
@@ -1060,38 +1085,84 @@ class Roll extends Component {
               ))}
             </div>
           </div>
-          <div
-            className="game-info-panel"
-            style={{ position: 'relative', zIndex: 10 }}
-          >
-            <div className="game-info-panel">
-              {/* <h3 className="game-sub-title">Rolls</h3> */}
-              <div className="gradient-container">
-                <p className="previous-guesses roll">
-                  <div style={{ display: 'flex', flexDirection: 'row'}}>
-                  {this.state.roll_guesses.length > 0 ? (
-  this.state.roll_guesses
-    .slice(-25)
-    .map((guess, index) => (
-      <div
-      style={{
-        width: '60px',
-        height: '60px',
-        backgroundPosition: 'center',
-        backgroundSize: 'contain'
-      }}
-      
-        key={index}
-        alt={guess.face}
-        className={guess.face === 'R' ? 'rock' : guess.face === 'P' ? 'paper' : guess.face === 'S' ? 'scissors' : guess.face === 'W' ? 'whale' : guess.face === 'B' ? 'bear' : guess.face === 'Bu' ? 'bull' : ''}
-      />
-    ))
-) : (
-  <span id="no-guesses"></span>
-)}
 
+          <div className="game-info-panel">
+            {/* <h3 className="game-sub-title">Rolls</h3> */}
+            <div className="gradient-container">
+              <div className="slider-images" ref={this.sliderRef}>
+                <p className="previous-guesses roll">
+                  <div style={{ display: 'flex', flexDirection: 'row' }}>
+                    {this.state.roll_guesses.length > 0 ? (
+                      this.state.roll_guesses.slice(-10).map((guess, index) => (
+                        <div
+                          style={{
+                            width: '120px',
+                            height: '120px',
+                            backgroundPosition: 'center',
+                            backgroundSize: 'contain'
+                          }}
+                          key={index}
+                          alt={guess.face}
+                          className={
+                            guess.face === 'R'
+                              ? 'rock'
+                              : guess.face === 'P'
+                              ? 'paper'
+                              : guess.face === 'S'
+                              ? 'scissors'
+                              : guess.face === 'W'
+                              ? 'whale'
+                              : guess.face === 'B'
+                              ? 'bear'
+                              : guess.face === 'Bu'
+                              ? 'bull'
+                              : ''
+                          }
+                        />
+                      ))
+                    ) : (
+                      <span id="no-guesses"></span>
+                    )}
                   </div>
-                  
+                </p>
+              </div>
+              <div className="slider-images" ref={this.sliderRef2}>
+                <p className="previous-guesses roll">
+                  <div style={{ display: 'flex', flexDirection: 'row' }}>
+                    {this.state.roll_guesses.length > 0 ? (
+                      this.state.roll_guesses
+                        .slice(-15, -5)
+                        .map((guess, index) => (
+                          <div
+                            style={{
+                              width: '120px',
+                              height: '120px',
+                              backgroundPosition: 'center',
+                              backgroundSize: 'contain'
+                            }}
+                            key={index}
+                            alt={guess.face}
+                            className={
+                              guess.face === 'R'
+                                ? 'rock'
+                                : guess.face === 'P'
+                                ? 'paper'
+                                : guess.face === 'S'
+                                ? 'scissors'
+                                : guess.face === 'W'
+                                ? 'whale'
+                                : guess.face === 'B'
+                                ? 'bear'
+                                : guess.face === 'Bu'
+                                ? 'bull'
+                                : ''
+                            }
+                          />
+                        ))
+                    ) : (
+                      <span id="no-guesses"></span>
+                    )}
+                  </div>
                 </p>
               </div>
             </div>
@@ -1369,9 +1440,6 @@ class Roll extends Component {
               {this.state.betting ? (
                 <div id="stop">
                   <span>Stop</span>
-                  <div className="slider-images" ref={this.sliderRef}>
-                    {/* Add your images here */}
-                  </div>{' '}
                 </div>
               ) : (
                 <div>
