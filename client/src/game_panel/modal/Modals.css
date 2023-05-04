@@ -370,9 +370,7 @@ border-bottom-right-radius: 0 !important;
     margin: 4px !important;
 }
 .modal-body .modal-content-wrapper.roll h4 {
-    background-image: url("/img/icons/modal-roll.png");
-    background-size: 30px;
-    background-position: 22px;
+    background-image: url("/img/icons/modal-roll.svg");
 }
 
 .modal-body .modal-content-wrapper.quick-shoot h4 {
@@ -393,31 +391,21 @@ border-bottom-right-radius: 0 !important;
 
 .modal-body .modal-content-wrapper.bang h4 {
     background-image: url("/img/icons/modal-bang.svg");
-    background-size: 26px;
-    background-position: 4.2% center;
 }
 
 
 .modal-body .modal-content-wrapper.drop-game h4 {
     background-image: url("/img/icons/modal-drop-game.svg");
-    background-size: 26px;
-    background-position: 4.2% center;
 }
 
 .modal-body .modal-content-wrapper.house-edge h4 {
     background-image: url("/img/icons/modal-house-edge.svg");
-    background-size: 24px;
-    background-position: 4% center;
 }
 .modal-body .modal-content-wrapper.provably-fair h4 {
     background-image: url("/img/icons/modal-provably-fair.svg");
-    background-size: 24px;
-    background-position: 4% center;
 }
 .modal-body .modal-content-wrapper.support h4 {
     background-image: url("/img/icons/modal-support.svg");
-    background-size: 24px;
-    background-position: 4% center;
 }
 .modal-body .modal-content-wrapper div.modal-content-panel {
     padding: 20px 24px;

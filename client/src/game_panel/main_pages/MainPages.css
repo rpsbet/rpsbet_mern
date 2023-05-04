@@ -2144,8 +2144,16 @@ bottom: 0px;
         /* white-space: unset; */
     /* } */
     .contents_wrapper .main-game {
-        grid-template-columns: 100%;
+        grid-template-columns: 100% !important;
         margin-bottom: 60px;
+    }
+
+    .bottom-footer {
+        margin-left: 0 !important;
+    }
+
+    #footer-container {
+        width: 100% !important;
     }
     .sub-panel {
         display: none;

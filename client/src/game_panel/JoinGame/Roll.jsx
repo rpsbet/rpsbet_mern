@@ -173,15 +173,14 @@ class Roll extends Component {
     const { playSound, playSoundLoop, stopSound } = this.props;
 
     if (!showRoll && !showCountdown) {
-      stopSound('countDown');
-      playSoundLoop('fuse');
+      // stopSound('countDown');
+      // playSoundLoop('fuse');
     } else if (showRoll || !showCountdown) {
-      stopSound('fuse');
-      playSound('roll');
-    } else if (showCountdown || !showRoll) {
-      stopSound('roll');
       // stopSound('fuse');
-      playSound('countDown');
+      // playSound('roll');
+    } else if (showCountdown || !showRoll) {
+      // stopSound('roll');
+      // playSound('countDown');
     }
 
     if (!showRoll && !showCountdown && waiting && newRound && !executeBet) {
