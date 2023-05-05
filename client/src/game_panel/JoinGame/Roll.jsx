@@ -6,7 +6,6 @@ import CountUp, { linearEasing } from 'react-countup';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-// import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button, TextField } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
@@ -16,7 +15,10 @@ import {
   validateBetAmount,
   validateLocalStorageLength
 } from '../modal/betValidations';
-import animationData from '../LottieAnimations/spinningIcon';
+import gBg from '../LottieAnimations/g-bg.json';
+import portal from '../LottieAnimations/portal.json';
+import rollHex from '../LottieAnimations/roll-hex.json';
+import pipe from '../LottieAnimations/pipe.json';
 import Avatar from '../../components/Avatar';
 import {
   alertModal,
@@ -31,7 +33,7 @@ import { FaClipboard } from 'react-icons/fa';
 const defaultOptions = {
   loop: true,
   autoplay: true,
-  animationData: animationData,
+  // animationData: animationData,
   rendererSettings: {
     preserveAspectRatio: 'xMidYMid slice'
   }
@@ -85,7 +87,7 @@ class Roll extends Component {
       clicked: true,
       intervalId: null,
       requestId: null,
-      nextRollInterval: 20,
+      nextRollInterval: 10,
       countdown: null,
       items: [],
       executeBet: false,
@@ -114,7 +116,6 @@ class Roll extends Component {
     };
     this.panelRef = React.createRef();
     this.sliderRef = React.createRef();
-    this.sliderRef2 = React.createRef();
 
     this.onChangeState = this.onChangeState.bind(this);
   }
@@ -219,13 +220,15 @@ class Roll extends Component {
     this.panelRef.current.addEventListener('scroll', this.handleScroll);
     const roomId = this.props.roomInfo._id;
     this.socket.on(`ROLL_GUESSES_${roomId}`, data => {
-      console.log(`Received data from socket ROLL_GUESSES_${roomId}:`);
+      console.log(`Received data from socket ROLL_GUESSES_${roomId}:`, data);
 
       if (data && data.rolls && data.rolls.length > 0) {
         const roll_guesses = data.rolls.map((roll, i) => ({
           roll,
           face: data.faces[i]
         })); // combine roll and face values
+
+        this.startSlider();
         this.setState({
           roll_guesses: roll_guesses
         });
@@ -245,16 +248,13 @@ class Roll extends Component {
         })); // combine roll and face values
         this.setState({
           roll_guesses: roll_guesses,
+
           elapsedTime: data.elapsedTime,
           listen: false
         });
+        this.startSlider();
       }
     });
-
-    // this.socket.on('ROLL_GUESSES', data => {
-    //   console.log('roll ROLL_GUESSES', data);
-    //   this.setState({ roll_guesses: data });
-    // });
 
     const items = [
       {
@@ -506,38 +506,13 @@ class Roll extends Component {
     function animate(timestamp) {
       if (!startTime) startTime = timestamp;
       const elapsedTime = timestamp - startTime;
-      const progress = Math.min(elapsedTime / 20000, 1); // 20 seconds
+      const progress = Math.min(elapsedTime / 20000, 0.8); // 20 seconds
       const ease = 1 - Math.pow(1 - progress, 10); // cubic easing
 
-      currentPos = ease * 1 * sliderImages.offsetWidth;
+      currentPos = ease * 0.65 * sliderImages.offsetWidth;
 
       sliderImages.style.transform = `translateX(${sliderImages.offsetWidth /
-        1.5 -
-        currentPos}px)`;
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    }
-
-    requestAnimationFrame(animate);
-  };
-  startSlider2 = () => {
-    const sliderImages = this.sliderRef2.current;
-    if (!sliderImages) return; // add null check here
-    let currentPos = 0;
-    let startTime = null;
-
-    function animate(timestamp) {
-      if (!startTime) startTime = timestamp;
-      const elapsedTime = timestamp - startTime;
-      const progress = Math.min(elapsedTime / 20000, 1); // 20 seconds
-      const ease = 1 - Math.pow(1 - progress, 10); // cubic easing
-
-      currentPos = ease * 1 * sliderImages.offsetWidth;
-
-      sliderImages.style.transform = `translateX(${sliderImages.offsetWidth /
-        0.61 -
+        3 -
         currentPos}px)`;
 
       if (progress < 1) {
@@ -771,15 +746,14 @@ class Roll extends Component {
       newRound
     } = this.state;
     const { playSound, playSoundLoop, stopSound } = this.props;
-    // Determine whether to show the countup animation or the roll message
     let content;
     if (showRoll) {
       if (
         elapsedTime &&
         elapsedTime / 1000 > nextRollInterval &&
-        elapsedTime / 1000 < nextRollInterval + 2
+        elapsedTime / 1000 < nextRollInterval
       ) {
-        const rollDuration = 2 - (elapsedTime / 1000 - nextRollInterval);
+        const rollDuration = elapsedTime / 1000 - nextRollInterval;
 
         content = (
           <div>
@@ -808,46 +782,43 @@ class Roll extends Component {
       }
     } else if (showCountdown) {
       content = (
-        <span id="nextRollIn">Next Roll in...{this.state.countdown}</span>
+        <div id="nextRollIn">
+        <span>Next Roll in...{this.state.countdown}</span>
+        </div>
       );
     } else {
       let countupStart;
-      if (elapsedTime && elapsedTime / 1000 > nextRollInterval + 2) {
+      if (elapsedTime && elapsedTime / 1000 > nextRollInterval) {
         countupStart = nextRollInterval;
-        // console.log("p sherman");
         const countdownStart = Math.ceil(
-          5 - (elapsedTime / 1000 - nextRollInterval - 2)
+          5 - (elapsedTime / 1000 - nextRollInterval)
         );
         if (countdownStart > 0) {
-          setTimeout(() => {
-            this.setState({
-              showRoll: false,
-              showCountdown: true,
-              countdown: countdownStart,
-              elapsedTime: ''
-            });
-            // Start the countdown
-            const countdownTimer = setInterval(() => {
-              const countdown = this.state.countdown - 1;
-              if (countdown <= 0) {
-                // Countdown is finished, restart everything
-                clearInterval(countdownTimer);
-                this.setState({
-                  showCountdown: false,
-                  countdown: null,
-                  elapsedTime: ''
-                });
-                if (this.state.waiting) {
-                  this.setState({ newRound: true });
-                }
-              } else {
-                this.setState({ countdown, elapsedTime: '' });
+          this.setState({
+            showRoll: false,
+            showCountdown: true,
+            countdown: countdownStart,
+            elapsedTime: ''
+          });
+          // Start the countdown
+          const countdownTimer = setInterval(() => {
+            const countdown = this.state.countdown - 1;
+            if (countdown <= 0) {
+              // Countdown is finished, restart everything
+              clearInterval(countdownTimer);
+              this.setState({
+                showCountdown: false,
+                countdown: null,
+                elapsedTime: ''
+              });
+              if (this.state.waiting) {
+                this.setState({ newRound: true });
               }
-            }, 1000);
+            } else {
+              this.setState({ countdown, elapsedTime: '' });
+            }
           });
         } else {
-          this.startSlider();
-          this.startSlider2();
           content = (
             <div>
               <p>
@@ -861,38 +832,35 @@ class Roll extends Component {
                       : nextRollInterval
                   }
                   useEasing={false}
-                  // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
                   onEnd={() => {
                     // Show the roll message for 2 seconds, then start the countdown
                     this.setState({
                       showRoll: true
                     });
-                    setTimeout(() => {
-                      this.setState({
-                        showRoll: false,
-                        showCountdown: true,
-                        countdown: 5,
-                        elapsedTime: ''
-                      });
-                      // Start the countdown
-                      const countdownTimer = setInterval(() => {
-                        const countdown = this.state.countdown - 1;
-                        if (countdown <= 0) {
-                          // Countdown is finished, restart everything
-                          clearInterval(countdownTimer);
-                          this.setState({
-                            showCountdown: false,
-                            countdown: null,
-                            elapsedTime: ''
-                          });
-                          if (this.state.waiting) {
-                            this.setState({ newRound: true });
-                          }
-                        } else {
-                          this.setState({ countdown, elapsedTime: '' });
+                    this.setState({
+                      showRoll: false,
+                      showCountdown: true,
+                      countdown: 5,
+                      elapsedTime: ''
+                    });
+                    // Start the countdown
+                    const countdownTimer = setInterval(() => {
+                      const countdown = this.state.countdown - 1;
+                      if (countdown <= 0) {
+                        // Countdown is finished, restart everything
+                        clearInterval(countdownTimer);
+                        this.setState({
+                          showCountdown: false,
+                          countdown: null,
+                          elapsedTime: ''
+                        });
+                        if (this.state.waiting) {
+                          this.setState({ newRound: true });
                         }
-                      }, 1000);
-                    }, 2000);
+                      } else {
+                        this.setState({ countdown, elapsedTime: '' });
+                      }
+                    }, 1000);
                   }}
                 />
               </p>
@@ -902,8 +870,7 @@ class Roll extends Component {
         }
       } else if (elapsedTime && elapsedTime / 1000 > nextRollInterval) {
         const rollStart = nextRollInterval;
-        const rollDuration =
-          2000 - (elapsedTime / 1000 - nextRollInterval) * 1000;
+        const rollDuration = (elapsedTime / 1000 - nextRollInterval) * 1000;
         if (rollDuration > 0) {
           content = (
             <div>
@@ -915,8 +882,6 @@ class Roll extends Component {
             </div>
           );
         } else {
-          this.startSlider();
-          this.startSlider2();
           content = (
             <div>
               <p>
@@ -930,66 +895,10 @@ class Roll extends Component {
                       : nextRollInterval
                   }
                   useEasing={false}
-                  // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
                   onEnd={() => {
                     this.setState({
                       showRoll: true
                     });
-                    setTimeout(() => {
-                      this.setState({
-                        showRoll: false,
-                        showCountdown: true,
-                        countdown: 5
-                      });
-                      // Start the countdown
-                      const countdownTimer = setInterval(() => {
-                        const countdown = this.state.countdown - 1;
-                        if (countdown <= 0) {
-                          // Countdown is finished, restart everything
-                          clearInterval(countdownTimer);
-                          this.setState({
-                            showCountdown: false,
-                            countdown: null
-                          });
-                          if (this.state.waiting) {
-                            this.setState({ newRound: true });
-                          }
-                        } else {
-                          this.setState({ countdown, elapsedTime: '' });
-                        }
-                      }, 10);
-                    }, 2000);
-                  }}
-                />
-              </p>
-            </div>
-          );
-          this.setState({ elapsedTime: '' });
-        }
-      } else {
-        this.startSlider();
-        this.startSlider2();
-        countupStart = elapsedTime ? elapsedTime / 1000 : 1;
-        content = (
-          <div>
-            <p>
-              <CountUp
-                start={countupStart}
-                end={nextRollInterval}
-                decimals={2}
-                duration={
-                  elapsedTime
-                    ? nextRollInterval - elapsedTime / 1000
-                    : nextRollInterval
-                }
-                useEasing={false}
-                // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
-                onEnd={() => {
-                  // Show the roll message for 2 seconds, then start the countdown
-                  this.setState({
-                    showRoll: true
-                  });
-                  setTimeout(() => {
                     this.setState({
                       showRoll: false,
                       showCountdown: true,
@@ -1011,8 +920,54 @@ class Roll extends Component {
                       } else {
                         this.setState({ countdown, elapsedTime: '' });
                       }
-                    }, 1000);
-                  }, 2000);
+                    }, 10);
+                  }}
+                />
+              </p>
+            </div>
+          );
+          this.setState({ elapsedTime: '' });
+        }
+      } else {
+        countupStart = elapsedTime ? elapsedTime / 1000 : 1;
+        content = (
+          <div>
+            <p>
+              <CountUp
+                start={countupStart}
+                end={nextRollInterval}
+                decimals={2}
+                duration={
+                  elapsedTime
+                    ? nextRollInterval - elapsedTime / 1000
+                    : nextRollInterval
+                }
+                useEasing={false}
+                onEnd={() => {
+                  this.setState({
+                    showRoll: true
+                  });
+                  this.setState({
+                    showRoll: false,
+                    showCountdown: true,
+                    countdown: 5
+                  });
+                  // Start the countdown
+                  const countdownTimer = setInterval(() => {
+                    const countdown = this.state.countdown - 1;
+                    if (countdown <= 0) {
+                      clearInterval(countdownTimer);
+                      this.setState({
+                        showCountdown: false,
+                        countdown: null
+                      });
+                      if (this.state.waiting) {
+                        this.setState({ newRound: true });
+                      }
+                    } else {
+                      this.setState({ countdown, elapsedTime: '' });
+                    }
+                  }, 1000);
                 }}
               />
             </p>
@@ -1087,19 +1042,163 @@ class Roll extends Component {
           </div>
 
           <div className="game-info-panel">
-            {/* <h3 className="game-sub-title">Rolls</h3> */}
+            <div
+            id="tunnel">
+
+           
+          <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: pipe
+              }}
+              style={{
+                margin: '58px auto -232px',
+                zIndex: '4',
+                opacity: '0.2',
+                // transform: 'translate(-154px, 36px)',
+                width: '655px',
+              }}
+            />
+            </div>
+              <div
+              style={{
+                zIndex: '3',
+
+              }}
+            id="leftPortal"
+            >
+          <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: portal
+              }}
+              style={{
+                margin: '0px auto -195px',
+                transform: 'translate(-275px, 36px) rotate(90deg)',
+                width: '313px',
+              }}
+            />            </div>
+
+            <div
+            style={{
+              zIndex: '3',
+              
+            }}
+            id="rightPortal"
+            >
+
+           
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: portal
+              }}
+              style={{
+                zIndex: '3',
+                margin: '0px auto -195px',
+                transform: 'translate(275px, 12px) rotate(90deg) scale(-1)',
+                width: '313px',
+              }}
+            /> </div>
+            <div
+            style={{
+              zIndex: '1',
+            }}
+            >
+
+            
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: pipe
+              }}
+              id="pipe"
+              style={{
+                margin: '60px auto -232px',
+                opacity: '1',
+                transform: 'translate(-647px, -49px)',
+                width: '655px',
+              }}
+            />
+             <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: pipe
+              }}
+              id="pipe"
+              style={{
+                margin: '60px auto -232px',
+                opacity: '1',
+                transform: 'translate(647px, -49px)',
+                width: '655px',
+              }}
+            />
+            </div>
             <div className="gradient-container">
-              <div className="slider-images" ref={this.sliderRef}>
+              <div id="gradient-bg">
+              
+              <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: gBg
+              }}
+              style={{
+                margin: '0px auto -100px',
+                transform: 'translate(146px, 47px)',
+                width: '196px',
+              }}
+            />
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: gBg
+              }}
+              style={{
+                margin: '0px auto -110px',
+                transform: 'translate(-154px, 36px)',
+                width: '196px',
+              }}
+            />
+              </div>
+                <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: rollHex
+              }}
+              style={{
+                marginTop: '10px',
+                marginBottom: '-155px',
+                filter: 'hue-rotate(45deg)',
+                maxWidth: '100%',
+                width: '160px',
+              }}
+            />
+              <div className="slider-images" id="top" ref={this.sliderRef}>
                 <p className="previous-guesses roll">
-                  <div style={{ display: 'flex', flexDirection: 'row' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      pointerEvents: 'none'
+                    }}
+                  >
                     {this.state.roll_guesses.length > 0 ? (
-                      this.state.roll_guesses.slice(-10).map((guess, index) => (
+                      this.state.roll_guesses.slice(-30).map((guess, index) => (
                         <div
                           style={{
                             width: '120px',
                             height: '120px',
                             backgroundPosition: 'center',
-                            backgroundSize: 'contain'
+                            backgroundSize: 'contain',
+                            pointerEvents: 'none'
                           }}
                           key={index}
                           alt={guess.face}
@@ -1120,45 +1219,6 @@ class Roll extends Component {
                           }
                         />
                       ))
-                    ) : (
-                      <span id="no-guesses"></span>
-                    )}
-                  </div>
-                </p>
-              </div>
-              <div className="slider-images" ref={this.sliderRef2}>
-                <p className="previous-guesses roll">
-                  <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    {this.state.roll_guesses.length > 0 ? (
-                      this.state.roll_guesses
-                        .slice(-15, -5)
-                        .map((guess, index) => (
-                          <div
-                            style={{
-                              width: '120px',
-                              height: '120px',
-                              backgroundPosition: 'center',
-                              backgroundSize: 'contain'
-                            }}
-                            key={index}
-                            alt={guess.face}
-                            className={
-                              guess.face === 'R'
-                                ? 'rock'
-                                : guess.face === 'P'
-                                ? 'paper'
-                                : guess.face === 'S'
-                                ? 'scissors'
-                                : guess.face === 'W'
-                                ? 'whale'
-                                : guess.face === 'B'
-                                ? 'bear'
-                                : guess.face === 'Bu'
-                                ? 'bull'
-                                : ''
-                            }
-                          />
-                        ))
                     ) : (
                       <span id="no-guesses"></span>
                     )}

@@ -198,6 +198,35 @@ div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
     font-weight: 800;
     cursor: pointer;
 }
+.slider-images {
+    pointer-events: none;
+}
+#nextRollIn {
+    position: relative;
+    width: 400px;
+    text-align: center;
+}
+#nextRollIn span {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50px);
+    margin: auto;
+    padding: 5px 15px;
+    z-index: 99;
+    font-weight: 600;
+    background: linear-gradient(#ff0000, #690000);
+    border-radius: 100px;
+}
+.rollTimer div p span{
+    display: none !important;
+}
+/* .slider-images#top {
+    margin-bottom: -105px;
+}
+
+.slider-images#bottom {
+    margin-top: -105px;
+} */
 
 div.table .table-header {
     background-color: transparent;
@@ -620,6 +649,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 .create-room-btn-panel button.btn-create-room {
     margin-top: -2.5px;
     color: #f9f9f9;
+    overflow: hidden;
     box-shadow: 0 10px 27px #00ff0c1a,0 -3px #00913c inset,0 2px #35d87b inset!important;
     font-size: 16px;
    border-radius: 0.25em;
@@ -2419,6 +2449,15 @@ margin-bottom: 10px;
     .previous-guesses.drop  {
         width: 360px;
     }
+
+#leftPortal {
+
+transform: translateX(160px) !important;
+}
+#rightPortal {
+
+    transform: translateX(-160px) !important;
+    }
     #view svg{
         margin-bottom: -2px;
     }
@@ -2427,10 +2466,6 @@ margin-bottom: 10px;
         font-size: 0.6em;
     }
 
-    .modal-body .modal-content-wrapper.roll h4 {
-        background-size: 22px;
-        background-position: 12px;
-    }
     .bet-amounts {
         display: block;
       }

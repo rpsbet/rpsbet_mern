@@ -41,7 +41,7 @@ const predictAndEmit = async (roll_list, room, socket, room_Id, numRolls) => {
 
   const timeoutId = setTimeout(
     () => predictAndEmit(roll_list, room, socket, room_Id, numRolls),
-    25000
+    15000
   );
   const timeoutIdsForRoom = timeoutIds.get(room_Id) || [];
   timeoutIdsForRoom.push(timeoutId);
@@ -60,7 +60,7 @@ const initializeRollRound = async (roll_list, room, socket, room_Id) => {
 
   const timeoutId = setTimeout(
     () => initializeRollRound(roll_list, room, socket, room_Id),
-    25000
+    15000
   );
   timeoutIdsForRoom.push(timeoutId);
   timeoutIds.set(room_Id, timeoutIdsForRoom);
