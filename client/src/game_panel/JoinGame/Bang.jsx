@@ -18,6 +18,7 @@ import {
 } from '../modal/betValidations';
 import bomb from '../LottieAnimations/bomb.json';
 import explosion from '../LottieAnimations/explosion.json';
+import bangBg from '../LottieAnimations/bang-bg.json';
 import animationData from '../LottieAnimations/spinningIcon';
 import Avatar from '../../components/Avatar';
 import {
@@ -168,9 +169,9 @@ class Bang extends Component {
 
     if (!showBang && !showCountdown) {
       stopSound('countDown');
-      playSoundLoop('fuse');
+      // playSoundLoop('fuse');
     } else if (showBang || !showCountdown) {
-      stopSound('fuse');
+      // stopSound('fuse');
       playSound('bang');
     } else if (showCountdown || !showBang) {
       stopSound('bang');
@@ -765,7 +766,7 @@ class Bang extends Component {
                 animationData: explosion
               }}
               style={{
-                filter: 'hue-rotate(45deg)',
+                filter: 'hue-rotate(312deg)',
                 maxWidth: '100%',
                 width: '300px',
                 marginBottom: '-50px',
@@ -854,7 +855,7 @@ class Bang extends Component {
                   animationData: bomb
                 }}
                 style={{
-                  filter: 'hue-rotate(45deg)',
+                  filter: 'hue-rotate(312deg)',
                   maxWidth: '100%',
                   width: '250px',
                   // position: 'absolute',
@@ -928,7 +929,7 @@ class Bang extends Component {
                   animationData: explosion
                 }}
                 style={{
-                  filter: 'hue-rotate(45deg)',
+                  filter: 'hue-rotate(312deg)',
                   maxWidth: '100%',
                   width: '300px',
                   marginBottom: '-50px'
@@ -952,7 +953,7 @@ class Bang extends Component {
                   animationData: bomb
                 }}
                 style={{
-                  filter: 'hue-rotate(45deg)',
+                  filter: 'hue-rotate(312deg)',
                   maxWidth: '100%',
                   width: '250px',
                   // position: 'absolute',
@@ -1022,7 +1023,7 @@ class Bang extends Component {
                 animationData: bomb
               }}
               style={{
-                filter: 'hue-rotate(45deg)',
+                filter: 'hue-rotate(312deg)',
                 maxWidth: '100%',
                 width: '250px',
                 // position: 'absolute',
@@ -1196,6 +1197,26 @@ class Bang extends Component {
                   </div> */}
                 </p>
               </div>
+            </div>
+            <div>
+
+            
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: bangBg
+              }}
+              style={{
+                // filter: 'hue-rotate(312deg)',
+                maxWidth: '100%',
+                width: '300px',
+                margin: '-5px auto -314px',
+                filter: 'hue-rotate(137deg)'
+                // position: 'absolute',
+                // transform: 'translate: (50%, 50%)'
+              }}
+            />
             </div>
             <div className="bangTimer">
               {bang_guesses.length ? (

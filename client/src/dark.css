@@ -7,10 +7,6 @@
 	box-shadow: none;
 }
 
-.dark_mode .bangTimer {
-	border: 3px solid #333;
-}
-
 .dark_mode 
 .gradient-container .previous-guesses.drop:before  {
 	background: linear-gradient(90deg, #151515, transparent);
@@ -23,6 +19,10 @@
 
   .dark_mode .game-page .game-contents.mystery-box-result-contents {
 	background-color: #060607 !important;
+  }
+
+  .dark_mode .game-page .game-contents .game-info-panel .box-prizes span {
+	color: #e5e5e5;
   }
 
 .dark_mode .game-page .game-contents.mystery-box-result-contents .mystery-box-result {

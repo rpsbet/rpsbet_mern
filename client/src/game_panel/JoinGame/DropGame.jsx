@@ -17,6 +17,7 @@ import {
 } from '../modal/betValidations';
 
 import animationData from '../LottieAnimations/spinningIcon';
+import drop from '../LottieAnimations/drop.json';
 import Avatar from '../../components/Avatar';
 import {
   alertModal,
@@ -718,7 +719,26 @@ class DropGame extends Component {
                 </p>
               </div>
             </div>
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: drop
+              }}
+              style={{
+                filter: 'hue-rotate(320deg)',
+                maxWidth: '100%',
+                width: '300px',
+                marginBottom: '-250px',
+                
+                // position: 'absolute',
+                // transform: 'translate: (50%, 50%)'
+              }}
+            />
+            <div className='drop-amount'>
+
             <h3 className="game-sub-title">Drop an amount!</h3>
+            </div>
             <div className="your-bet-amount">
               <TextField
                 type="text"

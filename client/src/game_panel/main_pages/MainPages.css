@@ -217,6 +217,12 @@ div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
     background: linear-gradient(#ff0000, #690000);
     border-radius: 100px;
 }
+.drop-amount {
+        position: relative;
+}
+.drop-amount .game-sub-title {
+    margin: -44px 0 42px !important;
+}
 .rollTimer div p span{
     display: none !important;
 }
@@ -1231,8 +1237,7 @@ max-width: 450px;
     align-content: center;
     justify-items: center;
     line-height: 1.3em;
-    height: 200px;
-    border: 3px solid #b9bbbe;
+    height: 295px;
     width: 290px;
     border-radius: 0.25em;
       }
@@ -1704,6 +1709,7 @@ input {
     background-size: 5.6em;
     background-color: #d81719;
 }
+
 
 
 .create-game-panel .boxes-panel .box {
@@ -2458,7 +2464,9 @@ margin-bottom: 10px;
     .previous-guesses.drop  {
         width: 360px;
     }
-
+    .bangTimer {
+        height: 275px;
+    }
 #leftPortal {
 
 transform: translateX(160px) !important;
