@@ -16,6 +16,7 @@ import {
 
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
+import grid from '../LottieAnimations/grid';
 // import { updateBetResult } from '../../redux/Logic/logic.actions';
 import {
   alertModal,
@@ -929,7 +930,11 @@ class QuickShoot extends Component {
           </div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
-            <div className="qs-image-panel">
+            <div className="qs-image-panel"
+            style={{
+              zIndex: '1',
+            }}
+            >
               <img
                 src={`/img/gametype/quick_shoot/gametype${
                   this.props.qs_game_type
@@ -944,8 +949,28 @@ class QuickShoot extends Component {
                 }}
               />
               {this.renderButtons()}
+              
             </div>
+            <div
+            id="grid"
+              style={{
+                zIndex: '0',
+              }}
+              >
 
+             
+              <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: grid
+              }}
+              style={{
+                width: '570px',
+                margin: '3px auto -172px',
+              }}
+            />
+             </div>
             <div className="your-bet-amount">
               <TextField
                 type="text"
