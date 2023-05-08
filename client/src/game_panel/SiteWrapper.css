@@ -98,7 +98,17 @@ a#btn_how_to_play {
     background-repeat: no-repeat;
     background-position: center center;
 }
-
+.game-type-panel .btn-game-type {
+    height: 170px !important;
+}
+.game-type-panel .btn-game-type img {
+    width:160px !important;
+    border-radius: 10px;
+}
+.game-type-panel .btn-game-type span {
+    padding: 10px 0 0 !important;
+    flex-direction: column;
+}
 .game_header .main_header #btn_leaderboards {
     font-size: 12px;
     font-weight: 300;

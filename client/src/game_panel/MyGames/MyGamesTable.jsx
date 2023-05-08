@@ -151,9 +151,14 @@ class MyGamesTable extends Component {
       'B!': 'bang',
       R: 'roll'
     };
-
+  
     const gameTypePanel = (
-      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap"  gap="15px">
+      <Box
+        display="flex"
+        justifyContent="space-evenly"
+        flexWrap="nowrap"
+        gap="15px"
+      >
         <Box item key="open-game-left-button">
           <IconButton
             className="btn-arrow-left"
@@ -162,6 +167,7 @@ class MyGamesTable extends Component {
             <ChevronLeftIcon />
           </IconButton>
         </Box>
+  
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -171,7 +177,11 @@ class MyGamesTable extends Component {
             this.handleGameTypeButtonClicked('All');
           }}
         >
-          All Games
+          <img
+            src={`/img/gametype/ALL.png`}
+            alt={`All Games`}
+          />
+          <span>All Games</span>
         </Button>
         {this.props.gameTypeList.map((gameType, index) => (
           <Button
@@ -187,7 +197,11 @@ class MyGamesTable extends Component {
               this.handleGameTypeButtonClicked(gameType.short_name);
             }}
           >
-            {gameType.game_type_name}
+            <img
+              src={`/img/gametype/${gameType.short_name}.png`}
+              alt={gameType.game_type_name}
+            />
+            <span>{gameType.game_type_name}</span>
           </Button>
         ))}
         <IconButton
@@ -199,7 +213,7 @@ class MyGamesTable extends Component {
         </IconButton>
       </Box>
     );
-
+  
     return gameTypePanel;
   };
 

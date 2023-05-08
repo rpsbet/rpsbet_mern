@@ -113,7 +113,7 @@ div.table .table-header {
     align-items: center;
 }
 div.table.main-history-table, div.table.my-open-game-table {
-    height: calc(100vh - 240px);
+    height: calc(100vh - 174px);
 }
 div.table.main-history-table .table-row > div {
     align-items: flex-start;
@@ -504,7 +504,7 @@ div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-
     scrollbar-width: none;  /* Firefox */
 }
 div.table.main-game-table, div.table.my-open-game-table {
-    height: calc(100vh - 250px);
+    height: calc(100vh - 350px);
 }
 
 div.table.main-game-table .table-row .table-cell.cell-room-info{
@@ -599,7 +599,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     flex: 0 0 auto;
     align-items: center;
     font-weight: 600;
-    filter: brightness(0.6);
+    filter: hue-rotate(282deg);
 }
 /* .game-type-panel .btn-game-type img {
     width: 32px;
@@ -607,11 +607,11 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     margin-right: 8px;
     filter: invert(61%) sepia(7%) saturate(233%) hue-rotate(173deg) brightness(94%) contrast(89%);
 } */
-.drop-game img {
+/* .drop-game img {
     width: 32px !important;
     height: 32px !important;
     padding: 5px !important;
-}
+} */
 
 /* .game-type-panel .btn-game-type:hover img {
     filter: invert(61%) sepia(7%) saturate(233%) hue-rotate(173deg) brightness(94%) contrast(89%);
@@ -635,11 +635,13 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     display: flex;
 }
 .game-type-panel .btn-arrow-left {
+    top:50px;
     background-image: linear-gradient(to right, #f9f9f9, rgba(255, 255, 255, 0));
 }
 .game-type-panel .btn-arrow-right {
     background-image: linear-gradient(to right, rgba(255, 255, 255, 0), #f9f9f9);
     right: 0;
+    top: 50px;
 }
 
 .create-room-btn-panel {
@@ -2531,11 +2533,11 @@ transform: translateX(160px) !important;
     .rps-add-run-panel > div.rps-add-run-form, .qs-add-run-form {
         padding-right: 0 !important;
     }
-    .drop-game img {
+    /* .drop-game img {
         width: 55px !important;
         height: 55px !important;
         padding: 12px !important;
-    }
+    } */
     /* .game-page .game-contents .game-info-panel .box-prizes span {
         white-space: unset;
         white-space: unset;
@@ -2598,7 +2600,10 @@ transform: translateX(160px) !important;
     div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-table {
         height: unset;
     }
+    div.table.main-history-table {
+        padding-top: 35px;
 
+    }
     .brain-game-play-panel .play-panel-header .brain-score {
         padding: 16px;
     }

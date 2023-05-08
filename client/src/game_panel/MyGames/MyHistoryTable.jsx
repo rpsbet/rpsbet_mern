@@ -79,12 +79,12 @@ class MyHistoryTable extends Component {
     clearInterval(this.interval);
   }
 
-  handleGameTypeButtonClicked = async short_name => {
-    this.setState({ selectedGameType: short_name });
-    this.props.getMyHistory({
-      game_type: short_name
-    });
-  };
+  // handleGameTypeButtonClicked = async short_name => {
+  //   this.setState({ selectedGameType: short_name });
+  //   this.props.getMyHistory({
+  //     game_type: short_name
+  //   });
+  // };
 
   handleOpenPlayerModal = (creator_id) => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -95,84 +95,84 @@ class MyHistoryTable extends Component {
     this.setState({ showPlayerModal: false });
   };
   
-  handleBtnLeftClicked = e => {
-    const scrollAmount = 200; // Change this value to adjust the scroll amount
-    this.game_type_panel.scrollLeft -= scrollAmount;
-  };
+//   handleBtnLeftClicked = e => {
+//     const scrollAmount = 200; // Change this value to adjust the scroll amount
+//     this.game_type_panel.scrollLeft -= scrollAmount;
+//   };
 
-  handleBtnRightClicked = e => {
-    const scrollAmount = 200; // Change this value to adjust the scroll amount
-    this.game_type_panel.scrollLeft += scrollAmount;
-  };
+//   handleBtnRightClicked = e => {
+//     const scrollAmount = 200; // Change this value to adjust the scroll amount
+//     this.game_type_panel.scrollLeft += scrollAmount;
+//   };
 
-  generateGameTypePanel = () => {
-    const gameTypeStyleClass = {
-      RPS: 'rps',
-      'S!': 'spleesh',
-      MB: 'mystery-box',
-      BG: 'brain-game',
-      QS: 'quick-shoot',
-      DG: 'drop-game',
-      'B!': 'bang',
-      R: 'roll'
-    };
+//   generateGameTypePanel = () => {
+//     const gameTypeStyleClass = {
+//       RPS: 'rps',
+//       'S!': 'spleesh',
+//       MB: 'mystery-box',
+//       BG: 'brain-game',
+//       QS: 'quick-shoot',
+//       DG: 'drop-game',
+//       'B!': 'bang',
+//       R: 'roll'
+//     };
 
-    const gameTypePanel = (
-      <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap"  gap="15px">
-        <Box key="open-game-left-button">
-          <IconButton
-            className="btn-arrow-left"
-            onClick={this.handleBtnLeftClicked}
-          >
-            <ChevronLeftIcon />
-          </IconButton>
-        </Box>
-        <Button
-  className={`btn-game-type btn-icon all-games ${
-    this.state.selectedGameType === 'All' ? 'active' : ''
-  }`}
-  key="open-game-all-game-button"
-  onClick={() => {
-    this.handleGameTypeButtonClicked('All');
-  }}
->
-  All Games
-</Button>
-{this.props.gameTypeList.map((gameType, index) => (
-  <Button
-    className={`btn-game-type btn-icon ${
-      gameTypeStyleClass[gameType.short_name]
-    } ${
-      this.state.selectedGameType === gameType.short_name ? 'active' : ''
-    }`}
-    key={index}
-    onClick={() => {
-      this.handleGameTypeButtonClicked(gameType.short_name);
-    }}
-  >
-    {gameType.game_type_name}
-  </Button>
-        ))}
-        <Box key="open-game-right-button">
-          <IconButton
-            className="btn-arrow-right"
-            onClick={this.handleBtnRightClicked}
-          >
-            <ChevronRightIcon />
-          </IconButton>
-        </Box>
-      </Box>
-    );
+//     const gameTypePanel = (
+//       <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap"  gap="15px">
+//         <Box key="open-game-left-button">
+//           <IconButton
+//             className="btn-arrow-left"
+//             onClick={this.handleBtnLeftClicked}
+//           >
+//             <ChevronLeftIcon />
+//           </IconButton>
+//         </Box>
+//         <Button
+//   className={`btn-game-type btn-icon all-games ${
+//     this.state.selectedGameType === 'All' ? 'active' : ''
+//   }`}
+//   key="open-game-all-game-button"
+//   onClick={() => {
+//     this.handleGameTypeButtonClicked('All');
+//   }}
+// >
+//   All Games
+// </Button>
+// {this.props.gameTypeList.map((gameType, index) => (
+//   <Button
+//     className={`btn-game-type btn-icon ${
+//       gameTypeStyleClass[gameType.short_name]
+//     } ${
+//       this.state.selectedGameType === gameType.short_name ? 'active' : ''
+//     }`}
+//     key={index}
+//     onClick={() => {
+//       this.handleGameTypeButtonClicked(gameType.short_name);
+//     }}
+//   >
+//     {gameType.game_type_name}
+//   </Button>
+//         ))}
+//         <Box key="open-game-right-button">
+//           <IconButton
+//             className="btn-arrow-right"
+//             onClick={this.handleBtnRightClicked}
+//           >
+//             <ChevronRightIcon />
+//           </IconButton>
+//         </Box>
+//       </Box>
+//     );
     
-    return gameTypePanel;
+//     return gameTypePanel;
   
-  };
+//   };
 
 
   handlePageNumberClicked = page => {
     this.props.getMyHistory({
       page: page,
-      game_type: this.state.selectedGameType
+      // game_type: this.state.selectedGameType
     });
   };
 
@@ -193,11 +193,11 @@ class MyHistoryTable extends Component {
   };
 
   render() {
-    const gameTypePanel = this.generateGameTypePanel();
+    // const gameTypePanel = this.generateGameTypePanel();
 
     return (
       <div className="overflowX">
-        <div className="game-type-container">
+        {/* <div className="game-type-container">
           <div
             className="game-type-panel"
             ref={elem => {
@@ -206,7 +206,7 @@ class MyHistoryTable extends Component {
           >
             {gameTypePanel}
           </div>
-        </div>
+        </div> */}
         <div className="table main-history-table">
           {this.state.myHistory?.length === 0 && (
             <div className="dont-have-game-msg">
@@ -266,7 +266,7 @@ const mapStateToProps = state => ({
   myHistory: state.logic.myHistory,
   pageNumber: state.logic.myHistoryPageNumber,
   totalPage: state.logic.myHistoryTotalPage,
-  gameTypeList: state.logic.gameTypeList
+  // gameTypeList: state.logic.gameTypeList
 });
 
 const mapDispatchToProps = {
