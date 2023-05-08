@@ -346,24 +346,23 @@ class RPS extends Component {
     }
   }
 
-  handleScroll = event => {
-    const panel = event.target;
-    const scrollLeft = panel.scrollLeft;
-    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+  // handleScroll = event => {
+  //   const panel = event.target;
+  //   const scrollLeft = panel.scrollLeft;
+  //   const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
 
-    if (scrollLeft >= maxScrollLeft) {
-      // Scrolled to or beyond end of panel, so append items to array and restart animation
-      const items = this.state.items.concat(this.state.items);
-      this.setState({ items }, () => {
-        panel.style.animation = 'none';
-        panel.scrollTo({ left: 0, behavior: 'auto' });
-        void panel.offsetWidth;
-        panel.style.animation = 'ticker 20s linear infinite';
-      });
-    } else {
-      panel.style.animation = 'none';
-    }
-  };
+  //   if (scrollLeft >= maxScrollLeft) {
+  //     const items = this.state.items.concat(this.state.items);
+  //     this.setState({ items }, () => {
+  //       panel.style.animation = 'none';
+  //       panel.scrollTo({ left: 0, behavior: 'auto' });
+  //       void panel.offsetWidth;
+  //       panel.style.animation = 'ticker 20s linear infinite';
+  //     });
+  //   } else {
+  //     panel.style.animation = 'none';
+  //   }
+  // };
 
 
   joinGame = async () => {
@@ -720,18 +719,13 @@ class RPS extends Component {
         <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            onScroll={this.handleScroll}
+            // onScroll={this.handleScroll}
           >
             
             <div className="pre-summary-panel__inner">
-              {[...Array(2)].map((_, i) => (
+              {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  <div className="data-item">
-                    <div>
-                      <div className="label host-display-name">Host</div>
-                    </div>
-                    <div className="value">{this.props.creator}</div>
-                  </div>
+                  
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -740,18 +734,11 @@ class RPS extends Component {
                       {convertToCurrency(this.state.bankroll)}
                     </div>
                   </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label your-bet-amount">Bet Amount</div>
-                    </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bet_amount)}
-                    </div>
-                  </div>
+                 
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
-                        Potential Return
+                        Your Return
                       </div>
                     </div>
                     <div className="value">
@@ -761,6 +748,13 @@ class RPS extends Component {
                         )
                       )}
                     </div>
+                  </div>
+
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
                   </div>
                 </React.Fragment>
               ))}

@@ -91,8 +91,7 @@ class Spleesh extends Component {
   };
 
   componentDidMount() {
-    // Add event listener to detect end of scroll
-    this.panelRef.current.addEventListener('scroll', this.handleScroll);
+    // this.panelRef.current.addEventListener('scroll', this.handleScroll);
     this.socket.on('SPLEESH_GUESSES', data => {
       this.setState({ spleesh_guesses: data });
     });
@@ -123,27 +122,27 @@ class Spleesh extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    this.panelRef.current.removeEventListener('scroll', this.handleScroll);
+    // this.panelRef.current.removeEventListener('scroll', this.handleScroll);
   };
 
-  handleScroll = event => {
-    const panel = event.target;
-    const scrollLeft = panel.scrollLeft;
-    const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
+  // handleScroll = event => {
+  //   const panel = event.target;
+  //   const scrollLeft = panel.scrollLeft;
+  //   const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
 
-    if (scrollLeft >= maxScrollLeft) {
-      // Scrolled to or beyond end of panel, so append items to array and restart animation
-      const items = this.state.items.concat(this.state.items);
-      this.setState({ items }, () => {
-        panel.style.animation = 'none';
-        panel.scrollTo({ left: 0, behavior: 'auto' });
-        void panel.offsetWidth;
-        panel.style.animation = 'ticker 20s linear infinite';
-      });
-    } else {
-      panel.style.animation = 'none';
-    }
-  };
+  //   if (scrollLeft >= maxScrollLeft) {
+  //     // Scrolled to or beyond end of panel, so append items to array and restart animation
+  //     const items = this.state.items.concat(this.state.items);
+  //     this.setState({ items }, () => {
+  //       panel.style.animation = 'none';
+  //       panel.scrollTo({ left: 0, behavior: 'auto' });
+  //       void panel.offsetWidth;
+  //       panel.style.animation = 'ticker 20s linear infinite';
+  //     });
+  //   } else {
+  //     panel.style.animation = 'none';
+  //   }
+  // };
 
   joinGame = async () => {
     const { is_anonymous, bet_amount } = this.state;
@@ -489,29 +488,24 @@ class Spleesh extends Component {
           <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            onScroll={this.handleScroll}
+            // onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner spleesh">
-              {[...Array(2)].map((_, i) => (
+              {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  <div className="data-item">
-                    <div>
-                      <div className="label host-display-name">Host</div>
-                    </div>
-                    <div className="value">{this.props.creator}</div>
-                  </div>
+                 
 
-                  <div className="data-item">
+                  {/* <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bet Amount</div>
                     </div>
                     <div className="value">
                       {convertToCurrency(this.state.bet_amount)}
                     </div>
-                  </div>
+                  </div> */}
                   <div className="data-item">
                     <div className="label your-max-return">
-                      Potential Return
+                      Your Return
                     </div>
                     <div className="value">
                       {convertToCurrency(
@@ -526,6 +520,12 @@ class Spleesh extends Component {
                       )}
                     </div>
                   </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -539,7 +539,7 @@ class Spleesh extends Component {
                       key={index}
                       style={{
                         color: '#fff',
-                        background: 'rgba(227, 3, 3, 0.76)',
+                        background: '#8e929711',
                         borderRadius: '6px',
                         padding: '0.3em 0.9em',
                         marginRight: '20px'

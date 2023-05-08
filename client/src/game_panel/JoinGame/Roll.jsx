@@ -997,14 +997,9 @@ class Roll extends Component {
             onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner">
-              {[...Array(2)].map((_, i) => (
+              {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  <div className="data-item">
-                    <div>
-                      <div className="label host-display-name">Host</div>
-                    </div>
-                    <div className="value">{this.props.creator}</div>
-                  </div>
+                  
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -1013,28 +1008,28 @@ class Roll extends Component {
                       {convertToCurrency(this.state.bankroll)}
                     </div>
                   </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label your-bet-amount">Bet Amount</div>
-                    </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bet_amount)}
-                    </div>
-                  </div>
+                  
+                  
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
-                        Average Multiplier
+                        Ave. Multiplier
                       </div>
                     </div>
                     <div className="value">
                       {convertToCurrency(
                         updateDigitToPoint2(
-                          this.props.aveMultiplier /* * 0.95 */
+                          this.props.aveMultiplier 
                         )
                       )}
                       x
                     </div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
                   </div>
                 </React.Fragment>
               ))}

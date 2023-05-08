@@ -581,14 +581,9 @@ class BrainGame extends Component {
         <div className="game-contents">
           <div className="pre-summary-panel">
             <div className="pre-summary-panel__inner">
-              {[...Array(2)].map((_, i) => (
+              {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  <div className="data-item">
-                    <div>
-                      <div className="label host-display-name">Host</div>
-                    </div>
-                    <div className="value">{this.props.creator}</div>
-                  </div>
+                  
 
                   <div className="data-item">
                     <div>
@@ -596,6 +591,18 @@ class BrainGame extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(this.props.bet_amount)}
+                    </div>
+                  </div>
+                  <div className="data-item">
+                    <div className="label your-max-return">
+                      Your Return
+                    </div>
+                    <div className="value">
+                      {convertToCurrency(
+                        updateDigitToPoint2(
+                          this.props.bet_amount * 2
+                        )
+                      )}
                     </div>
                   </div>
                   <div className="data-item">
@@ -608,18 +615,12 @@ class BrainGame extends Component {
                       )}
                     </div>
                   </div>
+                 
                   <div className="data-item">
-                    <div className="label your-max-return">
-                      Potential Return
+                    <div>
+                      <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">
-                      {convertToCurrency(
-                        updateDigitToPoint2(
-                          this.props.bet_amount *
-                            (this.props.joined_count + 2) /* 0.9 */
-                        )
-                      )}
-                    </div>
+                    <div className="value">{this.props.creator}</div>
                   </div>
                 </React.Fragment>
               ))}

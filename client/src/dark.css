@@ -72,6 +72,15 @@ background: #060607;
 .dark_mode div.table.main-game-table .table-row .table-cell.cell-amount-info {
     color: #fff;
 }
+.dark_mode .chat-time .chat-text {
+	background: #111111;
+}
+.dark_mode .chat-time .chat-text,
+.dark_mode div.table .table-row, div.table .table-header {
+	border-top: 2px solid #4443434f;
+	border-bottom: 3px solid #000;
+  }
+
 
 .dark_mode .cell-likes {
     text-align: center;
@@ -143,6 +152,7 @@ background: #060607;
 }
 .dark_mode .chat-wrapper .chat-input-panel {
 	background-color: #060607;
+	border-top: 2px solid #101010;
 }
 
 .dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .chat-text {

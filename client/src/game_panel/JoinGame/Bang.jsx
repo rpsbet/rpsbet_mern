@@ -208,7 +208,7 @@ class Bang extends Component {
   }
 
   componentDidMount = () => {
-    this.panelRef.current.addEventListener('scroll', this.handleScroll);
+    // this.panelRef.current.addEventListener('scroll', this.handleScroll);
     const roomId = this.props.roomInfo._id;
     this.socket.on(`BANG_GUESSES_${roomId}`, data => {
       // console.log(`Received data from socket BANG_GUESSES_${roomId}:`);
@@ -278,7 +278,7 @@ class Bang extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    this.panelRef.current.removeEventListener('scroll', this.handleScroll);
+    // this.panelRef.current.removeEventListener('scroll', this.handleScroll);
     this.socket.off('BANG_GUESSES1');
   };
 
@@ -1100,17 +1100,12 @@ class Bang extends Component {
           <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            onScroll={this.handleScroll}
+            // onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner">
-              {[...Array(2)].map((_, i) => (
+              {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  <div className="data-item">
-                    <div>
-                      <div className="label host-display-name">Host</div>
-                    </div>
-                    <div className="value">{this.props.creator}</div>
-                  </div>
+                 
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -1119,27 +1114,26 @@ class Bang extends Component {
                       {convertToCurrency(this.state.bankroll)}
                     </div>
                   </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label your-bet-amount">Bet Amount</div>
-                    </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bet_amount)}
-                    </div>
-                  </div>
+                  
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
-                        Average Multiplier
+                        Ave. Multiplier
                       </div>
                     </div>
                     <div className="value">
                       {convertToCurrency(
                         updateDigitToPoint2(
-                          this.props.aveMultiplier /* * 0.95 */
+                          this.props.aveMultiplier
                         )
                       )}x
                     </div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
                   </div>
                 </React.Fragment>
               ))}

@@ -181,7 +181,13 @@ class MyGamesTable extends Component {
             src={`/img/gametype/ALL.png`}
             alt={`All Games`}
           />
+          <div className='icon'>
+            <img
+              src={`/img/gametype/icons/All.svg`}
+              alt={`All Games`}
+              />
           <span>All Games</span>
+          </div>
         </Button>
         {this.props.gameTypeList.map((gameType, index) => (
           <Button
@@ -201,7 +207,13 @@ class MyGamesTable extends Component {
               src={`/img/gametype/${gameType.short_name}.png`}
               alt={gameType.game_type_name}
             />
+            <div className='icon'>
+            <img
+              src={`/img/gametype/icons/${gameType.short_name}.svg`}
+              alt={gameType.game_type_name}
+              />
             <span>{gameType.game_type_name}</span>
+              </div>
           </Button>
         ))}
         <IconButton
@@ -216,7 +228,7 @@ class MyGamesTable extends Component {
   
     return gameTypePanel;
   };
-
+  
   handlePageNumberClicked = page => {
     this.props.getMyGames({
       page: page,
@@ -283,15 +295,15 @@ class MyGamesTable extends Component {
           </Button>
         </div>
         <div className="table my-open-game-table">
-          {this.props.myGames.length > 0 && (
+          {/* {this.props.myGames.length > 0 && (
             <div className="table-header">
-              {/* <div className="table-cell room-id">Room ID</div> */}
-              {/* <div className="table-cell bet-info">BANKROLL</div> */}
+              <div className="table-cell room-id">Room ID</div>
+              <div className="table-cell bet-info">BANKROLL</div>
               <div className="table-cell payout">YOUR GAMES</div>
-              {/* <div className="table-cell winnings">WINNINGS</div> */}
-              {/* <div className="table-cell action desktop-only">Action</div> */}
+              <div className="table-cell winnings">WINNINGS</div>
+              <div className="table-cell action desktop-only">Action</div>
             </div>
-          )}
+          )} */}
           {this.props.myGames.length === 0 ? (
             <div className="dont-have-game-msg">
               <Lottie options={defaultOptions} width={50} />

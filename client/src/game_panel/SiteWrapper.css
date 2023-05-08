@@ -30,7 +30,7 @@ a#btn_how_to_play {
     display: flex;
     
     flex-wrap: nowrap;
-    animation: ticker 45s linear infinite;
+    /* animation: ticker 195s linear infinite; */
     pointer-events: none;
   }
   
@@ -99,15 +99,26 @@ a#btn_how_to_play {
     background-position: center center;
 }
 .game-type-panel .btn-game-type {
-    height: 170px !important;
+    height: 93px !important;
 }
 .game-type-panel .btn-game-type img {
     width:160px !important;
     border-radius: 10px;
 }
 .game-type-panel .btn-game-type span {
-    padding: 10px 0 0 !important;
+    /* padding: 10px 0 0 !important; */
     flex-direction: column;
+}
+
+.game-type-panel .btn-game-type div.icon {
+    margin-top: -32px;
+    background: #111111b8;
+    width: 100%;
+    font-size: 14px;
+    padding-top: 0 !important;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    font-weight: 500 !important;
 }
 .game_header .main_header #btn_leaderboards {
     font-size: 12px;
@@ -289,8 +300,6 @@ ul[role=menu] li:hover {
 .your-multiplier div {
     width: 100%; 
 }
-
-
 .room-history-panel,
 .action-panel {
     padding: 20px 0;

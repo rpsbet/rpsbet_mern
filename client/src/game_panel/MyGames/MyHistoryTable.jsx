@@ -197,6 +197,13 @@ class MyHistoryTable extends Component {
 
     return (
       <div className="overflowX">
+        <div className="outer-div">
+      <div className="border-mask" />
+      <div className="inner-div">
+        <h1>RAIN</h1>
+        <p>Coming Soon!</p>
+      </div>
+    </div>
         {/* <div className="game-type-container">
           <div
             className="game-type-panel"

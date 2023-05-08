@@ -198,7 +198,13 @@ class OpenGamesTable extends Component {
             src={`/img/gametype/ALL.png`}
             alt={`All Games`}
           />
+          <div className='icon'>
+            <img
+              src={`/img/gametype/icons/All.svg`}
+              alt={`All Games`}
+              />
           <span>All Games</span>
+          </div>
         </Button>
         {this.props.gameTypeList.map((gameType, index) => (
           <Button
@@ -218,7 +224,13 @@ class OpenGamesTable extends Component {
               src={`/img/gametype/${gameType.short_name}.png`}
               alt={gameType.game_type_name}
             />
+            <div className='icon'>
+            <img
+              src={`/img/gametype/icons/${gameType.short_name}.svg`}
+              alt={gameType.game_type_name}
+              />
             <span>{gameType.game_type_name}</span>
+              </div>
           </Button>
         ))}
         <IconButton

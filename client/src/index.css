@@ -836,11 +836,13 @@ div.table .table-row .table-cell img.game-type-icon {
 }
 
 .chat-time .chat-text {
-  background: #f9f9f914;
+  background: #e8e8e8;
   padding: 0.75rem;
   border-radius: 6px;
   border-bottom-left-radius: 0;
   margin-bottom: 20px;
+  border-top: 2px solid #c5c5c54f;
+    border-bottom: 2px solid #e1e1e1;
 }
 .chat {
   height: 100%;
@@ -1205,7 +1207,9 @@ circle {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
-
+.outer-div {
+  margin-top: 40px;
+}
 
   .contents_wrapper .main-game {
     grid-template-columns: unset !important;
@@ -1253,18 +1257,13 @@ circle {
     width: calc(100vw - 90px);
 }
 .btn-game-type div {
-  border-radius: 16px;
-  padding: 8px 16px;
   font-size: 1em !important;
-  margin-right: 4px;
 }
 .game-type-panel .btn-game-type {
   font-size: 1em !important;
+ 
 }
 
-.btn-game-type.active div {
-  color: #ef38d0;
-}
   .join-game-panel, .create-game-panel {
     height: unset;
     overflow-y: scroll;

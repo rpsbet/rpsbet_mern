@@ -45,7 +45,8 @@ button, button.btn {
     flex-direction: column;
 }
 .chat-wrapper .chat-panel .chat-line .chat-time .chat-text {
-    color: #babcc0;
+    color: #717171;
+    
 }
 .contents_wrapper .main-game .main-panel {
     padding: 24px 0 8px 24px;
@@ -99,6 +100,8 @@ button, button.btn {
 div.table .table-row,
 div.table .table-header {
     border-radius: 6px;
+    border-top: 2px solid #c5c5c54f;
+    border-bottom: 2px solid #e1e1e1;
     background: white;
     padding: 16px;
     margin-bottom: 8px;
@@ -113,7 +116,7 @@ div.table .table-header {
     align-items: center;
 }
 div.table.main-history-table, div.table.my-open-game-table {
-    height: calc(100vh - 174px);
+    height: calc(100vh - 281px);
 }
 div.table.main-history-table .table-row > div {
     align-items: flex-start;
@@ -504,7 +507,7 @@ div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-
     scrollbar-width: none;  /* Firefox */
 }
 div.table.main-game-table, div.table.my-open-game-table {
-    height: calc(100vh - 350px);
+    height: calc(100vh - 265px);
 }
 
 div.table.main-game-table .table-row .table-cell.cell-room-info{
@@ -575,7 +578,6 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     display: flex;
     justify-content: left;
     align-items: center;
-    margin-bottom: 8px;
     overflow-x: auto;
     transition: 0.2s;
     -webkit-scroll-behavior-duration: 0.2s;
@@ -593,20 +595,22 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     line-height: 1.71;
     background-color: transparent;
     color: #495057cc;
-    padding: 6px 1.2em;
+    padding: 0;
+    margin-right: 10px !important;
+    margin-bottom: 10px !important;
     white-space: nowrap;
     display: flex;
     flex: 0 0 auto;
     align-items: center;
     font-weight: 600;
     filter: hue-rotate(282deg);
+    border-radius: 10px !important;
 }
-/* .game-type-panel .btn-game-type img {
-    width: 32px;
-    height: 32px;
-    margin-right: 8px;
-    filter: invert(61%) sepia(7%) saturate(233%) hue-rotate(173deg) brightness(94%) contrast(89%);
-} */
+.game-type-panel .btn-game-type div.icon img {
+    width: 26px !important;
+    height: 32px !important;
+    margin-right: 2px;
+}
 /* .drop-game img {
     width: 32px !important;
     height: 32px !important;
@@ -988,7 +992,6 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 
 
 .game-page .pre-summary-panel > div {
-    padding: 0 60px;
     background-repeat: no-repeat;
     background-position: left center;
     font-size: 16px;
@@ -1024,9 +1027,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     justify-content: center;
     text-align: center;
     max-width: 100px;
-    min-width: 25% !important;
-    padding: 0.25rem;
-    /* font-size: 1.125rem; */
+    min-width: 180px !important;
   }
   
   .pre-summary-panel .label {
@@ -1990,6 +1991,7 @@ background-color: red;
     align-items: center;
     padding: 16px;
     width: 100%;
+    z-index: 2;
     position: fixed;
     box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.25);
 }
@@ -2623,6 +2625,7 @@ transform: translateX(160px) !important;
         z-index: 1;
         bottom: 70px;
         background-color: #fff;
+        border-top: 2px solid #d9d9d9;
     }
     
 }

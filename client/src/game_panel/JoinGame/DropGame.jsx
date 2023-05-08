@@ -167,8 +167,7 @@ class DropGame extends Component {
   }
 
   componentDidMount = () => {
-    // Add event listener to detect end of scroll
-    this.panelRef.current.addEventListener('scroll', this.handleScroll);
+    // this.panelRef.current.addEventListener('scroll', this.handleScroll);
 
     this.socket.on('DROP_GUESSES1', data => {
       if (!this.state.drop_guesses1Received) {
@@ -214,7 +213,7 @@ class DropGame extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    this.panelRef.current.removeEventListener('scroll', this.handleScroll);
+    // this.panelRef.current.removeEventListener('scroll', this.handleScroll);
   };
 
   predictNext = dropAmounts => {
@@ -611,18 +610,13 @@ class DropGame extends Component {
           <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            onScroll={this.handleScroll}
+            // onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner">
-              {[...Array(2)].map((_, i) => (
+              {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  <div className="data-item">
-                    <div>
-                      <div className="label host-display-name">Host</div>
-                    </div>
-                    <div className="value">{this.props.creator}</div>
-                  </div>
-                  <div className="data-item">
+                  
+                  {/* <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
@@ -635,7 +629,7 @@ class DropGame extends Component {
                     <div className="value">
                       {convertToCurrency(this.state.bet_amount)}
                     </div>
-                  </div>
+                  </div> */}
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
@@ -649,6 +643,12 @@ class DropGame extends Component {
                         )
                       )}
                     </div>
+                    <div className="data-item">
+                    <div>
+                      <div className="label host-display-name">Host</div>
+                    </div>
+                    <div className="value">{this.props.creator}</div>
+                  </div>
                   </div>
                 </React.Fragment>
               ))}
