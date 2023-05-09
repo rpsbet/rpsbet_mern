@@ -8,6 +8,10 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Pagination from '../../components/Pagination';
 import PlayerModal from '../modal/PlayerModal';
+import Lottie from 'react-lottie';
+import rain from '../LottieAnimations/rain.json';
+import waves from '../LottieAnimations/waves.json';
+import hex from '../LottieAnimations/hex.json';
 
 function updateFromNow(history = []) {
   const result = JSON.parse(JSON.stringify(history));
@@ -199,10 +203,75 @@ class MyHistoryTable extends Component {
       <div className="overflowX">
         <div className="outer-div">
       <div className="border-mask" />
-      <div className="inner-div">
-        <h1>RAIN</h1>
-        <p>Coming Soon!</p>
-      </div>
+      <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: rain
+              }}
+              style={{
+  transform: 'translateY(-66px)',
+  width: '250px',
+  height: '100%',
+  overflow: 'hidden',
+  margin: '-2px 0px -187px',
+  outline: 'none',
+  filter: 'hue-rotate(2deg)',
+  maxWidth: '100%'
+              }}
+            />
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: hex
+              }}
+              style={{
+                transform: 'translateY(-66px)',
+                width: '142px',
+                height: '100%',
+                overflow: 'hidden',
+                margin: '-2px 0px -187px',
+                outline: 'none',
+                filter: 'hue-rotate(2deg)',
+                maxWidth: '100%'
+              }}
+            />
+             <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: waves
+              }}
+              style={{
+                transform: 'translateY(-66px)',
+                width: '361px',
+                height: '100%',
+                overflow: 'hidden',
+                margin: '60px 0px -236px',
+                outline: 'none',
+                filter: 'hue-rotate(48deg)',
+                maxWidth: '100%'
+              }}
+            />
+            
+        <h1
+        id="rain"
+        style={{
+          color: '#fff',
+          fontSize: '3.1em',
+          letterSpacing: '0.35em',
+          textShadow: '0 0 12px #0058b6'
+        }}
+        >RAIN</h1>
+        <p
+        
+        style={{
+          color: '#fff',
+          paddingLeft: '10px',
+          textShadow: '0 0 12px #0058b6'
+        }}
+        >Coming Soon!</p>
     </div>
         {/* <div className="game-type-container">
           <div

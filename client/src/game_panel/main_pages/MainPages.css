@@ -2602,10 +2602,10 @@ transform: translateX(160px) !important;
     div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-table {
         height: unset;
     }
-    div.table.main-history-table {
+    /* div.table.main-history-table {
         padding-top: 35px;
 
-    }
+    } */
     .brain-game-play-panel .play-panel-header .brain-score {
         padding: 16px;
     }
