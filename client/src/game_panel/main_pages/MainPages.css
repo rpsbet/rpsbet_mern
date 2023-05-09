@@ -116,7 +116,7 @@ div.table .table-header {
     align-items: center;
 }
 div.table.main-history-table, div.table.my-open-game-table {
-    height: calc(100vh - 281px);
+    height: calc(100vh - 297px);
 }
 div.table.main-history-table .table-row > div {
     align-items: flex-start;
@@ -507,7 +507,7 @@ div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-
     scrollbar-width: none;  /* Firefox */
 }
 div.table.main-game-table, div.table.my-open-game-table {
-    height: calc(100vh - 265px);
+    height: calc(100vh - 297px);
 }
 
 div.table.main-game-table .table-row .table-cell.cell-room-info{

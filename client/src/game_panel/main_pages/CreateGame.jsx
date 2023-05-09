@@ -726,8 +726,8 @@ class CreateGame extends Component {
           className="main-game"
           style={{
             gridTemplateColumns: this.props.isDrawerOpen
-              ? '260px calc(70% - 260px) 30%'
-              : '70% 30%'
+              ? '260px calc(100% - 610px) 350px'
+              : 'calc(100% - 350px) 350px'
           }}
         >
           {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
