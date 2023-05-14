@@ -27,6 +27,12 @@ const predictAndEmit = async (bang_list, room, socket, room_Id) => {
   await newBet.save();
 
   const roomBetsForRoom = roomBets.get(room_Id) || [];
+
+  // remove oldest item if max limit reached
+  if (roomBetsForRoom.length >= 100) {
+    roomBetsForRoom.shift();
+  }
+
   roomBetsForRoom.push(newBet);
   roomBets.set(room_Id, roomBetsForRoom);
 
@@ -40,6 +46,7 @@ const predictAndEmit = async (bang_list, room, socket, room_Id) => {
   timeoutIdsForRoom.push(timeoutId);
   timeoutIds.set(room_Id, timeoutIdsForRoom);
 };
+
 
 const initializeRound = async (bang_list, room, socket, room_Id) => {
   // console.log("di")

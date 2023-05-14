@@ -399,6 +399,26 @@ div.table .table-row .table-cell button:last-child:before,
     background-position: 7.5px 7.5px;
 }
 
+@keyframes fade {
+    from {
+      filter: brightness(1);
+    }
+    to {
+    filter: brightness(1.5);
+    }
+  }
+  
+
+  @keyframes pulse {
+    from {
+      transform: scale(0.9);
+    }
+    to {
+      transform: scale(2);
+    }
+  }
+  
+
 .whale {
 
     background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d56f5333d09719df811b8_whale.svg') !important;
@@ -2591,6 +2611,7 @@ transform: translateX(160px) !important;
         padding-right: 0;
         border-right: none;
     }
+
 
    .game-type-panel::-webkit-scrollbar {
         display: none;

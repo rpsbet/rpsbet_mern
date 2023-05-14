@@ -28,9 +28,14 @@ const predictAndEmit = async (roll_list, room, socket, room_Id, numRolls) => {
       face: nextStateFace,
       created_at: currentTime
     });
-    await newBet.save();
 
     const roomBetsForRoom = roomBets.get(room_Id) || [];
+
+    // remove oldest item if max limit reached
+    if (roomBetsForRoom.length >= 1000) {
+      roomBetsForRoom.shift();
+    }
+
     roomBetsForRoom.push(newBet);
     roomBets.set(room_Id, roomBetsForRoom);
 
@@ -47,6 +52,7 @@ const predictAndEmit = async (roll_list, room, socket, room_Id, numRolls) => {
   timeoutIdsForRoom.push(timeoutId);
   timeoutIds.set(room_Id, timeoutIdsForRoom);
 };
+
 
 const initializeRollRound = async (roll_list, room, socket, room_Id) => {
   const numRolls = 20;

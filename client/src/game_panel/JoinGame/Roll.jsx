@@ -90,13 +90,16 @@ class Roll extends Component {
       nextRollInterval: 10,
       countdown: null,
       items: [],
+      showResult: false,
       executeBet: false,
       newRound: false,
       bgColorChanged: false,
       countupValue: 0,
       buttonClicked: false,
       cashoutAmount: 1,
+      disabledButtons: false,
       roll_guesses: [],
+      lastRollGuess: "",
       advanced_status: '',
       waiting: false,
       is_anonymous: false,
@@ -221,26 +224,40 @@ class Roll extends Component {
     const roomId = this.props.roomInfo._id;
     this.socket.on(`ROLL_GUESSES_${roomId}`, data => {
       console.log(`Received data from socket ROLL_GUESSES_${roomId}:`, data);
-
+  
       if (data && data.rolls && data.rolls.length > 0) {
         const roll_guesses = data.rolls.map((roll, i) => ({
           roll,
           face: data.faces[i]
         })); // combine roll and face values
-
+  
         this.startSlider();
         this.setState({
-          roll_guesses: roll_guesses
+          roll_guesses: roll_guesses,
+          lastRollGuess: roll_guesses[roll_guesses.length - 6].face,
+           // disable buttons
+        }, () => {
+          console.log("this", this.state.lastRollGuess);
+          setTimeout(() => {
+            this.setState({ disabledButtons: true });
+          }, 1000);
+          setTimeout(() => {
+            this.setState({ showResult: true });
+            this.setState({ disabledButtons: false });        
+            setTimeout(() => {
+              this.setState({ showResult: false });
+            }, 2000); // set showResult to false after 2 seconds
+          }, 10000); // set showResult to true after 5 seconds
         });
+        
       }
     });
+    
 
     this.socket.on(`ROLL_GUESSES1_${roomId}`, data => {
       console.log(`Received data from socket ROLL_GUESSES1_${roomId}:`, data);
 
       if (data && data.rolls && data.rolls.length > 0 && this.state.listen) {
-        const lastRoll = data.rolls[data.rolls.length - 1];
-        const lastFace = data.faces[data.faces.length - 1]; // get the last face value
 
         const roll_guesses = data.rolls.map((roll, i) => ({
           roll,
@@ -517,6 +534,7 @@ class Roll extends Component {
 
       if (progress < 1) {
         requestAnimationFrame(animate);
+        
       }
     }
 
@@ -536,6 +554,7 @@ class Roll extends Component {
     );
   }
 
+  
   handle2xButtonClick() {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
@@ -1176,6 +1195,45 @@ class Roll extends Component {
                 width: '160px',
               }}
             />
+            {this.state.showResult && (
+  <div style={{ position: 'relative', height: '0' }}>
+    <div
+      style={{
+        width: '123px',
+        zIndex: '1',
+        position: 'absolute',
+        height: '150px',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 'contain',
+        left: '48.3%',
+        animation: 'pulse 3s ease-out, fade 2s ease-out',
+        animationDelay: '0.1s',
+        animationFillMode: 'forwards',
+        animationIterationCount: this.state.showResult ? 'infinite' : '1',
+        animationPlayState: this.state.showResult ? 'running' : 'paused',
+        animationDirection: 'alternate',
+        animationTimingFunction: 'ease-in-out',
+      }}
+      className={
+        this.state.lastRollGuess === 'R'
+          ? 'rock'
+          : this.state.lastRollGuess === 'P'
+          ? 'paper'
+          : this.state.lastRollGuess === 'S'
+          ? 'scissors'
+          : this.state.lastRollGuess === 'W'
+          ? 'whale'
+          : this.state.lastRollGuess === 'B'
+          ? 'bear'
+          : this.state.lastRollGuess === 'Bu'
+          ? 'bull'
+          : ''
+      }
+    ></div>
+  </div>
+)}
+
               <div className="slider-images" id="top" ref={this.sliderRef}>
                 <p className="previous-guesses roll">
                   <div
@@ -1281,6 +1339,8 @@ class Roll extends Component {
                     'rock button-2x-r' +
                     (this.state.selected_roll === 'R' ? ' active' : '')
                   }
+                  disabled={this.state.disabledButtons}
+  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
                     this.onAddRun('2', 'R');
@@ -1299,6 +1359,8 @@ class Roll extends Component {
                     'paper button-2x-p' +
                     (this.state.selected_roll === 'P' ? ' active' : '')
                   }
+                  disabled={this.state.disabledButtons}
+  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
                     this.onAddRun('2', 'P');
@@ -1317,6 +1379,8 @@ class Roll extends Component {
                     'scissors button-2x-s' +
                     (this.state.selected_roll === 'S' ? ' active' : '')
                   }
+                  disabled={this.state.disabledButtons}
+  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
                     this.onAddRun('2', 'S');
@@ -1335,6 +1399,8 @@ class Roll extends Component {
                     'whale button-14x' +
                     (this.state.selected_roll === 'W' ? ' active' : '')
                   }
+                  disabled={this.state.disabledButtons}
+  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
                     this.onAddRun('14', 'W');
@@ -1353,6 +1419,8 @@ class Roll extends Component {
                     'bear button-15x' +
                     (this.state.selected_roll === 'B' ? ' active' : '')
                   }
+                  disabled={this.state.disabledButtons}
+  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
                     this.onAddRun('1.5', 'B');
@@ -1371,6 +1439,8 @@ class Roll extends Component {
                     'bull button-7x' +
                     (this.state.selected_roll === 'Bu' ? ' active' : '')
                   }
+                  disabled={this.state.disabledButtons}
+  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
                     this.onAddRun('7', 'Bu');
