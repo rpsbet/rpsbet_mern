@@ -418,7 +418,9 @@ div.table .table-row .table-cell button:last-child:before,
     }
   }
   
-
+#roll .active {
+    background-color: grey;
+  }
 .whale {
 
     background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d56f5333d09719df811b8_whale.svg') !important;
@@ -614,7 +616,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     font-size: 1.2em;
     line-height: 1.71;
     background-color: transparent;
-    color: #495057cc;
+    color: #f9f9f9;
     padding: 0;
     margin-right: 10px !important;
     margin-bottom: 10px !important;

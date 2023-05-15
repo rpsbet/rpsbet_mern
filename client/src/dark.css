@@ -86,8 +86,17 @@ background: #060607;
     text-align: center;
     color: #eee;
 }
+.dark_mode .game-type-panel .btn-game-type {
+	color: #495057cc;
+}
 
+.dark_mode .game-type-panel .btn-game-type div.icon {
+	background: #600000b8;
+}
 
+.dark_mode game-type-panel .btn-game-type div.icon {
+    background: #111111b8;
+}
 .dark_mode .mobile-only .active,
 .dark_mode div.table.my-chat-table .table-row > div.message-panel,
 .dark_mode #game_logs .transaction-panel button,

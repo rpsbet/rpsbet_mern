@@ -2,11 +2,9 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import CountUp, { linearEasing } from 'react-countup';
-
-import { TwitterShareButton, TwitterIcon } from 'react-share';
+import Share from './Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-// import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button, TextField } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
@@ -29,7 +27,6 @@ import {
 import history from '../../redux/history';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
-import { FaClipboard } from 'react-icons/fa';
 
 const defaultOptions = {
   loop: true,
@@ -45,8 +42,6 @@ const styles = {
     borderColor: '#fa3fa0'
   }
 };
-
-const twitterLink = window.location.href;
 
 const calcWinChance = prevStates => {
   let total = prevStates.length;
@@ -85,7 +80,6 @@ class Bang extends Component {
       betting: false,
       timer: null,
       timerValue: 2000,
-      clicked: true,
       intervalId: null,
       requestId: null,
       nextBangInterval: null,
@@ -107,7 +101,6 @@ class Bang extends Component {
       multiplier: 1.01,
       crashed: true,
       betResult: null,
-      copied: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
@@ -163,9 +156,16 @@ class Bang extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { waiting, newRound, showBang, showCountdown, executeBet, cashoutAmount } = this.state;
+    const {
+      waiting,
+      newRound,
+      showBang,
+      showCountdown,
+      executeBet,
+      cashoutAmount
+    } = this.state;
 
-    const {playSound, playSoundLoop, stopSound } = this.props;
+    const { playSound, playSoundLoop, stopSound } = this.props;
 
     if (!showBang && !showCountdown) {
       stopSound('countDown');
@@ -180,14 +180,17 @@ class Bang extends Component {
     }
 
     if (!showBang && !showCountdown && waiting && newRound && !executeBet) {
-      this.setState({ 
-        newRound: false,
-        executeBet: true,
-        crashed: false,
-        cashoutAmount: cashoutAmount
-      }, () => {
-        this.onBtnBetClick();
-      });
+      this.setState(
+        {
+          newRound: false,
+          executeBet: true,
+          crashed: false,
+          cashoutAmount: cashoutAmount
+        },
+        () => {
+          this.onBtnBetClick();
+        }
+      );
     }
 
     if (prevProps.roomInfo && this.props.roomInfo) {
@@ -278,8 +281,9 @@ class Bang extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    // this.panelRef.current.removeEventListener('scroll', this.handleScroll);
-    this.socket.off('BANG_GUESSES1');
+    this.socket.off(`BANG_GUESSES_${this.props.roomInfo._id}`);
+    this.socket.off(`BANG_GUESSES1_${this.props.roomInfo._id}`);
+    this.socket.off('UPDATED_BANKROLL');
   };
 
   predictNext = bangAmounts => {
@@ -344,7 +348,7 @@ class Bang extends Component {
       cashoutAmount: this.state.cashoutAmount
       // slippage: this.state.slippage
     });
-    
+
     let text = 'HAHAA, YOU LOST!!!';
 
     if (result.betResult === 1) {
@@ -400,29 +404,18 @@ class Bang extends Component {
     this.props.refreshHistory();
   };
 
-  
-  
   onBtnBetClick = async () => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-    } = this.props;
-    const {
-      buttonClicked,
-      waiting,
-      executeBet
-    } = this.state;
-  
+    const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
+    const { buttonClicked, waiting, executeBet } = this.state;
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-  
+
     if (!buttonClicked) {
       if (!waiting) {
         this.setState({ waiting: true });
@@ -435,7 +428,7 @@ class Bang extends Component {
       this.pushBet();
     }
   };
-  
+
   pushBet = async () => {
     const {
       openGamePasswordModal,
@@ -445,13 +438,13 @@ class Bang extends Component {
       roomInfo
     } = this.props;
     const { cashoutAmount } = this.state;
-  
+
     cancelAnimationFrame(this.state.requestId);
     await validateBetAmount(cashoutAmount, balance, isDarkMode);
-  
+
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-  
+
     if (is_private === true && passwordCorrect !== true) {
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         openGamePasswordModal();
@@ -472,7 +465,7 @@ class Bang extends Component {
       this.resetButtonState();
     }
   };
-  
+
   resetButtonState = () => {
     this.setState({
       buttonClicked: false,
@@ -480,17 +473,16 @@ class Bang extends Component {
       newRound: false,
       waiting: false,
       executeBet: false,
-      requestId: null,
+      requestId: null
     });
   };
-  
-  
+
   startAutoCashout = () => {
     const { bet_amount, multiplier } = this.state;
     let cashoutAmount = 1;
     const increment = 0.01;
     let previousTimestamp = null;
-    const animate = (timestamp) => {
+    const animate = timestamp => {
       if (!previousTimestamp) {
         previousTimestamp = timestamp;
       }
@@ -501,16 +493,14 @@ class Bang extends Component {
         previousTimestamp = timestamp;
       }
       if (cashoutAmount >= multiplier) {
-        this.setState({ cashoutAmount: multiplier, crashed: false },
-          () => {
-            this.pushBet();
-          });
+        this.setState({ cashoutAmount: multiplier, crashed: false }, () => {
+          this.pushBet();
+        });
         return;
       } else if (cashoutAmount >= this.state.nextBangInterval) {
-        this.setState({ crashed: true },
-          () => {
-            this.pushBet();
-          });
+        this.setState({ crashed: true }, () => {
+          this.pushBet();
+        });
         return;
       }
       const requestId = window.requestAnimationFrame(animate);
@@ -519,10 +509,7 @@ class Bang extends Component {
     const requestId = window.requestAnimationFrame(animate);
     this.setState({ buttonClicked: true, cashoutAmount, requestId });
   };
-  
-  
-  
-  
+
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
@@ -570,22 +557,6 @@ class Bang extends Component {
     );
   }
 
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
-    setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
-    }, 1000);
-  };
-
-  copy() {
-    navigator.clipboard.writeText(twitterLink);
-  }
   handleButtonClick = () => {
     const { isAuthenticated, creator_id, user_id, isDarkMode } = this.props;
     const { betting, timer } = this.state;
@@ -769,14 +740,17 @@ class Bang extends Component {
                 filter: 'hue-rotate(312deg)',
                 maxWidth: '100%',
                 width: '300px',
-                marginBottom: '-50px',
-                
+                marginBottom: '-50px'
+
                 // position: 'absolute',
                 // transform: 'translate: (50%, 50%)'
               }}
             />
-           <span  id="bang-text"> BANG
-            <br /> @ x{nextBangInterval.toFixed(2)}!</span>
+            <span id="bang-text">
+              {' '}
+              BANG
+              <br /> @ x{nextBangInterval.toFixed(2)}!
+            </span>
             <br />
             {setTimeout(
               () => this.setState({ elapsedTime: '' }),
@@ -802,13 +776,18 @@ class Bang extends Component {
                 // transform: 'translate: (50%, 50%)'
               }}
             />
-            <span id="bang-text"> BANG
-            <br /> @ x{nextBangInterval.toFixed(2)}!</span>
+            <span id="bang-text">
+              {' '}
+              BANG
+              <br /> @ x{nextBangInterval.toFixed(2)}!
+            </span>
           </div>
         );
       }
     } else if (showCountdown) {
-      content = <span id="nextBangIn">Next Bang in...{this.state.countdown}</span>;
+      content = (
+        <span id="nextBangIn">Next Bang in...{this.state.countdown}</span>
+      );
     } else {
       let countupStart;
       if (elapsedTime && elapsedTime / 1000 > nextBangInterval + 2) {
@@ -848,7 +827,7 @@ class Bang extends Component {
           content = (
             <div>
               <Lottie
-              id="bomb"
+                id="bomb"
                 options={{
                   loop: true,
                   autoplay: true,
@@ -862,7 +841,7 @@ class Bang extends Component {
                   marginRight: '-30px',
                   marginBottom: '-30px',
                   transform: 'translateY(20px)'
-                                }}
+                }}
               />
               <p>
                 <div id="x">x</div>
@@ -938,8 +917,11 @@ class Bang extends Component {
                   // transform: 'translate: (50%, 50%)'
                 }}
               />
-              <span id="bang-text"> BANG
-            <br /> @ x{nextBangInterval.toFixed(2)}!</span>
+              <span id="bang-text">
+                {' '}
+                BANG
+                <br /> @ x{nextBangInterval.toFixed(2)}!
+              </span>
             </div>
           );
         } else {
@@ -960,7 +942,6 @@ class Bang extends Component {
                   marginRight: '-30px',
                   marginBottom: '-30px',
                   transform: 'translateY(20px)'
-                
                 }}
               />
               <p>
@@ -1016,7 +997,7 @@ class Bang extends Component {
         content = (
           <div>
             <Lottie
-            id="bomb"
+              id="bomb"
               options={{
                 loop: true,
                 autoplay: true,
@@ -1081,13 +1062,6 @@ class Bang extends Component {
         );
       }
     }
-    const styles = ['copy-btn'];
-    let text = 'COPY CONTRACT';
-
-    if (this.state.clicked) {
-      styles.push('clicked');
-      text = 'COPIED!';
-    }
 
     return (
       <div className="game-page">
@@ -1105,7 +1079,6 @@ class Bang extends Component {
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                 
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -1114,7 +1087,7 @@ class Bang extends Component {
                       {convertToCurrency(this.state.bankroll)}
                     </div>
                   </div>
-                  
+
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
@@ -1123,10 +1096,9 @@ class Bang extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(
-                          this.props.aveMultiplier
-                        )
-                      )}x
+                        updateDigitToPoint2(this.props.aveMultiplier)
+                      )}
+                      x
                     </div>
                   </div>
                   <div className="data-item">
@@ -1193,24 +1165,22 @@ class Bang extends Component {
               </div>
             </div>
             <div>
-
-            
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: bangBg
-              }}
-              style={{
-                // filter: 'hue-rotate(312deg)',
-                maxWidth: '100%',
-                width: '300px',
-                margin: '-5px auto -314px',
-                filter: 'hue-rotate(137deg)'
-                // position: 'absolute',
-                // transform: 'translate: (50%, 50%)'
-              }}
-            />
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: bangBg
+                }}
+                style={{
+                  // filter: 'hue-rotate(312deg)',
+                  maxWidth: '100%',
+                  width: '300px',
+                  margin: '-5px auto -314px',
+                  filter: 'hue-rotate(137deg)'
+                  // position: 'absolute',
+                  // transform: 'translate: (50%, 50%)'
+                }}
+              />
             </div>
             <div className="bangTimer">
               {bang_guesses.length ? (
@@ -1297,7 +1267,9 @@ class Bang extends Component {
                 variant="contained"
               >
                 {this.state.buttonClicked ? (
-                  `Cash Out @ ${(parseFloat(this.state.cashoutAmount)).toFixed(2)}`
+                  `Cash Out @ ${parseFloat(this.state.cashoutAmount).toFixed(
+                    2
+                  )}`
                 ) : this.state.waiting ? (
                   <span style={{ animation: 'blink 0.75s linear infinite' }}>
                     Joining Next Round
@@ -1406,7 +1378,7 @@ class Bang extends Component {
             </div>
             <Button
               id="aiplay"
-              className='disabled'
+              className="disabled"
               variant="contained"
               onMouseDown={this.handleButtonClick}
               onMouseUp={this.handleButtonRelease}
@@ -1432,34 +1404,7 @@ class Bang extends Component {
           <BetArray arrayName="bang_array" label="bang" />
 
           <div className="action-panel">
-            <div className="share-options">
-              <TwitterShareButton
-                url={twitterLink}
-                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                className="Demo__some-network__share-button"
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-              <a
-                className={styles.join('')}
-                onClick={() => {
-                  this.toggleBtnHandler();
-                  this.copy();
-                }}
-              >
-                {this.state.clicked ? (
-                  <input
-                    type="text"
-                    value={twitterLink}
-                    readOnly
-                    onClick={this.toggleBtnHandler}
-                  />
-                ) : null}
-                <FaClipboard />
-                &nbsp;{this.state.text}
-              </a>
-            </div>
+            <Share roomInfo={this.props.roomInfo} />
           </div>
         </div>
       </div>

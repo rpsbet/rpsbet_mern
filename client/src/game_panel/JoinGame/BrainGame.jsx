@@ -23,9 +23,9 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
+import Share from './Share';
+
 import { convertToCurrency } from '../../util/conversion';
-import { FaClipboard } from 'react-icons/fa';
-import { TwitterShareButton, TwitterIcon } from 'react-share';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 const defaultOptions = {
@@ -36,8 +36,6 @@ const defaultOptions = {
     preserveAspectRatio: 'xMidYMid slice'
   }
 };
-
-const twitterLink = window.location.href;
 
 class BrainGame extends Component {
   constructor(props) {
@@ -51,8 +49,6 @@ class BrainGame extends Component {
       bgColorChanged: false,
       timer: null,
       timerValue: 2000,
-      clicked: true,
-      copied: false,
       is_anonymous: false,
       is_started: false,
       remaining_time: 60,
@@ -69,23 +65,6 @@ class BrainGame extends Component {
       settings_panel_opened: false
     };
     this.panelRef = React.createRef();
-  }
-
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
-    setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
-    }, 1000);
-  };
-
-  copy() {
-    navigator.clipboard.writeText(twitterLink);
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -550,7 +529,7 @@ class BrainGame extends Component {
                 <div className="timer-footer">seconds left</div>
                 <div className="timer-footer2">S</div>
               </div>
-              
+
               <div className="brain-score">
                 Score: <span>{this.state.score}</span>
               </div>
@@ -583,8 +562,6 @@ class BrainGame extends Component {
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  
-
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bet Amount</div>
@@ -594,14 +571,10 @@ class BrainGame extends Component {
                     </div>
                   </div>
                   <div className="data-item">
-                    <div className="label your-max-return">
-                      Your Return
-                    </div>
+                    <div className="label your-max-return">Your Return</div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(
-                          this.props.bet_amount * 2
-                        )
+                        updateDigitToPoint2(this.props.bet_amount * 2)
                       )}
                     </div>
                   </div>
@@ -615,7 +588,7 @@ class BrainGame extends Component {
                       )}
                     </div>
                   </div>
-                 
+
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
@@ -627,14 +600,13 @@ class BrainGame extends Component {
             </div>
           </div>
           <div
-             style={{
+            style={{
               zIndex: '0',
-              position: 'relative',
+              position: 'relative'
               // transform: 'translate: (50%, 50%)'
             }}
-            >
-           
-          <Lottie
+          >
+            <Lottie
               options={{
                 loop: true,
                 autoplay: true,
@@ -648,20 +620,21 @@ class BrainGame extends Component {
                 opacity: 0.3
               }}
             />
-             </div>
+          </div>
           <div
-          style={{
+            style={{
               zIndex: '1',
               position: 'relative'
-               }} className="game-info-panel brain-game">
-            
+            }}
+            className="game-info-panel brain-game"
+          >
             <h3 className="game-sub-title">Game Type:</h3>
             <p className="game-type">
               {this.props.brain_game_type.game_type_name}
             </p>
             <h3 className="game-sub-title">Score to Beat:</h3>
             <p>{this.props.brain_game_score}</p>
-           
+
             <Button id="btn_bet" onClick={this.onStartGame}>
               Start
             </Button>
@@ -781,34 +754,7 @@ class BrainGame extends Component {
 
           <div className="action-panel">
             <div className="action-panel">
-              <div className="share-options">
-                <TwitterShareButton
-                  url={twitterLink}
-                  title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                  className="Demo__some-network__share-button"
-                >
-                  <TwitterIcon size={32} round />
-                </TwitterShareButton>
-                {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-                <a
-                  className={styles.join('')}
-                  onClick={() => {
-                    this.toggleBtnHandler();
-                    this.copy();
-                  }}
-                >
-                  {this.state.clicked ? (
-                    <input
-                      type="text"
-                      value={twitterLink}
-                      readOnly
-                      onClick={this.toggleBtnHandler}
-                    />
-                  ) : null}
-                  <FaClipboard />
-                  &nbsp;{this.state.text}
-                </a>
-              </div>
+              <Share roomInfo={this.props.roomInfo} />
             </div>
           </div>
         </div>

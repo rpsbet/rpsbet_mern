@@ -82,40 +82,44 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   if (!['like', 'dislike', 'view'].includes(type)) {
     return res.status(400).json({ success: false, message: 'Invalid type' });
   }
-  const updateQuery = type === 'view'
-    ? {
-      $set: {
-        views: {
-          $cond: [
-            { $in: [req.user._id, "$views"] },
-            "$views",
-            { $concatArrays: ["$views", [req.user._id]] }
-          ]
+  const updateQuery =
+    type === 'view'
+      ? {
+          $set: {
+            views: {
+              $cond: [
+                { $in: [req.user._id, '$views'] },
+                '$views',
+                { $concatArrays: ['$views', [req.user._id]] }
+              ]
+            }
+          }
         }
-      }
-    }
-    : {
-      $set: {
-        [`${type}s`]: {
-          $cond: [
-            { $in: [req.user._id, `$${type}s`] },
-            { $setDifference: [`$${type}s`, [req.user._id]] },
-            { $concatArrays: [`$${type}s`, [req.user._id]] }
-          ]
-        }
-      }
-    };
+      : {
+          $set: {
+            [`${type}s`]: {
+              $cond: [
+                { $in: [req.user._id, `$${type}s`] },
+                { $setDifference: [`$${type}s`, [req.user._id]] },
+                { $concatArrays: [`$${type}s`, [req.user._id]] }
+              ]
+            }
+          }
+        };
   try {
-    const room = await Room.findOneAndUpdate({ _id: id }, [updateQuery], { new: true });
+    const room = await Room.findOneAndUpdate({ _id: id }, [updateQuery], {
+      new: true
+    });
     if (!room) {
-      return res.status(404).json({ success: false, message: 'Room not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: 'Room not found' });
     }
     res.json({ success: true, room });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
 
 // /api/room/:id call
 router.get('/room/:id', async (req, res) => {
@@ -209,30 +213,29 @@ router.get('/room/:id', async (req, res) => {
 
     let hasRollEmitted = false;
 
-async function emitRollElapsedTime(req, room) {
-  if (!hasRollEmitted && room.status === 'open') {
-    const roll_guesses = await RollBetItem.find({ room: room });
-    const rolls = roll_guesses.map(guess => guess.roll);
-    const faces = roll_guesses.map(guess => guess.face); // get the faces for each guess
+    async function emitRollElapsedTime(req, room) {
+      if (!hasRollEmitted && room.status === 'open') {
+        const roll_guesses = await RollBetItem.find({ room: room });
+        const rolls = roll_guesses.map(guess => guess.roll);
+        const faces = roll_guesses.map(guess => guess.face); // get the faces for each guess
 
-    // Calculate elapsed time from when the function was called
-    const currentTime = await getCurrentRollTime();
-    const lastRollTime =
-      roll_guesses.length > 0
-        ? roll_guesses[roll_guesses.length - 1].created_at
-        : currentTime;
-    const elapsedTime = currentTime - lastRollTime;
-    const roomId = room._id;
-    const socketName = `ROLL_GUESSES1_${roomId}`;
-    if (req.io.sockets) {
-      req.io.sockets.emit(socketName, { rolls, faces, elapsedTime }); // include faces in the emitted object
+        // Calculate elapsed time from when the function was called
+        const currentTime = await getCurrentRollTime();
+        const lastRollTime =
+          roll_guesses.length > 0
+            ? roll_guesses[roll_guesses.length - 1].created_at
+            : currentTime;
+        const elapsedTime = currentTime - lastRollTime;
+        const roomId = room._id;
+        const socketName = `ROLL_GUESSES1_${roomId}`;
+        if (req.io.sockets) {
+          req.io.sockets.emit(socketName, { rolls, faces, elapsedTime }); // include faces in the emitted object
+        }
+        hasRollEmitted = true;
+      }
     }
-    hasRollEmitted = true;
-  }
-}
 
-emitRollElapsedTime(req, room);
-
+    emitRollElapsedTime(req, room);
 
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
 
@@ -256,7 +259,7 @@ emitRollElapsedTime(req, room);
         brain_game_score: room['brain_game_score'],
         selected_drop: room['selected_drop'],
         cashoutAmount: room['cashoutAmount'],
-        aveMultiplier: room['aveMultiplier'],
+        multiplier: room['multiplier'],
         qs_game_type: room['qs_game_type'],
         room_history: roomHistory,
         box_list: boxPrizeList,
@@ -520,10 +523,10 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `
          ${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
             updateDigitToPoint2(
-              parseFloat(gameLog['bet_amount'] * gameLog['cashoutAmount'])
+              parseFloat(gameLog['bet_amount'] * gameLog['multiplier'])
             )
           )} (${parseFloat(
-            (gameLog['bet_amount'] * gameLog['cashoutAmount']) /
+            (gameLog['bet_amount'] * gameLog['multiplier']) /
               gameLog['bet_amount']
           ).toFixed(2)}X)
                         </span> in ${room_name}`;
@@ -795,6 +798,7 @@ const getRoomList = async (pagination, page, game_type) => {
         roll_list: room['roll_list'],
         crashed: room['crashed'],
         cashoutAmount: room['cashoutAmount'],
+        multiplier: room['multiplier'],
         winnings: '',
         spleesh_bet_unit: room['spleesh_bet_unit'],
         is_anonymous: room['is_anonymous'],
@@ -805,7 +809,7 @@ const getRoomList = async (pagination, page, game_type) => {
         created_at: moment(room['created_at']).format('YYYY-MM-DD HH:mm'),
         likes: room['likes'],
         dislikes: room['dislikes'],
-        views: room['views'],
+        views: room['views']
       };
 
       if (temp.game_type.game_type_id === 1) {
@@ -1017,7 +1021,7 @@ router.post('/rooms', auth, async (req, res) => {
       pr: pr,
       host_pr: host_pr,
       room_number: roomCount + 1,
-      status: 'open',
+      status: 'open'
     });
     await newRoom.save();
 
@@ -1062,14 +1066,11 @@ router.post('/rooms', auth, async (req, res) => {
       const roomId = newRoom.id;
 
       initializeRound(req.body.bang_list, newRoom, req.io.sockets, roomId);
-    
     } else if (gameType.game_type_name === 'Roll') {
       const roomId = newRoom.id;
 
       initializeRollRound(req.body.roll_list, newRoom, req.io.sockets, roomId);
-    
     }
-    
 
     newTransaction = new Transaction({
       user: req.user,
@@ -2186,8 +2187,6 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Bang!') {
-        // game logic
-
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         newTransactionJ.amount -= parseFloat(req.body.bet_amount);
 
@@ -2231,7 +2230,6 @@ router.post('/bet', auth, async (req, res) => {
               });
             }
 
-            
             message.message =
               'I won ' +
               // bet_item.bet_amount * 2 +
@@ -2243,10 +2241,8 @@ router.post('/bet', auth, async (req, res) => {
               roomInfo['room_number'];
           } else {
             newTransactionJ.amount +=
-            (parseFloat(roomInfo['user_bet']) *
-              ((100 - commission.value) / 100));
-
-            
+              parseFloat(roomInfo['user_bet']) *
+              ((100 - commission.value) / 100);
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -2264,8 +2260,8 @@ router.post('/bet', auth, async (req, res) => {
               '-' +
               roomInfo['room_number'];
 
-              roomInfo['user_bet'] = 0;
-              roomInfo['host_pr'] = 0;
+            roomInfo['user_bet'] = 0;
+            roomInfo['host_pr'] = 0;
           }
           const newBangGuess = new BangGuess({
             room: roomInfo._id,
@@ -2282,7 +2278,6 @@ router.post('/bet', auth, async (req, res) => {
           if (req.io.sockets) {
             req.io.sockets.emit('BANG_GUESSES', guesses);
           }
-
         } else if (bet_item.bang === req.body.bet_amount) {
           newGameLog.game_result = 0;
 
@@ -2398,39 +2393,42 @@ router.post('/bet', auth, async (req, res) => {
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         newTransactionJ.amount -= parseFloat(req.body.bet_amount);
 
+
         const bet_item = await RollBetItem.findOne({
           room: roomInfo,
-          roll: { $ne: '' }
         })
           .sort({ _id: 'desc' })
+          .skip(5)
           .limit(1);
-        // console.log("hi 2", req.body.bet_amount);
-        // console.log(req.body.crashed)
-        // console.log(req.body.cashoutAmount)
-        // console.log(req.body.multiplier)
-        if (!req.body.crashed) {
-          newGameLog.selected_roll = bet_item.roll;
-          newGameLog.game_result = 1;
+
+          console.log("The 6th: ", bet_item.face);
+          
+          console.log(" req.body.selected_roll",  req.body.selected_roll);
+          
+          if (bet_item.face == req.body.selected_roll ) {
+            newGameLog.multiplier = bet_item.roll;
+            newGameLog.game_result = 1;
 
           if (
             roomInfo['user_bet'] -
               parseFloat(req.body.bet_amount) *
-                parseFloat(req.body.cashoutAmount) >
+                parseFloat(bet_item.roll) >
             0
           ) {
+            console.log("hi", bet_item.roll);
             newTransactionJ.amount +=
               parseFloat(req.body.bet_amount) *
-              parseFloat(req.body.cashoutAmount) *
+              parseFloat(bet_item.roll) *
               ((100 - commission.value) / 100);
 
             roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
 
             roomInfo['host_pr'] -=
               parseFloat(req.body.bet_amount) *
-              parseFloat(req.body.cashoutAmount);
+              parseFloat(bet_item.roll);
             roomInfo['user_bet'] -=
               parseFloat(req.body.bet_amount) *
-              parseFloat(req.body.cashoutAmount);
+              parseFloat(bet_item.roll);
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -2438,22 +2436,19 @@ router.post('/bet', auth, async (req, res) => {
               });
             }
 
-            
             message.message =
               'I won ' +
               // bet_item.bet_amount * 2 +
               parseFloat(req.body.bet_amount) *
-                parseFloat(req.body.cashoutAmount) +
+                parseFloat(bet_item.roll) +
               ' BUSD in ' +
               roomInfo['game_type']['short_name'] +
               '-' +
               roomInfo['room_number'];
           } else {
             newTransactionJ.amount +=
-            (parseFloat(roomInfo['user_bet']) *
-              ((100 - commission.value) / 100));
-
-            
+              parseFloat(roomInfo['user_bet']) *
+              ((100 - commission.value) / 100);
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -2471,8 +2466,8 @@ router.post('/bet', auth, async (req, res) => {
               '-' +
               roomInfo['room_number'];
 
-              roomInfo['user_bet'] = 0;
-              roomInfo['host_pr'] = 0;
+            roomInfo['user_bet'] = 0;
+            roomInfo['host_pr'] = 0;
           }
           const newRollGuess = new RollGuess({
             room: roomInfo._id,
@@ -2481,7 +2476,7 @@ router.post('/bet', auth, async (req, res) => {
           });
           await newRollGuess.save();
 
-          newGameLog.cashoutAmount = req.body.cashoutAmount;
+          newGameLog.multiplier = bet_item.roll;
 
           const guesses = await RollGuess.find({ room: roomInfo._id }).sort({
             created_at: 'ascending'
@@ -2489,7 +2484,6 @@ router.post('/bet', auth, async (req, res) => {
           if (req.io.sockets) {
             req.io.sockets.emit('ROLL_GUESSES', guesses);
           }
-
         } else if (bet_item.roll === req.body.bet_amount) {
           newGameLog.game_result = 0;
 

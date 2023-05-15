@@ -80,7 +80,7 @@ const closeRoomSocket = (socket, room_Id) => {
     const socketName = `BANG_GUESSES_${room_Id}`;
     // socket.emit(socketName, { bangs: [], elapsedTime: '' });
     socket.disconnect(true);
-    console.log(`Closed socket ${socketName}`);
+    // console.log(`Closed socket ${socketName}`);
   }
 };
 

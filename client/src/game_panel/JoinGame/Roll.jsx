@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import CountUp, { linearEasing } from 'react-countup';
 
-import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
@@ -28,7 +27,7 @@ import {
 import history from '../../redux/history';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
-import { FaClipboard } from 'react-icons/fa';
+import Share from './Share';
 
 const defaultOptions = {
   loop: true,
@@ -38,14 +37,6 @@ const defaultOptions = {
     preserveAspectRatio: 'xMidYMid slice'
   }
 };
-
-const styles = {
-  focused: {
-    borderColor: '#fa3fa0'
-  }
-};
-
-const twitterLink = window.location.href;
 
 const calcWinChance = prevStates => {
   let total = prevStates.length;
@@ -82,24 +73,19 @@ class Roll extends Component {
     this.socket = this.props.socket;
     this.state = {
       betting: false,
+      isWaiting: false,
       timer: null,
       timerValue: 2000,
-      clicked: true,
       intervalId: null,
-      requestId: null,
       nextRollInterval: 10,
       countdown: null,
       items: [],
       showResult: false,
-      executeBet: false,
-      newRound: false,
       bgColorChanged: false,
-      countupValue: 0,
       buttonClicked: false,
-      cashoutAmount: 1,
       disabledButtons: false,
       roll_guesses: [],
-      lastRollGuess: "",
+      lastRollGuess: '',
       advanced_status: '',
       waiting: false,
       is_anonymous: false,
@@ -107,19 +93,17 @@ class Roll extends Component {
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       roll_guesses1Received: false,
       multiplier: 1.01,
-      crashed: true,
       betResult: null,
-      copied: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
       listen: true,
+      selected_roll: '',
       betResults: props.betResults,
       settings_panel_opened: false
     };
     this.panelRef = React.createRef();
     this.sliderRef = React.createRef();
-
     this.onChangeState = this.onChangeState.bind(this);
   }
 
@@ -166,40 +150,8 @@ class Roll extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {
-      waiting,
-      newRound,
-      showRoll,
-      showCountdown,
-      executeBet,
-      cashoutAmount
-    } = this.state;
-
-    const { playSound, playSoundLoop, stopSound } = this.props;
-
-    if (!showRoll && !showCountdown) {
-      // stopSound('countDown');
-      // playSoundLoop('fuse');
-    } else if (showRoll || !showCountdown) {
-      // stopSound('fuse');
-      // playSound('roll');
-    } else if (showCountdown || !showRoll) {
-      // stopSound('roll');
-      // playSound('countDown');
-    }
-
-    if (!showRoll && !showCountdown && waiting && newRound && !executeBet) {
-      this.setState(
-        {
-          newRound: false,
-          executeBet: true,
-          crashed: false,
-          cashoutAmount: cashoutAmount
-        },
-        () => {
-          this.onBtnBetClick();
-        }
-      );
+    if (this.state.isWaiting && this.state.showResult) {
+      this.pushBet();
     }
 
     if (prevProps.roomInfo && this.props.roomInfo) {
@@ -223,42 +175,45 @@ class Roll extends Component {
     this.panelRef.current.addEventListener('scroll', this.handleScroll);
     const roomId = this.props.roomInfo._id;
     this.socket.on(`ROLL_GUESSES_${roomId}`, data => {
-      console.log(`Received data from socket ROLL_GUESSES_${roomId}:`, data);
-  
+      // console.log(`Received data from socket ROLL_GUESSES_${roomId}:`, data);
+
       if (data && data.rolls && data.rolls.length > 0) {
         const roll_guesses = data.rolls.map((roll, i) => ({
           roll,
           face: data.faces[i]
         })); // combine roll and face values
-  
+
         this.startSlider();
-        this.setState({
-          roll_guesses: roll_guesses,
-          lastRollGuess: roll_guesses[roll_guesses.length - 6].face,
-           // disable buttons
-        }, () => {
-          console.log("this", this.state.lastRollGuess);
-          setTimeout(() => {
-            this.setState({ disabledButtons: true });
-          }, 1000);
-          setTimeout(() => {
-            this.setState({ showResult: true });
-            this.setState({ disabledButtons: false });        
+        this.props.stopSound('countDown');
+        this.props.playSound('sweep');
+        this.setState(
+          {
+            roll_guesses: roll_guesses,
+            lastRollGuess: roll_guesses[roll_guesses.length - 6].face
+            // disable buttons
+          },
+          () => {
+            console.log('this', this.state.lastRollGuess);
             setTimeout(() => {
-              this.setState({ showResult: false });
-            }, 2000); // set showResult to false after 2 seconds
-          }, 10000); // set showResult to true after 5 seconds
-        });
-        
+              this.setState({ disabledButtons: true });
+            }, 1000);
+            setTimeout(() => {
+              this.props.playSound('shine');
+              this.setState({ showResult: true });
+              this.setState({ disabledButtons: false});
+              setTimeout(() => {
+                this.setState({ showResult: false });
+              }, 2000);
+            }, 10000); // set showResult to true after 5 seconds
+          }
+        );
       }
     });
-    
 
     this.socket.on(`ROLL_GUESSES1_${roomId}`, data => {
-      console.log(`Received data from socket ROLL_GUESSES1_${roomId}:`, data);
+      // console.log(`Received data from socket ROLL_GUESSES1_${roomId}:`, data);
 
       if (data && data.rolls && data.rolls.length > 0 && this.state.listen) {
-
         const roll_guesses = data.rolls.map((roll, i) => ({
           roll,
           face: data.faces[i]
@@ -306,8 +261,11 @@ class Roll extends Component {
     clearInterval(this.state.intervalId, this.timer);
     document.removeEventListener('mousedown', this.handleClickOutside);
     this.panelRef.current.removeEventListener('scroll', this.handleScroll);
-    this.socket.off('ROLL_GUESSES1');
+    const roomId = this.props.roomInfo._id;
+    this.socket.off(`ROLL_GUESSES_${roomId}`);
+    this.socket.off(`ROLL_GUESSES1_${roomId}`);
   };
+  
 
   predictNext = roll_list => {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
@@ -375,20 +333,17 @@ class Roll extends Component {
 
   joinGame = async () => {
     const { playSound } = this.props;
-    // this.setState({ bet_amount: this.state.cashoutAmount });
-
+    const { selected_roll } = this.state;
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
+      selected_roll: selected_roll,
       // is_anonymous: this.state.is_anonymous,
-      // roll_bet_item_id: this.props.roll_bet_item_id,
-      crashed: this.state.crashed,
-      multiplier: this.state.multiplier,
-      cashoutAmount: this.state.cashoutAmount
+      // roll_bet_item_id: this.props.roll_bet_item
       // slippage: this.state.slippage
     });
-
+  
     let text = 'HAHAA, YOU LOST!!!';
-
+  
     if (result.betResult === 1) {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN DINNER!';
@@ -402,28 +357,16 @@ class Roll extends Component {
       playSound('lose');
       // this.changeBgColor(result.betResult);
     }
-
+  
     let stored_roll_array =
       JSON.parse(localStorage.getItem('roll_array')) || [];
-
+  
     while (stored_roll_array.length >= 20) {
       stored_roll_array.shift();
     }
     stored_roll_array.push({ roll: this.state.bet_amount });
     localStorage.setItem('roll_array', JSON.stringify(stored_roll_array));
-
-    gameResultModal(
-      this.props.isDarkMode,
-      text,
-      result.betResult,
-      'Okay',
-      null,
-      () => {
-        // history.push('/');
-      },
-      () => {}
-    );
-
+  
     if (result.status === 'success') {
       const currentUser = this.props.user;
       const currentRoom = this.props.room;
@@ -433,37 +376,49 @@ class Roll extends Component {
           { ...result, user: currentUser, room: currentRoom }
         ]
       }));
+  
+      gameResultModal(
+        this.props.isDarkMode,
+        text,
+        result.betResult,
+        'Okay',
+        null,
+        () => {
+          // history.push('/');
+        },
+        () => {}
+      );
     } else {
       if (result.message) {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
-
+  
     this.props.refreshHistory();
   };
+  
 
   onBtnBetClick = async () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
-    const { buttonClicked, waiting, executeBet } = this.state;
+    const { isAuthenticated, isDarkMode, creator_id, user_id, playSound } = this.props;
+    const { buttonClicked, isWaiting } = this.state;
+    playSound('select');
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      this.setState({ selected_roll: false, buttonClicked: false });
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      this.setState({ selected_roll: false, buttonClicked: false });
       return;
     }
 
-    if (!buttonClicked) {
-      if (!waiting) {
-        this.setState({ waiting: true });
-      } else if (!executeBet) {
-        this.resetButtonState();
-      } else {
-        this.startAutoCashout();
-      }
+    if (!buttonClicked && isWaiting) {
+      return;
     } else {
-      this.pushBet();
+      setTimeout(() => {
+        this.setState({ isWaiting: true });
+      }, 3000);
     }
   };
 
@@ -475,10 +430,9 @@ class Roll extends Component {
       is_private,
       roomInfo
     } = this.props;
-    const { cashoutAmount } = this.state;
+    const { bet_amount } = this.state;
 
-    cancelAnimationFrame(this.state.requestId);
-    await validateBetAmount(cashoutAmount, balance, isDarkMode);
+    await validateBetAmount(bet_amount, balance, isDarkMode);
 
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
@@ -507,11 +461,8 @@ class Roll extends Component {
   resetButtonState = () => {
     this.setState({
       buttonClicked: false,
-      cashoutAmount: 1,
-      newRound: false,
-      waiting: false,
-      executeBet: false,
-      requestId: null
+      isWaiting: false,
+      selected_roll: null
     });
   };
   startSlider = () => {
@@ -534,7 +485,6 @@ class Roll extends Component {
 
       if (progress < 1) {
         requestAnimationFrame(animate);
-        
       }
     }
 
@@ -554,7 +504,6 @@ class Roll extends Component {
     );
   }
 
-  
   handle2xButtonClick() {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
@@ -589,22 +538,6 @@ class Roll extends Component {
     );
   }
 
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
-    setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
-    }, 1000);
-  };
-
-  copy() {
-    navigator.clipboard.writeText(twitterLink);
-  }
   handleButtonClick = () => {
     const { isAuthenticated, creator_id, user_id, isDarkMode } = this.props;
     const { betting, timer } = this.state;
@@ -800,9 +733,13 @@ class Roll extends Component {
         );
       }
     } else if (showCountdown) {
+      playSound('countDown');
+      setTimeout(() => {
+        stopSound('countDown');
+      }, 5000);
       content = (
         <div id="nextRollIn">
-        <span>Next Roll in...{this.state.countdown}</span>
+          <span>Next Roll in...{this.state.countdown}</span>
         </div>
       );
     } else {
@@ -994,17 +931,10 @@ class Roll extends Component {
         );
       }
     }
-    const styles = ['copy-btn'];
-    let text = 'COPY CONTRACT';
-
-    if (this.state.clicked) {
-      styles.push('clicked');
-      text = 'COPIED!';
-    }
 
     return (
       <div className="game-page">
-        <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="page-title">
           <h2>PLAY - Roll!</h2>
@@ -1018,7 +948,6 @@ class Roll extends Component {
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -1027,8 +956,7 @@ class Roll extends Component {
                       {convertToCurrency(this.state.bankroll)}
                     </div>
                   </div>
-                  
-                  
+
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
@@ -1037,9 +965,7 @@ class Roll extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(
-                          this.props.aveMultiplier 
-                        )
+                        updateDigitToPoint2(this.props.aveMultiplier)
                       )}
                       x
                     </div>
@@ -1056,183 +982,179 @@ class Roll extends Component {
           </div>
 
           <div className="game-info-panel">
-            <div
-            id="tunnel">
-
-           
-          <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: pipe
-              }}
-              style={{
-                margin: '58px auto -232px',
-                zIndex: '4',
-                opacity: '0.2',
-                // transform: 'translate(-154px, 36px)',
-                width: '655px',
-              }}
-            />
+            <div id="tunnel">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: pipe
+                }}
+                style={{
+                  margin: '58px auto -232px',
+                  zIndex: '4',
+                  opacity: '0.2',
+                  // transform: 'translate(-154px, 36px)',
+                  width: '655px'
+                }}
+              />
             </div>
-              <div
+            <div
               style={{
-                zIndex: '3',
-
+                zIndex: '3'
               }}
-            id="leftPortal"
+              id="leftPortal"
             >
-          <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: portal
-              }}
-              style={{
-                margin: '0px auto -195px',
-                transform: 'translate(-275px, 36px) rotate(90deg)',
-                width: '313px',
-              }}
-            />            </div>
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: portal
+                }}
+                style={{
+                  margin: '0px auto -195px',
+                  transform: 'translate(-275px, 36px) rotate(90deg)',
+                  width: '313px'
+                }}
+              />{' '}
+            </div>
 
             <div
-            style={{
-              zIndex: '3',
-              
-            }}
-            id="rightPortal"
-            >
-
-           
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: portal
-              }}
               style={{
-                zIndex: '3',
-                margin: '0px auto -195px',
-                transform: 'translate(275px, 12px) rotate(90deg) scale(-1)',
-                width: '313px',
+                zIndex: '3'
               }}
-            /> </div>
+              id="rightPortal"
+            >
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: portal
+                }}
+                style={{
+                  zIndex: '3',
+                  margin: '0px auto -195px',
+                  transform: 'translate(275px, 12px) rotate(90deg) scale(-1)',
+                  width: '313px'
+                }}
+              />{' '}
+            </div>
             <div
-            style={{
-              zIndex: '1',
-            }}
+              style={{
+                zIndex: '1'
+              }}
             >
-
-            
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: pipe
-              }}
-              id="pipe"
-              style={{
-                margin: '60px auto -232px',
-                opacity: '1',
-                transform: 'translate(-647px, -49px)',
-                width: '655px',
-              }}
-            />
-             <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: pipe
-              }}
-              id="pipe"
-              style={{
-                margin: '60px auto -232px',
-                opacity: '1',
-                transform: 'translate(647px, -49px)',
-                width: '655px',
-              }}
-            />
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: pipe
+                }}
+                id="pipe"
+                style={{
+                  margin: '60px auto -232px',
+                  opacity: '1',
+                  transform: 'translate(-647px, -49px)',
+                  width: '655px'
+                }}
+              />
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: pipe
+                }}
+                id="pipe"
+                style={{
+                  margin: '60px auto -232px',
+                  opacity: '1',
+                  transform: 'translate(647px, -49px)',
+                  width: '655px'
+                }}
+              />
             </div>
             <div className="gradient-container">
               <div id="gradient-bg">
-              
-              <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: gBg
-              }}
-              style={{
-                margin: '0px auto -100px',
-                transform: 'translate(146px, 47px)',
-                width: '196px',
-              }}
-            />
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: gBg
-              }}
-              style={{
-                margin: '0px auto -110px',
-                transform: 'translate(-154px, 36px)',
-                width: '196px',
-              }}
-            />
-              </div>
                 <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: rollHex
-              }}
-              style={{
-                marginTop: '10px',
-                marginBottom: '-155px',
-                filter: 'hue-rotate(45deg)',
-                maxWidth: '100%',
-                width: '160px',
-              }}
-            />
-            {this.state.showResult && (
-  <div style={{ position: 'relative', height: '0' }}>
-    <div
-      style={{
-        width: '123px',
-        zIndex: '1',
-        position: 'absolute',
-        height: '150px',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: 'contain',
-        left: '48.3%',
-        animation: 'pulse 3s ease-out, fade 2s ease-out',
-        animationDelay: '0.1s',
-        animationFillMode: 'forwards',
-        animationIterationCount: this.state.showResult ? 'infinite' : '1',
-        animationPlayState: this.state.showResult ? 'running' : 'paused',
-        animationDirection: 'alternate',
-        animationTimingFunction: 'ease-in-out',
-      }}
-      className={
-        this.state.lastRollGuess === 'R'
-          ? 'rock'
-          : this.state.lastRollGuess === 'P'
-          ? 'paper'
-          : this.state.lastRollGuess === 'S'
-          ? 'scissors'
-          : this.state.lastRollGuess === 'W'
-          ? 'whale'
-          : this.state.lastRollGuess === 'B'
-          ? 'bear'
-          : this.state.lastRollGuess === 'Bu'
-          ? 'bull'
-          : ''
-      }
-    ></div>
-  </div>
-)}
+                  options={{
+                    loop: true,
+                    autoplay: true,
+                    animationData: gBg
+                  }}
+                  style={{
+                    margin: '0px auto -100px',
+                    transform: 'translate(146px, 47px)',
+                    width: '196px'
+                  }}
+                />
+                <Lottie
+                  options={{
+                    loop: true,
+                    autoplay: true,
+                    animationData: gBg
+                  }}
+                  style={{
+                    margin: '0px auto -110px',
+                    transform: 'translate(-154px, 36px)',
+                    width: '196px'
+                  }}
+                />
+              </div>
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: rollHex
+                }}
+                style={{
+                  marginTop: '10px',
+                  marginBottom: '-155px',
+                  filter: 'hue-rotate(45deg)',
+                  maxWidth: '100%',
+                  width: '160px'
+                }}
+              />
+              {this.state.showResult && (
+                <div style={{ position: 'relative', height: '0' }}>
+                  <div
+                    style={{
+                      width: '123px',
+                      zIndex: '1',
+                      position: 'absolute',
+                      height: '150px',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: 'contain',
+                      left: '48.3%',
+                      animation: 'pulse 3s ease-out, fade 2s ease-out',
+                      animationDelay: '0.1s',
+                      animationFillMode: 'forwards',
+                      animationIterationCount: this.state.showResult
+                        ? 'infinite'
+                        : '1',
+                      animationPlayState: this.state.showResult
+                        ? 'running'
+                        : 'paused',
+                      animationDirection: 'alternate',
+                      animationTimingFunction: 'ease-in-out'
+                    }}
+                    className={
+                      this.state.lastRollGuess === 'R'
+                        ? 'rock'
+                        : this.state.lastRollGuess === 'P'
+                        ? 'paper'
+                        : this.state.lastRollGuess === 'S'
+                        ? 'scissors'
+                        : this.state.lastRollGuess === 'W'
+                        ? 'whale'
+                        : this.state.lastRollGuess === 'B'
+                        ? 'bear'
+                        : this.state.lastRollGuess === 'Bu'
+                        ? 'bull'
+                        : ''
+                    }
+                  ></div>
+                </div>
+              )}
 
               <div className="slider-images" id="top" ref={this.sliderRef}>
                 <p className="previous-guesses roll">
@@ -1335,121 +1257,215 @@ class Roll extends Component {
 
               <div id="roll">
                 <Button
-                  className={
-                    'rock button-2x-r' +
-                    (this.state.selected_roll === 'R' ? ' active' : '')
-                  }
+                  className={`rock button-2x-r${
+                    this.state.selected_roll === 'R' ? ' active' : ''
+                  }${!this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    this.state.selected_roll === 'R'
+                    ? ' lose-bg'
+                    : ''}${this.state.betResult === 0 &&
+                    this.state.selected_roll === 'R'
+                    ? ' draw-bg'
+                    : ''}${this.state.betResult === 1 &&
+                    this.state.selected_roll === 'R'
+                    ? ' win-bg'
+                    : ''}`}
                   disabled={this.state.disabledButtons}
-  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
-                    this.onAddRun('2', 'R');
+                    this.onBtnBetClick();
+
                     const currentActive = document.querySelector('.active');
                     if (currentActive) {
                       currentActive.style.animation = 'none';
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
+
+                    this.setState({ selected_roll: null }, () => {
+                      this.setState({
+                        selected_roll: 'R',
+                        buttonClicked: true
+                      });
+                    });
                   }}
                 >
-                  <span>2x</span>
+                  <span>2x (4x)</span>
                 </Button>
                 <Button
-                  className={
-                    'paper button-2x-p' +
-                    (this.state.selected_roll === 'P' ? ' active' : '')
-                  }
+                  className={`paper button-2x-p${
+                    this.state.selected_roll === 'P' ? ' active' : ''
+                  }${this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    this.state.selected_roll === 'P'
+                    ? ' lose-bg'
+                    : ''}${this.state.betResult === 0 &&
+                    this.state.selected_roll === 'P'
+                    ? ' draw-bg'
+                    : ''}${this.state.betResult === 1 &&
+                    this.state.selected_roll === 'P'
+                    ? ' win-bg'
+                    : ''}`}
                   disabled={this.state.disabledButtons}
-  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
-                    this.onAddRun('2', 'P');
+                    this.onBtnBetClick();
                     const currentActive = document.querySelector('.active');
                     if (currentActive) {
                       currentActive.style.animation = 'none';
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
+
+                    this.setState({ selected_roll: null }, () => {
+                      this.setState({
+                        selected_roll: 'P',
+                        buttonClicked: true
+                      });
+                    });
                   }}
                 >
-                  <span>2x</span>
+                  <span>2x (4x)</span>
                 </Button>
                 <Button
-                  className={
-                    'scissors button-2x-s' +
-                    (this.state.selected_roll === 'S' ? ' active' : '')
-                  }
+                  className={`scissors button-2x-s${
+                    this.state.selected_roll === 'S' ? ' active' : ''
+                  }${this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    this.state.selected_roll === 'S'
+                    ? ' lose-bg'
+                    : ''}${this.state.betResult === 0 &&
+                    this.state.selected_roll === 'S'
+                    ? ' draw-bg'
+                    : ''}${this.state.betResult === 1 &&
+                    this.state.selected_roll === 'S'
+                    ? ' win-bg'
+                    : ''}`}
                   disabled={this.state.disabledButtons}
-  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
-                    this.onAddRun('2', 'S');
+                    this.onBtnBetClick();
                     const currentActive = document.querySelector('.active');
                     if (currentActive) {
                       currentActive.style.animation = 'none';
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
+
+                    this.setState({ selected_roll: null }, () => {
+                      this.setState({
+                        selected_roll: 'S',
+                        buttonClicked: true
+                      });
+                    });
                   }}
                 >
-                  <span>2x</span>
+                  <span>2x (4x)</span>
                 </Button>
                 <Button
-                  className={
-                    'whale button-14x' +
-                    (this.state.selected_roll === 'W' ? ' active' : '')
-                  }
+                  className={`whale button-2x-w${
+                    this.state.selected_roll === 'W' ? ' active' : ''
+                  }${this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    this.state.selected_roll === 'W'
+                    ? ' lose-bg'
+                    : ''}${this.state.betResult === 0 &&
+                    this.state.selected_roll === 'W'
+                    ? ' draw-bg'
+                    : ''}${this.state.betResult === 1 &&
+                    this.state.selected_roll === 'W'
+                    ? ' win-bg'
+                    : ''}`}
                   disabled={this.state.disabledButtons}
-  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
-                    this.onAddRun('14', 'W');
+                    this.onBtnBetClick();
                     const currentActive = document.querySelector('.active');
                     if (currentActive) {
                       currentActive.style.animation = 'none';
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
+                    this.setState({ selected_roll: null }, () => {
+                      this.setState({
+                        selected_roll: 'W',
+                        buttonClicked: true
+                      });
+                    });
                   }}
                 >
                   <span>14x</span>
                 </Button>
                 <Button
-                  className={
-                    'bear button-15x' +
-                    (this.state.selected_roll === 'B' ? ' active' : '')
-                  }
+                  className={`bear button-2x-b${
+                    this.state.selected_roll === 'B' ? ' active' : ''
+                  }${this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    this.state.selected_roll === 'B'
+                    ? ' lose-bg'
+                    : ''}${this.state.betResult === 0 &&
+                    this.state.selected_roll === 'B'
+                    ? ' draw-bg'
+                    : ''}${this.state.betResult === 1 &&
+                    this.state.selected_roll === 'B'
+                    ? ' win-bg'
+                    : ''}`}
                   disabled={this.state.disabledButtons}
-  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
-                    this.onAddRun('1.5', 'B');
+                    this.onBtnBetClick();
                     const currentActive = document.querySelector('.active');
                     if (currentActive) {
                       currentActive.style.animation = 'none';
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
+                    this.setState({ selected_roll: null }, () => {
+                      this.setState({
+                        selected_roll: 'B',
+                        buttonClicked: true
+                      });
+                    });
                   }}
                 >
                   <span>1.5x</span>
                 </Button>
                 <Button
-                  className={
-                    'bull button-7x' +
-                    (this.state.selected_roll === 'Bu' ? ' active' : '')
-                  }
+                  className={`bull button-2x-bu${
+                    this.state.selected_roll === 'Bu' ? ' active' : ''
+                  }${this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    this.state.selected_roll === 'Bu'
+                    ? ' lose-bg'
+                    : ''}${this.state.betResult === 0 &&
+                    this.state.selected_roll === 'Bu'
+                    ? ' draw-bg'
+                    : ''}${this.state.betResult === 1 &&
+                    this.state.selected_roll === 'Bu'
+                    ? ' win-bg'
+                    : ''}`}
                   disabled={this.state.disabledButtons}
-  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
                   onClick={() => {
-                    this.onAddRun('7', 'Bu');
+                    this.onBtnBetClick();
                     const currentActive = document.querySelector('.active');
                     if (currentActive) {
                       currentActive.style.animation = 'none';
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
+                    this.setState({ selected_roll: null }, () => {
+                      this.setState({
+                        selected_roll: 'Bu',
+                        buttonClicked: true
+                      });
+                    });
                   }}
                 >
                   <span>7x</span>
@@ -1580,34 +1596,7 @@ class Roll extends Component {
           <BetArray arrayName="roll_array" label="roll" />
 
           <div className="action-panel">
-            <div className="share-options">
-              <TwitterShareButton
-                url={twitterLink}
-                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                className="Demo__some-network__share-button"
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-              <a
-                className={styles.join('')}
-                onClick={() => {
-                  this.toggleBtnHandler();
-                  this.copy();
-                }}
-              >
-                {this.state.clicked ? (
-                  <input
-                    type="text"
-                    value={twitterLink}
-                    readOnly
-                    onClick={this.toggleBtnHandler}
-                  />
-                ) : null}
-                <FaClipboard />
-                &nbsp;{this.state.text}
-              </a>
-            </div>
+            <Share roomInfo={this.props.roomInfo} />
           </div>
         </div>
       </div>

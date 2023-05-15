@@ -4,12 +4,12 @@ import { getHistory } from '../../redux/Logic/logic.actions';
 import Moment from 'moment';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import rain from '../LottieAnimations/rain.json';
-import waves from '../LottieAnimations/waves.json';
-import hex from '../LottieAnimations/hex.json';
 import PlayerModal from '../modal/PlayerModal';
 import { Box, Button, IconButton } from '@material-ui/core';
 import Lottie from 'react-lottie';
+import rain from '../LottieAnimations/rain.json';
+import waves from '../LottieAnimations/waves.json';
+import hex from '../LottieAnimations/hex.json';
 import Pagination from '../../components/Pagination';
 
 function updateFromNow(history) {

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import BetArray from '../../components/BetArray';
-import { TwitterShareButton, TwitterIcon } from 'react-share';
+import Share from './Share';
 import { IconButton, Button, TextField } from '@material-ui/core';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
@@ -17,7 +17,6 @@ import {
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
 import grid from '../LottieAnimations/grid';
-// import { updateBetResult } from '../../redux/Logic/logic.actions';
 import {
   alertModal,
   confirmModalCreate,
@@ -25,7 +24,6 @@ import {
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
-import { FaClipboard } from 'react-icons/fa';
 
 const defaultOptions = {
   loop: true,
@@ -35,8 +33,6 @@ const defaultOptions = {
     preserveAspectRatio: 'xMidYMid slice'
   }
 };
-const twitterLink = window.location.href;
-
 class QuickShoot extends Component {
   constructor(props) {
     super(props);
@@ -48,11 +44,9 @@ class QuickShoot extends Component {
       betting: false,
       timer: null,
       timerValue: 2000,
-      clicked: true,
       intervalId: null,
       selected_qs_position: 0,
       advanced_status: '',
-      copied: false,
       is_anonymous: false,
       bet_amount: 1,
       bgColorChanged: false,
@@ -308,7 +302,7 @@ class QuickShoot extends Component {
     const options = [...Array(gameType).keys()];
     const transitionMatrix = {};
     const randomnessFactor = 0.2; // Adjust this value to control the level of randomness
-  
+
     options.forEach(option1 => {
       transitionMatrix[option1] = {};
       options.forEach(option2 => {
@@ -321,57 +315,69 @@ class QuickShoot extends Component {
         });
       });
     });
-  
+
     // Count transitions
     for (let i = 0; i < qs_list.length - 3; i++) {
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
+        qs_list[i + 3].qs
+      ]++;
     }
-  
+
     // Normalize transition probabilities
     Object.keys(transitionMatrix).forEach(fromState1 => {
       Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(fromState3 => {
-          const totalTransitions = Object.values(transitionMatrix[fromState1][fromState2][fromState3]).reduce((a, b) => a + b);
-          Object.keys(transitionMatrix[fromState1][fromState2][fromState3]).forEach(toState => {
-            transitionMatrix[fromState1][fromState2][fromState3][toState] /= totalTransitions;
-          });
-        });
+        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
+          fromState3 => {
+            const totalTransitions = Object.values(
+              transitionMatrix[fromState1][fromState2][fromState3]
+            ).reduce((a, b) => a + b);
+            Object.keys(
+              transitionMatrix[fromState1][fromState2][fromState3]
+            ).forEach(toState => {
+              transitionMatrix[fromState1][fromState2][fromState3][
+                toState
+              ] /= totalTransitions;
+            });
+          }
+        );
       });
     });
-  
+
     // Calculate winChance and deviation
     const winChance = this.calcWinChance(gameType, qs_list);
     const targetProbability = 100 / gameType;
     const deviation = Math.abs(winChance - targetProbability);
-  
+
     // Choose next state based on transition probabilities and deviation
     let currentState1 = qs_list[qs_list.length - 3].qs;
     let currentState2 = qs_list[qs_list.length - 2].qs;
     let currentState3 = qs_list[qs_list.length - 1].qs;
-  
+
     // Weighted random choice based on transition probabilities
     const weightedOptions = [];
-    Object.entries(transitionMatrix[currentState1][currentState2][currentState3]).forEach(([state, prob]) => {
+    Object.entries(
+      transitionMatrix[currentState1][currentState2][currentState3]
+    ).forEach(([state, prob]) => {
       for (let i = 0; i < Math.floor(prob * 100); i++) {
         weightedOptions.push(state);
       }
     });
-  
+
     let nextState;
     if (weightedOptions.length > 0) {
-      nextState = weightedOptions[Math.floor(Math.random() * weightedOptions.length)];
+      nextState =
+        weightedOptions[Math.floor(Math.random() * weightedOptions.length)];
     } else {
       nextState = options[Math.floor(Math.random() * options.length)];
     }
-  
+
     // Introduce randomness based on the randomnessFactor
     if (Math.random() < randomnessFactor) {
       nextState = options[Math.floor(Math.random() * options.length)];
     }
-  
+
     return nextState;
   };
-  
 
   handleMaxButtonClick() {
     const maxBetAmount = this.state.balance.toFixed(2);
@@ -389,22 +395,6 @@ class QuickShoot extends Component {
     );
   }
 
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
-    setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
-    }, 1000);
-  };
-
-  copy() {
-    navigator.clipboard.writeText(twitterLink);
-  }
 
   updatePotentialReturn = () => {
     this.setState({
@@ -839,14 +829,8 @@ class QuickShoot extends Component {
   // };
 
   render() {
-    const {qs_game_type} = this.props;
-    const styles = ['copy-btn'];
-    let text = 'COPY CONTRACT';
+    const { qs_game_type } = this.props;
 
-    if (this.state.clicked) {
-      styles.push('clicked');
-      text = 'COPIED!';
-    }
     let position_name = [
       'Center',
       'Top-Left',
@@ -855,22 +839,19 @@ class QuickShoot extends Component {
       'Bottom-Right'
     ];
     let position_short_name = ['c', 'tl', 'tr', 'bl', 'br'];
- let arrayName;
+    let arrayName;
     if (qs_game_type === 2) {
       position_name = ['Left', 'Right'];
       position_short_name = ['bl', 'br'];
       arrayName = 'qs_array_2';
-
     } else if (qs_game_type === 3) {
       position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
       position_short_name = ['bl', 'c', 'br'];
       arrayName = 'qs_array_3';
-
     } else if (qs_game_type === 4) {
       position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
       position_short_name = ['tl', 'tr', 'bl', 'br'];
       arrayName = 'qs_array_4';
-
     } else if (qs_game_type === 5) {
       arrayName = 'qs_array_5';
     }
@@ -881,7 +862,7 @@ class QuickShoot extends Component {
           <h2>PLAY - Quick Shoot</h2>
         </div>
         <div className="game-contents">
-        <div
+          <div
             className="pre-summary-panel"
             ref={this.panelRef}
             // onScroll={this.handleScroll}
@@ -889,7 +870,6 @@ class QuickShoot extends Component {
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                 
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -898,12 +878,10 @@ class QuickShoot extends Component {
                       {convertToCurrency(this.state.bankroll)}
                     </div>
                   </div>
-                  
+
                   <div className="data-item">
                     <div>
-                      <div className="label your-max-return">
-                        Your Return
-                      </div>
+                      <div className="label your-max-return">Your Return</div>
                     </div>
                     <div className="value">
                       {convertToCurrency(
@@ -924,10 +902,11 @@ class QuickShoot extends Component {
           </div>
           <div className="game-info-panel">
             <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
-            <div className="qs-image-panel"
-            style={{
-              zIndex: '1',
-            }}
+            <div
+              className="qs-image-panel"
+              style={{
+                zIndex: '1'
+              }}
             >
               <img
                 src={`/img/gametype/quick_shoot/gametype${
@@ -943,28 +922,25 @@ class QuickShoot extends Component {
                 }}
               />
               {this.renderButtons()}
-              
             </div>
             <div
-            id="grid"
+              id="grid"
               style={{
-                zIndex: '0',
+                zIndex: '0'
               }}
-              >
-
-             
+            >
               <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: grid
-              }}
-              style={{
-                width: '570px',
-                margin: '3px auto -172px',
-              }}
-            />
-             </div>
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: grid
+                }}
+                style={{
+                  width: '570px',
+                  margin: '3px auto -172px'
+                }}
+              />
+            </div>
             <div className="your-bet-amount">
               <TextField
                 type="text"
@@ -1026,30 +1002,48 @@ class QuickShoot extends Component {
             >
               <h5>AI Play Settings</h5>
               <p>CHOOSE AN ALGORITHM</p>
-              <div className='tiers'>
-            <table>
-              <tbody>
-                <tr>
-                  <td>Speed</td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "80%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Reasoning</td>
-                  <td><div className="bar" style={{width: "50%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Abilities</td>
-                  <td><div className="bar" style={{width: "30%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-              </tbody>
-            </table>
-            </div>
+              <div className="tiers">
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '80%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '50%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '30%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
               <div className="slippage-select-panel">
                 <Button
                   className={this.state.slippage === 100 ? 'active' : ''}
@@ -1060,25 +1054,22 @@ class QuickShoot extends Component {
                   Markov
                 </Button>
                 <Button
-                                className='disabled'
-
+                  className="disabled"
                   // className={this.state.slippage === 200 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
                   disabled={this.state.isDisabled}
-
                 >
                   Carlo
                 </Button>
                 <Button
-                className='disabled'
+                  className="disabled"
                   // className={this.state.slippage === 500 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                    disabled={this.state.isDisabled}
-
+                  disabled={this.state.isDisabled}
                 >
                   Q Bot
                 </Button>
@@ -1115,37 +1106,10 @@ class QuickShoot extends Component {
               )}
             </Button>
           </div>
-          <BetArray arrayName={arrayName} label="qs"/>
+          <BetArray arrayName={arrayName} label="qs" />
 
           <div className="action-panel">
-            <div className="share-options">
-              <TwitterShareButton
-                url={twitterLink}
-                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                className="Demo__some-network__share-button"
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-              <a
-                className={styles.join('')}
-                onClick={() => {
-                  this.toggleBtnHandler();
-                  this.copy();
-                }}
-              >
-                {this.state.clicked ? (
-                  <input
-                    type="text"
-                    value={twitterLink}
-                    readOnly
-                    onClick={this.toggleBtnHandler}
-                  />
-                ) : null}
-                <FaClipboard />
-                &nbsp;{this.state.text}
-              </a>
-            </div>
+            <Share roomInfo={this.props.roomInfo} />
           </div>
         </div>
       </div>

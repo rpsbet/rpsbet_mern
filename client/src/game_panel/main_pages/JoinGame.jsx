@@ -90,11 +90,13 @@ class JoinGame extends Component {
         start: new Audio('/sounds/start.mp3'),
         countDown: new Audio('/sounds/countDown.mp3'),
         stop: new Audio('/sounds/stop.mp3'),
+        sweep: new Audio('/sounds/sweep.mp3'),
         select: new Audio('/sounds/select.mp3'),
         wrong: new Audio('/sounds/wrong.mp3'),
         correct: new Audio('/sounds/correct.mp3'),
         bang: new Audio('/sounds/bang.mp3'),
-        fuse: new Audio('/sounds/fuse.mp3'),
+        shine: new Audio('/sounds/shine.mp3'),
+        // fuse: new Audio('/sounds/fuse.mp3'),
       },
       currentSound: null,
     };
@@ -263,7 +265,9 @@ class JoinGame extends Component {
   // };
   
   stopSound = (sound) => {
+    
     const { currentSound } = this.state;
+    console.log("stop", currentSound);
     if (currentSound && currentSound.src.includes(sound)) {
       currentSound.pause();
       currentSound.currentTime = 0;
@@ -483,11 +487,10 @@ class JoinGame extends Component {
                     crashed={this.props.roomInfo.crashed}
                     cashoutAmount={this.props.roomInfo.cashoutAmount}
                     bankroll={this.state.bankroll}
-                    roll_bet_item_id={this.props.roomInfo.roll_bet_item_id}
+                    roll_bet_item_id={this.state.roomInfo.roll_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
-                    playSoundLoop={this.playSoundLoop}
                     stopSound={this.stopSound}
                   />
                 )}

@@ -159,7 +159,7 @@ class Summary extends Component {
               <div className="summary-item-value">{public_max_return}</div>
             </div>
           )}
-          {this.props.game_mode === 'Bang!' && (
+          {this.props.game_mode === 'Bang!' || this.props.game_mode === 'Roll' && (
             <div className="summary-item">
               <div className="summary-item-name">Average Multiplier</div>
               <div className="summary-item-value">{this.props.aveMultiplier}x</div>

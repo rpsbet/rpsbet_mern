@@ -227,7 +227,7 @@ class Roll extends Component {
     ) : (
       
       <div className="game-info-panel">
-                          <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+                          {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="rps-add-run-panel">
         <div className="roll-add-run-form">
@@ -250,7 +250,7 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  ><span>2x</span></Button>
+  ><span>2x (4x)</span></Button>
   <Button
     className={
       'paper button-2x-p' + (this.state.selected_roll === 'P' ? ' active' : '')
@@ -265,7 +265,7 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  ><span>2x</span></Button>
+  ><span>2x (4x)</span></Button>
   <Button
     className={
       'scissors button-2x-s' +
@@ -281,7 +281,7 @@ class Roll extends Component {
         currentActive.style.animation = 'pulse 0.2s ease-in-out ';
       }
     }}
-  ><span>2x</span></Button>
+  ><span>2x (4x)</span></Button>
   <Button
     className={
       'whale button-14x' +

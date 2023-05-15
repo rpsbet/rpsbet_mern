@@ -26,6 +26,10 @@ const GameLogSchema = new Schema({
         type: String,
         default: ''
     },
+    selected_roll: {
+        type: String,
+        default: ''
+    },
     selected_dg: {
         type: String,
         default: ''
@@ -52,6 +56,10 @@ const GameLogSchema = new Schema({
         default: 0
     },
     cashoutAmount: {
+        type: Number,
+        default: 0
+    },
+    multiplier: {
         type: Number,
         default: 0
     },

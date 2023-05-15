@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import InlineSVG from 'react-inlinesvg';
-import { TwitterShareButton, TwitterIcon } from 'react-share';
+import Share from './Share';
 import { Button } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
 
@@ -16,7 +16,6 @@ import {
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
-import { FaClipboard } from 'react-icons/fa';
 import {
   alertModal,
   confirmModalCreate,
@@ -48,19 +47,16 @@ class Spleesh extends Component {
       timer: null,
       timerValue: 2000,
       holdTime: 0,
-      clicked: true,
       intervalId: null,
       spleesh_guesses1Received: false,
       items: [],
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
-      copied: false,
       spleesh_guesses: [],
       is_anonymous: false,
       balance: this.props.balance,
       isPasswordCorrect: false,
       settings_panel_opened: false
-
     };
     this.panelRef = React.createRef();
   }
@@ -104,7 +100,6 @@ class Spleesh extends Component {
       }
     });
     document.addEventListener('mousedown', this.handleClickOutside);
-
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -441,40 +436,13 @@ class Spleesh extends Component {
     refreshHistory();
   };
 
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
-    setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
-    }, 2000);
-  };
-
-  copy() {
-    navigator.clipboard.writeText(twitterLink);
-  }
-
   render() {
-    const {spleesh_bet_unit} = this.props;
-    const styles = ['copy-btn'];
-    let text = 'COPY CONTRACT';
-
-    if (this.state.clicked) {
-      styles.push('clicked');
-      text = 'COPIED!';
-    }
-
+    const { spleesh_bet_unit } = this.props;
     let arrayName;
     if (spleesh_bet_unit === 1) {
       arrayName = 'spleesh_array';
-
     } else if (spleesh_bet_unit === 10) {
       arrayName = 'spleesh_10_array';
-
     }
 
     return (
@@ -493,8 +461,6 @@ class Spleesh extends Component {
             <div className="pre-summary-panel__inner spleesh">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                 
-
                   {/* <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bet Amount</div>
@@ -504,9 +470,7 @@ class Spleesh extends Component {
                     </div>
                   </div> */}
                   <div className="data-item">
-                    <div className="label your-max-return">
-                      Your Return
-                    </div>
+                    <div className="label your-max-return">Your Return</div>
                     <div className="value">
                       {convertToCurrency(
                         updateDigitToPoint2(
@@ -570,30 +534,48 @@ class Spleesh extends Component {
             >
               <h5>AI Play Settings</h5>
               <p>CHOOSE AN ALGORITHM</p>
-              <div className='tiers'>
-            <table>
-              <tbody>
-                <tr>
-                  <td>Speed</td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "80%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Reasoning</td>
-                  <td><div className="bar" style={{width: "50%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Abilities</td>
-                  <td><div className="bar" style={{width: "30%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-              </tbody>
-            </table>
-            </div>
+              <div className="tiers">
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '80%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '50%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '30%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
               <div className="slippage-select-panel">
                 <Button
                   className={this.state.slippage === 100 ? 'active' : ''}
@@ -604,25 +586,22 @@ class Spleesh extends Component {
                   Markov
                 </Button>
                 <Button
-                                className='disabled'
-
+                  className="disabled"
                   // className={this.state.slippage === 200 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
                   disabled={this.state.isDisabled}
-
                 >
                   Carlo
                 </Button>
                 <Button
-                className='disabled'
+                  className="disabled"
                   // className={this.state.slippage === 500 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                    disabled={this.state.isDisabled}
-
+                  disabled={this.state.isDisabled}
                 >
                   Q Bot
                 </Button>
@@ -651,37 +630,10 @@ class Spleesh extends Component {
               )}
             </Button>
           </div>
-          <BetArray arrayName={arrayName} label="spleesh"/>
+          <BetArray arrayName={arrayName} label="spleesh" />
 
           <div className="action-panel">
-            <div className="share-options">
-              <TwitterShareButton
-                url={twitterLink}
-                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                className="Demo__some-network__share-button"
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-              <a
-                className={styles.join('')}
-                onClick={() => {
-                  this.toggleBtnHandler();
-                  this.copy();
-                }}
-              >
-                {this.state.clicked ? (
-                  <input
-                    type="text"
-                    value={twitterLink}
-                    readOnly
-                    onClick={this.toggleBtnHandler}
-                  />
-                ) : null}
-                <FaClipboard />
-                &nbsp;{this.state.text}
-              </a>
-            </div>
+            <Share roomInfo={this.props.roomInfo} />
           </div>
         </div>
       </div>

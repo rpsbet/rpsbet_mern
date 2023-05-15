@@ -19,7 +19,7 @@ class DefaultBetAmountPanel extends Component {
     };
   }
   handleMaxButtonClick() {
-    const maxBetAmount = this.props.balance.toFixed(2);
+    const maxBetAmount = Math.floor(this.props.balance * 100) / 100; // round down to 2 decimal places
     if (this.props.game_type === 'Brain Game') {
       this.props.onChangeState({
         bet_amount: maxBetAmount

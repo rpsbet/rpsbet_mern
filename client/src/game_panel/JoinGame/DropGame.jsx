@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 
-import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 // import { updateBetResult } from '../../redux/Logic/logic.actions';
@@ -25,9 +24,10 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
+import Share from './Share';
+
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
-import { FaClipboard } from 'react-icons/fa';
 
 const defaultOptions = {
   loop: true,
@@ -43,8 +43,6 @@ const styles = {
     borderColor: '#fa3fa0'
   }
 };
-
-const twitterLink = window.location.href;
 
 const calcWinChance = prevStates => {
   let total = prevStates.length;
@@ -83,7 +81,6 @@ class DropGame extends Component {
       betting: false,
       timer: null,
       timerValue: 2000,
-      clicked: true,
       intervalId: null,
       items: [],
       bgColorChanged: false,
@@ -94,7 +91,6 @@ class DropGame extends Component {
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       drop_guesses1Received: false,
       betResult: null,
-      copied: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
@@ -431,22 +427,6 @@ class DropGame extends Component {
     );
   }
 
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
-    setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
-    }, 1000);
-  };
-
-  copy() {
-    navigator.clipboard.writeText(twitterLink);
-  }
   handleButtonClick = () => {
     const { isAuthenticated, creator_id, user_id, isDarkMode } = this.props;
     const { betting, timer } = this.state;
@@ -592,13 +572,6 @@ class DropGame extends Component {
   };
 
   render() {
-    const styles = ['copy-btn'];
-    let text = 'COPY CONTRACT';
-
-    if (this.state.clicked) {
-      styles.push('clicked');
-      text = 'COPIED!';
-    }
     return (
       <div className="game-page">
         {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
@@ -615,7 +588,6 @@ class DropGame extends Component {
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-               
                   {/* <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -672,13 +644,13 @@ class DropGame extends Component {
                               guess.host_drop > guess.bet_amount
                                 ? '#e30303c2'
                                 : '#e3e103c2',
-                            
-                                border: '3px solid',
-                                borderColor:
-                                guess.host_drop > guess.bet_amount
-                                  ? '#e30303'
-                                  : '#e3e103',
-                              padding: '0.3em 0.2em',
+
+                            border: '3px solid',
+                            borderColor:
+                              guess.host_drop > guess.bet_amount
+                                ? '#e30303'
+                                : '#e3e103',
+                            padding: '0.3em 0.2em'
                           }}
                         >
                           <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
@@ -699,13 +671,12 @@ class DropGame extends Component {
                               guess.host_drop > guess.bet_amount
                                 ? '#e3e103c2'
                                 : '#e30303c2',
-                                border: '3px solid',
-                                borderColor:
-                                guess.host_drop > guess.bet_amount
-                                  ? '#e3e103'
-                                  : '#e30303',
-                              padding: '0.3em 0.2em',
-                              
+                            border: '3px solid',
+                            borderColor:
+                              guess.host_drop > guess.bet_amount
+                                ? '#e3e103'
+                                : '#e30303',
+                            padding: '0.3em 0.2em'
                           }}
                         >
                           <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
@@ -729,15 +700,14 @@ class DropGame extends Component {
                 filter: 'hue-rotate(320deg)',
                 maxWidth: '100%',
                 width: '300px',
-                marginBottom: '-250px',
-                
+                marginBottom: '-250px'
+
                 // position: 'absolute',
                 // transform: 'translate: (50%, 50%)'
               }}
             />
-            <div className='drop-amount'>
-
-            <h3 className="game-sub-title">Drop an amount!</h3>
+            <div className="drop-amount">
+              <h3 className="game-sub-title">Drop an amount!</h3>
             </div>
             <div className="your-bet-amount">
               <TextField
@@ -920,34 +890,7 @@ class DropGame extends Component {
           <BetArray arrayName="drop_array" label="drop" />
 
           <div className="action-panel">
-            <div className="share-options">
-              <TwitterShareButton
-                url={twitterLink}
-                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                className="Demo__some-network__share-button"
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-              <a
-                className={styles.join('')}
-                onClick={() => {
-                  this.toggleBtnHandler();
-                  this.copy();
-                }}
-              >
-                {this.state.clicked ? (
-                  <input
-                    type="text"
-                    value={twitterLink}
-                    readOnly
-                    onClick={this.toggleBtnHandler}
-                  />
-                ) : null}
-                <FaClipboard />
-                &nbsp;{this.state.text}
-              </a>
-            </div>
+            <Share roomInfo={this.props.roomInfo} />
           </div>
         </div>
       </div>

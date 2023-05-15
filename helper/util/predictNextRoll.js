@@ -12,7 +12,7 @@ const emitRollGuesses = (socket, room_Id) => {
     const socketName = `ROLL_GUESSES_${room_Id}`;
     const elapsedTime = '';
     socket.emit(socketName, { rolls: rolls, faces: faces, elapsedTime }); // include faces in the emitted data
-    console.log(`Sent data to socket ${socketName}:`, { rolls, faces, elapsedTime });
+    // console.log(`Sent data to socket ${socketName}:`, { rolls, faces, elapsedTime });
   }
 };
 
@@ -28,11 +28,12 @@ const predictAndEmit = async (roll_list, room, socket, room_Id, numRolls) => {
       face: nextStateFace,
       created_at: currentTime
     });
+    await newBet.save();
 
     const roomBetsForRoom = roomBets.get(room_Id) || [];
 
     // remove oldest item if max limit reached
-    if (roomBetsForRoom.length >= 1000) {
+    if (roomBetsForRoom.length >= 100) {
       roomBetsForRoom.shift();
     }
 
@@ -79,7 +80,7 @@ const closeRoomSocket = (socket, room_Id) => {
     const socketName = `ROLL_GUESSES_${room_Id}`;
     // socket.emit(socketName, { rolls: [], elapsedTime: '' });
     socket.disconnect(true);
-    console.log(`Closed socket ${socketName}`);
+    // console.log(`Closed socket ${socketName}`);
   }
 };
 

@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
-import { TwitterShareButton, TwitterIcon } from 'react-share';
+import Share from './Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-// import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import { Button, TextField } from '@material-ui/core';
 
@@ -26,7 +25,6 @@ import {
 import history from '../../redux/history';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
-import { FaClipboard } from 'react-icons/fa';
 import { LensOutlined } from '@material-ui/icons';
 
 const defaultOptions = {
@@ -49,8 +47,6 @@ const options = [
   { classname: 'paper', selection: 'P' },
   { classname: 'scissors', selection: 'S' }
 ];
-
-const twitterLink = window.location.href;
 
 const calcWinChance = prevStates => {
   let total = prevStates.length;
@@ -226,7 +222,6 @@ class RPS extends Component {
       betting: false,
       timer: null,
       timerValue: 2000,
-      clicked: true,
       intervalId: null,
       items: [],
       bgColorChanged: false,
@@ -237,7 +232,6 @@ class RPS extends Component {
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       // bankroll: 0,
       betResult: null,
-      copied: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
@@ -363,7 +357,6 @@ class RPS extends Component {
   //     panel.style.animation = 'none';
   //   }
   // };
-
 
   joinGame = async () => {
     const {
@@ -541,23 +534,6 @@ class RPS extends Component {
     );
   }
 
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
-    setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
-    }, 1000);
-  };
-
-  copy() {
-    navigator.clipboard.writeText(twitterLink);
-  }
-
   handleButtonClick = () => {
     const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
     const { betting } = this.state;
@@ -701,31 +677,20 @@ class RPS extends Component {
   };
 
   render() {
-    const styles = ['copy-btn'];
-    let text = 'COPY CONTRACT';
-
-    if (this.state.clicked) {
-      styles.push('clicked');
-      text = 'COPIED!';
-    }
     return (
       <div className="game-page">
-        
         <div className="page-title">
           <h2>PLAY - RPS</h2>
         </div>
         <div className="game-contents">
-          
-        <div
+          <div
             className="pre-summary-panel"
             ref={this.panelRef}
             // onScroll={this.handleScroll}
           >
-            
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -734,12 +699,10 @@ class RPS extends Component {
                       {convertToCurrency(this.state.bankroll)}
                     </div>
                   </div>
-                 
+
                   <div className="data-item">
                     <div>
-                      <div className="label your-max-return">
-                        Your Return
-                      </div>
+                      <div className="label your-max-return">Your Return</div>
                     </div>
                     <div className="value">
                       {convertToCurrency(
@@ -759,7 +722,6 @@ class RPS extends Component {
                 </React.Fragment>
               ))}
             </div>
-            
           </div>
           <div
             className="game-info-panel"
@@ -858,30 +820,48 @@ class RPS extends Component {
             >
               <h5>AI Play Settings</h5>
               <p>CHOOSE AN ALGORITHM</p>
-              <div className='tiers'>
-            <table>
-              <tbody>
-                <tr>
-                  <td>Speed</td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "80%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Reasoning</td>
-                  <td><div className="bar" style={{width: "50%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Abilities</td>
-                  <td><div className="bar" style={{width: "30%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+              <div className="tiers">
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '80%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '50%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '30%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
               <div className="slippage-select-panel">
                 <Button
                   className={this.state.slippage === 100 ? 'active' : ''}
@@ -892,25 +872,22 @@ class RPS extends Component {
                   Markov
                 </Button>
                 <Button
-                                className='disabled'
-
+                  className="disabled"
                   // className={this.state.slippage === 200 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
                   disabled={this.state.isDisabled}
-
                 >
                   Carlo
                 </Button>
                 <Button
-                className='disabled'
+                  className="disabled"
                   // className={this.state.slippage === 500 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                    disabled={this.state.isDisabled}
-
+                  disabled={this.state.isDisabled}
                 >
                   Q Bot
                 </Button>
@@ -948,37 +925,10 @@ class RPS extends Component {
               )}
             </Button>
           </div>
-          <BetArray arrayName="rps_array" label="rps"/>
+          <BetArray arrayName="rps_array" label="rps" />
 
           <div className="action-panel">
-            <div className="share-options">
-              <TwitterShareButton
-                url={twitterLink}
-                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                className="Demo__some-network__share-button"
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-              <a
-                className={styles.join('')}
-                onClick={() => {
-                  this.toggleBtnHandler();
-                  this.copy();
-                }}
-              >
-                {this.state.clicked ? (
-                  <input
-                    type="text"
-                    value={twitterLink}
-                    readOnly
-                    onClick={this.toggleBtnHandler}
-                  />
-                ) : null}
-                <FaClipboard />
-                &nbsp;{this.state.text}
-              </a>
-            </div>
+            <Share roomInfo={this.props.roomInfo} />
           </div>
         </div>
       </div>

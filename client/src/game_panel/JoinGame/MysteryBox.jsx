@@ -17,12 +17,9 @@ import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import ReactModal from 'react-modal';
-import { TwitterShareButton, TwitterIcon } from 'react-share';
-import { FaClipboard } from 'react-icons/fa';
+import Share from './Share';
 import { Card, CardContent, Typography } from '@material-ui/core';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
-
-const twitterLink = window.location.href;
 
 const defaultOptions = {
   loop: true,
@@ -74,10 +71,8 @@ class MysteryBox extends Component {
       timer: null,
       bgColorChanged: false,
       timerValue: 2000,
-      clicked: true,
       intervalId: null,
       settings_panel_opened: false
-
     };
   }
 
@@ -119,7 +114,6 @@ class MysteryBox extends Component {
       this.setState({ box_list: data.box_list });
     });
     document.addEventListener('mousedown', this.handleClickOutside);
-
   }
 
   componentWillUnmount = () => {
@@ -137,15 +131,13 @@ class MysteryBox extends Component {
           this.props.join({
             bet_amount: this.state.bet_amount,
             selected_id: this.state.selected_id,
-            is_anonymous: this.state.is_anonymous,
+            is_anonymous: this.state.is_anonymous
           });
-  
-          const updatedBoxList = this.state.box_list.map((el) =>
-            el._id === this.state.selected_id
-              ? { ...el, status: 'opened' }
-              : el
+
+          const updatedBoxList = this.state.box_list.map(el =>
+            el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
           );
-  
+
           this.setState({ box_list: updatedBoxList });
         }
       });
@@ -170,7 +162,7 @@ class MysteryBox extends Component {
   //     panel.style.animation = 'none';
   //   }
   // };
-  
+
   handleClickOutside = e => {
     if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
       this.setState({ settings_panel_opened: false });
@@ -484,7 +476,7 @@ class MysteryBox extends Component {
     while (stored_bet_array.length >= 20) {
       stored_bet_array.shift();
     }
-    
+
     stored_bet_array.push({ bet: bet_amount });
     localStorage.setItem('bet_array', JSON.stringify(stored_bet_array));
 
@@ -576,7 +568,7 @@ class MysteryBox extends Component {
           <h2>PLAY - Mystery Box</h2>
         </div>
         <div className="game-contents">
-        <div
+          <div
             className="pre-summary-panel"
             ref={this.panelRef}
             // onScroll={this.handleScroll}
@@ -584,7 +576,6 @@ class MysteryBox extends Component {
             <div className="pre-summary-panel__inner mystery-box">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                 
                   {/* <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bet Amount</div>
@@ -595,9 +586,7 @@ class MysteryBox extends Component {
                   </div> */}
                   <div className="data-item">
                     <div>
-                      <div className="label your-max-return">
-                        Your Return
-                      </div>
+                      <div className="label your-max-return">Your Return</div>
                     </div>
                     <div className="value">
                       {convertToCurrency(updateDigitToPoint2(pr))}
@@ -679,30 +668,48 @@ class MysteryBox extends Component {
             >
               <h5>AI Play Settings</h5>
               <p>CHOOSE AN ALGORITHM</p>
-              <div className='tiers'>
-            <table>
-              <tbody>
-                <tr>
-                  <td>Speed</td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "100%"}}></div></td>
-                  <td><div className="bar" style={{width: "80%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Reasoning</td>
-                  <td><div className="bar" style={{width: "50%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-                <tr>
-                  <td>Abilities</td>
-                  <td><div className="bar" style={{width: "30%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                  <td><div className="bar" style={{width: "0%"}}></div></td>
-                </tr>
-              </tbody>
-            </table>
-            </div>
+              <div className="tiers">
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Speed</td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '100%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '80%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Reasoning</td>
+                      <td>
+                        <div className="bar" style={{ width: '50%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Abilities</td>
+                      <td>
+                        <div className="bar" style={{ width: '30%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                      <td>
+                        <div className="bar" style={{ width: '0%' }}></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
               <div className="slippage-select-panel">
                 <Button
                   className={this.state.slippage === 100 ? 'active' : ''}
@@ -713,25 +720,22 @@ class MysteryBox extends Component {
                   Markov
                 </Button>
                 <Button
-                                className='disabled'
-
+                  className="disabled"
                   // className={this.state.slippage === 200 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
                   disabled={this.state.isDisabled}
-
                 >
                   Carlo
                 </Button>
                 <Button
-                className='disabled'
+                  className="disabled"
                   // className={this.state.slippage === 500 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                    disabled={this.state.isDisabled}
-
+                  disabled={this.state.isDisabled}
                 >
                   Q Bot
                 </Button>
@@ -768,37 +772,10 @@ class MysteryBox extends Component {
               )}
             </Button>
           </div>
-          <BetArray arrayName="bet_array" label="bet"/>
+          <BetArray arrayName="bet_array" label="bet" />
 
           <div className="action-panel">
-            <div className="share-options">
-              <TwitterShareButton
-                url={twitterLink}
-                title={`Play against me: ⚔`} // ${this.props.roomInfo.room_name}
-                className="Demo__some-network__share-button"
-              >
-                <TwitterIcon size={32} round />
-              </TwitterShareButton>
-              {/* <button onClick={() => this.CopyToClipboard()}>Grab Link</button> */}
-              <a
-                className={styles.join('')}
-                onClick={() => {
-                  this.toggleBtnHandler();
-                  this.copy();
-                }}
-              >
-                {this.state.clicked ? (
-                  <input
-                    type="text"
-                    value={twitterLink}
-                    readOnly
-                    onClick={this.toggleBtnHandler}
-                  />
-                ) : null}
-                <FaClipboard />
-                &nbsp;{this.state.text}
-              </a>
-            </div>
+            <Share roomInfo={this.props.roomInfo} />
           </div>
         </div>
       </div>
@@ -862,23 +839,6 @@ class MysteryBox extends Component {
       </div>
     );
   };
-
-  toggleBtnHandler = () => {
-    this.setState({
-      clicked: !this.state.clicked,
-      text: 'LINK GRABBED'
-    });
-    setTimeout(() => {
-      this.setState({
-        clicked: !this.state.clicked,
-        text: ''
-      });
-    }, 1000);
-  };
-
-  copy() {
-    navigator.clipboard.writeText(twitterLink);
-  }
 
   render() {
     return (
