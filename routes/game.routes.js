@@ -1691,7 +1691,8 @@ router.post('/bet', auth, async (req, res) => {
       });
       if (roomInfo['game_type']['game_type_name'] === 'RPS') {
         if (
-          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet'])
+          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet']) ||
+          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           // Return an error or some other response to the user, e.g.:
           return res
@@ -1853,7 +1854,8 @@ router.post('/bet', auth, async (req, res) => {
           parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
             parseFloat(req.body.bet_amount) -
             (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
-          parseFloat(roomInfo['user_bet'])
+          parseFloat(roomInfo['user_bet']) ||
+          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           // Return an error or some other response to the user, e.g.:
           return res
@@ -1998,7 +2000,7 @@ router.post('/bet', auth, async (req, res) => {
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Drop Game') {
         if (
-          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet'])
+          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance) 
         ) {
           // Return an error or some other response to the user, e.g.:
           return res
@@ -2196,7 +2198,7 @@ router.post('/bet', auth, async (req, res) => {
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Bang!') {
         if (
-          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet'])
+          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           // Return an error or some other response to the user, e.g.:
           return res
@@ -2405,7 +2407,7 @@ router.post('/bet', auth, async (req, res) => {
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Roll') {
         if (
-          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet'])
+          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
         ) {
           // Return an error or some other response to the user, e.g.:
           return res
@@ -2663,7 +2665,14 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Spleesh!') {
-        // game
+        if (
+          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
+        ) {
+          // Return an error or some other response to the user, e.g.:
+          return res
+            .status(400)
+            .json({ error: 'Bet amount exceeds available balance.' });
+        }
         newTransactionJ.amount -= req.body.bet_amount;
 
         roomInfo['host_pr'] += req.body.bet_amount;
@@ -3068,6 +3077,14 @@ router.post('/bet', auth, async (req, res) => {
         roomInfo.pr = max_prize;
         newGameLog.selected_box = selected_box;
       } else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
+        if (
+          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
+        ) {
+          // Return an error or some other response to the user, e.g.:
+          return res
+            .status(400)
+            .json({ error: 'Bet amount exceeds available balance.' });
+        }
         newGameLog.bet_amount = roomInfo['bet_amount'];
         newGameLog.brain_game_score = req.body.brain_game_score;
 

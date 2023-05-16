@@ -403,6 +403,27 @@ class CreateGame extends Component {
       ) {
         alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
         return;
+      } else if (
+        this.state.game_mode === 'Drop Game' &&
+        this.state.child_step === 2 &&
+        this.state.drop_list.length < 3
+      ) {
+        alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
+        return;
+      } else if (
+        this.state.game_mode === 'Bang!' &&
+        this.state.child_step === 2 &&
+        this.state.bang_list.length < 3
+      ) {
+        alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
+        return;
+      } else if (
+        this.state.game_mode === 'Roll' &&
+        this.state.child_step === 2 &&
+        this.state.roll_list.length < 3
+      ) {
+        alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
+        return;
       }
 
       if (this.state.game_mode === 'Quick Shoot' && this.state.child_step < 3) {
