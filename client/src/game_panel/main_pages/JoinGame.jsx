@@ -267,7 +267,7 @@ class JoinGame extends Component {
   stopSound = (sound) => {
     
     const { currentSound } = this.state;
-    console.log("stop", currentSound);
+    // console.log("stop", currentSound);
     if (currentSound && currentSound.src.includes(sound)) {
       currentSound.pause();
       currentSound.currentTime = 0;

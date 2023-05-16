@@ -1997,6 +1997,14 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Drop Game') {
+        if (
+          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet'])
+        ) {
+          // Return an error or some other response to the user, e.g.:
+          return res
+            .status(400)
+            .json({ error: 'Bet amount exceeds available balance.' });
+        }
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
 
         const availableBetItem = await DropBetItem.findOne({
@@ -2187,6 +2195,14 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Bang!') {
+        if (
+          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet'])
+        ) {
+          // Return an error or some other response to the user, e.g.:
+          return res
+            .status(400)
+            .json({ error: 'Bet amount exceeds available balance.' });
+        }
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         newTransactionJ.amount -= parseFloat(req.body.bet_amount);
 
@@ -2388,34 +2404,37 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Roll') {
-        // game logic
-
+        if (
+          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet'])
+        ) {
+          // Return an error or some other response to the user, e.g.:
+          return res
+            .status(400)
+            .json({ error: 'Bet amount exceeds available balance.' });
+        }
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         newTransactionJ.amount -= parseFloat(req.body.bet_amount);
 
-
         const bet_item = await RollBetItem.findOne({
-          room: roomInfo,
+          room: roomInfo
         })
           .sort({ _id: 'desc' })
           .skip(5)
           .limit(1);
 
-          console.log("The 6th: ", bet_item.face);
-          
-          console.log(" req.body.selected_roll",  req.body.selected_roll);
-          
-          if (bet_item.face == req.body.selected_roll ) {
-            newGameLog.multiplier = bet_item.roll;
-            newGameLog.game_result = 1;
+        // console.log('The 6th: ', bet_item.face);
+
+        // console.log(' req.body.selected_roll', req.body.selected_roll);
+
+        if (bet_item.face == req.body.selected_roll) {
+          newGameLog.multiplier = bet_item.roll;
+          newGameLog.game_result = 1;
 
           if (
             roomInfo['user_bet'] -
-              parseFloat(req.body.bet_amount) *
-                parseFloat(bet_item.roll) >
+              parseFloat(req.body.bet_amount) * parseFloat(bet_item.roll) >
             0
           ) {
-            console.log("hi", bet_item.roll);
             newTransactionJ.amount +=
               parseFloat(req.body.bet_amount) *
               parseFloat(bet_item.roll) *
@@ -2424,11 +2443,9 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
 
             roomInfo['host_pr'] -=
-              parseFloat(req.body.bet_amount) *
-              parseFloat(bet_item.roll);
+              parseFloat(req.body.bet_amount) * parseFloat(bet_item.roll);
             roomInfo['user_bet'] -=
-              parseFloat(req.body.bet_amount) *
-              parseFloat(bet_item.roll);
+              parseFloat(req.body.bet_amount) * parseFloat(bet_item.roll);
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -2439,8 +2456,7 @@ router.post('/bet', auth, async (req, res) => {
             message.message =
               'I won ' +
               // bet_item.bet_amount * 2 +
-              parseFloat(req.body.bet_amount) *
-                parseFloat(bet_item.roll) +
+              parseFloat(req.body.bet_amount) * parseFloat(bet_item.roll) +
               ' BUSD in ' +
               roomInfo['game_type']['short_name'] +
               '-' +
@@ -2484,31 +2500,84 @@ router.post('/bet', auth, async (req, res) => {
           if (req.io.sockets) {
             req.io.sockets.emit('ROLL_GUESSES', guesses);
           }
-        } else if (bet_item.roll === req.body.bet_amount) {
-          newGameLog.game_result = 0;
+        } else if (
+          (bet_item.face === 'R' && req.body.selected_roll == 'P') ||
+          (bet_item.face === 'P' && req.body.selected_roll == 'S') ||
+          (bet_item.face === 'S' && req.body.selected_roll == 'R')
+        ) {
+          newGameLog.multiplier = 4;
+          newGameLog.game_result = 1;
 
-          newTransactionJ.amount += parseFloat(req.body.bet_amount);
-          // Save the new roll guess
+          if (
+            roomInfo['user_bet'] -
+              parseFloat(req.body.bet_amount) * 4 >
+            0
+          ) {
+            newTransactionJ.amount +=
+              parseFloat(req.body.bet_amount) *
+              parseFloat(bet_item.roll) *
+              ((100 - commission.value) / 100);
+
+            roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
+
+            roomInfo['host_pr'] -=
+              parseFloat(req.body.bet_amount) * 4;
+            roomInfo['user_bet'] -=
+              parseFloat(req.body.bet_amount) * 4;
+
+            if (req.io.sockets) {
+              req.io.sockets.emit('UPDATED_BANKROLL', {
+                bankroll: roomInfo['user_bet']
+              });
+            }
+
+            message.message =
+              'I won ' +
+              // bet_item.bet_amount * 2 +
+              parseFloat(req.body.bet_amount) * 4 +
+              ' BUSD in ' +
+              roomInfo['game_type']['short_name'] +
+              '-' +
+              roomInfo['room_number'];
+          } else {
+            newTransactionJ.amount +=
+              parseFloat(roomInfo['user_bet']) *
+              ((100 - commission.value) / 100);
+
+            if (req.io.sockets) {
+              req.io.sockets.emit('UPDATED_BANKROLL', {
+                bankroll: roomInfo['user_bet']
+              });
+            }
+
+            roomInfo.status = 'finished';
+            message.message =
+              'I won ' +
+              // bet_item.bet_amount * 2 +
+              parseFloat(roomInfo['user_bet']) +
+              ' BUSD in ' +
+              roomInfo['game_type']['short_name'] +
+              '-' +
+              roomInfo['room_number'];
+
+            roomInfo['user_bet'] = 0;
+            roomInfo['host_pr'] = 0;
+          }
           const newRollGuess = new RollGuess({
             room: roomInfo._id,
             bet_amount: newGameLog.bet_amount,
-            host_roll: bet_item.roll
+            host_roll: 4
           });
           await newRollGuess.save();
+
+          newGameLog.multiplier = 4;
+
           const guesses = await RollGuess.find({ room: roomInfo._id }).sort({
             created_at: 'ascending'
           });
           if (req.io.sockets) {
             req.io.sockets.emit('ROLL_GUESSES', guesses);
           }
-
-          message.message =
-            'We split ' +
-            req.body.bet_amount * 2 +
-            ' BUSD in our ' +
-            roomInfo['game_type']['short_name'] +
-            '-' +
-            roomInfo['room_number'];
         } else {
           newGameLog.game_result = -1;
           // newTransactionC.amount += parseFloat(req.body.bet_amount) * 2 * ((100 - commission.value) / 100);

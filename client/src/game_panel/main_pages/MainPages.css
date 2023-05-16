@@ -245,16 +245,24 @@ div.table .table-header {
     padding-bottom: 8px;
 }
 
-.lose-bg {
+.lose-bg,
+#roll .lose-bg.active {
     background-color: #FFD700 !important;
     filter: unset !important;
   }
-.draw-bg {
+.draw-bg,
+#roll .draw-bg.active {
     background-color: #777777 !important;
   }
-.win-bg {
+.win-bg,
+#roll .win-bg.active {
+    background-color: #0cff00 !important;
     filter: unset !important;
-    background-color: #0cff00  !important;
+  }
+
+    
+#roll .active {
+    background-color: grey;
   }
 
 .btn_modal_close:hover,
@@ -417,10 +425,7 @@ div.table .table-row .table-cell button:last-child:before,
       transform: scale(2);
     }
   }
-  
-#roll .active {
-    background-color: grey;
-  }
+
 .whale {
 
     background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/644d56f5333d09719df811b8_whale.svg') !important;

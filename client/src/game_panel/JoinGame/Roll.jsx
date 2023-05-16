@@ -94,6 +94,7 @@ class Roll extends Component {
       roll_guesses1Received: false,
       multiplier: 1.01,
       betResult: null,
+      executeBet: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
@@ -126,8 +127,11 @@ class Roll extends Component {
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
+    await new Promise(resolve => setTimeout(resolve, 5000));
     this.setState({ bgColorChanged: false });
+    if (!this.state.buttonClicked) {
+      this.setState({ selected_roll: null });
+    }
   };
 
   handleClickOutside = e => {
@@ -150,7 +154,7 @@ class Roll extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.isWaiting && this.state.showResult) {
+    if (this.state.isWaiting && this.state.executeBet) {
       this.pushBet();
     }
 
@@ -193,10 +197,13 @@ class Roll extends Component {
             // disable buttons
           },
           () => {
-            console.log('this', this.state.lastRollGuess);
+            // console.log('this', this.state.lastRollGuess);
             setTimeout(() => {
               this.setState({ disabledButtons: true });
             }, 1000);
+            setTimeout(() => {
+              this.setState({ executeBet: true });
+            }, 3000);
             setTimeout(() => {
               this.props.playSound('shine');
               this.setState({ showResult: true });
@@ -334,6 +341,7 @@ class Roll extends Component {
   joinGame = async () => {
     const { playSound } = this.props;
     const { selected_roll } = this.state;
+    
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
       selected_roll: selected_roll,
@@ -341,23 +349,20 @@ class Roll extends Component {
       // roll_bet_item_id: this.props.roll_bet_item
       // slippage: this.state.slippage
     });
-  
+    setTimeout(() => {
+    
     let text = 'HAHAA, YOU LOST!!!';
   
     if (result.betResult === 1) {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN DINNER!';
-      // this.changeBgColor(result.betResult);
-    } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUAL MATCH!';
-      playSound('split');
-      // this.changeBgColor(result.betResult);
+      this.changeBgColor(result.betResult);
     } else {
       text = 'TROLLOLOLOL! LOSER!';
       playSound('lose');
-      // this.changeBgColor(result.betResult);
+      this.changeBgColor(result.betResult);
     }
-  
+    console.log("h3i", this.state.bgColorChanged, this.state.betResult, this.state.selected_roll)
     let stored_roll_array =
       JSON.parse(localStorage.getItem('roll_array')) || [];
   
@@ -366,7 +371,7 @@ class Roll extends Component {
     }
     stored_roll_array.push({ roll: this.state.bet_amount });
     localStorage.setItem('roll_array', JSON.stringify(stored_roll_array));
-  
+
     if (result.status === 'success') {
       const currentUser = this.props.user;
       const currentRoom = this.props.room;
@@ -393,8 +398,9 @@ class Roll extends Component {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
-  
+  // this.setState({selected_roll: null});
     this.props.refreshHistory();
+  }, 5000);
   };
   
 
@@ -404,12 +410,12 @@ class Roll extends Component {
     playSound('select');
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      this.setState({ selected_roll: false, buttonClicked: false });
+      this.setState({ selected_roll: null, buttonClicked: false });
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      this.setState({ selected_roll: false, buttonClicked: false });
+      this.setState({ selected_roll: null, buttonClicked: false });
       return;
     }
 
@@ -462,7 +468,7 @@ class Roll extends Component {
     this.setState({
       buttonClicked: false,
       isWaiting: false,
-      selected_roll: null
+      executeBet: false
     });
   };
   startSlider = () => {
@@ -655,11 +661,6 @@ class Roll extends Component {
         playSound('win');
 
         text = 'NOT BAD, WINNER!';
-        // this.changeBgColor(result.betResult);
-      } else if (result.betResult === 0) {
-        playSound('split');
-
-        text = 'DRAW, NO WINNER!';
         // this.changeBgColor(result.betResult);
       } else {
         // this.changeBgColor(result.betResult);
@@ -1259,13 +1260,10 @@ class Roll extends Component {
                 <Button
                   className={`rock button-2x-r${
                     this.state.selected_roll === 'R' ? ' active' : ''
-                  }${!this.state.bgColorChanged &&
+                  }${this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'R'
                     ? ' lose-bg'
-                    : ''}${this.state.betResult === 0 &&
-                    this.state.selected_roll === 'R'
-                    ? ' draw-bg'
                     : ''}${this.state.betResult === 1 &&
                     this.state.selected_roll === 'R'
                     ? ' win-bg'
@@ -1283,7 +1281,7 @@ class Roll extends Component {
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
 
-                    this.setState({ selected_roll: null }, () => {
+                    this.setState({ selected_roll: null, bgColorChanged: false }, () => {
                       this.setState({
                         selected_roll: 'R',
                         buttonClicked: true
@@ -1300,9 +1298,6 @@ class Roll extends Component {
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'P'
                     ? ' lose-bg'
-                    : ''}${this.state.betResult === 0 &&
-                    this.state.selected_roll === 'P'
-                    ? ' draw-bg'
                     : ''}${this.state.betResult === 1 &&
                     this.state.selected_roll === 'P'
                     ? ' win-bg'
@@ -1319,7 +1314,7 @@ class Roll extends Component {
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
 
-                    this.setState({ selected_roll: null }, () => {
+                    this.setState({ selected_roll: null, betResult: 0,  bgColorChanged: false }, () => {
                       this.setState({
                         selected_roll: 'P',
                         buttonClicked: true
@@ -1336,9 +1331,6 @@ class Roll extends Component {
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'S'
                     ? ' lose-bg'
-                    : ''}${this.state.betResult === 0 &&
-                    this.state.selected_roll === 'S'
-                    ? ' draw-bg'
                     : ''}${this.state.betResult === 1 &&
                     this.state.selected_roll === 'S'
                     ? ' win-bg'
@@ -1355,7 +1347,7 @@ class Roll extends Component {
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
 
-                    this.setState({ selected_roll: null }, () => {
+                    this.setState({ selected_roll: null, betResult: 0, bgColorChanged: false }, () => {
                       this.setState({
                         selected_roll: 'S',
                         buttonClicked: true
@@ -1372,9 +1364,6 @@ class Roll extends Component {
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'W'
                     ? ' lose-bg'
-                    : ''}${this.state.betResult === 0 &&
-                    this.state.selected_roll === 'W'
-                    ? ' draw-bg'
                     : ''}${this.state.betResult === 1 &&
                     this.state.selected_roll === 'W'
                     ? ' win-bg'
@@ -1390,7 +1379,7 @@ class Roll extends Component {
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
-                    this.setState({ selected_roll: null }, () => {
+                    this.setState({ selected_roll: null, betResult: 0, bgColorChanged: false }, () => {
                       this.setState({
                         selected_roll: 'W',
                         buttonClicked: true
@@ -1407,9 +1396,6 @@ class Roll extends Component {
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'B'
                     ? ' lose-bg'
-                    : ''}${this.state.betResult === 0 &&
-                    this.state.selected_roll === 'B'
-                    ? ' draw-bg'
                     : ''}${this.state.betResult === 1 &&
                     this.state.selected_roll === 'B'
                     ? ' win-bg'
@@ -1425,7 +1411,7 @@ class Roll extends Component {
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
-                    this.setState({ selected_roll: null }, () => {
+                    this.setState({ selected_roll: null, betResult: 0, bgColorChanged: false }, () => {
                       this.setState({
                         selected_roll: 'B',
                         buttonClicked: true
@@ -1442,9 +1428,6 @@ class Roll extends Component {
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'Bu'
                     ? ' lose-bg'
-                    : ''}${this.state.betResult === 0 &&
-                    this.state.selected_roll === 'Bu'
-                    ? ' draw-bg'
                     : ''}${this.state.betResult === 1 &&
                     this.state.selected_roll === 'Bu'
                     ? ' win-bg'
@@ -1460,7 +1443,7 @@ class Roll extends Component {
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
-                    this.setState({ selected_roll: null }, () => {
+                    this.setState({ selected_roll: null, betResult: 0, bgColorChanged: false }, () => {
                       this.setState({
                         selected_roll: 'Bu',
                         buttonClicked: true
