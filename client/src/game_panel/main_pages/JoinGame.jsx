@@ -6,6 +6,7 @@ import { Button, Drawer } from '@material-ui/core';
 import LoadingOverlay from 'react-loading-overlay';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import RPS from '../JoinGame/RPS';
+import Blackjack from '../JoinGame/Blackjack';
 import Spleesh from '../JoinGame/Spleesh';
 import MysteryBox from '../JoinGame/MysteryBox';
 import BrainGame from '../JoinGame/BrainGame';
@@ -494,7 +495,20 @@ class JoinGame extends Component {
                     stopSound={this.stopSound}
                   />
                 )}
-
+{this.props.roomInfo.game_type === 'Blackjack' && (
+                  <Blackjack
+                    refreshHistory={this.refreshHistory}
+                    playSound={this.playSound}
+                    join={this.join}
+                    roomInfo={this.props.roomInfo}
+                    user_id={this.props.user_id}
+                    creator_id={this.props.roomInfo.creator_id}
+                    bet_amount={this.props.roomInfo.bet_amount}
+                    bankroll={this.state.bankroll}
+                    bj_bet_item_id={this.props.roomInfo.bj_bet_item_id}
+                    is_private={this.props.roomInfo.is_private}
+                  />
+                )}
                 <div className="room-history-panel">
                   <h2 className="room-history-title">Battle History</h2>
                   {this.props.roomInfo &&

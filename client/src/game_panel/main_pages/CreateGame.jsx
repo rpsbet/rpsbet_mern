@@ -9,6 +9,7 @@ import BrainGame from '../CreateGame/BrainGame';
 import PlayBrainGame from '../CreateGame/PlayBrainGame';
 import QuickShoot from '../CreateGame/QuickShoot';
 import Bang from '../CreateGame/Bang';
+import Blackjack from '../CreateGame/Blackjack';
 import Roll from '../CreateGame/Roll';
 import { Button } from '@material-ui/core';
 import Footer from './Footer';
@@ -71,6 +72,7 @@ class CreateGame extends Component {
       rps_list: [],
       drop_list: [],
       bang_list: [],
+      bj_list: [],
       roll_list: [],
       qs_list: [],
       qs_game_type: 2,
@@ -283,6 +285,15 @@ class CreateGame extends Component {
         bet_amount: 0,
         endgame_amount: 0,
         aveMultiplier: 0,
+      };
+    } else if (gameTypeName === 'Blackjack') {
+      newState = {
+        ...newState,
+        game_type: 9,
+        bet_amount: 0,
+        winChance: 0,
+        max_return: 0,
+        endgame_amount: 0
       };
     }
 
@@ -670,7 +681,25 @@ class CreateGame extends Component {
           endgame_amount={this.state.endgame_amount}
         />
       );
-    }
+    } else if (this.state.game_mode === 'Blackjack') {
+      return (
+        <Blackjack
+        playSound={this.playSound}
+
+          onChangeState={this.onChangeState}
+          bj_list={this.state.bj_list}
+          bet_amount={this.state.bet_amount}
+          winChance={this.state.winChance}
+          is_private={this.state.is_private}
+          is_anonymous={this.state.is_anonymous}
+          room_password={this.state.room_password}
+          step={this.state.child_step}
+          endgame_amount={this.state.endgame_amount}
+          bj_game_type={this.state.bj_game_type}
+       
+        />
+      );
+    } 
     return <></>;
   };
 

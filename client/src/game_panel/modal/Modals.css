@@ -392,7 +392,9 @@ border-bottom-right-radius: 0 !important;
 .modal-body .modal-content-wrapper.bang h4 {
     background-image: url("/img/icons/modal-bang.svg");
 }
-
+.modal-body .modal-content-wrapper.blackjack h4 {
+    background-image: url("/img/icons/modal-blackjack.svg");
+}
 
 .modal-body .modal-content-wrapper.drop-game h4 {
     background-image: url("/img/icons/modal-drop-game.svg");

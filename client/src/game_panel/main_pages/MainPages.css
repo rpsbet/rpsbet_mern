@@ -1161,6 +1161,95 @@ overflow: hidden;
     padding: 0 15px;
     margin: 10px 4px 15px;
 }
+#bj-radio {
+    display: grid;
+  grid-template-columns: 50% 50%;	
+}
+.card-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+  }
+  
+  .card {
+    position: relative;
+    width: 100px;
+    height: 150px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .card-suit {
+    position: absolute;
+    top: 26px;
+    left: 8px;
+    font-size: 34px;
+  }
+  
+  .card-number {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    font-size: 24px;
+    font-weight: 600;
+    color: black;
+  }
+  
+  .suit-spades,
+  .suit-clubs {
+    color: black;
+  }
+  
+  .suit-hearts,
+  .suit-diamonds {
+    color: red;
+  }
+  .card.suit-♥ .card-number,
+  .card.suit-♦ .card-number {
+    color: red;
+  }
+  
+  
+  /* Overlapping cards */
+  .card:nth-child(2) {
+    transform: translateX(-50%);
+  }
+  
+  /* .card:nth-child(2) .card-suit {
+    transform: rotate(180deg);
+  }
+  
+  .card:nth-child(2) .card-number {
+    transform: rotate(180deg);
+  } */
+  
+  .card:nth-child(3) {
+    transform: translateX(50%);
+  }
+/*   
+  .card:nth-child(3) .card-suit {
+    transform: rotate(180deg);
+  }
+  
+  .card:nth-child(3) .card-number {
+    transform: rotate(180deg);
+  } */
+  
+  /* Card Suit Colors */
+  .suit-hearts, .suit-diamonds {
+    color: red;
+  }
+  
+  .suit-spades, .suit-clubs {
+    color: black;
+  }
+  
+.game-page .game-contents .game-info-panel .select-buttons-panel.brain-game button {
+    margin: 5px 4px 5px;
+}
 
 .game-page .game-contents .game-info-panel button.active {
     color: #e5e5e5;

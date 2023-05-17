@@ -1004,8 +1004,8 @@ a.player:hover {
   background: #a9a9a9  !important;
 }
 .game-page .game-contents .game-info-panel button.add-new-game-type {
-  background: linear-gradient(to right, #ff5f6d, #ffc371) !important;
-  box-shadow: 0 -1px 0px #ff5f6d,0 -4px #ffc371 inset,0 2px #ff5f6d inset !important;
+  background: linear-gradient(to bottom, #d81719, #ffb000) !important;
+  box-shadow: 0 -1px 0px #940001, 0 -4px #ffbe46 inset, 0 2px #e60002 inset !important;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: #fff;

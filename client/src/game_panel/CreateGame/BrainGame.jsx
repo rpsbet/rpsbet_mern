@@ -32,7 +32,7 @@ class BrainGame extends Component {
             :
             <div className="game-info-panel">
                 <h3 className="game-sub-title">Game Type</h3>
-                <div className="select-buttons-panel">
+                <div className="select-buttons-panel brain-game">
                     {this.props.game_type_list.map((game_type, index) => (
                         <Button className={(this.props.brain_game_type === game_type._id ? ' active' : '')} 
                             onClick={(e) => { 
