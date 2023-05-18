@@ -1176,12 +1176,27 @@ overflow: hidden;
     position: relative;
     width: 100px;
     height: 150px;
+    margin-left: -30px;
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: white;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+  opacity: 0; /* Initially hidden */
+  animation: cardAnimation 0.5s ease-in-out forwards;
+  transform-origin: top left;
   }
   
+  @keyframes cardAnimation {
+    0% {
+      transform: translate(100%, -100%); /* Initial position in the top right corner */
+      opacity: 0;
+    }
+    100% {
+      transform: translate(0, 0); /* Final position */
+      opacity: 1;
+    }
+  }
   .card-suit {
     position: absolute;
     top: 26px;
@@ -1196,6 +1211,33 @@ overflow: hidden;
     font-size: 24px;
     font-weight: 600;
     color: black;
+  }
+  .deck {
+    position: relative;
+    width: 0px;
+    height: 0px;
+  }
+  
+  .card-back {
+    position: absolute;
+    bottom: 10px;
+    left: 320px;
+    width: 100px;
+    z-index: 4;
+    height: 150px;
+    background-color: #d81719;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    box-shadow: 2px 2px 0px 1px #4a0000;
+    align-items: center;
+    justify-items: center;
+    margin: auto;
+    text-align: center;
+  }
+  
+  .rps-logo {
+    transform: rotate(180deg);
   }
   
   .suit-spades,
@@ -1212,33 +1254,11 @@ overflow: hidden;
     color: red;
   }
   
-  
-  /* Overlapping cards */
-  .card:nth-child(2) {
-    transform: translateX(-50%);
+  .card:nth-child(1) {
+    margin-left: 0 !important;
   }
-  
-  /* .card:nth-child(2) .card-suit {
-    transform: rotate(180deg);
-  }
-  
-  .card:nth-child(2) .card-number {
-    transform: rotate(180deg);
-  } */
-  
-  .card:nth-child(3) {
-    transform: translateX(50%);
-  }
-/*   
-  .card:nth-child(3) .card-suit {
-    transform: rotate(180deg);
-  }
-  
-  .card:nth-child(3) .card-number {
-    transform: rotate(180deg);
-  } */
-  
-  /* Card Suit Colors */
+
+
   .suit-hearts, .suit-diamonds {
     color: red;
   }
@@ -2499,9 +2519,14 @@ margin-bottom: 10px;
     #rps-radio Button:last-child {
         margin-right: 0px !important;
     }
-
+    .game-page .game-contents .game-info-panel button {
+        margin: 4px 4px 6px;
+    }
     .join-game-panel .game-page .game-contents .game-info-panel button {
         margin-top: 10px;
+    }
+    .card-back {
+        left: 210px;
     }
     .join-game-panel   .game-page .game-contents .game-info-panel #select-buttons-panel button {
         margin: 6px 6px;
@@ -2605,6 +2630,7 @@ transform: translateX(160px) !important;
 
     .bet-amounts {
         display: block;
+        margin-bottom: 5px;
       }
 
     .transaction-settings {

@@ -214,10 +214,15 @@ class Blackjack extends Component {
   startGame = () => {
     const cards = this.drawCards(2);
     const score = this.calculateScore(cards);
-    this.setState({ cards, score });
-
-    console.log(cards, score)
+    this.setState({ cards, score }, () => {
+      // Trigger the animation after the state is updated
+      const drawnCards = document.querySelectorAll('.card');
+      drawnCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
+      });
+    });
   };
+  
 
   drawCard = () => {
     const suits = ['♠', '♣', '♥', '♦'];
@@ -245,39 +250,62 @@ class Blackjack extends Component {
   calculateScore = (cards) => {
     let score = 0;
     let hasAce = false;
-
+  
     cards.forEach((card) => {
-      if (card === 'A') {
+      if (card.card === 'A') {
         score += 11;
         hasAce = true;
-      } else if (['K', 'Q', 'J'].includes(card)) {
+      } else if (['K', 'Q', 'J'].includes(card.card)) {
         score += 10;
       } else {
-        score += parseInt(card, 10);
+        score += parseInt(card.card, 10);
       }
     });
-
+  
     if (hasAce && score > 21) {
       score -= 10;
     }
-
+  
     return score;
   };
-
+  
   hit = () => {
     const newCard = this.drawCard();
     const newCards = [...this.state.cards, newCard];
     const newScore = this.calculateScore(newCards);
-
+  
     this.setState({ cards: newCards, score: newScore }, () => {
+      // Trigger the animation for the newly drawn card
+      const drawnCards = document.querySelectorAll('.card');
+      const newCardElement = drawnCards[drawnCards.length - 1]; // Get the last card element
+      newCardElement.style.animationDelay = `${(drawnCards.length - 1) * 0.2}s`; // Delay the animation
+      newCardElement.style.animation = 'cardAnimation 0.5s ease-in-out forwards';
+      
+      this.onAddRun(this.state.score, 'hit');
       if (newScore > 21) {
-        // Game over logic here
+        this.setState({ cards: [], score: 0 }, () => {
+          // Trigger the animation for the reset cards
+          const drawnCards = document.querySelectorAll('.card');
+          drawnCards.forEach(card => {
+            card.style.animation = 'cardResetAnimation 0.5s ease-in-out forwards';
+          });
+        });
+        this.startGame();
       }
     });
   };
+  
 
   stand = () => {
-    // Stand logic here
+    this.onAddRun(this.state.score, 'stand');
+    this.setState({ cards: [], score: 0 }, () => {
+      // Trigger the animation for the reset cards
+      const drawnCards = document.querySelectorAll('.card');
+      drawnCards.forEach(card => {
+        card.style.animation = 'cardResetAnimation 0.5s ease-in-out forwards';
+      });
+    });
+    this.startGame();
   };
 
   onAutoPlay = () => {
@@ -322,7 +350,7 @@ class Blackjack extends Component {
     });
   };
 
-  onAddRun = selected_bj => {
+  onAddRun = (score, selected_bj) => {
     this.props.playSound('boop');
     const wager = 1;
     const winPayout = 2;
@@ -331,22 +359,23 @@ class Blackjack extends Component {
     this.setState({ selected_bj: selected_bj });
     const newArray = JSON.parse(JSON.stringify(this.props.bj_list));
     newArray.push({
-      bj: selected_bj
+      score: score,
+      bj: selected_bj,
     });
-    const winChance = calcWinChance(newArray);
-    const winChanceEV = calcEV(
-      winChance,
-      wager,
-      winPayout,
-      lossPayout,
-      tiePayout
-    );
+    // const winChance = calcWinChance(newArray);
+    // const winChanceEV = calcEV(
+    //   winChance,
+    //   wager,
+    //   winPayout,
+    //   lossPayout,
+    //   tiePayout
+    // );
     this.props.onChangeState({
       bj_list: newArray,
-      winChance: winChanceEV
+      // winChance: winChanceEV
     });
-    this.onChangeWinChance(winChance);
-    this.setState({ winChance: winChanceEV });
+    // this.onChangeWinChance(winChance);
+    // this.setState({ winChance: winChanceEV });
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -384,6 +413,8 @@ class Blackjack extends Component {
 
     return this.props.step === 1 ? (
       <div className="game-info-panel">
+                                  {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
+
         <DefaultBetAmountPanel
           bet_amount={this.props.bet_amount}
           onChangeState={this.props.onChangeState}
@@ -394,12 +425,19 @@ class Blackjack extends Component {
       </div>
     ) : (
       <div className="game-info-panel">
-        <div className="bj-add-run-panel">
+        <div className="qs-add-run-panel">
           <div className="bj-add-run-form">
             <h3 className="game-sub-title">
               Train the Dealer!{' '}
             </h3>
-            <h4>Score: {score}</h4>
+            <h6>Score: {score}</h6>
+           <div className="deck">
+    <div className="card-back">
+      <div className="rps-logo">
+    <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
+  </div>
+    </div>
+  </div>
            <div className="card-container">
   {cards.map((card, index) => (
     <div key={index} className={`card suit-${card.suit.toLowerCase()}`}>
@@ -408,12 +446,6 @@ class Blackjack extends Component {
     </div>
   ))}
 </div>
-
-
-
-
-
-
             <div id="bj-radio">
               <Button
                 className={
@@ -421,7 +453,6 @@ class Blackjack extends Component {
                 }
                 variant="contained"
                 onClick={() => {
-                  // this.onAddRun('stand');
                   this.hit();
                   const currentActive = document.querySelector('.active');
                   if (currentActive) {
@@ -437,7 +468,6 @@ class Blackjack extends Component {
                 }
                 variant="contained"
                 onClick={() => {
-                  // this.onAddRun('stand');
                   this.stand();
                   const currentActive = document.querySelector('.active');
                   if (currentActive) {
@@ -461,7 +491,8 @@ class Blackjack extends Component {
                   this.props.bj_list.map((bj, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{bj.bj}</td>
+                      <td>{bj.score}</td>
+      <td>{bj.bj}</td>
                       <td>
                         <HighlightOffIcon
                           onClick={() => this.onRemoveItem(index)}
