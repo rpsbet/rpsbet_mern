@@ -680,6 +680,7 @@ class Blackjack extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
+          <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
           <h2>PLAY - bj</h2>
         </div>
         <div className="game-contents">
@@ -727,39 +728,19 @@ class Blackjack extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
-            <div id="bj-radio" style={{ zIndex: 1 }}>
-              {options.map(({ classname, selection }) => (
-                <Button
-                  variant="contained"
-                  id={`bj-${classname}`}
-                  className={`bj-option ${classname}${
-                    this.state.selected_bj === selection ? ' active' : ''
-                  }${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    this.state.selected_bj === selection
-                      ? ' lose-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 0 &&
-                    this.state.selected_bj === selection
-                      ? ' draw-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 &&
-                    this.state.selected_bj === selection
-                      ? ' win-bg'
-                      : ''
-                  }`}
-                  onClick={() => {
-                    this.setState({ selected_bj: selection });
-                    this.onBtnBetClick(selection);
-                    this.props.playSound('select');
-                  }}
-                />
-              ))}
-            </div>
+            <div className="deck">
+    <div className="card-back">
+      <div className="rps-logo">
+    <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
+  </div>
+    </div>
+  </div>
+  <div className='bow'>
+            <h3 className="game-sub-title">pays 3 to 2</h3>
+  <img src={'/img/bow.svg'} alt="Blackjack pays 3 to 2" />
+
+  </div>
+
             <div className="your-bet-amount">
               <TextField
                 id="betamount"
@@ -804,8 +785,73 @@ class Blackjack extends Component {
                 </Button>
               </div>
             </div>
+            <div id="bj-radio" style={{ zIndex: 1 }}>
+            
+              <Button
+                className={
+                  'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.hit();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              >HIT!</Button>
+              <Button
+                className={
+                  'stand' + (this.state.selected_bj === 'stand' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.stand();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              >STAND</Button>
+              
+              <Button
+                className={
+                  'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.hit();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              >SPLIT</Button>
+              <Button
+                className={
+                  'stand' + (this.state.selected_bj === 'stand' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.stand();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              >DOUBLE</Button>
+            </div>
+        
             <SettingsOutlinedIcon
-              id="btn-bj-settings"
+              id="btn-rps-settings"
               onClick={() =>
                 this.setState({
                   settings_panel_opened: !this.state.settings_panel_opened
@@ -903,6 +949,7 @@ class Blackjack extends Component {
             </div>
             <Button
               id="aiplay"
+              className="disabled"
               variant="contained"
               onMouseDown={this.handleButtonClick}
               onMouseUp={this.handleButtonRelease}
@@ -919,7 +966,7 @@ class Blackjack extends Component {
                   {this.state.timerValue !== 2000 ? (
                     <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
                   ) : (
-                    <span>AI Play</span>
+                    <span>AI Play (Coming Soon)</span>
                   )}
                 </div>
               )}

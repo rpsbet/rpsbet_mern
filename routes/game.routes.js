@@ -22,11 +22,13 @@ const DropGuess = require('../model/DropGuess');
 const BangGuess = require('../model/BangGuess');
 const RollGuess = require('../model/RollGuess');
 const RpsBetItem = require('../model/RpsBetItem');
+const BjBetItem = require('../model/BjBetItem');
 const QsBetItem = require('../model/QsBetItem');
 const DropBetItem = require('../model/DropBetItem');
 const BangBetItem = require('../model/BangBetItem');
 const RollBetItem = require('../model/RollBetItem');
 const { predictNext } = require('../helper/util/predictNext');
+const { predictNextBj } = require('../helper/util/predictNextBj');
 const { predictNextQs } = require('../helper/util/predictNextQs');
 const { predictNextDrop } = require('../helper/util/predictNextDrop');
 const {
@@ -143,6 +145,10 @@ router.get('/room/:id', async (req, res) => {
       room: room,
       joiner_rps: ''
     }).sort({ _id: 'asc' });
+    const bjBetItem = await BjBetItem.findOne({
+      room: room,
+      joiner_bj: ''
+    }).sort({ _id: 'asc' });
     const qsBetItem = await QsBetItem.findOne({
       room: room,
       joiner_qs: ''
@@ -258,6 +264,7 @@ router.get('/room/:id', async (req, res) => {
         user_bet: room['user_bet'],
         brain_game_score: room['brain_game_score'],
         selected_drop: room['selected_drop'],
+        selected_bj: room['selected_bj'],
         cashoutAmount: room['cashoutAmount'],
         multiplier: room['multiplier'],
         qs_game_type: room['qs_game_type'],
@@ -267,7 +274,7 @@ router.get('/room/:id', async (req, res) => {
         drop_bet_item_id: dropBetItem ? dropBetItem.id : null,
         bang_bet_item_id: bangBetItem ? bangBetItem.id : null,
         roll_bet_item_id: rollBetItem ? rollBetItem.id : null,
-
+        bj_bet_item_id: bjBetItem ? bjBetItem.id : null,
         qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
         is_private: room['is_private'],
         game_log_list: gameLogList.map(({ bet_amount }) => bet_amount)
@@ -403,6 +410,32 @@ const convertGameLogToHistoryStyle = async gameLogList => {
       }
 
       if (gameLog['game_type']['game_type_name'] === 'RPS') {
+        if (gameLog.game_result === 1) {
+          temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
+            updateDigitToPoint2(gameLog['bet_amount'] * 2)
+          )} (2.00X)</span> against ${creator_link} in ${room_name}`;
+        } else if (gameLog.game_result === 3) {
+          //dividends
+          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+            updateDigitToPoint2(
+              gameLog['user_bet'] - gameLog['room']['endgame_amount']
+            )
+          )}</span> from their game ${room_name}`;
+        } else if (gameLog.game_result === -100) {
+          //end game
+          temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
+            updateDigitToPoint2(userBet)
+          )} (${multiplierDisplay}x)</span> in ${room_name}`;
+        } else if (gameLog.game_result === 0) {
+          temp.history = `${joined_user_link} split <span style='color: #b9bbbe;'>${convertToCurrency(
+            updateDigitToPoint2(gameLog['bet_amount'] * 2)
+          )} (1.00X)</span> with ${creator_link} in ${room_name}`;
+        } else {
+          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
+            updateDigitToPoint2(gameLog['bet_amount'])
+          )} (0.00X)</span> against ${creator_link} in ${room_name}`;
+        }
+      } else if (gameLog['game_type']['game_type_name'] === 'Blackjack') {
         if (gameLog.game_result === 1) {
           temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
             updateDigitToPoint2(gameLog['bet_amount'] * 2)
@@ -1009,6 +1042,11 @@ router.post('/rooms', auth, async (req, res) => {
       pr = req.body.max_return;
       host_pr = parseFloat(req.body.bet_amount);
       user_bet = parseFloat(req.body.bet_amount);
+    } else if (req.body.game_type === 9) {
+      // Blackjack
+      host_pr = parseFloat(req.body.bet_amount);
+      user_bet = parseFloat(req.body.bet_amount);
+      pr = user_bet * 2;
     }
     const roomCount = await Room.countDocuments({});
     newRoom = new Room({
@@ -1070,7 +1108,16 @@ router.post('/rooms', auth, async (req, res) => {
       const roomId = newRoom.id;
 
       initializeRollRound(req.body.roll_list, newRoom, req.io.sockets, roomId);
-    }
+    } else if (gameType.game_type_name === 'Blackjack') {
+      req.body.bj_list.forEach(bj => {
+        newBj = new BjBetItem({
+          room: newRoom,
+          bj: bj.bj
+          // bet_amount: rps.bet_amount
+        });
+        newBj.save();
+      });
+    } 
 
     newTransaction = new Transaction({
       user: req.user,
@@ -1186,6 +1233,9 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
         temp.winnings = updateDigitToPoint2(room['user_bet']);
       } else if (temp.game_type.game_type_id === 8) {
         // Roll
+        temp.winnings = updateDigitToPoint2(room['user_bet']);
+      } else if (temp.game_type.game_type_id === 9) {
+        // Blackjack
         temp.winnings = updateDigitToPoint2(room['user_bet']);
       }
 
@@ -1312,6 +1362,15 @@ router.post('/end_game', auth, async (req, res) => {
           '-' +
           roomInfo['room_number'];
       } else if (roomInfo['game_type']['game_type_name'] === 'RPS') {
+        newTransaction.amount += roomInfo['user_bet'];
+        message.message =
+          'I made ' +
+          roomInfo['user_bet'] +
+          ' BUSD from UNSTAKING ' +
+          roomInfo['game_type']['short_name'] +
+          '-' +
+          roomInfo['room_number'];
+      } else if (roomInfo['game_type']['game_type_name'] === 'Blackjack') {
         newTransaction.amount += roomInfo['user_bet'];
         message.message =
           'I made ' +
@@ -2424,9 +2483,6 @@ router.post('/bet', auth, async (req, res) => {
           .skip(5)
           .limit(1);
 
-        // console.log('The 6th: ', bet_item.face);
-
-        // console.log(' req.body.selected_roll', req.body.selected_roll);
 
         if (bet_item.face == req.body.selected_roll) {
           newGameLog.multiplier = bet_item.roll;
@@ -3076,6 +3132,165 @@ router.post('/bet', auth, async (req, res) => {
         roomInfo.host_pr = new_host_pr;
         roomInfo.pr = max_prize;
         newGameLog.selected_box = selected_box;
+      } else if (roomInfo['game_type']['game_type_name'] === 'Blackjack') {
+        if (
+          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet']) ||
+          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
+        ) {
+          // Return an error or some other response to the user, e.g.:
+          return res
+            .status(400)
+            .json({ error: 'Bet amount exceeds available balance.' });
+        }
+        newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+
+        const availableBetItem = await BjBetItem.findOne({
+          _id: req.body.bj_bet_item_id,
+          joiner_bj: ''
+        });
+
+        let bet_item = availableBetItem;
+        if (!bet_item) {
+          // Get next available item
+          bet_item = await BjBetItem.findOne({
+            room: new ObjectId(req.body._id),
+            joiner_bj: ''
+          }).sort({ _id: 'asc' });
+        }
+
+        if (!bet_item) {
+          // Create new BjBetItem with predicted rps value
+          const allBetItems = await BjBetItem.find({
+            room: new ObjectId(req.body._id)
+          });
+          const nextItem = predictNext(allBetItems);
+
+          bet_item = new BjBetItem({
+            room: new ObjectId(req.body._id),
+            bj: nextItem
+          });
+
+          await bet_item.save();
+        }
+
+        newTransactionJ.amount -= parseFloat(req.body.bet_amount);
+
+        newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+        newGameLog.selected_bj = req.body.selected_bj;
+
+        if (
+          (bet_item.bj === 'R' && req.body.selected_bj == 'P') ||
+          (bet_item.bj === 'P' && req.body.selected_bj == 'S') ||
+          (bet_item.bj === 'S' && req.body.selected_bj == 'R')
+        ) {
+          newGameLog.game_result = 1;
+          newTransactionJ.amount +=
+            parseFloat(req.body.bet_amount) *
+            2 *
+            ((100 - commission.value) / 100);
+          roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
+
+          roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
+          roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATED_BANKROLL', {
+              bankroll: roomInfo['user_bet']
+            });
+          }
+
+          message.message =
+            'I won ' +
+            // bet_item.bet_amount * 2 +
+            req.body.bet_amount * 2 +
+            ' BUSD in ' +
+            roomInfo['game_type']['short_name'] +
+            '-' +
+            roomInfo['room_number'];
+        } else if (bet_item.bj === req.body.selected_bj) {
+          newGameLog.game_result = 0;
+
+          newTransactionJ.amount += parseFloat(req.body.bet_amount);
+          message.message =
+            'We split ' +
+            req.body.bet_amount * 2 +
+            ' BUSD in our ' +
+            roomInfo['game_type']['short_name'] +
+            '-' +
+            roomInfo['room_number'];
+        } else {
+          newGameLog.game_result = -1;
+          // newTransactionC.amount += parseFloat(req.body.bet_amount) * 2 * ((100 - commission.value) / 100);
+
+          roomInfo.host_pr =
+            (parseFloat(roomInfo.host_pr) || 0) +
+            parseFloat(req.body.bet_amount);
+          roomInfo.user_bet =
+            (parseFloat(roomInfo.user_bet) || 0) +
+            parseFloat(req.body.bet_amount);
+
+          if (
+            roomInfo['endgame_type'] &&
+            roomInfo['user_bet'] >= roomInfo['endgame_amount']
+          ) {
+            newTransactionC.amount +=
+              parseFloat(roomInfo['user_bet']) -
+              parseFloat(
+                roomInfo['endgame_amount']
+              ); /* ((100 - commission.value) / 100); */
+
+            const newGameLogC = new GameLog({
+              room: roomInfo,
+              creator: roomInfo['creator'],
+              joined_user: roomInfo['creator'],
+              game_type: roomInfo['game_type'],
+              bet_amount: roomInfo['host_pr'],
+              user_bet: roomInfo['user_bet'],
+              is_anonymous: roomInfo['is_anonymous'],
+              game_result: 3
+            });
+            await newGameLogC.save();
+            roomInfo['user_bet'] = parseFloat(
+              roomInfo['endgame_amount']
+            ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+          }
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATED_BANKROLL', {
+              bankroll: roomInfo['user_bet']
+            });
+          }
+
+          message.message =
+            'I lost ' +
+            req.body.bet_amount +
+            ' BUSD in ' +
+            roomInfo['game_type']['short_name'] +
+            '-' +
+            roomInfo['room_number'];
+        }
+
+        bet_item.joiner = req.user;
+        bet_item.joiner_bj = req.body.selected_bj;
+        await bet_item.save();
+
+        if (!roomInfo.joiners.includes(req.user)) {
+          roomInfo.joiners.addToSet(req.user);
+          await roomInfo.save();
+        }
+
+        if (roomInfo['user_bet'] <= 0) {
+          roomInfo.status = 'finished';
+          newGameLog.game_result = 1;
+          message.message =
+            'I won ' +
+            (roomInfo['host_pr'] + roomInfo['bet_amount']) +
+            ' BUSD' +
+            ' in ' +
+            roomInfo['game_type']['short_name'] +
+            '-' +
+            roomInfo['room_number'];
+        } 
       } else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
         if (
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)

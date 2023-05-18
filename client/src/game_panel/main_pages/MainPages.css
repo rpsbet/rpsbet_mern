@@ -465,7 +465,7 @@ div.table .table-row .table-cell button:last-child:hover,
 .btn-create-room:hover {
     transform: translateY(-1px);
     filter: brightness(1.06);
-    transition: 0.2s;
+    transition: 0.1s;
 }
 
 div.table .table-cell button.btn_join {
@@ -606,8 +606,8 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     justify-content: left;
     align-items: center;
     overflow-x: auto;
-    transition: 0.2s;
-    -webkit-scroll-behavior-duration: 0.2s;
+    transition: 0.1s;
+    -webkit-scroll-behavior-duration: 0.1s;
     -webkit-scroll-behavior-timing-function: ease-in;
     scroll-behavior: smooth;
 }
@@ -1065,6 +1065,18 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     padding-top: 0px;
   }
   
+  .bj-add-run-form h6{
+    background: #d8171930;
+    color: red;
+    padding: 10px;
+    border: 1px solid;
+    text-align: center;
+    border-radius: 9px;
+    width: 175px;
+    font-weight: 500;
+    margin: auto;
+  }
+
   .pre-summary-panel .value {
     font-size: 1.25rem;
     font-weight: bold;
@@ -1176,7 +1188,7 @@ overflow: hidden;
     position: relative;
     width: 100px;
     height: 150px;
-    margin-left: -30px;
+    margin-left: -60px;
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: white;
@@ -1485,8 +1497,25 @@ table#runs td svg {
     cursor: pointer;
 }
 
+.join-game-panel #bj-radio button {
+    margin: 4px 4px 6px !important;
+}
+.join-game-panel .deck .card-back {
+    bottom: -90px;
+    left: 200px;
+}
 
-
+.bow img {
+    position: relative;
+    width: 200px;
+    filter: contrast(0.5);
+    margin-top: -70px;
+    z-index: -1;
+}
+.bow h3 {
+    position: relative;
+    z-index: 1;
+}
 #runs td svg:hover {
     transform: scale(1.1);
     background-color: #ffffff5c;
@@ -1526,7 +1555,7 @@ table#runs td svg {
     box-shadow: 0 -1px 0px #d81719,0 -4px #af0000 inset,0 2px #a60014 inset!important;
     background-color: #c20017;
     filter: drop-shadow(2px 4px 6px black);
-    transition: all 0.2s ease-in-out;
+    transition: all 0.1s ease-in-out;
     position: relative;
     border-radius: 0.25em !important;
     transform-style: preserve-3d;
@@ -1559,7 +1588,7 @@ table#runs td svg {
     box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.1);
     transform: rotateX(90deg) translateZ(25px);
     opacity: 0;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.1s ease-in-out;
     }
 
     #rps-radio Button.active,#rps-radio Button:active  {
@@ -1628,7 +1657,7 @@ button.btn-submit {
 button.btn-submit:hover {
 transform: translateY(-1px);
 filter: brightness(1.06);
-transition: 0.2s;
+transition: 0.1s;
 }
 .create-game-panel .game-page .game-contents .action-panel button:active,
 #btn-signup:active,
@@ -2526,7 +2555,7 @@ margin-bottom: 10px;
         margin-top: 10px;
     }
     .card-back {
-        left: 210px;
+        left: 260px;
     }
     .join-game-panel   .game-page .game-contents .game-info-panel #select-buttons-panel button {
         margin: 6px 6px;

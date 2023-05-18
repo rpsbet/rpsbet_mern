@@ -198,6 +198,7 @@ class Blackjack extends Component {
       winChance: 33,
       bj_list: [],
       cards: [],
+      scoreAnimation: false,
       score: 0,
       transitionMatrix: {
         R: { R: 0, P: 0, S: 0 },
@@ -211,37 +212,27 @@ class Blackjack extends Component {
   componentDidMount() {
     this.startGame();
   }
-  startGame = () => {
-    const cards = this.drawCards(2);
-    const score = this.calculateScore(cards);
-    this.setState({ cards, score }, () => {
-      // Trigger the animation after the state is updated
-      const drawnCards = document.querySelectorAll('.card');
-      drawnCards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
-      });
+startGame = () => {
+  const cards = this.drawCards(2);
+  const score = this.calculateScore(cards);
   
-      if (score === 21) {
-        // Reset and deal two additional cards
-        setTimeout(() => {
-          this.resetAndDealAdditionalCards();
-        }, 1000);
-      }
+  this.setState({ cards, score }, () => {
+    // Trigger the animation after the state is updated
+    const drawnCards = document.querySelectorAll('.card');
+    drawnCards.forEach((card, index) => {
+      card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
     });
-  };
-  
-  resetAndDealAdditionalCards = () => {
-    const cards = this.drawCards(2);
-    const score = this.calculateScore(cards);
-    this.setState({ cards, score }, () => {
-      // Trigger the animation for the newly dealt cards
-      const drawnCards = document.querySelectorAll('.card');
-      drawnCards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
+    if (score === 21) {
+      setTimeout(() => {
+      this.setState({ cards: [], score: 0 }, () => {
+        // Trigger the animation after the state is updated
+        this.startGame();
       });
-    });
-  };
-  
+    }, 1000);
+    }
+  });
+};
+
   
 
   drawCard = () => {
@@ -267,33 +258,44 @@ class Blackjack extends Component {
     return cards;
   };
 
-  calculateScore = (cards) => {
-    let score = 0;
-    let hasAce = false;
-  
-    cards.forEach((card) => {
-      if (card.card === 'A') {
-        score += 11;
-        hasAce = true;
-      } else if (['K', 'Q', 'J'].includes(card.card)) {
-        score += 10;
-      } else {
-        score += parseInt(card.card, 10);
-      }
-    });
-  
-    if (hasAce && score > 21) {
-      score -= 10;
+  // Update the calculateScore function to trigger the animation
+calculateScore = (cards) => {
+  let score = 0;
+  let hasAce = false;
+
+  cards.forEach((card) => {
+    if (card.card === 'A') {
+      score += 11;
+      hasAce = true;
+    } else if (['K', 'Q', 'J'].includes(card.card)) {
+      score += 10;
+    } else {
+      score += parseInt(card.card, 10);
     }
+  });
+
+  if (hasAce && score > 21) {
+    score -= 10;
+  }
+
+  this.setState({ scoreAnimation: true }, () => {
+    setTimeout(() => {
+      this.setState({ scoreAnimation: false });
+    }, 500); // Adjust the duration of the animation as needed
+  });
+
+  return score;
+};
   
-    return score;
-  };
   hit = () => {
     const newCard = this.drawCard();
     const newCards = [...this.state.cards, newCard];
     const newScore = this.calculateScore(newCards);
   
-    this.onAddRun(this.state.score, 'hit');
+    if (newScore > 21) {
+      this.onAddRun(this.state.score, 'hit');
+    }
+  
     if (newScore >= 21) {
       this.setState({ cards: [], score: 0 }, () => {
         // Trigger the animation after the state is updated
@@ -309,9 +311,6 @@ class Blackjack extends Component {
       });
     }
   };
-  
-  
-  
 
   stand = () => {
     this.onAddRun(this.state.score, 'stand');
@@ -418,7 +417,7 @@ class Blackjack extends Component {
   };
   render() {
     const defaultBetAmounts = [10, 25, 50, 100, 250];
-    const { score, cards } = this.state;
+    const { score, cards, scoreAnimation } = this.state;
 
     return this.props.step === 1 ? (
       <div className="game-info-panel">
@@ -439,7 +438,8 @@ class Blackjack extends Component {
             <h3 className="game-sub-title">
               Train the Dealer!{' '}
             </h3>
-            <h6>Score: {score}</h6>
+            <h6 className={scoreAnimation ? 'score animated' : 'score'}>Score: {score}</h6>
+
            <div className="deck">
     <div className="card-back">
       <div className="rps-logo">
