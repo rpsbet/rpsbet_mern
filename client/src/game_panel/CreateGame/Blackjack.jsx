@@ -220,8 +220,28 @@ class Blackjack extends Component {
       drawnCards.forEach((card, index) => {
         card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
       });
+  
+      if (score === 21) {
+        // Reset and deal two additional cards
+        setTimeout(() => {
+          this.resetAndDealAdditionalCards();
+        }, 1000);
+      }
     });
   };
+  
+  resetAndDealAdditionalCards = () => {
+    const cards = this.drawCards(2);
+    const score = this.calculateScore(cards);
+    this.setState({ cards, score }, () => {
+      // Trigger the animation for the newly dealt cards
+      const drawnCards = document.querySelectorAll('.card');
+      drawnCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
+      });
+    });
+  };
+  
   
 
   drawCard = () => {
@@ -268,44 +288,37 @@ class Blackjack extends Component {
   
     return score;
   };
-  
   hit = () => {
     const newCard = this.drawCard();
     const newCards = [...this.state.cards, newCard];
     const newScore = this.calculateScore(newCards);
   
-    this.setState({ cards: newCards, score: newScore }, () => {
-      // Trigger the animation for the newly drawn card
-      const drawnCards = document.querySelectorAll('.card');
-      const newCardElement = drawnCards[drawnCards.length - 1]; // Get the last card element
-      newCardElement.style.animationDelay = `${(drawnCards.length - 1) * 0.2}s`; // Delay the animation
-      newCardElement.style.animation = 'cardAnimation 0.5s ease-in-out forwards';
-      
-      this.onAddRun(this.state.score, 'hit');
-      if (newScore > 21) {
-        this.setState({ cards: [], score: 0 }, () => {
-          // Trigger the animation for the reset cards
-          const drawnCards = document.querySelectorAll('.card');
-          drawnCards.forEach(card => {
-            card.style.animation = 'cardResetAnimation 0.5s ease-in-out forwards';
-          });
-        });
+    this.onAddRun(this.state.score, 'hit');
+    if (newScore >= 21) {
+      this.setState({ cards: [], score: 0 }, () => {
+        // Trigger the animation after the state is updated
         this.startGame();
-      }
-    });
+      });
+    } else {
+      this.setState({ cards: newCards, score: newScore }, () => {
+        // Trigger the animation for the newly drawn card
+        const drawnCards = document.querySelectorAll('.card');
+        const newCardElement = drawnCards[drawnCards.length - 1]; // Get the last card element
+        newCardElement.style.animationDelay = `${(drawnCards.length - 1) * 0.2}s`; // Delay the animation
+        newCardElement.style.animation = 'cardAnimation 0.5s ease-in-out forwards';
+      });
+    }
   };
+  
+  
   
 
   stand = () => {
     this.onAddRun(this.state.score, 'stand');
     this.setState({ cards: [], score: 0 }, () => {
-      // Trigger the animation for the reset cards
-      const drawnCards = document.querySelectorAll('.card');
-      drawnCards.forEach(card => {
-        card.style.animation = 'cardResetAnimation 0.5s ease-in-out forwards';
-      });
+      // Trigger the animation after the state is updated
+      this.startGame();
     });
-    this.startGame();
   };
 
   onAutoPlay = () => {
@@ -352,10 +365,6 @@ class Blackjack extends Component {
 
   onAddRun = (score, selected_bj) => {
     this.props.playSound('boop');
-    const wager = 1;
-    const winPayout = 2;
-    const lossPayout = 0;
-    const tiePayout = 1;
     this.setState({ selected_bj: selected_bj });
     const newArray = JSON.parse(JSON.stringify(this.props.bj_list));
     newArray.push({
