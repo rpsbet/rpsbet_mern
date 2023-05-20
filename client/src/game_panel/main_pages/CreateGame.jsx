@@ -108,7 +108,9 @@ class CreateGame extends Component {
         select: new Audio('/sounds/select.mp3'),
         addTen: new Audio('/sounds/addTen.mp3'),
         tap: new Audio('/sounds/tap.mp3'),
-        addBox: new Audio('/sounds/addBox.mp3')
+        addBox: new Audio('/sounds/addBox.mp3'),
+        cards: new Audio('/sounds/card.mp3'),
+
       }
     };
   }
@@ -436,6 +438,14 @@ class CreateGame extends Component {
         alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
         return;
       }
+      else if (
+        this.state.game_mode === 'Blackjack' &&
+        this.state.child_step === 2 &&
+        this.state.roll_list.length < 3
+      ) {
+        alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
+        return;
+      }
 
       if (this.state.game_mode === 'Quick Shoot' && this.state.child_step < 3) {
         this.setState({
@@ -685,7 +695,6 @@ class CreateGame extends Component {
       return (
         <Blackjack
         playSound={this.playSound}
-
           onChangeState={this.onChangeState}
           bj_list={this.state.bj_list}
           bet_amount={this.state.bet_amount}
@@ -695,7 +704,7 @@ class CreateGame extends Component {
           room_password={this.state.room_password}
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
-          bj_game_type={this.state.bj_game_type}
+          child_step={this.state.child_step}
        
         />
       );

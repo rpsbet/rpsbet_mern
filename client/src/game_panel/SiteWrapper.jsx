@@ -9,7 +9,8 @@ import Manage from './icons/Manage.js';
 import ManageHover from './icons/ManageHover';
 import HowTo from './icons/HowTo.js';
 import CountUp from 'react-countup';
-
+import Lottie from 'react-lottie';
+import progress from './LottieAnimations/progress.json';
 import HowToHover from './icons/HowToHover';
 import {
   setSocket,
@@ -133,6 +134,14 @@ const customStyles = {
   },
 };
 
+const gifUrls = [
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif',
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif'
+];
+const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
+const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
+
 
 const { SpeechSynthesis } = window.speechSynthesis;
 
@@ -169,10 +178,11 @@ class SiteWrapper extends Component {
       showWithdrawModal: false,
       showDepositModal: false,
       showResetPasswordModal: false,
-      isActiveLoadingOverlay: this.props.isActiveLoadingOverlay,
+      // isActiveLoadingOverlay: this.props.isActiveLoadingOverlay,
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
       anchorEl: null,
+      websiteLoading: true,
 
       web3: null,
       web3account: '',
@@ -184,14 +194,14 @@ class SiteWrapper extends Component {
     if (
       current_state.balance !== props.balance ||
       current_state.betResult !== props.betResult ||
-      current_state.userName !== props.userName ||
-      current_state.isActiveLoadingOverlay !== props.isActiveLoadingOverlay
+      current_state.userName !== props.userName 
+      // current_state.isActiveLoadingOverlay !== props.isActiveLoadingOverlay
     ) {
       return {
         ...current_state,
         balance: props.balance,
         userName: props.userName,
-        isActiveLoadingOverlay: props.isActiveLoadingOverlay,
+        // isActiveLoadingOverlay: props.isActiveLoadingOverlay,
         transactions: updateFromNow(props.transactions),
         betResult: props.betResult
       };
@@ -526,7 +536,9 @@ class SiteWrapper extends Component {
         // selectedMobileTabIndex: this.props.selectMobileTab(1)
       });
     }
-
+    setTimeout(() => {
+      this.setState({ websiteLoading: false });
+    }, 2500);
     try {
       this.nyan = new Audio('/sounds/nyan.mp3');
       this.nyan.load();
@@ -715,6 +727,7 @@ class SiteWrapper extends Component {
 
   render() {
     const { isMuted, balance, oldBalance } = this.state;
+    const { websiteLoading } = this.state;
 
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
@@ -723,6 +736,33 @@ class SiteWrapper extends Component {
             this.props.isDarkMode ? 'dark_mode' : ''
           }`}
         >
+           {websiteLoading && (
+        <div className="loading-overlay" style={{
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <img src={randomGifUrl} alt="Loading" />
+                <span style={{
+                  marginTop: '10px',
+                  color: '#fff',
+                }}>
+                  LOADING...
+                  </span>
+          <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: progress
+              }}
+              style={{
+                marginTop: '-40px',
+                filter: `hue-rotate(${hueRotateValue}deg)`, // Use the calculated hue-rotate value
+                width: '300px',
+                height: '100px'
+              }}
+              />
+        </div>
+      )}
           {/* <LoadingOverlay
             active={this.state.isActiveLoadingOverlay}
             spinner
@@ -1216,7 +1256,7 @@ const mapStateToProps = state => ({
   isMuted: state.auth.isMuted,
   user: state.auth.user,
   unreadMessageCount: state.auth.unreadMessageCount,
-  isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
+  // isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   transactions: state.auth.transactions,
   isDarkMode: state.auth.isDarkMode,

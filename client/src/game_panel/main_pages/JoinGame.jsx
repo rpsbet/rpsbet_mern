@@ -97,6 +97,7 @@ class JoinGame extends Component {
         correct: new Audio('/sounds/correct.mp3'),
         bang: new Audio('/sounds/bang.mp3'),
         shine: new Audio('/sounds/shine.mp3'),
+        cards: new Audio('/sounds/card.mp3'),
         // fuse: new Audio('/sounds/fuse.mp3'),
       },
       currentSound: null,

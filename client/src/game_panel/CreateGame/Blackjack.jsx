@@ -37,16 +37,32 @@ const calcWinChance = prevStates => {
   const sensitivityFactor = (range / 100) * total; // You can adjust this value to increase or decrease sensitivity
   const adjustmentFactor = (range / total) * sensitivityFactor;
 
-  const adjustedRockWinChance = (rockWinChance + rock * adjustmentFactor).toFixed(2);
-  const adjustedPaperWinChance = (paperWinChance + paper * adjustmentFactor).toFixed(2);
-  const adjustedScissorsWinChance = (scissorsWinChance + scissors * adjustmentFactor).toFixed(2);
+  const adjustedRockWinChance = (
+    rockWinChance +
+    rock * adjustmentFactor
+  ).toFixed(2);
+  const adjustedPaperWinChance = (
+    paperWinChance +
+    paper * adjustmentFactor
+  ).toFixed(2);
+  const adjustedScissorsWinChance = (
+    scissorsWinChance +
+    scissors * adjustmentFactor
+  ).toFixed(2);
 
-  const lowest = Math.min(adjustedRockWinChance, adjustedPaperWinChance, adjustedScissorsWinChance);
-  const highest = Math.max(adjustedRockWinChance, adjustedPaperWinChance, adjustedScissorsWinChance);
+  const lowest = Math.min(
+    adjustedRockWinChance,
+    adjustedPaperWinChance,
+    adjustedScissorsWinChance
+  );
+  const highest = Math.max(
+    adjustedRockWinChance,
+    adjustedPaperWinChance,
+    adjustedScissorsWinChance
+  );
 
   return `${lowest.toFixed(2)}% - ${highest.toFixed(2)}%`;
 };
-
 
 const calcEV = (calcWinChance, wager, winPayout, lossPayout, tiePayout) => {
   const winChance = calcWinChance;
@@ -209,93 +225,125 @@ class Blackjack extends Component {
     this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
   }
 
-  componentDidMount() {
-    this.startGame();
-  }
-startGame = () => {
-  const cards = this.drawCards(2);
-  const score = this.calculateScore(cards);
-  
-  this.setState({ cards, score }, () => {
-    // Trigger the animation after the state is updated
-    const drawnCards = document.querySelectorAll('.card');
-    drawnCards.forEach((card, index) => {
-      card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
-    });
-    if (score === 21) {
-      setTimeout(() => {
-      this.setState({ cards: [], score: 0 }, () => {
-        // Trigger the animation after the state is updated
-        this.startGame();
-      });
-    }, 1000);
-    }
-  });
-};
 
+  startGame = () => {
+    const cards = this.drawCards(2);
+    const score = this.calculateScore(cards);
+  
+    setTimeout(() => {
+      this.props.playSound('cards');
+    }, 500);
+  
+    this.setState({ cards, score }, () => {
+      // Trigger the animation after the state is updated
+      const drawnCards = document.querySelectorAll('.card');
+      drawnCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
+        card.classList.add('card-hidden'); // Apply the .card-hidden class to all card elements
+      });
+  
+      if (score === 21) {
+        setTimeout(() => {
+          // Remove the .card-hidden class to revert back to the original state
+          drawnCards.forEach((card) => {
+            card.classList.remove('card-hidden');
+          });
+  
+          setTimeout(() => {
+            this.setState({ cards: [], score: 0 }, () => {
+              // Trigger the animation after the state is updated
+              this.startGame();
+            });
+          }, 1000);
+        }, 300);
+      } else {
+        setTimeout(() => {
+          // Remove the .card-hidden class to revert back to the original state
+          drawnCards.forEach((card) => {
+            card.classList.remove('card-hidden');
+          });
+        }, 300);
+      }
+    });
+  };
   
 
   drawCard = () => {
     const suits = ['♠', '♣', '♥', '♦'];
-    const deck = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-    
+    const deck = [
+      'A',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+      'J',
+      'Q',
+      'K'
+    ];
+
     const randomSuitIndex = Math.floor(Math.random() * suits.length);
     const randomCardIndex = Math.floor(Math.random() * deck.length);
-    
+
     const suit = suits[randomSuitIndex];
     const card = deck[randomCardIndex];
-    
+    this.props.playSound('cards');
+
     return { card, suit };
   };
-  
 
-  drawCards = (count) => {
+  drawCards = count => {
     const cards = [];
     for (let i = 0; i < count; i++) {
       const card = this.drawCard();
       cards.push(card);
     }
+
     return cards;
   };
 
   // Update the calculateScore function to trigger the animation
-calculateScore = (cards) => {
-  let score = 0;
-  let hasAce = false;
+  calculateScore = cards => {
+    let score = 0;
+    let hasAce = false;
 
-  cards.forEach((card) => {
-    if (card.card === 'A') {
-      score += 11;
-      hasAce = true;
-    } else if (['K', 'Q', 'J'].includes(card.card)) {
-      score += 10;
-    } else {
-      score += parseInt(card.card, 10);
+    cards.forEach(card => {
+      if (card.card === 'A') {
+        score += 11;
+        hasAce = true;
+      } else if (['K', 'Q', 'J'].includes(card.card)) {
+        score += 10;
+      } else {
+        score += parseInt(card.card, 10);
+      }
+    });
+
+    if (hasAce && score > 21) {
+      score -= 10;
     }
-  });
 
-  if (hasAce && score > 21) {
-    score -= 10;
-  }
+    this.setState({ scoreAnimation: true }, () => {
+      setTimeout(() => {
+        this.setState({ scoreAnimation: false });
+      }, 500); // Adjust the duration of the animation as needed
+    });
 
-  this.setState({ scoreAnimation: true }, () => {
-    setTimeout(() => {
-      this.setState({ scoreAnimation: false });
-    }, 500); // Adjust the duration of the animation as needed
-  });
+    return score;
+  };
 
-  return score;
-};
-  
   hit = () => {
     const newCard = this.drawCard();
     const newCards = [...this.state.cards, newCard];
     const newScore = this.calculateScore(newCards);
-  
+
     if (newScore > 21) {
       this.onAddRun(this.state.score, 'hit');
     }
-  
+
     if (newScore >= 21) {
       this.setState({ cards: [], score: 0 }, () => {
         // Trigger the animation after the state is updated
@@ -306,8 +354,19 @@ calculateScore = (cards) => {
         // Trigger the animation for the newly drawn card
         const drawnCards = document.querySelectorAll('.card');
         const newCardElement = drawnCards[drawnCards.length - 1]; // Get the last card element
-        newCardElement.style.animationDelay = `${(drawnCards.length - 1) * 0.2}s`; // Delay the animation
-        newCardElement.style.animation = 'cardAnimation 0.5s ease-in-out forwards';
+
+        // Add the .card-hidden class to hide the suit and number and change background color to red
+        newCardElement.classList.add('card-hidden');
+
+        newCardElement.style.animationDelay = `${(drawnCards.length - 1) *
+          0.2}s`; // Delay the animation
+        newCardElement.style.animation =
+          'cardAnimation 0.5s ease-in-out forwards';
+
+        setTimeout(() => {
+          // Remove the .card-hidden class to revert back to the original state
+          newCardElement.classList.remove('card-hidden');
+        }, 300);
       });
     }
   };
@@ -368,7 +427,7 @@ calculateScore = (cards) => {
     const newArray = JSON.parse(JSON.stringify(this.props.bj_list));
     newArray.push({
       score: score,
-      bj: selected_bj,
+      bj: selected_bj
     });
     // const winChance = calcWinChance(newArray);
     // const winChanceEV = calcEV(
@@ -379,7 +438,7 @@ calculateScore = (cards) => {
     //   tiePayout
     // );
     this.props.onChangeState({
-      bj_list: newArray,
+      bj_list: newArray
       // winChance: winChanceEV
     });
     // this.onChangeWinChance(winChance);
@@ -387,6 +446,11 @@ calculateScore = (cards) => {
   };
 
   componentDidUpdate(prevProps, prevState) {
+    if (this.props.child_step !== prevProps.child_step) {
+      setTimeout(() => {
+        this.startGame();
+      }, 500);
+    }
     if (prevState.bj_list.length !== this.props.bj_list.length) {
       const table = document.getElementById('runs');
       if (table) {
@@ -395,7 +459,7 @@ calculateScore = (cards) => {
     }
   }
 
-  getSuitSymbol = (card) => {
+  getSuitSymbol = card => {
     switch (card) {
       case '♥':
         return <span className="suit-hearts">&hearts;</span>;
@@ -409,8 +473,6 @@ calculateScore = (cards) => {
         return '';
     }
   };
-  
-  
 
   onChangeBetAmount = new_state => {
     this.setState({ bet_amount: new_state.selected_bet_amount });
@@ -421,7 +483,7 @@ calculateScore = (cards) => {
 
     return this.props.step === 1 ? (
       <div className="game-info-panel">
-                                  {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
+        <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
 
         <DefaultBetAmountPanel
           bet_amount={this.props.bet_amount}
@@ -429,32 +491,36 @@ calculateScore = (cards) => {
           game_type="BJ"
           defaultBetAmounts={defaultBetAmounts}
         />
-      
       </div>
     ) : (
       <div className="game-info-panel">
         <div className="qs-add-run-panel">
           <div className="bj-add-run-form">
-            <h3 className="game-sub-title">
-              Train the Dealer!{' '}
-            </h3>
-            <h6 className={scoreAnimation ? 'score animated' : 'score'}>Score: {score}</h6>
+            <h3 className="game-sub-title">Train the Dealer! </h3>
+            <h6 className={scoreAnimation ? 'score animated' : 'score'}>
+              Score: {score}
+            </h6>
 
-           <div className="deck">
-    <div className="card-back">
-      <div className="rps-logo">
-    <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
-  </div>
-    </div>
-  </div>
-           <div className="card-container">
-  {cards.map((card, index) => (
-    <div key={index} className={`card suit-${card.suit.toLowerCase()}`}>
-      <div className="card-suit">{this.getSuitSymbol(card.suit)}</div>
-      <div className="card-number">{card.card}</div>
-    </div>
-  ))}
-</div>
+            <div className="deck">
+              <div className="card-back">
+                <div className="rps-logo">
+                  <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
+                </div>
+              </div>
+            </div>
+            <div className="card-container">
+              {cards.map((card, index) => (
+                <div
+                  key={index}
+                  className={`card suit-${card.suit.toLowerCase()}`}
+                >
+                  <div className="card-suit">
+                    {this.getSuitSymbol(card.suit)}
+                  </div>
+                  <div className="card-number">{card.card}</div>
+                </div>
+              ))}
+            </div>
             <div id="bj-radio">
               <Button
                 className={
@@ -470,10 +536,13 @@ calculateScore = (cards) => {
                     currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                   }
                 }}
-              >HIT!</Button>
+              >
+                HIT!
+              </Button>
               <Button
                 className={
-                  'stand' + (this.state.selected_bj === 'stand' ? ' active' : '')
+                  'stand' +
+                  (this.state.selected_bj === 'stand' ? ' active' : '')
                 }
                 variant="contained"
                 onClick={() => {
@@ -485,8 +554,9 @@ calculateScore = (cards) => {
                     currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                   }
                 }}
-              >STAND</Button>
-              
+              >
+                STAND
+              </Button>
             </div>
             <Button id="aiplay" variant="contained" onClick={this.onAutoPlay}>
               Test AI Play
@@ -501,7 +571,7 @@ calculateScore = (cards) => {
                     <tr key={index}>
                       <td>{index + 1}</td>
                       <td>{bj.score}</td>
-      <td>{bj.bj}</td>
+                      <td>{bj.bj}</td>
                       <td>
                         <HighlightOffIcon
                           onClick={() => this.onRemoveItem(index)}
@@ -512,7 +582,7 @@ calculateScore = (cards) => {
                 ) : (
                   <tr>
                     <td id="add-run" colSpan="4">
-                    Provide the AI with example outputs
+                      Provide the AI with example outputs
                     </td>
                   </tr>
                 )}

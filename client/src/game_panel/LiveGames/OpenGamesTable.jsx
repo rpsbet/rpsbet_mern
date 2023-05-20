@@ -13,20 +13,21 @@ import {
   ArrowUpward,
   ArrowDownward } from '@material-ui/icons';
 import VisibilityIcon from '@material-ui/icons/Visibility';
-
-
-
-
 import { Box, Button, Typography, IconButton } from '@material-ui/core';
-
 import { updateDigitToPoint2 } from '../../util/helper';
-
 import Avatar from '../../components/Avatar';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-
 import Pagination from '../../components/Pagination';
 import { convertToCurrency } from '../../util/conversion';
+
+const gifUrls = [
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif',
+  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif'
+];
+const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
+
 
 class OpenGamesTable extends Component {
   constructor(props) {
@@ -166,7 +167,8 @@ class OpenGamesTable extends Component {
       QS: 'quick-shoot',
       DG: 'drop-game',
       'B!': 'bang',
-      R: 'roll'
+      R: 'roll',
+      BJ: 'blackjack'
     };
   
     const gameTypePanel = (
@@ -283,12 +285,6 @@ class OpenGamesTable extends Component {
   };
 
   render() {
-    const gifUrls = [
-      'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
-      'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif',
-      'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif'
-    ];
-    const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 
     const gameTypePanel = this.generateGameTypePanel();
     return (

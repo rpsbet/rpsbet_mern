@@ -1065,7 +1065,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     padding-top: 0px;
   }
   
-  .bj-add-run-form h6{
+  h6.score{
     background: #d8171930;
     color: red;
     padding: 10px;
@@ -1194,21 +1194,39 @@ overflow: hidden;
     background-color: white;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     position: relative;
-  opacity: 0; /* Initially hidden */
-  animation: cardAnimation 0.5s ease-in-out forwards;
-  transform-origin: top left;
+    opacity: 0; /* Initially hidden */
+    animation: cardAnimation 0.5s ease-in-out forwards;
+    transform-origin: center;
   }
   
   @keyframes cardAnimation {
     0% {
-      transform: translate(100%, -100%); /* Initial position in the top right corner */
-      opacity: 0;
+      transform: translate(100%, -100%) rotateY(180deg); /* Initial position in the top right corner */
+      opacity: 0.8;
+    }
+    90% {
+      transform: translate(0, 0) rotateY(90deg); /* Halfway through the animation, the card is halfway flipped */
+      opacity: 0.9; /* The card is partially visible */
     }
     100% {
-      transform: translate(0, 0); /* Final position */
-      opacity: 1;
+      transform: translate(0, 0) rotateY(0); /* Final position, fully flipped */
+      opacity: 1; /* The card is fully visible */
     }
   }
+  .card-hidden {
+    background-color: red;
+    border: none;
+    background-image: url("/img/rps-logo-white.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    transform: rotate(180deg);
+  }
+  
+  .card-hidden .card-suit,
+  .card-hidden .card-number {
+    visibility: hidden;
+  }
+  
   .card-suit {
     position: absolute;
     top: 26px;
@@ -1224,6 +1242,7 @@ overflow: hidden;
     font-weight: 600;
     color: black;
   }
+  
   .deck {
     position: relative;
     width: 0px;
@@ -1237,15 +1256,17 @@ overflow: hidden;
     width: 100px;
     z-index: 4;
     height: 150px;
-    background-color: #d81719;
+    background-color: red; /* Set the background color to red */
     border-radius: 5px;
     display: flex;
     justify-content: center;
-    box-shadow: 2px 2px 0px 1px #4a0000;
     align-items: center;
-    justify-items: center;
-    margin: auto;
-    text-align: center;
+    box-shadow: 2px 2px 0px 1px #4a0000;
+    transform: rotateY(180deg); /* Initially flipped */
+  }
+  
+  .rps-logo img {
+    width: 60px; /* Adjust the logo size as needed */
   }
   
   .rps-logo {
@@ -2803,6 +2824,12 @@ transform: translateX(160px) !important;
 }
   
   @media (max-width: 480px) {
+    .join-game-panel .deck .card-back {
+        left: 111px;
+    }
+    .bow {
+        margin-top: -40px;
+    }
     .game-page .game-contents .game-info-panel .box-prizes {
         grid-template-columns: repeat(4, 1fr);
     }

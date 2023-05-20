@@ -226,9 +226,14 @@ class Blackjack extends Component {
       items: [],
       bgColorChanged: false,
       selected_bj: '',
+      cardVisibility: false,
       advanced_status: '',
       is_anonymous: false,
       bet_amount: 1,
+      cards: [],
+      cards_host: [],
+      score: 0,
+      score_host: 0,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       // bankroll: 0,
       betResult: null,
@@ -272,6 +277,8 @@ class Blackjack extends Component {
   };
 
   componentDidMount = () => {
+    this.dealJoiner();
+this.dealHost();
     // Initialize items array
     const items = [
       {
@@ -304,6 +311,236 @@ class Blackjack extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
+  };
+
+ // Obfuscated code example
+ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
+  const cards = drawCardsFunc(2);
+  const score = calculateScoreFunc(cards);
+
+  const cardVisibility = cards.map((_, index) => (index !== 1 ? true : false));
+
+  this.setState({ [cardsType]: cards, [scoreType]: score, cardVisibility }, () => {
+    const drawnCards = document.querySelectorAll(`.${cardsType === 'cards' ? 'card' : 'card_host'}`);
+
+    drawnCards.forEach((card, index) => {
+      card.style.animationDelay = `${index * 0.2}s`;
+      const cardNumber = card.querySelector('.card-number');
+      const cardSuit = card.querySelector('.card-suit');
+
+      if (!this.state.cardVisibility[index]) {
+        card.classList.add('card-hidden');
+        cardNumber.classList.add('card-hidden');
+        cardSuit.classList.add('card-hidden');
+      }
+    });
+
+    if (score === 21) {
+      setTimeout(() => {
+        drawnCards.forEach((card, index) => {
+          card.classList.remove('card-hidden');
+          const cardNumber = card.querySelector('.card-number');
+          const cardSuit = card.querySelector('.card-suit');
+          cardNumber.classList.remove('card-hidden');
+          cardSuit.classList.remove('card-hidden');
+        });
+        setTimeout(() => {
+          this.setState({ [cardsType]: [], [scoreType]: 0 }, () => {
+            this.dealCards(drawCardsFunc, calculateScoreFunc, cardsType, scoreType);
+          });
+        }, 1000);
+      }, 300);
+    } else {
+      setTimeout(() => {
+        drawnCards.forEach((card, index) => {
+          if (index >= 2 && !this.state.cardVisibility[index]) {
+            card.classList.remove('card-hidden');
+            const cardNumber = card.querySelector('.card-number');
+            const cardSuit = card.querySelector('.card-suit');
+            cardNumber.classList.remove('card-hidden');
+            cardSuit.classList.remove('card-hidden');
+          }
+        });
+      }, 300);
+    }
+  });
+};
+
+ dealJoiner = () => {
+  this.dealCards(this.drawCards, this.calculateScore, 'cards', 'score');
+};
+
+ dealHost = () => {
+  this.dealCards(this.drawCardsHost, this.calculateScoreHost, 'cards_host', 'score_host');
+};
+  
+  drawCard = () => {
+    const suits = ['♠', '♣', '♥', '♦'];
+    const deck = [
+      'A',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+      'J',
+      'Q',
+      'K'
+    ];
+
+    const randomSuitIndex = Math.floor(Math.random() * suits.length);
+    const randomCardIndex = Math.floor(Math.random() * deck.length);
+
+    const suit = suits[randomSuitIndex];
+    const card = deck[randomCardIndex];
+
+    return { card, suit };
+  };
+
+  drawCards = count => {
+    const cards = [];
+    for (let i = 0; i < count; i++) {
+      const card = this.drawCard();
+      cards.push(card);
+    }
+    return cards;
+  };
+
+  drawCardHost = () => {
+    const suits = ['♠', '♣', '♥', '♦'];
+    const deck = [
+      'A',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+      'J',
+      'Q',
+      'K'
+    ];
+
+    const randomSuitIndex = Math.floor(Math.random() * suits.length);
+    const randomCardIndex = Math.floor(Math.random() * deck.length);
+
+    const suit = suits[randomSuitIndex];
+    const card_host = deck[randomCardIndex];
+
+    return { card_host, suit };
+  };
+
+  drawCardsHost = count => {
+    const cards_host = [];
+    for (let i = 0; i < count; i++) {
+      const card_host = this.drawCardHost();
+      cards_host.push(card_host);
+    }
+    return cards_host;
+  };
+
+
+  // Update the calculateScore function to trigger the animation
+  calculateScore = cards => {
+    let score = 0;
+    let hasAce = false;
+
+    cards.forEach(card => {
+      if (card.card === 'A') {
+        score += 11;
+        hasAce = true;
+      } else if (['K', 'Q', 'J'].includes(card.card)) {
+        score += 10;
+      } else {
+        score += parseInt(card.card, 10);
+      }
+    });
+
+    if (hasAce && score > 21) {
+      score -= 10;
+    }
+
+    this.setState({ scoreAnimation: true }, () => {
+      setTimeout(() => {
+        this.setState({ scoreAnimation: false });
+      }, 500); // Adjust the duration of the animation as needed
+    });
+
+    return score;
+  };
+
+  // Update the calculateScore function to trigger the animation
+  calculateScoreHost = cards_host => {
+    const firstCard = cards_host[0]; // Get the first card
+  
+    let score = 0;
+    let hasAce = false;
+  
+    if (firstCard.card_host === 'A') {
+      score += 11;
+      hasAce = true;
+    } else if (['K', 'Q', 'J'].includes(firstCard.card_host)) {
+      score += 10;
+    } else {
+      score += parseInt(firstCard.card_host, 10);
+    }
+  
+    if (hasAce && score > 21) {
+      score -= 10;
+    }
+  
+    // Update the animation code to trigger animation for the first card only
+    if (firstCard) {
+      this.setState({ scoreAnimation: true }, () => {
+        setTimeout(() => {
+          this.setState({ scoreAnimation: false });
+        }, 500); // Adjust the duration of the animation as needed
+      });
+    }
+  
+    return score;
+  };
+  
+
+  hit = () => {
+    const newCard = this.drawCard();
+    const newCards = [...this.state.cards, newCard];
+    const newScore = this.calculateScore(newCards);
+
+    if (newScore > 21) {
+      this.onAddRun(this.state.score, 'hit');
+    }
+
+    if (newScore >= 21) {
+      this.setState({ cards: [], score: 0 }, () => {
+        // Trigger the animation after the state is updated
+        this.dealJoiner();
+      });
+    } else {
+      this.setState({ cards: newCards, score: newScore }, () => {
+        // Trigger the animation for the newly drawn card
+        const drawnCards = document.querySelectorAll('.card');
+        const newCardElement = drawnCards[drawnCards.length - 1]; // Get the last card element
+        newCardElement.style.animationDelay = `${(drawnCards.length - 1) *
+          0.2}s`; // Delay the animation
+        newCardElement.style.animation =
+          'cardAnimation 0.5s ease-in-out forwards';
+      });
+    }
+  };
+
+  stand = () => {
+    this.onAddRun(this.state.score, 'stand');
+    this.setState({ cards: [], score: 0 }, () => {
+      this.dealJoiner();
+    });
   };
 
   static getDerivedStateFromProps(props, current_state) {
@@ -357,6 +594,21 @@ class Blackjack extends Component {
   //     panel.style.animation = 'none';
   //   }
   // };
+
+  getSuitSymbol = card => {
+    switch (card) {
+      case '♥':
+        return <span className="suit-hearts">&hearts;</span>;
+      case '♦':
+        return <span className="suit-diamonds">&diams;</span>;
+      case '♠':
+        return <span className="suit-spades">&spades;</span>;
+      case '♣':
+        return <span className="suit-clubs">&clubs;</span>;
+      default:
+        return '';
+    }
+  };
 
   joinGame = async () => {
     const {
@@ -585,8 +837,7 @@ class Blackjack extends Component {
     if (!validateLocalStorageLength(storageName, isDarkMode)) {
       return;
     }
-    const stored_bj_array =
-      JSON.parse(localStorage.getItem(storageName)) || [];
+    const stored_bj_array = JSON.parse(localStorage.getItem(storageName)) || [];
     const intervalId = setInterval(() => {
       const randomItem = predictNext(stored_bj_array);
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
@@ -677,11 +928,13 @@ class Blackjack extends Component {
   };
 
   render() {
+    const { score, cards, cards_host, score_host, scoreAnimation, cardVisibility } = this.state;
+
     return (
       <div className="game-page">
         <div className="page-title">
           <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
-          <h2>PLAY - bj</h2>
+          <h2>PLAY - Blackjack</h2>
         </div>
         <div className="game-contents">
           <div
@@ -729,18 +982,44 @@ class Blackjack extends Component {
             style={{ position: 'relative', zIndex: 10 }}
           >
             <div className="deck">
-    <div className="card-back">
-      <div className="rps-logo">
-    <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
+              <div className="card-back">
+                <div className="rps-logo">
+                  <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
+                </div>
+              </div>
+            </div>
+            <h6 style={{marginTop: '20px'}} className={scoreAnimation ? 'score animated' : 'score'}>
+              Score: {score_host}
+            </h6>
+            <div className="card-container">
+            {cards_host.map((card_host, index) => (
+  <div key={index} className={`card suit-${card_host.suit.toLowerCase()} ${!cardVisibility[index] ? 'card-hidden' : ''}`}>
+    <div className={`card-suit ${!cardVisibility[index] ? 'card-hidden' : ''}`}>{this.getSuitSymbol(card_host.suit)}</div>
+    <div className={`card-number ${!cardVisibility[index] ? 'card-hidden' : ''}`}>{card_host.card_host}</div>
   </div>
-    </div>
-  </div>
-  <div className='bow'>
-            <h3 className="game-sub-title">pays 3 to 2</h3>
-  <img src={'/img/bow.svg'} alt="Blackjack pays 3 to 2" />
+))}
+</div>
 
-  </div>
-
+            <div className="bow">
+              <h3 className="game-sub-title">pays 3 to 2</h3>
+              <img src={'/img/bow.svg'} alt="Blackjack pays 3 to 2" />
+            </div>
+            <h6 className={scoreAnimation ? 'score animated' : 'score'}>
+              Score: {score}
+            </h6>
+            <div className="card-container">
+              {cards.map((card, index) => (
+                <div
+                  key={index}
+                  className={`card suit-${card.suit.toLowerCase()}`}
+                >
+                  <div className="card-suit">
+                    {this.getSuitSymbol(card.suit)}
+                  </div>
+                  <div className="card-number">{card.card}</div>
+                </div>
+              ))}
+            </div>
             <div className="your-bet-amount">
               <TextField
                 id="betamount"
@@ -786,7 +1065,6 @@ class Blackjack extends Component {
               </div>
             </div>
             <div id="bj-radio" style={{ zIndex: 1 }}>
-            
               <Button
                 className={
                   'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
@@ -801,10 +1079,13 @@ class Blackjack extends Component {
                     currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                   }
                 }}
-              >HIT!</Button>
+              >
+                HIT!
+              </Button>
               <Button
                 className={
-                  'stand' + (this.state.selected_bj === 'stand' ? ' active' : '')
+                  'stand' +
+                  (this.state.selected_bj === 'stand' ? ' active' : '')
                 }
                 variant="contained"
                 onClick={() => {
@@ -816,8 +1097,10 @@ class Blackjack extends Component {
                     currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                   }
                 }}
-              >STAND</Button>
-              
+              >
+                STAND
+              </Button>
+
               <Button
                 className={
                   'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
@@ -832,10 +1115,13 @@ class Blackjack extends Component {
                     currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                   }
                 }}
-              >SPLIT</Button>
+              >
+                SPLIT
+              </Button>
               <Button
                 className={
-                  'stand' + (this.state.selected_bj === 'stand' ? ' active' : '')
+                  'stand' +
+                  (this.state.selected_bj === 'stand' ? ' active' : '')
                 }
                 variant="contained"
                 onClick={() => {
@@ -847,9 +1133,11 @@ class Blackjack extends Component {
                     currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                   }
                 }}
-              >DOUBLE</Button>
+              >
+                DOUBLE
+              </Button>
             </div>
-        
+
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>
