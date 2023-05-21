@@ -1190,6 +1190,7 @@ overflow: hidden;
     height: 150px;
     margin-left: -60px;
     border: 1px solid #ccc;
+    box-shadow: 0px 0px 4px #323232;
     border-radius: 5px;
     background-color: white;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
@@ -1216,6 +1217,8 @@ overflow: hidden;
   .card-hidden {
     background-color: red;
     border: none;
+    border: 3px solid white;
+    box-shadow: 0px 0px 4px #323232;
     background-image: url("/img/rps-logo-white.svg");
     background-repeat: no-repeat;
     background-position: center;
@@ -1253,6 +1256,7 @@ overflow: hidden;
     position: absolute;
     bottom: 10px;
     left: 320px;
+    border: 3px solid white;
     width: 100px;
     z-index: 4;
     height: 150px;
@@ -2440,6 +2444,8 @@ bottom: 0px;
         width: 100%;
     }
 
+
+    
     div.table div.table-row div.table-cell {
         width: auto !important;
         font-size: 12px;

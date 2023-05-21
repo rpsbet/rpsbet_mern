@@ -407,6 +407,8 @@ this.dealHost();
       const card = this.drawCard();
       cards.push(card);
     }
+    this.props.playSound('cards');
+
     return cards;
   };
 

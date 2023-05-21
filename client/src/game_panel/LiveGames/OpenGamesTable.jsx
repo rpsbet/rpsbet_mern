@@ -160,6 +160,7 @@ class OpenGamesTable extends Component {
 
   generateGameTypePanel = () => {
     const gameTypeStyleClass = {
+      R: 'roll',
       RPS: 'rps',
       'S!': 'spleesh',
       MB: 'mystery-box',
@@ -167,7 +168,6 @@ class OpenGamesTable extends Component {
       QS: 'quick-shoot',
       DG: 'drop-game',
       'B!': 'bang',
-      R: 'roll',
       BJ: 'blackjack'
     };
   
