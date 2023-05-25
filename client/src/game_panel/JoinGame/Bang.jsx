@@ -5,7 +5,6 @@ import CountUp, { linearEasing } from 'react-countup';
 import Share from './Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-import Lottie from 'react-lottie';
 import { Button, TextField } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
 import {
@@ -14,6 +13,7 @@ import {
   validateBetAmount,
   validateLocalStorageLength
 } from '../modal/betValidations';
+import Lottie from 'react-lottie';
 import bomb from '../LottieAnimations/bomb.json';
 import explosion from '../LottieAnimations/explosion.json';
 import bangBg from '../LottieAnimations/bang-bg.json';
@@ -1065,7 +1065,7 @@ class Bang extends Component {
 
     return (
       <div className="game-page">
-        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
+        
 
         <div className="page-title">
           <h2>PLAY - Bang!</h2>

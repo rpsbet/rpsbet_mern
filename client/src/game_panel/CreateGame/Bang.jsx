@@ -243,7 +243,7 @@ class Bang extends Component {
 
   
     handleMaxButtonClick() {
-      const maxBetAmount = (this.state.balance).toFixed(2);
+      const maxBetAmount = Math.floor(this.state.balance * 100) / 100;
       this.setState({
         bang: Math.min(maxBetAmount, this.props.bet_amount)
       }, () => {

@@ -2295,11 +2295,11 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
 
             roomInfo['host_pr'] -=
-              parseFloat(req.body.bet_amount) *
-              parseFloat(req.body.cashoutAmount);
+              (parseFloat(req.body.bet_amount) *
+              parseFloat(req.body.cashoutAmount) - parseFloat(req.body.bet_amount));
             roomInfo['user_bet'] -=
-              parseFloat(req.body.bet_amount) *
-              parseFloat(req.body.cashoutAmount);
+              (parseFloat(req.body.bet_amount) *
+              parseFloat(req.body.cashoutAmount) - parseFloat(req.body.bet_amount));
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
