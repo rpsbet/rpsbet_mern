@@ -262,6 +262,8 @@ class OpenGamesTable extends Component {
   }
 
   handlePageNumberClicked = page => {
+    this.setState({ isLoading: true });
+
     this.props.getRoomList({
       page: page,
       game_type: this.state.selectedGameType
@@ -269,6 +271,8 @@ class OpenGamesTable extends Component {
   };
 
   handlePrevPageClicked = () => {
+    this.setState({ isLoading: true });
+
     if (this.props.pageNumber === 1) return;
     this.props.getRoomList({
       page: this.props.pageNumber - 1,
@@ -277,6 +281,8 @@ class OpenGamesTable extends Component {
   };
 
   handleNextPageClicked = () => {
+    this.setState({ isLoading: true });
+
     if (this.props.pageNumber === this.props.totalPage) return;
     this.props.getRoomList({
       page: this.props.pageNumber + 1,
