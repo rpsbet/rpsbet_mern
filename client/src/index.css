@@ -1,9 +1,10 @@
-@import url('https://fonts.googleapis.com/css?family=Lato:400,700');
-
-@font-face {
+/* @import url('https://fonts.googleapis.com/css?family=Lato:400,700'); */
+@import url('https://fonts.googleapis.com/css2?family=Days+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Days+One&family=Mitr&display=swap');
+/* @font-face {
   font-family: "Prototype";
   src: url("/fonts/prototype-webfont.woff") format("woff");
-}
+} */
 
 #root {
   background-color: #2b2b2b;
@@ -324,11 +325,20 @@ button:hover,
   }
 } */
 
-
-#root .site_wrapper {
-  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
+h1, h2, h3, h4, h5, h6, button span, button, li div, li div span, label
+{
+  font-family: 'Days One', sans-serif !important;
 }
 
+body, p, span, div {
+  font-family: 'Mitr', sans-serif !important;
+}
+/* #root .site_wrapper {
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
+} */
+ul div {
+  min-width: 44px !important;
+}
 .copyright {
   color: white;
   font-size: 1em;
@@ -1285,7 +1295,7 @@ circle {
     width: calc(100vw - 90px);
 }
 .btn-game-type div {
-  font-size: 1em !important;
+  font-size: 0.87em !important;
 }
 .game-type-panel .btn-game-type {
   font-size: 1em !important;

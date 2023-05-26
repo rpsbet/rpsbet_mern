@@ -399,12 +399,12 @@ div.table .table-row .table-cell button:last-child:before,
 }
 #roll Button {
     height: 80px !important;
-    width: 60px;
+    width: 75px;
     background-size: 50px;
     margin: 10px 1px 15px;
     background-color: #d81719;
     background-repeat: no-repeat;
-    background-position: 7.5px 7.5px;
+    background-position: 12.5px 7.5px;
 }
 
 @keyframes fade {
@@ -469,7 +469,7 @@ div.table .table-row .table-cell button:last-child:hover,
 }
 
 div.table .table-cell button.btn_join {
-    width: 114px;
+    width: 130px;
     height: 34px;
 }
 div.table .table-cell button.btn_join img {
@@ -477,7 +477,7 @@ div.table .table-cell button.btn_join img {
     margin-right: 4px;
 }
 div.table .table-cell button.btn_end {
-    width: 140px;
+    width: 155px;
     height: 32px;
 }
 div.table.main-game-table::-webkit-scrollbar, div.table.main-history-table::-webkit-scrollbar, div.table.my-open-game-table::-webkit-scrollbar {
@@ -690,9 +690,10 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 .create-room-btn-panel button.btn-create-room {
     margin-top: -2.5px;
     color: #f9f9f9;
+    padding: 6px 12px !important;
     overflow: hidden;
     box-shadow: 0 10px 27px #00ff0c1a,0 -3px #00913c inset,0 2px #35d87b inset!important;
-    font-size: 16px;
+    font-size: 15px;
    border-radius: 0.25em;
     font-weight: 600;
     background: linear-gradient(0deg,#d81719,#a60014) padding-box,linear-gradient(0deg,#a60014,#d81719) border-box;
@@ -1372,7 +1373,7 @@ max-width: 450px;
         overflow-x: scroll;
     }
     .gradient-container .previous-guesses.drop span {
-    min-width: 23%;
+    min-width: 25%;
     max-height: 30px;
     line-height: 16px;
     }
@@ -1657,11 +1658,11 @@ button.btn-submit,
 .send-msg
 {
     height: 40px;
-    margin: 0 15px;
+    margin: 0 5px 0 15px;
     background-image: linear-gradient(to top, #ff409a, #c438ef);
     color: white;
     border-radius: 0.25em;
-    padding: 0 20px;
+    padding: 0 18px;
     font-weight: 600;
     
 }
@@ -2662,8 +2663,11 @@ margin-bottom: 10px;
     }
 }
 @media (max-width: 400px) {
+    .game_header .main_header .header_action_panel button#btn-login {
+        margin-left: 0 !important;
+    }
     .previous-guesses.drop  {
-        width: 360px;
+        width: 344px;
     }
     .bangTimer {
         height: 275px;

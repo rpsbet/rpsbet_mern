@@ -20,6 +20,9 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Pagination from '../../components/Pagination';
 import { convertToCurrency } from '../../util/conversion';
+import Lottie from 'react-lottie';
+
+import avaHex from '../LottieAnimations/avahex.json';
 
 const gifUrls = [
   'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
@@ -343,6 +346,21 @@ class OpenGamesTable extends Component {
                       </div>
                     </div>
                     <div className="table-cell desktop-only cell-user-name">
+                    
+                    <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: avaHex
+              }}
+              style={{
+                position: 'relative',
+                width: '120px',
+                height: '70px',
+                filter: 'invert',
+                margin: '-20px -75px',
+              }}
+            />
                       <a
                         className="player"
                         onClick={() =>
@@ -497,6 +515,20 @@ class OpenGamesTable extends Component {
                   </div>
                   <div className="mobile-only">
                     <div className="table-cell cell-user-name">
+                    <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: avaHex
+              }}
+              style={{
+                position: 'relative',
+                width: '70px',
+                height: '70px',
+                filter: 'drop-shadow(2px 4px 6px black)',
+                margin: '-20px -50px -20px -16px',
+              }}
+            />
                       <a
                         className="player"
                         onClick={() =>

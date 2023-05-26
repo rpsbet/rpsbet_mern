@@ -239,6 +239,10 @@ cursor: pointer;
     text-align: center;
     margin-bottom: 10px;
   }
+
+  #btn-login {
+    padding: 0px 18px !important;
+  }
   
   .stars {
     font-size: 0.85em;

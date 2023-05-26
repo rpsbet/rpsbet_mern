@@ -139,7 +139,7 @@ class Footer extends Component {
                     <a href="https://t.me/rpsfinance">
                         <FontAwesomeIcon icon={faTelegram} />
                     </a>
-                    <a href="https://www.youtube.com/channel/UCJRXf1HVpAdBy3Uf6eNGHkA">
+                    <a href="https://www.youtube.com/@rps_game/">
                         <FontAwesomeIcon icon={faYoutube} />
                     </a>
                     <a href="https://www.instagram.com/rps.game/">
