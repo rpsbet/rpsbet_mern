@@ -94,6 +94,7 @@ class CreateGame extends Component {
       is_anonymous: false,
       room_password: '',
       aveMultiplier: 0,
+      score: 0,
       endgame_type: true,
       box_list: [],
       brain_game_type: this.props.brain_game_type,
@@ -441,7 +442,7 @@ class CreateGame extends Component {
       else if (
         this.state.game_mode === 'Blackjack' &&
         this.state.child_step === 2 &&
-        this.state.roll_list.length < 3
+        this.state.bj_list.length < 3
       ) {
         alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS NEEDED');
         return;

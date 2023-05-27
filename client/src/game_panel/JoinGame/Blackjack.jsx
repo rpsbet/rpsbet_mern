@@ -314,7 +314,7 @@ this.dealHost();
   };
 
  // Obfuscated code example
- dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
+dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
   const cards = drawCardsFunc(2);
   const score = calculateScoreFunc(cards);
 
@@ -335,34 +335,17 @@ this.dealHost();
       }
     });
 
-    if (score === 21) {
-      setTimeout(() => {
-        drawnCards.forEach((card, index) => {
+    setTimeout(() => {
+      drawnCards.forEach((card, index) => {
+        if (index >= 2 && !this.state.cardVisibility[index]) {
           card.classList.remove('card-hidden');
           const cardNumber = card.querySelector('.card-number');
           const cardSuit = card.querySelector('.card-suit');
           cardNumber.classList.remove('card-hidden');
           cardSuit.classList.remove('card-hidden');
-        });
-        setTimeout(() => {
-          this.setState({ [cardsType]: [], [scoreType]: 0 }, () => {
-            this.dealCards(drawCardsFunc, calculateScoreFunc, cardsType, scoreType);
-          });
-        }, 1000);
-      }, 300);
-    } else {
-      setTimeout(() => {
-        drawnCards.forEach((card, index) => {
-          if (index >= 2 && !this.state.cardVisibility[index]) {
-            card.classList.remove('card-hidden');
-            const cardNumber = card.querySelector('.card-number');
-            const cardSuit = card.querySelector('.card-suit');
-            cardNumber.classList.remove('card-hidden');
-            cardSuit.classList.remove('card-hidden');
-          }
-        });
-      }, 300);
-    }
+        }
+      });
+    }, 300);
   });
 };
 
@@ -516,10 +499,6 @@ this.dealHost();
     const newCards = [...this.state.cards, newCard];
     const newScore = this.calculateScore(newCards);
 
-    if (newScore > 21) {
-      this.onAddRun(this.state.score, 'hit');
-    }
-
     if (newScore >= 21) {
       this.setState({ cards: [], score: 0 }, () => {
         // Trigger the animation after the state is updated
@@ -539,7 +518,7 @@ this.dealHost();
   };
 
   stand = () => {
-    this.onAddRun(this.state.score, 'stand');
+    // this.onAddRun(this.state.score, 'stand');
     this.setState({ cards: [], score: 0 }, () => {
       this.dealJoiner();
     });
@@ -621,11 +600,13 @@ this.dealHost();
       playSound
     } = this.props;
 
-    const { selected_bj, is_anonymous, slippage, bet_amount } = this.state;
+    const { selected_bj, is_anonymous, slippage, bet_amount, score, score_host} = this.state;
 
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_bj: selected_bj,
+      score: score,
+      score_host: score_host,
       is_anonymous: is_anonymous,
       bj_bet_item_id: bj_bet_item_id,
       slippage: slippage
@@ -990,9 +971,6 @@ this.dealHost();
                 </div>
               </div>
             </div>
-            <h6 style={{marginTop: '20px'}} className={scoreAnimation ? 'score animated' : 'score'}>
-              Score: {score_host}
-            </h6>
             <div className="card-container">
             {cards_host.map((card_host, index) => (
   <div key={index} className={`card suit-${card_host.suit.toLowerCase()} ${!cardVisibility[index] ? 'card-hidden' : ''}`}>
@@ -1002,14 +980,14 @@ this.dealHost();
 ))}
 </div>
 
+            <h6 id="upper-score" className={scoreAnimation ? 'score animated' : 'score'}>
+              {score_host}
+            </h6>
             <div className="bow">
               <h3 className="game-sub-title">pays 3 to 2</h3>
               <img src={'/img/bow.svg'} alt="Blackjack pays 3 to 2" />
             </div>
-            <h6 className={scoreAnimation ? 'score animated' : 'score'}>
-              Score: {score}
-            </h6>
-            <div className="card-container">
+            <div style={{marginTop: "-30px"}} className="card-container">
               {cards.map((card, index) => (
                 <div
                   key={index}
@@ -1022,6 +1000,9 @@ this.dealHost();
                 </div>
               ))}
             </div>
+            <h6 className={scoreAnimation ? 'score animated' : 'score'}>
+             {score}
+            </h6>
             <div className="your-bet-amount">
               <TextField
                 id="betamount"
@@ -1066,6 +1047,7 @@ this.dealHost();
                 </Button>
               </div>
             </div>
+            <div>
             <div id="bj-radio" style={{ zIndex: 1 }}>
               <Button
                 className={
@@ -1138,8 +1120,16 @@ this.dealHost();
               >
                 DOUBLE
               </Button>
-            </div>
-
+              </div>
+            <Button
+                className="place-bet blackjack"
+                color="primary"
+                onClick={() => this.onBtnBetClick()}
+                variant="contained"
+                >
+                BET
+              </Button>
+              </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>

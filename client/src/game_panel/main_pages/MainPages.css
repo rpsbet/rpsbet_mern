@@ -1067,15 +1067,25 @@ div.table.my-history-table .table-row .table-cell img.avatar {
   }
   
   h6.score{
-    background: #d8171930;
-    color: red;
+    background: #404040;
+    color: white;
     padding: 10px;
-    border: 1px solid;
     text-align: center;
     border-radius: 9px;
-    width: 175px;
     font-weight: 500;
-    margin: auto;
+    margin: -60px -100px 0 20px;
+    z-index: 2;
+  }
+
+  button.blackjack {
+margin-top: 5px !important;
+margin-bottom: -20px !important;
+  }
+
+  .create-game-panel h6.score {
+display: table;
+margin: -60px 100px 20px 220px;
+position: relative;
   }
 
   .pre-summary-panel .value {
@@ -1255,7 +1265,7 @@ overflow: hidden;
   
   .card-back {
     position: absolute;
-    bottom: 10px;
+    bottom: -90px;
     left: 320px;
     border: 3px solid white;
     width: 100px;
@@ -1266,7 +1276,7 @@ overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 2px 2px 0px 1px #4a0000;
+    box-shadow: 2px 2px 0px 1px #929393;
     transform: rotateY(180deg); /* Initially flipped */
   }
   
@@ -1541,7 +1551,10 @@ table#runs td svg {
 .bow h3 {
     position: relative;
     z-index: 1;
+    font-size: 0.9em !important;
 }
+
+
 #runs td svg:hover {
     transform: scale(1.1);
     background-color: #ffffff5c;
@@ -2663,6 +2676,9 @@ margin-bottom: 10px;
     }
 }
 @media (max-width: 400px) {
+    #upper-score {
+        margin-bottom: 20px !important;
+    }
     .game_header .main_header .header_action_panel button#btn-login {
         margin-left: 0 !important;
     }

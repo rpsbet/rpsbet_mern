@@ -570,6 +570,7 @@ table#runs td {
 
 .qs-add-run-panel #runs {
   max-height: 15vh;
+  overflow-x: hidden;
   width: 100% !important;
 }
 

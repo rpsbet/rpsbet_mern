@@ -77,133 +77,68 @@ const calcEV = (calcWinChance, wager, winPayout, lossPayout, tiePayout) => {
     (winProb * winPayout + loseProb * lossPayout + tieProb * tiePayout - wager);
   return EV.toFixed(2);
 };
+const predictNext = (bj_list, score) => {
+  // Count the occurrences of each state transition
+  const transitions = {
+    stand: { stand: 0, hit: 0 },
+    hit: { stand: 0, hit: 0 }
+  };
 
-const predictNext = bj_list => {
-  // Create a transition matrix to store the probability of transitioning from one state to another
-  const transitionMatrix = {
-    R: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
+  // Iterate over bj_list to count state transitions
+  for (let i = 0; i < bj_list.length - 1; i++) {
+    const currentState = bj_list[i].bj;
+    const nextState = bj_list[i + 1].bj;
+    transitions[currentState][nextState]++;
+  }
+
+  // Calculate transition probabilities
+  const transitionProbabilities = {
+    stand: {
+      stand: transitions.stand.stand / (transitions.stand.stand + transitions.stand.hit),
+      hit: transitions.stand.hit / (transitions.stand.stand + transitions.stand.hit)
     },
-    P: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
-    },
-    S: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
+    hit: {
+      stand: transitions.hit.stand / (transitions.hit.stand + transitions.hit.hit),
+      hit: transitions.hit.hit / (transitions.hit.stand + transitions.hit.hit)
     }
   };
 
-  // Iterate through the previous states to populate the transition matrix
-  for (let i = 0; i < bj_list.length - 3; i++) {
-    transitionMatrix[bj_list[i].bj][bj_list[i + 1].bj][bj_list[i + 2].bj][
-      bj_list[i + 3].bj
-    ]++;
-  }
+  // Calculate the average scores for "stand" and "hit" actions
+  let standCount = 0;
+  let standScoreSum = 0;
+  let hitCount = 0;
+  let hitScoreSum = 0;
 
-  // Normalize the transition matrix
-  Object.keys(transitionMatrix).forEach(fromState1 => {
-    Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-        fromState3 => {
-          const totalTransitions = Object.values(
-            transitionMatrix[fromState1][fromState2][fromState3]
-          ).reduce((a, b) => a + b);
-          Object.keys(
-            transitionMatrix[fromState1][fromState2][fromState3]
-          ).forEach(toState => {
-            transitionMatrix[fromState1][fromState2][fromState3][
-              toState
-            ] /= totalTransitions;
-          });
-        }
-      );
-    });
-  });
-
-  // Check for consistency
-  const winChance = calcWinChance(bj_list);
-  let deviation = 0;
-  if (winChance !== '33.33%') {
-    deviation = (1 - 1 / 3) / 2;
-  }
-  // Use the transition matrix to predict the next state based on the current state
-  let currentState1 = bj_list[bj_list.length - 3].bj;
-  let currentState2 = bj_list[bj_list.length - 2].bj;
-  let currentState3 = bj_list[bj_list.length - 1].bj;
-  let nextState = currentState3;
-  let maxProb = 0;
-  Object.keys(
-    transitionMatrix[currentState1][currentState2][currentState3]
-  ).forEach(state => {
-    if (
-      transitionMatrix[currentState1][currentState2][currentState3][state] >
-      maxProb
-    ) {
-      maxProb =
-        transitionMatrix[currentState1][currentState2][currentState3][state];
-      nextState = state;
+  for (let i = 0; i < bj_list.length; i++) {
+    if (bj_list[i].bj === 'stand') {
+      standCount++;
+      standScoreSum += bj_list[i].score;
+    } else if (bj_list[i].bj === 'hit') {
+      hitCount++;
+      hitScoreSum += bj_list[i].score;
     }
-  });
-
-  // Add randomness
-  let randomNum = Math.random();
-  if (randomNum < deviation) {
-    let randomState = '';
-    do {
-      randomNum = Math.random();
-      if (randomNum < 1 / 3) {
-        randomState = 'R';
-      } else if (randomNum < 2 / 3) {
-        randomState = 'P';
-      } else {
-        randomState = 'S';
-      }
-    } while (randomState === currentState3);
-    nextState = randomState;
   }
-  return nextState;
+
+  const averageStandScore = standCount > 0 ? standScoreSum / standCount : 0;
+  const averageHitScore = hitCount > 0 ? hitScoreSum / hitCount : 0;
+
+  // Predict the next state based on the score, average scores, and transition probabilities
+  const probabilityOfStand = transitionProbabilities.hit.stand;
+  const probabilityOfHit = transitionProbabilities.stand.hit;
+
+  const threshold = Math.random();
+
+  if (score < averageStandScore * probabilityOfStand + averageHitScore * probabilityOfHit) {
+    return 'hit';
+  } else if (score > averageStandScore * (1 - probabilityOfStand) + averageHitScore * (1 - probabilityOfHit)) {
+    return 'stand';
+  } else if (threshold < probabilityOfHit) {
+    return 'hit';
+  } else {
+    return 'stand';
+  }
 };
+
 
 class Blackjack extends Component {
   constructor(props) {
@@ -339,11 +274,6 @@ class Blackjack extends Component {
     const newCard = this.drawCard();
     const newCards = [...this.state.cards, newCard];
     const newScore = this.calculateScore(newCards);
-
-    if (newScore > 21) {
-      this.onAddRun(this.state.score, 'hit');
-    }
-
     if (newScore >= 21) {
       this.setState({ cards: [], score: 0 }, () => {
         // Trigger the animation after the state is updated
@@ -378,13 +308,20 @@ class Blackjack extends Component {
       this.startGame();
     });
   };
-
   onAutoPlay = () => {
     if (this.props.bj_list.length > 2) {
       const prevStates = this.props.bj_list;
-
-      const nextBj = predictNext(prevStates, this.props.bj_list);
-      this.onAddRun(nextBj);
+  
+      const nextBj = predictNext(this.props.bj_list, this.state.score);
+      
+      if (this.state.score !== 21) {
+        this.onAddRun(this.state.score, nextBj);
+      }
+      
+      this.setState({ cards: [], score: 0 }, () => {
+        // Trigger the animation after the state is updated
+        this.startGame();
+      });
     } else {
       alertModal(
         this.props.isDarkMode,
@@ -393,6 +330,7 @@ class Blackjack extends Component {
       return;
     }
   };
+  
 
   onChangeWinChance = winChance => {
     this.setState({ winChance });
@@ -497,11 +435,6 @@ class Blackjack extends Component {
       <div className="game-info-panel">
         <div className="qs-add-run-panel">
           <div className="bj-add-run-form">
-            <h3 className="game-sub-title">Train the Dealer! </h3>
-            <h6 className={scoreAnimation ? 'score animated' : 'score'}>
-              Score: {score}
-            </h6>
-
             <div className="deck">
               <div className="card-back">
                 <div className="rps-logo">
@@ -522,6 +455,9 @@ class Blackjack extends Component {
                 </div>
               ))}
             </div>
+            <h6 className={scoreAnimation ? 'score animated' : 'score'}>
+              {score}
+            </h6>
             <div id="bj-radio">
               <Button
                 className={
@@ -529,6 +465,7 @@ class Blackjack extends Component {
                 }
                 variant="contained"
                 onClick={() => {
+                  this.onAddRun(this.state.score, 'hit');
                   this.hit();
                   const currentActive = document.querySelector('.active');
                   if (currentActive) {
@@ -564,7 +501,7 @@ class Blackjack extends Component {
             </Button>
           </div>
           <div className="bj-add-run-table">
-            <h3 className="game-sub-title">Training Data</h3>
+            <h3 className="game-sub-title">Train the Dealer!</h3>
             <table id="runs">
               <tbody>
                 {this.props.bj_list && this.props.bj_list.length > 0 ? (

@@ -1112,7 +1112,8 @@ router.post('/rooms', auth, async (req, res) => {
       req.body.bj_list.forEach(bj => {
         newBj = new BjBetItem({
           room: newRoom,
-          bj: bj.bj
+          bj: bj.bj,
+          score: bj.score
           // bet_amount: rps.bet_amount
         });
         newBj.save();
@@ -3157,7 +3158,7 @@ router.post('/bet', auth, async (req, res) => {
             joiner_bj: ''
           }).sort({ _id: 'asc' });
         }
-
+console.log(bet_item);
         if (!bet_item) {
           // Create new BjBetItem with predicted rps value
           const allBetItems = await BjBetItem.find({
