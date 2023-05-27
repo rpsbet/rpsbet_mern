@@ -1579,6 +1579,24 @@ router.post('/start_brain_game', auth, async (req, res) => {
   }
 });
 
+router.post('/start_blackjack', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: new ObjectId(req.user._id) });
+    user.balance -= req.body.bet_amount;
+    await user.save();
+
+    res.json({
+      success: true,
+      balance: user.balance
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      message: err.toString()
+    });
+  }
+});
+
 router.post('/get_chat_room_info', auth, async (req, res) => {
   try {
     const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
@@ -3134,16 +3152,12 @@ router.post('/bet', auth, async (req, res) => {
         roomInfo.pr = max_prize;
         newGameLog.selected_box = selected_box;
       } else if (roomInfo['game_type']['game_type_name'] === 'Blackjack') {
-        if (
-          parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet']) ||
-          parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
-        ) {
-          // Return an error or some other response to the user, e.g.:
-          return res
-            .status(400)
-            .json({ error: 'Bet amount exceeds available balance.' });
-        }
+       
+        newTransactionJ.amount -= parseFloat(req.body.bet_amount);
+
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+        // newGameLog.selected_bj = req.body.selected_bj;
+
 
         const availableBetItem = await BjBetItem.findOne({
           _id: req.body.bj_bet_item_id,
@@ -3158,27 +3172,23 @@ router.post('/bet', auth, async (req, res) => {
             joiner_bj: ''
           }).sort({ _id: 'asc' });
         }
-console.log(bet_item);
         if (!bet_item) {
           // Create new BjBetItem with predicted rps value
           const allBetItems = await BjBetItem.find({
             room: new ObjectId(req.body._id)
           });
-          const nextItem = predictNext(allBetItems);
-
+          const nextItem = predictNextBj(allBetItems);
+          
           bet_item = new BjBetItem({
             room: new ObjectId(req.body._id),
             bj: nextItem
           });
-
+          
           await bet_item.save();
         }
+        console.log(bet_item);
 
-        newTransactionJ.amount -= parseFloat(req.body.bet_amount);
-
-        newGameLog.bet_amount = parseFloat(req.body.bet_amount);
-        newGameLog.selected_bj = req.body.selected_bj;
-
+       
         if (
           (bet_item.bj === 'R' && req.body.selected_bj == 'P') ||
           (bet_item.bj === 'P' && req.body.selected_bj == 'S') ||

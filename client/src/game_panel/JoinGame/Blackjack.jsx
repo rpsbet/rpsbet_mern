@@ -6,6 +6,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import { Button, TextField } from '@material-ui/core';
+import { deductBalanceWhenStartBlackjack } from '../../redux/Logic/logic.actions';
 
 import {
   validateIsAuthenticated,
@@ -227,6 +228,7 @@ class Blackjack extends Component {
       bgColorChanged: false,
       selected_bj: '',
       cardVisibility: false,
+      is_started: false,
       advanced_status: '',
       is_anonymous: false,
       bet_amount: 1,
@@ -278,7 +280,7 @@ class Blackjack extends Component {
 
   componentDidMount = () => {
     this.dealJoiner();
-this.dealHost();
+    this.dealHost();
     // Initialize items array
     const items = [
       {
@@ -313,50 +315,62 @@ this.dealHost();
     document.removeEventListener('mousedown', this.handleClickOutside);
   };
 
- // Obfuscated code example
-dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
-  const cards = drawCardsFunc(2);
-  const score = calculateScoreFunc(cards);
+  // Obfuscated code example
+  dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
+    const cards = drawCardsFunc(2);
+    const score = calculateScoreFunc(cards);
 
-  const cardVisibility = cards.map((_, index) => (index !== 1 ? true : false));
+    const cardVisibility = cards.map((_, index) =>
+      index !== 1 ? true : false
+    );
 
-  this.setState({ [cardsType]: cards, [scoreType]: score, cardVisibility }, () => {
-    const drawnCards = document.querySelectorAll(`.${cardsType === 'cards' ? 'card' : 'card_host'}`);
+    this.setState(
+      { [cardsType]: cards, [scoreType]: score, cardVisibility },
+      () => {
+        const drawnCards = document.querySelectorAll(
+          `.${cardsType === 'cards' ? 'card' : 'card_host'}`
+        );
 
-    drawnCards.forEach((card, index) => {
-      card.style.animationDelay = `${index * 0.2}s`;
-      const cardNumber = card.querySelector('.card-number');
-      const cardSuit = card.querySelector('.card-suit');
-
-      if (!this.state.cardVisibility[index]) {
-        card.classList.add('card-hidden');
-        cardNumber.classList.add('card-hidden');
-        cardSuit.classList.add('card-hidden');
-      }
-    });
-
-    setTimeout(() => {
-      drawnCards.forEach((card, index) => {
-        if (index >= 2 && !this.state.cardVisibility[index]) {
-          card.classList.remove('card-hidden');
+        drawnCards.forEach((card, index) => {
+          card.style.animationDelay = `${index * 0.2}s`;
           const cardNumber = card.querySelector('.card-number');
           const cardSuit = card.querySelector('.card-suit');
-          cardNumber.classList.remove('card-hidden');
-          cardSuit.classList.remove('card-hidden');
-        }
-      });
-    }, 300);
-  });
-};
 
- dealJoiner = () => {
-  this.dealCards(this.drawCards, this.calculateScore, 'cards', 'score');
-};
+          if (!this.state.cardVisibility[index]) {
+            card.classList.add('card-hidden');
+            cardNumber.classList.add('card-hidden');
+            cardSuit.classList.add('card-hidden');
+          }
+        });
 
- dealHost = () => {
-  this.dealCards(this.drawCardsHost, this.calculateScoreHost, 'cards_host', 'score_host');
-};
-  
+        setTimeout(() => {
+          drawnCards.forEach((card, index) => {
+            if (index >= 2 && !this.state.cardVisibility[index]) {
+              card.classList.remove('card-hidden');
+              const cardNumber = card.querySelector('.card-number');
+              const cardSuit = card.querySelector('.card-suit');
+              cardNumber.classList.remove('card-hidden');
+              cardSuit.classList.remove('card-hidden');
+            }
+          });
+        }, 300);
+      }
+    );
+  };
+
+  dealJoiner = () => {
+    this.dealCards(this.drawCards, this.calculateScore, 'cards', 'score');
+  };
+
+  dealHost = () => {
+    this.dealCards(
+      this.drawCardsHost,
+      this.calculateScoreHost,
+      'cards_host',
+      'score_host'
+    );
+  };
+
   drawCard = () => {
     const suits = ['♠', '♣', '♥', '♦'];
     const deck = [
@@ -431,7 +445,6 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
     return cards_host;
   };
 
-
   // Update the calculateScore function to trigger the animation
   calculateScore = cards => {
     let score = 0;
@@ -464,10 +477,10 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
   // Update the calculateScore function to trigger the animation
   calculateScoreHost = cards_host => {
     const firstCard = cards_host[0]; // Get the first card
-  
+
     let score = 0;
     let hasAce = false;
-  
+
     if (firstCard.card_host === 'A') {
       score += 11;
       hasAce = true;
@@ -476,11 +489,11 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
     } else {
       score += parseInt(firstCard.card_host, 10);
     }
-  
+
     if (hasAce && score > 21) {
       score -= 10;
     }
-  
+
     // Update the animation code to trigger animation for the first card only
     if (firstCard) {
       this.setState({ scoreAnimation: true }, () => {
@@ -489,10 +502,9 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
         }, 500); // Adjust the duration of the animation as needed
       });
     }
-  
+
     return score;
   };
-  
 
   hit = () => {
     const newCard = this.drawCard();
@@ -600,7 +612,14 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
       playSound
     } = this.props;
 
-    const { selected_bj, is_anonymous, slippage, bet_amount, score, score_host} = this.state;
+    const {
+      selected_bj,
+      is_anonymous,
+      slippage,
+      bet_amount,
+      score,
+      score_host
+    } = this.state;
 
     const result = await join({
       bet_amount: parseFloat(bet_amount),
@@ -672,9 +691,10 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
       user_id,
       balance,
       is_private,
-      roomInfo
+      roomInfo,
+      deductBalanceWhenStartBlackjack
     } = this.props;
-    const { bet_amount, bankroll } = this.state;
+    const { bet_amount, bankroll, is_started } = this.state;
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
@@ -695,26 +715,39 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
 
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (is_private === true && passwordCorrect !== true) {
-        openGamePasswordModal();
-      } else {
-        await this.joinGame();
+    if (!is_started) {
+      if (
+        this.props.deductBalanceWhenStartBlackjack({
+          bet_amount: bet_amount
+        })
+      ) {
+        this.setState({
+          is_started: true,
+        });
+
       }
     } else {
-      confirmModalCreate(
-        isDarkMode,
-        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-        'Yes',
-        'Cancel',
-        async () => {
-          if (is_private === true && passwordCorrect !== true) {
-            openGamePasswordModal();
-          } else {
-            await this.joinGame();
-          }
+      if (localStorage.getItem('hideConfirmModal') === 'true') {
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
+        } else {
+          await this.joinGame();
         }
-      );
+      } else {
+        confirmModalCreate(
+          isDarkMode,
+          'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+          'Yes',
+          'Cancel',
+          async () => {
+            if (is_private === true && passwordCorrect !== true) {
+              openGamePasswordModal();
+            } else {
+              await this.joinGame();
+            }
+          }
+        );
+      }
     }
   };
 
@@ -911,7 +944,14 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
   };
 
   render() {
-    const { score, cards, cards_host, score_host, scoreAnimation, cardVisibility } = this.state;
+    const {
+      score,
+      cards,
+      cards_host,
+      score_host,
+      scoreAnimation,
+      cardVisibility
+    } = this.state;
 
     return (
       <div className="game-page">
@@ -972,22 +1012,42 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
               </div>
             </div>
             <div className="card-container">
-            {cards_host.map((card_host, index) => (
-  <div key={index} className={`card suit-${card_host.suit.toLowerCase()} ${!cardVisibility[index] ? 'card-hidden' : ''}`}>
-    <div className={`card-suit ${!cardVisibility[index] ? 'card-hidden' : ''}`}>{this.getSuitSymbol(card_host.suit)}</div>
-    <div className={`card-number ${!cardVisibility[index] ? 'card-hidden' : ''}`}>{card_host.card_host}</div>
-  </div>
-))}
-</div>
+              {cards_host.map((card_host, index) => (
+                <div
+                  key={index}
+                  className={`card suit-${card_host.suit.toLowerCase()} ${
+                    !cardVisibility[index] ? 'card-hidden' : ''
+                  }`}
+                >
+                  <div
+                    className={`card-suit ${
+                      !cardVisibility[index] ? 'card-hidden' : ''
+                    }`}
+                  >
+                    {this.getSuitSymbol(card_host.suit)}
+                  </div>
+                  <div
+                    className={`card-number ${
+                      !cardVisibility[index] ? 'card-hidden' : ''
+                    }`}
+                  >
+                    {card_host.card_host}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-            <h6 id="upper-score" className={scoreAnimation ? 'score animated' : 'score'}>
+            <h6
+              id="upper-score"
+              className={scoreAnimation ? 'score animated' : 'score'}
+            >
               {score_host}
             </h6>
             <div className="bow">
               <h3 className="game-sub-title">pays 3 to 2</h3>
               <img src={'/img/bow.svg'} alt="Blackjack pays 3 to 2" />
             </div>
-            <div style={{marginTop: "-30px"}} className="card-container">
+            <div style={{ marginTop: '-30px' }} className="card-container">
               {cards.map((card, index) => (
                 <div
                   key={index}
@@ -1001,7 +1061,7 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
               ))}
             </div>
             <h6 className={scoreAnimation ? 'score animated' : 'score'}>
-             {score}
+              {score}
             </h6>
             <div className="your-bet-amount">
               <TextField
@@ -1048,88 +1108,88 @@ dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
               </div>
             </div>
             <div>
-            <div id="bj-radio" style={{ zIndex: 1 }}>
-              <Button
-                className={
-                  'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
-                }
-                variant="contained"
-                onClick={() => {
-                  this.hit();
-                  const currentActive = document.querySelector('.active');
-                  if (currentActive) {
-                    currentActive.style.animation = 'none';
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+              <div id="bj-radio" style={{ zIndex: 1 }}>
+                <Button
+                  className={
+                    'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
                   }
-                }}
-              >
-                HIT!
-              </Button>
-              <Button
-                className={
-                  'stand' +
-                  (this.state.selected_bj === 'stand' ? ' active' : '')
-                }
-                variant="contained"
-                onClick={() => {
-                  this.stand();
-                  const currentActive = document.querySelector('.active');
-                  if (currentActive) {
-                    currentActive.style.animation = 'none';
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  variant="contained"
+                  onClick={() => {
+                    this.hit();
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
+                  }}
+                >
+                  HIT!
+                </Button>
+                <Button
+                  className={
+                    'stand' +
+                    (this.state.selected_bj === 'stand' ? ' active' : '')
                   }
-                }}
-              >
-                STAND
-              </Button>
+                  variant="contained"
+                  onClick={() => {
+                    this.stand();
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
+                  }}
+                >
+                  STAND
+                </Button>
 
-              <Button
-                className={
-                  'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
-                }
-                variant="contained"
-                onClick={() => {
-                  this.hit();
-                  const currentActive = document.querySelector('.active');
-                  if (currentActive) {
-                    currentActive.style.animation = 'none';
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                <Button
+                  className={
+                    'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
                   }
-                }}
-              >
-                SPLIT
-              </Button>
-              <Button
-                className={
-                  'stand' +
-                  (this.state.selected_bj === 'stand' ? ' active' : '')
-                }
-                variant="contained"
-                onClick={() => {
-                  this.stand();
-                  const currentActive = document.querySelector('.active');
-                  if (currentActive) {
-                    currentActive.style.animation = 'none';
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  variant="contained"
+                  onClick={() => {
+                    this.hit();
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
+                  }}
+                >
+                  SPLIT
+                </Button>
+                <Button
+                  className={
+                    'stand' +
+                    (this.state.selected_bj === 'stand' ? ' active' : '')
                   }
-                }}
-              >
-                DOUBLE
-              </Button>
+                  variant="contained"
+                  onClick={() => {
+                    this.stand();
+                    const currentActive = document.querySelector('.active');
+                    if (currentActive) {
+                      currentActive.style.animation = 'none';
+                      void currentActive.offsetWidth;
+                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                    }
+                  }}
+                >
+                  DOUBLE
+                </Button>
               </div>
-            <Button
-                className="place-bet blackjack"
+              <Button
+                className="place-bet btnBlackjack"
                 color="primary"
                 onClick={() => this.onBtnBetClick()}
                 variant="contained"
-                >
+              >
                 BET
               </Button>
-              </div>
+            </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>
@@ -1275,8 +1335,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  openGamePasswordModal
-
+  openGamePasswordModal,
+  deductBalanceWhenStartBlackjack
   // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
 };
 

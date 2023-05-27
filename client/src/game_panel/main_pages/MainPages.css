@@ -1077,7 +1077,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     z-index: 2;
   }
 
-  button.blackjack {
+  .btnBlackjack {
 margin-top: 5px !important;
 margin-bottom: -20px !important;
   }

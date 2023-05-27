@@ -707,7 +707,7 @@ class DropGame extends Component {
               }}
             />
             <div className="drop-amount">
-              <h3 className="game-sub-title">Drop an amount!</h3>
+              <h3 className="game-sub-title">Highest Drop Wins!</h3>
             </div>
             <div className="your-bet-amount">
               <TextField
