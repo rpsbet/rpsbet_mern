@@ -225,6 +225,7 @@ class Blackjack extends Component {
       timerValue: 2000,
       intervalId: null,
       items: [],
+      disabledButtons: true,
       bgColorChanged: false,
       selected_bj: '',
       cardVisibility: false,
@@ -279,8 +280,7 @@ class Blackjack extends Component {
   };
 
   componentDidMount = () => {
-    this.dealJoiner();
-    this.dealHost();
+    this.resetGame();
     // Initialize items array
     const items = [
       {
@@ -680,6 +680,18 @@ class Blackjack extends Component {
     localStorage.setItem('bj_array', JSON.stringify(stored_bj_array));
 
     refreshHistory();
+    this.resetGame();
+  };
+
+  resetGame = () => {
+    this.setState({
+      cards: [],
+      cards_host: [],
+      score: 0,
+      score_host: 0,
+      is_started: false,
+      disabledButtons: true
+     })
   };
 
   onBtnBetClick = async () => {
@@ -714,18 +726,22 @@ class Blackjack extends Component {
 
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
+    this.setState({ disabledButtons: false });
 
     if (!is_started) {
       if (
-        this.props.deductBalanceWhenStartBlackjack({
+        deductBalanceWhenStartBlackjack({
           bet_amount: bet_amount
         })
+        
       ) {
         this.setState({
           is_started: true,
         });
 
       }
+      this.dealJoiner();
+      this.dealHost();
     } else {
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         if (is_private === true && passwordCorrect !== true) {
@@ -1114,6 +1130,9 @@ class Blackjack extends Component {
                     'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
                   }
                   variant="contained"
+                  disabled={this.state.disabledButtons}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+
                   onClick={() => {
                     this.hit();
                     const currentActive = document.querySelector('.active');
@@ -1132,6 +1151,9 @@ class Blackjack extends Component {
                     (this.state.selected_bj === 'stand' ? ' active' : '')
                   }
                   variant="contained"
+                  disabled={this.state.disabledButtons}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+
                   onClick={() => {
                     this.stand();
                     const currentActive = document.querySelector('.active');
@@ -1150,6 +1172,9 @@ class Blackjack extends Component {
                     'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
                   }
                   variant="contained"
+                  disabled={this.state.disabledButtons}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+
                   onClick={() => {
                     this.hit();
                     const currentActive = document.querySelector('.active');
@@ -1168,6 +1193,9 @@ class Blackjack extends Component {
                     (this.state.selected_bj === 'stand' ? ' active' : '')
                   }
                   variant="contained"
+                  disabled={this.state.disabledButtons}
+                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+
                   onClick={() => {
                     this.stand();
                     const currentActive = document.querySelector('.active');
