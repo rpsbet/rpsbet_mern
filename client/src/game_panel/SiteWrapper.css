@@ -103,7 +103,7 @@ a#btn_how_to_play {
 }
 .game-type-panel .btn-game-type img {
     width:160px !important;
-    border-radius: 10px;
+    border-radius: 7px;
 }
 .game-type-panel .btn-game-type span {
     /* padding: 10px 0 0 !important; */
@@ -116,8 +116,8 @@ a#btn_how_to_play {
     width: 100%;
     font-size: 14px;
     padding-top: 0 !important;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
     font-weight: 500 !important;
 }
 .game_header .main_header #btn_leaderboards {
@@ -201,7 +201,7 @@ cursor: pointer;
     left: 50%;
     width: 0;
     height: 2px; /* Adjust the border height as needed */
-    background-color: #c438ef; /* Use your desired color */
+    background-color: #ff0003; /* Use your desired color */
     transition: width 0.3s ease-in-out, left 0.3s ease-in-out;
     transform: translateX(-50%);
   }

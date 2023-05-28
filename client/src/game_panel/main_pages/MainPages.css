@@ -222,9 +222,7 @@ div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
 }
 .drop-amount {
         position: relative;
-}
-.drop-amount .game-sub-title {
-    margin: -44px 0 42px !important;
+        margin: -220px auto -10px;
 }
 .rollTimer div p span{
     display: none !important;
@@ -615,6 +613,17 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     height: 0;
     background: transparent;
 }
+.animation-container {
+    opacity: 0;
+    transform: translateY(-100%);
+    transition: opacity 0.5s ease-in-out, transform 1s ease-in-out;
+  }
+  
+  .animation-container.animate {
+    opacity: 1;
+    transform: translateY(0%);
+  }
+  
 .game-type-panel .btn-game-type {
     text-align: center;
     cursor: pointer;
@@ -841,6 +850,9 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     font-weight: 600;
     text-align: left;
 }
+.qs-image-panel {
+    margin-bottom: 30px!important;
+}
 #game_logs .game_logs_contents table {
     width: 100%;
     line-height: 33px;
@@ -994,8 +1006,9 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     font-weight: 500;
     color: #747f8d;
 }
+
 .game-page .game-contents {
-    background-color: white;
+    background-color: #e2e2e2;
     border-radius: 6px;
     margin-top: 40px;
 }
@@ -1321,7 +1334,7 @@ overflow: hidden;
 
 .game-page .game-contents .game-info-panel button.active {
     color: #e5e5e5;
-    background-image: linear-gradient(to top, #c53c3c, #f50000);
+    background-image: linear-gradient(to top, #dc3545, #f50000);
     box-shadow: none !important;
 }
 .game-page .game-contents .game-info-panel button:hover {
@@ -1368,7 +1381,7 @@ box-shadow:none !important;
     text-align: center;
 }
 
-.gradient-container .previous-guesses.drop:before  {
+/* .gradient-container .previous-guesses.drop:before  {
     content: " ";
 	width: 80px;
 	height: 80px;
@@ -1377,7 +1390,7 @@ box-shadow:none !important;
     transform: translate(-5px, -10px);
 	background: linear-gradient(90deg, #fdfeff, transparent);
     }
-    
+     */
     .gradient-container .previous-guesses.drop {
 max-width: 450px;
         overflow-x: scroll;
@@ -1588,12 +1601,8 @@ table#runs td svg {
     width: 130px;
     height: 200px !important;
     cursor: pointer;
-    /* background: linear-gradient(0deg,#d81719,#a60014) padding-box,linear-gradient(0deg,#a60014,#d81719) border-box;
-
-    box-shadow: 0 -1px 0px #a60014,0 -4px #af0000 inset,0 2px #ff2525 inset!important; */
-    box-shadow: 0 -1px 0px #d81719,0 -4px #af0000 inset,0 2px #a60014 inset!important;
+    /* box-shadow: 0 -1px 10px 1px #d81719 !important; */
     background-color: #c20017;
-    filter: drop-shadow(2px 4px 6px black);
     transition: all 0.1s ease-in-out;
     position: relative;
     border-radius: 0.25em !important;
@@ -1633,7 +1642,7 @@ table#runs td svg {
     #rps-radio Button.active,#rps-radio Button:active  {
         transform: translateY(0);
         background-color: #ff0606;
-        box-shadow: none !important;
+        /* box-shadow: 0 -1px 2px 1px #d81719 !important; */
     }
     
     #rps-radio Button:hover:before {
@@ -1821,7 +1830,7 @@ button.btn-submit:active,
 .transaction-settings {
     position: fixed;
     transform: translate(0%, -10vh);
-color: #e5e5e5;
+color: #343a40;
     padding: 20px 30px !important;
     background: #a9a9a9;
     border-radius: 9px;
@@ -2129,8 +2138,84 @@ background-color: red;
     font-weight: 600;
     height: 45px;
 }
+.gemBg {
+    position: absolute;
+    z-index: -1;
+    width: 100vw;
+    height: unset;
+    bottom: -250px;
+    filter: invert(1);
+ }
+ .mountains-bg {
+    filter: invert(1);
 
-  
+        position: absolute;
+        z-index: -1;
+        width: 200vw;
+        height: unset;
+        bottom: 10%;  
+}
+
+.rocksBg {
+    filter: hue-rotate(75deg);
+        position: absolute;
+        z-index: -1;
+        width: 862px;
+        height: unset;
+        top: -119px;  
+}
+.bjBg {
+    filter: invert(1);
+
+        position: absolute;
+        z-index: -1;
+        width: 200vh;
+        height: unset;
+        top: 0;  
+}
+.mountains-bg-last {
+    filter: invert(1);
+
+        position: absolute;
+        z-index: -1;
+        width: 200vw;
+        height: unset;
+        top: 0px ; 
+}
+.threedBg {
+    filter: invert(1);
+    opacity: 0.5;
+        position: absolute;
+        z-index: -1;
+        width: 100vw;
+        height: unset;
+        top: -200px
+     
+}
+ .starsBg {
+    position: absolute;
+    z-index: -5;
+    width: 100vw;
+    height: unset;
+    top: -50px;
+    filter: invert(1);
+ }
+  .goalBg {
+    position: absolute;
+    z-index: -1;
+    width: 100vw;
+    height: unset;
+    bottom: -180px;
+    filter: invert(1);
+ }
+ .brainBg {
+    position: absolute;
+    z-index: -2;
+    width: 150vw;
+    height: unset;
+    bottom: -180px;
+    filter: unset;
+ }
 
   .game-type {
     margin-bottom: 0px !important;
@@ -2151,7 +2236,7 @@ background-color: red;
 .qs-image-panel div,
 .game-info-panel .qs-image-panel img {
     max-width: 100%;
-    border-radius: 20px;
+    border-radius: 10px;
 }
 .game-page .game-contents .game-info-panel .qs-action-panel button {
     width: 40px;
@@ -2676,6 +2761,9 @@ margin-bottom: 10px;
     }
 }
 @media (max-width: 400px) {
+    .qs-image-panel {
+        margin-bottom: 10px !important;
+    }
     #upper-score {
         margin-bottom: 20px !important;
     }
@@ -2711,11 +2799,11 @@ transform: translateX(160px) !important;
 
     .transaction-settings {
         transform: translate(0%, 10vh);
-    }    
+    }
    
     #no-guesses {
-        transform: translateX(-120px) !important;
-     }
+        margin: 0px 80px 10px 0px !important;
+         }
 [role="tablist"] button{
     padding-top: 25px !important;
     padding-bottom: 10px !important;
@@ -2850,6 +2938,31 @@ transform: translateX(160px) !important;
 }
   
   @media (max-width: 480px) {
+    .goalBg, .brainBg {
+        bottom: 0px;
+     }
+     .gemBg, .threedBg{
+        bottom: 0px;
+        top: unset;
+     }
+     /* .mountains-bg {
+        top: 0;
+     }
+     .mountains-bg-last {
+        top: 50%;
+     } */
+     .threedBg {
+        width: 100vh;
+    transform: rotate(90deg);
+   
+     }
+     .starsBg {
+        bottom: -80px;
+        left: -50%;
+     }
+     .starsBg div{
+        width: 120vh !important;
+     }
     .join-game-panel .deck .card-back {
         left: 111px;
     }

@@ -7,6 +7,7 @@ import BetArray from '../../components/BetArray';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
+import brainBg from '../LottieAnimations/brainBg.json';
 import animationData from '../LottieAnimations/spinningIcon';
 import brain from '../LottieAnimations/brain.json';
 import { Button } from '@material-ui/core';
@@ -98,15 +99,15 @@ class BrainGame extends Component {
     }
   };
 
-  // handleClickOutside = e => {
-  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
-  // };
+  handleClickOutside = e => {
+    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
 
   componentDidMount() {
     this.getNextQuestion();
-    // document.addEventListener('mousedown', this.handleClickOutside);
+    document.addEventListener('mousedown', this.handleClickOutside);
   }
 
   onShowButtonClicked = e => {
@@ -146,7 +147,7 @@ class BrainGame extends Component {
         is_anonymous: this.state.is_anonymous
       });
     }
-    // document.removeEventListener('mousedown', this.handleClickOutside);
+    document.removeEventListener('mousedown', this.handleClickOutside);
   }
 
   changeBgColor = async result => {
@@ -522,6 +523,19 @@ class BrainGame extends Component {
       <div className="game-page">
         <div className="game-contents">
           <div className="game-info-panel brain-game-play-panel">
+            <div className="brainBg"      style={{ position: 'relative', zIndex: 10 }}>
+
+<Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: brainBg
+              }}
+              style={{
+                filter: 'hue-rotate(221deg)'
+              }}
+              />
+              </div>
             <div className="play-panel-header">
               <div className="timer">
                 <div className="timer-title">Timer: </div>
@@ -599,9 +613,17 @@ class BrainGame extends Component {
               ))}
             </div>
           </div>
+          
           <div
             style={{
-              zIndex: '0',
+              zIndex: '1',
+              position: 'relative'
+            }}
+            className="game-info-panel brain-game"
+          >
+            <div
+            style={{
+              zIndex: '-1',
               position: 'relative'
               // transform: 'translate: (50%, 50%)'
             }}
@@ -613,27 +635,33 @@ class BrainGame extends Component {
                 animationData: brain
               }}
               style={{
-                filter: 'hue-rotate(185deg)',
                 maxWidth: '100%',
-                width: '300px',
-                margin: '-5px auto -314px',
-                opacity: 0.3
+                width: '500px',
+                margin: '-30px auto -300px',
+                opacity: 0.9
               }}
             />
           </div>
-          <div
-            style={{
-              zIndex: '1',
-              position: 'relative'
-            }}
-            className="game-info-panel brain-game"
-          >
+            <div className="brainBg" >
+
+<Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: brainBg
+              }}
+              style={{
+                filter: 'hue-rotate(322deg)',
+                opacity: 0.8
+              }}
+              />
+              </div>
             <h3 className="game-sub-title">Game Type:</h3>
             <p className="game-type">
               {this.props.brain_game_type.game_type_name}
             </p>
             <h3 className="game-sub-title">Score to Beat:</h3>
-            <p>{this.props.brain_game_score}</p>
+            <p style={{backgroundColor: "grey", borderRadius:"7px", padding: "10px"}}>{this.props.brain_game_score}</p>
 
             <Button id="btn_bet" onClick={this.onStartGame}>
               Start

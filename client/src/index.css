@@ -111,8 +111,8 @@ input,textarea { border-radius: 0 !important; }
 
 .qs-image-panel img {
   position: absolute;
-  box-shadow: 0 0 20px #dadada;
-  filter: drop-shadow(2px 4px 6px rgb(253, 253, 253));
+  box-shadow: 0 0 20px #49ff08;
+  filter: hue-rotate(141deg);
 }
 
 .create-game-panel .qs-buttons {
@@ -659,7 +659,6 @@ border-radius: 0.25em !important;
 }
 .game-type-panel .btn-game-type.active,
 .game-type-panel .btn-game-type:hover {
-  color: #ef38d0;
   transition: filter 0.2s;
   filter: brightness(1.3);
 }

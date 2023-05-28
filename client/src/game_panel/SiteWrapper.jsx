@@ -790,7 +790,7 @@ class SiteWrapper extends Component {
               <Tabs
                 value={this.props.selectedMainTabIndex}
                 onChange={this.handleMainTabChange}
-                TabIndicatorProps={{ style: { background: '#c438ef' } }}
+                TabIndicatorProps={{ style: { background: '#ff0000' } }}
                 className="main-game-page-tabs desktop-only"
               >
                 <Tab

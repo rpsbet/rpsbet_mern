@@ -7,6 +7,7 @@ import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import { Button, TextField } from '@material-ui/core';
 
+import starsBg from '../LottieAnimations/stars-bg.json';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -727,6 +728,21 @@ class RPS extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
+            
+          <div className="starsBg" >
+
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: starsBg
+              }}
+              style={{
+                filter: 'hue-rotate(330deg)',
+                opacity: '0.8'
+              }}
+            />
+              </div>
             <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
             <div id="rps-radio" style={{ zIndex: 1 }}>
               {options.map(({ classname, selection }) => (

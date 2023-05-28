@@ -7,10 +7,10 @@
 	box-shadow: none;
 }
 
-.dark_mode 
+/* .dark_mode 
 .gradient-container .previous-guesses.drop:before  {
 	background: linear-gradient(90deg, #151515, transparent);
-    }
+    } */
     
 
 .dark_mode .game-page .game-contents .game-info-panel .max  button {
@@ -21,6 +21,26 @@
 	background-color: #060607 !important;
   }
 
+  .dark_mode .mountains-bg,
+  .dark_mode .mountains-bg-last {
+		filter: brightness(0.92);
+  }
+
+  /* .dark_mode .rocksBg {
+	filter: brightness(0.92);
+}
+ */
+
+  .dark_mode .brainBg {
+	filter: invert(1);
+  }
+
+  .dark_mode .goalBg,
+  .dark_mode .gemBg,
+  .dark_mode .starsBg,
+  .dark_mode .bjBg{
+    filter: unset;
+ }
   .dark_mode .game-page .game-contents .game-info-panel .box-prizes span {
 	color: #e5e5e5;
   }
@@ -50,9 +70,11 @@
        #212529 
     );
 }
+.qs-image-panel img {
+	filter: hue-rotate(45deg);
+  }
 .dark_mode .qs-image-panel img {
-	box-shadow: 0 0 20px #0e0e0e;
-	filter: drop-shadow(2px 4px 6px black);
+	box-shadow: 0 0 20px #28a745;
   }
 
 .dark_mode .contents_wrapper .room-history-panel h2.room-history-title {
@@ -215,7 +237,7 @@ background: #060607;
 	background: #060607;
 }
 .dark_mode .main-game-page-tabs .Mui-selected {
-	color: #ef38d0;
+	color: #d81719;
 }
 .dark_mode div.table .dont-have-game-msg {
 	color: #8e9297;

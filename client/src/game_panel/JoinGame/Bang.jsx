@@ -14,6 +14,7 @@ import {
   validateLocalStorageLength
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
+import rocksBg from '../LottieAnimations/rocksBg.json';
 import bomb from '../LottieAnimations/bomb.json';
 import explosion from '../LottieAnimations/explosion.json';
 import bangBg from '../LottieAnimations/bang-bg.json';
@@ -1115,6 +1116,18 @@ class Bang extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
+             <div className="rocksBg" 
+            >
+
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: rocksBg
+              }}
+        // style={{ filter: 'hue-rotate(321deg)'}}
+            />
+                    </div>
             <div className="game-info-panel">
               <h3 className="game-sub-title">Previous Bangs</h3>
               <div className="gradient-container">
@@ -1164,7 +1177,7 @@ class Bang extends Component {
                 </p>
               </div>
             </div>
-            <div>
+            <div style={{margin: '20px auto' }}>
               <Lottie
                 options={{
                   loop: true,

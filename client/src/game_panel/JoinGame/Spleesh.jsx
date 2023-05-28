@@ -15,6 +15,8 @@ import {
   validateBankroll
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
+import threedBg from '../LottieAnimations/3d-bg.json';
+
 import animationData from '../LottieAnimations/spinningIcon';
 import {
   alertModal,
@@ -494,7 +496,22 @@ class Spleesh extends Component {
               ))}
             </div>
           </div>
-          <div className="game-info-panel">
+          <div
+            className="game-info-panel"
+            style={{ position: 'relative', zIndex: 10 }}
+          >
+            <div className="threedBg">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: threedBg
+                }}
+                style={{
+                  filter: 'grayscale(1)'
+                }}
+              />
+            </div>
             <h3 className="game-sub-title">Previous Guesses</h3>
             <p className="previous-guesses">
               {this.state.spleesh_guesses.length > 0

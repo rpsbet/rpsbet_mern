@@ -6,6 +6,8 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 // import { updateBetResult } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
+import gemBg from '../LottieAnimations/gem-bg.json';
+
 import { Button, TextField } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
 import {
@@ -83,6 +85,7 @@ class DropGame extends Component {
       timerValue: 2000,
       intervalId: null,
       items: [],
+      showAnimation: false,
       bgColorChanged: false,
       drop_guesses: [],
       advanced_status: '',
@@ -329,7 +332,10 @@ class DropGame extends Component {
 
   onBtnBetClick = async () => {
     this.props.playSound('select');
-
+    this.setState({ showAnimation: true });
+    setTimeout(() => {
+      this.setState({ showAnimation: false });
+    }, 5000);
     const {
       openGamePasswordModal,
       isAuthenticated,
@@ -572,6 +578,8 @@ class DropGame extends Component {
   };
 
   render() {
+        const { showAnimation } = this.state;
+
     return (
       <div className="game-page">
         {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
@@ -630,6 +638,18 @@ class DropGame extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
+            <div className="gemBg" 
+            >
+
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: gemBg
+              }}
+        style={{ filter: 'hue-rotate(321deg)'}}
+            />
+                    </div>
             <div className="game-info-panel">
               <h3 className="game-sub-title">Previous Drops</h3>
               <div className="gradient-container">
@@ -690,22 +710,21 @@ class DropGame extends Component {
                 </p>
               </div>
             </div>
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: drop
-              }}
-              style={{
-                filter: 'hue-rotate(320deg)',
-                maxWidth: '100%',
-                width: '300px',
-                marginBottom: '-250px'
+            <div className={`animation-container${showAnimation ? ' animate' : ''}`}>
+          <Lottie
+            options={{
+              loop: true,
+              autoplay: true,
+              animationData: drop,
+            }}
+            width={200}
+            height={200}
+            style={{
+              filter: 'hue-rotate(95deg)'
 
-                // position: 'absolute',
-                // transform: 'translate: (50%, 50%)'
-              }}
-            />
+            }}
+          />
+          </div>
             <div className="drop-amount">
               <h3 className="game-sub-title">Highest Drop Wins!</h3>
             </div>

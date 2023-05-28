@@ -51,4 +51,8 @@
   .AvatarButtonPanel button:first-child {
     margin-bottom: 16px;
   }
+  .AvatarButtonPanel button {
+width: 100%;
+    font-size: 0.6em;
+}
 }

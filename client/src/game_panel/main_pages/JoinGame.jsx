@@ -352,7 +352,7 @@ class JoinGame extends Component {
                 <Tabs
                   value={this.state.show_open_game}
                   onChange={this.showOpenGameOrHistory}
-                  TabIndicatorProps={{ style: { background: '#c438ef' } }}
+                  TabIndicatorProps={{ style: { background: '#ff0000' } }}
                   className="main-game-page-tabs"
                 >
                   <Tab

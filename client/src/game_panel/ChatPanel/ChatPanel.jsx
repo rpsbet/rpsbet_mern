@@ -92,7 +92,7 @@ class ChatPanel extends Component {
         <Tabs
           value={this.state.selected_tab_index}
           onChange={this.handleTabChange}
-          TabIndicatorProps={{ style: { background: '#c438ef' } }}
+          TabIndicatorProps={{ style: { background: '#ff0000' } }}
           className="main-game-page-tabs"
         >
           <Tab

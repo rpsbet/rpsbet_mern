@@ -5,6 +5,8 @@ import Share from './Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
+import bjBg from '../LottieAnimations/bjBg.json';
+
 import { Button, TextField } from '@material-ui/core';
 import { deductBalanceWhenStartBlackjack } from '../../redux/Logic/logic.actions';
 
@@ -691,7 +693,7 @@ class Blackjack extends Component {
       score_host: 0,
       is_started: false,
       disabledButtons: true
-     })
+    });
   };
 
   onBtnBetClick = async () => {
@@ -733,12 +735,10 @@ class Blackjack extends Component {
         deductBalanceWhenStartBlackjack({
           bet_amount: bet_amount
         })
-        
       ) {
         this.setState({
-          is_started: true,
+          is_started: true
         });
-
       }
       this.dealJoiner();
       this.dealHost();
@@ -1020,6 +1020,20 @@ class Blackjack extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
+            <div className="bjBg">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: bjBg
+                }}
+                style={{
+                  transform: 'rotate(180deg)',
+                  filter: 'grayscale(1)',
+                  opacity: '0.1'
+                }}
+              />
+            </div>
             <div className="deck">
               <div className="card-back">
                 <div className="rps-logo">
@@ -1132,7 +1146,6 @@ class Blackjack extends Component {
                   variant="contained"
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-
                   onClick={() => {
                     this.hit();
                     const currentActive = document.querySelector('.active');
@@ -1153,7 +1166,6 @@ class Blackjack extends Component {
                   variant="contained"
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-
                   onClick={() => {
                     this.stand();
                     const currentActive = document.querySelector('.active');
@@ -1174,7 +1186,6 @@ class Blackjack extends Component {
                   variant="contained"
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-
                   onClick={() => {
                     this.hit();
                     const currentActive = document.querySelector('.active');
@@ -1195,7 +1206,6 @@ class Blackjack extends Component {
                   variant="contained"
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-
                   onClick={() => {
                     this.stand();
                     const currentActive = document.querySelector('.active');

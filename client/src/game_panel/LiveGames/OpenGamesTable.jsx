@@ -357,7 +357,7 @@ class OpenGamesTable extends Component {
                 position: 'relative',
                 width: '120px',
                 height: '70px',
-                filter: 'invert',
+                filter: 'hue-rotate(33deg)',
                 margin: '-20px -75px',
               }}
             />
@@ -525,7 +525,7 @@ class OpenGamesTable extends Component {
                 position: 'relative',
                 width: '70px',
                 height: '70px',
-                filter: 'drop-shadow(2px 4px 6px black)',
+                filter: 'hue-rotate(33deg)',
                 margin: '-20px -50px -20px -16px',
               }}
             />

@@ -15,6 +15,8 @@ import {
 } from '../modal/betValidations';
 
 import Lottie from 'react-lottie';
+import goalBg from '../LottieAnimations/goal-bg.json';
+
 import animationData from '../LottieAnimations/spinningIcon';
 import grid from '../LottieAnimations/grid';
 import {
@@ -394,7 +396,6 @@ class QuickShoot extends Component {
       }
     );
   }
-
 
   updatePotentialReturn = () => {
     this.setState({
@@ -900,7 +901,22 @@ class QuickShoot extends Component {
               ))}
             </div>
           </div>
-          <div className="game-info-panel">
+          <div
+            className="game-info-panel"
+            style={{ position: 'relative', zIndex: 10 }}
+          >
+            <div className="goalBg">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: goalBg
+                }}
+                style={{
+                  filter: 'hue-rotate(221deg)'
+                }}
+              />
+            </div>
             <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
             <div
               className="qs-image-panel"
@@ -918,7 +934,7 @@ class QuickShoot extends Component {
                 style={{
                   width: '600px',
                   maxWidth: '100%',
-                  borderRadius: '20px'
+                  borderRadius: '10px'
                 }}
               />
               {this.renderButtons()}
@@ -936,8 +952,8 @@ class QuickShoot extends Component {
                   animationData: grid
                 }}
                 style={{
-                  width: '570px',
-                  margin: '3px auto -172px'
+                  width: '320px',
+                  margin: '3px auto -320px'
                 }}
               />
             </div>

@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import history from '../../redux/history';
 import BetArray from '../../components/BetArray';
 import Lottie from 'react-lottie';
+import mountainsBg from '../LottieAnimations/mountains-bg.json';
+
 import { Button } from '@material-ui/core';
 import {
   validateIsAuthenticated,
@@ -602,7 +604,38 @@ class MysteryBox extends Component {
               ))}
             </div>
           </div>
-          <div className="game-info-panel">
+          <div className="game-info-panel"             style={{ position: 'relative', zIndex: 10 }}
+>
+<div className='mountains-bg'>
+
+<Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: mountainsBg
+              }}
+              style={{
+                width: '100vw',
+                zIndex: '-1',
+                filter: 'brightness(0.72)'
+              }}
+              />
+              </div>
+              <div className='mountains-bg-last'>
+
+<Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: mountainsBg
+              }}
+              style={{
+                width: '100vw',
+                zIndex: '-1',
+                filter: 'brightness(0.72)'
+              }}
+              />
+              </div>
             <h3 className="game-sub-title">Prizes</h3>
             <p className="box-prizes">
               {prizes.map((item, key) => (
