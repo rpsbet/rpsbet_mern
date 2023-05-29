@@ -1418,7 +1418,7 @@ max-width: 450px;
     }
     #x {
         position: absolute;
-        top: 130px !important;
+        top: 140px !important;
         left: 60px !important;
     }
 
@@ -2160,7 +2160,7 @@ background-color: red;
 .gemBg {
     position: absolute;
     z-index: -1;
-    width: 100vw;
+    width: 84vw;
     height: unset;
     bottom: -250px;
     filter: invert(1);
@@ -2963,6 +2963,10 @@ transform: translateX(160px) !important;
      .gemBg, .threedBg{
         bottom: 0px;
         top: unset;
+     }
+
+     .gemBg {
+        width: 100vw;
      }
      .boatBg {
         width: 180vw;
