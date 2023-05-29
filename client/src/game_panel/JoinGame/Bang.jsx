@@ -17,7 +17,6 @@ import Lottie from 'react-lottie';
 import rocksBg from '../LottieAnimations/rocksBg.json';
 import bomb from '../LottieAnimations/bomb.json';
 import explosion from '../LottieAnimations/explosion.json';
-import bangBg from '../LottieAnimations/bang-bg.json';
 import animationData from '../LottieAnimations/spinningIcon';
 import Avatar from '../../components/Avatar';
 import {
@@ -827,23 +826,7 @@ class Bang extends Component {
         } else {
           content = (
             <div>
-              <Lottie
-                id="bomb"
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: bomb
-                }}
-                style={{
-                  filter: 'hue-rotate(312deg)',
-                  maxWidth: '100%',
-                  width: '250px',
-                  // position: 'absolute',
-                  marginRight: '-30px',
-                  marginBottom: '-30px',
-                  transform: 'translateY(20px)'
-                }}
-              />
+             
               <p>
                 <div id="x">x</div>
                 <CountUp
@@ -1007,10 +990,10 @@ class Bang extends Component {
               style={{
                 filter: 'hue-rotate(312deg)',
                 maxWidth: '100%',
-                width: '250px',
+                width: '300px',
                 // position: 'absolute',
-                marginRight: '-30px',
-                marginBottom: '-30px',
+                marginLeft: '60px',
+                marginBottom: '30px',
                 transform: 'translateY(20px)'
               }}
             />
@@ -1125,7 +1108,6 @@ class Bang extends Component {
                 autoplay: true,
                 animationData: rocksBg
               }}
-        // style={{ filter: 'hue-rotate(321deg)'}}
             />
                     </div>
             <div className="game-info-panel">
@@ -1177,24 +1159,7 @@ class Bang extends Component {
                 </p>
               </div>
             </div>
-            <div style={{margin: '20px auto' }}>
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: bangBg
-                }}
-                style={{
-                  // filter: 'hue-rotate(312deg)',
-                  maxWidth: '100%',
-                  width: '300px',
-                  margin: '-5px auto -314px',
-                  filter: 'hue-rotate(137deg)'
-                  // position: 'absolute',
-                  // transform: 'translate: (50%, 50%)'
-                }}
-              />
-            </div>
+            
             <div className="bangTimer">
               {bang_guesses.length ? (
                 content

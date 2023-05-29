@@ -212,6 +212,7 @@ div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
 #nextRollIn span {
     position: absolute;
     left: 50%;
+    color: #fff !important;
     transform: translate(-50%, -50px);
     margin: auto;
     padding: 5px 15px;
@@ -1168,6 +1169,14 @@ position: relative;
     border-radius: 6px;
 }
 
+.bow h3.game-sub-title {
+    color: #fff !important;
+}
+
+input {
+    border: none;
+}
+
 .game-page .game-contents h3.game-sub-title {
     font-size: 16px;
     color: #343a40;
@@ -1408,8 +1417,9 @@ max-width: 450px;
         justify-content: flex-end;
     }
     #x {
-        transform: translate(-55px, -90px);
-        font-size: small;
+        position: absolute;
+        top: 130px !important;
+        left: 60px !important;
     }
 
     #bang-text {
@@ -2138,6 +2148,15 @@ background-color: red;
     font-weight: 600;
     height: 45px;
 }
+
+.boatBg {
+    position: absolute;
+    z-index: -1;
+    width: 100vw;
+    height: unset;
+    bottom: 0px;
+    filter: hue-rotate(75deg);
+ }
 .gemBg {
     position: absolute;
     z-index: -1;
@@ -2160,9 +2179,9 @@ background-color: red;
     filter: hue-rotate(75deg);
         position: absolute;
         z-index: -1;
-        width: 862px;
+        width: 100vw;
         height: unset;
-        top: -119px;  
+        bottom: -100px;  
 }
 .bjBg {
     filter: invert(1);
@@ -2938,19 +2957,19 @@ transform: translateX(160px) !important;
 }
   
   @media (max-width: 480px) {
-    .goalBg, .brainBg {
+    .goalBg, .brainBg, .rocksBg,  .boatBg {
         bottom: 0px;
      }
      .gemBg, .threedBg{
         bottom: 0px;
         top: unset;
      }
-     /* .mountains-bg {
-        top: 0;
+     .boatBg {
+        width: 180vw;
      }
-     .mountains-bg-last {
-        top: 50%;
-     } */
+     .rocksBg {
+        width: 150vw;
+     } 
      .threedBg {
         width: 100vh;
     transform: rotate(90deg);

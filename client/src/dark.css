@@ -26,10 +26,13 @@
 		filter: brightness(0.92);
   }
 
-  /* .dark_mode .rocksBg {
-	filter: brightness(0.92);
+  .dark_mode .rocksBg {
+	filter: hue-rotate(325deg);;
 }
- */
+
+.dark_mode .boatBg div {
+	filter: invert(1) !important;
+  }
 
   .dark_mode .brainBg {
 	filter: invert(1);
@@ -290,6 +293,11 @@ background: #060607;
 .dark_mode div.table.main-history-table .table-row > div {
 	color: white;
 }
+
+.bow h3.game-sub-title {
+    color: #343a40 !important;
+}
+
 
 .dark_mode .game-page .pre-summary-panel label,
 .dark_mode .game-page .pre-summary-panel .label {

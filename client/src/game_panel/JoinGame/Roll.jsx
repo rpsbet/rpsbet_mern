@@ -14,6 +14,8 @@ import {
   validateBetAmount,
   validateLocalStorageLength
 } from '../modal/betValidations';
+import boatBg from '../LottieAnimations/boatBg.json';
+
 import gBg from '../LottieAnimations/g-bg.json';
 import portal from '../LottieAnimations/portal.json';
 import rollHex from '../LottieAnimations/roll-hex.json';
@@ -207,7 +209,7 @@ class Roll extends Component {
             setTimeout(() => {
               this.props.playSound('shine');
               this.setState({ showResult: true });
-              this.setState({ disabledButtons: false});
+              this.setState({ disabledButtons: false });
               setTimeout(() => {
                 this.setState({ showResult: false });
               }, 2000);
@@ -272,7 +274,6 @@ class Roll extends Component {
     this.socket.off(`ROLL_GUESSES_${roomId}`);
     this.socket.off(`ROLL_GUESSES1_${roomId}`);
   };
-  
 
   predictNext = roll_list => {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
@@ -341,71 +342,80 @@ class Roll extends Component {
   joinGame = async () => {
     const { playSound } = this.props;
     const { selected_roll } = this.state;
-    
+
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
-      selected_roll: selected_roll,
+      selected_roll: selected_roll
       // is_anonymous: this.state.is_anonymous,
       // roll_bet_item_id: this.props.roll_bet_item
       // slippage: this.state.slippage
     });
     setTimeout(() => {
-    
-    let text = 'HAHAA, YOU LOST!!!';
-  
-    if (result.betResult === 1) {
-      playSound('win');
-      text = 'WINNER, WINNER, VEGAN DINNER!';
-      this.changeBgColor(result.betResult);
-    } else {
-      text = 'TROLLOLOLOL! LOSER!';
-      playSound('lose');
-      this.changeBgColor(result.betResult);
-    }
-    console.log("h3i", this.state.bgColorChanged, this.state.betResult, this.state.selected_roll)
-    let stored_roll_array =
-      JSON.parse(localStorage.getItem('roll_array')) || [];
-  
-    while (stored_roll_array.length >= 20) {
-      stored_roll_array.shift();
-    }
-    stored_roll_array.push({ roll: this.state.bet_amount });
-    localStorage.setItem('roll_array', JSON.stringify(stored_roll_array));
+      let text = 'HAHAA, YOU LOST!!!';
 
-    if (result.status === 'success') {
-      const currentUser = this.props.user;
-      const currentRoom = this.props.room;
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
-  
-      gameResultModal(
-        this.props.isDarkMode,
-        text,
-        result.betResult,
-        'Okay',
-        null,
-        () => {
-          // history.push('/');
-        },
-        () => {}
-      );
-    } else {
-      if (result.message) {
-        alertModal(this.props.isDarkMode, result.message);
+      if (result.betResult === 1) {
+        playSound('win');
+        text = 'WINNER, WINNER, VEGAN DINNER!';
+        this.changeBgColor(result.betResult);
+      } else {
+        text = 'TROLLOLOLOL! LOSER!';
+        playSound('lose');
+        this.changeBgColor(result.betResult);
       }
-    }
-  // this.setState({selected_roll: null});
-    this.props.refreshHistory();
-  }, 5000);
+      console.log(
+        'h3i',
+        this.state.bgColorChanged,
+        this.state.betResult,
+        this.state.selected_roll
+      );
+      let stored_roll_array =
+        JSON.parse(localStorage.getItem('roll_array')) || [];
+
+      while (stored_roll_array.length >= 20) {
+        stored_roll_array.shift();
+      }
+      stored_roll_array.push({ roll: this.state.bet_amount });
+      localStorage.setItem('roll_array', JSON.stringify(stored_roll_array));
+
+      if (result.status === 'success') {
+        const currentUser = this.props.user;
+        const currentRoom = this.props.room;
+        this.setState(prevState => ({
+          betResults: [
+            ...prevState.betResults,
+            { ...result, user: currentUser, room: currentRoom }
+          ]
+        }));
+
+        gameResultModal(
+          this.props.isDarkMode,
+          text,
+          result.betResult,
+          'Okay',
+          null,
+          () => {
+            // history.push('/');
+          },
+          () => {}
+        );
+      } else {
+        if (result.message) {
+          alertModal(this.props.isDarkMode, result.message);
+        }
+      }
+      // this.setState({selected_roll: null});
+      this.props.refreshHistory();
+    }, 5000);
   };
-  
 
   onBtnBetClick = async () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id, playSound } = this.props;
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      playSound
+    } = this.props;
     const { buttonClicked, isWaiting } = this.state;
     playSound('select');
 
@@ -982,7 +992,20 @@ class Roll extends Component {
             </div>
           </div>
 
-          <div className="game-info-panel">
+          <div
+            className="game-info-panel"
+            style={{ position: 'relative', zIndex: 10 }}
+          >
+            <div className="boatBg">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: boatBg
+                }}
+                style={{ filter: 'hue-rotate(302deg)' }}
+              />
+            </div>
             <div id="tunnel">
               <Lottie
                 options={{
@@ -1260,14 +1283,18 @@ class Roll extends Component {
                 <Button
                   className={`rock button-2x-r${
                     this.state.selected_roll === 'R' ? ' active' : ''
-                  }${this.state.bgColorChanged &&
+                  }${
+                    this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'R'
-                    ? ' lose-bg'
-                    : ''}${this.state.betResult === 1 &&
+                      ? ' lose-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 &&
                     this.state.selected_roll === 'R'
-                    ? ' win-bg'
-                    : ''}`}
+                      ? ' win-bg'
+                      : ''
+                  }`}
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
@@ -1281,12 +1308,15 @@ class Roll extends Component {
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
 
-                    this.setState({ selected_roll: null, bgColorChanged: false }, () => {
-                      this.setState({
-                        selected_roll: 'R',
-                        buttonClicked: true
-                      });
-                    });
+                    this.setState(
+                      { selected_roll: null, bgColorChanged: false },
+                      () => {
+                        this.setState({
+                          selected_roll: 'R',
+                          buttonClicked: true
+                        });
+                      }
+                    );
                   }}
                 >
                   <span>2x (4x)</span>
@@ -1294,14 +1324,18 @@ class Roll extends Component {
                 <Button
                   className={`paper button-2x-p${
                     this.state.selected_roll === 'P' ? ' active' : ''
-                  }${this.state.bgColorChanged &&
+                  }${
+                    this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'P'
-                    ? ' lose-bg'
-                    : ''}${this.state.betResult === 1 &&
+                      ? ' lose-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 &&
                     this.state.selected_roll === 'P'
-                    ? ' win-bg'
-                    : ''}`}
+                      ? ' win-bg'
+                      : ''
+                  }`}
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
@@ -1314,12 +1348,19 @@ class Roll extends Component {
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
 
-                    this.setState({ selected_roll: null, betResult: 0,  bgColorChanged: false }, () => {
-                      this.setState({
-                        selected_roll: 'P',
-                        buttonClicked: true
-                      });
-                    });
+                    this.setState(
+                      {
+                        selected_roll: null,
+                        betResult: 0,
+                        bgColorChanged: false
+                      },
+                      () => {
+                        this.setState({
+                          selected_roll: 'P',
+                          buttonClicked: true
+                        });
+                      }
+                    );
                   }}
                 >
                   <span>2x (4x)</span>
@@ -1327,14 +1368,18 @@ class Roll extends Component {
                 <Button
                   className={`scissors button-2x-s${
                     this.state.selected_roll === 'S' ? ' active' : ''
-                  }${this.state.bgColorChanged &&
+                  }${
+                    this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'S'
-                    ? ' lose-bg'
-                    : ''}${this.state.betResult === 1 &&
+                      ? ' lose-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 &&
                     this.state.selected_roll === 'S'
-                    ? ' win-bg'
-                    : ''}`}
+                      ? ' win-bg'
+                      : ''
+                  }`}
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
@@ -1347,12 +1392,19 @@ class Roll extends Component {
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
 
-                    this.setState({ selected_roll: null, betResult: 0, bgColorChanged: false }, () => {
-                      this.setState({
-                        selected_roll: 'S',
-                        buttonClicked: true
-                      });
-                    });
+                    this.setState(
+                      {
+                        selected_roll: null,
+                        betResult: 0,
+                        bgColorChanged: false
+                      },
+                      () => {
+                        this.setState({
+                          selected_roll: 'S',
+                          buttonClicked: true
+                        });
+                      }
+                    );
                   }}
                 >
                   <span>2x (4x)</span>
@@ -1360,14 +1412,18 @@ class Roll extends Component {
                 <Button
                   className={`whale button-2x-w${
                     this.state.selected_roll === 'W' ? ' active' : ''
-                  }${this.state.bgColorChanged &&
+                  }${
+                    this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'W'
-                    ? ' lose-bg'
-                    : ''}${this.state.betResult === 1 &&
+                      ? ' lose-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 &&
                     this.state.selected_roll === 'W'
-                    ? ' win-bg'
-                    : ''}`}
+                      ? ' win-bg'
+                      : ''
+                  }`}
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
@@ -1379,12 +1435,19 @@ class Roll extends Component {
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
-                    this.setState({ selected_roll: null, betResult: 0, bgColorChanged: false }, () => {
-                      this.setState({
-                        selected_roll: 'W',
-                        buttonClicked: true
-                      });
-                    });
+                    this.setState(
+                      {
+                        selected_roll: null,
+                        betResult: 0,
+                        bgColorChanged: false
+                      },
+                      () => {
+                        this.setState({
+                          selected_roll: 'W',
+                          buttonClicked: true
+                        });
+                      }
+                    );
                   }}
                 >
                   <span>14x</span>
@@ -1392,14 +1455,18 @@ class Roll extends Component {
                 <Button
                   className={`bear button-2x-b${
                     this.state.selected_roll === 'B' ? ' active' : ''
-                  }${this.state.bgColorChanged &&
+                  }${
+                    this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'B'
-                    ? ' lose-bg'
-                    : ''}${this.state.betResult === 1 &&
+                      ? ' lose-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 &&
                     this.state.selected_roll === 'B'
-                    ? ' win-bg'
-                    : ''}`}
+                      ? ' win-bg'
+                      : ''
+                  }`}
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
@@ -1411,12 +1478,19 @@ class Roll extends Component {
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
-                    this.setState({ selected_roll: null, betResult: 0, bgColorChanged: false }, () => {
-                      this.setState({
-                        selected_roll: 'B',
-                        buttonClicked: true
-                      });
-                    });
+                    this.setState(
+                      {
+                        selected_roll: null,
+                        betResult: 0,
+                        bgColorChanged: false
+                      },
+                      () => {
+                        this.setState({
+                          selected_roll: 'B',
+                          buttonClicked: true
+                        });
+                      }
+                    );
                   }}
                 >
                   <span>1.5x</span>
@@ -1424,14 +1498,18 @@ class Roll extends Component {
                 <Button
                   className={`bull button-2x-bu${
                     this.state.selected_roll === 'Bu' ? ' active' : ''
-                  }${this.state.bgColorChanged &&
+                  }${
+                    this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
                     this.state.selected_roll === 'Bu'
-                    ? ' lose-bg'
-                    : ''}${this.state.betResult === 1 &&
+                      ? ' lose-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 &&
                     this.state.selected_roll === 'Bu'
-                    ? ' win-bg'
-                    : ''}`}
+                      ? ' win-bg'
+                      : ''
+                  }`}
                   disabled={this.state.disabledButtons}
                   style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                   variant="contained"
@@ -1443,12 +1521,19 @@ class Roll extends Component {
                       void currentActive.offsetWidth;
                       currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                     }
-                    this.setState({ selected_roll: null, betResult: 0, bgColorChanged: false }, () => {
-                      this.setState({
-                        selected_roll: 'Bu',
-                        buttonClicked: true
-                      });
-                    });
+                    this.setState(
+                      {
+                        selected_roll: null,
+                        betResult: 0,
+                        bgColorChanged: false
+                      },
+                      () => {
+                        this.setState({
+                          selected_roll: 'Bu',
+                          buttonClicked: true
+                        });
+                      }
+                    );
                   }}
                 >
                   <span>7x</span>

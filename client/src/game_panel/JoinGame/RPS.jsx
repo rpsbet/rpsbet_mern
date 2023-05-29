@@ -743,7 +743,7 @@ class RPS extends Component {
               }}
             />
               </div>
-            <h3 className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
+            <h3  style={{ zIndex: 9 }} className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
             <div id="rps-radio" style={{ zIndex: 1 }}>
               {options.map(({ classname, selection }) => (
                 <Button
