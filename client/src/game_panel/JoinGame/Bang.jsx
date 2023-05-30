@@ -1128,36 +1128,37 @@ class Bang extends Component {
                 <h5>View All Bangs</h5>
               </div>
               <div
-  ref={this.runsRef}
-  className={`runs-modal ${
-    this.state.runs_panel_opened ? 'active' : ''
-  }`}
->
-  <h5>LAST 100</h5>
+                ref={this.runsRef}
+                className={`runs-modal ${
+                  this.state.runs_panel_opened ? 'active' : ''
+                }`}
+              >
+                <h5>LAST 100</h5>
 
-  <div className="slippage-select-panel">
-    <div>
-      {bang_guesses
-        .slice(-100)
-        .reverse() // Reverse the order of the array
-        .map((bang, index) => (
-          <div
-            style={{
-              textAlign: 'center',
-              borderRadius: '5px',
-              marginBottom: '1px',
-              border: '2px solid',
-              backgroundColor: bang < 2.0 ? '#e3e103c2' : '#e30303c2',
-              borderColor: bang < 2.0 ? '#e3e103c2' : '#e30303c2',
-            }}
-            key={index}
-          >
-            {bang}x
-          </div>
-        ))}
-    </div>
-  </div>
-</div>
+                <div className="slippage-select-panel">
+                  <div>
+                    {bang_guesses
+                      .slice(-101, -1)
+                      .reverse()
+                      .map((bang, index) => (
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            borderRadius: '5px',
+                            marginBottom: '1px',
+                            border: '2px solid',
+                            backgroundColor:
+                              bang < 2.0 ? '#e3e103c2' : '#e30303c2',
+                            borderColor: bang < 2.0 ? '#e3e103c2' : '#e30303c2'
+                          }}
+                          key={index}
+                        >
+                          {bang}x
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
               <div className="gradient-container">
                 <p className="previous-guesses drop">
                   <div>

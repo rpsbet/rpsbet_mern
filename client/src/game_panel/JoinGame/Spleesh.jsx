@@ -6,6 +6,8 @@ import InlineSVG from 'react-inlinesvg';
 import Share from './Share';
 import { Button } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
+import waves from '../LottieAnimations/waves.json';
+import bear from '../LottieAnimations/bear.json';
 
 import {
   validateIsAuthenticated,
@@ -90,9 +92,9 @@ class Spleesh extends Component {
 
   componentDidMount() {
     // this.panelRef.current.addEventListener('scroll', this.handleScroll);
+    console.log('endgame_amount:', this.props.roomInfo.endgame_amount); // Log the spleesh_guesses value
     this.socket.on('SPLEESH_GUESSES', data => {
       this.setState({ spleesh_guesses: data });
-      // console.log('spleesh_guesses:', this.state.spleesh_guesses); // Log the spleesh_guesses value
     });
     this.socket.on('SPLEESH_GUESSES1', data => {
       if (!this.state.spleesh_guesses1Received) {
@@ -435,19 +437,32 @@ class Spleesh extends Component {
 
   render() {
     const { spleesh_bet_unit, endgame_amount } = this.props;
-    const { spleesh_guesses } = this.state
-    let arrayName;
-    if (spleesh_bet_unit === 1) {
-      arrayName = 'spleesh_array';
-    } else if (spleesh_bet_unit === 10) {
-      arrayName = 'spleesh_10_array';
+  const { spleesh_guesses } = this.state;
+  let arrayName;
+  if (spleesh_bet_unit === 1) {
+    arrayName = 'spleesh_array';
+  } else if (spleesh_bet_unit === 10) {
+    arrayName = 'spleesh_10_array';
+  }
+
+  const guessedAmounts = spleesh_guesses.map((number) => number.bet_amount);
+  const remainingSum = endgame_amount - guessedAmounts.reduce((sum, amount) => sum + amount, 0);
+
+  let minSum = 0;
+  let minGuesses = 0;
+  let minStep = 1;
+
+  if (spleesh_bet_unit === 10) {
+    for (let i = 100; i >= 10; i -= 10) {
+      if (!guessedAmounts.includes(i)) {
+        minSum += i;
+        minGuesses++;
+        if (minSum >= remainingSum) {
+          break;
+        }
+      }
     }
-
-    const guessedAmounts = spleesh_guesses.map((number) => number.bet_amount);
-    const remainingSum = endgame_amount - guessedAmounts.reduce((sum, amount) => sum + amount, 0);
-
-    let minSum = 0;
-    let minGuesses = 0;
+  } else {
     for (let i = 10; i >= 1; i--) {
       if (!guessedAmounts.includes(i)) {
         minSum += i;
@@ -457,9 +472,23 @@ class Spleesh extends Component {
         }
       }
     }
+  }
 
-    let maxSum = 0;
-    let maxGuesses = 0;
+  let maxSum = 0;
+  let maxGuesses = 0;
+  let maxStep = 1;
+
+  if (spleesh_bet_unit === 10) {
+    for (let i = 10; i <= 100; i += 10) {
+      if (!guessedAmounts.includes(i)) {
+        maxSum += i;
+        maxGuesses++;
+        if (maxSum >= remainingSum) {
+          break;
+        }
+      }
+    }
+  } else {
     for (let i = 1; i <= 10; i++) {
       if (!guessedAmounts.includes(i)) {
         maxSum += i;
@@ -469,11 +498,19 @@ class Spleesh extends Component {
         }
       }
     }
+  }
 
-    let remainingGuessesText = `${minGuesses} - ${maxGuesses}`;
-    if (minGuesses === maxGuesses) {
-      remainingGuessesText = minGuesses === 1 ? `${minGuesses} guess` : `${minGuesses} guesses`;
-    }
+  let remainingGuessesText = `${minGuesses} - ${maxGuesses}`;
+  if (minGuesses === maxGuesses) {
+    remainingGuessesText = minGuesses === 1 ? `${minGuesses} guess` : `${minGuesses} guesses`;
+  }
+
+  const averageGuesses = (minGuesses + maxGuesses) / 2;
+  const marginTopMin = -200;
+  const marginTopMax = 200;
+  const marginTop = marginTopMin + ((averageGuesses - 1) / 9) * (marginTopMax - marginTopMin);
+  const marginTopScaled = marginTop;
+
     return (
       <div className="game-page">
         <div className="page-title">
@@ -535,12 +572,12 @@ class Spleesh extends Component {
                   animationData: threedBg
                 }}
                 style={{
-                  filter: 'grayscale(1)'
+                  filter: 'hue-rotate(99deg)',
                 }}
               />
             </div>
-            <h3 className="game-sub-title">Previous Guesses</h3>
-            <p className="previous-guesses">
+            {/*<h3 className="game-sub-title">Previous Guesses</h3>
+             <p className="previous-guesses">
               {this.state.spleesh_guesses.length > 0
                 ? this.state.spleesh_guesses.map((guess, index) => (
                     <span
@@ -559,7 +596,41 @@ class Spleesh extends Component {
                     </span>
                   ))
                 : `No guesses yet`}
-            </p>
+            </p> */}
+             <div className="waves">
+
+             <Lottie
+        options={{
+          loop: true,
+          autoplay: true,
+          animationData: waves
+        }}
+        style={{
+          zIndex: '-1',
+          left: '0',
+          position: 'absolute',
+          filter: 'invert(1)',
+          maxWidth: '100%',
+          marginTop: `${marginTopScaled}px`
+        }}
+      />
+              </div>
+              <div className="mosquito" style={{
+                zIndex: '-2',
+                display: 'flex',
+                justifyContent: 'center',
+              }}>
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: bear
+              }}
+              style={{
+                position: 'absolute',
+              }}
+            />
+            </div>
             <h3 className="game-sub-title">{remainingGuessesText} remaining</h3>
 
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>

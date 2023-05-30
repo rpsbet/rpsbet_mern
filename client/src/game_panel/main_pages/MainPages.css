@@ -1383,12 +1383,12 @@ box-shadow:none !important;
     font-size: 16px;
     /* color: #060607; */
 }
-.game-page .game-contents .game-info-panel .previous-guesses {
+/* .game-page .game-contents .game-info-panel .previous-guesses {
     color: #8e9297;
     font-size: 16px;
     font-weight: 400;
     text-align: center;
-}
+} */
 
 /* .gradient-container .previous-guesses.drop:before  {
     content: " ";
@@ -2225,12 +2225,16 @@ background-color: red;
         height: unset;
         top: 0px ; 
 }
+
+.mosquito {
+    margin: 30px 0px 80px;
+}
+
 .threedBg {
-    filter: invert(1);
     opacity: 0.5;
         position: absolute;
         z-index: -1;
-        width: 100vw;
+        width: 125vw;
         height: unset;
         top: -200px
      
@@ -2612,7 +2616,9 @@ bottom: 0px;
         justify-content: space-between;
         background: #dee2e6;
     };
-
+    .waves div {
+        transform: scale(2.5);
+    }
 
     div.main-page-nav-button-group button:hover, div.main-page-nav-button-group button.active {
         background: #747f8d;
@@ -2803,6 +2809,18 @@ margin-bottom: 10px;
     }
 }
 @media (max-width: 400px) {
+    .mosquito {
+        margin: -30px 0px 80px;
+    }
+    .waves div {
+        transform: scale(4.6);
+    }
+  
+    .rollTimer #no-guesses {
+        font-size: 0.6em;
+        padding-top: 30px;
+        padding-left: 80px;
+            }
     #x {
         top: 130px !important;
     }
