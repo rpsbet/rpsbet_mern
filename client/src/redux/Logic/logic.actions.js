@@ -372,6 +372,23 @@ export const deductBalanceWhenStartBlackjack = (data) => async dispatch => {
   }
 }
 
+export const deductBalanceWhenStartRoll = (data) => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.post('/game/start_roll', data);
+    dispatch({ type: END_LOADING });
+
+    if (res.data.success) {
+      dispatch({ type: SET_BALANCE, payload: res.data.balance });
+      return true;
+    }
+
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
+
 export const updateBankroll = (bankroll) => {
   return {
     type: UPDATE_BANKROLL,

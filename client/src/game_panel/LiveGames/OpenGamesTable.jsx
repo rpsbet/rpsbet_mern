@@ -41,7 +41,6 @@ class OpenGamesTable extends Component {
       showPlayerModal: false,
       selectedCreator: '',
       mouseDown: false,
-      borderColor: '',
       likes: [],
       dislikes: [],
       views: [],
@@ -88,7 +87,6 @@ class OpenGamesTable extends Component {
   handleView = ({ _id }) => this.handleViewAction({ roomId: _id, type: 'view' });
 
   handleViewAction = ({ roomId, type }) => {
-    console.log(roomId)
     if (this.props.user?._id) {
       this.props.actionRoom({ roomId, type, conditions: {
         page: this.props.pageNumber ?? 0,
@@ -126,11 +124,11 @@ class OpenGamesTable extends Component {
       game_type: e.currentTarget.dataset.gameType,
       bet_amount: bet_amount,
       creator_id: creator_id,
+      // endgame_amount: e.currentTarget.dataset.endgame_amount,
       spleesh_bet_unit: parseInt(e.currentTarget.dataset.spleeshBetUnit),
       box_price: parseFloat(e.currentTarget.dataset.boxPrice),
       game_log_list: [],
       box_list: [],
-      borderColor: '',
       brain_game_type: {
         _id: e.currentTarget.dataset.brainGameTypeId,
         game_type_name: e.currentTarget.dataset.brainGameTypeName
@@ -463,6 +461,7 @@ class OpenGamesTable extends Component {
                         }}
 
                         data-id={row._id}
+                        // data-endgame-amount={row.endgame_amount}
                         data-creator-id={row.creator_id}
                         data-room-status={row.status}
                         data-game-type={row.game_type.game_type_name}

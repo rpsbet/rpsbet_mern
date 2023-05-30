@@ -253,6 +253,7 @@ router.get('/room/:id', async (req, res) => {
         creator_id: room['creator'],
         aveMultiplier: room['aveMultiplier'],
         creator_name: creator['username'],
+        endgame_amount: room['endgame_amount'],
         joiners: joiners,
         game_type: room['game_type']['game_type_name'],
         bet_amount: parseFloat(room['user_bet']),
@@ -815,6 +816,8 @@ const getRoomList = async (pagination, page, game_type) => {
             : '',
         creator_id: room['creator']['_id'],
         aveMultiplier: room['aveMultiplier'],
+        endgame_amount: room['endgame_amount'],
+
         joiners: room['joiners'],
         joiner_avatars: joinerAvatars,
         creator_avatar: room['creator']['avatar'],
@@ -1057,6 +1060,7 @@ router.post('/rooms', auth, async (req, res) => {
       game_type: gameType,
       user_bet: user_bet,
       pr: pr,
+      endgame_amount: req.body.endgame_amount,
       host_pr: host_pr,
       room_number: roomCount + 1,
       status: 'open'
@@ -1580,6 +1584,24 @@ router.post('/start_brain_game', auth, async (req, res) => {
 });
 
 router.post('/start_blackjack', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: new ObjectId(req.user._id) });
+    user.balance -= req.body.bet_amount;
+    await user.save();
+
+    res.json({
+      success: true,
+      balance: user.balance
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      message: err.toString()
+    });
+  }
+});
+
+router.post('/start_roll', auth, async (req, res) => {
   try {
     const user = await User.findOne({ _id: new ObjectId(req.user._id) });
     user.balance -= req.body.bet_amount;
@@ -2493,7 +2515,7 @@ router.post('/bet', auth, async (req, res) => {
             .json({ error: 'Bet amount exceeds available balance.' });
         }
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
-        newTransactionJ.amount -= parseFloat(req.body.bet_amount);
+        // newTransactionJ.amount -= parseFloat(req.body.bet_amount);
 
         const bet_item = await RollBetItem.findOne({
           room: roomInfo

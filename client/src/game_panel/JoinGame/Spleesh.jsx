@@ -92,6 +92,7 @@ class Spleesh extends Component {
     // this.panelRef.current.addEventListener('scroll', this.handleScroll);
     this.socket.on('SPLEESH_GUESSES', data => {
       this.setState({ spleesh_guesses: data });
+      // console.log('spleesh_guesses:', this.state.spleesh_guesses); // Log the spleesh_guesses value
     });
     this.socket.on('SPLEESH_GUESSES1', data => {
       if (!this.state.spleesh_guesses1Received) {
@@ -99,6 +100,7 @@ class Spleesh extends Component {
           spleesh_guesses: data,
           spleesh_guesses1Received: true
         });
+        // console.log('spleesh_guesses:', this.state.spleesh_guesses); // Log the spleesh_guesses value
       }
     });
     document.addEventListener('mousedown', this.handleClickOutside);
@@ -238,16 +240,6 @@ class Spleesh extends Component {
 
     const { bankroll } = this.state;
 
-    if (
-      this.state.spleesh_guesses.some(item => item.bet_amount === bet_amount)
-    ) {
-      alertModal(
-        isDarkMode,
-        'ALREADY BEEN GUESSED IN THIS CURRENT GAME STUPID MTF!'
-      );
-      return;
-    }
-
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
@@ -278,17 +270,19 @@ class Spleesh extends Component {
   };
 
   createNumberPanel = () => {
+    const { spleesh_guesses } = this.state;
     let panel = [];
+  
     for (let i = 1; i <= 10; i++) {
+      const betAmount = i * this.props.spleesh_bet_unit;
+      const isDisabled = spleesh_guesses.some((item) => item.bet_amount === betAmount);
+  
       panel.push(
-        <Button
-          className={
-            this.state.bet_amount / this.props.spleesh_bet_unit === i
-              ? ' active'
-              : ''
-          }
+        <button
+          className={`${
+            this.state.bet_amount / this.props.spleesh_bet_unit === i ? 'active' : ''
+          } ${isDisabled ? 'disabled' : ''}`}
           onClick={() => {
-            const betAmount = i * this.props.spleesh_bet_unit;
             const endgameAmount = this.props.spleesh_bet_unit * (55 - i);
             this.setState(
               {
@@ -302,15 +296,16 @@ class Spleesh extends Component {
             );
           }}
           key={i}
+          disabled={isDisabled}
         >
-          {convertToCurrency(
-            updateDigitToPoint2(i * this.props.spleesh_bet_unit)
-          )}
-        </Button>
+          {convertToCurrency(i * this.props.spleesh_bet_unit)}
+        </button>
       );
     }
+  
     return panel;
   };
+  
 
   predictNext = (array1, array2) => {
     const frequencyMap = {};
@@ -439,7 +434,8 @@ class Spleesh extends Component {
   };
 
   render() {
-    const { spleesh_bet_unit } = this.props;
+    const { spleesh_bet_unit, endgame_amount } = this.props;
+    const { spleesh_guesses } = this.state
     let arrayName;
     if (spleesh_bet_unit === 1) {
       arrayName = 'spleesh_array';
@@ -447,6 +443,37 @@ class Spleesh extends Component {
       arrayName = 'spleesh_10_array';
     }
 
+    const guessedAmounts = spleesh_guesses.map((number) => number.bet_amount);
+    const remainingSum = endgame_amount - guessedAmounts.reduce((sum, amount) => sum + amount, 0);
+
+    let minSum = 0;
+    let minGuesses = 0;
+    for (let i = 10; i >= 1; i--) {
+      if (!guessedAmounts.includes(i)) {
+        minSum += i;
+        minGuesses++;
+        if (minSum >= remainingSum) {
+          break;
+        }
+      }
+    }
+
+    let maxSum = 0;
+    let maxGuesses = 0;
+    for (let i = 1; i <= 10; i++) {
+      if (!guessedAmounts.includes(i)) {
+        maxSum += i;
+        maxGuesses++;
+        if (maxSum >= remainingSum) {
+          break;
+        }
+      }
+    }
+
+    let remainingGuessesText = `${minGuesses} - ${maxGuesses}`;
+    if (minGuesses === maxGuesses) {
+      remainingGuessesText = minGuesses === 1 ? `${minGuesses} guess` : `${minGuesses} guesses`;
+    }
     return (
       <div className="game-page">
         <div className="page-title">
@@ -533,7 +560,8 @@ class Spleesh extends Component {
                   ))
                 : `No guesses yet`}
             </p>
-            <h3 className="game-sub-title">Your Number</h3>
+            <h3 className="game-sub-title">{remainingGuessesText} remaining</h3>
+
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"

@@ -392,6 +392,7 @@ class JoinGame extends Component {
                     user_id={this.props.user_id}
                     creator_id={this.props.roomInfo.creator_id}
                     roomInfo={this.props.roomInfo}
+                    endgame_amount={this.props.roomInfo.endgame_amount}
                     playSound={this.playSound}
                     is_private={this.props.roomInfo.is_private}
                   />

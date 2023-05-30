@@ -1838,20 +1838,44 @@ button.btn-submit:active,
     filter: grayscale(1);
 }
 .transaction-settings {
+    /* position: fixed; */
+    top:30vh;
+color: #343a40;
+    padding: 20px 20px !important;
+    background: #a9a9a9;
+    border-radius: 9px;
+    opacity: 0;
+    transition: .2s;
+    z-index: 9999;
+    display: none;
+    cursor: pointer;
+}
+.runs-modal {
+    cursor: pointer;
     position: fixed;
-    transform: translate(0%, -10vh);
+    transform: translate(0%, 10vh);
 color: #343a40;
     padding: 20px 30px !important;
     background: #a9a9a9;
     border-radius: 9px;
     opacity: 0;
     transition: .2s;
-    z-index: 100;
+    z-index: 4;
+    height: 400px;
     display: none;
+    overflow-y: scroll;
 }
 .transaction-settings.active {
     opacity: 1;
+    display: inline-block;
+    /* z-index: 99999999; */
+    position: absolute;
+}
+.runs-modal.active {
+    opacity: 1;
     display: block;
+    z-index: 1;
+    position: absolute;
 }
 input {
     border-radius: 8px !important;
@@ -2155,7 +2179,7 @@ background-color: red;
     width: 100vw;
     height: unset;
     bottom: 0px;
-    filter: hue-rotate(75deg);
+    filter: invert(1);
  }
 .gemBg {
     position: absolute;
@@ -2562,7 +2586,6 @@ bottom: 0px;
         width: 100%;
     }
 
-
     
     div.table div.table-row div.table-cell {
         width: auto !important;
@@ -2780,6 +2803,9 @@ margin-bottom: 10px;
     }
 }
 @media (max-width: 400px) {
+    #x {
+        top: 130px !important;
+    }
     .qs-image-panel {
         margin-bottom: 10px !important;
     }
@@ -2817,6 +2843,9 @@ transform: translateX(160px) !important;
       }
 
     .transaction-settings {
+        transform: translate(0%, 10vh);
+    }
+    .runs-modal {
         transform: translate(0%, 10vh);
     }
    
@@ -2960,16 +2989,20 @@ transform: translateX(160px) !important;
     .goalBg, .brainBg, .rocksBg,  .boatBg {
         bottom: 0px;
      }
-     .gemBg, .threedBg{
+     .gemBg{
         bottom: 0px;
         top: unset;
      }
-
+     .threedBg{
+        bottom: 0;
+        width: auto;
+        height: 160vh;
+     }
      .gemBg {
         width: 100vw;
      }
      .boatBg {
-        width: 180vw;
+        width: 200vw;
      }
      .rocksBg {
         width: 150vw;

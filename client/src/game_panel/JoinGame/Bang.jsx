@@ -75,6 +75,7 @@ class Bang extends Component {
     super(props);
 
     this.settingsRef = React.createRef();
+    this.runsRef = React.createRef();
     this.socket = this.props.socket;
     this.state = {
       betting: false,
@@ -106,7 +107,8 @@ class Bang extends Component {
       slippage: 100,
       listen: true,
       betResults: props.betResults,
-      settings_panel_opened: false
+      settings_panel_opened: false,
+      runs_panel_opened: false
     };
     this.panelRef = React.createRef();
 
@@ -139,6 +141,9 @@ class Bang extends Component {
   handleClickOutside = e => {
     if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
       this.setState({ settings_panel_opened: false });
+    }
+    if (this.runsRef && !this.runsRef.current.contains(e.target)) {
+      this.setState({ runs_panel_opened: false });
     }
   };
   static getDerivedStateFromProps(props, current_state) {
@@ -218,7 +223,7 @@ class Bang extends Component {
 
       if (data && data.bangs && data.bangs.length > 0) {
         const lastBang = data.bangs[data.bangs.length - 1];
-        // console.log('lastBang', lastBang);
+        console.log('div', data.bangs);
         const nextBangInterval = lastBang;
         this.setState({
           bang_guesses: data.bangs,
@@ -826,7 +831,6 @@ class Bang extends Component {
         } else {
           content = (
             <div>
-             
               <p>
                 <div id="x">x</div>
                 <CountUp
@@ -1049,8 +1053,6 @@ class Bang extends Component {
 
     return (
       <div className="game-page">
-        
-
         <div className="page-title">
           <h2>PLAY - Bang!</h2>
         </div>
@@ -1099,19 +1101,63 @@ class Bang extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-             <div className="rocksBg" 
-            >
-
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: rocksBg
-              }}
-            />
-                    </div>
+            <div className="rocksBg">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: rocksBg
+                }}
+              />
+            </div>
             <div className="game-info-panel">
-              <h3 className="game-sub-title">Previous Bangs</h3>
+              <div
+                onClick={() =>
+                  this.setState({
+                    runs_panel_opened: !this.state.runs_panel_opened
+                  })
+                }
+                style={{
+                  background: '#f8f9fa54',
+                  padding: '4px 10px',
+                  borderRadius: '7px',
+                  marginTop: '30px'
+                }}
+              >
+                {' '}
+                <h5>View All Bangs</h5>
+              </div>
+              <div
+  ref={this.runsRef}
+  className={`runs-modal ${
+    this.state.runs_panel_opened ? 'active' : ''
+  }`}
+>
+  <h5>LAST 100</h5>
+
+  <div className="slippage-select-panel">
+    <div>
+      {bang_guesses
+        .slice(-100)
+        .reverse() // Reverse the order of the array
+        .map((bang, index) => (
+          <div
+            style={{
+              textAlign: 'center',
+              borderRadius: '5px',
+              marginBottom: '1px',
+              border: '2px solid',
+              backgroundColor: bang < 2.0 ? '#e3e103c2' : '#e30303c2',
+              borderColor: bang < 2.0 ? '#e3e103c2' : '#e30303c2',
+            }}
+            key={index}
+          >
+            {bang}x
+          </div>
+        ))}
+    </div>
+  </div>
+</div>
               <div className="gradient-container">
                 <p className="previous-guesses drop">
                   <div>
@@ -1159,7 +1205,7 @@ class Bang extends Component {
                 </p>
               </div>
             </div>
-            
+
             <div className="bangTimer">
               {bang_guesses.length ? (
                 content

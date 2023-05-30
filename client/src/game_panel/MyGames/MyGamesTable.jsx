@@ -43,7 +43,6 @@ class MyGamesTable extends Component {
     this.props.getMyGames({
       game_type: this.state.selectedGameType
     });
-    console.log(this.props)
   }
 
   // endRoom = (winnings, room_id) => {
@@ -73,7 +72,6 @@ class MyGamesTable extends Component {
   // };
 
   handleButtonClick = (winnings, room_id) => {
-    console.log(winnings);
     let startTime = 1500;
     this.setState({
       [room_id]: {
@@ -113,7 +111,6 @@ class MyGamesTable extends Component {
       await this.props.getMyGames({
         game_type: this.state.selectedGameType
       });
-      console.log(this.state.balance);
       await this.props.addNewTransaction({ amount: winnings, room_id });
       this.props.setBalance((this.state.balance += parseFloat(winnings)));
     } catch (error) {

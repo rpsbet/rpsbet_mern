@@ -65,6 +65,10 @@
 	background: #101010;
 	color: #e9ecef;
  }
+ .dark_mode .runs-modal {
+	background: #1010104f;
+	color: #e9ecef;
+ }
 
 .dark_mode  ::-webkit-scrollBar-thumb {
     background-image:  linear-gradient(

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import CountUp, { linearEasing } from 'react-countup';
+import { deductBalanceWhenStartRoll } from '../../redux/Logic/logic.actions';
 
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -96,7 +97,6 @@ class Roll extends Component {
       roll_guesses1Received: false,
       multiplier: 1.01,
       betResult: null,
-      executeBet: false,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
@@ -156,7 +156,7 @@ class Roll extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.isWaiting && this.state.executeBet) {
+    if (this.state.isWaiting && this.state.disabledButtons) {
       this.pushBet();
     }
 
@@ -201,11 +201,12 @@ class Roll extends Component {
           () => {
             // console.log('this', this.state.lastRollGuess);
             setTimeout(() => {
-              this.setState({ disabledButtons: true });
+              this.setState({ disabledButtons: true }, () => {
+                if (this.state.buttonClicked) {
+                  this.props.deductBalanceWhenStartRoll({ bet_amount: this.state.bet_amount });
+                }
+              });
             }, 1000);
-            setTimeout(() => {
-              this.setState({ executeBet: true });
-            }, 3000);
             setTimeout(() => {
               this.props.playSound('shine');
               this.setState({ showResult: true });
@@ -362,12 +363,12 @@ class Roll extends Component {
         playSound('lose');
         this.changeBgColor(result.betResult);
       }
-      console.log(
-        'h3i',
-        this.state.bgColorChanged,
-        this.state.betResult,
-        this.state.selected_roll
-      );
+      // console.log(
+      //   'h3i',
+      //   this.state.bgColorChanged,
+      //   this.state.betResult,
+      //   this.state.selected_roll
+      // );
       let stored_roll_array =
         JSON.parse(localStorage.getItem('roll_array')) || [];
 
@@ -477,8 +478,7 @@ class Roll extends Component {
   resetButtonState = () => {
     this.setState({
       buttonClicked: false,
-      isWaiting: false,
-      executeBet: false
+      isWaiting: false
     });
   };
   startSlider = () => {
@@ -1683,7 +1683,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  openGamePasswordModal
+  openGamePasswordModal,
+  deductBalanceWhenStartRoll
   // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
 };
 
