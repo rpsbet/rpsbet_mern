@@ -84,54 +84,53 @@ const customTextFieldStyles = {
   MuiOutlinedInput: {
     root: {
       '&:hover $notchedOutline': {
-        borderColor: 'currentColor',
+        borderColor: 'currentColor'
       },
       '&$focused $notchedOutline': {
-        borderColor: 'currentColor',
+        borderColor: 'currentColor'
       },
       '& input:-webkit-autofill': {
         '-webkit-box-shadow': '0 0 0 100px transparent inset',
-        '-webkit-text-fill-color': 'currentColor',
-      },
+        '-webkit-text-fill-color': 'currentColor'
+      }
     },
     notchedOutline: {},
-    focused: {},
+    focused: {}
   },
   MuiInputBase: {
     input: {
       '&$focused': {
-        backgroundColor: 'transparent',
+        backgroundColor: 'transparent'
       },
       '&:-webkit-autofill': {
         '-webkit-box-shadow': '0 0 0 100px inherit inset',
-        '-webkit-text-fill-color': 'currentColor',
-      },
+        '-webkit-text-fill-color': 'currentColor'
+      }
     },
-    focused: {},
-  },
+    focused: {}
+  }
 };
-
 
 const mainTheme = createTheme({
   palette: {
-    type: 'light',
+    type: 'light'
   },
-  overrides: customTextFieldStyles, // Add the TextField style overrides
+  overrides: customTextFieldStyles // Add the TextField style overrides
 });
 
 const darkTheme = createTheme({
   palette: {
-    type: 'dark',
+    type: 'dark'
   },
-  overrides: customTextFieldStyles, // Add the TextField style overrides
+  overrides: customTextFieldStyles // Add the TextField style overrides
 });
 
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
     height: '48px',
-    minWidth: '80px',
-  },
+    minWidth: '80px'
+  }
 };
 
 const gifUrls = [
@@ -141,7 +140,6 @@ const gifUrls = [
 ];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
-
 
 const { SpeechSynthesis } = window.speechSynthesis;
 
@@ -178,7 +176,6 @@ class SiteWrapper extends Component {
       showWithdrawModal: false,
       showDepositModal: false,
       showResetPasswordModal: false,
-      // isActiveLoadingOverlay: this.props.isActiveLoadingOverlay,
       showGameLog: false,
       transactions: updateFromNow(this.props.transactions),
       anchorEl: null,
@@ -189,21 +186,24 @@ class SiteWrapper extends Component {
       web3balance: 0
     };
   }
+  static getDerivedStateFromProps(props, currentState) {
+    const {
+      balance,
+      betResult,
+      userName
+    } = props;
 
-  static getDerivedStateFromProps(props, current_state) {
     if (
-      current_state.balance !== props.balance ||
-      current_state.betResult !== props.betResult ||
-      current_state.userName !== props.userName 
-      // current_state.isActiveLoadingOverlay !== props.isActiveLoadingOverlay
+      currentState.balance !== balance ||
+      currentState.betResult !== betResult ||
+      currentState.userName !== userName
     ) {
       return {
-        ...current_state,
-        balance: props.balance,
-        userName: props.userName,
-        // isActiveLoadingOverlay: props.isActiveLoadingOverlay,
+        ...currentState,
+        balance,
+        userName,
         transactions: updateFromNow(props.transactions),
-        betResult: props.betResult
+        betResult
       };
     }
 
@@ -211,10 +211,11 @@ class SiteWrapper extends Component {
   }
 
   handleMainTabChange = (event, newValue) => {
+    const { selectMainTab } = this.props;
     if (window.location.pathname !== '/') {
       history.push('/');
     }
-    this.props.selectMainTab(newValue);
+    selectMainTab(newValue);
   };
 
   handleMouseEnter = index => {
@@ -224,49 +225,52 @@ class SiteWrapper extends Component {
   handleMouseLeave = () => {
     this.setState({ hoverTabIndex: -1 });
   };
-  
+
   handleMute = () => {
-    this.audioWin.pause();
-    this.audioWin.muted = true;
-    this.audioSplit.pause();
-    this.audioSplit.muted = true;
-    this.audioLose.pause();
-    this.audioLose.muted = true;
-    this.fatality.pause();
-    this.fatality.muted = true;
-    this.nyan.pause();
-    this.nyan.muted = true;
-    this.topG.pause();
-    this.topG.muted = true;
-    this.oohBaby.pause();
-    this.oohBaby.muted = true;
-    this.cashRegister.pause();
-    this.cashRegister.muted = true;
+    const audioElements = [
+      this.audioWin,
+      this.audioSplit,
+      this.audioLose,
+      this.fatality,
+      this.nyan,
+      this.topG,
+      this.oohBaby,
+      this.cashRegister
+    ];
+
+    audioElements.forEach(audio => {
+      audio.pause();
+      audio.muted = true;
+    });
 
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
   };
-  
+
   handleUnmute = () => {
-    this.audioWin.muted = false;
-    this.audioSplit.muted = false;
-    this.audioLose.muted = false;
-    this.fatality.muted = false;
-    this.nyan.muted = false;
-    this.topG.muted = false;
-    this.oohBaby.muted = false;
-    this.cashRegister.muted = false;
+    const audioElements = [
+      this.audioWin,
+      this.audioSplit,
+      this.audioLose,
+      this.fatality,
+      this.nyan,
+      this.topG,
+      this.oohBaby,
+      this.cashRegister
+    ];
+
+    audioElements.forEach(audio => {
+      audio.muted = false;
+    });
   };
 
   speak(message) {
-    if (!this.props.isMuted) {
-      if (window.speechSynthesis) {
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
-        utterance.lang = 'en-US'; // set the language to US English
-        window.speechSynthesis.speak(utterance);
-      }
+    if (!this.props.isMuted && window.speechSynthesis) {
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
+      utterance.lang = 'en-US'; // set the language to US English
+      window.speechSynthesis.speak(utterance);
     }
   }
 
@@ -284,12 +288,12 @@ class SiteWrapper extends Component {
 
   initSocket = () => {
     const socket = socketIOClient(this.state.endpoint);
-  
+
     socket.on('CONNECTED', data => {
       socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
       socket.emit('FETCH_GLOBAL_CHAT');
     });
-  
+
     socket.on('UPDATED_ROOM_LIST', data => {
       this.props.setRoomList(data);
       this.props.getUser(true);
@@ -297,177 +301,176 @@ class SiteWrapper extends Component {
       this.props.getMyHistory();
       this.props.getHistory();
     });
-  
-    socket.on('PLAY_CORRECT_SOUND', (socketId) => {
+
+    socket.on('PLAY_CORRECT_SOUND', socketId => {
       if (socket.id === socketId && !this.props.isMuted) {
         const audio = new Audio('/sounds/correct.mp3');
         audio.play();
       }
     });
-  
-    socket.on('PLAY_WRONG_SOUND', (socketId) => {
+
+    socket.on('PLAY_WRONG_SOUND', socketId => {
       if (socket.id === socketId && !this.props.isMuted) {
         const audio = new Audio('/sounds/wrong.mp3');
         audio.play();
       }
     });
-    
 
-    socket.on('PLAY_SOUND', data => {
-      if (!this.props.isMuted) {
-      let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
+    // socket.on('PLAY_SOUND', data => {
+    //   if (!this.props.isMuted) {
+    //     let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
 
-      const message = data.message.toLowerCase();
-      if (message.includes('lost')) {
-        let value;
-        if (message.match(/\d+\.\d{2}/)) {
-          value = message.match(/\d+\.\d{2}/)[0];
-        } else if (message.match(/\d+/)) {
-          value = message.match(/\d+/)[0];
-        }
-        if (value) {
-          const formattedValue = parseFloat(value).toFixed(2);
-          const spokenValue = formattedValue.endsWith('.00')
-            ? parseFloat(formattedValue).toString()
-            : formattedValue;
-          this.speak(`Lost, ${spokenValue}`);
-        }
-        if (value >= 0 && value <= 2) {
-          this.audioSplit.play();
-        } else if (value > 25 && value <= 100) {
-          this.audioLose.play();
-        } else if (value > 100) {
-          this.fatality.play();
-        }
-        winCounter = 0;
-      } else if (message.includes('split')) {
-        let value;
-        if (message.match(/\d+\.\d{2}/)) {
-          value = message.match(/\d+\.\d{2}/)[0];
-        } else if (message.match(/\d+/)) {
-          value = message.match(/\d+/)[0];
-        }
-        if (value) {
-          const formattedValue = parseFloat(value).toFixed(2);
-          const spokenValue = formattedValue.endsWith('.00')
-            ? parseFloat(formattedValue).toString()
-            : formattedValue;
-          this.speak(`Split, ${spokenValue}`);
-        }
-        winCounter = 0;
-      } else if (message.includes('won')) {
-        winCounter++;
-        if (winCounter === 3) {
-          this.oohBaby.play();
-          winCounter = 0;
-        }
-        let value;
-        if (message.match(/\d+\.\d{2}/)) {
-          value = message.match(/\d+\.\d{2}/)[0];
-        } else if (message.match(/\d+/)) {
-          value = message.match(/\d+/)[0];
-        }
-        if (value) {
-          const formattedValue = parseFloat(value).toFixed(2);
-          const spokenValue = formattedValue.endsWith('.00')
-            ? parseFloat(formattedValue).toString()
-            : formattedValue;
-          this.speak(`Won, ${spokenValue}`);
-        }
-        if (value >= 0 && value <= 2) {
-          this.audioSplit.play();
-        } else if (value >= 15 && value <= 50) {
-          this.cashRegister.play();
-        } else if (value > 50 && value <= 250) {
-          this.audioWin.play();
-        } else if (value > 250 && value <= 1000) {
-          this.topG.play();
-        } else if (value > 1000) {
-          this.nyan.play();
-        }
-      }
+    //     const message = data.message.toLowerCase();
+    //     if (message.includes('lost')) {
+    //       let value;
+    //       if (message.match(/\d+\.\d{2}/)) {
+    //         value = message.match(/\d+\.\d{2}/)[0];
+    //       } else if (message.match(/\d+/)) {
+    //         value = message.match(/\d+/)[0];
+    //       }
+    //       if (value) {
+    //         const formattedValue = parseFloat(value).toFixed(2);
+    //         const spokenValue = formattedValue.endsWith('.00')
+    //           ? parseFloat(formattedValue).toString()
+    //           : formattedValue;
+    //         this.speak(`Lost, ${spokenValue}`);
+    //       }
+    //       if (value >= 0 && value <= 2) {
+    //         this.audioSplit.play();
+    //       } else if (value > 25 && value <= 100) {
+    //         this.audioLose.play();
+    //       } else if (value > 100) {
+    //         this.fatality.play();
+    //       }
+    //       winCounter = 0;
+    //     } else if (message.includes('split')) {
+    //       let value;
+    //       if (message.match(/\d+\.\d{2}/)) {
+    //         value = message.match(/\d+\.\d{2}/)[0];
+    //       } else if (message.match(/\d+/)) {
+    //         value = message.match(/\d+/)[0];
+    //       }
+    //       if (value) {
+    //         const formattedValue = parseFloat(value).toFixed(2);
+    //         const spokenValue = formattedValue.endsWith('.00')
+    //           ? parseFloat(formattedValue).toString()
+    //           : formattedValue;
+    //         this.speak(`Split, ${spokenValue}`);
+    //       }
+    //       winCounter = 0;
+    //     } else if (message.includes('won')) {
+    //       winCounter++;
+    //       if (winCounter === 3) {
+    //         this.oohBaby.play();
+    //         winCounter = 0;
+    //       }
+    //       let value;
+    //       if (message.match(/\d+\.\d{2}/)) {
+    //         value = message.match(/\d+\.\d{2}/)[0];
+    //       } else if (message.match(/\d+/)) {
+    //         value = message.match(/\d+/)[0];
+    //       }
+    //       if (value) {
+    //         const formattedValue = parseFloat(value).toFixed(2);
+    //         const spokenValue = formattedValue.endsWith('.00')
+    //           ? parseFloat(formattedValue).toString()
+    //           : formattedValue;
+    //         this.speak(`Won, ${spokenValue}`);
+    //       }
+    //       if (value >= 0 && value <= 2) {
+    //         this.audioSplit.play();
+    //       } else if (value >= 15 && value <= 50) {
+    //         this.cashRegister.play();
+    //       } else if (value > 50 && value <= 250) {
+    //         this.audioWin.play();
+    //       } else if (value > 250 && value <= 1000) {
+    //         this.topG.play();
+    //       } else if (value > 1000) {
+    //         this.nyan.play();
+    //       }
+    //     }
 
-      localStorage.setItem('winCounter', winCounter);
-    }
-    });
+    //     localStorage.setItem('winCounter', winCounter);
+    //   }
+    // });
 
     socket.on('SEND_CHAT', data => {
       try {
         if (!this.props.isMuted) {
-        let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
+          let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
 
-        const message = data.message.toLowerCase();
-        if (message.includes('won')) {
-          let value;
-          if (message.match(/\d+\.\d{2}/)) {
-            value = message.match(/\d+\.\d{2}/)[0];
-          } else if (message.match(/\d+/)) {
-            value = message.match(/\d+/)[0];
-          }
-          if (value) {
-            const formattedValue = parseFloat(value).toFixed(2);
-            const spokenValue = formattedValue.endsWith('.00')
-              ? parseFloat(formattedValue).toString()
-              : formattedValue;
-            this.speak(`Lost, ${spokenValue}`);
-          }
-          if (value >= 0 && value <= 2) {
-            this.audioSplit.play();
-          } else if (value > 25 && value <= 100) {
-            this.audioLose.play();
-          } else if (value > 100) {
-            this.fatality.play();
-          }
-          winCounter = 0;
-        } else if (message.includes('split')) {
-          let value;
-          if (message.match(/\d+\.\d{2}/)) {
-            value = message.match(/\d+\.\d{2}/)[0];
-          } else if (message.match(/\d+/)) {
-            value = message.match(/\d+/)[0];
-          }
-          if (value) {
-            const formattedValue = parseFloat(value).toFixed(2);
-            const spokenValue = formattedValue.endsWith('.00')
-              ? parseFloat(formattedValue).toString()
-              : formattedValue;
-            this.speak(`Split, ${spokenValue}`);
-          }
-          winCounter = 0;
-        } else if (message.includes('lost')) {
-          winCounter++;
-          if (winCounter === 3) {
-            this.oohBaby.play();
+          const message = data.message.toLowerCase();
+          if (message.includes('won')) {
+            let value;
+            if (message.match(/\d+\.\d{2}/)) {
+              value = message.match(/\d+\.\d{2}/)[0];
+            } else if (message.match(/\d+/)) {
+              value = message.match(/\d+/)[0];
+            }
+            if (value) {
+              const formattedValue = parseFloat(value).toFixed(2);
+              const spokenValue = formattedValue.endsWith('.00')
+                ? parseFloat(formattedValue).toString()
+                : formattedValue;
+              this.speak(`Lost, ${spokenValue}`);
+            }
+            if (value >= 0 && value <= 2) {
+              this.audioSplit.play();
+            } else if (value > 25 && value <= 100) {
+              this.audioLose.play();
+            } else if (value > 100) {
+              this.fatality.play();
+            }
             winCounter = 0;
+          } else if (message.includes('split')) {
+            let value;
+            if (message.match(/\d+\.\d{2}/)) {
+              value = message.match(/\d+\.\d{2}/)[0];
+            } else if (message.match(/\d+/)) {
+              value = message.match(/\d+/)[0];
+            }
+            if (value) {
+              const formattedValue = parseFloat(value).toFixed(2);
+              const spokenValue = formattedValue.endsWith('.00')
+                ? parseFloat(formattedValue).toString()
+                : formattedValue;
+              this.speak(`Split, ${spokenValue}`);
+            }
+            winCounter = 0;
+          } else if (message.includes('lost')) {
+            winCounter++;
+            if (winCounter === 3) {
+              this.oohBaby.play();
+              winCounter = 0;
+            }
+            let value;
+            if (message.match(/\d+\.\d{2}/)) {
+              value = message.match(/\d+\.\d{2}/)[0];
+            } else if (message.match(/\d+/)) {
+              value = message.match(/\d+/)[0];
+            }
+            if (value) {
+              const formattedValue = parseFloat(value).toFixed(2);
+              const spokenValue = formattedValue.endsWith('.00')
+                ? parseFloat(formattedValue).toString()
+                : formattedValue;
+              this.speak(`Won, ${spokenValue}`);
+            }
+            if (value >= 0 && value <= 2) {
+              this.audioSplit.play();
+            } else if (value >= 15 && value <= 50) {
+              this.cashRegister.play();
+            } else if (value > 50 && value <= 250) {
+              this.audioWin.play();
+            } else if (value > 250 && value <= 1000) {
+              this.topG.play();
+            } else if (value > 1000) {
+              this.nyan.play();
+            }
           }
-          let value;
-          if (message.match(/\d+\.\d{2}/)) {
-            value = message.match(/\d+\.\d{2}/)[0];
-          } else if (message.match(/\d+/)) {
-            value = message.match(/\d+/)[0];
-          }
-          if (value) {
-            const formattedValue = parseFloat(value).toFixed(2);
-            const spokenValue = formattedValue.endsWith('.00')
-              ? parseFloat(formattedValue).toString()
-              : formattedValue;
-            this.speak(`Won, ${spokenValue}`);
-          }
-          if (value >= 0 && value <= 2) {
-            this.audioSplit.play();
-          } else if (value >= 15 && value <= 50) {
-            this.cashRegister.play();
-          } else if (value > 50 && value <= 250) {
-            this.audioWin.play();
-          } else if (value > 250 && value <= 1000) {
-            this.topG.play();
-          } else if (value > 1000) {
-            this.nyan.play();
-          }
-        }
 
-        localStorage.setItem('winCounter', winCounter);
-      }
+          localStorage.setItem('winCounter', winCounter);
+        }
         this.props.addChatLog(data);
 
         if (history.location.pathname.substr(0, 5) === '/chat') {
@@ -530,15 +533,47 @@ class SiteWrapper extends Component {
   };
   async componentDidMount() {
     let currentUrl = window.location.pathname;
+
     if (currentUrl.indexOf('create') !== -1) {
       this.setState({
         selectedMainTabIndex: this.props.selectMainTab(1)
-        // selectedMobileTabIndex: this.props.selectMobileTab(1)
       });
     }
+
     setTimeout(() => {
       this.setState({ websiteLoading: false });
     }, 2500);
+
+    this.initializeAudio();
+
+    this.initSocket();
+
+    const result = await this.props.getUser(true);
+
+    if (result.status === 'success') {
+      // if (!result.user.is_activated) {
+      //   this.handleOpenVerificationModal();
+      // }
+    }
+
+    this.interval = setInterval(this.updateReminderTime, 3000);
+
+    //web3
+    if (window.ethereum) {
+      window.ethereum.on('chainChanged', () => {
+        this.loadWeb3();
+      });
+      window.ethereum.on('accountsChanged', () => {
+        this.loadWeb3();
+      });
+    }
+
+    this.loadWeb3();
+    this.fetchData();
+    setInterval(() => this.fetchData(), 2000); // Call the fetchData method every 2 seconds
+  }
+
+  initializeAudio() {
     try {
       this.nyan = new Audio('/sounds/nyan.mp3');
       this.nyan.load();
@@ -559,48 +594,27 @@ class SiteWrapper extends Component {
     } catch (e) {
       console.log(e);
     }
-
-    this.initSocket();
-    const result = await this.props.getUser(true);
-    if (result.status === 'success') {
-      // if (!result.user.is_activated) {
-      //   this.handleOpenVerificationModal();
-      // }
-    }
-    this.interval = setInterval(this.updateReminderTime, 3000);
-    //web3
-    if (window.ethereum) {
-      window.ethereum.on('chainChanged', () => {
-        this.loadWeb3();
-      });
-      window.ethereum.on('accountsChanged', () => {
-        this.loadWeb3();
-      });
-    }
-    this.loadWeb3();
-    this.fetchData();
-    setInterval(() => this.fetchData(), 2000); // Call the fetchData method every 2 seconds
   }
-
   async fetchData() {
-    const transactions = this.props.transactions;
+    const { transactions } = this.props;
 
-    let categories = [];
-    let data = [];
+    const categories = [];
+    const data = [];
     let currentBalance = 0;
 
-    transactions.forEach(transaction => {
+    transactions.forEach((transaction, index) => {
       categories.push(transaction.created_at);
       currentBalance += transaction.amount;
       data.push({
-        x: categories.length - 1,
+        x: index,
         y: currentBalance,
         color: transaction.amount >= 0 ? 'green' : 'red'
       });
     });
+
     this.setState(prevState => ({
       balance: currentBalance,
-      oldBalance: prevState.balance // update oldBalance
+      oldBalance: prevState.balance
     }));
 
     this.setState({
@@ -628,7 +642,6 @@ class SiteWrapper extends Component {
         },
         interactions: []
       },
-
       series: [
         {
           data
@@ -638,91 +651,70 @@ class SiteWrapper extends Component {
   }
 
   componentWillUnmount() {
-    if (this.props.socket) {
-      this.props.socket.disconnect();
+    const { socket } = this.props;
+    if (socket) {
+      socket.disconnect();
     }
     clearInterval(this.interval);
   }
-
   handleLogout = clear_token => {
-    this.setState({ web3account: null });
-    this.setState({ web3balance: null });
-    this.setState({ anchorEl: null });
-    if (this.props.socket) {
-      this.props.socket.disconnect();
+    this.setState({
+      web3account: null,
+      web3balance: null,
+      anchorEl: null,
+      showGameLog: false
+    });
+
+    const { socket, userSignOut } = this.props;
+    if (socket) {
+      socket.disconnect();
     }
-    this.props.userSignOut(clear_token);
+    userSignOut(clear_token);
   };
 
-  handleOpenLoginModal = () => {
-    this.setState({ showLoginModal: true });
-  };
-  handleCloseLoginModal = () => {
-    this.setState({ showLoginModal: false });
+  handleModalOpen = (modalName, value) => {
+    this.setState({ [modalName]: value });
   };
 
-  handleOpenSignupModal = () => {
-    this.setState({ showSignupModal: true });
-  };
-  handleCloseSignupModal = () => {
-    this.setState({ showSignupModal: false });
-  };
-
-  handleOpenVerificationModal = () => {
-    this.setState({ showVerificationModal: true });
-  };
-  handleCloseVerificationModal = () => {
-    this.setState({ showVerificationModal: false });
+  handleModalClose = modalName => {
+    this.setState({ [modalName]: false });
   };
 
   handleOpenProfileModal = () => {
-    this.setState({ showProfileModal: true, anchorEl: null });
+    this.handleModalOpen('showProfileModal', true);
   };
-  handleCloseProfileModal = () => {
-    this.setState({ showProfileModal: false });
-  };
+
   handleOpenPlayerModal = () => {
-    this.setState({ showPlayerModal: true, anchorEl: null });
-  };
-  handleClosePlayerModal = () => {
-    this.setState({ showPlayerModal: false });
+    this.handleModalOpen('showPlayerModal', true);
   };
 
   handleOpenHowToPlayModal = () => {
-    this.setState({ showHowToPlayModal: true });
-  };
-  handleCloseHowToPlayModal = () => {
-    this.setState({ showHowToPlayModal: false });
+    this.handleModalOpen('showHowToPlayModal', true);
   };
 
   handleOpenDepositModal = () => {
-    this.setState({ showDepositModal: true, anchorEl: null });
-  };
-  handleCloseDepositModal = () => {
-    this.setState({ showDepositModal: false });
+    this.handleModalOpen('showDepositModal', true);
   };
 
   handleOpenWithdrawModal = () => {
-    this.setState({ showWithdrawModal: true, anchorEl: null });
-  };
-  handleCloseWithdrawModal = () => {
-    this.setState({ showWithdrawModal: false });
+    this.handleModalOpen('showWithdrawModal', true);
   };
 
   handleOpenResetPasswordModal = () => {
-    this.setState({ showResetPasswordModal: true });
-  };
-  handleCloseResetPasswordModal = () => {
-    this.setState({ showResetPasswordModal: false });
+    this.handleModalOpen('showResetPasswordModal', true);
   };
 
   handleBalanceClick = () => {
-    this.setState({ showGameLog: !this.state.showGameLog });
+    this.setState(prevState => ({
+      showGameLog: !prevState.showGameLog
+    }));
   };
 
   disconnectWeb3 = async () => {
-    this.setState({ web3account: null });
-    this.setState({ web3balance: null });
+    this.setState({
+      web3account: null,
+      web3balance: null
+    });
   };
 
   render() {
@@ -736,46 +728,38 @@ class SiteWrapper extends Component {
             this.props.isDarkMode ? 'dark_mode' : ''
           }`}
         >
-           {websiteLoading && (
-        <div className="loading-overlay" style={{
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          <img src={randomGifUrl} alt="Loading" />
-                <span style={{
-                  marginTop: '10px',
-                  color: '#fff',
-                }}>
-                  LOADING...
-                  </span>
-          <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: progress
-              }}
+          {websiteLoading && (
+            <div
+              className="loading-overlay"
               style={{
-                marginTop: '-40px',
-                filter: `hue-rotate(${hueRotateValue}deg)`, // Use the calculated hue-rotate value
-                width: '300px',
-                height: '100px'
+                display: 'flex',
+                flexDirection: 'column'
               }}
+            >
+              <img src={randomGifUrl} alt="Loading" />
+              <span
+                style={{
+                  marginTop: '10px',
+                  color: '#fff'
+                }}
+              >
+                LOADING...
+              </span>
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: progress
+                }}
+                style={{
+                  marginTop: '-40px',
+                  filter: `hue-rotate(${hueRotateValue}deg)`, // Use the calculated hue-rotate value
+                  width: '300px',
+                  height: '100px'
+                }}
               />
-        </div>
-      )}
-          {/* <LoadingOverlay
-            active={this.state.isActiveLoadingOverlay}
-            spinner
-            text={randomText}
-            styles={{
-              wrapper: {
-                position: 'fixed',
-                width: '100%',
-                height: '100vh',
-                zIndex: this.state.isActiveLoadingOverlay ? 3 : 0
-              }
-            }}
-          ></LoadingOverlay> */}
+            </div>
+          )}
           <div className="game_header">
             <div className="main_header">
               <a
@@ -1000,18 +984,20 @@ class SiteWrapper extends Component {
                               onClick={e => {
                                 this.props.toggleMute(!this.props.isMuted);
                                 this.handleMute();
-                              }}                            >
+                              }}
+                            >
                               <ListItemIcon>
                                 <VolumeOffIcon />
                               </ListItemIcon>
                               UNMUTE
                             </div>
                           ) : (
-                            <div className="playBtn"
-                            onClick={e => {
-                              this.props.toggleMute(!this.props.isMuted);
-                              this.handleUnmute();
-                            }}
+                            <div
+                              className="playBtn"
+                              onClick={e => {
+                                this.props.toggleMute(!this.props.isMuted);
+                                this.handleUnmute();
+                              }}
                             >
                               <ListItemIcon>
                                 <VolumeUpIcon />
@@ -1048,17 +1034,6 @@ class SiteWrapper extends Component {
                         </ListItemIcon>
                         <ListItemText>LOG OUT</ListItemText>
                       </MenuItem>
-
-                      {/* <MenuItem onClick={(e) => {this.props.setDarkMode(!this.props.isDarkMode)}}>
-                
-                        <DarkModeToggle
-                          onChange={this.props.setDarkMode}
-                          checked={this.props.isDarkMode}
-                          size={50}
-                          speed={5}
-                          className="dark_mode_toggle"
-                        />
-                      </MenuItem> */}
                     </Menu>
                   </>
                 ) : (

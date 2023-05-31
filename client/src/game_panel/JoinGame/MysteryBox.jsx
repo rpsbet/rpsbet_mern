@@ -77,39 +77,40 @@ class MysteryBox extends Component {
       settings_panel_opened: false
     };
   }
-
   static getDerivedStateFromProps(props, current_state) {
+    const { isPasswordCorrect, betResult, balance } = props;
+  
     if (
-      current_state.isPasswordCorrect !== props.isPasswordCorrect ||
-      current_state.betResult !== props.betResult ||
-      current_state.balance !== props.balance
+      current_state.isPasswordCorrect !== isPasswordCorrect ||
+      current_state.betResult !== betResult ||
+      current_state.balance !== balance
     ) {
       return {
         ...current_state,
-        balance: props.balance,
-        isPasswordCorrect: props.isPasswordCorrect,
-        betResult: props.betResult
+        balance,
+        isPasswordCorrect,
+        betResult
       };
     }
-
+  
     return null;
   }
-
+  
   onBoxClicked = e => {
     e.preventDefault();
     this.props.playSound('select');
-
+  
     if (e.currentTarget.getAttribute('status') === 'opened') {
       return;
     }
-
+  
     const _id = e.currentTarget.getAttribute('_id');
     const box_price = e.currentTarget.getAttribute('box_price');
     this.setState({ selected_id: _id, bet_amount: box_price }, () => {
       this.onBtnBetClick();
     });
   };
-
+  
   componentDidMount() {
     const { socket } = this.props;
     socket.on('UPDATED_BOX_LIST', data => {
@@ -117,12 +118,12 @@ class MysteryBox extends Component {
     });
     document.addEventListener('mousedown', this.handleClickOutside);
   }
-
+  
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
   };
-
+  
   componentDidUpdate(prevProps, prevState) {
     if (prevState.box_list !== this.state.box_list) {
       this.props.refreshHistory(() => {
@@ -135,35 +136,16 @@ class MysteryBox extends Component {
             selected_id: this.state.selected_id,
             is_anonymous: this.state.is_anonymous
           });
-
+  
           const updatedBoxList = this.state.box_list.map(el =>
             el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
           );
-
+  
           this.setState({ box_list: updatedBoxList });
         }
       });
     }
   }
-
-  // handleScroll = event => {
-  //   const panel = event.target;
-  //   const scrollLeft = panel.scrollLeft;
-  //   const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-
-  //   if (scrollLeft >= maxScrollLeft) {
-  //     // Scrolled to or beyond end of panel, so append items to array and restart animation
-  //     const items = this.state.items.concat(this.state.items);
-  //     this.setState({ items }, () => {
-  //       panel.style.animation = 'none';
-  //       panel.scrollTo({ left: 0, behavior: 'auto' });
-  //       void panel.offsetWidth;
-  //       panel.style.animation = 'ticker 20s linear infinite';
-  //     });
-  //   } else {
-  //     panel.style.animation = 'none';
-  //   }
-  // };
 
   handleClickOutside = e => {
     if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {

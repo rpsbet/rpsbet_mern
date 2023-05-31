@@ -89,25 +89,46 @@ class Spleesh extends Component {
       this.setState({ settings_panel_opened: false });
     }
   };
-
+  static getDerivedStateFromProps(props, currentState) {
+    if (
+      currentState.isPasswordCorrect !== props.isPasswordCorrect ||
+      currentState.balance !== props.balance
+    ) {
+      return {
+        ...currentState,
+        balance: props.balance,
+        isPasswordCorrect: props.isPasswordCorrect
+      };
+    }
+    return null;
+  }
+  
+  onShowButtonClicked = (e) => {
+    e.preventDefault();
+  };
+  
+  handleClickOutside = (e) => {
+    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
+  
   componentDidMount() {
-    // this.panelRef.current.addEventListener('scroll', this.handleScroll);
-    console.log('endgame_amount:', this.props.roomInfo.endgame_amount); // Log the spleesh_guesses value
-    this.socket.on('SPLEESH_GUESSES', data => {
+    console.log('endgame_amount:', this.props.roomInfo.endgame_amount);
+    this.socket.on('SPLEESH_GUESSES', (data) => {
       this.setState({ spleesh_guesses: data });
     });
-    this.socket.on('SPLEESH_GUESSES1', data => {
+    this.socket.on('SPLEESH_GUESSES1', (data) => {
       if (!this.state.spleesh_guesses1Received) {
         this.setState({
           spleesh_guesses: data,
           spleesh_guesses1Received: true
         });
-        // console.log('spleesh_guesses:', this.state.spleesh_guesses); // Log the spleesh_guesses value
       }
     });
     document.addEventListener('mousedown', this.handleClickOutside);
   }
-
+  
   componentDidUpdate(prevProps, prevState) {
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
@@ -119,45 +140,26 @@ class Spleesh extends Component {
       });
     }
   }
-
+  
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    // this.panelRef.current.removeEventListener('scroll', this.handleScroll);
   };
-
-  // handleScroll = event => {
-  //   const panel = event.target;
-  //   const scrollLeft = panel.scrollLeft;
-  //   const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-
-  //   if (scrollLeft >= maxScrollLeft) {
-  //     // Scrolled to or beyond end of panel, so append items to array and restart animation
-  //     const items = this.state.items.concat(this.state.items);
-  //     this.setState({ items }, () => {
-  //       panel.style.animation = 'none';
-  //       panel.scrollTo({ left: 0, behavior: 'auto' });
-  //       void panel.offsetWidth;
-  //       panel.style.animation = 'ticker 20s linear infinite';
-  //     });
-  //   } else {
-  //     panel.style.animation = 'none';
-  //   }
-  // };
-
   joinGame = async () => {
     const { is_anonymous, bet_amount } = this.state;
     const {
       spleesh_bet_unit,
       playSound,
       refreshHistory,
-      isDarkMode
+      isDarkMode,
+      join
     } = this.props;
-
-    const result = await this.props.join({
+  
+    const result = await join({
       bet_amount: bet_amount,
       is_anonymous: is_anonymous
     });
+  
     if (result.status === 'success') {
       let text = 'HAHAA, YOU LOST!!!';
       playSound('lose');
@@ -168,16 +170,16 @@ class Spleesh extends Component {
         text = 'DRAW, NO WINNER!';
         playSound('split');
       }
-
+  
       let stored_spleesh_array =
         JSON.parse(localStorage.getItem('spleesh_array')) || [];
       let stored_spleesh_10_array =
         JSON.parse(localStorage.getItem('spleesh_10_array')) || [];
-
+  
       while (stored_spleesh_array.length >= 30) {
         stored_spleesh_array.shift();
       }
-
+  
       if (spleesh_bet_unit === 10) {
         while (stored_spleesh_10_array.length >= 30) {
           stored_spleesh_10_array.shift();
@@ -194,7 +196,7 @@ class Spleesh extends Component {
           JSON.stringify(stored_spleesh_array)
         );
       }
-
+  
       if (result.roomStatus === 'finished') {
         gameResultModal(
           isDarkMode,
@@ -227,8 +229,37 @@ class Spleesh extends Component {
     }
     refreshHistory();
   };
-
-  onBtnBetClick = async bet_amount => {
+  
+  joinGame2 = async (nextGuess, shouldStopBetting) => {
+    const { is_anonymous } = this.state;
+    const { playSound, refreshHistory, join } = this.props;
+  
+    if (shouldStopBetting) {
+      this.stopBetting();
+      return;
+    }
+  
+    const result = await join({
+      bet_amount: nextGuess,
+      is_anonymous: is_anonymous
+    });
+  
+    if (result.status === 'success') {
+      let text = 'HAHAA, YOU LOST!!!';
+      playSound('lose');
+      if (result.betResult === 1) {
+        text = 'NOT BAD, WINNER!';
+        playSound('win');
+      } else if (result.betResult === 0) {
+        text = 'DRAW, NO WINNER!';
+        playSound('split');
+      }
+    }
+  
+    refreshHistory();
+  };
+  
+  onBtnBetClick = async (bet_amount) => {
     const {
       isAuthenticated,
       isDarkMode,
@@ -239,38 +270,38 @@ class Spleesh extends Component {
       roomInfo,
       openGamePasswordModal
     } = this.props;
-
+  
     const { bankroll } = this.state;
-
+  
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-
+  
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-
+  
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-
+  
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
-
+  
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-
+  
     const hideConfirmModal =
       localStorage.getItem('hideConfirmModal') === 'true';
-
+  
     if (hideConfirmModal || is_private !== true || passwordCorrect === true) {
       await this.joinGame(bet_amount);
     } else {
       openGamePasswordModal();
     }
   };
-
+  
   createNumberPanel = () => {
     const { spleesh_guesses } = this.state;
     let panel = [];
@@ -314,29 +345,25 @@ class Spleesh extends Component {
     let maxValue = 0;
     let maxKey = 0;
 
-    // Create a frequency map of the spleesh values in array1
     array1.forEach(item => {
       if (!frequencyMap[item.spleesh]) {
         frequencyMap[item.spleesh] = 0;
       }
       frequencyMap[item.spleesh] += 1;
 
-      // Keep track of the spleesh value with the highest frequency
       if (frequencyMap[item.spleesh] > maxValue) {
         maxValue = frequencyMap[item.spleesh];
         maxKey = item.spleesh;
       }
     });
 
-    // Get all the spleesh values from the frequency map
     const spleeshValues = Object.keys(frequencyMap);
 
     let prediction = maxKey;
     let i = 0;
-    const maxAttempts = spleeshValues.length * 1; // set a maximum number of attempts to find a value
+    const maxAttempts = spleeshValues.length * 1;
     let shouldStopBetting = false;
     while (array2.some(item => item.bet_amount === prediction)) {
-      // Randomize a value from the spleesh values until one is found that doesn't exist in array2 or until the maximum number of attempts is reached
       const randomIndex = Math.floor(Math.random() * spleeshValues.length);
       prediction = Number(spleeshValues[randomIndex]);
 
@@ -409,31 +436,6 @@ class Spleesh extends Component {
     this.setState({ intervalId: null, betting: false, timerValue: 2000 });
   };
 
-  joinGame2 = async (nextGuess, shouldStopBetting) => {
-    const { is_anonymous } = this.state;
-    const { playSound, refreshHistory } = this.props;
-    if (shouldStopBetting) {
-      this.stopBetting();
-      return;
-    }
-    const result = await this.props.join({
-      bet_amount: nextGuess,
-      is_anonymous: is_anonymous
-    });
-    if (result.status === 'success') {
-      let text = 'HAHAA, YOU LOST!!!';
-      playSound('lose');
-      if (result.betResult === 1) {
-        text = 'NOT BAD, WINNER!';
-        playSound('win');
-      } else if (result.betResult === 0) {
-        text = 'DRAW, NO WINNER!';
-        playSound('split');
-      }
-    }
-
-    refreshHistory();
-  };
 
   render() {
     const { spleesh_bet_unit, endgame_amount } = this.props;
@@ -576,27 +578,7 @@ class Spleesh extends Component {
                 }}
               />
             </div>
-            {/*<h3 className="game-sub-title">Previous Guesses</h3>
-             <p className="previous-guesses">
-              {this.state.spleesh_guesses.length > 0
-                ? this.state.spleesh_guesses.map((guess, index) => (
-                    <span
-                      key={index}
-                      style={{
-                        color: '#fff',
-                        background: '#8e929711',
-                        borderRadius: '6px',
-                        padding: '0.3em 0.9em',
-                        marginRight: '20px'
-                      }}
-                    >
-                      {' '}
-                      <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
-                      {guess.bet_amount + '.00'}
-                    </span>
-                  ))
-                : `No guesses yet`}
-            </p> */}
+            
              <div className="waves">
 
              <Lottie

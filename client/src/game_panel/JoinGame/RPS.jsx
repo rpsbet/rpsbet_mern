@@ -341,23 +341,6 @@ class RPS extends Component {
     }
   }
 
-  // handleScroll = event => {
-  //   const panel = event.target;
-  //   const scrollLeft = panel.scrollLeft;
-  //   const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-
-  //   if (scrollLeft >= maxScrollLeft) {
-  //     const items = this.state.items.concat(this.state.items);
-  //     this.setState({ items }, () => {
-  //       panel.style.animation = 'none';
-  //       panel.scrollTo({ left: 0, behavior: 'auto' });
-  //       void panel.offsetWidth;
-  //       panel.style.animation = 'ticker 20s linear infinite';
-  //     });
-  //   } else {
-  //     panel.style.animation = 'none';
-  //   }
-  // };
 
   joinGame = async () => {
     const {
@@ -369,7 +352,7 @@ class RPS extends Component {
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
-
+// console.log(selected_rps);
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,

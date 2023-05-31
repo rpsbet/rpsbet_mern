@@ -146,7 +146,7 @@ class DropGame extends Component {
     }
     return null;
   }
-
+  
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.roomInfo && this.props.roomInfo) {
       if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
@@ -156,7 +156,7 @@ class DropGame extends Component {
         });
       }
     }
-
+  
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
       this.state.isPasswordCorrect === true
@@ -164,10 +164,8 @@ class DropGame extends Component {
       this.joinGame();
     }
   }
-
+  
   componentDidMount = () => {
-    // this.panelRef.current.addEventListener('scroll', this.handleScroll);
-
     this.socket.on('DROP_GUESSES1', data => {
       if (!this.state.drop_guesses1Received) {
         this.setState({
@@ -179,7 +177,7 @@ class DropGame extends Component {
     this.socket.on('DROP_GUESSES', data => {
       this.setState({ drop_guesses: data });
     });
-
+  
     const items = [
       {
         label: 'Host',
@@ -205,22 +203,21 @@ class DropGame extends Component {
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll });
     });
-
+  
     document.addEventListener('mousedown', this.handleClickOutside);
   };
-
+  
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    // this.panelRef.current.removeEventListener('scroll', this.handleScroll);
   };
+  
 
   predictNext = dropAmounts => {
     // Find the unique values in dropAmounts
     const uniqueValues = [...new Set(dropAmounts.map(drop => drop.drop))];
 
     if (uniqueValues.length === 1) {
-      // If there is only one unique value, return that value
       return uniqueValues[0];
     } else {
       // Otherwise, compute the range and generate a random number within that range
@@ -582,7 +579,6 @@ class DropGame extends Component {
 
     return (
       <div className="game-page">
-        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="page-title">
           <h2>PLAY - Drop Game</h2>
@@ -591,25 +587,11 @@ class DropGame extends Component {
           <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            // onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  {/* <div className="data-item">
-                    <div>
-                      <div className="label your-bet-amount">Bankroll</div>
-                    </div>
-                    <div className="value">???</div>
-                  </div> */}
-                  {/* <div className="data-item">
-                    <div>
-                      <div className="label your-bet-amount">Bet Amount</div>
-                    </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bet_amount)}
-                    </div>
-                  </div> */}
+
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
@@ -619,7 +601,7 @@ class DropGame extends Component {
                     <div className="value">
                       {convertToCurrency(
                         updateDigitToPoint2(
-                          this.state.bet_amount * 2 /* * 0.95 */
+                          this.state.bet_amount * 2 
                         )
                       )}
                     </div>

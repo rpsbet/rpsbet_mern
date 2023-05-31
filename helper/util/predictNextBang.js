@@ -16,7 +16,6 @@ const emitBangGuesses = (socket, room_Id) => {
 };
 
 const predictAndEmit = async (bang_list, room, socket, room_Id) => {
-
   const nextBangPrediction = await predictNextBang(bang_list);
   const currentTime = await getCurrentTime();
   const newBet = new BangBetItem({
@@ -94,63 +93,59 @@ const stopBangGame = (room_Id, socket) => {
 
 
 const predictNextBang = bangAmounts => {
-    // Find the unique values in bangAmounts
-    const uniqueValues = [...new Set(bangAmounts.map(bang => bang.bang))];
-  
-    if (uniqueValues.length === 1) {
-      // If there is only one unique value, return that value
-      return uniqueValues[0];
-    } else {
-      // Otherwise, compute the range and generate a random number within that range
-      const minValue = Math.min(...uniqueValues);
-      const maxValue = Math.max(...uniqueValues);
-      const rangeSize = Math.ceil((maxValue - minValue) / 200);
-  
-      const rangeCounts = {};
-      bangAmounts.forEach((bang) => {
-        const range = Math.floor((bang.bang - minValue) / rangeSize);
-        rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
-      });
-  
-      const totalCounts = bangAmounts.length;
-      const rangeProbabilities = {};
-      Object.keys(rangeCounts).forEach((range) => {
-        const rangeProbability = rangeCounts[range] / totalCounts;
-        rangeProbabilities[range] = rangeProbability;
-      });
-  
-      let randomValue = Math.random();
-      let chosenRange = null;
-      Object.entries(rangeProbabilities).some(([range, probability]) => {
-        randomValue -= probability;
-        if (randomValue <= 0) {
-          chosenRange = range;
-          return true;
-        }
-        return false;
-      });
-  
-      const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
-      const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
-  
-      const getRandomNumberInRange = (min, max) => {
-        return Math.random() * (max - min) + min;
-      };
-      
-      const randomChance = Math.random();
-      const newValue = parseFloat(getRandomNumberInRange(1, 1.06).toFixed(2));
-      const isChanged = randomChance <= 0.3;
-      
-      if(isChanged){
-        return newValue;
-      } else {
-        return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+  const uniqueValues = [...new Set(bangAmounts.map(bang => bang.bang))];
+
+  if (uniqueValues.length === 1) {
+    return uniqueValues[0];
+  } else {
+    const minValue = Math.min(...uniqueValues);
+    const maxValue = Math.max(...uniqueValues);
+    const rangeSize = Math.ceil((maxValue - minValue) / 200);
+
+    const rangeCounts = {};
+    bangAmounts.forEach((bang) => {
+      const range = Math.floor((bang.bang - minValue) / rangeSize);
+      rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
+    });
+
+    const totalCounts = bangAmounts.length;
+    const rangeProbabilities = {};
+    Object.keys(rangeCounts).forEach((range) => {
+      const rangeProbability = rangeCounts[range] / totalCounts;
+      rangeProbabilities[range] = rangeProbability;
+    });
+
+    let randomValue = Math.random();
+    let chosenRange = null;
+    Object.entries(rangeProbabilities).some(([range, probability]) => {
+      randomValue -= probability;
+      if (randomValue <= 0) {
+        chosenRange = range;
+        return true;
       }
+      return false;
+    });
+
+    const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
+    const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
+
+    const getRandomNumberInRange = (min, max) => {
+      return Math.random() * (max - min) + min;
+    };
+
+    const randomChance = Math.random();
+    const newValue = parseFloat(getRandomNumberInRange(1, 1.06).toFixed(2));
+    const isChanged = randomChance <= 0.51;
+
+    if (isChanged) {
+      return newValue;
+    } else {
+      return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
     }
-  };
+  }
+};
 
 const getCurrentTime = async () => {
-  // console.log("time" );
   return new Promise((resolve, reject) => {
     ntpClient.getNetworkTime('time.google.com', 123, function(err, date) {
       if (err) {

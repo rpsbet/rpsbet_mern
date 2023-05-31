@@ -102,7 +102,7 @@ div.table .table-header {
     border-radius: 6px;
     border-top: 2px solid #c5c5c54f;
     border-bottom: 2px solid #e1e1e1;
-    background: white;
+    background: #f9f9f9;
     padding: 16px;
     margin-bottom: 8px;
     color: #747f8d;
@@ -327,7 +327,7 @@ div.table .table-row .table-cell button:last-child,
     line-height: 40px;
     overflow: hidden;
     font-weight: 600;
-    background: linear-gradient(0deg,#d81719,#a60014) padding-box,linear-gradient(0deg,#a60014,#d81719) border-box;
+    background: linear-gradient(0deg,#d81719,#e70000) padding-box,linear-gradient(0deg,#fc0000,#d81719) border-box;
     box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000, inset 0 2px #ff2525 !important;
 }
 div.table .table-row .table-cell button.active,
@@ -712,7 +712,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 
 .contents_wrapper .main-game .main-panel,
 .contents_wrapper .main-game .sub-panel {
-	background-image: linear-gradient(-135deg, transparent, #f9f9f9 55%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec72434cb1c84_Dots%20Blue.svg) !important;
+	background-image: linear-gradient(-135deg, transparent, #e9ecef  55%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec72434cb1c84_Dots%20Blue.svg) !important;
     background-position: top right;
 
     background-size: cover;
@@ -827,10 +827,10 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     position: absolute;
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
-    border-bottom: 10px solid white;
+    border-bottom: 10px solid #e9ecef;
 }
 #game_logs .game_logs_contents {
-    background: white;
+    background: #e9ecef;
     width: 330px;
     margin: 10px auto;
     border-radius: 10px;
@@ -899,7 +899,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     color: #747f8d;
 }
 #game_logs .transaction-panel {
-    border-top: 2px solid #36393f;
+    border-top: 2px solid #dee2e6;
     padding-top: 5px;
 }
 #game_logs .transaction-panel button {
@@ -1168,6 +1168,23 @@ position: relative;
     padding: 0px 10.5px;
     border-radius: 6px;
 }
+
+.slide-in {
+    animation: slideIn 0.5s ease-in-out;
+    animation-fill-mode: both;
+  }
+  
+  @keyframes slideIn {
+    0% {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
 
 .bow h3.game-sub-title {
     color: #fff !important;
@@ -2620,10 +2637,7 @@ bottom: 0px;
         transform: scale(2.5);
     }
 
-    div.main-page-nav-button-group button:hover, div.main-page-nav-button-group button.active {
-        background: #747f8d;
-        
-    }
+
     
     div.main-page-nav-button-group button {
         display: flex;
@@ -2642,18 +2656,14 @@ bottom: 0px;
         width: 32px;
         height: 32px;
         margin-right: 5px;
+        filter: invert(1);
     }
     div.main-page-nav-button-group button:hover,
     div.main-page-nav-button-group button.active {
         /* background: #747f8d !important; */
-        color: white;
+        color: unset;
         padding: 0 15px;
         border-radius: 16px;
-    }
-
-
-    .mobile-only .active {
-        filter: brightness(0.5);
     }
 
     #game_logs .arrow-up{
@@ -3054,5 +3064,9 @@ transform: translateX(160px) !important;
     .boxes-panel {
         grid-template-columns: repeat(3, 1.2fr);
         grid-gap: 0.6rem;
+    }
+
+    .cell-action button {
+        font-size: 1em !important;
     }
   }

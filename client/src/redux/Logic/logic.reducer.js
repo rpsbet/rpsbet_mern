@@ -95,150 +95,157 @@ const initialState = {
   selectedMainTabIndex: 0,
   globalChatList: []
 };
-  
 export default function(state = initialState, action) {
   const { type, payload } = action;
   switch (type) {
     case BET_SUCCESS:
       return {
-        ...state, betResult: payload.betResult, roomStatus: payload.roomStatus
+        ...state,
+        betResult: payload.betResult,
+        roomStatus: payload.roomStatus
       };
-      case UPDATE_BET_RESULT:
-  if (typeof payload === 'object') {
-    return {
-      ...state,
-      betResult: [...state.betResult, payload]
-    }
-  } else {
-    return state;
-  };
-  case SPLEESH_GUESSES:
-    return {
-      ...state,
-      spleesh_guesses: action.spleesh_guesses
-    };
-  case DROP_GUESSES:
-    return {
-      ...state,
-      drop_guesses: action.drop_guesses
-    };
+    case UPDATE_BET_RESULT:
+      if (typeof payload === 'object') {
+        return {
+          ...state,
+          betResult: [...state.betResult, payload]
+        };
+      }
+      return state;
+    case SPLEESH_GUESSES:
+      return {
+        ...state,
+        spleesh_guesses: action.spleesh_guesses
+      };
+    case DROP_GUESSES:
+      return {
+        ...state,
+        drop_guesses: action.drop_guesses
+      };
     case BANG_GUESSES:
-    return {
-      ...state,
-      bang_guesses: action.bang_guesses
-    };
+      return {
+        ...state,
+        bang_guesses: action.bang_guesses
+      };
     case ROLL_GUESSES:
       return {
         ...state,
         roll_guesses: action.roll_guesses
       };
-
-  case UPDATE_BANKROLL:
+    case UPDATE_BANKROLL:
+    case UPDATE_BANKROLL_QS:
       return {
         ...state,
         bankroll: action.payload,
       };
-  case UPDATE_BANKROLL_QS:
-    return {
-      ...state,
-      bankroll: action.payload,
-    };
     case START_LOADING:
       return {
-        ...state, isActiveLoadingOverlay: true
-      }
+        ...state,
+        isActiveLoadingOverlay: true
+      };
     case END_LOADING:
       return {
-        ...state, isActiveLoadingOverlay: false
-      }
+        ...state,
+        isActiveLoadingOverlay: false
+      };
     case SET_GAME_MODE:
       return {
-        ...state, game_mode: payload
+        ...state,
+        game_mode: payload
       };
     case SET_CUR_ROOM_INFO:
       return {
-        ...state, curRoomInfo: payload
-      }
+        ...state,
+        curRoomInfo: payload
+      };
     case SET_CHAT_ROOM_INFO:
       return {
-        ...state, chatRoomInfo: payload
-      }
+        ...state,
+        chatRoomInfo: payload
+      };
     case GAMETYPE_LOADED:
       let firstGameType = '';
       if (payload.gameTypeList && payload.gameTypeList.length > 0) {
         firstGameType = payload.gameTypeList[0].game_type_name;
       }
       return {
-        ...state, game_mode: firstGameType, ...payload
+        ...state,
+        game_mode: firstGameType,
+        ...payload
       };
-      case ROOMINFO_LOADED:
-        return {
-          ...state, 
-          curRoomInfo: {
-            ...state.curRoomInfo, 
-            ...payload.roomInfo
-          }
-        };
-  
-
+    case ROOMINFO_LOADED:
+      return {
+        ...state,
+        curRoomInfo: {
+          ...state.curRoomInfo,
+          ...payload.roomInfo
+        }
+      };
     case ROOMS_LOADED:
       return {
-        ...state, roomList: payload.roomList, totalPage: payload.pages, roomCount: payload.total, pageNumber: payload.page
+        ...state,
+        roomList: payload.roomList,
+        totalPage: payload.pages,
+        roomCount: payload.total,
+        pageNumber: payload.page
       };
     case HISTORY_LOADED:
       return {
-        ...state, history: [...payload.history], historyTotalPage: payload.pages, historyPageNumber: payload.page
-      }
+        ...state,
+        history: [...payload.history],
+        historyTotalPage: payload.pages,
+        historyPageNumber: payload.page
+      };
     case MY_GAMES_LOADED:
       return {
-        ...state, myGames: payload.myGames, myGamesTotalPage: payload.pages, myGamesPageNumber: payload.page
+        ...state,
+        myGames: payload.myGames,
+        myGamesTotalPage: payload.pages,
+        myGamesPageNumber: payload.page
       };
-      case MY_HISTORY_LOADED:
-        return {
-          ...state, myHistory: payload.history, myHistoryTotalPage: payload.pages, myHistoryPageNumber: payload.page
-        };
+    case MY_HISTORY_LOADED:
+      return {
+        ...state,
+        myHistory: payload.history,
+        myHistoryTotalPage: payload.pages,
+        myHistoryPageNumber: payload.page
+      };
     case MY_CHAT_LOADED:
       return {
-        ...state, myChat: payload
+        ...state,
+        myChat: payload
       };
     case MSG_CREATE_ROOM_SUCCESS:
-      return {
-        ...state,
-      };
     case MSG_CREATE_ROOM_FAIL:
-      return {
-        ...state,
-      };
     case SET_URL:
-      return {
-        ...state,
-      };
+      return state;
     case ONLINE_USER_LIST_UPDATED:
       return {
-        ...state, onlineUserList: payload
-      }
+        ...state,
+        onlineUserList: payload
+      };
     case SELECT_MAIN_TAB:
       return {
-        ...state, selectedMainTabIndex: payload
-      }
+        ...state,
+        selectedMainTabIndex: payload
+      };
     case GLOBAL_CHAT_RECEIVED:
-      const chat_list = JSON.parse(JSON.stringify(state.globalChatList));
-      chat_list.push(payload)
       return {
-        ...state, globalChatList: chat_list
-      }
+        ...state,
+        globalChatList: [...state.globalChatList, payload]
+      };
     case SET_GLOBAL_CHAT:
-        return {
-          ...state,
-          globalChatList: payload
-        }
+      return {
+        ...state,
+        globalChatList: payload
+      };
     case ACTION_ROOM:
       return {
         ...state,
         roomList: state.roomList.map((room) =>
           room.id === payload.id ? { ...room, ...payload } : room
         )
-      }
+      };
     default:
       return state;
   }

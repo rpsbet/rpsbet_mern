@@ -136,7 +136,9 @@ background: #060607;
 .dark_mode #game_logs .transaction-panel button:hover {
     background-color: #fff;    
 }
-
+.dark_mode #game_logs .transaction-panel {
+border-top: 2px solid #36393f;
+}
 .dark_mode #footer-container {
 	background: #151515;
    }
@@ -492,8 +494,12 @@ background: #060607;
 .dark_mode .modal-body .withdraw-modal-tabs button.active.btn-bank {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M12.5 5l.224-.447c-.141-.07-.307-.07-.448 0L12.5 5zM5 19.5h15v-1H5v1zm7.276-14.947l-6 3 .448.894 6-3-.448-.894zM5 10.5h15v-1H5v1zm13.724-2.947l-6-3-.448.894 6 3 .448-.894zM10 12.5v4h1v-4h-1zm4 0v4h1v-4h-1zM6 10v9h1v-9H6zm12 0v9h1v-9h-1z'/%3E%3C/svg%3E%0A");
 }
-
-
+.dark_mode div.main-page-nav-button-group button svg {
+	filter: unset;
+}
+.dark_mode    div.main-page-nav-button-group button.active {
+color: #fff;
+}
 .dark_mode div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
 border-color: #151515;
 }

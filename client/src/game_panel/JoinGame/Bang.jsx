@@ -159,7 +159,7 @@ class Bang extends Component {
     }
     return null;
   }
-
+  
   componentDidUpdate(prevProps, prevState) {
     const {
       waiting,
@@ -169,9 +169,9 @@ class Bang extends Component {
       executeBet,
       cashoutAmount
     } = this.state;
-
+  
     const { playSound, playSoundLoop, stopSound } = this.props;
-
+  
     if (!showBang && !showCountdown) {
       stopSound('countDown');
       // playSoundLoop('fuse');
@@ -183,7 +183,7 @@ class Bang extends Component {
       // stopSound('fuse');
       playSound('countDown');
     }
-
+  
     if (!showBang && !showCountdown && waiting && newRound && !executeBet) {
       this.setState(
         {
@@ -197,7 +197,7 @@ class Bang extends Component {
         }
       );
     }
-
+  
     if (prevProps.roomInfo && this.props.roomInfo) {
       if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
         this.setState({
@@ -206,7 +206,7 @@ class Bang extends Component {
         });
       }
     }
-
+  
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
       this.state.isPasswordCorrect === true
@@ -214,13 +214,10 @@ class Bang extends Component {
       this.joinGame();
     }
   }
-
+  
   componentDidMount = () => {
-    // this.panelRef.current.addEventListener('scroll', this.handleScroll);
     const roomId = this.props.roomInfo._id;
     this.socket.on(`BANG_GUESSES_${roomId}`, data => {
-      // console.log(`Received data from socket BANG_GUESSES_${roomId}:`);
-
       if (data && data.bangs && data.bangs.length > 0) {
         const lastBang = data.bangs[data.bangs.length - 1];
         console.log('div', data.bangs);
@@ -231,10 +228,8 @@ class Bang extends Component {
         });
       }
     });
-
+  
     this.socket.on(`BANG_GUESSES1_${roomId}`, data => {
-      // console.log(`Received data from socket BANG_GUESSES1_${roomId}:`, data);
-
       if (data && data.bangs && data.bangs.length > 0 && this.state.listen) {
         const lastBang = data.bangs[data.bangs.length - 1];
         // console.log('lastBang', lastBang);
@@ -245,15 +240,9 @@ class Bang extends Component {
           elapsedTime: data.elapsedTime,
           listen: false
         });
-        // console.log('elapsedTime', this.state.elapsedTime);
       }
     });
-
-    // this.socket.on('BANG_GUESSES', data => {
-    //   console.log('bang BANG_GUESSES', data);
-    //   this.setState({ bang_guesses: data });
-    // });
-
+  
     const items = [
       {
         label: 'Host',
@@ -279,10 +268,10 @@ class Bang extends Component {
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll });
     });
-
+  
     document.addEventListener('mousedown', this.handleClickOutside);
   };
-
+  
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
@@ -290,6 +279,7 @@ class Bang extends Component {
     this.socket.off(`BANG_GUESSES1_${this.props.roomInfo._id}`);
     this.socket.off('UPDATED_BANKROLL');
   };
+  
 
   predictNext = bangAmounts => {
     // Find the unique values in bangAmounts
@@ -342,12 +332,8 @@ class Bang extends Component {
 
   joinGame = async () => {
     const { playSound } = this.props;
-    // this.setState({ bet_amount: this.state.cashoutAmount });
-
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
-      // is_anonymous: this.state.is_anonymous,
-      // bang_bet_item_id: this.props.bang_bet_item_id,
       crashed: this.state.crashed,
       multiplier: this.state.multiplier,
       cashoutAmount: this.state.cashoutAmount
@@ -359,15 +345,12 @@ class Bang extends Component {
     if (result.betResult === 1) {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN DINNER!';
-      // this.changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
       text = 'SPLIT! EQUAL MATCH!';
       playSound('split');
-      // this.changeBgColor(result.betResult);
     } else {
       text = 'TROLLOLOLOL! LOSER!';
       playSound('lose');
-      // this.changeBgColor(result.betResult);
     }
 
     let stored_bang_array =

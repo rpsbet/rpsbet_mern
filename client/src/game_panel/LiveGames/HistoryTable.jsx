@@ -290,8 +290,11 @@ class HistoryTable extends Component {
           )}
           {this.state.history?.map(
             (row, key) => (
-              <div className="table-row" key={row._id}>
-                <div>
+<div
+    className={`table-row ${key < 10 ? 'slide-in' : ''}`}
+    style={{ animationDelay: `${key * 0.1}s` }}
+    key={row._id}
+  >                <div>
                   <div className="table-cell">
                     <div className="room-id">{row.status}</div>
                     <div

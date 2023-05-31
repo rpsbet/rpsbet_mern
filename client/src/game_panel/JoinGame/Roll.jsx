@@ -142,64 +142,57 @@ class Roll extends Component {
     }
   };
   static getDerivedStateFromProps(props, current_state) {
-    if (
-      current_state.balance !== props.balance ||
-      current_state.isPasswordCorrect !== props.isPasswordCorrect
-    ) {
+    const { balance, isPasswordCorrect } = props;
+    if (current_state.balance !== balance || current_state.isPasswordCorrect !== isPasswordCorrect) {
       return {
         ...current_state,
-        isPasswordCorrect: props.isPasswordCorrect,
-        balance: props.balance
+        isPasswordCorrect,
+        balance
       };
     }
     return null;
   }
-
+  
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.isWaiting && this.state.disabledButtons) {
+    const { isWaiting, disabledButtons } = this.state;
+  
+    if (isWaiting && disabledButtons) {
       this.pushBet();
     }
-
-    if (prevProps.roomInfo && this.props.roomInfo) {
-      if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
+  
+    const { roomInfo } = this.props;
+    if (prevProps.roomInfo && roomInfo) {
+      if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
         this.setState({
-          bankroll:
-            parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
+          bankroll: parseFloat(roomInfo.bet_amount) - this.getPreviousBets()
         });
       }
     }
-
-    if (
-      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
-      this.state.isPasswordCorrect === true
-    ) {
+  
+    if (prevState.isPasswordCorrect !== this.state.isPasswordCorrect && this.state.isPasswordCorrect) {
       this.joinGame();
     }
   }
-
+  
   componentDidMount = () => {
     this.panelRef.current.addEventListener('scroll', this.handleScroll);
     const roomId = this.props.roomInfo._id;
     this.socket.on(`ROLL_GUESSES_${roomId}`, data => {
-      // console.log(`Received data from socket ROLL_GUESSES_${roomId}:`, data);
-
       if (data && data.rolls && data.rolls.length > 0) {
         const roll_guesses = data.rolls.map((roll, i) => ({
           roll,
           face: data.faces[i]
-        })); // combine roll and face values
-
+        }));
+  
         this.startSlider();
         this.props.stopSound('countDown');
         this.props.playSound('sweep');
         this.setState(
           {
-            roll_guesses: roll_guesses,
+            roll_guesses,
             lastRollGuess: roll_guesses[roll_guesses.length - 6].face
-            // disable buttons
           },
           () => {
-            // console.log('this', this.state.lastRollGuess);
             setTimeout(() => {
               this.setState({ disabledButtons: true }, () => {
                 if (this.state.buttonClicked) {
@@ -214,30 +207,27 @@ class Roll extends Component {
               setTimeout(() => {
                 this.setState({ showResult: false });
               }, 2000);
-            }, 10000); // set showResult to true after 5 seconds
+            }, 10000);
           }
         );
       }
     });
-
+  
     this.socket.on(`ROLL_GUESSES1_${roomId}`, data => {
-      // console.log(`Received data from socket ROLL_GUESSES1_${roomId}:`, data);
-
       if (data && data.rolls && data.rolls.length > 0 && this.state.listen) {
         const roll_guesses = data.rolls.map((roll, i) => ({
           roll,
           face: data.faces[i]
-        })); // combine roll and face values
+        }));
         this.setState({
-          roll_guesses: roll_guesses,
-
+          roll_guesses,
           elapsedTime: data.elapsedTime,
           listen: false
         });
         this.startSlider();
       }
     });
-
+  
     const items = [
       {
         label: 'Host',
@@ -253,20 +243,19 @@ class Roll extends Component {
       },
       {
         label: 'Potential Return',
-        value: convertToCurrency(
-          updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
-        )
+        value: convertToCurrency(updateDigitToPoint2(this.state.bet_amount * 2))
       }
     ];
     this.setState({ items });
+  
     const { socket } = this.props;
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll });
     });
-
+  
     document.addEventListener('mousedown', this.handleClickOutside);
   };
-
+  
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId, this.timer);
     document.removeEventListener('mousedown', this.handleClickOutside);
@@ -275,6 +264,7 @@ class Roll extends Component {
     this.socket.off(`ROLL_GUESSES_${roomId}`);
     this.socket.off(`ROLL_GUESSES1_${roomId}`);
   };
+  
 
   predictNext = roll_list => {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
@@ -341,19 +331,20 @@ class Roll extends Component {
   };
 
   joinGame = async () => {
-    const { playSound } = this.props;
-    const { selected_roll } = this.state;
-
-    const result = await this.props.join({
-      bet_amount: parseFloat(this.state.bet_amount),
+    const { playSound, join, user, room, isDarkMode } = this.props;
+    const { selected_roll, bet_amount } = this.state;
+  
+    const result = await join({
+      bet_amount: parseFloat(bet_amount),
       selected_roll: selected_roll
       // is_anonymous: this.state.is_anonymous,
       // roll_bet_item_id: this.props.roll_bet_item
       // slippage: this.state.slippage
     });
+  
     setTimeout(() => {
       let text = 'HAHAA, YOU LOST!!!';
-
+  
       if (result.betResult === 1) {
         playSound('win');
         text = 'WINNER, WINNER, VEGAN DINNER!';
@@ -363,33 +354,22 @@ class Roll extends Component {
         playSound('lose');
         this.changeBgColor(result.betResult);
       }
-      // console.log(
-      //   'h3i',
-      //   this.state.bgColorChanged,
-      //   this.state.betResult,
-      //   this.state.selected_roll
-      // );
-      let stored_roll_array =
-        JSON.parse(localStorage.getItem('roll_array')) || [];
-
+  
+      let stored_roll_array = JSON.parse(localStorage.getItem('roll_array')) || [];
+  
       while (stored_roll_array.length >= 20) {
         stored_roll_array.shift();
       }
-      stored_roll_array.push({ roll: this.state.bet_amount });
+      stored_roll_array.push({ roll: bet_amount });
       localStorage.setItem('roll_array', JSON.stringify(stored_roll_array));
-
+  
       if (result.status === 'success') {
-        const currentUser = this.props.user;
-        const currentRoom = this.props.room;
         this.setState(prevState => ({
-          betResults: [
-            ...prevState.betResults,
-            { ...result, user: currentUser, room: currentRoom }
-          ]
+          betResults: [...prevState.betResults, { ...result, user, room }]
         }));
-
+  
         gameResultModal(
-          this.props.isDarkMode,
+          isDarkMode,
           text,
           result.betResult,
           'Okay',
@@ -401,35 +381,29 @@ class Roll extends Component {
         );
       } else {
         if (result.message) {
-          alertModal(this.props.isDarkMode, result.message);
+          alertModal(isDarkMode, result.message);
         }
       }
-      // this.setState({selected_roll: null});
+  
       this.props.refreshHistory();
     }, 5000);
   };
-
+  
   onBtnBetClick = async () => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-      playSound
-    } = this.props;
+    const { isAuthenticated, isDarkMode, creator_id, user_id, playSound } = this.props;
     const { buttonClicked, isWaiting } = this.state;
     playSound('select');
-
+  
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       this.setState({ selected_roll: null, buttonClicked: false });
       return;
     }
-
+  
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       this.setState({ selected_roll: null, buttonClicked: false });
       return;
     }
-
+  
     if (!buttonClicked && isWaiting) {
       return;
     } else {
@@ -438,22 +412,16 @@ class Roll extends Component {
       }, 3000);
     }
   };
-
+  
   pushBet = async () => {
-    const {
-      openGamePasswordModal,
-      balance,
-      isDarkMode,
-      is_private,
-      roomInfo
-    } = this.props;
+    const { openGamePasswordModal, balance, isDarkMode, is_private, roomInfo } = this.props;
     const { bet_amount } = this.state;
-
+  
     await validateBetAmount(bet_amount, balance, isDarkMode);
-
+  
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-
+  
     if (is_private === true && passwordCorrect !== true) {
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         openGamePasswordModal();
@@ -474,38 +442,39 @@ class Roll extends Component {
       this.resetButtonState();
     }
   };
-
+  
   resetButtonState = () => {
     this.setState({
       buttonClicked: false,
       isWaiting: false
     });
   };
+  
   startSlider = () => {
     const sliderImages = this.sliderRef.current;
-    if (!sliderImages) return; // add null check here
+    if (!sliderImages) return;
+  
     let currentPos = 0;
     let startTime = null;
-
+  
     function animate(timestamp) {
       if (!startTime) startTime = timestamp;
       const elapsedTime = timestamp - startTime;
       const progress = Math.min(elapsedTime / 20000, 0.8); // 20 seconds
       const ease = 1 - Math.pow(1 - progress, 10); // cubic easing
-
+  
       currentPos = ease * 0.65 * sliderImages.offsetWidth;
-
-      sliderImages.style.transform = `translateX(${sliderImages.offsetWidth /
-        3 -
-        currentPos}px)`;
-
+  
+      sliderImages.style.transform = `translateX(${sliderImages.offsetWidth / 3 - currentPos}px)`;
+  
       if (progress < 1) {
         requestAnimationFrame(animate);
       }
     }
-
+  
     requestAnimationFrame(animate);
   };
+  
 
   handlehalfxButtonClick() {
     const multipliedBetAmount = this.state.bet_amount * 0.5;

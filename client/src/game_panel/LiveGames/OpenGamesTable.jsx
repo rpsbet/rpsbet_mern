@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import { actionRoom, getRoomList, setCurRoomInfo } from '../../redux/Logic/logic.actions';
+import {
+  actionRoom,
+  getRoomList,
+  setCurRoomInfo
+} from '../../redux/Logic/logic.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 import Battle from '../icons/Battle';
@@ -9,9 +13,7 @@ import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
 import ThumbUpOutlinedIcon from '@material-ui/icons/ThumbUpOutlined';
 import ThumbDownOutlinedIcon from '@material-ui/icons/ThumbDownOutlined';
-import {
-  ArrowUpward,
-  ArrowDownward } from '@material-ui/icons';
+import { ArrowUpward, ArrowDownward } from '@material-ui/icons';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import { Box, Button, Typography, IconButton } from '@material-ui/core';
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -31,12 +33,11 @@ const gifUrls = [
 ];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 
-
 class OpenGamesTable extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedGameType: 'All',
+      selectedGameType: '',
       isLoading: false,
       showPlayerModal: false,
       selectedCreator: '',
@@ -45,10 +46,9 @@ class OpenGamesTable extends Component {
       dislikes: [],
       views: [],
       liked: false,
-  disliked: false
+      disliked: false
     };
   }
-
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
@@ -57,43 +57,45 @@ class OpenGamesTable extends Component {
     this.setState({ showPlayerModal: false });
   };
 
-  // handleLike = ({ _id }) => {
-  //   if (!this.state.liked) {
-  //     this.setState({ liked: true, disliked: false });
-  //     this.handleAction({ roomId: _id, type: 'like' });
-  //   }
-  // };
-  
-  // handleDislike = ({ _id }) => {
-  //   if (!this.state.disliked) {
-  //     this.setState({ liked: false, disliked: true });
-  //     this.handleAction({ roomId: _id, type: 'dislike' });
-  //   }
-  // };
-  
+  handleLike = ({ _id }) => {
+    this.handleAction({ roomId: _id, type: 'like' });
+  };
 
-  handleLike = ({ _id }) => this.handleAction({ roomId: _id, type: 'like' });
-  handleDislike = ({ _id }) => this.handleAction({ roomId: _id, type: 'dislike' });
+  handleDislike = ({ _id }) => {
+    this.handleAction({ roomId: _id, type: 'dislike' });
+  };
 
   handleAction = ({ roomId, type }) => {
-    if (this.props.user?._id) {
-      this.props.actionRoom({ roomId, type, conditions: {
-        page: this.props.pageNumber ?? 0,
-        game_type: this.state.selectedGameType
-      } })
+    const { user, pageNumber } = this.props;
+    if (user && user._id) {
+      this.props.actionRoom({
+        roomId,
+        type,
+        conditions: {
+          page: pageNumber !== undefined ? pageNumber : 0,
+          game_type: this.state.selectedGameType
+        }
+      });
     }
-  }
+  };
 
-  handleView = ({ _id }) => this.handleViewAction({ roomId: _id, type: 'view' });
+  handleView = ({ _id }) => {
+    this.handleViewAction({ roomId: _id, type: 'view' });
+  };
 
   handleViewAction = ({ roomId, type }) => {
-    if (this.props.user?._id) {
-      this.props.actionRoom({ roomId, type, conditions: {
-        page: this.props.pageNumber ?? 0,
-        game_type: this.state.selectedGameType
-      } })
+    const { user, pageNumber } = this.props;
+    if (user && user._id) {
+      this.props.actionRoom({
+        roomId,
+        type,
+        conditions: {
+          page: pageNumber !== undefined ? pageNumber : 0,
+          game_type: this.state.selectedGameType
+        }
+      });
     }
-  }
+  };
 
   calculatePercentageChange = (originalValue, newValue) => {
     const difference = newValue - originalValue;
@@ -104,40 +106,41 @@ class OpenGamesTable extends Component {
   joinRoom = e => {
     this.setState({ isClicked: true });
 
-    const creator_id = e.currentTarget.dataset.creatorId;
-    const bet_amount = e.currentTarget.dataset.betAmount;
+    const creator_id = e.currentTarget.getAttribute('data-creatorId');
+    const bet_amount = e.currentTarget.getAttribute('data-betAmount');
 
     // if (!this.props.isAuthenticated) {
     //   alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
     //   return;
     // }
 
-    if (e.currentTarget.dataset.roomStatus === 'finished') {
+    if (e.currentTarget.getAttribute('data-roomStatus') === 'finished') {
       alertModal(this.props.isDarkMode, `THIS GAME HAS ENDED ALREADY`);
       return;
     }
 
-    const room_id = e.currentTarget.dataset.id;
+    const room_id = e.currentTarget.getAttribute('data-id');
 
     this.props.setCurRoomInfo({
       _id: room_id,
-      game_type: e.currentTarget.dataset.gameType,
+      game_type: e.currentTarget.getAttribute('data-gameType'),
       bet_amount: bet_amount,
       creator_id: creator_id,
-      // endgame_amount: e.currentTarget.dataset.endgame_amount,
-      spleesh_bet_unit: parseInt(e.currentTarget.dataset.spleeshBetUnit),
-      box_price: parseFloat(e.currentTarget.dataset.boxPrice),
+      // endgame_amount: e.currentTarget.getAttribute('data-endgame_amount'),
+      spleesh_bet_unit: parseInt(
+        e.currentTarget.getAttribute('data-spleeshBetUnit')
+      ),
+      box_price: parseFloat(e.currentTarget.getAttribute('data-boxPrice')),
       game_log_list: [],
       box_list: [],
       brain_game_type: {
-        _id: e.currentTarget.dataset.brainGameTypeId,
-        game_type_name: e.currentTarget.dataset.brainGameTypeName
+        _id: e.currentTarget.getAttribute('data-brainGameTypeId'),
+        game_type_name: e.currentTarget.getAttribute('data-brainGameTypeName')
       },
-      brain_game_score: e.currentTarget.dataset.brainGameScore
+      brain_game_score: e.currentTarget.getAttribute('data-brainGameScore')
     });
     history.push('/join/' + room_id);
   };
-
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name, isLoading: true });
     try {
@@ -149,6 +152,7 @@ class OpenGamesTable extends Component {
     }
     return;
   };
+
   handleBtnLeftClicked = e => {
     const scrollAmount = 200; // Change this value to adjust the scroll amount
     this.game_type_panel.scrollLeft -= scrollAmount;
@@ -171,13 +175,14 @@ class OpenGamesTable extends Component {
       'B!': 'bang',
       BJ: 'blackjack'
     };
-  
+
     const gameTypePanel = (
       <Box
         display="flex"
         justifyContent="space-evenly"
         flexWrap="nowrap"
         gap="15px"
+        ref={ref => (this.game_type_panel = ref)}
       >
         <Box item key="open-game-left-button">
           <IconButton
@@ -187,7 +192,7 @@ class OpenGamesTable extends Component {
             <ChevronLeftIcon />
           </IconButton>
         </Box>
-  
+
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -197,16 +202,10 @@ class OpenGamesTable extends Component {
             this.handleGameTypeButtonClicked('All');
           }}
         >
-          <img
-            src={`/img/gametype/ALL.png`}
-            alt={`All Games`}
-          />
-          <div className='icon'>
-            <img
-              src={`/img/gametype/icons/All.svg`}
-              alt={`All Games`}
-              />
-          <span>All Games</span>
+          <img src={`/img/gametype/ALL.png`} alt={`All Games`} />
+          <div className="icon">
+            <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
+            <span>All Games</span>
           </div>
         </Button>
         {this.props.gameTypeList.map((gameType, index) => (
@@ -227,13 +226,13 @@ class OpenGamesTable extends Component {
               src={`/img/gametype/${gameType.short_name}.png`}
               alt={gameType.game_type_name}
             />
-            <div className='icon'>
-            <img
-              src={`/img/gametype/icons/${gameType.short_name}.svg`}
-              alt={gameType.game_type_name}
+            <div className="icon">
+              <img
+                src={`/img/gametype/icons/${gameType.short_name}.svg`}
+                alt={gameType.game_type_name}
               />
-            <span>{gameType.game_type_name}</span>
-              </div>
+              <span>{gameType.game_type_name}</span>
+            </div>
           </Button>
         ))}
         <IconButton
@@ -245,11 +244,9 @@ class OpenGamesTable extends Component {
         </IconButton>
       </Box>
     );
-  
+
     return gameTypePanel;
   };
-  
-
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.roomList !== this.props.roomList) {
       this.setState({ isLoading: false });
@@ -258,7 +255,7 @@ class OpenGamesTable extends Component {
 
   componentDidMount() {
     window.addEventListener('load', () => {
-      this.setState({ loaded: true });
+      this.setState({ loaded: true, selectedGameType: 'All' });
     });
   }
 
@@ -292,7 +289,6 @@ class OpenGamesTable extends Component {
   };
 
   render() {
-
     const gameTypePanel = this.generateGameTypePanel();
     return (
       <div className="overflowX">
@@ -328,7 +324,12 @@ class OpenGamesTable extends Component {
 
             {this.props.roomList.map(
               (row, key) => (
-                <div className="table-row" key={row._id}>
+                <div
+                className={`table-row ${key < 10 ? 'slide-in' : ''}`}
+                style={{ animationDelay: `${key * 0.1}s` }}
+                key={row._id}
+              >
+                  {' '}
                   <div>
                     <div className="table-cell cell-room-info">
                       <img
@@ -344,21 +345,20 @@ class OpenGamesTable extends Component {
                       </div>
                     </div>
                     <div className="table-cell desktop-only cell-user-name">
-                    
-                    <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: avaHex
-              }}
-              style={{
-                position: 'relative',
-                width: '120px',
-                height: '70px',
-                filter: 'hue-rotate(33deg)',
-                margin: '-20px -75px',
-              }}
-            />
+                      <Lottie
+                        options={{
+                          loop: true,
+                          autoplay: true,
+                          animationData: avaHex
+                        }}
+                        style={{
+                          position: 'relative',
+                          width: '120px',
+                          height: '70px',
+                          filter: 'hue-rotate(33deg)',
+                          margin: '-20px -75px'
+                        }}
+                      />
                       <a
                         className="player"
                         onClick={() =>
@@ -403,63 +403,124 @@ class OpenGamesTable extends Component {
                       ) : null}
                     </div>
                     <div className="table-cell desktop-only cell-amount">
-                    {row.game_type.game_type_name === 'Mystery Box' ? (
+                      {row.game_type.game_type_name === 'Mystery Box' ? (
                         <>
-                        <div style={{ display: "flex", alignItems: "center" }}>
-  {this.calculatePercentageChange(row.bet_amount, (parseFloat(row.pr) + parseFloat(row.user_bet))) > 0 ?
-    <ArrowUpward style={{ color: "green" }} /> :
-    <ArrowDownward style={{ color: "red" }} />
-  }
-  <span style={{ color: this.calculatePercentageChange(row.bet_amount, (parseFloat(row.pr) + parseFloat(row.user_bet))) > 0 ? "green" : "red" }}>
-    {updateDigitToPoint2(this.calculatePercentageChange(row.bet_amount, (parseFloat(row.pr) + parseFloat(row.user_bet))))}%
-  </span>
-</div>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            {this.calculatePercentageChange(
+                              row.bet_amount,
+                              parseFloat(row.pr) + parseFloat(row.user_bet)
+                            ) > 0 ? (
+                              <ArrowUpward style={{ color: '#57ca22' }} />
+                            ) : (
+                              <ArrowDownward style={{ color: 'red' }} />
+                            )}
+                            <span
+                              style={{
+                                color:
+                                  this.calculatePercentageChange(
+                                    row.bet_amount,
+                                    parseFloat(row.pr) +
+                                      parseFloat(row.user_bet)
+                                  ) > 0
+                                    ? '#57ca22'
+                                    : 'red'
+                              }}
+                            >
+                              {updateDigitToPoint2(
+                                this.calculatePercentageChange(
+                                  row.bet_amount,
+                                  parseFloat(row.pr) + parseFloat(row.user_bet)
+                                )
+                              )}
+                              %
+                            </span>
+                          </div>
                         </>
                       ) : (
                         <>
-<div style={{ display: "flex", alignItems: "center" }}>
-  {this.calculatePercentageChange(row.bet_amount, row.user_bet) > 0 ?
-    <ArrowUpward style={{ color: "green" }} /> :
-    <ArrowDownward style={{ color: "red" }} />
-  }
-  <span style={{ color: this.calculatePercentageChange(row.bet_amount, row.user_bet) > 0 ? "green" : "red" }}>
-    {updateDigitToPoint2(this.calculatePercentageChange(row.bet_amount, row.user_bet))}%
-  </span>
-</div>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            {this.calculatePercentageChange(
+                              row.bet_amount,
+                              row.user_bet
+                            ) > 0 ? (
+                              <ArrowUpward style={{ color: '#57ca22' }} />
+                            ) : (
+                              <ArrowDownward style={{ color: 'red' }} />
+                            )}
+                            <span
+                              style={{
+                                color:
+                                  this.calculatePercentageChange(
+                                    row.bet_amount,
+                                    row.user_bet
+                                  ) > 0
+                                    ? '#57ca22'
+                                    : 'red'
+                              }}
+                            >
+                              {updateDigitToPoint2(
+                                this.calculatePercentageChange(
+                                  row.bet_amount,
+                                  row.user_bet
+                                )
+                              )}
+                              %
+                            </span>
+                          </div>
                         </>
                       )}
-                      </div>
+                    </div>
                     <div className="table-cell cell-likes">
                       <div id="view">
-
-                    <VisibilityIcon style={{ fontSize: '1rem' }} />
-                      <Typography variant="body1">{row.views?.length || 0}</Typography>
+                        <VisibilityIcon style={{ fontSize: '1rem' }} />
+                        <Typography variant="body1">
+                          {row.views?.length || 0}
+                        </Typography>
                       </div>
 
                       <div>
-                      
-
-                    <IconButton onClick={() => this.handleLike(row)}>
-    {row.likes?.includes(this.props.user.id) ? <span role="img" aria-label="Thumbs up">&#x1F44D;</span> : <ThumbUpIcon style={{ fontSize: '1rem' }} />}
-</IconButton>
-<Typography variant="body1">{row.likes?.length || 0}</Typography>
-</div>
-<div>
-<IconButton onClick={() => this.handleDislike(row)}>
-    {row.dislikes?.includes(this.props.user.id) ? <span role="img" aria-label="Thumbs down">&#x1F44E;</span> : <ThumbDownIcon style={{ fontSize: '1rem' }} />}
-</IconButton>
-<Typography variant="body1">{row.dislikes?.length || 0}</Typography>
-</div>
-</div>
-                    <div className="table-cell cell-action" onClick={() => this.handleView(row)}>
+                        <IconButton onClick={() => this.handleLike(row)}>
+                          {row.likes?.includes(this.props.user.id) ? (
+                            <span role="img" aria-label="Thumbs up">
+                              &#x1F44D;
+                            </span>
+                          ) : (
+                            <ThumbUpIcon style={{ fontSize: '1rem' }} />
+                          )}
+                        </IconButton>
+                        <Typography variant="body1">
+                          {row.likes?.length || 0}
+                        </Typography>
+                      </div>
+                      <div>
+                        <IconButton onClick={() => this.handleDislike(row)}>
+                          {row.dislikes?.includes(this.props.user.id) ? (
+                            <span role="img" aria-label="Thumbs down">
+                              &#x1F44E;
+                            </span>
+                          ) : (
+                            <ThumbDownIcon style={{ fontSize: '1rem' }} />
+                          )}
+                        </IconButton>
+                        <Typography variant="body1">
+                          {row.dislikes?.length || 0}
+                        </Typography>
+                      </div>
+                    </div>
+                    <div
+                      className="table-cell cell-action"
+                      onClick={() => this.handleView(row)}
+                    >
                       <Button
                         className="btn_join"
                         onClick={event => {
                           event.currentTarget.classList.add('active');
                           this.joinRoom(event);
-                          
                         }}
-
                         data-id={row._id}
                         // data-endgame-amount={row.endgame_amount}
                         data-creator-id={row.creator_id}
@@ -488,46 +549,45 @@ class OpenGamesTable extends Component {
                           />
                         )}
                         {row.game_type.game_type_name === 'Spleesh!' && (
-      <>
-        WIN {convertToCurrency(row.spleesh_bet_unit * 10)}
-      </>
-    )}
-    {row.game_type.game_type_name === 'Mystery Box' && (
-      <>
-        WIN {convertToCurrency(row.pr)}
-      </>
-    )}
-    {row.game_type.game_type_name === 'Drop Game' && (
-      <>
-        WIN ???
-      </>
-    )}
-    {row.game_type.game_type_name !== 'Spleesh!' &&
-    row.game_type.game_type_name !== 'Drop Game' && 
-      row.game_type.game_type_name !== 'Mystery Box' && (
-      <>
-        WIN {convertToCurrency(updateDigitToPoint2(row.user_bet))}
-      </>
-    )}
-  </Button>
+                          <>
+                            WIN {convertToCurrency(row.spleesh_bet_unit * 10)}
+                          </>
+                        )}
+                        {row.game_type.game_type_name === 'Mystery Box' && (
+                          <>WIN {convertToCurrency(row.pr)}</>
+                        )}
+                        {row.game_type.game_type_name === 'Drop Game' && (
+                          <>WIN ???</>
+                        )}
+                        {row.game_type.game_type_name !== 'Spleesh!' &&
+                          row.game_type.game_type_name !== 'Drop Game' &&
+                          row.game_type.game_type_name !== 'Mystery Box' && (
+                            <>
+                              WIN{' '}
+                              {convertToCurrency(
+                                updateDigitToPoint2(row.user_bet)
+                              )}
+                            </>
+                          )}
+                      </Button>
                     </div>
                   </div>
                   <div className="mobile-only">
                     <div className="table-cell cell-user-name">
-                    <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: avaHex
-              }}
-              style={{
-                position: 'relative',
-                width: '70px',
-                height: '70px',
-                filter: 'hue-rotate(33deg)',
-                margin: '-20px -50px -20px -16px',
-              }}
-            />
+                      <Lottie
+                        options={{
+                          loop: true,
+                          autoplay: true,
+                          animationData: avaHex
+                        }}
+                        style={{
+                          position: 'relative',
+                          width: '70px',
+                          height: '70px',
+                          filter: 'hue-rotate(33deg)',
+                          margin: '-20px -50px -20px -16px'
+                        }}
+                      />
                       <a
                         className="player"
                         onClick={() =>
@@ -569,32 +629,77 @@ class OpenGamesTable extends Component {
                       ) : null}
                     </div>
                     <div className="table-cell mobile-only cell-amount">
-                    {row.game_type.game_type_name === 'Mystery Box' ? (
+                      {row.game_type.game_type_name === 'Mystery Box' ? (
                         <>
-                        <div style={{ display: "flex", alignItems: "center" }}>
-  {this.calculatePercentageChange(row.bet_amount, (parseFloat(row.pr) + parseFloat(row.user_bet))) > 0 ?
-    <ArrowUpward style={{ color: "green" }} /> :
-    <ArrowDownward style={{ color: "red" }} />
-  }
-  <span style={{ color: this.calculatePercentageChange(row.bet_amount, (parseFloat(row.pr) + parseFloat(row.user_bet))) > 0 ? "green" : "red" }}>
-    {updateDigitToPoint2(this.calculatePercentageChange(row.bet_amount, (parseFloat(row.pr) + parseFloat(row.user_bet))))}%
-  </span>
-</div>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            {this.calculatePercentageChange(
+                              row.bet_amount,
+                              parseFloat(row.pr) + parseFloat(row.user_bet)
+                            ) > 0 ? (
+                              <ArrowUpward style={{ color: '#57ca22' }} />
+                            ) : (
+                              <ArrowDownward style={{ color: 'red' }} />
+                            )}
+                            <span
+                              style={{
+                                color:
+                                  this.calculatePercentageChange(
+                                    row.bet_amount,
+                                    parseFloat(row.pr) +
+                                      parseFloat(row.user_bet)
+                                  ) > 0
+                                    ? '#57ca22'
+                                    : 'red'
+                              }}
+                            >
+                              {updateDigitToPoint2(
+                                this.calculatePercentageChange(
+                                  row.bet_amount,
+                                  parseFloat(row.pr) + parseFloat(row.user_bet)
+                                )
+                              )}
+                              %
+                            </span>
+                          </div>
                         </>
                       ) : (
                         <>
-<div style={{ display: "flex", alignItems: "center" }}>
-  {this.calculatePercentageChange(row.bet_amount, row.user_bet) > 0 ?
-    <ArrowUpward style={{ color: "green" }} /> :
-    <ArrowDownward style={{ color: "red" }} />
-  }
-  <span style={{ color: this.calculatePercentageChange(row.bet_amount, row.user_bet) > 0 ? "green" : "red" }}>
-    {updateDigitToPoint2(this.calculatePercentageChange(row.bet_amount, row.user_bet))}%
-  </span>
-</div>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            {this.calculatePercentageChange(
+                              row.bet_amount,
+                              row.user_bet
+                            ) > 0 ? (
+                              <ArrowUpward style={{ color: '#57ca22' }} />
+                            ) : (
+                              <ArrowDownward style={{ color: 'red' }} />
+                            )}
+                            <span
+                              style={{
+                                color:
+                                  this.calculatePercentageChange(
+                                    row.bet_amount,
+                                    row.user_bet
+                                  ) > 0
+                                    ? '#57ca22'
+                                    : 'red'
+                              }}
+                            >
+                              {updateDigitToPoint2(
+                                this.calculatePercentageChange(
+                                  row.bet_amount,
+                                  row.user_bet
+                                )
+                              )}
+                              %
+                            </span>
+                          </div>
                         </>
                       )}
-                      </div>
+                    </div>
                   </div>
                 </div>
               ),
@@ -622,7 +727,7 @@ const mapStateToProps = state => ({
   joiners: state.logic.curRoomInfo.joiners,
   isAuthenticated: state.auth.isAuthenticated,
   userName: state.auth.userName,
-  user: state.auth.user,
+  user: state.auth.user
 });
 
 const mapDispatchToProps = {
