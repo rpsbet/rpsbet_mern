@@ -672,42 +672,70 @@ class SiteWrapper extends Component {
     userSignOut(clear_token);
   };
 
-  handleModalOpen = (modalName, value) => {
-    this.setState({ [modalName]: value });
+  handleOpenLoginModal = () => {
+    this.setState({ showLoginModal: true });
+  };
+  handleCloseLoginModal = () => {
+    this.setState({ showLoginModal: false });
   };
 
-  handleModalClose = modalName => {
-    this.setState({ [modalName]: false });
+  handleOpenSignupModal = () => {
+    this.setState({ showSignupModal: true });
+  };
+  handleCloseSignupModal = () => {
+    this.setState({ showSignupModal: false });
+  };
+
+  handleOpenVerificationModal = () => {
+    this.setState({ showVerificationModal: true });
+  };
+  handleCloseVerificationModal = () => {
+    this.setState({ showVerificationModal: false });
   };
 
   handleOpenProfileModal = () => {
-    this.handleModalOpen('showProfileModal', true);
+    this.setState({ showProfileModal: true, anchorEl: null });
   };
-
+  handleCloseProfileModal = () => {
+    this.setState({ showProfileModal: false });
+  };
   handleOpenPlayerModal = () => {
-    this.handleModalOpen('showPlayerModal', true);
+    this.setState({ showPlayerModal: true, anchorEl: null });
+  };
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
   };
 
   handleOpenHowToPlayModal = () => {
-    this.handleModalOpen('showHowToPlayModal', true);
+    this.setState({ showHowToPlayModal: true });
+  };
+  handleCloseHowToPlayModal = () => {
+    this.setState({ showHowToPlayModal: false });
   };
 
   handleOpenDepositModal = () => {
-    this.handleModalOpen('showDepositModal', true);
+    this.setState({ showDepositModal: true, anchorEl: null });
+  };
+  handleCloseDepositModal = () => {
+    this.setState({ showDepositModal: false });
   };
 
   handleOpenWithdrawModal = () => {
-    this.handleModalOpen('showWithdrawModal', true);
+    this.setState({ showWithdrawModal: true, anchorEl: null });
+  };
+  handleCloseWithdrawModal = () => {
+    this.setState({ showWithdrawModal: false });
   };
 
   handleOpenResetPasswordModal = () => {
-    this.handleModalOpen('showResetPasswordModal', true);
+    this.setState({ showResetPasswordModal: true });
+  };
+  handleCloseResetPasswordModal = () => {
+    this.setState({ showResetPasswordModal: false });
   };
 
   handleBalanceClick = () => {
-    this.setState(prevState => ({
-      showGameLog: !prevState.showGameLog
-    }));
+    this.setState({ showGameLog: !this.state.showGameLog });
   };
 
   disconnectWeb3 = async () => {
