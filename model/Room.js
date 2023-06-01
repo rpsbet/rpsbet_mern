@@ -26,7 +26,7 @@ const RoomSchema = new Schema({
   crashed: {
     type: Boolean,
     default: false
-},
+  },
   selected_qs_position: {
     type: Number,
     default: 0
@@ -88,10 +88,6 @@ const RoomSchema = new Schema({
     type: Number,
     default: 0
   },
-  note: {
-    type: String,
-    default: ''
-  },
   is_private: {
     type: Boolean,
     default: false
@@ -116,6 +112,10 @@ const RoomSchema = new Schema({
     default: []
   }],
   status: { type: String },
+  youtubeUrl: {
+    type: String,
+    default: ''
+  },
   created_at: {
     type: Date,
     default: Date.now

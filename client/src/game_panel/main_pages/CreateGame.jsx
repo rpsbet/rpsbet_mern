@@ -95,6 +95,9 @@ class CreateGame extends Component {
       room_password: '',
       aveMultiplier: 0,
       score: 0,
+      youtubeUrl: '',
+      videoId: '',
+      isPlaying: false,
       endgame_type: true,
       box_list: [],
       brain_game_type: this.props.brain_game_type,
@@ -131,6 +134,33 @@ class CreateGame extends Component {
     }
     return null;
   }
+
+  handleUrlChange = (event) => {
+    this.setState({
+      youtubeUrl: event.target.value,
+    });
+  };
+
+  handleSubmit = (event) => {
+    event.preventDefault();
+    const { youtubeUrl } = this.state;
+    const videoId = this.getVideoId(youtubeUrl);
+
+    this.setState({
+      videoId,
+      isPlaying: true,
+    });
+  };
+  
+  getVideoId = (url) => {
+    // Extract the video ID from the YouTube URL
+    const videoId = url.split('v=')[1];
+    const ampersandPosition = videoId.indexOf('&');
+    if (ampersandPosition !== -1) {
+      return videoId.substring(0, ampersandPosition);
+    }
+    return videoId;
+  };
 
   onChangeState = async newState => {
     await this.setState(newState);
@@ -312,6 +342,7 @@ class CreateGame extends Component {
   onSkipButtonClicked = () => {
     this.setState({
       is_private: false,
+      youtubeUrl: '',
       is_anonymous: false,
       endgame_type: false,
       step: this.state.step + 1
@@ -341,9 +372,8 @@ class CreateGame extends Component {
     }
   };
   
-
   onPrevButtonClicked = () => {
-    if (this.state.game_mode !== 'Mystery Box' && this.state.step < 4) {
+    if (this.state.game_mode !== 'Mystery Box' && this.state.step < 5) {
       if (this.state.step === 3 && this.state.child_step === 1) {
         if (this.state.game_mode === 'Quick Shoot') {
           this.setState({
@@ -469,14 +499,16 @@ class CreateGame extends Component {
         return;
       }
     } else if (this.state.child_step === 2 && this.state.game_mode === 'Spleesh!') {
-      if ((this.state.spleesh_bet_unit === 1 && this.state.endgame_amount < 34) || (this.state.spleesh_bet_unit === 10 && this.state.endgame_amount < 340)) {
+      if ((this.state.spleesh_bet_unit === 1 && this.state.endgame_amount < 36) || (this.state.spleesh_bet_unit === 10 && this.state.endgame_amount < 360)) {
         alertModal(
           this.props.isDarkMode,
           `TOO PROFITABLE! PAYOUT MUST BE MORE THAN ${35 * this.state.spleeshh_bet_unit}`
         );
         return;
       }
-      
+      this.setState({
+        child_step: this.state.child_step + 1
+      });
      } else if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
       if (this.state.max_return > (this.state.bet_amount * 4)) {
         alertModal(
@@ -491,6 +523,9 @@ class CreateGame extends Component {
         );
         return;
       }
+      this.setState({
+        child_step: this.state.child_step + 1
+      });
      } else if (this.state.child_step === 2) {
       if (this.state.endgame_type && isNaN(this.state.endgame_amount)) {
         alertModal(
@@ -499,7 +534,10 @@ class CreateGame extends Component {
         );
         return;
       }
-     } else if (this.state.step === 3) {
+      this.setState({
+        child_step: this.state.child_step + 1
+      });
+     } else if (this.state.child_step === 1) {
       if (this.state.is_private === true && this.state.room_password === '') {
         alertModal(
           this.props.isDarkMode,
@@ -512,22 +550,19 @@ class CreateGame extends Component {
         this.setState({ endgame_type: false });
       }
 
-      if (
-        // this.state.game_mode !== 'RPS' &&
-        this.state.game_mode !== 'mtf jones' &&
-        this.state.child_step === 1
-      ) {
+    
         this.setState({
           child_step: this.state.child_step + 1
         });
         return;
-      }
+    
     }
 
     this.setState({
-      step: this.state.step < 4 ? this.state.step + 1 : this.state.step
+      step: this.state.step < 5 ? this.state.step + 1 : this.state.step
     });
   };
+
 
   playSound = sound => {
     if (!this.props.isMuted) {
@@ -574,7 +609,7 @@ class CreateGame extends Component {
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
           rps_game_type={this.state.rps_game_type}
-       
+       youtubeUrl={this.state.youtubeUrl}
         />
       );
     } else if (this.state.game_mode === 'Spleesh!') {
@@ -593,6 +628,7 @@ class CreateGame extends Component {
           endgame_type={this.state.endgame_type}
           endgame_amount={this.state.endgame_amount}
           step={this.state.child_step}
+          youtubeUrl={this.state.youtubeUrl}
         />
       );
     } else if (this.state.game_mode === 'Mystery Box') {
@@ -640,6 +676,7 @@ class CreateGame extends Component {
           selected_qs_position={this.state.selected_qs_position}
           step={this.state.child_step}
           qs_nation={this.state.qs_nation}
+          youtubeUrl={this.state.youtubeUrl}
         />
       );
     } else if (this.state.game_mode === 'Drop Game') {
@@ -656,6 +693,7 @@ class CreateGame extends Component {
           room_password={this.state.room_password}
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
+          youtubeUrl={this.state.youtubeUrl}
         />
       );
     } else if (this.state.game_mode === 'Bang!') {
@@ -673,6 +711,7 @@ class CreateGame extends Component {
           room_password={this.state.room_password}
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
+          youtubeUrl={this.state.youtubeUrl}
         />
       );
     } else if (this.state.game_mode === 'Roll') {
@@ -690,6 +729,7 @@ class CreateGame extends Component {
           room_password={this.state.room_password}
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
+          youtubeUrl={this.state.youtubeUrl}
         />
       );
     } else if (this.state.game_mode === 'Blackjack') {
@@ -706,6 +746,7 @@ class CreateGame extends Component {
           step={this.state.child_step}
           endgame_amount={this.state.endgame_amount}
           child_step={this.state.child_step}
+          youtubeUrl={this.state.youtubeUrl}
        
         />
       );
@@ -718,7 +759,7 @@ class CreateGame extends Component {
       <>
         <hr />
         <div className="action-panel">
-          {(this.state.step < 3 || this.state.step > 4) &&
+          {(this.state.step < 3 && this.state.step > 6) &&
           this.state.child_step === 1 ? (
             <span></span>
           ) : (
@@ -726,22 +767,22 @@ class CreateGame extends Component {
               Previous
             </Button>
           )}
-          {this.state.step === 3 && (
+          {(this.state.step === 3 || this.state.step === 4) && (
             <Button id="btn_skip" onClick={this.onSkipButtonClicked}>
               Skip
             </Button>
           )}
-          {this.state.step === 4 && this.state.game_mode === 'Brain Game' && (
+          {this.state.step === 5 && this.state.game_mode === 'Brain Game' && (
             <Button id="btn_bet" onClick={this.onStartBrainGame}>
               Start
             </Button>
           )}
-          {this.state.step === 4 && this.state.game_mode !== 'Brain Game' && (
+          {this.state.step === 5 && this.state.game_mode !== 'Brain Game' && (
             <Button id="btn_bet" onClick={this.onCreateRoom}>
               Place Bet
             </Button>
           )}
-          {this.state.step < 4 && this.state.step !== 1 && (
+          {this.state.step < 5 && this.state.step !== 1 && (
             <Button id="btn_next" onClick={this.onNextButtonClicked}>
               Next
             </Button>
@@ -830,7 +871,7 @@ class CreateGame extends Component {
               <div className="game-page">
                 <div className="page-title">
                   <h2>CREATE {this.state.game_mode} AI</h2>
-                  {this.state.step === 5 &&
+                  {this.state.step === 6 &&
                   this.state.game_mode === 'Brain Game' &&
                   this.state.isPlayingBrain ? (
                     <Summary
@@ -846,6 +887,7 @@ class CreateGame extends Component {
                       max_prize={this.state.max_prize}
                       winChance={this.state.winChance}
                       public_bet_amount={this.state.public_bet_amount}
+                      youtubeUrl={this.state.youtubeUrl}
                     />
                   ) : (
                     <span>Click the manual icon at the top for more game help.</span>
@@ -871,10 +913,11 @@ class CreateGame extends Component {
                       spleesh_bet_unit={this.state.spleesh_bet_unit}
                       winChance={this.state.winChance}
                       calcWinChance={this.props.calcWinChance}
+                      youtubeUrl={this.state.youtubeUrl}
                     />
                   )}
                   {this.state.step === 2 && this.step2()}
-                  {this.state.step === 3 && (
+                  {(this.state.step === 3 || this.state.step === 4) && (
                     <AdvancedSettings
                     calculateEV={this.calculateEV}
                     max_return={this.state.max_return}
@@ -891,6 +934,11 @@ class CreateGame extends Component {
                       is_anonymous={this.state.is_anonymous}
                       step={this.state.child_step}
                       box_list={this.state.box_list}
+                      youtubeUrl={this.state.youtubeUrl}
+                      videoId={this.state.videoId}
+                      isPlaying={this.state.isPlaying}
+                      handleSubmit={this.handleSubmit}
+                      handleUrlChange={this.handleUrlChange}
                     />
                   )}
                   {this.state.step === 5 &&
@@ -904,9 +952,10 @@ class CreateGame extends Component {
                         is_anonymous={this.state.is_anonymous}
                         room_password={this.state.room_password}
                         endgame_amount={this.state.endgame_amount}
+                        youtubeUrl={this.state.youtubeUrl}
                       />
                     )}
-                  {this.state.step !== 5 && this.action_panel()}
+                  {this.state.step !== 6 && this.action_panel()}
                 </div>
               </div>
             </div>

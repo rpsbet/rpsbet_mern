@@ -135,7 +135,7 @@ const predictNextBang = bangAmounts => {
 
     const randomChance = Math.random();
     const newValue = parseFloat(getRandomNumberInRange(1, 1.06).toFixed(2));
-    const isChanged = randomChance <= 0.51;
+    const isChanged = randomChance <= 0.41;
 
     if (isChanged) {
       return newValue;

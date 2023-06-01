@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import { Button, TextField } from '@material-ui/core';
-
 class AdvancedSettings extends Component {
-  
   render() {
     return (
       <div id="advanced_panel">
@@ -103,7 +101,9 @@ class AdvancedSettings extends Component {
                         endgame_amount: e.target.value,
                         winChance: this.props.calculateEV(
                           this.props.bet_amount,
-                          e.target.value, this.props.spleesh_bet_unit)
+                          e.target.value,
+                          this.props.spleesh_bet_unit
+                        )
                       });
                     } else {
                       this.props.onChangeState({
@@ -119,7 +119,7 @@ class AdvancedSettings extends Component {
             <p className="tip">AUTOMATIC PAYOUTS WHEN BANKROLL HITS VALUE</p>
           </div>
         )}
-         {this.props.step === 3 && (
+        {/* {this.props.step === 3 && (
           <div className="game-privacy-panel game-info-panel">
             <h3 className="game-sub-title">AI Play Algorithm</h3>
             <div className="radio-button-group">
@@ -141,6 +141,33 @@ class AdvancedSettings extends Component {
               </button>
             </div>
             <p>Click 'i' for more info.</p>
+          </div>
+        )} */}
+        {this.props.step === 3 && (
+          <div className="game-music-panel game-info-panel">
+            <h3 className="game-sub-title">Add music?</h3>
+            <form onSubmit={this.props.handleSubmit}>
+              <TextField
+                label="YouTube URL"
+                value={this.props.youtubeUrl}
+                onChange={this.props.handleUrlChange}
+              />
+              <Button type="submit" variant="contained" color="primary">
+                Play
+              </Button>
+            </form>
+            {this.props.isPlaying && (
+              <iframe
+                width="560"
+                height="315"
+                src={`https://www.youtube.com/embed/${this.props.videoId}?autoplay=1`}
+                title="YouTube Music Player"
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              />
+            )}
+            <p className="tip">ENTER A YOUTUBE URL AND CLICK PLAY</p>
           </div>
         )}
         {/* {this.props.step === 3 && (

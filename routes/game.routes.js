@@ -274,6 +274,7 @@ router.get('/room/:id', async (req, res) => {
         bj_bet_item_id: bjBetItem ? bjBetItem.id : null,
         qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
         is_private: room['is_private'],
+        youtubeUrl: room['youtubeUrl'],
         game_log_list: gameLogList.map(({ bet_amount }) => bet_amount)
       }
     });
@@ -823,6 +824,7 @@ const getRoomList = async (pagination, page, game_type) => {
         spleesh_bet_unit: room.spleesh_bet_unit,
         is_anonymous: room.is_anonymous,
         is_private: room.is_private,
+        youtubeUrl: room.youtubeUrl,
         brain_game_type: room.brain_game_type,
         status: room.status,
         index: room.room_number,
@@ -1195,7 +1197,8 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
         winnings: '',
         index: room.room_number,
         endgame_amount: room.endgame_amount,
-        is_private: room.is_private
+        is_private: room.is_private,
+        youtubeUrl: room.youtubeUrl
       };
 
       const gameLogCount = await GameLog.countDocuments({ room: room._id });

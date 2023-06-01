@@ -8,6 +8,10 @@ import { Button } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
 import waves from '../LottieAnimations/waves.json';
 import bear from '../LottieAnimations/bear.json';
+import ReactPlayer from 'react-player';
+import IconButton from '@material-ui/core/IconButton';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import PauseIcon from '@material-ui/icons/Pause';
 
 import {
   validateIsAuthenticated,
@@ -28,6 +32,7 @@ import {
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+
 
 const defaultOptions = {
   loop: true,
@@ -54,6 +59,9 @@ class Spleesh extends Component {
       intervalId: null,
       spleesh_guesses1Received: false,
       items: [],
+      youtubeUrl: 'https://www.youtube.com/watch?v=GfxcnX7XWfg&list=RDMMUrYC-aRQOus&index=12',
+      isPlaying: true,
+
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
       spleesh_guesses: [],
@@ -64,6 +72,13 @@ class Spleesh extends Component {
     };
     this.panelRef = React.createRef();
   }
+  
+  togglePlay = () => {
+    this.setState((prevState) => ({
+      isPlaying: !prevState.isPlaying,
+    }));
+  };
+
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -439,7 +454,7 @@ class Spleesh extends Component {
 
   render() {
     const { spleesh_bet_unit, endgame_amount } = this.props;
-  const { spleesh_guesses } = this.state;
+  const { spleesh_guesses, youtubeUrl, isPlaying } = this.state;
   let arrayName;
   if (spleesh_bet_unit === 1) {
     arrayName = 'spleesh_array';
@@ -529,14 +544,7 @@ class Spleesh extends Component {
             <div className="pre-summary-panel__inner spleesh">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  {/* <div className="data-item">
-                    <div>
-                      <div className="label your-bet-amount">Bet Amount</div>
-                    </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bet_amount)}
-                    </div>
-                  </div> */}
+                 
                   <div className="data-item">
                     <div className="label your-max-return">Your Return</div>
                     <div className="value">
@@ -557,6 +565,23 @@ class Spleesh extends Component {
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      {/* <div className="label your-bet-amount">Bet Amount</div> */}
+                    <ReactPlayer
+          url={youtubeUrl}
+          playing={isPlaying}
+          width="100%"
+          height="50px"
+        />
+                    </div>
+                    <div style={{display: 'flex', justifyContent: 'center'}} className="value">
+                    <IconButton style={{marginTop: '-50px', marginRight: '-25px'}} onClick={this.togglePlay}>
+          {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+        </IconButton>
+                      {/* {convertToCurrency(this.state.bet_amount)} */}
+                    </div>
                   </div>
                 </React.Fragment>
               ))}

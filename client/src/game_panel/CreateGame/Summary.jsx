@@ -201,7 +201,10 @@ class Summary extends Component {
               </div>
             </div>
           )}
-
+      <div className="summary-item">
+              <div className="summary-item-name">Music</div>
+              <div className="summary-item-value">{this.props.youtubeUrl}</div>
+            </div>
           <div className="summary-item">
             <div className="summary-item-name">Privacy</div>
             <div className="summary-item-value">
@@ -216,7 +219,7 @@ class Summary extends Component {
   render() {
     if (this.props.step === 1) {
       return <></>;
-    } else if (this.props.step === 4) {
+    } else if (this.props.step === 5) {
       return this.total_summery();
     }
     return this.pre_summery();

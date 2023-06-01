@@ -381,6 +381,7 @@ class JoinGame extends Component {
                     bankroll={this.state.bankroll}
                     rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
+                    youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Spleesh!' && (
@@ -395,6 +396,7 @@ class JoinGame extends Component {
                     endgame_amount={this.props.roomInfo.endgame_amount}
                     playSound={this.playSound}
                     is_private={this.props.roomInfo.is_private}
+                    youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Mystery Box' &&
@@ -410,6 +412,7 @@ class JoinGame extends Component {
                       roomInfo={this.props.roomInfo}
                       playSound={this.playSound}
                       betResult={this.state.betResult}
+                      youtubeUrl={this.props.roomInfo.youtubeUrl}
                     />
                   )}
                 {this.props.roomInfo.game_type === 'Brain Game' && (
@@ -429,6 +432,7 @@ class JoinGame extends Component {
                     is_private={this.props.roomInfo.is_private}
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
+                    youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Quick Shoot' && (
@@ -444,6 +448,7 @@ class JoinGame extends Component {
                     is_private={this.props.roomInfo.is_private}
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
+                    youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Drop Game' && (
@@ -458,6 +463,7 @@ class JoinGame extends Component {
                     is_private={this.props.roomInfo.is_private}
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
+                    youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Bang!' && (
@@ -477,6 +483,7 @@ class JoinGame extends Component {
                     playSound={this.playSound}
                     playSoundLoop={this.playSoundLoop}
                     stopSound={this.stopSound}
+                    youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Roll' && (
@@ -495,6 +502,7 @@ class JoinGame extends Component {
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
                     stopSound={this.stopSound}
+                    youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
 {this.props.roomInfo.game_type === 'Blackjack' && (
@@ -509,6 +517,7 @@ class JoinGame extends Component {
                     bankroll={this.state.bankroll}
                     bj_bet_item_id={this.props.roomInfo.bj_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
+                    youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
                 <div className="room-history-panel">
