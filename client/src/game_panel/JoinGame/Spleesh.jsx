@@ -8,11 +8,7 @@ import { Button } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
 import waves from '../LottieAnimations/waves.json';
 import bear from '../LottieAnimations/bear.json';
-import ReactPlayer from 'react-player';
-import IconButton from '@material-ui/core/IconButton';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import PauseIcon from '@material-ui/icons/Pause';
-
+import YouTube from 'react-youtube';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -32,7 +28,6 @@ import {
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
-
 
 const defaultOptions = {
   loop: true,
@@ -59,9 +54,8 @@ class Spleesh extends Component {
       intervalId: null,
       spleesh_guesses1Received: false,
       items: [],
-      youtubeUrl: 'https://www.youtube.com/watch?v=GfxcnX7XWfg&list=RDMMUrYC-aRQOus&index=12',
-      isPlaying: true,
-
+      youtubeUrl: this.props.youtubeUrl,
+      isPlaying: false,
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
       spleesh_guesses: [],
@@ -72,13 +66,11 @@ class Spleesh extends Component {
     };
     this.panelRef = React.createRef();
   }
-  
   togglePlay = () => {
     this.setState((prevState) => ({
       isPlaying: !prevState.isPlaying,
     }));
   };
-
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -461,7 +453,13 @@ class Spleesh extends Component {
   } else if (spleesh_bet_unit === 10) {
     arrayName = 'spleesh_10_array';
   }
-
+  const opts = {
+    height: '0',
+    width: '0',
+    playerVars: {
+      autoplay: isPlaying ? 1 : 0,
+    },
+  };
   const guessedAmounts = spleesh_guesses.map((number) => number.bet_amount);
   const remainingSum = endgame_amount - guessedAmounts.reduce((sum, amount) => sum + amount, 0);
 
@@ -544,7 +542,12 @@ class Spleesh extends Component {
             <div className="pre-summary-panel__inner spleesh">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                 
+                  <div className="data-item">
+                  <YouTube videoId={youtubeUrl} opts={opts} />
+        <button onClick={this.togglePlay}>
+          {isPlaying ? 'Pause' : 'Play'}
+        </button>
+                  </div>
                   <div className="data-item">
                     <div className="label your-max-return">Your Return</div>
                     <div className="value">
@@ -565,23 +568,6 @@ class Spleesh extends Component {
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
-                  </div>
-                  <div className="data-item">
-                    <div>
-                      {/* <div className="label your-bet-amount">Bet Amount</div> */}
-                    <ReactPlayer
-          url={youtubeUrl}
-          playing={isPlaying}
-          width="100%"
-          height="50px"
-        />
-                    </div>
-                    <div style={{display: 'flex', justifyContent: 'center'}} className="value">
-                    <IconButton style={{marginTop: '-50px', marginRight: '-25px'}} onClick={this.togglePlay}>
-          {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-        </IconButton>
-                      {/* {convertToCurrency(this.state.bet_amount)} */}
-                    </div>
                   </div>
                 </React.Fragment>
               ))}
