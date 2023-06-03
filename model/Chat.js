@@ -8,7 +8,14 @@ const ChatSchema = new Schema({
   },
   message: {
     type: String,
-    ref: ''
+  },
+  messageType: {
+    type: String,
+    enum: ['text', 'gif'], // Add more types if needed
+    default: 'text'
+  },
+  messageContent: {
+    type: String,
   },
   created_at: {
     type: Date,
@@ -17,7 +24,6 @@ const ChatSchema = new Schema({
   avatar: {
     type: String,
     ref: 'User.avatar'
-
   }
 });
 

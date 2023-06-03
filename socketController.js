@@ -28,7 +28,6 @@ module.exports.sendMessage = (to_user_id, data) => {
 module.exports.newTransaction = transaction => {
   send('NEW_TRANSACTION', transaction['user']['_id'], transaction);
 };
-
 module.exports.socketio = server => {
   const io = socket_io(server);
 
@@ -42,15 +41,21 @@ module.exports.socketio = server => {
       });
     });
 
-      socket.on('GLOBAL_CHAT_SEND', data => {
+    socket.on('GLOBAL_CHAT_SEND', data => {
+      const { senderId, message, messageType, messageContent, avatar } = data;
       const chat = new Chat({
-        sender: data.senderId,
-        message: data.message,
-        avatar: data.avatar
+        sender: senderId,
+        message: message,
+        messageType: messageType,
+        avatar: avatar
       });
       chat.save();
       io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
-        ...data,
+        senderId,
+        message: message,
+        messageType,
+        messageContent,
+        avatar,
         time: Moment(new Date()).format('hh:mm')
       });
     });
@@ -58,23 +63,23 @@ module.exports.socketio = server => {
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
         .sort({ created_at: -1 })
-        .limit(3000)
+        .limit(500)
         .populate({ path: 'sender', model: User, select: 'username avatar' })
         .then(results =>
           results
-            .map(({ created_at, message, sender }) => ({
+            .map(({ created_at, message, messageType, messageContent, sender }) => ({
               sender: sender?.username ?? '',
               senderId: sender?._id ?? '',
               message,
+              messageType,
+              messageContent,
               avatar: sender?.avatar ?? '',
-
               time: Moment(created_at).format('hh:mm')
             }))
             .sort((a, b) => (a.created_at > b.created_at ? 1 : -1))
         )
         .then(results => io.sockets.emit('SET_GLOBAL_CHAT', results));
     });
-    
 
     socket.on('disconnect', reason => {
       Object.keys(sockets).forEach((key, index) => {

@@ -60,7 +60,7 @@ if (current_state.chat_list.length !== props.globalChatList.length) {
 
 
    handleOpenPlayerModal = (senderId) => {
-    console.log('senderId', senderId)
+    // console.log('senderId', senderId)
     this.setState({ showPlayerModal: true, selectedCreator: senderId });
   }
 
@@ -71,7 +71,8 @@ if (current_state.chat_list.length !== props.globalChatList.length) {
 
 
   render() {
-        console.log(this.props.messages)
+        // console.log(this.props.messages)
+        // console.log('Message Type:', this.state.chat_list);
 
     return (
       <div className="chat-panel global-chat" ref={this.chatBoxRef}>
@@ -88,37 +89,34 @@ if (current_state.chat_list.length !== props.globalChatList.length) {
               // {...this.state.selectedRow}
             />
           }
-        {this.state.chat_list.map(
-          (chat, key) => (
-            <div className="chat-line" key={key}>
-              <div className="chat-content">
-              <a className="player" onClick={() => this.handleOpenPlayerModal(chat.senderId)}>                   
-
-                  <Avatar
-                    className="avatar"
-                    src={chat.avatar}
-                    alt=""
-                    darkMode={this.props.isDarkMode}
-                  />
-                </a>
-              </div>
-              <div className="chat-time">
-                <span className="sender-name">{chat.sender}</span>
-                <span className="chat-text">
-                {
-        chat.message.split(/(\S+\.[^\s]+)/).map((part, i) =>
-          /\S+\.[^\s]+/.test(part) && !/\.{2,}/.test(part)
-            ? <a href={part} target="_blank" rel="noopener noreferrer">{part}</a>
-            : part
-        )
-      }
-    </span>
-                {/* {chat.time} */}
-              </div>
-            </div>
-          ),
-          this
+     {this.state.chat_list.map((chat, key) => (
+  <div className="chat-line" key={key}>
+    <div className="chat-content">
+      <a className="player" onClick={() => this.handleOpenPlayerModal(chat.senderId)}>
+        <Avatar
+          className="avatar"
+          src={chat.avatar}
+          alt=""
+          darkMode={this.props.isDarkMode}
+        />
+      </a>
+    </div>
+    <div className="chat-time">
+      <span className="sender-name">{chat.sender}</span>
+      <span className="chat-text">
+        {chat.messageType === 'gif' ? (
+          <img src={JSON.parse(chat.message).content} alt="gif" />
+        ) : (
+          chat.message
         )}
+      </span>
+    </div>
+  </div>
+))}
+
+
+
+
       </div>
     );
   }

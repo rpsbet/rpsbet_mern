@@ -7,6 +7,10 @@
 	box-shadow: none;
 }
 
+.dark_mode .search-popup {
+    background-color: #060607;
+}
+
 /* .dark_mode 
 .gradient-container .previous-guesses.drop:before  {
 	background: linear-gradient(90deg, #151515, transparent);
@@ -406,7 +410,7 @@ border-top: 2px solid #36393f;
 }
 
 .dark_mode .chat-wrapper .chat-input-panel .emoticon-panel {
-	background-color: #212529;
+	background-color: #060607;
 }
 
 .dark_mode .boxes-panel .box span {

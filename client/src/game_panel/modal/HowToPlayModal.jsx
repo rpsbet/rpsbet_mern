@@ -267,11 +267,7 @@ class HowToPlayModal extends Component {
 
                       </ol>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>If you're looking for a quick flip, hold onto the bomb for as long as you can lift your balls - otherwise, if you're looking for a long-term, attractive money-spinner, this is the game for you. Just remember to set up (Host) with more 1's then high numbers whilst still throwing in a few random numbers into the mix too.
-                        </p>
-                    </div>
+                    
                   </div>
                 </AccordionItemPanel> */}
               </AccordionItem>
@@ -286,8 +282,8 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper bang">
                     <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To cashout the multiplier before the 'Roll'</p>
+                      <h5 style={{ color: '#02c526' }}>Objective</h5>
+                      <p>To cashout the multiplier before the 'Roll'.</p>
                     </div>
                     <div className="modal-content-panel">
                       <h5>Gameplay</h5>
@@ -299,11 +295,7 @@ class HowToPlayModal extends Component {
 
                       </ol>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>If you're looking for a quick flip, hold onto the bomb for as long as you can lift your balls - otherwise, if you're looking for a long-term, attractive money-spinner, this is the game for you. Just remember to set up (Host) with more 1's then high numbers whilst still throwing in a few random numbers into the mix too.
-                        </p>
-                    </div>
+                   
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
@@ -318,7 +310,7 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper bang">
                     <div className="modal-content-panel">
-                      <h5>Objective</h5>
+                      <h5  style={{ color: '#02c526' }}>Objective</h5>
                       <p>To cashout the multiplier before the 'Bang!'</p>
                     </div>
                     <div className="modal-content-panel">
@@ -331,11 +323,7 @@ class HowToPlayModal extends Component {
 
                       </ol>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>If you're looking for a quick flip, hold onto the bomb for as long as you can lift your balls - otherwise, if you're looking for a long-term, attractive money-spinner, this is the game for you. Just remember to set up (Host) with more 1's then high numbers whilst still throwing in a few random numbers into the mix too.
-                        </p>
-                    </div>
+                    
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
@@ -350,8 +338,8 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper drop-game">
                     <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To drop a higher value</p>
+                      <h5 style={{ color: '#02c526' }}>Objective</h5>
+                      <p>To drop (bet) a higher value than your opponent.</p>
                     </div>
                     <div className="modal-content-panel">
                       <h5>Gameplay</h5>
@@ -364,11 +352,7 @@ class HowToPlayModal extends Component {
                         </li>
                       </ol>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>Well, let's face it, this game is a guaranteed profit if you're rich. But remember, there's always someone richer than you.
-                      </p>
-                    </div>
+                   
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
@@ -383,8 +367,8 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper quick-shoot">
                     <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To score a goal past the keeper</p>
+                      <h5 style={{ color: '#02c526' }}>Objective</h5>
+                      <p>To score a goal past the keeper.</p>
                     </div>
                     <div className="modal-content-panel">
                       <h5>Gameplay</h5>
@@ -396,11 +380,7 @@ class HowToPlayModal extends Component {
                         <li>Depending on the game type, If you can score past the AI keeper, you will win from 1.25x - 2x your original Bet Amount</li>
                       </ol>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>If you're not hosting, you're playing at random and it's just 1 shot, then yes you're most likely going to win if you have 5 directions you can shoot in. Specifically your odds are 5/4 whereby if you put $4 on you can get expect $5 back. If you're hosting and setting up the game, then it's opposite but overall, as long as you avoid training your AI with predictable patterns then the Profit Guarantee is similar to that of the Rock Paper Scissors game. A zero-sum game.
-                      </p>
-                    </div>
+                   
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
@@ -415,8 +395,8 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper brain-game">
                     <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To score higher in the quiz</p>
+                      <h5 style={{ color: '#02c526' }}>Objective</h5>
+                      <p>To score higher in the quiz.</p>
                     </div>
                     <div className="modal-content-panel">
                       <h5>Gameplay</h5>
@@ -432,11 +412,7 @@ class HowToPlayModal extends Component {
                         </li>
                       </ol>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>A profit is always guaranteed for as long as you know the answers. So when you're setting up, go ahead click the 'create your own' option. But with every profitable game, is it attractive enough to encourage the gamblers? Well, no - gamblers come to earn not learn. But like I said, as long as you know your stuff, you can guarantee profit for those times when you're desperately low and need to rely purely on what you know. Besides, not every Brain Game has to be so mentally intensive, have fun in the creation process.
-                      </p>
-                    </div>
+                    
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
@@ -451,8 +427,8 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper quick-shoot">
                     <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To correctly open profitable boxes</p>
+                      <h5 style={{ color: '#02c526' }}>Objective</h5>
+                      <p>To correctly open profitable boxes.</p>
                     </div>
                     <div className="modal-content-panel">
                       <h5>Gameplay</h5>
@@ -465,11 +441,7 @@ class HowToPlayModal extends Component {
                           </li>
                       </ol>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>If you're setting up a Mystery Box AI, it can take some skill to master. Without a bit of practice, your AI can be very unattractive to play with and worse it can go south quickly. Think of your boxes like the classic <a href="https://en.wikipedia.org/wiki/Shell_game">Shell Game</a> as long as they think they always stand a chance, they will always play, and as long as you set it up right, you will always stand to make a profit. So here's an example of a well balanced game that has a positive EV (Estimated Value): 5 boxes, each costing $10.50 each to open, with one box containing a $50 prize. In this case, as long as your boxes cost more to open than the odds, you can guarantee an edge (a positive EV) and therefore will win money in the long run, if you can survive the short run.
-                      </p>
-                    </div>
+                    
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
@@ -486,8 +458,8 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To correctly guess the number within 3-9 guesses</p>
+                      <h5 style={{ color: '#02c526' }}>Objective</h5>
+                      <p>To correctly guess the number within 3-9 guesses.</p>
                     </div>
                     <div className="modal-content-panel">
                       <h5>Gameplay</h5>
@@ -503,11 +475,7 @@ class HowToPlayModal extends Component {
                         </li>
                       </ol>
                     </div>
-                    <div className="modal-content-panel">
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-                      <p>If you're hosting, the short answer is yes - one of the very few games that can always guarantee profit, just set your payout as low as possible, bearing in mind a lower payout makes a less attractive game (35 is minimum for gametype 1-10). But does that make it fair for both parties? Yes, like any standard casino game, the House is always at risk in the short-run, but as more players lose, their safety funds become more stable. If you're not hosting, invite the gang - split the risk!
-                      </p>
-                    </div>
+                   
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
@@ -522,8 +490,8 @@ class HowToPlayModal extends Component {
                 <AccordionItemPanel>
                   <div className="modal-content-wrapper rps">
                     <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To correctly predict the correct 'hand' guesture</p>
+                      <h5 style={{ color: '#02c526' }}>Objective</h5>
+                      <p>To correctly predict the correct 'hand' guesture.</p>
                     </div>
                     <div className="modal-content-panel">
                       <h5>Gameplay</h5>
@@ -538,10 +506,7 @@ class HowToPlayModal extends Component {
                           The winner is determined by the following rules: rock beats scissors, scissors beats paper, and paper beats rock. The winner receives 2x their Bet Amount. If both players choose the same, the round is a tie and no money or fees are taken.
                         </li>
                       </ol>
-                      <h5 style={{ color: '#02c526' }}>Profit Guarantee?</h5>
-
-                      <p>Although Rock-Paper-Scissors is often considered a game of chance, with PVP, players can use their skill and knowledge of psychology to try predict outcomes. For example, most will lead with Rock, most will alternate and most will definitely find difficulty in randomizing their choices. Knowing these traits for profit is just mind money. Oh, and if you're setting up a game try keep your EV as close to 0 as possible...wait actually - that means people can count and make better decisions for example if 7 Rocks and 5 Papers have been played in the last 15 turns, then you can bet a lot of money on playing scissors next as it likely be a tie or a W but only IF you can be confident their EV is 0. So hopefully that answers the question ;)
-</p>
+                     
                     </div>
                   </div>
                 </AccordionItemPanel>

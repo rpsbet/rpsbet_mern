@@ -3,7 +3,52 @@
     overflow-y: scroll;
     width: 270px;
 }
-
+.chat-text img {
+    max-width: 100%;
+    display: block;
+    margin: auto;
+}
+.btn-search-gifs {
+    margin-right: 5px !important;
+}
+.search-popup {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    border-radius: 8px;
+    width: 100%;
+    max-height: 400px;
+    overflow-y: scroll;
+    background-color: #e5e5e5;
+    z-index: 9993;
+    padding: 10px;
+  }
+  .search-popup div {
+    width: 100%;
+  }
+  .search-input {
+    width: 100% !important;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  
+  .gif-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  
+  .gif-results img {
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  
+  .gif-results img:hover {
+    transform: scale(1.1);
+  }
+  
 .chat-wrapper .chat-input-panel {
     display: flex;
     align-items: center;
@@ -88,13 +133,15 @@ div.table.my-chat-table .table-row .table-cell:last-child {
     overflow: visible;
 }
 
+
 .mat-chat .chat-wrapper{
     background-color: #f9f9f9;
     padding-top: 43px;
     overflow: hidden;
     padding-bottom: 30px;
     width: 270px;
-
+    height: 100%;
+    
 }
 .chat-input-panel .form-control {
     margin-top: 0 !important;
@@ -125,7 +172,7 @@ div.table.my-chat-table .table-row .table-cell:last-child {
     }
     .chat-wrapper .chat-panel.global-chat {
         height: calc(90vh - 250px);
-        width: unset;
+        width: 100%;
     }
     
 

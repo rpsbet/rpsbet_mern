@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import axios from 'axios';
 
 import Moment from 'moment';
 // import { alertModal } from '../modal/ConfirmAlerts';
@@ -34,11 +35,18 @@ class ChatPanel extends Component {
     this.state = {
       selected_tab_index: 1,
       text: '',
-      showEmojiPanel: false
+      showEmojiPanel: false,
+      showSearchPopup: false,
+      gifs: [] 
     };
   }
 
-
+  toggleSearchPopup = () => {
+    this.setState(prevState => ({
+      showSearchPopup: !prevState.showSearchPopup
+    }));
+  };
+  
   handleMouseEnter = (index) => {
     this.setState({ hoverTabIndex: index });
   }
@@ -47,7 +55,28 @@ class ChatPanel extends Component {
     this.setState({ hoverTabIndex: -1 });
   }
   
-
+  handleGifClick = gifUrl => {
+    if (this.props.socket) {
+      // Send the clicked GIF to the chat
+      const message = {
+        type: 'gif',
+        content: gifUrl,
+      };
+  
+      this.props.socket.emit('GLOBAL_CHAT_SEND', {
+        sender: this.props.userName,
+        senderId: this.props.user._id,
+        message: JSON.stringify(message),
+        avatar: this.props.user.avatar,
+        messageType: 'gif'
+      });
+  
+      // Close the search popup and clear the search input
+      this.setState({ showSearchPopup: false, searchInput: '' });
+    }
+  };
+  
+  
   insertEmoji = e => {
     this.setState({ text: this.state.text + e.target.innerHTML });
     this.textarea.focus();
@@ -79,6 +108,50 @@ class ChatPanel extends Component {
       }
     }
   };
+
+  renderSearchPopup() {
+    if (this.state.showSearchPopup) {
+      return (
+        <div className="search-popup">
+          {/* Search input */}
+          <TextField
+            type="text"
+            placeholder="Search GIFs..."
+            variant="outlined"
+            onKeyDown={this.onTextAreaKeyDown}
+            onChange={this.handleSearchInputChange}
+          />
+  
+          {/* Display the searched GIFs */}
+          <div className="gif-results">
+            {this.state.gifs.map(gif => (
+              <img
+                key={gif.id}
+                src={gif.images.fixed_height.url}
+                alt={gif.title}
+                onClick={() => this.handleGifClick(gif.images.fixed_height.url)}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+  }
+  
+  handleSearchInputChange = async event => {
+    const searchTerm = event.target.value;
+    const apiKey = 'EoYYQ1kbX7mRfqwJ6xC4M6wgQmds4Dq1'; // Replace with your Giphy API key
+    const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}`;
+  
+    try {
+      const response = await axios.get(url);
+      const gifs = response.data.data;
+      this.setState({ gifs });
+    } catch (error) {
+      console.error('Error fetching GIFs:', error);
+    }
+  };
+  
 
   toggleEmojiPanel = e => {
     e.preventDefault();
@@ -126,6 +199,7 @@ class ChatPanel extends Component {
         {this.state.selected_tab_index === 0 ? <MyChat /> : <GlobalChat />}
         {this.state.selected_tab_index === 1 && (
           <div className="chat-input-panel">
+             {this.renderSearchPopup()}
             <div
               className={`emoticon-panel ${
                 this.state.showEmojiPanel ? 'active' : ''
@@ -208,21 +282,28 @@ class ChatPanel extends Component {
               className="btn-show-emoticon"
               onClick={this.toggleEmojiPanel}
             ></Button>
+            <Button
+  className="btn-search-gifs" // Add a class for styling if desired
+  onClick={this.toggleSearchPopup}
+>
+  GIF
+</Button>
+
             <TextField
               type="text"
               className="form-control"
               variant="outlined"
-              placeholder="SAY HI..."
               onKeyDown={this.onTextAreaKeyDown}
+              placeholder="Say Hi!!"
               onChange={this.onChangeText}
               value={this.state.text}
-              autoComplete="off"
               ref={elem => {
                 this.textarea = elem;
               }}
             />
           </div>
         )}
+       
       </div>
     );
   }

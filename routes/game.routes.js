@@ -1561,7 +1561,6 @@ router.post('/start_roll', auth, async (req, res) => {
     });
   }
 });
-
 router.post('/get_chat_room_info', auth, async (req, res) => {
   try {
     const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
@@ -1593,7 +1592,8 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
       const message = {
         from: chatLog.from,
         to: chatLog.to,
-        message: chatLog.message,
+        messageType: chatLog.messageType,
+        messageContent: chatLog.messageContent,
         created_at: moment(chatLog.created_at).format('LLL')
       };
       messages.push(message);

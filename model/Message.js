@@ -12,7 +12,12 @@ const MessageSchema = new Schema({
   },
   message: {
     type: String,
-    ref: ''
+    required: true
+  },
+  messageType: {
+    type: String,
+    enum: ['text', 'gif'],
+    default: 'text'
   },
   is_read: {
     type: Boolean,

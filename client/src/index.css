@@ -146,6 +146,9 @@ input,textarea { border-radius: 0 !important; }
   height: 100px;
 }
 
+fieldset {
+  border: none !important;
+}
 button {
   height: 45px !important;
   margin: 5px;
