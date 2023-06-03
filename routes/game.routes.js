@@ -121,6 +121,7 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+
 });
 // /api/room/:id call
 router.get('/room/:id', async (req, res) => {
@@ -267,6 +268,7 @@ router.get('/room/:id', async (req, res) => {
         qs_game_type: room['qs_game_type'],
         room_history: roomHistory,
         box_list: boxPrizeList,
+        status: room['status'],
         rps_bet_item_id: rpsBetItem ? rpsBetItem.id : null,
         drop_bet_item_id: dropBetItem ? dropBetItem.id : null,
         bang_bet_item_id: bangBetItem ? bangBetItem.id : null,

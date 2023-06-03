@@ -149,6 +149,7 @@ class AdvancedSettings extends Component {
             <form onSubmit={this.props.handleSubmit}>
               <TextField
                 label="YouTube URL"
+                variant="outlined"
                 value={this.props.youtubeUrl}
                 onChange={this.props.handleUrlChange}
               />

@@ -2,18 +2,16 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-import InlineSVG from 'react-inlinesvg';
-import Share from './Share';
+import Share from '../../components/Share';
 import { Button } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
 import waves from '../LottieAnimations/waves.json';
 import bear from '../LottieAnimations/bear.json';
-import YouTube from 'react-youtube';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
 import {
   validateIsAuthenticated,
   validateCreatorId,
   validateBetAmount,
-  validateLocalStorageLength,
   validateBankroll
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
@@ -22,7 +20,6 @@ import threedBg from '../LottieAnimations/3d-bg.json';
 import animationData from '../LottieAnimations/spinningIcon';
 import {
   alertModal,
-  confirmModalCreate,
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
@@ -38,8 +35,6 @@ const defaultOptions = {
   }
 };
 
-const twitterLink = window.location.href;
-
 class Spleesh extends Component {
   constructor(props) {
     super(props);
@@ -54,8 +49,6 @@ class Spleesh extends Component {
       intervalId: null,
       spleesh_guesses1Received: false,
       items: [],
-      youtubeUrl: this.props.youtubeUrl,
-      isPlaying: false,
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
       spleesh_guesses: [],
@@ -66,11 +59,6 @@ class Spleesh extends Component {
     };
     this.panelRef = React.createRef();
   }
-  togglePlay = () => {
-    this.setState((prevState) => ({
-      isPlaying: !prevState.isPlaying,
-    }));
-  };
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -121,7 +109,7 @@ class Spleesh extends Component {
   };
   
   componentDidMount() {
-    console.log('endgame_amount:', this.props.roomInfo.endgame_amount);
+    console.log('endgame_amount:', this.props.gamme);
     this.socket.on('SPLEESH_GUESSES', (data) => {
       this.setState({ spleesh_guesses: data });
     });
@@ -446,20 +434,14 @@ class Spleesh extends Component {
 
   render() {
     const { spleesh_bet_unit, endgame_amount } = this.props;
-  const { spleesh_guesses, youtubeUrl, isPlaying } = this.state;
+  const { spleesh_guesses } = this.state;
   let arrayName;
   if (spleesh_bet_unit === 1) {
     arrayName = 'spleesh_array';
   } else if (spleesh_bet_unit === 10) {
     arrayName = 'spleesh_10_array';
   }
-  const opts = {
-    height: '0',
-    width: '0',
-    playerVars: {
-      autoplay: isPlaying ? 1 : 0,
-    },
-  };
+
   const guessedAmounts = spleesh_guesses.map((number) => number.bet_amount);
   const remainingSum = endgame_amount - guessedAmounts.reduce((sum, amount) => sum + amount, 0);
 
@@ -543,11 +525,12 @@ class Spleesh extends Component {
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
                   <div className="data-item">
-                  <YouTube videoId={youtubeUrl} opts={opts} />
-        <button onClick={this.togglePlay}>
-          {isPlaying ? 'Pause' : 'Play'}
-        </button>
+                    <div>
+                      <div className="label room-id">STATUS</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.status}</div>
                   </div>
+                 
                   <div className="data-item">
                     <div className="label your-max-return">Your Return</div>
                     <div className="value">
@@ -557,7 +540,6 @@ class Spleesh extends Component {
                             (a, b) => a + b.bet_amount,
                             0
                           ) +
-                            // this.props.game_log_list.reduce((a, b) => a + b, 0) +
                             this.state.bet_amount * 2 /* 0.9 */
                         )
                       )}
@@ -565,10 +547,21 @@ class Spleesh extends Component {
                   </div>
                   <div className="data-item">
                     <div>
+                      <div className="label win-chance">Win Chance</div>
+                    </div>
+                    <div className="value">{((averageGuesses / (10 - this.state.spleesh_guesses.length)) * 100).toFixed(2)}%</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>

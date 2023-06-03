@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
 import BetArray from '../../components/BetArray';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -24,7 +25,7 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
-import Share from './Share';
+import Share from '../../components/Share';
 
 import { convertToCurrency } from '../../util/conversion';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
@@ -580,6 +581,12 @@ class BrainGame extends Component {
                 <React.Fragment key={i}>
                   <div className="data-item">
                     <div>
+                      <div className="label room-id">STATUS</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.status}</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
                       <div className="label your-bet-amount">Bet Amount</div>
                     </div>
                     <div className="value">
@@ -605,12 +612,17 @@ class BrainGame extends Component {
                     </div>
                   </div>
 
+                 
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>

@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
-import Share from './Share';
+import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-import Lottie from 'react-lottie';
 import { Button, TextField } from '@material-ui/core';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
 
+import Lottie from 'react-lottie';
 import starsBg from '../LottieAnimations/stars-bg.json';
 import {
   validateIsAuthenticated,
@@ -675,6 +676,12 @@ class RPS extends Component {
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
+                   <div className="data-item">
+                    <div>
+                      <div className="label room-id">STATUS</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.status}</div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
@@ -696,13 +703,22 @@ class RPS extends Component {
                       )}
                     </div>
                   </div>
-
+                  <div className="data-item">
+                    <div>
+                      <div className="label win-chance">Win Chance</div>
+                    </div>
+                    <div className="value">33%</div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>

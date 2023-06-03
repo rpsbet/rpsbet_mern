@@ -71,8 +71,6 @@ const initialState = {
     likes: 0,
     dislikes: 0,
     views: 0,
-    liked: false,
-    disliked: false,
   },
   betResult: -1,
   betResults: [],

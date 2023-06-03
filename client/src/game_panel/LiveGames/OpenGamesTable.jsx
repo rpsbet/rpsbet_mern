@@ -23,6 +23,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Pagination from '../../components/Pagination';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
+import like from '../LottieAnimations/like.json';
 
 import avaHex from '../LottieAnimations/avahex.json';
 
@@ -42,11 +43,7 @@ class OpenGamesTable extends Component {
       showPlayerModal: false,
       selectedCreator: '',
       mouseDown: false,
-      likes: [],
-      dislikes: [],
-      views: [],
-      liked: false,
-      disliked: false
+      roomList: [],
     };
   }
   handleOpenPlayerModal = creator_id => {
@@ -58,12 +55,60 @@ class OpenGamesTable extends Component {
   };
 
   handleLike = ({ _id }) => {
+    const updatedRoomList = this.state.roomList.map((room) => {
+      if (room._id === _id) {
+        const likesIndex = room.likes.indexOf(this.props.user._id);
+        const dislikesIndex = room.dislikes.indexOf(this.props.user._id);
+  
+        if (likesIndex > -1) {
+          room.likes.splice(likesIndex, 1);
+        } else if (dislikesIndex > -1) {
+          room.dislikes.splice(dislikesIndex, 1);
+          room.likes.push(this.props.user._id);
+          this.handleAction({ roomId: _id, type: 'dislike' });
+        } else {
+          room.likes.push(this.props.user._id);
+        }
+  
+        // Set a flag to indicate the animation should be shown
+        room.likeAnimation = true;
+  
+        // Set a timeout to remove the animation after 1.5 seconds
+        setTimeout(() => {
+          room.likeAnimation = false;
+          this.setState({ roomList: [...this.state.roomList] });
+        }, 1500);
+      }
+      return room;
+    });
+  
+    this.setState({ roomList: updatedRoomList });
     this.handleAction({ roomId: _id, type: 'like' });
   };
-
+  
   handleDislike = ({ _id }) => {
+    const updatedRoomList = this.state.roomList.map((room) => {
+      if (room._id === _id) {
+        const likesIndex = room.likes.indexOf(this.props.user._id);
+        const dislikesIndex = room.dislikes.indexOf(this.props.user._id);
+
+        if (dislikesIndex > -1) {
+          room.dislikes.splice(dislikesIndex, 1);
+        } else if (likesIndex > -1) {
+          room.likes.splice(likesIndex, 1);
+          room.dislikes.push(this.props.user._id);
+          this.handleAction({ roomId: _id, type: 'like' });
+        } else {
+          room.dislikes.push(this.props.user._id);
+        }
+      }
+      return room;
+    });
+
+    this.setState({ roomList: updatedRoomList });
     this.handleAction({ roomId: _id, type: 'dislike' });
   };
+  
 
   handleAction = ({ roomId, type }) => {
     const { user, pageNumber } = this.props;
@@ -73,8 +118,8 @@ class OpenGamesTable extends Component {
         type,
         conditions: {
           page: pageNumber !== undefined ? pageNumber : 0,
-          game_type: this.state.selectedGameType
-        }
+          game_type: this.state.selectedGameType,
+        },
       });
     }
   };
@@ -108,11 +153,6 @@ class OpenGamesTable extends Component {
 
     const creator_id = e.currentTarget.getAttribute('data-creatorId');
     const bet_amount = e.currentTarget.getAttribute('data-betAmount');
-
-    // if (!this.props.isAuthenticated) {
-    //   alertModal(this.props.isDarkMode, `LOGIN TO PLAY THIS GAME, MTF!!`);
-    //   return;
-    // }
 
     if (e.currentTarget.getAttribute('data-roomStatus') === 'finished') {
       alertModal(this.props.isDarkMode, `THIS GAME HAS ENDED ALREADY`);
@@ -247,16 +287,20 @@ class OpenGamesTable extends Component {
 
     return gameTypePanel;
   };
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.roomList !== this.props.roomList) {
-      this.setState({ isLoading: false });
-    }
-  }
-
+  
   componentDidMount() {
+    const { roomList } = this.props;
+    this.setState({ roomList });
     window.addEventListener('load', () => {
       this.setState({ loaded: true, selectedGameType: 'All' });
     });
+  }
+  
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.roomList !== this.props.roomList) {
+      const { roomList } = this.props;
+      this.setState({ roomList, isLoading: false });
+    }
   }
 
   handlePageNumberClicked = page => {
@@ -322,7 +366,7 @@ class OpenGamesTable extends Component {
               />
             )}
 
-            {this.props.roomList.map(
+            {this.state.roomList.map(
               (row, key) => (
                 <div
                 className={`table-row ${key < 10 ? 'slide-in' : ''}`}
@@ -475,42 +519,57 @@ class OpenGamesTable extends Component {
                       )}
                     </div>
                     <div className="table-cell cell-likes">
-                      <div id="view">
-                        <VisibilityIcon style={{ fontSize: '1rem' }} />
-                        <Typography variant="body1">
-                          {row.views?.length || 0}
-                        </Typography>
-                      </div>
-
-                      <div>
-                        <IconButton onClick={() => this.handleLike(row)}>
-                          {row.likes?.includes(this.props.user.id) ? (
-                            <span role="img" aria-label="Thumbs up">
-                              &#x1F44D;
-                            </span>
-                          ) : (
-                            <ThumbUpIcon style={{ fontSize: '1rem' }} />
-                          )}
-                        </IconButton>
-                        <Typography variant="body1">
-                          {row.likes?.length || 0}
-                        </Typography>
-                      </div>
-                      <div>
-                        <IconButton onClick={() => this.handleDislike(row)}>
-                          {row.dislikes?.includes(this.props.user.id) ? (
-                            <span role="img" aria-label="Thumbs down">
-                              &#x1F44E;
-                            </span>
-                          ) : (
-                            <ThumbDownIcon style={{ fontSize: '1rem' }} />
-                          )}
-                        </IconButton>
-                        <Typography variant="body1">
-                          {row.dislikes?.length || 0}
-                        </Typography>
-                      </div>
-                    </div>
+                      
+              <div id="view">
+                <VisibilityIcon style={{ fontSize: '1rem' }} />
+                <Typography variant="body1">
+                  {row.views?.length || 0}
+                </Typography>
+              </div>
+             
+              <div>
+              <IconButton onClick={() => this.handleLike(row)}>
+    {row.likes?.includes(this.props.user._id) ? (
+      <>
+        {!row.likeAnimation && (
+          <ThumbUpIcon style={{ fontSize: '1rem', color: 'red' }} />
+        )}
+        {row.likeAnimation && (
+          <Lottie
+            options={{
+              loop: false,
+              autoplay: true,
+              animationData: like
+            }}
+            style={{
+              width: '32px',
+              height: '38px',
+              margin: '-26px -8px -20px -8px'
+            }}
+          />
+        )}
+      </>
+    ) : (
+      <ThumbUpOutlinedIcon style={{ fontSize: '1rem' }} />
+    )}
+  </IconButton>
+                <Typography variant="body1">
+                  {row.likes?.length || 0}
+                </Typography>
+              </div>
+              <div>
+                <IconButton onClick={() => this.handleDislike(row)}>
+                  {row.dislikes?.includes(this.props.user._id) ? (
+                    <ThumbDownIcon style={{ fontSize: '1rem', color: '#ff3232' }} />
+                  ) : (
+                    <ThumbDownOutlinedIcon style={{ fontSize: '1rem' }} />
+                  )}
+                </IconButton>
+                <Typography variant="body1">
+                  {row.dislikes?.length || 0}
+                </Typography>
+              </div>
+            </div>
                     <div
                       className="table-cell cell-action"
                       onClick={() => this.handleView(row)}

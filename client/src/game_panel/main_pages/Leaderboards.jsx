@@ -56,7 +56,7 @@ class Leaderboards extends Component {
         return (
             <div className="leaderboards-page">
                 <div className="page-title">
-                    <h3>{this.state.period} leaderboards</h3>
+                    <h3>{this.state.period}</h3>
                     <div className="leaderboard-action-panel">
                         <Select
                             value={this.state.period}
@@ -73,8 +73,8 @@ class Leaderboards extends Component {
                         <button onClick={this.refreshTable}><LoopIcon /></button>
                     </div>
                 </div>
-                <div className="leaderboards-content">
-                    <table className="table leaderboards-table">
+                <div className="leaderboards-content" style={{width: '300px', overflowX: 'scroll'}} >
+                    <table className="table leaderboards-table" >
                         <thead>
                             <tr>
                                 <th>#</th>

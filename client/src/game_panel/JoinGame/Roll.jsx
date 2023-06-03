@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import CountUp, { linearEasing } from 'react-countup';
 import { deductBalanceWhenStartRoll } from '../../redux/Logic/logic.actions';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
@@ -30,7 +31,7 @@ import {
 import history from '../../redux/history';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
-import Share from './Share';
+import Share from '../../components/Share';
 
 const defaultOptions = {
   loop: true,
@@ -930,6 +931,12 @@ class Roll extends Component {
                 <React.Fragment key={i}>
                   <div className="data-item">
                     <div>
+                      <div className="label room-id">STATUS</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.status}</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
                     <div className="value">
@@ -956,6 +963,11 @@ class Roll extends Component {
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>

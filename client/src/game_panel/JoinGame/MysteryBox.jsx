@@ -4,6 +4,7 @@ import history from '../../redux/history';
 import BetArray from '../../components/BetArray';
 import Lottie from 'react-lottie';
 import mountainsBg from '../LottieAnimations/mountains-bg.json';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import { Button } from '@material-ui/core';
 import {
@@ -19,7 +20,7 @@ import { convertToCurrency } from '../../util/conversion';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import ReactModal from 'react-modal';
-import Share from './Share';
+import Share from '../../components/Share';
 import { Card, CardContent, Typography } from '@material-ui/core';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
@@ -525,19 +526,46 @@ class MysteryBox extends Component {
 
   getBetForm = () => {
     let prizes = [];
+    let prices = [];
+    let openedBoxes = 0;
+    let prizeSum = 0;
+  let priceSum = 0;
+  let priceCount = 0;
     let pr = 0;
+    let numPrizesGreaterThanPrices = 0; // Initialize counter
+
     this.state.box_list.map(row => {
       prizes.push({
-        price: row.box_prize,
+        prize: row.box_prize,
         status: row.status
       });
-
+      prices.push({
+        price: row.box_price,
+        status: row.status
+      })
       pr = pr < row.box_prize ? row.box_prize : pr;
 
+      if (row.status === "init") {
+        prizeSum += row.box_prize;
+        priceSum += row.box_price;
+        priceCount++;
+         // Check if the prize is greater than the price
+      if (row.box_prize > row.box_price) {
+        numPrizesGreaterThanPrices++;
+      }
+      } else {
+        openedBoxes += row.box_price;
+      }
       return true;
     });
-    prizes.sort((a, b) => a.price - b.price);
+    prizes.sort((a, b) => a.prize - b.prize);
 
+    let averagePrice = priceCount > 0 ? priceSum / priceCount : 0;
+    let guesses = ((this.props.roomInfo.endgame_amount - prizeSum) - openedBoxes)/ averagePrice;
+    let attempts = guesses < 1 ? 1 : guesses;
+    console.log("prizes.length", prizes.length);
+    console.log("guesses", guesses);
+    console.log("numPrizesGreaterThanPrices", numPrizesGreaterThanPrices);
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
@@ -560,14 +588,12 @@ class MysteryBox extends Component {
             <div className="pre-summary-panel__inner mystery-box">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                  {/* <div className="data-item">
+                  <div className="data-item">
                     <div>
-                      <div className="label your-bet-amount">Bet Amount</div>
+                      <div className="label room-id">STATUS</div>
                     </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bet_amount)}
-                    </div>
-                  </div> */}
+                    <div className="value">{this.props.roomInfo.status}</div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">Your Return</div>
@@ -578,10 +604,23 @@ class MysteryBox extends Component {
                   </div>
                   <div className="data-item">
                     <div>
+                      <div className="label win-chance">Win Chance</div>
+                    </div>
+                    <div className="value">
+  {((this.calculateProbability(prizes.length, guesses, numPrizesGreaterThanPrices) || numPrizesGreaterThanPrices / prizes.length) * 100).toFixed(2)}%
+</div>
+
+                  </div>
+                  <div className="data-item">
+                    <div>
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>
@@ -622,11 +661,11 @@ class MysteryBox extends Component {
             <p className="box-prizes">
               {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
-                  {convertToCurrency(item.price === 0 ? 'EMPTY' : item.price)}
+                  {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}
                 </span>
               ))}
             </p>
-            <h3 className="game-sub-title">Select a Box</h3>
+            <h3 className="game-sub-title">{attempts.toFixed(2)} guesses remaining</h3>
             <div className="boxes-panel boxes-join">
               {this.state.box_list.map((row, index) => (
                 <Card
@@ -807,23 +846,37 @@ class MysteryBox extends Component {
     }
   };
 
+   calculateProbability = (numBoxes, numGuesses, numPrizes) => {
+      // Calculate probability of not winning
+      let probabilityNotWinning = 1;
+      for (let i = 0; i < numGuesses; i++) {
+        probabilityNotWinning *= (numBoxes - numPrizes - i) / (numBoxes - i);
+      }
+  
+      // Calculate probability of winning
+      let probabilityWinning = 1 - probabilityNotWinning;
+  
+      return probabilityWinning;
+    };
+
   getBetResultForm = () => {
     let prizes = [];
     this.state.box_list.map(row => {
       prizes.push({
-        price: row.box_prize,
+        prize: row.box_prize,
         status: row.status
       });
       return true;
     });
-    prizes.sort((a, b) => a.price - b.price);
+    prizes.sort((a, b) => a.prize - b.prize);
     let timeLeft = 1500; // duration of modal in milliseconds
     const intervalId = setInterval(() => {
       timeLeft -= 100;
       if (timeLeft === 0) {
         clearInterval(intervalId);
       }
-    }, 100); // countdown interval
+    }, 100);
+    
     return (
       <div className="game-page">
         <div className="game-contents mystery-box-result-contents">
@@ -835,7 +888,7 @@ class MysteryBox extends Component {
             >
               {convertToCurrency(this.state.betResult)}
             </div>
-            <h4 className="game-sub-title">
+            <h4 className="game-sub-title" style={{marginTop: "30px"}}>
               {this.state.betResult === 0
                 ? `PAHAH WRONG BOX DICKHEAD!`
                 : `NICE 😎 ISSA MONEY BOX`}

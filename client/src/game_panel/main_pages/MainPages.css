@@ -71,7 +71,36 @@ button, button.btn {
     border-bottom: 1px solid transparent;
 }
 
-
+.ticker-container {
+    overflow: hidden;
+    width: 99px;
+    font-size: 0.8em;
+    margin-bottom: -15px;
+    margin-top: -10px;
+  }
+  .music-controls {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .ticker-text {
+    animation: ticker 20s linear infinite;
+    white-space: nowrap;
+  }
+  [class^="MuiSlider-thumb"]:hover,
+.Mui-focusVisible {
+    box-shadow: 0px 0px 0px 8px #f009 !important;
+  }
+  
+  
+  @keyframes ticker {
+    0% {
+      transform: translateX(0);
+    }
+  
+    100% {
+      transform: translateX(-100%);
+    }
+  }
 
 .main-game-page-tabs.sub-tabs .Mui-selected {
     border-top-left-radius: 8px;
@@ -585,8 +614,8 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     text-align: center;
     color: #333;
     display: flex;
-
 }
+
 
 /* div.table.my-chat-table .table-row > div.message-panel {
     filter: brightness(0.5);
@@ -1069,7 +1098,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     justify-content: center;
     text-align: center;
     max-width: 100px;
-    min-width: 180px !important;
+    min-width: 150px !important;
   }
   
   .pre-summary-panel .label {
@@ -1109,13 +1138,22 @@ position: relative;
     white-space: nowrap;
   }
   
+  .game-page .pre-summary-panel  div.room-id {
+    background-image: url("/img/game.svg");
+    background-repeat: no-repeat;
+    background-position: 0 5px;
+    background-size: 1.58em;
+
+}
+
   .game-page .pre-summary-panel  div.host-display-name {
     background-image: url("/img/profile-thumbnail-dark.svg");
     background-repeat: no-repeat;
     background-position: 0 3px;
     background-size: 1.84em;
 
-}.game-page .pre-summary-panel  div.your-bet-amount {
+}
+.game-page .pre-summary-panel  div.your-bet-amount {
     background-repeat: no-repeat;
     background-size: 1.6em;
     margin: unset;
@@ -1167,6 +1205,10 @@ position: relative;
     background: #fa3fa029;
     padding: 0px 10.5px;
     border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
 }
 
 .slide-in {
@@ -1422,9 +1464,11 @@ max-width: 450px;
         overflow-x: scroll;
     }
     .gradient-container .previous-guesses.drop span {
-    min-width: 25%;
+    min-width: 27%;
     max-height: 30px;
+    font-size: 0.9em;
     line-height: 16px;
+    text-align: center;
     }
 
     .previous-guesses.drop div {
@@ -1885,8 +1929,8 @@ color: #343a40;
 .transaction-settings.active {
     opacity: 1;
     display: inline-block;
-    /* z-index: 99999999; */
-    position: absolute;
+    z-index: 99;
+    position: fixed;
 }
 .runs-modal.active {
     opacity: 1;
@@ -2275,7 +2319,7 @@ background-color: red;
  .brainBg {
     position: absolute;
     z-index: -2;
-    width: 150vw;
+    width: 100vw;
     height: unset;
     bottom: -180px;
     filter: unset;
@@ -2536,6 +2580,10 @@ bottom: 0px;
 .leaderboards-page table tr:last-child td:last-child {
     border-bottom-right-radius: 8px;
 }
+.waves div {
+    transform: scale(2.5) !important;
+}
+
 @media (min-width: 1024px) {
     .mobile-only {
         display: none !important;
@@ -2633,10 +2681,7 @@ bottom: 0px;
         justify-content: space-between;
         background: #dee2e6;
     };
-    .waves div {
-        transform: scale(2.5);
-    }
-
+   
 
     
     div.main-page-nav-button-group button {
@@ -2696,7 +2741,7 @@ margin-bottom: 10px;
         padding: 0px 16px 16px;
     }
     .game-page .pre-summary-panel {
-        margin: 20px 0 40px;
+        /* margin: 20px 0 40px; */
     display: flex;
     padding: 0;
     align-items: center;
@@ -2823,7 +2868,7 @@ margin-bottom: 10px;
         margin: -30px 0px 80px;
     }
     .waves div {
-        transform: scale(4.6);
+        transform: scale(4.5)  !important;
     }
   
     .rollTimer #no-guesses {
@@ -3032,7 +3077,7 @@ transform: translateX(160px) !important;
      .boatBg {
         width: 200vw;
      }
-     .rocksBg {
+     .rocksBg, .brainBg {
         width: 150vw;
      } 
      .threedBg {
@@ -3040,6 +3085,8 @@ transform: translateX(160px) !important;
     transform: rotate(90deg);
    
      }
+     
+      
      .starsBg {
         bottom: -80px;
         left: -50%;

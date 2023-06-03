@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
-import CountUp, { linearEasing } from 'react-countup';
-import Share from './Share';
+import CountUp from 'react-countup';
+import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { Button, TextField } from '@material-ui/core';
-import InlineSVG from 'react-inlinesvg';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
+
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -1050,6 +1051,12 @@ class Bang extends Component {
                 <React.Fragment key={i}>
                   <div className="data-item">
                     <div>
+                      <div className="label room-id">STATUS</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.status}</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
                     <div className="value">
@@ -1070,12 +1077,17 @@ class Bang extends Component {
                       x
                     </div>
                   </div>
+                 
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>
@@ -1155,7 +1167,8 @@ class Bang extends Component {
                               background: guess < 2 ? '#e3e103c2' : '#e30303c2',
                               border: '3px solid',
                               borderColor: guess < 2 ? '#e3e103' : '#e30303',
-                              padding: '0.3em 0.2em'
+                              padding: '0.3em 0.2em',
+                              textAlign: 'center'
                             }}
                           >
                             x{guess.toFixed(2)}

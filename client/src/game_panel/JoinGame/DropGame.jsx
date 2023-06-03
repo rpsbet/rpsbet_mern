@@ -4,7 +4,8 @@ import BetArray from '../../components/BetArray';
 
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
-// import { updateBetResult } from '../../redux/Logic/logic.actions';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
+
 import Lottie from 'react-lottie';
 import gemBg from '../LottieAnimations/gem-bg.json';
 
@@ -26,7 +27,7 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
-import Share from './Share';
+import Share from '../../components/Share';
 
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
@@ -591,7 +592,13 @@ class DropGame extends Component {
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-
+<div className="data-item">
+                    <div>
+                      <div className="label room-id">STATUS</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.status}</div>
+                  </div>
+                 
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
@@ -612,6 +619,11 @@ class DropGame extends Component {
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                 
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>

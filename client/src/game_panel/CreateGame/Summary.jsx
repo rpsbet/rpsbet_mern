@@ -202,9 +202,12 @@ class Summary extends Component {
             </div>
           )}
       <div className="summary-item">
-              <div className="summary-item-name">Music</div>
-              <div className="summary-item-value">{this.props.youtubeUrl}</div>
-            </div>
+  <div className="summary-item-name">Music</div>
+  <div className="summary-item-value">
+    {this.props.youtubeUrl ? this.props.youtubeUrl : "No Music"}
+  </div>
+</div>
+
           <div className="summary-item">
             <div className="summary-item-name">Privacy</div>
             <div className="summary-item-value">

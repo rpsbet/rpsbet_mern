@@ -66,17 +66,31 @@ class MainPage extends Component {
   }
 
   async componentDidMount() {
-    
-    this.props.getRoomList();
-    this.props.getHistory();
-    this.props.getGameTypeList();
+    const {
+      getRoomList,
+      getHistory,
+      getGameTypeList,
+      isAuthenticated,
+      getMyGames,
+      getMyHistory,
+      getMyChat
+    } = this.props;
 
-    if (this.props.isAuthenticated) {
-      this.props.getMyGames();
-      this.props.getMyHistory();
-      this.props.getMyChat();
+    const promises = [
+      getRoomList(),
+      getHistory(),
+      getGameTypeList()
+    ];
+
+    if (isAuthenticated) {
+      promises.push(getMyGames());
+      promises.push(getMyHistory());
+      promises.push(getMyChat());
     }
-  }
+
+    await Promise.all(promises);
+}
+
 
   showOpenGameOrHistory = (e, newValue) => {
     e.preventDefault();

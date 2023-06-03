@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
-import Share from './Share';
+import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import bjBg from '../LottieAnimations/bjBg.json';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import { Button, TextField } from '@material-ui/core';
 import { deductBalanceWhenStartBlackjack } from '../../redux/Logic/logic.actions';
@@ -986,6 +987,12 @@ class Blackjack extends Component {
                 <React.Fragment key={i}>
                   <div className="data-item">
                     <div>
+                      <div className="label room-id">STATUS</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.status}</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
                     <div className="value">
@@ -1005,13 +1012,16 @@ class Blackjack extends Component {
                       )}
                     </div>
                   </div>
-
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>

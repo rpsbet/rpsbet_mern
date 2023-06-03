@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import history from '../../redux/history';
+import TabbedContent from '../../components/TabbedContent';
 import Moment from 'moment';
 import { Button, Drawer } from '@material-ui/core';
 import LoadingOverlay from 'react-loading-overlay';
@@ -520,52 +520,9 @@ class JoinGame extends Component {
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
                   />
                 )}
-                <div className="room-history-panel">
-                  <h2 className="room-history-title">Battle History</h2>
-                  {this.props.roomInfo &&
-                  this.props.roomInfo.room_history &&
-                  this.props.roomInfo.room_history.length > 0 ? (
-                    <div className="table main-history-table">
-                      {this.props.roomInfo.room_history
-                        .slice(0, this.state.numToShow)
-                        .map((row, key) => (
-                          <div className="table-row" key={'history' + row._id}>
-                            <div>
-                              <div className="table-cell">
-                                <div className="room-id">{row.room_name}</div>
-                                <div
-                                  dangerouslySetInnerHTML={{
-                                    __html: row.history
-                                  }}
-                                ></div>
-                                <div className="table-cell">{row.from_now}</div>
-                              </div>
-                            </div>
-                            {key ===
-                              this.props.roomInfo.room_history.length - 1 && (
-                              <div ref={this.lastItemRef}></div>
-                            )}
-                          </div>
-                        ))}
-                      {this.state.numToShow <
-                        this.props.roomInfo.room_history.length && (
-                        <div className="load-more-btn">
-                          <Button
-                            id="load-btn"
-                            variant="contained"
-                            color="primary"
-                            onClick={this.handleLoadMore}
-                          >
-                            Load More
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p>No History Yet</p>
-                  )}
-                </div>
+                
               </div>
+              <TabbedContent roomInfo={this.props.roomInfo}  />
               <div>
                 {((!this.state.is_mobile &&
                   this.props.selectedMainTabIndex === 1) ||

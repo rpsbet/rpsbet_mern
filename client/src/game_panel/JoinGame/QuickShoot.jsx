@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import BetArray from '../../components/BetArray';
-import Share from './Share';
+import Share from '../../components/Share';
 import { IconButton, Button, TextField } from '@material-ui/core';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import {
   validateIsAuthenticated,
@@ -769,6 +770,13 @@ class QuickShoot extends Component {
                 <React.Fragment key={i}>
                   <div className="data-item">
                     <div>
+                      <div className="label room-id">STATUS</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.status}</div>
+                  </div>
+                 
+                  <div className="data-item">
+                    <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
                     <div className="value">
@@ -789,10 +797,20 @@ class QuickShoot extends Component {
                   </div>
                   <div className="data-item">
                     <div>
+                      <div className="label win-chance">Win Chance</div>
+                    </div>
+                    <div className="value">{(((this.props.qs_game_type - 1) / this.props.qs_game_type) * 100).toFixed(2)}%</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  {this.props.youtubeUrl && 
+                  <div className="data-item">
+                  <YouTubeVideo url={this.props.youtubeUrl} />
+                  </div>}
                 </React.Fragment>
               ))}
             </div>
