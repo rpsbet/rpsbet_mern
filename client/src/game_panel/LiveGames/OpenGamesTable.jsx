@@ -225,12 +225,12 @@ class OpenGamesTable extends Component {
         ref={ref => (this.game_type_panel = ref)}
       >
         <Box item key="open-game-left-button">
-          <IconButton
+          <Button
             className="btn-arrow-left"
             onClick={this.handleBtnLeftClicked}
           >
             <ChevronLeftIcon />
-          </IconButton>
+          </Button>
         </Box>
 
         <Button
@@ -275,13 +275,13 @@ class OpenGamesTable extends Component {
             </div>
           </Button>
         ))}
-        <IconButton
+        <Button
           className="btn-arrow-right"
           key="open-game-right-button"
           onClick={this.handleBtnRightClicked}
         >
           <ChevronRightIcon />
-        </IconButton>
+        </Button>
       </Box>
     );
 
@@ -427,24 +427,27 @@ class OpenGamesTable extends Component {
                         }`}
                       ></i>
                       {row.joiners && row.joiners.length > 0 ? (
-                        <div className="table-cell desktop-only cell-joiners">
-                          <Battle />
-                          {row.joiner_avatars
-                            .slice(0, 5)
-                            .map((avatar, index) => (
-                              // <a className="player" onClick={() => this.handleOpenPlayerModal(row.curRoomInfo.j)}>
+  <div className="table-cell desktop-only cell-joiners">
+    <Battle />
+    {row.joiner_avatars
+      .slice(0, 2)
+      .map((avatar, index) => (
+        <Avatar
+          className="avatar"
+          key={index}
+          src={avatar}
+          alt=""
+          darkMode={this.props.isDarkMode}
+        />
+      ))}
+    {row.joiner_avatars.length > 2 && (
+      <div className="avatar-square">
+        <div className="avatar-count">+{row.joiner_avatars.length - 2}</div>
+      </div>
+    )}
+  </div>
+) : null}
 
-                              <Avatar
-                                className="avatar"
-                                key={index}
-                                src={avatar}
-                                alt=""
-                                darkMode={this.props.isDarkMode}
-                              />
-                              // </a>
-                            ))}
-                        </div>
-                      ) : null}
                     </div>
                     <div className="table-cell desktop-only cell-amount">
                       {row.game_type.game_type_name === 'Mystery Box' ? (
@@ -560,7 +563,7 @@ class OpenGamesTable extends Component {
               <div>
                 <IconButton onClick={() => this.handleDislike(row)}>
                   {row.dislikes?.includes(this.props.user._id) ? (
-                    <ThumbDownIcon style={{ fontSize: '1rem', color: '#ff3232' }} />
+                    <ThumbDownIcon style={{ fontSize: '1rem', color: 'red' }} />
                   ) : (
                     <ThumbDownOutlinedIcon style={{ fontSize: '1rem' }} />
                   )}
@@ -670,22 +673,27 @@ class OpenGamesTable extends Component {
                             : ''
                         }`}
                       ></i>
-                      {row.joiners && row.joiners.length > 0 ? (
-                        <div className="table-cell mobile-only cell-joiners">
-                          <Battle />
-                          {row.joiner_avatars
-                            .slice(0, 10)
-                            .map((avatar, index) => (
-                              <Avatar
-                                className="avatar"
-                                key={index}
-                                src={avatar}
-                                alt=""
-                                darkMode={this.props.isDarkMode}
-                              />
-                            ))}
-                        </div>
-                      ) : null}
+                       {row.joiners && row.joiners.length > 0 ? (
+  <div className="table-cell mobile-only cell-joiners">
+    <Battle />
+    {row.joiner_avatars
+      .slice(0, 8)
+      .map((avatar, index) => (
+        <Avatar
+          className="avatar"
+          key={index}
+          src={avatar}
+          alt=""
+          darkMode={this.props.isDarkMode}
+        />
+      ))}
+    {row.joiner_avatars.length > 8 && (
+      <div className="avatar-square">
+        <div className="avatar-count">+{row.joiner_avatars.length - 8}</div>
+      </div>
+    )}
+  </div>
+) : null}
                     </div>
                     <div className="table-cell mobile-only cell-amount">
                       {row.game_type.game_type_name === 'Mystery Box' ? (

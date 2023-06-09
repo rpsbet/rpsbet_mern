@@ -7,8 +7,7 @@ Modal.setAppElement('#root')
 const customStyles = {
     overlay: {
 		zIndex: 3,
-		backgroundColor: 'rgba(47, 49, 54, 0.8)',
-        backdropFilter: 'blur(4px)'
+		backgroundColor: 'rgba(0, 0, 0, 0.8)',
 	},
 	content: {
 		top         : '50%',
@@ -18,7 +17,6 @@ const customStyles = {
 		transform   : 'translate(-50%, -50%)',
 		background: 'transparent',
 		padding: 0,
-		border: 0
 	}
 }
 

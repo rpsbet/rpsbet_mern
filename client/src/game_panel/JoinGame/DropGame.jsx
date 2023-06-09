@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
-
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
@@ -9,7 +8,7 @@ import { YouTubeVideo } from '../../components/YoutubeVideo';
 import Lottie from 'react-lottie';
 import gemBg from '../LottieAnimations/gem-bg.json';
 
-import { Button, TextField } from '@material-ui/core';
+import { Button, ButtonGroup, TextField } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
 import {
   validateIsAuthenticated,
@@ -21,6 +20,7 @@ import {
 import animationData from '../LottieAnimations/spinningIcon';
 import drop from '../LottieAnimations/drop.json';
 import Avatar from '../../components/Avatar';
+import BetAmountInput from '../../components/BetAmountInput';
 import {
   alertModal,
   confirmModalCreate,
@@ -91,7 +91,7 @@ class DropGame extends Component {
       drop_guesses: [],
       advanced_status: '',
       is_anonymous: false,
-      bet_amount: 1,
+      bet_amount: 2.00,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       drop_guesses1Received: false,
       betResult: null,
@@ -384,7 +384,7 @@ class DropGame extends Component {
     }
   };
 
-  handlehalfxButtonClick() {
+  handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState(
@@ -397,7 +397,7 @@ class DropGame extends Component {
     );
   }
 
-  handle2xButtonClick() {
+  handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
@@ -419,7 +419,11 @@ class DropGame extends Component {
     }
   }
 
-  handleMaxButtonClick() {
+  handleBetAmountChange = event => {
+    this.setState({ bet_amount: event.target.value });
+  };
+
+  handleMaxButtonClick = () => {
     const maxBetAmount = this.state.balance;
     this.setState(
       {
@@ -490,6 +494,10 @@ class DropGame extends Component {
     playSound('start');
 
     this.setState({ intervalId, betting: true });
+  };
+
+  handleChange = (event) => {
+    this.setState({ bet_amount: event.target.value });
   };
 
   stopBetting = () => {
@@ -722,53 +730,14 @@ class DropGame extends Component {
             <div className="drop-amount">
               <h3 className="game-sub-title">Highest Drop Wins!</h3>
             </div>
-            <div className="your-bet-amount">
-              <TextField
-                type="text"
-                name="betamount"
-                variant="outlined"
-                id="betamount"
-                label="BET AMOUNT"
-                value={this.state.bet_amount}
-                onChange={event =>
-                  this.setState({ bet_amount: event.target.value })
-                }
-                placeholder="DROP AMOUNT"
-                inputProps={{
-                  pattern: '[0-9]*',
-                  maxLength: 9
-                }}
-                InputLabelProps={{
-                  shrink: true
-                }}
-                InputProps={{
-                  endAdornment: 'BUSD'
-                }}
-              />
-              <div>
-                <div className="max">
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => this.handlehalfxButtonClick()}
-                  >
-                    0.5x
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => this.handle2xButtonClick()}
-                  >
-                    2x
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => this.handleMaxButtonClick()}
-                  >
-                    Max
-                  </Button>
-                </div>
+            <BetAmountInput
+          betAmount={this.state.bet_amount}
+          handle2xButtonClick={this.handle2xButtonClick}
+          handleHalfXButtonClick={this.handleHalfXButtonClick}
+          handleMaxButtonClick={this.handleMaxButtonClick}
+          onChange={this.handleChange}
+          isDarkMode={this.props.isDarkMode}
+        />
                 <Button
                   className="place-bet"
                   color="primary"
@@ -777,8 +746,7 @@ class DropGame extends Component {
                 >
                   DROP AMOUNT
                 </Button>
-              </div>
-            </div>
+           
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>

@@ -119,6 +119,23 @@ export const acPaginationActivity = (pagination, page) => async (
   }
 };
 
+export const fetchId = (username) => async (dispatch) => {
+  try {
+    const { data } = await api.post('user/getId', { username });
+    if (data.success) {
+      return data.user;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+      return null; // Return null if there's an error
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+    return null; // Return null if there's an error
+  }
+};
+
+
 export const acGetCustomerInfo = _id => async dispatch => {
   try {
     const { data } = await api.post('user/get-info', {_id});

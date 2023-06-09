@@ -48,7 +48,7 @@ const customStyles = {
   tabRoot: {
     textTransform: 'none',
     width: '50%',
-    height: '48px'
+    // height: '48px'
   }
 };
 
@@ -78,12 +78,12 @@ class JoinGame extends Component {
     this.state = {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
-      numToShow: 10,
       joiningRoom: false,
       roomInfo: this.props.roomInfo,
       bankroll:
         parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
       history: this.props.history,
+      loading: false,
       sounds: {
         win: new Audio('/sounds/win-sound.mp3'),
         split: new Audio('/sounds/split-sound.mp3'),
@@ -102,7 +102,7 @@ class JoinGame extends Component {
       },
       currentSound: null,
     };
-    this.handleLoadMore = this.handleLoadMore.bind(this);
+
     this.toggleDrawer = this.toggleDrawer.bind(this);
   }
 
@@ -129,6 +129,11 @@ class JoinGame extends Component {
   }
 
   componentDidMount() {
+    this.setState({ loading: true });
+
+  setTimeout(() => {
+    this.setState({ loading: false });
+  }, 1500);
     window.addEventListener('unload', this.handleUnload);
 
     Object.values(this.state.sounds).forEach(sound => {
@@ -162,11 +167,6 @@ class JoinGame extends Component {
     }
   }
 
-  handleLoadMore() {
-    this.setState({
-      numToShow: this.state.numToShow + 10
-    });
-  }
 
   toggleDrawer = () => {
     this.props.toggleDrawer(!this.props.isDrawerOpen);
@@ -302,12 +302,13 @@ class JoinGame extends Component {
 
   render() {
     const { open } = this.props;
+    const { joiningRoom, loading } = this.state;
 
     return (
       <>
         <LoadingOverlay
           className="custom-loading-overlay"
-          active={this.state.joiningRoom}
+          active={loading || joiningRoom}
           spinner={
             <div className="rpsLoader">
               <img
@@ -321,7 +322,7 @@ class JoinGame extends Component {
                   marginBottom: '10px'
                 }}
               />
-              <div>Joining Room...</div>
+      <div>{loading ? 'Loading Room...' : 'Joining Room...'}</div>
             </div>
           }
         >
@@ -522,7 +523,7 @@ class JoinGame extends Component {
                 )}
                 
               </div>
-              <TabbedContent roomInfo={this.props.roomInfo}  />
+              <TabbedContent roomInfo={this.props.roomInfo}/>
               <div>
                 {((!this.state.is_mobile &&
                   this.props.selectedMainTabIndex === 1) ||

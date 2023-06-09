@@ -13,9 +13,16 @@ class TabbedContent extends Component {
     super(props);
     this.state = {
       selectedTab: 0,
+      numToShow: 10,
     };
+    this.handleLoadMore = this.handleLoadMore.bind(this);
   }
 
+  handleLoadMore() {
+    this.setState({
+      numToShow: this.state.numToShow + 10
+    });
+  }
   handleTabChange = (event, newValue) => {
     this.setState({ selectedTab: newValue });
   };

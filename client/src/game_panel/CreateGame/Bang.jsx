@@ -215,7 +215,7 @@ class Bang extends Component {
   }
 
 
-  handlehalfxButtonClick() {
+  handleHalfXButtonClick() {
     const multipliedBetAmount = this.state.bang * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState({
@@ -280,7 +280,7 @@ class Bang extends Component {
             <h3 className="game-sub-title">
               Add some Bangs!{' '}
             </h3>
-            <div className="your-bet-amount">
+            <div className="bet-amount">
               <TextField
                 type="text"
                 pattern="[0-9]*"
@@ -297,7 +297,7 @@ class Bang extends Component {
               />
               <div>
               <div className='max'>
-            <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handleHalfXButtonClick()}>0.5x</Button>
             <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
             <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
           </div>

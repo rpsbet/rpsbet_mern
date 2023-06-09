@@ -1,14 +1,13 @@
 .dark_mode .modal-body .modal-content-wrapper div.modal-content-panel input,
 .dark_mode input,
 .dark_mode input:focus {
-	border: 0;
 	background-color: #101010;
 	color: white;
 	box-shadow: none;
 }
 
-.dark_mode .search-popup {
-    background-color: #060607;
+.dark_mode .modal-title {
+	color: #f9f9f9;
 }
 
 /* .dark_mode 
@@ -101,14 +100,23 @@
 background: #060607;
 }
 
+.dark_mode .tooltip.reply .tooltip-content {
+	background: #212529;
+}
 .dark_mode div.table.my-chat-table .table-row > div.message-panel,
-.dark_mode div.table.main-game-table .table-row .table-cell.cell-amount-info {
-    color: #fff;
+.dark_mode div.table.main-game-table .table-row .table-cell.cell-amount-info,
+.dark_mode .main-game-page-tabs button:hover, .dark_mode .main-game-page-tabs button[aria-selected="true"] {
+    color: #f8f9fa  !important;
 }
-.dark_mode .chat-time .chat-text {
-	background: #111111;
+.dark_mode .chat-msg {
+	background: linear-gradient(176deg, #111111, #3737370d); ;
 }
-.dark_mode .chat-time .chat-text,
+
+.dark_mode .chat-player .avatar {
+	background-color: rgb(45, 45, 45);
+	border: 4px solid #111;
+}
+.dark_mode .chat-msg,
 .dark_mode div.table .table-row, div.table .table-header {
 	border-top: 2px solid #4443434f;
 	border-bottom: 3px solid #000;
@@ -120,8 +128,10 @@ background: #060607;
     color: #eee;
 }
 .dark_mode .game-type-panel .btn-game-type {
-	color: #495057cc;
+	border: 3px solid #101010;
+	color: #e5e5e5;
 }
+
 
 .dark_mode .game-type-panel .btn-game-type div.icon {
 	background: #600000b8;
@@ -144,12 +154,23 @@ background: #060607;
 border-top: 2px solid #36393f;
 }
 .dark_mode #footer-container {
+	border-top: 1px solid rgba(40, 38, 55, 0.48);
 	background: #151515;
    }
+
+   .dark_mode .modal-header {
+	border-bottom: 1px solid #060607;
+   }
+
+   .dark_mode .modal-footer {
+    border-top: 1px solid #060607;
+    background: #0e0e0e;
+}
 
 .dark_mode 	.modal-body .modal-content-wrapper.drop-game h4 {
     background-image: url("/img/icons/modal-drop-game-dark-mode.svg");
 }
+
 
 .dark_mode 	.modal-body .modal-content-wrapper.roll h4 {
     background-image: url("/img/icons/modal-roll-dark-mode.svg");
@@ -176,16 +197,11 @@ border-top: 2px solid #36393f;
 }
 
 .dark_mode a.player,
-.dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .sender-name {
+.dark_mode .chat-wrapper .chat-panel .chat-line .sender-name {
 	
     color:#b9bbbe;
 }
 
-
-
-.dark_mode .game-type-panel .btn-game-type {
-	color: #e5e5e5;
-}
 
 /* 
 .dark_mode .game-type-panel .btn-game-type.active,
@@ -199,11 +215,14 @@ border-top: 2px solid #36393f;
     background-color: #2f3136;
 }
 .dark_mode .chat-wrapper .chat-input-panel {
-	background-color: #060607;
-	border-top: 2px solid #101010;
+	background-color: #101010;
+    border-top: 1px solid #1e1e1e;
+}
+.dark_mode .chat-wrapper .chat-panel .chat-line .chat-msg .chat-text {
+    color: #b9bbbe;
 }
 
-.dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
+/* .dark_mode .chat-wrapper .chat-panel .chat-line .chat-content .chat-text {
 	color: #959595;
     background: #f2f2f20a;
     margin: 0 0px 15px;
@@ -214,9 +233,14 @@ border-top: 2px solid #36393f;
     width: 100%;
     position: relative;
     font-size: 1em;
+} */
+
+.dark_mode .game_header .main_header {
+	box-shadow: 0px 1px 2px #101010;
 }
-
-
+.dark_mode .chat-wrapper div[role="tablist"] {
+    border-bottom: solid 1px  #101010;
+}
 .dark_mode .game_header {
 	background-color: #060607;
 }
@@ -238,20 +262,28 @@ border-top: 2px solid #36393f;
 .dark_mode #howto-modal th {
 	color: #ffffff !important;
 }
-
+.dark_mode .contents_wrapper .main-game .sub-panel {
+border-left: 1px solid rgba(40, 38, 55, 0.48);
+}
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: #0c0c0c;
-	background-image: linear-gradient(-135deg, transparent, #0c0c0c 75%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6452b60506b4289cb579941f_scattered-forcefields.svg) !important;
+	background-image: linear-gradient(-135deg, transparent, #0c0c0c 95%), url(/img/bgm.webp) !important;
+}
 
+.dark_mode .avatar-square {
+
+	background: #222e;
+    border: 3px solid #444;
+    color: #c4c4c4;
 }
 .dark_mode .main-game-page-tabs {
 	color: #8e9297;
 	background: #060607;
 }
-.dark_mode .main-game-page-tabs .Mui-selected {
+/* .dark_mode .main-game-page-tabs .Mui-selected {
 	color: #d81719;
-}
+} */
 .dark_mode div.table .dont-have-game-msg {
 	color: #8e9297;
 	text-align: center;
@@ -288,10 +320,10 @@ border-top: 2px solid #36393f;
 }
 .dark_mode #game_logs {
 	background: rgba(0, 0, 0, 0.5);
-	backdrop-filter: blur(4px);
 }
 .dark_mode #game_logs .game_logs_contents {
 	background: #060607;
+	border: 2px solid #101010;
 }
 .dark_mode #game_logs .game_logs_contents h2,
 .dark_mode #game_logs .game_logs_contents .transaction-panel button,
@@ -373,12 +405,13 @@ border-top: 2px solid #36393f;
 }
 .dark_mode .mat-chat .chat-wrapper {
 	background-color: #060607;
+	border-right: 1px solid rgba(40, 38, 55, 0.48);
 }
 
 .dark_mode .modal-body,
 .dark_mode .modal-header{
 	color: #8e9297;
-	background-color: #060607;
+	background-color: #101010;
 }
 .dark_mode .modal-body h2,
 .dark_mode .modal-body h5,
@@ -409,8 +442,11 @@ border-top: 2px solid #36393f;
     right: 0;
 }
 
-.dark_mode .chat-wrapper .chat-input-panel .emoticon-panel {
-	background-color: #060607;
+.dark_mode .chat-wrapper .chat-input-panel .emoticon-panel, .dark_mode .search-popup {
+	background-color: #1b1b1b;
+}
+.dark_mode .chat-wrapper .chat-input-panel .emoticon-panel > img:hover {
+	background: #333;
 }
 
 .dark_mode .boxes-panel .box span {
@@ -523,7 +559,7 @@ border-color: #151515;
   .dark_mode #balance {
     color: white;
     background: #101010;
-    border: 1px solid #151515;
+
 }
 
 .dark_mode .game-page .game-contents .game-info-panel .box-prizes {
@@ -568,4 +604,5 @@ border-color: #151515;
 	.dark_mode .game-page .game-contents .game-info-panel .edit-amount-panel span {
 		color: white;
 	}
+	
 }

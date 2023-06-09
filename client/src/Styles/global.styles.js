@@ -22,7 +22,7 @@ body {
 }
 /* width */
 ::-webkit-scrollBar {
-    width: 10px;
+    width: 5px;
 }
   
 /* Track */

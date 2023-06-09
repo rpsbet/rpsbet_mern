@@ -128,7 +128,7 @@ const darkTheme = createTheme({
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
-    height: '48px',
+    // height: '48px',
     minWidth: '80px'
   }
 };
@@ -187,11 +187,7 @@ class SiteWrapper extends Component {
     };
   }
   static getDerivedStateFromProps(props, currentState) {
-    const {
-      balance,
-      betResult,
-      userName
-    } = props;
+    const { balance, betResult, userName } = props;
 
     if (
       currentState.balance !== balance ||
@@ -464,7 +460,7 @@ class SiteWrapper extends Component {
 
     setTimeout(() => {
       this.setState({ websiteLoading: false });
-    }, 2500);
+    }, 1500);
 
     this.initializeAudio();
 
@@ -728,37 +724,45 @@ class SiteWrapper extends Component {
                 className="main-game-page-tabs desktop-only"
               >
                 <Tab
-                  className="custom-tab"
-                  // label="Live Bots"
-                  // labelPlacement="left"
-                  icon={
-                    this.state.hoverTabIndex === 0 ||
-                    this.props.selectedMainTabIndex === 0 ? (
-                      <BattleHover />
-                    ) : (
-                      <Battle />
-                    )
-                  }
-                  style={customStyles.tabRoot}
-                  onMouseEnter={() => this.handleMouseEnter(0)}
-                  onMouseLeave={this.handleMouseLeave}
-                />
-                <Tab
-                  className="custom-tab"
-                  icon={
-                    this.state.hoverTabIndex === 1 ||
-                    this.props.selectedMainTabIndex === 1 ? (
-                      <ManageHover />
-                    ) : (
-                      <Manage />
-                    )
-                  }
-                  // label="My Bots"
-                  // labelPlacement="left"
-                  style={customStyles.tabRoot}
-                  onMouseEnter={() => this.handleMouseEnter(1)}
-                  onMouseLeave={this.handleMouseLeave}
-                />
+  className={`custom-tab ${
+    this.state.hoverTabIndex === 0 || this.props.selectedMainTabIndex === 0
+      ? 'fade-animation fade-in'
+      : 'fade-animation fade-out'
+  }`}
+  label="PVP"
+  labelPlacement="left"
+  icon={
+    this.state.hoverTabIndex === 0 || this.props.selectedMainTabIndex === 0 ? (
+      <BattleHover />
+    ) : (
+      <Battle />
+    )
+  }
+  style={customStyles.tabRoot}
+  onMouseEnter={() => this.handleMouseEnter(0)}
+  onMouseLeave={this.handleMouseLeave}
+/>
+
+<Tab
+  className={`custom-tab ${
+    this.state.hoverTabIndex === 1 || this.props.selectedMainTabIndex === 1
+      ? 'fade-animation fade-in'
+      : 'fade-animation fade-out'
+  }`}
+  label="Manage"
+  labelPlacement="left"
+  icon={
+    this.state.hoverTabIndex === 1 || this.props.selectedMainTabIndex === 1 ? (
+      <ManageHover />
+    ) : (
+      <Manage />
+    )
+  }
+  style={customStyles.tabRoot}
+  onMouseEnter={() => this.handleMouseEnter(1)}
+  onMouseLeave={this.handleMouseLeave}
+/>
+
               </Tabs>
 
               <div className="header_action_panel">
@@ -806,12 +810,13 @@ class SiteWrapper extends Component {
                         }}
                       />
                       <Button
-                        style={{ minWidth: '32px', maxHeight: '32px' }}
+                      id="wallet-btn"
+                        style={{ minWidth: '32px', maxHeight: '33px' }}
                         onClick={this.handleBalanceClick}
                       >
                         <AccountBalanceWallet
-                          style={{ width: '22px', height: '22px' }}
-                        />
+                          style={{ position: 'relative', zIndex: '1', width: '18px', height: '18px', margin: '0 5px 0 10px' }}
+                        /><span id="wallet-text" style={{position: 'relative', zIndex: '1', fontSize: '0.6em', paddingRight: '10px'}} >Wallet</span>
                       </Button>
                     </div>
 
@@ -827,7 +832,7 @@ class SiteWrapper extends Component {
                         className="avatar"
                         darkMode={this.props.isDarkMode}
                       />
-                      <span className="username">{this.state.userName}</span>
+                      {/* <span className="username">{this.state.userName}</span> */}
                       <ArrowDropDownIcon />
                     </Button>
                     <Menu
@@ -848,9 +853,12 @@ class SiteWrapper extends Component {
                       PaperProps={{
                         style: {
                           width: '200px',
+                          border: this.props.isDarkMode ?
+                          '2px solid #212529'
+                          : '2px solid #e5e5e5',
                           background: this.props.isDarkMode
-                            ? '#060607'
-                            : 'white'
+                            ? '#101010'
+                            : '#f9f9f9'
                         }
                       }}
                     >

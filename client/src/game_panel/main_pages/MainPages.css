@@ -2,12 +2,12 @@ button, button.btn {
     outline: none !important;
 }
 
-.chat-log-panel .message-header img.avatar {
-    background: darkgray;
-}
-.your-bet-amount {
+
+.bet-amount {
     margin-top: 30px;
+    margin-bottom: 30px;
     display: flex;
+    width: 330px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -18,44 +18,24 @@ button, button.btn {
     display: grid;
     position: relative;
 }
-.chat-wrapper .chat-panel {
-    padding: 16px;
-}
-.chat-wrapper .chat-panel .chat-line {
-    display: grid;
-    grid-template-columns: 25px 1fr;
-    grid-gap: 16px;
-}
-.chat-wrapper .chat-panel .chat-line .chat-content {
-    display: flex;
-    flex-direction: column-reverse;
-    margin-bottom: 16px;
-}
-.chat-wrapper .chat-panel .chat-line .chat-content .sender-name {
-    color: #747f8d;
-    margin-right: 5px;
-    width: 100%;
+
+div[role="tablist"] {
+    min-height: unset !important;
 }
 
-.chat-wrapper .chat-panel .chat-line .chat-time {
-    font-size: 0.75em;
-    font-weight: 600;
-    color: #72767d;
-    display: flex;
-    flex-direction: column;
-}
-.chat-wrapper .chat-panel .chat-line .chat-time .chat-text {
-    color: #717171;
-    
-}
+
 .contents_wrapper .main-game .main-panel {
-    padding: 24px 0 8px 24px;
+    padding: 48px 6px 8px 16px;
     background-color: rgba(235, 237, 239, 0.5);
     position: relative;
+    height: calc(100vh - 50px);
+    overflow-y: scroll;
 }
 .contents_wrapper .main-game .sub-panel {
     padding: 24px 18px 8px;
     position: initial;
+    border-left: 1px solid rgb(206 212 240);
+
     background-color: rgba(235, 237, 239, 0.5);
 }
 .main-game h2.main-title {
@@ -63,7 +43,6 @@ button, button.btn {
     font-weight: 400;
     color: #060607;
     padding-bottom: 12px;
-    margin-bottom: 12px;
     text-transform: uppercase;
 }
 .main-game-page-tabs {
@@ -86,8 +65,7 @@ button, button.btn {
     animation: ticker 20s linear infinite;
     white-space: nowrap;
   }
-  [class^="MuiSlider-thumb"]:hover,
-.Mui-focusVisible {
+  [class^="MuiSlider-thumb"]:hover {
     box-shadow: 0px 0px 0px 8px #f009 !important;
   }
   
@@ -116,7 +94,7 @@ button, button.btn {
     background: #fdfeff;
     padding-left: 10px;
     border: 3px solid #fdfeff;
-    border-radius: 8px;
+    border-radius: 0.3em;
 }
 .search_panel input.search_text{
     border: 0;
@@ -129,13 +107,13 @@ button, button.btn {
 div.table .table-row,
 div.table .table-header {
     border-radius: 6px;
-    border-top: 2px solid #c5c5c54f;
+    border-top: 2px solid #f8f9fa;
     border-bottom: 2px solid #e1e1e1;
-    background: #f9f9f9;
-    padding: 16px;
-    margin-bottom: 8px;
-    color: #747f8d;
-    font-size: 16px;
+    background: #fff;
+    padding: 0.9em;
+    margin-bottom: 10px;
+    color: #86868b;
+    font-size: 1em;
 }
 div.table .table-row > div,
 div.table .table-header {
@@ -333,7 +311,7 @@ a:hover {
 div.table .table-row .table-cell img.game-type-icon {
     width: 40px;
     height: 40px;
-    border-radius: 8px;
+    border-radius: 0.3em;
     margin-right: 16px;
     filter: brightness(0.5);
     /* transform: scale(1.5); */
@@ -381,9 +359,16 @@ div.table .table-row .table-cell button span,
     position: inherit;
 }
 
+#wallet-btn::before {
+    opacity: 0 !important;
+}
+#wallet-btn:hover::before {
+    opacity: 0.4 !important;
+}
+
 div.table .table-row .table-cell button:last-child:before,
 .create-room-btn-panel button.btn-create-room:before,
-.game_header .main_header .header_action_panel button#btn-login:before {
+.game_header .main_header .header_action_panel button#btn-login:before, #wallet-btn::before {
     content: "";
     position: absolute;
     top: -50%;
@@ -416,7 +401,7 @@ div.table .table-row .table-cell button:last-child:before,
 .place-bet {
     display: flex !important;
     margin: auto !important;
-    width: 100%;
+    width: 330px;
 }
 #roll {
     text-align: center;
@@ -562,7 +547,7 @@ div.table.main-game-table, div.table.main-history-table, div.table.my-open-game-
     scrollbar-width: none;  /* Firefox */
 }
 div.table.main-game-table, div.table.my-open-game-table {
-    height: calc(100vh - 297px);
+    height: calc(100vh - 264px);
 }
 
 div.table.main-game-table .table-row .table-cell.cell-room-info{
@@ -664,13 +649,13 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     padding: 0;
     margin-right: 10px !important;
     margin-bottom: 10px !important;
+    /* margin-top: 10px !important; */
     white-space: nowrap;
     display: flex;
     flex: 0 0 auto;
     align-items: center;
     font-weight: 600;
-    filter: hue-rotate(282deg);
-    border-radius: 10px !important;
+    filter: grayscale(1);
 }
 .game-type-panel .btn-game-type div.icon img {
     width: 26px !important;
@@ -692,31 +677,30 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
     color: white;
     display: none;
     transition: 0.5s;
-    width: 40px;
-    height: 100%;
     align-items: center;
     justify-content: center;
     position: absolute;
     cursor: pointer;
     z-index: 9;
+height: calc(100% - 10px) !important;
 }
 .game-type-panel:hover .btn-arrow-left,
 .game-type-panel:hover .btn-arrow-right {
     display: flex;
 }
 .game-type-panel .btn-arrow-left {
-    top:50px;
+    top:0px;
     background-image: linear-gradient(to right, #f9f9f9, rgba(255, 255, 255, 0));
 }
 .game-type-panel .btn-arrow-right {
     background-image: linear-gradient(to right, rgba(255, 255, 255, 0), #f9f9f9);
     right: 0;
-    top: 50px;
+    top: 0px;
 }
 
 .create-room-btn-panel {
     position: absolute;
-    top: 12px;
+    top: 32px;
     right: 0;
     margin-bottom: 15px;
         margin-right: 5px;
@@ -743,8 +727,7 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info{
 .contents_wrapper .main-game .sub-panel {
 	background-image: linear-gradient(-135deg, transparent, #e9ecef  55%), url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec72434cb1c84_Dots%20Blue.svg) !important;
     background-position: top right;
-
-    background-size: cover;
+    background-size: cover !important;
     
 }
 
@@ -785,6 +768,7 @@ div.table.my-open-game-table .table-row .table-cell.room-id img.lock-icon {
 }
 div.table.my-open-game-table .table-row .table-cell.bet-info span.bet-pr {
     color: #ffb000;
+    border: 2px solid;
     font-weight: bold;
     background: #ffb00022;
     border-radius: 6px;
@@ -794,6 +778,7 @@ div.table.my-open-game-table .table-row .table-cell.bet-info span.bet-pr {
 div.table.my-open-game-table .table-row .table-cell.bet-info span.end-amount {
     color: #d81719;
     margin-left: 10px;
+    border: 2px solid;
     font-weight: bold;
     background: #D8171833;
     border-radius: 6px;
@@ -860,6 +845,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 }
 #game_logs .game_logs_contents {
     background: #e9ecef;
+    border: 2px solid 2px solid #fff;
     width: 330px;
     margin: 10px auto;
     border-radius: 10px;
@@ -891,17 +877,11 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     padding: 0 10px;
 }
 #game_logs .game_logs_contents table tr td.amount {
-    border-top-left-radius: 9px;
-    border-bottom-left-radius: 9px;
     cursor: pointer;
 }
 #game_logs .game_logs_contents table tr td.fromNow {
-    border-radius: 6px;
+
     cursor: pointer;
-}
-#game_logs .game_logs_contents table tr:hover {
-    background-color: #36393f;
-    border-radius: 6px;
 }
 #game_logs .game_logs_contents table{
     border-collapse:separate;
@@ -939,7 +919,6 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     color: #36393f;
     background-repeat: no-repeat;
     background-position: 5px center;
-    border-radius: 6px;
 }
 /* #game_logs .transaction-panel button {
     color: #333;
@@ -1022,12 +1001,18 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     color: #212529;
 }
 
+.page-title {
+    margin-bottom: -30px;
+}
+
 .contents_wrapper .game-page .page-title h2 {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' fill='none' viewBox='0 0 40 40'%3E%3Cpath fill='%23060607' fill-rule='evenodd' d='M2.25 14.821c0-3.905 3.166-7.071 7.071-7.071H30.18c3.905 0 7.071 3.166 7.071 7.071v6.143c.58.504 1.085 1.09 1.5 1.74v-7.883c0-4.733-3.838-8.571-8.571-8.571H9.32C4.588 6.25.75 10.088.75 14.821v11.805c0 3.974 3.221 7.195 7.195 7.195 2.726 0 5.217-1.54 6.436-3.977l.618-1.237h9.162c-.099-.485-.154-.987-.16-1.5h-9.465c-.284 0-.544.16-.671.415l-.826 1.651c-.965 1.93-2.937 3.148-5.094 3.148-3.145 0-5.695-2.55-5.695-5.695V14.821zm8.929-1.303v3.16H8.018v1.5h3.16v3.161h1.5v-3.16h3.161v-1.5h-3.16v-3.161h-1.5zm12.482 7.268h2.607v-1.5H23.66v1.5zm5.214-5.215h2.607v-1.5h-2.607v1.5z' clip-rule='evenodd'/%3E%3Cpath stroke='%23060607' stroke-width='1.5' d='M32.75 25L29.75 34M28 29.25L38 29.25'/%3E%3C/svg%3E%0A");
     background-repeat: no-repeat;
     background-position: left center;
     padding-left: 56px;
-    font-size: 24px;
+    font-size: 1.2em;
+    height: 30px;
+    line-height: 30px;
     font-weight: bold;
     color: #343a40;
 }
@@ -1060,6 +1045,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
     width: 100%;
     position: relative;
 }
+
 
 
 .game-page .pre-summary-panel > div {
@@ -1188,7 +1174,7 @@ position: relative;
 .game-page .game-contents .summary-panel .summary-info {
     background-color: rgba(242, 243, 245, 0.4);
     width: 400px;
-    border-radius: 8px;
+    border-radius: 0.3em;
     max-width: 100%;
     margin: auto !important;
 }
@@ -1263,7 +1249,7 @@ overflow: hidden;
 }
 .game-page .game-contents .game-info-panel button {
     padding: 0 15px;
-    margin: 10px 4px 15px;
+    margin: 10px 4px 8px;
 }
 #bj-radio {
     display: grid;
@@ -1421,7 +1407,7 @@ box-shadow:none !important;
     margin-bottom: 16px;
     height: 35px;
     width: 170px;
-    border-radius: 8px;
+    border-radius: 0.3em;
     display: contents;
 }
 .game-page .game-contents .game-info-panel.payout-info-panel .edit-amount-panel {
@@ -1603,7 +1589,7 @@ max-width: 450px;
 }
 
 table#runs {
-    border-radius: 8px;
+    border-radius: 0.3em;
     width: 300px;
 }
 table#runs th,
@@ -1789,7 +1775,7 @@ button.btn-submit:active,
 
 .game-page .game-contents .radio-button-group button.radio-button {
     background-color: rgba(242, 243, 245, 0.4);
-    border-radius: 8px;
+    border-radius: 0.3em;
     height: 40px;
     color: #4f5660;
     font-size: 16px;
@@ -1939,7 +1925,7 @@ color: #343a40;
     position: absolute;
 }
 input {
-    border-radius: 8px !important;
+    border-radius: 0.3em !important;
     outline: 0;
     padding-left: 8px;
     border-width: 1px;
@@ -2041,9 +2027,6 @@ input {
     text-align: center;
     padding-top: 45px;
     background-repeat: no-repeat;
-}
-#grid {
-    margin-top: -29px;
 }
 .join-game-panel .game-page .game-contents p {
     font-size: 1em;
@@ -2536,7 +2519,7 @@ bottom: 0px;
 }
 .leaderboards-page .page-title button {
     background: #191a1d;
-    border-radius: 8px;
+    border-radius: 0.3em;
     width: 36px;
     height: 36px;
     margin-left: 16px;
@@ -2590,6 +2573,9 @@ bottom: 0px;
     }
 }
 @media (max-width: 1023px) {
+    /* .contents_wrapper .main-game .main-panel, .contents_wrapper .main-game .sub-panel {
+		background-size: 200vh;
+	} */
     /* .game-page .game-contents .game-info-panel .box-prizes span { */
         /* white-space: unset; */
     /* } */
@@ -2617,35 +2603,7 @@ bottom: 0px;
         width: 100%;
         overflow-x: auto;
     }
-    /* .game-type-panel .btn-game-type.btn-icon {
-        display: block;
-        width: 130px;
-        font-size: 10px;
-        padding: 0;
-    } */
-    /* .game-type-panel .btn-game-type.btn-icon.active,
-    .game-type-panel .btn-game-type.btn-icon:hover {
-        background: transparent;
-        color: #C438EF;
-        
-    } 
-    .game-type-panel .btn-game-type.btn-icon img {
-        width: 56px;
-        height: 56px;
-        padding: 6px;
-        border-radius: 8px;
-        margin: 0 0 8px;
-    }
-    .game-type-panel .btn-game-type.btn-icon.active {
-        color: unset;
-    }
-    .game-type-panel .btn-game-type.btn-icon.active img {
-        border: 1px solid #C438EF;
-    }
-    
-    .game-type-panel .btn-game-type:hover img {
-        filter: invert(43%) sepia(61%) saturate(6413%) hue-rotate(269deg) brightness(94%) contrast(100%);
-    } */
+   
     .main-game h2.main-title {
         font-size: 12px;
     }
@@ -2708,7 +2666,7 @@ bottom: 0px;
         /* background: #747f8d !important; */
         color: unset;
         padding: 0 15px;
-        border-radius: 16px;
+        border-radius: 0.3em;
     }
 
     #game_logs .arrow-up{
@@ -2723,8 +2681,6 @@ bottom: 0px;
         display: block;
     }
     .contents_wrapper .game-page .page-title h2 {
-        margin-top: 20px;
-margin-bottom: 10px;
         font-size: 16px;
         padding-left: 44px;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath fill='%23060607' d='M15.474 17.705l-.67.336.67-.336zm-.495-.99l.67-.336c-.127-.254-.386-.415-.67-.415v.75zm-6.258 0v-.75c-.284 0-.543.16-.67.414l.67.335zM22.05 8.892v7.083h1.5V8.893h-1.5zm-5.905 8.477l-.496-.991-1.341.67.495.992 1.342-.671zm-1.166-1.406H8.72v1.5h6.258v-1.5zm-6.928.415l-.496.99 1.342.672.495-.991-1.341-.671zm-6.401-.403V8.893H.15v7.083h1.5zM5.593 4.95h12.514v-1.5H5.593v1.5zm-.826 14.143c-1.722 0-3.117-1.396-3.117-3.117H.15c0 2.55 2.067 4.617 4.617 4.617v-1.5zm14.166 0c-1.18 0-2.26-.667-2.788-1.723l-1.342.67c.782 1.565 2.38 2.553 4.13 2.553v-1.5zm3.117-3.117c0 1.721-1.396 3.117-3.117 3.117v1.5c2.55 0 4.617-2.067 4.617-4.617h-1.5zM7.555 17.37c-.528 1.056-1.607 1.723-2.788 1.723v1.5c1.749 0 3.348-.988 4.13-2.552l-1.342-.671zM23.55 8.893c0-3.006-2.437-5.443-5.443-5.443v1.5c2.178 0 3.943 1.765 3.943 3.943h1.5zm-21.9 0c0-2.178 1.765-3.943 3.943-3.943v-1.5C2.587 3.45.15 5.887.15 8.893h1.5zm3.16 2.314h4.693v-1.5H4.811v1.5zm1.597-3.096v4.692h1.5V8.111h-1.5zm10.918 1.532h1.564v-1.5h-1.564v1.5zm-3.129 3.128h1.565v-1.5h-1.565v1.5z'/%3E%3C/svg%3E%0A");
@@ -2864,6 +2820,15 @@ margin-bottom: 10px;
     }
 }
 @media (max-width: 400px) {
+    .contents_wrapper .main-game .main-panel {
+        height: unset;
+    }
+    .page-title {
+        margin-bottom: 0px;
+    }
+    .place-bet {
+        width: 100%;
+    }
     .mosquito {
         margin: -30px 0px 80px;
     }
@@ -2925,17 +2890,10 @@ transform: translateX(160px) !important;
     #no-guesses {
         margin: 0px 80px 10px 0px !important;
          }
-[role="tablist"] button{
-    padding-top: 25px !important;
-    padding-bottom: 10px !important;
-    min-height: 50px !important;
-    }
+
     .mobile-only.cell-joiners svg{
         margin-left: 3px;
         margin-right: 6px;
-    }
-    div.table.my-chat-table {
-        padding: 55px 10px 10px;
     }
    
     .game-page .pre-summary-panel {
@@ -2950,10 +2908,10 @@ transform: translateX(160px) !important;
         flex-wrap: wrap;
 
     }
-
+/* 
     .your-bet-amount input {
         min-width: 215px;
-    }
+    } */
     .create-game-panel .boxes-panel .box {
         margin-right: -2px;
         margin-left: 0px;
@@ -3018,7 +2976,71 @@ transform: translateX(160px) !important;
         padding-right: 0;
         border-right: none;
     }
+    /* @keyframes fade-in {
+        from {
+          border-color: gray;
+          background-color: #1f1f1f;
+        }
+        to {
+          border-color: red;
+          background-color: black;
+          box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.3);
+        }
+      } */
+      
+      .your-bet-amount {
+        display: flex;
+        align-items: center;
+      }
+      
+      .your-bet-amount .MuiOutlinedInput-root {
+        /* animation-name: fade-in; */
+        animation-duration: 0.3s;
+        animation-timing-function: ease-in-out;
+        animation-name: fade-out;
+      }
+      .your-bet-amount .MuiButtonGroup-root.fade-out {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
 
+      .your-bet-amount .MuiOutlinedInput-root:focus-within ~ .MuiButtonGroup-root {
+        opacity: 1; /* Set the opacity to 1 to show the button group when the input is focused */
+        pointer-events: auto; /* Enable pointer events on the button group */
+      }
+      
+      .your-bet-amount .MuiOutlinedInput-input {
+        width: 150px; /* Set a fixed width for the input */
+        height: 40px; /* Set a fixed height for the input */
+      }
+      .fade-in {
+        opacity: 1;
+        transition: opacity 0.3s ease-in-out;
+      }
+      
+      .fade-out {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+      }
+      
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      
+      @keyframes fade-out {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+            
 
    .game-type-panel::-webkit-scrollbar {
         display: none;
@@ -3059,6 +3081,9 @@ transform: translateX(160px) !important;
 }
   
   @media (max-width: 480px) {
+   #wallet-text {
+    display: none;
+   }
     .goalBg, .brainBg, .rocksBg,  .boatBg {
         bottom: 0px;
      }
@@ -3107,6 +3132,7 @@ transform: translateX(160px) !important;
         grid-gap: 0.4rem;
         grid-template-columns: repeat(4, 1fr);
     }
+   
     
     .boxes-panel {
         grid-template-columns: repeat(3, 1.2fr);

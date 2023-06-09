@@ -4,7 +4,7 @@ import BetArray from '../../components/BetArray';
 import CountUp, { linearEasing } from 'react-countup';
 import { deductBalanceWhenStartRoll } from '../../redux/Logic/logic.actions';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-
+import BetAmountInput from '../../components/BetAmountInput';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
@@ -477,7 +477,7 @@ class Roll extends Component {
   };
   
 
-  handlehalfxButtonClick() {
+  handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState(
@@ -490,7 +490,7 @@ class Roll extends Component {
     );
   }
 
-  handle2xButtonClick() {
+  handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
@@ -512,7 +512,7 @@ class Roll extends Component {
     }
   }
 
-  handleMaxButtonClick() {
+  handleMaxButtonClick = () => {
     const maxBetAmount = this.state.balance;
     this.setState(
       {
@@ -1214,52 +1214,14 @@ class Roll extends Component {
               )}
             </div>
 
-            <div className="your-bet-amount">
-              <TextField
-                type="text"
-                name="betamount"
-                variant="outlined"
-                id="betamount"
-                label="BET AMOUNT"
-                value={this.state.bet_amount}
-                onChange={event =>
-                  this.setState({ bet_amount: event.target.value })
-                }
-                inputProps={{
-                  pattern: '[0-9]*',
-                  maxLength: 9
-                }}
-                InputLabelProps={{
-                  shrink: true
-                }}
-                InputProps={{
-                  endAdornment: 'BUSD'
-                }}
-              />
-              <div className="max">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handlehalfxButtonClick()}
-                >
-                  0.5x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handle2xButtonClick()}
-                >
-                  2x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handleMaxButtonClick()}
-                >
-                  Max
-                </Button>
-              </div>
-
+            <BetAmountInput
+          betAmount={this.state.bet_amount}
+          handle2xButtonClick={this.handle2xButtonClick}
+          handleHalfXButtonClick={this.handleHalfXButtonClick}
+          handleMaxButtonClick={this.handleMaxButtonClick}
+          onChange={this.handleChange}
+          isDarkMode={this.props.isDarkMode}
+        />
               <div id="roll">
                 <Button
                   className={`rock button-2x-r${
@@ -1520,7 +1482,6 @@ class Roll extends Component {
                   <span>7x</span>
                 </Button>
               </div>
-            </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>

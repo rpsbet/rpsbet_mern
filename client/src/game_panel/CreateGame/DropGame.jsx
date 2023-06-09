@@ -196,7 +196,7 @@ class DropGame extends Component {
   }
 
 
-  handlehalfxButtonClick() {
+  handleHalfXButtonClick() {
     const multipliedBetAmount = this.state.drop * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState({
@@ -278,7 +278,7 @@ class DropGame extends Component {
               />
               <div>
               <div className='max'>
-            <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handleHalfXButtonClick()}>0.5x</Button>
             <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
             <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
           </div>

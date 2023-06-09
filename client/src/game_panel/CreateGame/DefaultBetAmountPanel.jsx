@@ -134,7 +134,7 @@ class DefaultBetAmountPanel extends Component {
             placeholder="BET AMOUNT"
           />
           <div className="max">
-            {/* <Button variant="contained" color="primary" onClick={() => this.handlehalfxButtonClick()}>0.5x</Button>
+            {/* <Button variant="contained" color="primary" onClick={() => this.handleHalfXButtonClick()}>0.5x</Button>
             <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button> */}
             <Button
               variant="contained"

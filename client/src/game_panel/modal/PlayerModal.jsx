@@ -18,8 +18,7 @@ Modal.setAppElement('#root')
 const customStyles = {
     overlay: {
         zIndex: 3,
-        backgroundColor: 'rgba(47, 49, 54, 0.2)',
-        backdropFilter: 'blur(4px)'
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
     },
     content: {
         top         : '50%',
@@ -29,7 +28,6 @@ const customStyles = {
         transform   : 'translate(-50%, -50%)',
         background: 'transparent',
         padding: 0,
-        border: 0
     }
 }
 
@@ -143,12 +141,13 @@ class PlayerModal extends Component {
                                     profitAllTimeLow={this.state.profitAllTimeLow}
                                     getRoomStatisticsData={this.props.getRoomStatisticsData}
                                 />
-                                <div className='align-center'>
-                                <Button className="send-msg" onClick={this.handleOpenChat}>Send Message</Button>
-                            </div>
+                                
                             </div>
                         )}
                     </div>
+                    <div className='modal-footer'>
+                                <Button className="send-msg" onClick={this.handleOpenChat}>Send Message</Button>
+                            </div>
                 </div>
             </Modal>
         )

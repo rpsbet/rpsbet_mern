@@ -7,7 +7,7 @@ import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import bjBg from '../LottieAnimations/bjBg.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-
+import BetAmountInput from '../../components/BetAmountInput';
 import { Button, TextField } from '@material-ui/core';
 import { deductBalanceWhenStartBlackjack } from '../../redux/Logic/logic.actions';
 
@@ -768,7 +768,7 @@ class Blackjack extends Component {
     }
   };
 
-  handlehalfxButtonClick() {
+  handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState(
@@ -781,7 +781,7 @@ class Blackjack extends Component {
     );
   }
 
-  handle2xButtonClick() {
+  handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(
@@ -807,7 +807,7 @@ class Blackjack extends Component {
     }
   }
 
-  handleMaxButtonClick() {
+  handleMaxButtonClick = () => {
     const maxBetAmount = Math.floor(this.state.balance * 100) / 100; // Round down to two decimal places
     this.setState(
       {
@@ -1103,50 +1103,14 @@ class Blackjack extends Component {
             <h6 className={scoreAnimation ? 'score animated' : 'score'}>
               {score}
             </h6>
-            <div className="your-bet-amount">
-              <TextField
-                id="betamount"
-                variant="outlined"
-                label="BET AMOUNT"
-                type="text"
-                inputProps={{
-                  pattern: '[0-9]*',
-                  maxLength: 9
-                }}
-                InputLabelProps={{
-                  shrink: true
-                }}
-                value={this.state.bet_amount}
-                onChange={this.onChangeState}
-                InputProps={{
-                  endAdornment: 'BUSD'
-                }}
-              />
-
-              <div className="max">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handlehalfxButtonClick()}
-                >
-                  0.5x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handle2xButtonClick()}
-                >
-                  2x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handleMaxButtonClick()}
-                >
-                  Max
-                </Button>
-              </div>
-            </div>
+            <BetAmountInput
+          betAmount={this.state.bet_amount}
+          handle2xButtonClick={this.handle2xButtonClick}
+          handleHalfXButtonClick={this.handleHalfXButtonClick}
+          handleMaxButtonClick={this.handleMaxButtonClick}
+          onChange={this.handleChange}
+          isDarkMode={this.props.isDarkMode}
+        />
             <div>
               <div id="bj-radio" style={{ zIndex: 1 }}>
                 <Button

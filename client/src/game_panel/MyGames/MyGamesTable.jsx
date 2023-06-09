@@ -16,7 +16,6 @@ import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
 import InlineSVG from 'react-inlinesvg';
-import IconButton from '@material-ui/core/IconButton';
 import { Box, Button } from '@material-ui/core';
 
 const defaultOptions = {
@@ -157,12 +156,12 @@ class MyGamesTable extends Component {
         gap="15px"
       >
         <Box item key="open-game-left-button">
-          <IconButton
+          <Button
             className="btn-arrow-left"
             onClick={this.handleBtnLeftClicked}
           >
             <ChevronLeftIcon />
-          </IconButton>
+          </Button>
         </Box>
   
         <Button
@@ -213,13 +212,13 @@ class MyGamesTable extends Component {
               </div>
           </Button>
         ))}
-        <IconButton
+        <Button
           className="btn-arrow-right"
           key="open-game-right-button"
           onClick={this.handleBtnRightClicked}
         >
           <ChevronRightIcon />
-        </IconButton>
+        </Button>
       </Box>
     );
   

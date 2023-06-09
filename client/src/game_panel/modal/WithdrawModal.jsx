@@ -15,8 +15,7 @@ Modal.setAppElement('#root')
 const customStyles = {
     overlay: {
         zIndex: 3,
-        backgroundColor: 'rgba(47, 49, 54, 0.8)',
-        backdropFilter: 'blur(4px)'
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
     },
     content: {
         top         : '50%',
@@ -26,7 +25,6 @@ const customStyles = {
         transform   : 'translate(-50%, -50%)',
         padding: 0,
         background: 'transparent',
-        border: 0
     }
 }
 
@@ -141,7 +139,7 @@ class WithdrawModal extends Component {
                 >
                         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
                             <div className='modal-header'>
-                                <h2>WITHDRAW</h2>
+                                <h2 className='modal-title'>WITHDRAW</h2>
                                 <Button className="btn-close" onClick={this.props.closeModal}>×</Button>
                             </div>
                             <div className="modal-body edit-modal-body deposit-modal-body">
@@ -176,13 +174,13 @@ class WithdrawModal extends Component {
                                     
                                
                                  
-                                    <div className="modal-action-panel">
-                                        <Button className="btn-submit" onClick={this.send}>Withdraw</Button>
-                                        <Button className="btn-back" onClick={this.props.closeModal}>CANCEL</Button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
+                                    <div className="modal-footer">
+                                        <Button className="btn-submit" onClick={this.send}>Withdraw</Button>
+                                        <Button className="btn-back" onClick={this.props.closeModal}>CANCEL</Button>
+                                    </div>
                     </div>
                 </Modal>
             </>

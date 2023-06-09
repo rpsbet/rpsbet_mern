@@ -42,8 +42,8 @@ const customStyles = {
   tabRoot: {
     textTransform: 'none',
     width: '50%',
-    height: '48px',
-    backgroundColor: 'rgba(47, 49, 54, 0.5)'
+    // height: '48px',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   }
 };
 

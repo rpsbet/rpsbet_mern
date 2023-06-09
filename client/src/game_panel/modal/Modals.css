@@ -1,7 +1,7 @@
 .modal-body {
-    background-color: white;
+    background-color: #e5e5e5;
     color: #747f8d;
-    max-height: 75vh;
+    max-height: 55vh;
     min-width: 50vw;
     max-width: 95vw;
     overflow-y: scroll;
@@ -14,6 +14,11 @@
 }
 
 
+.modal-body button,
+.modal-body button.btn-back {
+	border-radius: 6px;
+}
+
 .modal-body.edit-modal-body.question-modal-body div[class*='MuiGrid-grid'] {
     max-width: 100%;
 }
@@ -24,7 +29,7 @@
     color: #fff;
    
     padding: 20px 5px;
-    border-radius: 20px;
+    border-radius: 0.3em;
     background: #0606075c;
     /* box-shadow: 0 0 8px 2px #560251; */
 }
@@ -102,23 +107,42 @@
     color: gray;
   }
 
-
 /* .modal-body.edit-modal-body::-webkit-scrollbar-thumb,  #runs::-webkit-scrollbar-thumb {
     background-image: linear-gradient(to bottom, #ff409a, #c438ef);
 } */
 
 .modal-header {
-    transform: translateY(1px);
-    border-top-right-radius: 20px !important;
-    border-top-left-radius: 20px !important;
-    border-bottom: 0 !important;
+    transform: translateY(0px);
+    border-bottom: 1px solid #747f8d;
     background: #fdfeff;
 }
 
+.modal-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-image:linear-gradient(rgba(0, 0, 0, 0.8) 100%, rgba(0, 0, 0, 0) 1%), url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6452ae1e8a3838b5dbbd31c1_rock.png");
 
+    z-index: -1;
+  }
+  
+  .modal-header-content {
+    color: #fff !important;
+  }
   .ReactModal__Overlay {
     opacity: 0;
     transition: opacity 500ms ease-in-out;
+  }
+
+  .react-confirm-alert .modal-body.alert-body {
+    border-radius: 0.6em !important;
+    border: 1px solid #ffffff2d;
   }
   
   .ReactModal__Overlay--after-open {
@@ -134,15 +158,7 @@
     font-size: 16px;
     font-weight: 500;
 }
-.how-to-play-modal-body,
-div[aria-label="Privacy Modal"] .modal-body,
-div[aria-label="Terms Modal"] .modal-body, 
-div[aria-label="Player Modal"] .modal-body,
-div[aria-label="Profile Modal"] .modal-body,
-div[aria-label="Add Question Modal"] .modal-body {
-border-top-right-radius: 0 !important;
-border-bottom-right-radius: 0 !important;
-}
+
 .modal-body h5 {
     text-align: center;
     font-size: 24px;
@@ -150,10 +166,11 @@ border-bottom-right-radius: 0 !important;
     color: #060607;
     border-bottom: none !important;
 }
-.modal-body h2.modal-title {
-    font-size: 16px;
+.modal-title {
+    font-size: 1.2rem !important;
     text-transform: uppercase;
-    margin: -24px auto 40px -16px;
+    margin: 15px auto 10px 15px;
+    color: #060607;;
 }
 .modal-body h5 {
     font-size: 16px;
@@ -165,14 +182,15 @@ border-bottom-right-radius: 0 !important;
     font-size: 12px;
 }
 
-.modal-body .modal-action-panel {
-    margin-top: 20px;
+.modal-footer {
+    
+    border-top: 1px solid #747f8d;
+    background:rgb(173 173 173);
 }
-.modal-body .modal-action-panel button {
+.modal-footer button {
     height: 55px;
     background: transparent;
     color: #747f8d;
-    border: 1px solid #d3d7db;
     padding: 0 20px;
     font-weight: 600;
     margin: 0 20px;
@@ -223,7 +241,6 @@ border-bottom-right-radius: 0 !important;
 
 .react-confirm-alert-overlay {
     background: rgba(19, 19, 19, 0.2) !important;
-    backdrop-filter: blur(2px);
 }
 
 @keyframes pulse {
@@ -307,6 +324,7 @@ border-bottom-right-radius: 0 !important;
 
 .modal-body {
     width: 400px;
+    border-radius: 0 !important;
 }
 
 .statistics-container {
@@ -341,21 +359,10 @@ border-bottom-right-radius: 0 !important;
 }
 
 .ReactModal__Content {
-    overflow: unset !important;
+    border: 2px solid #6e6e6e  !important;
+    border-radius: 7px !important;
 }
 
-.modal-body.edit-modal-body .modal-action-panel {
-    margin-top: 40px;
-    text-align: right;
-    
-}
-.modal-body.edit-modal-body .modal-action-panel button.btn-submit,
-.modal-body.edit-modal-body .modal-action-panel button.btn-back, 
-.modal-body.alert-body .modal-action-panel button.btn-submit,
-.modal-body.alert-body .modal-action-panel button.btn-back {
-    width: auto;
-    margin: 0 0 0 16px;
-}
 .modal-body .modal-content-wrapper h4 {
     text-transform: uppercase;
     font-size: 16px;
@@ -465,26 +472,11 @@ border-bottom-right-radius: 0 !important;
     border-radius: 4px 4px 0 0;
 }
 
-
-
-
-
-ul[role=menu] li:hover {
-    border-radius: 6px !important;
-}
-
-/* .dark_mode #profile-menu div[class*="MuiPaper-root"] {
-    background-color: #101010 !important;
-} */
 div[role="presentation"] div {
-    /* background-color: transparent !important; */
     box-shadow: none;
-    border-radius: 16px !important;
+    border-radius: 0.3em !important;
 }
 
-div[role="presentation"] div:first-child {
-    backdrop-filter: blur(4px);
-}
 div[role="presentation"] li:last-child {
     justify-content: center;
 }
@@ -557,24 +549,10 @@ div[role="presentation"] li:last-child {
     .modal-body.edit-modal-body.deposit-modal-body .modal-content-wrapper div.modal-content-panel {
         padding: 16px;
     }
-    .modal-body.edit-modal-body.deposit-modal-body .modal-action-panel{
-        display: flex;
-        justify-content: space-between;
-    }
-    .modal-body.alert-body .modal-action-panel {
-        display: flex;
-        justify-content: center;
-    }
+
+
     .react-confirm-alert .modal-body.alert-body.confirm-body {
         padding: 32px;
     }
-    .modal-body.edit-modal-body .modal-action-panel button.btn-submit, 
-    .modal-body.edit-modal-body .modal-action-panel button.btn-back {
-        padding: 0 15px;
-        margin: 0;
-    }
-    .modal-body.alert-body .modal-action-panel button.btn-submit, 
-    .modal-body.alert-body .modal-action-panel button.btn-back {
-        margin: 0 15px;
-    }
+
 }

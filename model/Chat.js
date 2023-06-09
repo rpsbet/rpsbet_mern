@@ -24,7 +24,26 @@ const ChatSchema = new Schema({
   avatar: {
     type: String,
     ref: 'User.avatar'
-  }
+  },
+  replyTo: [
+    {
+      sender: {
+        type: String
+      },
+      avatar: {
+        type: String
+      },
+      message: {
+        type: String
+      },
+      messageType: {
+        type: String
+      },
+      time: {
+        type: String
+      }
+    }
+  ]
 });
 
 module.exports = Chat = mongoose.model('rps_chat', ChatSchema);

@@ -25,16 +25,6 @@ getCommission = async () => {
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
     const _id = req.query._id;
-    let statistics = {
-      deposit: 0,
-      withdraw: 0,
-      gameProfit: 0,
-      profitAllTimeHigh: 0,
-      profitAllTimeLow: 0,
-      gamePlayed: 0,
-      totalWagered: 0,
-      gameLogList: []
-    };
 
     const receipts = await Receipt.find({ user_id: _id });
     const transactions = await Transaction.find({ user: _id });
@@ -46,137 +36,117 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       .populate({ path: 'joined_user', model: User })
       .populate({ path: 'room', model: Room })
       .populate({ path: 'game_type', model: GameType });
-    const rooms = await Room.find({ creator: _id });
 
-    for (r of receipts) {
-      if (r.payment_type === 'Deposit') {
-        statistics['deposit'] += r.amount;
-      } else if (r.payment_type === 'Withdraw') {
-        statistics['withdraw'] += r.amount;
+    let statistics = {
+      deposit: 0,
+      withdraw: 0,
+      gameProfit: 0,
+      profitAllTimeHigh: 0,
+      profitAllTimeLow: 0,
+      gamePlayed: 0,
+      totalWagered: 0,
+      gameLogList: []
+    };
+
+    for (const receipt of receipts) {
+      if (receipt.payment_type === 'Deposit') {
+        statistics.deposit += receipt.amount;
+      } else if (receipt.payment_type === 'Withdraw') {
+        statistics.withdraw += receipt.amount;
       }
     }
 
-    for (t of transactions) {
-      if (t.description != 'deposit' && t.description != 'withdraw') {
-        statistics['gameProfit'] += t.amount;
+    for (const transaction of transactions) {
+      if (transaction.description !== 'deposit' && transaction.description !== 'withdraw') {
+        statistics.gameProfit += transaction.amount;
       }
-    }
-
-    for (room of rooms) {
-      statistics['totalWagered'] += room.bet_amount;
     }
 
     const commission = await getCommission();
 
-    for (log of gameLogs) {
-      if (log.game_result == -100) {
-        //end_game
+    for (const gameLog of gameLogs) {
+      if (gameLog.game_result === -100) {
+        // Skip the game log if it's an end_game
         continue;
       }
-      statistics['gamePlayed']++;
 
-      const creator_id = log.creator ? log.creator._id : null;
-      const joiner_id = log.joined_user ? log.joined_user._id : null;
-      const opponent =
-        creator_id == _id
-          ? {
-              _id: joiner_id,
-              username: joiner_id ? log.joined_user.username : null
-            }
-          : {
-              _id: creator_id,
-              username: creator_id ? log.creator.username : null
-            };
+      statistics.gamePlayed++;
+
+      const creator = gameLog.creator;
+      const joinedUser = gameLog.joined_user;
+
+      const creatorId = creator ? creator._id : null;
+      const joinedUserId = joinedUser ? joinedUser._id : null;
+
+      const opponentId = creatorId === _id ? joinedUserId : creatorId;
+      const opponentUsername = opponentId ? (creatorId === _id ? joinedUser.username : creator.username) : null;
+
       let profit = 0;
 
-      if (log.game_type.short_name == 'S!') {
-        if (log.game_result == 1) {
-          if (creator_id == _id) {
-            profit = 0 - log.bet_amount;
-          } else {
-            profit = log.bet_amount * 2 - log.bet_amount;
-          }
+      if (gameLog.game_type.short_name === 'S!') {
+        if (gameLog.game_result === 1) {
+          profit = creatorId === _id ? 0 - gameLog.bet_amount : gameLog.bet_amount * 2 - gameLog.bet_amount;
         } else {
-          if (creator_id == _id) {
-            profit = log.bet_amount;
-          } else {
-            profit = 0 - log.bet_amount;
-          }
+          profit = creatorId === _id ? gameLog.bet_amount : 0 - gameLog.bet_amount;
         }
-      } else if (log.game_type.short_name == 'QS') {
-        if (log.game_result == 1) {
-          if (creator_id == _id) {
-            profit = 0 - log.bet_amount;
-          } else {
-            profit = log.bet_amount * log.room.qs_game_type - log.bet_amount;
-          }
+      } else if (gameLog.game_type.short_name === 'QS') {
+        if (gameLog.game_result === 1) {
+          profit = creatorId === _id ? 0 - gameLog.bet_amount : gameLog.bet_amount * gameLog.room.qs_game_type - gameLog.bet_amount;
         } else {
-          if (creator_id == _id) {
-            profit = log.bet_amount;
-          } else {
-            profit = 0 - log.bet_amount;
-          }
+          profit = creatorId === _id ? gameLog.bet_amount : 0 - gameLog.bet_amount;
         }
-      } else if (log.game_type.short_name == 'MB') {
-        if (creator_id == _id) {
-          profit = log.bet_amount - log.game_result;
-        } else {
-          profit = log.game_result - log.bet_amount;
-        }
+      } else if (gameLog.game_type.short_name === 'MB') {
+        profit = creatorId === _id ? gameLog.bet_amount - gameLog.game_result : gameLog.game_result - gameLog.bet_amount;
       } else {
-        if (log.game_result == 0) {
-          profit = 0 - log.bet_amount * commission;
+        if (gameLog.game_result === 0) {
+          profit = 0 - gameLog.bet_amount * commission;
         } else {
-          if (
-            (creator_id == _id && log.game_result == 1) ||
-            (joiner_id == _id && log.game_result == -1)
-          ) {
-            profit = 0 - log.bet_amount;
-          } else {
-            profit = log.bet_amount * 2 - log.bet_amount;
-          }
+          profit = (creatorId === _id && gameLog.game_result === 1) || (joinedUserId === _id && gameLog.game_result === -1)
+            ? 0 - gameLog.bet_amount
+            : gameLog.bet_amount * 2 - gameLog.bet_amount;
         }
       }
 
-      if (statistics['profitAllTimeHigh'] < profit) {
-        statistics['profitAllTimeHigh'] = profit;
+      if (statistics.profitAllTimeHigh < profit) {
+        statistics.profitAllTimeHigh = profit;
       }
 
-      if (statistics['profitAllTimeLow'] > profit) {
-        statistics['profitAllTimeLow'] = profit;
+      if (statistics.profitAllTimeLow > profit) {
+        statistics.profitAllTimeLow = profit;
       }
 
-      if (log.joined_user && log.joined_user._id == _id) {
-        statistics['totalWagered'] += log.bet_amount;
-      }
+      statistics.totalWagered += gameLog.bet_amount;
 
-      if (!log.room) {
+      if (!gameLog.room) {
         return { error: 'Room object is null or undefined' };
       }
-      
-      statistics['gameLogList'].push({
-        game_id: log.game_type.short_name + '-' + log.room.room_number,
-        room_id: log.room._id,
-        played: log.created_at,
-        bet: log.bet_amount,
-        opponent: opponent,
-        profit: profit,
+
+      statistics.gameLogList.push({
+        game_id: `${gameLog.game_type.short_name}-${gameLog.room.room_number}`,
+        room_id: gameLog.room._id,
+        played: gameLog.created_at,
+        bet: gameLog.bet_amount,
+        opponent: { _id: opponentId, username: opponentUsername },
+        profit,
         net_profit: 0
       });
     }
 
-    res.json({
+    const response = {
       success: true,
       statistics
-    });
-  } catch (err) {
-    console.error(err);
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error(error);
     res.json({
       success: false,
-      err: message
+      error: message
     });
   }
 });
+
 
 getBetType = bet_amount => {
   if (bet_amount >= 1 && bet_amount < 10) {
@@ -295,13 +265,10 @@ router.get('/get-room-statistics', auth, async (req, res) => {
 
     const room_info = [];
 
-    if (room.game_type.short_name == 'MB') {
+    if (room.game_type.short_name === 'MB') {
       const boxList = await RoomBoxPrize.find({ room: room_id });
-      const boxPrices = [];
 
-      for (box of boxList) {
-        boxPrices.push(`[RPS ${box.box_price}, RPS ${box.box_prize}]`);
-      }
+      const boxPrices = boxList.map((box) => `[RPS ${box.box_price}, RPS ${box.box_prize}]`);
 
       room_info.push({
         _id: room._id,
@@ -310,13 +277,13 @@ router.get('/get-room-statistics', auth, async (req, res) => {
         action: 'Create boxes. ' + boxPrices.join(', ')
       });
 
-      for (log of gameLogs) {
-        if (log.game_result == -100) {
+      for (const log of gameLogs) {
+        if (log.game_result === -100) {
           room_info.push({
             _id: log._id,
             created_at: log.created_at,
             actor: log.joined_user.username,
-            action: `End Game by Creator`
+            action: 'End Game by Creator'
           });
         } else {
           room_info.push({
@@ -336,42 +303,40 @@ router.get('/get-room-statistics', auth, async (req, res) => {
         action: 'Create Room'
       });
 
-      for (log of gameLogs) {
-        if (log.game_result == -100) {
+      for (const log of gameLogs) {
+        if (log.game_result === -100) {
           room_info.push({
             _id: log._id,
             created_at: log.created_at,
             actor: log.joined_user.username,
-            action: `End Game by Creator`
+            action: 'End Game by Creator'
           });
         } else {
+          const result = log.game_result === 1 ? 'Win' : log.game_result === -1 ? 'Lose' : 'Draw';
           room_info.push({
             _id: log._id,
             created_at: log.created_at,
             actor: log.joined_user.username,
-            action: `Bet RPS ${log.bet_amount} and ${
-              log.game_result == 1
-                ? 'Win'
-                : log.game_result == -1
-                ? 'Lose'
-                : 'Draw'
-            }`
+            action: `Bet RPS ${log.bet_amount} and ${result}`
           });
         }
       }
     }
 
-    res.json({
+    const response = {
       success: true,
-      room_info: room_info
-    });
-  } catch (err) {
-    console.error(err);
+      room_info
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error(error);
     res.json({
       success: false,
-      err: message
+      error: message
     });
   }
 });
+
 
 module.exports = router;

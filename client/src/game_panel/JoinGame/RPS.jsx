@@ -6,7 +6,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { updateDigitToPoint2 } from '../../util/helper';
 import { Button, TextField } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-
+import BetAmountInput from '../../components/BetAmountInput';
 import Lottie from 'react-lottie';
 import starsBg from '../LottieAnimations/stars-bg.json';
 import {
@@ -468,7 +468,7 @@ class RPS extends Component {
     }
   };
 
-  handlehalfxButtonClick() {
+  handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState(
@@ -481,7 +481,7 @@ class RPS extends Component {
     );
   }
 
-  handle2xButtonClick() {
+  handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(
@@ -507,7 +507,7 @@ class RPS extends Component {
     }
   }
 
-  handleMaxButtonClick() {
+  handleMaxButtonClick = () =>  {
     const maxBetAmount = Math.floor(this.state.balance * 100) / 100; // Round down to two decimal places
     this.setState(
       {
@@ -737,7 +737,7 @@ class RPS extends Component {
                 animationData: starsBg
               }}
               style={{
-                filter: 'hue-rotate(330deg)',
+                filter: 'hue-rotate(15deg)',
                 opacity: '0.8'
               }}
             />
@@ -775,50 +775,14 @@ class RPS extends Component {
                 />
               ))}
             </div>
-            <div className="your-bet-amount">
-              <TextField
-                id="betamount"
-                variant="outlined"
-                label="BET AMOUNT"
-                type="text"
-                inputProps={{
-                  pattern: '[0-9]*',
-                  maxLength: 9
-                }}
-                InputLabelProps={{
-                  shrink: true
-                }}
-                value={this.state.bet_amount}
-                onChange={this.onChangeState}
-                InputProps={{
-                  endAdornment: 'BUSD'
-                }}
-              />
-
-              <div className="max">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handlehalfxButtonClick()}
-                >
-                  0.5x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handle2xButtonClick()}
-                >
-                  2x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handleMaxButtonClick()}
-                >
-                  Max
-                </Button>
-              </div>
-            </div>
+            <BetAmountInput
+          betAmount={this.state.bet_amount}
+          handle2xButtonClick={this.handle2xButtonClick}
+          handleHalfXButtonClick={this.handleHalfXButtonClick}
+          handleMaxButtonClick={this.handleMaxButtonClick}
+          onChange={this.handleChange}
+          isDarkMode={this.props.isDarkMode}
+        />
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>

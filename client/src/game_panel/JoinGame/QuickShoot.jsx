@@ -6,7 +6,7 @@ import Share from '../../components/Share';
 import { IconButton, Button, TextField } from '@material-ui/core';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-
+import BetAmountInput from '../../components/BetAmountInput';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -19,7 +19,6 @@ import Lottie from 'react-lottie';
 import goalBg from '../LottieAnimations/goal-bg.json';
 
 import animationData from '../LottieAnimations/spinningIcon';
-import grid from '../LottieAnimations/grid';
 import {
   alertModal,
   confirmModalCreate,
@@ -51,7 +50,7 @@ class QuickShoot extends Component {
       selected_qs_position: 0,
       advanced_status: '',
       is_anonymous: false,
-      bet_amount: 1,
+      bet_amount: 1.00,
       bgColorChanged: false,
       potential_return: 1.25,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
@@ -244,9 +243,9 @@ class QuickShoot extends Component {
     this.setState({ bgColorChanged: false });
   };
 
-  handlehalfxButtonClick() {
+  handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
+    const roundedBetAmount = (Math.floor(multipliedBetAmount * 100) / 100).toFixed(2);
     this.setState(
       {
         bet_amount: roundedBetAmount
@@ -261,12 +260,7 @@ class QuickShoot extends Component {
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, this.state.balance);
     const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
-    if (roundedBetAmount < -2330223) {
-      alertModal(
-        this.props.isDarkMode,
-        "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?"
-      );
-    } else if (
+   if (
       (this.state.bet_amount * 2) / (this.props.qs_game_type - 1) >
       this.state.bankroll
     ) {
@@ -282,6 +276,23 @@ class QuickShoot extends Component {
       );
     }
   };
+
+   handleMaxButtonClick = () => {
+    const maxBetAmount = Math.floor(this.state.balance * 100) / 100;
+
+    this.setState(
+      {
+        bet_amount: Math.min(
+          maxBetAmount,
+          this.state.bankroll * (this.props.qs_game_type - 1)
+        )
+      },
+      () => {
+        document.getElementById('betamount').focus();
+      }
+    );
+  }
+
 
   calcWinChance = (gametype, rounds) => {
     let positionCounts = new Array(gametype + 1).fill(0);
@@ -306,22 +317,7 @@ class QuickShoot extends Component {
     return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
   };
 
-  handleMaxButtonClick() {
-    const maxBetAmount = Math.floor(this.state.balance * 100) / 100;
-
-    this.setState(
-      {
-        bet_amount: Math.min(
-          maxBetAmount,
-          this.state.bankroll * (this.props.qs_game_type - 1)
-        )
-      },
-      () => {
-        document.getElementById('betamount').focus();
-      }
-    );
-  }
-
+ 
   updatePotentialReturn = () => {
     this.setState({
       potential_return:
@@ -853,69 +849,15 @@ class QuickShoot extends Component {
               />
               {this.renderButtons()}
             </div>
-            <div
-              id="grid"
-              style={{
-                zIndex: '0'
-              }}
-            >
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: grid
-                }}
-                style={{
-                  width: '320px',
-                  margin: '3px auto -320px'
-                }}
-              />
-            </div>
-            <div className="your-bet-amount">
-              <TextField
-                type="text"
-                name="betamount"
-                variant="outlined"
-                id="betamount"
-                label="BET AMOUNT"
-                value={this.state.bet_amount}
-                onChange={this.onChangeState}
-                placeholder="BET AMOUNT"
-                inputProps={{
-                  pattern: '[0-9]*',
-                  maxLength: 9
-                }}
-                InputLabelProps={{
-                  shrink: true
-                }}
-                InputProps={{
-                  endAdornment: 'BUSD'
-                }}
-              />
-              <div className="max">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handlehalfxButtonClick()}
-                >
-                  0.5x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handle2xButtonClick()}
-                >
-                  2x
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.handleMaxButtonClick()}
-                >
-                  Max
-                </Button>
-              </div>
-            </div>
+           
+            <BetAmountInput
+          betAmount={this.state.bet_amount}
+          handle2xButtonClick={this.handle2xButtonClick}
+          handleHalfXButtonClick={this.handleHalfXButtonClick}
+          handleMaxButtonClick={this.handleMaxButtonClick}
+          onChange={this.handleChange}
+          isDarkMode={this.props.isDarkMode}
+        />
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>

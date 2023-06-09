@@ -146,9 +146,7 @@ input,textarea { border-radius: 0 !important; }
   height: 100px;
 }
 
-fieldset {
-  border: none !important;
-}
+
 button {
   height: 45px !important;
   margin: 5px;
@@ -170,6 +168,8 @@ button {
     border: 3px solid #ddd !important;
 }
 #footer-container {
+  border-top: 1px solid rgba(235, 235, 235, 0.48);
+
  background: #e5e5e5;
 }
 
@@ -428,6 +428,9 @@ div.table.my-chat-table .table-row > div.message-panel ,
   margin: 15px auto !important;
   height: 64px !important;
   min-width: 230px;
+  color: #3d3d3d;
+  background: linear-gradient(165deg, #6c757d, #b9bbbe);
+  box-shadow:  rgba(0, 0, 0, 0.56) 0px -3px 0px inset, rgb(255 255 255 / 21%) 0px 3px 0px inset !important;
 }
 h3.game-sub-title {
   text-align: center !important;
@@ -656,36 +659,17 @@ border-radius: 0.25em !important;
 }
 
 
-.MuiPaper-root {
-    color: white;
-    background-color: #5653df;
-}
 .game-type-panel .btn-game-type.active,
 .game-type-panel .btn-game-type:hover {
   transition: filter 0.2s;
   filter: brightness(1.3);
 }
 .game-type-panel .btn-game-type:hover {
-border-radius: 6px;
+border-radius: 7px;
 transform: scale(1.02);
 transition: transform 0.1s ease;
 }
 
-.modal-body.alert-body {
-	border-radius: 20px !important;
-}
-
-.modal-body {
-  border-top-right-radius: 0;
-  border-top-left-radius: 0;
-  border-bottom-right-radius: 20px;
-  border-bottom-left-radius: 20px;
-}
-
-.modal-body button,
-.modal-body button.btn-back {
-	border-radius: 6px;
-}
 
 .login_form #btn_signup,
 .login_form #btn_goback {
@@ -712,8 +696,8 @@ div[aria-label="How To Play Modal"] th {
   border-bottom: 5px solid #fff !important;
   padding: 4px 18px;
   margin: 20px 0;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
   text-align: center;
 }
 
@@ -819,7 +803,7 @@ div[aria-label="How To Play Modal"] ul {
 
 .profile_info_panel span:nth-child(even),.profile_info_panel input {
   text-align: center;
-    background: #C83228;
+    /* background: #C83228; */
     box-shadow: -5px 0px 8px 0px #aaa;
     padding: 10px 15px;
     color: #fff;
@@ -865,30 +849,6 @@ div.table .table-row .table-cell img.game-type-icon {
   display: flex;
   align-items: center;
   
-}
-
-/*** GLOBAL CHAT ***/
-
-.chat-wrapper .chat-panel .chat-line .chat-content {
-  overflow-wrap: anywhere;
-     
-}
-
-.chat-time .chat-text {
-  background: #e8e8e8;
-  padding: 0.75rem;
-  border-radius: 6px;
-  border-bottom-left-radius: 0;
-  margin-bottom: 20px;
-  border-top: 2px solid #c5c5c54f;
-    border-bottom: 2px solid #e1e1e1;
-}
-.chat {
-  height: 100%;
-  overflow-y: scroll;
-position: relative;
-top: 1vh;
-bottom: 2vh;
 }
 
 
@@ -1030,9 +990,11 @@ a.player:hover {
   border-width: 10px;
 }
 
-.game-page .game-contents .game-info-panel .max  button {
+.game-contents .game-info-panel .bet-amount button {
+  border: 1px solid;
   box-shadow: unset !important;
-  background: #a9a9a9  !important;
+  background: #d8171954 !important;
+  color: red;
 }
 .game-page .game-contents .game-info-panel button.add-new-game-type {
   background: linear-gradient(to bottom, #d81719, #ffb000) !important;
@@ -1083,10 +1045,10 @@ circle {
 .add-new-game-type:hover {
   background-position: right center;
 }
-.join-game-panel {
+/* .join-game-panel {
   height: 86vh;
   overflow-y: scroll;
-}
+} */
 .create-game-panel {
   height: 80vh;
   overflow-y: scroll;
@@ -1252,20 +1214,15 @@ circle {
 #rain {
   margin-top: -260px;
 }
-  .contents_wrapper .main-game {
-    grid-template-columns: unset !important;
-    display: block !important;
-    margin-bottom: unset !important;
-  }
   .game-type-panel {
-    margin-top: 36px !important;
+    margin-top: 60px !important;
   }
   #footer-container {
     padding-bottom: 90px;
   }
 
   .chat-wrapper .chat-panel {
-    padding: 0px 6px 0px 16px !important;
+    padding: 70px 6px 0px 16px !important;
 }
 
 
@@ -1277,7 +1234,7 @@ circle {
 }
 
   .mat-chat .chat-wrapper {
-    width: unset !important;
+    width: 100vw !important;
     overflow: auto;
     overscroll-behavior-y: none;
     flex: 1;

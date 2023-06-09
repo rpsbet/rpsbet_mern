@@ -136,38 +136,55 @@ class MainPage extends Component {
           (this.state.selectedMobileTab === 'live_games' ||
             this.state.selectedMobileTab === 'my_games') && (
               <Tabs
-  value={this.state.show_open_game}
-  onChange={this.showOpenGameOrHistory}
-  TabIndicatorProps={{ style: { background: '#ff0000' } }}
-  className="main-game-page-tabs"
->
-  <Tab
-    icon={
-      (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'live_games') ? (
-        <BattleHover />
-      ) : (
-        (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'my_games') ? (
-          <ManageHover />
-        ) : (
-          this.state.selectedMobileTab === 'live_games' ? <Battle /> : <Manage />
-        )
-      )
-    }
-    style={customStyles.tabRoot}
-  />
-  <Tab
-    icon={
-      this.state.show_open_game === 1 ? (
-        <ShowHistoryHover />
-      ) : (
-        <ShowHistory />
-      )
-    }
-    style={customStyles.tabRoot}
-  />
-</Tabs>
-
-
+              value={this.state.show_open_game}
+              onChange={this.showOpenGameOrHistory}
+              TabIndicatorProps={{ style: { background: '#ff0000' } }}
+              className="main-game-page-tabs"
+            >
+              <Tab
+                label={
+                  (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'live_games') ? (
+                    "PVP"
+                  ) : (
+                    (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'my_games') ? (
+                      "MANAGE"
+                    ) : (
+                      this.state.selectedMobileTab === 'live_games' ? "PVP" : "MANAGE"
+                    )
+                  )
+                }
+                icon={
+                  (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'live_games') ? (
+                    <BattleHover />
+                  ) : (
+                    (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'my_games') ? (
+                      <ManageHover />
+                    ) : (
+                      this.state.selectedMobileTab === 'live_games' ? <Battle /> : <Manage />
+                    )
+                  )
+                }
+                style={customStyles.tabRoot}
+              />
+              <Tab
+                label={
+                  this.state.show_open_game === 1 ? (
+                    this.state.selectedMobileTab === 'live_games' ? "History" : "My History"
+                  ) : (
+                    "History"
+                  )
+                }
+                icon={
+                  this.state.show_open_game === 1 ? (
+                    <ShowHistoryHover />
+                  ) : (
+                    <ShowHistory />
+                  )
+                }
+                style={customStyles.tabRoot}
+              />
+            </Tabs>
+            
 
           )}
         <div className="main-panel">

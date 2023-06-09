@@ -31,7 +31,6 @@ router.get('/', auth, async (req, res) => {
     const count = await User.countDocuments({ is_deleted: is_banned });
 
     let result = [];
-
     users.forEach((user, index) => {
       let temp = {
         _id: user['_id'],
@@ -42,7 +41,6 @@ router.get('/', auth, async (req, res) => {
       };
       result.push(temp);
     });
-
     res.json({
       success: true,
       query: req.query,
@@ -71,7 +69,7 @@ router.get('/activity', auth, async (req, res) => {
     const count = await Transaction.countDocuments({});
 
     let result = [];
-
+    
     transactions.forEach((transaction, index) => {
       let temp = {
         _id: transaction['_id'],
@@ -122,7 +120,7 @@ router.post('/', async (req, res) => {
     });
 
   user = await User.findOne({ username });
-
+  
   if (user)
     return res.json({
       success: false,
@@ -209,7 +207,7 @@ newUser.avatar = generateAvatar(newUser.username);
 router.post('/get-info', async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.body._id });
-
+    
     res.json({
       success: true,
       query: req.query,
@@ -223,6 +221,33 @@ router.post('/get-info', async (req, res) => {
     });
   }
 });
+router.post('/getId', async (req, res) => {
+  try {
+    const userId = await User.findOne({ username: req.body.username }, { _id: 1 });
+
+    if (!userId) {
+      return res.json({
+        success: true,
+        query: req.query,
+        user: null,
+      });
+    }
+
+    res.json({
+      success: true,
+      query: req.query,
+      user: userId._id, // Return the _id value directly
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+
 
 router.post('/updateCustomer', auth, async (req, res) => {
   try {
@@ -234,7 +259,6 @@ router.post('/updateCustomer', auth, async (req, res) => {
     if (req.body.is_deleted === true || req.body.is_deleted === false) {
       user.is_deleted = req.body.is_deleted;
     }
-
     await user.save();
 
     res.json({
