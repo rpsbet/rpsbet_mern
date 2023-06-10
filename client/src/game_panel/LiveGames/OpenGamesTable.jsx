@@ -43,7 +43,7 @@ class OpenGamesTable extends Component {
       showPlayerModal: false,
       selectedCreator: '',
       mouseDown: false,
-      roomList: [],
+      roomList: []
     };
   }
   handleOpenPlayerModal = creator_id => {
@@ -55,11 +55,11 @@ class OpenGamesTable extends Component {
   };
 
   handleLike = ({ _id }) => {
-    const updatedRoomList = this.state.roomList.map((room) => {
+    const updatedRoomList = this.state.roomList.map(room => {
       if (room._id === _id) {
         const likesIndex = room.likes.indexOf(this.props.user._id);
         const dislikesIndex = room.dislikes.indexOf(this.props.user._id);
-  
+
         if (likesIndex > -1) {
           room.likes.splice(likesIndex, 1);
         } else if (dislikesIndex > -1) {
@@ -69,10 +69,10 @@ class OpenGamesTable extends Component {
         } else {
           room.likes.push(this.props.user._id);
         }
-  
+
         // Set a flag to indicate the animation should be shown
         room.likeAnimation = true;
-  
+
         // Set a timeout to remove the animation after 1.5 seconds
         setTimeout(() => {
           room.likeAnimation = false;
@@ -81,13 +81,13 @@ class OpenGamesTable extends Component {
       }
       return room;
     });
-  
+
     this.setState({ roomList: updatedRoomList });
     this.handleAction({ roomId: _id, type: 'like' });
   };
-  
+
   handleDislike = ({ _id }) => {
-    const updatedRoomList = this.state.roomList.map((room) => {
+    const updatedRoomList = this.state.roomList.map(room => {
       if (room._id === _id) {
         const likesIndex = room.likes.indexOf(this.props.user._id);
         const dislikesIndex = room.dislikes.indexOf(this.props.user._id);
@@ -108,7 +108,6 @@ class OpenGamesTable extends Component {
     this.setState({ roomList: updatedRoomList });
     this.handleAction({ roomId: _id, type: 'dislike' });
   };
-  
 
   handleAction = ({ roomId, type }) => {
     const { user, pageNumber } = this.props;
@@ -118,8 +117,8 @@ class OpenGamesTable extends Component {
         type,
         conditions: {
           page: pageNumber !== undefined ? pageNumber : 0,
-          game_type: this.state.selectedGameType,
-        },
+          game_type: this.state.selectedGameType
+        }
       });
     }
   };
@@ -272,6 +271,26 @@ class OpenGamesTable extends Component {
                 alt={gameType.game_type_name}
               />
               <span>{gameType.game_type_name}</span>
+              {((gameType.short_name === 'S!' ||
+  gameType.short_name === 'BG' ||
+  gameType.short_name === 'RPS' ||
+  gameType.short_name === 'MB') && (
+    <span className="tag ex">Exclusive</span>
+  ))}
+{gameType.short_name === 'QS' && (
+  <span className="tag hot">Hot!</span>
+)}
+{gameType.short_name === 'DG' && (
+  <span className="tag risky">Risky</span>
+)}
+{((gameType.short_name === 'B!' ||
+  gameType.short_name === 'R') && (
+    <span className="tag new">New</span>
+  ))}
+{gameType.short_name === 'BJ' && (
+  <span className="tag coming-soon">Coming Soon</span>
+)}
+
             </div>
           </Button>
         ))}
@@ -287,7 +306,7 @@ class OpenGamesTable extends Component {
 
     return gameTypePanel;
   };
-  
+
   componentDidMount() {
     const { roomList } = this.props;
     this.setState({ roomList });
@@ -295,7 +314,7 @@ class OpenGamesTable extends Component {
       this.setState({ loaded: true, selectedGameType: 'All' });
     });
   }
-  
+
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.roomList !== this.props.roomList) {
       const { roomList } = this.props;
@@ -369,10 +388,10 @@ class OpenGamesTable extends Component {
             {this.state.roomList.map(
               (row, key) => (
                 <div
-                className={`table-row ${key < 10 ? 'slide-in' : ''}`}
-                style={{ animationDelay: `${key * 0.1}s` }}
-                key={row._id}
-              >
+                  className={`table-row ${key < 10 ? 'slide-in' : ''}`}
+                  style={{ animationDelay: `${key * 0.1}s` }}
+                  key={row._id}
+                >
                   {' '}
                   <div>
                     <div className="table-cell cell-room-info">
@@ -427,27 +446,28 @@ class OpenGamesTable extends Component {
                         }`}
                       ></i>
                       {row.joiners && row.joiners.length > 0 ? (
-  <div className="table-cell desktop-only cell-joiners">
-    <Battle />
-    {row.joiner_avatars
-      .slice(0, 2)
-      .map((avatar, index) => (
-        <Avatar
-          className="avatar"
-          key={index}
-          src={avatar}
-          alt=""
-          darkMode={this.props.isDarkMode}
-        />
-      ))}
-    {row.joiner_avatars.length > 2 && (
-      <div className="avatar-square">
-        <div className="avatar-count">+{row.joiner_avatars.length - 2}</div>
-      </div>
-    )}
-  </div>
-) : null}
-
+                        <div className="table-cell desktop-only cell-joiners">
+                          <Battle />
+                          {row.joiner_avatars
+                            .slice(0, 2)
+                            .map((avatar, index) => (
+                              <Avatar
+                                className="avatar"
+                                key={index}
+                                src={avatar}
+                                alt=""
+                                darkMode={this.props.isDarkMode}
+                              />
+                            ))}
+                          {row.joiner_avatars.length > 2 && (
+                            <div className="avatar-square">
+                              <div className="avatar-count">
+                                +{row.joiner_avatars.length - 2}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="table-cell desktop-only cell-amount">
                       {row.game_type.game_type_name === 'Mystery Box' ? (
@@ -522,57 +542,62 @@ class OpenGamesTable extends Component {
                       )}
                     </div>
                     <div className="table-cell cell-likes">
-                      
-              <div id="view">
-                <VisibilityIcon style={{ fontSize: '1rem' }} />
-                <Typography variant="body1">
-                  {row.views?.length || 0}
-                </Typography>
-              </div>
-             
-              <div>
-              <IconButton onClick={() => this.handleLike(row)}>
-    {row.likes?.includes(this.props.user._id) ? (
-      <>
-        {!row.likeAnimation && (
-          <ThumbUpIcon style={{ fontSize: '1rem', color: 'red' }} />
-        )}
-        {row.likeAnimation && (
-          <Lottie
-            options={{
-              loop: false,
-              autoplay: true,
-              animationData: like
-            }}
-            style={{
-              width: '32px',
-              height: '38px',
-              margin: '-26px -8px -20px -8px'
-            }}
-          />
-        )}
-      </>
-    ) : (
-      <ThumbUpOutlinedIcon style={{ fontSize: '1rem' }} />
-    )}
-  </IconButton>
-                <Typography variant="body1">
-                  {row.likes?.length || 0}
-                </Typography>
-              </div>
-              <div>
-                <IconButton onClick={() => this.handleDislike(row)}>
-                  {row.dislikes?.includes(this.props.user._id) ? (
-                    <ThumbDownIcon style={{ fontSize: '1rem', color: 'red' }} />
-                  ) : (
-                    <ThumbDownOutlinedIcon style={{ fontSize: '1rem' }} />
-                  )}
-                </IconButton>
-                <Typography variant="body1">
-                  {row.dislikes?.length || 0}
-                </Typography>
-              </div>
-            </div>
+                      <div id="view">
+                        <VisibilityIcon style={{ fontSize: '1rem' }} />
+                        <Typography variant="body1">
+                          {row.views?.length || 0}
+                        </Typography>
+                      </div>
+
+                      <div>
+                        <IconButton onClick={() => this.handleLike(row)}>
+                          {row.likes?.includes(this.props.user._id) ? (
+                            <>
+                              {!row.likeAnimation && (
+                                <ThumbUpIcon
+                                  style={{ fontSize: '1rem', color: 'red' }}
+                                />
+                              )}
+                              {row.likeAnimation && (
+                                <Lottie
+                                  options={{
+                                    loop: false,
+                                    autoplay: true,
+                                    animationData: like
+                                  }}
+                                  style={{
+                                    width: '32px',
+                                    height: '38px',
+                                    margin: '-26px -8px -20px -8px'
+                                  }}
+                                />
+                              )}
+                            </>
+                          ) : (
+                            <ThumbUpOutlinedIcon style={{ fontSize: '1rem' }} />
+                          )}
+                        </IconButton>
+                        <Typography variant="body1">
+                          {row.likes?.length || 0}
+                        </Typography>
+                      </div>
+                      <div>
+                        <IconButton onClick={() => this.handleDislike(row)}>
+                          {row.dislikes?.includes(this.props.user._id) ? (
+                            <ThumbDownIcon
+                              style={{ fontSize: '1rem', color: 'red' }}
+                            />
+                          ) : (
+                            <ThumbDownOutlinedIcon
+                              style={{ fontSize: '1rem' }}
+                            />
+                          )}
+                        </IconButton>
+                        <Typography variant="body1">
+                          {row.dislikes?.length || 0}
+                        </Typography>
+                      </div>
+                    </div>
                     <div
                       className="table-cell cell-action"
                       onClick={() => this.handleView(row)}
@@ -673,27 +698,29 @@ class OpenGamesTable extends Component {
                             : ''
                         }`}
                       ></i>
-                       {row.joiners && row.joiners.length > 0 ? (
-  <div className="table-cell mobile-only cell-joiners">
-    <Battle />
-    {row.joiner_avatars
-      .slice(0, 8)
-      .map((avatar, index) => (
-        <Avatar
-          className="avatar"
-          key={index}
-          src={avatar}
-          alt=""
-          darkMode={this.props.isDarkMode}
-        />
-      ))}
-    {row.joiner_avatars.length > 8 && (
-      <div className="avatar-square">
-        <div className="avatar-count">+{row.joiner_avatars.length - 8}</div>
-      </div>
-    )}
-  </div>
-) : null}
+                      {row.joiners && row.joiners.length > 0 ? (
+                        <div className="table-cell mobile-only cell-joiners">
+                          <Battle />
+                          {row.joiner_avatars
+                            .slice(0, 8)
+                            .map((avatar, index) => (
+                              <Avatar
+                                className="avatar"
+                                key={index}
+                                src={avatar}
+                                alt=""
+                                darkMode={this.props.isDarkMode}
+                              />
+                            ))}
+                          {row.joiner_avatars.length > 8 && (
+                            <div className="avatar-square">
+                              <div className="avatar-count">
+                                +{row.joiner_avatars.length - 8}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="table-cell mobile-only cell-amount">
                       {row.game_type.game_type_name === 'Mystery Box' ? (

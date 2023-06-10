@@ -6,6 +6,54 @@
 
 /*** GLOBAL CHAT ***/
 
+.reply-to {
+    display: flex;
+    align-items: center;
+    margin: -10px 0 5px 0!important;
+}
+
+.reply-border {
+    position: absolute;
+    top: 20px; /* Adjust the distance from the top as needed */
+    left: -5px; /* Adjust the distance from the left as needed */
+    width: 30px;
+    height: 40px;
+    border-radius: 7px;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
+    border-left: 1px solid #444; /* Move the border to the left and center vertically */
+  }
+.reply-to .chat-player .avatar {
+    display: flex;
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0px 5px 5px !important;
+}
+.reply-to .chat-player,
+.reply-sender.sender-name,
+.reply-message.chat-text {
+
+    position: relative !important;
+}
+
+.chat-wrapper .chat-panel .chat-line .reply-sender.sender-name {
+    font-size: 0.70em !important;
+    margin: 0 !important;
+}
+
+.reply-message.chat-text {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 400;
+}
+
+.reply-message.chat-text img{
+    max-width: 40px;
+}
 .chat-wrapper .chat-panel .chat-line .chat-content {
     overflow-wrap: anywhere;  
   }
@@ -93,8 +141,7 @@
 .chat-wrapper .chat-panel .chat-line .sender-name {
     color: #747f8d;
     position: absolute;
-    font-size: 0.85em;
-    opacity: 0.4;
+    font-size: 1em;
     margin-left: 20px !important;
     margin-top: -20px;
     font-weight: 600;
@@ -115,12 +162,16 @@
     margin-left: 20px;
     font-weight: 400;
 }
-
+.chat-text a {
+    color: #ff0000 !important;
+}
+.chat-text a:hover {
+    color: #d81719 !important;
+}
   
 .chat-text img {
     max-width: 100%;
-    display: block;
-    margin: auto;
+    display: inline-block;
 }
 .search-popup {
 display: grid;

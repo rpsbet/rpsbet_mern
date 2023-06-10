@@ -117,6 +117,7 @@ class ChatPanel extends Component {
     };
   }
   onTextAreaKeyDown = e => {
+ 
     if (!this.props.socket) return;
 
     if (e.keyCode === 13) {
@@ -132,7 +133,7 @@ class ChatPanel extends Component {
           avatar: this.props.user.avatar,
           replyTo: selectedMessage // Include the selected message details
         });
-
+        console.log(this.state.selectedMessage);
         this.setState({ text: '', showEmojiPanel: false });
       }
     }
@@ -192,6 +193,7 @@ class ChatPanel extends Component {
   };
 
   setSelectedMessage = message => {
+    console.log("jee", message)
     this.setState({ selectedMessage: message });
   };
 
@@ -327,6 +329,7 @@ class ChatPanel extends Component {
           <MyChat />
         ) : (
           <GlobalChat
+          emojis={emojis}
             setSelectedMessage={this.setSelectedMessage}
             selectedMessage={selectedMessage}
           />
@@ -377,14 +380,14 @@ class ChatPanel extends Component {
                     <Button
                       className="btn-show-emoticon"
                       onClick={this.toggleEmojiPanel}
-                      style={{ minWidth: '32px' }}
+                      style={{ minWidth: '32px', marginTop: '4px' }}
                     >
                       <InsertEmoticon style={{ fontSize: '16px' }} />
                     </Button>
                     <Button
                       className="btn-search-gifs"
                       onClick={this.toggleSearchPopup}
-                      style={{ minWidth: '32px', marginLeft: '2px' }}
+                      style={{ minWidth: '32px', marginLeft: '2px', marginTop: '4px' }}
                     >
                       <Gif style={{ fontSize: '32px' }} />
                     </Button>

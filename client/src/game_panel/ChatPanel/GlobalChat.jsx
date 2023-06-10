@@ -60,8 +60,6 @@ class GlobalChat extends Component {
         ...current_state,
         chat_list: props.globalChatList
       };
-    
-
     }
 
     return null;
@@ -83,18 +81,22 @@ class GlobalChat extends Component {
       // Deselect the message if it was already selected
       setSelectedMessage({
         sender: null,
+        senderId: null,
         avatar: null,
         message: null,
         messageType: null,
+        replyTo: null,
         time: null
       });
     } else {
       // Select the clicked message
       setSelectedMessage({
         sender: message.sender,
+        senderId: message.senderId,
         avatar: message.avatar,
         message: message.message,
         messageType: message.messageType,
+        replyTo: message.replyTo,
         time: message.time
       });
     }
@@ -102,7 +104,7 @@ class GlobalChat extends Component {
 
   render() {
     const { chat_list } = this.state;
-    const { fetchId, messages, selectedMessage } = this.props;
+    const { fetchId, emojis, selectedMessage } = this.props;
 
     return (
       <div className="chat-panel global-chat" ref={this.chatBoxRef}>
@@ -119,109 +121,225 @@ class GlobalChat extends Component {
           />
         )}
         {chat_list.map((chat, key) => {
-  const message = chat.message;
-  const mentions = message.match(/@(\w+)/g);
-  const wrappedMessage = message.split(/(@\w+)/g).map((part, index) => {
-    if (part.startsWith('@')) {
-      const username = part.substring(1);
-      const mentionedUser = this.state.mentionedUsers[username];
+          const message = chat.message;
+          const mentions = message.match(/@(\w+)/g);
+          const wrappedMessage = message
+            .split(/(@\w+|:\w+:)/g)
+            .map((part, index) => {
+              if (part.startsWith('@')) {
+                const username = part.substring(1);
+                const mentionedUser = this.state.mentionedUsers[username];
 
-      if (mentionedUser && mentionedUser._id) {
-        // Render the link with _id if available
-        return (
-          <a
-            key={index}
-            className="player"
-            onClick={() =>
-              this.handleOpenPlayerModal(mentionedUser._id)
-            }
-          >
-            {part}
-          </a>
-        );
-      } else if (mentionedUser && !mentionedUser._id) {
-        // Mentioned user exists but doesn't have an _id
-        return (
-          <span key={index} className="mention-link">
-            {part}
-          </span>
-        );
-      } else {
-        // Fetch the _id for the mentioned user only if it's not already in the state
-        fetchId(username)
-          .then(id => {
-            const updatedMentionedUsers = {
-              ...this.state.mentionedUsers
-            };
-            updatedMentionedUsers[username] = { _id: id };
-            this.setState({ mentionedUsers: updatedMentionedUsers });
-          })
-          .catch(error => {
-            console.error(`Error fetching _id for ${username}:`, error);
-          });
+                if (mentionedUser && mentionedUser._id) {
+                  // Render the link with _id if available
+                  return (
+                    <a
+                      key={index}
+                      className="player"
+                      onClick={event => {
+                        event.stopPropagation();
+                        this.handleOpenPlayerModal(mentionedUser._id);
+                      }}
+                      
+                    >
+                      {part}
+                    </a>
+                  );
+                } else if (mentionedUser && !mentionedUser._id) {
+                  // Mentioned user exists but doesn't have an _id
+                  return (
+                    <span key={index} className="mention-link">
+                      {part}
+                    </span>
+                  );
+                } else {
+                  // Fetch the _id for the mentioned user only if it's not already in the state
+                  fetchId(username)
+                    .then(id => {
+                      const updatedMentionedUsers = {
+                        ...this.state.mentionedUsers
+                      };
+                      updatedMentionedUsers[username] = { _id: id };
+                      this.setState({ mentionedUsers: updatedMentionedUsers });
+                    })
+                    .catch(error => {
+                      console.error(
+                        `Error fetching _id for ${username}:`,
+                        error
+                      );
+                    });
 
-        // Render the mention link without _id for now
-        return (
-          <span key={index} className="mention-link">
-            {part}
-          </span>
-        );
-      }
-    }
+                  // Render the mention link without _id for now
+                  return (
+                    <span key={index} className="mention-link">
+                      {part}
+                    </span>
+                  );
+                }
+              } else if (part.startsWith(':') && part.endsWith(':')) {
+                const emojiCommand = part;
+                const emoji = emojis.find(
+                  emoji => emoji.command === emojiCommand
+                );
 
-    return part;
-  });
+                if (emoji) {
+                  const { url, alt } = emoji;
+                  return (
+                    <img key={index} src={url} alt={alt} className="emoji" />
+                  );
+                }
+              }
+              return part;
+            });
 
-  return (
-    <div
-      key={key}
-      className={`chat-line ${
-        selectedMessage === chat ? 'selected' : ''
-      }`}
-      onClick={() => this.handleMessageClick(chat)}
-    >
-      <div className="chat-content">
-        <a
-          className="chat-player"
-          onClick={() => this.handleOpenPlayerModal(chat.senderId)}
-        >
-          <Avatar
-            className="avatar"
-            src={chat.avatar}
-            alt=""
-            darkMode={this.props.isDarkMode}
-          />
-        </a>
+          // Handle replyTo message
+          let wrappedReplyMessage = null;
+          if (chat.replyTo && chat.replyTo.message) {
+            const replyMessage = chat.replyTo.message;
+            wrappedReplyMessage = replyMessage
+              .split(/(@\w+|:\w+:)/g)
+              .map((part, index) => {
+                if (part.startsWith('@')) {
+                  const username = part.substring(1);
+                  const mentionedUser = this.state.mentionedUsers[username];
 
-        <div className="chat-msg">
-          <span className="sender-name">{chat.sender}</span>
-          <span className="chat-text">
-            {chat.replyTo && (
-              <div className="reply-to">
-                <span className="reply-sender">
-                  {chat.replyTo[0].sender}
-                </span>
-                <span className="reply-message">
-                  {chat.replyTo[0].message}
-                </span>
+                  if (mentionedUser && mentionedUser._id) {
+                    // Render the link with _id if available
+                    return (
+                      <a
+                        key={index}
+                        className="player"
+                        onClick={event => {
+                          event.stopPropagation();
+                          this.handleOpenPlayerModal(mentionedUser._id);
+                        }}
+                        
+                      >
+                        {part}
+                      </a>
+                    );
+                  } else if (mentionedUser && !mentionedUser._id) {
+                    // Mentioned user exists but doesn't have an _id
+                    return (
+                      <span key={index} className="mention-link">
+                        {part}
+                      </span>
+                    );
+                  } else {
+                    // Fetch the _id for the mentioned user only if it's not already in the state
+                    fetchId(username)
+                      .then(id => {
+                        const updatedMentionedUsers = {
+                          ...this.state.mentionedUsers
+                        };
+                        updatedMentionedUsers[username] = { _id: id };
+                        this.setState({
+                          mentionedUsers: updatedMentionedUsers
+                        });
+                      })
+                      .catch(error => {
+                        console.error(
+                          `Error fetching _id for ${username}:`,
+                          error
+                        );
+                      });
+
+                    // Render the mention link without _id for now
+                    return (
+                      <span key={index} className="mention-link">
+                        {part}
+                      </span>
+                    );
+                  }
+                } else if (part.startsWith(':') && part.endsWith(':')) {
+                  const emojiCommand = part;
+                  const emoji = emojis.find(
+                    emoji => emoji.command === emojiCommand
+                  );
+
+                  if (emoji) {
+                    const { url, alt } = emoji;
+                    return (
+                      <img key={index} src={url} alt={alt} className="emoji" />
+                    );
+                  }
+                }
+                return part;
+              });
+          }
+
+          return (
+            <div
+              key={key}
+              className={`chat-line ${
+                selectedMessage === chat ? 'selected' : ''
+              }`}
+              onClick={() => this.handleMessageClick(chat)}
+            >
+              {chat.replyTo && chat.replyTo.sender && (
+                <div className="reply-to">
+                  <a
+                    className="chat-player"
+                    onClick={() =>
+                      this.handleOpenPlayerModal(chat.replyTo.sender)
+                    }
+                  >
+                    <div className="reply-border"></div>
+                    <Avatar
+                      className="avatar"
+                      src={chat.replyTo.avatar}
+                      alt=""
+                      darkMode={this.props.isDarkMode}
+                    />
+                  </a>
+                  <span className="reply-sender sender-name">
+                    {chat.replyTo.sender}
+                  </span>
+                  <span className="reply-message chat-text">
+                    {chat.replyTo.messageType === 'gif' ? (
+                      <img
+                        src={JSON.parse(chat.replyTo.message).content}
+                        alt="gif"
+                      />
+                    ) : (
+                      wrappedReplyMessage
+                    )}
+                  </span>
+                  {/* <span className="reply-time chat-time">{chat.replyTo.time}</span> */}
+                </div>
+              )}
+              <div className="chat-content">
+                <a
+                  className="chat-player"
+                  onClick={() => this.handleOpenPlayerModal(chat.senderId)}
+                >
+                  <Avatar
+                    className="avatar"
+                    src={chat.avatar}
+                    alt=""
+                    darkMode={this.props.isDarkMode}
+                  />
+                </a>
+
+                <div className="chat-msg">
+                  <span className="sender-name">{chat.sender}</span>
+
+                  <span className="chat-text">
+                    {chat.messageType === 'gif' ? (
+                      <img src={JSON.parse(chat.message).content} alt="gif" />
+                    ) : (
+                      wrappedMessage
+                    )}
+                  </span>
+                </div>
+
+                <div className="chat-time">
+                  <div>{chat.time}</div>
+                </div>
               </div>
-            )}
-            {chat.messageType === 'gif' ? (
-              <img src={JSON.parse(chat.message).content} alt="gif" />
-            ) : (
-              wrappedMessage
-            )}
-          </span>
-        </div>
-
-        <div className="chat-time">
-          <div>{chat.time}</div>
-        </div>
-      </div>
-    </div>
-  );
-})}
-
+            </div>
+          );
+        })}
       </div>
     );
   }

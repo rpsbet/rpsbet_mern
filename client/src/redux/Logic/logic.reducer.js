@@ -32,7 +32,7 @@ import {
 const initialState = {
   isActiveLoadingOverlay: false,
   socket: null,
-  game_mode: 'RPS',
+  game_mode: 'All',
   // game_mode: 'Spleesh!',
   roomList: [],
   history: [],

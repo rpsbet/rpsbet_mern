@@ -28,7 +28,8 @@ const ChatSchema = new Schema({
   replyTo: [
     {
       sender: {
-        type: String
+        type: Schema.Types.ObjectId,
+    ref: 'User'
       },
       avatar: {
         type: String

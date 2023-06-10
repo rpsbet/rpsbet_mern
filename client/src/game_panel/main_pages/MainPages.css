@@ -276,7 +276,40 @@ div.table .table-header {
 .modal-body.alert-body button.btn-close:hover {
   background-color: unset !important;
 }
-
+.tag {
+    position: absolute;
+    font-size: 0.7em;
+    padding: 0px 7.5px;
+    z-index: 9;
+    left: 6px;
+    top: 5px;
+    border-radius: 0.3em !important;
+}
+.tag.risky {
+    color: #ffb000;
+    background-color: #ffb00044;
+    border: 1px solid;
+}
+.tag.ex {
+    color: #59c2ff;
+    background-color: #59c2ff44;
+    border: 1px solid;
+}
+.tag.new {
+    color: #00ff00;
+    background-color: #00ff0044;
+    border: 1px solid;
+}
+.tag.hot {
+    color: #4d00c9;
+    background-color: #4d00c944;
+    border: 1px solid;
+}
+.tag.coming-soon {
+    color: #ec00ec;
+    background-color: #ec00ec44;
+    border: 1px solid;
+}
 div.table .table-row .table-cell img.game-type-icon[src='/img/gametype/icons/DG.svg'] {
     width: 34px !important;
     height: 34px !important;

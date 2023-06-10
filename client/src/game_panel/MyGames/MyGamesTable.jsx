@@ -209,6 +209,25 @@ class MyGamesTable extends Component {
               alt={gameType.game_type_name}
               />
             <span>{gameType.game_type_name}</span>
+            {((gameType.short_name === 'S!' ||
+  gameType.short_name === 'BG' ||
+  gameType.short_name === 'RPS' ||
+  gameType.short_name === 'MB') && (
+    <span className="tag ex">Exclusive</span>
+  ))}
+{gameType.short_name === 'QS' && (
+  <span className="tag hot">Hot!</span>
+)}
+{gameType.short_name === 'DG' && (
+  <span className="tag risky">Risky</span>
+)}
+{((gameType.short_name === 'B!' ||
+  gameType.short_name === 'R') && (
+    <span className="tag new">New</span>
+  ))}
+{gameType.short_name === 'BJ' && (
+  <span className="tag coming-soon">Coming Soon</span>
+)}
               </div>
           </Button>
         ))}
@@ -282,7 +301,7 @@ class MyGamesTable extends Component {
           </div>
         </div>
         <div className="create-room-btn-panel">
-          <label>FULLY AUTONOMOUS ➜</label>
+          <label>BE THE HOUSE ➜</label>
           <Button
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}

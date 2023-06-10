@@ -39,7 +39,6 @@ module.exports.socketio = server => {
 
     socket.on('GLOBAL_CHAT_SEND', data => {
       const {
-        sender,
         senderId,
         message,
         messageType,
@@ -48,30 +47,29 @@ module.exports.socketio = server => {
         replyTo
       } = data;
     
-      console.log('replyTo:', replyTo); // Log the replyTo field
-    
+      
       const replyToMessage = replyTo ? [{
-        sender: replyTo.sender,
+        sender: replyTo.senderId,
         avatar: replyTo.avatar,
         message: replyTo.message,
         messageType: replyTo.messageType,
-        time: Moment(replyTo.created_at).format('hh:mm')
+        time: replyTo.time,
       }] : null; // Include the replyTo message details if it exists
-    
+      
+      // console.log('replyToMessage:', replyToMessage); // Log the replyTo field
       const chat = new Chat({
         sender: senderId,
         message: message,
         messageType: messageType,
         messageContent: messageContent,
         avatar: avatar,
-        replyTo: replyToMessage
+        replyTo: replyToMessage,
       });
-    
+      
       chat.save()
         .then(savedChat => {
           const chatData = {
-            sender: sender,
-            senderId: senderId,
+            sender: senderId,
             message: message,
             messageType: messageType,
             messageContent: messageContent,
@@ -90,53 +88,58 @@ module.exports.socketio = server => {
     
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
-        .sort({ created_at: 1 }) // Sort in ascending order of created_at
+        .sort({ created_at: -1 }) // Sort in descending order of created_at
         .limit(100)
         .populate({ path: 'sender', model: User, select: 'username avatar' })
         .populate({
           path: 'replyTo',
-          model: 'rps_chat', // Use the model name 'rps_chat' instead of Chat
+          model: 'Chat',
           populate: { path: 'sender', model: User, select: 'username avatar' }
         })
-        .then(
-          results =>
-            results.map(
-              ({
-                created_at,
-                message,
-                messageType,
-                messageContent,
-                sender,
-                replyTo
-              }) => {
-                // console.log('replyTo:', replyTo); // Log the replyTo field
-                return {
-                  sender: sender?.username ?? '',
-                  senderId: sender?._id ?? '',
-                  message: message,
-                  messageType: messageType,
-                  messageContent: messageContent,
-                  avatar: sender?.avatar ?? '',
-                  replyTo: replyTo
-                    ? {
-                        sender: replyTo.sender?.username ?? '',
-                        avatar: replyTo.sender?.avatar ?? '',
-                        message: replyTo.message,
-                        messageType: replyTo.messageType,
-                        time: Moment(replyTo.created_at).format('hh:mm')
-                      }
-                    : null,
-                  time: Moment(created_at).format('hh:mm')
-                };
-              }
-            )
-          // .sort((a, b) => (a.created_at > b.created_at ? -1 : 1)) // Sort in descending order of created_at
-        )
-        .then(results => io.sockets.emit('SET_GLOBAL_CHAT', results))
+        .then(results => {
+          const transformedResults = results.map(
+            ({
+              created_at,
+              message,
+              messageType,
+              messageContent,
+              sender,
+              replyTo
+            }) => {
+              const extractedReplyTo = replyTo && replyTo.length > 0 ? replyTo[0] : null;
+              const transformedReplyTo = extractedReplyTo
+                ? {
+                    sender: extractedReplyTo.sender?.username ?? '',
+                    avatar: extractedReplyTo.sender?.avatar ?? '',
+                    message: extractedReplyTo.message,
+                    messageType: extractedReplyTo.messageType,
+                    time: Moment(extractedReplyTo.created_at).format('hh:mm')
+                  }
+                : null;
+    
+              return {
+                sender: sender?.username ?? '',
+                senderId: sender?._id ?? '',
+                message: message,
+                messageType: messageType,
+                messageContent: messageContent,
+                avatar: sender?.avatar ?? '',
+                replyTo: transformedReplyTo,
+                time: Moment(created_at).format('hh:mm')
+              };
+            }
+          );
+    
+          const sortedResults = transformedResults.sort((a, b) => (a.created_at > b.created_at ? 1 : -1));
+    
+          io.sockets.emit('SET_GLOBAL_CHAT', sortedResults);
+        })
         .catch(error => {
           console.error('Error fetching GLOBAL_CHAT:', error);
         });
     });
+    
+    
 
     socket.on('disconnect', reason => {
       Object.keys(sockets).forEach((key, index) => {
