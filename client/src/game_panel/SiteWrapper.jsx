@@ -168,7 +168,8 @@ class SiteWrapper extends Component {
       showProfileModal: false,
       showPlayerModal: false,
       showHowToPlayModal: false,
-      // Set initial state of song
+      loadingText: '',
+      counter: 0,
       isPlaying: false,
       showLoginModal: false,
       showSignupModal: false,
@@ -241,6 +242,20 @@ class SiteWrapper extends Component {
 
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
+    }
+  };
+
+
+  
+  updateLoadingText = () => {
+    const texts = ['sounds', 'graphics', 'games', 'trojan horse', 'keystroke logger', 'your mom', 'cute ducks', 'private key injection']; // Add your array of randomly selected texts here
+    const randomIndex = Math.floor(Math.random() * texts.length);
+    this.setState({ loadingText: texts[randomIndex] });
+  };
+
+  updateCounter = () => {
+    if (this.state.counter < 100) {
+      this.setState(prevState => ({ counter: prevState.counter + 1 }));
     }
   };
 
@@ -457,10 +472,11 @@ class SiteWrapper extends Component {
         selectedMainTabIndex: this.props.selectMainTab(1)
       });
     }
-
+    this.timer = setInterval(this.updateLoadingText, 700);
+    this.counter = setInterval(this.updateCounter, 25);
     setTimeout(() => {
       this.setState({ websiteLoading: false });
-    }, 1500);
+    }, 2500);
 
     this.initializeAudio();
 
@@ -574,6 +590,8 @@ class SiteWrapper extends Component {
       socket.disconnect();
     }
     clearInterval(this.interval);
+    clearInterval(this.timer);
+    clearInterval(this.counter);
   }
   handleLogout = clear_token => {
     this.setState({
@@ -665,7 +683,7 @@ class SiteWrapper extends Component {
 
   render() {
     const { isMuted, balance, oldBalance } = this.state;
-    const { websiteLoading } = this.state;
+    const { websiteLoading, loadingText, counter } = this.state;
 
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
@@ -689,7 +707,7 @@ class SiteWrapper extends Component {
                   color: '#fff'
                 }}
               >
-                LOADING...
+          {`Loading ${loadingText} ${counter}%`}
               </span>
               <Lottie
                 options={{

@@ -392,6 +392,56 @@ div.table .table-row .table-cell button span,
     position: inherit;
 }
 
+.your-bet-amount {
+    display: flex;
+    align-items: center;
+  }
+  
+  .bet-amount .MuiOutlinedInput-root {
+    /* animation-name: fade-in; */
+    animation-duration: 0.3s;
+    animation-timing-function: ease-in-out;
+    animation-name: fade-out;
+  }
+  .bet-amount .MuiButtonGroup-root.fade-out {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .bet-amount .MuiOutlinedInput-root:focus-within ~ .MuiButtonGroup-root {
+    opacity: 1; /* Set the opacity to 1 to show the button group when the input is focused */
+    pointer-events: auto; /* Enable pointer events on the button group */
+  }
+  
+  .fade-in {
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .fade-out {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+      
+
 #wallet-btn::before {
     opacity: 0 !important;
 }
@@ -3021,59 +3071,7 @@ transform: translateX(160px) !important;
         }
       } */
       
-      .your-bet-amount {
-        display: flex;
-        align-items: center;
-      }
       
-      .your-bet-amount .MuiOutlinedInput-root {
-        /* animation-name: fade-in; */
-        animation-duration: 0.3s;
-        animation-timing-function: ease-in-out;
-        animation-name: fade-out;
-      }
-      .your-bet-amount .MuiButtonGroup-root.fade-out {
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-      }
-
-      .your-bet-amount .MuiOutlinedInput-root:focus-within ~ .MuiButtonGroup-root {
-        opacity: 1; /* Set the opacity to 1 to show the button group when the input is focused */
-        pointer-events: auto; /* Enable pointer events on the button group */
-      }
-      
-      .your-bet-amount .MuiOutlinedInput-input {
-        width: 150px; /* Set a fixed width for the input */
-        height: 40px; /* Set a fixed height for the input */
-      }
-      .fade-in {
-        opacity: 1;
-        transition: opacity 0.3s ease-in-out;
-      }
-      
-      .fade-out {
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-      }
-      
-      @keyframes fade-in {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-      
-      @keyframes fade-out {
-        from {
-          opacity: 1;
-        }
-        to {
-          opacity: 0;
-        }
-      }
-            
 
    .game-type-panel::-webkit-scrollbar {
         display: none;

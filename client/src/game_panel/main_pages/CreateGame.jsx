@@ -81,7 +81,7 @@ class CreateGame extends Component {
       selected_drop: '',
       selected_bang: '',
       selected_qs_position: 0,
-      bet_amount: 1,
+      bet_amount: 10.00,
       endgame_amount: 0,
       spleesh_bet_unit: 1,
       max_return: 0,
@@ -240,7 +240,7 @@ class CreateGame extends Component {
 
     let newState = {
       child_step: 1,
-      bet_amount: 1,
+      bet_amount: 10.00,
       endgame_amount: 0,
       max_return: 0,
       max_prize: 0,
@@ -261,7 +261,7 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 1,
-        bet_amount: 0,
+        bet_amount: 10.00,
         winChance: 0,
         max_return: 0,
         endgame_amount: 0
@@ -280,6 +280,7 @@ class CreateGame extends Component {
         game_type: 5,
         public_bet_amount: convertToCurrency(1),
         max_return: 2,
+        bet_amount: 0.01,
         winChance: 0,
         qs_nation: Math.floor(Math.random() * 5),
         endgame_amount: 0
@@ -298,7 +299,7 @@ class CreateGame extends Component {
         ...newState,
         game_type: 6,
         winChance: 0,
-        bet_amount: 0,
+        bet_amount: 10.00,
         endgame_amount: 0
       };
     } else if (gameTypeName === 'Bang!') {
@@ -306,7 +307,7 @@ class CreateGame extends Component {
         ...newState,
         game_type: 7,
         winChance: 0,
-        bet_amount: 0,
+        bet_amount: 10.00,
         endgame_amount: 0,
         aveMultiplier: 0,
       };
@@ -315,7 +316,7 @@ class CreateGame extends Component {
         ...newState,
         game_type: 8,
         winChance: 0,
-        bet_amount: 0,
+        bet_amount: 10.00,
         endgame_amount: 0,
         aveMultiplier: 0,
       };
@@ -323,7 +324,7 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 9,
-        bet_amount: 0,
+        bet_amount: 10.00,
         winChance: 0,
         max_return: 0,
         endgame_amount: 0

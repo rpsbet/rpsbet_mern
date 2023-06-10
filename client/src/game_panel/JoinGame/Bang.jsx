@@ -221,7 +221,6 @@ class Bang extends Component {
     this.socket.on(`BANG_GUESSES_${roomId}`, data => {
       if (data && data.bangs && data.bangs.length > 0) {
         const lastBang = data.bangs[data.bangs.length - 1];
-        console.log('div', data.bangs);
         const nextBangInterval = lastBang;
         this.setState({
           bang_guesses: data.bangs,

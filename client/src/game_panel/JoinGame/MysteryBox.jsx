@@ -561,9 +561,9 @@ class MysteryBox extends Component {
     let averagePrice = priceCount > 0 ? priceSum / priceCount : 0;
     let guesses = ((this.props.roomInfo.endgame_amount - prizeSum) - openedBoxes)/ averagePrice;
     let attempts = guesses < 1 ? 1 : guesses;
-    console.log("prizes.length", prizes.length);
-    console.log("guesses", guesses);
-    console.log("numPrizesGreaterThanPrices", numPrizesGreaterThanPrices);
+    // console.log("prizes.length", prizes.length);
+    // console.log("guesses", guesses);
+    // console.log("numPrizesGreaterThanPrices", numPrizesGreaterThanPrices);
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
@@ -946,7 +946,6 @@ const mapStateToProps = state => ({
   roomStatus: state.logic.roomStatus,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
-  balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name
 });
 

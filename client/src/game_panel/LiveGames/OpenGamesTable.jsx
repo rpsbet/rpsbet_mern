@@ -285,7 +285,7 @@ class OpenGamesTable extends Component {
 )}
 {((gameType.short_name === 'B!' ||
   gameType.short_name === 'R') && (
-    <span className="tag new">New</span>
+    <span className="tag new">New / Beta</span>
   ))}
 {gameType.short_name === 'BJ' && (
   <span className="tag coming-soon">Coming Soon</span>

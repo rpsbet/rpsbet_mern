@@ -1015,15 +1015,15 @@ router.post('/rooms', auth, async (req, res) => {
     let user_bet = 0;
     let pr = 0;
 
-    if (game_type === '1') {
+    if (game_type == '1') {
       // RPS
       host_pr = parseFloat(bet_amount);
       user_bet = parseFloat(bet_amount);
       pr = user_bet * 2;
-    } else if (game_type === '2') {
+    } else if (game_type == '2') {
       // Spleesh!
       pr = parseFloat(bet_amount);
-    } else if (game_type === '3') {
+    } else if (game_type == '3') {
       // Brain Game
       pr = parseFloat(bet_amount);
       host_pr = parseFloat(bet_amount);
@@ -1051,7 +1051,7 @@ router.post('/rooms', auth, async (req, res) => {
       pr = parseFloat(req.body.max_return);
       host_pr = parseFloat(bet_amount);
       user_bet = parseFloat(bet_amount);
-    } else if (game_type === '9') {
+    } else if (game_type == '9') {
       // Blackjack
       host_pr = parseFloat(bet_amount);
       user_bet = parseFloat(bet_amount);
@@ -1072,6 +1072,8 @@ router.post('/rooms', auth, async (req, res) => {
       room_number: roomCount + 1,
       status: 'open'
     });
+    
+
     await newRoom.save();
 
     if (gameType.game_type_name === 'Mystery Box') {
@@ -3136,7 +3138,6 @@ router.post('/bet', auth, async (req, res) => {
 
           await bet_item.save();
         }
-        console.log(bet_item);
 
         if (
           (bet_item.bj === 'R' && req.body.selected_bj == 'P') ||

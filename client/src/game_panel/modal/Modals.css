@@ -189,7 +189,7 @@
 }
 .modal-footer button {
     height: 55px;
-    background: transparent;
+    background: linear-gradient(350deg, #fa58ff, #c900d8);
     color: #747f8d;
     padding: 0 20px;
     font-weight: 600;

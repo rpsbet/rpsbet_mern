@@ -109,7 +109,6 @@ class Spleesh extends Component {
   };
   
   componentDidMount() {
-    console.log('endgame_amount:', this.props.gamme);
     this.socket.on('SPLEESH_GUESSES', (data) => {
       this.setState({ spleesh_guesses: data });
     });

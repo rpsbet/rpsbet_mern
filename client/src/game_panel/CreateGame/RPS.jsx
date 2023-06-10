@@ -194,7 +194,7 @@ class RPS extends Component {
     super(props);
     this.state = {
       selected_rps: '',
-      bet_amount: 5.0,
+      bet_amount: 10.00,
       winChance: 33,
       rps_list: [],
       transitionMatrix: {
