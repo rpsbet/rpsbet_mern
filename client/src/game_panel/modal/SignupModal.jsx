@@ -95,7 +95,7 @@ class SignupModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className='modal-header'>
-            <h2>REGISTER</h2>
+            <h2 className='modal-title'>REGISTER</h2>
             <Button className="btn-close" onClick={closeModal}>×</Button>
           </div>
           <div className="modal-body">
@@ -149,11 +149,12 @@ class SignupModal extends Component {
               Register
             </Button>
             <p className="m-0 sm-text-center">
-              ALREADY REGISTERED?{' '}
-              <button onClick={(e) => { closeModal(); openLoginModal(); }}>
+              GOT ACCOUNT?{' '}
+              <Button onClick={(e) => { closeModal(); openLoginModal(); }}>
                 LOGIN HERE →
-              </button>
+              </Button>
             </p>
+            
           </div>
         </div>
       </Modal>

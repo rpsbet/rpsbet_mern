@@ -47,10 +47,10 @@ class Upload extends Component {
         // console.log((event.loaded / event.total) * 100, '%');
       });
 
-      req.upload.addEventListener("load", event => {
-        // console.log('Done. 100%');
-        this.props.setCurrentProductInfo({image: '/img/uploads/' + filename});
-      });
+      // req.upload.addEventListener("load", event => {
+      //   // console.log('Done. 100%');
+      //   this.props.setCurrentProductInfo({image: '/img/uploads/' + filename});
+      // });
 
       req.upload.addEventListener("error", event => {
         // console.log(req.response);
