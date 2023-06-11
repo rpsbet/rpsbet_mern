@@ -241,7 +241,7 @@ class OpenGamesTable extends Component {
             this.handleGameTypeButtonClicked('All');
           }}
         >
-          <img src={`/img/gametype/ALL.png`} alt={`All Games`} />
+          <img src={`/img/gametype/ALL.webp`} alt={`All Games`} />
           <div className="icon">
             <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
             <span>All Games</span>
@@ -262,7 +262,7 @@ class OpenGamesTable extends Component {
             }}
           >
             <img
-              src={`/img/gametype/${gameType.short_name}.png`}
+              src={`/img/gametype/${gameType.short_name}.webp`}
               alt={gameType.game_type_name}
             />
             <div className="icon">
@@ -287,9 +287,13 @@ class OpenGamesTable extends Component {
   gameType.short_name === 'R') && (
     <span className="tag new">New / Beta</span>
   ))}
-{gameType.short_name === 'BJ' && (
+{((gameType.short_name === 'BJ' ||
+  gameType.short_name === 'W' ||
+  gameType.short_name === 'S' ||
+  gameType.short_name === 'P' ||
+  gameType.short_name === 'C') && (
   <span className="tag coming-soon">Coming Soon</span>
-)}
+))}
 
             </div>
           </Button>

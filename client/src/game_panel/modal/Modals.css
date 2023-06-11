@@ -164,7 +164,7 @@
     background-color: #e5e5e5;
     color: #747f8d;
     max-height: 55vh;
-    min-width: 350px;
+    min-width: 300px;
     overflow-y: scroll;
     position: relative;
 }
@@ -421,6 +421,19 @@ div[role="presentation"] li:last-child {
 }
 .modal-body .modal-content-wrapper.spleesh h4 {
     background-image: url("/img/icons/modal-spleesh.svg");
+}
+
+.modal-body .modal-content-wrapper.wheel h4 {
+    background-image: url("/img/icons/modal-wheel.svg");
+}
+.modal-body .modal-content-wrapper.slots h4 {
+    background-image: url("/img/icons/modal-slots.svg");
+}
+.modal-body .modal-content-wrapper.pot h4 {
+    background-image: url("/img/icons/modal-pot.svg");
+}
+.modal-body .modal-content-wrapper.clips h4 {
+    background-image: url("/img/icons/modal-clips-dark.svg");
 }
 .modal-body .modal-content-wrapper.brain-game h4 {
     background-image: url("/img/icons/modal-brain-game.svg");

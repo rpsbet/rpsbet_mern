@@ -1017,12 +1017,12 @@ class SiteWrapper extends Component {
                     <Button id="btn-login" onClick={this.handleOpenLoginModal}>
                       Login
                     </Button>
-                    <Button
+                    {/* <Button
                       id="btn-signup"
                       onClick={this.handleOpenSignupModal}
                     >
                       Register
-                    </Button>
+                    </Button> */}
                   </>
                 )}
               </div>

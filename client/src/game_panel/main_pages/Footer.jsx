@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTwitter, faInstagram, faYoutube, faTelegram, faDiscord, faTwitch } from '@fortawesome/free-brands-svg-icons';
+import { faTwitter, faTelegram, faDiscord } from '@fortawesome/free-brands-svg-icons';
 import bscscan from '../icons/bscscan.png';
 import busd from '../icons/b-usd.png';
 import btc from '../icons/btc.png';
@@ -139,7 +139,7 @@ class Footer extends Component {
                     <a href="https://t.me/rpsfinance">
                         <FontAwesomeIcon icon={faTelegram} />
                     </a>
-                    <a href="https://www.youtube.com/@rps_game/">
+                    {/* <a href="https://www.youtube.com/@rps_game/">
                         <FontAwesomeIcon icon={faYoutube} />
                     </a>
                     <a href="https://www.instagram.com/rps.game/">
@@ -147,7 +147,7 @@ class Footer extends Component {
                     </a>
                     <a href="https://www.twitch.tv/rpsbet">
                         <FontAwesomeIcon icon={faTwitch} />
-                    </a>
+                    </a> */}
                 </div>
                 <div className={classes.currencies}>
     <img className={classes.availableCurrency} src={busd} alt="BUSD" />

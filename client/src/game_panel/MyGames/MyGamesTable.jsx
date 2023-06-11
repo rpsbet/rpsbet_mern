@@ -174,7 +174,7 @@ class MyGamesTable extends Component {
           }}
         >
           <img
-            src={`/img/gametype/ALL.png`}
+            src={`/img/gametype/ALL.webp`}
             alt={`All Games`}
           />
           <div className='icon'>
@@ -200,7 +200,7 @@ class MyGamesTable extends Component {
             }}
           >
             <img
-              src={`/img/gametype/${gameType.short_name}.png`}
+              src={`/img/gametype/${gameType.short_name}.webp`}
               alt={gameType.game_type_name}
             />
             <div className='icon'>
@@ -223,7 +223,7 @@ class MyGamesTable extends Component {
 )}
 {((gameType.short_name === 'B!' ||
   gameType.short_name === 'R') && (
-    <span className="tag new">New</span>
+    <span className="tag new">New / Beta</span>
   ))}
 {gameType.short_name === 'BJ' && (
   <span className="tag coming-soon">Coming Soon</span>

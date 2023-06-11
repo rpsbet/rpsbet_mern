@@ -1077,7 +1077,7 @@ circle {
 
 @media (min-width: 320px) and (max-width: 480px) {
 .outer-div {
-  margin-top: 40px;
+  margin-top: 60px;
 }
 #rain {
   margin-top: -260px;

@@ -93,6 +93,9 @@ a#btn_how_to_play {
     overflow: hidden;
 }
 
+div[role="tablist"] {
+    min-height: unset !important;
+}
 
 
 .countdown-bar {
@@ -265,11 +268,7 @@ cursor: pointer;
     background-size: 2em;
 }
 
-.game_header .main_header .header_action_panel button#btn-login,
-.game_header .main_header .header_action_panel button#btn-signup {
-    height: 32px !important;
-    
-}
+
 .level-number {
     font-size: 24px;
     text-align: center;
@@ -335,7 +334,7 @@ div.table .table-row .table-cell img.avatar,
 }
 .room-history-panel,
 .action-panel {
-    padding: 20px 0;
+    padding: 20px;
 }
 
 .btn-back:hover,
