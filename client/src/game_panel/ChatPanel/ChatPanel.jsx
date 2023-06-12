@@ -133,10 +133,10 @@ class ChatPanel extends Component {
           avatar: this.props.user.avatar,
           replyTo: selectedMessage // Include the selected message details
         });
-        console.log(this.state.selectedMessage);
-        this.setState({ text: '', showEmojiPanel: false });
+        this.handleClearTooltip();
       }
     }
+    
   };
 
   handleClearTooltip = () => {
@@ -146,7 +146,9 @@ class ChatPanel extends Component {
         avatar: null,
         message: null,
         messageType: null,
-        time: null
+        time: null,
+        text: '',
+        showEmojiPanel: false
       }
     });
   };

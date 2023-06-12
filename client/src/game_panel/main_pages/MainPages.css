@@ -2090,7 +2090,6 @@ input {
   background-repeat: no-repeat;
 }
 .join-game-panel .game-page .game-contents p {
-  font-size: 1em;
   font-weight: 600;
   color: #f9f9f9;
 }
@@ -2115,21 +2114,19 @@ input {
   filter: grayscale(1);
 }
 .game-page .game-contents .game-info-panel .box-prizes {
-  font-size: 16px;
-  font-weight: 600;
-  background-color: #f2f3f5;
-  padding: 20px;
-  border-radius: 6px;
-  word-break: break-all;
-  line-height: 24px;
-  display: grid;
-  grid-gap: 0.2rem;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(auto, 10px);
+    flex-direction: column;
+    font-size: 16px;
+    font-weight: 600;
+    background-color: #f2f3f5;
+    padding: 20px;
+    border-radius: 6px;
+    word-break: break-all;
+    line-height: 24px;
+    display: flex;
+    align-items: end;
 }
 
 .game-page .game-contents .game-info-panel .box-prizes span {
-  /* color: rgb(87, 202, 34); */
   color: #6c757d;
   padding: 5px;
   border-radius: 3px;
@@ -2641,12 +2638,7 @@ input {
   }
 }
 @media (max-width: 1023px) {
-  /* .contents_wrapper .main-game .main-panel, .contents_wrapper .main-game .sub-panel {
-		background-size: 200vh;
-	} */
-  /* .game-page .game-contents .game-info-panel .box-prizes span { */
-  /* white-space: unset; */
-  /* } */
+
   .contents_wrapper .main-game {
     grid-template-columns: 100% !important;
     margin-bottom: 60px;
@@ -2995,15 +2987,6 @@ input {
   .qs-add-run-form {
     padding-right: 0 !important;
   }
-  /* .drop-game img {
-        width: 55px !important;
-        height: 55px !important;
-        padding: 12px !important;
-    } */
-  /* .game-page .game-contents .game-info-panel .box-prizes span {
-        white-space: unset;
-        white-space: unset;
-    } */
 
   .game-page .game-contents .game-info-panel .box-prizes span {
     width: 57px;
@@ -3154,9 +3137,7 @@ input {
   .bow {
     margin-top: -40px;
   }
-  .game-page .game-contents .game-info-panel .box-prizes {
-    grid-template-columns: repeat(4, 1fr);
-  }
+
   .create-game-panel .boxes-panel {
     grid-gap: 0.4rem;
     grid-template-columns: repeat(4, 1fr);

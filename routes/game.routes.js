@@ -43,10 +43,9 @@ const convertToCurrency = require('../helper/util/conversion');
 
 let user_access_log = {};
 
-// /api/game_types call
 router.get('/game_types', async (req, res) => {
   try {
-    const gameTypes = await GameType.find({});
+    const gameTypes = await GameType.find({}).sort({ created_at: 1 });
     res.json({
       success: true,
       query: req.query,
@@ -59,6 +58,7 @@ router.get('/game_types', async (req, res) => {
     });
   }
 });
+
 
 router.post('/checkGamePassword', async (req, res) => {
   try {

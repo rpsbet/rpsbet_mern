@@ -666,7 +666,6 @@ border-radius: 0.25em !important;
 }
 .game-type-panel .btn-game-type:hover {
 border-radius: 7px;
-transform: scale(1.02);
 transition: transform 0.1s ease;
 }
 

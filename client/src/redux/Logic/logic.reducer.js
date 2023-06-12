@@ -47,11 +47,11 @@ const initialState = {
   historyPageNumber: 1,
   gameTypeList: [
     { game_type_name: 'RPS' },
+    { game_type_name: 'Drop Game' },
     { game_type_name: 'Spleesh!' },
     { game_type_name: 'Brain Game' },
     { game_type_name: 'Mystery Box' },
     { game_type_name: 'Quick Shoot' },
-    { game_type_name: 'Drop Game' },
     { game_type_name: 'Bang!' },
     { game_type_name: 'Roll' },
   ],

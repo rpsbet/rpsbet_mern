@@ -245,14 +245,6 @@ class SiteWrapper extends Component {
     }
   };
 
-
-  
-  updateLoadingText = () => {
-    const texts = ['sounds', 'graphics', 'games', 'trojan horse', 'keystroke logger', 'your mom', 'cute ducks', 'private key injection']; // Add your array of randomly selected texts here
-    const randomIndex = Math.floor(Math.random() * texts.length);
-    this.setState({ loadingText: texts[randomIndex] });
-  };
-
   updateCounter = () => {
     if (this.state.counter < 100) {
       this.setState(prevState => ({ counter: prevState.counter + 1 }));
@@ -472,7 +464,6 @@ class SiteWrapper extends Component {
         selectedMainTabIndex: this.props.selectMainTab(1)
       });
     }
-    this.timer = setInterval(this.updateLoadingText, 700);
     this.counter = setInterval(this.updateCounter, 25);
     setTimeout(() => {
       this.setState({ websiteLoading: false });
@@ -707,7 +698,7 @@ class SiteWrapper extends Component {
                   color: '#fff'
                 }}
               >
-          {`Loading ${loadingText} ${counter}%`}
+          {`Connecting... ${counter}%`}
               </span>
               <Lottie
                 options={{

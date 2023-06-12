@@ -244,6 +244,7 @@ display: grid;
 .chat-time div {
     font-size: 0.7em;
     opacity: 0.4;
+    color: #fff;
     margin-left: -38px;
     background: #333;
     box-shadow: inset 1px 1px 0px  #686868, inset -6px -3px 0px  #313131;

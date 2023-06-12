@@ -657,12 +657,25 @@ class MysteryBox extends Component {
               </div>
             <h3 className="game-sub-title">Prizes</h3>
             <p className="box-prizes">
-              {prizes.map((item, key) => (
-                <span className={item.status} key={key}>
-                  {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}
-                </span>
-              ))}
-            </p>
+  {prizes.reduce((accumulator, item) => {
+    const existingItem = accumulator.find((element) => element.prize === item.prize);
+    if (existingItem) {
+      existingItem.count += 1;
+    } else {
+      accumulator.push({ prize: item.prize, count: 1 });
+    }
+    return accumulator;
+  }, []).sort((a, b) => {
+    return b.prize - a.prize;
+  }).map((item, key) => (
+    <span className={item.prize === 0 ? 'EMPTY' : ''} key={key}>
+      {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}
+      {' '}
+      ({(item.count / prizes.length * 100).toFixed(2)}%)
+    </span>
+  ))}
+</p>
+
             <h3 className="game-sub-title">{attempts.toFixed(2)} guesses remaining</h3>
             <div className="boxes-panel boxes-join">
               {this.state.box_list.map((row, index) => (
