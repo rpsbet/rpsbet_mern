@@ -163,6 +163,9 @@ module.exports.socketio = server => {
     socket.on('SPLEESH_GUESSES1', data => {
       socket.broadcast.emit('SPLEESH_GUESSES1', data);
     });
+    socket.on('RPS_1', data => {
+      socket.broadcast.emit('RPS_1', data);
+    });
 
     socket.on('DROP_GUESSES', data => {
       socket.broadcast.emit('DROP_GUESSES', data);

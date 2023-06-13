@@ -535,7 +535,7 @@ class BrainGame extends Component {
                   animationData: brainBg
                 }}
                 style={{
-                  filter: 'hue-rotate(221deg)'
+                  opacity: '0.4'
                 }}
               />
             </div>

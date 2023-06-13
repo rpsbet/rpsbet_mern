@@ -232,7 +232,7 @@ class MysteryBox extends Component {
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
+    await new Promise(resolve => setTimeout(resolve, 2500)); // Wait for 1 second
     this.setState({ bgColorChanged: false });
   };
 
@@ -871,15 +871,15 @@ class MysteryBox extends Component {
     };
 
   getBetResultForm = () => {
-    let prizes = [];
-    this.state.box_list.map(row => {
-      prizes.push({
-        prize: row.box_prize,
-        status: row.status
-      });
-      return true;
-    });
-    prizes.sort((a, b) => a.prize - b.prize);
+    // let prizes = [];
+    // this.state.box_list.map(row => {
+    //   prizes.push({
+    //     prize: row.box_prize,
+    //     status: row.status
+    //   });
+    //   return true;
+    // });
+    // prizes.sort((a, b) => a.prize - b.prize);
     let timeLeft = 1500; // duration of modal in milliseconds
     const intervalId = setInterval(() => {
       timeLeft -= 100;
@@ -904,9 +904,9 @@ class MysteryBox extends Component {
                 ? `PAHAH WRONG BOX DICKHEAD!`
                 : `NICE 😎 ISSA MONEY BOX`}
             </h4>
-            <p>
+            {/* <p>
               {this.state.betResult === 0 ? `THIS BOX IS EMPTY` : `YOU WON!`}
-            </p>
+            </p> */}
           </div>
           <div className="countdown-timer">
             <div

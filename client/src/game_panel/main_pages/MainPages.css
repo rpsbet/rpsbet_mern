@@ -154,9 +154,21 @@ div.table .table-row .table-cell button:last-child:before,
   margin: auto !important;
   width: 330px;
 }
-.game-page .game-contents .game-info-panel button {
+.game-page .game-contents .game-info-panel button, #rps-radio div {
     padding: 0 15px;
     margin: 10px 4px 8px;
+  }
+
+  #rps-radio div.active{
+opacity: 0.9;
+border: unset;
+transition: 0.3s;
+    transform: translateY(20px) rotate(180deg) !important;
+  }
+  #rps-radio div{
+    margin-top: -60px;
+    opacity: 0.5;
+    pointer-events: none;
   }
 
 #roll button span span {
@@ -184,8 +196,8 @@ div.table .table-row .table-cell button:last-child,
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
 .game-page .game-contents .game-info-panel button.place-bet,
-.game-contents .game-info-panel button {
-  padding: 0;
+.game-contents .game-info-panel button, #rps-radio div.active {
+  padding: 0;   
   border-radius: 0.25em;
   color: #fff;
   /* line-height: 40px; */
@@ -204,10 +216,9 @@ div.table .table-row .table-cell button.active,
 div.table .table-row .table-cell button:last-child:active,
 .btn-create-room:focus,
 .btn-create-room.active,
-.qs-buttons button.active {
+.qs-buttons button.active, #rps-radio div.active {
   background-color: #d81719;
   box-shadow: none !important;
-  transform: translate(0px, 1px);
 }
 
 div.table .table-row .table-cell button span,
@@ -383,8 +394,8 @@ div.table .table-cell button.btn_end {
   padding: 48px 6px 8px 16px;
   background-color: rgba(235, 237, 239, 0.5);
   position: relative;
-  /* height: calc(100vh - 50px); */
-  /* overflow-y: scroll; */
+  height: calc(100vh - 50px); 
+ overflow-y: scroll;
 }
 .contents_wrapper .main-game .sub-panel {
   padding: 24px 18px 8px;
@@ -1304,11 +1315,11 @@ input {
   padding-top: 30px;
 }
 .game-page .game-contents p {
-  font-size: 14px;
-  line-height: 17px;
-  color: #747f8d;
-  margin-top: 16px;
-}
+    font-size: 13px;
+    line-height: 14px;
+    color: #747f8d;
+    margin-top: 14px;
+  }
 .game-page .game-contents .game-info-panel {
   display: flex;
   flex-direction: column;
@@ -1359,7 +1370,7 @@ input {
     opacity: 1; /* The card is fully visible */
   }
 }
-.card-hidden {
+.card-hidden, #rps-radio div {
   background-color: red;
   border: none;
   border: 3px solid white;
@@ -1586,24 +1597,23 @@ input {
   font-size: 0.5em;
   line-height: 1.4em;
 }
-/* 
-      @keyframes bounce {
-        0% {
-          transform: translateY(-20%);
-        }
-        25% {
-          transform: translateY(-70%);
-        }
-        50% {
-          transform: translateY(-50%);
-        }
-        75% {
-          transform: translateY(-30%);
-        }
-        100% {
-          transform: translateY(-50%);
-        }
-      } */
+.guesses {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+  }
+  .guesses p:first-child {
+    opacity: 1;
+  }
+  .guesses p {
+    background-color: #ff000044;
+    border: solid 2px #ff0000;
+    padding: 2px 10px;
+    border-radius: 0.3em;
+    color: #ff0000 !important;
+    opacity: 0.6;
+  }
+
 
 #no-guesses {
   font-size: 24px;
@@ -1704,6 +1714,8 @@ table#runs td svg {
 }
 #rps-game-type-radio,
 #rps-radio {
+    display: flex;
+    flex-direction: row;
   text-align: center;
 }
 #rps-game-type-radio button {
@@ -1718,19 +1730,17 @@ table#runs td svg {
   animation: pulse 0.2s;
 }
 
-#rps-radio button {
-  background-size: contain;
-  background-repeat: no-repeat;
-  display: inline-block;
-  width: 130px;
-  height: 200px !important;
+#rps-radio button,
+#rps-radio div {
+    background-position: center !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  width: 72px;
+  height: 120px !important;
   cursor: pointer;
-  /* box-shadow: 0 -1px 10px 1px #d81719 !important; */
   background-color: #c20017;
   transition: all 0.1s ease-in-out;
-  position: relative;
   border-radius: 0.25em !important;
-  transform-style: preserve-3d;
 }
 
 #rps-radio button:hover {
@@ -1763,11 +1773,9 @@ table#runs td svg {
   transition: all 0.1s ease-in-out;
 }
 
-#rps-radio button.active,
-#rps-radio button:active {
-  transform: translateY(0);
-  background-color: #ff0606;
-  /* box-shadow: 0 -1px 2px 1px #d81719 !important; */
+#rps-radio button.active{
+    transition: 0.3s;
+  transform: translateY(-20px) !important;
 }
 
 #rps-radio button:hover:before {
@@ -1775,19 +1783,17 @@ table#runs td svg {
   transform: rotateX(0deg) translateZ(25px);
 }
 
-#rps-radio button.rock {
-  background-position: center;
+#rps-radio .rock {
   background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/64294438e727411a8737e55d_rock-bg.gif') !important;
 }
-#rps-radio button.paper {
-  background-position: center;
+#rps-radio .paper {
   background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/642944296b19ef77367075c0_paper-bg.gif') !important;
 }
-#rps-radio button.scissors {
-  background-position: center;
+#rps-radio .scissors {
+
   background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6429443717973b53f71d1981_scissors-bg.gif') !important;
 }
-/* #rps-radio Button.rock {
+/* #rps-radio .rock {
     background-position: center;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='135' height='116' fill='none' viewBox='0 0 135 116'%3E%3Cg clip-path='url(%23clip0)'%3E%3Cpath fill='%235F8182' d='M84 88.271l-20.46 8.656-20.315-25.894 2.996 24.72-25.356-6.822.95-70.344 28.498-.66L72.09 39.125l-16.807 21.42L84 88.27zM39.498 48.734L52.14 40.52l-12.35-8.582-.291 16.797z'/%3E%3Cpath fill='%2383AAAA' d='M36.21 83.87l-10.23.367-.365-4.035 4.75-1.1-8.55-60.442-7.527 5.428 1.096 10.636c.585-.22 1.243-.146 1.608.514.22.366.365.807.511 1.32 0 .147.074.733.147.807.511.367.877 1.173.438 1.76-.511.734-1.096 1.174-1.754 1.76-.073.074-.219.148-.292.22l4.823 47.9 16.076 4.767-.73-9.902zM40.01 32.01l3.361-2.714 12.204 8.729-4.604 3.52L40.01 32.01zM55.21 60.617l-12.423.147.73 4.401 13.52.734 21.19 24.94 3.289-2.201-26.307-28.02z'/%3E%3Cpath fill='%23231F20' d='M43.225 71.033l.292-5.868L51.19 68.1l17.903 26.774L63.466 97l-20.24-25.967zM72.09 39.199l-17.612 15.33-10.23-.733 20.095-15.77-11.326-13.204 3.288-.734 15.784 15.11z' opacity='.5'/%3E%3Cpath fill='%235F8182' d='M12.242 42.793l2.923-2.567 3.288 5.134-5.48 3.668-.73-6.235z'/%3E%3Cpath fill='%23385959' d='M12.242 42.793L11 44.847l.585 4.768 3.069.513.877-1.247 2.63-.22.292-3.3-6.21-2.568zM15.384 34.724l2.339-2.714 2.996 1.32-.439 2.861-1.754-.146.731 3.08-3.215 1.907-.146-2.64 1.461-.294-.365-2.2-1.462.293-.146-1.467zM22.473 21.007l-.22.147-1.973 1.467.804 4.841 1.096-.073 6.358 37.63'/%3E%3C/g%3E%3Cg clip-path='url(%23clip1)'%3E%3Cpath fill='%238CAAAA' d='M72 70.9l10.3-20.2 16.3-.7 5.9 6 10.6 1.2 9.5 17.8L114 95.5l-17.7-.6-14.7-6.2L72 70.9z'/%3E%3Cpath fill='%235F8182' d='M115.1 57.2l-12.6 6.7 8.5 14.8-2.3 1.7-3.9-8.1-3.3 1.2 8.7 15.5 3.8 6.4L124.6 75s-11-18.2-9.5-17.8z'/%3E%3Cpath fill='%23fff' d='M82.3 50.7L72 70.9l17.7 2.7-6.2-6.4 1.2-1.9 5 3.5 5.9-6.2-11.3-10.9-2-1z' opacity='.25'/%3E%3Cpath fill='%235F8182' d='M81.6 88.7l8.1-15.1 9.9 7.6 3.3-1.3 7.3 9.2-2.6 4.1-11.3 1.7-14.7-6.2z'/%3E%3Cpath fill='%23EDEAE3' d='M101.5 62.8l2.4-.5 8.1 14.3-2 1.1-8.5-14.9z'/%3E%3Cpath fill='%23fff' d='M82.3 50.7l7.6 1.2 8.6 9.8-2.9.9-13.3-11.9z' opacity='.25'/%3E%3Cpath fill='%23EDEAE3' d='M89.7 73.6l-3 15.8-5.1-.7 8.1-15.1z'/%3E%3Cpath fill='%23231F20' d='M102.3 63.9l-7.5 3.4.7 2.3-10.2 7.7 3.7 5.3 10.3-4.5 6.6 4.4 9-4.7-11.9-8.4 13.8-7.8-1.7-4.4-9.2 4.8-4.6-4-1.6 1.9 2.6 4z' opacity='.5'/%3E%3Cpath fill='%23231F20' d='M95.7 87l-10.4-9.7-2.1 3.5-5-6.5-3.4.6 6.8 13.8 14.7 6.2 2-1.5-6.1-2.9 3.5-3.5z' opacity='.5'/%3E%3Cpath fill='%23231F20' d='M114 95.5l6.9-13.3-2.4-2.5-7.1 11.5-10.4-4.6-1 1.8 6.8 3.5-1.3 1.3-13.4-5.7-1.8 4.3 7 3.6 16.7.1z'/%3E%3C/g%3E%3Cdefs%3E%3CclipPath id='clip0'%3E%3Cpath fill='%23fff' d='M0 0H73V79H0z' transform='translate(11 18)'/%3E%3C/clipPath%3E%3CclipPath id='clip1'%3E%3Cpath fill='%23fff' d='M0 0H52.6V45.5H0z' transform='translate(72 50)'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E%0A");
 }
@@ -2123,7 +2129,7 @@ input {
     word-break: break-all;
     line-height: 24px;
     display: flex;
-    align-items: end;
+    align-items: center;
 }
 
 .game-page .game-contents .game-info-panel .box-prizes span {
@@ -2179,7 +2185,7 @@ input {
   max-width: 100%;
   margin: 7px auto;
   text-align: center;
-  background-color: #f9f9f9 !important;
+  /* background-color: #f9f9f9 !important; */
 }
 .game-page .game-contents.mystery-box-result-contents .mystery-box-result {
   background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/645615efcb110d2114a867dd_openbox.svg');
@@ -2781,8 +2787,6 @@ input {
     padding-right: 0 !important;
   }
   #rps-radio button {
-    width: 72px;
-    height: 150px !important;
     max-width: 100%;
     margin: 4px !important;
   }
@@ -2954,6 +2958,7 @@ input {
     transform: translate(0%, 10vh);
   }
 
+
   #no-guesses {
     margin: 0px 80px 10px 0px !important;
   }
@@ -2989,10 +2994,7 @@ input {
   }
 
   .game-page .game-contents .game-info-panel .box-prizes span {
-    width: 57px;
     padding: 3px 5px;
-    display: block;
-    float: left;
     margin: 0 3px;
     font-size: small;
   }
@@ -3125,7 +3127,7 @@ input {
   }
 
   .starsBg {
-    bottom: -80px;
+    top: 0px;
     left: -30%;
   }
   .starsBg div {

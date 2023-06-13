@@ -112,7 +112,6 @@ input,textarea { border-radius: 0 !important; }
 .qs-image-panel img {
   position: absolute;
   box-shadow: 0 0 20px #49ff08;
-  filter: hue-rotate(141deg);
 }
 
 .create-game-panel .qs-buttons {

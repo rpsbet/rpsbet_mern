@@ -71,7 +71,10 @@ class GamePasswordModal extends Component {
                     id="game_password"
                     variant="outlined"
                     value={this.state.password}
-                    onChange={(e) => {this.setState({password: e.target.value})}} className="form-control" />
+                    onChange={(e) => {this.setState({password: e.target.value})}}
+                    className="form-control"
+                    style={{marginBottom: '15px'}}
+                    />
                     <Button className="btn-submit" onClick={this.onBtnOkClicked}>Continue Bet</Button>
                     <Button className="btn-back" onClick={this.props.closeGamePasswordModal}>Cancel</Button>
                 </div>

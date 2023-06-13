@@ -133,7 +133,7 @@ class JoinGame extends Component {
 
   setTimeout(() => {
     this.setState({ loading: false });
-  }, 1500);
+  }, 2000);
     window.addEventListener('unload', this.handleUnload);
 
     Object.values(this.state.sounds).forEach(sound => {

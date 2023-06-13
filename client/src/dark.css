@@ -80,11 +80,8 @@
        #212529 
     );
 }
-.qs-image-panel img {
-	filter: hue-rotate(45deg);
-  }
 .dark_mode .qs-image-panel img {
-	box-shadow: 0 0 20px #28a745;
+	box-shadow: 0 0 20px #6100a3;
   }
 
 .dark_mode .contents_wrapper .room-history-panel h2.room-history-title {

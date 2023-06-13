@@ -226,13 +226,15 @@ class RPS extends Component {
       timerValue: 2000,
       intervalId: null,
       items: [],
+      rps1Received: false,
       bgColorChanged: false,
       selected_rps: '',
+      startedPlaying: false,
       advanced_status: '',
       is_anonymous: false,
       bet_amount: 1,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
-      // bankroll: 0,
+      rps: [],
       betResult: null,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
@@ -263,7 +265,7 @@ class RPS extends Component {
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
+    await new Promise(resolve => setTimeout(resolve, 2500)); // Wait for 1 second
     this.setState({ bgColorChanged: false });
   };
 
@@ -274,7 +276,6 @@ class RPS extends Component {
   };
 
   componentDidMount = () => {
-    // Initialize items array
     const items = [
       {
         label: 'Host',
@@ -298,10 +299,24 @@ class RPS extends Component {
     this.setState({ items });
     const { socket } = this.props;
     socket.on('UPDATED_BANKROLL', data => {
-      this.setState({ bankroll: data.bankroll });
+      this.setState({
+        bankroll: data.bankroll,
+        rps: data.rps,
+        startedPlaying: true
+      });
     });
+    socket.on('RPS_1', data => {
+      if (!this.state.rps1Received) {
+        this.setState({
+          rps: data,
+          rps1Received: true
+        });
+      }
+    });
+    socket.emit('emitRps'); // Request RPS data on load
     document.addEventListener('mousedown', this.handleClickOutside);
   };
+  
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
@@ -342,7 +357,6 @@ class RPS extends Component {
     }
   }
 
-
   joinGame = async () => {
     const {
       rps_bet_item_id,
@@ -353,7 +367,7 @@ class RPS extends Component {
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
-// console.log(selected_rps);
+    // console.log(selected_rps);
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
@@ -479,7 +493,7 @@ class RPS extends Component {
         document.getElementById('betamount').focus();
       }
     );
-  }
+  };
 
   handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
@@ -505,9 +519,9 @@ class RPS extends Component {
         }
       );
     }
-  }
+  };
 
-  handleMaxButtonClick = () =>  {
+  handleMaxButtonClick = () => {
     const maxBetAmount = Math.floor(this.state.balance * 100) / 100; // Round down to two decimal places
     this.setState(
       {
@@ -517,7 +531,7 @@ class RPS extends Component {
         document.getElementById('betamount').focus();
       }
     );
-  }
+  };
 
   handleButtonClick = () => {
     const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
@@ -530,7 +544,6 @@ class RPS extends Component {
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-
     if (!betting) {
       this.setState({
         timer: setInterval(() => {
@@ -549,6 +562,7 @@ class RPS extends Component {
       this.stopBetting();
     }
   };
+
 
   handleButtonRelease = () => {
     if (this.state.timer) {
@@ -662,6 +676,8 @@ class RPS extends Component {
   };
 
   render() {
+    const rpsValueAtIndex0 = this.state.rps[0]?.rps; // Ensure rps[0] exists and access its rps property
+
     return (
       <div className="game-page">
         <div className="page-title">
@@ -676,7 +692,7 @@ class RPS extends Component {
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-                   <div className="data-item">
+                  <div className="data-item">
                     <div>
                       <div className="label room-id">STATUS</div>
                     </div>
@@ -715,10 +731,11 @@ class RPS extends Component {
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
-                  {this.props.youtubeUrl && 
-                  <div className="data-item">
-                  <YouTubeVideo url={this.props.youtubeUrl} />
-                  </div>}
+                  {this.props.youtubeUrl && (
+                    <div className="data-item">
+                      <YouTubeVideo url={this.props.youtubeUrl} />
+                    </div>
+                  )}
                 </React.Fragment>
               ))}
             </div>
@@ -727,22 +744,95 @@ class RPS extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            
-          <div className="starsBg" >
+            <div className="starsBg">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: starsBg
+                }}
+                style={{
+                  opacity: '0.2'
+                }}
+              />
+            </div>
+            <div className="guesses">
+              {this.state.rps.map((item, index) => (
+                <p key={index}>{item.rps}</p>
+              ))}
+            </div>
 
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: starsBg
-              }}
-              style={{
-                filter: 'hue-rotate(15deg)',
-                opacity: '0.8'
-              }}
-            />
+            {this.state.startedPlaying && (
+              <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">
+                <div
+                  className={`rps-option ${
+                    this.state.rps[0]?.rps === 'R' ? 'rock' : ''
+                  }${rpsValueAtIndex0 === 'R' ? ' active' : ''}${
+                    this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    rpsValueAtIndex0 === 'R'
+                      ? ' win-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 0 && rpsValueAtIndex0 === 'R'
+                      ? ' draw-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 && rpsValueAtIndex0 === 'R'
+                      ? ' lose-bg'
+                      : ''
+                  }`}
+                ></div>
+                <div
+                  className={`rps-option ${
+                    this.state.rps[0]?.rps === 'P' ? 'paper' : ''
+                  }${rpsValueAtIndex0 === 'P' ? ' active' : ''}${
+                    this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    rpsValueAtIndex0 === 'P'
+                      ? ' win-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 0 && rpsValueAtIndex0 === 'P'
+                      ? ' draw-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 && rpsValueAtIndex0 === 'P'
+                      ? ' lose-bg'
+                      : ''
+                  }`}
+                ></div>
+                <div
+                  className={`rps-option ${
+                    this.state.rps[0]?.rps === 'S' ? 'scissors' : ''
+                  }${rpsValueAtIndex0 === 'S' ? ' active' : ''}${
+                    this.state.bgColorChanged &&
+                    this.state.betResult === -1 &&
+                    rpsValueAtIndex0 === 'S'
+                      ? ' win-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 0 && rpsValueAtIndex0 === 'S'
+                      ? ' draw-bg'
+                      : ''
+                  }${
+                    this.state.betResult === 1 && rpsValueAtIndex0 === 'S'
+                      ? ' lose-bg'
+                      : ''
+                  }`}
+                ></div>
               </div>
-            <h3  style={{ zIndex: 9 }} className="game-sub-title">Select: Rock - Paper - Scissors!</h3>
+            )}
+            {!this.state.startedPlaying ? (
+              <h3 style={{ zIndex: 9 }} className="game-sub-title">
+                Select: Rock - Paper - Scissors!
+              </h3>
+            ) : (
+              <h3 style={{ zIndex: 9 }} className="game-sub-title fade-out">
+                Select: Rock - Paper - Scissors!
+              </h3>
+            )}
+
             <div id="rps-radio" style={{ zIndex: 1 }}>
               {options.map(({ classname, selection }) => (
                 <Button
@@ -768,21 +858,22 @@ class RPS extends Component {
                       : ''
                   }`}
                   onClick={() => {
-                    this.setState({ selected_rps: selection });
-                    this.onBtnBetClick(selection);
+                    this.setState({ selected_rps: selection }, () => {
+                      this.onBtnBetClick(selection);
+                    });
                     this.props.playSound('select');
                   }}
                 />
               ))}
             </div>
             <BetAmountInput
-          betAmount={this.state.bet_amount}
-          handle2xButtonClick={this.handle2xButtonClick}
-          handleHalfXButtonClick={this.handleHalfXButtonClick}
-          handleMaxButtonClick={this.handleMaxButtonClick}
-          onChange={this.handleChange}
-          isDarkMode={this.props.isDarkMode}
-        />
+              betAmount={this.state.bet_amount}
+              handle2xButtonClick={this.handle2xButtonClick}
+              handleHalfXButtonClick={this.handleHalfXButtonClick}
+              handleMaxButtonClick={this.handleMaxButtonClick}
+              onChange={this.handleChange}
+              isDarkMode={this.props.isDarkMode}
+            />
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>

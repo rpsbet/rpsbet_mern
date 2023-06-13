@@ -32,15 +32,16 @@
   
   .react-confirm-alert .modal-body.alert-body.result-body{
     animation: pulse 1s ease-in-out infinite;
-  padding: 15px 0px 15px 15px !important;
   min-width: unset !important;
 }
 
+.react-confirm-alert .modal-footer {
+    border-top: unset;
+    background: unset;
+}
 
 .react-confirm-alert .modal-body.alert-body {
-  width: 400px;
   max-width: 95vw;
-  padding: 32px 64px;
   text-align: center;
 }
 
@@ -58,7 +59,7 @@
     margin-bottom: 16px;
 }
 .modal-body.result-body h1 {
-    font-size: 30px;
+    font-size: 1.2em;
     font-weight: 700;
 }
 .modal-body.result-body .modal-icon {
@@ -516,7 +517,9 @@ div[role="presentation"] li:last-child {
     .accordion {
       margin-top: 15px;
     }
-
+    .modal-body {
+        max-width: 95vw;
+    }
     .AvatarButtonPanel button:first-child {
         display: flex;
         align-items: center;

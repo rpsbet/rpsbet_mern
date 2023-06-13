@@ -169,6 +169,16 @@ router.get('/room/:id', async (req, res) => {
       joiner_roll: ''
     }).sort({ _id: 'asc' });
 
+    async function emitRps(req) {
+      const rpsItems = await RpsBetItem.find({ room: room });
+      const rps1 = rpsItems.slice(-5);
+      // console.log(rps1);
+      if (req.io.sockets) {
+        req.io.sockets.emit('RPS_1', rps1);
+      }
+    }
+    emitRps(req);
+    
     let hasEmitted = false;
 
     async function emitGuesses(req) {
@@ -1767,6 +1777,7 @@ router.post('/bet', auth, async (req, res) => {
             room: new ObjectId(req.body._id)
           });
           const nextItem = predictNext(allBetItems);
+          // console.log("nextItem", nextItem);
           bet_item = new RpsBetItem({
             room: new ObjectId(req.body._id),
             rps: nextItem
@@ -1795,9 +1806,15 @@ router.post('/bet', auth, async (req, res) => {
           roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
           roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
 
+          const lastFiveBetItems = await RpsBetItem.find({
+            room: new ObjectId(req.body._id)
+          }).sort({ created_at: -1 }).limit(5);
+
+          // console.log(lastFiveBetItems)
           if (req.io.sockets) {
             req.io.sockets.emit('UPDATED_BANKROLL', {
-              bankroll: roomInfo['user_bet']
+              bankroll: roomInfo['user_bet'],
+              rps: lastFiveBetItems
             });
           }
 
@@ -1811,6 +1828,20 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else if (bet_item.rps === req.body.selected_rps) {
           newGameLog.game_result = 0;
+
+          const lastFiveBetItems = await RpsBetItem.find({
+            room: new ObjectId(req.body._id)
+          }).sort({ created_at: -1 }).limit(5);
+
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATED_BANKROLL', {
+              bankroll: roomInfo['user_bet'],
+              rps: lastFiveBetItems
+
+            });
+          }
+
 
           newTransactionJ.amount += parseFloat(req.body.bet_amount);
           message.message =
@@ -1856,10 +1887,16 @@ router.post('/bet', auth, async (req, res) => {
               roomInfo['endgame_amount']
             ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
           }
+          const lastFiveBetItems = await RpsBetItem.find({
+            room: new ObjectId(req.body._id)
+          }).sort({ created_at: -1 }).limit(5);
+
 
           if (req.io.sockets) {
             req.io.sockets.emit('UPDATED_BANKROLL', {
-              bankroll: roomInfo['user_bet']
+              bankroll: roomInfo['user_bet'],
+              rps: lastFiveBetItems
+
             });
           }
 

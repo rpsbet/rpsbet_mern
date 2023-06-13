@@ -239,7 +239,7 @@ class QuickShoot extends Component {
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
+    await new Promise(resolve => setTimeout(resolve, 2500)); // Wait for 1 second
     this.setState({ bgColorChanged: false });
   };
 
@@ -823,7 +823,7 @@ class QuickShoot extends Component {
                   animationData: goalBg
                 }}
                 style={{
-                  filter: 'hue-rotate(221deg)'
+                  opacity: '0.4'
                 }}
               />
             </div>
