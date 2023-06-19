@@ -84,7 +84,6 @@ class Roll extends Component {
       nextRollInterval: 10,
       countdown: null,
       items: [],
-      showResult: false,
       bgColorChanged: false,
       buttonClicked: false,
       disabledButtons: false,
@@ -186,7 +185,6 @@ class Roll extends Component {
         }));
   
         this.startSlider();
-        this.props.stopSound('countDown');
         this.props.playSound('sweep');
         this.setState(
           {
@@ -203,11 +201,8 @@ class Roll extends Component {
             }, 1000);
             setTimeout(() => {
               this.props.playSound('shine');
-              this.setState({ showResult: true });
               this.setState({ disabledButtons: false });
-              setTimeout(() => {
-                this.setState({ showResult: false });
-              }, 2000);
+             
             }, 10000);
           }
         );
@@ -714,13 +709,9 @@ class Roll extends Component {
         );
       }
     } else if (showCountdown) {
-      playSound('countDown');
-      setTimeout(() => {
-        stopSound('countDown');
-      }, 5000);
       content = (
         <div id="nextRollIn">
-          <span>Next Roll in...{this.state.countdown}</span>
+          <span>Rolling...</span>
         </div>
       );
     } else {
@@ -987,123 +978,7 @@ class Roll extends Component {
                 style={{ filter: 'hue-rotate(302deg)' }}
               />
             </div>
-            <div id="tunnel">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: pipe
-                }}
-                style={{
-                  margin: '58px auto -232px',
-                  zIndex: '4',
-                  opacity: '0.2',
-                  // transform: 'translate(-154px, 36px)',
-                  width: '655px'
-                }}
-              />
-            </div>
-            <div
-              style={{
-                zIndex: '3'
-              }}
-              id="leftPortal"
-            >
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: portal
-                }}
-                style={{
-                  margin: '0px auto -195px',
-                  transform: 'translate(-275px, 36px) rotate(90deg)',
-                  width: '313px'
-                }}
-              />{' '}
-            </div>
-
-            <div
-              style={{
-                zIndex: '3'
-              }}
-              id="rightPortal"
-            >
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: portal
-                }}
-                style={{
-                  zIndex: '3',
-                  margin: '0px auto -195px',
-                  transform: 'translate(275px, 12px) rotate(90deg) scale(-1)',
-                  width: '313px'
-                }}
-              />{' '}
-            </div>
-            <div
-              style={{
-                zIndex: '1'
-              }}
-            >
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: pipe
-                }}
-                id="pipe"
-                style={{
-                  margin: '60px auto -232px',
-                  opacity: '1',
-                  transform: 'translate(-647px, -49px)',
-                  width: '655px'
-                }}
-              />
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: pipe
-                }}
-                id="pipe"
-                style={{
-                  margin: '60px auto -232px',
-                  opacity: '1',
-                  transform: 'translate(647px, -49px)',
-                  width: '655px'
-                }}
-              />
-            </div>
-            <div className="gradient-container">
-              <div id="gradient-bg">
-                <Lottie
-                  options={{
-                    loop: true,
-                    autoplay: true,
-                    animationData: gBg
-                  }}
-                  style={{
-                    margin: '0px auto -100px',
-                    transform: 'translate(146px, 47px)',
-                    width: '196px'
-                  }}
-                />
-                <Lottie
-                  options={{
-                    loop: true,
-                    autoplay: true,
-                    animationData: gBg
-                  }}
-                  style={{
-                    margin: '0px auto -110px',
-                    transform: 'translate(-154px, 36px)',
-                    width: '196px'
-                  }}
-                />
-              </div>
+            
               <Lottie
                 options={{
                   loop: true,
@@ -1118,48 +993,7 @@ class Roll extends Component {
                   width: '160px'
                 }}
               />
-              {this.state.showResult && (
-                <div style={{ position: 'relative', height: '0' }}>
-                  <div
-                    style={{
-                      width: '123px',
-                      zIndex: '1',
-                      position: 'absolute',
-                      height: '150px',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: 'contain',
-                      left: '48.3%',
-                      animation: 'pulse 3s ease-out, fade 2s ease-out',
-                      animationDelay: '0.1s',
-                      animationFillMode: 'forwards',
-                      animationIterationCount: this.state.showResult
-                        ? 'infinite'
-                        : '1',
-                      animationPlayState: this.state.showResult
-                        ? 'running'
-                        : 'paused',
-                      animationDirection: 'alternate',
-                      animationTimingFunction: 'ease-in-out'
-                    }}
-                    className={
-                      this.state.lastRollGuess === 'R'
-                        ? 'rock'
-                        : this.state.lastRollGuess === 'P'
-                        ? 'paper'
-                        : this.state.lastRollGuess === 'S'
-                        ? 'scissors'
-                        : this.state.lastRollGuess === 'W'
-                        ? 'whale'
-                        : this.state.lastRollGuess === 'B'
-                        ? 'bear'
-                        : this.state.lastRollGuess === 'Bu'
-                        ? 'bull'
-                        : ''
-                    }
-                  ></div>
-                </div>
-              )}
+             
 
               <div className="slider-images" id="top" ref={this.sliderRef}>
                 <p className="previous-guesses roll">
@@ -1205,7 +1039,6 @@ class Roll extends Component {
                   </div>
                 </p>
               </div>
-            </div>
             <div className="rollTimer">
               {roll_guesses.length ? (
                 content

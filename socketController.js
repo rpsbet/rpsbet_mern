@@ -39,6 +39,7 @@ module.exports.socketio = server => {
 
     socket.on('GLOBAL_CHAT_SEND', data => {
       const {
+        sender,
         senderId,
         message,
         messageType,
@@ -47,44 +48,75 @@ module.exports.socketio = server => {
         replyTo
       } = data;
     
-      
-      const replyToMessage = replyTo ? [{
-        sender: replyTo.senderId,
-        avatar: replyTo.avatar,
-        message: replyTo.message,
-        messageType: replyTo.messageType,
-        time: replyTo.time,
-      }] : null; // Include the replyTo message details if it exists
-      
-      // console.log('replyToMessage:', replyToMessage); // Log the replyTo field
+    
       const chat = new Chat({
         sender: senderId,
         message: message,
         messageType: messageType,
         messageContent: messageContent,
         avatar: avatar,
-        replyTo: replyToMessage,
+        replyTo: replyTo ? {
+          sender: replyTo.senderId, // Assign senderId temporarily
+          avatar: replyTo.avatar,
+          message: replyTo.message,
+          messageType: replyTo.messageType,
+          time: Moment(replyTo.created_at).format('hh:mm')
+        } : null // Include the replyTo message details if it exists
       });
-      
-      chat.save()
+    
+      chat
+        .save()
         .then(savedChat => {
-          const chatData = {
-            sender: senderId,
-            message: message,
-            messageType: messageType,
-            messageContent: messageContent,
-            avatar: avatar,
-            replyTo: replyToMessage,
-            time: Moment(savedChat.created_at).format('hh:mm')
+          console.log('Saved chat:', savedChat);
+    
+          // Fetch the username for replyTo.senderId from your data source
+          const fetchUsername = (userId) => {
+            // Implementation to fetch username using userId
+            // Replace this with your actual implementation
+            return User.findById(userId)
+              .then(user => user.username)
+              .catch(error => {
+                console.error('Error fetching username:', error);
+                return null;
+              });
           };
     
-          io.sockets.emit('GLOBAL_CHAT_RECEIVED', chatData);
+          const fetchReplyToUsername = replyTo
+            ? fetchUsername(replyTo.senderId)
+            : null;
+    
+          Promise.all([fetchReplyToUsername])
+            .then(([replyToUsername]) => {
+              io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
+                sender: sender,
+                senderId: senderId,
+                message: message,
+                messageType: messageType,
+                messageContent: messageContent,
+                avatar: avatar,
+                replyTo: replyTo
+                  ? {
+                      sender: replyToUsername, // Assign the fetched username
+                      avatar: replyTo.avatar,
+                      message: replyTo.message,
+                      messageType: replyTo.messageType,
+                      time: Moment(replyTo.created_at).format('hh:mm')
+                    }
+                  : null, // Include the replyTo message details if it exists
+                time: Moment(savedChat.created_at).format('hh:mm')
+              });
+            })
+            .catch(error => {
+              console.error('Error fetching replyTo username:', error);
+              // Handle error if fetching the replyTo username fails
+            });
         })
         .catch(error => {
           console.error('Error saving chat:', error);
           // Handle error if chat saving fails
         });
     });
+        
     
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
@@ -140,7 +172,6 @@ module.exports.socketio = server => {
     });
     
     
-
     socket.on('disconnect', reason => {
       Object.keys(sockets).forEach((key, index) => {
         if (sockets[key].id === socket.id) {
@@ -179,11 +210,7 @@ module.exports.socketio = server => {
       socket.broadcast.emit('UPDATED_BANKROLL', data);
     });
 
-    // socket.on('BANG_GUESSES', (data) => {
-    //   socket.broadcast.emit('BANG_GUESSES', data);
-    // });
 
-    // // socketcontroller.js
 
     socket.on('BANG_GUESSES1', data => {
       const roomId = data.roomId; // assuming roomId is passed in the data object
@@ -200,6 +227,8 @@ module.exports.socketio = server => {
     });
 
     socket.on('READ_MESSAGE', async data => {
+      
+      console.log('Received READ_MESSAGE:', data);
       await Message.updateMany(
         {
           is_read: false,
@@ -223,7 +252,6 @@ module.exports.socketio = server => {
 
     socket.on('SEND_CHAT', async data => {
       send('SEND_CHAT', data.to, data);
-
       const message = new Message(data);
       await message.save();
     });

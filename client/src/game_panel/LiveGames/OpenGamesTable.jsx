@@ -271,30 +271,27 @@ class OpenGamesTable extends Component {
                 alt={gameType.game_type_name}
               />
               <span>{gameType.game_type_name}</span>
-              {((gameType.short_name === 'S!' ||
-  gameType.short_name === 'BG' ||
-  gameType.short_name === 'RPS' ||
-  gameType.short_name === 'MB') && (
-    <span className="tag ex">Exclusive</span>
-  ))}
-{gameType.short_name === 'QS' && (
-  <span className="tag hot">Hot!</span>
-)}
-{gameType.short_name === 'DG' && (
-  <span className="tag risky">Risky</span>
-)}
-{((gameType.short_name === 'B!' ||
-  gameType.short_name === 'R') && (
-    <span className="tag new">New / Beta</span>
-  ))}
-{((gameType.short_name === 'BJ' ||
-  gameType.short_name === 'W' ||
-  gameType.short_name === 'S' ||
-  gameType.short_name === 'P' ||
-  gameType.short_name === 'C') && (
-  <span className="tag coming-soon">Coming Soon</span>
-))}
-
+              {(gameType.short_name === 'S!' ||
+                gameType.short_name === 'BG' ||
+                gameType.short_name === 'RPS' ||
+                gameType.short_name === 'MB') && (
+                <span className="tag ex">Exclusive</span>
+              )}
+              {gameType.short_name === 'QS' && (
+                <span className="tag hot">Hot!</span>
+              )}
+              {gameType.short_name === 'DG' && (
+                <span className="tag risky">Risky</span>
+              )}
+              {(gameType.short_name === 'B!' ||
+                gameType.short_name === 'R') && (
+                <span className="tag new">New / Beta</span>
+              )}
+              {(gameType.short_name === 'BJ' ||
+                gameType.short_name === 'P' ||
+                gameType.short_name === 'C') && (
+                <span className="tag coming-soon">Coming Soon</span>
+              )}
             </div>
           </Button>
         ))}

@@ -14,11 +14,11 @@ const MessageSchema = new Schema({
     type: String,
     required: true
   },
-  messageType: {
-    type: String,
-    enum: ['text', 'gif'],
-    default: 'text'
-  },
+  // messageType: {
+  //   type: String,
+  //   enum: ['text', 'gif'],
+  //   default: 'text'
+  // },
   is_read: {
     type: Boolean,
     default: false

@@ -241,34 +241,7 @@ class HowToPlayModal extends Component {
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
-              <AccordionItem>
-                <AccordionItemHeading>
-                  <AccordionItemButton>
-                    <div className="modal-content-wrapper slots">
-                      <h4>Slots (coming soon!)</h4>
-                    </div>
-                  </AccordionItemButton>
-                </AccordionItemHeading>
-                {/* <AccordionItemPanel>
-                  <div className="modal-content-wrapper blackjack">
-                    <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To cashout the multiplier before the 'Roll'</p>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5>Gameplay</h5>
-                      <ol>
-                        <li>Enter in a predetermined Bet Amount. Optionally, alter the predetermined Autocashout Amount as the counter can increment quickly</li>
-                        <li>Click 'Bang Out' when you are happy and wait for the next round</li>
-                        <li>Once you see the bomb, the round will have started and you have to cashout before the 'BANG!' by re-clicking same button which should now say 'Cashout @ $x.xx'</li>
-                        <li>If you successfully manage to cashout in time, your winnings is equal to your Bet Amount multiplied by your final multiplier</li>
-
-                      </ol>
-                    </div>
-                    
-                  </div>
-                </AccordionItemPanel> */}
-              </AccordionItem>
+              
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
@@ -297,34 +270,7 @@ class HowToPlayModal extends Component {
                   </div>
                 </AccordionItemPanel> */}
               </AccordionItem>
-              <AccordionItem>
-                <AccordionItemHeading>
-                  <AccordionItemButton>
-                    <div className="modal-content-wrapper wheel">
-                      <h4>Wheel (coming soon!)</h4>
-                    </div>
-                  </AccordionItemButton>
-                </AccordionItemHeading>
-                {/* <AccordionItemPanel>
-                  <div className="modal-content-wrapper blackjack">
-                    <div className="modal-content-panel">
-                      <h5>Objective</h5>
-                      <p>To cashout the multiplier before the 'Roll'</p>
-                    </div>
-                    <div className="modal-content-panel">
-                      <h5>Gameplay</h5>
-                      <ol>
-                        <li>Enter in a predetermined Bet Amount. Optionally, alter the predetermined Autocashout Amount as the counter can increment quickly</li>
-                        <li>Click 'Bang Out' when you are happy and wait for the next round</li>
-                        <li>Once you see the bomb, the round will have started and you have to cashout before the 'BANG!' by re-clicking same button which should now say 'Cashout @ $x.xx'</li>
-                        <li>If you successfully manage to cashout in time, your winnings is equal to your Bet Amount multiplied by your final multiplier</li>
-
-                      </ol>
-                    </div>
-                    
-                  </div>
-                </AccordionItemPanel> */}
-              </AccordionItem>
+              
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>

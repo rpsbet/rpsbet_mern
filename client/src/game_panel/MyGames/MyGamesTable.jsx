@@ -116,7 +116,6 @@ class MyGamesTable extends Component {
       console.error('Error ending room:', error);
     }
   };
-  
 
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
@@ -147,7 +146,7 @@ class MyGamesTable extends Component {
       'B!': 'bang',
       R: 'roll'
     };
-  
+
     const gameTypePanel = (
       <Box
         display="flex"
@@ -163,7 +162,7 @@ class MyGamesTable extends Component {
             <ChevronLeftIcon />
           </Button>
         </Box>
-  
+
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -173,16 +172,10 @@ class MyGamesTable extends Component {
             this.handleGameTypeButtonClicked('All');
           }}
         >
-          <img
-            src={`/img/gametype/ALL.webp`}
-            alt={`All Games`}
-          />
-          <div className='icon'>
-            <img
-              src={`/img/gametype/icons/All.svg`}
-              alt={`All Games`}
-              />
-          <span>All Games</span>
+          <img src={`/img/gametype/ALL.webp`} alt={`All Games`} />
+          <div className="icon">
+            <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
+            <span>All Games</span>
           </div>
         </Button>
         {this.props.gameTypeList.map((gameType, index) => (
@@ -203,32 +196,34 @@ class MyGamesTable extends Component {
               src={`/img/gametype/${gameType.short_name}.webp`}
               alt={gameType.game_type_name}
             />
-            <div className='icon'>
-            <img
-              src={`/img/gametype/icons/${gameType.short_name}.svg`}
-              alt={gameType.game_type_name}
+            <div className="icon">
+              <img
+                src={`/img/gametype/icons/${gameType.short_name}.svg`}
+                alt={gameType.game_type_name}
               />
-            <span>{gameType.game_type_name}</span>
-            {((gameType.short_name === 'S!' ||
-  gameType.short_name === 'BG' ||
-  gameType.short_name === 'RPS' ||
-  gameType.short_name === 'MB') && (
-    <span className="tag ex">Exclusive</span>
-  ))}
-{gameType.short_name === 'QS' && (
-  <span className="tag hot">Hot!</span>
-)}
-{gameType.short_name === 'DG' && (
-  <span className="tag risky">Risky</span>
-)}
-{((gameType.short_name === 'B!' ||
-  gameType.short_name === 'R') && (
-    <span className="tag new">New / Beta</span>
-  ))}
-{gameType.short_name === 'BJ' && (
-  <span className="tag coming-soon">Coming Soon</span>
-)}
-              </div>
+              <span>{gameType.game_type_name}</span>
+              {(gameType.short_name === 'S!' ||
+                gameType.short_name === 'BG' ||
+                gameType.short_name === 'RPS' ||
+                gameType.short_name === 'MB') && (
+                <span className="tag ex">Exclusive</span>
+              )}
+              {gameType.short_name === 'QS' && (
+                <span className="tag hot">Hot!</span>
+              )}
+              {gameType.short_name === 'DG' && (
+                <span className="tag risky">Risky</span>
+              )}
+              {(gameType.short_name === 'B!' ||
+                gameType.short_name === 'R') && (
+                <span className="tag new">New / Beta</span>
+              )}
+              {(gameType.short_name === 'BJ' ||
+                gameType.short_name === 'P' ||
+                gameType.short_name === 'C') && (
+                <span className="tag coming-soon">Coming Soon</span>
+              )}
+            </div>
           </Button>
         ))}
         <Button
@@ -240,10 +235,10 @@ class MyGamesTable extends Component {
         </Button>
       </Box>
     );
-  
+
     return gameTypePanel;
   };
-  
+
   handlePageNumberClicked = page => {
     this.props.getMyGames({
       page: page,
@@ -375,13 +370,16 @@ class MyGamesTable extends Component {
                         onMouseLeave={() => this.handleButtonRelease(row._id)}
                         _id={row._id}
                       >
-                      {this.state[row._id] && this.state[row._id].holding
-                        ? `${(this.state[row._id].timeLeft / 1000).toFixed(
-                            2
-                          )}s`
-                        : <> TAKE&nbsp;<span>{convertToCurrency(row.winnings)}</span>
-                        </>}
-                    </Button>
+                        {this.state[row._id] && this.state[row._id].holding ? (
+                          `${(this.state[row._id].timeLeft / 1000).toFixed(2)}s`
+                        ) : (
+                          <>
+                            {' '}
+                            TAKE&nbsp;
+                            <span>{convertToCurrency(row.winnings)}</span>
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                   <div className="mobile-only">
@@ -401,12 +399,15 @@ class MyGamesTable extends Component {
                         onTouchCancel={() => this.handleButtonRelease(row._id)}
                         _id={row._id}
                       >
-                        {this.state[row._id] && this.state[row._id].holding
-                          ? `${(this.state[row._id].timeLeft / 2000).toFixed(
-                              2
-                            )}s`
-                          : <> TAKE&nbsp;<span>{convertToCurrency(row.winnings)}</span>
-                          </>}
+                        {this.state[row._id] && this.state[row._id].holding ? (
+                          `${(this.state[row._id].timeLeft / 2000).toFixed(2)}s`
+                        ) : (
+                          <>
+                            {' '}
+                            TAKE&nbsp;
+                            <span>{convertToCurrency(row.winnings)}</span>
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>

@@ -760,7 +760,7 @@ class CreateGame extends Component {
       <>
         <hr />
         <div className="action-panel">
-          {(this.state.step < 3 && this.state.step > 6) &&
+          {(this.state.step < 3 && this.state.step > 6) ||
           this.state.child_step === 1 ? (
             <span></span>
           ) : (

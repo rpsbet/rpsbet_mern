@@ -391,7 +391,7 @@ div.table .table-cell button.btn_end {
 }
 
 .contents_wrapper .main-game .main-panel {
-  padding: 48px 6px 8px 16px;
+  padding: 32px 6px 8px 16px;
   background-color: rgba(235, 237, 239, 0.5);
   position: relative;
   height: calc(100vh - 50px); 
@@ -2517,9 +2517,7 @@ input {
   width: 100%;
   position: fixed;
 }
-.chat-page .chat-input-panel.show-emoji {
-  border-radius: 0 40px 40px;
-}
+
 .chat-page .chat-input-panel .emoticon-panel {
   display: none;
   position: absolute;

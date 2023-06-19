@@ -131,7 +131,7 @@ class ChatPage extends Component {
                         <span role="img" aria-label="" onClick={this.insertEmoji}>🥩</span>
                     </div>
                     <Button className="btn-show-emoticon" onClick={() => {this.setState({showEmojiPanel: !this.state.showEmojiPanel})}}></Button>
-                    <input type="text" className="form-control" placeholder="TYPE SOMETHING..." onKeyDown={this.onTextAreaKeyDown} onChange={this.onChangeText} value={this.state.text} ref={(elem) => {this.textarea = elem}} />
+                    <input type="text" className="form-control" placeholder="Chat here..." onKeyDown={this.onTextAreaKeyDown} onChange={this.onChangeText} value={this.state.text} ref={(elem) => {this.textarea = elem}} />
                     <Button className="btn-send-message" onClick={this.sendMessage}><FontAwesomeIcon icon={faPaperPlane} /></Button>
                 </div>
             </div>

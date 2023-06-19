@@ -151,8 +151,14 @@ const getCurrentRollTime = async () => {
         resolve(date);
       }
     });
+  })
+  .catch((error) => {
+    // Handle the error here
+    console.error('Error retrieving network time:', error);
+    throw error; // Rethrow the error to propagate it further if needed
   });
 };
+
 
 module.exports = {
   predictNextRoll,
