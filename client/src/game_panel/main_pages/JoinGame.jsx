@@ -322,7 +322,7 @@ class JoinGame extends Component {
                   marginBottom: '10px'
                 }}
               />
-      <div>{loading ? 'Loading Room...' : 'Joining Room...'}</div>
+      <div>{loading ? 'Joining Room...' : 'Please wait...'}</div>
             </div>
           }
         >

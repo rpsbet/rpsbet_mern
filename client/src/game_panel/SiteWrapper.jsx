@@ -168,8 +168,6 @@ class SiteWrapper extends Component {
       showProfileModal: false,
       showPlayerModal: false,
       showHowToPlayModal: false,
-      loadingText: '',
-      counter: 0,
       isPlaying: false,
       showLoginModal: false,
       showSignupModal: false,
@@ -245,11 +243,11 @@ class SiteWrapper extends Component {
     }
   };
 
-  updateCounter = () => {
-    if (this.state.counter < 100) {
-      this.setState(prevState => ({ counter: prevState.counter + 1 }));
-    }
-  };
+  // updateCounter = () => {
+  //   if (this.state.counter < 100) {
+  //     this.setState(prevState => ({ counter: prevState.counter + 1 }));
+  //   }
+  // };
 
   handleUnmute = () => {
     const audioElements = [
@@ -464,10 +462,10 @@ class SiteWrapper extends Component {
         selectedMainTabIndex: this.props.selectMainTab(1)
       });
     }
-    this.counter = setInterval(this.updateCounter, 25);
+    // this.counter = setInterval(this.updateCounter, 25);
     setTimeout(() => {
       this.setState({ websiteLoading: false });
-    }, 2500);
+    }, 1500);
 
     this.initializeAudio();
 
@@ -582,7 +580,7 @@ class SiteWrapper extends Component {
     }
     clearInterval(this.interval);
     clearInterval(this.timer);
-    clearInterval(this.counter);
+    // clearInterval(this.counter);
   }
   handleLogout = clear_token => {
     this.setState({
@@ -674,7 +672,7 @@ class SiteWrapper extends Component {
 
   render() {
     const { isMuted, balance, oldBalance } = this.state;
-    const { websiteLoading, loadingText, counter } = this.state;
+    const { websiteLoading } = this.state;
 
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
@@ -698,7 +696,7 @@ class SiteWrapper extends Component {
                   color: '#fff'
                 }}
               >
-          {`Connecting... ${counter}%`}
+          {`Connecting...`}
               </span>
               <Lottie
                 options={{
@@ -820,7 +818,7 @@ class SiteWrapper extends Component {
                       />
                       <Button
                       id="wallet-btn"
-                        style={{ minWidth: '32px', maxHeight: '33px' }}
+                        style={{ minWidth: '32px', maxHeight: '33px', borderRadius: '0.25em' }}
                         onClick={this.handleBalanceClick}
                       >
                         <AccountBalanceWallet

@@ -410,6 +410,12 @@ div[role="presentation"] li:last-child {
 .modal-body .modal-content-wrapper.roll h4 {
     background-image: url("/img/icons/modal-roll.svg");
 }
+.modal-body .modal-content-wrapper.craps h4 {
+    background-image: url("/img/icons/modal-craps.svg");
+}
+.modal-body .modal-content-wrapper.roll h4 {
+    background-image: url("/img/icons/modal-roll.svg");
+}
 
 .modal-body .modal-content-wrapper.quick-shoot h4 {
     background-image: url("/img/icons/modal-quick-shoot.svg");

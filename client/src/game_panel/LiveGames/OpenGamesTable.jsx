@@ -212,7 +212,8 @@ class OpenGamesTable extends Component {
       QS: 'quick-shoot',
       DG: 'drop-game',
       'B!': 'bang',
-      BJ: 'blackjack'
+      BJ: 'blackjack',
+      CR: 'craps'
     };
 
     const gameTypePanel = (
@@ -289,7 +290,8 @@ class OpenGamesTable extends Component {
               )}
               {(gameType.short_name === 'BJ' ||
                 gameType.short_name === 'P' ||
-                gameType.short_name === 'C') && (
+                gameType.short_name === 'C' ||
+                gameType.short_name === 'CR') && (
                 <span className="tag coming-soon">Coming Soon</span>
               )}
             </div>
@@ -417,10 +419,10 @@ class OpenGamesTable extends Component {
                         }}
                         style={{
                           position: 'relative',
-                          width: '120px',
-                          height: '70px',
-                          filter: 'hue-rotate(33deg)',
-                          margin: '-20px -75px'
+                          width: '142px',
+                          height: '90px',
+                          filter: 'hue-rotate(111deg)',
+                          margin: '-26px -88px'
                         }}
                       />
                       <a
@@ -670,10 +672,10 @@ class OpenGamesTable extends Component {
                         }}
                         style={{
                           position: 'relative',
-                          width: '70px',
-                          height: '70px',
-                          filter: 'hue-rotate(33deg)',
-                          margin: '-20px -50px -20px -16px'
+                          width: '114px',
+                          height: '80 px',
+                          filter: 'hue-rotate(111deg)',
+                          margin: '-24px -74px -22px -37px'
                         }}
                       />
                       <a

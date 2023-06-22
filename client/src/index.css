@@ -277,11 +277,11 @@ button#bl {
 }
 
 #busd {
-  margin-top: -3px;
-  margin-left: 3px;
+  margin-top: -1px;
+  margin-left: 4px;
+  margin-right: 2px;
   width: 0.7em;
   height: 0.7em;
- 
 }
 
 

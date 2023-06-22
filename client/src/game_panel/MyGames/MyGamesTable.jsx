@@ -144,7 +144,9 @@ class MyGamesTable extends Component {
       QS: 'quick-shoot',
       DG: 'drop-game',
       'B!': 'bang',
-      R: 'roll'
+      R: 'roll',
+      BJ: 'blackjack',
+      CR: 'craps'
     };
 
     const gameTypePanel = (
@@ -220,7 +222,8 @@ class MyGamesTable extends Component {
               )}
               {(gameType.short_name === 'BJ' ||
                 gameType.short_name === 'P' ||
-                gameType.short_name === 'C') && (
+                gameType.short_name === 'C' ||
+                gameType.short_name === 'CR') && (
                 <span className="tag coming-soon">Coming Soon</span>
               )}
             </div>

@@ -1604,8 +1604,8 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
       const message = {
         from: chatLog.from,
         to: chatLog.to,
-        messageType: chatLog.messageType,
-        messageContent: chatLog.messageContent,
+        message: chatLog.message,
+        // messageContent: chatLog.messageContent,
         created_at: moment(chatLog.created_at).format('LLL')
       };
       messages.push(message);
@@ -3417,7 +3417,7 @@ setTimeout(async () => {
         message.save();
         socket.sendMessage(message.to._id, {
           from: message.from._id,
-          to: message.to_id,
+          to: message.to._id,
           message: message.message,
           created_at: moment(new Date()).format('LLL')
         });

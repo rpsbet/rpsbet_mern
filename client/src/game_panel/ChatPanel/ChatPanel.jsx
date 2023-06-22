@@ -195,7 +195,6 @@ class ChatPanel extends Component {
   };
 
   setSelectedMessage = message => {
-    console.log("jee", message)
     this.setState({ selectedMessage: message });
   };
 
@@ -346,7 +345,10 @@ class ChatPanel extends Component {
                     <Avatar src={selectedMessage.avatar} alt="Avatar" />
                   </div>
                   {selectedMessage.sender}
-                  <Clear className="tooltip-cross" onClick={this.handleClearTooltip} />
+                  <Button  className="tooltip-cross">
+
+                  <Clear onClick={this.handleClearTooltip} />
+                  </Button>
 
                 </div>
               </div>

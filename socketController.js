@@ -67,7 +67,6 @@ module.exports.socketio = server => {
       chat
         .save()
         .then(savedChat => {
-          console.log('Saved chat:', savedChat);
     
           // Fetch the username for replyTo.senderId from your data source
           const fetchUsername = (userId) => {
@@ -228,7 +227,6 @@ module.exports.socketio = server => {
 
     socket.on('READ_MESSAGE', async data => {
       
-      console.log('Received READ_MESSAGE:', data);
       await Message.updateMany(
         {
           is_read: false,
@@ -254,7 +252,9 @@ module.exports.socketio = server => {
       send('SEND_CHAT', data.to, data);
       const message = new Message(data);
       await message.save();
-    });
+  });
+  ``
+  
   });
 
   return io;

@@ -62,12 +62,13 @@ class ChatPage extends Component {
             socket: props.socket
         };
     }
-
+    
     async componentDidMount() {
         this.IsAuthenticatedReroute();
         await this.props.getChatRoomInfo(this.props.match.params.id);
         this.state.socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {to: this.state.my_info._id});
     }
+    
 
     componentDidUpdate() {
         this.chat_log_panel.scrollTop = this.chat_log_panel.scrollHeight;

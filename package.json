@@ -55,6 +55,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "pretty-bitte": "1.0.4",
+    "react-chat-widget": "^3.1.4",
     "react-countup": "^6.4.2",
     "react-inlinesvg": "^3.0.1",
     "react-share": "^4.4.1",

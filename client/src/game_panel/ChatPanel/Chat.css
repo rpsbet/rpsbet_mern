@@ -5,7 +5,9 @@
 }
 
 /*** GLOBAL CHAT ***/
-
+.chat-msg, .tooltip-content svg, .chat-player {
+    cursor: pointer !important;
+  }
 .reply-to {
     display: flex;
     align-items: center;
@@ -81,6 +83,8 @@
       border-top: 2px solid #c5c5c54f;
       border-bottom: 2px solid #e1e1e1;
   }
+
+
   .chat {
     height: 100%;
     overflow-y: scroll;
@@ -94,13 +98,16 @@
     margin-left: -5px;
     opacity: 1 !important;
 }
-.tooltip.reply .tooltip-content svg {
+.tooltip.reply .tooltip-content button {
+    min-width: 32px !important;
     right: 10px;
     position: absolute;
     opacity: .7;
+    padding: 0 !important;
+    height: 32px !important;
 }
-.tooltip.reply .tooltip-content svg:hover {
-    opacity: .7;
+.tooltip.reply .tooltip-content button:hover {
+    opacity: 1;
     transition: 0.3s;
 }
 .tooltip.reply .tooltip-content {

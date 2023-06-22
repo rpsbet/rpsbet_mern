@@ -760,7 +760,7 @@ class CreateGame extends Component {
       <>
         <hr />
         <div className="action-panel">
-          {(this.state.step < 3 && this.state.step > 6) ||
+          {(this.state.step < 3 && this.state.step > 6) &&
           this.state.child_step === 1 ? (
             <span></span>
           ) : (
@@ -891,7 +891,7 @@ class CreateGame extends Component {
                       youtubeUrl={this.state.youtubeUrl}
                     />
                   ) : (
-                    <span>Click the manual icon at the top for more game help.</span>
+                    <span>Click the manual icon at the top for help.</span>
                   )}
                 </div>
                 <div className="game-contents">
