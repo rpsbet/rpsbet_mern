@@ -137,6 +137,7 @@ class MyGamesTable extends Component {
 
   generateGameTypePanel = () => {
     const gameTypeStyleClass = {
+      R: 'roll',
       RPS: 'rps',
       'S!': 'spleesh',
       MB: 'mystery-box',
@@ -144,17 +145,17 @@ class MyGamesTable extends Component {
       QS: 'quick-shoot',
       DG: 'drop-game',
       'B!': 'bang',
-      R: 'roll',
       BJ: 'blackjack',
       CR: 'craps'
     };
-
+  
     const gameTypePanel = (
       <Box
         display="flex"
         justifyContent="space-evenly"
         flexWrap="nowrap"
         gap="15px"
+        ref={ref => (this.game_type_panel = ref)}
       >
         <Box item key="open-game-left-button">
           <Button
@@ -164,7 +165,7 @@ class MyGamesTable extends Component {
             <ChevronLeftIcon />
           </Button>
         </Box>
-
+  
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -174,7 +175,6 @@ class MyGamesTable extends Component {
             this.handleGameTypeButtonClicked('All');
           }}
         >
-          <img src={`/img/gametype/ALL.webp`} alt={`All Games`} />
           <div className="icon">
             <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
             <span>All Games</span>
@@ -194,38 +194,12 @@ class MyGamesTable extends Component {
               this.handleGameTypeButtonClicked(gameType.short_name);
             }}
           >
-            <img
-              src={`/img/gametype/${gameType.short_name}.webp`}
-              alt={gameType.game_type_name}
-            />
             <div className="icon">
               <img
                 src={`/img/gametype/icons/${gameType.short_name}.svg`}
                 alt={gameType.game_type_name}
               />
               <span>{gameType.game_type_name}</span>
-              {(gameType.short_name === 'S!' ||
-                gameType.short_name === 'BG' ||
-                gameType.short_name === 'RPS' ||
-                gameType.short_name === 'MB') && (
-                <span className="tag ex">Exclusive</span>
-              )}
-              {gameType.short_name === 'QS' && (
-                <span className="tag hot">Hot!</span>
-              )}
-              {gameType.short_name === 'DG' && (
-                <span className="tag risky">Risky</span>
-              )}
-              {(gameType.short_name === 'B!' ||
-                gameType.short_name === 'R') && (
-                <span className="tag new">New / Beta</span>
-              )}
-              {(gameType.short_name === 'BJ' ||
-                gameType.short_name === 'P' ||
-                gameType.short_name === 'C' ||
-                gameType.short_name === 'CR') && (
-                <span className="tag coming-soon">Coming Soon</span>
-              )}
             </div>
           </Button>
         ))}
@@ -238,9 +212,10 @@ class MyGamesTable extends Component {
         </Button>
       </Box>
     );
-
+  
     return gameTypePanel;
   };
+  
 
   handlePageNumberClicked = page => {
     this.props.getMyGames({

@@ -99,6 +99,7 @@ class StatisticsForm extends React.Component {
             download: false // <== line to add
           }
         },
+        
         pan: {
           enabled: true,
           type: 'x'

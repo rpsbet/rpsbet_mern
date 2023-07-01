@@ -137,10 +137,6 @@ div[role="tablist"] {
     background-repeat: no-repeat;
     background-position: center center;
 }
-.game-type-panel .btn-game-type {
-    height: 93px !important;
-    border-radius: 7px;
-}
 .game-type-panel .btn-game-type img {
     width:160px !important;
     border-radius: 7px;
@@ -149,20 +145,15 @@ div[role="tablist"] {
 
 
 .game-type-panel .btn-game-type span {
-    /* padding: 10px 0 0 !important; */
-    flex-direction: column;
+    padding-right: 5px;
 }
 div[role=presentation] div:first-child {
     backdrop-filter: blur(2px);
 }
 .game-type-panel .btn-game-type div.icon {
-    margin-top: -32px;
-    background: #ff0000b8;
     width: 100%;
+    align-items: center;
     font-size: 14px;
-    padding-top: 0 !important;
-    border-bottom-left-radius: 7px;
-    border-bottom-right-radius: 7px;
     font-weight: 500 !important;
 }
 .game_header .main_header #btn_leaderboards {

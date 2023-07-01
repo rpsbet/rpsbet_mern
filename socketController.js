@@ -120,7 +120,7 @@ module.exports.socketio = server => {
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
         .sort({ created_at: -1 }) // Sort in descending order of created_at
-        .limit(100)
+        .limit(50)
         .populate({ path: 'sender', model: User, select: 'username avatar' })
         .populate({
           path: 'replyTo',

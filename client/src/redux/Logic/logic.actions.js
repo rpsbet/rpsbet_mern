@@ -175,7 +175,11 @@ export const bet = bet_info => async dispatch => {
           message: res.data.message
         };
       } else {
-        console.log('err');
+        dispatch({ type: MSG_WARNING, payload: 'Error'});
+        return {
+          status: 'failed',
+          message: 'SLOW DOWN BLUD!'
+        };
       }
     }
   } catch (err) {

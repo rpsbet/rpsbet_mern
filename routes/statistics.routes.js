@@ -26,17 +26,24 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
     const _id = req.query._id;
 
-    const receipts = await Receipt.find({ user_id: _id });
-    const transactions = await Transaction.find({ user: _id });
-    const gameLogs = await GameLog.find({
-      $or: [{ creator: _id }, { joined_user: _id }]
-    })
-      .sort({ created_at: 'asc' })
-      .populate({ path: 'creator', model: User })
-      .populate({ path: 'joined_user', model: User })
-      .populate({ path: 'room', model: Room })
-      .populate({ path: 'game_type', model: GameType });
+    // console.log('Fetching receipts...');
+    const [receipts, transactions, gameLogs] = await Promise.all([
+      Receipt.find({ user_id: _id }).select('payment_type amount'),
+      Transaction.find({ user: _id }),
+      GameLog.find({
+        $or: [{ creator: _id }, { joined_user: _id }],
+        room: { $ne: null } // Exclude gameLogs with null room property
+      })
+        .sort({ created_at: 'asc' })
+        .populate([
+          { path: 'creator', model: User },
+          { path: 'joined_user', model: User },
+          { path: 'room', model: Room },
+          { path: 'game_type', model: GameType }
+        ])
+    ]);
 
+    // console.log('Calculating statistics...');
     let statistics = {
       deposit: 0,
       withdraw: 0,
@@ -65,37 +72,26 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
     const commission = await getCommission();
 
     for (const gameLog of gameLogs) {
-      if (gameLog.game_result === -100) {
-        // Skip the game log if it's an end_game
-        continue;
+      if (!gameLog.room) {
+        console.log('Skipping gameLog:', gameLog._id, 'as room object is null.');
+        continue; // Skip gameLogs with null room property
       }
 
       statistics.gamePlayed++;
 
-      const creator = gameLog.creator;
-      const joinedUser = gameLog.joined_user;
-
-      const creatorId = creator ? creator._id : null;
-      const joinedUserId = joinedUser ? joinedUser._id : null;
+      const creatorId = gameLog.creator ? gameLog.creator._id : null;
+      const joinedUserId = gameLog.joined_user ? gameLog.joined_user._id : null;
 
       const opponentId = creatorId === _id ? joinedUserId : creatorId;
-      const opponentUsername = opponentId ? (creatorId === _id ? joinedUser.username : creator.username) : null;
+      const opponentUsername = opponentId ? (creatorId === _id ? gameLog.joined_user.username : gameLog.creator.username) : null;
 
       let profit = 0;
 
-      if (gameLog.game_type.short_name === 'S!') {
-        if (gameLog.game_result === 1) {
-          profit = creatorId === _id ? 0 - gameLog.bet_amount : gameLog.bet_amount * 2 - gameLog.bet_amount;
-        } else {
-          profit = creatorId === _id ? gameLog.bet_amount : 0 - gameLog.bet_amount;
-        }
-      } else if (gameLog.game_type.short_name === 'QS') {
-        if (gameLog.game_result === 1) {
-          profit = creatorId === _id ? 0 - gameLog.bet_amount : gameLog.bet_amount * gameLog.room.qs_game_type - gameLog.bet_amount;
-        } else {
-          profit = creatorId === _id ? gameLog.bet_amount : 0 - gameLog.bet_amount;
-        }
-      } else if (gameLog.game_type.short_name === 'MB') {
+      if (gameLog.game_type && gameLog.game_type.short_name === 'S!') {
+        profit = creatorId === _id ? 0 - gameLog.bet_amount : gameLog.bet_amount * 2 - gameLog.bet_amount;
+      } else if (gameLog.game_type && gameLog.game_type.short_name === 'QS') {
+        profit = creatorId === _id ? 0 - gameLog.bet_amount : gameLog.bet_amount * gameLog.room.qs_game_type - gameLog.bet_amount;
+      } else if (gameLog.game_type && gameLog.game_type.short_name === 'MB') {
         profit = creatorId === _id ? gameLog.bet_amount - gameLog.game_result : gameLog.game_result - gameLog.bet_amount;
       } else {
         if (gameLog.game_result === 0) {
@@ -118,11 +114,18 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       statistics.totalWagered += gameLog.bet_amount;
 
       if (!gameLog.room) {
+        // console.log('Error: Room object is null or undefined');
+        // console.log('gameLog:', gameLog);
         return { error: 'Room object is null or undefined' };
       }
 
+      let gameTypeShortName = '';
+      if (gameLog.game_type) {
+        gameTypeShortName = gameLog.game_type.short_name || '';
+      }
+
       statistics.gameLogList.push({
-        game_id: `${gameLog.game_type.short_name}-${gameLog.room.room_number}`,
+        game_id: `${gameTypeShortName}-${gameLog.room.room_number}`,
         room_id: gameLog.room._id,
         played: gameLog.created_at,
         bet: gameLog.bet_amount,
@@ -137,12 +140,13 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       statistics
     };
 
+    // console.log('Statistics calculated successfully.');
     res.json(response);
   } catch (error) {
     console.error(error);
     res.json({
       success: false,
-      error: message
+      error: error.message
     });
   }
 });

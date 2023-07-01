@@ -200,9 +200,9 @@ class HistoryTable extends Component {
 
     return (
       <div className="overflowX">
-       <div className="outer-div">
+       {/* <div className="outer-div"> */}
       <div className="border-mask" />
-      <Lottie
+      {/* <Lottie
               options={{
                 loop: true,
                 autoplay: true,
@@ -270,8 +270,8 @@ class HistoryTable extends Component {
           paddingLeft: '10px',
           textShadow: '0 0 12px #0058b6'
         }}
-        >Coming Soon!</p>
-    </div>
+        >Coming Soon!</p> */}
+    {/* </div> */}
         {/* <div className="game-type-container">
           <div
             className="game-type-panel"

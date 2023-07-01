@@ -117,13 +117,12 @@ class ChatPanel extends Component {
     };
   }
   onTextAreaKeyDown = e => {
- 
     if (!this.props.socket) return;
-
+  
     if (e.keyCode === 13) {
       e.preventDefault();
       const text = this.state.text.trim();
-
+  
       if (text !== '') {
         const { selectedMessage } = this.state;
         this.props.socket.emit('GLOBAL_CHAT_SEND', {
@@ -136,9 +135,8 @@ class ChatPanel extends Component {
         this.handleClearTooltip();
       }
     }
-    
   };
-
+  
   handleClearTooltip = () => {
     this.setState({
       selectedMessage: {
@@ -147,9 +145,9 @@ class ChatPanel extends Component {
         message: null,
         messageType: null,
         time: null,
-        text: '',
         showEmojiPanel: false
-      }
+      },
+      text: '' // Clear the text field input by updating the 'text' state
     });
   };
   
@@ -384,14 +382,14 @@ class ChatPanel extends Component {
                     <Button
                       className="btn-show-emoticon"
                       onClick={this.toggleEmojiPanel}
-                      style={{ minWidth: '32px', marginTop: '4px' }}
+                      style={{ minWidth: '32px'}}
                     >
                       <InsertEmoticon style={{ fontSize: '16px' }} />
                     </Button>
                     <Button
                       className="btn-search-gifs"
                       onClick={this.toggleSearchPopup}
-                      style={{ minWidth: '32px', marginLeft: '2px', marginTop: '4px' }}
+                      style={{ minWidth: '32px', marginLeft: '2px'}}
                     >
                       <Gif style={{ fontSize: '32px' }} />
                     </Button>

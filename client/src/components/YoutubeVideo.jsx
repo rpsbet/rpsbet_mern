@@ -51,15 +51,18 @@ export class YouTubeVideo extends React.Component {
   };
 
   handlePlayPause = () => {
-    if (this.state.isPlaying) {
-      this.player.pauseVideo(); // Pause the video
-    } else {
-      this.player.playVideo(); // Play the video
+    if (this.player && this.player.pauseVideo) {
+      if (this.state.isPlaying) {
+        this.player.pauseVideo();
+      } else {
+        this.player.playVideo();
+      }
+      this.setState(prevState => ({
+        isPlaying: !prevState.isPlaying
+      }));
     }
-    this.setState(prevState => ({
-      isPlaying: !prevState.isPlaying // Toggle the play/pause state
-    }));
   };
+  
 
   handleVolumeChange = (event, value) => {
     this.player.setVolume(value); // Set the volume of the video
@@ -96,6 +99,7 @@ export class YouTubeVideo extends React.Component {
       this.onYouTubeIframeAPIReady();
     }
   }
+  
 
   render() {
     const containerStyle = {

@@ -128,11 +128,6 @@ background: #060607;
 	color: #e5e5e5;
 }
 
-
-.dark_mode .game-type-panel .btn-game-type div.icon {
-	background: #600000b8;
-}
-
 .dark_mode game-type-panel .btn-game-type div.icon {
     background: #111111b8;
 }

@@ -242,7 +242,7 @@ class HowToPlayModal extends Component {
                 </AccordionItemPanel>
               </AccordionItem>
               
-              <AccordionItem>
+             {/* <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper pot">
@@ -250,7 +250,7 @@ class HowToPlayModal extends Component {
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
-                {/* <AccordionItemPanel>
+                <AccordionItemPanel>
                   <div className="modal-content-wrapper blackjack">
                     <div className="modal-content-panel">
                       <h5>Objective</h5>
@@ -268,7 +268,7 @@ class HowToPlayModal extends Component {
                     </div>
                     
                   </div>
-                </AccordionItemPanel> */}
+                </AccordionItemPanel> 
               </AccordionItem>
               
               <AccordionItem>
@@ -279,7 +279,7 @@ class HowToPlayModal extends Component {
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
-                {/* <AccordionItemPanel>
+                <AccordionItemPanel>
                   <div className="modal-content-wrapper blackjack">
                     <div className="modal-content-panel">
                       <h5>Objective</h5>
@@ -297,7 +297,7 @@ class HowToPlayModal extends Component {
                     </div>
                     
                   </div>
-                </AccordionItemPanel> */}
+                </AccordionItemPanel> 
               </AccordionItem>
               <AccordionItem>
                 <AccordionItemHeading>
@@ -307,7 +307,7 @@ class HowToPlayModal extends Component {
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
-                {/* <AccordionItemPanel>
+                <AccordionItemPanel>
                   <div className="modal-content-wrapper blackjack">
                     <div className="modal-content-panel">
                       <h5>Objective</h5>
@@ -325,7 +325,7 @@ class HowToPlayModal extends Component {
                     </div>
                     
                   </div>
-                </AccordionItemPanel> */}
+                </AccordionItemPanel>
               </AccordionItem>
               <AccordionItem>
                 <AccordionItemHeading>
@@ -335,7 +335,7 @@ class HowToPlayModal extends Component {
                     </div>
                   </AccordionItemButton>
                 </AccordionItemHeading>
-                {/* <AccordionItemPanel>
+                <AccordionItemPanel>
                   <div className="modal-content-wrapper blackjack">
                     <div className="modal-content-panel">
                       <h5>Objective</h5>
@@ -353,7 +353,7 @@ class HowToPlayModal extends Component {
                     </div>
                     
                   </div>
-                </AccordionItemPanel> */}
+                </AccordionItemPanel>
               </AccordionItem>
             <AccordionItem>
                 <AccordionItemHeading>
@@ -409,7 +409,7 @@ class HowToPlayModal extends Component {
                     
                   </div>
                 </AccordionItemPanel>
-              </AccordionItem>
+              </AccordionItem>  */}
             <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
