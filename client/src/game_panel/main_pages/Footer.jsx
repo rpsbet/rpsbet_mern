@@ -150,16 +150,16 @@ class Footer extends Component {
                     </a> */}
                 </div>
                 <div className={classes.currencies}>
-    <img className={classes.availableCurrency} src={busd} alt="BUSD" />
+    <img className={classes.currency} src={busd} alt="BUSD" />
     <img className={classes.currency} src={btc} alt="BTC" />
-    <img className={classes.currency} src={eth} alt="ETH" />
+    <img className={classes.availableCurrency} src={eth} alt="ETH" />
     <img className={classes.currency} src={ltc} alt="LTC" />
 </div>
                 <div className={classes.proof}>
                     <p>Proof of Funds</p>
-                    <a target="_blank" href="https://bscscan.com/address/0x5D38080DA6a868b8BBe65a061D79E2065d5Dd79A">
+                    <a target="_blank" href="https://etherscan.com/address/0x5D38080DA6a868b8BBe65a061D79E2065d5Dd79A">
 
-                <img  className={classes.bscscan} src={bscscan} alt="bscscan" />
+                <img  className={classes.bscscan} src={bscscan} alt="etherscan" />
                     </a>
 
                               </div>

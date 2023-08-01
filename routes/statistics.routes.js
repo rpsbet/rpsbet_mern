@@ -73,7 +73,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
 
     for (const gameLog of gameLogs) {
       if (!gameLog.room) {
-        console.log('Skipping gameLog:', gameLog._id, 'as room object is null.');
+        // console.log('Skipping gameLog:', gameLog._id, 'as room object is null.');
         continue; // Skip gameLogs with null room property
       }
 

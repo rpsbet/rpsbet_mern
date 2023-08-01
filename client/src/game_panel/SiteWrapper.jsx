@@ -12,6 +12,8 @@ import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
 import progress from './LottieAnimations/progress.json';
 import HowToHover from './icons/HowToHover';
+import InlineSVG from 'react-inlinesvg';
+
 import {
   setSocket,
   userSignOut,
@@ -436,24 +438,21 @@ class SiteWrapper extends Component {
     this.props.setSocket(socket);
   };
   loadWeb3 = async () => {
-    try {
-      const web3 = new Web3(Web3.givenProvider);
-      this.setState({ web3 });
-      const accounts = await web3.eth.requestAccounts();
-      const contractInstance = new web3.eth.Contract(abi, tokenAddr);
-      const tokenBalance = await contractInstance.methods
-        .balanceOf(accounts[0])
-        .call();
-      const decimal = await contractInstance.methods.decimals().call();
-      const tokenAmount =
-        Math.floor(Number(tokenBalance / Math.pow(10, decimal)) * 100000) /
-        100000;
-      this.setState({ web3account: accounts[0] });
-      this.setState({ web3balance: tokenAmount });
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  try {
+    const web3 = new Web3(Web3.givenProvider);
+    this.setState({ web3 });
+    const accounts = await web3.eth.requestAccounts();
+    this.setState({ web3account: accounts[0] });
+
+    // Get ETH balance of the account
+    const ethBalance = await web3.eth.getBalance(accounts[0]);
+    const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
+    this.setState({ web3balance: tokenAmount });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
   async componentDidMount() {
     let currentUrl = window.location.pathname;
 
@@ -802,10 +801,11 @@ class SiteWrapper extends Component {
                 {this.props.isAuthenticated ? (
                   <>
                     <div id="balance">
+                    <InlineSVG id="busd" src={require('./JoinGame/busd.svg')} />
                       <CountUp
                         start={oldBalance}
                         end={balance}
-                        prefix="$"
+                        // prefix="$"
                         separator=","
                         decimal="."
                         decimals={2}

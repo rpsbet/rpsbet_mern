@@ -242,7 +242,7 @@ class MysteryBox extends Component {
                   onChange={this.onChangeNewBoxPrize}
                   placeholder="PRIZE"
                   InputProps={{
-                    endAdornment: 'BUSD'
+                    endAdornment: 'ETH'
                   }}
                 />
               </div>
@@ -265,7 +265,7 @@ class MysteryBox extends Component {
                   onChange={this.onChangeNewBoxPrice}
                   placeholder="PRICE"
                   InputProps={{
-                    endAdornment: 'BUSD'
+                    endAdornment: 'ETH'
                   }}
                 />
               </div>

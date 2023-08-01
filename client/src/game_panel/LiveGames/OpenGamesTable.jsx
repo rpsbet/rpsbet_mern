@@ -350,7 +350,7 @@ class OpenGamesTable extends Component {
           <div className="table main-game-table">
             {this.props.roomList.length === 0 && (
               <div className="dont-have-game-msg">
-                <div>NO BATTLES YET, GO TO 'MY BATTLES'</div>
+                <div>NO BATTLES YET, GO TO 'MANAGE' AND CREATE ONE</div>
               </div>
             )}
             {this.state.showPlayerModal && (
@@ -509,7 +509,7 @@ class OpenGamesTable extends Component {
                               {updateDigitToPoint2(
                                 this.calculatePercentageChange(
                                   row.bet_amount,
-                                  row.user_bet
+                                  row.bet_amount
                                 )
                               )}
                               %

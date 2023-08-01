@@ -293,7 +293,7 @@ class RPS extends Component {
     this.setState({ bet_amount: new_state.selected_bet_amount });
   };
   render() {
-    const defaultBetAmounts = [10, 25, 50, 100, 250];
+    const defaultBetAmounts = [0.01, 0.02, 0.05, 0.1, 1.00];
 
     return this.props.step === 1 ? (
       <div className="game-info-panel">

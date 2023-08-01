@@ -84,7 +84,7 @@ class AdvancedSettings extends Component {
                     shrink: true
                   }}
                   InputProps={{
-                    endAdornment: 'BUSD'
+                    endAdornment: 'ETH'
                   }}
                   onChange={e => {
                     if (this.props.game_mode === 'Mystery Box') {

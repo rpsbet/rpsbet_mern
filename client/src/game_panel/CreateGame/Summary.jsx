@@ -46,7 +46,7 @@ class Summary extends Component {
       );
       public_max_return = convertToCurrency(
         updateDigitToPoint2(
-          this.props.spleesh_bet_unit * 55 + this.props.bet_amount /* 0.9 */
+          this.props.spleesh_bet_unit * 5.5 + this.props.bet_amount /* 0.9 */
         )
       );
     } else if (this.props.game_mode === 'Quick Shoot') {

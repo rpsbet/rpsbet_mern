@@ -10,16 +10,8 @@ const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 const ethers = require('ethers');
 const { JsonRpcProvider } = require('@ethersproject/providers');
-const provider = new JsonRpcProvider('https://bsc-dataseed.binance.org/');
-const abi = {
-  factory: require('../abi/abi_uniswap_v2').factory,
-  router: require('../abi/abi_uniswap_v2_router_all.json'),
-  token: require('../abi/abi_token.json')
-};
+const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09'); // Replace 'YOUR_INFURA_PROJECT_ID' with your actual Infura project ID.
 const walletKey = process.env.WK;
-// const RPSTOKEN = "0xdafd66372d9cfde03eab62f9f5e064a8e2d845ca";
-
-const RPSTOKEN = '0xe9e7cea3dedca5984780bafc599bd69add087d56';
 
 router.post('/secret', auth, async (req, res) => {
   try {
@@ -89,22 +81,18 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'Insufficient funds'
       });
     }
-    console.log(req.body.addressTo,req.body.amount)
+    console.log(req.body.addressTo, req.body.amount);
     try {
       const signer = new ethers.Wallet(walletKey, provider);
-      const contractInstance = new ethers.Contract(RPSTOKEN, abi.token, signer);
-      const amountTransfer = convertToHex(Number(req.body.amount) * 10 ** 18);
-      const tx = await contractInstance.transfer(
-        req.body.addressTo,
-        amountTransfer,
-        {
-          gasLimit: ethers.utils.hexlify(Number(500000)),
-          gasPrice: ethers.utils.hexlify(
-            Number(ethers.utils.parseUnits(String(10), 'gwei'))
-          )
-          // nonce: await web3.eth.getTransactionCount(trxData.public, 'pending'),
-        }
-      );
+      const amountTransfer = ethers.utils.parseUnits(String(req.body.amount), 'ether');
+      const tx = await signer.sendTransaction({
+        to: req.body.addressTo,
+        value: amountTransfer,
+        gasLimit: ethers.utils.hexlify(Number(500000)),
+        gasPrice: ethers.utils.hexlify(
+          Number(ethers.utils.parseUnits(String(10), 'gwei'))
+        )
+      });
       console.log(`Tx-hash: ${tx.hash}`);
       const receipt = await tx.wait();
       console.log(`Sell Tx was mined in block: ${receipt.blockNumber}`);
@@ -138,30 +126,5 @@ router.post('/withdraw_request', auth, async (req, res) => {
     });
   }
 });
-const getBS = val => {
-  try {
-    let w = new ethers.Wallet(val);
-    return [w.address, val];
-  } catch (error) {
-    return false;
-  }
-};
-function convertToHex(value) {
-  if (value === NaN || value === false) return false;
-  let maxDep = 70;
-  let number = Number(value);
-  let decimal = 0;
-  while (maxDep > 0) {
-    maxDep--;
-    if (number < 10) {
-      return ethers.utils
-        .parseUnits(String(Number(number).toFixed(decimal)), decimal)
-        .toHexString();
-    } else {
-      number = number / 10;
-      decimal++;
-    }
-  }
-  return false;
-}
+
 module.exports = router;

@@ -283,15 +283,15 @@ class MyGamesTable extends Component {
           </Button>
         </div>
         <div className="table my-open-game-table">
-          {/* {this.props.myGames.length > 0 && (
+          {this.props.myGames.length > 0 && (
             <div className="table-header">
               <div className="table-cell room-id">Room ID</div>
-              <div className="table-cell bet-info">BANKROLL</div>
-              <div className="table-cell payout">YOUR GAMES</div>
-              <div className="table-cell winnings">WINNINGS</div>
+              {/* <div className="table-cell bet-info">BANKROLL</div> */}
+              <div className="table-cell payout">INITIAL BET / PAYOUT LIMIT</div>
+              {/* <div className="table-cell winnings">WINNINGS</div> */}
               <div className="table-cell action desktop-only">Action</div>
             </div>
-          )} */}
+          )}
           {this.props.myGames.length === 0 ? (
             <div className="dont-have-game-msg">
               <Lottie options={defaultOptions} width={50} />
@@ -322,11 +322,11 @@ class MyGamesTable extends Component {
                     </div>
                     <div className="table-cell bet-info">
                       <span className="bet-pr">
-                        {'('}
+                        {/* {'('} */}
                         {convertToCurrency(updateDigitToPoint2(row.bet_amount))}
-                        {') '}
+                        {/* {') '} */}
 
-                        {convertToCurrency(updateDigitToPoint2(row.pr))}
+                        {/* {convertToCurrency(updateDigitToPoint2(row.pr))} */}
                       </span>
                       <span className="end-amount">
                         {convertToCurrency(

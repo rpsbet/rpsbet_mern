@@ -56,14 +56,14 @@ this.props.playSound('boop');
               className={this.props.spleesh_bet_unit === item ? 'active' : ''}
               onClick={() => {
                 this.props.onChangeState({
-                  spleesh_bet_unit: item,
-                  bet_amount: item,
-                  max_return: 54 * item,
-                  endgame_amount: 54 * item
+                  spleesh_bet_unit: item / 100,
+                  bet_amount: item / 100,
+                  max_return: 54 * item / 100,
+                  endgame_amount: 54 * item / 100
                 });
               }}
             >
-              {convertToCurrency(item)} - {convertToCurrency(item * 10)}
+              {convertToCurrency(item / 100)} - {convertToCurrency(item * 10 / 100)}
             </Button>
           ))}
         

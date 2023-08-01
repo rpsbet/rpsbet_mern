@@ -236,7 +236,7 @@ class DropGame extends Component {
   };
   render() {
     
-    const defaultBetAmounts = [10, 25, 50, 100, 250];
+    const defaultBetAmounts = [0.01, 0.02, 0.05, 0.1, 1.00];
 
     return this.props.step === 1 ? (
       
@@ -273,7 +273,7 @@ class DropGame extends Component {
                 onChange={(event) => this.setState({ drop: event.target.value })}
                 placeholder="BET AMOUNT"
                 InputProps={{
-                  endAdornment: "BUSD",
+                  endAdornment: "ETH",
                 }}
               />
               <div>

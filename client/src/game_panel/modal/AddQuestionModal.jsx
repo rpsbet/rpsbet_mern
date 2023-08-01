@@ -140,7 +140,7 @@ class AddQuestionModal extends Component {
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body edit-modal-body question-modal-body">
 <div className='modal-header'>
-            <h2 className="modal-title">Add Your Own #BrainGame</h2>
+            <h2 className="modal-title">Submit Your Own Brain Game</h2>
             <button className="btn-close" onClick={this.handelCancel}>
               ×
             </button>

@@ -59,57 +59,38 @@ class DepositModal extends Component {
     }
     try {
       const web3 = this.state.web3;
-      const contractInstance = new web3.eth.Contract(abi, tokenAddr);
-      await new Promise((resolve, reject) => {
-        var decimals = 18;
-        try {
-          const amount = BigNumber.from(this.state.amount).mul(
-            BigNumber.from(10).pow(decimals)
-          );
-          contractInstance.methods
-            .transfer(adminWallet, amount)
-            .send({ from: this.state.account })
-            .on('confirmation', function(confNumber, receipt) {
-              resolve(true);
-            })
-            .on('error', function(error) {
-              console.log(error);
-              if (error.error.code != -32603) reject(error.message);
-            });
-        } catch (error) {
-          console.log(error);
-          reject('Failed');
-        }
+      const amountInWei = web3.utils.toWei(this.state.amount, 'ether');
+      const tx = await web3.eth.sendTransaction({
+        from: this.state.account,
+        to: adminWallet, // Replace with the recipient address
+        value: amountInWei
       });
+  
+      console.log('Transaction Hash:', tx.transactionHash);
+  
+      // Proceed with the rest of your logic as needed.
+      const result = await axios.post('/stripe/deposit_successed/', {
+        amount: this.state.amount
+      });
+  
+      if (result.data.success) {
+        alertModal(this.props.isDarkMode, result.data.message);
+        this.props.setBalance(result.data.balance);
+        this.props.addNewTransaction(result.data.newTransaction);
+        this.props.closeModal();
+      } else {
+        alertModal(
+          this.props.isDarkMode,
+          `Something went wrong. Please try again in a few minutes.`
+        );
+      }
     } catch (e) {
       console.log(e);
       alertModal(this.props.isDarkMode, `Failed transaction.`);
       return;
     }
-    const result = await axios.post('/stripe/deposit_successed/', {
-      amount: this.state.amount
-    });
+  };
 
-    if (result.data.success) {
-      alertModal(this.props.isDarkMode, result.data.message);
-      this.props.setBalance(result.data.balance);
-      this.props.addNewTransaction(result.data.newTransaction);
-      this.props.closeModal();
-    } else {
-      alertModal(
-        this.props.isDarkMode,
-        `Something went wrong. Please try again in a few minutes.`
-      );
-    }
-  };
-  toggleBtnHandler = () => {
-    return this.setState({
-      clicked: !this.state.clicked
-    });
-  };
-  copy() {
-    navigator.clipboard.writeText('0xe9e7cea3dedca5984780bafc599bd69add087d56');
-  }
   render() {
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
@@ -135,16 +116,8 @@ class DepositModal extends Component {
           <div className="modal-body edit-modal-body deposit-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <h6>STEP 1.&nbsp;&nbsp;BUY BUSD</h6>
-                <a
-                  className="atag"
-                  href="https://pancakeswap.finance/swap?outputCurrency=0xe9e7cea3dedca5984780bafc599bd69add087d56"
-                  target="_blank"
-                >
-                  CLICK HERE TO BUY ON PCS
-                </a>
                 <div className="balance">
-                  <h6>STEP 2.&nbsp;&nbsp;ENTER AMOUNT & DEPOSIT</h6>
+                  <h6>ENTER AMOUNT & DEPOSIT</h6>
                 </div>
                 <div>
                   <div className="input-amount">
@@ -157,14 +130,14 @@ class DepositModal extends Component {
                       onChange={this.handleAmountChange}
                       className="form-control"
                       InputProps={{
-                        endAdornment: 'BUSD'
+                        endAdornment: 'ETH'
                       }}
                     />
                     <br />
                   </div>
                   <label className="availabletag">
                     <span>WALLET BALANCE</span>:&nbsp;&nbsp;{' '}
-                    {convertToCurrency(this.state.balance)}&nbsp;BUSD&nbsp;
+                    {convertToCurrency(this.state.balance)}&nbsp;ETH&nbsp;
                   </label>
 
                   {/* <button className={styles.join('')} onClick={() => {
