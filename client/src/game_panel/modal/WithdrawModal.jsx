@@ -64,21 +64,21 @@ class WithdrawModal extends Component {
    
     send = async () => {
         
-        
         try {
             
             if (this.state.amount < 5) {
-                alertModal(this.props.isDarkMode, `WITHDRAWAL AMOUNT MUST BE MORE THAN 5 BUSD`)
+                alertModal(this.props.isDarkMode, `WITHDRAWAL AMOUNT MUST BE MORE THAN 5 ETH`)
                 return;
             }
 
             if (this.state.totalWagered < 25) {
-                alertModal(this.props.isDarkMode, `MUST HAVE WAGERED AT LEAST 25 BUSD`)
+            // if (this.state.totalWagered < 0) {
+                alertModal(this.props.isDarkMode, `MUST HAVE WAGERED AT LEAST 25 ETH`)
                 return;
             }
 
             if (this.state.deposit < 5) {
-                alertModal(this.props.isDarkMode, `DEPOSIT AT LEAST 5 BUSD FIRST`)
+                alertModal(this.props.isDarkMode, `DEPOSIT AT LEAST 5 ETH FIRST`)
                 return;
             }
             
@@ -163,7 +163,7 @@ class WithdrawModal extends Component {
                                     value={this.state.amount}
                                     onChange={this.handleAmountChange}
                                     InputProps={{
-                                        endAdornment: "BUSD",
+                                        endAdornment: "ETH",
                                     }}
                                     className="form-control" />
                                   

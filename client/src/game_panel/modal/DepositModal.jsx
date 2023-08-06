@@ -47,6 +47,7 @@ class DepositModal extends Component {
       amount: e.target.value
     });
   };
+
   send = async () => {
     if (this.state.amount <= 0) {
       alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
@@ -60,30 +61,31 @@ class DepositModal extends Component {
     try {
       const web3 = this.state.web3;
       const amountInWei = web3.utils.toWei(this.state.amount, 'ether');
-      const tx = await web3.eth.sendTransaction({
+      // transaction initiate
+      web3.eth.sendTransaction({
         from: this.state.account,
         to: adminWallet, // Replace with the recipient address
         value: amountInWei
-      });
-  
-      console.log('Transaction Hash:', tx.transactionHash);
-  
-      // Proceed with the rest of your logic as needed.
-      const result = await axios.post('/stripe/deposit_successed/', {
-        amount: this.state.amount
-      });
-  
-      if (result.data.success) {
-        alertModal(this.props.isDarkMode, result.data.message);
-        this.props.setBalance(result.data.balance);
-        this.props.addNewTransaction(result.data.newTransaction);
-        this.props.closeModal();
-      } else {
-        alertModal(
-          this.props.isDarkMode,
-          `Something went wrong. Please try again in a few minutes.`
-        );
-      }
+      })
+      .then(async (tx) => {
+        // Proceed with the rest of logic.
+        const result = await axios.post('/stripe/deposit_successed/', {
+          amount: this.state.amount,
+          txtHash: tx.transactionHash,
+        });
+
+        if (result.data.success) {
+          alertModal(this.props.isDarkMode, result.data.message);
+          this.props.setBalance(result.data.balance);
+          this.props.addNewTransaction(result.data.newTransaction);
+          this.props.closeModal();
+        } else {
+          alertModal(
+            this.props.isDarkMode,
+            `Something went wrong. Please try again in a few minutes.`
+          );
+        }
+      })
     } catch (e) {
       console.log(e);
       alertModal(this.props.isDarkMode, `Failed transaction.`);
