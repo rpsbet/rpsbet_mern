@@ -808,7 +808,7 @@ class SiteWrapper extends Component {
                         // prefix="$"
                         separator=","
                         decimal="."
-                        decimals={2}
+                        decimals={5}
                         duration={1.5}
                         redraw={true}
                         preserveValue={true}
@@ -1043,14 +1043,16 @@ class SiteWrapper extends Component {
                                 <>
                                   {'+ '}
                                   {convertToCurrency(
-                                    updateDigitToPoint2(row.amount)
+                                    row.amount,
+                                    true
                                   )}
                                 </>
                               ) : (
                                 <>
                                   {'- '}
                                   {convertToCurrency(
-                                    updateDigitToPoint2(Math.abs(row.amount))
+                                    Math.abs(row.amount),
+                                    true
                                   )}
                                 </>
                               )}
