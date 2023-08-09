@@ -245,7 +245,7 @@ class QuickShoot extends Component {
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = (Math.floor(multipliedBetAmount * 100) / 100).toFixed(2);
+    const roundedBetAmount = (Math.floor(multipliedBetAmount * 100) / 100).toFixed(6);
     this.setState(
       {
         bet_amount: roundedBetAmount

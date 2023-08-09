@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import { updateDigitToPoint2 } from '../../util/helper';
+// import { updateDigitToPoint2 } from '../../util/helper';
 import { Button, TextField } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
@@ -292,7 +292,7 @@ class RPS extends Component {
       {
         label: 'Potential Return',
         value: convertToCurrency(
-          updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
+          this.state.bet_amount * 2 /* * 0.95 */
         )
       }
     ];
@@ -713,9 +713,9 @@ class RPS extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(
+                        // updateDigitToPoint2(
                           this.state.bet_amount * 2 /* * 0.95 */
-                        )
+                        // )
                       )}
                     </div>
                   </div>

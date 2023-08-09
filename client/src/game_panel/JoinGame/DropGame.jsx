@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import { updateDigitToPoint2 } from '../../util/helper';
+// import { updateDigitToPoint2 } from '../../util/helper';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import Lottie from 'react-lottie';
@@ -194,9 +194,8 @@ class DropGame extends Component {
       },
       {
         label: 'Potential Return',
-        value: convertToCurrency(
-          updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
-        )
+        value: convertToCurrency(this.state.bet_amount * 2 /* * 0.95 */)
+        // )
       }
     ];
     this.setState({ items });
@@ -615,9 +614,9 @@ class DropGame extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(
+                        // updateDigitToPoint2(
                           this.state.bet_amount * 2 
-                        )
+                        // )
                       )}
                     </div>
                   </div>
@@ -676,7 +675,7 @@ class DropGame extends Component {
                           }}
                         >
                           <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
-                          {guess.host_drop.toFixed(2)}
+                          {guess.host_drop}
                         </span>
                       ))
                     ) : (

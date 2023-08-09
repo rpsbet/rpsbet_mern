@@ -72,12 +72,12 @@ import WithdrawModal from './modal/WithdrawModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
 
 import Moment from 'moment';
-import { updateDigitToPoint2 } from '../util/helper';
+// import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css';
 import Avatar from '../components/Avatar';
 import Web3 from 'web3';
-import abi from '../config/abi_token.json';
-import { tokenAddr } from '../config/index.js';
+// import abi from '../config/abi_token.json';
+// import { tokenAddr } from '../config/index.js';
 import { convertToCurrency } from '../util/conversion';
 
 LoadingOverlay.propTypes = undefined;
@@ -333,7 +333,7 @@ class SiteWrapper extends Component {
               value = message.match(/\d+/)[0];
             }
             if (value) {
-              const formattedValue = parseFloat(value).toFixed(2);
+              const formattedValue = parseFloat(value).toFixed(6);
               const spokenValue = formattedValue.endsWith('.00')
                 ? parseFloat(formattedValue).toString()
                 : formattedValue;
@@ -355,7 +355,7 @@ class SiteWrapper extends Component {
               value = message.match(/\d+/)[0];
             }
             if (value) {
-              const formattedValue = parseFloat(value).toFixed(2);
+              const formattedValue = parseFloat(value);
               const spokenValue = formattedValue.endsWith('.00')
                 ? parseFloat(formattedValue).toString()
                 : formattedValue;
@@ -375,7 +375,7 @@ class SiteWrapper extends Component {
               value = message.match(/\d+/)[0];
             }
             if (value) {
-              const formattedValue = parseFloat(value).toFixed(2);
+              const formattedValue = parseFloat(value);
               const spokenValue = formattedValue.endsWith('.00')
                 ? parseFloat(formattedValue).toString()
                 : formattedValue;

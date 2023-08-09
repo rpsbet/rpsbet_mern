@@ -11,8 +11,7 @@ import { Button, TextField } from '@material-ui/core';
 
 import Elevation from '../../Styles/Elevation';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
-import {
-  updateDigitToPoint2,  
+import { 
   addCurrencySignal
 } from '../../util/helper';
 import moment from 'moment';
@@ -194,7 +193,7 @@ class ProfileModal extends Component {
                         variant="outlined"
                         label="REFERRAL REWARDS"
                         InputProps={{
-                            endAdornment: "BUSD",
+                            endAdornment: "ETH",
                           }}
                         readOnly />
 

@@ -6,7 +6,7 @@ import BetArray from '../../components/BetArray';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import { updateDigitToPoint2 } from '../../util/helper';
+// import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import brainBg from '../LottieAnimations/brainBg.json';
 import animationData from '../LottieAnimations/spinningIcon';
@@ -596,8 +596,7 @@ class BrainGame extends Component {
                   <div className="data-item">
                     <div className="label your-max-return">Your Return</div>
                     <div className="value">
-                      {convertToCurrency(
-                        updateDigitToPoint2(this.props.bet_amount * 2)
+                      {convertToCurrency(this.props.bet_amount * 2
                       )}
                     </div>
                   </div>
@@ -605,9 +604,9 @@ class BrainGame extends Component {
                     <div className="label public-max-return">Pot</div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(
+                        // updateDigitToPoint2(
                           this.props.bet_amount * this.props.joined_count
-                        )
+                        // )
                       )}
                     </div>
                   </div>

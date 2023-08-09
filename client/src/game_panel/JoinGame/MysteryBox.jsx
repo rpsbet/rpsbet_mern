@@ -17,7 +17,7 @@ import {
 import animationData from '../LottieAnimations/spinningIcon';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
-import { updateDigitToPoint2 } from '../../util/helper';
+// import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import ReactModal from 'react-modal';
 import Share from '../../components/Share';
@@ -597,7 +597,7 @@ class MysteryBox extends Component {
                       <div className="label your-max-return">Your Return</div>
                     </div>
                     <div className="value">
-                      {convertToCurrency(updateDigitToPoint2(pr))}
+                      {convertToCurrency(pr)}
                     </div>
                   </div>
                   <div className="data-item">

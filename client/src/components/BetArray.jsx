@@ -17,7 +17,7 @@ function BetArray({ arrayName, label }) {
           {stored_bet_array.map((item, index) => (
             <div key={index} className="array-item">
               {typeof item[label] === 'number'
-                ? item[label].toFixed(2)
+                ? item[label]
                 : item[label]}
             </div>
           ))}

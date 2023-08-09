@@ -6,7 +6,7 @@ import {
   endGame,
   addNewTransaction
 } from '../../redux/Logic/logic.actions';
-import { updateDigitToPoint2 } from '../../util/helper';
+// import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalClosed } from '../modal/ConfirmAlerts';
 import Pagination from '../../components/Pagination';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
@@ -323,14 +323,14 @@ class MyGamesTable extends Component {
                     <div className="table-cell bet-info">
                       <span className="bet-pr">
                         {/* {'('} */}
-                        {convertToCurrency(updateDigitToPoint2(row.bet_amount))}
+                        {convertToCurrency(row.bet_amount)}
                         {/* {') '} */}
 
                         {/* {convertToCurrency(updateDigitToPoint2(row.pr))} */}
                       </span>
                       <span className="end-amount">
                         {convertToCurrency(
-                          updateDigitToPoint2(row.endgame_amount)
+                          row.endgame_amount
                         )}
                       </span>
                     </div>

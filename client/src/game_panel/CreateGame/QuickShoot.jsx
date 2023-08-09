@@ -74,8 +74,8 @@ class QuickShoot extends Component {
 
    calcWinChance = (gameType, rounds) => {
     // Calculate base probabilities
-    let probWin = (100 / gameType).toFixed(2);
-    let probLose = (100 - probWin).toFixed(2);
+    let probWin = (100 / gameType).toFixed(6);
+    let probLose = (100 - probWin).toFixed(6);
   
     // Initialize the frequency of each unique qs value to 0
     const freq = {};

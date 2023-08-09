@@ -224,7 +224,7 @@ class DropGame extends Component {
 
   
     handleMaxButtonClick() {
-      const maxBetAmount = (this.state.balance).toFixed(2);
+      const maxBetAmount = (this.state.balance);
       this.setState({
         drop: Math.min(maxBetAmount, this.props.bet_amount)
       }, () => {
@@ -236,7 +236,7 @@ class DropGame extends Component {
   };
   render() {
     
-    const defaultBetAmounts = [0.01, 0.02, 0.05, 0.1, 1.00];
+    const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
 
     return this.props.step === 1 ? (
       

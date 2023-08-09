@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTwitter, faTelegram, faDiscord } from '@fortawesome/free-brands-svg-icons';
-import bscscan from '../icons/bscscan.png';
+import bscscan from '../icons/etherscan-logo.svg';
 import busd from '../icons/b-usd.png';
 import btc from '../icons/btc.png';
 import eth from '../icons/eth.png';
@@ -184,9 +184,9 @@ class Footer extends Component {
                     {/* <a className={classes.link} href="#">Fair</a> */}
                 </div>
                 <div className={classes.address}>
-                    <p>RPS.GAME is operated by RPSBET Ltd. (Registration No. 12175962), having its registered address at 84 Ladysmith Road, Plymouth, UK
+                    <p>This website falls under provable fairness because (1) P2P, skill games are transformative and (2) players have a 100% control-rate over the AI technology used to replace an intermediary. 
 </p>
-                    <p>Payments may be handled on behalf of RPS Finance Limited (UK) (Registration No. 13823533), having its registered address at 84 Ladysmith Road, Plymouth, UK
+                    <p>Also rps.game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
 </p>
                 </div>
             </div>

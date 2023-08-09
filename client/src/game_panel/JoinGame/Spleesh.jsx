@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import { updateDigitToPoint2 } from '../../util/helper';
+// import { updateDigitToPoint2 } from '../../util/helper';
 import Share from '../../components/Share';
 import { Button } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
@@ -534,14 +534,14 @@ class Spleesh extends Component {
                     <div className="label your-max-return">Your Return</div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(
+                        // updateDigitToPoint2(
                           this.state.spleesh_guesses.reduce(
                             (a, b) => a + b.bet_amount,
                             0
                           ) +
                             this.state.bet_amount * 2 /* 0.9 */
                         )
-                      )}
+                      }
                     </div>
                   </div>
                   <div className="data-item">

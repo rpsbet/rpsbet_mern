@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { initParams } from 'request';
+// import { initParams } from 'request';
 import { convertToCurrency } from '../../util/conversion';
-import { updateDigitToPoint2 } from '../../util/helper';
+// import { updateDigitToPoint2 } from '../../util/helper';
 import { connect } from 'react-redux';
 import { Button, TextField } from '@material-ui/core';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
@@ -12,7 +12,7 @@ class DefaultBetAmountPanel extends Component {
     super(props);
     const defaultBetAmounts = this.props.defaultBetAmounts
       ? this.props.defaultBetAmounts
-      : [0.01, 0.02, 0.05, 0.1, 1.00];
+      : [0.001, 0.002, 0.005, 0.01, 0.1];
     this.state = {
       defaultBetAmounts: defaultBetAmounts,
       isFocused: false,
@@ -23,7 +23,7 @@ class DefaultBetAmountPanel extends Component {
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.props.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(multipliedBetAmount * 1000000) / 1000000;
     const newState = {
       bet_amount: roundedBetAmount
     };
@@ -48,7 +48,7 @@ class DefaultBetAmountPanel extends Component {
   
 
   handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.props.balance * 100) / 100; // round down to 2 decimal places
+    const maxBetAmount = Math.floor(this.props.balance * 1000000) / 1000000; // round down to 2 decimal places
     if (this.props.game_type === 'Brain Game') {
       this.props.onChangeState({
         bet_amount: maxBetAmount
@@ -88,8 +88,8 @@ class DefaultBetAmountPanel extends Component {
   };
 
   formatBetAmount = (amount) => {
-    const roundedAmount = Math.floor(amount * 100) / 100;
-    return roundedAmount.toFixed(2);
+    const roundedAmount = Math.floor(amount * 1000000) / 1000000;
+    return roundedAmount;
   };
 
   render() {
@@ -175,7 +175,7 @@ class DefaultBetAmountPanel extends Component {
               }}
               key={index}
             >
-              {convertToCurrency(updateDigitToPoint2(amount))}
+              {convertToCurrency(amount)}
             </Button>
           ))}
           <Button
@@ -248,10 +248,10 @@ class DefaultBetAmountPanel extends Component {
                 this.props.onChangeState({
                   bet_amount: parseInt(e.target.value) || '',
                   public_bet_amount: convertToCurrency(
-                    updateDigitToPoint2(
+                    // updateDigitToPoint2(
                       (this.props.qs_game_type - 1) *
                         (parseInt(e.target.value) || '')
-                    )
+                    // )
                   ),
                   max_return: this.props.qs_game_type * e.target.value
                 });
