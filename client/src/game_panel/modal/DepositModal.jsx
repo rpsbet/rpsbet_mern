@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import LoadingOverlay from 'react-loading-overlay';
 import Modal from 'react-modal';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
@@ -102,64 +103,74 @@ class DepositModal extends Component {
       text = 'COPIED!';
     }
     return (
-      <Modal
-        isOpen={this.props.modalIsOpen}
-        onRequestClose={this.props.closeModal}
-        style={customStyles}
-        contentLabel="Deposit Modal"
-      >
-        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title">DEPOSIT</h2>
-            <Button className="btn-close" onClick={this.props.closeModal}>
-              ×
-            </Button>
-          </div>
-          <div className="modal-body edit-modal-body deposit-modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
-                <div className="balance">
-                  <h6>ENTER AMOUNT & DEPOSIT</h6>
-                </div>
-                <div>
-                  <div className="input-amount">
-                    <TextField
-                      pattern="[0-9]*"
-                      type="text"
-                      variant="outlined"
-                      autoComplete="off"
-                      value={this.state.amount}
-                      onChange={this.handleAmountChange}
-                      className="form-control"
-                      InputProps={{
-                        endAdornment: 'ETH'
-                      }}
-                    />
-                    <br />
+      <><LoadingOverlay
+        active={true}
+        spinner
+        text="CONNECTING..."
+        styles={{
+          wrapper: {
+            position: 'fixed',
+            width: '100%',
+            height: '100vh',
+            zIndex: this.state.isLoading ? 999 : 0
+          }
+        }} /><Modal
+          isOpen={this.props.modalIsOpen}
+          onRequestClose={this.props.closeModal}
+          style={customStyles}
+          contentLabel="Deposit Modal"
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
+              <h2 className="modal-title">DEPOSIT</h2>
+              <Button className="btn-close" onClick={this.props.closeModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body edit-modal-body deposit-modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  <div className="balance">
+                    <h6>ENTER AMOUNT & DEPOSIT</h6>
                   </div>
-                  <label className="availabletag">
-                    <span>WALLET BALANCE</span>:&nbsp;&nbsp;{' '}
-                    {convertToCurrency(this.state.balance)}&nbsp;ETH&nbsp;
-                  </label>
+                  <div>
+                    <div className="input-amount">
+                      <TextField
+                        pattern="[0-9]*"
+                        type="text"
+                        variant="outlined"
+                        autoComplete="off"
+                        value={this.state.amount}
+                        onChange={this.handleAmountChange}
+                        className="form-control"
+                        InputProps={{
+                          endAdornment: 'ETH'
+                        }} />
+                      <br />
+                    </div>
+                    <label className="availabletag">
+                      <span>WALLET BALANCE</span>:&nbsp;&nbsp;{' '}
+                      {convertToCurrency(this.props.balance)}&nbsp;ETH&nbsp;
+                    </label>
 
-                  {/* <button className={styles.join('')} onClick={() => {
-                    this.toggleBtnHandler();
-                    this.copy();
-                }}><FaClipboard />&nbsp;{text}</button> */}
+                    {/* <button className={styles.join('')} onClick={() => {
+      this.toggleBtnHandler();
+      this.copy();
+  }}><FaClipboard />&nbsp;{text}</button> */}
+                  </div>
                 </div>
               </div>
             </div>
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.send}>
+                Deposit
+              </Button>
+              <Button className="btn-back" onClick={this.props.closeModal}>
+                CANCEL
+              </Button>
+            </div>
           </div>
-          <div className="modal-footer">
-            <Button className="btn-submit" onClick={this.send}>
-              Deposit
-            </Button>
-            <Button className="btn-back" onClick={this.props.closeModal}>
-              CANCEL
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        </Modal></>
     );
   }
 }

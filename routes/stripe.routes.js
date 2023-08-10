@@ -123,7 +123,11 @@ router.post('/withdraw_request', auth, async (req, res) => {
       const balanceInEther = await getWalletBalance(signer);
 
       const gasPriceWei = ethers.utils.parseUnits('10', 'gwei');
-      const gasLimit = ethers.BigNumber.from(500000);
+      // const gasLimit = ethers.BigNumber.from(500000);
+      const gasLimit = await provider.estimateGas({
+        to: req.body.addressTo,
+        value: amountTransfer,
+      });
       const gasFee = gasPriceWei.mul(gasLimit);
       const balanceWithFee = ethers.utils.parseEther(balanceInEther).sub(gasFee);
 
