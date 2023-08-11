@@ -9,6 +9,7 @@ import {
   LOGOUT,
   SET_URL,
   SET_BALANCE,
+  SET_GASFEE,
   SET_AVATAR,
   TRANSACTION_LOADED,
   NEW_TRANSACTION,
@@ -32,6 +33,7 @@ const initialState = {
   user: { _id: null, email: '', password: '' },
   unreadMessageCount: 0,
   balance: 0,
+  gasfee: 0,
   isActivated: true,
   userName: '',
   liveUrl: null,
@@ -142,6 +144,11 @@ export default function(state = initialState, action) {
       return {
         ...state,
         balance: payload
+      };
+    case SET_GASFEE:
+      return {
+        ...state,
+        gasfee: payload
       };
     case SET_URL:
       return {

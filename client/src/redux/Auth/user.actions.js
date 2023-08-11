@@ -12,6 +12,7 @@ import {
   MSG_WARNING,
   SET_UNREAD_MESSAGE_COUNT,
   SET_BALANCE,
+  SET_GASFEE,
   SET_URL,
   TRANSACTION_LOADED,
   VERIFICATION_SUCCESS,
@@ -250,6 +251,11 @@ export const setUrl = url => dispatch => {
 
 export const setBalance = balance => dispatch => {
   dispatch({ type: SET_BALANCE, payload: balance });
+}
+
+export const setGasfee = params => async dispatch => {
+  const { data } = await axios.post('/stripe/get_gasfee', params);
+  dispatch({ type: SET_GASFEE, payload: data.data });
 }
 
 export const toggleMute = isMuted => dispatch => {

@@ -185,4 +185,21 @@ router.post('/withdraw_request', auth, async (req, res) => {
   }
 });
 
+router.post('/get_gasfee', auth, async (req, res) => {
+  const amount = req.body.amount ? req.body.amount : 0;
+  const amountTransfer = ethers.utils.parseUnits(String(amount), 'ether');
+
+  const gasPriceWei = ethers.utils.parseUnits('10', 'gwei');
+  // const gasLimit = ethers.BigNumber.from(500000);
+  const gasLimit = await provider.estimateGas({
+    to: req.body.addressTo,
+    value: amountTransfer,
+  });
+  const gasFee = gasPriceWei.mul(gasLimit);
+  const gasFeeEth = ethers.utils.formatEther(gasFee);
+  return res.json({
+    data: gasFeeEth
+  })
+})
+
 module.exports = router;

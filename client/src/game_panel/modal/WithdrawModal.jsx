@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
-import { setBalance } from '../../redux/Auth/user.actions';
+import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Modal from 'react-modal';
@@ -46,22 +46,24 @@ class WithdrawModal extends Component {
         };
     }
 
-    handleAmountChange = (e) => {
-        e.preventDefault();
-        this.setState({
-            amount: e.target.value
-        })
-        console.log(this.state.amount);
-    }
-
     async componentDidMount() {
         const result = await this.props.getCustomerStatisticsData(this.state._id)
         this.setState({
           ...result
         })
+
+        const params = {addressTo: this.state.account}
+        this.props.setGasfee(params);
       }
 
-   
+    handleAmountChange = (e) => {
+        e.preventDefault();
+        const amount = e.target.value;
+        this.setState({
+            amount: amount
+        })
+    }
+
     send = async () => {
         
         
@@ -159,18 +161,17 @@ class WithdrawModal extends Component {
                                   
                                     </div>
                                     <label className="availabletag">
-                                        <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.props.balance)}
-                                        </label>
-                                    
-                               
-                                 
+                                        <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.state.balance)}<br/>
+                                        
+                                        <span>GAS FEE</span>:&nbsp;{convertToCurrency(this.props.gasfee)}
+                                        </label>                
                                 </div>
                             </div>
                         </div>
-                                    <div className="modal-footer">
-                                        <Button className="btn-submit" onClick={this.send}>Withdraw</Button>
-                                        <Button className="btn-back" onClick={this.props.closeModal}>CANCEL</Button>
-                                    </div>
+                        <div className="modal-footer">
+                            <Button className="btn-submit" onClick={this.send}>Withdraw</Button>
+                            <Button className="btn-back" onClick={this.props.closeModal}>CANCEL</Button>
+                        </div>
                     </div>
                 </Modal>
             </>
@@ -181,10 +182,12 @@ class WithdrawModal extends Component {
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
+  gasfee: state.auth.gasfee
 });
 
 const mapDispatchToProps = {
   setBalance,
+  setGasfee,
   addNewTransaction,
   getCustomerStatisticsData,
 };

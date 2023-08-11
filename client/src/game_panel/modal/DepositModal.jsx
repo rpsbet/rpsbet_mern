@@ -4,7 +4,7 @@ import LoadingOverlay from 'react-loading-overlay';
 import Modal from 'react-modal';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { setBalance } from '../../redux/Auth/user.actions';
+import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { BigNumber } from 'ethers';
 import { Button, TextField } from '@material-ui/core';
@@ -40,6 +40,11 @@ class DepositModal extends Component {
       balance: props.balance,
       account: props.account
     };
+  }
+
+  async componentDidMount() {
+    const params = {addressTo: this.state.account}
+    this.props.setGasfee(params);
   }
 
   handleAmountChange = e => {
@@ -150,7 +155,9 @@ class DepositModal extends Component {
                     </div>
                     <label className="availabletag">
                       <span>WALLET BALANCE</span>:&nbsp;&nbsp;{' '}
-                      {convertToCurrency(this.props.balance)}&nbsp;ETH&nbsp;
+                      {convertToCurrency(this.props.balance)}&nbsp;ETH&nbsp;<br/>
+                      <span>WALLET BALANCE</span>:&nbsp;&nbsp;{' '}
+                      {convertToCurrency(this.props.gasfee)}
                     </label>
 
                     {/* <button className={styles.join('')} onClick={() => {
@@ -176,11 +183,13 @@ class DepositModal extends Component {
 }
 
 const mapStateToProps = state => ({
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  gasfee: state.auth.gasfee
 });
 
 const mapDispatchToProps = {
   setBalance,
+  setGasfee,
   addNewTransaction
 };
 
