@@ -161,7 +161,7 @@ class WithdrawModal extends Component {
                                   
                                     </div>
                                     <label className="availabletag">
-                                        <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.state.balance)}<br/>
+                                        <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.props.balance)}<br/>
                                         
                                         <span>GAS FEE</span>:&nbsp;{convertToCurrency(this.props.gasfee)}
                                         </label>                

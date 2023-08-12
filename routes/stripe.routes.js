@@ -116,32 +116,46 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     console.log(req.body.addressTo, req.body.amount);
     const signer = new ethers.Wallet(walletKey, provider);
+
+    let realEth;
     try {
       const amountTransfer = ethers.utils.parseUnits(String(req.body.amount), 'ether');
 
-      // Fetch the balance of the wallet from the Ethereum network
-      const balanceInEther = await getWalletBalance(signer);
-
-      const gasPriceWei = ethers.utils.parseUnits('10', 'gwei');
-      // const gasLimit = ethers.BigNumber.from(500000);
+      const block = await provider.getBlock('latest')
+      const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei')
+      const priorityFeeGwei = '2.5';
       const gasLimit = await provider.estimateGas({
         to: req.body.addressTo,
-        value: amountTransfer,
+        value: amountTransfer
       });
-      const gasFee = gasPriceWei.mul(gasLimit);
-      const balanceWithFee = ethers.utils.parseEther(balanceInEther).sub(gasFee);
+  
+      // Calculate gas fee in wei
+      const gasPrice = ethers.utils.parseUnits(baseFeeGwei, 'gwei')
+                        .add(ethers.utils.parseUnits(priorityFeeGwei, 'gwei'));
 
-      if (Number(balanceWithFee) < Number(amountTransfer)) 
+      const gasFee = gasPrice.mul(gasLimit);
+
+      const balanceInEther = await getWalletBalance(signer);
+
+      const balanceWei = ethers.utils.parseEther(balanceInEther); // returns BigNumber
+
+      // Subtract gas fee from balance in wei
+      const differenceWei = balanceWei.sub(gasFee); // returns BigNumber
+
+      if (Number(balanceInEther) < Number(req.body.amount) && differenceWei.lt(0)) 
         return res.json({
           success: false,
           message: 'Invalid Operation detected!'
         })
-
+      
+      const real = amountTransfer.sub(gasFee);
+      realEth = ethers.utils.formatEther(real)
+      
       const tx = await signer.sendTransaction({
         to: req.body.addressTo,
-        value: amountTransfer,
+        value: real,
         gasLimit: ethers.utils.hexlify(gasLimit),
-        gasPrice: ethers.utils.hexlify(Number(gasPriceWei))
+        gasPrice: ethers.utils.hexlify(Number(gasPrice))
       });
 
       console.log(`Tx-hash: ${tx.hash}`);
@@ -160,7 +174,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
     await receipt.save();
     const newTransaction = new Transaction({
       user: req.user,
-      amount: -req.body.amount,
+      amount: -realEth,
       description: 'withdraw'
     });
 
@@ -186,20 +200,28 @@ router.post('/withdraw_request', auth, async (req, res) => {
 });
 
 router.post('/get_gasfee', auth, async (req, res) => {
-  const amount = req.body.amount ? req.body.amount : 0;
-  const amountTransfer = ethers.utils.parseUnits(String(amount), 'ether');
+  const amount = req.body.amount ? req.body.amount : "0";
+  const amountTransfer = ethers.utils.parseUnits(amount, 'ether');
 
-  const gasPriceWei = ethers.utils.parseUnits('10', 'gwei');
-  // const gasLimit = ethers.BigNumber.from(500000);
-  const gasLimit = await provider.estimateGas({
-    to: req.body.addressTo,
-    value: amountTransfer,
-  });
-  const gasFee = gasPriceWei.mul(gasLimit);
-  const gasFeeEth = ethers.utils.formatEther(gasFee);
-  return res.json({
-    data: gasFeeEth
-  })
+  try {
+    const block = await provider.getBlock('latest')
+    const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei')
+    const priorityFeeGwei = '2.5';
+    const gasLimit = await provider.estimateGas({
+      to: req.body.addressTo,
+      value: amountTransfer
+    });
+
+    // Calculate gas fee in wei
+    const gasFee = ethers.utils.parseUnits(baseFeeGwei, 'gwei')
+      .add(ethers.utils.parseUnits(priorityFeeGwei, 'gwei')).mul(gasLimit);
+
+    const gasFeeEth = ethers.utils.formatEther(gasFee);
+
+    return res.json({ data: gasFeeEth});
+  } catch(error) {
+    return res.status(400).send(error.message);
+  }
 })
 
 module.exports = router;

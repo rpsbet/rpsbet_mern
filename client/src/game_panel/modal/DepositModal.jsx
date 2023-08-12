@@ -156,7 +156,7 @@ class DepositModal extends Component {
                     <label className="availabletag">
                       <span>WALLET BALANCE</span>:&nbsp;&nbsp;{' '}
                       {convertToCurrency(this.props.balance)}&nbsp;ETH&nbsp;<br/>
-                      <span>WALLET BALANCE</span>:&nbsp;&nbsp;{' '}
+                      <span>GAS FEE</span>:&nbsp;&nbsp;{' '}
                       {convertToCurrency(this.props.gasfee)}
                     </label>
 
