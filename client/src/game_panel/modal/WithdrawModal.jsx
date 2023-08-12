@@ -90,12 +90,12 @@ class WithdrawModal extends Component {
                 this.props.closeModal();
             } else {
                 this.setState({ isLoading: false })
-                alertModal(this.props.isDarkMode, `SOMETHING WENT WRONG - CONTACT SUPPORT`)
+                alertModal(this.props.isDarkMode, `Something went wrong. Please try again later or contact support.`)
             }
         } catch(e) {
             this.setState({ isLoading: false })
             if (this.state.amount <= 0) {
-                alertModal(this.props.isDarkMode, `Something went wrong`);
+                alertModal(this.props.isDarkMode, `Failed transaction.`);
                 return;
             }
         }
@@ -112,7 +112,7 @@ class WithdrawModal extends Component {
                 <LoadingOverlay
                     active={true}
                     spinner
-                    text="CONNECTING..."
+                    text="Creating Block.."
                     styles={{
                         wrapper: {
                             position: 'fixed',

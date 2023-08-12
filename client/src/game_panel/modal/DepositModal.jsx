@@ -38,7 +38,9 @@ class DepositModal extends Component {
       amount: 0,
       web3: props.web3,
       balance: props.balance,
-      account: props.account
+      account: props.account,
+      isLoading: false
+
     };
   }
 
@@ -67,6 +69,10 @@ class DepositModal extends Component {
     try {
       const web3 = this.state.web3;
       const amountInWei = web3.utils.toWei(this.state.amount, 'ether');
+
+      this.setState({ isLoading: true })
+
+
       // transaction initiate
       web3.eth.sendTransaction({
         from: this.state.account,
@@ -81,19 +87,24 @@ class DepositModal extends Component {
         });
 
         if (result.data.success) {
-          alertModal(this.props.isDarkMode, result.data.message);
+          alertModal(this.props.isDarresultkMode, result.data.message);
           this.props.setBalance(result.data.balance);
           this.props.addNewTransaction(result.data.newTransaction);
+          this.setState({ isLoading: false })
           this.props.closeModal();
+
         } else {
           alertModal(
             this.props.isDarkMode,
-            `Something went wrong. Please try again in a few minutes.`
+            this.setState({ isLoading: false }),
+
+            `Something went wrong. Please try again later or contact support.`
           );
         }
       })
     } catch (e) {
       console.log(e);
+      this.setState({ isLoading: false })
       alertModal(this.props.isDarkMode, `Failed transaction.`);
       return;
     }
@@ -111,7 +122,7 @@ class DepositModal extends Component {
       <><LoadingOverlay
         active={true}
         spinner
-        text="CONNECTING..."
+        text="Creating Block..."
         styles={{
           wrapper: {
             position: 'fixed',

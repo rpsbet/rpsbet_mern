@@ -88,7 +88,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: 'ACCOUNT LOADED 🤑 MUCH WOW!!'
+      message: `Deposit successful! 🎉 Much Wow. View the transaction details on the blockchain using this <a href="https://etherscan.io/tx/${txtHash}" target="_blank">transaction link</a>.`
     });
   } catch (err) {
     console.log('error in deposit_successed', err);
@@ -99,6 +99,40 @@ router.post('/deposit_successed', auth, async (req, res) => {
   }
 });
 
+// router.post('/withdraw_request', auth, async (req, res) => {
+//   const signer = new ethers.Wallet(walletKey, provider);
+
+//   try {
+//     // Initiate the withdrawal
+//     const withdrawalAmount = ethers.utils.parseUnits('0.0001', 'ether');
+
+//     // Send the withdrawal transaction
+//     const tx = await signer.sendTransaction({
+//       to: req.body.addressTo,
+//       value: withdrawalAmount
+//     });
+
+//     const receipt = await tx.wait();
+
+//     // Update user's balance in the database
+//     req.user.balance = (await getWalletBalance(signer)).toString();
+//     await req.user.save();
+
+//     return res.json({
+//       success: true,
+//       balance: req.user.balance,
+//       message: 'Withdrawal successful!'
+//     });
+//   } catch (e) {
+//     console.log('Error:', e);
+//     return res.json({
+//       success: false,
+//       message: 'Failed to initiate withdrawal'
+//     });
+//   }
+// });
+
+
 router.post('/withdraw_request', auth, async (req, res) => {
   try {
     const receipt = new Receipt({
@@ -107,22 +141,27 @@ router.post('/withdraw_request', auth, async (req, res) => {
       amount: req.body.amount
     });
     const balance = req.user.balance;
+    console.log("User's balance:", req.user.balance);
+    console.log("Requested withdrawal amount:", req.body.amount);
+
     if (balance < req.body.amount) {
+      console.log("Insufficient funds");
       return res.json({
         success: false,
         message: 'Insufficient funds'
       });
     }
 
+    console.log("Calculating gas fees...");
+
     console.log(req.body.addressTo, req.body.amount);
     const signer = new ethers.Wallet(walletKey, provider);
 
-    let realEth;
     try {
       const amountTransfer = ethers.utils.parseUnits(String(req.body.amount), 'ether');
 
-      const block = await provider.getBlock('latest')
-      const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei')
+      const block = await provider.getBlock('latest');
+      const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei');
       const priorityFeeGwei = '2.5';
       const gasLimit = await provider.estimateGas({
         to: req.body.addressTo,
@@ -137,32 +176,42 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
       const balanceInEther = await getWalletBalance(signer);
 
-      const balanceWei = ethers.utils.parseEther(balanceInEther); // returns BigNumber
+      const balanceWei = ethers.utils.parseEther(balanceInEther);
 
       // Subtract gas fee from balance in wei
-      const differenceWei = balanceWei.sub(gasFee); // returns BigNumber
+      const differenceWei = balanceWei.sub(gasFee);
 
-      if (Number(balanceInEther) < Number(req.body.amount) && differenceWei.lt(0)) 
+      console.log("Balance in Wei:", balanceWei.toString());
+      console.log("Gas Fee in Wei:", gasFee.toString());
+      console.log("Difference in Wei:", differenceWei.toString());
+
+      if (differenceWei.lt(0)) {
+        console.log("Insufficient funds to cover gas fee");
         return res.json({
           success: false,
-          message: 'Invalid Operation detected!'
-        })
+          message: 'Insufficient funds to cover gas fee'
+        });
+      }
+
       
       const real = amountTransfer.sub(gasFee);
-      realEth = ethers.utils.formatEther(real)
+      const realEth = ethers.utils.formatEther(real);
       
+      console.log("Sending transaction...");
+
       const tx = await signer.sendTransaction({
         to: req.body.addressTo,
         value: real,
         gasLimit: ethers.utils.hexlify(gasLimit),
-        gasPrice: ethers.utils.hexlify(Number(gasPrice))
+        gasPrice: ethers.utils.hexlify(gasPrice)
       });
-
-      console.log(`Tx-hash: ${tx.hash}`);
-
+  
+      console.log("Transaction hash:", tx.hash);
+  
       const receipt = await tx.wait();
+  
+      console.log("Transaction mined in block:", receipt.blockNumber);
       
-      console.log(`Sell Tx was mined in block: ${receipt.blockNumber}`);
     } catch (e) {
       console.log(e);
       return res.json({
@@ -174,11 +223,10 @@ router.post('/withdraw_request', auth, async (req, res) => {
     await receipt.save();
     const newTransaction = new Transaction({
       user: req.user,
-      amount: -realEth,
+      amount: -req.body.amount,
       description: 'withdraw'
     });
 
-    // req.user.balance = Number(req.user.balance) - Number(req.body.amount);
     req.user.balance = await getWalletBalance(signer);
 
     await req.user.save();
@@ -191,13 +239,14 @@ router.post('/withdraw_request', auth, async (req, res) => {
       message: 'GREAT SUCCESS! 🧀 VERY NICE!!'
     });
   } catch (e) {
-    console.log('ERROR in withdraw send transaction');
+    console.log('ERROR in withdraw send transaction', e);
     return res.json({
       success: false,
-      message: e
+      message: 'Failed to initiate withdrawal'
     });
   }
 });
+
 
 router.post('/get_gasfee', auth, async (req, res) => {
   const amount = req.body.amount ? req.body.amount : "0";
