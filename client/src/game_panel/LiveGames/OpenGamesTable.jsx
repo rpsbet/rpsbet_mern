@@ -629,7 +629,7 @@ class OpenGamesTable extends Component {
                             <>
                               WIN{' '}
                               {convertToCurrency(
-                                updateDigitToPoint2(row.user_bet)
+                                row.user_bet
                               )}
                             </>
                           )}

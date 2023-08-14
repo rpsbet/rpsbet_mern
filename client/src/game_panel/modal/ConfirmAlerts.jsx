@@ -11,7 +11,7 @@ const showAlert = (isDarkMode, text, icon) => {
               ×
             </Button>
             <div className={`modal-icon alert-icon${icon}`}></div>
-            <h5>{text}</h5>
+            <h5 dangerouslySetInnerHTML={{ __html: text }}></h5>
           </div>
         </div>
       );

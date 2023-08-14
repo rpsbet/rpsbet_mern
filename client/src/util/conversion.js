@@ -4,13 +4,18 @@ import InlineSVG from 'react-inlinesvg';
 export const convertToCurrency = input => {
   let number = Number(input);
   if (!isNaN(number)) {
+    // Round the number down
     number = Math.floor(number * 1000000) / 1000000;
 
     let [whole, decimal] = number.toString().split('.');
     whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-    // Use parseFloat to remove trailing zeros
-    const formattedNumber = parseFloat(`${whole}.${decimal}`).toString();
+    // Remove trailing zeros after the decimal point
+    if (decimal) {
+      decimal = decimal.replace(/0+$/, '');
+    }
+
+    const formattedNumber = decimal ? `${whole}.${decimal}` : whole;
 
     return (
       <>

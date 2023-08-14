@@ -91,8 +91,8 @@ export default function BetAmountInput(props) {
   };
 
   const formatBetAmount = (amount) => {
-    const roundedAmount = Math.floor(amount * 100) / 100;
-    return roundedAmount.toFixed(6);
+    const roundedAmount = Math.floor(amount * 100000) / 100000;
+    return roundedAmount;
   };
   
   const formattedBetAmount = formatBetAmount(betAmount);

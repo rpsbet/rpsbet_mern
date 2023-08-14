@@ -1,9 +1,10 @@
 const convertToCurrency = (input, isFull = false) => {
   let number = Number(input);
   if (!isNaN(number)) {
-    number = isFull ? number : Math.floor(number * 100) / 100; // round down to 2 decimal places
+    // Round the number down if not in full mode
+    number = isFull ? number : Math.floor(number * 1000000) / 1000000;
 
-    let [whole, decimal] = isFull ? number.toString().split('.') : number.toFixed(2).split('.');
+    let [whole, decimal] = isFull ? number.toString().split('.') : number.toString().split('.');
     if (!decimal) decimal = '';
     
     // Remove trailing zeros from the decimal part
