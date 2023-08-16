@@ -74,8 +74,8 @@ router.post('/deposit_successed', auth, async (req, res) => {
     if (Number(tx.value) != Number(wamount) || tx.to !== signer.address) {
       return res.status(400).send('Transaction does not match with input');
     }
-    //req.user.balance = Number(req.user.balance) + Number(amount);
-    req.user.balance = await getWalletBalance(signer);
+    req.user.balance = Number(req.user.balance) + Number(amount);
+    // req.user.balance = await getWalletBalance(signer);
 
     await req.user.save();
     const newTransaction = new Transaction({
@@ -202,8 +202,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
       amount: -req.body.amount,
       description: 'withdraw'
     });
-    
-    req.user.balance = await getWalletBalance(signer);
+    req.user.balance = Number(req.user.balance) - Number(req.body.amount);
+    // req.user.balance = await getWalletBalance(signer);
 
     await req.user.save();
     await newTransaction.save();
