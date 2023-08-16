@@ -55,6 +55,14 @@ router.post('/deposit_successed', auth, async (req, res) => {
       return res.status(400).send('Invalid input');
     }
 
+    //  prevent double spending
+    const usedTransactions = await Transaction.find({
+      hash: txtHash
+    });
+    if (usedTransactions.length > 0) {
+      return res.status(400).send('Transaction has been already used');
+    }
+
     const tx = await provider.getTransaction(txtHash)
     // Check if the transaction exists and is confirmed
     if (!tx || !tx.blockNumber) {
@@ -73,7 +81,8 @@ router.post('/deposit_successed', auth, async (req, res) => {
     const newTransaction = new Transaction({
       user: req.user,
       amount: req.body.amount,
-      description: 'deposit'
+      description: 'deposit',
+      hash: txtHash
     });
     await newTransaction.save();
 
@@ -193,7 +202,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       amount: -req.body.amount,
       description: 'withdraw'
     });
-
+    
     req.user.balance = await getWalletBalance(signer);
 
     await req.user.save();
