@@ -14,6 +14,9 @@ const TransactionSchema = new Schema({
     type: String,
     default: ''
   },
+  hash: {
+    type: String
+  },
   created_at: {
     type: Date,
     default: Date.now
