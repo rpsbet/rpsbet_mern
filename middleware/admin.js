@@ -3,6 +3,7 @@ const User = require('../model/User');
 const AdminUser = require('../model/AdminUser');
 
 // eslint-disable-next-line consistent-return
+
 module.exports = async function(req, res, next) {
   // Get token from header
   const token = req.header('x-auth-token');
@@ -21,16 +22,14 @@ module.exports = async function(req, res, next) {
     let user;
     if (is_admin === 1) {
       user = await AdminUser.findOne({ _id: id });
-    } else {
-      user = await User.findOne({ _id: id });
-    }
+    } 
     if (!user)
-      return res.json({ success: false, error: 'user token not valid' });
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
     user.status = 'on';
     await user.save();
     req.user = user;
     next();
   } catch (err) {
-    res.json({ success: false, message: 'Successful!' });
+    res.json({ success: false, message: 'Token is not valid' });
   }
 };

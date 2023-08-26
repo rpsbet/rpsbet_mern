@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 const AdminUser = require('../model/AdminUser');
 
 const auth = require('../middleware/auth');
+//const admin = require('../middleware/admin');
 
 // @route   POST api/admin_auth
 // @desc    Auth AdminUser
@@ -64,7 +65,11 @@ router.get('/admin', auth, async (req, res) => {
     res.json({
       success: true,
       message: 'Admin has been authenticated',
-      admin: req.user
+      user: {
+              rewards:req.user.rewards,
+              bio:req.user.bio,
+              avatar:req.user.avatar
+            }
     });
   } catch (error) {
     res.json({ success: false, error });

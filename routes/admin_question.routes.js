@@ -3,6 +3,7 @@
 var ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
 const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 const router = express.Router();
 const Question = require('../model/Question');
@@ -99,7 +100,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // /api/question/:id call
-router.get('/:id', async (req, res) => {
+router.get('/:id', admin, async (req, res) => {
 	try {
 			const question = await Question.findOne({_id: req.params.id});
 			const answers = await Answer.find({question: question, is_correct_answer: true});

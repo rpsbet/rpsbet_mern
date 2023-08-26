@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
+const admin = require('../middleware/admin');
 
 // User Model
 const User = require('../model/User');
@@ -16,7 +17,7 @@ const Transaction = require('../model/Transaction');
 const GameLog = require('../model/GameLog');
 const Room = require('../model/Room');
 
-router.get('/', auth, async (req, res) => {
+router.get('/', admin, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const is_banned = req.query.is_banned;
@@ -57,7 +58,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-router.get('/activity', auth, async (req, res) => {
+router.get('/activity', admin, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   try {
@@ -204,7 +205,7 @@ newUser.avatar = generateAvatar(newUser.username);
   });
 });
 
-router.post('/get-info', async (req, res) => {
+router.post('/get-info', admin, async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.body._id });
     
@@ -221,7 +222,7 @@ router.post('/get-info', async (req, res) => {
     });
   }
 });
-router.post('/getId', async (req, res) => {
+router.post('/getId', admin, async (req, res) => {
   try {
     const userId = await User.findOne({ username: req.body.username }, { _id: 1 });
 
