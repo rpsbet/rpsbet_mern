@@ -41,7 +41,9 @@ const brainGameTypeRoutes = require('./routes/admin_brain_game_type.route');
 const stripeRoutes = require('./routes/stripe.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
 const systemSetting = require('./routes/settings.routes');
+const helmet = require('helmet'); // for sec headers
 
+app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
