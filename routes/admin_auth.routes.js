@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const AdminUser = require('../model/AdminUser');
 
 const auth = require('../middleware/auth');
-//const admin = require('../middleware/admin');
+const admin = require('../middleware/admin');
 
 // @route   POST api/admin_auth
 // @desc    Auth AdminUser
@@ -60,7 +60,7 @@ router.post('/', (req, res) => {
 // @route   GET api/admin_auth/admin
 // @desc    Get AdminUser data
 // @access  Private
-router.get('/admin', auth, async (req, res) => {
+router.get('/admin', admin, async (req, res) => {
   try {
     res.json({
       success: true,
@@ -79,7 +79,7 @@ router.get('/admin', auth, async (req, res) => {
 // @route   GET api/admin_auth/logout
 // @desc    logout
 // @access  Private
-router.post('/logout', auth, async (req, res) => {
+router.post('/logout', admin, async (req, res) => {
   try {
     req.user.status = 'off';
     req.user.save();

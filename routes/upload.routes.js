@@ -1,9 +1,10 @@
 const express = require('express');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
 // /api/item call
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
     }

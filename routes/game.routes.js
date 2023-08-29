@@ -5,6 +5,7 @@ const router = express.Router();
 
 const moment = require('moment');
 const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 
 const Room = require('../model/Room');
 const User = require('../model/User');
@@ -117,14 +118,14 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
         .status(404)
         .json({ success: false, message: 'Room not found' });
     }
-    res.json({ success: true, room });
+    res.json({ success: true, message: 'Successful!' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 
 });
 // /api/room/:id call
-router.get('/room/:id', async (req, res) => {
+router.get('/room/:id', auth, async (req, res) => {
   try {
     const room = await Room.findOne({ _id: req.params.id })
       .populate({ path: 'game_type', model: GameType })
@@ -353,7 +354,7 @@ router.get('/question/:brain_game_type', async (req, res) => {
   }
 });
 
-router.post('/answer', async (req, res) => {
+router.post('/answer', auth, async (req, res) => {
   try {
     const count = await Answer.countDocuments({
       _id: req.body.answer_id,
