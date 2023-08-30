@@ -10,7 +10,7 @@ const Question = require('../model/Question');
 const Answer = require('../model/Answer');
 const BrainGameType = require('../model/BrainGameType');
 
-router.post('/delete', admin, async (req, res) => {
+router.post('/delete', async (req, res) => {
 	try {
 		const { _id } = req.body;
 
@@ -136,7 +136,7 @@ router.get('/:id', admin, async (req, res) => {
 });
 
 // /api/questions call
-router.get('/', admin, async (req, res) => {
+router.get('/', auth, async (req, res) => {
 	const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
 	const page = req.query.page ? parseInt(req.query.page) : 1;
 

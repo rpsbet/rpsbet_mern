@@ -1,11 +1,11 @@
 var ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
-//const auth = require('../middleware/auth');
-const admin = require('../middleware/admin');
+const auth = require('../middleware/auth');
+// const admin = require('../middleware/admin');
 
 const router = express.Router();
 const BrainGameType = require('../model/BrainGameType');
-router.post('/delete', admin, async (req, res) => {
+router.post('/delete', auth, async (req, res) => {
 	try {
 		const { _id } = req.body;
 
@@ -41,7 +41,7 @@ router.post('/delete', admin, async (req, res) => {
 });
 
 
-router.post('/', admin, async (req, res) => {
+router.post('/', auth, async (req, res) => {
 	try {
 	  const { game_type_name } = req.body;
   
@@ -66,7 +66,7 @@ router.post('/', admin, async (req, res) => {
 	}
   });
   
-router.get('/:id',admin, async (req, res) => {
+router.get('/:id', async (req, res) => {
 	try {
         const brainGameType = await BrainGameType.findOne({_id: req.params.id});
 
@@ -100,7 +100,7 @@ router.get('/:id',admin, async (req, res) => {
 // 	}
 // });
 
-router.get('/', admin, async (req, res) => {
+router.get('/', async (req, res) => {
 	try {
 	  const { user_id } = req.query;
 	  const query = user_id ? { user_id } : {};
