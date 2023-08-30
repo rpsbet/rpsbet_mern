@@ -205,7 +205,7 @@ newUser.avatar = generateAvatar(newUser.username);
   });
 });
 
-router.post('/get-info', admin, async (req, res) => {
+router.post('/get-info', async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.body._id });
     
