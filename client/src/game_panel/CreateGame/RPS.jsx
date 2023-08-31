@@ -249,7 +249,6 @@ class RPS extends Component {
   };
 
   onAddRun = selected_rps => {
-    this.props.playSound('boop');
     const wager = 1;
     const winPayout = 2;
     const lossPayout = 0;
@@ -329,7 +328,7 @@ class RPS extends Component {
         <div className="rps-add-run-panel">
           <div className="rps-add-run-form">
             <h3 className="game-sub-title">
-              Select: Rock - Paper - Scissors!{' '}
+              Select: R - P - S!{' '}
             </h3>
             <div id="rps-radio">
               <Button
@@ -338,6 +337,7 @@ class RPS extends Component {
                 }
                 variant="contained"
                 onClick={() => {
+                  this.props.playSound('boop');
                   this.onAddRun('R');
                   const currentActive = document.querySelector('.active');
                   if (currentActive) {
@@ -353,6 +353,7 @@ class RPS extends Component {
                 }
                 variant="contained"
                 onClick={() => {
+                  this.props.playSound('boop');
                   this.onAddRun('P');
                   const currentActive = document.querySelector('.active');
                   if (currentActive) {
@@ -369,6 +370,7 @@ class RPS extends Component {
                 }
                 variant="contained"
                 onClick={() => {
+                  this.props.playSound('boop');
                   this.onAddRun('S');
                   const currentActive = document.querySelector('.active');
                   if (currentActive) {

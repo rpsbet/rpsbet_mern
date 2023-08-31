@@ -1302,8 +1302,8 @@ input {
 .game-page .game-contents h3.game-sub-title {
   font-size: 16px;
   color: #343a40;
-  line-height: 19px;
-  margin: 0 0 15px;
+  line-height: 5px;
+  margin: 0 0 30px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2006,11 +2006,10 @@ input {
   /* background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='74' height='72' fill='none' viewBox='0 0 74 72'%3E%3Cpath fill='%23FEBE7E' d='M47.956 72L0 61.182V9.23l47.956 7.2v55.57z'/%3E%3Cpath fill='%23C47D49' d='M74 55.237L47.956 72V16.43L74 5.133v50.105z'/%3E%3Cpath fill='%23FEDC98' d='M74 5.132L27.962 0 0 9.23l47.956 7.2L74 5.133z'/%3E%3Cpath fill='%23BA835D' d='M27.15 24.148l-9.48-1.514V11.926l9.48 1.44v10.782z'/%3E%3Cpath fill='%23C99570' d='M27.15 13.366l-9.48-1.44 26.192-10.19 8.927 1.033L27.15 13.366z'/%3E%3Cpath fill='%23A37452' d='M64.888 19.163l-5.976 2.77V11.704l5.976-2.585v10.043zM64.888 61.145l-5.976 3.84V54.091l5.976-3.212v10.264z'/%3E%3Cpath fill='%23C99570' d='M64.888 9.12L18.408 3.14 11.583 5.39l47.33 6.314 5.975-2.585z'/%3E%3Cpath fill='%23BA835D' d='M27.15 67.31l-9.48-2.067V54.5l9.48 1.44V67.31z'/%3E%3Cpath fill='%23BF6726' d='M0 9.231s3.726.148 6.825.554c4.574.59 11.03 2.141 11.03 2.141L0 9.231zM27.298 13.255s3.32.333 4.464.443c7.968.776 16.194 2.696 16.194 2.696l-20.658-3.139z'/%3E%3C/svg%3E%0A") !important; */
   background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/645612e6ba466a065fba23f9_close-box.svg') !important;
   position: relative;
-  margin-right: 0.1px;
-  margin-bottom: -2px;
+  margin-right: 5px;
   display: inline-block;
   text-align: center;
-  padding-top: 45px !important;
+  padding-top: 20px !important;
   background-repeat: no-repeat !important;
 }
 
@@ -2018,12 +2017,12 @@ input {
   grid-gap: 0.4rem;
   grid-template-columns: repeat(6, 1fr);
 }
-
+/* 
 .boxes-panel {
   grid-gap: 0.6rem;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-}
+} */
 
 .boxes-panel .box i {
   width: 20px;
@@ -2069,11 +2068,11 @@ input {
 }
 
 .boxes-panel.boxes-join .box {
-  background-position: center -5px;
+  background-position: center 3px;
   border-radius: 6px;
   cursor: pointer;
   border: unset !important;
-  background-size: 5.6em;
+  background-size: 3.4em;
   background-color: #d81719;
 }
 
@@ -3147,6 +3146,7 @@ input {
   }
 
   .boxes-panel {
+    display: grid;
     grid-template-columns: repeat(3, 1.2fr);
     grid-gap: 0.6rem;
   }

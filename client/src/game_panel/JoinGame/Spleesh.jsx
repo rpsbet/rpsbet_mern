@@ -15,7 +15,7 @@ import {
   validateBankroll
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
-import threedBg from '../LottieAnimations/3d-bg.json';
+// import threedBg from '../LottieAnimations/3d-bg.json';
 
 import animationData from '../LottieAnimations/spinningIcon';
 import {
@@ -569,7 +569,7 @@ class Spleesh extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            <div className="threedBg">
+            {/* <div className="threedBg">
               <Lottie
                 options={{
                   loop: true,
@@ -580,7 +580,7 @@ class Spleesh extends Component {
                   filter: 'hue-rotate(99deg)',
                 }}
               />
-            </div>
+            </div> */}
             
              <div className="waves">
 

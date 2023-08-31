@@ -8,7 +8,7 @@ import { Button, TextField } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import Lottie from 'react-lottie';
-import starsBg from '../LottieAnimations/stars-bg.json';
+// import starsBg from '../LottieAnimations/stars-bg.json';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -232,7 +232,7 @@ class RPS extends Component {
       startedPlaying: false,
       advanced_status: '',
       is_anonymous: false,
-      bet_amount: 1,
+      bet_amount: 0.001,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       rps: [],
       betResult: null,
@@ -301,17 +301,18 @@ class RPS extends Component {
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({
         bankroll: data.bankroll,
-        rps: data.rps,
         startedPlaying: true
       });
     });
     socket.on('RPS_1', data => {
-      if (!this.state.rps1Received) {
-        this.setState({
-          rps: data,
-          rps1Received: true
-        });
-      }
+      
+      this.setState({
+        rps: data,
+        rps1Received: true
+      }, () => {
+        // console.log(' RPS:', this.state.rps);
+      });
+      
     });
     socket.emit('emitRps'); // Request RPS data on load
     document.addEventListener('mousedown', this.handleClickOutside);
@@ -367,7 +368,6 @@ class RPS extends Component {
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
-    // console.log(selected_rps);
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
@@ -484,7 +484,7 @@ class RPS extends Component {
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
     this.setState(
       {
         bet_amount: roundedBetAmount
@@ -503,7 +503,7 @@ class RPS extends Component {
       maxBetAmount,
       this.props.bet_amount
     );
-    const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
     if (roundedBetAmount < -2330223) {
       alertModal(
         this.props.isDarkMode,
@@ -522,7 +522,7 @@ class RPS extends Component {
   };
 
   handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.state.balance * 100) / 100; // Round down to two decimal places
+    const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000; // Round down to two decimal places
     this.setState(
       {
         bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
@@ -676,7 +676,7 @@ class RPS extends Component {
   };
 
   render() {
-    const rpsValueAtIndex0 = this.state.rps[0]?.rps; // Ensure rps[0] exists and access its rps property
+    const rpsValueAtLastIndex= this.state.rps[this.state.rps.length - 1]?.rps; // Ensure rps[this.state.rps.length - 1] exists and access its rps property
 
     return (
       <div className="game-page">
@@ -744,7 +744,7 @@ class RPS extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            <div className="starsBg">
+            {/* <div className="starsBg">
               <Lottie
                 options={{
                   loop: true,
@@ -755,68 +755,69 @@ class RPS extends Component {
                   opacity: '0.2'
                 }}
               />
-            </div>
+            </div> */}
             <div className="guesses">
-              {this.state.rps.map((item, index) => (
-                <p key={index}>{item.rps}</p>
-              ))}
+            {this.state.rps.slice().reverse().map((item, index) => (
+  <p key={index}>{item.rps}</p>
+))}
+
             </div>
 
             {this.state.startedPlaying && (
               <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">
                 <div
                   className={`rps-option ${
-                    this.state.rps[0]?.rps === 'R' ? 'rock' : ''
-                  }${rpsValueAtIndex0 === 'R' ? ' active' : ''}${
+                    this.state.rps[this.state.rps.length - 1]?.rps === 'R' ? 'rock' : ''
+                  }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${
                     this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
-                    rpsValueAtIndex0 === 'R'
+                    rpsValueAtLastIndex === 'R'
                       ? ' win-bg'
                       : ''
                   }${
-                    this.state.betResult === 0 && rpsValueAtIndex0 === 'R'
+                    this.state.betResult === 0 && rpsValueAtLastIndex === 'R'
                       ? ' draw-bg'
                       : ''
                   }${
-                    this.state.betResult === 1 && rpsValueAtIndex0 === 'R'
+                    this.state.betResult === 1 && rpsValueAtLastIndex === 'R'
                       ? ' lose-bg'
                       : ''
                   }`}
                 ></div>
                 <div
                   className={`rps-option ${
-                    this.state.rps[0]?.rps === 'P' ? 'paper' : ''
-                  }${rpsValueAtIndex0 === 'P' ? ' active' : ''}${
+                    this.state.rps[this.state.rps.length - 1]?.rps === 'P' ? 'paper' : ''
+                  }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${
                     this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
-                    rpsValueAtIndex0 === 'P'
+                    rpsValueAtLastIndex === 'P'
                       ? ' win-bg'
                       : ''
                   }${
-                    this.state.betResult === 0 && rpsValueAtIndex0 === 'P'
+                    this.state.betResult === 0 && rpsValueAtLastIndex === 'P'
                       ? ' draw-bg'
                       : ''
                   }${
-                    this.state.betResult === 1 && rpsValueAtIndex0 === 'P'
+                    this.state.betResult === 1 && rpsValueAtLastIndex === 'P'
                       ? ' lose-bg'
                       : ''
                   }`}
                 ></div>
                 <div
                   className={`rps-option ${
-                    this.state.rps[0]?.rps === 'S' ? 'scissors' : ''
-                  }${rpsValueAtIndex0 === 'S' ? ' active' : ''}${
+                    this.state.rps[this.state.rps.length - 1]?.rps === 'S' ? 'scissors' : ''
+                  }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${
                     this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
-                    rpsValueAtIndex0 === 'S'
+                    rpsValueAtLastIndex === 'S'
                       ? ' win-bg'
                       : ''
                   }${
-                    this.state.betResult === 0 && rpsValueAtIndex0 === 'S'
+                    this.state.betResult === 0 && rpsValueAtLastIndex === 'S'
                       ? ' draw-bg'
                       : ''
                   }${
-                    this.state.betResult === 1 && rpsValueAtIndex0 === 'S'
+                    this.state.betResult === 1 && rpsValueAtLastIndex === 'S'
                       ? ' lose-bg'
                       : ''
                   }`}
@@ -825,11 +826,11 @@ class RPS extends Component {
             )}
             {!this.state.startedPlaying ? (
               <h3 style={{ zIndex: 9 }} className="game-sub-title">
-                Select: Rock - Paper - Scissors!
+                Select: R - P - S!
               </h3>
             ) : (
               <h3 style={{ zIndex: 9 }} className="game-sub-title fade-out">
-                Select: Rock - Paper - Scissors!
+                Select: R - P - S!
               </h3>
             )}
 
@@ -871,7 +872,7 @@ class RPS extends Component {
               handle2xButtonClick={this.handle2xButtonClick}
               handleHalfXButtonClick={this.handleHalfXButtonClick}
               handleMaxButtonClick={this.handleMaxButtonClick}
-              onChange={this.handleChange}
+              onChangeState={this.onChangeState}
               isDarkMode={this.props.isDarkMode}
             />
             <SettingsOutlinedIcon

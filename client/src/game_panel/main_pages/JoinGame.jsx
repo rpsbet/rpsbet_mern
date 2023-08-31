@@ -265,6 +265,11 @@ class JoinGame extends Component {
   //     }, 100);
   //   }
   // };
+
+  onChangeState = async newState => {
+    await this.setState(newState);
+  };
+
   
   stopSound = (sound) => {
     

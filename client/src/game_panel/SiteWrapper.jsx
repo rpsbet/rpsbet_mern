@@ -672,7 +672,10 @@ class SiteWrapper extends Component {
   render() {
     const { isMuted, balance, oldBalance } = this.state;
     const { websiteLoading } = this.state;
-
+    const balanceString = balance.toString();
+    const decimalIndex = balanceString.indexOf(".");
+    const numDecimals = decimalIndex !== -1 ? Math.min(balanceString.length - decimalIndex - 1, 5) : 0;
+    
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
         <div
@@ -808,7 +811,7 @@ class SiteWrapper extends Component {
                         // prefix="$"
                         separator=","
                         decimal="."
-                        decimals={5}
+                        decimals={numDecimals}
                         duration={1.5}
                         redraw={true}
                         preserveValue={true}

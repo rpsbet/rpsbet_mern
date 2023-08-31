@@ -23,7 +23,7 @@ class DefaultBetAmountPanel extends Component {
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.props.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 1000000) / 1000000;
+    const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
     const newState = {
       bet_amount: roundedBetAmount
     };
@@ -48,7 +48,7 @@ class DefaultBetAmountPanel extends Component {
   
 
   handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.props.balance * 1000000) / 1000000; // round down to 2 decimal places
+    const maxBetAmount = Math.floor(this.props.balance * 100000) / 100000; // round down to 2 decimal places
     if (this.props.game_type === 'Brain Game') {
       this.props.onChangeState({
         bet_amount: maxBetAmount
@@ -88,7 +88,7 @@ class DefaultBetAmountPanel extends Component {
   };
 
   formatBetAmount = (amount) => {
-    const roundedAmount = Math.floor(amount * 1000000) / 1000000;
+    const roundedAmount = Math.floor(amount * 100000) / 100000;
     return roundedAmount;
   };
 
@@ -199,9 +199,9 @@ class DefaultBetAmountPanel extends Component {
             name="betamount"
             id="betAmount"
             variant="outlined"
-            value={formattedBetAmount}
+            value={bet_amount}
             inputProps={{
-              pattern: '[0-9]*',
+              pattern: '^\\d*\\.?\\d*$',
               maxLength: 9
             }}
             InputLabelProps={{
@@ -246,7 +246,7 @@ class DefaultBetAmountPanel extends Component {
                 this.props.onChangeState({ bet_amount: e.target.value });
               } else if (this.props.game_type === 'Quick Shoot') {
                 this.props.onChangeState({
-                  bet_amount: parseInt(e.target.value) || '',
+                  bet_amount: e.target.value,
                   public_bet_amount: convertToCurrency(
                     // updateDigitToPoint2(
                       (this.props.qs_game_type - 1) *
@@ -257,7 +257,7 @@ class DefaultBetAmountPanel extends Component {
                 });
               } else {
                 this.props.onChangeState({
-                  bet_amount: parseInt(e.target.value) || '',
+                  bet_amount: e.target.value,
                   max_return: (parseInt(e.target.value) || 0) * 2 /* * 0.95 */
                 });
               }

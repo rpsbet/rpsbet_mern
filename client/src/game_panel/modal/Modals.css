@@ -407,6 +407,10 @@ div[role="presentation"] li:last-child {
     border-radius: 13px !important;
     margin: 4px !important;
 }
+
+#login_now {
+    color: #fff;
+}
 .modal-body .modal-content-wrapper.roll h4 {
     background-image: url("/img/icons/modal-roll.svg");
 }

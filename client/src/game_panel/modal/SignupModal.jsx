@@ -71,7 +71,7 @@ class SignupModal extends Component {
                 <p>CLICK YOUR BALANCE TO MAKE A DEPOSIT</p>
               </div>
               <div className="modal-footer">
-                <Button onClick={() => { 
+                <Button id="login_now" onClick={() => { 
                   onClose(); 
                   this.props.closeModal();
                   this.props.openLoginModal();

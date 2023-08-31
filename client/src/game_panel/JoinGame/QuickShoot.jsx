@@ -16,7 +16,7 @@ import {
 } from '../modal/betValidations';
 
 import Lottie from 'react-lottie';
-import goalBg from '../LottieAnimations/goal-bg.json';
+// import goalBg from '../LottieAnimations/goal-bg.json';
 
 import animationData from '../LottieAnimations/spinningIcon';
 import {
@@ -50,7 +50,7 @@ class QuickShoot extends Component {
       selected_qs_position: 0,
       advanced_status: '',
       is_anonymous: false,
-      bet_amount: 1.00,
+      bet_amount: 0.001,
       bgColorChanged: false,
       potential_return: 1.25,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
@@ -245,7 +245,7 @@ class QuickShoot extends Component {
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = (Math.floor(multipliedBetAmount * 100) / 100).toFixed(6);
+    const roundedBetAmount = (Math.floor(multipliedBetAmount * 100000) / 100000);
     this.setState(
       {
         bet_amount: roundedBetAmount
@@ -259,7 +259,7 @@ class QuickShoot extends Component {
   handle2xButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, this.state.balance);
-    const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
    if (
       (this.state.bet_amount * 2) / (this.props.qs_game_type - 1) >
       this.state.bankroll
@@ -278,7 +278,7 @@ class QuickShoot extends Component {
   };
 
    handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.state.balance * 100) / 100;
+    const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000;
 
     this.setState(
       {
@@ -815,7 +815,7 @@ class QuickShoot extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            <div className="goalBg">
+            {/* <div className="goalBg">
               <Lottie
                 options={{
                   loop: true,
@@ -826,7 +826,7 @@ class QuickShoot extends Component {
                   opacity: '0.4'
                 }}
               />
-            </div>
+            </div> */}
             <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
             <div
               className="qs-image-panel"
@@ -855,7 +855,7 @@ class QuickShoot extends Component {
           handle2xButtonClick={this.handle2xButtonClick}
           handleHalfXButtonClick={this.handleHalfXButtonClick}
           handleMaxButtonClick={this.handleMaxButtonClick}
-          onChange={this.handleChange}
+          onChangeState={this.onChangeState}
           isDarkMode={this.props.isDarkMode}
         />
             <SettingsOutlinedIcon

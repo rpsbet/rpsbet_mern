@@ -153,14 +153,23 @@ class CreateGame extends Component {
   };
   
   getVideoId = (url) => {
-    // Extract the video ID from the YouTube URL
-    const videoId = url.split('v=')[1];
-    const ampersandPosition = videoId.indexOf('&');
-    if (ampersandPosition !== -1) {
-      return videoId.substring(0, ampersandPosition);
+    // Check if the URL uses the "youtube.com" format
+    if (url.includes('youtube.com')) {
+        const videoId = url.split('v=')[1];
+        const ampersandPosition = videoId.indexOf('&');
+        if (ampersandPosition !== -1) {
+            return videoId.substring(0, ampersandPosition);
+        }
+        return videoId;
     }
-    return videoId;
-  };
+    // Check if the URL uses the "youtu.be" format
+    if (url.includes('youtu.be')) {
+        const videoId = url.split('/').pop().split('?')[0];
+        return videoId;
+    }
+    return null; // Invalid URL format
+};
+
 
   onChangeState = async newState => {
     await this.setState(newState);
@@ -403,7 +412,7 @@ class CreateGame extends Component {
   };
 
   onNextButtonClicked = () => {
-    console.log(this.state.spleesh_bet_unit)
+    // console.log(this.state.spleesh_bet_unit)
     if (this.state.step === 2) {
       if (
         (this.state.game_mode !== 'RPS' ||

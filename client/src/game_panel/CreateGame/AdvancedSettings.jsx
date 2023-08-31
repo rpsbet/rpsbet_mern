@@ -146,7 +146,7 @@ class AdvancedSettings extends Component {
         {this.props.step === 3 && (
           <div className="game-music-panel game-info-panel">
             <h3 className="game-sub-title">Add music?</h3>
-            <form onSubmit={this.props.handleSubmit}>
+            <form style={{display: "flex"}} onSubmit={this.props.handleSubmit}>
               <TextField
                 label="YouTube URL"
                 variant="outlined"

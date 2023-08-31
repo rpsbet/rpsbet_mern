@@ -8,7 +8,7 @@ import { YouTubeVideo } from '../../components/YoutubeVideo';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 // import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
-import brainBg from '../LottieAnimations/brainBg.json';
+// import brainBg from '../LottieAnimations/brainBg.json';
 import animationData from '../LottieAnimations/spinningIcon';
 import brain from '../LottieAnimations/brain.json';
 import { Button } from '@material-ui/core';
@@ -524,7 +524,7 @@ class BrainGame extends Component {
       <div className="game-page">
         <div className="game-contents">
           <div className="game-info-panel brain-game-play-panel">
-            <div
+            {/* <div
               className="brainBg"
               style={{ position: 'relative', zIndex: 10 }}
             >
@@ -538,7 +538,7 @@ class BrainGame extends Component {
                   opacity: '0.4'
                 }}
               />
-            </div>
+            </div> */}
             <div className="play-panel-header">
               <div className="timer">
                 <div className="timer-title">Timer: </div>
@@ -655,7 +655,7 @@ class BrainGame extends Component {
                 }}
               />
             </div>
-            <div className="brainBg">
+            {/* <div className="brainBg">
               <Lottie
                 options={{
                   loop: true,
@@ -667,7 +667,7 @@ class BrainGame extends Component {
                   opacity: 0.8
                 }}
               />
-            </div>
+            </div> */}
             <h3 className="game-sub-title">Game Type:</h3>
             <p className="game-type">
               {this.props.brain_game_type.game_type_name}

@@ -80,9 +80,11 @@
        #212529 
     );
 }
-.dark_mode .qs-image-panel img {
+
+
+/* .dark_mode .qs-image-panel img {
 	box-shadow: 0 0 20px #6100a3;
-  }
+  } */
 
 .dark_mode .contents_wrapper .room-history-panel h2.room-history-title {
 	color: #8e9297;
@@ -114,7 +116,7 @@ background: #060607;
 	border: 4px solid #111;
 }
 .dark_mode .chat-msg,
-.dark_mode div.table .table-row, div.table .table-header {
+.dark_mode div.table .table-row, .dark_mode div.table .table-header {
 	border-top: 2px solid #4443434f;
 	border-bottom: 3px solid #000;
   }

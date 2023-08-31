@@ -6,7 +6,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import Lottie from 'react-lottie';
-import gemBg from '../LottieAnimations/gem-bg.json';
+// import gemBg from '../LottieAnimations/gem-bg.json';
 
 import { Button, ButtonGroup, TextField } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
@@ -91,7 +91,7 @@ class DropGame extends Component {
       drop_guesses: [],
       advanced_status: '',
       is_anonymous: false,
-      bet_amount: 2.00,
+      bet_amount: 0.01,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       drop_guesses1Received: false,
       betResult: null,
@@ -385,7 +385,7 @@ class DropGame extends Component {
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
     this.setState(
       {
         bet_amount: roundedBetAmount
@@ -400,7 +400,7 @@ class DropGame extends Component {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
-    const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
     if (roundedBetAmount < -2330223) {
       alertModal(
         this.props.isDarkMode,
@@ -639,7 +639,7 @@ class DropGame extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            <div className="gemBg" 
+            {/* <div className="gemBg" 
             >
 
             <Lottie
@@ -650,7 +650,7 @@ class DropGame extends Component {
               }}
         style={{ filter: 'hue-rotate(321deg)'}}
             />
-                    </div>
+                    </div> */}
             <div className="game-info-panel">
               <h3 className="game-sub-title">Previous Drops</h3>
               <div className="gradient-container">
@@ -734,7 +734,7 @@ class DropGame extends Component {
           handle2xButtonClick={this.handle2xButtonClick}
           handleHalfXButtonClick={this.handleHalfXButtonClick}
           handleMaxButtonClick={this.handleMaxButtonClick}
-          onChange={this.handleChange}
+          onChangeState={this.onChangeState}
           isDarkMode={this.props.isDarkMode}
         />
                 <Button

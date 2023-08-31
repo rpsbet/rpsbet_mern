@@ -13,7 +13,7 @@ export default function BetAmountInput(props) {
     handle2xButtonClick,
     handleHalfXButtonClick,
     handleMaxButtonClick,
-    onChange,
+    onChangeState,
     isDarkMode
   } = props;
 
@@ -90,12 +90,12 @@ export default function BetAmountInput(props) {
     setIsFocused(false);
   };
 
-  const formatBetAmount = (amount) => {
-    const roundedAmount = Math.floor(amount * 100000) / 100000;
-    return roundedAmount;
-  };
+  // const formatBetAmount = (amount) => {
+  //   const roundedAmount = Math.floor(amount * 100000) / 100000;
+  //   return roundedAmount;
+  // };
   
-  const formattedBetAmount = formatBetAmount(betAmount);
+  // const formattedBetAmount = formatBetAmount(betAmount);
 
   return (
     <div className="bet-amount">
@@ -106,11 +106,11 @@ export default function BetAmountInput(props) {
           variant="outlined"
           id="betamount"
           label="BET AMOUNT"
-          value={formattedBetAmount}
-          onChange={onChange}
+          value={betAmount}
+          onChange={onChangeState}
           placeholder="BET AMOUNT"
           inputProps={{
-            pattern: '[0-9]*',
+            pattern: '^\\d*\\.?\\d*$',
             maxLength: 9,
           }}
           InputLabelProps={{

@@ -5,7 +5,7 @@ export const convertToCurrency = input => {
   let number = Number(input);
   if (!isNaN(number)) {
     // Round the number down
-    number = Math.floor(number * 1000000) / 1000000;
+    number = Math.floor(number * 100000) / 100000;
 
     let [whole, decimal] = number.toString().split('.');
     whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
