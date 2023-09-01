@@ -52,23 +52,12 @@ class StatisticsForm extends React.Component {
   //   }
   // }
   getRank(totalWagered) {
-    const level = Math.floor(Math.cbrt(totalWagered / 100)) + 1;
-    const fullStars = Math.floor(level);
-    const halfStars = Math.floor((level - fullStars) * 2);
-    const quarterStars = Math.floor((level - fullStars - halfStars / 2) * 4);
-    let stars = '';
-    for (let i = 0; i < fullStars; i++) {
-      stars += '★';
-    }
-    if (halfStars === 1) {
-      stars += '½';
-    }
-    for (let i = 0; i < quarterStars; i++) {
-      stars += '¼';
-    }
+    // Calculate the level using a logarithmic function with base 2.
+    const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
+    const stars = '★'.repeat(level);
   
-    const nextLevelWager = Math.pow(level * 500, 3);
-    const progress = Math.min(1, totalWagered / nextLevelWager);
+    const nextLevelWager = Math.pow(3, level * 5) - 1;
+    const progress = totalWagered / nextLevelWager;
     const progressBarWidth = 100;
     const progressBarFilled = progress * progressBarWidth;
   
@@ -82,8 +71,6 @@ class StatisticsForm extends React.Component {
       </div>
     );
   }
-  
-  
   
 
   render() {

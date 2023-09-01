@@ -24,7 +24,7 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
     if (bet_amount > bankroll) {
       alertModal(
         isDarkMode,
-        `NOT ENOUGHT BANKROLL!`);
+        `NOT ENOUGH BANKROLL OR GAME HAS FINISHED`);
       return false;
     }
     return true;

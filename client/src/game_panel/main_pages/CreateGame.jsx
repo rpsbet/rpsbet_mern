@@ -350,6 +350,15 @@ class CreateGame extends Component {
   };
 
   onSkipButtonClicked = () => {
+    if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
+      if (this.state.max_return > (this.state.bet_amount * 4)) {
+        alertModal(
+          this.props.isDarkMode,
+          `TOO PROFITABLE! GAME IS UNFAIR`
+        );
+        return;
+      }
+    }
     this.setState({
       is_private: false,
       youtubeUrl: '',
@@ -357,6 +366,7 @@ class CreateGame extends Component {
       endgame_type: false,
       step: this.state.step + 1
     });
+
   };
 
   onStartBrainGame = e => {

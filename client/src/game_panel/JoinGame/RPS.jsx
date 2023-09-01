@@ -4,7 +4,7 @@ import BetArray from '../../components/BetArray';
 import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 // import { updateDigitToPoint2 } from '../../util/helper';
-import { Button, TextField } from '@material-ui/core';
+import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import Lottie from 'react-lottie';
@@ -265,7 +265,7 @@ class RPS extends Component {
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2500)); // Wait for 1 second
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Wait for 1 second
     this.setState({ bgColorChanged: false });
   };
 
@@ -291,9 +291,7 @@ class RPS extends Component {
       },
       {
         label: 'Potential Return',
-        value: convertToCurrency(
-          this.state.bet_amount * 2 /* * 0.95 */
-        )
+        value: convertToCurrency(this.state.bet_amount * 2 /* * 0.95 */)
       }
     ];
     this.setState({ items });
@@ -305,19 +303,19 @@ class RPS extends Component {
       });
     });
     socket.on('RPS_1', data => {
-      
-      this.setState({
-        rps: data,
-        rps1Received: true
-      }, () => {
-        // console.log(' RPS:', this.state.rps);
-      });
-      
+      this.setState(
+        {
+          rps: data,
+          rps1Received: true
+        },
+        () => {
+          // console.log(' RPS:', this.state.rps);
+        }
+      );
     });
     socket.emit('emitRps'); // Request RPS data on load
     document.addEventListener('mousedown', this.handleClickOutside);
   };
-  
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
@@ -533,41 +531,38 @@ class RPS extends Component {
     );
   };
 
-  handleButtonClick = () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
-    const { betting } = this.state;
+  handleSwitchChange = () => {
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      balance
+    } = this.props;
+    const { betting, bet_amount } = this.state;
 
+    // Add the necessary validation checks here
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      // Display an error message or handle the case when authentication fails
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      // Display an error message or handle the case when creator ID validation fails
       return;
     }
-    if (!betting) {
-      this.setState({
-        timer: setInterval(() => {
-          this.setState(state => {
-            if (state.timerValue === 0) {
-              clearInterval(this.state.timer);
-              this.startBetting();
-              return { timerValue: 2000 };
-            } else {
-              return { timerValue: state.timerValue - 10 };
-            }
-          });
-        }, 10)
-      });
-    } else {
-      this.stopBetting();
+
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      // Display an error message or handle the case when bet amount validation fails
+      return;
     }
-  };
 
-
-  handleButtonRelease = () => {
-    if (this.state.timer) {
-      clearInterval(this.state.timer);
-      this.setState({ timerValue: 2000 });
+    if (!betting) {
+      // User has turned on the switch
+      this.startBetting();
+    } else {
+      // User has turned off the switch
+      this.stopBetting();
     }
   };
 
@@ -588,6 +583,7 @@ class RPS extends Component {
       JSON.parse(localStorage.getItem(storageName)) || [];
     const intervalId = setInterval(() => {
       const randomItem = predictNext(stored_rps_array);
+      console.log('random', randomItem);
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       const passwordCorrect = rooms[roomInfo._id];
       if (is_private === true && passwordCorrect !== 'true') {
@@ -595,7 +591,7 @@ class RPS extends Component {
       } else {
         this.joinGame2(randomItem);
       }
-    }, 3500);
+    }, 4000);
     playSound('start');
     this.setState({ intervalId, betting: true });
   };
@@ -628,7 +624,9 @@ class RPS extends Component {
       return;
     }
 
-    this.setState({ selected_rps: randomItem });
+    // Set selected_rps state with await
+    await this.setState({ selected_rps: randomItem });
+    console.log(this.state.selected_rps);
 
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
@@ -637,46 +635,58 @@ class RPS extends Component {
       return;
     }
 
-    const result = await this.props.join({
-      bet_amount: parseFloat(bet_amount),
-      selected_rps: selected_rps,
-      is_anonymous: is_anonymous,
-      rps_bet_item_id: rps_bet_item_id,
-      slippage: slippage
-    });
+    // Check if selected_rps is not null before calling join
+    if (this.state.selected_rps !== null) {
+      const result = await this.props.join({
+        bet_amount: parseFloat(bet_amount),
+        selected_rps: this.state.selected_rps,
+        is_anonymous: is_anonymous,
+        rps_bet_item_id: rps_bet_item_id,
+        slippage: slippage
+      });
 
-    const currentUser = this.props.user;
-    const currentRoom = this.props.room;
-    if (result.status === 'success') {
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
-      let text = 'HAHAA, YOU LOST!!!';
+      const currentUser = this.props.user;
+      const currentRoom = this.props.room;
+      if (result.status === 'success') {
+        this.setState(prevState => ({
+          betResults: [
+            ...prevState.betResults,
+            { ...result, user: currentUser, room: currentRoom }
+          ]
+        }));
+        let text = 'HAHAA, YOU LOST!!!';
 
-      if (result.betResult === 1) {
-        playSound('win');
+        if (result.betResult === 1) {
+          playSound('win');
 
-        text = 'NOT BAD, WINNER!';
-        this.changeBgColor(result.betResult);
-      } else if (result.betResult === 0) {
-        playSound('split');
+          text = 'NOT BAD, WINNER!';
 
-        text = 'DRAW, NO WINNER!';
-        this.changeBgColor(result.betResult);
-      } else {
-        this.changeBgColor(result.betResult); // Add this line
-        playSound('lose');
+          setTimeout(() => {
+            this.changeBgColor(result.betResult);
+          }, 1000);
+        } else if (result.betResult === 0) {
+          playSound('split');
+
+          text = 'DRAW, NO WINNER!';
+          setTimeout(() => {
+            this.changeBgColor(result.betResult);
+          }, 1000);
+        } else {
+          setTimeout(() => {
+            this.changeBgColor(result.betResult);
+          }, 1000);
+          playSound('lose');
+        }
+
+        refreshHistory();
       }
-
-      refreshHistory();
     }
   };
 
   render() {
-    const rpsValueAtLastIndex= this.state.rps[this.state.rps.length - 1]?.rps; // Ensure rps[this.state.rps.length - 1] exists and access its rps property
+    const { isDisabled, betting, timerValue } = this.state;
+
+    const rpsValueAtLastIndex = this.state.rps[this.state.rps.length - 1]?.rps; // Ensure rps[this.state.rps.length - 1] exists and access its rps property
 
     return (
       <div className="game-page">
@@ -714,7 +724,7 @@ class RPS extends Component {
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
-                          this.state.bet_amount * 2 /* * 0.95 */
+                        this.state.bet_amount * 2 /* * 0.95 */
                         // )
                       )}
                     </div>
@@ -757,17 +767,21 @@ class RPS extends Component {
               />
             </div> */}
             <div className="guesses">
-            {this.state.rps.slice().reverse().map((item, index) => (
-  <p key={index}>{item.rps}</p>
-))}
-
+              {this.state.rps
+                .slice()
+                .reverse()
+                .map((item, index) => (
+                  <p key={index}>{item.rps}</p>
+                ))}
             </div>
 
             {this.state.startedPlaying && (
               <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">
                 <div
                   className={`rps-option ${
-                    this.state.rps[this.state.rps.length - 1]?.rps === 'R' ? 'rock' : ''
+                    this.state.rps[this.state.rps.length - 1]?.rps === 'R'
+                      ? 'rock'
+                      : ''
                   }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${
                     this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
@@ -786,7 +800,9 @@ class RPS extends Component {
                 ></div>
                 <div
                   className={`rps-option ${
-                    this.state.rps[this.state.rps.length - 1]?.rps === 'P' ? 'paper' : ''
+                    this.state.rps[this.state.rps.length - 1]?.rps === 'P'
+                      ? 'paper'
+                      : ''
                   }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${
                     this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
@@ -805,7 +821,9 @@ class RPS extends Component {
                 ></div>
                 <div
                   className={`rps-option ${
-                    this.state.rps[this.state.rps.length - 1]?.rps === 'S' ? 'scissors' : ''
+                    this.state.rps[this.state.rps.length - 1]?.rps === 'S'
+                      ? 'scissors'
+                      : ''
                   }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${
                     this.state.bgColorChanged &&
                     this.state.betResult === -1 &&
@@ -948,7 +966,7 @@ class RPS extends Component {
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
-                  disabled={this.state.isDisabled}
+                  disabled={isDisabled}
                 >
                   Carlo
                 </Button>
@@ -958,7 +976,7 @@ class RPS extends Component {
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                  disabled={this.state.isDisabled}
+                  disabled={isDisabled}
                 >
                   Q Bot
                 </Button>
@@ -972,29 +990,30 @@ class RPS extends Component {
                 </button> */}
               </div>
             </div>
-            <Button
-              id="aiplay"
-              variant="contained"
-              onMouseDown={this.handleButtonClick}
-              onMouseUp={this.handleButtonRelease}
-              onTouchStart={this.handleButtonClick}
-              onTouchEnd={this.handleButtonRelease}
-            >
-              {this.state.betting ? (
+            <div>
+              <FormControlLabel
+                control={
+                  <Switch
+                    id="aiplay-switch"
+                    checked={betting}
+                    onChange={this.handleSwitchChange}
+                  />
+                }
+                label={betting ? 'AI ON' : 'AI OFF'}
+              />
+              {betting ? (
                 <div id="stop">
-                  <span>Stop</span>
+                  {/* <span>Stop</span> */}
                   <Lottie options={defaultOptions} width={22} />
                 </div>
               ) : (
                 <div>
-                  {this.state.timerValue !== 2000 ? (
-                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
-                  ) : (
-                    <span>AI Play</span>
-                  )}
+                  {timerValue !== 2000 ? (
+                    <span>{(timerValue / 2000).toFixed(2)}s</span>
+                  ) : null}
                 </div>
               )}
-            </Button>
+            </div>
           </div>
           <BetArray arrayName="rps_array" label="rps" />
 

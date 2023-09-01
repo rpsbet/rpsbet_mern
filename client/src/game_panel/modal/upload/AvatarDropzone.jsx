@@ -80,10 +80,10 @@ class Dropzone extends Component {
         <Avatar className="AvatarPreviewPanel" alt="" src={this.props.imageUrl} darkMode={this.props.darkMode} />
         <div className="AvatarControlPanel">
           <div className="AvatarButtonPanel">
-            <Button style={{marginRight: "5px"}} onClick={(e)=>{this.props.setImageFilename("")}}>Remove Photo</Button>
-            <Button onClick={this.openFileDialog}>Upload Photo</Button>
+            <Button style={{marginRight: "5px"}} onClick={(e)=>{this.props.setImageFilename("")}}>Remove Image</Button>
+            <Button onClick={this.openFileDialog}>Upload Image</Button>
           </div>
-          <p className="mt-1">CHOOSE SOMETHING SEXY</p>
+          <p className="mt-1">OR DRAG & DROP</p>
         </div>
       </div>
     );

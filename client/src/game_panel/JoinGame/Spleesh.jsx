@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 // import { updateDigitToPoint2 } from '../../util/helper';
 import Share from '../../components/Share';
-import { Button } from '@material-ui/core';
+import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
 import waves from '../LottieAnimations/waves.json';
 import bear from '../LottieAnimations/bear.json';
@@ -18,10 +18,7 @@ import Lottie from 'react-lottie';
 // import threedBg from '../LottieAnimations/3d-bg.json';
 
 import animationData from '../LottieAnimations/spinningIcon';
-import {
-  alertModal,
-  gameResultModal
-} from '../modal/ConfirmAlerts';
+import { alertModal, gameResultModal } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
@@ -97,22 +94,22 @@ class Spleesh extends Component {
     }
     return null;
   }
-  
-  onShowButtonClicked = (e) => {
+
+  onShowButtonClicked = e => {
     e.preventDefault();
   };
-  
-  handleClickOutside = (e) => {
+
+  handleClickOutside = e => {
     if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
       this.setState({ settings_panel_opened: false });
     }
   };
-  
+
   componentDidMount() {
-    this.socket.on('SPLEESH_GUESSES', (data) => {
+    this.socket.on('SPLEESH_GUESSES', data => {
       this.setState({ spleesh_guesses: data });
     });
-    this.socket.on('SPLEESH_GUESSES1', (data) => {
+    this.socket.on('SPLEESH_GUESSES1', data => {
       if (!this.state.spleesh_guesses1Received) {
         this.setState({
           spleesh_guesses: data,
@@ -122,7 +119,7 @@ class Spleesh extends Component {
     });
     document.addEventListener('mousedown', this.handleClickOutside);
   }
-  
+
   componentDidUpdate(prevProps, prevState) {
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
@@ -134,7 +131,7 @@ class Spleesh extends Component {
       });
     }
   }
-  
+
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
@@ -148,12 +145,12 @@ class Spleesh extends Component {
       isDarkMode,
       join
     } = this.props;
-  
+
     const result = await join({
       bet_amount: bet_amount,
       is_anonymous: is_anonymous
     });
-  
+
     if (result.status === 'success') {
       let text = 'HAHAA, YOU LOST!!!';
       playSound('lose');
@@ -164,16 +161,16 @@ class Spleesh extends Component {
         text = 'DRAW, NO WINNER!';
         playSound('split');
       }
-  
+
       let stored_spleesh_array =
         JSON.parse(localStorage.getItem('spleesh_array')) || [];
       let stored_spleesh_10_array =
         JSON.parse(localStorage.getItem('spleesh_10_array')) || [];
-  
+
       while (stored_spleesh_array.length >= 30) {
         stored_spleesh_array.shift();
       }
-  
+
       if (spleesh_bet_unit === 10) {
         while (stored_spleesh_10_array.length >= 30) {
           stored_spleesh_10_array.shift();
@@ -190,7 +187,7 @@ class Spleesh extends Component {
           JSON.stringify(stored_spleesh_array)
         );
       }
-  
+
       if (result.roomStatus === 'finished') {
         gameResultModal(
           isDarkMode,
@@ -223,21 +220,21 @@ class Spleesh extends Component {
     }
     refreshHistory();
   };
-  
+
   joinGame2 = async (nextGuess, shouldStopBetting) => {
     const { is_anonymous } = this.state;
     const { playSound, refreshHistory, join } = this.props;
-  
+
     if (shouldStopBetting) {
       this.stopBetting();
       return;
     }
-  
+
     const result = await join({
       bet_amount: nextGuess,
       is_anonymous: is_anonymous
     });
-  
+
     if (result.status === 'success') {
       let text = 'HAHAA, YOU LOST!!!';
       playSound('lose');
@@ -249,11 +246,11 @@ class Spleesh extends Component {
         playSound('split');
       }
     }
-  
+
     refreshHistory();
   };
-  
-  onBtnBetClick = async (bet_amount) => {
+
+  onBtnBetClick = async bet_amount => {
     const {
       isAuthenticated,
       isDarkMode,
@@ -264,50 +261,54 @@ class Spleesh extends Component {
       roomInfo,
       openGamePasswordModal
     } = this.props;
-  
+
     const { bankroll } = this.state;
-  
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
-  
+
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-  
+
     const hideConfirmModal =
       localStorage.getItem('hideConfirmModal') === 'true';
-  
+
     if (hideConfirmModal || is_private !== true || passwordCorrect === true) {
       await this.joinGame(bet_amount);
     } else {
       openGamePasswordModal();
     }
   };
-  
+
   createNumberPanel = () => {
     const { spleesh_guesses } = this.state;
     let panel = [];
-  
+
     for (let i = 1; i <= 10; i++) {
       const betAmount = i * this.props.spleesh_bet_unit;
-      const isDisabled = spleesh_guesses.some((item) => item.bet_amount === betAmount);
-  
+      const isDisabled = spleesh_guesses.some(
+        item => item.bet_amount === betAmount
+      );
+
       panel.push(
         <button
           className={`${
-            this.state.bet_amount / this.props.spleesh_bet_unit === i ? 'active' : ''
+            this.state.bet_amount / this.props.spleesh_bet_unit === i
+              ? 'active'
+              : ''
           } ${isDisabled ? 'disabled' : ''}`}
           onClick={() => {
             const endgameAmount = this.props.spleesh_bet_unit * (55 - i);
@@ -329,10 +330,9 @@ class Spleesh extends Component {
         </button>
       );
     }
-  
+
     return panel;
   };
-  
 
   predictNext = (array1, array2) => {
     const frequencyMap = {};
@@ -372,31 +372,38 @@ class Spleesh extends Component {
     return { prediction, shouldStopBetting };
   };
 
-  handleButtonClick = () => {
-    this.props.playSound('select');
-    if (!this.state.betting) {
-      this.setState({
-        timer: setInterval(() => {
-          this.setState(state => {
-            if (state.timerValue === 0) {
-              clearInterval(this.state.timer);
-              this.startBetting();
-              return { timerValue: 2000 };
-            } else {
-              return { timerValue: state.timerValue - 10 };
-            }
-          });
-        }, 10)
-      });
-    } else {
-      this.stopBetting();
-    }
-  };
+  handleSwitchChange = () => {
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      balance
+    } = this.props;
+    const { betting, bet_amount } = this.state;
 
-  handleButtonRelease = () => {
-    if (this.state.timer) {
-      clearInterval(this.state.timer);
-      this.setState({ timerValue: 2000 });
+    // Add the necessary validation checks here
+    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      // Display an error message or handle the case when authentication fails
+      return;
+    }
+
+    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      // Display an error message or handle the case when creator ID validation fails
+      return;
+    }
+
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      // Display an error message or handle the case when bet amount validation fails
+      return;
+    }
+
+    if (!betting) {
+      // User has turned on the switch
+      this.startBetting();
+    } else {
+      // User has turned off the switch
+      this.stopBetting();
     }
   };
   startBetting = () => {
@@ -430,82 +437,91 @@ class Spleesh extends Component {
     this.setState({ intervalId: null, betting: false, timerValue: 2000 });
   };
 
-
   render() {
     const { spleesh_bet_unit, endgame_amount } = this.props;
-  const { spleesh_guesses } = this.state;
-  let arrayName;
-  if (spleesh_bet_unit === 1) {
-    arrayName = 'spleesh_array';
-  } else if (spleesh_bet_unit === 10) {
-    arrayName = 'spleesh_10_array';
-  }
+    const {
+      spleesh_guesses,
+      showAnimation,
+      isDisabled,
+      betting,
+      timerValue
+    } = this.state;
 
-  const guessedAmounts = spleesh_guesses.map((number) => number.bet_amount);
-  const remainingSum = endgame_amount - guessedAmounts.reduce((sum, amount) => sum + amount, 0);
+    let arrayName;
+    if (spleesh_bet_unit === 1) {
+      arrayName = 'spleesh_array';
+    } else if (spleesh_bet_unit === 10) {
+      arrayName = 'spleesh_10_array';
+    }
 
-  let minSum = 0;
-  let minGuesses = 0;
-  let minStep = 1;
+    const guessedAmounts = spleesh_guesses.map(number => number.bet_amount);
+    const remainingSum =
+      endgame_amount - guessedAmounts.reduce((sum, amount) => sum + amount, 0);
 
-  if (spleesh_bet_unit === 10) {
-    for (let i = 100; i >= 10; i -= 10) {
-      if (!guessedAmounts.includes(i)) {
-        minSum += i;
-        minGuesses++;
-        if (minSum >= remainingSum) {
-          break;
+    let minSum = 0;
+    let minGuesses = 0;
+    let minStep = 1;
+
+    if (spleesh_bet_unit === 10) {
+      for (let i = 100; i >= 10; i -= 10) {
+        if (!guessedAmounts.includes(i)) {
+          minSum += i;
+          minGuesses++;
+          if (minSum >= remainingSum) {
+            break;
+          }
+        }
+      }
+    } else {
+      for (let i = 10; i >= 1; i--) {
+        if (!guessedAmounts.includes(i)) {
+          minSum += i;
+          minGuesses++;
+          if (minSum >= remainingSum) {
+            break;
+          }
         }
       }
     }
-  } else {
-    for (let i = 10; i >= 1; i--) {
-      if (!guessedAmounts.includes(i)) {
-        minSum += i;
-        minGuesses++;
-        if (minSum >= remainingSum) {
-          break;
+
+    let maxSum = 0;
+    let maxGuesses = 0;
+    let maxStep = 1;
+
+    if (spleesh_bet_unit === 10) {
+      for (let i = 10; i <= 100; i += 10) {
+        if (!guessedAmounts.includes(i)) {
+          maxSum += i;
+          maxGuesses++;
+          if (maxSum >= remainingSum) {
+            break;
+          }
+        }
+      }
+    } else {
+      for (let i = 1; i <= 10; i++) {
+        if (!guessedAmounts.includes(i)) {
+          maxSum += i;
+          maxGuesses++;
+          if (maxSum >= remainingSum) {
+            break;
+          }
         }
       }
     }
-  }
 
-  let maxSum = 0;
-  let maxGuesses = 0;
-  let maxStep = 1;
-
-  if (spleesh_bet_unit === 10) {
-    for (let i = 10; i <= 100; i += 10) {
-      if (!guessedAmounts.includes(i)) {
-        maxSum += i;
-        maxGuesses++;
-        if (maxSum >= remainingSum) {
-          break;
-        }
-      }
+    let remainingGuessesText = `${minGuesses} - ${maxGuesses}`;
+    if (minGuesses === maxGuesses) {
+      remainingGuessesText =
+        minGuesses === 1 ? `${minGuesses} guess` : `${minGuesses} guesses`;
     }
-  } else {
-    for (let i = 1; i <= 10; i++) {
-      if (!guessedAmounts.includes(i)) {
-        maxSum += i;
-        maxGuesses++;
-        if (maxSum >= remainingSum) {
-          break;
-        }
-      }
-    }
-  }
 
-  let remainingGuessesText = `${minGuesses} - ${maxGuesses}`;
-  if (minGuesses === maxGuesses) {
-    remainingGuessesText = minGuesses === 1 ? `${minGuesses} guess` : `${minGuesses} guesses`;
-  }
-
-  const averageGuesses = (minGuesses + maxGuesses) / 2;
-  const marginTopMin = -200;
-  const marginTopMax = 200;
-  const marginTop = marginTopMin + ((averageGuesses - 1) / 9) * (marginTopMax - marginTopMin);
-  const marginTopScaled = marginTop;
+    const averageGuesses = (minGuesses + maxGuesses) / 2;
+    const marginTopMin = -200;
+    const marginTopMax = 200;
+    const marginTop =
+      marginTopMin + ((averageGuesses - 1) / 9) * (marginTopMax - marginTopMin);
+    const marginTopScaled = marginTop;
 
     return (
       <div className="game-page">
@@ -529,26 +545,32 @@ class Spleesh extends Component {
                     </div>
                     <div className="value">{this.props.roomInfo.status}</div>
                   </div>
-                 
+
                   <div className="data-item">
                     <div className="label your-max-return">Your Return</div>
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
-                          this.state.spleesh_guesses.reduce(
-                            (a, b) => a + b.bet_amount,
-                            0
-                          ) +
-                            this.state.bet_amount * 2 /* 0.9 */
-                        )
-                      }
+                        this.state.spleesh_guesses.reduce(
+                          (a, b) => a + b.bet_amount,
+                          0
+                        ) +
+                          this.state.bet_amount * 2 /* 0.9 */
+                      )}
                     </div>
                   </div>
                   <div className="data-item">
                     <div>
                       <div className="label win-chance">Win Chance</div>
                     </div>
-                    <div className="value">{((averageGuesses / (10 - this.state.spleesh_guesses.length)) * 100).toFixed(2)}%</div>
+                    <div className="value">
+                      {(
+                        (averageGuesses /
+                          (10 - this.state.spleesh_guesses.length)) *
+                        100
+                      ).toFixed(2)}
+                      %
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -556,11 +578,12 @@ class Spleesh extends Component {
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
-                  
-                  {this.props.youtubeUrl && 
-                  <div className="data-item">
-                  <YouTubeVideo url={this.props.youtubeUrl} />
-                  </div>}
+
+                  {this.props.youtubeUrl && (
+                    <div className="data-item">
+                      <YouTubeVideo url={this.props.youtubeUrl} />
+                    </div>
+                  )}
                 </React.Fragment>
               ))}
             </div>
@@ -581,40 +604,42 @@ class Spleesh extends Component {
                 }}
               />
             </div> */}
-            
-             <div className="waves">
 
-             <Lottie
-        options={{
-          loop: true,
-          autoplay: true,
-          animationData: waves
-        }}
-        style={{
-          zIndex: '-1',
-          left: '0',
-          position: 'absolute',
-          filter: 'invert(1)',
-          maxWidth: '100%',
-          marginTop: `${marginTopScaled}px`
-        }}
-      />
-              </div>
-              <div className="mosquito" style={{
+            <div className="waves">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: waves
+                }}
+                style={{
+                  zIndex: '-1',
+                  left: '0',
+                  position: 'absolute',
+                  filter: 'invert(1)',
+                  maxWidth: '100%',
+                  marginTop: `${marginTopScaled}px`
+                }}
+              />
+            </div>
+            <div
+              className="mosquito"
+              style={{
                 zIndex: '-2',
                 display: 'flex',
-                justifyContent: 'center',
-              }}>
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: bear
+                justifyContent: 'center'
               }}
-              style={{
-                position: 'absolute',
-              }}
-            />
+            >
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: bear
+                }}
+                style={{
+                  position: 'absolute'
+                }}
+              />
             </div>
             <h3 className="game-sub-title">{remainingGuessesText} remaining</h3>
 
@@ -708,28 +733,30 @@ class Spleesh extends Component {
                 </Button>
               </div>
             </div>
-            <Button
-              id="aiplay"
-              onMouseDown={this.handleButtonClick}
-              onMouseUp={this.handleButtonRelease}
-              onTouchStart={this.handleButtonClick}
-              onTouchEnd={this.handleButtonRelease}
-            >
-              {this.state.betting ? (
+            <div>
+              <FormControlLabel
+                control={
+                  <Switch
+                    id="aiplay-switch"
+                    checked={betting}
+                    onChange={this.handleSwitchChange}
+                  />
+                }
+                label={betting ? 'AI ON' : 'AI OFF'}
+              />
+              {betting ? (
                 <div id="stop">
-                  <span>Stop</span>
+                  {/* <span>Stop</span> */}
                   <Lottie options={defaultOptions} width={22} />
                 </div>
               ) : (
                 <div>
-                  {this.state.timerValue !== 2000 ? (
-                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
-                  ) : (
-                    <span>AI Play</span>
-                  )}
+                  {timerValue !== 2000 ? (
+                    <span>{(timerValue / 2000).toFixed(2)}s</span>
+                  ) : null}
                 </div>
               )}
-            </Button>
+            </div>
           </div>
           <BetArray arrayName={arrayName} label="spleesh" />
 

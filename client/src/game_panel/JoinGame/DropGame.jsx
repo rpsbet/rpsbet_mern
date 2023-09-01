@@ -8,7 +8,7 @@ import { YouTubeVideo } from '../../components/YoutubeVideo';
 import Lottie from 'react-lottie';
 // import gemBg from '../LottieAnimations/gem-bg.json';
 
-import { Button, ButtonGroup, TextField } from '@material-ui/core';
+import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
 import {
   validateIsAuthenticated,
@@ -147,7 +147,7 @@ class DropGame extends Component {
     }
     return null;
   }
-  
+
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.roomInfo && this.props.roomInfo) {
       if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
@@ -157,7 +157,7 @@ class DropGame extends Component {
         });
       }
     }
-  
+
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
       this.state.isPasswordCorrect === true
@@ -165,7 +165,7 @@ class DropGame extends Component {
       this.joinGame();
     }
   }
-  
+
   componentDidMount = () => {
     this.socket.on('DROP_GUESSES1', data => {
       if (!this.state.drop_guesses1Received) {
@@ -178,7 +178,7 @@ class DropGame extends Component {
     this.socket.on('DROP_GUESSES', data => {
       this.setState({ drop_guesses: data });
     });
-  
+
     const items = [
       {
         label: 'Host',
@@ -203,15 +203,14 @@ class DropGame extends Component {
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll });
     });
-  
+
     document.addEventListener('mousedown', this.handleClickOutside);
   };
-  
+
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
   };
-  
 
   predictNext = dropAmounts => {
     // Find the unique values in dropAmounts
@@ -394,7 +393,7 @@ class DropGame extends Component {
         document.getElementById('betamount').focus();
       }
     );
-  }
+  };
 
   handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
@@ -416,7 +415,7 @@ class DropGame extends Component {
         }
       );
     }
-  }
+  };
 
   handleBetAmountChange = event => {
     this.setState({ bet_amount: event.target.value });
@@ -432,44 +431,43 @@ class DropGame extends Component {
         document.getElementById('betamount').focus();
       }
     );
-  }
+  };
 
-  handleButtonClick = () => {
-    const { isAuthenticated, creator_id, user_id, isDarkMode } = this.props;
-    const { betting, timer } = this.state;
+  handleSwitchChange = () => {
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      balance
+    } = this.props;
+    const { betting, bet_amount } = this.state;
 
+    // Add the necessary validation checks here
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      // Display an error message or handle the case when authentication fails
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      // Display an error message or handle the case when creator ID validation fails
       return;
     }
+
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      // Display an error message or handle the case when bet amount validation fails
+      return;
+    }
+
     if (!betting) {
-      this.setState({
-        timer: setInterval(() => {
-          this.setState(state => {
-            if (state.timerValue === 0) {
-              clearInterval(this.state.timer);
-              this.startBetting();
-              return { timerValue: 2000 };
-            } else {
-              return { timerValue: state.timerValue - 10 };
-            }
-          });
-        }, 10)
-      });
+      // User has turned on the switch
+      this.startBetting();
     } else {
+      // User has turned off the switch
       this.stopBetting();
     }
   };
 
-  handleButtonRelease = () => {
-    if (this.state.timer) {
-      clearInterval(this.state.timer);
-      this.setState({ timerValue: 2000 });
-    }
-  };
   startBetting = () => {
     const { isDarkMode, playSound, is_private, roomInfo } = this.props;
 
@@ -495,7 +493,7 @@ class DropGame extends Component {
     this.setState({ intervalId, betting: true });
   };
 
-  handleChange = (event) => {
+  handleChange = event => {
     this.setState({ bet_amount: event.target.value });
   };
 
@@ -583,29 +581,25 @@ class DropGame extends Component {
   };
 
   render() {
-        const { showAnimation } = this.state;
+    const { showAnimation, isDisabled, betting, timerValue } = this.state;
 
     return (
       <div className="game-page">
-
         <div className="page-title">
           <h2>PLAY - Drop Game</h2>
         </div>
         <div className="game-contents">
-          <div
-            className="pre-summary-panel"
-            ref={this.panelRef}
-          >
+          <div className="pre-summary-panel" ref={this.panelRef}>
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
-<div className="data-item">
+                  <div className="data-item">
                     <div>
                       <div className="label room-id">STATUS</div>
                     </div>
                     <div className="value">{this.props.roomInfo.status}</div>
                   </div>
-                 
+
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
@@ -615,7 +609,7 @@ class DropGame extends Component {
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
-                          this.state.bet_amount * 2 
+                        this.state.bet_amount * 2
                         // )
                       )}
                     </div>
@@ -626,11 +620,12 @@ class DropGame extends Component {
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
-                 
-                  {this.props.youtubeUrl && 
-                  <div className="data-item">
-                  <YouTubeVideo url={this.props.youtubeUrl} />
-                  </div>}
+
+                  {this.props.youtubeUrl && (
+                    <div className="data-item">
+                      <YouTubeVideo url={this.props.youtubeUrl} />
+                    </div>
+                  )}
                 </React.Fragment>
               ))}
             </div>
@@ -711,41 +706,44 @@ class DropGame extends Component {
                 </p>
               </div>
             </div>
-            <div className={`animation-container${showAnimation ? ' animate' : ''}`}>
-          <Lottie
-            options={{
-              loop: true,
-              autoplay: true,
-              animationData: drop,
-            }}
-            width={200}
-            height={200}
-            style={{
-              filter: 'hue-rotate(95deg)'
-
-            }}
-          />
-          </div>
+            <div
+              className={`animation-container${
+                showAnimation ? ' animate' : ''
+              }`}
+            >
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: drop
+                }}
+                width={200}
+                height={200}
+                style={{
+                  filter: 'hue-rotate(95deg)'
+                }}
+              />
+            </div>
             <div className="drop-amount">
               <h3 className="game-sub-title">Highest Drop Wins!</h3>
             </div>
             <BetAmountInput
-          betAmount={this.state.bet_amount}
-          handle2xButtonClick={this.handle2xButtonClick}
-          handleHalfXButtonClick={this.handleHalfXButtonClick}
-          handleMaxButtonClick={this.handleMaxButtonClick}
-          onChangeState={this.onChangeState}
-          isDarkMode={this.props.isDarkMode}
-        />
-                <Button
-                  className="place-bet"
-                  color="primary"
-                  onClick={() => this.onBtnBetClick()}
-                  variant="contained"
-                >
-                  DROP AMOUNT
-                </Button>
-           
+              betAmount={this.state.bet_amount}
+              handle2xButtonClick={this.handle2xButtonClick}
+              handleHalfXButtonClick={this.handleHalfXButtonClick}
+              handleMaxButtonClick={this.handleMaxButtonClick}
+              onChangeState={this.onChangeState}
+              isDarkMode={this.props.isDarkMode}
+            />
+            <Button
+              className="place-bet"
+              color="primary"
+              onClick={() => this.onBtnBetClick()}
+              variant="contained"
+            >
+              DROP AMOUNT
+            </Button>
+
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>
@@ -843,29 +841,30 @@ class DropGame extends Component {
                 </button> */}
               </div>
             </div>
-            <Button
-              id="aiplay"
-              variant="contained"
-              onMouseDown={this.handleButtonClick}
-              onMouseUp={this.handleButtonRelease}
-              onTouchStart={this.handleButtonClick}
-              onTouchEnd={this.handleButtonRelease}
-            >
-              {this.state.betting ? (
+            <div>
+              <FormControlLabel
+                control={
+                  <Switch
+                    id="aiplay-switch"
+                    checked={betting}
+                    onChange={this.handleSwitchChange}
+                  />
+                }
+                label={betting ? 'AI ON' : 'AI OFF'}
+              />
+              {betting ? (
                 <div id="stop">
-                  <span>Stop</span>
+                  {/* <span>Stop</span> */}
                   <Lottie options={defaultOptions} width={22} />
                 </div>
               ) : (
                 <div>
-                  {this.state.timerValue !== 2000 ? (
-                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
-                  ) : (
-                    <span>AI Play</span>
-                  )}
+                  {timerValue !== 2000 ? (
+                    <span>{(timerValue / 2000).toFixed(2)}s</span>
+                  ) : null}
                 </div>
               )}
-            </Button>
+            </div>
           </div>
           <BetArray arrayName="drop_array" label="drop" />
 

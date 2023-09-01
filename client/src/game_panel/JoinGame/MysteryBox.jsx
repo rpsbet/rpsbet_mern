@@ -6,7 +6,7 @@ import Lottie from 'react-lottie';
 import mountainsBg from '../LottieAnimations/mountains-bg.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 
-import { Button } from '@material-ui/core';
+import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -36,7 +36,7 @@ const defaultOptions = {
 const customStyles = {
   overlay: {
     zIndex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
   },
   content: {
     top: '50%',
@@ -45,7 +45,7 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     background: 'transparent',
-    padding: 0,
+    padding: 0
   }
 };
 
@@ -78,7 +78,7 @@ class MysteryBox extends Component {
   }
   static getDerivedStateFromProps(props, current_state) {
     const { isPasswordCorrect, betResult, balance } = props;
-  
+
     if (
       current_state.isPasswordCorrect !== isPasswordCorrect ||
       current_state.betResult !== betResult ||
@@ -91,25 +91,25 @@ class MysteryBox extends Component {
         betResult
       };
     }
-  
+
     return null;
   }
-  
+
   onBoxClicked = e => {
     e.preventDefault();
     this.props.playSound('select');
-  
+
     if (e.currentTarget.getAttribute('status') === 'opened') {
       return;
     }
-  
+
     const _id = e.currentTarget.getAttribute('_id');
     const box_price = e.currentTarget.getAttribute('box_price');
     this.setState({ selected_id: _id, bet_amount: box_price }, () => {
       this.onBtnBetClick();
     });
   };
-  
+
   componentDidMount() {
     const { socket } = this.props;
     socket.on('UPDATED_BOX_LIST', data => {
@@ -117,12 +117,12 @@ class MysteryBox extends Component {
     });
     document.addEventListener('mousedown', this.handleClickOutside);
   }
-  
+
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
   };
-  
+
   componentDidUpdate(prevProps, prevState) {
     if (prevState.box_list !== this.state.box_list) {
       this.props.refreshHistory(() => {
@@ -135,11 +135,11 @@ class MysteryBox extends Component {
             selected_id: this.state.selected_id,
             is_anonymous: this.state.is_anonymous
           });
-  
+
           const updatedBoxList = this.state.box_list.map(el =>
             el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
           );
-  
+
           this.setState({ box_list: updatedBoxList });
         }
       });
@@ -236,43 +236,40 @@ class MysteryBox extends Component {
     this.setState({ bgColorChanged: false });
   };
 
-  handleButtonClick = () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
-    const { betting } = this.state;
+  handleSwitchChange = () => {
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      balance
+    } = this.props;
+    const { betting, bet_amount } = this.state;
 
+    // Add the necessary validation checks here
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      // Display an error message or handle the case when authentication fails
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      // Display an error message or handle the case when creator ID validation fails
       return;
     }
+
+    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+      // Display an error message or handle the case when bet amount validation fails
+      return;
+    }
+
     if (!betting) {
-      this.setState({
-        timer: setInterval(() => {
-          this.setState(state => {
-            if (state.timerValue === 0) {
-              clearInterval(this.state.timer);
-              this.startBetting();
-              return { timerValue: 2000 };
-            } else {
-              return { timerValue: state.timerValue - 10 };
-            }
-          });
-        }, 10)
-      });
+      // User has turned on the switch
+      this.startBetting();
     } else {
+      // User has turned off the switch
       this.stopBetting();
     }
   };
-
-  handleButtonRelease = () => {
-    if (this.state.timer) {
-      clearInterval(this.state.timer);
-      this.setState({ timerValue: 2000 });
-    }
-  };
-
   startBetting = () => {
     const {
       isDarkMode,
@@ -523,12 +520,14 @@ class MysteryBox extends Component {
   };
 
   getBetForm = () => {
+    const { isDisabled, betting, timerValue } = this.state;
+
     let prizes = [];
     let prices = [];
     let openedBoxes = 0;
     let prizeSum = 0;
-  let priceSum = 0;
-  let priceCount = 0;
+    let priceSum = 0;
+    let priceCount = 0;
     let pr = 0;
     let numPrizesGreaterThanPrices = 0; // Initialize counter
 
@@ -540,17 +539,17 @@ class MysteryBox extends Component {
       prices.push({
         price: row.box_price,
         status: row.status
-      })
+      });
       pr = pr < row.box_prize ? row.box_prize : pr;
 
-      if (row.status === "init") {
+      if (row.status === 'init') {
         prizeSum += row.box_prize;
         priceSum += row.box_price;
         priceCount++;
-         // Check if the prize is greater than the price
-      if (row.box_prize > row.box_price) {
-        numPrizesGreaterThanPrices++;
-      }
+        // Check if the prize is greater than the price
+        if (row.box_prize > row.box_price) {
+          numPrizesGreaterThanPrices++;
+        }
       } else {
         openedBoxes += row.box_price;
       }
@@ -559,7 +558,9 @@ class MysteryBox extends Component {
     prizes.sort((a, b) => a.prize - b.prize);
 
     let averagePrice = priceCount > 0 ? priceSum / priceCount : 0;
-    let guesses = ((this.props.roomInfo.endgame_amount - prizeSum) - openedBoxes)/ averagePrice;
+    let guesses =
+      (this.props.roomInfo.endgame_amount - prizeSum - openedBoxes) /
+      averagePrice;
     let attempts = guesses < 1 ? 1 : guesses;
     // console.log("prizes.length", prizes.length);
     // console.log("guesses", guesses);
@@ -596,18 +597,22 @@ class MysteryBox extends Component {
                     <div>
                       <div className="label your-max-return">Your Return</div>
                     </div>
-                    <div className="value">
-                      {convertToCurrency(pr)}
-                    </div>
+                    <div className="value">{convertToCurrency(pr)}</div>
                   </div>
                   <div className="data-item">
                     <div>
                       <div className="label win-chance">Win Chance</div>
                     </div>
                     <div className="value">
-  {((this.calculateProbability(prizes.length, guesses, numPrizesGreaterThanPrices) || numPrizesGreaterThanPrices / prizes.length) * 100).toFixed(2)}%
-</div>
-
+                      {(
+                        (this.calculateProbability(
+                          prizes.length,
+                          guesses,
+                          numPrizesGreaterThanPrices
+                        ) || numPrizesGreaterThanPrices / prizes.length) * 100
+                      ).toFixed(2)}
+                      %
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -615,68 +620,75 @@ class MysteryBox extends Component {
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
-                  {this.props.youtubeUrl && 
-                  <div className="data-item">
-                  <YouTubeVideo url={this.props.youtubeUrl} />
-                  </div>}
+                  {this.props.youtubeUrl && (
+                    <div className="data-item">
+                      <YouTubeVideo url={this.props.youtubeUrl} />
+                    </div>
+                  )}
                 </React.Fragment>
               ))}
             </div>
           </div>
-          <div className="game-info-panel"             style={{ position: 'relative', zIndex: 10 }}
->
-<div className='mountains-bg'>
-
-<Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: mountainsBg
-              }}
-              style={{
-                width: '100vw',
-                zIndex: '-1',
-                filter: 'brightness(0.72)'
-              }}
+          <div
+            className="game-info-panel"
+            style={{ position: 'relative', zIndex: 10 }}
+          >
+            <div className="mountains-bg">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: mountainsBg
+                }}
+                style={{
+                  width: '100vw',
+                  zIndex: '-1',
+                  filter: 'brightness(0.72)'
+                }}
               />
-              </div>
-              <div className='mountains-bg-last'>
-
-<Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: mountainsBg
-              }}
-              style={{
-                width: '100vw',
-                zIndex: '-1',
-                filter: 'brightness(0.72)'
-              }}
+            </div>
+            <div className="mountains-bg-last">
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: mountainsBg
+                }}
+                style={{
+                  width: '100vw',
+                  zIndex: '-1',
+                  filter: 'brightness(0.72)'
+                }}
               />
-              </div>
+            </div>
             <h3 className="game-sub-title">Prizes</h3>
             <p className="box-prizes">
-  {prizes.reduce((accumulator, item) => {
-    const existingItem = accumulator.find((element) => element.prize === item.prize);
-    if (existingItem) {
-      existingItem.count += 1;
-    } else {
-      accumulator.push({ prize: item.prize, count: 1 });
-    }
-    return accumulator;
-  }, []).sort((a, b) => {
-    return b.prize - a.prize;
-  }).map((item, key) => (
-    <span className={item.prize === 0 ? 'EMPTY' : ''} key={key}>
-      {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}
-      {' '}
-      ({(item.count / prizes.length * 100).toFixed(2)}%)
-    </span>
-  ))}
-</p>
+              {prizes
+                .reduce((accumulator, item) => {
+                  const existingItem = accumulator.find(
+                    element => element.prize === item.prize
+                  );
+                  if (existingItem) {
+                    existingItem.count += 1;
+                  } else {
+                    accumulator.push({ prize: item.prize, count: 1 });
+                  }
+                  return accumulator;
+                }, [])
+                .sort((a, b) => {
+                  return b.prize - a.prize;
+                })
+                .map((item, key) => (
+                  <span className={item.prize === 0 ? 'EMPTY' : ''} key={key}>
+                    {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}{' '}
+                    ({((item.count / prizes.length) * 100).toFixed(2)}%)
+                  </span>
+                ))}
+            </p>
 
-            <h3 className="game-sub-title">{attempts.toFixed(2)} guesses remaining</h3>
+            <h3 className="game-sub-title">
+              {attempts.toFixed(2)} guesses remaining
+            </h3>
             <div className="boxes-panel boxes-join">
               {this.state.box_list.map((row, index) => (
                 <Card
@@ -790,7 +802,7 @@ class MysteryBox extends Component {
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
-                  disabled={this.state.isDisabled}
+                  disabled={isDisabled}
                 >
                   Carlo
                 </Button>
@@ -800,7 +812,7 @@ class MysteryBox extends Component {
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                  disabled={this.state.isDisabled}
+                  disabled={isDisabled}
                 >
                   Q Bot
                 </Button>
@@ -814,28 +826,30 @@ class MysteryBox extends Component {
                 </button> */}
               </div>
             </div>
-            <Button
-              id="aiplay"
-              onMouseDown={this.handleButtonClick}
-              onMouseUp={this.handleButtonRelease}
-              onTouchStart={this.handleButtonClick}
-              onTouchEnd={this.handleButtonRelease}
-            >
-              {this.state.betting ? (
+            <div>
+              <FormControlLabel
+                control={
+                  <Switch
+                    id="aiplay-switch"
+                    checked={betting}
+                    onChange={this.handleSwitchChange}
+                  />
+                }
+                label={betting ? 'AI ON' : 'AI OFF'}
+              />
+              {betting ? (
                 <div id="stop">
-                  <span>Stop</span>
+                  {/* <span>Stop</span> */}
                   <Lottie options={defaultOptions} width={22} />
                 </div>
               ) : (
                 <div>
-                  {this.state.timerValue !== 2000 ? (
-                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
-                  ) : (
-                    <span>AI Play</span>
-                  )}
+                  {timerValue !== 2000 ? (
+                    <span>{(timerValue / 2000).toFixed(2)}s</span>
+                  ) : null}
                 </div>
               )}
-            </Button>
+            </div>
           </div>
           <BetArray arrayName="bet_array" label="bet" />
 
@@ -857,18 +871,18 @@ class MysteryBox extends Component {
     }
   };
 
-   calculateProbability = (numBoxes, numGuesses, numPrizes) => {
-      // Calculate probability of not winning
-      let probabilityNotWinning = 1;
-      for (let i = 0; i < numGuesses; i++) {
-        probabilityNotWinning *= (numBoxes - numPrizes - i) / (numBoxes - i);
-      }
-  
-      // Calculate probability of winning
-      let probabilityWinning = 1 - probabilityNotWinning;
-  
-      return probabilityWinning;
-    };
+  calculateProbability = (numBoxes, numGuesses, numPrizes) => {
+    // Calculate probability of not winning
+    let probabilityNotWinning = 1;
+    for (let i = 0; i < numGuesses; i++) {
+      probabilityNotWinning *= (numBoxes - numPrizes - i) / (numBoxes - i);
+    }
+
+    // Calculate probability of winning
+    let probabilityWinning = 1 - probabilityNotWinning;
+
+    return probabilityWinning;
+  };
 
   getBetResultForm = () => {
     // let prizes = [];
@@ -887,7 +901,7 @@ class MysteryBox extends Component {
         clearInterval(intervalId);
       }
     }, 100);
-    
+
     return (
       <div className="game-page">
         <div className="game-contents mystery-box-result-contents">
@@ -899,7 +913,7 @@ class MysteryBox extends Component {
             >
               {convertToCurrency(this.state.betResult)}
             </div>
-            <h4 className="game-sub-title" style={{marginTop: "30px"}}>
+            <h4 className="game-sub-title" style={{ marginTop: '30px' }}>
               {this.state.betResult === 0
                 ? `PAHAH WRONG BOX DICKHEAD!`
                 : `NICE 😎 ISSA MONEY BOX`}

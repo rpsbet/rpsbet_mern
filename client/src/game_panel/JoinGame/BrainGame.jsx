@@ -11,7 +11,7 @@ import Lottie from 'react-lottie';
 // import brainBg from '../LottieAnimations/brainBg.json';
 import animationData from '../LottieAnimations/spinningIcon';
 import brain from '../LottieAnimations/brain.json';
-import { Button } from '@material-ui/core';
+import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -350,7 +350,7 @@ class BrainGame extends Component {
     }
   };
 
-  handleButtonClick = () => {
+  handleSwitchChange = () => {
     const {
       isAuthenticated,
       isDarkMode,
@@ -358,35 +358,27 @@ class BrainGame extends Component {
       user_id,
       balance
     } = this.props;
-    const { bet_amount, bankroll, betting, timerValue } = this.state;
+    const { betting, bet_amount, bankroll } = this.state;
 
+    // Add the necessary validation checks here
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+      // Display an error message or handle the case when authentication fails
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      // Display an error message or handle the case when creator ID validation fails
       return;
     }
-
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
 
     if (!betting) {
-      this.setState({
-        timer: setInterval(() => {
-          this.setState(state => {
-            if (state.timerValue === 0) {
-              clearInterval(state.timer);
-              this.startBetting();
-              return { timerValue: 2000 };
-            } else {
-              return { timerValue: state.timerValue - 10 };
-            }
-          });
-        }, 10)
-      });
+      // User has turned on the switch
+      this.startBetting();
     } else {
+      // User has turned off the switch
       this.stopBetting();
     }
   };
@@ -511,6 +503,8 @@ class BrainGame extends Component {
   };
 
   render() {
+    const { showAnimation, isDisabled, betting, timerValue } = this.state;
+
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
@@ -596,8 +590,7 @@ class BrainGame extends Component {
                   <div className="data-item">
                     <div className="label your-max-return">Your Return</div>
                     <div className="value">
-                      {convertToCurrency(this.props.bet_amount * 2
-                      )}
+                      {convertToCurrency(this.props.bet_amount * 2)}
                     </div>
                   </div>
                   <div className="data-item">
@@ -605,23 +598,23 @@ class BrainGame extends Component {
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
-                          this.props.bet_amount * this.props.joined_count
+                        this.props.bet_amount * this.props.joined_count
                         // )
                       )}
                     </div>
                   </div>
 
-                 
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
-                  {this.props.youtubeUrl && 
-                  <div className="data-item">
-                  <YouTubeVideo url={this.props.youtubeUrl} />
-                  </div>}
+                  {this.props.youtubeUrl && (
+                    <div className="data-item">
+                      <YouTubeVideo url={this.props.youtubeUrl} />
+                    </div>
+                  )}
                 </React.Fragment>
               ))}
             </div>
@@ -775,28 +768,30 @@ class BrainGame extends Component {
                 </Button>
               </div>
             </div>
-            <Button
-              id="aiplay"
-              onMouseDown={this.handleButtonClick}
-              onMouseUp={this.handleButtonRelease}
-              onTouchStart={this.handleButtonClick}
-              onTouchEnd={this.handleButtonRelease}
-            >
-              {this.state.betting ? (
+            <div>
+              <FormControlLabel
+                control={
+                  <Switch
+                    id="aiplay-switch"
+                    checked={betting}
+                    onChange={this.handleSwitchChange}
+                  />
+                }
+                label={betting ? 'AI ON' : 'AI OFF'}
+              />
+              {betting ? (
                 <div id="stop">
-                  <span>Stop</span>
+                  {/* <span>Stop</span> */}
                   <Lottie options={defaultOptions} width={22} />
                 </div>
               ) : (
                 <div>
-                  {this.state.timerValue !== 2000 ? (
-                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
-                  ) : (
-                    <span>AI Play</span>
-                  )}
+                  {timerValue !== 2000 ? (
+                    <span>{(timerValue / 2000).toFixed(2)}s</span>
+                  ) : null}
                 </div>
               )}
-            </Button>
+            </div>
           </div>
           <BetArray arrayName={arrayName} label="score" />
 
