@@ -87,7 +87,7 @@ class DepositModal extends Component {
         });
 
         if (result.data.success) {
-          alertModal(this.props.isDarresultkMode, result.data.message);
+          alertModal(this.props.isDarkMode, result.data.message);
           this.props.setBalance(result.data.balance);
           this.props.addNewTransaction(result.data.newTransaction);
           this.setState({ isLoading: false })

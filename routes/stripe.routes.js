@@ -10,7 +10,7 @@ const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 const ethers = require('ethers');
 const { JsonRpcProvider } = require('@ethersproject/providers');
-
+const cron = require('node-cron');
 // const ganacheEndpoint = 'http://localhost:7544';
 // const provider = new JsonRpcProvider(ganacheEndpoint); 
 const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09'); // Replace 'YOUR_INFURA_PROJECT_ID' with your actual Infura project ID.
@@ -46,67 +46,111 @@ router.post('/secret', auth, async (req, res) => {
     });
   }
 });
+// Define a function to process deposits securely
+const processDeposit = async (user, amount, txtHash) => {
+  try {
+    // Check if the transaction hash has already been processed
+    const usedTransactions = await Transaction.find({ hash: txtHash });
+    if (usedTransactions.length > 0) {
+      console.log('Transaction has been already used');
+      return;
+    }
 
+    // Retrieve the Ethereum transaction
+    const tx = await provider.getTransaction(txtHash);
+
+    // Check if the transaction is confirmed on the blockchain
+    if (!tx || !tx.blockNumber) {
+      console.log('Transaction not found or not confirmed');
+      return;
+    }
+
+    // Verify that the transaction matches with the expected details
+    const signer = new ethers.Wallet(walletKey, provider);
+    const wamount = ethers.utils.parseUnits(amount, 'ether');
+
+    if (tx.to !== signer.address || !tx.value.eq(wamount)) {
+      console.log('Transaction does not match with input');
+      return;
+    }
+
+    // Update the user's balance
+    user.balance = Number(user.balance) + Number(amount);
+    await user.save();
+
+    // Save the transaction details
+    const newTransaction = new Transaction({
+      user: user,
+      amount: amount,
+      description: 'deposit',
+      hash: txtHash,
+    });
+    await newTransaction.save();
+
+    // Create a receipt and log success
+    const receipt = new Receipt({
+      user_id: user._id,
+      payment_method: req.body.payment_method,
+      payment_type: 'Deposit',
+      amount: amount,
+    });
+    await receipt.save();
+
+    console.log('Deposit processed successfully');
+  } catch (err) {
+    console.log('Error in processing deposit:', err);
+  }
+};
+
+// Schedule a cron job to regularly process deposits (e.g., every minute)
+cron.schedule('* * * * *', async () => {
+  try {
+    // Query the database for pending deposits (you may need a deposit queue)
+    const pendingDeposits = await PendingDeposit.find();
+
+    for (const deposit of pendingDeposits) {
+      // Process each pending deposit securely
+      await processDeposit(deposit.user, deposit.amount, deposit.txtHash);
+
+      // Remove the processed deposit from the queue
+      await deposit.remove();
+    }
+  } catch (err) {
+    console.log('Error in cron job:', err);
+  }
+});
+
+// Handle deposit requests
 router.post('/deposit_successed', auth, async (req, res) => {
   try {
-    const {amount, txtHash} = req.body;
-    // validate the input
+    const { amount, txtHash } = req.body;
+
+    // Validate the input
     if (!amount || !txtHash) {
       return res.status(400).send('Invalid input');
     }
 
-    //  prevent double spending
-    const usedTransactions = await Transaction.find({
-      hash: txtHash
-    });
-    if (usedTransactions.length > 0) {
-      return res.status(400).send('Transaction has been already used');
-    }
-
-    const tx = await provider.getTransaction(txtHash)
-    // Check if the transaction exists and is confirmed
-    if (!tx || !tx.blockNumber) {
-      return res.status(404).send('Transaction not found or not confirmed');
-    }
-    // Check if the transaction matches with the amount and the addresses
-    const signer = new ethers.Wallet(walletKey, provider);
-    const wamount = ethers.utils.parseUnits(amount, 'ether');
-    if (Number(tx.value) != Number(wamount) || tx.to !== signer.address) {
-      return res.status(400).send('Transaction does not match with input');
-    }
-    req.user.balance = Number(req.user.balance) + Number(amount);
-    // req.user.balance = await getWalletBalance(signer);
-
-    await req.user.save();
-    const newTransaction = new Transaction({
+    // Save the deposit as pending for later processing by the cron job
+    const pendingDeposit = new PendingDeposit({
       user: req.user,
-      amount: req.body.amount,
-      description: 'deposit',
-      hash: txtHash
+      amount: amount,
+      txtHash: txtHash,
     });
-    await newTransaction.save();
+    await pendingDeposit.save();
 
-    const receipt = new Receipt({
-      user_id: req.user._id,
-      payment_method: req.body.payment_method,
-      payment_type: 'Deposit',
-      amount: req.body.amount
-    });
-    await receipt.save();
     res.json({
       success: true,
-      balance: req.user.balance,
-      newTransaction,
-      message: `Deposit successful! 🎉 Much Wow.<br />View the transaction details on the blockchain using this <a href="https://etherscan.io/tx/${txtHash}" target="_blank">transaction link</a>.`
+      message: 'Deposit request received and pending processing',
     });
   } catch (err) {
-    console.log('error in deposit_successed', err);
+    console.log('Error in deposit_successed', err);
     res.json({
       success: false,
-      message: err
+      message: err,
     });
   }
 });
+
 
 router.post('/withdraw_request', auth, async (req, res) => {
   let tx;
