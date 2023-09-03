@@ -395,7 +395,7 @@ class RPS extends Component {
                       <td>{index + 1}</td>
                       <td>{rps.rps}</td>
                       <td>
-                        <HighlightOffIcon
+                        <HighlightOffIcon  id="delete"
                           onClick={() => this.onRemoveItem(index)}
                         />
                       </td>

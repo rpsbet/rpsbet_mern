@@ -42,6 +42,10 @@ const stripeRoutes = require('./routes/stripe.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
 const systemSetting = require('./routes/settings.routes');
 const helmet = require('helmet'); // for sec headers
+const cronJob = require('./helper/util/createCronJob.js');
+
+// Initialize the cron job to periodically check for confirmations
+cronJob.checkConfirmations();
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

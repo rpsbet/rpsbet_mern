@@ -511,7 +511,7 @@ class Blackjack extends Component {
                       <td>{bj.score}</td>
                       <td>{bj.bj}</td>
                       <td>
-                        <HighlightOffIcon
+                        <HighlightOffIcon id="delete"
                           onClick={() => this.onRemoveItem(index)}
                         />
                       </td>

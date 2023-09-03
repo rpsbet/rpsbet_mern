@@ -669,8 +669,8 @@ class DropGame extends Component {
                             padding: '0.3em 0.2em'
                           }}
                         >
-                          <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
-                          {guess.host_drop}
+                          {/* <InlineSVG id="busd" src={require('./busd.svg')} />{' '} */}
+                          {convertToCurrency(guess.host_drop)}
                         </span>
                       ))
                     ) : (
@@ -695,8 +695,8 @@ class DropGame extends Component {
                             padding: '0.3em 0.2em'
                           }}
                         >
-                          <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
-                          {guess.bet_amount.toFixed(2)}
+                          {/* <InlineSVG id="busd" src={require('./busd.svg')} />{' '} */}
+                          {convertToCurrency(guess.bet_amount)}
                         </span>
                       ))
                     ) : (

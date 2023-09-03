@@ -418,7 +418,7 @@ class QuickShoot extends Component {
                           <td>{index + 1}</td>
                           <td>{qs.qs}</td>
                           <td>
-                            <HighlightOffIcon
+                            <HighlightOffIcon  id="delete"
                               onClick={() => this.onRemoveItem(index)}
                             />
                           </td>

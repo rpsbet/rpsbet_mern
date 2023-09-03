@@ -723,6 +723,7 @@ div.table.my-open-game-table::-webkit-scrollbar {
 .your-bet-amount {
   display: flex;
   align-items: center;
+  flex-direction: column;
 }
 
 #roll {
@@ -1679,10 +1680,16 @@ table#runs td {
   text-align: center;
   border-radius: 16px;
 }
-
-table#runs td svg {
-  cursor: pointer;
+table#runs td {
+  width: 140px;
 }
+table#runs td:first-child {
+width: 20px;
+}
+table#runs td:last-child {
+  width: 20px;
+  }
+  
 
 .join-game-panel #bj-radio button {
   margin: 4px 4px 6px !important;
@@ -1705,10 +1712,11 @@ table#runs td svg {
   font-size: 0.9em !important;
 }
 
-#runs td svg:hover {
+svg#delete:hover {
   transform: scale(1.1);
   background-color: #ffffff5c;
   border-radius: 20px;
+  cursor: pointer;
   padding: 0.5px;
   transition: 0.2s;
 }
@@ -1918,6 +1926,8 @@ button.btn-submit:active,
   width: 0;
   z-index: -1;
 }
+
+
 
 #btn-rps-settings {
   /* bottom: -3.1rem; */

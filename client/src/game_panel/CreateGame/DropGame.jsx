@@ -2,11 +2,12 @@ import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
 import { Button, TextField } from '@material-ui/core';
-
+import { convertToCurrency } from '../../util/conversion';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import {
   alertModal
 } from '../modal/ConfirmAlerts';
+import BetAmountInput from '../../components/BetAmountInput';
 
 
 const calcWinChance = (prevStates) => {
@@ -41,15 +42,14 @@ class DropGame extends Component {
     super(props);
     this.state = {
       selected_drop: '',
-      bet_amount: 10.00,
+      bet_amount: 0.1,
       drop: 0.01,
       balance: this.props.balance,
       winChance: 33,
       // is_other: (this.props.bet_amount === 5 || this.props.bet_amount === 10 || this.props.bet_amount === 25 || this.props.bet_amount === 50 || this.props.bet_amount === 100) ? 'hidden' : '',
-
-
     };
     // this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
+    this.onChangeState = this.onChangeState.bind(this);
 
   }
 
@@ -66,7 +66,10 @@ class DropGame extends Component {
     return null;
   }
 
- 
+  onChangeState(e) {
+    this.setState({ drop: e.target.value });
+  }
+
 
   onChangeWinChance = (winChance) => {
     this.setState({ winChance });
@@ -196,7 +199,7 @@ class DropGame extends Component {
   }
 
 
-  handleHalfXButtonClick() {
+  handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.drop * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState({
@@ -206,7 +209,7 @@ class DropGame extends Component {
     });
     }
 
-  handle2xButtonClick() {
+  handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.drop * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount, this.props.bet_amount);
@@ -223,7 +226,7 @@ class DropGame extends Component {
   }
 
   
-    handleMaxButtonClick() {
+    handleMaxButtonClick = () => {
       const maxBetAmount = (this.state.balance);
       this.setState({
         drop: Math.min(maxBetAmount, this.props.bet_amount)
@@ -262,7 +265,15 @@ class DropGame extends Component {
               Drop some amounts!{' '}
             </h3>
             <div className="your-bet-amount">
-              <TextField
+            <BetAmountInput
+              betAmount={this.state.drop}
+              handle2xButtonClick={this.handle2xButtonClick}
+              handleHalfXButtonClick={this.handleHalfXButtonClick}
+              handleMaxButtonClick={this.handleMaxButtonClick}
+              onChangeState={this.onChangeState}
+              isDarkMode={this.props.isDarkMode}
+            />
+              {/* <TextField
                 type="text"
                 pattern="[0-9]*"
                 name="betamount"
@@ -275,12 +286,12 @@ class DropGame extends Component {
                 InputProps={{
                   endAdornment: "ETH",
                 }}
-              />
+              /> */}
               <div>
               <div className='max'>
-            <Button variant="contained" color="primary" onClick={() => this.handleHalfXButtonClick()}>0.5x</Button>
+            {/* <Button variant="contained" color="primary" onClick={() => this.handleHalfXButtonClick()}>0.5x</Button>
             <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
-            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
+            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button> */}
           </div>
               </div>
               <div className='drop addRun'>
@@ -307,9 +318,9 @@ class DropGame extends Component {
                   this.props.drop_list.map((drop, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{drop.drop}</td>
+                      <td>{convertToCurrency(drop.drop)}</td>
                       <td>
-                        <HighlightOffIcon
+                        <HighlightOffIcon id="delete"
                           onClick={() => this.onRemoveItem(index)}
                         />
                       </td>
