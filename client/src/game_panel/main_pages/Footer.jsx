@@ -157,7 +157,7 @@ class Footer extends Component {
 </div>
                 <div className={classes.proof}>
                     <p>Proof of Funds</p>
-                    <a target="_blank" href="https://etherscan.com/address/0x5D38080DA6a868b8BBe65a061D79E2065d5Dd79A">
+                    <a target="_blank" href="https://etherscan.com/address/0xD291Db607053cFcdcFFdADCcfE8A3a8bA8Cd8c6B">
 
                 <img  className={classes.bscscan} src={bscscan} alt="etherscan" />
                     </a>

@@ -613,9 +613,9 @@ class HowToPlayModal extends Component {
                       <table id="howto-modal">
                         <tbody>
                           <tr>
-                            <th>HOST FEES</th>
-                            <th>JOINING TAX</th>
-                            <th>WITHDRAWAL FEES</th>
+                            <th>CREATE A GAME</th>
+                            <th>JOIN A GAME</th>
+                            <th>DP / WD</th>
                           </tr>
                           <tr>
                             <td>
@@ -623,7 +623,7 @@ class HowToPlayModal extends Component {
                             </td>
                             <td className="gamemode">0.5%</td>
                             <td rowSpan="6">
-                              <u>FREE (WE'LL PAY THIS)</u>
+                              <u><a href="https://etherscan.io/gastracker">SEE GAS TRACKER</a></u>
                             </td>
                           </tr>
                         </tbody>
@@ -647,7 +647,7 @@ class HowToPlayModal extends Component {
                       <Button><a href="https://twitter.com/officialrpsgame">Twitter</a></Button>
                       <Button><a href="https://t.me/rps_finance">Telegram</a></Button>
                       <Button><a href="https://discord.gg/anMJntW4AD">Discord</a></Button>
-                      <Button><a href="mailto:lenny@rps.finance">Email</a></Button>
+                      {/* <Button><a href="mailto:lenny@rps.finance">Email</a></Button> */}
                     </div>
                   </div>
                 </AccordionItemPanel>
