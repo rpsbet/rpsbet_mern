@@ -5,7 +5,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import Share from '../../components/Share';
 import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
-import waves from '../LottieAnimations/waves.json';
+// import waves from '../LottieAnimations/waves.json';
 import bear from '../LottieAnimations/bear.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import {
@@ -171,7 +171,7 @@ class Spleesh extends Component {
         stored_spleesh_array.shift();
       }
 
-      if (spleesh_bet_unit === 10) {
+      if (spleesh_bet_unit === 0.1) {
         while (stored_spleesh_10_array.length >= 30) {
           stored_spleesh_10_array.shift();
         }
@@ -410,7 +410,7 @@ class Spleesh extends Component {
     this.props.playSound('start');
     const intervalId = setInterval(() => {
       let storageKey = 'spleesh_array';
-      if (this.props.spleesh_bet_unit === 10) {
+      if (this.props.spleesh_bet_unit === 0.1) {
         storageKey = 'spleesh_10_array';
       }
 
@@ -448,9 +448,9 @@ class Spleesh extends Component {
     } = this.state;
 
     let arrayName;
-    if (spleesh_bet_unit === 1) {
+    if (spleesh_bet_unit === 0.01) {
       arrayName = 'spleesh_array';
-    } else if (spleesh_bet_unit === 10) {
+    } else if (spleesh_bet_unit === 0.1) {
       arrayName = 'spleesh_10_array';
     }
 
@@ -462,7 +462,7 @@ class Spleesh extends Component {
     let minGuesses = 0;
     let minStep = 1;
 
-    if (spleesh_bet_unit === 10) {
+    if (spleesh_bet_unit === 0.1) {
       for (let i = 100; i >= 10; i -= 10) {
         if (!guessedAmounts.includes(i)) {
           minSum += i;
@@ -488,7 +488,7 @@ class Spleesh extends Component {
     let maxGuesses = 0;
     let maxStep = 1;
 
-    if (spleesh_bet_unit === 10) {
+    if (spleesh_bet_unit === 0.10) {
       for (let i = 10; i <= 100; i += 10) {
         if (!guessedAmounts.includes(i)) {
           maxSum += i;
@@ -605,7 +605,7 @@ class Spleesh extends Component {
               />
             </div> */}
 
-            <div className="waves">
+            {/* <div className="waves">
               <Lottie
                 options={{
                   loop: true,
@@ -621,7 +621,7 @@ class Spleesh extends Component {
                   marginTop: `${marginTopScaled}px`
                 }}
               />
-            </div>
+            </div> */}
             <div
               className="mosquito"
               style={{

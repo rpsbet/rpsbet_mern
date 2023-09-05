@@ -119,7 +119,7 @@ class DropGame extends Component {
       const getRandomNumberInRange = (min, max) => {
         return Math.random() * (max - min) + min;
       };
-      return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+      return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(5));
     }
   };
   

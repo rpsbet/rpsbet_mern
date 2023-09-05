@@ -149,7 +149,7 @@ class WithdrawModal extends Component {
                                             </div>
                                 <div className="input-amount">
                                     <TextField
-                                    pattern="[0-9]*"
+                                    pattern="^\\d*\\.?\\d*$"
                                     variant='outlined'
                                     autoComplete='off'
                                     value={this.state.amount}

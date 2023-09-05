@@ -255,7 +255,7 @@ class DropGame extends Component {
         return Math.random() * (max - min) + min;
       };
       return parseFloat(
-        getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2)
+        getRandomNumberInRange(rangeMinValue, rangeMaxValue)
       );
     }
   };

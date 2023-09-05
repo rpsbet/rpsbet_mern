@@ -229,7 +229,7 @@ class MysteryBox extends Component {
                   variant="outlined"
                   type="text"
                   inputProps={{
-                    pattern: '[0-9]*',
+                    pattern: '^\\d*\\.?\\d*$',
                     maxLength: 9
                   }}
                   style={{ marginRight: '15px' }}
@@ -253,7 +253,7 @@ class MysteryBox extends Component {
                   type="text"
                   variant="outlined"
                   inputProps={{
-                    pattern: '[0-9]*',
+                    pattern: '^\\d*\\.?\\d*$',
                     maxLength: 9
                   }}
                   InputLabelProps={{

@@ -93,7 +93,7 @@ class PlayBrainGame extends Component {
 		  const response = await axios.post('/game/answer/', data);
 		  if (response.data.success) {
 			const answerResult = response.data.answer_result;
-			console.log(answerResult)
+			// console.log(answerResult)
 			if (answerResult === 1) {
 			  this.props.playSound('correct');
 			} else if (answerResult === -1) {

@@ -520,10 +520,10 @@ class CreateGame extends Component {
         return;
       }
     } else if (this.state.child_step === 2 && this.state.game_mode === 'Spleesh!') {
-      if ((this.state.spleesh_bet_unit === 0.01 && this.state.endgame_amount < 0.36) || (this.state.spleesh_bet_unit === 0.10 && this.state.endgame_amount < 3.60)) {
+      if ((this.state.spleesh_bet_unit === 0.01 && this.state.endgame_amount < 0.4) || (this.state.spleesh_bet_unit === 0.10 && this.state.endgame_amount < 4.00)) {
         alertModal(
           this.props.isDarkMode,
-          `TOO PROFITABLE! PAYOUT MUST BE MORE THAN ${35 * this.state.spleesh_bet_unit}`
+          `TOO PROFITABLE! PAYOUT MUST BE AT LEAST ${40 * this.state.spleesh_bet_unit}`
         );
         return;
       }
@@ -793,7 +793,7 @@ class CreateGame extends Component {
               Skip
             </Button>
           )}
-          {this.state.step === 5 && this.state.game_mode === 'Brain Game' && (
+          {this.state.step === 5 && this.state.game_mode === 'Brain Game' && !this.state.isPlayingBrain && (
             <Button id="btn_bet" onClick={this.onStartBrainGame}>
               Start
             </Button>
