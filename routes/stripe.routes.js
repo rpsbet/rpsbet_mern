@@ -217,7 +217,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
       description: 'withdraw'
     });
 
-    req.user.balance = await getWalletBalance(signer);
+    // req.user.balance = await getWalletBalance(signer);
+    req.user.balance = req.user.balance - req.body.amount;
 
     await req.user.save();
     await newTransaction.save();
