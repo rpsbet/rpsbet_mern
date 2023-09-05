@@ -60,7 +60,6 @@ router.get('/game_types', async (req, res) => {
   }
 });
 
-
 router.post('/checkGamePassword', async (req, res) => {
   try {
     const room = await Room.findOne({ _id: req.body.room_id });
@@ -122,7 +121,6 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-
 });
 // /api/room/:id call
 router.get('/room/:id', async (req, res) => {
@@ -174,16 +172,15 @@ router.get('/room/:id', async (req, res) => {
       const rpsItems = await RpsBetItem.find({ room: room });
       const rps1 = rpsItems.filter(item => item.joiner !== null).slice(-5); // Filter out items with null joiner
       // console.log("eee", rps1);
-      
+
       if (rps1.length > 0 && req.io.sockets) {
         req.io.sockets.emit('RPS_1', rps1);
       }
     }
-    
+
     emitRps(req);
-    
+
     let hasEmitted = false;
-    
 
     async function emitGuesses(req) {
       if (!hasEmitted) {
@@ -420,9 +417,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           )} (2.00X)</span> against ${creator_link} in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            
-              gameLog['user_bet'] - gameLog['room']['endgame_amount']
-            
+            gameLog['user_bet'] - gameLog['room']['endgame_amount']
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
@@ -444,9 +439,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           )} (2.00X)</span> against ${creator_link} in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            
-              gameLog['user_bet'] - gameLog['room']['endgame_amount']
-            
+            gameLog['user_bet'] - gameLog['room']['endgame_amount']
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
@@ -466,9 +459,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           const winnings =
             gameLog['bet_amount'] / (gameLog['room']['qs_game_type'] - 1) +
             gameLog['bet_amount'];
-          const winningsDisplay = convertToCurrency(
-            winnings
-          );
+          const winningsDisplay = convertToCurrency(winnings);
           const multiplierDisplay = (winnings / gameLog['bet_amount']).toFixed(
             2
           );
@@ -477,9 +468,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            
-              gameLog['user_bet'] - gameLog['room']['endgame_amount']
-            
+            gameLog['user_bet'] - gameLog['room']['endgame_amount']
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
@@ -495,9 +484,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           const winnings = parseFloat(
             gameLog['bet_amount'] + gameLog['selected_drop']
           );
-          const winningsDisplay = convertToCurrency(
-            winnings
-          );
+          const winningsDisplay = convertToCurrency(winnings);
           const multiplierDisplay = (
             (gameLog['bet_amount'] + gameLog['selected_drop']) /
             gameLog['bet_amount']
@@ -507,9 +494,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            
-              gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-            
+            gameLog['bet_amount'] - gameLog['room']['endgame_amount']
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
@@ -525,9 +510,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           const winnings = parseFloat(
             gameLog['bet_amount'] * gameLog['cashoutAmount']
           );
-          const winningsDisplay = convertToCurrency(
-            winnings
-          );
+          const winningsDisplay = convertToCurrency(winnings);
           const multiplierDisplay = (
             (gameLog['bet_amount'] * gameLog['cashoutAmount']) /
             gameLog['bet_amount']
@@ -537,9 +520,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            
-              gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-            
+            gameLog['bet_amount'] - gameLog['room']['endgame_amount']
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
@@ -555,9 +536,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           const winnings = parseFloat(
             gameLog['bet_amount'] * gameLog['multiplier']
           );
-          const winningsDisplay = convertToCurrency(
-            winnings
-          );
+          const winningsDisplay = convertToCurrency(winnings);
           const multiplierDisplay = (
             (gameLog['bet_amount'] * gameLog['multiplier']) /
             gameLog['bet_amount']
@@ -567,9 +546,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            
-              gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-            
+            gameLog['bet_amount'] - gameLog['room']['endgame_amount']
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
@@ -585,9 +562,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           const winnings =
             parseFloat(gameLog['host_pr']) +
             parseFloat(gameLog['room']['bet_amount']);
-          const winningsDisplay = convertToCurrency(
-            winnings
-          );
+          const winningsDisplay = convertToCurrency(winnings);
           const multiplierDisplay = (
             (parseFloat(gameLog['host_pr']) +
               parseFloat(gameLog['room']['bet_amount'])) /
@@ -597,9 +572,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            
-              gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-            
+            gameLog['bet_amount']
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           const hostPr = parseFloat(gameLog['host_pr']);
@@ -613,9 +586,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             (userBet === 0 && roomBetAmount === roomPr
               ? roomPr
               : roomPr + roomBetAmount);
-          const unstakedDisplay = convertToCurrency(
-            unstakedAmount
-          );
+          const unstakedDisplay = convertToCurrency(unstakedAmount);
           const multiplierDisplay = (
             (hostPr + roomBetAmount) /
             roomBetAmount
@@ -633,16 +604,15 @@ const convertGameLogToHistoryStyle = async gameLogList => {
       } else if (gameLog['game_type']['game_type_name'] === 'Mystery Box') {
         if (gameLog.game_result === 0) {
           const betAmount = parseFloat(gameLog['bet_amount']);
-          const openingMessage = `${joined_user_link} opened a box <span style='color: #ffdd15;'>${
-            convertToCurrency(betAmount
+          const openingMessage = `${joined_user_link} opened a box <span style='color: #ffdd15;'>${convertToCurrency(
+            betAmount
           )}</span>`;
           const resultMessage = `and didn't get <span style='color: #ffdd15;'>shit (0.00X)</span>`;
 
           temp.history = `${openingMessage} ${resultMessage} in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${
-            convertToCurrency(gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-            
+          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+            gameLog['bet_amount'] - gameLog['room']['endgame_amount']
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           const roomPr = parseFloat(gameLog['room']['pr']);
@@ -650,8 +620,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           const roomBetAmount = parseFloat(gameLog['room']['bet_amount']);
 
           const unstakedAmount = roomPr + roomUserBet;
-          const unstakedDisplay = convertToCurrency(unstakedAmount
-          );
+          const unstakedDisplay = convertToCurrency(unstakedAmount);
           const multiplierDisplay = (
             (roomPr + roomUserBet) /
             roomBetAmount
@@ -668,8 +637,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             gameResult / gameLog['room']['bet_amount'] < 1
               ? '#ffdd15'
               : '#ff0a28';
-          const winningsDisplay = convertToCurrency(gameResult
-          );
+          const winningsDisplay = convertToCurrency(gameResult);
           const multiplierDisplay = (gameResult / betAmount).toFixed(2);
 
           temp.history = `${joined_user_link} opened a box and won <span style="color: ${color}">${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
@@ -681,26 +649,27 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         const roomBetAmount = parseFloat(gameLog['room']['bet_amount']);
 
         if (gameLog.game_result === 0) {
-          temp.history = `${joined_user_link} bet <span style='color: #02c526;'>${convertToCurrency(betAmount
+          temp.history = `${joined_user_link} bet <span style='color: #02c526;'>${convertToCurrency(
+            betAmount
           )}</span>, scored ${
             gameLog['brain_game_score']
-          } and split <span style='color: #02c526;'>${convertToCurrency(roomPr
+          } and split <span style='color: #02c526;'>${convertToCurrency(
+            roomPr
           )}</span> in ${room_name}`;
         } else if (gameLog.game_result === 1) {
           const winnings = betAmount * 2;
           temp.history = `${joined_user_link} scored ${
             gameLog['brain_game_score']
           } and won <span style='color: #ff0a28;'>${convertToCurrency(
-            (winnings)
+            winnings
           )} (2.00X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
-            (betAmount)
+            betAmount
           )}</span> from their game ${room_name}`;
         } else if (gameLog.game_result === -100) {
           const unstakedAmount = roomPr + roomUserBet;
-          const unstakedDisplay = convertToCurrency(unstakedAmount
-          );
+          const unstakedDisplay = convertToCurrency(unstakedAmount);
           const multiplierDisplay = (unstakedAmount / roomBetAmount).toFixed(2);
           const color = multiplierDisplay < 1 ? '#ffdd15' : '#ff0a28';
 
@@ -709,7 +678,8 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         } else {
           temp.history = `${joined_user_link} scored ${
             gameLog['brain_game_score']
-          } and lost <span style='color: #ff0a28;'>${convertToCurrency(betAmount
+          } and lost <span style='color: #ff0a28;'>${convertToCurrency(
+            betAmount
           )} (0.00X)</span> in ${room_name}`;
         }
       }
@@ -853,7 +823,7 @@ const getRoomList = async (pagination, page, game_type) => {
           });
           if (!gameLogList || gameLogList.length == 0) {
             temp.winnings =
-              temp.spleesh_bet_unit + updateDigitToPoint2(room.user_bet);
+              temp.spleesh_bet_unit + room.user_bet;
           } else {
             for (let i = 10; i > 0; i--) {
               let is_exist = false;
@@ -867,7 +837,7 @@ const getRoomList = async (pagination, page, game_type) => {
               if (!is_exist) {
                 temp.winnings =
                   i * temp.spleesh_bet_unit +
-                  updateDigitToPoint2(room.user_bet);
+                  room.user_bet;
                 break;
               }
             }
@@ -1079,7 +1049,6 @@ router.post('/rooms', auth, async (req, res) => {
       room_number: roomCount + 1,
       status: 'open'
     });
-    
 
     await newRoom.save();
 
@@ -1218,28 +1187,27 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
         temp.winnings = temp.bet_amount;
       } else if (room.game_type.game_type_id === 1) {
         // RPS
-        temp.winnings = updateDigitToPoint2(room.user_bet);
+        temp.winnings = room.user_bet;
       } else if (room.game_type.game_type_id === 2) {
         // Spleesh!
         temp.bet_amount =
           room.user_bet === 0 && room.bet_amount === room.pr
             ? room.pr
-            : room.pr + temp.bet_amount;
-        temp.winnings = updateDigitToPoint2(
-          parseFloat(room.user_bet) + parseFloat(room.host_pr) + temp.bet_amount
-        );
+            : temp.bet_amount;
+        temp.winnings = 
+          parseFloat(room.user_bet) + parseFloat(room.host_pr) + temp.bet_amount;
       } else if (room.game_type.game_type_id === 3) {
         // Brain Game
-        temp.winnings = updateDigitToPoint2(room.pr);
+        temp.winnings = room.pr;
       } else if (room.game_type.game_type_id === 4) {
         // Mystery Box
         temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr);
       } else if (room.game_type.game_type_id === 5) {
         // Quick Shoot
-        temp.winnings = updateDigitToPoint2(room.user_bet);
+        temp.winnings = room.user_bet;
       } else if (room.game_type.game_type_id === 6) {
         // Drop Game
-        temp.winnings = updateDigitToPoint2(room.user_bet);
+        temp.winnings = room.user_bet;
       } else if (room.game_type.game_type_id === 7) {
         // Bang!
         temp.winnings = updateDigitToPoint2(room.user_bet);
@@ -1344,13 +1312,12 @@ router.post('/end_game', auth, async (req, res) => {
         const betAmount =
           roomInfo.user_bet === 0 && roomInfo.bet_amount === roomInfo.pr
             ? roomInfo.pr
-            : roomInfo.pr + roomInfo.bet_amount;
+            : roomInfo.bet_amount;
 
-        const winnings = updateDigitToPoint2(
+        const winnings = 
           parseFloat(roomInfo.user_bet) +
             parseFloat(roomInfo.host_pr) +
-            betAmount
-        );
+            betAmount;
 
         newTransaction.amount += parseFloat(winnings);
 
@@ -1806,17 +1773,20 @@ router.post('/bet', auth, async (req, res) => {
 
           const lastFiveBetItems = await RpsBetItem.find({
             room: new ObjectId(req.body._id)
-          }).sort({ created_at: -1 }).limit(5);
-          
-          const filteredBetItems = lastFiveBetItems.filter(item => item.joiner !== null); // Filter out items with null joiner
-          
+          })
+            .sort({ created_at: -1 })
+            .limit(5);
+
+          const filteredBetItems = lastFiveBetItems.filter(
+            item => item.joiner !== null
+          ); // Filter out items with null joiner
+
           if (filteredBetItems.length > 0 && req.io.sockets) {
             req.io.sockets.emit('UPDATED_BANKROLL', {
               bankroll: roomInfo['user_bet'],
               rps: filteredBetItems
             });
           }
-          
 
           message.message =
             'I won ' +
@@ -1832,15 +1802,16 @@ router.post('/bet', auth, async (req, res) => {
           const lastFiveBetItems = await RpsBetItem.find({
             room: new ObjectId(req.body._id),
             joiner: { $ne: null } // Filter out items with null joiner
-          }).sort({ created_at: -1 }).limit(5);
-          
+          })
+            .sort({ created_at: -1 })
+            .limit(5);
+
           if (req.io.sockets && lastFiveBetItems.length > 0) {
             req.io.sockets.emit('UPDATED_BANKROLL', {
               bankroll: roomInfo['user_bet'],
               rps: lastFiveBetItems
             });
           }
-          
 
           newTransactionJ.amount += parseFloat(req.body.bet_amount);
           message.message =
@@ -1889,8 +1860,10 @@ router.post('/bet', auth, async (req, res) => {
           const lastFiveBetItems = await RpsBetItem.find({
             room: new ObjectId(req.body._id),
             joiner: { $ne: null } // Filter out items with null joiner
-          }).sort({ created_at: -1 }).limit(5);
-          
+          })
+            .sort({ created_at: -1 })
+            .limit(5);
+
           if (req.io.sockets && lastFiveBetItems.length > 0) {
             req.io.sockets.emit('UPDATED_BANKROLL', {
               bankroll: roomInfo['user_bet'],
@@ -2734,16 +2707,17 @@ router.post('/bet', auth, async (req, res) => {
         if (parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)) {
           // Return an error or some other response to the user, e.g.:
           return res
-            .status(400)
-            .json({ error: 'Bet amount exceeds available balance.' });
+          .status(400)
+          .json({ error: 'Bet amount exceeds available balance.' });
         }
         newTransactionJ.amount -= req.body.bet_amount;
-
+        
         roomInfo['host_pr'] += req.body.bet_amount;
+        // console.log("roomInfo['host_pr']", roomInfo['host_pr'])
         newGameLog.bet_amount = req.body.bet_amount;
         newGameLog.host_pr = roomInfo['host_pr'];
-
-        if (roomInfo.bet_amount == req.body.bet_amount) {
+        
+        if (updateDigitToPoint2(roomInfo.bet_amount) == updateDigitToPoint2(req.body.bet_amount)) {
           newGameLog.game_result = 1;
           const guesses = await SpleeshGuess.find({ room: roomInfo._id }).sort({
             created_at: 'ascending'
@@ -2764,23 +2738,28 @@ router.post('/bet', auth, async (req, res) => {
             (roomInfo['host_pr'] + roomInfo['bet_amount']) *
             ((100 - commission.value) / 100);
 
-          const originalBetAmount = roomInfo.pr;
-
           // Randomize the new bet amount
           let newBetAmount;
+          // console.log('2roomInfo.spleesh_bet_unit', roomInfo.spleesh_bet_unit);
+          if (roomInfo.spleesh_bet_unit === 0.01) {
+            newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100; // Random number between 1 and 10 (inclusive) converted to a decimal between 0.01 and 0.1 (inclusive).
+            // console.log("newBetAmounttt", newBetAmount);
 
-if (roomInfo.spleesh_bet_unit === 1) {
-  newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100; // Random number between 1 and 10 (inclusive) converted to a decimal between 0.01 and 0.1 (inclusive).
-  while (newBetAmount > originalBetAmount) {
-    newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100;
-  }
-} else if (roomInfo.spleesh_bet_unit === 10) {
-  newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10; // Random number between 1 and 10 (inclusive) converted to a decimal between 0.1 and 1 (inclusive).
-  while (newBetAmount > originalBetAmount) {
-    newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10;
-  }
-}
+            while (newBetAmount > roomInfo['host_pr']) {
+              newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100;
+              // console.log("newBetAmount", newBetAmount);
+            }
+          } else if (roomInfo.spleesh_bet_unit === 0.1) {
+            newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10; // Random number between 1 and 10 (inclusive) converted to a decimal between 0.1 and 1 (inclusive).
+            // console.log("newBetAmounttt", newBetAmount);
+            // console.log("roomInfo['user_bet']", roomInfo['user_bet']);
 
+            while (newBetAmount > roomInfo['host_pr']) {
+              newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10;
+              // console.log("newBetAmount2", newBetAmount);
+
+            }
+          }
           if (newBetAmount <= roomInfo['user_bet']) {
             roomInfo.bet_amount = newBetAmount;
             roomInfo['user_bet'] = parseFloat(
@@ -2843,23 +2822,28 @@ if (roomInfo.spleesh_bet_unit === 1) {
             roomInfo['endgame_type'] &&
             roomInfo['host_pr'] >= roomInfo['endgame_amount']
           ) {
-            const originalBetAmount = roomInfo.host_pr;
-
+            // console.log('host', roomInfo['host_pr'])
             // Randomize the new bet amount
             let newBetAmount;
+            // console.log('roomInfo.spleesh_bet_unit', roomInfo.spleesh_bet_unit)
 
-if (roomInfo.spleesh_bet_unit === 1) {
-  newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100; // Random number between 1 and 10 (inclusive) converted to a decimal between 0.01 and 0.1 (inclusive).
-  while (newBetAmount > originalBetAmount) {
-    newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100;
-  }
-} else if (roomInfo.spleesh_bet_unit === 10) {
-  newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10; // Random number between 1 and 10 (inclusive) converted to a decimal between 0.1 and 1 (inclusive).
-  while (newBetAmount > originalBetAmount) {
-    newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10;
-  }
-}
+            if (roomInfo.spleesh_bet_unit === 0.01) {
+              newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100;
+              while (newBetAmount > roomInfo['host_pr']) {
+                newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100;
+                // console.log("newBetAmount3", newBetAmount);
 
+              }
+            } else if (roomInfo.spleesh_bet_unit === 0.1) {
+              newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10;
+              // console.log("newBetAmounthi", newBetAmount);
+              // console.log("roomInfo['user_bet']", roomInfo['user_bet']);
+              while (newBetAmount > roomInfo['host_pr']) {
+                newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10;
+                // console.log("newBetAmount4", newBetAmount);
+
+              }
+            }
 
             roomInfo.bet_amount = newBetAmount;
             roomInfo['user_bet'] =
@@ -3006,17 +2990,11 @@ if (roomInfo.spleesh_bet_unit === 1) {
               }
 
               let updatedBoxList = originalBoxList.map((box, index) => {
-                let randomAmount =
-                  (Math.random() < 0.5 ? -1 : 1) *
-                    Math.floor(Math.random() * 2) +
-                  1;
+                let randomAmount = (Math.random() < 0.5 ? -2 : 2);
                 let newPrice = box.box_price + randomAmount;
+                
                 while (newPrice <= 0) {
-                  randomAmount =
-                    (Math.random() < 0.5 ? -1 : 1) *
-                      Math.floor(Math.random() * 2) +
-                    1;
-                  newPrice = box.box_price + randomAmount;
+                  newPrice += 1;
                 }
                 let newBox = new RoomBoxPrize({
                   room: roomInfo,
@@ -3096,9 +3074,6 @@ if (roomInfo.spleesh_bet_unit === 1) {
               room: roomInfo
             }).select('box_prize box_price');
 
-            let originalHasZero = originalBoxList.some(
-              box => box.box_price === 0
-            );
             await RoomBoxPrize.deleteMany({ room: roomInfo });
 
             let boxPrizes = originalBoxList.map(box => box.box_prize);
@@ -3110,26 +3085,24 @@ if (roomInfo.spleesh_bet_unit === 1) {
             }
 
             let updatedBoxList = originalBoxList.map((box, index) => {
-              let randomAmount =
-                (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * 2) +
-                1;
+              let randomAmount = (Math.random() < 0.5 ? -2 : 2);
               let newPrice = box.box_price + randomAmount;
+              
               while (newPrice <= 0) {
-                randomAmount =
-                  (Math.random() < 0.5 ? -1 : 1) *
-                    Math.floor(Math.random() * 2) +
-                  1;
-                newPrice = box.box_price + randomAmount;
+                newPrice += 1;
               }
+              
               let newBox = new RoomBoxPrize({
                 room: roomInfo,
                 box_prize: boxPrizes[index],
                 box_price: newPrice,
                 status: 'init'
               });
+              
               newBox.save();
               return newBox;
             });
+            
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BOX_LIST', {
@@ -3395,43 +3368,41 @@ if (roomInfo.spleesh_bet_unit === 1) {
         roomInfo.joiners.addToSet(req.user);
         await roomInfo.save();
       }
-setTimeout(async () => {
-  const rooms = await getRoomList(10, 1, 'All');
-  req.io.sockets.emit('UPDATED_ROOM_LIST', {
-    _id: roomInfo['_id'],
-    total: rooms.count,
-    roomList: rooms.rooms,
-    pages: Math.ceil(rooms.count / 10)
-  });
-
-
-
-      if (newTransactionJ.amount !== 0) {
-        newTransactionJ.save();
-      }
-
-      if (newTransactionC.amount !== 0) {
-        newTransactionC.save();
-        socket.newTransaction(newTransactionC);
-      }
-
-      if (message.from._id !== message.to._id) {
-        message.save();
-        socket.sendMessage(message.to._id, {
-          from: message.from._id,
-          to: message.to._id,
-          message: message.message,
-          created_at: moment(new Date()).format('LLL')
+      setTimeout(async () => {
+        const rooms = await getRoomList(10, 1, 'All');
+        req.io.sockets.emit('UPDATED_ROOM_LIST', {
+          _id: roomInfo['_id'],
+          total: rooms.count,
+          roomList: rooms.rooms,
+          pages: Math.ceil(rooms.count / 10)
         });
 
-        // socket.playSound(message.from._id, {
-        //   from: message.from._id,
-        //   to: message.to_id,
-        //   message: message.message,
-        //   created_at: moment(new Date()).format('LLL')
-        // });
-      }
-    }, 0);
+        if (newTransactionJ.amount !== 0) {
+          newTransactionJ.save();
+        }
+
+        if (newTransactionC.amount !== 0) {
+          newTransactionC.save();
+          socket.newTransaction(newTransactionC);
+        }
+
+        if (message.from._id !== message.to._id) {
+          message.save();
+          socket.sendMessage(message.to._id, {
+            from: message.from._id,
+            to: message.to._id,
+            message: message.message,
+            created_at: moment(new Date()).format('LLL')
+          });
+
+          // socket.playSound(message.from._id, {
+          //   from: message.from._id,
+          //   to: message.to_id,
+          //   message: message.message,
+          //   created_at: moment(new Date()).format('LLL')
+          // });
+        }
+      }, 0);
       res.json({
         success: true,
         message: 'successful bet',

@@ -29,7 +29,7 @@ router.post('/delete', async (req, res) => {
 		});
 	}
 });
-router.post('/', admin, async (req, res) => {
+router.post('/', auth, async (req, res) => {
 	try {
 		const { _id, question, brain_game_type, answers, incorrect_answers } = req.body;
 
@@ -100,7 +100,7 @@ router.post('/', admin, async (req, res) => {
 });
 
 // /api/question/:id call
-router.get('/:id', admin, async (req, res) => {
+router.get('/:id', async (req, res) => {
 	try {
 			const question = await Question.findOne({_id: req.params.id});
 			const answers = await Answer.find({question: question, is_correct_answer: true});
@@ -136,7 +136,7 @@ router.get('/:id', admin, async (req, res) => {
 });
 
 // /api/questions call
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
 	const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
 	const page = req.query.page ? parseInt(req.query.page) : 1;
 
