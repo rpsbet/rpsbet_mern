@@ -130,7 +130,9 @@ class ChatPanel extends Component {
           senderId: this.props.user._id,
           message: text,
           avatar: this.props.user.avatar,
-          replyTo: selectedMessage // Include the selected message details
+          replyTo: selectedMessage,
+          showEmojiPanel: false,
+          showSearchPopup: false
         });
         this.handleClearTooltip();
       }

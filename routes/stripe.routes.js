@@ -111,7 +111,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: `Deposit received! Please wait for confirmations.<br />View transaction details <a href="https://etherscan.io/tx/${txtHash}" target="_blank">here</a>.`,
+      message: `Deposit received! Please wait for confirmations.<br />View transaction details <a href="https://etherscan.io/tx/${txtHash}" target="_blank">here</a>. You may need to refresh.`,
     });
   } catch (err) {
     console.log('error in deposit_successed', err);

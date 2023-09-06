@@ -169,10 +169,27 @@ export class YouTubeVideo extends React.Component {
 }
 
 function extractVideoId(url) {
-  const regex = /[?&]v=([^?&]+)/;
-  const match = url.match(regex);
-  if (match && match[1]) {
-    return match[1];
+  // Regular expressions to match YouTube video URLs in both formats.
+  const regexLong = /[?&]v=([^?&]+)/;
+  const regexShort = /youtu\.be\/([^?&]+)/;
+
+  // Try to match the long URL format first.
+  const matchLong = url.match(regexLong);
+
+  // If a match is found in the long format, return the video ID.
+  if (matchLong && matchLong[1]) {
+    return matchLong[1];
   }
+
+  // If no match is found in the long format, try the short format.
+  const matchShort = url.match(regexShort);
+
+  // If a match is found in the short format, return the video ID.
+  if (matchShort && matchShort[1]) {
+    return matchShort[1];
+  }
+
+  // If no match is found in either format, return null to indicate that no video ID was found.
   return null;
 }
+
