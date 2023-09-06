@@ -390,6 +390,7 @@ class CreateGame extends Component {
         }
       );
     }
+    
   };
   
   onPrevButtonClicked = () => {
@@ -595,6 +596,7 @@ class CreateGame extends Component {
 
 
   onCreateRoom = async () => {
+    
     if (localStorage.getItem('hideConfirmModal') === 'true') {
       this.setState({ creatingRoom: true });
       await this.props.createRoom(this.state);
@@ -665,12 +667,15 @@ class CreateGame extends Component {
           winChance={this.state.winChance}
           endgame_amount={this.state.endgame_amount}
           calcWinChance={this.calcWinChance}
+          youtubeUrl={this.state.youtubeUrl}
+
         />
       );
     } else if (this.state.game_mode === 'Brain Game') {
       return (
         <BrainGame
         playSound={this.playSound}
+        youtubeUrl={this.state.youtubeUrl}
 
           onChangeState={this.onChangeState}
           bet_amount={this.state.bet_amount}
@@ -974,6 +979,8 @@ class CreateGame extends Component {
                         room_password={this.state.room_password}
                         endgame_amount={this.state.endgame_amount}
                         youtubeUrl={this.state.youtubeUrl}
+                        videoId={this.state.videoId}
+
                       />
                     )}
                   {this.state.step !== 6 && this.action_panel()}

@@ -1482,6 +1482,12 @@ router.get('/my_chat', auth, async (req, res) => {
 });
 const decrementUserBalance = async (userId, betAmount) => {
   const user = await User.findOne({ _id: userId });
+
+  // Check if the balance after decrement would be negative
+  if (user.balance - betAmount < 0) {
+    throw new Error("Insufficient balance");
+  }
+
   user.balance -= betAmount;
   await user.save();
   return user.balance;
@@ -1490,6 +1496,7 @@ const decrementUserBalance = async (userId, betAmount) => {
 router.post('/start_brain_game', auth, async (req, res) => {
   try {
     const userId = new ObjectId(req.user._id);
+
     const balance = await decrementUserBalance(userId, req.body.bet_amount);
 
     res.json({
@@ -1503,6 +1510,7 @@ router.post('/start_brain_game', auth, async (req, res) => {
     });
   }
 });
+
 
 router.post('/start_blackjack', auth, async (req, res) => {
   try {
@@ -3265,12 +3273,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
-        if (parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)) {
-          // Return an error or some other response to the user, e.g.:
-          return res
-            .status(400)
-            .json({ error: 'Bet amount exceeds available balance.' });
-        }
+        
         newGameLog.bet_amount = roomInfo['bet_amount'];
         newGameLog.brain_game_score = req.body.brain_game_score;
 
