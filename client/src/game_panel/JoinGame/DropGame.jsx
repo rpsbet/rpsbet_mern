@@ -609,7 +609,7 @@ class DropGame extends Component {
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
-                        this.state.bet_amount * 2
+                        (this.state.bet_amount * 2) - 0.001
                         // )
                       )}
                     </div>

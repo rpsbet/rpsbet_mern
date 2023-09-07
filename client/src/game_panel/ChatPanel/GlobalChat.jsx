@@ -102,6 +102,37 @@ class GlobalChat extends Component {
     }
   };
 
+   fetchAndUpdateId(username) {
+    // Check if the user is already in the state
+    const mentionedUser = this.state.mentionedUsers[username];
+  
+    if (mentionedUser && mentionedUser._id) {
+      // User already has an _id, no need to fetch
+      return Promise.resolve(mentionedUser);
+    } else {
+      // Fetch the _id for the mentioned user
+      return new Promise((resolve, reject) => {
+        fetchId(username)
+          .then((user) => {
+            if (user && user._id) {
+              // Update the state with the fetched _id
+              this.setState((prevState) => ({
+                mentionedUsers: {
+                  ...prevState.mentionedUsers,
+                  [username]: user,
+                },
+              }));
+            }
+            resolve(user);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      });
+    }
+  }
+  
+
   render() {
     const { chat_list } = this.state;
     const { fetchId, emojis, selectedMessage } = this.props;
@@ -121,62 +152,48 @@ class GlobalChat extends Component {
           />
         )}
         {chat_list.map((chat, key) => {
-          const message = chat.message;
-          const mentions = message.match(/@(\w+)/g);
-          const wrappedMessage = message
-            .split(/(@\w+|:\w+:)/g)
-            .map((part, index) => {
-              if (part.startsWith('@')) {
-                const username = part.substring(1);
-                const mentionedUser = this.state.mentionedUsers[username];
+  const message = chat.message;
+  const mentions = message.match(/@(\w+)/g);
 
-                if (mentionedUser && mentionedUser._id) {
-                  // Render the link with _id if available
-                  return (
-                    <a
-                      key={index}
-                      className="player"
-                      onClick={event => {
-                        event.stopPropagation();
-                        this.handleOpenPlayerModal(mentionedUser._id);
-                      }}
-                      
-                    >
-                      {part}
-                    </a>
-                  );
-                } else if (mentionedUser && !mentionedUser._id) {
-                  // Mentioned user exists but doesn't have an _id
-                  return (
-                    <span key={index} className="mention-link">
-                      {part}
-                    </span>
-                  );
-                } else {
-                  // Fetch the _id for the mentioned user only if it's not already in the state
-                  fetchId(username)
-                    .then(id => {
-                      const updatedMentionedUsers = {
-                        ...this.state.mentionedUsers
-                      };
-                      updatedMentionedUsers[username] = { _id: id };
-                      this.setState({ mentionedUsers: updatedMentionedUsers });
-                    })
-                    .catch(error => {
-                      console.error(
-                        `Error fetching _id for ${username}:`,
-                        error
-                      );
-                    });
+  const wrappedMessage = message
+    .split(/(@\w+|:\w+:)/g)
+    .map((part, index) => {
+      if (part.startsWith('@')) {
+        const username = part.substring(1);
 
-                  // Render the mention link without _id for now
-                  return (
-                    <span key={index} className="mention-link">
-                      {part}
-                    </span>
-                  );
-                }
-              } else if (part.startsWith(':') && part.endsWith(':')) {
+        // Call fetchAndUpdateId to fetch the _id and update the state
+        const mentionedUser = this.fetchAndUpdateId(username);
+
+        if (mentionedUser && mentionedUser._id) {
+          // Render the link with _id if available
+          return (
+            <a
+              key={index}
+              className="player"
+              onClick={(event) => {
+                event.stopPropagation();
+                this.handleOpenPlayerModal(mentionedUser._id);
+              }}
+            >
+              {part}
+            </a>
+          );
+        } else if (mentionedUser && !mentionedUser._id) {
+          // Mentioned user exists but doesn't have an _id
+          return (
+            <span key={index} className="mention-link">
+              {part}
+            </span>
+          );
+        } else {
+          // Fetching the _id, render the mention link without _id for now
+          return (
+            <span key={index} className="mention-link">
+              {part}
+            </span>
+          );
+        }
+      } else if (part.startsWith(':') && part.endsWith(':')) {
                 const emojiCommand = part;
                 const emoji = emojis.find(
                   emoji => emoji.command === emojiCommand

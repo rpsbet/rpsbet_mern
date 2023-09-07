@@ -124,6 +124,7 @@ export const fetchId = (username) => async (dispatch) => {
     const { data } = await api.post('user/getId', { username });
     if (data.success) {
       return data.user;
+      console.log("data", data);
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
       return null; // Return null if there's an error

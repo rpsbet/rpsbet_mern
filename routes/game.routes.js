@@ -2998,7 +2998,7 @@ router.post('/bet', auth, async (req, res) => {
               }
 
               let updatedBoxList = originalBoxList.map((box, index) => {
-                let randomAmount = (Math.random() < 0.5 ? -2 : 2);
+                let randomAmount = (Math.random() < 0.5 ? -0.002 : 0.002);
                 let newPrice = box.box_price + randomAmount;
                 
                 while (newPrice <= 0) {
@@ -3093,7 +3093,7 @@ router.post('/bet', auth, async (req, res) => {
             }
 
             let updatedBoxList = originalBoxList.map((box, index) => {
-              let randomAmount = (Math.random() < 0.5 ? -2 : 2);
+              let randomAmount = (Math.random() < 0.5 ? -0.002 : 0.002);
               let newPrice = box.box_price + randomAmount;
               
               while (newPrice <= 0) {

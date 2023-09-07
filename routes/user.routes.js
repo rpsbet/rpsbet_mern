@@ -225,7 +225,7 @@ router.post('/get-info', async (req, res) => {
 router.post('/getId', admin, async (req, res) => {
   try {
     const userId = await User.findOne({ username: req.body.username }, { _id: 1 });
-
+console.log("userId", userId);
     if (!userId) {
       return res.json({
         success: true,
