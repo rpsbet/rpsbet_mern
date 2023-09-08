@@ -125,6 +125,15 @@ router.post('/deposit_successed', auth, async (req, res) => {
 router.post('/withdraw_request', auth, async (req, res) => {
   let tx;
   try {
+    // Check if the "to" address is provided and starts with "0x"
+    const toAddress = req.body.addressTo;
+    if (!toAddress || !toAddress.startsWith('0x')) {
+      console.log("Invalid 'to' address");
+      return res.json({
+        success: false,
+        message: "No wallet connected / wrong network."
+      });
+    }
     const receipt = new Receipt({
       user_id: req.user._id,
       email: req.body.email,
@@ -214,7 +223,9 @@ router.post('/withdraw_request', auth, async (req, res) => {
     const newTransaction = new Transaction({
       user: req.user,
       amount: -req.body.amount,
-      description: 'withdraw'
+      description: 'withdraw',
+      status: 'completed',
+      hash: tx.hash
     });
 
     // req.user.balance = await getWalletBalance(signer);

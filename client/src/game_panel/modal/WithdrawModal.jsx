@@ -90,7 +90,7 @@ class WithdrawModal extends Component {
                 this.props.closeModal();
             } else {
                 this.setState({ isLoading: false })
-                alertModal(this.props.isDarkMode, `Something went wrong. Please try again later or contact support.`)
+                alertModal(this.props.isDarkMode, result.data.message)
             }
         } catch(e) {
             this.setState({ isLoading: false })
