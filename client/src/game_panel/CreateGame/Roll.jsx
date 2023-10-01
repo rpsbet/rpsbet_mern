@@ -52,7 +52,7 @@ class Roll extends Component {
     super(props);
     this.state = {
       selected_roll: '',
-      bet_amount: 10.00,
+      bet_amount: 0.001,
       roll: '',
       roll_list: [],
       face: '',

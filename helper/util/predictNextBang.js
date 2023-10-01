@@ -134,13 +134,13 @@ const predictNextBang = bangAmounts => {
     };
 
     const randomChance = Math.random();
-    const newValue = parseFloat(getRandomNumberInRange(1, 1.06).toFixed(2));
+    const newValue = parseFloat(getRandomNumberInRange(1, 1.06));
     const isChanged = randomChance <= 0.41;
 
     if (isChanged) {
       return newValue;
     } else {
-      return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+      return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue));
     }
   }
 };

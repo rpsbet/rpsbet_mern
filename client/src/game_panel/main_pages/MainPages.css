@@ -726,6 +726,14 @@ div.table.my-open-game-table::-webkit-scrollbar {
   flex-direction: column;
 }
 
+.rain#busd {
+  margin-top: -12px;
+  margin-right: -21px;
+  margin-left: -18px;
+  width: 3.5em !important;
+  height: 1.5em !important;
+  filter: hue-rotate(45deg)
+}
 #roll {
   text-align: center;
 }

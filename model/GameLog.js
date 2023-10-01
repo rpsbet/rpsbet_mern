@@ -38,6 +38,10 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0
     },
+    commission: {
+        type: Number,
+        default: 0
+    },
     game_result: {
         type: Number,
         default: 0

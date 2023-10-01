@@ -509,7 +509,7 @@ class OpenGamesTable extends Component {
                               {updateDigitToPoint2(
                                 this.calculatePercentageChange(
                                   row.bet_amount,
-                                  row.bet_amount
+                                  row.user_bet
                                 )
                               )}
                               %

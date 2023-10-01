@@ -633,7 +633,7 @@ class MysteryBox extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            <div className="mountains-bg">
+            {/* <div className="mountains-bg">
               <Lottie
                 options={{
                   loop: true,
@@ -660,7 +660,7 @@ class MysteryBox extends Component {
                   filter: 'brightness(0.72)'
                 }}
               />
-            </div>
+              </div> */}
             <h3 className="game-sub-title">Prizes</h3>
             <p className="box-prizes">
               {prizes

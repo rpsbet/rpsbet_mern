@@ -99,6 +99,8 @@ export const DROP_GUESSES = 'DROP_GUESSES';
 export const BANG_GUESSES = 'BANG_GUESSES';
 export const ROLL_GUESSES = 'ROLL_GUESSES';
 export const UPDATE_BANKROLL = 'UPDATE_BANKROLL';
+export const UPDATE_RAIN = 'UPDATE_RAIN';
+
 export const UPDATE_BANKROLL_QS = 'UPDATE_BANKROLL_QS';
 
 

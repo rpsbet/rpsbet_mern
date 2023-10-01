@@ -2,17 +2,15 @@ import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
 import { Button, TextField } from '@material-ui/core';
+import BetAmountInput from '../../components/BetAmountInput';
 
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
-import {
-  alertModal
-} from '../modal/ConfirmAlerts';
+import { alertModal } from '../modal/ConfirmAlerts';
 
-
-const calcWinChance = (prevStates) => {
+const calcWinChance = prevStates => {
   let total = prevStates.length;
   let counts = {};
-  prevStates.forEach((state) => {
+  prevStates.forEach(state => {
     if (counts[state.bang]) {
       counts[state.bang]++;
     } else {
@@ -21,7 +19,7 @@ const calcWinChance = (prevStates) => {
   });
   let lowest = Infinity;
   let highest = -Infinity;
-  Object.keys(counts).forEach((key) => {
+  Object.keys(counts).forEach(key => {
     const chance = (counts[key] / total) * 100;
     if (chance < lowest) {
       lowest = chance;
@@ -31,12 +29,12 @@ const calcWinChance = (prevStates) => {
     }
   });
   if (lowest === highest) {
-    return lowest.toFixed(2) + "%";
+    return lowest.toFixed(2) + '%';
   }
-  return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
+  return lowest.toFixed(2) + '% - ' + highest.toFixed(2) + '%';
 };
 
-const calcAveMultiplier = (list) => {
+const calcAveMultiplier = list => {
   let sum = 0;
   for (let i = 0; i < list.length; i++) {
     sum += parseFloat(list[i].bang);
@@ -45,25 +43,22 @@ const calcAveMultiplier = (list) => {
   return parseFloat(average.toFixed(2));
 };
 
-
-
 class Bang extends Component {
   constructor(props) {
     super(props);
     this.state = {
       selected_bang: '',
-      bet_amount: 10.00,
-      bang: 1.00,
+      bet_amount: 0.001,
+      bang: 1.0,
       balance: this.props.balance,
       winChance: 33,
       aveMultiplier: 0
     };
+    this.onChangeState = this.onChangeState.bind(this);
   }
 
   static getDerivedStateFromProps(props, current_state) {
-    if (
-      current_state.balance !== props.balance
-    ) {
+    if (current_state.balance !== props.balance) {
       return {
         ...current_state,
         balance: props.balance
@@ -72,18 +67,22 @@ class Bang extends Component {
     return null;
   }
 
-  onChangeWinChance = (winChance) => {
+  onChangeWinChance = winChance => {
     this.setState({ winChance });
   };
 
-  onChangeAveMultiplier = (aveMultiplier) => {
+  onChangeState(e) {
+    this.setState({ bang: e.target.value });
+  }
+
+  onChangeAveMultiplier = aveMultiplier => {
     this.setState({ aveMultiplier });
   };
-  
-  predictNext = (bangAmounts) => {
+
+  predictNext = bangAmounts => {
     // Find the unique values in bangAmounts
     const uniqueValues = [...new Set(bangAmounts.map(bang => bang.bang))];
-  
+
     if (uniqueValues.length === 1) {
       // If there is only one unique value, return that value
       return uniqueValues[0];
@@ -92,20 +91,20 @@ class Bang extends Component {
       const minValue = Math.min(...uniqueValues);
       const maxValue = Math.max(...uniqueValues);
       const rangeSize = Math.ceil((maxValue - minValue) / 200);
-  
+
       const rangeCounts = {};
-      bangAmounts.forEach((bang) => {
+      bangAmounts.forEach(bang => {
         const range = Math.floor((bang.bang - minValue) / rangeSize);
         rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
       });
-  
+
       const totalCounts = bangAmounts.length;
       const rangeProbabilities = {};
-      Object.keys(rangeCounts).forEach((range) => {
+      Object.keys(rangeCounts).forEach(range => {
         const rangeProbability = rangeCounts[range] / totalCounts;
         rangeProbabilities[range] = rangeProbability;
       });
-  
+
       let randomValue = Math.random();
       let chosenRange = null;
       Object.entries(rangeProbabilities).some(([range, probability]) => {
@@ -116,28 +115,25 @@ class Bang extends Component {
         }
         return false;
       });
-  
+
       const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
       const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
-  
+
       const getRandomNumberInRange = (min, max) => {
         return Math.random() * (max - min) + min;
       };
-      
+
       const randomChance = Math.random();
-      const newValue = parseFloat(getRandomNumberInRange(1, 1.06).toFixed(2));
+      const newValue = getRandomNumberInRange(1, 1.06);
       const isChanged = randomChance <= 0.41;
-      
-      if(isChanged){
+
+      if (isChanged) {
         return newValue;
       } else {
-        return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2));
+        return getRandomNumberInRange(rangeMinValue, rangeMaxValue);
       }
     }
   };
-  
-  
-  
 
   onAutoPlay = () => {
     if (this.props.bang_list.length > 2) {
@@ -145,13 +141,13 @@ class Bang extends Component {
 
       this.onAddRun(predictedNum);
     } else {
-      alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
+      alertModal(
+        this.props.isDarkMode,
+        'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!'
+      );
     }
   };
-  
 
-  
-  
   onRemoveItem = index => {
     this.props.playSound('tap');
 
@@ -164,10 +160,9 @@ class Bang extends Component {
       winChance: winChance,
       aveMultiplier: aveMultiplier
     });
-
   };
 
-  onAddRun = (bang) => {
+  onAddRun = bang => {
     this.props.playSound('boop');
 
     // Ensure bang is a number
@@ -178,17 +173,16 @@ class Bang extends Component {
       alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER');
       return;
     }
-  
+
     this.setState({ bang: bang });
     const newArray = JSON.parse(JSON.stringify(this.props.bang_list));
 
-  
     if (bang < 1) {
-      bang = 1; 
+      bang = 1;
     }
-  
+
     newArray.push({
-      bang: bang.toFixed(2)
+      bang: bang
     });
 
     const aveMultiplier = calcAveMultiplier(newArray);
@@ -214,74 +208,90 @@ class Bang extends Component {
     }
   }
 
-
-  handleHalfXButtonClick() {
+  handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bang * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
-    this.setState({
-    bang: roundedBetAmount
-    }, () => {
-    document.getElementById("betamount").focus();
-    });
-    }
+    this.setState(
+      {
+        bang: roundedBetAmount
+      },
+      () => {
+        document.getElementById('betamount').focus();
+      }
+    );
+  };
+  
 
-  handle2xButtonClick() {
+  handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bang * 2;
-    const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount, this.props.bet_amount);
+    const limitedBetAmount = Math.min(
+      multipliedBetAmount,
+      maxBetAmount,
+      this.props.bet_amount
+    );
     const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
     if (roundedBetAmount < -2330223) {
-      alertModal(this.props.isDarkMode, "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?");
+      alertModal(
+        this.props.isDarkMode,
+        "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?"
+      );
     } else {
-      this.setState({
-        bang: roundedBetAmount
-      }, () => {
-      document.getElementById("betamount").focus();
-      });
+      this.setState(
+        {
+          bang: roundedBetAmount
+        },
+        () => {
+          document.getElementById('betamount').focus();
+        }
+      );
     }
-  }
-
-  
-    handleMaxButtonClick() {
-      const maxBetAmount = Math.floor(this.state.balance * 100) / 100;
-      this.setState({
-        bang: Math.min(maxBetAmount, this.props.bet_amount)
-      }, () => {
-      document.getElementById("betamount").focus();
-      });
-    }
-  onChangeBetAmount = new_state => {
-    this.setState({ bang: new_state.selected_bet_amount });
   };
+
+  handleMaxButtonClick = () => {
+    const maxBetAmount = Math.floor(this.state.balance * 100) / 100;
+    this.setState(
+      {
+        bang: Math.min(maxBetAmount, this.props.bet_amount)
+      },
+      () => {
+        document.getElementById('betamount').focus();
+      }
+    );
+  };
+  // onChangeBetAmount = new_state => {
+  //   this.setState({ bang: new_state.selected_bet_amount });
+  // };
   render() {
-    
-    const defaultBetAmounts = [10, 25, 50, 100, 250];
+    const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
 
     return this.props.step === 1 ? (
-      
       <div className="game-info-panel">
         {/* <h3 className="game-sub-title">Bankroll</h3> */}
         <DefaultBetAmountPanel
-              bet_amount={this.props.bet_amount}
-              onChangeState={this.props.onChangeState}
-              game_type="Bang"
-              defaultBetAmounts={defaultBetAmounts}
-            />
-     
+          bet_amount={this.props.bet_amount}
+          onChangeState={this.props.onChangeState}
+          game_type="Bang"
+          defaultBetAmounts={defaultBetAmounts}
+        />
       </div>
     ) : (
-      
       <div className="game-info-panel">
-                          {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
+        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="rps-add-run-panel">
-        <div className="bang-add-run-form">
-           
-            <h3 className="game-sub-title">
-              Add some Bangs!{' '}
-            </h3>
+          <div className="bang-add-run-form">
+            <h3 className="game-sub-title">Add some Bangs! </h3>
             <div className="bet-amount">
-              <TextField
+              <BetAmountInput
+                betAmount={this.state.drop}
+                handle2xButtonClick={this.handle2xButtonClick}
+                handleHalfXButtonClick={this.handleHalfXButtonClick}
+                handleMaxButtonClick={this.handleMaxButtonClick}
+                onChangeState={this.onChangeState}
+                isDarkMode={this.props.isDarkMode}
+              />
+              {/* <TextField
                 type="text"
                 pattern="[0-9]*"
                 name="betamount"
@@ -292,31 +302,57 @@ class Bang extends Component {
                 onChange={(event) => this.setState({ bang: event.target.value })}
                 placeholder="BET AMOUNT"
                 InputProps={{
-                  endAdornment: "BUSD",
+                  onFocus: this.handleFocus,
+                  onBlur: this.handleBlur,
+                  endAdornment: (
+                    <ButtonGroup
+                      className={isFocused ? 'fade-in' : 'fade-out'}
+                    >
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => this.handle2xButtonClick()}
+                        style={{ marginTop: '8px' }}
+                      >
+                        2x
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => this.handleHalfXButtonClick()}
+                        style={{ marginTop: '8px' }}
+                      >
+                        1/2x
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => this.handleMaxButtonClick()}
+                        style={{ marginTop: '8px' }}
+                      >
+                        Max
+                      </Button>
+                    </ButtonGroup>
+                  ),
                 }}
-              />
-              <div>
-              <div className='max'>
-            <Button variant="contained" color="primary" onClick={() => this.handleHalfXButtonClick()}>0.5x</Button>
-            <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
-            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button>
-          </div>
-              </div>
-              <div className='bang addRun'>
-              <Button 
-              id="bang-button"
+              /> */}
+              <div></div>
+              <div className="bang addRun">
+                <Button
+                  id="bang-button"
                   onClick={() => {
                     this.onAddRun(this.state.bang);
-
-                  }}>
-                    Add Run
-              </Button>
+                  }}
+                >
+                  Add Run
+                </Button>
               </div>
             </div>
-            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</Button>
+            <Button id="aiplay" onClick={this.onAutoPlay}>
+              Test AI Play
+            </Button>
             {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
 </label> */}
-
           </div>
           <div className="rps-add-run-table bang-add-run-table">
             <h3 className="game-sub-title">Training Data</h3>
@@ -336,7 +372,9 @@ class Bang extends Component {
                   ))
                 ) : (
                   <tr>
-                    <td id="add-run" colSpan="4">Provide the AI with example outputs</td>
+                    <td id="add-run" colSpan="4">
+                      Provide the AI with example outputs
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -351,8 +389,7 @@ class Bang extends Component {
 const mapStateToProps = state => ({
   balance: state.auth.balance,
   auth: state.auth.isAuthenticated,
-  isDarkMode: state.auth.isDarkMode,
-
+  isDarkMode: state.auth.isDarkMode
 });
 
 export default connect(mapStateToProps)(Bang);

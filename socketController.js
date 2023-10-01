@@ -47,29 +47,29 @@ module.exports.socketio = server => {
         avatar,
         replyTo
       } = data;
-    
-    
+
       const chat = new Chat({
         sender: senderId,
         message: message,
         messageType: messageType,
         messageContent: messageContent,
         avatar: avatar,
-        replyTo: replyTo ? {
-          sender: replyTo.senderId, // Assign senderId temporarily
-          avatar: replyTo.avatar,
-          message: replyTo.message,
-          messageType: replyTo.messageType,
-          time: Moment(replyTo.created_at).format('hh:mm')
-        } : null // Include the replyTo message details if it exists
+        replyTo: replyTo
+          ? {
+              sender: replyTo.senderId, // Assign senderId temporarily
+              avatar: replyTo.avatar,
+              message: replyTo.message,
+              messageType: replyTo.messageType,
+              time: Moment(replyTo.created_at).format('hh:mm')
+            }
+          : null // Include the replyTo message details if it exists
       });
-    
+
       chat
         .save()
         .then(savedChat => {
-    
           // Fetch the username for replyTo.senderId from your data source
-          const fetchUsername = (userId) => {
+          const fetchUsername = userId => {
             // Implementation to fetch username using userId
             // Replace this with your actual implementation
             return User.findById(userId)
@@ -79,11 +79,11 @@ module.exports.socketio = server => {
                 return null;
               });
           };
-    
+
           const fetchReplyToUsername = replyTo
             ? fetchUsername(replyTo.senderId)
             : null;
-    
+
           Promise.all([fetchReplyToUsername])
             .then(([replyToUsername]) => {
               io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
@@ -115,8 +115,7 @@ module.exports.socketio = server => {
           // Handle error if chat saving fails
         });
     });
-        
-    
+
     socket.on('FETCH_GLOBAL_CHAT', () => {
       Chat.find({})
         .sort({ created_at: -1 }) // Sort in descending order of created_at
@@ -137,7 +136,8 @@ module.exports.socketio = server => {
               sender,
               replyTo
             }) => {
-              const extractedReplyTo = replyTo && replyTo.length > 0 ? replyTo[0] : null;
+              const extractedReplyTo =
+                replyTo && replyTo.length > 0 ? replyTo[0] : null;
               const transformedReplyTo = extractedReplyTo
                 ? {
                     sender: extractedReplyTo.sender?.username ?? '',
@@ -147,7 +147,7 @@ module.exports.socketio = server => {
                     time: Moment(extractedReplyTo.created_at).format('hh:mm')
                   }
                 : null;
-    
+
               return {
                 sender: sender?.username ?? '',
                 senderId: sender?._id ?? '',
@@ -160,17 +160,18 @@ module.exports.socketio = server => {
               };
             }
           );
-    
-          const sortedResults = transformedResults.sort((a, b) => (a.created_at > b.created_at ? 1 : -1));
-    
+
+          const sortedResults = transformedResults.sort((a, b) =>
+            a.created_at > b.created_at ? 1 : -1
+          );
+
           io.sockets.emit('SET_GLOBAL_CHAT', sortedResults);
         })
         .catch(error => {
           console.error('Error fetching GLOBAL_CHAT:', error);
         });
     });
-    
-    
+
     socket.on('disconnect', reason => {
       Object.keys(sockets).forEach((key, index) => {
         if (sockets[key].id === socket.id) {
@@ -209,8 +210,6 @@ module.exports.socketio = server => {
       socket.broadcast.emit('UPDATED_BANKROLL', data);
     });
 
-
-
     socket.on('BANG_GUESSES1', data => {
       const roomId = data.roomId; // assuming roomId is passed in the data object
       socket.to(roomId).emit('BANG_GUESSES1', data);
@@ -226,7 +225,6 @@ module.exports.socketio = server => {
     });
 
     socket.on('READ_MESSAGE', async data => {
-      
       await Message.updateMany(
         {
           is_read: false,
@@ -252,9 +250,8 @@ module.exports.socketio = server => {
       send('SEND_CHAT', data.to, data);
       const message = new Message(data);
       await message.save();
-  });
-  ``
-  
+    });
+    ``;
   });
 
   return io;

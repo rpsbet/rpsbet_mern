@@ -355,7 +355,8 @@ class HowToPlayModal extends Component {
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
-            <AccordionItem>
+               */}
+            {/* <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper roll">
@@ -607,21 +608,31 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-                        Hosting games i.e. operating as 'The House' is 100% free as there are games that are zero-sum and we want to offer something for them risking their capital. 
-                        {' '}
+Hosts receive ZERO tax on their winnings AND 15% from their players' winnings.                       {' '}
                       </p>
                       <table id="howto-modal">
                         <tbody>
                           <tr>
-                            <th>CREATE A GAME</th>
-                            <th>JOIN A GAME</th>
+                            <th>HOSTS</th>
+                            <th>JOINERS</th>
+                          </tr>
+                          <tr>
+                            <td  style={{color: "rgb(87, 202, 34)" }}>
+                              <u>FREE +12.5% APY</u>
+                            </td>
+                            <td className="gamemode">-12.5%</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <br />
+                      <table id="howto-modal">
+                        <tbody>
+                          <tr>
+                            <th>PLATFORM</th>
                             <th>DP / WD</th>
                           </tr>
                           <tr>
-                            <td>
-                              <u>FREE</u>
-                            </td>
-                            <td className="gamemode">0.5%</td>
+                            <td className="gamemode">-1%</td>
                             <td rowSpan="6">
                               <u><a href="https://etherscan.io/gastracker">SEE GAS TRACKER</a></u>
                             </td>

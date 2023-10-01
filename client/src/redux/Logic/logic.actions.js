@@ -7,6 +7,7 @@ import {
   ROOMS_LOADED,
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
+  UPDATE_RAIN,
   UPDATE_BANKROLL_QS,
   BET_SUCCESS,
   MSG_CREATE_ROOM_SUCCESS,
@@ -175,7 +176,7 @@ export const bet = bet_info => async dispatch => {
           message: res.data.message
         };
       } else {
-        dispatch({ type: MSG_WARNING, payload: 'Error'});
+        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G'});
         return {
           status: 'failed',
           message: 'SLOW DOWN BLUD!'
@@ -390,6 +391,14 @@ export const updateBankroll = bankroll => {
     payload: bankroll
   };
 };
+
+export const updateRain = rain => {
+  return {
+    type: UPDATE_RAIN,
+    payload: rain
+  };
+};
+
 
 export const updateBankrollQs = bankroll => {
   return {

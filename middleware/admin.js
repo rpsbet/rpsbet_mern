@@ -12,7 +12,7 @@ module.exports = async function(req, res, next) {
   if (!token) {
     return res.json({
       success: false,
-      message: 'No token, authorization denied'
+      message: 'Must be logged in to view this profile!'
     });
   }
   

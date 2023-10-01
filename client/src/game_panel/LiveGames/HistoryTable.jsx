@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { getHistory } from '../../redux/Logic/logic.actions';
 import Moment from 'moment';
+import { getSettings } from '../../redux/Setting/setting.action';
+import { convertToCurrency } from '../../util/conversion';
+import CountUp from 'react-countup';
+import InlineSVG from 'react-inlinesvg';
+
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import PlayerModal from '../modal/PlayerModal';
@@ -23,11 +28,39 @@ function updateFromNow(history) {
 class HistoryTable extends Component {
   constructor(props) {
     super(props);
+    this.socket = this.props.socket;
+
     this.state = {
       history: this.props.history,
       showPlayerModal: false,
+      rain: 0
       // selectedGameType: 'All'
     };
+  }
+
+  async componentDidMount() {
+    this.updateReminderTime();
+    this.attachUserLinkListeners();
+
+    this.interval = setInterval(this.updateReminderTime(), 3000);
+    const settings = await this.props.getSettings();
+    this.setState({ ...settings });
+
+    const { socket } = this.props;
+    if (socket) {
+      socket.on('UPDATE_RAIN', data => {
+        this.setState(prevState => ({
+          rain: data.rain,
+          prevRain: prevState.rain
+        }));
+      });
+    } else {
+      console.error('Socket is null or undefined');
+    }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -50,6 +83,7 @@ class HistoryTable extends Component {
       this.attachUserLinkListeners();
 
       this.setState({ history: updateFromNow(this.props.history) });
+      // console.log("wdwed", this.state.settings);
     }
   }
 
@@ -74,17 +108,6 @@ class HistoryTable extends Component {
   updateReminderTime = () => {
     this.setState({ history: updateFromNow(this.state.history) });
   };
-
-  async componentDidMount() {
-    this.updateReminderTime();
-    this.attachUserLinkListeners();
-
-    this.interval = setInterval(this.updateReminderTime(), 3000);
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.interval);
-  }
 
   // handleGameTypeButtonClicked = async short_name => {
   //   this.setState({ selectedGameType: short_name });
@@ -200,78 +223,120 @@ class HistoryTable extends Component {
 
     return (
       <div className="overflowX">
-       {/* <div className="outer-div"> */}
-      <div className="border-mask" />
-      {/* <Lottie
+        <div className="outer-div">
+          <div className="border-mask" />
+          <div className="desktop-only">
+            <Lottie
               options={{
                 loop: true,
                 autoplay: true,
                 animationData: rain
               }}
               style={{
-  transform: 'translateY(-66px)',
-  width: '250px',
-  height: '100%',
-  overflow: 'hidden',
-  margin: '-2px 0px -187px',
-  outline: 'none',
-  filter: 'hue-rotate(2deg)',
-  maxWidth: '100%'
-              }}
-            />
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: hex
-              }}
-              style={{
                 transform: 'translateY(-66px)',
-                width: '142px',
+                width: '250px',
                 height: '100%',
                 overflow: 'hidden',
-                margin: '-2px 0px -187px',
+                margin: '-2px 0px -178px',
                 outline: 'none',
                 filter: 'hue-rotate(2deg)',
                 maxWidth: '100%'
               }}
             />
-             <Lottie
+          </div>
+          <div className="mobile-only">
+            <Lottie
               options={{
                 loop: true,
                 autoplay: true,
-                animationData: waves
+                animationData: rain
               }}
+              className="mobile-only"
               style={{
                 transform: 'translateY(-66px)',
-                width: '361px',
+                width: '250px',
                 height: '100%',
                 overflow: 'hidden',
-                margin: '60px 0px -236px',
+                margin: '-2px 0px -270px',
                 outline: 'none',
-                filter: 'hue-rotate(48deg)',
+                filter: 'hue-rotate(2deg)',
                 maxWidth: '100%'
               }}
             />
-            
-        <h1
-        id="rain"
-        style={{
-          color: '#fff',
-          fontSize: '3.1em',
-          letterSpacing: '0.35em',
-          textShadow: '0 0 12px #0058b6'
-        }}
-        >RAIN</h1>
-        <p
-        
-        style={{
-          color: '#fff',
-          paddingLeft: '10px',
-          textShadow: '0 0 12px #0058b6'
-        }}
-        >Coming Soon!</p> */}
-    {/* </div> */}
+          </div>
+          <Lottie
+            options={{
+              loop: true,
+              autoplay: true,
+              animationData: hex
+            }}
+            style={{
+              transform: 'translateY(-66px)',
+              width: '142px',
+              height: '100%',
+              overflow: 'hidden',
+              margin: '-2px 0px -187px',
+              outline: 'none',
+              filter: 'hue-rotate(2deg)',
+              maxWidth: '100%'
+            }}
+          />
+          <Lottie
+            options={{
+              loop: true,
+              autoplay: true,
+              animationData: waves
+            }}
+            style={{
+              transform: 'translateY(-66px)',
+              width: '361px',
+              height: '100%',
+              overflow: 'hidden',
+              margin: '60px 0px -236px',
+              outline: 'none',
+              filter: 'hue-rotate(48deg)',
+              maxWidth: '100%'
+            }}
+          />
+          <InlineSVG
+            class="rain"
+            id="busd"
+            src={require('../JoinGame/busd.svg')}
+          />
+          <CountUp
+            end={this.state.rain}
+            start={this.state.prevRain} // Start from the previous rain value
+            duration={2} // Duration of the countup animation in seconds
+            separator=","
+            decimals={6} // Number of decimal places
+          >
+            {({ countUpRef, start }) => (
+              <h1
+                id="rain"
+                ref={countUpRef}
+                style={{
+                  color: '#fff',
+                  fontSize: '2em',
+                  position: 'relative',
+                  display: 'inline-block',
+                  zIndex: '1',
+                  textShadow: '0 0 12px #0058b6'
+                }}
+              />
+            )}
+          </CountUp>
+          <p
+            style={{
+              color: '#fff',
+              position: 'relative',
+              zIndex: '1',
+              paddingLeft: '10px',
+              textShadow: '0 0 12px #0058b6'
+            }}
+          >
+            Returned to Bankrolls (RTBs)
+          </p>
+        </div>
         {/* <div className="game-type-container">
           <div
             className="game-type-panel"
@@ -290,11 +355,13 @@ class HistoryTable extends Component {
           )}
           {this.state.history?.map(
             (row, key) => (
-<div
-    className={`table-row ${key < 10 ? 'slide-in' : ''}`}
-    style={{ animationDelay: `${key * 0.1}s` }}
-    key={row._id}
-  >                <div>
+              <div
+                className={`table-row ${key < 10 ? 'slide-in' : ''}`}
+                style={{ animationDelay: `${key * 0.1}s` }}
+                key={row._id}
+              >
+                {' '}
+                <div>
                   <div className="table-cell">
                     <div className="room-id">{row.status}</div>
                     <div
@@ -341,16 +408,18 @@ class HistoryTable extends Component {
 }
 
 const mapStateToProps = state => ({
+  socket: state.auth.socket,
   isAuthenticated: state.auth.isAuthenticated,
   history: state.logic.history,
   pageNumber: state.logic.historyPageNumber,
   totalPage: state.logic.historyTotalPage,
-  isDarkMode: state.auth.isDarkMode,
+  isDarkMode: state.auth.isDarkMode
   // gameTypeList: state.logic.gameTypeList
 });
 
 const mapDispatchToProps = {
-  getHistory
+  getHistory,
+  getSettings
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(HistoryTable);

@@ -325,7 +325,7 @@ class Bang extends Component {
         return Math.random() * (max - min) + min;
       };
       return parseFloat(
-        getRandomNumberInRange(rangeMinValue, rangeMaxValue).toFixed(2)
+        getRandomNumberInRange(rangeMinValue, rangeMaxValue)
       );
     }
   };
@@ -737,7 +737,7 @@ class Bang extends Component {
             <span id="bang-text">
               {' '}
               BANG
-              <br /> @ x{nextBangInterval.toFixed(2)}!
+              <br /> @ x{nextBangInterval}!
             </span>
             <br />
             {setTimeout(
@@ -767,7 +767,7 @@ class Bang extends Component {
             <span id="bang-text">
               {' '}
               BANG
-              <br /> @ x{nextBangInterval.toFixed(2)}!
+              <br /> @ x{nextBangInterval}!
             </span>
           </div>
         );
@@ -891,7 +891,7 @@ class Bang extends Component {
               <span id="bang-text">
                 {' '}
                 BANG
-                <br /> @ x{nextBangInterval.toFixed(2)}!
+                <br /> @ x{nextBangInterval}!
               </span>
             </div>
           );
@@ -1170,7 +1170,7 @@ class Bang extends Component {
                               textAlign: 'center'
                             }}
                           >
-                            x{guess.toFixed(2)}
+                            x{guess}
                           </span>
                         ))
                     ) : (
@@ -1249,7 +1249,7 @@ class Bang extends Component {
                 variant="contained"
               >
                 {this.state.buttonClicked ? (
-                  `Cash Out @ ${parseFloat(this.state.cashoutAmount).toFixed(
+                  `Cash Out @ ${parseFloat(this.state.cashoutAmount)(
                     2
                   )}`
                 ) : this.state.waiting ? (

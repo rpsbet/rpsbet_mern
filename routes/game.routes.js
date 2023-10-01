@@ -414,11 +414,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         if (gameLog.game_result === 1) {
           temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['bet_amount'] * 2
-          )} (2.00X)</span> against ${creator_link} in ${room_name}`;
+          )} (2.00X)</span> (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['user_bet'] - gameLog['room']['endgame_amount']
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
             userBet
@@ -426,11 +426,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         } else if (gameLog.game_result === 0) {
           temp.history = `${joined_user_link} split <span style='color: #b9bbbe;'>${convertToCurrency(
             gameLog['bet_amount'] * 2
-          )} (1.00X)</span> with ${creator_link} in ${room_name}`;
+          )} (1.00X)</span> in ${room_name}`;
         } else {
           temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
             gameLog['bet_amount']
-          )} (0.00X)</span> against ${creator_link} in ${room_name}`;
+          )} (0.00X)</span> in ${room_name}`;
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Blackjack') {
         if (gameLog.game_result === 1) {
@@ -438,9 +438,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             gameLog['bet_amount'] * 2
           )} (2.00X)</span> against ${creator_link} in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['user_bet'] - gameLog['room']['endgame_amount']
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
             userBet
@@ -465,11 +465,12 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           );
 
           temp.history = `
-            ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
+            ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span>
+            (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['user_bet'] - gameLog['room']['endgame_amount']
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
             userBet
@@ -491,11 +492,12 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           ).toFixed(2);
 
           temp.history = `
-            ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
+            ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> 
+            (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
             gameLog['room']['host_pr']
@@ -519,9 +521,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `
             ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
             gameLog['room']['host_pr']
@@ -545,9 +547,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           temp.history = `
             ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
             gameLog['room']['host_pr']
@@ -569,11 +571,13 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             parseFloat(gameLog['bet_amount'])
           ).toFixed(2);
 
-          temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
+          temp.history = `${joined_user_link} won 
+          <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> 
+          (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['bet_amount']
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           const hostPr = parseFloat(gameLog['host_pr']);
           const userBet = parseFloat(gameLog['user_bet']);
@@ -611,9 +615,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
 
           temp.history = `${openingMessage} ${resultMessage} in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           const roomPr = parseFloat(gameLog['room']['pr']);
           const roomUserBet = parseFloat(gameLog['room']['user_bet']);
@@ -640,7 +644,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           const winningsDisplay = convertToCurrency(gameResult);
           const multiplierDisplay = (gameResult / betAmount).toFixed(2);
 
-          temp.history = `${joined_user_link} opened a box and won <span style="color: ${color}">${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
+          temp.history = `${joined_user_link} opened a box and won 
+          <span style="color: ${color}">${winningsDisplay} (${multiplierDisplay}X)</span>
+          (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
         }
       } else if (gameLog['game_type']['game_type_name'] === 'Brain Game') {
         const betAmount = parseFloat(gameLog['bet_amount']);
@@ -649,11 +655,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         const roomBetAmount = parseFloat(gameLog['room']['bet_amount']);
 
         if (gameLog.game_result === 0) {
-          temp.history = `${joined_user_link} bet <span style='color: #02c526;'>${convertToCurrency(
+          temp.history = `${joined_user_link} bet <span style='color: #b9bbbe;'>${convertToCurrency(
             betAmount
           )}</span>, scored ${
             gameLog['brain_game_score']
-          } and split <span style='color: #02c526;'>${convertToCurrency(
+          } and split <span style='color: #b9bbbe;'>${convertToCurrency(
             roomPr
           )}</span> in ${room_name}`;
         } else if (gameLog.game_result === 1) {
@@ -662,11 +668,11 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             gameLog['brain_game_score']
           } and won <span style='color: #ff0a28;'>${convertToCurrency(
             winnings
-          )} (2.00X)</span> in ${room_name}`;
+          )} (2.00X)</span> (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received <span style='color: #ff0a28;'>${convertToCurrency(
+          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             betAmount
-          )}</span> from their game ${room_name}`;
+          )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           const unstakedAmount = roomPr + roomUserBet;
           const unstakedDisplay = convertToCurrency(unstakedAmount);
@@ -822,8 +828,7 @@ const getRoomList = async (pagination, page, game_type) => {
             bet_amount: 'desc'
           });
           if (!gameLogList || gameLogList.length == 0) {
-            temp.winnings =
-              temp.spleesh_bet_unit + room.user_bet;
+            temp.winnings = temp.spleesh_bet_unit + room.user_bet;
           } else {
             for (let i = 10; i > 0; i--) {
               let is_exist = false;
@@ -835,9 +840,7 @@ const getRoomList = async (pagination, page, game_type) => {
               }
 
               if (!is_exist) {
-                temp.winnings =
-                  i * temp.spleesh_bet_unit +
-                  room.user_bet;
+                temp.winnings = i * temp.spleesh_bet_unit + room.user_bet;
                 break;
               }
             }
@@ -1194,8 +1197,10 @@ const getMyRooms = async (user_id, pagination, page, game_type) => {
           room.user_bet === 0 && room.bet_amount === room.pr
             ? room.pr
             : temp.bet_amount;
-        temp.winnings = 
-          parseFloat(room.user_bet) + parseFloat(room.host_pr) + temp.bet_amount;
+        temp.winnings =
+          parseFloat(room.user_bet) +
+          parseFloat(room.host_pr) +
+          temp.bet_amount;
       } else if (room.game_type.game_type_id === 3) {
         // Brain Game
         temp.winnings = room.pr;
@@ -1314,10 +1319,10 @@ router.post('/end_game', auth, async (req, res) => {
             ? roomInfo.pr
             : roomInfo.bet_amount;
 
-        const winnings = 
+        const winnings =
           parseFloat(roomInfo.user_bet) +
-            parseFloat(roomInfo.host_pr) +
-            betAmount;
+          parseFloat(roomInfo.host_pr) +
+          betAmount;
 
         newTransaction.amount += parseFloat(winnings);
 
@@ -1485,7 +1490,7 @@ const decrementUserBalance = async (userId, betAmount) => {
 
   // Check if the balance after decrement would be negative
   if (user.balance - betAmount < 0) {
-    throw new Error("Insufficient balance");
+    throw new Error('Insufficient balance');
   }
 
   user.balance -= betAmount;
@@ -1510,7 +1515,6 @@ router.post('/start_brain_game', auth, async (req, res) => {
     });
   }
 });
-
 
 router.post('/start_blackjack', auth, async (req, res) => {
   try {
@@ -1639,6 +1643,8 @@ async function sendEndedMessageToJoiners(roomId, from, message, is_anonymous) {
 router.post('/bet', auth, async (req, res) => {
   try {
     const commission = await SystemSetting.findOne({ name: 'commission' });
+    const rain = await SystemSetting.findOne({ name: 'rain' });
+    const platform = await SystemSetting.findOne({ name: 'platform' });
 
     const start = new Date();
     if (req.body._id) {
@@ -1774,6 +1780,45 @@ router.post('/bet', auth, async (req, res) => {
             parseFloat(req.body.bet_amount) *
             2 *
             ((100 - commission.value) / 100);
+
+       
+          newGameLog.commission =
+          parseFloat(req.body.bet_amount) *
+            2 *
+            ((commission.value - 0.5) / 100);
+
+          // update rain stat 10%)
+          rain.value =
+          parseFloat(rain.value) +
+          parseFloat(req.body.bet_amount) *
+            2 *
+            ((commission.value - 0.5) / 100);
+
+          rain.save();
+
+          // update platform stat (0.5%)
+          platform.value =
+          parseFloat(platform.value) +
+          parseFloat(req.body.bet_amount) *
+            2 *
+            ((commission.value - 10) / 100);
+          platform.save();
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATE_RAIN', {
+              rain: rain.value
+            });
+          }
+
+          // update bankroll (10%)
+          if (roomInfo['user_bet'] != 0) {
+            roomInfo['user_bet'] =
+            parseFloat(roomInfo['user_bet']) +
+            parseFloat(req.body.bet_amount) *
+              2 *
+              ((commission.value - 0.5) / 100);
+          }
+
           roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
 
           roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
@@ -2012,7 +2057,6 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else {
           newGameLog.game_result = 1;
-
           newTransactionJ.amount +=
             (parseFloat(req.body.bet_amount) +
               parseFloat(req.body.bet_amount) /
@@ -2023,12 +2067,66 @@ router.post('/bet', auth, async (req, res) => {
           roomInfo['user_bet'] -=
             parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
 
+          // if (req.io.sockets) {
+          //   req.io.sockets.emit('UPDATED_BANKROLL_QS', {
+          //     bankroll: roomInfo['user_bet']
+          //   });
+          // }
+
+          newGameLog.commission =
+            (parseFloat(req.body.bet_amount) +
+              parseFloat(req.body.bet_amount) /
+                (roomInfo['qs_game_type'] - 1)) *
+            ((commission.value - 0.5) / 100);
+
+          // update rain stat 10%)
+          rain.value =
+            parseFloat(rain.value) +
+            (parseFloat(req.body.bet_amount) +
+              parseFloat(req.body.bet_amount) /
+                (roomInfo['qs_game_type'] - 1)) *
+              ((commission.value - 0.5) / 100);
+
+          rain.save();
+
+          // update platform stat (0.5%)
+          platform.value =
+            parseFloat(platform.value) +
+            (parseFloat(req.body.bet_amount) +
+              parseFloat(req.body.bet_amount) /
+                (roomInfo['qs_game_type'] - 1)) *
+              ((commission.value - 10) / 100);
+
+          platform.save();
+
           if (req.io.sockets) {
-            req.io.sockets.emit('UPDATED_BANKROLL_QS', {
-              bankroll: roomInfo['user_bet']
+            req.io.sockets.emit('UPDATE_RAIN', {
+              rain: rain.value
             });
           }
 
+          // update bankroll (10%)
+          if (roomInfo['user_bet'] != 0) {
+            roomInfo['user_bet'] =
+              parseFloat(roomInfo['user_bet']) +
+              (parseFloat(req.body.bet_amount) +
+                parseFloat(req.body.bet_amount) /
+                  (roomInfo['qs_game_type'] - 1)) *
+                ((commission.value - 0.5) / 100);
+            console.log(
+              '10%',
+              (parseFloat(req.body.bet_amount) +
+                parseFloat(req.body.bet_amount) /
+                  (roomInfo['qs_game_type'] - 1)) *
+                ((commission.value - 1) / 100)
+            );
+
+            if (req.io.sockets) {
+              req.io.sockets.emit('UPDATED_BANKROLL_QS', {
+                bankroll: roomInfo['user_bet']
+              });
+            }
+          }
           message.message =
             "You're not the best keeper are you? I just won " +
             (parseFloat(req.body.bet_amount) /
@@ -2081,6 +2179,7 @@ router.post('/bet', auth, async (req, res) => {
             joiner_drop: ''
           }).sort({ _id: 'asc' });
         } else {
+          
           // Create new DropBetItem with predicted bet value
           const allBetItems = await DropBetItem.find({
             room: new ObjectId(req.body._id)
@@ -2109,6 +2208,38 @@ router.post('/bet', auth, async (req, res) => {
           newTransactionJ.amount +=
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
             ((100 - commission.value) / 100);
+            newGameLog.commission =
+            (parseFloat(req.body.bet_amount) + bet_item.drop) *
+              ((commission.value - 0.5) / 100);
+  
+            // update rain stat 10%)
+            rain.value =
+            parseFloat(rain.value) +
+            (parseFloat(req.body.bet_amount) + bet_item.drop) *
+              ((commission.value - 0.5) / 100);
+  
+            rain.save();
+  
+            // update platform stat (0.5%)
+            platform.value =
+            parseFloat(platform.value) +
+            (parseFloat(req.body.bet_amount) + bet_item.drop) *
+              ((commission.value - 10) / 100);
+            platform.save();
+  
+            if (req.io.sockets) {
+              req.io.sockets.emit('UPDATE_RAIN', {
+                rain: rain.value
+              });
+            }
+  
+            // update bankroll (10%)
+            if (roomInfo['user_bet'] != 0) {
+              roomInfo['user_bet'] =
+              parseFloat(roomInfo['user_bet']) +
+              (parseFloat(req.body.bet_amount) + bet_item.drop) *
+              ((commission.value - 0.5) / 100);
+            }
           roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
 
           roomInfo['host_pr'] -= bet_item.drop;
@@ -2715,17 +2846,20 @@ router.post('/bet', auth, async (req, res) => {
         if (parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)) {
           // Return an error or some other response to the user, e.g.:
           return res
-          .status(400)
-          .json({ error: 'Bet amount exceeds available balance.' });
+            .status(400)
+            .json({ error: 'Bet amount exceeds available balance.' });
         }
         newTransactionJ.amount -= req.body.bet_amount;
-        
+
         roomInfo['host_pr'] += req.body.bet_amount;
         // console.log("roomInfo['host_pr']", roomInfo['host_pr'])
         newGameLog.bet_amount = req.body.bet_amount;
         newGameLog.host_pr = roomInfo['host_pr'];
-        
-        if (updateDigitToPoint2(roomInfo.bet_amount) == updateDigitToPoint2(req.body.bet_amount)) {
+
+        if (
+          updateDigitToPoint2(roomInfo.bet_amount) ==
+          updateDigitToPoint2(req.body.bet_amount)
+        ) {
           newGameLog.game_result = 1;
           const guesses = await SpleeshGuess.find({ room: roomInfo._id }).sort({
             created_at: 'ascending'
@@ -2733,6 +2867,8 @@ router.post('/bet', auth, async (req, res) => {
           if (req.io.sockets) {
             req.io.sockets.emit('SPLEESH_GUESSES', guesses);
           }
+
+          
 
           message.message =
             'I won ' +
@@ -2742,6 +2878,43 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
+
+          newGameLog.commission =
+          (roomInfo['host_pr'] + roomInfo['bet_amount']) *
+
+            ((commission.value - 0.5) / 100);
+
+          // update rain stat 10%)
+          rain.value =
+          parseFloat(rain.value) +
+          (roomInfo['host_pr'] + roomInfo['bet_amount']) *
+
+            ((commission.value - 0.5) / 100);
+
+          rain.save();
+
+          // update platform stat (0.5%)
+          platform.value =
+          parseFloat(platform.value) +
+          (roomInfo['host_pr'] + roomInfo['bet_amount']) *
+
+            ((commission.value - 10) / 100);
+          platform.save();
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATE_RAIN', {
+              rain: rain.value
+            });
+          }
+
+          // update bankroll (10%)
+          if (roomInfo['user_bet'] != 0) {
+            roomInfo['user_bet'] =
+            parseFloat(roomInfo['user_bet']) +
+            (roomInfo['host_pr'] + roomInfo['bet_amount']) *
+              ((commission.value - 0.5) / 100);
+          }
+
           newTransactionJ.amount +=
             (roomInfo['host_pr'] + roomInfo['bet_amount']) *
             ((100 - commission.value) / 100);
@@ -2765,7 +2938,6 @@ router.post('/bet', auth, async (req, res) => {
             while (newBetAmount > roomInfo['host_pr']) {
               newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10;
               // console.log("newBetAmount2", newBetAmount);
-
             }
           }
           if (newBetAmount <= roomInfo['user_bet']) {
@@ -2840,7 +3012,6 @@ router.post('/bet', auth, async (req, res) => {
               while (newBetAmount > roomInfo['host_pr']) {
                 newBetAmount = (Math.floor(Math.random() * 10) + 1) / 100;
                 // console.log("newBetAmount3", newBetAmount);
-
               }
             } else if (roomInfo.spleesh_bet_unit === 0.1) {
               newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10;
@@ -2849,7 +3020,6 @@ router.post('/bet', auth, async (req, res) => {
               while (newBetAmount > roomInfo['host_pr']) {
                 newBetAmount = (Math.floor(Math.random() * 10) + 1) / 10;
                 // console.log("newBetAmount4", newBetAmount);
-
               }
             }
 
@@ -2915,6 +3085,38 @@ router.post('/bet', auth, async (req, res) => {
         newTransactionJ.amount -= selected_box.box_price;
         newTransactionJ.amount +=
           selected_box.box_prize * ((100 - commission.value) / 100);
+
+          newGameLog.commission =
+          selected_box.box_prize *
+            ((commission.value - 0.5) / 100);
+
+          // update rain stat 10%)
+          rain.value = parseFloat(rain.value) +
+          (selected_box.box_prize * 
+            ((commission.value - 0.5) / 100));
+
+          rain.save();
+
+          // update platform stat (0.5%)
+          platform.value =
+          parseFloat(platform.value) +
+          (selected_box.box_prize * 
+            ((commission.value - 10) / 100));
+          platform.save();
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATE_RAIN', {
+              rain: rain.value
+            });
+          }
+
+          // update bankroll (10%)
+          // if (roomInfo['user_bet'] != 0) {
+            roomInfo['user_bet'] =
+            parseFloat(roomInfo['user_bet']) +
+          (selected_box.box_prize * 
+            ((commission.value - 0.5) / 100));
+          // }
 
         if (selected_box.box_prize === 0) {
           message.message =
@@ -2998,9 +3200,9 @@ router.post('/bet', auth, async (req, res) => {
               }
 
               let updatedBoxList = originalBoxList.map((box, index) => {
-                let randomAmount = (Math.random() < 0.5 ? -0.002 : 0.002);
+                let randomAmount = Math.random() < 0.5 ? -0.002 : 0.002;
                 let newPrice = box.box_price + randomAmount;
-                
+
                 while (newPrice <= 0) {
                   newPrice += 1;
                 }
@@ -3093,24 +3295,23 @@ router.post('/bet', auth, async (req, res) => {
             }
 
             let updatedBoxList = originalBoxList.map((box, index) => {
-              let randomAmount = (Math.random() < 0.5 ? -0.002 : 0.002);
+              let randomAmount = Math.random() < 0.5 ? -0.001 : 0.001;
               let newPrice = box.box_price + randomAmount;
-              
+
               while (newPrice <= 0) {
                 newPrice += 1;
               }
-              
+
               let newBox = new RoomBoxPrize({
                 room: roomInfo,
                 box_prize: boxPrizes[index],
                 box_price: newPrice,
                 status: 'init'
               });
-              
+
               newBox.save();
               return newBox;
             });
-            
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BOX_LIST', {
@@ -3273,7 +3474,6 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
-        
         newGameLog.bet_amount = roomInfo['bet_amount'];
         newGameLog.brain_game_score = req.body.brain_game_score;
 
@@ -3309,9 +3509,44 @@ router.post('/bet', auth, async (req, res) => {
 
           newTransactionJ.amount +=
             roomInfo['bet_amount'] * 2 * ((100 - commission.value) / 100);
+
+            newGameLog.commission =
+            roomInfo['bet_amount'] * 2 * 
+              ((commission.value - 0.5) / 100);
+  
+            // update rain stat 10%)
+            rain.value =
+            parseFloat(rain.value) +
+            roomInfo['bet_amount'] * 2 * 
+              ((commission.value - 0.5) / 100);
+  
+            rain.save();
+  
+            // update platform stat (0.5%)
+            platform.value =
+            parseFloat(platform.value) +
+            roomInfo['bet_amount'] * 2 * 
+              ((commission.value - 10) / 100);
+            platform.save();
+  
+            if (req.io.sockets) {
+              req.io.sockets.emit('UPDATE_RAIN', {
+                rain: rain.value
+              });
+            }
+  
+            // update bankroll (10%)
+            if (roomInfo['user_bet'] != 0) {
+              roomInfo['user_bet'] =
+              parseFloat(roomInfo['user_bet']) +
+              roomInfo['bet_amount'] * 2 * 
+                ((commission.value - 0.5) / 100);
+            }
+
           roomInfo['pr'] -= roomInfo['bet_amount'];
           roomInfo['host_pr'] -= roomInfo['bet_amount'];
           roomInfo['user_bet'] -= roomInfo['bet_amount'];
+
           if (roomInfo['user_bet'] <= 0 || roomInfo['host_pr'] <= 0) {
             roomInfo.status = 'finished';
           }

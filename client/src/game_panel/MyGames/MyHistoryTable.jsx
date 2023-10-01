@@ -2,7 +2,11 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { getMyHistory } from '../../redux/Logic/logic.actions';
 import IconButton from '@material-ui/core/IconButton';
-import {Box, Button} from '@material-ui/core';
+import { Box, Button } from '@material-ui/core';
+import CountUp from 'react-countup';
+import { getSettings } from '../../redux/Setting/setting.action';
+import InlineSVG from 'react-inlinesvg';
+
 import Moment from 'moment';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
@@ -24,11 +28,12 @@ function updateFromNow(history = []) {
 class MyHistoryTable extends Component {
   constructor(props) {
     super(props);
+    this.socket = this.props.socket;
+
     this.state = {
       myHistory: this.props.myHistory,
       selectedGameType: 'All',
-      showPlayerModal: false,
-
+      showPlayerModal: false
     };
   }
 
@@ -59,15 +64,25 @@ class MyHistoryTable extends Component {
     this.attachUserLinkListeners();
 
     this.interval = setInterval(this.updateReminderTime(), 3000);
+    const settings = await this.props.getSettings();
+    this.setState({ ...settings });
+
+    const { socket } = this.props;
+    socket.on('UPDATE_RAIN', data => {
+      this.setState(prevState => ({
+        rain: data.rain,
+        prevRain: prevState.rain // Store the previous rain value
+      }));
+    });
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.history !== this.props.history) {
       this.attachUserLinkListeners();
 
-        this.setState({ history: updateFromNow(this.props.history) });
+      this.setState({ history: updateFromNow(this.props.history) });
     }
-}
+  }
 
   attachUserLinkListeners = () => {
     const userLinks = document.querySelectorAll('.user-link');
@@ -90,92 +105,90 @@ class MyHistoryTable extends Component {
   //   });
   // };
 
-  handleOpenPlayerModal = (creator_id) => {
+  handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
-  }
+  };
 
-  
   handleClosePlayerModal = () => {
     this.setState({ showPlayerModal: false });
   };
-  
-//   handleBtnLeftClicked = e => {
-//     const scrollAmount = 200; // Change this value to adjust the scroll amount
-//     this.game_type_panel.scrollLeft -= scrollAmount;
-//   };
 
-//   handleBtnRightClicked = e => {
-//     const scrollAmount = 200; // Change this value to adjust the scroll amount
-//     this.game_type_panel.scrollLeft += scrollAmount;
-//   };
+  //   handleBtnLeftClicked = e => {
+  //     const scrollAmount = 200; // Change this value to adjust the scroll amount
+  //     this.game_type_panel.scrollLeft -= scrollAmount;
+  //   };
 
-//   generateGameTypePanel = () => {
-//     const gameTypeStyleClass = {
-//       RPS: 'rps',
-//       'S!': 'spleesh',
-//       MB: 'mystery-box',
-//       BG: 'brain-game',
-//       QS: 'quick-shoot',
-//       DG: 'drop-game',
-//       'B!': 'bang',
-//       R: 'roll'
-//     };
+  //   handleBtnRightClicked = e => {
+  //     const scrollAmount = 200; // Change this value to adjust the scroll amount
+  //     this.game_type_panel.scrollLeft += scrollAmount;
+  //   };
 
-//     const gameTypePanel = (
-//       <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap"  gap="15px">
-//         <Box key="open-game-left-button">
-//           <IconButton
-//             className="btn-arrow-left"
-//             onClick={this.handleBtnLeftClicked}
-//           >
-//             <ChevronLeftIcon />
-//           </IconButton>
-//         </Box>
-//         <Button
-//   className={`btn-game-type btn-icon all-games ${
-//     this.state.selectedGameType === 'All' ? 'active' : ''
-//   }`}
-//   key="open-game-all-game-button"
-//   onClick={() => {
-//     this.handleGameTypeButtonClicked('All');
-//   }}
-// >
-//   All Games
-// </Button>
-// {this.props.gameTypeList.map((gameType, index) => (
-//   <Button
-//     className={`btn-game-type btn-icon ${
-//       gameTypeStyleClass[gameType.short_name]
-//     } ${
-//       this.state.selectedGameType === gameType.short_name ? 'active' : ''
-//     }`}
-//     key={index}
-//     onClick={() => {
-//       this.handleGameTypeButtonClicked(gameType.short_name);
-//     }}
-//   >
-//     {gameType.game_type_name}
-//   </Button>
-//         ))}
-//         <Box key="open-game-right-button">
-//           <IconButton
-//             className="btn-arrow-right"
-//             onClick={this.handleBtnRightClicked}
-//           >
-//             <ChevronRightIcon />
-//           </IconButton>
-//         </Box>
-//       </Box>
-//     );
-    
-//     return gameTypePanel;
-  
-//   };
+  //   generateGameTypePanel = () => {
+  //     const gameTypeStyleClass = {
+  //       RPS: 'rps',
+  //       'S!': 'spleesh',
+  //       MB: 'mystery-box',
+  //       BG: 'brain-game',
+  //       QS: 'quick-shoot',
+  //       DG: 'drop-game',
+  //       'B!': 'bang',
+  //       R: 'roll'
+  //     };
 
+  //     const gameTypePanel = (
+  //       <Box display="flex" justifyContent="space-evenly" flexWrap="nowrap"  gap="15px">
+  //         <Box key="open-game-left-button">
+  //           <IconButton
+  //             className="btn-arrow-left"
+  //             onClick={this.handleBtnLeftClicked}
+  //           >
+  //             <ChevronLeftIcon />
+  //           </IconButton>
+  //         </Box>
+  //         <Button
+  //   className={`btn-game-type btn-icon all-games ${
+  //     this.state.selectedGameType === 'All' ? 'active' : ''
+  //   }`}
+  //   key="open-game-all-game-button"
+  //   onClick={() => {
+  //     this.handleGameTypeButtonClicked('All');
+  //   }}
+  // >
+  //   All Games
+  // </Button>
+  // {this.props.gameTypeList.map((gameType, index) => (
+  //   <Button
+  //     className={`btn-game-type btn-icon ${
+  //       gameTypeStyleClass[gameType.short_name]
+  //     } ${
+  //       this.state.selectedGameType === gameType.short_name ? 'active' : ''
+  //     }`}
+  //     key={index}
+  //     onClick={() => {
+  //       this.handleGameTypeButtonClicked(gameType.short_name);
+  //     }}
+  //   >
+  //     {gameType.game_type_name}
+  //   </Button>
+  //         ))}
+  //         <Box key="open-game-right-button">
+  //           <IconButton
+  //             className="btn-arrow-right"
+  //             onClick={this.handleBtnRightClicked}
+  //           >
+  //             <ChevronRightIcon />
+  //           </IconButton>
+  //         </Box>
+  //       </Box>
+  //     );
+
+  //     return gameTypePanel;
+
+  //   };
 
   handlePageNumberClicked = page => {
     this.props.getMyHistory({
-      page: page,
+      page: page
       // game_type: this.state.selectedGameType
     });
   };
@@ -201,78 +214,120 @@ class MyHistoryTable extends Component {
 
     return (
       <div className="overflowX">
-        {/* <div className="outer-div"> */}
-      <div className="border-mask" />
-      {/* <Lottie
+        <div className="outer-div">
+          <div className="border-mask" />
+          <div className="desktop-only">
+            <Lottie
               options={{
                 loop: true,
                 autoplay: true,
                 animationData: rain
               }}
               style={{
-  transform: 'translateY(-66px)',
-  width: '250px',
-  height: '100%',
-  overflow: 'hidden',
-  margin: '-2px 0px -187px',
-  outline: 'none',
-  filter: 'hue-rotate(2deg)',
-  maxWidth: '100%'
-              }}
-            />
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: hex
-              }}
-              style={{
                 transform: 'translateY(-66px)',
-                width: '142px',
+                width: '250px',
                 height: '100%',
                 overflow: 'hidden',
-                margin: '-2px 0px -187px',
+                margin: '-2px 0px -178px',
                 outline: 'none',
                 filter: 'hue-rotate(2deg)',
                 maxWidth: '100%'
               }}
             />
-             <Lottie
+          </div>
+          <div className="mobile-only">
+            <Lottie
               options={{
                 loop: true,
                 autoplay: true,
-                animationData: waves
+                animationData: rain
               }}
+              className="mobile-only"
               style={{
                 transform: 'translateY(-66px)',
-                width: '361px',
+                width: '250px',
                 height: '100%',
                 overflow: 'hidden',
-                margin: '60px 0px -236px',
+                margin: '-2px 0px -270px',
                 outline: 'none',
-                filter: 'hue-rotate(48deg)',
+                filter: 'hue-rotate(2deg)',
                 maxWidth: '100%'
               }}
             />
-            
-        <h1
-        id="rain"
-        style={{
-          color: '#fff',
-          fontSize: '3.1em',
-          letterSpacing: '0.35em',
-          textShadow: '0 0 12px #0058b6'
-        }}
-        >RAIN</h1>
-        <p
-        
-        style={{
-          color: '#fff',
-          paddingLeft: '10px',
-          textShadow: '0 0 12px #0058b6'
-        }}
-        >Coming Soon!</p>
-    </div> */}
+          </div>
+          <Lottie
+            options={{
+              loop: true,
+              autoplay: true,
+              animationData: hex
+            }}
+            style={{
+              transform: 'translateY(-66px)',
+              width: '142px',
+              height: '100%',
+              overflow: 'hidden',
+              margin: '-2px 0px -187px',
+              outline: 'none',
+              filter: 'hue-rotate(2deg)',
+              maxWidth: '100%'
+            }}
+          />
+          <Lottie
+            options={{
+              loop: true,
+              autoplay: true,
+              animationData: waves
+            }}
+            style={{
+              transform: 'translateY(-66px)',
+              width: '361px',
+              height: '100%',
+              overflow: 'hidden',
+              margin: '60px 0px -236px',
+              outline: 'none',
+              filter: 'hue-rotate(48deg)',
+              maxWidth: '100%'
+            }}
+          />
+          <InlineSVG
+            class="rain"
+            id="busd"
+            src={require('../JoinGame/busd.svg')}
+          />
+          <CountUp
+            end={this.state.rain}
+            start={this.state.prevRain} // Start from the previous rain value
+            duration={2} // Duration of the countup animation in seconds
+            separator=","
+            decimals={6} // Number of decimal places
+          >
+            {({ countUpRef, start }) => (
+              <h1
+                id="rain"
+                ref={countUpRef}
+                style={{
+                  color: '#fff',
+                  fontSize: '2em',
+                  position: 'relative',
+                  display: 'inline-block',
+                  zIndex: '1',
+                  textShadow: '0 0 12px #0058b6'
+                }}
+              />
+            )}
+          </CountUp>
+          <p
+            style={{
+              color: '#fff',
+              position: 'relative',
+              zIndex: '1',
+              paddingLeft: '10px',
+              textShadow: '0 0 12px #0058b6'
+            }}
+          >
+            Returned to Bankrolls (RTBs)
+          </p>
+        </div>
         {/* <div className="game-type-container">
           <div
             className="game-type-panel"
@@ -314,15 +369,15 @@ class MyHistoryTable extends Component {
           )}
         </div>
         {this.state.showPlayerModal && (
-            <PlayerModal
-              modalIsOpen={this.state.showPlayerModal}
-              closeModal={this.handleClosePlayerModal}
-              selectedCreator={this.state.selectedCreator}
+          <PlayerModal
+            modalIsOpen={this.state.showPlayerModal}
+            closeModal={this.handleClosePlayerModal}
+            selectedCreator={this.state.selectedCreator}
             // player_name={this.state.userName}
             // balance={this.state.balance}
             // avatar={this.props.user.avatar}
-            />
-          )}  
+          />
+        )}
         {this.state.myHistory?.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
@@ -339,14 +394,18 @@ class MyHistoryTable extends Component {
 }
 
 const mapStateToProps = state => ({
+  socket: state.auth.socket,
+  isAuthenticated: state.auth.isAuthenticated,
+
   myHistory: state.logic.myHistory,
   pageNumber: state.logic.myHistoryPageNumber,
-  totalPage: state.logic.myHistoryTotalPage,
+  totalPage: state.logic.myHistoryTotalPage
   // gameTypeList: state.logic.gameTypeList
 });
 
 const mapDispatchToProps = {
-  getMyHistory
+  getMyHistory,
+  getSettings
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyHistoryTable);

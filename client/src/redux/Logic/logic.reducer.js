@@ -17,6 +17,7 @@ import {
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
   UPDATE_BANKROLL_QS,
+  UPDATE_RAIN,
   SPLEESH_GUESSES,
   DROP_GUESSES,
   BANG_GUESSES,
@@ -75,6 +76,7 @@ const initialState = {
   betResult: -1,
   betResults: [],
   bankroll: 0,
+  rain: 0,
   roomStatus: '',
   myGames: [],
   myGamesTotalPage: 0,
@@ -135,6 +137,11 @@ export default function(state = initialState, action) {
       return {
         ...state,
         bankroll: action.payload,
+      };
+    case UPDATE_RAIN:
+      return {
+        ...state,
+        rain: action.payload,
       };
     case START_LOADING:
       return {
