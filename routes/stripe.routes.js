@@ -109,7 +109,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
 
     res.json({
       success: true,
-      balance: req.user.balance,
+      balance: req.user.balance + req.body.amount,
       newTransaction,
       message: `Deposit received! Please wait for confirmations.<br />View transaction details <a href="https://etherscan.io/tx/${txtHash}" target="_blank">here</a>. You may need to refresh.`,
     });
@@ -136,14 +136,28 @@ router.post('/withdraw_request', auth, async (req, res) => {
     }
     const receipt = new Receipt({
       user_id: req.user._id,
-      email: req.body.email,
-      amount: req.body.amount
+      // payment_method: req.body.payment_method,
+      payment_type: 'Withdraw',
+      amount: req.body.amount,
     });
-    
+    const balance = req.user.balance;
+    // console.log("User's balance:", req.user.balance);
+    // console.log("Requested withdrawal amount:", req.body.amount);
+
+    if (balance < req.body.amount) {
+      console.log("Insufficient funds");
+      return res.json({
+        success: false,
+        message: 'INSUFFICIENT FUNDS'
+      });
+    }
+
+    // console.log("Calculating gas fees...");
+
+    // console.log(req.body.addressTo, req.body.amount);
     const signer = new ethers.Wallet(walletKey, provider);
-    
+
     try {
-      const balance = req.user.balance;
       const amountTransfer = ethers.utils.parseUnits(String(req.body.amount), 'ether');
 
       const block = await provider.getBlock('latest');
@@ -167,6 +181,10 @@ router.post('/withdraw_request', auth, async (req, res) => {
       // Subtract gas fee from balance in wei
       const differenceWei = balanceWei.sub(gasFee);
 
+      // console.log("Balance in Wei:", balanceWei.toString());
+      // console.log("Gas Fee in Wei:", gasFee.toString());
+      // console.log("Difference in Wei:", differenceWei.toString());
+
       if (differenceWei.lt(0)) {
         console.log("Insufficient funds to cover gas fee");
         return res.json({
@@ -178,8 +196,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       
       const real = amountTransfer.sub(gasFee);
       const realEth = ethers.utils.formatEther(real);
-      balance = balance - req.body.amount;
-
+      
       console.log("Sending transaction...");
 
       tx = await signer.sendTransaction({
@@ -204,27 +221,26 @@ router.post('/withdraw_request', auth, async (req, res) => {
     }
     
     await receipt.save();
+    
     const newTransaction = new Transaction({
       user: req.user,
-      amount: -req.body.amount,
+      amount: req.body.amount,
       description: 'withdraw',
-      status: 'completed',
+      status: 'pending',  // Mark the transaction as pending
       hash: tx.hash
     });
 
-    // req.user.balance = await getWalletBalance(signer);
-
-    await req.user.save();
+    // Save the transaction as pending
     await newTransaction.save();
 
     return res.json({
       success: true,
-      balance: req.user.balance,
+      balance: req.user.balance - req.body.amount,
       newTransaction,
-      message: `Withdrawal successful! 🤑 Much Wow.<br /> View the transaction details on the blockchain using this <a href="https://etherscan.io/tx/${tx.hash}" target="_blank">transaction link</a>.`
+      message: `Withdrawal request received and is pending confirmation. 🤑 Much Wow.<br /> View the transaction details on the blockchain using this <a href="https://etherscan.io/tx/${tx.hash}" target="_blank">transaction link</a>.`
     });
   } catch (e) {
-    console.log('ERROR in withdraw send transaction', e);
+    console.log('ERROR in withdraw_request', e);
     return res.json({
       success: false,
       message: 'Failed to initiate withdrawal'

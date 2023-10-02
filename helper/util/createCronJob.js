@@ -3,53 +3,68 @@ const cron = require('node-cron');
 const ethers = require('ethers');
 const { JsonRpcProvider } = require('@ethersproject/providers');
 const User = require('../../model/User');
-
-// Import the Transaction model
 const Transaction = require('../../model/Transaction');
 const { setBalance } = require('../../routes/user.routes');
 
-const provider = new JsonRpcProvider(
-  'https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09'
-);
+const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09');
 
-// Initialize your Ethereum provider and other necessary variables here
-
-// Define the confirmation threshold for deposit transactions
-const confirmationThreshold = 6; // Adjust as needed
+// Define the confirmation thresholds
+const withdrawalConfirmationThreshold = 0;
+const depositConfirmationThreshold = 6;
 
 // Define a function to periodically check for confirmations
 async function checkConfirmations() {
   try {
-    // Implement the logic to check for confirmations
-    // Query the Ethereum network for pending deposit requests and check their confirmations
-    // Update the user's balances as needed
+    // console.log('Checking for confirmations...');
+
     const currentBlock = await provider.getBlockNumber();
+    const pendingTransactions = await Transaction.find({ status: 'pending' });
 
-    const pendingDeposits = await Transaction.find({ status: 'pending' });
-    // console.log('pending', pendingDeposits);
-
-    for (const deposit of pendingDeposits) {
-      const tx = await provider.getTransaction(deposit.hash);
+    for (const transaction of pendingTransactions) {
+      const tx = await provider.getTransaction(transaction.hash);
       if (tx && tx.blockNumber) {
-          console.log('tx', tx);
         const confirmations = currentBlock - tx.blockNumber;
-        if (confirmations >= confirmationThreshold) {
-            // console.log('balance');
-            // Get the user associated with the transaction
-            const user = await User.findById(deposit.user);
-            // console.log('balance1', user);
+
+        // Determine if it's a deposit or withdrawal
+        let isDeposit = transaction.description === 'deposit';
+        let isWithdrawal = transaction.description === 'withdraw';
+
+        // console.log(`Transaction hash: ${transaction.hash}`);
+        // console.log(`Confirmations: ${confirmations}`);
+        // console.log(`Is deposit: ${isDeposit}`);
+        // console.log(`Is withdrawal: ${isWithdrawal}`);
+
+        if (isDeposit && confirmations >= depositConfirmationThreshold) {
+          console.log('Processing deposit transaction...');
+
+          // Get the user associated with the transaction
+          const user = await User.findById(transaction.user);
+
           if (user) {
-            // console.log('balaneww');
+            // Update the transaction status to 'completed'
+            transaction.status = 'completed';
+            await transaction.save();
 
-            // Update the deposit status to 'completed'
-            deposit.status = 'completed';
-            await deposit.save();
-
-            // Update the user's balance
-            user.balance += deposit.amount; // Assuming deposit.amount is the deposited amount
+            // Update the user's balance accordingly
+            user.balance += transaction.amount;
             await user.save();
-                        // console.log('balance2');
+            console.log('Deposit transaction processed successfully.');
+          }
+        } else if (isWithdrawal && confirmations >= withdrawalConfirmationThreshold) {
+          console.log('Processing withdrawal transaction...');
 
+          // Get the user associated with the transaction
+          const user = await User.findById(transaction.user);
+
+          if (user) {
+            // Update the transaction status to 'completed'
+            transaction.status = 'completed';
+            await transaction.save();
+
+            // Update the user's balance accordingly
+            user.balance -= transaction.amount;
+            await user.save();
+            console.log('Withdrawal transaction processed successfully.');
           }
         }
       }
@@ -59,8 +74,8 @@ async function checkConfirmations() {
   }
 }
 
-// Schedule the task to run every minute (adjust the cron schedule as needed)
-cron.schedule('* * * * *', checkConfirmations);
+// Schedule the task to run every 20 seconds
+cron.schedule('*/1 * * * * *', checkConfirmations);
 
 // Export any necessary functions or variables for use in your application
 module.exports = {
