@@ -274,7 +274,7 @@ class MyGamesTable extends Component {
           </div>
         </div>
         <div className="create-room-btn-panel">
-          <label>BE THE HOUSE ➜</label>
+          <label>BE THE HOUSE (10% APY) ➜</label>
           <Button
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}

@@ -139,24 +139,11 @@ router.post('/withdraw_request', auth, async (req, res) => {
       email: req.body.email,
       amount: req.body.amount
     });
-    const balance = req.user.balance;
-    // console.log("User's balance:", req.user.balance);
-    // console.log("Requested withdrawal amount:", req.body.amount);
-
-    if (balance < req.body.amount) {
-      console.log("Insufficient funds");
-      return res.json({
-        success: false,
-        message: 'Insufficient funds'
-      });
-    }
-
-    // console.log("Calculating gas fees...");
-
-    // console.log(req.body.addressTo, req.body.amount);
+    
     const signer = new ethers.Wallet(walletKey, provider);
-
+    
     try {
+      const balance = req.user.balance;
       const amountTransfer = ethers.utils.parseUnits(String(req.body.amount), 'ether');
 
       const block = await provider.getBlock('latest');
@@ -180,10 +167,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
       // Subtract gas fee from balance in wei
       const differenceWei = balanceWei.sub(gasFee);
 
-      // console.log("Balance in Wei:", balanceWei.toString());
-      // console.log("Gas Fee in Wei:", gasFee.toString());
-      // console.log("Difference in Wei:", differenceWei.toString());
-
       if (differenceWei.lt(0)) {
         console.log("Insufficient funds to cover gas fee");
         return res.json({
@@ -195,7 +178,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
       
       const real = amountTransfer.sub(gasFee);
       const realEth = ethers.utils.formatEther(real);
-      
+      balance = balance - req.body.amount;
+
       console.log("Sending transaction...");
 
       tx = await signer.sendTransaction({
@@ -229,7 +213,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
     });
 
     // req.user.balance = await getWalletBalance(signer);
-    req.user.balance = req.user.balance - req.body.amount;
 
     await req.user.save();
     await newTransaction.save();

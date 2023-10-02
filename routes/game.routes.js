@@ -1810,6 +1810,12 @@ router.post('/bet', auth, async (req, res) => {
             });
           }
 
+          
+          roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
+          
+          roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
+          roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
+          
           // update bankroll (10%)
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
@@ -1818,12 +1824,6 @@ router.post('/bet', auth, async (req, res) => {
               2 *
               ((commission.value - 0.5) / 100);
           }
-
-          roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
-
-          roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
-          roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
-
           const lastFiveBetItems = await RpsBetItem.find({
             room: new ObjectId(req.body._id)
           })
@@ -2233,6 +2233,10 @@ router.post('/bet', auth, async (req, res) => {
               });
             }
   
+            roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
+            
+            roomInfo['host_pr'] -= bet_item.drop;
+            roomInfo['user_bet'] -= bet_item.drop;
             // update bankroll (10%)
             if (roomInfo['user_bet'] != 0) {
               roomInfo['user_bet'] =
@@ -2240,10 +2244,6 @@ router.post('/bet', auth, async (req, res) => {
               (parseFloat(req.body.bet_amount) + bet_item.drop) *
               ((commission.value - 0.5) / 100);
             }
-          roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
-
-          roomInfo['host_pr'] -= bet_item.drop;
-          roomInfo['user_bet'] -= bet_item.drop;
 
           if (req.io.sockets) {
             req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -3535,6 +3535,10 @@ router.post('/bet', auth, async (req, res) => {
               });
             }
   
+            
+            roomInfo['pr'] -= roomInfo['bet_amount'];
+            roomInfo['host_pr'] -= roomInfo['bet_amount'];
+            roomInfo['user_bet'] -= roomInfo['bet_amount'];
             // update bankroll (10%)
             if (roomInfo['user_bet'] != 0) {
               roomInfo['user_bet'] =
@@ -3542,10 +3546,6 @@ router.post('/bet', auth, async (req, res) => {
               roomInfo['bet_amount'] * 2 * 
                 ((commission.value - 0.5) / 100);
             }
-
-          roomInfo['pr'] -= roomInfo['bet_amount'];
-          roomInfo['host_pr'] -= roomInfo['bet_amount'];
-          roomInfo['user_bet'] -= roomInfo['bet_amount'];
 
           if (roomInfo['user_bet'] <= 0 || roomInfo['host_pr'] <= 0) {
             roomInfo.status = 'finished';

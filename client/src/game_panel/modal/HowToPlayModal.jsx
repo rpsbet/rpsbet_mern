@@ -608,7 +608,7 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>
-Hosts receive ZERO tax on their winnings AND 15% from their players' winnings.                       {' '}
+Hosts receive ZERO tax on their winnings AND 10% from their players' winnings.                       {' '}
                       </p>
                       <table id="howto-modal">
                         <tbody>
@@ -618,9 +618,9 @@ Hosts receive ZERO tax on their winnings AND 15% from their players' winnings.  
                           </tr>
                           <tr>
                             <td  style={{color: "rgb(87, 202, 34)" }}>
-                              <u>FREE +12.5% APY</u>
+                              <u>FREE +10% APY</u>
                             </td>
-                            <td className="gamemode">-12.5%</td>
+                            <td className="gamemode">-10.5%</td>
                           </tr>
                         </tbody>
                       </table>
@@ -632,7 +632,7 @@ Hosts receive ZERO tax on their winnings AND 15% from their players' winnings.  
                             <th>DP / WD</th>
                           </tr>
                           <tr>
-                            <td className="gamemode">-1%</td>
+                            <td className="gamemode">-0.5%</td>
                             <td rowSpan="6">
                               <u><a href="https://etherscan.io/gastracker">SEE GAS TRACKER</a></u>
                             </td>
