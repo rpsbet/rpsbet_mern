@@ -41,6 +41,11 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
       alertModal(isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
       return false;
     }
+
+    if (bet_amount < 0.0005) {
+      alertModal(isDarkMode, `MINIMUM BET IS 0.0005 ETH`);
+      return false;
+    }
   
     if (bet_amount > balance) {
       alertModal(isDarkMode, `TOO BROKE FOR THIS BET`);
