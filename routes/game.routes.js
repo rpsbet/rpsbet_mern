@@ -1787,7 +1787,7 @@ router.post('/bet', auth, async (req, res) => {
             2 *
             ((commission.value - 0.5) / 100);
 
-          // update rain stat 12.5%)
+          // update rain stat 14.5)
           rain.value =
           parseFloat(rain.value) +
           parseFloat(req.body.bet_amount) *
@@ -1801,7 +1801,7 @@ router.post('/bet', auth, async (req, res) => {
           parseFloat(platform.value) +
           parseFloat(req.body.bet_amount) *
             2 *
-            ((commission.value - 12.5) / 100);
+            ((commission.value - 14.5) / 100);
           platform.save();
 
           if (req.io.sockets) {
@@ -1816,7 +1816,7 @@ router.post('/bet', auth, async (req, res) => {
           roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
           roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
           
-          // update bankroll (12.5%)
+          // update bankroll (14.5)
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
             parseFloat(roomInfo['user_bet']) +
@@ -2079,7 +2079,7 @@ router.post('/bet', auth, async (req, res) => {
                 (roomInfo['qs_game_type'] - 1)) *
             ((commission.value - 0.5) / 100);
 
-          // update rain stat 12.5%)
+          // update rain stat 14.5)
           rain.value =
             parseFloat(rain.value) +
             (parseFloat(req.body.bet_amount) +
@@ -2095,7 +2095,7 @@ router.post('/bet', auth, async (req, res) => {
             (parseFloat(req.body.bet_amount) +
               parseFloat(req.body.bet_amount) /
                 (roomInfo['qs_game_type'] - 1)) *
-              ((commission.value - 12.5) / 100);
+              ((commission.value - 14.5) / 100);
 
           platform.save();
 
@@ -2105,7 +2105,7 @@ router.post('/bet', auth, async (req, res) => {
             });
           }
 
-          // update bankroll (12.5%)
+          // update bankroll (14.5)
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
@@ -2205,7 +2205,7 @@ router.post('/bet', auth, async (req, res) => {
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
               ((commission.value - 0.5) / 100);
   
-            // update rain stat 12.5%)
+            // update rain stat 14.5)
             rain.value =
             parseFloat(rain.value) +
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
@@ -2217,7 +2217,7 @@ router.post('/bet', auth, async (req, res) => {
             platform.value =
             parseFloat(platform.value) +
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
-              ((commission.value - 12.5) / 100);
+              ((commission.value - 14.5) / 100);
             platform.save();
   
             if (req.io.sockets) {
@@ -2230,7 +2230,7 @@ router.post('/bet', auth, async (req, res) => {
             
             roomInfo['host_pr'] -= bet_item.drop;
             roomInfo['user_bet'] -= bet_item.drop;
-            // update bankroll (12.5%)
+            // update bankroll (14.5)
             if (roomInfo['user_bet'] != 0) {
               roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
@@ -2877,7 +2877,7 @@ router.post('/bet', auth, async (req, res) => {
 
             ((commission.value - 0.5) / 100);
 
-          // update rain stat 12.5%)
+          // update rain stat 14.5)
           rain.value =
           parseFloat(rain.value) +
           (roomInfo['host_pr'] + roomInfo['bet_amount']) *
@@ -2891,7 +2891,7 @@ router.post('/bet', auth, async (req, res) => {
           parseFloat(platform.value) +
           (roomInfo['host_pr'] + roomInfo['bet_amount']) *
 
-            ((commission.value - 12.5) / 100);
+            ((commission.value - 14.5) / 100);
           platform.save();
 
           if (req.io.sockets) {
@@ -2900,7 +2900,7 @@ router.post('/bet', auth, async (req, res) => {
             });
           }
 
-          // update bankroll (12.5%)
+          // update bankroll (14.5)
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
             parseFloat(roomInfo['user_bet']) +
@@ -3083,7 +3083,7 @@ router.post('/bet', auth, async (req, res) => {
           selected_box.box_prize *
             ((commission.value - 0.5) / 100);
 
-          // update rain stat 12.5%)
+          // update rain stat 14.5)
           rain.value = parseFloat(rain.value) +
           (selected_box.box_prize * 
             ((commission.value - 0.5) / 100));
@@ -3094,7 +3094,7 @@ router.post('/bet', auth, async (req, res) => {
           platform.value =
           parseFloat(platform.value) +
           (selected_box.box_prize * 
-            ((commission.value - 12.5) / 100));
+            ((commission.value - 14.5) / 100));
           platform.save();
 
           if (req.io.sockets) {
@@ -3103,7 +3103,7 @@ router.post('/bet', auth, async (req, res) => {
             });
           }
 
-          // update bankroll (12.5%)
+          // update bankroll (14.5)
           // if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
             parseFloat(roomInfo['user_bet']) +
@@ -3507,7 +3507,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['bet_amount'] * 2 * 
               ((commission.value - 0.5) / 100);
   
-            // update rain stat 12.5%)
+            // update rain stat 14.5)
             rain.value =
             parseFloat(rain.value) +
             roomInfo['bet_amount'] * 2 * 
@@ -3519,7 +3519,7 @@ router.post('/bet', auth, async (req, res) => {
             platform.value =
             parseFloat(platform.value) +
             roomInfo['bet_amount'] * 2 * 
-              ((commission.value - 12.5) / 100);
+              ((commission.value - 14.5) / 100);
             platform.save();
   
             if (req.io.sockets) {
@@ -3532,7 +3532,7 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['pr'] -= roomInfo['bet_amount'];
             roomInfo['host_pr'] -= roomInfo['bet_amount'];
             roomInfo['user_bet'] -= roomInfo['bet_amount'];
-            // update bankroll (12.5%)
+            // update bankroll (14.5)
             if (roomInfo['user_bet'] != 0) {
               roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
