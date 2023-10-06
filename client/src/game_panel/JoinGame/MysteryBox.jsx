@@ -411,9 +411,11 @@ class MysteryBox extends Component {
       return;
     }
 
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+    if (bet_amount > balance) {
+      alertModal(isDarkMode, `TOO BROKE!`);
       return;
     }
+
 
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];

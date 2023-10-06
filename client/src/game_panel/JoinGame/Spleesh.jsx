@@ -641,7 +641,7 @@ class Spleesh extends Component {
                 }}
               />
             </div>
-            <h3 className="game-sub-title">{remainingGuessesText} remaining</h3>
+            {/* <h3 className="game-sub-title">{remainingGuessesText} remaining</h3> */}
 
             <div id="select-buttons-panel">{this.createNumberPanel()}</div>
             <SettingsOutlinedIcon
