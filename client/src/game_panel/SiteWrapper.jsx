@@ -1249,7 +1249,7 @@ class SiteWrapper extends Component {
             {this.state.showAllGameLogs && (
               <div className="game-logs-modal-container">
                 <div className="modal-header">
-                  <h2>ALL BALANCE HISTORY</h2>
+                  <h2>ALL HISTORY</h2>
                   <Button
                     className="close-button"
                     onClick={this.toggleAllTransactions}
@@ -1341,7 +1341,7 @@ class SiteWrapper extends Component {
                   </div>
                   <div className="summary-flex">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>1-Day Profit: </span>
+                      <span>1-Day</span>
                       <span
                         style={{
                           color: this.props.oneDayProfit > 0 ? '#57ca22' : 'red'
@@ -1356,7 +1356,7 @@ class SiteWrapper extends Component {
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>7-Day Profit: </span>
+                      <span>7-Day</span>
                       <span
                         style={{
                           color:
@@ -1372,7 +1372,7 @@ class SiteWrapper extends Component {
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>All-time Profit: </span>
+                      <span>All-time</span>
                       <span
                         style={{
                           color:

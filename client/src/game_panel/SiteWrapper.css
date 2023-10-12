@@ -381,6 +381,15 @@ div.table .table-row .table-cell img.avatar,
 }
 
 @media (max-width: 768px) {
+  .game-logs-modal-container .summary {
+    flex-direction: column;
+  }
+  .game-logs-container {
+    max-height: calc(100vh - 380px) !important;
+  }
+  .game-logs-modal-container {
+    background: #f9f9f9;
+  }
   .cell-likes div {
     margin-left: unset;
   }

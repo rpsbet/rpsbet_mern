@@ -614,6 +614,9 @@ border-color: #151515;
 	color: #b9bbbe;
 }
 @media (max-width: 768px) {
+	.dark_mode .game-logs-modal-container {
+		background: #101010;
+	  }
     .dark_mode .game_header .main_header a.game_logo {
 		background-size: contain;
 	}
