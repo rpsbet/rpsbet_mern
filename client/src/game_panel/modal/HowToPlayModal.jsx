@@ -620,7 +620,7 @@ Hosts receive ZERO tax on their winnings AND 10% from their players' winnings.  
                             <td  style={{color: "rgb(87, 202, 34)" }}>
                               <u>FREE +14.5% APY</u>
                             </td>
-                            <td className="gamemode">-13%</td>
+                            <td className="gamemode">-14.5%</td>
                           </tr>
                         </tbody>
                       </table>

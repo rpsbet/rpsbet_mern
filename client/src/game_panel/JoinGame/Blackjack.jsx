@@ -1018,6 +1018,12 @@ class Blackjack extends Component {
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label room-name">Room ID</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.room_name}</div>
+                  </div>
                   {this.props.youtubeUrl && 
                   <div className="data-item">
                   <YouTubeVideo url={this.props.youtubeUrl} />

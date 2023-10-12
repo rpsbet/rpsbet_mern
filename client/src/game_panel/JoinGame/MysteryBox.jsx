@@ -296,7 +296,7 @@ class MysteryBox extends Component {
       } else {
         this.joinGame2(nextBox.box_price);
       }
-    }, 3500);
+    }, 2500);
     playSound('start');
     this.setState({ intervalId, betting: true });
   };
@@ -501,7 +501,7 @@ class MysteryBox extends Component {
 
       setTimeout(() => {
         this.setState({ isOpen: false });
-      }, 1500);
+      }, 2500);
       this.setState(
         prevState => ({
           betResults: [
@@ -621,6 +621,12 @@ class MysteryBox extends Component {
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label room-name">Room ID</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.room_name}</div>
                   </div>
                   {this.props.youtubeUrl && (
                     <div className="data-item">
@@ -887,16 +893,16 @@ class MysteryBox extends Component {
   };
 
   getBetResultForm = () => {
-    // let prizes = [];
-    // this.state.box_list.map(row => {
-    //   prizes.push({
-    //     prize: row.box_prize,
-    //     status: row.status
-    //   });
-    //   return true;
-    // });
-    // prizes.sort((a, b) => a.prize - b.prize);
-    let timeLeft = 1500; // duration of modal in milliseconds
+    let prizes = [];
+    this.state.box_list.map(row => {
+      prizes.push({
+        prize: row.box_prize,
+        status: row.status
+      });
+      return true;
+    });
+    prizes.sort((a, b) => a.prize - b.prize);
+    let timeLeft = 2500; // duration of modal in milliseconds
     const intervalId = setInterval(() => {
       timeLeft -= 100;
       if (timeLeft === 0) {
@@ -908,6 +914,14 @@ class MysteryBox extends Component {
       <div className="game-page">
         <div className="game-contents mystery-box-result-contents">
           <div className="game-info-panel">
+            {/* <h3 className="game-sub-title">ALL BOXES</h3> */}
+            <p className="game-modal box-prizes">
+            {prizes.map((item, key) => (
+                <span className={item.status} key={key}>
+                  {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}
+                </span>
+              ))}
+              </p>
             <div
               className={`mystery-box-result ${
                 this.state.betResult === 0 ? 'failed' : 'success'
@@ -917,7 +931,7 @@ class MysteryBox extends Component {
             </div>
             <h4 className="game-sub-title" style={{ marginTop: '30px' }}>
               {this.state.betResult === 0
-                ? `PAHAH WRONG BOX DICKHEAD!`
+                ? `WRONG BOX DICKHEAD!`
                 : `NICE 😎 ISSA MONEY BOX`}
             </h4>
             {/* <p>
@@ -927,7 +941,7 @@ class MysteryBox extends Component {
           <div className="countdown-timer">
             <div
               className="countdown-bar"
-              style={{ width: `${(timeLeft / 1500) * 100}%` }}
+              style={{ width: `${(timeLeft / 2500) * 100}%` }}
             ></div>
           </div>
         </div>

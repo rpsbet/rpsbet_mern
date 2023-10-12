@@ -14,6 +14,10 @@ const TransactionSchema = new Schema({
     type: String,
     default: ''
   },
+  room: {
+    type: String,
+    default: ''
+  },
   hash: {
     type: String
   },

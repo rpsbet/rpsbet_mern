@@ -12,7 +12,11 @@ import {
   SET_GASFEE,
   SET_AVATAR,
   TRANSACTION_LOADED,
+  SET_SEVEN_DAY_PROFIT,
+  SET_ONE_DAY_PROFIT,
+  SET_ALL_TIME_PROFIT,
   NEW_TRANSACTION,
+  LOAD_MORE_TRANSACTIONS,
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
@@ -38,6 +42,9 @@ const initialState = {
   userName: '',
   liveUrl: null,
   transactions: [],
+  sevenDayProfit: null,
+  oneDayProfit: null,
+  allTimeProfit: null,
   referralCode: null
 };
 
@@ -57,12 +64,12 @@ export default function(state = initialState, action) {
         ...state,
         isMuted: payload
       };
-      case TOGGLE_DRAWER:
-        localStorage.setItem('isDrawerOpen', payload);
-        return {
-          ...state,
-          isDrawerOpen: payload
-        };
+    case TOGGLE_DRAWER:
+      localStorage.setItem('isDrawerOpen', payload);
+      return {
+        ...state,
+        isDrawerOpen: payload
+      };
     case SET_SOCKET:
       return {
         ...state,
@@ -81,6 +88,21 @@ export default function(state = initialState, action) {
         ...state,
         transactions: newTransactions
       };
+      case SET_SEVEN_DAY_PROFIT:
+        return {
+          ...state,
+          sevenDayProfit: payload
+        };
+      case SET_ONE_DAY_PROFIT:
+        return {
+          ...state,
+          oneDayProfit: payload
+        };
+      case SET_ALL_TIME_PROFIT:
+        return {
+          ...state,
+          allTimeProfit: payload
+        };
     case SET_AVATAR:
       return {
         ...state,

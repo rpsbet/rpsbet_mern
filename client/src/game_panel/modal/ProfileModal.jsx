@@ -168,6 +168,8 @@ class ProfileModal extends Component {
                         gameProfit={this.state.gameProfit}
                         balance={this.state.balance}
                         gamePlayed={this.state.gamePlayed}
+                        gameHosted={this.state.gameHosted}
+                        gameJoined={this.state.gameJoined}
                         totalWagered={this.state.totalWagered}
                         netProfit={this.state.netProfit}
                         profitAllTimeHigh={this.state.profitAllTimeHigh}

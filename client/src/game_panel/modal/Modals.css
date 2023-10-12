@@ -388,6 +388,37 @@ div[role="presentation"] li:last-child {
     margin-top: 0;
 }
 
+.played {
+    display: flex;
+    justify-items: center;
+    align-items: center;
+}
+
+.played span {
+    width: 50%;
+}
+.bar {
+    display: flex;
+    height: 10px;
+    border-radius: 30px;
+    overflow: hidden;
+    margin: unset !important;
+  }
+  
+  .vs-bar {
+    height: 100%;
+    margin: unset !important;
+  }
+  
+  .vs-bar.host {
+    background-color: #ffdd15 !important;
+  }
+  
+  .vs-bar.player {
+    background-color: #ff0a28 !important;
+  }
+  
+
 /********************/
 /*** HOW TO MODAL ***/
 /********************/
@@ -565,6 +596,7 @@ div[role="presentation"] li:last-child {
     .modal-body.edit-modal-body.deposit-modal-body .modal-content-wrapper div.modal-content-panel {
         padding: 16px;
     }
+
 
     .react-confirm-alert .modal-body.alert-body.confirm-body {
         padding: 32px;

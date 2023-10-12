@@ -13,7 +13,14 @@ import Lottie from 'react-lottie';
 import progress from './LottieAnimations/progress.json';
 import HowToHover from './icons/HowToHover';
 import InlineSVG from 'react-inlinesvg';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faSort,
+  faSearch,
+  faFilter,
+  faArrowAltCircleDown,
+  faArrowAltCircleUp
+} from '@fortawesome/free-solid-svg-icons';
 import {
   setSocket,
   userSignOut,
@@ -40,17 +47,37 @@ import {
   Tabs,
   Tab,
   Button,
+  TextField,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Divider
+  Divider,
+  Checkbox,
+  TableBody,
+  TableHead,
+  Table,
+  TableCell,
+  TableRow,
+  Radio,
+  RadioGroup,
+  FormControlLabel
 } from '@material-ui/core';
+
+import {
+  Close as CloseIcon,
+  Link as LinkIcon,
+  ArrowUpward,
+  ArrowDownward
+} from '@material-ui/icons';
 
 import AccountBalanceWallet from '@material-ui/icons/AccountBalanceWallet';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import AndroidIcon from '@material-ui/icons/Android';
+import PersonIcon from '@material-ui/icons/Person';
 import Brightness7Icon from '@material-ui/icons/Brightness7';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
+
 import VolumeUpIcon from '@material-ui/icons/VolumeUp';
 import VolumeOffIcon from '@material-ui/icons/VolumeOff';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
@@ -70,7 +97,6 @@ import VerificationModal from './modal/VerificationModal';
 import DepositModal from './modal/DepositModal';
 import WithdrawModal from './modal/WithdrawModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
-
 import Moment from 'moment';
 // import { updateDigitToPoint2 } from '../util/helper';
 import './SiteWrapper.css';
@@ -178,10 +204,19 @@ class SiteWrapper extends Component {
       showDepositModal: false,
       showResetPasswordModal: false,
       showGameLog: false,
+      userParams: [false, true],
+      loadMore: 20,
+      showAllGameLogs: false,
       transactions: updateFromNow(this.props.transactions),
       anchorEl: null,
       websiteLoading: true,
-
+      sortBy: 'date',
+      showFilter: false,
+      showSort: false,
+      showSearch: false,
+      searchQuery: '',
+      showWithdrawals: false,
+      showDeposits: false,
       web3: null,
       web3account: '',
       web3balance: 0
@@ -206,6 +241,92 @@ class SiteWrapper extends Component {
 
     return null;
   }
+
+  toggleSort = () => {
+    this.setState(prevState => ({
+      showSort: !prevState.showSort
+    }));
+  };
+
+  toggleSearch = () => {
+    this.setState(prevState => ({
+      showSearch: !prevState.showSearch
+    }));
+  };
+
+  toggleFilter = () => {
+    this.setState(prevState => ({
+      showFilter: !prevState.showFilter
+    }));
+  };
+
+  handleSortBy = option => {
+    this.setState({ sortBy: option }, () => {
+      this.props.getUser(
+        false,
+        true,
+        this.state.loadMore,
+        this.state.showWithdrawals,
+        this.state.showDeposits,
+        option,
+        this.state.searchQuery
+      );
+    });
+  };
+
+  toggleShowWithdrawals = () => {
+    this.setState(
+      prevState => ({
+        showWithdrawals: !prevState.showWithdrawals
+      }),
+      () => {
+        this.props.getUser(
+          false,
+          true,
+          this.state.loadMore,
+          this.state.showWithdrawals,
+          this.state.showDeposits,
+          this.state.sortBy,
+          this.state.searchQuery
+        );
+      }
+    );
+  };
+
+  toggleShowDeposits = () => {
+    this.setState(
+      prevState => ({
+        showDeposits: !prevState.showDeposits
+      }),
+      () => {
+        this.props.getUser(
+          false,
+          true,
+          this.state.loadMore,
+          this.state.showWithdrawals,
+          this.state.showDeposits,
+          this.state.sortBy,
+          this.state.searchQuery
+        );
+      }
+    );
+  };
+
+  handleSearch = event => {
+    const searchQuery = event.target.value;
+    this.setState({ searchQuery }, () => {
+      // Call the function to fetch data with the updated search query
+      this.props.getUser(
+        false,
+        true,
+        this.state.loadMore,
+        this.state.showWithdrawals,
+        this.state.showDeposits,
+        this.state.sortBy,
+        searchQuery
+      );
+    });
+  };
 
   handleMainTabChange = (event, newValue) => {
     const { selectMainTab } = this.props;
@@ -299,7 +420,15 @@ class SiteWrapper extends Component {
 
     socket.on('UPDATED_ROOM_LIST', data => {
       this.props.setRoomList(data);
-      this.props.getUser(true);
+      this.props.getUser(
+        true,
+        false,
+        0,
+        false,
+        false,
+        this.state.sortBy,
+        this.state.searchQuery
+      );
       this.props.getMyGames(1);
       this.props.getMyHistory();
       this.props.getHistory();
@@ -438,20 +567,20 @@ class SiteWrapper extends Component {
     this.props.setSocket(socket);
   };
   loadWeb3 = async () => {
-  try {
-    const web3 = new Web3(Web3.givenProvider);
-    this.setState({ web3 });
-    const accounts = await web3.eth.requestAccounts();
-    this.setState({ web3account: accounts[0] });
+    try {
+      const web3 = new Web3(Web3.givenProvider);
+      this.setState({ web3 });
+      const accounts = await web3.eth.requestAccounts();
+      this.setState({ web3account: accounts[0] });
 
-    // Get ETH balance of the account
-    const ethBalance = await web3.eth.getBalance(accounts[0]);
-    const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
-    this.setState({ web3balance: tokenAmount });
-  } catch (e) {
-    console.log(e);
-  }
-};
+      // Get ETH balance of the account
+      const ethBalance = await web3.eth.getBalance(accounts[0]);
+      const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
+      this.setState({ web3balance: tokenAmount });
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   async componentDidMount() {
     let currentUrl = window.location.pathname;
@@ -470,7 +599,15 @@ class SiteWrapper extends Component {
 
     this.initSocket();
 
-    const result = await this.props.getUser(true);
+    const result = await this.props.getUser(
+      true,
+      false,
+      0,
+      false,
+      false,
+      this.state.sortBy,
+      this.state.searchQuery
+    );
 
     if (result.status === 'success') {
       // if (!result.user.is_activated) {
@@ -492,7 +629,7 @@ class SiteWrapper extends Component {
 
     this.loadWeb3();
     this.fetchData();
-    setInterval(() => this.fetchData(), 2000); // Call the fetchData method every 2 seconds
+    setInterval(() => this.fetchData(), 2000);
   }
 
   initializeAudio() {
@@ -534,12 +671,10 @@ class SiteWrapper extends Component {
       });
     });
 
-    this.setState(prevState => ({
-      balance: currentBalance,
-      oldBalance: prevState.balance
-    }));
-
     this.setState({
+      balance: currentBalance,
+      oldBalance: this.state.balance,
+      transactions: transactions,
       options: {
         chart: {
           id: 'balance-chart',
@@ -662,6 +797,51 @@ class SiteWrapper extends Component {
     this.setState({ showGameLog: !this.state.showGameLog });
   };
 
+  handleLoadMore = () => {
+    const {
+      loadMore,
+      showWithdrawals,
+      showDeposits,
+      sortBy,
+      searchQuery
+    } = this.state;
+    const nextLoadMore = loadMore >= 0 ? loadMore + 10 : 10;
+
+    this.props.getUser(
+      false,
+      true,
+      nextLoadMore,
+      showWithdrawals,
+      showDeposits,
+      sortBy,
+      searchQuery
+    );
+
+    this.setState({
+      loadMore: nextLoadMore
+    });
+  };
+
+  toggleAllTransactions = () => {
+    const [param1, param2] = this.state.userParams;
+    this.props.getUser(
+      param1,
+      param2,
+      0,
+      this.state.showWithdrawals,
+      this.state.showDeposits,
+      this.state.sortBy,
+      this.state.searchQuery
+    );
+
+    const toggledParams = [param2, param1];
+    this.setState(prevState => ({
+      showAllGameLogs: !prevState.showAllGameLogs,
+      userParams: toggledParams,
+      loadMore: 0
+    }));
+  };
+
   disconnectWeb3 = async () => {
     this.setState({
       web3account: null,
@@ -673,9 +853,12 @@ class SiteWrapper extends Component {
     const { isMuted, balance, oldBalance } = this.state;
     const { websiteLoading } = this.state;
     const balanceString = balance.toString();
-    const decimalIndex = balanceString.indexOf(".");
-    const numDecimals = decimalIndex !== -1 ? Math.min(balanceString.length - decimalIndex - 1, 5) : 0;
-    
+    const decimalIndex = balanceString.indexOf('.');
+    const numDecimals =
+      decimalIndex !== -1
+        ? Math.min(balanceString.length - decimalIndex - 1, 5)
+        : 0;
+
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
         <div
@@ -698,7 +881,7 @@ class SiteWrapper extends Component {
                   color: '#fff'
                 }}
               >
-          {`Connecting...`}
+                {`Connecting...`}
               </span>
               <Lottie
                 options={{
@@ -733,45 +916,48 @@ class SiteWrapper extends Component {
                 className="main-game-page-tabs desktop-only"
               >
                 <Tab
-  className={`custom-tab ${
-    this.state.hoverTabIndex === 0 || this.props.selectedMainTabIndex === 0
-      ? 'fade-animation fade-in'
-      : 'fade-animation fade-out'
-  }`}
-  label="PVP"
-  labelPlacement="left"
-  icon={
-    this.state.hoverTabIndex === 0 || this.props.selectedMainTabIndex === 0 ? (
-      <BattleHover />
-    ) : (
-      <Battle />
-    )
-  }
-  style={customStyles.tabRoot}
-  onMouseEnter={() => this.handleMouseEnter(0)}
-  onMouseLeave={this.handleMouseLeave}
-/>
+                  className={`custom-tab ${
+                    this.state.hoverTabIndex === 0 ||
+                    this.props.selectedMainTabIndex === 0
+                      ? 'fade-animation fade-in'
+                      : 'fade-animation fade-out'
+                  }`}
+                  label="PVP"
+                  labelPlacement="left"
+                  icon={
+                    this.state.hoverTabIndex === 0 ||
+                    this.props.selectedMainTabIndex === 0 ? (
+                      <BattleHover />
+                    ) : (
+                      <Battle />
+                    )
+                  }
+                  style={customStyles.tabRoot}
+                  onMouseEnter={() => this.handleMouseEnter(0)}
+                  onMouseLeave={this.handleMouseLeave}
+                />
 
-<Tab
-  className={`custom-tab ${
-    this.state.hoverTabIndex === 1 || this.props.selectedMainTabIndex === 1
-      ? 'fade-animation fade-in'
-      : 'fade-animation fade-out'
-  }`}
-  label="Manage"
-  labelPlacement="left"
-  icon={
-    this.state.hoverTabIndex === 1 || this.props.selectedMainTabIndex === 1 ? (
-      <ManageHover />
-    ) : (
-      <Manage />
-    )
-  }
-  style={customStyles.tabRoot}
-  onMouseEnter={() => this.handleMouseEnter(1)}
-  onMouseLeave={this.handleMouseLeave}
-/>
-
+                <Tab
+                  className={`custom-tab ${
+                    this.state.hoverTabIndex === 1 ||
+                    this.props.selectedMainTabIndex === 1
+                      ? 'fade-animation fade-in'
+                      : 'fade-animation fade-out'
+                  }`}
+                  label="Manage"
+                  labelPlacement="left"
+                  icon={
+                    this.state.hoverTabIndex === 1 ||
+                    this.props.selectedMainTabIndex === 1 ? (
+                      <ManageHover />
+                    ) : (
+                      <Manage />
+                    )
+                  }
+                  style={customStyles.tabRoot}
+                  onMouseEnter={() => this.handleMouseEnter(1)}
+                  onMouseLeave={this.handleMouseLeave}
+                />
               </Tabs>
 
               <div className="header_action_panel">
@@ -804,7 +990,10 @@ class SiteWrapper extends Component {
                 {this.props.isAuthenticated ? (
                   <>
                     <div id="balance">
-                    <InlineSVG id="busd" src={require('./JoinGame/busd.svg')} />
+                      <InlineSVG
+                        id="busd"
+                        src={require('./JoinGame/busd.svg')}
+                      />
                       <CountUp
                         start={oldBalance}
                         end={balance}
@@ -820,13 +1009,34 @@ class SiteWrapper extends Component {
                         }}
                       />
                       <Button
-                      id="wallet-btn"
-                        style={{ minWidth: '32px', maxHeight: '33px', borderRadius: '0.25em' }}
+                        id="wallet-btn"
+                        style={{
+                          minWidth: '32px',
+                          maxHeight: '33px',
+                          borderRadius: '0.25em'
+                        }}
                         onClick={this.handleBalanceClick}
                       >
                         <AccountBalanceWallet
-                          style={{ position: 'relative', zIndex: '1', width: '18px', height: '18px', margin: '0 5px 0 10px' }}
-                        /><span id="wallet-text" style={{position: 'relative', zIndex: '1', fontSize: '0.6em', paddingRight: '10px'}} >Wallet</span>
+                          style={{
+                            position: 'relative',
+                            zIndex: '1',
+                            width: '18px',
+                            height: '18px',
+                            margin: '0 5px 0 10px'
+                          }}
+                        />
+                        <span
+                          id="wallet-text"
+                          style={{
+                            position: 'relative',
+                            zIndex: '1',
+                            fontSize: '0.6em',
+                            paddingRight: '10px'
+                          }}
+                        >
+                          Wallet
+                        </span>
                       </Button>
                     </div>
 
@@ -863,9 +1073,9 @@ class SiteWrapper extends Component {
                       PaperProps={{
                         style: {
                           width: '200px',
-                          border: this.props.isDarkMode ?
-                          '2px solid #212529'
-                          : '2px solid #e5e5e5',
+                          border: this.props.isDarkMode
+                            ? '2px solid #212529'
+                            : '2px solid #e5e5e5',
                           background: this.props.isDarkMode
                             ? '#101010'
                             : '#f9f9f9'
@@ -943,7 +1153,23 @@ class SiteWrapper extends Component {
                         />
                       </MenuItem>
                       <Divider />
-
+                      {/* <MenuItem
+                        onClick={e => {
+                          this.props.setDarkMode(!this.props.isDarkMode);
+                        }}
+                      >
+                        <ListItemIcon>
+                          {this.props.isDarkMode ? (
+                            <AndroidIcon />
+                          ) : (
+                            <PersonIcon />
+                          )}
+                        </ListItemIcon>
+                       
+                        <ListItemText>
+                          {this.props.isDarkMode ? 'MARKOV' : 'Q-BOT'}
+                        </ListItemText>
+                      </MenuItem> */}
                       <MenuItem>
                         <ListItemText>
                           {this.props.isMuted ? (
@@ -987,6 +1213,7 @@ class SiteWrapper extends Component {
                             <Brightness4Icon />
                           )}
                         </ListItemIcon>
+                       
                         <ListItemText>
                           {this.props.isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
                         </ListItemText>
@@ -1019,25 +1246,168 @@ class SiteWrapper extends Component {
                 )}
               </div>
             </div>
-            <div
-              id="game_logs"
-              className={this.state.showGameLog ? '' : 'hidden'}
-              onClick={this.handleBalanceClick}
-            >
-              <div className="arrow-up"></div>
-              <div className="game_logs_contents">
-                {<h2>BALANCE HISTORY</h2>}
-                {
-                  <table>
-                    <tbody>
+            {this.state.showAllGameLogs && (
+              <div className="game-logs-modal-container">
+                <div className="modal-header">
+                  <h2>ALL BALANCE HISTORY</h2>
+                  <Button
+                    className="close-button"
+                    onClick={this.toggleAllTransactions}
+                  >
+                    <CloseIcon />
+                  </Button>
+                </div>
+                <div className="summary">
+                  <div className="summary-flex">
+                    <div>
+                      <Button onClick={this.toggleSort}>
+                        <FontAwesomeIcon icon={faSort} />
+                        &nbsp;&nbsp;Sort by
+                      </Button>
+                      {this.state.showSort && (
+                        <div className="popup">
+                          <div className="popup-content">
+                            <RadioGroup
+                              aria-label="sort-options"
+                              name="sort-options"
+                              value={this.state.sortBy}
+                              onChange={event =>
+                                this.handleSortBy(event.target.value)
+                              }
+                            >
+                              <FormControlLabel
+                                value="date"
+                                control={<Radio color="primary" />}
+                                label="Newest"
+                              />
+                              <FormControlLabel
+                                value="amount"
+                                control={<Radio color="primary" />}
+                                label="Biggest"
+                              />
+                            </RadioGroup>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <Button onClick={this.toggleFilter}>
+                        <FontAwesomeIcon icon={faFilter} />
+                        &nbsp;&nbsp;Filter
+                      </Button>
+                      {this.state.showFilter && (
+                        <div className="filter">
+                          <div className="filter-content">
+                            <label>
+                              <FontAwesomeIcon icon={faArrowAltCircleUp} />{' '}
+                              Withdrawals:
+                              <Checkbox
+                                checked={this.state.showWithdrawals}
+                                onChange={this.toggleShowWithdrawals}
+                              />
+                            </label>
+                            <label>
+                              <FontAwesomeIcon icon={faArrowAltCircleDown} />{' '}
+                              Deposits:
+                              <Checkbox
+                                checked={this.state.showDeposits}
+                                onChange={this.toggleShowDeposits}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Button onClick={this.toggleSearch}>
+                        <FontAwesomeIcon icon={faSearch} />
+                        &nbsp;&nbsp;Search
+                      </Button>
+
+                      {this.state.showSearch && (
+                        <div className="search">
+                          <div className="search-content">
+                            <TextField
+                              name="search"
+                              margin="normal"
+                              value={this.state.searchQuery}
+                              onChange={this.handleSearch}
+                            ></TextField>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="summary-flex">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span>1-Day Profit: </span>
+                      <span
+                        style={{
+                          color: this.props.oneDayProfit > 0 ? '#57ca22' : 'red'
+                        }}
+                      >
+                        {this.props.oneDayProfit > 0 ? (
+                          <ArrowUpward />
+                        ) : (
+                          <ArrowDownward />
+                        )}
+                        {convertToCurrency(this.props.oneDayProfit)}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span>7-Day Profit: </span>
+                      <span
+                        style={{
+                          color:
+                            this.props.sevenDayProfit > 0 ? '#57ca22' : 'red'
+                        }}
+                      >
+                        {this.props.sevenDayProfit > 0 ? (
+                          <ArrowUpward />
+                        ) : (
+                          <ArrowDownward />
+                        )}
+                        {convertToCurrency(this.props.sevenDayProfit)}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span>All-time Profit: </span>
+                      <span
+                        style={{
+                          color:
+                            this.props.allTimeProfit > 0 ? '#57ca22' : 'red'
+                        }}
+                      >
+                        {this.props.allTimeProfit > 0 ? (
+                          <ArrowUpward />
+                        ) : (
+                          <ArrowDownward />
+                        )}
+                        {convertToCurrency(this.props.allTimeProfit)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="game-logs-container">
+                  <Table className="game-logs-table">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Amount</TableCell>
+                        <TableCell>From Now</TableCell>
+                        <TableCell>Description</TableCell>
+                        <TableCell>Link</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
                       {this.state.transactions.length === 0 ? (
-                        <tr>
-                          <td>...</td>
-                        </tr>
+                        <TableRow>
+                          <TableCell colSpan="4">...</TableCell>
+                        </TableRow>
                       ) : (
                         this.state.transactions.map((row, key) => (
-                          <tr key={key}>
-                            <td
+                          <TableRow key={key}>
+                            <TableCell
                               className={
                                 'amount ' + (row.amount > 0 ? 'green' : 'red')
                               }
@@ -1045,10 +1415,7 @@ class SiteWrapper extends Component {
                               {row.amount > 0 ? (
                                 <>
                                   {'+ '}
-                                  {convertToCurrency(
-                                    row.amount,
-                                    true
-                                  )}
+                                  {convertToCurrency(row.amount, true)}
                                 </>
                               ) : (
                                 <>
@@ -1059,13 +1426,101 @@ class SiteWrapper extends Component {
                                   )}
                                 </>
                               )}
-                            </td>
-                            <td className="fromNow">{row.from_now}</td>
-                          </tr>
+                            </TableCell>
+                            <TableCell className="fromNow">
+                              {row.from_now}
+                            </TableCell>
+                            <TableCell className="description">
+                              {row.description}
+                            </TableCell>
+                            <TableCell className="hash">
+                              {row.hash ? (
+                                <a
+                                  href={`https://etherscan.io/tx/${row.hash}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <LinkIcon />
+                                </a>
+                              ) : row.room ? (
+                                <a
+                                  href={`/join/${row.room}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <LinkIcon />
+                                </a>
+                              ) : (
+                                ''
+                              )}
+                            </TableCell>
+                          </TableRow>
                         ))
                       )}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="load-more-button">
+                  <Button onClick={this.handleLoadMore}>LOAD MORE</Button>
+                </div>
+              </div>
+            )}
+
+            <div
+              id="game_logs"
+              className={this.state.showGameLog ? '' : 'hidden'}
+              onClick={this.handleBalanceClick}
+            >
+              <div className="arrow-up"></div>
+              <div className="game_logs_contents">
+                {<h2>BALANCE HISTORY</h2>}
+                {
+                  <div>
+                    <table>
+                      <tbody>
+                        {this.state.transactions.length === 0 ? (
+                          <tr>
+                            <td>...</td>
+                          </tr>
+                        ) : (
+                          this.state.transactions.map((row, key) => (
+                            <tr key={key}>
+                              <a
+                                href={`/join/${row.room}`}
+                                rel="noopener noreferrer"
+                              >
+                                <td
+                                  className={
+                                    'amount ' +
+                                    (row.amount > 0 ? 'green' : 'red')
+                                  }
+                                >
+                                  {row.amount > 0 ? (
+                                    <>
+                                      {'+ '}
+                                      {convertToCurrency(row.amount, true)}
+                                    </>
+                                  ) : (
+                                    <>
+                                      {'- '}
+                                      {convertToCurrency(
+                                        Math.abs(row.amount),
+                                        true
+                                      )}
+                                    </>
+                                  )}
+                                </td>
+                                <td className="fromNow">{row.from_now}</td>
+                              </a>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                      <Button onClick={this.toggleAllTransactions}>
+                        View All
+                      </Button>
+                    </table>
+                  </div>
                 }
                 <div className="transaction-panel">
                   <Button
@@ -1205,7 +1660,10 @@ const mapStateToProps = state => ({
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   transactions: state.auth.transactions,
   isDarkMode: state.auth.isDarkMode,
-  betResult: state.logic.betResult
+  betResult: state.logic.betResult,
+  sevenDayProfit: state.auth.sevenDayProfit,
+  oneDayProfit: state.auth.oneDayProfit,
+  allTimeProfit: state.auth.allTimeProfit
 });
 
 const mapDispatchToProps = {

@@ -100,7 +100,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
     
     const receipt = new Receipt({
       user_id: req.user._id,
-      payment_method: req.body.payment_method,
+      // payment_method: req.body.payment_method,
       payment_type: 'Deposit',
       amount: req.body.amount,
     });
@@ -140,6 +140,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
       payment_type: 'Withdraw',
       amount: req.body.amount,
     });
+    await receipt.save();
+
     const balance = req.user.balance;
     // console.log("User's balance:", req.user.balance);
     // console.log("Requested withdrawal amount:", req.body.amount);
@@ -220,7 +222,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
       });
     }
     
-    await receipt.save();
     
     const newTransaction = new Transaction({
       user: req.user,

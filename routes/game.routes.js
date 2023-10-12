@@ -271,6 +271,7 @@ router.get('/room/:id', async (req, res) => {
         new_host_pr: room['new_host_pr'],
         crashed: room['crashed'],
         user_bet: room['user_bet'],
+        room_name: room['game_type']['short_name'] + '-' + room['room_number'],
         brain_game_score: room['brain_game_score'],
         selected_drop: room['selected_drop'],
         selected_bj: room['selected_bj'],
@@ -414,7 +415,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         if (gameLog.game_result === 1) {
           temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['bet_amount'] * 2
-          )} (2.00X)</span> (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
+          )} (2.00X)</span> (${convertToCurrency(
+            gameLog['commission']
+          )} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['user_bet'] - gameLog['room']['endgame_amount']
@@ -668,7 +671,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             gameLog['brain_game_score']
           } and won <span style='color: #ff0a28;'>${convertToCurrency(
             winnings
-          )} (2.00X)</span> (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
+          )} (2.00X)</span> (${convertToCurrency(
+            gameLog['commission']
+          )} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
             betAmount
@@ -1109,8 +1114,8 @@ router.post('/rooms', auth, async (req, res) => {
     const newTransaction = new Transaction({
       user: req.user,
       amount: 0,
-      description:
-        'create ' + gameType.game_type_name + ' - ' + newRoom.room_number
+      description: 'created ' + gameType.short_name + '-' + newRoom.room_number,
+      room: req.body._id
     });
 
     if (is_anonymous === true) {
@@ -1300,7 +1305,8 @@ router.post('/end_game', auth, async (req, res) => {
     const newTransaction = new Transaction({
       user: roomInfo.creator,
       amount: 0,
-      description: `end game ${roomInfo.game_type.short_name}-${roomInfo.room_number}`
+      description: `ended ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+      room: req.body._id
     });
 
     if (gameLogCount === 0) {
@@ -1695,19 +1701,21 @@ router.post('/bet', auth, async (req, res) => {
         user: roomInfo['creator'],
         amount: 0,
         description:
-          'play game ' +
-          roomInfo['game_type']['game_type_name'] +
-          ' - ' +
-          roomInfo['room_number']
+          'auto-payout in ' +
+          roomInfo['game_type']['short_name'] +
+          '-' +
+          roomInfo['room_number'],
+        room: req.body._id
       });
       newTransactionJ = new Transaction({
         user: req.user,
         amount: 0,
         description:
-          'play game ' +
-          roomInfo['game_type']['game_type_name'] +
-          ' - ' +
-          roomInfo['room_number']
+          'joined ' +
+          roomInfo['game_type']['short_name'] +
+          '-' +
+          roomInfo['room_number'],
+        room: req.body._id
       });
 
       // if (req.body.is_anonymous == true) {
@@ -1781,27 +1789,26 @@ router.post('/bet', auth, async (req, res) => {
             2 *
             ((100 - commission.value) / 100);
 
-       
           newGameLog.commission =
-          parseFloat(req.body.bet_amount) *
+            parseFloat(req.body.bet_amount) *
             2 *
             ((commission.value - 0.5) / 100);
 
           // update rain stat 14.5)
           rain.value =
-          parseFloat(rain.value) +
-          parseFloat(req.body.bet_amount) *
-            2 *
-            ((commission.value - 0.5) / 100);
+            parseFloat(rain.value) +
+            parseFloat(req.body.bet_amount) *
+              2 *
+              ((commission.value - 0.5) / 100);
 
           rain.save();
 
           // update platform stat (0.5%)
           platform.value =
-          parseFloat(platform.value) +
-          parseFloat(req.body.bet_amount) *
-            2 *
-            ((commission.value - 14.5) / 100);
+            parseFloat(platform.value) +
+            parseFloat(req.body.bet_amount) *
+              2 *
+              ((commission.value - 14.5) / 100);
           platform.save();
 
           if (req.io.sockets) {
@@ -1810,19 +1817,18 @@ router.post('/bet', auth, async (req, res) => {
             });
           }
 
-          
           roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
-          
+
           roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
           roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
-          
+
           // update bankroll (14.5)
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
-            parseFloat(roomInfo['user_bet']) +
-            parseFloat(req.body.bet_amount) *
-              2 *
-              ((commission.value - 0.5) / 100);
+              parseFloat(roomInfo['user_bet']) +
+              parseFloat(req.body.bet_amount) *
+                2 *
+                ((commission.value - 0.5) / 100);
           }
           const lastFiveBetItems = await RpsBetItem.find({
             room: new ObjectId(req.body._id)
@@ -2172,7 +2178,6 @@ router.post('/bet', auth, async (req, res) => {
             joiner_drop: ''
           }).sort({ _id: 'asc' });
         } else {
-          
           // Create new DropBetItem with predicted bet value
           const allBetItems = await DropBetItem.find({
             room: new ObjectId(req.body._id)
@@ -2201,42 +2206,42 @@ router.post('/bet', auth, async (req, res) => {
           newTransactionJ.amount +=
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
             ((100 - commission.value) / 100);
-            newGameLog.commission =
+          newGameLog.commission =
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
-              ((commission.value - 0.5) / 100);
-  
-            // update rain stat 14.5)
-            rain.value =
+            ((commission.value - 0.5) / 100);
+
+          // update rain stat 14.5)
+          rain.value =
             parseFloat(rain.value) +
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
               ((commission.value - 0.5) / 100);
-  
-            rain.save();
-  
-            // update platform stat (0.5%)
-            platform.value =
+
+          rain.save();
+
+          // update platform stat (0.5%)
+          platform.value =
             parseFloat(platform.value) +
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
               ((commission.value - 14.5) / 100);
-            platform.save();
-  
-            if (req.io.sockets) {
-              req.io.sockets.emit('UPDATE_RAIN', {
-                rain: rain.value
-              });
-            }
-  
-            roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
-            
-            roomInfo['host_pr'] -= bet_item.drop;
-            roomInfo['user_bet'] -= bet_item.drop;
-            // update bankroll (14.5)
-            if (roomInfo['user_bet'] != 0) {
-              roomInfo['user_bet'] =
+          platform.save();
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATE_RAIN', {
+              rain: rain.value
+            });
+          }
+
+          roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
+
+          roomInfo['host_pr'] -= bet_item.drop;
+          roomInfo['user_bet'] -= bet_item.drop;
+          // update bankroll (14.5)
+          if (roomInfo['user_bet'] != 0) {
+            roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
               (parseFloat(req.body.bet_amount) + bet_item.drop) *
-              ((commission.value - 0.5) / 100);
-            }
+                ((commission.value - 0.5) / 100);
+          }
 
           if (req.io.sockets) {
             req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -2861,8 +2866,6 @@ router.post('/bet', auth, async (req, res) => {
             req.io.sockets.emit('SPLEESH_GUESSES', guesses);
           }
 
-          
-
           message.message =
             'I won ' +
             (roomInfo['host_pr'] + roomInfo['bet_amount']) +
@@ -2873,25 +2876,22 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
 
           newGameLog.commission =
-          (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-
+            (roomInfo['host_pr'] + roomInfo['bet_amount']) *
             ((commission.value - 0.5) / 100);
 
           // update rain stat 14.5)
           rain.value =
-          parseFloat(rain.value) +
-          (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-
-            ((commission.value - 0.5) / 100);
+            parseFloat(rain.value) +
+            (roomInfo['host_pr'] + roomInfo['bet_amount']) *
+              ((commission.value - 0.5) / 100);
 
           rain.save();
 
           // update platform stat (0.5%)
           platform.value =
-          parseFloat(platform.value) +
-          (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-
-            ((commission.value - 14.5) / 100);
+            parseFloat(platform.value) +
+            (roomInfo['host_pr'] + roomInfo['bet_amount']) *
+              ((commission.value - 14.5) / 100);
           platform.save();
 
           if (req.io.sockets) {
@@ -2903,9 +2903,9 @@ router.post('/bet', auth, async (req, res) => {
           // update bankroll (14.5)
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
-            parseFloat(roomInfo['user_bet']) +
-            (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-              ((commission.value - 0.5) / 100);
+              parseFloat(roomInfo['user_bet']) +
+              (roomInfo['host_pr'] + roomInfo['bet_amount']) *
+                ((commission.value - 0.5) / 100);
           }
 
           newTransactionJ.amount +=
@@ -3079,37 +3079,34 @@ router.post('/bet', auth, async (req, res) => {
         newTransactionJ.amount +=
           selected_box.box_prize * ((100 - commission.value) / 100);
 
-          newGameLog.commission =
-          selected_box.box_prize *
-            ((commission.value - 0.5) / 100);
+        newGameLog.commission =
+          selected_box.box_prize * ((commission.value - 0.5) / 100);
 
-          // update rain stat 14.5)
-          rain.value = parseFloat(rain.value) +
-          (selected_box.box_prize * 
-            ((commission.value - 0.5) / 100));
+        // update rain stat 14.5)
+        rain.value =
+          parseFloat(rain.value) +
+          selected_box.box_prize * ((commission.value - 0.5) / 100);
 
-          rain.save();
+        rain.save();
 
-          // update platform stat (0.5%)
-          platform.value =
+        // update platform stat (0.5%)
+        platform.value =
           parseFloat(platform.value) +
-          (selected_box.box_prize * 
-            ((commission.value - 14.5) / 100));
-          platform.save();
+          selected_box.box_prize * ((commission.value - 14.5) / 100);
+        platform.save();
 
-          if (req.io.sockets) {
-            req.io.sockets.emit('UPDATE_RAIN', {
-              rain: rain.value
-            });
-          }
+        if (req.io.sockets) {
+          req.io.sockets.emit('UPDATE_RAIN', {
+            rain: rain.value
+          });
+        }
 
-          // update bankroll (14.5)
-          // if (roomInfo['user_bet'] != 0) {
-            roomInfo['user_bet'] =
-            parseFloat(roomInfo['user_bet']) +
-          (selected_box.box_prize * 
-            ((commission.value - 0.5) / 100));
-          // }
+        // update bankroll (14.5)
+        // if (roomInfo['user_bet'] != 0) {
+        roomInfo['user_bet'] =
+          parseFloat(roomInfo['user_bet']) +
+          selected_box.box_prize * ((commission.value - 0.5) / 100);
+        // }
 
         if (selected_box.box_prize === 0) {
           message.message =
@@ -3243,9 +3240,9 @@ router.post('/bet', auth, async (req, res) => {
             // newTransactionC.amount += new_host_pr * ((100 - commission.value) / 100);
 
             const messageC =
-              'I made ' +
+              'I received ' +
               new_host_pr +
-              ' ETH from UNSTAKING ' +
+              ' ETH ' +
               roomInfo['game_type']['short_name'] +
               '-' +
               roomInfo['room_number'];
@@ -3255,6 +3252,7 @@ router.post('/bet', auth, async (req, res) => {
               messageC,
               roomInfo.is_anonymous
             );
+            // newGameLog.game_result = 3;
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -3503,42 +3501,37 @@ router.post('/bet', auth, async (req, res) => {
           newTransactionJ.amount +=
             roomInfo['bet_amount'] * 2 * ((100 - commission.value) / 100);
 
-            newGameLog.commission =
-            roomInfo['bet_amount'] * 2 * 
-              ((commission.value - 0.5) / 100);
-  
-            // update rain stat 14.5)
-            rain.value =
+          newGameLog.commission =
+            roomInfo['bet_amount'] * 2 * ((commission.value - 0.5) / 100);
+
+          // update rain stat 14.5)
+          rain.value =
             parseFloat(rain.value) +
-            roomInfo['bet_amount'] * 2 * 
-              ((commission.value - 0.5) / 100);
-  
-            rain.save();
-  
-            // update platform stat (0.5%)
-            platform.value =
+            roomInfo['bet_amount'] * 2 * ((commission.value - 0.5) / 100);
+
+          rain.save();
+
+          // update platform stat (0.5%)
+          platform.value =
             parseFloat(platform.value) +
-            roomInfo['bet_amount'] * 2 * 
-              ((commission.value - 14.5) / 100);
-            platform.save();
-  
-            if (req.io.sockets) {
-              req.io.sockets.emit('UPDATE_RAIN', {
-                rain: rain.value
-              });
-            }
-  
-            
-            roomInfo['pr'] -= roomInfo['bet_amount'];
-            roomInfo['host_pr'] -= roomInfo['bet_amount'];
-            roomInfo['user_bet'] -= roomInfo['bet_amount'];
-            // update bankroll (14.5)
-            if (roomInfo['user_bet'] != 0) {
-              roomInfo['user_bet'] =
+            roomInfo['bet_amount'] * 2 * ((commission.value - 14.5) / 100);
+          platform.save();
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('UPDATE_RAIN', {
+              rain: rain.value
+            });
+          }
+
+          roomInfo['pr'] -= roomInfo['bet_amount'];
+          roomInfo['host_pr'] -= roomInfo['bet_amount'];
+          roomInfo['user_bet'] -= roomInfo['bet_amount'];
+          // update bankroll (14.5)
+          if (roomInfo['user_bet'] != 0) {
+            roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
-              roomInfo['bet_amount'] * 2 * 
-                ((commission.value - 0.5) / 100);
-            }
+              roomInfo['bet_amount'] * 2 * ((commission.value - 0.5) / 100);
+          }
 
           if (roomInfo['user_bet'] <= 0 || roomInfo['host_pr'] <= 0) {
             roomInfo.status = 'finished';

@@ -1,7 +1,11 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-underscore-dangle */
 const express = require('express');
-
+const {
+  calculate7dayProfit,
+  calculate1dayProfit,
+  calculateAllTimeProfit
+} = require('../helper/util/profitCalculation');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 // User Model
@@ -69,28 +73,61 @@ router.post('/', (req, res) => {
 // @route   GET api/auth/user
 // @desc    Get user data
 // @access  Private
+// Calculate profits without including transactions with 'withdraw' or 'deposit' in the description
+
 router.get('/user', auth, async (req, res) => {
   try {
+    let queryLimit = req.query.viewAll === 'true' ? 7 : 4;
+
+    if (req.query.loadMore) {
+      const loadMoreValue = parseInt(req.query.loadMore);
+      queryLimit += loadMoreValue;
+    }
+
+    let query = { user: req.user };
+
+    if (req.query.showWithdrawals === 'true') {
+      query.description = { $regex: 'withdraw', $options: 'i' };
+    } else if (req.query.showDeposits === 'true') {
+      query.description = { $regex: 'deposit', $options: 'i' };
+    } else if (req.query.search) {
+      query.description = { $regex: req.query.search, $options: 'i' };
+    }
+
+    const transactions = await Transaction.find(query)
+      .sort(req.query.sortBy === 'amount' ? { amount: -1 } : { created_at: -1 })
+      .limit(queryLimit);
+   
+      const transactions2 = await Transaction.find(query)
+    let profitData = {};
+    if (req.query.viewAll === 'true') {
+      // const unFilteredTransactions = await Transaction.find(query)
+      // .sort({ created_at: 'desc' })
+      // const unFiltered = unFilteredTransactions.filter(
+      //   transaction => !/withdraw|deposit/i.test(transaction.description)
+      // );
+      profitData.sevenDayProfit = calculate7dayProfit(transactions2);
+      profitData.oneDayProfit = calculate1dayProfit(transactions2);
+      profitData.allTimeProfit = calculateAllTimeProfit(transactions2);
+    }
+
     const count = await Message.countDocuments({
       to: req.user,
       is_read: false
     });
 
-    const transactions = await Transaction.find({ user: req.user })
-      .sort({ created_at: 'desc' })
-      .limit(6);
-
     res.json({
       success: true,
-      message: 'User has been authenticated',
       user: req.user,
       unread_message_count: count,
-      transactions
+      transactions,
+      ...profitData
     });
   } catch (error) {
-    res.json({ success: false, error });
+    res.json({ success: false, error: error.message });
   }
 });
+
 
 // Forgot Password
 router.post('/sendResetPasswordEmail', async (req, res) => {

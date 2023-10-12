@@ -16,9 +16,9 @@ function BetArray({ arrayName, label }) {
         <div className="bet-array-grid">
           {stored_bet_array.map((item, index) => (
             <div key={index} className="array-item">
-              {typeof item[label] === 'number'
-                ? item[label].toFixed(4)
-                : item[label]}
+              {typeof item[label] === 'string'
+                ? parseFloat(item[label]).toFixed(4)
+                : Number(item[label]).toFixed(4)}
             </div>
           ))}
         </div>

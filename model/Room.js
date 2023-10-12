@@ -2,9 +2,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const RoomSchema = new Schema({
+  room_name: {
+    type: String,
+    default: ''
+  },
   room_number: {
-    type: Number,
-    default: 0
+    type: String,
+    default: ''
   },
   creator: {
     type: Schema.Types.ObjectId,

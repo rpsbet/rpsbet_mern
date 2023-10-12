@@ -75,7 +75,7 @@ async function checkConfirmations() {
 }
 
 // Schedule the task to run every 20 seconds
-cron.schedule('*/1 * * * * *', checkConfirmations);
+cron.schedule('*/5 * * * * *', checkConfirmations);
 
 // Export any necessary functions or variables for use in your application
 module.exports = {

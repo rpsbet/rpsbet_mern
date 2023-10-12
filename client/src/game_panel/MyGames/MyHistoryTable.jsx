@@ -349,7 +349,7 @@ class MyHistoryTable extends Component {
               <div className="table-row" key={'my_history' + row._id}>
                 <div>
                   <div className="table-cell">
-                    <div className="room-id">{row.room_name}</div>
+                  <div className="room-id">{row.status}</div>
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}

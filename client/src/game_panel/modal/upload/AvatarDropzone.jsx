@@ -35,17 +35,63 @@ class Dropzone extends Component {
     if (this.props.disabled) return;
     const file = evt.target.files[0];
 
-    if (file.size > 3145728 * 1.2) {//file size > 3MB
-      alertModal(this.props.darkMode, "THIS ONE IS UGLY, TRY ANOTHER");
-      return;
-    }
+    const image = new Image();
+    const reader = new FileReader();
 
-    this.previewImage(file);
+    reader.onload = (e) => {
+      image.src = e.target.result;
 
-    if (this.props.onFileAdded) {
-      this.props.onFileAdded(file);
-    }
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        // Adjust these values as needed for compression
+        const maxWidth = 800;
+        const maxHeight = 800;
+
+        let width = image.width;
+        let height = image.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        context.drawImage(image, 0, 0, width, height);
+
+        // Convert the canvas content to a Blob (compressed image)
+        canvas.toBlob((blob) => {
+          // Now you can use the compressed image (blob)
+          // For example, upload the compressed image using AJAX
+
+          // Check the size of the compressed image
+          if (blob.size > 4194304) {
+            alertModal(this.props.darkMode, "THIS ONE IS TOO LARGE, TRY ANOTHER");
+            return;
+          }
+
+          this.previewImage(blob);
+
+          if (this.props.onFileAdded) {
+            this.props.onFileAdded(blob);
+          }
+        }, file.type);
+      };
+    };
+
+    reader.readAsDataURL(file);
   }
+
 
   onDragOver = (event) => {
     event.preventDefault();

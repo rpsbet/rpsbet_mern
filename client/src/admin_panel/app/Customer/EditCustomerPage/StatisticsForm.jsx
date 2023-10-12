@@ -11,6 +11,7 @@ function generateData(gameLogList) {
   let totalProfit = 0;
   gameLogList &&
     gameLogList.forEach((log, index) => {
+      console.log(log.profit);
       totalProfit += log.profit;
       series.push({ x: `${Number(index) + 1}`, y: totalProfit });
     });
@@ -55,23 +56,28 @@ class StatisticsForm extends React.Component {
     // Calculate the level using a logarithmic function with base 2.
     const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
     const stars = '★'.repeat(level);
-  
+
     const nextLevelWager = Math.pow(3, level * 5) - 1;
     const progress = totalWagered / nextLevelWager;
     const progressBarWidth = 100;
     const progressBarFilled = progress * progressBarWidth;
-  
+
     return (
       <div>
         <div className="level-number">{level.toLocaleString()}</div>
         <div className="stars">{stars}</div>
-        <div className="progress-bar-outer" style={{ width: `${progressBarWidth}px` }}>
-          <div className="progress-bar-filled" style={{ width: `${progressBarFilled}px` }}></div>
+        <div
+          className="progress-bar-outer"
+          style={{ width: `${progressBarWidth}px` }}
+        >
+          <div
+            className="progress-bar-filled"
+            style={{ width: `${progressBarFilled}px` }}
+          ></div>
         </div>
       </div>
     );
   }
-  
 
   render() {
     const gameLogList = this.props.gameLogList;
@@ -86,7 +92,7 @@ class StatisticsForm extends React.Component {
             download: false // <== line to add
           }
         },
-        
+
         pan: {
           enabled: true,
           type: 'x'
@@ -144,17 +150,6 @@ class StatisticsForm extends React.Component {
       animations: {
         enabled: false
       },
-      xaxis: {
-        // range: 1500,
-        // min: 0,
-        // max: 1500,
-        forceNiceScale: true,
-        labels: {
-          show: false,
-          rotate: 0,
-          hideOverlappingLabels: true
-        }
-      },
       yaxis: {
         labels: {
           formatter: function(value) {
@@ -176,16 +171,35 @@ class StatisticsForm extends React.Component {
           }
         }
       },
+      xaxis: {
+        // range: 1500,
+        // min: 0,
+        // max: 1500,
+        forceNiceScale: true,
+        labels: {
+          show: false,
+          rotate: 0,
+          hideOverlappingLabels: true
+        }
+      },
+      
       tooltip: {
         custom: function({ series, seriesIndex, dataPointIndex, w }) {
           const convertToCurrency = input => {
             let number = Number(input);
             if (!isNaN(number)) {
-              let [whole, decimal] = number
-                .toFixed(2)
-                .toString()
-                .split('.');
+              // Round the number down
+              number = Math.floor(number * 100000) / 100000;
+
+              let [whole, decimal] = number.toString().split('.');
               whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+              // Remove trailing zeros after the decimal point
+              if (decimal) {
+                decimal = decimal.replace(/0+$/, '');
+              }
+
+              const formattedNumber = decimal ? `${whole}.${decimal}` : whole;
               return `<svg id='busd' width="0.7em" height="0.7em" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
               viewBox="0 0 1920 1920" enable-background="new 0 0 1920 1920" xml:space="preserve">
            <g>
@@ -196,7 +210,7 @@ class StatisticsForm extends React.Component {
              <polygon fill="#8A92B2" points="420.1,1078.7 959.8,1839.3 959.8,1397.6 	"/>
              <polygon fill="#62688F" points="959.8,1397.6 959.8,1839.3 1499.9,1078.7 	"/>
            </g>
-           </svg>&thinsp;${whole}.${decimal}`;
+           </svg>&thinsp;${formattedNumber}`;
             } else {
               return input;
             }
@@ -205,6 +219,11 @@ class StatisticsForm extends React.Component {
               <tr>
               <td>GAME ID: </td>
               <td>&nbsp;${gameLogList[dataPointIndex].game_id}</td>
+              </tr>
+              <tr>
+              <tr>
+              <td>BET ID: </td>
+              <td>&nbsp;${gameLogList[dataPointIndex].bet_id}</td>
               </tr>
               <tr>
               <td>PLAYED: </td>
@@ -228,6 +247,12 @@ class StatisticsForm extends React.Component {
                 gameLogList[dataPointIndex].profit
               )}</td>
               </tr>
+              <tr>
+              <td>NET PROFIT: </td>
+              <td>&nbsp;${convertToCurrency(
+                gameLogList[dataPointIndex].net_profit
+              )}</td>
+              </tr>
               
                 </table>`;
         }
@@ -249,8 +274,12 @@ class StatisticsForm extends React.Component {
         }
       }
     ];
+    // console.log('Series Data:', series);
+
     const {
       gamePlayed,
+      gameHosted,
+      gameJoined,
       totalWagered,
       netProfit,
       gameProfit,
@@ -260,10 +289,10 @@ class StatisticsForm extends React.Component {
 
     return (
       <ChartDivEl>
-      <div className="rank-badge">
-  <h2>{this.props.username}</h2>
-  <div className="stars">{this.getRank(this.props.totalWagered)}</div>
-</div>
+        <div className="rank-badge">
+          <h2>{this.props.username}</h2>
+          <div className="stars">{this.getRank(this.props.totalWagered)}</div>
+        </div>
 
         <div className="statistics-container">
           <div>
@@ -294,8 +323,26 @@ class StatisticsForm extends React.Component {
                 <table>
                   <tbody>
                     <tr>
-                      <td className="label">Game Played</td>
-                      <td className="value">{gamePlayed}</td>
+                      <td className="label">Games Played</td>
+                      <td className="value played">
+                        <span>{gamePlayed}</span>
+                        <span className="bar">
+                          <div
+                            className="vs-bar host"
+                            style={{
+                              width: `${(gameHosted / gamePlayed) * 100}%`
+                            }}
+                            title={`As Host: ${gameHosted}`}
+                          ></div>
+                          <div
+                            className="vs-bar player"
+                            style={{
+                              width: `${(gameJoined / gamePlayed) * 100}%`
+                            }}
+                            title={`As Player: ${gameJoined}`}
+                          ></div>
+                        </span>
+                      </td>
                     </tr>
                     <tr>
                       <td className="label">Total Wagered</td>
@@ -306,7 +353,6 @@ class StatisticsForm extends React.Component {
                     <tr>
                       <td className="label">Net Profit</td>
                       <td className="value">{convertToCurrency(gameProfit)}</td>
-                      {/* <td className="value">{netProfit}</td> */}
                     </tr>
                     <tr>
                       <td className="label">Profit ATH</td>

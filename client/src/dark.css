@@ -10,6 +10,12 @@
 	color: #f9f9f9;
 }
 
+.dark_mode .game-logs-table thead {
+	background-color: #101010;
+	color: #f9f9f9;
+
+}
+
 /* .dark_mode 
 .gradient-container .previous-guesses.drop:before  {
 	background: linear-gradient(90deg, #151515, transparent);

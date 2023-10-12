@@ -15,6 +15,9 @@ import {
   SET_GASFEE,
   SET_URL,
   TRANSACTION_LOADED,
+  SET_SEVEN_DAY_PROFIT,
+  SET_ONE_DAY_PROFIT,
+  SET_ALL_TIME_PROFIT,
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
@@ -30,25 +33,39 @@ import setAuthToken from '../../util/setAuthToken';
 import history from '../history';
 
 // Load User
-export const getUser = (is_reload) => async dispatch => {
+export const getUser = (is_reload, viewAll, loadMore, showWithdrawals, showDeposits, sortBy, search) => async dispatch => {
   if (localStorage.token) {
     localStorage.removeItem('isAdminAuthenticated');
     setAuthToken(localStorage.token);
   }
   try {
-    const res = await axios.get('/auth/user');
+    const res = await axios.get(`/auth/user?viewAll=${viewAll}&loadMore=${loadMore}&showWithdrawals=${showWithdrawals}&showDeposits=${showDeposits}&sortBy=${sortBy}&search=${search}`);
+    
     if (res.data.success) {
       dispatch({ type: USER_LOADED, payload: res.data.user });
       dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: res.data.unread_message_count });
       dispatch({ type: TRANSACTION_LOADED, payload: res.data.transactions });
-      
-      if (!is_reload) {
+      const { sevenDayProfit, oneDayProfit, allTimeProfit } = res.data; // Extract profit values from the response
+
+      if (sevenDayProfit !== undefined) {
+        dispatch({ type: SET_SEVEN_DAY_PROFIT, payload: sevenDayProfit });
+      }
+
+      if (oneDayProfit !== undefined) {
+        dispatch({ type: SET_ONE_DAY_PROFIT, payload: oneDayProfit });
+      }
+
+      if (allTimeProfit !== undefined) {
+        dispatch({ type: SET_ALL_TIME_PROFIT, payload: allTimeProfit });
+      }
+
+      if (!is_reload && res.data.message) {
         dispatch({ type: MSG_INFO, payload: res.data.message });
       }
       return {
         status: 'success',
         user: res.data.user
-      }
+      };
     } else {
       dispatch({ type: AUTH_ERROR });
     }
@@ -58,8 +75,9 @@ export const getUser = (is_reload) => async dispatch => {
   }
   return {
     status: 'failed'
-  }
+  };
 };
+
 
 // Register User
 export const userSignUp = ({

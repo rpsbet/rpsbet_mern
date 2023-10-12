@@ -73,7 +73,6 @@ class QuickShoot extends Component {
     socket.on('UPDATED_BANKROLL_QS', data => {
       this.setState({ bankroll: data.bankroll });
     });
-
     document.addEventListener('mousedown', this.handleClickOutside);
   }
 
@@ -821,6 +820,12 @@ class QuickShoot extends Component {
                       <div className="label host-display-name">Host</div>
                     </div>
                     <div className="value">{this.props.creator}</div>
+                  </div>
+                   <div className="data-item">
+                    <div>
+                      <div className="label room-name">Room ID</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.room_name}</div>
                   </div>
                   {this.props.youtubeUrl && (
                     <div className="data-item">

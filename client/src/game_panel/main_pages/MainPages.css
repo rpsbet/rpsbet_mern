@@ -1,3 +1,4 @@
+
 /*****************/
 /*** ANIMATIONS **/
 /*****************/
@@ -1055,13 +1056,31 @@ div.table.my-history-table .table-row .table-cell img.avatar {
   padding: 2.5px 9px;
   border-radius: 6px;
 }
-#game_logs .game_logs_contents table td.amount.green {
-  color: rgb(87, 202, 34);
+#game_logs .game_logs_contents table td.amount {
   background: rgb(87 202 34 / 11%);
 }
-#game_logs .game_logs_contents table td.amount.red {
-  color: #ff0000;
-  background: #ff000011;
+
+.game-logs-container {
+  max-height: calc(100vh - 270px);
+  overflow-y: scroll;
+}
+
+.game-logs-table thead {
+  position: sticky;
+  top:0;
+  background-color: #f9f9f9;
+  color: #101010;
+}
+
+table td.amount.green {
+  color: rgb(87, 202, 34) !important;
+  background: rgb(87, 202, 34, 0.22) !important;
+
+}
+table td.amount.red {
+  color: #ff0000 !important;
+  background: #ff000033 !important;
+
 }
 #game_logs .game_logs_contents table td.fromNow {
   text-align: right;
@@ -1222,6 +1241,13 @@ h6.score {
   background-repeat: no-repeat;
   background-position: 0 5px;
   background-size: 1.58em;
+}
+
+.game-page .pre-summary-panel div.room-name {
+  background-image: url('/img/room_name.svg');
+  background-repeat: no-repeat;
+  background-position: 0 8px;
+  background-size: 1.54em;
 }
 
 .game-page .pre-summary-panel div.host-display-name {
@@ -2136,6 +2162,12 @@ input {
   background-position: center 6px;
   filter: grayscale(1);
 }
+
+.game-modal.box-prizes {
+  flex-direction: row !important;
+
+}
+
 .game-page .game-contents .game-info-panel .box-prizes {
     flex-direction: column;
     font-size: 16px;

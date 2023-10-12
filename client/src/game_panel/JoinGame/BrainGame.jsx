@@ -42,7 +42,7 @@ const defaultOptions = {
 class BrainGame extends Component {
   constructor(props) {
     super(props);
-    // this.settingsRef = React.createRef();
+    this.settingsRef = React.createRef();
 
     this.state = {
       brain_game_type: this.props.brain_game_type,
@@ -610,6 +610,12 @@ class BrainGame extends Component {
                     </div>
                     <div className="value">{this.props.creator}</div>
                   </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label room-name">Room ID</div>
+                    </div>
+                    <div className="value">{this.props.roomInfo.room_name}</div>
+                  </div>
                   {this.props.youtubeUrl && (
                     <div className="data-item">
                       <YouTubeVideo url={this.props.youtubeUrl} />
@@ -688,7 +694,7 @@ class BrainGame extends Component {
               }
             />
             <div
-              // ref={this.settingsRef}
+              ref={this.settingsRef}
               className={`transaction-settings ${
                 this.state.settings_panel_opened ? 'active' : ''
               }`}
