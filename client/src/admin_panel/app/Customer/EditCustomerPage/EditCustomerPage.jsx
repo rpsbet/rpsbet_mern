@@ -5,7 +5,7 @@ import {
   acGetCustomerInfo,
   updateCustomer,
   getCustomerStatisticsData,
-  getRoomStatisticsData
+  // getRoomStatisticsData
 } from '../../../../redux/Customer/customer.action';
 import ContainerHeader from '../../../../components/ContainerHeader';
 import EditCustomerForm from './EditCustomerForm';
@@ -150,7 +150,7 @@ class EditCustomerPage extends Component {
           netProfit={this.state.netProfit}
           profitAllTimeHigh={this.state.profitAllTimeHigh}
           profitAllTimeLow={this.state.profitAllTimeLow}
-          getRoomStatisticsData={this.props.getRoomStatisticsData}
+          // getRoomStatisticsData={this.props.getRoomStatisticsData}
         />
       </>
     );
@@ -173,7 +173,7 @@ const mapDispatchToProps = {
   acGetCustomerInfo,
   updateCustomer,
   getCustomerStatisticsData,
-  getRoomStatisticsData
+  // getRoomStatisticsData
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(EditCustomerPage);

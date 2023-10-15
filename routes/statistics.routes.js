@@ -24,19 +24,76 @@ getCommission = async () => {
 
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
-    const _id = req.query._id;
+    const { _id, actorType, gameType, timeType } = req.query;
+    let transactionConditions = {};
+    const gameLogsQuery = {
+      $and: [
+        { $or: [{ creator: _id }, { joined_user: _id }] },
+        { room: { $ne: null } },
+        { game_result: { $nin: [3, -100] } } // Exclude gameLogs with game_result 3 or -100
+      ]
+    };
 
-    // console.log('Fetching receipts...');
+    
+
+    if (actorType === 'As Host') {
+      transactionConditions.$and = [
+        { description: { $not: /joined/i } },
+      ];
+    } else if (actorType === 'As Player') {
+      transactionConditions.$and = [
+        { description: /joined/i },
+      ];
+    } else {
+      transactionConditions.$and = [
+        { description: /-/i }
+      ];
+    }
+
+    // Apply additional filtering based on gameType for transactions
+    if (gameType === '62a25d2a723b9f15709d1ae7') {
+      transactionConditions.$and.push({ description: /RPS/i });
+    } else if (gameType === '62a25d2a723b9f15709d1ae8') {
+      transactionConditions.$and.push({ description: /S!/i });
+    } else if (gameType === '62a25d2a723b9f15709d1ae9') {
+      transactionConditions.$and.push({ description: /BG/i });
+    } else if (gameType === '62a25d2a723b9f15709d1aea') {
+      transactionConditions.$and.push({ description: /MB/i });
+    } else if (gameType === '62a25d2a723b9f15709d1aeb') {
+      transactionConditions.$and.push({ description: /QS/i });
+    } else if (gameType === '63dac60ba1316a1e70a468ab') {
+      transactionConditions.$and.push({ description: /DG/i });
+    }
+
+    if (actorType === 'As Host') {
+      gameLogsQuery.$and.push({ joined_user: { $ne: _id } });
+    } else if (actorType === 'As Player') {
+      gameLogsQuery.$and.push({ creator: { $ne: _id } });
+    }
+
+    // Modify the query to filter based on gameType
+    if (gameType !== 'All') {
+      gameLogsQuery.$and.push({ game_type: gameType });
+    }
+
+    let startDate;
+    if (timeType === '1') {
+      startDate = new Date(new Date().setDate(new Date().getDate() - 1));
+    } else if (timeType === '7') {
+      startDate = new Date(new Date().setDate(new Date().getDate() - 7));
+    } else if (timeType === '30') {
+      startDate = new Date(new Date().setDate(new Date().getDate() - 30));
+    }
+
+    if (startDate) {
+      transactionConditions.$and.push({ created_at: { $gte: startDate } });
+      gameLogsQuery.$and.push({ created_at: { $gte: startDate } });
+    }
+
     const [receipts, transactions, gameLogs] = await Promise.all([
       Receipt.find({ user_id: _id }).select('payment_type amount'),
-      Transaction.find({ user: _id }),
-      GameLog.find({
-        $and: [
-          { $or: [{ creator: _id }, { joined_user: _id }] },
-          { room: { $ne: null } },
-          { game_result: { $nin: [3, -100] } } // Exclude gameLogs with game_result 3 or -100
-        ]
-      })
+      Transaction.find({ user: _id, ...transactionConditions }),
+      GameLog.find(gameLogsQuery) // Use the updated query for gameLogs
         .sort({ created_at: 'asc' })
         .populate([
           { path: 'creator', model: User },
@@ -46,11 +103,13 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         ])
     ]);
 
-    // console.log('Calculating statistics...');
     let statistics = {
       deposit: 0,
       withdraw: 0,
       gameProfit: 0,
+      averageProfit: 0,
+      averageWager: 0,
+      averageGamesPlayedPerRoom: 0,
       profitAllTimeHigh: 0,
       profitAllTimeLow: 0,
       gamePlayed: 0,
@@ -113,6 +172,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         profit = isHost
           ? 0 - gameLog.bet_amount
           : gameLog.bet_amount * 2 - gameLog.bet_amount;
+        net_profit = 0 - gameLog.bet_amount * commission;
       } else if (gameLog.game_type && gameLog.game_type.short_name === 'QS') {
         if (gameLog.game_result === -1) {
           profit = 0 - gameLog.bet_amount;
@@ -138,19 +198,22 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           net_profit = 0 - gameLog.bet_amount * commission;
         } else {
           profit =
-          (isHost && gameLog.game_result === 1) ||
-          (isJoined && gameLog.game_result === -1)
-            ? 0 - gameLog.selected_drop
-            : gameLog.bet_amount + gameLog.selected_drop;
-        net_profit =
-          (isHost && gameLog.game_result === 1) ||
-          (isJoined && gameLog.game_result === -1)
-            ? 0 -
-              gameLog.selected_drop +
-              ((commission - 0.5) / 100) * (gameLog.bet_amount + gameLog.selected_drop)
-            : ((gameLog.bet_amount + gameLog.selected_drop) * (100 - commission)) / 100 -
-              gameLog.bet_amount;
-      }
+            (isHost && gameLog.game_result === 1) ||
+            (isJoined && gameLog.game_result === -1)
+              ? 0 - gameLog.selected_drop
+              : gameLog.bet_amount + gameLog.selected_drop;
+          net_profit =
+            (isHost && gameLog.game_result === 1) ||
+            (isJoined && gameLog.game_result === -1)
+              ? 0 -
+                gameLog.selected_drop +
+                ((commission - 0.5) / 100) *
+                  (gameLog.bet_amount + gameLog.selected_drop)
+              : ((gameLog.bet_amount + gameLog.selected_drop) *
+                  (100 - commission)) /
+                  100 -
+                gameLog.bet_amount;
+        }
       } else if (gameLog.game_type && gameLog.game_type.short_name === 'MB') {
         profit = isHost
           ? gameLog.bet_amount - gameLog.game_result
@@ -159,7 +222,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         net_profit = isHost
           ? gameLog.bet_amount - gameLog.game_result
           : gameLog.game_result - gameLog.bet_amount;
-      } 
+      }
       // rps & bg
       else {
         if (gameLog.game_result === 0) {
@@ -182,6 +245,28 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         }
       }
 
+        // Group game logs by room and calculate the count for each room
+    const roomCounts = {};
+    for (const gameLog of gameLogs) {
+      if (!gameLog.room) {
+        continue; // Skip gameLogs with null room property
+      }
+
+      const roomId = gameLog.room._id.toString();
+      if (roomCounts[roomId]) {
+        roomCounts[roomId]++;
+      } else {
+        roomCounts[roomId] = 1;
+      }
+    }
+
+    // Calculate the average count for all rooms
+    const roomIds = Object.keys(roomCounts);
+    if (roomIds.length > 0) {
+      const totalRoomCount = roomIds.reduce((total, roomId) => total + roomCounts[roomId], 0);
+      statistics.averageGamesPlayedPerRoom = totalRoomCount / roomIds.length;
+    }
+
       if (statistics.profitAllTimeHigh < profit) {
         statistics.profitAllTimeHigh = profit;
       }
@@ -191,10 +276,18 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       }
 
       statistics.totalWagered += gameLog.bet_amount;
+      const averageWager =
+        statistics.gamePlayed > 0
+          ? statistics.totalWagered / statistics.gamePlayed
+          : 0;
+      const averageProfit =
+        statistics.gamePlayed > 0
+          ? statistics.gameProfit / statistics.gamePlayed
+          : 0;
+      statistics.averageWager = averageWager;
+      statistics.averageProfit = averageProfit;
 
       if (!gameLog.room) {
-        // console.log('Error: Room object is null or undefined');
-        // console.log('gameLog:', gameLog);
         return { error: 'Room object is null or undefined' };
       }
 
@@ -220,7 +313,6 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       statistics
     };
 
-    // console.log('Statistics calculated successfully.');
     res.json(response);
   } catch (error) {
     console.error(error);
@@ -260,7 +352,7 @@ getBetType = bet_amount => {
 };
 
 getIndexByGameType = game_type => {
-  const game_types = ['RPS', 'S!', 'BG', 'MB', 'QS'];
+  const game_types = ['RPS', 'S!', 'BG', 'MB', 'QS', 'DG'];
   return game_types.indexOf(game_type);
 };
 
@@ -279,7 +371,6 @@ router.get('/get-total-statistics', auth, async (req, res) => {
         { name: 'Brain Game', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
         { name: 'Quick Shoot', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
         { name: 'Drop Game', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
-
       ]
     };
 
@@ -334,99 +425,77 @@ router.get('/get-total-statistics', auth, async (req, res) => {
     });
   }
 });
-
-router.get('/get-room-statistics', auth, async (req, res) => {
+router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
-
-    const room = await Room.findOne({ _id: room_id })
-      .populate({ path: 'creator', model: User })
-      .populate({ path: 'game_type', model: GameType });
+    const commission = await getCommission();
 
     const gameLogs = await GameLog.find({ room: room_id })
       .sort({ created_at: 'asc' })
       .populate({ path: 'game_type', model: GameType })
       .populate({ path: 'joined_user', model: User });
 
-    const room_info = [];
+    const playerStats = {};
 
-    if (room.game_type.short_name === 'MB') {
-      const boxList = await RoomBoxPrize.find({ room: room_id });
+    for (const gameLog of gameLogs) {
+      const actor = gameLog.joined_user.username;
+      const wagered = gameLog.bet_amount;
+      let net_profit = 0;
 
-      const boxPrices = boxList.map(
-        box => `[RPS ${box.box_price}, RPS ${box.box_prize}]`
-      );
-
-      room_info.push({
-        _id: room._id,
-        created_at: room.created_at,
-        actor: room.creator.username,
-        action: 'Create boxes. ' + boxPrices.join(', ')
-      });
-
-      for (const log of gameLogs) {
-        if (log.game_result === -100) {
-          room_info.push({
-            _id: log._id,
-            created_at: log.created_at,
-            actor: log.joined_user.username,
-            action: 'End Game by Creator'
-          });
+      // Calculate net profit based on game type
+      if (gameLog.game_type && gameLog.game_type.short_name === 'S!') {
+        net_profit = 0 - wagered * commission;
+      } else if (gameLog.game_type && gameLog.game_type.short_name === 'QS') {
+        if (gameLog.game_result === -1) {
+          net_profit = 0 - wagered * commission;
         } else {
-          room_info.push({
-            _id: log._id,
-            created_at: log.created_at,
-            actor: log.joined_user.username,
-            action: `Open a box. [RPS ${log.bet_amount}, RPS ${log.game_result}]`
-          });
+          net_profit =
+            wagered *
+              gameLog.game_type.game_type_id *
+              ((100 - commission) / 100) -
+            wagered;
+        }
+      } else if (gameLog.game_type && gameLog.game_type.short_name === 'DG') {
+        if (gameLog.game_result === -1) {
+          net_profit = 0 - wagered * commission;
+        } else {
+          net_profit =
+            ((wagered + gameLog.selected_drop) * (100 - commission)) / 100 -
+            wagered;
+        }
+      } else if (gameLog.game_type && gameLog.game_type.short_name === 'MB') {
+        net_profit = gameLog.game_result - wagered;
+      } else {
+        if (gameLog.game_result === 0) {
+          net_profit = 0;
+        } else {
+          net_profit = (wagered * 2 * (100 - commission)) / 100 - wagered;
         }
       }
-    } else {
-      room_info.push({
-        _id: room._id,
-        created_at: room.created_at,
-        actor: room.creator.username,
-        bet_amount: 'RPS ' + room.bet_amount,
-        action: 'Create Room'
-      });
 
-      for (const log of gameLogs) {
-        if (log.game_result === -100) {
-          room_info.push({
-            _id: log._id,
-            created_at: log.created_at,
-            actor: log.joined_user.username,
-            action: 'End Game by Creator'
-          });
-        } else {
-          const result =
-            log.game_result === 1
-              ? 'Win'
-              : log.game_result === -1
-              ? 'Lose'
-              : 'Draw';
-          room_info.push({
-            _id: log._id,
-            created_at: log.created_at,
-            actor: log.joined_user.username,
-            action: `Bet RPS ${log.bet_amount} and ${result}`
-          });
-        }
+      // Accumulate net profit for each player
+      if (playerStats[actor]) {
+        playerStats[actor].wagered += wagered;
+        playerStats[actor].net_profit += net_profit;
+        playerStats[actor].bets += gameLog.game_result === 0 ? 0 : 1;
+      } else {
+        playerStats[actor] = {
+          actor,
+          wagered,
+          net_profit,
+          bets: gameLog.game_result === 0 ? 0 : 1
+        };
       }
     }
 
-    const response = {
-      success: true,
-      room_info
-    };
+    // Convert playerStats object to an array and sort by net profit (highest first)
+    const room_info = Object.values(playerStats);
+    room_info.sort((a, b) => b.net_profit - a.net_profit);
 
-    res.json(response);
+    res.json({ success: true, room_info });
   } catch (error) {
-    console.error(error);
-    res.json({
-      success: false,
-      error: message
-    });
+    console.log('error***', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

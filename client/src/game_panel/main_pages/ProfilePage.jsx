@@ -27,18 +27,18 @@ class ProfilePage extends React.Component {
     };
   }
 
-  dataPointSelection = async (event, chartContext, config) => {
-    console.log(this.props.gameLogList[config.dataPointIndex]);
-    const gameLogList = this.props.gameLogList;
-    const room_id = gameLogList[config.dataPointIndex].room_id;
-    const actionList = await this.props.getRoomStatisticsData(room_id);
-    this.setState({
-      room_info: {
-        room_name: gameLogList[config.dataPointIndex].game_id,
-        actionList: actionList
-      }
-    });
-  };
+  // dataPointSelection = async (event, chartContext, config) => {
+  //   console.log(this.props.gameLogList[config.dataPointIndex]);
+  //   const gameLogList = this.props.gameLogList;
+  //   const room_id = gameLogList[config.dataPointIndex].room_id;
+  //   const actionList = await this.props.getRoomStatisticsData(room_id);
+  //   this.setState({
+  //     room_info: {
+  //       room_name: gameLogList[config.dataPointIndex].game_id,
+  //       actionList: actionList
+  //     }
+  //   });
+  // };
 
   render() {
     const gameLogList = this.props.gameLogList;

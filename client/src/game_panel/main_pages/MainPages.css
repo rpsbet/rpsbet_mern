@@ -201,7 +201,7 @@ div.table .table-row .table-cell button:last-child,
   padding: 0;   
   border-radius: 0.25em;
   color: #fff;
-  /* line-height: 40px; */
+  font-size: 0.8em;
   overflow: hidden;
   font-weight: 600;
   background: linear-gradient(0deg, #d81719, #e70000) padding-box,

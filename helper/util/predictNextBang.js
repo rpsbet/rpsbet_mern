@@ -48,7 +48,6 @@ const predictAndEmit = async (bang_list, room, socket, room_Id) => {
 
 
 const initializeRound = async (bang_list, room, socket, room_Id) => {
-  // console.log("di")
   const nextBangPrediction = await predictNextBang(bang_list);
 
   const currentTime = await getCurrentTime();

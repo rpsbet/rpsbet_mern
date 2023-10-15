@@ -170,14 +170,12 @@ router.get('/room/:id', async (req, res) => {
 
     async function emitRps(req) {
       const rpsItems = await RpsBetItem.find({ room: room });
-      const rps1 = rpsItems.filter(item => item.joiner !== null).slice(-5); // Filter out items with null joiner
-      // console.log("eee", rps1);
-
+      const rps1 = rpsItems.filter(item => item.joiner !== null).slice(-5);
       if (rps1.length > 0 && req.io.sockets) {
         req.io.sockets.emit('RPS_1', rps1);
       }
     }
-
+    
     emitRps(req);
 
     let hasEmitted = false;
@@ -1061,39 +1059,44 @@ router.post('/rooms', auth, async (req, res) => {
     await newRoom.save();
 
     if (gameType.game_type_name === 'Mystery Box') {
-      box_list.forEach(box => {
+      for (const box of box_list) {
         const newBox = new RoomBoxPrize({
           room: newRoom,
           box_prize: box.box_prize,
           box_price: box.box_price,
           status: 'init'
         });
-        newBox.save();
-      });
+        await newBox.save();
+      }
     } else if (gameType.game_type_name === 'RPS') {
-      rps_list.forEach(rps => {
+      for (const rps of rps_list) {
         const newRps = new RpsBetItem({
           room: newRoom,
           rps: rps.rps
         });
-        newRps.save();
-      });
-    } else if (gameType.game_type_name === 'Quick Shoot') {
-      qs_list.forEach(qs => {
+        await newRps.save();
+      }
+    }
+    else if (gameType.game_type_name === 'Quick Shoot') {
+    
+      for (const qs of qs_list) {
         const newQs = new QsBetItem({
           room: newRoom,
           qs: qs.qs
         });
-        newQs.save();
-      });
-    } else if (gameType.game_type_name === 'Drop Game') {
-      drop_list.forEach(drop => {
+        await newQs.save();
+      }
+    
+    }
+    else if (gameType.game_type_name === 'Drop Game') {
+    
+      for (const drop of drop_list) {
         const newDrop = new DropBetItem({
           room: newRoom,
           drop: drop.drop
         });
-        newDrop.save();
-      });
+        await newDrop.save();
+      }
     } else if (gameType.game_type_name === 'Bang!') {
       const roomId = newRoom.id;
       initializeRound(bang_list, newRoom, req.io.sockets, roomId);
@@ -1101,21 +1104,22 @@ router.post('/rooms', auth, async (req, res) => {
       const roomId = newRoom.id;
       initializeRollRound(roll_list, newRoom, req.io.sockets, roomId);
     } else if (gameType.game_type_name === 'Blackjack') {
-      bj_list.forEach(bj => {
+      for (const bj of bj_list) {
         const newBj = new BjBetItem({
           room: newRoom,
           bj: bj.bj,
           score: bj.score
         });
-        newBj.save();
-      });
+        await newBj.save();
+      }
+    
     }
 
     const newTransaction = new Transaction({
       user: req.user,
       amount: 0,
       description: 'created ' + gameType.short_name + '-' + newRoom.room_number,
-      room: req.body._id
+      room: newRoom._id
     });
 
     if (is_anonymous === true) {
@@ -1306,7 +1310,7 @@ router.post('/end_game', auth, async (req, res) => {
       user: roomInfo.creator,
       amount: 0,
       description: `ended ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
-      room: req.body._id
+      room: roomId
     });
 
     if (gameLogCount === 0) {
@@ -1747,16 +1751,9 @@ router.post('/bet', auth, async (req, res) => {
           _id: req.body.rps_bet_item_id,
           joiner_rps: ''
         });
+          console.log("avail", availableBetItem)
 
         let bet_item = availableBetItem;
-        // console.log("hsi", bet_item);
-        // if (!bet_item) {
-        //   // Get next available item
-        //   bet_item = await RpsBetItem.findOne({
-        //     room: new ObjectId(req.body._id),
-        //     joiner_rps: ''
-        //   }).sort({ _id: 'asc' });
-        // }
 
         if (!bet_item) {
           // Create new RpsBetItem with predicted rps value
@@ -1764,12 +1761,11 @@ router.post('/bet', auth, async (req, res) => {
             room: new ObjectId(req.body._id)
           });
           const nextItem = predictNext(allBetItems);
-          // console.log("nextItem", nextItem);
+          console.log("nextItem", nextItem);
           bet_item = new RpsBetItem({
             room: new ObjectId(req.body._id),
             rps: nextItem
           });
-
           await bet_item.save();
         }
 
@@ -1777,6 +1773,7 @@ router.post('/bet', auth, async (req, res) => {
 
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         newGameLog.selected_rps = req.body.selected_rps;
+        console.log("next", bet_item.rps)
 
         if (
           (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
@@ -2178,7 +2175,6 @@ router.post('/bet', auth, async (req, res) => {
             joiner_drop: ''
           }).sort({ _id: 'asc' });
         } else {
-          // Create new DropBetItem with predicted bet value
           const allBetItems = await DropBetItem.find({
             room: new ObjectId(req.body._id)
           });

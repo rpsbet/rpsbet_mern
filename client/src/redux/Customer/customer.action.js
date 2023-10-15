@@ -8,7 +8,7 @@ import {
   PAGINATION_FOR_CUSTOMER,
   PAGINATION_FOR_ACTIVITY,
   LOADING_CUSTOMER_TABLE,
-  ACTIVITY_QUERY,
+  ACTIVITY_QUERY
 } from '../types';
 
 export const acPaginationCustomer = (pagination, page, is_banned) => async (
@@ -39,11 +39,14 @@ export const acPaginationCustomer = (pagination, page, is_banned) => async (
   }
 };
 
-export const queryCustomer = (pagination, page, is_banned) => async (dispatch, getState) => {
+export const queryCustomer = (pagination, page, is_banned) => async (
+  dispatch,
+  getState
+) => {
   dispatch({ type: LOADING_CUSTOMER_TABLE, payload: true });
   let payload = {
     pagination,
-    page,
+    page
   };
   dispatch({ type: PAGINATION_FOR_CUSTOMER, payload });
   let body = {};
@@ -65,7 +68,10 @@ export const queryCustomer = (pagination, page, is_banned) => async (dispatch, g
   }
 };
 
-export const queryActivity = (pagination, page) => async (dispatch, getState) => {
+export const queryActivity = (pagination, page) => async (
+  dispatch,
+  getState
+) => {
   dispatch({ type: LOADING_CUSTOMER_TABLE, payload: true });
   let payload = {
     pagination,
@@ -119,12 +125,11 @@ export const acPaginationActivity = (pagination, page) => async (
   }
 };
 
-export const fetchId = (username) => async (dispatch) => {
+export const fetchId = username => async dispatch => {
   try {
     const { data } = await api.post('user/getId', { username });
     if (data.success) {
       return data.user;
-      console.log("data", data);
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
       return null; // Return null if there's an error
@@ -136,10 +141,9 @@ export const fetchId = (username) => async (dispatch) => {
   }
 };
 
-
 export const acGetCustomerInfo = _id => async dispatch => {
   try {
-    const { data } = await api.post('user/get-info', {_id});
+    const { data } = await api.post('user/get-info', { _id });
     if (data.success) {
       return data.user;
     } else {
@@ -151,9 +155,21 @@ export const acGetCustomerInfo = _id => async dispatch => {
   }
 };
 
-export const getCustomerStatisticsData = _id => async dispatch => {
+export const getCustomerStatisticsData = (
+  _id,
+  actorType,
+  gameType,
+  timeType
+) => async dispatch => {
   try {
-    const { data } = await api.get('statistics/get-customer-statistics', {params: {_id}});
+    const { data } = await api.get('statistics/get-customer-statistics', {
+      params: {
+        _id: _id,
+        actorType: actorType,
+        gameType: gameType,
+        timeType: timeType
+      }
+    });
     if (data.success) {
       return data.statistics;
     } else {
@@ -163,11 +179,13 @@ export const getCustomerStatisticsData = _id => async dispatch => {
     console.log('error***', error);
     dispatch({ type: MSG_WARNING, payload: error });
   }
-}
+};
 
 export const getRoomStatisticsData = room_id => async dispatch => {
   try {
-    const { data } = await api.get('statistics/get-room-statistics', {params: {room_id}});
+    const { data } = await api.get('statistics/get-room-statistics', {
+      params: { room_id }
+    });
     if (data.success) {
       return data.room_info;
     } else {
@@ -177,7 +195,7 @@ export const getRoomStatisticsData = room_id => async dispatch => {
     console.log('error***', error);
     dispatch({ type: MSG_WARNING, payload: error });
   }
-}
+};
 
 // Update Customer
 export const updateCustomer = customer => async dispatch => {

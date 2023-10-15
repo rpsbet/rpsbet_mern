@@ -8,11 +8,9 @@ const { setBalance } = require('../../routes/user.routes');
 
 const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09');
 
-// Define the confirmation thresholds
 const withdrawalConfirmationThreshold = 0;
 const depositConfirmationThreshold = 6;
 
-// Define a function to periodically check for confirmations
 async function checkConfirmations() {
   try {
     // console.log('Checking for confirmations...');
@@ -74,7 +72,6 @@ async function checkConfirmations() {
   }
 }
 
-// Schedule the task to run every 20 seconds
 cron.schedule('*/5 * * * * *', checkConfirmations);
 
 // Export any necessary functions or variables for use in your application

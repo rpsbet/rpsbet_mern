@@ -35,7 +35,14 @@
     white-space: nowrap;
 
     }
-
+    .room-link {
+        z-index: 9;
+        background-color: rgba(0, 0, 0, 0.5);
+        margin: auto !important;
+        transform: translateY(-200%);
+        display: block !important;
+      }
+      
   
     .statistics-panel .loading {
     text-align: center;
@@ -68,9 +75,14 @@
 .statistics-panel {
     margin: 30px 0;
 }
+.statistics-panel .filters {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
 
 .statistics-panel div {
-    margin: 5px 20px;
+    margin: 5px;
 }
 
 .statistics-panel table th, .statistics-panel table td {

@@ -366,6 +366,7 @@ class RPS extends Component {
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
+    console.log("next", selected_rps)
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
@@ -583,7 +584,6 @@ class RPS extends Component {
       JSON.parse(localStorage.getItem(storageName)) || [];
     const intervalId = setInterval(() => {
       const randomItem = predictNext(stored_rps_array);
-      console.log('random', randomItem);
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       const passwordCorrect = rooms[roomInfo._id];
       if (is_private === true && passwordCorrect !== 'true') {

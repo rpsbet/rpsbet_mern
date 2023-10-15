@@ -4,14 +4,17 @@ import styled from 'styled-components';
 import Elevation from '../../../../Styles/Elevation';
 import moment from 'moment';
 import './style.css';
-import { convertToCurrency } from '../../../../util/conversion';
+import { Button } from '@material-ui/core';
+import { FormControl, MenuItem, Select } from '@material-ui/core';
 
+import { Link as LinkIcon } from '@material-ui/icons';
+import { convertToCurrency } from '../../../../util/conversion';
+import { updateDigitToPoint2 } from '../../../../util/helper';
 function generateData(gameLogList) {
   const series = [];
   let totalProfit = 0;
   gameLogList &&
     gameLogList.forEach((log, index) => {
-      console.log(log.profit);
       totalProfit += log.profit;
       series.push({ x: `${Number(index) + 1}`, y: totalProfit });
     });
@@ -24,22 +27,51 @@ class StatisticsForm extends React.Component {
 
     this.state = {
       room_info: null,
-      loaded: true
+      loaded: true,
+      showButton: false,
+      actorType: 'Both',
+      gameType: 'All',
+      timeType: 'allTime',
+      url: '',
+      roomName: '',
+      roomId: ''
     };
   }
 
-  dataPointSelection = async (event, chartContext, config) => {
-    console.log(this.props.gameLogList[config.dataPointIndex]);
-    const gameLogList = this.props.gameLogList;
-    const room_id = gameLogList[config.dataPointIndex].room_id;
-    const actionList = await this.props.getRoomStatisticsData(room_id);
-    this.setState({
-      room_info: {
-        room_name: gameLogList[config.dataPointIndex].game_id,
-        actionList: actionList
-      }
-    });
+  handleActorTypeChange = event => {
+    this.setState({ actorType: event.target.value });
+    this.props.onDropdownChange('actorType', event.target.value);
   };
+
+  handleGameTypeChange = event => {
+    this.setState({ gameType: event.target.value });
+    this.props.onDropdownChange('gameType', event.target.value);
+  };
+
+  handleTimeTypeChange = event => {
+    this.setState({ timeType: event.target.value });
+    this.props.onDropdownChange('timeType', event.target.value);
+    
+  };
+
+  getRoomLink(dataPointIndex) {
+    const gameLog = this.props.gameLogList[dataPointIndex];
+    const roomId = gameLog.room_id;
+    const roomName = gameLog.game_id;
+    if (roomId === this.state.roomId) {
+      return;
+    }
+
+    setTimeout(() => {
+      this.setState({
+        roomId,
+        url: `/join/${roomId}`,
+        roomName: roomName
+      });
+    }, 1000);
+
+    this.handleTooltipToggle();
+  }
 
   // componentDidUpdate(prevProps) {
   //   if (
@@ -52,6 +84,11 @@ class StatisticsForm extends React.Component {
   //     this.setState({ loaded: true });
   //   }
   // }
+
+  handleTooltipToggle = () => {
+    this.setState({ showButton: true });
+  };
+
   getRank(totalWagered) {
     // Calculate the level using a logarithmic function with base 2.
     const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
@@ -182,7 +219,7 @@ class StatisticsForm extends React.Component {
           hideOverlappingLabels: true
         }
       },
-      
+
       tooltip: {
         custom: function({ series, seriesIndex, dataPointIndex, w }) {
           const convertToCurrency = input => {
@@ -215,16 +252,15 @@ class StatisticsForm extends React.Component {
               return input;
             }
           };
+
+          this.getRoomLink(dataPointIndex);
+
           return `<table class="chart-tooltip">
               <tr>
               <td>GAME ID: </td>
               <td>&nbsp;${gameLogList[dataPointIndex].game_id}</td>
               </tr>
               <tr>
-              <tr>
-              <td>BET ID: </td>
-              <td>&nbsp;${gameLogList[dataPointIndex].bet_id}</td>
-              </tr>
               <tr>
               <td>PLAYED: </td>
               <td>&nbsp;${moment(
@@ -255,7 +291,7 @@ class StatisticsForm extends React.Component {
               </tr>
               
                 </table>`;
-        }
+        }.bind(this)
       }
     };
     const series = [
@@ -283,6 +319,9 @@ class StatisticsForm extends React.Component {
       totalWagered,
       netProfit,
       gameProfit,
+      averageWager,
+      averageGamesPlayedPerRoom,
+      averageProfit,
       profitAllTimeHigh,
       profitAllTimeLow
     } = this.props;
@@ -291,32 +330,52 @@ class StatisticsForm extends React.Component {
       <ChartDivEl>
         <div className="rank-badge">
           <h2>{this.props.username}</h2>
-          <div className="stars">{this.getRank(this.props.totalWagered)}</div>
+          <div className="stars">{this.getRank(totalWagered)}</div>
         </div>
 
         <div className="statistics-container">
           <div>
-            {/* <div className="statistics-panel">
-              <h5>BREAKDOWN</h5>
-              <div>
-                Deposits:{' '}
-                {addCurrencySignal(updateDigitToPoint2(this.props.deposit))}
-              </div>
-              <div>
-                Withdrawals:{' '}
-                {addCurrencySignal(updateDigitToPoint2(this.props.withdraw))}
-              </div>
-              <div>
-                Game Profit:{' '}
-                {addCurrencySignal(updateDigitToPoint2(this.props.gameProfit))}
-              </div>
-              <div>
-                Balance:{' '}
-                {addCurrencySignal(updateDigitToPoint2(this.props.balance))}
-              </div>
-            </div> */}
             <div className="statistics-panel">
               <h5>PERFORMANCE</h5>
+              <div className='filters'>
+
+              <FormControl>
+                <Select
+                  value={this.state.actorType}
+                  onChange={this.handleActorTypeChange}
+                  >
+                  <MenuItem value="Both">Both</MenuItem>
+                  <MenuItem value="As Host">As Host</MenuItem>
+                  <MenuItem value="As Player">As Player</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl>
+                <Select
+                  value={this.state.gameType}
+                  onChange={this.handleGameTypeChange}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  <MenuItem value="62a25d2a723b9f15709d1ae7">RPS</MenuItem>
+                  <MenuItem value="62a25d2a723b9f15709d1aeb">Quick Shoot</MenuItem>
+                  <MenuItem value="62a25d2a723b9f15709d1ae9">Brain Game</MenuItem>
+                  <MenuItem value="62a25d2a723b9f15709d1aea">Mystery Box</MenuItem>
+                  <MenuItem value="63dac60ba1316a1e70a468ab">Drop Game</MenuItem>
+                  <MenuItem value="62a25d2a723b9f15709d1ae8">Spleesh</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <Select
+                  value={this.state.timeType}
+                  onChange={this.handleTimeTypeChange}
+                  >
+                  <MenuItem value="1">Last 24 Hours</MenuItem>
+                  <MenuItem value="7">Last 7 Days</MenuItem>
+                  <MenuItem value="30">Last 30 Days</MenuItem>
+                  <MenuItem value="allTime">All-time</MenuItem>
+                </Select>
+              </FormControl>
+                </div>
               {!this.state.loaded ? (
                 <div className="loading">LOADING...</div>
               ) : (
@@ -355,6 +414,24 @@ class StatisticsForm extends React.Component {
                       <td className="value">{convertToCurrency(gameProfit)}</td>
                     </tr>
                     <tr>
+                      <td className="label">Ave. Wager</td>
+                      <td className="value">
+                        {convertToCurrency(averageWager)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="label">Ave. Games Played Per Room</td>
+                      <td className="value">
+                        {updateDigitToPoint2(averageGamesPlayedPerRoom)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="label">Ave. Profit Per Game</td>
+                      <td className="value">
+                        {convertToCurrency(averageProfit)}
+                      </td>
+                    </tr>
+                    <tr>
                       <td className="label">Profit ATH</td>
                       <td className="value">
                         {convertToCurrency(profitAllTimeHigh)}
@@ -371,32 +448,8 @@ class StatisticsForm extends React.Component {
               )}
             </div>
           </div>
-          <div>
-            {this.state.room_info && (
-              <div className="statistics-panel">
-                <h5>ROOM INFO ({this.state.room_info.room_name})</h5>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Date/Time</th>
-                      <th>Actor</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {this.state.room_info.actionList.map((action, key) => (
-                      <tr key={action._id}>
-                        <td>{moment(action.created_at).format('LLL')}</td>
-                        <td>{action.actor}</td>
-                        <td>{action.action}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
         </div>
+
         <ChartEl
           options={options}
           series={series}
@@ -411,6 +464,15 @@ class StatisticsForm extends React.Component {
           height="350"
           width="100%"
         />
+        {this.state.showButton && (
+          <Button
+            className="room-link"
+            onClick={() => (window.location.href = this.state.url)}
+          >
+            {this.state.roomName}
+            <LinkIcon />
+          </Button>
+        )}
       </ChartDivEl>
     );
   }
