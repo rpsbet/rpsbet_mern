@@ -298,7 +298,7 @@ class GlobalChat extends Component {
                   <a
                     className="chat-player"
                     onClick={() =>
-                      this.handleOpenPlayerModal(chat.replyTo.sender)
+                      this.handleOpenPlayerModal(chat.senderId)
                     }
                   >
                     <div className="reply-border"></div>

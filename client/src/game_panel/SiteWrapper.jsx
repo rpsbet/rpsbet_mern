@@ -1,17 +1,32 @@
 import React, { Component } from 'react';
-import { createTheme, MuiThemeProvider } from '@material-ui/core/styles';
+import {
+  createTheme,
+  MuiThemeProvider,
+  Tabs,
+  Tab,
+  Button,
+  TextField,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Checkbox,
+  TableBody,
+  TableHead,
+  Table,
+  TableCell,
+  TableRow,
+  Radio,
+  RadioGroup,
+  FormControlLabel
+} from '@material-ui/core';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import ReactApexChart from 'react-apexcharts';
-import Battle from './icons/Battle.js';
-import BattleHover from './icons/BattleHover';
-import Manage from './icons/Manage.js';
-import ManageHover from './icons/ManageHover';
-import HowTo from './icons/HowTo.js';
 import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
 import progress from './LottieAnimations/progress.json';
-import HowToHover from './icons/HowToHover';
 import InlineSVG from 'react-inlinesvg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -21,6 +36,45 @@ import {
   faArrowAltCircleDown,
   faArrowAltCircleUp
 } from '@fortawesome/free-solid-svg-icons';
+import {
+  Close,
+  Link,
+  ArrowUpward,
+  ArrowDownward,
+  AccountBalanceWallet,
+  ArrowDropDown,
+  Brightness7,
+  Brightness4,
+  VolumeUp,
+  VolumeOff,
+  ExitToApp,
+  PersonOutline
+} from '@material-ui/icons';
+import history from '../redux/history';
+import socketIOClient from 'socket.io-client';
+import Moment from 'moment';
+import Avatar from '../components/Avatar';
+import Web3 from 'web3';
+import './SiteWrapper.css';
+
+import ProfileModal from './modal/ProfileModal';
+import PlayerModal from './modal/PlayerModal';
+import HowToPlayModal from './modal/HowToPlayModal';
+import GamePasswordModal from './modal/GamePasswordModal';
+import LoginModal from './modal/LoginModal';
+import SignupModal from './modal/SignupModal';
+import VerificationModal from './modal/VerificationModal';
+import DepositModal from './modal/DepositModal';
+import WithdrawModal from './modal/WithdrawModal';
+import ResetPasswordModal from './modal/ResetPasswordModal';
+
+import Battle from './icons/Battle.js';
+import BattleHover from './icons/BattleHover';
+import Manage from './icons/Manage.js';
+import ManageHover from './icons/ManageHover';
+import HowTo from './icons/HowTo.js';
+import HowToHover from './icons/HowToHover';
+
 import {
   setSocket,
   userSignOut,
@@ -43,67 +97,6 @@ import {
   updateBetResult
 } from '../redux/Logic/logic.actions';
 
-import {
-  Tabs,
-  Tab,
-  Button,
-  TextField,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-  Checkbox,
-  TableBody,
-  TableHead,
-  Table,
-  TableCell,
-  TableRow,
-  Radio,
-  RadioGroup,
-  FormControlLabel
-} from '@material-ui/core';
-
-import {
-  Close as CloseIcon,
-  Link as LinkIcon,
-  ArrowUpward,
-  ArrowDownward
-} from '@material-ui/icons';
-
-import AccountBalanceWallet from '@material-ui/icons/AccountBalanceWallet';
-import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import AndroidIcon from '@material-ui/icons/Android';
-import PersonIcon from '@material-ui/icons/Person';
-import Brightness7Icon from '@material-ui/icons/Brightness7';
-import Brightness4Icon from '@material-ui/icons/Brightness4';
-
-import VolumeUpIcon from '@material-ui/icons/VolumeUp';
-import VolumeOffIcon from '@material-ui/icons/VolumeOff';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
-import PersonOutlineIcon from '@material-ui/icons/PersonOutline';
-
-import history from '../redux/history';
-import socketIOClient from 'socket.io-client';
-
-import ProfileModal from './modal/ProfileModal';
-import PlayerModal from './modal/PlayerModal';
-import HowToPlayModal from './modal/HowToPlayModal';
-
-import GamePasswordModal from './modal/GamePasswordModal';
-import LoginModal from './modal/LoginModal';
-import SignupModal from './modal/SignupModal';
-import VerificationModal from './modal/VerificationModal';
-import DepositModal from './modal/DepositModal';
-import WithdrawModal from './modal/WithdrawModal';
-import ResetPasswordModal from './modal/ResetPasswordModal';
-import Moment from 'moment';
-// import { updateDigitToPoint2 } from '../util/helper';
-import './SiteWrapper.css';
-import Avatar from '../components/Avatar';
-import Web3 from 'web3';
-// import abi from '../config/abi_token.json';
-// import { tokenAddr } from '../config/index.js';
 import { convertToCurrency } from '../util/conversion';
 
 LoadingOverlay.propTypes = undefined;
@@ -143,20 +136,19 @@ const mainTheme = createTheme({
   palette: {
     type: 'light'
   },
-  overrides: customTextFieldStyles // Add the TextField style overrides
+  overrides: customTextFieldStyles
 });
 
 const darkTheme = createTheme({
   palette: {
     type: 'dark'
   },
-  overrides: customTextFieldStyles // Add the TextField style overrides
+  overrides: customTextFieldStyles
 });
 
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
-    // height: '48px',
     minWidth: '80px'
   }
 };
@@ -970,7 +962,7 @@ class SiteWrapper extends Component {
                   }}
                   id="btn_leaderboards"
                 >
-                  <img src="/img/icons/leaderboards.svg" alt="Leaderboards" />
+                  <img src="/img/s/leaderboards.svg" alt="Leaderboards" />
                   Leaderboards
                 </a>
                 */
@@ -1053,7 +1045,7 @@ class SiteWrapper extends Component {
                         darkMode={this.props.isDarkMode}
                       />
                       {/* <span className="username">{this.state.userName}</span> */}
-                      <ArrowDropDownIcon />
+                      <ArrowDropDown />
                     </Button>
                     <Menu
                       id="profile-menu"
@@ -1084,7 +1076,7 @@ class SiteWrapper extends Component {
                     >
                       <MenuItem onClick={this.handleOpenProfileModal}>
                         <ListItemIcon>
-                          <PersonOutlineIcon />
+                          <PersonOutline />
                         </ListItemIcon>
                         <ListItemText>PROFILE</ListItemText>
                       </MenuItem>
@@ -1158,13 +1150,13 @@ class SiteWrapper extends Component {
                           this.props.setDarkMode(!this.props.isDarkMode);
                         }}
                       >
-                        <ListItemIcon>
+                        <ListItem>
                           {this.props.isDarkMode ? (
-                            <AndroidIcon />
+                            <Android />
                           ) : (
-                            <PersonIcon />
+                            <Person />
                           )}
-                        </ListItemIcon>
+                        </ListItem>
                        
                         <ListItemText>
                           {this.props.isDarkMode ? 'MARKOV' : 'Q-BOT'}
@@ -1181,7 +1173,7 @@ class SiteWrapper extends Component {
                               }}
                             >
                               <ListItemIcon>
-                                <VolumeOffIcon />
+                                <VolumeOff />
                               </ListItemIcon>
                               UNMUTE
                             </div>
@@ -1194,7 +1186,7 @@ class SiteWrapper extends Component {
                               }}
                             >
                               <ListItemIcon>
-                                <VolumeUpIcon />
+                                <VolumeUp />
                               </ListItemIcon>
                               MUTE
                             </div>
@@ -1208,12 +1200,12 @@ class SiteWrapper extends Component {
                       >
                         <ListItemIcon>
                           {this.props.isDarkMode ? (
-                            <Brightness7Icon />
+                            <Brightness7 />
                           ) : (
-                            <Brightness4Icon />
+                            <Brightness4 />
                           )}
                         </ListItemIcon>
-                       
+
                         <ListItemText>
                           {this.props.isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
                         </ListItemText>
@@ -1225,7 +1217,7 @@ class SiteWrapper extends Component {
                         }}
                       >
                         <ListItemIcon>
-                          <ExitToAppIcon size="small" />
+                          <ExitToApp size="small" />
                         </ListItemIcon>
                         <ListItemText>LOG OUT</ListItemText>
                       </MenuItem>
@@ -1254,7 +1246,7 @@ class SiteWrapper extends Component {
                     className="close-button"
                     onClick={this.toggleAllTransactions}
                   >
-                    <CloseIcon />
+                    <Close />
                   </Button>
                 </div>
                 <div className="summary">
@@ -1440,7 +1432,7 @@ class SiteWrapper extends Component {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                 >
-                                  <LinkIcon />
+                                  <Link />
                                 </a>
                               ) : row.room ? (
                                 <a
@@ -1448,7 +1440,7 @@ class SiteWrapper extends Component {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                 >
-                                  <LinkIcon />
+                                  <Link />
                                 </a>
                               ) : (
                                 ''

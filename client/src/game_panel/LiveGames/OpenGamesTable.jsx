@@ -1,31 +1,37 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import history from '../../redux/history';
 import {
   actionRoom,
   getRoomList,
   setCurRoomInfo
 } from '../../redux/Logic/logic.actions';
-import { alertModal } from '../modal/ConfirmAlerts';
-import PlayerModal from '../modal/PlayerModal';
-import Battle from '../icons/Battle';
-import ThumbUpIcon from '@material-ui/icons/ThumbUp';
-import ThumbDownIcon from '@material-ui/icons/ThumbDown';
-import ThumbUpOutlinedIcon from '@material-ui/icons/ThumbUpOutlined';
-import ThumbDownOutlinedIcon from '@material-ui/icons/ThumbDownOutlined';
-import { ArrowUpward, ArrowDownward } from '@material-ui/icons';
-import VisibilityIcon from '@material-ui/icons/Visibility';
 import { Box, Button, Typography, IconButton } from '@material-ui/core';
-import { updateDigitToPoint2 } from '../../util/helper';
+import { Add, Remove, Visibility } from '@material-ui/icons';
+import ReactApexChart from 'react-apexcharts';
+
 import Avatar from '../../components/Avatar';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import Pagination from '../../components/Pagination';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
-import like from '../LottieAnimations/like.json';
+import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 
+import Battle from '../icons/Battle';
+import {
+  ThumbUp,
+  ThumbDown,
+  ThumbUpOutlined,
+  ThumbDownOutlined
+} from '@material-ui/icons';
+
+import { alertModal } from '../modal/ConfirmAlerts';
+import PlayerModal from '../modal/PlayerModal';
+
+import like from '../LottieAnimations/like.json';
 import avaHex from '../LottieAnimations/avahex.json';
+
+import history from '../../redux/history';
 
 const gifUrls = [
   'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
@@ -43,9 +49,142 @@ class OpenGamesTable extends Component {
       showPlayerModal: false,
       selectedCreator: '',
       mouseDown: false,
-      roomList: []
+      roomList: [],
+      hostNetProfitList: [],
+      actionList: null
     };
   }
+
+  generateGameTypePanel = () => {
+    const gameTypeStyleClass = {
+      R: 'roll',
+      RPS: 'rps',
+      'S!': 'spleesh',
+      MB: 'mystery-box',
+      BG: 'brain-game',
+      QS: 'quick-shoot',
+      DG: 'drop-game',
+      'B!': 'bang',
+      BJ: 'blackjack',
+      CR: 'craps'
+    };
+
+    const gameTypePanel = (
+      <Box
+        display="flex"
+        justifyContent="space-evenly"
+        flexWrap="nowrap"
+        gap="15px"
+        ref={ref => (this.game_type_panel = ref)}
+      >
+        <Box item key="open-game-left-button">
+          <Button
+            className="btn-arrow-left"
+            onClick={this.handleBtnLeftClicked}
+          >
+            <ChevronLeftIcon />
+          </Button>
+        </Box>
+
+        <Button
+          className={`btn-game-type btn-icon all-games ${
+            this.state.selectedGameType === 'All' ? 'active' : ''
+          }`}
+          key="open-game-all-game-button"
+          onClick={() => {
+            this.handleGameTypeButtonClicked('All');
+          }}
+        >
+          <div className="icon">
+            <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
+            <span>All Games</span>
+          </div>
+        </Button>
+        {this.props.gameTypeList.map((gameType, index) => (
+          <Button
+            className={`btn-game-type btn-icon ${
+              gameTypeStyleClass[gameType.short_name]
+            } ${
+              this.state.selectedGameType === gameType.short_name
+                ? 'active'
+                : ''
+            }`}
+            key={index}
+            onClick={() => {
+              this.handleGameTypeButtonClicked(gameType.short_name);
+            }}
+          >
+            <div className="icon">
+              <img
+                src={`/img/gametype/icons/${gameType.short_name}.svg`}
+                alt={gameType.game_type_name}
+              />
+              <span>{gameType.game_type_name}</span>
+            </div>
+          </Button>
+        ))}
+        <Button
+          className="btn-arrow-right"
+          key="open-game-right-button"
+          onClick={this.handleBtnRightClicked}
+        >
+          <ChevronRightIcon />
+        </Button>
+      </Box>
+    );
+
+    return gameTypePanel;
+  };
+
+  componentDidMount() {
+    const { roomList } = this.props;
+
+    this.setState({ roomList });
+    const roomIds = roomList.map(room => room._id);
+    this.getRoomData(roomIds);
+    window.addEventListener('load', () => {
+      this.setState({ loaded: true, selectedGameType: 'All' });
+    });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.roomList !== this.props.roomList) {
+      const { roomList } = this.props;
+      this.setState({ roomList, isLoading: false });
+      const roomIds = roomList.map(room => room._id);
+      this.getRoomData(roomIds);
+    }
+  }
+
+  getRoomData = async roomIds => {
+    try {
+      const hostNetProfitListPromises = roomIds.map(roomId =>
+        this.props.getRoomStatisticsData(roomId)
+      );
+
+      const hostNetProfitLists = await Promise.all(hostNetProfitListPromises);
+
+      const netProfitsByRoom = hostNetProfitLists.map(hostNetProfitList => {
+        const hostNetProfit = hostNetProfitList.hostNetProfit;
+        const lastIndexNetProfit = hostNetProfit[hostNetProfit.length - 1];
+        return lastIndexNetProfit;
+      });
+
+      const hostNetProfits = hostNetProfitLists.map(item => item.hostNetProfit);
+      const hostBetsValue = hostNetProfitLists.map(item => item.hostBetsValue);
+
+      this.setState({
+        hostNetProfitList: netProfitsByRoom,
+        actionList: {
+          hostNetProfits,
+          hostBetsValue
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching room data:', error);
+    }
+  };
+
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
@@ -70,10 +209,8 @@ class OpenGamesTable extends Component {
           room.likes.push(this.props.user._id);
         }
 
-        // Set a flag to indicate the animation should be shown
         room.likeAnimation = true;
 
-        // Set a timeout to remove the animation after 1.5 seconds
         setTimeout(() => {
           room.likeAnimation = false;
           this.setState({ roomList: [...this.state.roomList] });
@@ -141,12 +278,6 @@ class OpenGamesTable extends Component {
     }
   };
 
-  calculatePercentageChange = (originalValue, newValue) => {
-    const difference = newValue - originalValue;
-    const percentageChange = (difference / originalValue) * 100;
-    return percentageChange;
-  };
-
   joinRoom = e => {
     this.setState({ isClicked: true });
 
@@ -193,111 +324,14 @@ class OpenGamesTable extends Component {
   };
 
   handleBtnLeftClicked = e => {
-    const scrollAmount = 200; // Change this value to adjust the scroll amount
+    const scrollAmount = 200;
     this.game_type_panel.scrollLeft -= scrollAmount;
   };
 
   handleBtnRightClicked = e => {
-    const scrollAmount = 200; // Change this value to adjust the scroll amount
+    const scrollAmount = 200;
     this.game_type_panel.scrollLeft += scrollAmount;
   };
-
-  generateGameTypePanel = () => {
-    const gameTypeStyleClass = {
-      R: 'roll',
-      RPS: 'rps',
-      'S!': 'spleesh',
-      MB: 'mystery-box',
-      BG: 'brain-game',
-      QS: 'quick-shoot',
-      DG: 'drop-game',
-      'B!': 'bang',
-      BJ: 'blackjack',
-      CR: 'craps'
-    };
-  
-    const gameTypePanel = (
-      <Box
-        display="flex"
-        justifyContent="space-evenly"
-        flexWrap="nowrap"
-        gap="15px"
-        ref={ref => (this.game_type_panel = ref)}
-      >
-        <Box item key="open-game-left-button">
-          <Button
-            className="btn-arrow-left"
-            onClick={this.handleBtnLeftClicked}
-          >
-            <ChevronLeftIcon />
-          </Button>
-        </Box>
-  
-        <Button
-          className={`btn-game-type btn-icon all-games ${
-            this.state.selectedGameType === 'All' ? 'active' : ''
-          }`}
-          key="open-game-all-game-button"
-          onClick={() => {
-            this.handleGameTypeButtonClicked('All');
-          }}
-        >
-          <div className="icon">
-            <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
-            <span>All Games</span>
-          </div>
-        </Button>
-        {this.props.gameTypeList.map((gameType, index) => (
-          <Button
-            className={`btn-game-type btn-icon ${
-              gameTypeStyleClass[gameType.short_name]
-            } ${
-              this.state.selectedGameType === gameType.short_name
-                ? 'active'
-                : ''
-            }`}
-            key={index}
-            onClick={() => {
-              this.handleGameTypeButtonClicked(gameType.short_name);
-            }}
-          >
-            <div className="icon">
-              <img
-                src={`/img/gametype/icons/${gameType.short_name}.svg`}
-                alt={gameType.game_type_name}
-              />
-              <span>{gameType.game_type_name}</span>
-            </div>
-          </Button>
-        ))}
-        <Button
-          className="btn-arrow-right"
-          key="open-game-right-button"
-          onClick={this.handleBtnRightClicked}
-        >
-          <ChevronRightIcon />
-        </Button>
-      </Box>
-    );
-  
-    return gameTypePanel;
-  };
-  
-
-  componentDidMount() {
-    const { roomList } = this.props;
-    this.setState({ roomList });
-    window.addEventListener('load', () => {
-      this.setState({ loaded: true, selectedGameType: 'All' });
-    });
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.roomList !== this.props.roomList) {
-      const { roomList } = this.props;
-      this.setState({ roomList, isLoading: false });
-    }
-  }
 
   handlePageNumberClicked = page => {
     this.setState({ isLoading: true });
@@ -328,8 +362,31 @@ class OpenGamesTable extends Component {
     });
   };
 
+  renderArrow = value => {
+    return value >= 0 ? (
+      <Add style={{ color: '#57ca22' }} />
+    ) : (
+      <Remove style={{ color: 'red' }} />
+    );
+  };
+
+  calculateColor = value => {
+    return value >= 0 ? '#57ca22' : 'red';
+  };
+
   render() {
     const gameTypePanel = this.generateGameTypePanel();
+    const {
+      hostNetProfitList,
+      isLoading,
+      showPlayerModal,
+      selectedCreator
+    } = this.state;
+    const roomStatistics = this.state.actionList || {
+      hostNetProfits: [],
+      hostBetsValue: []
+    };
+    // console.log(roomStatistics)
     return (
       <div className="overflowX">
         <div className="game-type-container">
@@ -342,7 +399,7 @@ class OpenGamesTable extends Component {
             {gameTypePanel}
           </div>
         </div>
-        {this.state.isLoading ? (
+        {isLoading ? (
           <div className="loading-gif-container">
             <img src={randomGifUrl} id="isLoading" alt="loading" />
           </div>
@@ -353,10 +410,10 @@ class OpenGamesTable extends Component {
                 <div>NO BATTLES YET, GO TO 'MANAGE' AND CREATE ONE</div>
               </div>
             )}
-            {this.state.showPlayerModal && (
+            {showPlayerModal && (
               <PlayerModal
-                selectedCreator={this.state.selectedCreator}
-                modalIsOpen={this.state.showPlayerModal}
+                selectedCreator={selectedCreator}
+                modalIsOpen={showPlayerModal}
                 closeModal={this.handleClosePlayerModal}
                 // {...this.state.selectedRow}
               />
@@ -428,13 +485,24 @@ class OpenGamesTable extends Component {
                           {row.joiner_avatars
                             .slice(0, 2)
                             .map((avatar, index) => (
+
+                              <a
+                        className="player"
+                        onClick={() =>
+                          this.handleOpenPlayerModal(
+                          row.joiners
+                          )
+                        }
+                      >
+
                               <Avatar
                                 className="avatar"
                                 key={index}
                                 src={avatar}
                                 alt=""
                                 darkMode={this.props.isDarkMode}
-                              />
+                                />
+                                </a>
                             ))}
                           {row.joiner_avatars.length > 2 && (
                             <div className="avatar-square">
@@ -447,80 +515,97 @@ class OpenGamesTable extends Component {
                       ) : null}
                     </div>
                     <div className="table-cell desktop-only cell-amount">
-                      {row.game_type.game_type_name === 'Mystery Box' ? (
-                        <>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            {this.calculatePercentageChange(
-                              row.bet_amount,
-                              parseFloat(row.pr) + parseFloat(row.user_bet)
-                            ) > 0 ? (
-                              <ArrowUpward style={{ color: '#57ca22' }} />
-                            ) : (
-                              <ArrowDownward style={{ color: 'red' }} />
-                            )}
-                            <span
-                              style={{
-                                color:
-                                  this.calculatePercentageChange(
-                                    row.bet_amount,
-                                    parseFloat(row.pr) +
-                                      parseFloat(row.user_bet)
-                                  ) > 0
-                                    ? '#57ca22'
-                                    : 'red'
-                              }}
-                            >
-                              {updateDigitToPoint2(
-                                this.calculatePercentageChange(
-                                  row.bet_amount,
-                                  parseFloat(row.pr) + parseFloat(row.user_bet)
-                                )
-                              )}
-                              %
-                            </span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            {this.calculatePercentageChange(
-                              row.bet_amount,
-                              row.user_bet
-                            ) > 0 ? (
-                              <ArrowUpward style={{ color: '#57ca22' }} />
-                            ) : (
-                              <ArrowDownward style={{ color: 'red' }} />
-                            )}
-                            <span
-                              style={{
-                                color:
-                                  this.calculatePercentageChange(
-                                    row.bet_amount,
-                                    row.user_bet
-                                  ) > 0
-                                    ? '#57ca22'
-                                    : 'red'
-                              }}
-                            >
-                              {updateDigitToPoint2(
-                                this.calculatePercentageChange(
-                                  row.bet_amount,
-                                  row.user_bet
-                                )
-                              )}
-                              %
-                            </span>
-                          </div>
-                        </>
-                      )}
+                      <ReactApexChart
+                        className="bankroll-graph"
+                        options={{
+                          chart: {
+                            animations: {
+                              enabled: false
+                            },
+                            toolbar: {
+                              show: false
+                            },
+                            events: {},
+                            zoom: {
+                              enabled: false
+                            }
+                          },
+                          grid: {
+                            show: false
+                          },
+                          tooltip: {
+                            enabled: false
+                          },
+                          fill: {
+                            type: 'gradient',
+                            gradient: {
+                              shade: 'light',
+                              gradientToColors: hostNetProfitList[key] > 0 ? ['#00FF00'] : hostNetProfitList[key] < 0 ? ['#FF0000'] : ['#808080'],
+                              shadeIntensity: 1,
+                              type: 'vertical',
+                              opacityFrom: 0.7,
+                              opacityTo: 0.9,
+                              stops: [0, 100, 100]
+                            }
+                          },
+
+                          stroke: {
+                            curve: 'smooth'
+                          },
+                          xaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          },
+                          yaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          }
+                        }}
+                        type="line"
+                        width={120}
+                        height="100"
+                        series={[
+                          {
+                            data: roomStatistics.hostNetProfits[key] && roomStatistics.hostBetsValue[key]
+                              ? roomStatistics.hostNetProfits[key].map((value, index) => [
+                                  roomStatistics.hostBetsValue[key][index],
+                                  value
+                                ])
+                              : []
+                          }
+                        ]}
+                        
+                        
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {/* {this.renderArrow(hostNetProfitList[key])} */}
+                        <span
+                          style={{
+                            color: this.calculateColor(hostNetProfitList[key])
+                          }}
+                        >
+                          {convertToCurrency(hostNetProfitList[key])}
+                        </span>
+                      </div>
                     </div>
+
                     <div className="table-cell cell-likes">
                       <div id="view">
-                        <VisibilityIcon style={{ fontSize: '1rem' }} />
+                        <Visibility style={{ fontSize: '1rem' }} />
                         <Typography variant="body1">
                           {row.views?.length || 0}
                         </Typography>
@@ -531,7 +616,7 @@ class OpenGamesTable extends Component {
                           {row.likes?.includes(this.props.user._id) ? (
                             <>
                               {!row.likeAnimation && (
-                                <ThumbUpIcon
+                                <ThumbUp
                                   style={{ fontSize: '1rem', color: 'red' }}
                                 />
                               )}
@@ -551,29 +636,27 @@ class OpenGamesTable extends Component {
                               )}
                             </>
                           ) : (
-                            <ThumbUpOutlinedIcon style={{ fontSize: '1rem' }} />
+                            <ThumbUpOutlined style={{ fontSize: '1rem' }} />
                           )}
                         </IconButton>
                         <Typography variant="body1">
                           {row.likes?.length || 0}
                         </Typography>
                       </div>
-                      <div>
+                      {/* <div>
                         <IconButton onClick={() => this.handleDislike(row)}>
                           {row.dislikes?.includes(this.props.user._id) ? (
-                            <ThumbDownIcon
+                            <ThumbDown
                               style={{ fontSize: '1rem', color: 'red' }}
                             />
                           ) : (
-                            <ThumbDownOutlinedIcon
-                              style={{ fontSize: '1rem' }}
-                            />
+                            <ThumbDownOutlined style={{ fontSize: '1rem' }} />
                           )}
                         </IconButton>
                         <Typography variant="body1">
                           {row.dislikes?.length || 0}
                         </Typography>
-                      </div>
+                      </div> */}
                     </div>
                     <div
                       className="table-cell cell-action"
@@ -620,18 +703,13 @@ class OpenGamesTable extends Component {
                         {row.game_type.game_type_name === 'Mystery Box' && (
                           <>WIN {convertToCurrency(row.pr)}</>
                         )}
-                        {row.game_type.game_type_name === 'Drop Game' && (
-                          <>WIN ???</>
-                        )}
+                        {/* {row.game_type.game_type_name === 'Drop Game' && (
+                          <>WIN ?</>
+                        )} */}
                         {row.game_type.game_type_name !== 'Spleesh!' &&
-                          row.game_type.game_type_name !== 'Drop Game' &&
+                          // row.game_type.game_type_name !== 'Drop Game' &&
                           row.game_type.game_type_name !== 'Mystery Box' && (
-                            <>
-                              WIN{' '}
-                              {convertToCurrency(
-                                row.user_bet
-                              )}
-                            </>
+                            <>WIN {convertToCurrency(row.user_bet)}</>
                           )}
                       </Button>
                     </div>
@@ -700,76 +778,16 @@ class OpenGamesTable extends Component {
                       ) : null}
                     </div>
                     <div className="table-cell mobile-only cell-amount">
-                      {row.game_type.game_type_name === 'Mystery Box' ? (
-                        <>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            {this.calculatePercentageChange(
-                              row.bet_amount,
-                              parseFloat(row.pr) + parseFloat(row.user_bet)
-                            ) > 0 ? (
-                              <ArrowUpward style={{ color: '#57ca22' }} />
-                            ) : (
-                              <ArrowDownward style={{ color: 'red' }} />
-                            )}
-                            <span
-                              style={{
-                                color:
-                                  this.calculatePercentageChange(
-                                    row.bet_amount,
-                                    parseFloat(row.pr) +
-                                      parseFloat(row.user_bet)
-                                  ) > 0
-                                    ? '#57ca22'
-                                    : 'red'
-                              }}
-                            >
-                              {updateDigitToPoint2(
-                                this.calculatePercentageChange(
-                                  row.bet_amount,
-                                  parseFloat(row.pr) + parseFloat(row.user_bet)
-                                )
-                              )}
-                              %
-                            </span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            {this.calculatePercentageChange(
-                              row.bet_amount,
-                              row.user_bet
-                            ) > 0 ? (
-                              <ArrowUpward style={{ color: '#57ca22' }} />
-                            ) : (
-                              <ArrowDownward style={{ color: 'red' }} />
-                            )}
-                            <span
-                              style={{
-                                color:
-                                  this.calculatePercentageChange(
-                                    row.bet_amount,
-                                    row.user_bet
-                                  ) > 0
-                                    ? '#57ca22'
-                                    : 'red'
-                              }}
-                            >
-                              {updateDigitToPoint2(
-                                this.calculatePercentageChange(
-                                  row.bet_amount,
-                                  row.user_bet
-                                )
-                              )}
-                              %
-                            </span>
-                          </div>
-                        </>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {/* {this.renderArrow(hostNetProfitList[key])} */}
+                        <span
+                          style={{
+                            color: this.calculateColor(hostNetProfitList[key])
+                          }}
+                        >
+                          {convertToCurrency(hostNetProfitList[key])}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -804,7 +822,8 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   getRoomList,
   setCurRoomInfo,
-  actionRoom
+  actionRoom,
+  getRoomStatisticsData
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);

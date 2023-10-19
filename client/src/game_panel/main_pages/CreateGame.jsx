@@ -1,6 +1,17 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import history from '../../redux/history';
+import { Button, Tabs, Tab, Drawer } from '@material-ui/core';
+
+import Footer from './Footer';
+import Summary from '../CreateGame/Summary';
+import AdvancedSettings from '../CreateGame/AdvancedSettings';
+// import MyGamesTable from '../MyGames/MyGamesTable';
+import LoadingOverlay from 'react-loading-overlay';
+import MyHistoryTable from '../MyGames/MyHistoryTable';
+import HistoryTable from '../LiveGames/HistoryTable';
+import ChatPanel from '../ChatPanel/ChatPanel';
+import DrawerButton from './DrawerButton';
+
 import RPS from '../CreateGame/RPS';
 import Spleesh from '../CreateGame/Spleesh';
 import MysteryBox from '../CreateGame/MysteryBox';
@@ -11,10 +22,9 @@ import QuickShoot from '../CreateGame/QuickShoot';
 import Bang from '../CreateGame/Bang';
 import Blackjack from '../CreateGame/Blackjack';
 import Roll from '../CreateGame/Roll';
-import { Button } from '@material-ui/core';
-import Footer from './Footer';
+
+import history from '../../redux/history';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
-import Summary from '../CreateGame/Summary';
 import {
   createRoom,
   setGameMode,
@@ -26,17 +36,9 @@ import {
 } from '../../redux/Logic/logic.actions';
 import { getBrainGameType } from '../../redux/Question/question.action';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
-import AdvancedSettings from '../CreateGame/AdvancedSettings';
-import { convertToCurrency } from '../../util/conversion';
-import MyGamesTable from '../MyGames/MyGamesTable';
-import LoadingOverlay from 'react-loading-overlay';
-// import BounceLoader from 'react-spinners/BounceLoader';
 
-import MyHistoryTable from '../MyGames/MyHistoryTable';
-import HistoryTable from '../LiveGames/HistoryTable';
-import ChatPanel from '../ChatPanel/ChatPanel';
-import { Tabs, Tab, Drawer } from '@material-ui/core';
-import DrawerButton from './DrawerButton';
+import { convertToCurrency } from '../../util/conversion';
+
 
 const customStyles = {
   tabRoot: {
@@ -423,7 +425,7 @@ class CreateGame extends Component {
   };
 
   onNextButtonClicked = () => {
-    // console.log(this.state.spleesh_bet_unit)
+    
     if (this.state.step === 2) {
       if (
         (this.state.game_mode !== 'RPS' ||
@@ -453,7 +455,7 @@ class CreateGame extends Component {
         this.state.child_step === 1 &&
         this.state.qs_list.length > 0
       ) {
-        // If the game mode is Quick Shoot and the step is 3, clear the qslist
+        
         this.setState({
           qs_list: [],
           winChance: 0,

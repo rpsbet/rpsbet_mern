@@ -19,21 +19,21 @@ if (localStorage.token) {
 }
 
 const App = props => {
-  const { isAuthenticated } = props.auth;
-  const { isAdminAuthenticated } = props.admin_auth;
+  // const { isAuthenticated } = props.auth;
+  // const { isAdminAuthenticated } = props.admin_auth;
 
-  useEffect(() => {
-    if (isAdminAuthenticated) {
-      props.getAdmin();
-    } else if (isAuthenticated) {
-      // console.log('App.jsx');
-      // props.getUser();
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (isAdminAuthenticated) {
+  //     props.getAdmin();
+  //   } else if (isAuthenticated) {
+  //     // console.log('App.jsx');
+  //     // props.getUser();
+  //   }
+  // }, []);
 
   return (
     <Switch>
-      <Route
+      {/* <Route
         path="/admin/signin"
         render={routeProps =>
           isAdminAuthenticated ? (
@@ -42,7 +42,7 @@ const App = props => {
             <AdminSignInPage {...routeProps} />
           )
         }
-      />
+      /> */}
       {/* <Route
         path="/admin/signup"
         render={routeProps =>
@@ -53,7 +53,7 @@ const App = props => {
           )
         }
       /> */}
-      <Route
+      {/* <Route
         path="/admin"
         render={routeProps =>
           !isAdminAuthenticated ? (
@@ -62,7 +62,7 @@ const App = props => {
             <AdminMainRoute {...routeProps} />
           )
         }
-      />
+      /> */}
 
       {/* <Route
         path="/signin"

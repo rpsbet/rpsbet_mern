@@ -45,7 +45,6 @@ class Dropzone extends Component {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
 
-        // Adjust these values as needed for compression
         const maxWidth = 800;
         const maxHeight = 800;
 
@@ -69,12 +68,8 @@ class Dropzone extends Component {
 
         context.drawImage(image, 0, 0, width, height);
 
-        // Convert the canvas content to a Blob (compressed image)
         canvas.toBlob((blob) => {
-          // Now you can use the compressed image (blob)
-          // For example, upload the compressed image using AJAX
 
-          // Check the size of the compressed image
           if (blob.size > 4194304) {
             alertModal(this.props.darkMode, "THIS ONE IS TOO LARGE, TRY ANOTHER");
             return;

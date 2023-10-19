@@ -34,7 +34,6 @@ class HistoryTable extends Component {
       history: this.props.history,
       showPlayerModal: false,
       rain: 0
-      // selectedGameType: 'All'
     };
   }
 
@@ -299,16 +298,16 @@ class HistoryTable extends Component {
             }}
           />
           <InlineSVG
-            class="rain"
+            className="rain"
             id="busd"
             src={require('../JoinGame/busd.svg')}
           />
           <CountUp
             end={this.state.rain}
-            start={this.state.prevRain} // Start from the previous rain value
-            duration={2} // Duration of the countup animation in seconds
+            start={this.state.prevRain}
+            duration={2}
             separator=","
-            decimals={6} // Number of decimal places
+            decimals={6}
           >
             {({ countUpRef, start }) => (
               <h1

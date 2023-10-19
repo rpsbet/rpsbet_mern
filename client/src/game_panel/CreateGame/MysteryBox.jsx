@@ -271,7 +271,7 @@ class MysteryBox extends Component {
               </div>
             </div>
           </div>
-          <div class="box-btn-row">
+          <div className="box-btn-row">
             <Button className="other" onClick={this.onAddBox}>
               Add box
             </Button>

@@ -43,7 +43,7 @@ class PlayerModal extends Component {
       myChat: [],
       actorType: 'Both',
       gameType: 'All',
-      timeType: 'allTime'
+      timeType: '7'
     };
   }
 

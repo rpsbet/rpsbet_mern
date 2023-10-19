@@ -4,7 +4,11 @@ import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
 import BetArray from '../../components/BetArray';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
+import Moment from 'moment';
+import Avatar from '../../components/Avatar';
+import ReactApexChart from 'react-apexcharts';
 
+import PlayerModal from '../modal/PlayerModal';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 // import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
@@ -61,6 +65,8 @@ class BrainGame extends Component {
       question: { _id: '', question: '' },
       answers: [],
       items: [],
+      bankroll: this.props.roomInfo.user_bet,
+
       next_question: null,
       next_answers: [],
       isPasswordCorrect: this.props.isPasswordCorrect,
@@ -101,7 +107,11 @@ class BrainGame extends Component {
   };
 
   handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+    if (
+      this.settingsRef &&
+      this.settingsRef.current &&
+      !this.settingsRef.current.contains(e.target)
+    ) {
       this.setState({ settings_panel_opened: false });
     }
   };
@@ -175,14 +185,16 @@ class BrainGame extends Component {
     } = this.props;
 
     playSound('select');
-
+    
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
+    
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
+    
 
     if (roomStatus === 'finished') {
       alertModal(isDarkMode, 'THIS STAKE HAS ENDED');
@@ -196,37 +208,56 @@ class BrainGame extends Component {
       if (is_private === true && passwordCorrect !== true) {
         openGamePasswordModal();
       } else {
-        confirmModalCreate(
-          isDarkMode,
-          'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-          'Yes',
-          'Cancel',
-          async () => {
-            if (is_private === true && passwordCorrect !== true) {
-              openGamePasswordModal();
-            } else {
-              const response = await deductBalanceWhenStartBrainGame({
-                bet_amount: bet_amount
+        const response = await deductBalanceWhenStartBrainGame({
+          bet_amount: bet_amount
+        });
+
+        if (response) {
+          const intervalId = setInterval(this.onCountDown, 1000);
+
+          this.setState({
+            is_started: true,
+            intervalId,
+            question: this.state.next_question,
+            answers: this.state.next_answers,
+            remaining_time: 60
+          });
+
+          this.getNextQuestion();
+        }
+      }
+    } else {
+      confirmModalCreate(
+        isDarkMode,
+        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+        'Yes',
+        'Cancel',
+        async () => {
+          if (is_private === true && passwordCorrect !== true) {
+            openGamePasswordModal();
+          } else {
+            const response = await deductBalanceWhenStartBrainGame({
+              bet_amount: bet_amount
+            });
+
+            if (response) {
+              const intervalId = setInterval(this.onCountDown, 1000);
+
+              this.setState({
+                is_started: true,
+                intervalId,
+                question: this.state.next_question,
+                answers: this.state.next_answers,
+                remaining_time: 60
               });
 
-              if (response) {
-                const intervalId = setInterval(this.onCountDown, 1000);
-
-                this.setState({
-                  is_started: true,
-                  intervalId,
-                  question: this.state.next_question,
-                  answers: this.state.next_answers,
-                  remaining_time: 60
-                });
-
-                this.getNextQuestion();
-              }
+              this.getNextQuestion();
             }
           }
-        );
-      }
+        }
+      );
     }
+    // }
   };
   onCountDown = async () => {
     const {
@@ -360,14 +391,11 @@ class BrainGame extends Component {
     } = this.props;
     const { betting, bet_amount, bankroll } = this.state;
 
-    // Add the necessary validation checks here
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      // Display an error message or handle the case when authentication fails
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      // Display an error message or handle the case when creator ID validation fails
       return;
     }
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
@@ -375,10 +403,8 @@ class BrainGame extends Component {
     }
 
     if (!betting) {
-      // User has turned on the switch
       this.startBetting();
     } else {
-      // User has turned off the switch
       this.stopBetting();
     }
   };
@@ -503,19 +529,54 @@ class BrainGame extends Component {
   };
 
   render() {
-    const { showAnimation, isDisabled, betting, timerValue } = this.state;
+    const {
+      is_started,
+      clicked,
+      showAnimation,
+      remaining_time,
+      isDisabled,
+      betting,
+      timerValue,
+      bankroll,
+      answers,
+      score,
+      settings_panel_opened
+    } = this.state;
+    const {
+      brain_game_type,
+      creator_id,
+      selectedCreator,
+      showPlayerModal,
+      handleOpenPlayerModal,
+      handleClosePlayerModal,
+      roomInfo,
+      bet_amount
+    } = this.props;
+    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
+    const roomStatistics = this.props.actionList || [];
 
+    const barStyle = {
+      width: `${payoutPercentage + 10}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
+    };
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
-    if (this.state.clicked) {
+    if (clicked) {
       styles.push('clicked');
       text = 'COPIED!';
     }
-    const { is_started } = this.state;
-    let arrayName = `score_array_${this.props.brain_game_type}`;
+
+    let arrayName = `score_array_${brain_game_type}`;
     return is_started === true ? (
       <div className="game-page">
+          {showPlayerModal && (
+            <PlayerModal
+              selectedCreator={selectedCreator}
+              modalIsOpen={showPlayerModal}
+              closeModal={handleClosePlayerModal}
+            />
+          )}
         <div className="game-contents">
           <div className="game-info-panel brain-game-play-panel">
             {/* <div
@@ -536,19 +597,19 @@ class BrainGame extends Component {
             <div className="play-panel-header">
               <div className="timer">
                 <div className="timer-title">Timer: </div>
-                <div className="countdown">{this.state.remaining_time}</div>
+                <div className="countdown">{remaining_time}</div>
                 <div className="timer-footer">seconds left</div>
                 <div className="timer-footer2">S</div>
               </div>
 
               <div className="brain-score">
-                Score: <span>{this.state.score}</span>
+                Score: <span>{score}</span>
               </div>
             </div>
             <div className="quiz-panel">
               <div className="question">{this.state.question.question}</div>
               <div className="answer-panel">
-                {this.state.answers.map((answer, index) => (
+                {answers.map((answer, index) => (
                   <button
                     key={index}
                     className="answer other"
@@ -577,38 +638,150 @@ class BrainGame extends Component {
                     <div>
                       <div className="label room-id">STATUS</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.status}</div>
+                    <div className="value">{roomInfo.status}</div>
                   </div>
                   <div className="data-item">
                     <div>
-                      <div className="label your-bet-amount">Bet Amount</div>
+                      <div className="label public-bet-amount">Bet Amount</div>
                     </div>
+                    <div className="value">{convertToCurrency(bet_amount)}</div>
+                  </div>
+                  <div className="data-item">
+                    <div className="label your-bet-amount">Bankroll</div>
                     <div className="value">
-                      {convertToCurrency(this.props.bet_amount)}
+                      {convertToCurrency(
+                        // updateDigitToPoint2(
+                        roomInfo.host_pr
+                        // )
+                      )}
                     </div>
                   </div>
                   <div className="data-item">
                     <div className="label your-max-return">Your Return</div>
                     <div className="value">
-                      {convertToCurrency(this.props.bet_amount * 2)}
-                    </div>
-                  </div>
-                  <div className="data-item">
-                    <div className="label public-max-return">Pot</div>
-                    <div className="value">
-                      {convertToCurrency(
-                        // updateDigitToPoint2(
-                        this.props.bet_amount * this.props.joined_count
-                        // )
-                      )}
+                      {convertToCurrency(bet_amount * 2)}
                     </div>
                   </div>
 
+                  {roomInfo.endgame_amount > 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label net-profit">Host Profit</div>
+                    </div>
+                    <div className="value bankroll">
+                      {roomStatistics.hostNetProfit?.slice(-1)[0] != null
+                        ? convertToCurrency(
+                            roomStatistics.hostNetProfit?.slice(-1)[0]
+                          )
+                        : convertToCurrency(0)}
+                      <ReactApexChart
+                        className="bankroll-graph"
+                        options={{
+                          chart: {
+                            animations: {
+                              enabled: false
+                            },
+                            toolbar: {
+                              show: false
+                            },
+                            events: {},
+                            zoom: {
+                              enabled: false
+                            }
+                          },
+                          grid: {
+                            show: false
+                          },
+                          tooltip: {
+                            enabled: false
+                          },
+                          fill: {
+                            type: 'gradient',
+                            gradient: {
+                              shade: 'light',
+                              gradientToColors:
+                                roomStatistics.hostNetProfit?.slice(-1)[0] > 0
+                                  ? ['#00FF00']
+                                  : roomStatistics.hostNetProfit?.slice(-1)[0] <
+                                    0
+                                  ? ['#FF0000']
+                                  : ['#808080'],
+                              shadeIntensity: 1,
+                              type: 'vertical',
+                              opacityFrom: 0.7,
+                              opacityTo: 0.9,
+                              stops: [0, 100, 100]
+                            }
+                          },
+
+                          stroke: {
+                            curve: 'smooth'
+                          },
+                          xaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          },
+                          yaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          }
+                        }}
+                        type="line"
+                        width={120}
+                        height="100"
+                        series={[
+                          {
+                            data: roomStatistics.hostNetProfit.map(
+                              (value, index) => [
+                                roomStatistics.hostBetsValue[index],
+                                value
+                              ]
+                            )
+                          }
+                        ]}
+                      />
+                    </div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">{this.props.creator}</div>
+                    <div className="value host">
+                      <a
+                        className="player"
+                        onClick={() => handleOpenPlayerModal(creator_id)}
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={this.props.creator_avatar}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                      </a>
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -621,6 +794,14 @@ class BrainGame extends Component {
                       <YouTubeVideo url={this.props.youtubeUrl} />
                     </div>
                   )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label public-max-return">Created</div>
+                    </div>
+                    <div className="value">
+                      {Moment(this.props.roomInfo.created_at).fromNow()}
+                    </div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -689,14 +870,14 @@ class BrainGame extends Component {
               id="btn-rps-settings"
               onClick={() =>
                 this.setState({
-                  settings_panel_opened: !this.state.settings_panel_opened
+                  settings_panel_opened: !settings_panel_opened
                 })
               }
             />
             <div
               ref={this.settingsRef}
               className={`transaction-settings ${
-                this.state.settings_panel_opened ? 'active' : ''
+                settings_panel_opened ? 'active' : ''
               }`}
             >
               <h5>AI Play Settings</h5>
@@ -758,7 +939,7 @@ class BrainGame extends Component {
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
-                  disabled={this.state.isDisabled}
+                  disabled={isDisabled}
                 >
                   Carlo
                 </Button>
@@ -768,7 +949,7 @@ class BrainGame extends Component {
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                  disabled={this.state.isDisabled}
+                  disabled={isDisabled}
                 >
                   Q Bot
                 </Button>
@@ -803,7 +984,7 @@ class BrainGame extends Component {
 
           <div className="action-panel">
             <div className="action-panel">
-              <Share roomInfo={this.props.roomInfo} />
+              <Share roomInfo={roomInfo} />
             </div>
           </div>
         </div>
@@ -819,7 +1000,9 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   roomStatus: state.logic.roomStatus,
   balance: state.auth.balance,
-  creator: state.logic.curRoomInfo.creator_name
+  creator: state.logic.curRoomInfo.creator_name,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
+
 });
 
 const mapDispatchToProps = {

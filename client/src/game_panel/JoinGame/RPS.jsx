@@ -3,7 +3,11 @@ import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-// import { updateDigitToPoint2 } from '../../util/helper';
+import ReactApexChart from 'react-apexcharts';
+import Avatar from '../../components/Avatar';
+import PlayerModal from '../modal/PlayerModal';
+import Moment from 'moment';
+
 import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
@@ -18,7 +22,6 @@ import {
 } from '../modal/betValidations';
 
 import animationData from '../LottieAnimations/spinningIcon';
-import Avatar from '../../components/Avatar';
 import {
   alertModal,
   confirmModalCreate,
@@ -225,7 +228,6 @@ class RPS extends Component {
       timer: null,
       timerValue: 2000,
       intervalId: null,
-      items: [],
       rps1Received: false,
       bgColorChanged: false,
       selected_rps: '',
@@ -276,25 +278,6 @@ class RPS extends Component {
   };
 
   componentDidMount = () => {
-    const items = [
-      {
-        label: 'Host',
-        value: this.props.creator
-      },
-      {
-        label: 'Bankroll',
-        value: convertToCurrency(this.state.bankroll)
-      },
-      {
-        label: 'Bet Amount',
-        value: convertToCurrency(this.state.bet_amount)
-      },
-      {
-        label: 'Potential Return',
-        value: convertToCurrency(this.state.bet_amount * 2 /* * 0.95 */)
-      }
-    ];
-    this.setState({ items });
     const { socket } = this.props;
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({
@@ -366,7 +349,6 @@ class RPS extends Component {
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
-    console.log("next", selected_rps)
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
@@ -626,7 +608,6 @@ class RPS extends Component {
 
     // Set selected_rps state with await
     await this.setState({ selected_rps: randomItem });
-    console.log(this.state.selected_rps);
 
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
@@ -684,15 +665,29 @@ class RPS extends Component {
   };
 
   render() {
-    const { isDisabled, betting, timerValue } = this.state;
+    const { isDisabled, betting, timerValue, bankroll } = this.state;
+    const roomStatistics = this.props.actionList || [];
+    const { selectedCreator, showPlayerModal, roomInfo } = this.props;
+    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
-    const rpsValueAtLastIndex = this.state.rps[this.state.rps.length - 1]?.rps; // Ensure rps[this.state.rps.length - 1] exists and access its rps property
-
+    const barStyle = {
+      width: `${payoutPercentage + 10}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
+    };
+    const rpsValueAtLastIndex = this.state.rps[this.state.rps.length - 1]?.rps;
     return (
       <div className="game-page">
         <div className="page-title">
           <h2>PLAY - RPS</h2>
         </div>
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={this.props.handleClosePlayerModal}
+            // {...this.state.selectedRow}
+          />
+        )}
         <div className="game-contents">
           <div
             className="pre-summary-panel"
@@ -712,9 +707,7 @@ class RPS extends Component {
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bankroll)}
-                    </div>
+                    <div className="value">{convertToCurrency(bankroll)}</div>
                   </div>
 
                   <div className="data-item">
@@ -735,11 +728,121 @@ class RPS extends Component {
                     </div>
                     <div className="value">33%</div>
                   </div>
+                  {this.props.roomInfo.endgame_amount > 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label net-profit">Host Profit</div>
+                    </div>
+                    <div className="value bankroll">
+                      {convertToCurrency(
+                        roomStatistics.hostNetProfit?.slice(-1)[0]
+                      )}
+                      <ReactApexChart
+                        className="bankroll-graph"
+                        options={{
+                          chart: {
+                            animations: {
+                              enabled: false
+                            },
+                            toolbar: {
+                              show: false
+                            },
+                            events: {},
+                            zoom: {
+                              enabled: false
+                            }
+                          },
+                          grid: {
+                            show: false
+                          },
+                          tooltip: {
+                            enabled: false
+                          },
+                          fill: {
+                            type: 'gradient',
+                            gradient: {
+                              shade: 'light',
+                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
+                              shadeIntensity: 1,
+                              type: 'vertical',
+                              opacityFrom: 0.7,
+                              opacityTo: 0.9,
+                              stops: [0, 100, 100]
+                            }
+                          },
+
+                          stroke: {
+                            curve: 'smooth'
+                          },
+                          xaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          },
+                          yaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          }
+                        }}
+                        type="line"
+                        width={120}
+                        height="100"
+                        series={[
+                          {
+                            data: roomStatistics.hostNetProfit.map(
+                              (value, index) => [
+                                roomStatistics.hostBetsValue[index],
+                                value
+                              ]
+                            )
+                          }
+                        ]}
+                      />
+                    </div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">{this.props.creator}</div>
+                    <div className="value host">
+                      <a
+                        className="player"
+                        onClick={() =>
+                          this.props.handleOpenPlayerModal(
+                            this.props.creator_id
+                          )
+                        }
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={this.props.creator_avatar}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                      </a>
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -752,6 +855,14 @@ class RPS extends Component {
                       <YouTubeVideo url={this.props.youtubeUrl} />
                     </div>
                   )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label public-max-return">Created</div>
+                    </div>
+                    <div className="value">
+                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                    </div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -1039,7 +1150,7 @@ const mapStateToProps = state => ({
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
-  creator: state.logic.curRoomInfo.creator_name,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
   betResults: state.logic.betResults
 });
 

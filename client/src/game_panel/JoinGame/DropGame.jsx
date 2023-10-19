@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-// import { updateDigitToPoint2 } from '../../util/helper';
+import ReactApexChart from 'react-apexcharts';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-
+import Moment from 'moment';
+import Avatar from '../../components/Avatar';
+import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
 // import gemBg from '../LottieAnimations/gem-bg.json';
 
@@ -19,7 +21,6 @@ import {
 
 import animationData from '../LottieAnimations/spinningIcon';
 import drop from '../LottieAnimations/drop.json';
-import Avatar from '../../components/Avatar';
 import BetAmountInput from '../../components/BetAmountInput';
 import {
   alertModal,
@@ -85,7 +86,6 @@ class DropGame extends Component {
       timer: null,
       timerValue: 2000,
       intervalId: null,
-      items: [],
       showAnimation: false,
       bgColorChanged: false,
       drop_guesses: [],
@@ -178,27 +178,6 @@ class DropGame extends Component {
     this.socket.on('DROP_GUESSES', data => {
       this.setState({ drop_guesses: data });
     });
-
-    const items = [
-      {
-        label: 'Host',
-        value: this.props.creator
-      },
-      {
-        label: 'Bankroll',
-        value: convertToCurrency(this.state.bankroll)
-      },
-      {
-        label: 'Bet Amount',
-        value: convertToCurrency(this.state.bet_amount)
-      },
-      {
-        label: 'Potential Return',
-        value: convertToCurrency(this.state.bet_amount * 2 /* * 0.95 */)
-        // )
-      }
-    ];
-    this.setState({ items });
     const { socket } = this.props;
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll });
@@ -591,13 +570,28 @@ class DropGame extends Component {
   };
 
   render() {
-    const { showAnimation, isDisabled, betting, timerValue } = this.state;
+    const { showAnimation, isDisabled, bankroll, betting, timerValue } = this.state;
+    const roomStatistics = this.props.actionList || [];
+    const { selectedCreator, showPlayerModal, roomInfo } = this.props;
+    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
+    const barStyle = {
+      width: `${payoutPercentage + 10}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
+    };
     return (
       <div className="game-page">
         <div className="page-title">
           <h2>PLAY - Drop Game</h2>
         </div>
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={this.props.handleClosePlayerModal}
+            // {...this.state.selectedRow}
+          />
+        )}
         <div className="game-contents">
           <div className="pre-summary-panel" ref={this.panelRef}>
             <div className="pre-summary-panel__inner">
@@ -609,7 +603,15 @@ class DropGame extends Component {
                     </div>
                     <div className="value">{this.props.roomInfo.status}</div>
                   </div>
-
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-bet-amount">Bankroll</div>
+                    </div>
+                    <div className="value bankroll">
+                      {convertToCurrency(this.state.bankroll)}
+                     
+                    </div>
+                    </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
@@ -619,16 +621,126 @@ class DropGame extends Component {
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
-                        (this.state.bet_amount * 2) - 0.001
+                        (this.state.bet_amount) + ' + ??'
                         // )
                       )}
+                    </div>
+                  </div>
+                  {this.props.roomInfo.endgame_amount > 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label net-profit">Host Profit</div>
+                    </div>
+                    <div className="value bankroll">
+                      {convertToCurrency(
+                        roomStatistics.hostNetProfit?.slice(-1)[0]
+                      )}
+                      <ReactApexChart
+                        className="bankroll-graph"
+                        options={{
+                          chart: {
+                            animations: {
+                              enabled: false
+                            },
+                            toolbar: {
+                              show: false
+                            },
+                            events: {},
+                            zoom: {
+                              enabled: false
+                            }
+                          },
+                          grid: {
+                            show: false
+                          },
+                          tooltip: {
+                            enabled: false
+                          },
+                          fill: {
+                            type: 'gradient',
+                            gradient: {
+                              shade: 'light',
+                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
+                              shadeIntensity: 1,
+                              type: 'vertical',
+                              opacityFrom: 0.7,
+                              opacityTo: 0.9,
+                              stops: [0, 100, 100]
+                            }
+                          },
+
+                          stroke: {
+                            curve: 'smooth'
+                          },
+                          xaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          },
+                          yaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          }
+                        }}
+                        type="line"
+                        width={120}
+                        height="100"
+                        series={[
+                          {
+                            data: roomStatistics.hostNetProfit.map(
+                              (value, index) => [
+                                roomStatistics.hostBetsValue[index],
+                                value
+                              ]
+                            )
+                          }
+                        ]}
+                      />
                     </div>
                   </div>
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">{this.props.creator}</div>
+                    <div className="value host">
+                      <a
+                        className="player"
+                        onClick={() =>
+                          this.props.handleOpenPlayerModal(
+                            this.props.creator_id
+                          )
+                        }
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={this.props.creator_avatar}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                      </a>
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -641,6 +753,14 @@ class DropGame extends Component {
                       <YouTubeVideo url={this.props.youtubeUrl} />
                     </div>
                   )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label public-max-return">Created</div>
+                    </div>
+                    <div className="value">
+                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                    </div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -899,6 +1019,8 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
+
   betResults: state.logic.betResults
 });
 

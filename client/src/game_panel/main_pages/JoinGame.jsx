@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import TabbedContent from '../../components/TabbedContent';
 import Moment from 'moment';
+import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import { Button, Drawer } from '@material-ui/core';
 import LoadingOverlay from 'react-loading-overlay';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
@@ -48,7 +49,6 @@ const customStyles = {
   tabRoot: {
     textTransform: 'none',
     width: '50%',
-    // height: '48px'
   }
 };
 
@@ -76,6 +76,9 @@ class JoinGame extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      actionList: null,
+      showPlayerModal: false,
+      selectedCreator: '',
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
       joiningRoom: false,
@@ -98,7 +101,6 @@ class JoinGame extends Component {
         bang: new Audio('/sounds/bang.mp3'),
         shine: new Audio('/sounds/shine.mp3'),
         cards: new Audio('/sounds/card.mp3'),
-        // fuse: new Audio('/sounds/fuse.mp3'),
       },
       currentSound: null,
     };
@@ -130,6 +132,7 @@ class JoinGame extends Component {
 
   componentDidMount() {
     this.setState({ loading: true });
+    this.getRoomData(this.props.match.params.id);
 
   setTimeout(() => {
     this.setState({ loading: false });
@@ -229,42 +232,27 @@ class JoinGame extends Component {
           console.log(`Error playing sound "${sound}":`, error);
         });
       }
-      this.setState({ currentSound: audio }); // Store a reference to the currently playing sound
+      this.setState({ currentSound: audio });
     }
   };
   
   playSoundLoop = sound => {
     if (!this.props.isMuted) {
       const audio = this.state.sounds[sound];
-      if (audio.paused) { // Check if the sound is not already playing
-        audio.currentTime = 3; // Set the starting time to 3 seconds
-        audio.loop = true; // Enable looping
+      if (audio.paused) {
+        audio.currentTime = 3;
+        audio.loop = true;
         const playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise.catch(error => {
             console.log(`Error playing sound "${sound}":`, error);
           });
         }
-        this.setState({ currentSound: audio }); // Store a reference to the currently playing sound
+        this.setState({ currentSound: audio });
       }
     }
   };
   
-  // fadeOutSound = () => {
-  //   const { currentSound } = this.state;
-  //   if (currentSound) {
-  //     const fadeOutInterval = setInterval(() => {
-  //       currentSound.volume -= 0.1;
-  //       if (currentSound.volume <= 0.1) {
-  //         clearInterval(fadeOutInterval);
-  //         currentSound.pause();
-  //         currentSound.currentTime = 0;
-  //         currentSound.volume = 1;
-  //         this.setState({ currentSound: null }); // Clear the reference to the currently playing sound
-  //       }
-  //     }, 100);
-  //   }
-  // };
 
   onChangeState = async newState => {
     await this.setState(newState);
@@ -282,9 +270,30 @@ class JoinGame extends Component {
     }
   };
   
+  getRoomData = async roomId => {
+    try {
+      const actionList = await this.props.getRoomStatisticsData(roomId);
+      this.setState({
+        actionList: actionList
+      });
+      
+    } catch (error) {
+      console.error('Error fetching room data:', error);
+    }
+  };
   
+  handleOpenPlayerModal = creator_id => {
+    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+  };
+
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
+
   refreshHistory = () => {
     this.props.getRoomInfo(this.props.match.params.id);
+    this.getRoomData(this.props.match.params.id);
+
   };
 
   showOpenGameOrHistory = (e, newValue) => {
@@ -382,17 +391,27 @@ class JoinGame extends Component {
                     join={this.join}
                     roomInfo={this.props.roomInfo}
                     user_id={this.props.user_id}
+                    handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                     creator_id={this.props.roomInfo.creator_id}
                     bet_amount={this.props.roomInfo.bet_amount}
                     bankroll={this.state.bankroll}
                     rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Spleesh!' && (
                   <Spleesh
                     refreshHistory={this.refreshHistory}
+                    handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                     join={this.join}
                     spleesh_bet_unit={this.props.roomInfo.spleesh_bet_unit}
                     game_log_list={this.props.roomInfo.game_log_list || []}
@@ -403,11 +422,17 @@ class JoinGame extends Component {
                     playSound={this.playSound}
                     is_private={this.props.roomInfo.is_private}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Mystery Box' &&
                   this.props.roomInfo.box_list.length > 0 && (
                     <MysteryBox
+                    handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                       refreshHistory={this.refreshHistory}
                       join={this.join}
                       box_list={this.props.roomInfo.box_list}
@@ -419,10 +444,16 @@ class JoinGame extends Component {
                       playSound={this.playSound}
                       betResult={this.state.betResult}
                       youtubeUrl={this.props.roomInfo.youtubeUrl}
+                      actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                     />
                   )}
                 {this.props.roomInfo.game_type === 'Brain Game' && (
                   <BrainGame
+                  handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                     refreshHistory={this.refreshHistory}
                     join={this.join}
                     brain_game_type={this.props.roomInfo.brain_game_type}
@@ -439,10 +470,16 @@ class JoinGame extends Component {
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Quick Shoot' && (
                   <QuickShoot
+                  handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                     refreshHistory={this.refreshHistory}
                     join={this.join}
                     user_id={this.props.user_id}
@@ -455,10 +492,16 @@ class JoinGame extends Component {
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Drop Game' && (
                   <DropGame
+                  handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                     refreshHistory={this.refreshHistory}
                     join={this.join}
                     user_id={this.props.user_id}
@@ -470,12 +513,18 @@ class JoinGame extends Component {
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Bang!' && (
                   <Bang
                     refreshHistory={this.refreshHistory}
                     join={this.join}
+                    handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                     user_id={this.props.user_id}
                     creator_id={this.props.roomInfo.creator_id}
                     aveMultiplier={this.props.roomInfo.aveMultiplier}
@@ -490,10 +539,16 @@ class JoinGame extends Component {
                     playSoundLoop={this.playSoundLoop}
                     stopSound={this.stopSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                   />
                 )}
                 {this.props.roomInfo.game_type === 'Roll' && (
                   <Roll
+                  handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                     refreshHistory={this.refreshHistory}
                     join={this.join}
                     user_id={this.props.user_id}
@@ -509,10 +564,16 @@ class JoinGame extends Component {
                     playSound={this.playSound}
                     stopSound={this.stopSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                   />
                 )}
 {this.props.roomInfo.game_type === 'Blackjack' && (
                   <Blackjack
+                  handleOpenPlayerModal={this.handleOpenPlayerModal}
+                    handleClosePlayerModal={this.handleClosePlayerModal}
+                    selectedCreator={this.state.selectedCreator}
+                    showPlayerModal={this.state.showPlayerModal}
                     refreshHistory={this.refreshHistory}
                     playSound={this.playSound}
                     join={this.join}
@@ -524,11 +585,13 @@ class JoinGame extends Component {
                     bj_bet_item_id={this.props.roomInfo.bj_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    actionList={this.state.actionList}
+                    getRoomData={this.getRoomData}
                   />
                 )}
                 
               </div>
-              <TabbedContent roomInfo={this.props.roomInfo}/>
+              <TabbedContent actionList={this.state.actionList} roomInfo={this.props.roomInfo} getRoomData={this.getRoomData}/>
               <div>
                 {((!this.state.is_mobile &&
                   this.props.selectedMainTabIndex === 1) ||
@@ -744,6 +807,7 @@ const mapDispatchToProps = {
   getMyChat,
   getMyGames,
   getMyHistory,
+  getRoomStatisticsData,
   getHistory,
   toggleDrawer,
   getGameTypeList

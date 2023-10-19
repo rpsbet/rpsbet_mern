@@ -3,9 +3,12 @@ import { connect } from 'react-redux';
 import history from '../../redux/history';
 import BetArray from '../../components/BetArray';
 import Lottie from 'react-lottie';
-import mountainsBg from '../LottieAnimations/mountains-bg.json';
+// import mountainsBg from '../LottieAnimations/mountains-bg.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-
+import ReactApexChart from 'react-apexcharts';
+import Moment from 'moment';
+import Avatar from '../../components/Avatar';
+import PlayerModal from '../modal/PlayerModal';
 import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import {
   validateIsAuthenticated,
@@ -17,7 +20,6 @@ import {
 import animationData from '../LottieAnimations/spinningIcon';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
-// import { updateDigitToPoint2 } from '../../util/helper';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import ReactModal from 'react-modal';
 import Share from '../../components/Share';
@@ -69,6 +71,8 @@ class MysteryBox extends Component {
       isPasswordCorrect: false,
       isOpen: true,
       betting: false,
+      bankroll: this.props.roomInfo.host_pr,
+
       timer: null,
       bgColorChanged: false,
       timerValue: 2000,
@@ -124,6 +128,13 @@ class MysteryBox extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
+    if (prevProps.roomInfo && this.props.roomInfo) {
+      if (prevProps.roomInfo.host_pr !== this.props.roomInfo.host_pr) {
+        this.setState({
+          bankroll: parseFloat(this.props.roomInfo.host_pr)
+        });
+      }
+    }
     if (prevState.box_list !== this.state.box_list) {
       this.props.refreshHistory(() => {
         if (
@@ -158,7 +169,6 @@ class MysteryBox extends Component {
     let startProbabilities = {};
     let distinctBoxes = [...new Set(boxList)];
 
-    // Calculate start probabilities
     for (let i = 0; i < boxList.length; i++) {
       if (startProbabilities[boxList[i]]) {
         startProbabilities[boxList[i]]++;
@@ -175,7 +185,6 @@ class MysteryBox extends Component {
       startProbabilities[box] /= totalStartStates;
     }
 
-    // Calculate transition probabilities
     for (let i = 0; i < boxList.length - 1; i++) {
       let currentBox = boxList[i];
       let nextBox = boxList[i + 1];
@@ -246,27 +255,21 @@ class MysteryBox extends Component {
     } = this.props;
     const { betting, bet_amount } = this.state;
 
-    // Add the necessary validation checks here
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      // Display an error message or handle the case when authentication fails
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      // Display an error message or handle the case when creator ID validation fails
       return;
     }
 
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      // Display an error message or handle the case when bet amount validation fails
       return;
     }
 
     if (!betting) {
-      // User has turned on the switch
       this.startBetting();
     } else {
-      // User has turned off the switch
       this.stopBetting();
     }
   };
@@ -432,7 +435,6 @@ class MysteryBox extends Component {
         'Yes',
         'Cancel',
         async () => {
-          // This should be a function
           if (is_private === true) {
             openGamePasswordModal();
           } else {
@@ -522,8 +524,8 @@ class MysteryBox extends Component {
   };
 
   getBetForm = () => {
-    const { isDisabled, betting, timerValue } = this.state;
-
+    const { bankroll, isDisabled, betting, timerValue } = this.state;
+    
     let prizes = [];
     let prices = [];
     let openedBoxes = 0;
@@ -548,7 +550,6 @@ class MysteryBox extends Component {
         prizeSum += row.box_prize;
         priceSum += row.box_price;
         priceCount++;
-        // Check if the prize is greater than the price
         if (row.box_prize > row.box_price) {
           numPrizesGreaterThanPrices++;
         }
@@ -564,9 +565,6 @@ class MysteryBox extends Component {
       (this.props.roomInfo.endgame_amount - prizeSum - openedBoxes) /
       averagePrice;
     let attempts = guesses < 1 ? 1 : guesses;
-    // console.log("prizes.length", prizes.length);
-    // console.log("guesses", guesses);
-    // console.log("numPrizesGreaterThanPrices", numPrizesGreaterThanPrices);
     const styles = ['copy-btn'];
     let text = 'COPY CONTRACT';
 
@@ -574,12 +572,29 @@ class MysteryBox extends Component {
       styles.push('clicked');
       text = 'COPIED!';
     }
+    const roomStatistics = this.props.actionList || [];
+    
+    const { selectedCreator, showPlayerModal, roomInfo } = this.props;
+    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
+  
+    const barStyle = {
+      width: `${payoutPercentage + 10}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
+    };
 
     return (
       <div className="game-page">
         <div className="page-title">
           <h2>PLAY - Mystery Box</h2>
         </div>
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={this.props.handleClosePlayerModal}
+            // {...this.state.selectedRow}
+          />
+        )}
         <div className="game-contents">
           <div
             className="pre-summary-panel"
@@ -595,6 +610,16 @@ class MysteryBox extends Component {
                     </div>
                     <div className="value">{this.props.roomInfo.status}</div>
                   </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label your-bet-amount">Bankroll</div>
+                    </div>
+                    <div className="value bankroll">
+                      {convertToCurrency(this.state.bankroll)}
+                      
+                    </div>
+                  </div>
+
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">Your Return</div>
@@ -616,11 +641,121 @@ class MysteryBox extends Component {
                       %
                     </div>
                   </div>
+                  {this.props.roomInfo.endgame_amount > 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label net-profit">Host Profit</div>
+                    </div>
+                    <div className="value bankroll">
+                      {convertToCurrency(
+                        roomStatistics.hostNetProfit?.slice(-1)[0]
+                      )}
+                      <ReactApexChart
+                        className="bankroll-graph"
+                        options={{
+                          chart: {
+                            animations: {
+                              enabled: false
+                            },
+                            toolbar: {
+                              show: false
+                            },
+                            events: {},
+                            zoom: {
+                              enabled: false
+                            }
+                          },
+                          grid: {
+                            show: false
+                          },
+                          tooltip: {
+                            enabled: false
+                          },
+                          fill: {
+                            type: 'gradient',
+                            gradient: {
+                              shade: 'light',
+                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
+                              shadeIntensity: 1,
+                              type: 'vertical',
+                              opacityFrom: 0.7,
+                              opacityTo: 0.9,
+                              stops: [0, 100, 100]
+                            }
+                          },
+
+                          stroke: {
+                            curve: 'smooth'
+                          },
+                          xaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          },
+                          yaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          }
+                        }}
+                        type="line"
+                        width={120}
+                        height="100"
+                        series={[
+                          {
+                            data: roomStatistics.hostNetProfit.map(
+                              (value, index) => [
+                                roomStatistics.hostBetsValue[index],
+                                value
+                              ]
+                            )
+                          }
+                        ]}
+                      />
+                    </div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">{this.props.creator}</div>
+                    <div className="value host">
+                      <a
+                        className="player"
+                        onClick={() =>
+                          this.props.handleOpenPlayerModal(
+                            this.props.creator_id
+                          )
+                        }
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={this.props.creator_avatar}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                      </a>
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -633,6 +768,14 @@ class MysteryBox extends Component {
                       <YouTubeVideo url={this.props.youtubeUrl} />
                     </div>
                   )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label public-max-return">Created</div>
+                    </div>
+                    <div className="value">
+                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                    </div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -847,7 +990,6 @@ class MysteryBox extends Component {
               />
               {betting ? (
                 <div id="stop">
-                  {/* <span>Stop</span> */}
                   <Lottie options={defaultOptions} width={22} />
                 </div>
               ) : (
@@ -888,11 +1030,12 @@ class MysteryBox extends Component {
 
     // Calculate probability of winning
     let probabilityWinning = 1 - probabilityNotWinning;
-
+    
     return probabilityWinning;
   };
-
+  
   getBetResultForm = () => {
+    
     let prizes = [];
     this.state.box_list.map(row => {
       prizes.push({
@@ -912,12 +1055,13 @@ class MysteryBox extends Component {
 
     return (
       <div className="game-page">
+       
         <div className="game-contents mystery-box-result-contents">
           <div className="game-info-panel">
             {/* <h3 className="game-sub-title">ALL BOXES</h3> */}
             <p className="game-modal box-prizes">
             {prizes.map((item, key) => (
-                <span className={item.status} key={key}>
+              <span className={item.status} key={key}>
                   {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}
                 </span>
               ))}
@@ -949,7 +1093,7 @@ class MysteryBox extends Component {
     );
   };
 
-  render() {
+  render() { 
     return (
       <div>
         {this.getBetForm()}
@@ -989,12 +1133,13 @@ const mapStateToProps = state => ({
   roomStatus: state.logic.roomStatus,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
-  creator: state.logic.curRoomInfo.creator_name
+  creator: state.logic.curRoomInfo.creator_name,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
+
 });
 
 const mapDispatchToProps = {
   openGamePasswordModal
-  // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MysteryBox);

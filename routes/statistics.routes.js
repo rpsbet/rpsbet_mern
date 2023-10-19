@@ -25,29 +25,22 @@ getCommission = async () => {
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
     const { _id, actorType, gameType, timeType } = req.query;
+
     let transactionConditions = {};
     const gameLogsQuery = {
       $and: [
         { $or: [{ creator: _id }, { joined_user: _id }] },
         { room: { $ne: null } },
-        { game_result: { $nin: [3, -100] } } // Exclude gameLogs with game_result 3 or -100
+        { game_result: { $nin: [3, -100] } }
       ]
     };
 
-    
-
     if (actorType === 'As Host') {
-      transactionConditions.$and = [
-        { description: { $not: /joined/i } },
-      ];
+      transactionConditions.$and = [{ description: { $not: /joined/i } }];
     } else if (actorType === 'As Player') {
-      transactionConditions.$and = [
-        { description: /joined/i },
-      ];
+      transactionConditions.$and = [{ description: /joined/i }];
     } else {
-      transactionConditions.$and = [
-        { description: /-/i }
-      ];
+      transactionConditions.$and = [{ description: /-/i }];
     }
 
     // Apply additional filtering based on gameType for transactions
@@ -77,12 +70,15 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
     }
 
     let startDate;
-    if (timeType === '1') {
+    if (timeType === '24') {
       startDate = new Date(new Date().setDate(new Date().getDate() - 1));
     } else if (timeType === '7') {
       startDate = new Date(new Date().setDate(new Date().getDate() - 7));
     } else if (timeType === '30') {
       startDate = new Date(new Date().setDate(new Date().getDate() - 30));
+    } else if (timeType === '1') {
+      // Adding condition for 1 hour
+      startDate = new Date(new Date().setHours(new Date().getHours() - 1));
     }
 
     if (startDate) {
@@ -90,18 +86,26 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       gameLogsQuery.$and.push({ created_at: { $gte: startDate } });
     }
 
-    const [receipts, transactions, gameLogs] = await Promise.all([
-      Receipt.find({ user_id: _id }).select('payment_type amount'),
-      Transaction.find({ user: _id, ...transactionConditions }),
-      GameLog.find(gameLogsQuery) // Use the updated query for gameLogs
-        .sort({ created_at: 'asc' })
-        .populate([
-          { path: 'creator', model: User },
-          { path: 'joined_user', model: User },
-          { path: 'room', model: Room },
-          { path: 'game_type', model: GameType }
-        ])
-    ]);
+    const receipts = await Receipt.find({ user_id: _id }).select(
+      'payment_type amount'
+    );
+
+    const transactions = await Transaction.find({
+      user: _id,
+      ...transactionConditions
+    });
+
+    const gameLogs = await GameLog.find(gameLogsQuery)
+      .select(
+        'creator joined_user selected_drop room game_type bet_amount created_at game_result'
+      )
+      .sort({ created_at: 'asc' })
+      .populate([
+        { path: 'creator', model: User, select: '_id username' },
+        { path: 'joined_user', model: User, select: '_id username' },
+        { path: 'room', model: Room, select: 'room_number qs_game_type' },
+        { path: 'game_type', model: GameType, select: 'short_name' }
+      ]);
 
     let statistics = {
       deposit: 0,
@@ -174,45 +178,48 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           : gameLog.bet_amount * 2 - gameLog.bet_amount;
         net_profit = 0 - gameLog.bet_amount * commission;
       } else if (gameLog.game_type && gameLog.game_type.short_name === 'QS') {
-        if (gameLog.game_result === -1) {
-          profit = 0 - gameLog.bet_amount;
-          net_profit = 0 - gameLog.bet_amount * commission;
-        } else {
-          profit = isHost
-            ? 0 - gameLog.bet_amount
-            : gameLog.bet_amount * gameLog.room.qs_game_type;
-          net_profit = isHost
-            ? 0 -
-              gameLog.bet_amount +
-              ((commission - 0.5) / 100) *
-                gameLog.bet_amount *
-                gameLog.room.qs_game_type
-            : gameLog.bet_amount *
-                gameLog.room.qs_game_type *
+        profit =
+            isHost && gameLog.game_result === -1
+              ? gameLog.bet_amount * 2
+              : isJoined && gameLog.game_result === 1
+              ? (gameLog.bet_amount +
+                gameLog.bet_amount / (gameLog.room.qs_game_type - 1))
+              : 0 - gameLog.bet_amount / (gameLog.room.qs_game_type - 1);
+          net_profit =
+            isHost && gameLog.game_result === -1
+              ? gameLog.bet_amount * 2
+              : isJoined && gameLog.game_result === 1
+              ? (gameLog.bet_amount +
+                gameLog.bet_amount / (gameLog.room.qs_game_type - 1)) *
                 ((100 - commission) / 100) -
-              gameLog.bet_amount;
-        }
+              gameLog.bet_amount
+              : isJoined && gameLog.game_result === -1
+              ? 0 - gameLog.bet_amount
+              : (0 - gameLog.bet_amount / (gameLog.room.qs_game_type - 1)) + ((gameLog.bet_amount + gameLog.bet_amount / (gameLog.room.qs_game_type - 1)) * ((commission - 0.5) / 100));
       } else if (gameLog.game_type && gameLog.game_type.short_name === 'DG') {
-        if (gameLog.game_result === -1) {
-          profit = 0 - gameLog.bet_amount;
-          net_profit = 0 - gameLog.bet_amount * commission;
+        if (gameLog.game_result === 0) {
+          profit = 0;
+          net_profit = 0;
         } else {
           profit =
-            (isHost && gameLog.game_result === 1) ||
-            (isJoined && gameLog.game_result === -1)
-              ? 0 - gameLog.selected_drop
-              : gameLog.bet_amount + gameLog.selected_drop;
+            isHost && gameLog.game_result === -1
+            ? gameLog.bet_amount + gameLog.selected_drop
+            : isJoined && gameLog.game_result === 1
+            ? (gameLog.bet_amount + gameLog.selected_drop)
+            : isJoined && gameLog.game_result === -1
+            ? 0 - gameLog.bet_amount
+            : 0 - gameLog.selected_drop;
           net_profit =
-            (isHost && gameLog.game_result === 1) ||
-            (isJoined && gameLog.game_result === -1)
-              ? 0 -
-                gameLog.selected_drop +
-                ((commission - 0.5) / 100) *
-                  (gameLog.bet_amount + gameLog.selected_drop)
-              : ((gameLog.bet_amount + gameLog.selected_drop) *
-                  (100 - commission)) /
-                  100 -
-                gameLog.bet_amount;
+            isHost && gameLog.game_result === -1
+              ? gameLog.bet_amount + gameLog.selected_drop
+              : isJoined && gameLog.game_result === 1
+              ? (gameLog.bet_amount + gameLog.selected_drop) * ((100 - commission) / 100) -
+                gameLog.bet_amount
+              : isJoined && gameLog.game_result === -1
+              ? 0 - gameLog.bet_amount
+              : 0 -
+                gameLog.selected_drop  +
+                (gameLog.selected_drop + gameLog.bet_amount) * ((commission - 0.5) / 100);
         }
       } else if (gameLog.game_type && gameLog.game_type.short_name === 'MB') {
         profit = isHost
@@ -230,27 +237,25 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           net_profit = 0;
         } else {
           profit =
-            (isHost && gameLog.game_result === 1) ||
-            (isJoined && gameLog.game_result === -1)
-              ? 0 - gameLog.bet_amount
-              : gameLog.bet_amount * 2;
+            isHost && gameLog.game_result === -1
+              ? gameLog.bet_amount * 2
+              : isJoined && gameLog.game_result === 1
+              ? gameLog.bet_amount * 2
+              : 0 - gameLog.bet_amount;
           net_profit =
-            (isHost && gameLog.game_result === 1) ||
-            (isJoined && gameLog.game_result === -1)
-              ? 0 -
+            isHost && gameLog.game_result === -1
+              ? gameLog.bet_amount * 2
+              : isJoined && gameLog.game_result === 1
+              ? gameLog.bet_amount * 2 * ((100 - commission) / 100) -
+                gameLog.bet_amount
+              : isJoined && gameLog.game_result === -1
+              ? 0 - gameLog.bet_amount
+              : 0 -
                 gameLog.bet_amount +
-                ((commission - 0.5) / 100) * gameLog.bet_amount * 2
-              : (gameLog.bet_amount * 2 * (100 - commission)) / 100 -
-                gameLog.bet_amount;
+                2 * gameLog.bet_amount * ((commission - 0.5) / 100);
         }
       }
-
-        // Group game logs by room and calculate the count for each room
-    const roomCounts = {};
-    for (const gameLog of gameLogs) {
-      if (!gameLog.room) {
-        continue; // Skip gameLogs with null room property
-      }
+      const roomCounts = {};
 
       const roomId = gameLog.room._id.toString();
       if (roomCounts[roomId]) {
@@ -258,14 +263,16 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       } else {
         roomCounts[roomId] = 1;
       }
-    }
 
-    // Calculate the average count for all rooms
-    const roomIds = Object.keys(roomCounts);
-    if (roomIds.length > 0) {
-      const totalRoomCount = roomIds.reduce((total, roomId) => total + roomCounts[roomId], 0);
-      statistics.averageGamesPlayedPerRoom = totalRoomCount / roomIds.length;
-    }
+      // Calculate the average count for all rooms
+      const roomIds = Object.keys(roomCounts);
+      if (roomIds.length > 0) {
+        const totalRoomCount = roomIds.reduce(
+          (total, roomId) => total + roomCounts[roomId],
+          0
+        );
+        statistics.averageGamesPlayedPerRoom = totalRoomCount / roomIds.length;
+      }
 
       if (statistics.profitAllTimeHigh < profit) {
         statistics.profitAllTimeHigh = profit;
@@ -425,19 +432,30 @@ router.get('/get-total-statistics', auth, async (req, res) => {
     });
   }
 });
+
 router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
     const commission = await getCommission();
 
-    const gameLogs = await GameLog.find({ room: room_id })
+    const gameLogs = await GameLog.find({
+      $and: [{ room: { $ne: null } }, { game_result: { $nin: [3, -100] } }],
+      room: room_id
+    })
       .sort({ created_at: 'asc' })
-      .populate({ path: 'game_type', model: GameType })
-      .populate({ path: 'joined_user', model: User });
+      .populate({ path: 'game_type', model: GameType, select: 'short_name' })
+      .populate({ path: 'room', model: Room, select: 'qs_game_type' })
+      .populate({
+        path: 'joined_user',
+        model: User,
+        select: '_id username avatar'
+      });
 
     const playerStats = {};
 
     for (const gameLog of gameLogs) {
+      const _id = gameLog.joined_user._id;
+      const avatar = gameLog.joined_user.avatar;
       const actor = gameLog.joined_user.username;
       const wagered = gameLog.bet_amount;
       let net_profit = 0;
@@ -447,17 +465,17 @@ router.get('/get-room-statistics', async (req, res) => {
         net_profit = 0 - wagered * commission;
       } else if (gameLog.game_type && gameLog.game_type.short_name === 'QS') {
         if (gameLog.game_result === -1) {
-          net_profit = 0 - wagered * commission;
+          net_profit = 0 - wagered;
         } else {
           net_profit =
-            wagered *
-              gameLog.game_type.game_type_id *
+            (wagered + wagered /
+              (gameLog.room.qs_game_type - 1)) *
               ((100 - commission) / 100) -
             wagered;
         }
       } else if (gameLog.game_type && gameLog.game_type.short_name === 'DG') {
         if (gameLog.game_result === -1) {
-          net_profit = 0 - wagered * commission;
+          net_profit = 0 - wagered;
         } else {
           net_profit =
             ((wagered + gameLog.selected_drop) * (100 - commission)) / 100 -
@@ -468,31 +486,106 @@ router.get('/get-room-statistics', async (req, res) => {
       } else {
         if (gameLog.game_result === 0) {
           net_profit = 0;
+        } else if (gameLog.game_result === 1) {
+          net_profit = wagered * 2 * ((100 - commission) / 100) - wagered;
         } else {
-          net_profit = (wagered * 2 * (100 - commission)) / 100 - wagered;
+          net_profit = 0 - wagered;
         }
       }
 
       // Accumulate net profit for each player
       if (playerStats[actor]) {
+        playerStats[actor].avatar = avatar;
+        playerStats[actor]._id = _id;
         playerStats[actor].wagered += wagered;
         playerStats[actor].net_profit += net_profit;
-        playerStats[actor].bets += gameLog.game_result === 0 ? 0 : 1;
+        playerStats[actor].bets +=
+          gameLog.game_result === 0 ||
+          gameLog.game_result === -1 ||
+          gameLog.game_result === 1
+            ? 1
+            : 0;
+
+        playerStats[actor].net_profit_values.push(
+          playerStats[actor].net_profit
+        );
+        playerStats[actor].bets_values.push(playerStats[actor].bets);
       } else {
         playerStats[actor] = {
+          avatar,
+          _id,
           actor,
           wagered,
           net_profit,
-          bets: gameLog.game_result === 0 ? 0 : 1
+          bets:
+            gameLog.game_result === 0 ||
+            gameLog.game_result === -1 ||
+            gameLog.game_result === 1
+              ? 1
+              : 0
         };
+        playerStats[actor].net_profit_values = [net_profit];
+        playerStats[actor].bets_values = [
+          gameLog.game_result === 0 ||
+          gameLog.game_result === -1 ||
+          gameLog.game_result === 1
+            ? 1
+            : 0
+        ];
       }
     }
 
-    // Convert playerStats object to an array and sort by net profit (highest first)
-    const room_info = Object.values(playerStats);
+    const room_info = Object.values(playerStats).map(player => ({
+      _id: player._id,
+      avatar: player.avatar,
+      actor: player.actor,
+      wagered: player.wagered,
+      net_profit: player.net_profit,
+      bets: player.bets,
+      net_profit_values: player.net_profit_values,
+      bets_values: player.bets_values
+    }));
+
     room_info.sort((a, b) => b.net_profit - a.net_profit);
 
-    res.json({ success: true, room_info });
+    // Calculate hostNetProfit
+    const hostNetProfit = [];
+    for (const player of room_info) {
+      const netProfitValues = player.net_profit_values;
+      while (hostNetProfit.length < netProfitValues.length) {
+        hostNetProfit.push(0);
+      }
+
+      for (let i = 0; i < netProfitValues.length; i++) {
+        hostNetProfit[i] += -1 * netProfitValues[i];
+      }
+    }
+
+    // Calculate hostBetsValue
+    const hostBetsValue = [];
+    for (const player of room_info) {
+      const betsValues = player.bets_values;
+      while (hostBetsValue.length < betsValues.length) {
+        hostBetsValue.push(0);
+      }
+
+      for (let i = 0; i < betsValues.length; i++) {
+        hostBetsValue[i] += 1;
+      }
+    }
+
+    for (let i = 1; i < hostBetsValue.length; i++) {
+      hostBetsValue[i] += hostBetsValue[i - 1];
+    }
+
+    const response = {
+      success: true,
+      room_info: room_info,
+      hostNetProfit,
+      hostBetsValue
+    };
+
+    res.json(response);
   } catch (error) {
     console.log('error***', error);
     res.status(500).json({ success: false, message: 'Internal server error' });

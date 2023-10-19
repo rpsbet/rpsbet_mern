@@ -73,8 +73,7 @@ router.post('/deposit_successed', auth, async (req, res) => {
     if (!tx || !tx.blockNumber) {
       return res.status(404).send('Transaction not found or not confirmed');
     }
-    // console.log('1', tx);
-    
+  
     // Check if the transaction matches with the amount and the addresses
     const signer = new ethers.Wallet(walletKey, provider);
     const wamount = ethers.utils.parseUnits(amount, 'ether');
@@ -82,7 +81,6 @@ router.post('/deposit_successed', auth, async (req, res) => {
     if (Number(tx.value) != Number(wamount) || tx.to !== signer.address) {
       return res.status(400).send('Transaction does not match with input');
     }
-    // console.log('2', wamount);
     
     // The cron job will periodically check for confirmations and update the balance
     // No need to update the balance here

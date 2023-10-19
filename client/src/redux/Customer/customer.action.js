@@ -187,7 +187,7 @@ export const getRoomStatisticsData = room_id => async dispatch => {
       params: { room_id }
     });
     if (data.success) {
-      return data.room_info;
+      return data;
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }

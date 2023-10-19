@@ -60,11 +60,9 @@ export const createRoom = room_info => async dispatch => {
 
 export function updateSpleeshGuesses() {
   return dispatch => {
-    // Make a GET request to your server to retrieve the spleesh guesses
     fetch('/api/spleesh/guesses')
       .then(res => res.json())
       .then(data => {
-        // Dispatch the action to store the spleesh guesses in your state
         dispatch({
           type: SPLEESH_GUESSES,
           payload: data
@@ -78,11 +76,9 @@ export function updateSpleeshGuesses() {
 
 export function updateDropGuesses() {
   return dispatch => {
-    // Make a GET request to your server to retrieve the drop guesses
     fetch('/api/drop/guesses')
       .then(res => res.json())
       .then(data => {
-        // Dispatch the action to store the drop guesses in your state
         dispatch({
           type: DROP_GUESSES,
           payload: data

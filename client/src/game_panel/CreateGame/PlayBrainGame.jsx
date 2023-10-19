@@ -73,7 +73,8 @@ class PlayBrainGame extends Component {
 				is_private: this.props.is_private,
 				endgame_amount: this.props.endgame_amount,
 				is_anonymous: this.props.is_anonymous,
-				room_password: this.props.room_password
+				room_password: this.props.room_password,
+				youtubeUrl: this.props.youtubeUrl
 			});
 		}
 	}

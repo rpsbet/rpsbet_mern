@@ -3,6 +3,10 @@ import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import BetArray from '../../components/BetArray';
 import Share from '../../components/Share';
+import ReactApexChart from 'react-apexcharts';
+import Moment from 'moment';
+import Avatar from '../../components/Avatar';
+import PlayerModal from '../modal/PlayerModal';
 import {
   IconButton,
   Button,
@@ -735,7 +739,16 @@ class QuickShoot extends Component {
 
   render() {
     const { qs_game_type } = this.props;
-    const { isDisabled, betting, timerValue } = this.state;
+    const roomStatistics = this.props.actionList || [];
+
+    const { isDisabled, bankroll, betting, timerValue } = this.state;
+    const { selectedCreator, showPlayerModal, roomInfo } = this.props;
+    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
+
+    const barStyle = {
+      width: `${payoutPercentage + 10}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
+    };
     let position_name = [
       'Center',
       'Top-Left',
@@ -766,6 +779,14 @@ class QuickShoot extends Component {
         <div className="page-title">
           <h2>PLAY - Quick Shoot</h2>
         </div>
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={this.props.handleClosePlayerModal}
+            // {...this.state.selectedRow}
+          />
+        )}
         <div className="game-contents">
           <div
             className="pre-summary-panel"
@@ -786,8 +807,9 @@ class QuickShoot extends Component {
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
-                    <div className="value">
+                    <div className="value bankroll">
                       {convertToCurrency(this.state.bankroll)}
+                
                     </div>
                   </div>
 
@@ -815,13 +837,123 @@ class QuickShoot extends Component {
                       %
                     </div>
                   </div>
+                  {this.props.roomInfo.endgame_amount > 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label net-profit">Host Profit</div>
+                    </div>
+                    <div className="value bankroll">
+                      {convertToCurrency(
+                        roomStatistics.hostNetProfit?.slice(-1)[0]
+                      )}
+                      <ReactApexChart
+                        className="bankroll-graph"
+                        options={{
+                          chart: {
+                            animations: {
+                              enabled: false
+                            },
+                            toolbar: {
+                              show: false
+                            },
+                            events: {},
+                            zoom: {
+                              enabled: false
+                            }
+                          },
+                          grid: {
+                            show: false
+                          },
+                          tooltip: {
+                            enabled: false
+                          },
+                          fill: {
+                            type: 'gradient',
+                            gradient: {
+                              shade: 'light',
+                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
+                              shadeIntensity: 1,
+                              type: 'vertical',
+                              opacityFrom: 0.7,
+                              opacityTo: 0.9,
+                              stops: [0, 100, 100]
+                            }
+                          },
+
+                          stroke: {
+                            curve: 'smooth'
+                          },
+                          xaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          },
+                          yaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          }
+                        }}
+                        type="line"
+                        width={120}
+                        height="100"
+                        series={[
+                          {
+                            data: roomStatistics.hostNetProfit.map(
+                              (value, index) => [
+                                roomStatistics.hostBetsValue[index],
+                                value
+                              ]
+                            )
+                          }
+                        ]}
+                      />
+                    </div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">{this.props.creator}</div>
+                    <div className="value host">
+                      <a
+                        className="player"
+                        onClick={() =>
+                          this.props.handleOpenPlayerModal(
+                            this.props.creator_id
+                          )
+                        }
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={this.props.creator_avatar}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                      </a>
+                    </div>
                   </div>
-                   <div className="data-item">
+                  <div className="data-item">
                     <div>
                       <div className="label room-name">Room ID</div>
                     </div>
@@ -832,6 +964,14 @@ class QuickShoot extends Component {
                       <YouTubeVideo url={this.props.youtubeUrl} />
                     </div>
                   )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label public-max-return">Created</div>
+                    </div>
+                    <div className="value">
+                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                    </div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -1024,6 +1164,8 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
+
   betResults: state.logic.betResults
 });
 

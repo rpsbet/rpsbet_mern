@@ -5,16 +5,79 @@ import ShowHistoryHover from '../game_panel/icons/ShowHistoryHover';
 import ChatHover from '../game_panel/icons/ChatHover';
 import ChatRoomHover from '../game_panel/icons/ChatRoomHover';
 import Leaderboards from '../game_panel/main_pages/Leaderboards';
+import Moment from 'moment';
+import PlayerModal from '../game_panel/modal/PlayerModal';
+
+function updateFromNow(history) {
+  if (!history) {
+    return [];
+  }
+
+  const result = JSON.parse(JSON.stringify(history));
+  for (let i = 0; i < result.length; i++) {
+    result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
+  }
+  return result;
+}
 
 class TabbedContent extends Component {
   constructor(props) {
     super(props);
     this.state = {
       selectedTab: 0,
-      numToShow: 10
+      numToShow: 10,
+      showPlayerModal: false,
+
+      room_history: this.props.roomInfo.room_history
     };
     this.handleLoadMore = this.handleLoadMore.bind(this);
   }
+
+  static getDerivedStateFromProps(props, current_state) {
+    if (
+      !current_state.room_history || // Check if room_history is undefined
+      current_state.room_history.length === 0 ||
+      (props.roomInfo.room_history &&
+        current_state.room_history[0]['created_at'] !==
+          props.roomInfo.room_history[0]['created_at'])
+    ) {
+      return {
+        ...current_state,
+        room_history: updateFromNow(props.roomInfo.room_history)
+      };
+    }
+    return null;
+  }
+
+  async componentDidMount() {
+    // this.updateReminderTime();
+    this.attachUserLinkListeners();
+  }
+
+  attachUserLinkListeners = () => {
+    const userLinks = document.querySelectorAll('.user-link');
+    userLinks.forEach(link => {
+      link.addEventListener('click', event => {
+        const userId = event.target.getAttribute('data-userid');
+        this.handleOpenPlayerModal(userId);
+      });
+    });
+  };
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.roomInfo.room_history !== this.props.roomInfo.room_history) {
+      this.attachUserLinkListeners();
+
+    }
+  }
+
+  handleOpenPlayerModal = creator_id => {
+    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+  };
+
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
+  };
 
   handleLoadMore() {
     this.setState({
@@ -27,7 +90,7 @@ class TabbedContent extends Component {
 
   render() {
     const { selectedTab } = this.state;
-
+    // console.log("hi" , this.props.roomInfo)
     return (
       <div>
         <Tabs
@@ -57,6 +120,16 @@ class TabbedContent extends Component {
               this.props.roomInfo.room_history &&
               this.props.roomInfo.room_history.length > 0 ? (
                 <div className="table main-history-table">
+                  {this.state.showPlayerModal && (
+                    <PlayerModal
+                      modalIsOpen={this.state.showPlayerModal}
+                      closeModal={this.handleClosePlayerModal}
+                      selectedCreator={this.state.selectedCreator}
+                      // player_name={this.state.userName}
+                      // balance={this.state.balance}
+                      // avatar={this.props.user.avatar}
+                    />
+                  )}
                   {this.props.roomInfo.room_history
                     .slice(0, this.state.numToShow)
                     .map((row, key) => (
@@ -69,7 +142,10 @@ class TabbedContent extends Component {
                                 __html: row.history
                               }}
                             ></div>
-                            <div className="table-cell">{row.from_now}</div>
+                          </div>
+                          <div className="table-cell">
+                            {' '}
+                            {Moment(row.created_at).fromNow()}{' '}
                           </div>
                         </div>
                         {key ===
@@ -97,11 +173,15 @@ class TabbedContent extends Component {
               )}
             </div>
           )}
-              {selectedTab === 1 && (
-                <div>
-                  <Leaderboards getRoomInfo={this.props.roomInfo} />
-                </div>
-              )}
+          {selectedTab === 1 && (
+            <div>
+              <Leaderboards
+                actionList={this.props.actionList}
+                getRoomInfo={this.props.roomInfo._id}
+                getRoomData={this.props.getRoomData}
+              />
+            </div>
+          )}
           {selectedTab === 2 && (
             <div>
               COMING SOON

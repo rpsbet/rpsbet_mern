@@ -60,7 +60,7 @@ class ProfileModal extends Component {
       _id: this.props.userInfo._id,
       actorType: 'Both',
       gameType: 'All',
-      timeType: 'allTime',
+      timeType: '7',
       referralCode: '',
       rewards: this.props.userInfo.rewards,
       username: this.props.userInfo.username,
@@ -118,7 +118,6 @@ class ProfileModal extends Component {
   };
   
   handleAvatarLoaded = filename => {
-    console.log(filename);
     this.props.setUserInfo({ ...this.props.userInfo, avatar: filename });
   };
 

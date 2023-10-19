@@ -15,7 +15,7 @@ function generateData(gameLogList) {
   let totalProfit = 0;
   gameLogList &&
     gameLogList.forEach((log, index) => {
-      totalProfit += log.profit;
+      totalProfit += log.net_profit;
       series.push({ x: `${Number(index) + 1}`, y: totalProfit });
     });
   return series;
@@ -31,7 +31,7 @@ class StatisticsForm extends React.Component {
       showButton: false,
       actorType: 'Both',
       gameType: 'All',
-      timeType: 'allTime',
+      timeType: '7',
       url: '',
       roomName: '',
       roomId: ''
@@ -369,7 +369,8 @@ class StatisticsForm extends React.Component {
                   value={this.state.timeType}
                   onChange={this.handleTimeTypeChange}
                   >
-                  <MenuItem value="1">Last 24 Hours</MenuItem>
+                  <MenuItem value="1">Last Hour</MenuItem>
+                  <MenuItem value="24">Last 24 Hours</MenuItem>
                   <MenuItem value="7">Last 7 Days</MenuItem>
                   <MenuItem value="30">Last 30 Days</MenuItem>
                   <MenuItem value="allTime">All-time</MenuItem>

@@ -6,6 +6,10 @@ import Share from '../../components/Share';
 import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import BetArray from '../../components/BetArray';
 // import waves from '../LottieAnimations/waves.json';
+import ReactApexChart from 'react-apexcharts';
+import Moment from 'moment';
+import Avatar from '../../components/Avatar';
+import PlayerModal from '../modal/PlayerModal';
 import bear from '../LottieAnimations/bear.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import {
@@ -438,15 +442,25 @@ class Spleesh extends Component {
   };
 
   render() {
-    const { spleesh_bet_unit, endgame_amount } = this.props;
+
+    const { selectedCreator, showPlayerModal, roomInfo, spleesh_bet_unit, endgame_amount } = this.props;
+    const roomStatistics = this.props.actionList || [];
+
     const {
       spleesh_guesses,
       showAnimation,
       isDisabled,
       betting,
+      bankroll,
       timerValue
     } = this.state;
 
+const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
+
+    const barStyle = {
+      width: `${payoutPercentage + 10}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
+    };
     let arrayName;
     if (spleesh_bet_unit === 0.01) {
       arrayName = 'spleesh_array';
@@ -522,7 +536,7 @@ class Spleesh extends Component {
     const marginTop =
       marginTopMin + ((averageGuesses - 1) / 9) * (marginTopMax - marginTopMin);
     const marginTopScaled = marginTop;
-
+   
     return (
       <div className="game-page">
         <div className="page-title">
@@ -572,11 +586,121 @@ class Spleesh extends Component {
                       %
                     </div>
                   </div>
+                  {this.props.roomInfo.endgame_amount > 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label net-profit">Host Profit</div>
+                    </div>
+                    <div className="value bankroll">
+                      {convertToCurrency(
+                        roomStatistics.hostNetProfit?.slice(-1)[0]
+                      )}
+                      <ReactApexChart
+                        className="bankroll-graph"
+                        options={{
+                          chart: {
+                            animations: {
+                              enabled: false
+                            },
+                            toolbar: {
+                              show: false
+                            },
+                            events: {},
+                            zoom: {
+                              enabled: false
+                            }
+                          },
+                          grid: {
+                            show: false
+                          },
+                          tooltip: {
+                            enabled: false
+                          },
+                          fill: {
+                            type: 'gradient',
+                            gradient: {
+                              shade: 'light',
+                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
+                              shadeIntensity: 1,
+                              type: 'vertical',
+                              opacityFrom: 0.7,
+                              opacityTo: 0.9,
+                              stops: [0, 100, 100]
+                            }
+                          },
+
+                          stroke: {
+                            curve: 'smooth'
+                          },
+                          xaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          },
+                          yaxis: {
+                            labels: {
+                              show: false
+                            },
+                            axisTicks: {
+                              show: false
+                            },
+                            axisBorder: {
+                              show: false
+                            }
+                          }
+                        }}
+                        type="line"
+                        width={120}
+                        height="100"
+                        series={[
+                          {
+                            data: roomStatistics.hostNetProfit.map(
+                              (value, index) => [
+                                roomStatistics.hostBetsValue[index],
+                                value
+                              ]
+                            )
+                          }
+                        ]}
+                      />
+                    </div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">{this.props.creator}</div>
+                    <div className="value host">
+                      <a
+                        className="player"
+                        onClick={() =>
+                          this.props.handleOpenPlayerModal(
+                            this.props.creator_id
+                          )
+                        }
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={this.props.creator_avatar}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                      </a>
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -589,6 +713,14 @@ class Spleesh extends Component {
                       <YouTubeVideo url={this.props.youtubeUrl} />
                     </div>
                   )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label public-max-return">Created</div>
+                    </div>
+                    <div className="value">
+                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                    </div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -780,7 +912,9 @@ const mapStateToProps = state => ({
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
-  creator: state.logic.curRoomInfo.creator_name
+  creator: state.logic.curRoomInfo.creator_name,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
+
 });
 
 const mapDispatchToProps = {

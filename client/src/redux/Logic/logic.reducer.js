@@ -34,7 +34,6 @@ const initialState = {
   isActiveLoadingOverlay: false,
   socket: null,
   game_mode: 'All',
-  // game_mode: 'Spleesh!',
   roomList: [],
   history: [],
   roomCount: 0,
@@ -59,6 +58,7 @@ const initialState = {
   curRoomInfo: {
     _id: 0,
     creator_id: '',
+    creator_avatar: '',
     aveMultiplier: '',
     joiners: {},
     game_type: '',

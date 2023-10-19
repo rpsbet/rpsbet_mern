@@ -118,6 +118,11 @@ button.btn {
   pointer-events: auto; /* Enable pointer events on the button group */
 }
 
+.leaderboards-content {
+  overflow-y: scroll;
+  width: 100%;
+}
+
 a {
   color: #b9bbbe;
   font-weight: 600;
@@ -391,7 +396,7 @@ opacity: 0.7;
   padding: 48px 6px 8px 16px;
   background-color: rgba(235, 237, 239, 0.5);
   position: relative;
-  height: calc(100vh - 50px); 
+  height: calc(100vh - -50px); 
  overflow-y: scroll;
 }
 .contents_wrapper .main-game .sub-panel {
@@ -864,6 +869,8 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
   white-space: nowrap;
 }
 
+.cell-amount span { white-space: nowrap;}
+
 .cell-likes {
   text-align: center;
   color: #333;
@@ -1243,6 +1250,20 @@ h6.score {
   background-size: 1.58em;
 }
 
+
+.game-page .pre-summary-panel div.net-profit {
+  background-image: url('/img/net_profit.svg');
+  background-repeat: no-repeat;
+  background-position: 0 8px;
+  background-size: 1.54em;
+}
+
+.game-page .pre-summary-panel div.created {
+  background-image: url('/img/created.svg');
+  background-repeat: no-repeat;
+  background-position: 0 8px;
+  background-size: 1.54em;
+}
 .game-page .pre-summary-panel div.room-name {
   background-image: url('/img/room_name.svg');
   background-repeat: no-repeat;
@@ -2618,9 +2639,6 @@ input {
   line-height: 24px;
   height: 24px;
 }
-.leaderboards-page {
-  padding: 32px 24px;
-}
 .leaderboards-page .page-title {
   display: flex;
   justify-content: space-between;
@@ -2659,11 +2677,63 @@ input {
   border-top: none;
   border-bottom: 2px solid #202225;
   text-align: right;
+  white-space: nowrap;
 }
 .leaderboards-page table td {
   border-top: 1px solid #202225;
   color: white;
-  text-align: right;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.leaderboards-page table td div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.data-item .value.host {
+  margin: auto;
+}
+
+.payout-bar {
+  background: black;
+    height: 15px;
+    width: 100px;
+    overflow: hidden;
+    border-radius: 20px;
+    margin: 8px 0;
+    border: 2px solid #212529;
+}
+
+.payout-bar .value {
+    background: linear-gradient(45deg, #9f0c0c, #f13595);
+    height: 100%;
+}
+.data-item .avatar {
+  margin-right: unset !important;
+}
+
+.data-item .value.bankroll {
+  display: flex;
+  height: 30px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.data-item .value.bankroll .bankroll-graph{
+  width: 70px;
+  margin-left: -30px;
+}
+
+.table-cell.cell-amount .bankroll-graph {
+  min-height: unset !important;
+    height: 78px;
+    margin-top: -30px;
+    margin-left: -10px;
+    margin-bottom: -7px;
+}
+.bankroll-graph div:first-child {
+  transform: scale(0.5);
 }
 .leaderboards-page table th.player,
 .leaderboards-page table td.player {
@@ -2681,6 +2751,14 @@ input {
 .leaderboards-page table tr:last-child td:last-child {
   border-bottom-right-radius: 8px;
 }
+
+.leaderboards-page table tr:last-child td:last-child div{
+  border-bottom-right-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .waves div {
   transform: scale(2.5) !important;
 }

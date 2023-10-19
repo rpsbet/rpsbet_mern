@@ -6,12 +6,11 @@ import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
-import { BigNumber } from 'ethers';
+// import { BigNumber } from 'ethers';
 import { Button, TextField } from '@material-ui/core';
 
 import { tokenAddr, adminWallet } from '../../config/index.js';
-import abi from '../../config/abi_token.json';
-import { FaClipboard } from 'react-icons/fa';
+// import abi from '../../config/abi_token.json';
 import { convertToCurrency } from '../../util/conversion';
 Modal.setAppElement('#root');
 const customStyles = {
@@ -111,13 +110,7 @@ class DepositModal extends Component {
   };
 
   render() {
-    const styles = ['copy-btn'];
-    let text = 'COPY CONTRACT';
-
-    if (this.state.clicked) {
-      styles.push('clicked');
-      text = 'COPIED!';
-    }
+    
     return (
       <><LoadingOverlay
         active={true}

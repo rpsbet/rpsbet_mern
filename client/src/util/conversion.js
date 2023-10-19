@@ -10,7 +10,6 @@ export const convertToCurrency = input => {
     let [whole, decimal] = number.toString().split('.');
     whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-    // Remove trailing zeros after the decimal point
     if (decimal) {
       decimal = decimal.replace(/0+$/, '');
     }
