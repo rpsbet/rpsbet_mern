@@ -6,8 +6,13 @@ import {
   endGame,
   addNewTransaction
 } from '../../redux/Logic/logic.actions';
-// import { updateDigitToPoint2 } from '../../util/helper';
-import { alertModal, confirmModalClosed } from '../modal/ConfirmAlerts';
+import { faFilter, faSort } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Battle from '../icons/Battle';
+
+import {
+  createRoom,
+} from '../../redux/Logic/logic.actions';import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
 import Pagination from '../../components/Pagination';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
@@ -16,7 +21,7 @@ import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
 import InlineSVG from 'react-inlinesvg';
-import { Box, Button } from '@material-ui/core';
+import { Box, Button, Menu, MenuItem } from '@material-ui/core';
 
 const defaultOptions = {
   loop: true,
@@ -34,15 +39,99 @@ class MyGamesTable extends Component {
       selectedGameType: 'All',
       holding: false,
       timer: null,
-      balance: this.props.balance
+      balance: this.props.balance,
+      anchorEl: null,
+      selectedFilter: 'open',
+      sortAnchorEl: null,
+      selectedSort: 'desc',
+      creatingRoom: false
     };
   }
 
   componentDidMount() {
-    this.props.getMyGames({
-      game_type: this.state.selectedGameType
-    });
+    this.fetchData();
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      this.state.selectedFilter !== prevState.selectedFilter ||
+      this.state.selectedSort !== prevState.selectedSort
+    ) {
+      // Filter value has changed, re-fetch data
+      this.fetchData();
+    }
+  }
+
+  fetchData = () => {
+    const { selectedFilter, selectedGameType, selectedSort } = this.state;
+
+    this.props.getMyGames({
+      game_type: selectedGameType,
+      status: selectedFilter === 'open' ? 'open' : 'finished',
+      sort: selectedSort
+    });
+  };
+
+  handleFilterClick = event => {
+    this.setState({ anchorEl: event.currentTarget });
+  };
+
+  handleFilterClose = filter => {
+    this.setState({ anchorEl: null, selectedFilter: filter });
+  };
+
+  handleSortClick = event => {
+    this.setState({ sortAnchorEl: event.currentTarget });
+  };
+
+  handleSortClose = selectedSort => {
+    this.setState({ sortAnchorEl: null, selectedSort });
+  };
+
+  openRecreateModal = (row) => {
+    confirmModalCreate(
+      this.props.isDarkMode,
+      'CONFIRM RE-CREATE GAME?',
+      'LFG',
+      'Fuck No',
+      async () => {
+        this.setState({ creatingRoom: true });
+        await this.onCreateRoom(row);
+        this.setState({ creatingRoom: false });
+      }
+    );
+  }
+
+  
+
+  onCreateRoom = async (row) => {
+    
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      this.setState({ creatingRoom: true });
+      await this.props.createRoom({
+        game_type: row.game_type,
+				bet_amount: row.bet_amount,
+				endgame_amount: row.endgame_amount,
+				// is_anonymous: row.is_anonymous,
+				youtubeUrl: row.youtubeUrl
+      }
+      );
+      
+      this.setState({ creatingRoom: false });
+    } else {
+      confirmModalCreate(
+        this.props.isDarkMode,
+        'CONFIRM GAME SETTINGS?',
+        'LFG',
+        'Cancel',
+        async () => {
+          this.setState({ creatingRoom: true });
+          await this.props.createRoom(this.state);
+          this.setState({ creatingRoom: false });
+        }
+      );
+    }
+  };
 
   // endRoom = (winnings, room_id) => {
   //   const convertToCurrency = input => {
@@ -108,7 +197,9 @@ class MyGamesTable extends Component {
     try {
       await this.props.endGame(room_id);
       await this.props.getMyGames({
-        game_type: this.state.selectedGameType
+        game_type: this.state.selectedGameType,
+        status: this.state.selectedFilter,
+        sort: this.state.selectedSort
       });
       await this.props.addNewTransaction({ amount: winnings, room_id });
       this.props.setBalance((this.state.balance += parseFloat(winnings)));
@@ -120,7 +211,9 @@ class MyGamesTable extends Component {
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
     this.props.getMyGames({
-      game_type: short_name
+      game_type: short_name,
+      status: this.state.selectedFilter,
+      sort: this.state.selectedSort
     });
     return;
   };
@@ -148,7 +241,7 @@ class MyGamesTable extends Component {
       BJ: 'blackjack',
       CR: 'craps'
     };
-  
+
     const gameTypePanel = (
       <Box
         display="flex"
@@ -165,7 +258,7 @@ class MyGamesTable extends Component {
             <ChevronLeftIcon />
           </Button>
         </Box>
-  
+
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -212,15 +305,16 @@ class MyGamesTable extends Component {
         </Button>
       </Box>
     );
-  
+
     return gameTypePanel;
   };
-  
 
   handlePageNumberClicked = page => {
     this.props.getMyGames({
       page: page,
-      game_type: this.state.selectedGameType
+      game_type: this.state.selectedGameType,
+      status: this.state.selectedFilter,
+      sort: this.state.selectedSort
     });
   };
 
@@ -228,7 +322,9 @@ class MyGamesTable extends Component {
     if (this.props.pageNumber === 1) return;
     this.props.getMyGames({
       page: this.props.pageNumber - 1,
-      game_type: this.state.selectedGameType
+      game_type: this.state.selectedGameType,
+      status: this.state.selectedFilter,
+      sort: this.state.selectedSort
     });
   };
 
@@ -236,7 +332,9 @@ class MyGamesTable extends Component {
     if (this.props.pageNumber === this.props.totalPage) return;
     this.props.getMyGames({
       page: this.props.pageNumber + 1,
-      game_type: this.state.selectedGameType
+      game_type: this.state.selectedGameType,
+      status: this.state.selectedFilter,
+      sort: this.state.selectedSort
     });
   };
 
@@ -258,19 +356,113 @@ class MyGamesTable extends Component {
     }
   };
 
+  createRoom() {
+    this.props.createRoom({
+      game_type: 3,
+      brain_game_type: this.props.brain_game_type,
+      brain_game_score: this.state.score,
+      bet_amount: this.props.bet_amount,
+      is_private: this.props.is_private,
+      endgame_amount: this.props.endgame_amount,
+      is_anonymous: this.props.is_anonymous,
+      room_password: this.props.room_password,
+      youtubeUrl: this.props.youtubeUrl
+    });
+  }
+
   render() {
     const gameTypePanel = this.generateGameTypePanel();
     const { row } = this.props;
+    const { anchorEl, selectedFilter, sortAnchorEl, selectedSort } = this.state;
+
     return (
       <div className="my-open-games">
-        <div className="game-type-container">
-          <div
-            className="game-type-panel"
-            ref={elem => {
-              this.game_type_panel = elem;
-            }}
-          >
-            {gameTypePanel}
+        <div className="filter-container">
+          <div className="game-type-container">
+            <div
+              className="game-type-panel"
+              ref={elem => {
+                this.game_type_panel = elem;
+              }}
+            >
+              {gameTypePanel}
+            </div>
+          </div>
+          <div className="filters">
+            <Button
+              className="game-type-panel"
+              onClick={this.handleFilterClick}
+              variant="contained"
+            >
+              <FontAwesomeIcon icon={faFilter} />
+            </Button>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={() => this.handleFilterClose(null)}
+            >
+              <MenuItem
+                onClick={() => this.handleFilterClose('open')}
+                selected={selectedFilter === 'open'}
+              >
+                OPEN
+              </MenuItem>
+              <MenuItem
+                onClick={() => this.handleFilterClose('finished')}
+                selected={selectedFilter === 'finished'}
+              >
+                FINISHED
+              </MenuItem>
+            </Menu>
+            <Button
+              className="game-type-panel"
+              onClick={this.handleSortClick}
+              variant="contained"
+            >
+              <FontAwesomeIcon icon={faSort} />
+            </Button>
+            <Menu
+              anchorEl={sortAnchorEl}
+              open={Boolean(sortAnchorEl)}
+              onClose={() => this.handleSortClose(null)}
+            >
+              <MenuItem
+                onClick={() => this.handleSortClose('desc')}
+                selected={selectedSort === 'desc'}
+              >
+                Newest First
+              </MenuItem>
+              <MenuItem
+                onClick={() => this.handleSortClose('asc')}
+                selected={selectedSort === 'asc'}
+              >
+                Oldest First
+              </MenuItem>
+              <MenuItem
+                onClick={() => this.handleSortClose('net_profit_desc')}
+                selected={selectedSort === 'net_profit_desc'}
+              >
+                Net Profit (High to Low)
+              </MenuItem>
+              <MenuItem
+                onClick={() => this.handleSortClose('net_profit_asc')}
+                selected={selectedSort === 'net_profit_asc'}
+              >
+                Net Profit (Low to High)
+              </MenuItem>
+              <MenuItem
+                onClick={() => this.handleSortClose('bets_desc')}
+                selected={selectedSort === 'bets_desc'}
+              >
+                Plays (High to Low)
+              </MenuItem>
+              <MenuItem
+                onClick={() => this.handleSortClose('bets_asc')}
+                selected={selectedSort === 'bets_asc'}
+              >
+                Plays (Low to High)
+              </MenuItem>
+            </Menu>
           </div>
         </div>
         <div className="create-room-btn-panel">
@@ -286,10 +478,14 @@ class MyGamesTable extends Component {
           {this.props.myGames.length > 0 && (
             <div className="table-header">
               <div className="table-cell room-id">Room ID</div>
-              {/* <div className="table-cell bet-info">BANKROLL</div> */}
-              <div className="table-cell payout">INITIAL BET / PAYOUT LIMIT</div>
-              {/* <div className="table-cell winnings">WINNINGS</div> */}
-              <div className="table-cell action desktop-only">Action</div>
+              <div className="table-cell payout">
+                INITIAL BET
+              </div>
+              <div className="table-cell winnings">Payout</div>
+              <div className="table-cell bet-info">Net Profit</div>
+              <div className="table-cell winnings">Plays</div>
+
+              <div className="table-cell action desktop-only">Bankroll/Re-Create</div>
             </div>
           )}
           {this.props.myGames.length === 0 ? (
@@ -306,19 +502,21 @@ class MyGamesTable extends Component {
                 <div className="table-row" key={row._id}>
                   <div>
                     <div className="table-cell room-id">
+                    <a href={`/join/${row._id}`}>
                       <img
                         src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
                         alt=""
                         className="game-type-icon"
-                      />
+                        />
                       {row.game_type.short_name + '-' + row.index}
                       {row.is_private && (
                         <img
-                          src="/img/icon-lock.png"
-                          alt=""
-                          className="lock-icon"
+                        src="/img/icon-lock.png"
+                        alt=""
+                        className="lock-icon"
                         />
-                      )}
+                        )}
+                        </a>
                     </div>
                     <div className="table-cell bet-info">
                       <span className="bet-pr">
@@ -328,36 +526,53 @@ class MyGamesTable extends Component {
 
                         {/* {convertToCurrency(updateDigitToPoint2(row.pr))} */}
                       </span>
+                    </div>
+                    <div className="table-cell endgame">
                       <span className="end-amount">
-                        {convertToCurrency(
-                          row.endgame_amount
-                        )}
+                      {row.endgame_amount === 0 ? "M" : convertToCurrency(row.endgame_amount)}
                       </span>
                     </div>
-                    {/* <div className="table-cell winnings">
-                      <span>{convertToCurrency(row.winnings)}</span>
-                    </div> */}
+                    <div className="table-cell winnings">
+                      <span>{convertToCurrency(row.net_profit)}</span>
+                    </div>
+                    <div className="table-cell bets">
+                      <Battle width="24px" />
+                      &nbsp;
+                      <span>{row.bets}</span>
+                    </div>
 
                     <div className="table-cell action desktop-only">
-                      <Button
-                        className="btn_end"
-                        onMouseDown={() =>
-                          this.handleButtonClick(row.winnings, row._id)
-                        }
-                        onMouseUp={() => this.handleButtonRelease(row._id)}
-                        onMouseLeave={() => this.handleButtonRelease(row._id)}
-                        _id={row._id}
-                      >
-                        {this.state[row._id] && this.state[row._id].holding ? (
-                          `${(this.state[row._id].timeLeft / 1000).toFixed(2)}s`
-                        ) : (
-                          <>
-                            {' '}
-                            TAKE&nbsp;
-                            <span>{convertToCurrency(row.winnings)}</span>
-                          </>
-                        )}
-                      </Button>
+                      {row.status === 'finished' ? (
+                        <Button
+                          className="btn_recreate"
+                          onClick={() => this.openRecreateModal(row)}
+                        >
+                          RE-CREATE
+                        </Button>
+                      ) : (
+                        <Button
+                          className="btn_end"
+                          onMouseDown={() =>
+                            this.handleButtonClick(row.winnings, row._id)
+                          }
+                          onMouseUp={() => this.handleButtonRelease(row._id)}
+                          onMouseLeave={() => this.handleButtonRelease(row._id)}
+                          _id={row._id}
+                        >
+                          {this.state[row._id] &&
+                          this.state[row._id].holding ? (
+                            `${(this.state[row._id].timeLeft / 1000).toFixed(
+                              2
+                            )}s`
+                          ) : (
+                            <>
+                              {' '}
+                              TAKE&nbsp;
+                              <span>{convertToCurrency(row.winnings)}</span>
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="mobile-only">
@@ -421,6 +636,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   endGame,
+  createRoom,
   getMyGames,
   addNewTransaction,
   setBalance

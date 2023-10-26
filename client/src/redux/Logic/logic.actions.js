@@ -31,7 +31,6 @@ import {
   SELECT_MAIN_TAB,
   MY_CHAT_LOADED,
   GLOBAL_CHAT_RECEIVED,
-  LOAD_LEADERBOARDS,
   SET_GLOBAL_CHAT
 } from '../types';
 import axios from '../../util/Api';
@@ -172,7 +171,7 @@ export const bet = bet_info => async dispatch => {
           message: res.data.message
         };
       } else {
-        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G'});
+        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G' });
         return {
           status: 'failed',
           message: 'SLOW DOWN BLUD!'
@@ -280,7 +279,10 @@ export const getGameTypeList = () => async dispatch => {
 export const getMyGames = search_condition => async dispatch => {
   dispatch({ type: START_LOADING });
   try {
-    const res = await axios.get('/game/my_games', { params: search_condition });
+    const res = await axios.get('/game/my_games', {
+      params: { ...search_condition }
+    });
+
     if (res.data.success) {
       dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
     } else {
@@ -395,7 +397,6 @@ export const updateRain = rain => {
   };
 };
 
-
 export const updateBankrollQs = bankroll => {
   return {
     type: UPDATE_BANKROLL_QS,
@@ -403,16 +404,7 @@ export const updateBankrollQs = bankroll => {
   };
 };
 
-export const getLeaderboardsInfo = () => async dispatch => {
-  try {
-    const res = await axios.post('/game/get_leaderboards_info');
-    if (res.data.success) {
-      dispatch({ type: LOAD_LEADERBOARDS, payload: res.data });
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
+
 
 export const setRoomList = data => dispatch => {
   data.page = 1;

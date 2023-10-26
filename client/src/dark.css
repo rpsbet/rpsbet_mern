@@ -26,9 +26,6 @@
 	background: transparent  !important;
   }
 
-  .dark_mode .game-page .game-contents.mystery-box-result-contents {
-	background-color: #060607 !important;
-  }
 
   .dark_mode .mountains-bg,
   .dark_mode .mountains-bg-last {
@@ -53,18 +50,15 @@
   .dark_mode .bjBg{
     filter: unset;
  }
-  .dark_mode .game-page .game-contents .game-info-panel .box-prizes span {
-	color: #e5e5e5;
-  }
 
-.dark_mode .game-page .game-contents.mystery-box-result-contents .mystery-box-result {
+/* .dark_mode .game-page .game-contents.mystery-box-result-contents .mystery-box-result {
     
     background-image: url("https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/645612e2ba466a255aba23ec_open-box.svg") !important;
-}
-
+} */
+/* 
   .dark_mode .game-page .game-contents.mystery-box-result-contents .mystery-box-result {
 	text-shadow: 0px 0px 14px #1700f9;
-  }
+  } */
 
   .dark_mode .gamified-container {
 	border: 2px solid #333;
@@ -125,6 +119,10 @@ background: #060607;
 .dark_mode div.table .table-row, .dark_mode div.table .table-header {
 	border-top: 2px solid #4443434f;
 	border-bottom: 3px solid #000;
+  }
+
+  .dark_mode div.table .table-header {
+	background-color: #141414;
   }
 
 
@@ -581,12 +579,8 @@ border-color: #151515;
 
 }
 
-.dark_mode .game-page .game-contents .game-info-panel .box-prizes {
-	background-color: #101010;
-}
 .dark_mode .game-page .game-contents .game-info-panel .box-prizes span.opened {
 	white-space: nowrap;
-	background-color: #101010;
 }
 .dark_mode .chat-page {
 	background-color: #060607;

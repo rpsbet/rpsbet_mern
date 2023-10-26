@@ -17,7 +17,7 @@ import App from './App';
 import GlobalStyle from './Styles/global.styles';
 import history from './redux/history';
 import MessageBar from './components/MessugeBar';
-// import AnimatedCusror from './components/AnimatedCursor';
+import AnimatedCursor from './components/AnimatedCursor';
 
 const theme = createTheme({
   palette: {
@@ -30,8 +30,8 @@ const theme = createTheme({
 
 ReactDOM.render(
   <React.Fragment>
-    {/* {window.innerWidth > 767 && <AnimatedCusror />} */}
     <Provider store={store}>
+    {window.innerWidth > 767 && <AnimatedCursor />}
       <GlobalStyle />
       <MuiThemeProvider theme={theme}>
         <BrowserRouter>

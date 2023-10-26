@@ -7,7 +7,7 @@ import MainPage from '../main_pages/MainPage';
 import JoinGame from '../main_pages/JoinGame';
 import ChatPage from '../MyGames/ChatPage';
 import ChangePasswordPage from '../main_pages/ChangePasswordPage';
-import Leaderboards from '../main_pages/Leaderboards';
+import LeaderboardsModal from '../modal/LeaderboardsModal';
 import ProfilePage from '../main_pages/ProfilePage';
 
 export class GameMainRoute extends Component {
@@ -45,7 +45,7 @@ export class GameMainRoute extends Component {
           <Route
             exact
             path={`${match.path}leaderboards`}
-            component={Leaderboards}
+            component={LeaderboardsModal}
           />
           <Route 
             path={`${match.path}`}

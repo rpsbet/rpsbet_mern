@@ -6,13 +6,23 @@ import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
-// import { BigNumber } from 'ethers';
-import { Button, TextField } from '@material-ui/core';
-
-import { tokenAddr, adminWallet } from '../../config/index.js';
-// import abi from '../../config/abi_token.json';
+import {
+  Button,
+  TextField,
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+  IconButton,
+  Tooltip,
+  Typography
+} from '@material-ui/core';
+import { Info, Warning, Link, FiberManualRecord } from '@material-ui/icons';
 import { convertToCurrency } from '../../util/conversion';
+import { tokenAddr, adminWallet } from '../../config/index.js';
+
 Modal.setAppElement('#root');
+
 const customStyles = {
   overlay: {
     zIndex: 3,
@@ -39,12 +49,11 @@ class DepositModal extends Component {
       balance: props.balance,
       account: props.account,
       isLoading: false
-
     };
   }
 
   async componentDidMount() {
-    const params = {addressTo: this.state.account}
+    const params = { addressTo: this.state.account };
     this.props.setGasfee(params);
   }
 
@@ -69,61 +78,63 @@ class DepositModal extends Component {
       const web3 = this.state.web3;
       const amountInWei = web3.utils.toWei(this.state.amount, 'ether');
 
-      this.setState({ isLoading: true })
+      this.setState({ isLoading: true });
 
+      // Transaction initiate
+      web3.eth
+        .sendTransaction({
+          from: this.state.account,
+          to: adminWallet, // Replace with the recipient address
+          value: amountInWei
+        })
+        .then(async tx => {
+          // Proceed with the rest of the logic.
+          const result = await axios.post('/stripe/deposit_successed/', {
+            amount: this.state.amount,
+            txtHash: tx.transactionHash
+          });
 
-      // transaction initiate
-      web3.eth.sendTransaction({
-        from: this.state.account,
-        to: adminWallet, // Replace with the recipient address
-        value: amountInWei
-      })
-      .then(async (tx) => {
-        // Proceed with the rest of logic.
-        const result = await axios.post('/stripe/deposit_successed/', {
-          amount: this.state.amount,
-          txtHash: tx.transactionHash,
+          if (result.data.success) {
+            alertModal(this.props.isDarkMode, result.data.message);
+            this.props.setBalance(result.data.balance);
+            this.props.addNewTransaction(result.data.newTransaction);
+            this.setState({ isLoading: false });
+            this.props.closeModal();
+          } else {
+            this.setState({ isLoading: false });
+            alertModal(
+              this.props.isDarkMode,
+              `Something went wrong. Please try again later or contact support.`
+            );
+          }
         });
-
-        if (result.data.success) {
-          alertModal(this.props.isDarkMode, result.data.message);
-          this.props.setBalance(result.data.balance);
-          this.props.addNewTransaction(result.data.newTransaction);
-          this.setState({ isLoading: false })
-          this.props.closeModal();
-
-        } else {
-          alertModal(
-            this.props.isDarkMode,
-            this.setState({ isLoading: false }),
-
-            `Something went wrong. Please try again later or contact support.`
-          );
-        }
-      })
     } catch (e) {
       console.log(e);
-      this.setState({ isLoading: false })
+      this.setState({ isLoading: false });
       alertModal(this.props.isDarkMode, `Failed transaction.`);
       return;
     }
   };
 
   render() {
-    
+    const { account } = this.state;
+    const isConnected = !!account;
     return (
-      <><LoadingOverlay
-        active={true}
-        spinner
-        text="Creating Block..."
-        styles={{
-          wrapper: {
-            position: 'fixed',
-            width: '100%',
-            height: '100vh',
-            zIndex: this.state.isLoading ? 999 : 0
-          }
-        }} /><Modal
+      <>
+        <LoadingOverlay
+          active={true}
+          spinner
+          text="Creating Block..."
+          styles={{
+            wrapper: {
+              position: 'fixed',
+              width: '100%',
+              height: '100vh',
+              zIndex: this.state.isLoading ? 999 : 0
+            }
+          }}
+        />
+        <Modal
           isOpen={this.props.modalIsOpen}
           onRequestClose={this.props.closeModal}
           style={customStyles}
@@ -139,11 +150,71 @@ class DepositModal extends Component {
             <div className="modal-body edit-modal-body deposit-modal-body">
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
-                  <div className="balance">
-                    <h6>ENTER AMOUNT & DEPOSIT</h6>
+                  <div className="account">
+                    <div className="account">
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography>Send To Address</Typography>
+
+                        {isConnected ? (
+                          <TextField
+                            label="Account"
+                            variant="outlined"
+                            value={account}
+                            InputProps={{
+                              readOnly: true
+                            }}
+                          />
+                        ) : (
+                          <TextField
+                            label="Account"
+                            variant="outlined"
+                            value="Connect Wallet"
+                            InputProps={{
+                              readOnly: true
+                            }}
+                          />
+                        )}
+                        {isConnected ? (
+                          <FiberManualRecord
+                            className="light"
+                            style={{ background: '#28a745', color: 'green' }}
+                          />
+                        ) : (
+                          <FiberManualRecord
+                            className="light"
+                            style={{ background: '#ff0000', color: 'red' }}
+                          />
+                        )}
+                        {isConnected ? (
+                          <Tooltip title="Connected account" arrow>
+                            <Info />
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="How do I connect?" arrow>
+                            <a
+                              href="your_connect_wallet_link_here"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                textDecoration: 'none'
+                              }}
+                            >
+                              <Info />
+                              <Link
+                                fontSize="small"
+                                style={{ marginLeft: '4px' }}
+                              />
+                            </a>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <div className="input-amount">
+                      <Typography>Deposit Amount</Typography>
                       <TextField
                         pattern="^\\d*\\.?\\d*$"
                         type="text"
@@ -154,20 +225,41 @@ class DepositModal extends Component {
                         className="form-control"
                         InputProps={{
                           endAdornment: 'ETH'
-                        }} />
-                      <br />
+                        }}
+                      />
                     </div>
-                    <label className="availabletag">
-                      <span>WALLET BALANCE</span>:&nbsp;&nbsp;{' '}
-                      {convertToCurrency(this.props.balance)}&nbsp;ETH&nbsp;<br/>
-                      <span>GAS FEE</span>:&nbsp;&nbsp;{' '}
-                      {convertToCurrency(this.props.gasfee)}
-                    </label>
-
-                    {/* <button className={styles.join('')} onClick={() => {
-      this.toggleBtnHandler();
-      this.copy();
-  }}><FaClipboard />&nbsp;{text}</button> */}
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>
+                            <span>WALLET BALANCE:</span>
+                          </TableCell>
+                          <TableCell>
+                            {convertToCurrency(this.props.balance)}
+                            &nbsp;ETH
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <span>GAS FEE:</span>
+                          </TableCell>
+                          <TableCell>
+                            {convertToCurrency(this.props.gasfee)}
+                          </TableCell>
+                          <Tooltip
+                            title="Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
+                            arrow
+                          >
+                            <IconButton size="small">
+                              <Info />
+                            </IconButton>
+                          </Tooltip>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                    <div className="disclaimer">
+                    <Typography>Receive within 1 - 3 minutes</Typography>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -181,7 +273,8 @@ class DepositModal extends Component {
               </Button>
             </div>
           </div>
-        </Modal></>
+        </Modal>
+      </>
     );
   }
 }

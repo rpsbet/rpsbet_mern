@@ -83,19 +83,16 @@ class Roll extends Component {
   };
   predictNext = (roll_list) => {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
-    const sequence = roll_list.map(roll => roll.face); // New array to store sequence of faces
+    const sequence = roll_list.map(roll => roll.face);
     const nextStates = {};
   
-    // Determine the probability of each face occurring next based on the previous sequence of faces
     faces.forEach((face) => {
       const count = sequence.filter((f, i) => i > 0 && sequence[i-1] === face).length;
       nextStates[face] = count / Math.max(1, sequence.length - 1);
     });
   
-    // Check if all probabilities are either 0 or 1
     const allProbabilitiesOneOrZero = Object.values(nextStates).every(probability => probability === 0 || probability === 1);
   
-    // Use the original method of predicting if all probabilities are either 0 or 1
     if (allProbabilitiesOneOrZero) {
       const occurrences = {};
       roll_list.forEach((roll) => {
@@ -210,7 +207,7 @@ class Roll extends Component {
   };
   render() {
     
-    const defaultBetAmounts = [10, 25, 50, 100, 250];
+    const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
 
     return this.props.step === 1 ? (
       

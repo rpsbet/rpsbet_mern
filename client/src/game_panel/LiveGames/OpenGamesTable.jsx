@@ -32,11 +32,10 @@ import like from '../LottieAnimations/like.json';
 import avaHex from '../LottieAnimations/avahex.json';
 
 import history from '../../redux/history';
-
 const gifUrls = [
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif',
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif'
+  '/img/rock.gif',
+  '/img/paper.gif',
+  '/img/scissors.gif'
 ];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 
@@ -418,7 +417,16 @@ class OpenGamesTable extends Component {
                 // {...this.state.selectedRow}
               />
             )}
-
+{this.props.roomList.length > 0 && (
+            <div className="table-header">
+              <div className="table-cell room-id">Room ID</div>
+              <div className="table-cell bet-info">host / PLAYER</div>
+              <div className="table-cell payout">
+Net profit              </div>
+              {/* <div className="table-cell winnings">WINNINGS</div> */}
+              <div className="table-cell action desktop-only">Bet/Bankroll</div>
+            </div>
+          )}
             {this.state.roomList.map(
               (row, key) => (
                 <div

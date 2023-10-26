@@ -29,6 +29,7 @@ const customStyles = {
   }
 };
 
+
 class HowToPlayModal extends Component {
   render() {
 
@@ -356,7 +357,7 @@ class HowToPlayModal extends Component {
                 </AccordionItemPanel>
               </AccordionItem>
                */}
-            {/* <AccordionItem>
+            <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper roll">
@@ -410,7 +411,7 @@ class HowToPlayModal extends Component {
                     
                   </div>
                 </AccordionItemPanel>
-              </AccordionItem>  */}
+              </AccordionItem> 
             <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>

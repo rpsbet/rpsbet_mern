@@ -1101,7 +1101,7 @@ class Bang extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            <div className="rocksBg">
+            {/* <div className="rocksBg">
               <Lottie
                 options={{
                   loop: true,
@@ -1109,7 +1109,7 @@ class Bang extends Component {
                   animationData: rocksBg
                 }}
               />
-            </div>
+            </div> */}
             <div className="game-info-panel">
               <div
                 onClick={() =>

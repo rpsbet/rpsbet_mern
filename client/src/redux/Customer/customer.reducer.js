@@ -4,13 +4,15 @@ import {
   PAGINATION_FOR_ACTIVITY,
   LOADING_CUSTOMER_TABLE,
   ADD_MAIN_INFO,
-  ACTIVITY_QUERY
+  ACTIVITY_QUERY,
+  LOAD_LEADERBOARDS
 } from '../types';
 
 const initialState = {
   queryData: [],
   pagination: 10,
   page: 1,
+  leaderboards: [],
   totalResults: 0,
   lastQuery: null,
   pages: 1,
@@ -31,6 +33,11 @@ export default (state = initialState, { type, payload }) => {
         totalResults: payload.total,
         pages: payload.pages
       };
+      case LOAD_LEADERBOARDS:
+        return {
+          ...state,
+          leaderboards: payload.leaderboards
+        };
     case ACTIVITY_QUERY:
       return {
         ...state,

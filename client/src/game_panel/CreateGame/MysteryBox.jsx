@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
 import { convertToCurrency } from '../../util/conversion';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { Box, Button, TextField } from '@material-ui/core';
+
+import { Table, TableBody, TableCell, TableRow, Button, TextField } from '@material-ui/core';
 import { connect } from 'react-redux';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+
 
 class MysteryBox extends Component {
   constructor(props) {
@@ -15,7 +18,21 @@ class MysteryBox extends Component {
     };
   }
 
-  
+  onDragEnd = (result) => {
+    if (!result.destination) {
+      return; // Dropped outside the list
+    }
+
+    const { source, destination } = result;
+    const reorderedBoxList = [...this.props.box_list];
+    const [movedItem] = reorderedBoxList.splice(source.index, 1);
+    reorderedBoxList.splice(destination.index, 0, movedItem);
+
+    // Update the state with the reordered list
+    this.updateBoxList(reorderedBoxList);
+  };
+
+
   onChangeNewBoxPrize = e => {
     this.setState({ new_box_prize: e.target.value });
   };
@@ -57,10 +74,10 @@ class MysteryBox extends Component {
 
   addBoxes = (e, numBoxes) => {
     e.preventDefault();
-  
+
     let new_box_price = parseFloat(this.state.new_box_price);
     let new_box_prize = parseFloat(this.state.new_box_prize);
-  
+
     if (
       new_box_price <= 0 ||
       new_box_price === undefined ||
@@ -73,33 +90,33 @@ class MysteryBox extends Component {
       );
       return;
     }
-  
+
     if (new_box_prize < 0 || isNaN(new_box_price)) {
       alertModal(this.props.isDarkMode, `WHAT KIND OF F*CKING PRIZE IS THAT?!`);
       return;
     }
-  
+
     new_box_price = isNaN(new_box_price) ? 0 : new_box_price;
     new_box_prize = isNaN(new_box_prize) ? 0 : new_box_prize;
-  
+
     let box_list = this.props.box_list;
-  
+
     const delay = 1000 / numBoxes;
     let timeDelay = 0;
-  
+
     for (let i = 0; i < numBoxes; i++) {
       setTimeout(() => {
         box_list = box_list.concat({
           box_price: new_box_price,
-          box_prize: new_box_prize,
+          box_prize: new_box_prize
         });
-  
+
         const bet_amount = box_list.reduce(
           (totalAmount, box) => totalAmount + box.box_prize,
           0
         );
         const max_return = this.calcMaxReturn(box_list);
-  
+
         this.props.onChangeState({
           box_list: box_list,
           winChance: this.props.calcMysteryBoxEV(
@@ -113,27 +130,26 @@ class MysteryBox extends Component {
           endgame_amount: max_return['max_return'],
           lowest_box_price: max_return['lowest_box_price'],
           public_bet_amount:
-            max_return['lowest_box_price'] === max_return['highest_box_price'] ? (
+            max_return['lowest_box_price'] ===
+            max_return['highest_box_price'] ? (
               convertToCurrency(max_return['lowest_box_price'])
             ) : (
               <>
                 {convertToCurrency(max_return['lowest_box_price'])} -{' '}
                 {convertToCurrency(max_return['highest_box_price'])}
               </>
-            ),
+            )
         });
       }, timeDelay);
-  
+
       timeDelay += delay;
     }
-  
+
     this.setState({
       new_box_price: '',
-      new_box_prize: '',
+      new_box_prize: ''
     });
-  
   };
-  
 
   onAddBox = e => {
     this.addBoxes(e, 1);
@@ -148,7 +164,7 @@ class MysteryBox extends Component {
   updateBoxList = newBoxList => {
     if (newBoxList.length === 0) {
       this.props.onChangeState({
-        box_list: [],
+        box_list: []
       });
       return;
     }
@@ -162,7 +178,11 @@ class MysteryBox extends Component {
     this.props.onChangeState({
       box_list: newBoxList,
       bet_amount: bet_amount,
-      winChance: this.props.calcMysteryBoxEV(newBoxList, max_return['max_return'], max_return['max_return']),
+      winChance: this.props.calcMysteryBoxEV(
+        newBoxList,
+        max_return['max_return'],
+        max_return['max_return']
+      ),
       max_return: max_return['max_return'],
       max_prize: max_return['max_prize'],
       endgame_amount: max_return['max_return'],
@@ -179,19 +199,20 @@ class MysteryBox extends Component {
     });
   };
 
-  onRemoveBox = e => {
-    e.preventDefault();
+  onRemoveBox = (index) => {
     this.props.playSound('tap');
-    let box_list = this.props.box_list;
-    box_list.splice(e.target.getAttribute('index'), 1);
-    this.updateBoxList(box_list);
+    // Create a new array without the item to be removed
+    const updatedBoxList = this.props.box_list.filter((box, i) => i !== index);
+    this.updateBoxList(updatedBoxList);
   };
-
+  
   onEmptyBoxes = e => {
     e.preventDefault();
     this.updateBoxList([]);
   };
 
+
+  
   // componentDidUpdate(prevProps) {
   //   if (prevProps.endgame_amount !== this.props.endgame_amount) {
   //     const winChance = this.calcWinChance(this.props.box_list, this.props.endgame_amount);
@@ -200,27 +221,82 @@ class MysteryBox extends Component {
 
   // }
   render() {
+    const boxList = this.props.box_list;
+    const uniquePrizes = [...new Set(boxList.map((row) => row.box_prize))];
+  
+    const calculateProbability = (prize) => {
+      const count = boxList.filter((row) => row.box_prize === prize).length;
+      const totalBoxes = boxList.length;
+      return count / totalBoxes * 100;
+    };
+  
+    // Sort unique prizes largest first
+    uniquePrizes.sort((a, b) => b - a);
+  
+    // Check if there are no prizes
+    const noPrizes = uniquePrizes.length === 0;
+  
+    // Map through the unique prizes and display the key
+    const prizeKey = (
+      
+      <div className="prize-key">
+                <h3 className="game-sub-title">Prizes</h3>
+
+                <Table>
+        
+        <TableBody>
+          {uniquePrizes.map((prize, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <span className={`box ${prize > 0 ? 'lose-bg' : 'win-bg'}`}></span>
+                {prize === 0.0 ? 'EMPTY' : convertToCurrency(prize)}
+              </TableCell>
+              <TableCell>{calculateProbability(prize).toFixed(2)}%</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      </div>
+    );
+  
     return (
       <div className="game-info-panel">
-        <h3 className="game-sub-title">Create a box</h3>
-        <div className="boxes-panel">
-          {this.props.box_list.map(
-            (row, key) => (
-              <div className="box" key={key}>
-                <i title="Delete Box?" onClick={this.onRemoveBox} index={key}>
-                  -
-                </i>
-                <span>
-                  {row.box_prize === 0.0
-                    ? 'EMPTY'
-                    : convertToCurrency(row.box_prize)}{' '}
-                  / {convertToCurrency(row.box_price)}
-                </span>
+        {boxList.length === 0 ? <h3 className="game-sub-title">Add Some Boxes</h3> : prizeKey}
+
+        <DragDropContext onDragEnd={this.onDragEnd}>
+          <Droppable droppableId="boxList">
+            {(provided) => (
+              <div
+                className="boxes-panel"
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+              >
+                {boxList.map((row, key) => (
+                  <Draggable key={key} draggableId={`box-${key}`} index={key}>
+                    {(provided) => (
+                      <div
+                        className={`box ${row.box_prize > 0 ? 'lose-bg' : 'win-bg'}`}
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <i title="Delete Box?" onClick={() => this.onRemoveBox(key)}>
+                          -
+                        </i>
+                        <span>
+                          {row.box_prize === 0.0 ? 'EMPTY' : convertToCurrency(row.box_prize)}{' '}
+                          / {convertToCurrency(row.box_price)}
+                        </span>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
               </div>
-            ),
-            this
-          )}
-        </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+        <hr />
         <div className="create-box-panel">
           <div className="amounts-panel">
             <div>
@@ -281,7 +357,7 @@ class MysteryBox extends Component {
           </div>
 
           <Button
-        id="reset"
+            id="reset"
             href="/#"
             onClick={this.onEmptyBoxes}
             title="Empty all boxes?"

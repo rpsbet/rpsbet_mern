@@ -43,6 +43,26 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
+  totalWagered: {
+    type: Number,
+    default: 0
+  },
+  totalProfit: {
+    type: Number,
+    default: 0
+  },
+  profitAllTimeHigh: {
+    type: Number,
+    default: 0
+  },
+  profitAllTimeLow: {
+    type: Number,
+    default: 0
+  },
+  gamePlayed: {
+    type: Number,
+    default: 0
+  },
   status: { type: String },
   is_deleted: {
     type: Boolean,

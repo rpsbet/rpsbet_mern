@@ -972,8 +972,8 @@ class Roll extends Component {
           <div
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
-          >
-            <div className="boatBg">
+          ><h3 className='game-sub-title'>Match the Face</h3>
+            {/* <div className="boatBg">
               <Lottie
                 options={{
                   loop: true,
@@ -982,7 +982,7 @@ class Roll extends Component {
                 }}
                 style={{ filter: 'hue-rotate(302deg)' }}
               />
-            </div>
+            </div> */}
             
               <Lottie
                 options={{

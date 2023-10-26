@@ -48,7 +48,8 @@ import {
   VolumeUp,
   VolumeOff,
   ExitToApp,
-  PersonOutline
+  PersonOutline,
+  Help
 } from '@material-ui/icons';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
@@ -56,10 +57,11 @@ import Moment from 'moment';
 import Avatar from '../components/Avatar';
 import Web3 from 'web3';
 import './SiteWrapper.css';
-
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
+import LeaderboardsModal from './modal/LeaderboardsModal';
+
 import GamePasswordModal from './modal/GamePasswordModal';
 import LoginModal from './modal/LoginModal';
 import SignupModal from './modal/SignupModal';
@@ -67,13 +69,16 @@ import VerificationModal from './modal/VerificationModal';
 import DepositModal from './modal/DepositModal';
 import WithdrawModal from './modal/WithdrawModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
-
 import Battle from './icons/Battle.js';
 import BattleHover from './icons/BattleHover';
 import Manage from './icons/Manage.js';
 import ManageHover from './icons/ManageHover';
-import HowTo from './icons/HowTo.js';
-import HowToHover from './icons/HowToHover';
+import Notifications from './icons/Notifications.js';
+import NotificationsHover from './icons/NotificationsHover';
+import Leaderboards from './icons/Leaderboards.js';
+import LeaderboardsHover from './icons/LeaderboardsHover';
+import Store from './icons/Store.js';
+import StoreHover from './icons/StoreHover';
 
 import {
   setSocket,
@@ -153,11 +158,7 @@ const customStyles = {
   }
 };
 
-const gifUrls = [
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef8e1ce09cd9cf53a4829_rock1.gif',
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641ef98d7e17a610c3ed83b9_paper2.gif',
-  'https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/641efdcadd850ab47a768e04_scissors1.gif'
-];
+const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
 
@@ -188,6 +189,7 @@ class SiteWrapper extends Component {
       showProfileModal: false,
       showPlayerModal: false,
       showHowToPlayModal: false,
+      showLeaderboardsModal: false,
       isPlaying: false,
       showLoginModal: false,
       showSignupModal: false,
@@ -764,6 +766,13 @@ class SiteWrapper extends Component {
     this.setState({ showHowToPlayModal: false });
   };
 
+  handleOpenLeaderboardsModal = () => {
+    this.setState({ showLeaderboardsModal: true });
+  };
+  handleCloseLeaderboardsModal = () => {
+    this.setState({ showLeaderboardsModal: false });
+  };
+
   handleOpenDepositModal = () => {
     this.setState({ showDepositModal: true, anchorEl: null });
   };
@@ -953,32 +962,44 @@ class SiteWrapper extends Component {
               </Tabs>
 
               <div className="header_action_panel">
-                <div></div>
-                {
-                  /*<a
-                  href="#"
-                  onClick={e => {
-                    history.push('/leaderboards');
-                  }}
-                  id="btn_leaderboards"
+                <a
+                  href="/marketplace"
+                  id="btn_marketplace"
+                  onMouseEnter={() => this.handleMouseEnter(5)}
+                  onMouseLeave={this.handleMouseLeave}
                 >
-                  <img src="/img/s/leaderboards.svg" alt="Leaderboards" />
-                  Leaderboards
+                  {this.state.hoverTabIndex === 5 ? (
+                    <StoreHover width="18pt" />
+                  ) : (
+                    <Store />
+                  )}
                 </a>
-                */
-                  <a
-                    onClick={this.handleOpenHowToPlayModal}
-                    id="btn_how_to_play"
-                    onMouseEnter={() => this.handleMouseEnter(2)}
-                    onMouseLeave={this.handleMouseLeave}
-                  >
-                    {this.state.hoverTabIndex === 2 ? (
-                      <HowToHover />
-                    ) : (
-                      <HowTo />
-                    )}
-                  </a>
-                }
+                <a
+                href="#"
+                onClick={this.handleOpenLeaderboardsModal}
+                   id="btn_leaderboards"
+                  onMouseEnter={() => this.handleMouseEnter(4)}
+                  onMouseLeave={this.handleMouseLeave}
+                >
+                  {this.state.hoverTabIndex === 4 ? (
+                    <LeaderboardsHover width="18pt" />
+                  ) : (
+                    <Leaderboards />
+                  )}
+                </a>
+                <a
+                href="#"
+                  onClick={this.handleOpenNotificationsModal}
+                  id="btn_notifications"
+                  onMouseEnter={() => this.handleMouseEnter(3)}
+                  onMouseLeave={this.handleMouseLeave}
+                >
+                  {this.state.hoverTabIndex === 3 ? (
+                    <NotificationsHover width="18pt" />
+                  ) : (
+                    <Notifications />
+                  )}
+                </a>
                 {this.props.isAuthenticated ? (
                   <>
                     <div id="balance">
@@ -1073,6 +1094,9 @@ class SiteWrapper extends Component {
                             : '#f9f9f9'
                         }
                       }}
+                      BackdropProps={{
+                        invisible: true
+                      }}
                     >
                       <MenuItem onClick={this.handleOpenProfileModal}>
                         <ListItemIcon>
@@ -1080,6 +1104,7 @@ class SiteWrapper extends Component {
                         </ListItemIcon>
                         <ListItemText>PROFILE</ListItemText>
                       </MenuItem>
+
                       <MenuItem onClick={this.playPause}>
                         <ReactApexChart
                           options={{
@@ -1209,6 +1234,12 @@ class SiteWrapper extends Component {
                         <ListItemText>
                           {this.props.isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
                         </ListItemText>
+                      </MenuItem>
+                      <MenuItem onClick={this.handleOpenHowToPlayModal}>
+                        <ListItemIcon>
+                          <Help />
+                        </ListItemIcon>
+                        <ListItemText>HELP</ListItemText>
                       </MenuItem>
                       <Divider />
                       <MenuItem
@@ -1443,6 +1474,7 @@ class SiteWrapper extends Component {
                                   <Link />
                                 </a>
                               ) : (
+                                // If there's no room value, don't display a link
                                 ''
                               )}
                             </TableCell>
@@ -1467,53 +1499,61 @@ class SiteWrapper extends Component {
               <div className="game_logs_contents">
                 {<h2>BALANCE HISTORY</h2>}
                 {
-                  <div>
-                    <table>
-                      <tbody>
-                        {this.state.transactions.length === 0 ? (
-                          <tr>
-                            <td>...</td>
-                          </tr>
-                        ) : (
-                          this.state.transactions.map((row, key) => (
-                            <tr key={key}>
-                              <a
-                                href={`/join/${row.room}`}
-                                rel="noopener noreferrer"
-                              >
-                                <td
-                                  className={
-                                    'amount ' +
-                                    (row.amount > 0 ? 'green' : 'red')
-                                  }
-                                >
-                                  {row.amount > 0 ? (
-                                    <>
-                                      {'+ '}
-                                      {convertToCurrency(row.amount, true)}
-                                    </>
-                                  ) : (
-                                    <>
-                                      {'- '}
-                                      {convertToCurrency(
-                                        Math.abs(row.amount),
-                                        true
-                                      )}
-                                    </>
-                                  )}
-                                </td>
-                                <td className="fromNow">{row.from_now}</td>
-                              </a>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                      <Button onClick={this.toggleAllTransactions}>
-                        View All
-                      </Button>
-                    </table>
-                  </div>
-                }
+  <div>
+    <table>
+      <tbody>
+        {this.state.transactions.length === 0 ? (
+          <tr>
+            <td>...</td>
+          </tr>
+        ) : (
+          this.state.transactions.map((row, key) => (
+            <tr key={key}>
+              {row.hash ? (  // Check if row has a 'hash' property
+                <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
+                  <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
+                    {row.amount > 0 ? (
+                      <>
+                        {'+ '}
+                        {convertToCurrency(row.amount, true)}
+                      </>
+                    ) : (
+                      <>
+                        {'- '}
+                        {convertToCurrency(Math.abs(row.amount), true)}
+                      </>
+                    )}
+                  </td>
+                  <td className="fromNow">{row.from_now}</td>
+                </a>
+              ) : (
+<table>                <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
+                  {row.amount > 0 ? (
+                    <>
+                      {'+ '}
+                      {convertToCurrency(row.amount, true)}
+                    </>
+                  ) : (
+                    <>
+                      {'- '}
+                      {convertToCurrency(Math.abs(row.amount), true)}
+                    </>
+                  )}
+                </td>
+                <td className="fromNow">{row.from_now}</td>
+                </table>
+              )}
+            </tr>
+          ))
+        )}
+      </tbody>
+      <Button onClick={this.toggleAllTransactions}>
+        View All
+      </Button>
+    </table>
+  </div>
+}
+
                 <div className="transaction-panel">
                   <Button
                     className="btn-withdraw"
@@ -1573,6 +1613,15 @@ class SiteWrapper extends Component {
               player_name={this.state.userName}
               balance={this.state.balance}
               avatar={this.props.user.avatar}
+            />
+          )}
+           {this.state.showLeaderboardsModal && (
+            <LeaderboardsModal
+              modalIsOpen={this.state.showLeaderboardsModal}
+              closeModal={this.handleCloseLeaderboardsModal}
+              player_name={this.state.userName}
+              balance={this.state.balance}
+              isDarkMode={this.props.isDarkMode}
             />
           )}
           {this.state.showHowToPlayModal && (

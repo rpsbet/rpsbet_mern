@@ -22,7 +22,7 @@ module.exports.sendMessage = (to_user_id, data) => {
 };
 
 module.exports.newTransaction = transaction => {
-  send('NEW_TRANSACTION', transaction['user']['_id'], transaction);
+  send('NEW_TRANSACTION', transaction);
 };
 module.exports.socketio = server => {
   const io = socket_io(server);

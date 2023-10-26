@@ -29,7 +29,7 @@ import {
   GLOBAL_CHAT_RECEIVED,
   SET_GLOBAL_CHAT
 } from '../types';
-  
+
 const initialState = {
   isActiveLoadingOverlay: false,
   socket: null,
@@ -53,7 +53,7 @@ const initialState = {
     { game_type_name: 'Mystery Box' },
     { game_type_name: 'Quick Shoot' },
     { game_type_name: 'Bang!' },
-    { game_type_name: 'Roll' },
+    { game_type_name: 'Roll' }
   ],
   curRoomInfo: {
     _id: 0,
@@ -71,7 +71,7 @@ const initialState = {
     qs_game_type: 2,
     likes: 0,
     dislikes: 0,
-    views: 0,
+    views: 0
   },
   betResult: -1,
   betResults: [],
@@ -112,6 +112,7 @@ export default function(state = initialState, action) {
         };
       }
       return state;
+   
     case SPLEESH_GUESSES:
       return {
         ...state,
@@ -136,12 +137,12 @@ export default function(state = initialState, action) {
     case UPDATE_BANKROLL_QS:
       return {
         ...state,
-        bankroll: action.payload,
+        bankroll: action.payload
       };
     case UPDATE_RAIN:
       return {
         ...state,
-        rain: action.payload,
+        rain: action.payload
       };
     case START_LOADING:
       return {
@@ -247,7 +248,7 @@ export default function(state = initialState, action) {
     case ACTION_ROOM:
       return {
         ...state,
-        roomList: state.roomList.map((room) =>
+        roomList: state.roomList.map(room =>
           room.id === payload.id ? { ...room, ...payload } : room
         )
       };

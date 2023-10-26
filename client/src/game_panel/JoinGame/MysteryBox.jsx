@@ -9,7 +9,7 @@ import ReactApexChart from 'react-apexcharts';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
-import { Button, Switch, FormControlLabel } from '@material-ui/core';
+import { Button, Switch, FormControlLabel, Table, TableBody, TableCell, TableRow, } from '@material-ui/core';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -58,7 +58,6 @@ class MysteryBox extends Component {
     this.settingsRef = React.createRef();
 
     this.state = {
-      items: [],
       bet_amount: 0,
       selected_id:
         this.props.box_list.length > 0 ? this.props.box_list[0]._id : '',
@@ -503,7 +502,7 @@ class MysteryBox extends Component {
 
       setTimeout(() => {
         this.setState({ isOpen: false });
-      }, 2500);
+      }, 3500);
       this.setState(
         prevState => ({
           betResults: [
@@ -581,6 +580,18 @@ class MysteryBox extends Component {
       width: `${payoutPercentage + 10}%`,
       backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
     };
+
+    const uniquePrizes = prizes
+    .reduce((accumulator, item) => {
+      const existingItem = accumulator.find((element) => element.prize === item.prize);
+      if (existingItem) {
+        existingItem.count += 1;
+      } else {
+        accumulator.push({ prize: item.prize, count: 1 });
+      }
+      return accumulator;
+    }, [])
+    .sort((a, b) => b.prize - a.prize);
 
     return (
       <div className="game-page">
@@ -813,29 +824,22 @@ class MysteryBox extends Component {
               />
               </div> */}
             <h3 className="game-sub-title">Prizes</h3>
-            <p className="box-prizes">
-              {prizes
-                .reduce((accumulator, item) => {
-                  const existingItem = accumulator.find(
-                    element => element.prize === item.prize
-                  );
-                  if (existingItem) {
-                    existingItem.count += 1;
-                  } else {
-                    accumulator.push({ prize: item.prize, count: 1 });
-                  }
-                  return accumulator;
-                }, [])
-                .sort((a, b) => {
-                  return b.prize - a.prize;
-                })
-                .map((item, key) => (
-                  <span className={item.prize === 0 ? 'EMPTY' : ''} key={key}>
-                    {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}{' '}
-                    ({((item.count / prizes.length) * 100).toFixed(2)}%)
-                  </span>
-                ))}
-            </p>
+            <Table className='prize-key'>
+        <TableBody>
+          {uniquePrizes.map((item, key) => (
+            <TableRow key={key}>
+              <TableCell>
+                <span className={item.prize === 0 ? 'EMPTY' : ''}>
+                  {item.prize === 0 ? 'EMPTY' : convertToCurrency(item.prize)}
+                </span>
+              </TableCell>
+              <TableCell>
+                {((item.count / prizes.length) * 100).toFixed(2)}%
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
             <h3 className="game-sub-title">
               {attempts.toFixed(2)} guesses remaining
@@ -1045,7 +1049,7 @@ class MysteryBox extends Component {
       return true;
     });
     prizes.sort((a, b) => a.prize - b.prize);
-    let timeLeft = 2500; // duration of modal in milliseconds
+    let timeLeft = 3500; // duration of modal in milliseconds
     const intervalId = setInterval(() => {
       timeLeft -= 100;
       if (timeLeft === 0) {
@@ -1058,7 +1062,7 @@ class MysteryBox extends Component {
        
         <div className="game-contents mystery-box-result-contents">
           <div className="game-info-panel">
-            {/* <h3 className="game-sub-title">ALL BOXES</h3> */}
+            <i className="disclaimer">*NOT IN THIS ORDER*</i>
             <p className="game-modal box-prizes">
             {prizes.map((item, key) => (
               <span className={item.status} key={key}>
@@ -1085,7 +1089,7 @@ class MysteryBox extends Component {
           <div className="countdown-timer">
             <div
               className="countdown-bar"
-              style={{ width: `${(timeLeft / 2500) * 100}%` }}
+              style={{ width: `${(timeLeft / 3500) * 100}%` }}
             ></div>
           </div>
         </div>

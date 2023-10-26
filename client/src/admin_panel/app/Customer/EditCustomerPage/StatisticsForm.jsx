@@ -362,6 +362,9 @@ class StatisticsForm extends React.Component {
                   <MenuItem value="62a25d2a723b9f15709d1aea">Mystery Box</MenuItem>
                   <MenuItem value="63dac60ba1316a1e70a468ab">Drop Game</MenuItem>
                   <MenuItem value="62a25d2a723b9f15709d1ae8">Spleesh</MenuItem>
+                  <MenuItem value="6536a82933e70418b45fbe32">Bang!</MenuItem>
+                  <MenuItem value="6536946933e70418b45fbe2f">Roll</MenuItem>
+
                 </Select>
               </FormControl>
               <FormControl>

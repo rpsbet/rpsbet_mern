@@ -8,7 +8,8 @@ import {
   PAGINATION_FOR_CUSTOMER,
   PAGINATION_FOR_ACTIVITY,
   LOADING_CUSTOMER_TABLE,
-  ACTIVITY_QUERY
+  ACTIVITY_QUERY,
+  LOAD_LEADERBOARDS
 } from '../types';
 
 export const acPaginationCustomer = (pagination, page, is_banned) => async (
@@ -155,6 +156,23 @@ export const acGetCustomerInfo = _id => async dispatch => {
   }
 };
 
+
+export const fetchLeaderboardsData = () => async (dispatch) => {
+  try {
+    const { data } = await api.get('statistics/get-leaderboards');
+    console.log(data)
+    if (data.success) {
+      dispatch({ type: LOAD_LEADERBOARDS, payload: data });
+    } else {
+      return (false)
+      // dispatch({ payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    // dispatch({ payload: 'An error occurred while fetching leaderboards data' });
+  }
+};
+
 export const getCustomerStatisticsData = (
   _id,
   actorType,
@@ -211,3 +229,5 @@ export const updateCustomer = customer => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
+
+

@@ -42,10 +42,6 @@
   margin-right: 5px !important;
 }
 
-a#btn_how_to_play {
-  margin-right: 15px !important;
-}
-
 .input-wrapper {
   position: relative;
 }
@@ -140,29 +136,30 @@ div[role='tablist'] {
 .game-type-panel .btn-game-type span {
   padding-right: 5px;
 }
-div[role='presentation'] div:first-child {
-  backdrop-filter: blur(2px);
-}
 .game-type-panel .btn-game-type div.icon {
   width: 100%;
   align-items: center;
   font-size: 14px;
   font-weight: 500 !important;
 }
-.game_header .main_header #btn_leaderboards {
-  font-size: 12px;
-  font-weight: 300;
-  line-height: 20px;
-  color: #747f8d;
-  margin-right: 32px;
+.game_header .main_header #btn_leaderboards,
+.game_header .main_header #btn_marketplace,
+
+.game_header .main_header #btn_notifications
+{
+  margin-right: 15px;
+  display: flex;
+  max-height: 50px;
+  overflow: hidden;
+  align-items: center;
 }
 
-.game_header .main_header #btn_leaderboards img {
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-}
+.game_header .main_header #btn_leaderboards svg,
+.game_header .main_header #btn_marketplace svg,
 
+.game_header .main_header #btn_notifications svg{
+  width: 20pt !important;
+}
 .table.main-game-table .table-row:hover {
   transform: scale(0.99);
   filter: brightness(1.09);
@@ -171,9 +168,6 @@ div[role='presentation'] div:first-child {
   cursor: pointer;
 }
 
-.game_header .main_header #btn_how_to_play:hover {
-  cursor: pointer;
-}
 #wallet-btn {
   margin-top: -1px;
   border-radius: 0 0 0.2em !important;
@@ -418,12 +412,6 @@ div.table .table-row .table-cell img.avatar,
     background-image: url('/img/game-logo-mobile.svg');
   }
 
-  .game_header .main_header #btn_how_to_play span {
-    display: none;
-  }
-  .game_header .main_header span#balance {
-    margin: 0;
-  }
   .game_header .main_header .header_action_panel button span.username
     /* ,.game_header .main_header .header_action_panel button svg  */
  {

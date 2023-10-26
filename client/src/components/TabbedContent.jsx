@@ -4,7 +4,7 @@ import ShowHistory from '../game_panel/icons/ShowHistory';
 import ShowHistoryHover from '../game_panel/icons/ShowHistoryHover';
 import ChatHover from '../game_panel/icons/ChatHover';
 import ChatRoomHover from '../game_panel/icons/ChatRoomHover';
-import Leaderboards from '../game_panel/main_pages/Leaderboards';
+import Leaderboards from './Leaderboards';
 import Moment from 'moment';
 import PlayerModal from '../game_panel/modal/PlayerModal';
 

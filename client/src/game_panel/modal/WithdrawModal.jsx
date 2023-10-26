@@ -5,178 +5,306 @@ import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Modal from 'react-modal';
-import { Button, TextField } from '@material-ui/core';
+import {
+  Button,
+  TextField,
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+  IconButton,
+  Icon,
+  Tooltip,
+  Typography
+} from '@material-ui/core';
+import { Warning, Info, Link, FiberManualRecord } from '@material-ui/icons';
 
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { convertToCurrency } from '../../util/conversion';
-Modal.setAppElement('#root')
+Modal.setAppElement('#root');
 
 const customStyles = {
-    overlay: {
-        zIndex: 3,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    },
-    content: {
-        top         : '50%',
-        left        : '50%',
-        right       : 'auto',
-        bottom      : 'auto',
-        transform   : 'translate(-50%, -50%)',
-        padding: 0,
-        background: 'transparent',
-    }
-}
+  overlay: {
+    zIndex: 3,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+  },
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    transform: 'translate(-50%, -50%)',
+    padding: 0,
+    background: 'transparent'
+  }
+};
 
 class WithdrawModal extends Component {
-    constructor(props) {
-        super(props);
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            _id: this.props.userInfo._id,
-            amount: 0,
-            web3: props.web3,
-            balance: props.balance,
-            account: props.account,
-            isLoading: false,
-            totalWagered: 0,
-            deposit: 0,
-            amount: 0,
-            balance: 0,
-        };
-    }
+    this.state = {
+      _id: this.props.userInfo._id,
+      amount: 0,
+      web3: props.web3,
+      balance: props.balance,
+      account: props.account,
+      isLoading: false,
+      totalWagered: 0,
+      deposit: 0,
+      amount: 0,
+      balance: 0
+    };
+  }
 
-    async componentDidMount() {
-        const result = await this.props.getCustomerStatisticsData(this.state._id)
-        this.setState({
-          ...result
-        })
+  async componentDidMount() {
+    const result = await this.props.getCustomerStatisticsData(this.state._id);
+    this.setState({
+      ...result
+    });
 
-        const params = {addressTo: this.state.account}
-        this.props.setGasfee(params);
+    const params = { addressTo: this.state.account };
+    this.props.setGasfee(params);
+  }
+
+  handleAmountChange = e => {
+    e.preventDefault();
+    const amount = e.target.value;
+    this.setState({
+      amount: amount
+    });
+  };
+
+  send = async () => {
+    try {
+      if (this.state.amount < 0) {
+        alertModal(
+          this.props.isDarkMode,
+          `WITHDRAWAL AMOUNT MUST BE MORE THAN 0 ETH DUMBASS`
+        );
+        return;
       }
 
-    handleAmountChange = (e) => {
-        e.preventDefault();
-        const amount = e.target.value;
-        this.setState({
-            amount: amount
-        })
+      if (this.state.amount > this.props.balance) {
+        alertModal(this.props.isDarkMode, `TRY LATER BROKIE`);
+        return;
+      }
+
+      this.setState({ isLoading: true });
+      const result = await axios.post('/stripe/withdraw_request/', {
+        amount: this.state.amount,
+        addressTo: this.state.account
+      });
+
+      if (result.data.success) {
+        alertModal(this.props.isDarkMode, result.data.message);
+        this.props.setBalance(result.data.balance);
+        this.props.addNewTransaction(result.data.newTransaction);
+        this.setState({ isLoading: false });
+        this.props.closeModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(this.props.isDarkMode, result.data.message);
+      }
+    } catch (e) {
+      this.setState({ isLoading: false });
+      if (this.state.amount <= 0) {
+        alertModal(this.props.isDarkMode, `Failed transaction.`);
+        return;
+      }
     }
+  };
 
-    send = async () => {
-        
-        
-        try {
-            
-            // if (this.state.amount < 1) {
-            //     alertModal(this.props.isDarkMode, `WITHDRAWAL AMOUNT MUST BE MORE THAN 1 ETH`)
-            //     return;
-            // }
-            
-            if (this.state.amount > this.props.balance) {
-                alertModal(this.props.isDarkMode, `TRY LATER BROKIE`)
-                return;
+  render() {
+    const { account } = this.state;
+    const isConnected = !!account;
+    return (
+      <>
+        <LoadingOverlay
+          active={true}
+          spinner
+          text="Creating Block..."
+          styles={{
+            wrapper: {
+              position: 'fixed',
+              width: '100%',
+              height: '100vh',
+              zIndex: this.state.isLoading ? 999 : 0
             }
-            
-            this.setState({ isLoading: true })
-            const result = await axios.post('/stripe/withdraw_request/', { amount: this.state.amount, addressTo: this.state.account});
-            
-            if (result.data.success) {
-                alertModal(this.props.isDarkMode, result.data.message)
-                this.props.setBalance(result.data.balance);
-                this.props.addNewTransaction(result.data.newTransaction);
-                this.setState({ isLoading: false })
-                this.props.closeModal();
-            } else {
-                this.setState({ isLoading: false })
-                alertModal(this.props.isDarkMode, result.data.message)
-            }
-        } catch(e) {
-            this.setState({ isLoading: false })
-            if (this.state.amount <= 0) {
-                alertModal(this.props.isDarkMode, `Failed transaction.`);
-                return;
-            }
-        }
-
-    }
-
-
-      render() {
-        const { totalWagered, deposit, amount, balance } = this.state;
-
-        console.log({ loading: this.state.isLoading })
-        return (
-            <>
-                <LoadingOverlay
-                    active={true}
-                    spinner
-                    text="Creating Block.."
-                    styles={{
-                        wrapper: {
-                            position: 'fixed',
-                            width: '100%',
-                            height: '100vh',
-                            zIndex: this.state.isLoading ? 999 : 0
-                        }
-                    }}
-                />
-                <Modal
-                    isOpen={this.props.modalIsOpen}
-                    onRequestClose={this.props.closeModal}
-                    style={customStyles}
-                    contentLabel="Deposit Modal"
-                    account={this.state.web3account}
-                >
-                        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-                            <div className='modal-header'>
-                                <h2 className='modal-title'>WITHDRAW</h2>
-                                <Button className="btn-close" onClick={this.props.closeModal}>×</Button>
-                            </div>
-                            <div className="modal-body edit-modal-body deposit-modal-body">
-                               
-                                <div className="modal-content-wrapper">
-                                    <div className="modal-content-panel">
-                                      
-                                        {/* <div id='withdrawal-status'>
+          }}
+        />
+        <Modal
+          isOpen={this.props.modalIsOpen}
+          onRequestClose={this.props.closeModal}
+          style={customStyles}
+          contentLabel="Deposit Modal"
+          account={this.state.web3account}
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
+              <h2 className="modal-title">WITHDRAW</h2>
+              <Button className="btn-close" onClick={this.props.closeModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body edit-modal-body deposit-modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  {/* <div id='withdrawal-status'>
                                         <h6>ELIGIBILILITY STATUS</h6>
                                     <div><span className="eligible-label">WAGERED (MIN {convertToCurrency(25)})</span><span style={{color: this.state.totalWagered < 25 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.totalWagered)}</span></div>
                                     <div><span className="eligible-label">DEPOSITS (MIN {convertToCurrency(5)})</span><span style={{color: this.state.deposit < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.deposit)}</span></div>
                                         <div><span className="eligible-label">AMOUNT (MIN {convertToCurrency(5)})</span><span style={{color: this.state.amount < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.amount)}</span></div>
                                         </div> */}
-                                        <div className='balance'>
-                                            </div>
-                                <div className="input-amount">
-                                    <TextField
-                                    pattern="^\\d*\\.?\\d*$"
-                                    variant='outlined'
-                                    autoComplete='off'
-                                    value={this.state.amount}
-                                    onChange={this.handleAmountChange}
-                                    InputProps={{
-                                        endAdornment: "ETH",
-                                    }}
-                                    className="form-control" />
-                                  
-                                    </div>
-                                    <label className="availabletag">
-                                        <span>IN-GAME BALANCE</span>:&nbsp;{convertToCurrency(this.props.balance)}<br/>
-                                        
-                                        <span>GAS FEE</span>:&nbsp;{convertToCurrency(this.props.gasfee)}
-                                        </label>                
-                                </div>
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <Button className="btn-submit" onClick={this.send}>Withdraw</Button>
-                            <Button className="btn-back" onClick={this.props.closeModal}>CANCEL</Button>
-                        </div>
+                  <div className="account">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography>Send To Address</Typography>
+
+                      {isConnected ? (
+                        <TextField
+                          label="Account"
+                          variant="outlined"
+                          value={account}
+                          InputProps={{
+                            readOnly: true
+                          }}
+                        />
+                      ) : (
+                        <TextField
+                          label="Account"
+                          variant="outlined"
+                          value="Connect Wallet"
+                          InputProps={{
+                            readOnly: true
+                          }}
+                        />
+                      )}
+                      {isConnected ? (
+                        <FiberManualRecord
+                          className="light"
+                          style={{ background: '#28a745', color: 'green' }}
+                        />
+                      ) : (
+                        <FiberManualRecord
+                          className="light"
+                          style={{ background: '#ff0000', color: 'red' }}
+                        />
+                      )}
+                      {isConnected ? (
+                        <Tooltip title="Connected account" arrow>
+                          <Info />
+                        </Tooltip>
+                      ) : (
+                        <Tooltip title="How do I connect?" arrow>
+                          <a
+                            href="your_connect_wallet_link_here"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              textDecoration: 'none'
+                            }}
+                          >
+                            <Info />
+                            <Link
+                              fontSize="small"
+                              style={{ marginLeft: '4px' }}
+                            />
+                          </a>
+                        </Tooltip>
+                      )}
                     </div>
-                </Modal>
-            </>
-        )
-    }
+                  </div>
+                  <div className="input-amount">
+                    <Typography>Withdrawal Amount</Typography>
+                    <TextField
+                      pattern="^\\d*\\.?\\d*$"
+                      variant="outlined"
+                      autoComplete="off"
+                      value={this.state.amount}
+                      onChange={this.handleAmountChange}
+                      InputProps={{
+                        endAdornment: 'ETH'
+                      }}
+                      className="form-control"
+                    />
+                  </div>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <span>IN-GAME BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(this.props.balance)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>WITHDRAWAL AMOUNT:</span>
+                        </TableCell>
+                        <TableCell style={{ color: 'red' }}>
+                          {convertToCurrency(this.state.amount * -1)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(
+                            this.props.balance - this.state.amount
+                          )}
+                          &nbsp;
+                          {this.props.balance - this.state.amount < 0 && (
+                            <Warning width="15pt" />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                  <hr />
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <span>GAS FEE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(this.props.gasfee)}
+                        </TableCell>
+                        <Tooltip
+                          title="Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
+                          arrow
+                        >
+                          <IconButton size="small">
+                            <Info />
+                          </IconButton>
+                        </Tooltip>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                  <div className="disclaimer">
+                    <Typography>Receive within 1 - 3 minutes</Typography>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.send}>
+                Withdraw
+              </Button>
+              <Button className="btn-back" onClick={this.props.closeModal}>
+                CANCEL
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      </>
+    );
+  }
 }
 
 const mapStateToProps = state => ({
@@ -189,10 +317,7 @@ const mapDispatchToProps = {
   setBalance,
   setGasfee,
   addNewTransaction,
-  getCustomerStatisticsData,
+  getCustomerStatisticsData
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(WithdrawModal);
+export default connect(mapStateToProps, mapDispatchToProps)(WithdrawModal);

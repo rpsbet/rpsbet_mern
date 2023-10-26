@@ -101,11 +101,6 @@ router.get('/user', auth, async (req, res) => {
       const transactions2 = await Transaction.find(query)
     let profitData = {};
     if (req.query.viewAll === 'true') {
-      // const unFilteredTransactions = await Transaction.find(query)
-      // .sort({ created_at: 'desc' })
-      // const unFiltered = unFilteredTransactions.filter(
-      //   transaction => !/withdraw|deposit/i.test(transaction.description)
-      // );
       profitData.sevenDayProfit = calculate7dayProfit(transactions2);
       profitData.oneDayProfit = calculate1dayProfit(transactions2);
       profitData.allTimeProfit = calculateAllTimeProfit(transactions2);
