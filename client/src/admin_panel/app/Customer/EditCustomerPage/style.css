@@ -1,107 +1,106 @@
 .statistics-container {
-    display: grid;
-    grid-template-columns: 30% auto;
+  display: grid;
+  grid-template-columns: 30% auto;
 }
 
-    .statistics-panel h5 {
-    text-transform: uppercase;
-    margin-bottom: 1rem;
-    }
-    .statistics-panel table {
-    width: 100%;
-    display: flex;
-    text-align-last: start;
-    justify-content: space-evenly;
-    }
-    .statistics-paneltbody tr td {
-        text-transform: uppercase;
-    padding: 0.5rem;
-    }
-    .statistics-panel .label {
-        text-transform: uppercase;
-    text-align: right;
-    font-weight: bold;
-    color: gray;
-    width: 40%;
-    font-size: 0.75em;
-    white-space: nowrap;
-    }
-    .statistics-panel .value {
-    text-align: left;
-    color: #ffb000;
+.statistics-panel h5 {
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.statistics-panel table {
+  width: 100%;
+  display: flex;
+  text-align-last: start;
+  justify-content: space-evenly;
+}
+.statistics-paneltbody tr td {
+  text-transform: uppercase;
+  padding: 0.5rem;
+}
+.statistics-panel .label {
+  text-transform: uppercase;
+  text-align: right;
+  font-weight: bold;
+  color: gray;
+  width: 40%;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+.statistics-panel .value {
+  text-align: left;
+  color: #ffb000;
 
-    font-size: 1.1em;
-    animation: slideIn 0.5s ease-in-out;
-    white-space: nowrap;
+  font-size: 1.1em;
+  animation: slideIn 0.5s ease-in-out;
+  white-space: nowrap;
+}
+.room-link {
+  z-index: 9;
+  background-color: rgba(0, 0, 0, 0.5);
+  margin: auto !important;
+  transform: translateY(-200%);
+  display: block !important;
+}
 
-    }
-    .room-link {
-        z-index: 9;
-        background-color: rgba(0, 0, 0, 0.5);
-        margin: auto !important;
-        transform: translateY(-200%);
-        display: block !important;
-      }
-      
-  
-    .statistics-panel .loading {
-    text-align: center;
-    font-style: italic;
-    color: gray;
-    animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-    0% {
+.statistics-panel .loading {
+  text-align: center;
+  font-style: italic;
+  color: gray;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
     transform: scale(1);
-    }
-    50% {
+  }
+  50% {
     transform: scale(1.05);
-    }
-    100% {
+  }
+  100% {
     transform: scale(1);
-    }
-    }
-    
-    @keyframes slideIn {
-    0% {
+  }
+}
+
+@keyframes slideIn {
+  0% {
     transform: translateX(-20%);
-    }
-    100% {
+  }
+  100% {
     transform: translateX(0);
-    }
-    }
+  }
+}
 
 .statistics-panel {
-    margin: 30px 0;
+  margin: 30px 0;
 }
 .statistics-panel .filters {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 .statistics-panel div {
-    margin: 5px;
+  margin: 5px;
 }
 
-.statistics-panel table th, .statistics-panel table td {
-    padding: 5px 20px;
+.statistics-panel table th,
+.statistics-panel table td {
+  padding: 5px 20px;
 }
 
 .apexcharts-tooltip {
-    padding: 10px;
+  padding: 10px;
 }
 
 .step-10 .apexcharts-xaxis-label,
 .step-5 .apexcharts-xaxis-label {
-    display: none;
+  display: none;
 }
 
 .step-10 .apexcharts-xaxis-label:nth-child(10n) {
-    display:revert;
+  display: revert;
 }
 
 .step-5 .apexcharts-xaxis-label:nth-child(5n) {
-    display:revert;
+  display: revert;
 }

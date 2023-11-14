@@ -9,35 +9,35 @@ import {
   ADD_LANDING_TOTAL
 } from '../types';
 
-export const acQueryItem = (pagination, page) => async (
-  dispatch,
-  getState
-) => {
-  dispatch({ type: LANDING_QUERY, payload: [] });
-  dispatch({ type: LOADING_LANDING_TABLE, payload: true });
-  let payload = {
-    pagination,
-    page
-  };
-  dispatch({ type: PAGINATION_FOR_LANDING, payload });
-  let body = {};
-  body.pagination = getState().landingReducer.pagination;
-  body.page = getState().landingReducer.page;
-  try {
-    const { data } = await api.get('landing', { params: body });
+// export const acQueryItem = (pagination, page) => async (
+//   dispatch,
+//   getState
+// ) => {
+//   dispatch({ type: LANDING_QUERY, payload: [] });
+//   dispatch({ type: LOADING_LANDING_TABLE, payload: true });
+//   let payload = {
+//     pagination,
+//     page
+//   };
+//   dispatch({ type: PAGINATION_FOR_LANDING, payload });
+//   let body = {};
+//   body.pagination = getState().landingReducer.pagination;
+//   body.page = getState().landingReducer.page;
+//   try {
+//     const { data } = await api.get('landing', { params: body });
 
-    if (data.success) {
-      dispatch({ type: LANDING_QUERY, payload: data.items });
-      dispatch({ type: ADD_LANDING_TOTAL, payload: data });
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.message });
-    }
-    dispatch({ type: LOADING_LANDING_TABLE, payload: false });
-  } catch (error) {
-    console.log('error***', error);
-    dispatch({ type: MSG_WARNING, payload: error });
-  }
-};
+//     if (data.success) {
+//       dispatch({ type: LANDING_QUERY, payload: data.items });
+//       dispatch({ type: ADD_LANDING_TOTAL, payload: data });
+//     } else {
+//       dispatch({ type: MSG_ERROR, payload: data.message });
+//     }
+//     dispatch({ type: LOADING_LANDING_TABLE, payload: false });
+//   } catch (error) {
+//     console.log('error***', error);
+//     dispatch({ type: MSG_WARNING, payload: error });
+//   }
+// };
 
 export const getItem = () => async (dispatch, getState) => {
   const _id = getState().landingReducer._id;

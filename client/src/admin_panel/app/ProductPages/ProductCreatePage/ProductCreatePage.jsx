@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { setUrl } from '../../../../redux/Auth/user.actions';
+// import { setUrl } from '../../../redux/Auth/user.actions';
 import ContainerHeader from '../../../../components/ContainerHeader';
 import { createItem, getItem, updateItem, deleteItem, setCurrentProductInfo} from '../../../../redux/Item/item.action';
 import CreateProductForm from './CreateProductForm';
 import { warningMsgBar, infoMsgBar } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
+import { Button } from '@material-ui/core';
 
 class ProductCreatePage extends Component {
   state = {
@@ -24,17 +25,17 @@ class ProductCreatePage extends Component {
       productName: props.productName,
       price: props.price,
       image: props.image,
-      startDateTime: props.startDateTime,
-      expireDateTime: props.expireDateTime,
+      // startDateTime: props.startDateTime,
+      // expireDateTime: props.expireDateTime,
     };
   }
 
   componentDidMount() {
-    if (this.props.match.params._id && this.state._id !== this.props.match.params._id) {
-      this.props.setCurrentProductInfo({ _id: this.props.match.params._id });
-    }
+    // if (this.props.match.params._id && this.state._id !== this.props.match.params._id) {
+    //   this.props.setCurrentProductInfo({ _id: this.props.match.params._id });
+    // }
 
-    this.props.setUrl(this.props.match.path);
+    // this.props.setUrl(this.props.match.path);
     this.props.getItem();
   }
 
@@ -47,21 +48,16 @@ class ProductCreatePage extends Component {
     this.setState({
       buttonDisable: true,
     });
-    history.push(`/admin/product/`);
+    this.props.closeProductCreateModal();
+
+    // history.push(`//product/`);
   };
 
-  onSubmitFrom = e => {
-    e.preventDefault();
-    console.log(this.state);
-    this.props.infoMsgBar(`product bine crate`);
-    this.props.createItem(this.state);
-    this.handelCancel();
-  };
 
   onSaveForm = e => {
     e.preventDefault();
     console.log(this.state);
-    this.props.infoMsgBar(`product bine saved`);
+    this.props.infoMsgBar(`New Item Listed!`);
     this.props.updateItem(this.state);
     this.handelCancel();
   };
@@ -99,18 +95,15 @@ class ProductCreatePage extends Component {
   render() {
     return (
       <>
-        <ContainerHeader
-          title={this.state._id === '' ? 'New Post' : 'Edit Product'}
-        />
         <CreateProductForm
           handelCancel={this.handelCancel}
           updateTextField={this.updateTextField}
-          onSubmitFrom={this.onSubmitFrom}
+          onSubmitFrom={this.props.onSubmitFrom}
           handleChange={this.handleChange}
           onSaveForm={this.onSaveForm}
           setOnDelete={this.setOnDelete}
           buttonDisable={this.state.buttonDisable}
-        />
+          />
       </>
     );
   }
@@ -126,12 +119,12 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  setUrl,
+  // setUrl,
   warningMsgBar,
   infoMsgBar,
   createItem,
   getItem,
-  updateItem,
+  // updateItem,
   deleteItem,
   setCurrentProductInfo
 };

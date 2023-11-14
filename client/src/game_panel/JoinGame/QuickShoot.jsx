@@ -25,7 +25,6 @@ import {
 } from '../modal/betValidations';
 
 import Lottie from 'react-lottie';
-// import goalBg from '../LottieAnimations/goal-bg.json';
 
 import animationData from '../LottieAnimations/spinningIcon';
 import {
@@ -947,6 +946,7 @@ class QuickShoot extends Component {
                         <Avatar
                           className="avatar"
                           src={this.props.creator_avatar}
+                          rank={this.props.rank}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -1165,7 +1165,7 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
-
+  rank: state.logic.curRoomInfo.rank,
   betResults: state.logic.betResults
 });
 

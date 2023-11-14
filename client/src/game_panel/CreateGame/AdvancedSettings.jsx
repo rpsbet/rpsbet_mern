@@ -1,16 +1,81 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { renderLottieAnimation } from '../../util/LottieAnimations';
+import { acQueryMyItem } from '../../redux/Item/item.action';
 import { Button, TextField } from '@material-ui/core';
-class AdvancedSettings extends Component {
+import styled from 'styled-components';
+
+const ProductCard = styled.div`
+  position: relative;
+  background: linear-gradient(156deg, #303438, #cf0c0e);
+  border-radius: 20px;
+  padding: 10px;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  cursor: pointer;
+  -webkit-transition: -webkit-transform 0.2s;
+  -webkit-transition: transform 0.2s;
+  transition: transform 0.2s;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+
+  &:hover {
+    transform: scale(1.03);
+  }
+`;
+
+  class AdvancedSettings extends Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        selectedBackgroundId: null, // Initialize with no selected background
+      };
+    }
+
+  async componentDidMount() {
+    const { acQueryMyItem } = this.props;
+    await acQueryMyItem(10, 1, 'price', '653ee7df17c9f5ee2124564a');
+  }
+
+logStep() {
+  console.log("wn", this.props.step, this.props.child_step)
+
+}
+
   render() {
     return (
       <div id="advanced_panel">
-        {this.props.step === 1 && (
+        {this.props.child_step === 1 && (
           <div className="game-privacy-panel game-info-panel">
             <h3 className="game-sub-title">Privacy</h3>
             <div className="radio-button-group bet-amounts">
               <Button
                 className={!this.props.is_private ? ' active' : ''}
                 onClick={() => {
+                  this.logStep();
                   this.props.onChangeState({
                     is_private: false,
                     room_password: ''
@@ -22,6 +87,7 @@ class AdvancedSettings extends Component {
               <Button
                 className={this.props.is_private ? ' active' : ''}
                 onClick={() => {
+                  
                   this.props.onChangeState({ is_private: true });
                 }}
               >
@@ -45,13 +111,15 @@ class AdvancedSettings extends Component {
           </div>
         )}
 
-        {this.props.step === 2 && (
+        {this.props.child_step === 2 && (
           <div className="game-info-panel payout-info-panel">
             <h3 className="game-sub-title">Payout</h3>
             <div className="select-buttons-panel bet-amounts">
               <Button
                 className={!this.props.endgame_type ? ' active' : ''}
                 onClick={() => {
+                  this.logStep();
+
                   this.props.onChangeState({ endgame_type: false });
                 }}
               >
@@ -60,6 +128,7 @@ class AdvancedSettings extends Component {
               <Button
                 className={this.props.endgame_type ? ' active' : ''}
                 onClick={() => {
+                  
                   this.props.onChangeState({ endgame_type: true });
                 }}
               >
@@ -119,41 +188,21 @@ class AdvancedSettings extends Component {
             <p className="tip">AUTOMATIC PAYOUTS WHEN BANKROLL HITS VALUE</p>
           </div>
         )}
-        {/* {this.props.step === 3 && (
-          <div className="game-privacy-panel game-info-panel">
-            <h3 className="game-sub-title">AI Play Algorithm</h3>
-            <div className="radio-button-group">
-              <button
-                className={
-                  'radio-button' + (this.props.is_anonymous === true ? ' checked' : '')
-                }
-                onClick={() => { this.props.onChangeState({is_anonymous: true}); }}
-              >
-                V1
-              </button>
-              <button
-                className={
-                  'radio-button' + (this.props.is_anonymous === false ? ' checked' : '')
-                }
-                onClick={() => { this.props.onChangeState({is_anonymous: false}); }}
-              >
-                V2
-              </button>
-            </div>
-            <p>Click 'i' for more info.</p>
-          </div>
-        )} */}
-        {this.props.step === 3 && (
+
+        {this.props.child_step === 3 && (
           <div className="game-music-panel game-info-panel">
             <h3 className="game-sub-title">Add music?</h3>
-            <form style={{display: "flex"}} onSubmit={this.props.handleSubmit}>
+            <form
+              style={{ display: 'flex' }}
+              onSubmit={this.props.handleSubmit}
+            >
               <TextField
                 label="YouTube URL"
                 variant="outlined"
                 value={this.props.youtubeUrl}
                 onChange={this.props.handleUrlChange}
               />
-              <Button type="submit" variant="contained" color="primary">
+              <Button type="submit" onClick={this.logStep()} variant="contained" color="primary">
                 Play
               </Button>
             </form>
@@ -171,43 +220,44 @@ class AdvancedSettings extends Component {
             <p className="tip">ENTER A YOUTUBE URL AND CLICK PLAY</p>
           </div>
         )}
-        {/* {this.props.step === 3 && (
-          <div className="game-privacy-panel game-info-panel">
-            <h3 className="game-sub-title">Anonymous</h3>
-            <div className="radio-button-group">
-              <button
-                className={
-                  'radio-button' + (this.props.is_anonymous === true ? ' checked' : '')
-                }
-                onClick={() => { this.props.onChangeState({is_anonymous: true}); }}
+        {this.props.child_step === 4 && (
+          <div className="game-background-panel game-info-panel">
+            <h3 className="game-sub-title">Add Background?</h3>
+            {this.props.data.map(row => (
+              <ProductCard
+                key={row._id}
+                onClick={() => {
+                this.setState({ selectedBackgroundId: row._id }); 
+                this.props.onChangeState({
+                  gameBackground: row.image
+                })
+              }}
+              className={this.state.selectedBackgroundId === row._id ? 'selected' : ''}
               >
-                Yes
-              </button>
-              <button
-                className={
-                  'radio-button' + (this.props.is_anonymous === false ? ' checked' : '')
-                }
-                onClick={() => { this.props.onChangeState({is_anonymous: false}); }}
-              >
-                No
-              </button>
-            </div>
-            <p>Choose 'Yes' to place an anonymous bet. RPS 0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your RPS 0.10 back.</p>
+                {row.image && renderLottieAnimation(row.image) ? (
+                  renderLottieAnimation(row.image)
+                ) : (
+                  <img src={row.image} alt={row.productName} />
+                )}
+                <div>{row.productName}</div>
+              </ProductCard>
+            ))}
+            <p className="tip">
+              GAME BACKGROUNDS AVAILABLE VIA THE MARKETPLACE
+            </p>
           </div>
-        )} */}
-
-        {/* 
-        <hr/>
-				<label className="lbl_game_option">Anonymous Bet</label>
-				<div >
-					<label className={"radio-inline" + (this.props.is_anonymous === true ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: true}); }}>Yes</label>
-					<label className={"radio-inline" + (this.props.is_anonymous === false ? ' checked' : '')} onClick={() => { this.props.onChangeState({is_anonymous: false}); }}>No</label>
-				</div>
-				<div className="tip" style={{pointerEvents: "none", opacity: "0.6"}}>Choose 'Yes' to place an anonymous bet. RPS 0.10 will be deducted from your balance and added to the PR. Please note, if you end your game, you will not receive your RPS 0.10 back.</div>
-      */}
+        )}
       </div>
     );
   }
 }
 
-export default AdvancedSettings;
+const mapStateToProps = state => ({
+  data: state.itemReducer.myItemArray
+});
+
+const mapDispatchToProps = {
+  acQueryMyItem
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(AdvancedSettings);

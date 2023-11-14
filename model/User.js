@@ -33,6 +33,11 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
+  accessory: {
+    type: String,
+    ref: 'Item',
+    default: null
+  },
   bio: {
     type: String,
   },

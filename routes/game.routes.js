@@ -9,6 +9,8 @@ const admin = require('../middleware/admin');
 
 const Room = require('../model/Room');
 const User = require('../model/User');
+
+const Item = require('../model/Item');
 const GameType = require('../model/GameType');
 const GameLog = require('../model/GameLog');
 const RoomBoxPrize = require('../model/RoomBoxPrize');
@@ -16,6 +18,8 @@ const Question = require('../model/Question');
 const Answer = require('../model/Answer');
 const BrainGameType = require('../model/BrainGameType');
 const Message = require('../model/Message');
+const Notification = require('../model/Notification');
+
 const Transaction = require('../model/Transaction');
 const SystemSetting = require('../model/SystemSetting');
 const SpleeshGuess = require('../model/SpleeshGuess');
@@ -32,6 +36,7 @@ const { predictNext } = require('../helper/util/predictNext');
 const { predictNextBj } = require('../helper/util/predictNextBj');
 const { predictNextQs } = require('../helper/util/predictNextQs');
 const { predictNextDrop } = require('../helper/util/predictNextDrop');
+const avatarUtils  = require('../helper/util/getRank');
 const {
   getCurrentTime,
   initializeRound
@@ -255,6 +260,8 @@ router.get('/room/:id', async (req, res) => {
         created_at: room['created_at'],
         creator_id: room['creator'],
         creator_avatar: creator['avatar'],
+        rank: creator['totalWagered'],
+        creator_accessory: creator['accessory'],
         aveMultiplier: room['aveMultiplier'],
         creator_name: creator['username'],
         endgame_amount: room['endgame_amount'],
@@ -285,6 +292,7 @@ router.get('/room/:id', async (req, res) => {
         qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
         is_private: room['is_private'],
         youtubeUrl: room['youtubeUrl'],
+        gameBackground: room['gameBackground'],
         game_log_list: gameLogList.map(({ bet_amount }) => bet_amount)
       }
     });
@@ -387,9 +395,10 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         status: gameLog['room']['status']
       };
 
-      const joined_user_avatar = `<img class='avatar' data-userid="${gameLog['joined_user']['_id']}" src='${gameLog['joined_user']['avatar']} ' alt='' onerror='this.src="/img/profile-thumbnail.svg"' />`;
-      const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" src='${gameLog['creator']['avatar']} ' alt='' onerror='this.src="/img/profile-thumbnail.svg"' />`;
-      const joined_user_link = `<a href="javascript:void(0)" class="user-link" data-userid="${gameLog['joined_user']['_id']}">${joined_user_avatar}</a>`;
+      const joined_user_avatar = `<img class='avatar' data-userid="${gameLog['joined_user']['_id']}" rank='${gameLog['joined_user']['totalWagered']}' src='${gameLog['joined_user']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['joined_user']['totalWagered'])}" />`;
+
+const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" rank='${gameLog['creator']['totalWagered']}' src='${gameLog['creator']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
+const joined_user_link = `<a href="javascript:void(0)" class="user-link" data-userid="${gameLog['joined_user']['_id']}">${joined_user_avatar}</a>`;
       const creator_link = `<a href="javascript:void(0)" class="user-link" data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
 
       const betAmount = parseFloat(gameLog['room']['bet_amount']);
@@ -769,10 +778,15 @@ const getRoomList = async (pagination, page, game_type) => {
   for (const room of rooms) {
     const room_id = room.game_type.short_name + '-' + room.room_number;
     try {
-      const joinerAvatars = await Promise.all(
+      const joinerData = await Promise.all(
         room.joiners.map(async joinedUser => {
           const user = await User.findOne({ _id: joinedUser });
-          return user.avatar;
+          return {
+            avatar: user.avatar,
+            totalWagered: user.totalWagered,
+            accessory: user.accessory,
+            rank: user.totalWagered
+          };
         })
       );
 
@@ -788,8 +802,14 @@ const getRoomList = async (pagination, page, game_type) => {
         aveMultiplier: room.aveMultiplier,
         endgame_amount: room.endgame_amount,
         joiners: room.joiners,
-        joiner_avatars: joinerAvatars,
+        joiner_avatars: joinerData.map(joiner => ({
+          avatar: joiner.avatar,
+          rank: joiner.totalWagered,
+          accessory: joiner.accessory
+        })),
+        rank: room.creator.totalWagered,
         creator_avatar: room.creator ? room.creator.avatar : '',
+        creator_accessory: room.creator ? room.creator.accessory : '',
         creator_status: room.creator ? room.creator.status : '',
         game_type: room.game_type,
         bet_amount: room.bet_amount,
@@ -809,6 +829,7 @@ const getRoomList = async (pagination, page, game_type) => {
         is_anonymous: room.is_anonymous,
         is_private: room.is_private,
         youtubeUrl: room.youtubeUrl,
+        gameBackground: room.gameBackground,
         brain_game_type: room.brain_game_type,
         status: room.status,
         index: room.room_number,
@@ -1143,11 +1164,8 @@ router.post('/rooms', auth, async (req, res) => {
   }
 });
 
-
 async function getRoomNetProfits(room_id) {
   try {
-    const commission = await getCommission();
-
     const gameLogs = await GameLog.find({
       $and: [{ room: { $ne: null } }, { game_result: { $nin: [3, -100] } }],
       room: room_id
@@ -1164,6 +1182,20 @@ async function getRoomNetProfits(room_id) {
     const playerStats = {};
 
     for (const gameLog of gameLogs) {
+      const tax = await SystemSetting.findOne({ name: 'commission' });
+      const creatorUser = await User.findOne({ _id: gameLog.creator }).select(
+        'accessory'
+      );
+      const accessory = creatorUser ? creatorUser.accessory : null;
+      let item;
+      if (accessory) {
+        item = await Item.findOne({ image: accessory }).select('CP');
+      } else {
+        item = { CP: tax.value };
+      }
+
+      const commission = item.CP;
+
       const actor = gameLog.joined_user.username;
       const wagered = gameLog.bet_amount;
       let net_profit = 0;
@@ -1429,9 +1461,10 @@ router.post('/end_game', auth, async (req, res) => {
     // stopBangGame(roomId, req.io.sockets);
 
     const gameLogCount = await GameLog.countDocuments({ room: roomId });
-    let message = new Message({
+    let message = new Notification({
       from: userId,
       to: roomInfo.creator,
+      room: roomInfo._id,
       message: '',
       is_anonymous: req.body.is_anonymous,
       is_read: true
@@ -1552,11 +1585,11 @@ router.get('/my_chat', auth, async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const messages1 = await Message.find({ from: userId }).populate({
+    const messages1 = await Notification.find({ from: userId }).populate({
       path: 'to',
       model: User
     });
-    const messages2 = await Message.find({ to: userId }).populate({
+    const messages2 = await Notification.find({ to: userId }).populate({
       path: 'from',
       model: User
     });
@@ -1575,6 +1608,7 @@ router.get('/my_chat', auth, async (req, res) => {
           message: message.message,
           username: message.to.username,
           avatar: message.to.avatar,
+          rank: message.to.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),
           updated_at: message.updated_at,
@@ -1599,6 +1633,7 @@ router.get('/my_chat', auth, async (req, res) => {
           message: message.message,
           username: message.from.username,
           avatar: message.from.avatar,
+          rank: message.from.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),
           updated_at: message.updated_at
@@ -1617,6 +1652,88 @@ router.get('/my_chat', auth, async (req, res) => {
     res.json({
       success: true,
       myChat
+    });
+  } catch (err) {
+    console.log(err);
+    res.json({
+      success: false,
+      message: err
+    });
+  }
+});
+
+router.get('/notifications', auth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const messages1 = await Notification.find({ from: userId }).populate({
+      path: 'to',
+      model: User
+    });
+    const messages2 = await Notification.find({ to: userId }).populate({
+      path: 'from',
+      model: User
+    });
+
+    const notifications = {};
+    for (let message of messages1) {
+      if (
+        message.to &&
+        (!notifications[message.to._id] ||
+          notifications[message.to._id].updated_at < message.updated_at)
+      ) {
+        notifications[message.to._id] = {
+          ...notifications[message.to._id],
+          _id: message.to._id,
+          message: message.message,
+          username: message.to.username,
+          avatar: message.to.avatar,
+          rank: message.to.totalWagered,
+          created_at: message.created_at,
+          created_at_str: moment(message.created_at).format('LLL'),
+          updated_at: message.updated_at,
+          unread_message_count: 0
+        };
+      }
+    }
+
+    for (let message of messages2) {
+      if (message.from && message.from._id === message.to) {
+        continue;
+      }
+
+      if (
+        message.from &&
+        (!notifications[message.from._id] ||
+          notifications[message.from._id].updated_at < message.updated_at)
+      ) {
+        notifications[message.from._id] = {
+          ...notifications[message.from._id],
+          _id: message.from._id,
+          message: message.message,
+          username: message.from.username,
+          avatar: message.from.avatar,
+          rank: message.from.totalWagered,
+          created_at: message.created_at,
+          created_at_str: moment(message.created_at).format('LLL'),
+          updated_at: message.updated_at
+        };
+      }
+
+      if (
+        message.from &&
+        !notifications[message.from._id].unread_message_count
+      ) {
+        notifications[message.from._id].unread_message_count = 0;
+      }
+
+      if (message.from && !message.is_read) {
+        notifications[message.from._id].unread_message_count++;
+      }
+    }
+
+    res.json({
+      success: true,
+      notifications: notifications
     });
   } catch (err) {
     console.log(err);
@@ -1690,6 +1807,64 @@ router.post('/start_roll', auth, async (req, res) => {
     });
   }
 });
+
+router.post('/get_notification_room_info', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
+
+    await Notification.updateMany(
+      {
+        is_read: false,
+        from: new ObjectId(req.body.user_id),
+        to: new ObjectId(req.user._id)
+      },
+      { $set: { is_read: true } },
+      (err, writeResult) => {
+        console.log('set messages as read (open chat room)', err);
+      }
+    );
+
+    const notificationLogs = await Notification.find({
+      $or: [
+        {
+          from: new ObjectId(req.body.user_id),
+          to: new ObjectId(req.user._id)
+        },
+        { from: new ObjectId(req.user._id), to: new ObjectId(req.body.user_id) }
+      ]
+    }).sort({ created_at: 'asc' });
+
+    let messages = [];
+    for (const notificationLog of notificationLogs) {
+      const message = {
+        from: notificationLog.from,
+        to: notificationLog.to,
+        message: notificationLog.message,
+        // messageContent: chatLog.messageContent,
+        created_at: moment(notificationLog.created_at).format('LLL')
+      };
+      messages.push(message);
+    }
+
+    res.json({
+      success: true,
+      RoomInfo: {
+        user_id: user._id,
+        avatar: user.avatar,
+        rank: user.totalWagered,
+        accessory: user.accessory,
+        username: user.username,
+        notificationLog: messages
+      }
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      message: err
+    });
+  }
+});
+
 router.post('/get_chat_room_info', auth, async (req, res) => {
   try {
     const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
@@ -1732,7 +1907,9 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
       success: true,
       chatRoomInfo: {
         user_id: user._id,
+        accessory: user.accessory,
         avatar: user.avatar,
+        rank: user.totalWagered,
         username: user.username,
         chatLogs: messages
       }
@@ -1764,7 +1941,7 @@ async function sendEndedMessageToJoiners(roomId, from, message, is_anonymous) {
       return;
     }
     joiners[log.joined_user] = 1;
-    const temp = new Message({
+    const temp = new Notification({
       from: new ObjectId(from),
       to: new ObjectId(log.joined_user),
       message: message,
@@ -1772,14 +1949,16 @@ async function sendEndedMessageToJoiners(roomId, from, message, is_anonymous) {
       is_read: false
     });
     temp.save();
-    socket.sendMessage(log.joined_user, {
+    socket.sendNotification(log.joined_user, {
       from: from,
       to: log.joined_user,
+      room: roomId,
       message: message,
       created_at: now
     });
   });
 }
+
 router.post('/tip', auth, async (req, res) => {
   try {
     const toAddress = req.body.addressTo;
@@ -1788,18 +1967,18 @@ router.post('/tip', auth, async (req, res) => {
     if (!userToTip) {
       return res.json({
         success: false,
-        message: 'Recipient not found',
+        message: 'Recipient not found'
       });
     }
 
     const now = moment().format('LLL');
     const userBalance = req.user.balance;
-    const tipAmount = parseFloat(req.body.amount);  // Parse amount as a float
+    const tipAmount = parseFloat(req.body.amount); // Parse amount as a float
 
     if (isNaN(tipAmount) || tipAmount <= 0) {
       return res.json({
         success: false,
-        message: 'Invalid tip amount',
+        message: 'Invalid tip amount'
       });
     }
 
@@ -1810,7 +1989,7 @@ router.post('/tip', auth, async (req, res) => {
     if (userBalance < tipAmount) {
       return res.json({
         success: false,
-        message: 'INSUFFICIENT FUNDS',
+        message: 'INSUFFICIENT FUNDS'
       });
     }
 
@@ -1825,21 +2004,26 @@ router.post('/tip', auth, async (req, res) => {
       created_at: now,
       user: req.user,
       amount: -tipAmount,
-      description: `Tipped ${userToTip.username}`,
+      description: `Tipped ${userToTip.username}`
     });
 
     const newTransactionJ = new Transaction({
       created_at: now,
       user: userToTip,
       amount: tipAmount,
-      description,
+      description
     });
 
     // Update balances and save transactions
     userToTip.balance += tipAmount;
     req.user.balance -= tipAmount;
 
-    const savePromises = [userToTip.save(), req.user.save(), newTransactionC.save(), newTransactionJ.save()];
+    const savePromises = [
+      userToTip.save(),
+      req.user.save(),
+      newTransactionC.save(),
+      newTransactionJ.save()
+    ];
 
     await Promise.all(savePromises);
 
@@ -1847,23 +2031,20 @@ router.post('/tip', auth, async (req, res) => {
       success: true,
       balance: req.user.balance,
       newTransaction: newTransactionC,
-      message: 'Tip has been sent. 💸 Yipeee!',
+      message: 'Tip has been sent. 💸 Yipeee!'
     });
   } catch (e) {
     console.log('ERROR in tip_request', e);
     return res.json({
       success: false,
-      message: 'Failed to initiate tip',
+      message: 'Failed to initiate tip'
     });
   }
 });
 
-
-
-
 router.post('/bet', auth, async (req, res) => {
   try {
-    const commission = await SystemSetting.findOne({ name: 'commission' });
+    const tax = await SystemSetting.findOne({ name: 'commission' });
     const rain = await SystemSetting.findOne({ name: 'rain' });
     const platform = await SystemSetting.findOne({ name: 'platform' });
 
@@ -1903,6 +2084,19 @@ router.post('/bet', auth, async (req, res) => {
         return;
       }
 
+      const creatorUser = await User.findOne({
+        _id: roomInfo['creator']._id
+      }).select('accessory');
+      const accessory = creatorUser.accessory;
+      let item;
+
+      if (accessory) {
+        item = await Item.findOne({ image: accessory }).select('CP');
+      } else {
+        item = { CP: tax.value };
+      }
+      const commission = item.CP;
+
       newGameLog = new GameLog({
         room: roomInfo,
         creator: roomInfo['creator'],
@@ -1938,9 +2132,10 @@ router.post('/bet', auth, async (req, res) => {
       //   newTransactionJ.amount -= 10;
       // }
 
-      let message = new Message({
+      let message = new Notification({
         from: req.user,
         to: roomInfo['creator'],
+        room: req.body._id,
         message: '',
         is_anonymous: req.body.is_anonymous,
         is_read: false
@@ -1989,30 +2184,22 @@ router.post('/bet', auth, async (req, res) => {
         ) {
           newGameLog.game_result = 1;
           newTransactionJ.amount +=
-            parseFloat(req.body.bet_amount) *
-            2 *
-            ((100 - commission.value) / 100);
+            parseFloat(req.body.bet_amount) * 2 * ((100 - commission) / 100);
 
           newGameLog.commission =
-            parseFloat(req.body.bet_amount) *
-            2 *
-            ((commission.value - 0.5) / 100);
+            parseFloat(req.body.bet_amount) * 2 * ((commission - 0.5) / 100);
 
-          // update rain stat 14.5)
+          // update rain
           rain.value =
             parseFloat(rain.value) +
-            parseFloat(req.body.bet_amount) *
-              2 *
-              ((commission.value - 0.5) / 100);
+            parseFloat(req.body.bet_amount) * 2 * ((commission - 0.5) / 100);
 
           rain.save();
 
           // update platform stat (0.5%)
           platform.value =
             parseFloat(platform.value) +
-            parseFloat(req.body.bet_amount) *
-              2 *
-              ((commission.value - 14.5) / 100);
+            parseFloat(req.body.bet_amount) * 2 * (tax.value / 100);
           platform.save();
 
           if (req.io.sockets) {
@@ -2026,13 +2213,11 @@ router.post('/bet', auth, async (req, res) => {
           roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
           roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
 
-          // update bankroll (14.5)
+          // update bankroll
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
-              parseFloat(req.body.bet_amount) *
-                2 *
-                ((commission.value - 0.5) / 100);
+              parseFloat(req.body.bet_amount) * 2 * ((commission - 0.5) / 100);
           }
           const lastFiveBetItems = await RpsBetItem.find({
             room: new ObjectId(req.body._id)
@@ -2086,7 +2271,6 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else {
           newGameLog.game_result = -1;
-          // newTransactionC.amount += parseFloat(req.body.bet_amount) * 2 * ((100 - commission.value) / 100);
 
           roomInfo.host_pr =
             (parseFloat(roomInfo.host_pr) || 0) +
@@ -2101,9 +2285,7 @@ router.post('/bet', auth, async (req, res) => {
           ) {
             newTransactionC.amount +=
               parseFloat(roomInfo['user_bet']) -
-              parseFloat(
-                roomInfo['endgame_amount']
-              ); /* ((100 - commission.value) / 100); */
+              parseFloat(roomInfo['endgame_amount']);
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -2229,20 +2411,14 @@ router.post('/bet', auth, async (req, res) => {
           newGameLog.game_result = -1;
 
           roomInfo['user_bet'] =
-            parseFloat(roomInfo['user_bet']) +
-            parseFloat(
-              req.body.bet_amount
-            ) /* (100 - commission.value) / 100)(parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1)) */;
-
+            parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
           if (
             roomInfo['endgame_type'] &&
             roomInfo['user_bet'] >= roomInfo['endgame_amount']
           ) {
             newTransactionC.amount +=
               parseFloat(roomInfo['user_bet']) -
-              parseFloat(
-                roomInfo['endgame_amount']
-              ); /* ((100 - commission.value) / 100); */
+              parseFloat(roomInfo['endgame_amount']);
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -2283,7 +2459,7 @@ router.post('/bet', auth, async (req, res) => {
             (parseFloat(req.body.bet_amount) +
               parseFloat(req.body.bet_amount) /
                 (roomInfo['qs_game_type'] - 1)) *
-            ((100 - commission.value) / 100);
+            ((100 - commission) / 100);
           roomInfo['host_pr'] -=
             parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
           roomInfo['user_bet'] -=
@@ -2299,15 +2475,15 @@ router.post('/bet', auth, async (req, res) => {
             (parseFloat(req.body.bet_amount) +
               parseFloat(req.body.bet_amount) /
                 (roomInfo['qs_game_type'] - 1)) *
-            ((commission.value - 0.5) / 100);
+            ((commission - 0.5) / 100);
 
-          // update rain stat 14.5)
+          // update rain
           rain.value =
             parseFloat(rain.value) +
             (parseFloat(req.body.bet_amount) +
               parseFloat(req.body.bet_amount) /
                 (roomInfo['qs_game_type'] - 1)) *
-              ((commission.value - 0.5) / 100);
+              ((commission - 0.5) / 100);
 
           rain.save();
 
@@ -2317,7 +2493,7 @@ router.post('/bet', auth, async (req, res) => {
             (parseFloat(req.body.bet_amount) +
               parseFloat(req.body.bet_amount) /
                 (roomInfo['qs_game_type'] - 1)) *
-              ((commission.value - 14.5) / 100);
+              (tax.value / 100);
 
           platform.save();
 
@@ -2327,14 +2503,14 @@ router.post('/bet', auth, async (req, res) => {
             });
           }
 
-          // update bankroll (14.5)
+          // update bankroll
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
               (parseFloat(req.body.bet_amount) +
                 parseFloat(req.body.bet_amount) /
                   (roomInfo['qs_game_type'] - 1)) *
-                ((commission.value - 0.5) / 100);
+                ((commission - 0.5) / 100);
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL_QS', {
@@ -2386,7 +2562,6 @@ router.post('/bet', auth, async (req, res) => {
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Drop Game') {
         if (parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)) {
-          // Return an error or some other response to the user, e.g.:
           return res
             .status(400)
             .json({ error: 'Bet amount exceeds available balance.' });
@@ -2432,16 +2607,16 @@ router.post('/bet', auth, async (req, res) => {
           newGameLog.game_result = 1;
           newTransactionJ.amount +=
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
-            ((100 - commission.value) / 100);
+            ((100 - commission) / 100);
           newGameLog.commission =
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
-            ((commission.value - 0.5) / 100);
+            ((commission - 0.5) / 100);
 
-          // update rain stat 14.5)
+          // update rain
           rain.value =
             parseFloat(rain.value) +
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
-              ((commission.value - 0.5) / 100);
+              ((commission - 0.5) / 100);
 
           rain.save();
 
@@ -2449,7 +2624,7 @@ router.post('/bet', auth, async (req, res) => {
           platform.value =
             parseFloat(platform.value) +
             (parseFloat(req.body.bet_amount) + bet_item.drop) *
-              ((commission.value - 14.5) / 100);
+              (tax.value / 100);
           platform.save();
 
           if (req.io.sockets) {
@@ -2462,12 +2637,12 @@ router.post('/bet', auth, async (req, res) => {
 
           roomInfo['host_pr'] -= bet_item.drop;
           roomInfo['user_bet'] -= bet_item.drop;
-          // update bankroll (14.5)
+          // update bankroll
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
               (parseFloat(req.body.bet_amount) + bet_item.drop) *
-                ((commission.value - 0.5) / 100);
+                ((commission - 0.5) / 100);
           }
 
           if (req.io.sockets) {
@@ -2528,7 +2703,6 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else {
           newGameLog.game_result = -1;
-          // newTransactionC.amount += parseFloat(req.body.bet_amount) * 2 * ((100 - commission.value) / 100);
 
           roomInfo.host_pr =
             (parseFloat(roomInfo.host_pr) || 0) +
@@ -2543,10 +2717,7 @@ router.post('/bet', auth, async (req, res) => {
           ) {
             newTransactionC.amount +=
               parseFloat(roomInfo['user_bet']) -
-              parseFloat(
-                roomInfo['endgame_amount']
-              ); /* ((100 - commission.value) / 100); */
-            /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+              parseFloat(roomInfo['endgame_amount']);
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -2656,7 +2827,7 @@ router.post('/bet', auth, async (req, res) => {
             newTransactionJ.amount +=
               parseFloat(req.body.bet_amount) *
               parseFloat(req.body.cashoutAmount) *
-              ((100 - commission.value) / 100);
+              ((100 - commission) / 100);
 
             roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
 
@@ -2686,8 +2857,7 @@ router.post('/bet', auth, async (req, res) => {
               roomInfo['room_number'];
           } else {
             newTransactionJ.amount +=
-              parseFloat(roomInfo['user_bet']) *
-              ((100 - commission.value) / 100);
+              parseFloat(roomInfo['user_bet']) * ((100 - commission) / 100);
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -2750,7 +2920,6 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else {
           newGameLog.game_result = -1;
-          // newTransactionC.amount += parseFloat(req.body.bet_amount) * 2 * ((100 - commission.value) / 100);
 
           roomInfo.host_pr =
             (parseFloat(roomInfo.host_pr) || 0) +
@@ -2765,10 +2934,7 @@ router.post('/bet', auth, async (req, res) => {
           ) {
             newTransactionC.amount +=
               parseFloat(roomInfo['user_bet']) -
-              parseFloat(
-                roomInfo['endgame_amount']
-              ); /* ((100 - commission.value) / 100); */
-            /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+              parseFloat(roomInfo['endgame_amount']);
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -2873,7 +3039,7 @@ router.post('/bet', auth, async (req, res) => {
             newTransactionJ.amount +=
               parseFloat(req.body.bet_amount) *
               parseFloat(bet_item.roll) *
-              ((100 - commission.value) / 100);
+              ((100 - commission) / 100);
 
             roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
 
@@ -2898,8 +3064,7 @@ router.post('/bet', auth, async (req, res) => {
               roomInfo['room_number'];
           } else {
             newTransactionJ.amount +=
-              parseFloat(roomInfo['user_bet']) *
-              ((100 - commission.value) / 100);
+              parseFloat(roomInfo['user_bet']) * ((100 - commission) / 100);
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -2947,7 +3112,7 @@ router.post('/bet', auth, async (req, res) => {
             newTransactionJ.amount +=
               parseFloat(req.body.bet_amount) *
               parseFloat(bet_item.roll) *
-              ((100 - commission.value) / 100);
+              ((100 - commission) / 100);
 
             roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
 
@@ -2970,8 +3135,7 @@ router.post('/bet', auth, async (req, res) => {
               roomInfo['room_number'];
           } else {
             newTransactionJ.amount +=
-              parseFloat(roomInfo['user_bet']) *
-              ((100 - commission.value) / 100);
+              parseFloat(roomInfo['user_bet']) * ((100 - commission) / 100);
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -3009,7 +3173,6 @@ router.post('/bet', auth, async (req, res) => {
           }
         } else {
           newGameLog.game_result = -1;
-          // newTransactionC.amount += parseFloat(req.body.bet_amount) * 2 * ((100 - commission.value) / 100);
 
           roomInfo.host_pr =
             (parseFloat(roomInfo.host_pr) || 0) +
@@ -3024,10 +3187,7 @@ router.post('/bet', auth, async (req, res) => {
           ) {
             newTransactionC.amount +=
               parseFloat(roomInfo['user_bet']) -
-              parseFloat(
-                roomInfo['endgame_amount']
-              ); /* ((100 - commission.value) / 100); */
-            /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+              parseFloat(roomInfo['endgame_amount']);
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -3137,20 +3297,19 @@ router.post('/bet', auth, async (req, res) => {
 
           newGameLog.commission =
             (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-            ((commission.value - 0.5) / 100);
+            ((commission - 0.5) / 100);
 
           rain.value =
             parseFloat(rain.value) +
             (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-              ((commission.value - 0.5) / 100);
+              ((commission - 0.5) / 100);
 
           rain.save();
 
           // update platform stat (0.5%)
           platform.value =
             parseFloat(platform.value) +
-            (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-              ((commission.value - 14.5) / 100);
+            (roomInfo['host_pr'] + roomInfo['bet_amount']) * (tax.value / 100);
           platform.save();
 
           if (req.io.sockets) {
@@ -3159,17 +3318,17 @@ router.post('/bet', auth, async (req, res) => {
             });
           }
 
-          // update bankroll (14.5)
+          // update bankroll
           if (roomInfo['user_bet'] != 0) {
             roomInfo['user_bet'] =
               parseFloat(roomInfo['user_bet']) +
               (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-                ((commission.value - 0.5) / 100);
+                ((commission - 0.5) / 100);
           }
 
           newTransactionJ.amount +=
             (roomInfo['host_pr'] + roomInfo['bet_amount']) *
-            ((100 - commission.value) / 100);
+            ((100 - commission) / 100);
 
           let newBetAmount;
 
@@ -3279,9 +3438,7 @@ router.post('/bet', auth, async (req, res) => {
             // roomInfo.status = 'finished';
             newTransactionC.amount +=
               parseFloat(roomInfo['host_pr']) -
-              parseFloat(
-                roomInfo['endgame_amount']
-              ); /* ((100 - commission.value) / 100); **/
+              parseFloat(roomInfo['endgame_amount']);
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -3325,22 +3482,22 @@ router.post('/bet', auth, async (req, res) => {
         }
         newTransactionJ.amount -= selected_box.box_price;
         newTransactionJ.amount +=
-          selected_box.box_prize * ((100 - commission.value) / 100);
+          selected_box.box_prize * ((100 - commission) / 100);
 
         newGameLog.commission =
-          selected_box.box_prize * ((commission.value - 0.5) / 100);
+          selected_box.box_prize * ((commission - 0.5) / 100);
 
-        // update rain stat 14.5)
+        // update rain
         rain.value =
           parseFloat(rain.value) +
-          selected_box.box_prize * ((commission.value - 0.5) / 100);
+          selected_box.box_prize * ((commission - 0.5) / 100);
 
         rain.save();
 
         // update platform stat (0.5%)
         platform.value =
           parseFloat(platform.value) +
-          selected_box.box_prize * ((commission.value - 14.5) / 100);
+          selected_box.box_prize * (tax.value / 100);
         platform.save();
 
         if (req.io.sockets) {
@@ -3349,11 +3506,11 @@ router.post('/bet', auth, async (req, res) => {
           });
         }
 
-        // update bankroll (14.5)
-        // if (roomInfo['user_bet'] != 0) {
+        // update bankroll
+
         roomInfo['user_bet'] =
           parseFloat(roomInfo['user_bet']) +
-          selected_box.box_prize * ((commission.value - 0.5) / 100);
+          selected_box.box_prize * ((commission - 0.5) / 100);
         // }
 
         if (selected_box.box_prize === 0) {
@@ -3484,8 +3641,6 @@ router.post('/bet', auth, async (req, res) => {
 
             /*lowest_box_price === -1 ? 0 : lowest_box_price; */
 
-            // newTransactionC.amount += new_host_pr * ((100 - commission.value) / 100);
-
             const messageC =
               'I received ' +
               new_host_pr +
@@ -3605,9 +3760,7 @@ router.post('/bet', auth, async (req, res) => {
         ) {
           newGameLog.game_result = 1;
           newTransactionJ.amount +=
-            parseFloat(req.body.bet_amount) *
-            2 *
-            ((100 - commission.value) / 100);
+            parseFloat(req.body.bet_amount) * 2 * ((100 - commission) / 100);
           roomInfo['user_bet'] = parseInt(roomInfo['user_bet']);
 
           roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
@@ -3640,7 +3793,6 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
         } else {
           newGameLog.game_result = -1;
-          // newTransactionC.amount += parseFloat(req.body.bet_amount) * 2 * ((100 - commission.value) / 100);
 
           roomInfo.host_pr =
             (parseFloat(roomInfo.host_pr) || 0) +
@@ -3655,9 +3807,7 @@ router.post('/bet', auth, async (req, res) => {
           ) {
             newTransactionC.amount +=
               parseFloat(roomInfo['user_bet']) -
-              parseFloat(
-                roomInfo['endgame_amount']
-              ); /* ((100 - commission.value) / 100); */
+              parseFloat(roomInfo['endgame_amount']);
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -3756,22 +3906,22 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['room_number'];
 
           newTransactionJ.amount +=
-            roomInfo['bet_amount'] * 2 * ((100 - commission.value) / 100);
+            roomInfo['bet_amount'] * 2 * ((100 - commission) / 100);
 
           newGameLog.commission =
-            roomInfo['bet_amount'] * 2 * ((commission.value - 0.5) / 100);
+            roomInfo['bet_amount'] * 2 * ((commission - 0.5) / 100);
 
-          // update rain stat 14.5)
+          // update rain
           rain.value =
             parseFloat(rain.value) +
-            roomInfo['bet_amount'] * 2 * ((commission.value - 0.5) / 100);
+            roomInfo['bet_amount'] * 2 * ((commission - 0.5) / 100);
 
           rain.save();
 
           // update platform stat (0.5%)
           platform.value =
             parseFloat(platform.value) +
-            roomInfo['bet_amount'] * 2 * ((commission.value - 14.5) / 100);
+            roomInfo['bet_amount'] * 2 * (tax.value / 100);
           platform.save();
 
           if (req.io.sockets) {
@@ -3782,18 +3932,14 @@ router.post('/bet', auth, async (req, res) => {
 
           roomInfo['pr'] -= roomInfo['bet_amount'];
           roomInfo['host_pr'] -= roomInfo['bet_amount'];
-          // update bankroll (14.5)
+          // update bankroll
 
           roomInfo['host_pr'] =
             parseFloat(roomInfo['host_pr']) +
-            parseFloat(roomInfo['bet_amount']) *
-              2 *
-              ((commission.value - 0.5) / 100);
+            parseFloat(roomInfo['bet_amount']) * 2 * ((commission - 0.5) / 100);
           roomInfo['pr'] =
             parseFloat(roomInfo['pr']) +
-            parseFloat(roomInfo['bet_amount']) *
-              2 *
-              ((commission.value - 0.5) / 100);
+            parseFloat(roomInfo['bet_amount']) * 2 * ((commission - 0.5) / 100);
 
           if (roomInfo['host_pr'] <= parseFloat(roomInfo['user_bet'])) {
             roomInfo.status = 'finished';
@@ -3832,8 +3978,7 @@ router.post('/bet', auth, async (req, res) => {
             // roomInfo.status = 'finished';
 
             newTransactionC.amount +=
-              roomInfo['host_pr'] -
-              roomInfo['endgame_amount']; /* ((100 - commission.value) / 100);*/
+              roomInfo['host_pr'] - roomInfo['endgame_amount'];
 
             const newGameLogC = new GameLog({
               room: roomInfo,
@@ -3853,7 +3998,7 @@ router.post('/bet', auth, async (req, res) => {
         }
       }
       roomInfo['creator']['balance'] += newTransactionC.amount;
-      roomInfo['creator']['gamePlayed'] ++;
+      roomInfo['creator']['gamePlayed']++;
       roomInfo['creator']['totalProfit'] += newTransactionC.amount;
       roomInfo['creator']['totalWagered'] += newTransactionJ.amount;
 
@@ -3866,7 +4011,7 @@ router.post('/bet', auth, async (req, res) => {
       roomInfo['creator'].save();
 
       req.user['balance'] += newTransactionJ.amount;
-      req.user['gamePlayed'] ++;
+      req.user['gamePlayed']++;
       req.user['totalProfit'] += newTransactionJ.amount;
       req.user['totalWagered'] += newTransactionJ.amount;
 
@@ -3876,7 +4021,6 @@ router.post('/bet', auth, async (req, res) => {
       if (req.user['profitAllTimeLow'] > newTransactionJ.amount) {
         req.user['profitAllTimeLow'] = newTransactionJ.amount;
       }
-
 
       if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
         req.user['balance'] += roomInfo['bet_amount'];
@@ -3910,7 +4054,7 @@ router.post('/bet', auth, async (req, res) => {
 
         if (message.from._id !== message.to._id) {
           message.save();
-          socket.sendMessage(message.to._id, {
+          socket.sendNotification(message.to._id, {
             from: message.from._id,
             to: message.to._id,
             message: message.message,

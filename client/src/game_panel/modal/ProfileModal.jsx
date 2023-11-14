@@ -64,10 +64,13 @@ class ProfileModal extends Component {
       referralCode: '',
       rewards: this.props.userInfo.rewards,
       username: this.props.userInfo.username,
+      profitAllTimeHigh: this.props.userInfo.profitAllTimeHigh,
+      profitAllTimeLow: this.props.userInfo.profitAllTimeLow,
       email: this.props.userInfo.email,
       password: '',
       passwordConfirmation: '',
       avatar: this.props.userInfo.avatar,
+      rank: this.props.userInfo.totalWagered,
       joined_date: this.props.userInfo.joined_date
     };
   }
@@ -77,14 +80,16 @@ class ProfileModal extends Component {
       current_state.avatar !== props.avatar ||
       current_state.username !== props.username ||
       current_state.email !== props.email ||
+      current_state.totalWagered !== props.totalWagered ||
       current_state.rewards !== props.rewards
+
     ) {
       return {
         ...current_state,
         avatar: props.userInfo.avatar,
         username: props.userInfo.username,
         email: props.userInfo.email,
-
+        totalWagered: props.userInfo.totalWagered,
         referralCode: props.userInfo.referralCode,
         rewards: props.userInfo.rewards
       };
@@ -155,6 +160,7 @@ class ProfileModal extends Component {
     this.props.closeModal();
   };
 
+  
   render() {
     const gameLogList = this.props.gameLogList;
     const series = [{ name: 'Jan', data: generateData(gameLogList) }];
@@ -177,6 +183,7 @@ class ProfileModal extends Component {
               <AvatarUpload
                 setImageFilename={this.handleAvatarLoaded}
                 darkMode={this.props.isDarkMode}
+                rank={this.state.rank}
                 avatar={this.state.avatar}
               />
             </div>
@@ -194,13 +201,13 @@ class ProfileModal extends Component {
                 gameHosted={this.state.gameHosted}
                 gameJoined={this.state.gameJoined}
                 totalWagered={this.state.totalWagered}
+                rank={this.props.totalWagered}
                 netProfit={this.state.netProfit}
                 profitAllTimeHigh={this.state.profitAllTimeHigh}
                 profitAllTimeLow={this.state.profitAllTimeLow}
                 averageWager={this.state.averageWager}
                 averageGamesPlayedPerRoom={this.state.averageGamesPlayedPerRoom}
                 averageProfit={this.state.averageProfit}
-
                 // getRoomStatisticsData={this.props.getRoomStatisticsData}
               />
             </div>

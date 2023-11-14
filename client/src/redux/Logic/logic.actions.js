@@ -19,6 +19,7 @@ import {
   MY_GAMES_LOADED,
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
+  SET_NOTIFICATIONS_ROOM_INFO,
   HISTORY_LOADED,
   NEW_TRANSACTION,
   SET_BALANCE,
@@ -30,11 +31,15 @@ import {
   MSG_WARNING,
   SELECT_MAIN_TAB,
   MY_CHAT_LOADED,
+  NOTIFICATIONS_LOADED,
   GLOBAL_CHAT_RECEIVED,
-  SET_GLOBAL_CHAT
+  SET_GLOBAL_CHAT,
+  FETCH_ACCESSORY_SUCCESS
 } from '../types';
 import axios from '../../util/Api';
 import history from '../history';
+
+// Logic.actions
 
 // CreateRoom
 export const createRoom = room_info => async dispatch => {
@@ -227,6 +232,7 @@ export const actionRoom = ({ roomId, type }) => async dispatch => {
 
   dispatch({ type: END_LOADING });
 };
+
 export const checkGamePassword = data => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
@@ -241,6 +247,83 @@ export const checkGamePassword = data => async dispatch => {
   }
   return false;
 };
+
+export const listItem = data => async (dispatch) => {
+  try {
+    dispatch({ type: START_LOADING});
+    const res = await axios.post('/item/list-for-sale', data );
+    if (res.data.success) {
+      return res.data;
+    }
+  } catch (err) {
+  } finally {
+    dispatch({ type: END_LOADING });
+  }
+  return false;
+};
+
+export const deListItem = data => async (dispatch) => {
+  try {
+    dispatch({ type: START_LOADING});
+    const res = await axios.post('/item/delist-from-sale', data );
+    if (res.data.success) {
+      return res.data;
+    }
+  } catch (err) {
+  } finally {
+    dispatch({ type: END_LOADING });
+  }
+  return false;
+};
+
+export const confirmTrade = data => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING }); 
+    const res = await axios.post('/item/trade/', data);
+    if (res.data.success) {
+
+      return res.data;
+    }
+  } catch (err) {
+  } finally {
+    dispatch({ type: END_LOADING });
+  }
+  return false;
+};
+
+export const fetchAccessory = data => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.post('/item/accessory', data);
+    if (res.data.success) {
+      // dispatch({ type: FETCH_ACCESSORY_SUCCESS, payload: res.data });
+      return res.data;
+    }
+  } catch (err) {
+    // Handle the error if needed
+  } finally {
+    dispatch({ type: END_LOADING });
+  }
+  return false;
+};
+
+
+export const equipItem = data => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING }); 
+    const res = await axios.post('/item/equip/', data);
+
+    if (res.data.success) {
+
+      return res.data;
+    }
+  } catch (err) {
+  } finally {
+    dispatch({ type: END_LOADING });
+  }
+  return false;
+};
+
 export const getRoomList = search_condition => async dispatch => {
   dispatch({ type: START_LOADING });
   try {
@@ -342,6 +425,35 @@ export const getMyChat = () => async dispatch => {
     console.log(err);
   }
 };
+export const getNotifications = () => async dispatch => {
+  try {
+    // Send an HTTP GET request to the '/game/notifications' endpoint.
+    const res = await axios.get('/game/notifications');
+
+    // Check if the response data indicates success.
+    if (res.data.success) {
+      // If successful, dispatch a Redux action with the notifications payload.
+      dispatch({ type: NOTIFICATIONS_LOADED, payload: res.data.notifications });
+    }
+  } catch (err) {
+    // If there's an error during the request, log the error.
+    console.log(err);
+  }
+};
+
+
+export const getNotificationsRoomInfo = user_id => async dispatch => {
+  try {
+    const res = await axios.post('/game/get_notifications_room_info', { user_id });
+    if (res.data.success) {
+      dispatch({ type: SET_NOTIFICATIONS_ROOM_INFO, payload: res.data.notificationsRoomInfo });
+    } else {
+      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+    }
+  } catch (err) {
+    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+  }
+};
 
 export const getChatRoomInfo = user_id => async dispatch => {
   try {
@@ -422,6 +534,10 @@ export const setCurRoomInfo = room_info => dispatch => {
   }
 };
 
+export const setNotificationsRoomInfo = room_info => dispatch => {
+  dispatch({ type: SET_NOTIFICATIONS_ROOM_INFO, payload: room_info });
+};
+
 export const setChatRoomInfo = room_info => dispatch => {
   dispatch({ type: SET_CHAT_ROOM_INFO, payload: room_info });
 };
@@ -482,8 +598,6 @@ export function updateBetResult(betResult) {
 }
 
 export const updateBetResults = betResults => {
-  console.log('betResults received in action:', betResults);
-
   return {
     type: 'UPDATE_BET_RESULTS',
     payload: betResults

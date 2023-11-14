@@ -8,7 +8,6 @@ import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
-// import gemBg from '../LottieAnimations/gem-bg.json';
 
 import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
@@ -736,6 +735,7 @@ class DropGame extends Component {
                         <Avatar
                           className="avatar"
                           src={this.props.creator_avatar}
+                          rank={this.props.rank}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -1020,6 +1020,7 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
+  rank: state.logic.curRoomInfo.rank,
 
   betResults: state.logic.betResults
 });

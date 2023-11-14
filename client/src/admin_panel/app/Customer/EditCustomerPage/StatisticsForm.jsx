@@ -6,7 +6,6 @@ import moment from 'moment';
 import './style.css';
 import { Button } from '@material-ui/core';
 import { FormControl, MenuItem, Select } from '@material-ui/core';
-
 import { Link as LinkIcon } from '@material-ui/icons';
 import { convertToCurrency } from '../../../../util/conversion';
 import { updateDigitToPoint2 } from '../../../../util/helper';
@@ -34,7 +33,8 @@ class StatisticsForm extends React.Component {
       timeType: '7',
       url: '',
       roomName: '',
-      roomId: ''
+      roomId: '',
+      rank: ''
     };
   }
 
@@ -53,6 +53,34 @@ class StatisticsForm extends React.Component {
     this.props.onDropdownChange('timeType', event.target.value);
     
   };
+
+  
+  getRank(totalWagered) {
+    // Calculate the level using a logarithmic function with base 2.
+    const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
+    const stars = '★'.repeat(level);
+
+    const nextLevelWager = Math.pow(3, level * 5) - 1;
+    const progress = totalWagered / nextLevelWager;
+    const progressBarWidth = 100;
+    const progressBarFilled = progress * progressBarWidth;
+
+    return (
+      <div>
+        <div className="level-number">{level.toLocaleString()}</div>
+        <div className="stars">{stars}</div>
+        <div
+          className="progress-bar-outer"
+          style={{ width: `${progressBarWidth}px` }}
+        >
+          <div
+            className="progress-bar-filled"
+            style={{ width: `${progressBarFilled}px` }}
+          ></div>
+        </div>
+      </div>
+    );
+  }
 
   getRoomLink(dataPointIndex) {
     const gameLog = this.props.gameLogList[dataPointIndex];
@@ -89,32 +117,6 @@ class StatisticsForm extends React.Component {
     this.setState({ showButton: true });
   };
 
-  getRank(totalWagered) {
-    // Calculate the level using a logarithmic function with base 2.
-    const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-    const stars = '★'.repeat(level);
-
-    const nextLevelWager = Math.pow(3, level * 5) - 1;
-    const progress = totalWagered / nextLevelWager;
-    const progressBarWidth = 100;
-    const progressBarFilled = progress * progressBarWidth;
-
-    return (
-      <div>
-        <div className="level-number">{level.toLocaleString()}</div>
-        <div className="stars">{stars}</div>
-        <div
-          className="progress-bar-outer"
-          style={{ width: `${progressBarWidth}px` }}
-        >
-          <div
-            className="progress-bar-filled"
-            style={{ width: `${progressBarFilled}px` }}
-          ></div>
-        </div>
-      </div>
-    );
-  }
 
   render() {
     const gameLogList = this.props.gameLogList;
@@ -330,7 +332,7 @@ class StatisticsForm extends React.Component {
       <ChartDivEl>
         <div className="rank-badge">
           <h2>{this.props.username}</h2>
-          <div className="stars">{this.getRank(totalWagered)}</div>
+          <div className="stars">{this.getRank(this.props.rank)}</div>
         </div>
 
         <div className="statistics-container">

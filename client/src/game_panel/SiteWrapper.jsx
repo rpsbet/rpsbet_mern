@@ -60,7 +60,13 @@ import './SiteWrapper.css';
 import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
+import MarketplaceModal from './modal/MarketplaceModal';
+
 import LeaderboardsModal from './modal/LeaderboardsModal';
+import { getNotifications } from '../redux/Logic/logic.actions';
+import ConfirmTradeModal from './modal/ConfirmTradeModal';
+import ListItemModal from './modal/ListItemModal';
+import DeListItemModal from './modal/DeListItemModal';
 
 import GamePasswordModal from './modal/GamePasswordModal';
 import LoginModal from './modal/LoginModal';
@@ -68,6 +74,7 @@ import SignupModal from './modal/SignupModal';
 import VerificationModal from './modal/VerificationModal';
 import DepositModal from './modal/DepositModal';
 import WithdrawModal from './modal/WithdrawModal';
+import InventoryModal from './modal/InventoryModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
 import Battle from './icons/Battle.js';
 import BattleHover from './icons/BattleHover';
@@ -189,6 +196,7 @@ class SiteWrapper extends Component {
       showProfileModal: false,
       showPlayerModal: false,
       showHowToPlayModal: false,
+      showMarketplaceModal: false,
       showLeaderboardsModal: false,
       isPlaying: false,
       showLoginModal: false,
@@ -196,8 +204,11 @@ class SiteWrapper extends Component {
       showVerificationModal: false,
       showWithdrawModal: false,
       showDepositModal: false,
+      showInventoryModal: false,
       showResetPasswordModal: false,
       showGameLog: false,
+      notifications: this.props.notifications,
+      showNotifications: false,
       userParams: [false, true],
       loadMore: 20,
       showAllGameLogs: false,
@@ -215,18 +226,21 @@ class SiteWrapper extends Component {
       web3account: '',
       web3balance: 0
     };
+    this.state.notifications = this.props.notification || {};
   }
   static getDerivedStateFromProps(props, currentState) {
-    const { balance, betResult, userName } = props;
+    const { balance, betResult, userName, notifications } = props;
 
     if (
       currentState.balance !== balance ||
       currentState.betResult !== betResult ||
-      currentState.userName !== userName
+      currentState.userName !== userName ||
+      currentState.notifications !== notifications
     ) {
       return {
         ...currentState,
         balance,
+        notifications: props.notifications,
         userName,
         transactions: updateFromNow(props.transactions),
         betResult
@@ -578,7 +592,7 @@ class SiteWrapper extends Component {
 
   async componentDidMount() {
     let currentUrl = window.location.pathname;
-
+    await this.props.getNotifications();
     if (currentUrl.indexOf('create') !== -1) {
       this.setState({
         selectedMainTabIndex: this.props.selectMainTab(1)
@@ -766,6 +780,13 @@ class SiteWrapper extends Component {
     this.setState({ showHowToPlayModal: false });
   };
 
+  handleOpenMarketplaceModal = () => {
+    this.setState({ showMarketplaceModal: true });
+  };
+  handleCloseMarketplaceModal = () => {
+    this.setState({ showMarketplaceModal: false });
+  };
+
   handleOpenLeaderboardsModal = () => {
     this.setState({ showLeaderboardsModal: true });
   };
@@ -778,6 +799,13 @@ class SiteWrapper extends Component {
   };
   handleCloseDepositModal = () => {
     this.setState({ showDepositModal: false });
+  };
+
+  handleOpenInventoryModal = () => {
+    this.setState({ showInventoryModal: true, anchorEl: null });
+  };
+  handleCloseInventoryModal = () => {
+    this.setState({ showInventoryModal: false });
   };
 
   handleOpenWithdrawModal = () => {
@@ -796,6 +824,10 @@ class SiteWrapper extends Component {
 
   handleBalanceClick = () => {
     this.setState({ showGameLog: !this.state.showGameLog });
+  };
+
+  handleNotificationsClick = () => {
+    this.setState({ showNotifications: !this.state.showNotifications });
   };
 
   handleLoadMore = () => {
@@ -859,6 +891,7 @@ class SiteWrapper extends Component {
       decimalIndex !== -1
         ? Math.min(balanceString.length - decimalIndex - 1, 5)
         : 0;
+    const notificationsArray = Object.values(this.props.notifications);
 
     return (
       <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
@@ -963,7 +996,11 @@ class SiteWrapper extends Component {
 
               <div className="header_action_panel">
                 <a
-                  href="/marketplace"
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    this.handleOpenMarketplaceModal();
+                  }}
                   id="btn_marketplace"
                   onMouseEnter={() => this.handleMouseEnter(5)}
                   onMouseLeave={this.handleMouseLeave}
@@ -975,9 +1012,12 @@ class SiteWrapper extends Component {
                   )}
                 </a>
                 <a
-                href="#"
-                onClick={this.handleOpenLeaderboardsModal}
-                   id="btn_leaderboards"
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    this.handleOpenLeaderboardsModal();
+                  }}
+                  id="btn_leaderboards"
                   onMouseEnter={() => this.handleMouseEnter(4)}
                   onMouseLeave={this.handleMouseLeave}
                 >
@@ -988,8 +1028,11 @@ class SiteWrapper extends Component {
                   )}
                 </a>
                 <a
-                href="#"
-                  onClick={this.handleOpenNotificationsModal}
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    this.handleNotificationsClick();
+                  }}
                   id="btn_notifications"
                   onMouseEnter={() => this.handleMouseEnter(3)}
                   onMouseLeave={this.handleMouseLeave}
@@ -1061,6 +1104,7 @@ class SiteWrapper extends Component {
                     >
                       <Avatar
                         src={this.props.user.avatar}
+                        rank={this.props.user.totalWagered}
                         alt=""
                         className="avatar"
                         darkMode={this.props.isDarkMode}
@@ -1267,6 +1311,32 @@ class SiteWrapper extends Component {
                     </Button> */}
                   </>
                 )}
+              </div>
+            </div>
+            <div
+              id="notifications"
+              className={this.state.showNotifications ? '' : 'hidden'}
+              onClick={this.handleNotificationsClick}
+            >
+              <div className="arrow-up"></div>
+              <div className="header_panel_contents">
+                {<h2>NOTIFICATIONS HISTORY</h2>}
+                {
+                  <div>
+                    {notificationsArray.length > 0 ? (
+                      notificationsArray.map((notification, index) => (
+                        <div key={index}>
+                          {/* Render notification details here */}
+                          <p>{notification.message}</p>
+                          <p>From: {notification.username}</p>
+                          {/* Add more fields as needed */}
+                        </div>
+                      ))
+                    ) : (
+                      <p>No notifications available.</p>
+                    )}
+                  </div>
+                }
               </div>
             </div>
             {this.state.showAllGameLogs && (
@@ -1496,64 +1566,93 @@ class SiteWrapper extends Component {
               onClick={this.handleBalanceClick}
             >
               <div className="arrow-up"></div>
-              <div className="game_logs_contents">
+              <div className="header_panel_contents">
                 {<h2>BALANCE HISTORY</h2>}
                 {
-  <div>
-    <table>
-      <tbody>
-        {this.state.transactions.length === 0 ? (
-          <tr>
-            <td>...</td>
-          </tr>
-        ) : (
-          this.state.transactions.map((row, key) => (
-            <tr key={key}>
-              {row.hash ? (  // Check if row has a 'hash' property
-                <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
-                  <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
-                    {row.amount > 0 ? (
-                      <>
-                        {'+ '}
-                        {convertToCurrency(row.amount, true)}
-                      </>
-                    ) : (
-                      <>
-                        {'- '}
-                        {convertToCurrency(Math.abs(row.amount), true)}
-                      </>
-                    )}
-                  </td>
-                  <td className="fromNow">{row.from_now}</td>
-                </a>
-              ) : (
-<table>                <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
-                  {row.amount > 0 ? (
-                    <>
-                      {'+ '}
-                      {convertToCurrency(row.amount, true)}
-                    </>
-                  ) : (
-                    <>
-                      {'- '}
-                      {convertToCurrency(Math.abs(row.amount), true)}
-                    </>
-                  )}
-                </td>
-                <td className="fromNow">{row.from_now}</td>
-                </table>
-              )}
-            </tr>
-          ))
-        )}
-      </tbody>
-      <Button onClick={this.toggleAllTransactions}>
-        View All
-      </Button>
-    </table>
-  </div>
-}
-
+                  <div>
+                    <table>
+                      <tbody>
+                        {this.state.transactions.length === 0 ? (
+                          <tr>
+                            <td>...</td>
+                          </tr>
+                        ) : (
+                          this.state.transactions.map((row, key) => (
+                            <tr key={key}>
+                              {row.hash ? ( // Check if row has a 'hash' property
+                                <a
+                                  href={`https://etherscan.io/tx/${row.hash}`}
+                                  rel="noopener noreferrer"
+                                >
+                                  <td
+                                    className={
+                                      'amount ' +
+                                      (row.amount > 0 ? 'green' : 'red')
+                                    }
+                                  >
+                                    {row.amount > 0 ? (
+                                      <>
+                                        {'+ '}
+                                        {convertToCurrency(row.amount, true)}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {'- '}
+                                        {convertToCurrency(
+                                          Math.abs(row.amount),
+                                          true
+                                        )}
+                                      </>
+                                    )}
+                                  </td>
+                                  <td className="fromNow">{row.from_now}</td>
+                                </a>
+                              ) : (
+                                <table>
+                                  {' '}
+                                  <td
+                                    className={
+                                      'amount ' +
+                                      (row.amount > 0 ? 'green' : 'red')
+                                    }
+                                  >
+                                    {row.amount > 0 ? (
+                                      <>
+                                        {'+ '}
+                                        {convertToCurrency(row.amount, true)}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {'- '}
+                                        {convertToCurrency(
+                                          Math.abs(row.amount),
+                                          true
+                                        )}
+                                      </>
+                                    )}
+                                  </td>
+                                  <td className="fromNow">{row.from_now}</td>
+                                </table>
+                              )}
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                      <Button onClick={this.toggleAllTransactions}>
+                        View All
+                      </Button>
+                    </table>
+                  </div>
+                }
+                <div className="transaction-panel">
+                  <Button
+                    className="btn-inventory"
+                    isDarkMode={this.props.isDarkMode}
+                    onClick={this.handleOpenInventoryModal}
+                  >
+                    Inventory
+                  </Button>
+                </div>
                 <div className="transaction-panel">
                   <Button
                     className="btn-withdraw"
@@ -1604,6 +1703,7 @@ class SiteWrapper extends Component {
               balance={this.state.balance}
               avatar={this.props.user.avatar}
               email={this.props.user.email}
+              totalWagered={this.props.user.totalWagered}
             />
           )}
           {this.state.showPlayerModal && (
@@ -1615,7 +1715,7 @@ class SiteWrapper extends Component {
               avatar={this.props.user.avatar}
             />
           )}
-           {this.state.showLeaderboardsModal && (
+          {this.state.showLeaderboardsModal && (
             <LeaderboardsModal
               modalIsOpen={this.state.showLeaderboardsModal}
               closeModal={this.handleCloseLeaderboardsModal}
@@ -1628,6 +1728,15 @@ class SiteWrapper extends Component {
             <HowToPlayModal
               modalIsOpen={this.state.showHowToPlayModal}
               closeModal={this.handleCloseHowToPlayModal}
+              player_name={this.state.userName}
+              balance={this.state.balance}
+              isDarkMode={this.props.isDarkMode}
+            />
+          )}
+          {this.state.showMarketplaceModal && (
+            <MarketplaceModal
+              modalIsOpen={this.state.showMarketplaceModal}
+              closeModal={this.handleCloseMarketplaceModal}
               player_name={this.state.userName}
               balance={this.state.balance}
               isDarkMode={this.props.isDarkMode}
@@ -1665,6 +1774,12 @@ class SiteWrapper extends Component {
               account={this.state.web3account}
             />
           )}
+          {this.state.showInventoryModal && (
+            <InventoryModal
+              modalIsOpen={this.state.showInventoryModal}
+              closeModal={this.handleCloseInventoryModal}
+            />
+          )}
           {this.state.showWithdrawModal && (
             <WithdrawModal
               modalIsOpen={this.state.showWithdrawModal}
@@ -1681,6 +1796,9 @@ class SiteWrapper extends Component {
               openLoginModal={this.handleOpenLoginModal}
             />
           )}
+          <ListItemModal />
+          <DeListItemModal />
+          <ConfirmTradeModal />
           <GamePasswordModal />
         </div>
       </MuiThemeProvider>
@@ -1690,6 +1808,9 @@ class SiteWrapper extends Component {
 
 const mapStateToProps = state => ({
   isAuthenticated: state.auth.isAuthenticated,
+  showListItemModal: state.snackbar.showListItemModal,
+  showDeListItemModal: state.snackbar.showDeListItemModal,
+  showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
   showGamePasswordModal: state.snackbar.showGamePasswordModal,
   socket: state.auth.socket,
   balance: state.auth.balance,
@@ -1704,7 +1825,8 @@ const mapStateToProps = state => ({
   betResult: state.logic.betResult,
   sevenDayProfit: state.auth.sevenDayProfit,
   oneDayProfit: state.auth.oneDayProfit,
-  allTimeProfit: state.auth.allTimeProfit
+  allTimeProfit: state.auth.allTimeProfit,
+  notifications: state.logic.notifications
 });
 
 const mapDispatchToProps = {
@@ -1718,6 +1840,7 @@ const mapDispatchToProps = {
   getHistory,
   setUnreadMessageCount,
   addNewTransaction,
+  getNotifications,
   setDarkMode,
   updateOnlineUserList,
   selectMainTab,

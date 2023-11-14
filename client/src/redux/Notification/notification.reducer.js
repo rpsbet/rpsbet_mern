@@ -7,6 +7,12 @@ import {
   CLOSE_ALERT_MODAL,
   OPEN_GAME_PASSWORD_MODAL,
   CLOSE_GAME_PASSWORD_MODAL,
+  OPEN_CONFIRM_TRADE_MODAL,
+  CLOSE_CONFIRM_TRADE_MODAL,
+  OPEN_LIST_ITEM_MODAL,
+  CLOSE_LIST_ITEM_MODAL,
+  OPEN_DELIST_ITEM_MODAL,
+  CLOSE_DELIST_ITEM_MODAL,
   SET_PASSWORD_CORRECT
 } from '../types';
 
@@ -19,11 +25,15 @@ const initialState = {
   showVerification: false,
   showAlert: false,
   showGamePasswordModal: false,
+  showConfirmTradeModal: false,
+  showListItemModal: false,
+  showDeListItemModal: false,
+
   title: '',
   alertMessage: '',
   alertType: '',
   roomStatus: '',
-  isPasswordCorrect: false,
+  isPasswordCorrect: false
 };
 
 export default function(state = initialState, action) {
@@ -69,24 +79,54 @@ export default function(state = initialState, action) {
         showAlert: false,
         alertMessage: '',
         alertType: '',
-        title: '',
-      }
+        title: ''
+      };
     case SET_PASSWORD_CORRECT:
       return {
         ...state,
         isPasswordCorrect: payload
-      }
+      };
     case OPEN_GAME_PASSWORD_MODAL:
       return {
         ...state,
         showGamePasswordModal: true,
-        isPasswordCorrect: false,
-      }
+        isPasswordCorrect: false
+      };
     case CLOSE_GAME_PASSWORD_MODAL:
       return {
         ...state,
         showGamePasswordModal: false
-      }
+      };
+    case OPEN_CONFIRM_TRADE_MODAL:
+      return {
+        ...state,
+        showConfirmTradeModal: true
+      };
+    case CLOSE_CONFIRM_TRADE_MODAL:
+      return {
+        ...state,
+        showConfirmTradeModal: false
+      };
+      case OPEN_LIST_ITEM_MODAL:
+        return {
+          ...state,
+          showListItemModal: true
+        };
+      case CLOSE_LIST_ITEM_MODAL:
+        return {
+          ...state,
+          showListItemModal: false
+        };
+      case OPEN_DELIST_ITEM_MODAL:
+        return {
+          ...state,
+          showDeListItemModal: true
+        };
+      case CLOSE_DELIST_ITEM_MODAL:
+        return {
+          ...state,
+          showDeListItemModal: false
+        };
     default:
       return state;
   }

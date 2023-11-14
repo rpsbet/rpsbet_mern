@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { fetchLeaderboardsData } from '../../redux/Customer/customer.action';
 import PlayerModal from '../modal/PlayerModal';
 import Avatar from '../../components/Avatar';
-
+import LinearProgress from '@material-ui/core/LinearProgress';
 import { withStyles } from '@material-ui/core/styles';
 import { convertToCurrency } from '../../util/conversion';
 import {
@@ -52,13 +52,13 @@ class LeaderboardsModal extends Component {
     sortField: 'totalProfit',
     sortOrder: 'desc',
     showPlayerModal: false,
-    isLoading: false,
     selectedCreator: ''
   };
 
+ 
+
   async componentDidMount() {
-    await this.props.fetchLeaderboardsData();
-    console.log(this.props.leaderboards);
+    await this.props.fetchLeaderboardsData()
   }
 
   handleOpenPlayerModal = creator_id => {
@@ -89,13 +89,8 @@ class LeaderboardsModal extends Component {
       showPlayerModal,
       selectedCreator
     } = this.state;
-    const { leaderboards, isDarkMode } = this.props;
-    if (!leaderboards) {
-      return (
-        // Render a loading indicator or message here
-        <div>Loading...</div>
-      );
-    }
+    const { leaderboards, isDarkMode, loading } = this.props;
+    
     // Sort the leaderboards data based on current sorting options
     const sortedLeaderboards = [...leaderboards].sort((a, b) => {
       const aValue = a[this.state.sortField];
@@ -128,6 +123,7 @@ class LeaderboardsModal extends Component {
           <div className="modal-body edit-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
+              {!loading ? (
                 <Table>
                   <TableHead>
                     <TableRow>
@@ -173,6 +169,7 @@ class LeaderboardsModal extends Component {
                             <Avatar
                               className="avatar"
                               src={entry.avatar}
+                              rank={entry.totalWagered}
                               alt=""
                               darkMode={isDarkMode}
                             />
@@ -207,6 +204,10 @@ class LeaderboardsModal extends Component {
                     ))}
                   </TableBody>
                 </Table>
+              ) : (
+                
+<LinearProgress color='secondary' />
+              )}
               </div>
             </div>
           </div>
@@ -220,7 +221,9 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   user_id: state.auth.user._id,
   isDarkMode: state.auth.isDarkMode,
-  leaderboards: state.customerReducer.leaderboards
+  leaderboards: state.customerReducer.leaderboards,
+  loading: state.customerReducer.loading,
+
 });
 
 const mapDispatchToProps = {

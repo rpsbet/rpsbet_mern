@@ -86,6 +86,9 @@
 .modal-body .modal-icon.result-icon-password {
     background-image: url("/img/icons/result-icon-password.svg");
 }
+.modal-body .modal-icon.result-icon-trade {
+    background-image: url("/img/icons/result-icon-trade.svg");
+}
 .modal-body.alert-body button.btn-close {
     top: 10px;
     right: 0;
@@ -120,8 +123,12 @@
 .ReactModal__Content {
     border: 2px solid #6e6e6e  !important;
     border-radius: 7px !important;
+    max-width: 80vw !important;
 }
 
+button:disabled {
+    background: rgb(189, 189, 189, 0.02) !important;
+}
 /*******************/
 /*** MODAL HEADER **/
 /*******************/
@@ -165,7 +172,7 @@
     background-color: #e5e5e5;
     color: #747f8d;
     max-height: 55vh;
-    min-width: 300px;
+    min-width: 540px;
     overflow-y: scroll;
     position: relative;
 }
@@ -519,7 +526,7 @@ div[role="presentation"] div {
 }
 .modal-body .modal-content-wrapper div.modal-content-panel {
     padding: 20px 24px;
-    overflow-x: scroll;
+    /* overflow-x: scroll; */
 }
 .modal-body.how-to-play-modal-body .modal-content-wrapper div.modal-content-panel p {
     margin-top: initial;
@@ -576,6 +583,7 @@ div[role="presentation"] div {
     }
     .modal-body {
         max-width: 95vw;
+        min-width: 300px;
     }
     .AvatarButtonPanel button:first-child {
         display: flex;

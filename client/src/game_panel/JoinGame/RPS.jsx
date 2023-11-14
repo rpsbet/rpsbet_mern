@@ -12,7 +12,7 @@ import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import Lottie from 'react-lottie';
-// import starsBg from '../LottieAnimations/stars-bg.json';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -524,27 +524,21 @@ class RPS extends Component {
     } = this.props;
     const { betting, bet_amount } = this.state;
 
-    // Add the necessary validation checks here
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      // Display an error message or handle the case when authentication fails
       return;
     }
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      // Display an error message or handle the case when creator ID validation fails
       return;
     }
 
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      // Display an error message or handle the case when bet amount validation fails
       return;
     }
 
     if (!betting) {
-      // User has turned on the switch
       this.startBetting();
     } else {
-      // User has turned off the switch
       this.stopBetting();
     }
   };
@@ -601,12 +595,10 @@ class RPS extends Component {
       betting
     } = this.state;
 
-    // Check if betting is true before continuing
     if (!betting) {
       return;
     }
 
-    // Set selected_rps state with await
     await this.setState({ selected_rps: randomItem });
 
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
@@ -616,7 +608,6 @@ class RPS extends Component {
       return;
     }
 
-    // Check if selected_rps is not null before calling join
     if (this.state.selected_rps !== null) {
       const result = await this.props.join({
         bet_amount: parseFloat(bet_amount),
@@ -838,6 +829,7 @@ class RPS extends Component {
                         <Avatar
                           className="avatar"
                           src={this.props.creator_avatar}
+                          rank={this.props.rank}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -871,18 +863,8 @@ class RPS extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* <div className="starsBg">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: starsBg
-                }}
-                style={{
-                  opacity: '0.2'
-                }}
-              />
-            </div> */}
+                     {renderLottieAvatarAnimation(this.props.gameBackground)}
+
             <div className="guesses">
               {this.state.rps
                 .slice()
@@ -1151,7 +1133,9 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  betResults: state.logic.betResults
+  betResults: state.logic.betResults,
+  rank: state.logic.curRoomInfo.rank,
+
 });
 
 const mapDispatchToProps = {

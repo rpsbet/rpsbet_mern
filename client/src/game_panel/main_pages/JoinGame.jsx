@@ -400,6 +400,7 @@ class JoinGame extends Component {
                     rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    gameBackground={this.props.roomInfo.gameBackground}
                     actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                   />
@@ -421,6 +422,7 @@ class JoinGame extends Component {
                     playSound={this.playSound}
                     is_private={this.props.roomInfo.is_private}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    gameBackground={this.props.roomInfo.gameBackground}
                     actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                   />
@@ -443,6 +445,7 @@ class JoinGame extends Component {
                       playSound={this.playSound}
                       betResult={this.state.betResult}
                       youtubeUrl={this.props.roomInfo.youtubeUrl}
+                      gameBackground={this.props.roomInfo.gameBackground}
                       actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                     />
@@ -469,6 +472,7 @@ class JoinGame extends Component {
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    gameBackground={this.props.roomInfo.gameBackground}
                     actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                   />
@@ -491,6 +495,7 @@ class JoinGame extends Component {
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    gameBackground={this.props.roomInfo.gameBackground}
                     actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                   />
@@ -512,6 +517,7 @@ class JoinGame extends Component {
                     roomInfo={this.props.roomInfo}
                     playSound={this.playSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    gameBackground={this.props.roomInfo.gameBackground}
                     actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                   />
@@ -538,6 +544,7 @@ class JoinGame extends Component {
                     playSoundLoop={this.playSoundLoop}
                     stopSound={this.stopSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    gameBackground={this.props.roomInfo.gameBackground}
                     actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                   />
@@ -563,6 +570,7 @@ class JoinGame extends Component {
                     playSound={this.playSound}
                     stopSound={this.stopSound}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    gameBackground={this.props.roomInfo.gameBackground}
                     actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                   />
@@ -584,6 +592,7 @@ class JoinGame extends Component {
                     bj_bet_item_id={this.props.roomInfo.bj_bet_item_id}
                     is_private={this.props.roomInfo.is_private}
                     youtubeUrl={this.props.roomInfo.youtubeUrl}
+                    gameBackground={this.props.roomInfo.gameBackground}
                     actionList={this.state.actionList}
                     getRoomData={this.getRoomData}
                   />

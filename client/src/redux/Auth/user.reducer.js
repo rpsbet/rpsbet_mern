@@ -124,6 +124,7 @@ export default function(state = initialState, action) {
         isAdmin: 0,
         userName: payload.username,
         isAuthenticated: true,
+        totalWagered: payload.totalWagered,
         isActivated: payload.is_activated,
         loading: false,
         user: { ...payload, password: '' },

@@ -5,6 +5,12 @@
   background-color: #f8f9fa;
   top: 0;
 }
+
+.selected {
+  border: 2px solid #cf0c0e;
+  box-shadow: 0 0 5px rgba(207, 12, 14, 0.7);
+  transition: all 0.3s;
+}
 .main-game-page-tabs button span {
   display: inline-block !important;
 }
@@ -12,6 +18,20 @@
 .main-game-page-tabs button[aria-selected='true'] {
   color: #101010 !important;
 }
+
+.lottie div {
+  width: 160px !important;
+  height: 100% !important;
+}
+
+.lottie-container div {
+  top: 5px;
+  position: absolute;
+}
+.avatar img {
+  border-radius: 6px;
+}
+
 .avatar-square {
   background: #b9bbbe;
   border: 3px solid #dee2e6;

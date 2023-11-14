@@ -9,7 +9,8 @@ import {
   PAGINATION_FOR_ACTIVITY,
   LOADING_CUSTOMER_TABLE,
   ACTIVITY_QUERY,
-  LOAD_LEADERBOARDS
+  LOAD_LEADERBOARDS,
+  LOADING_LEADERBOARDS_TABLE
 } from '../types';
 
 export const acPaginationCustomer = (pagination, page, is_banned) => async (
@@ -145,6 +146,7 @@ export const fetchId = username => async dispatch => {
 export const acGetCustomerInfo = _id => async dispatch => {
   try {
     const { data } = await api.post('user/get-info', { _id });
+
     if (data.success) {
       return data.user;
     } else {
@@ -158,11 +160,15 @@ export const acGetCustomerInfo = _id => async dispatch => {
 
 
 export const fetchLeaderboardsData = () => async (dispatch) => {
+  dispatch({ type: LOADING_LEADERBOARDS_TABLE, payload: true });
+
   try {
     const { data } = await api.get('statistics/get-leaderboards');
-    console.log(data)
     if (data.success) {
+
       dispatch({ type: LOAD_LEADERBOARDS, payload: data });
+      dispatch({ type: LOADING_LEADERBOARDS_TABLE, payload: false });
+
     } else {
       return (false)
       // dispatch({ payload: data.message });

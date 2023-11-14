@@ -16,12 +16,11 @@ import {
   validateBetAmount,
   validateLocalStorageLength
 } from '../modal/betValidations';
-import boatBg from '../LottieAnimations/boatBg.json';
+// import boatBg from '../LottieAnimations/boatBg.json';
 
-import gBg from '../LottieAnimations/g-bg.json';
-import portal from '../LottieAnimations/portal.json';
+// import gBg from '../LottieAnimations/g-bg.json';
+// import portal from '../LottieAnimations/portal.json';
 import rollHex from '../LottieAnimations/roll-hex.json';
-import pipe from '../LottieAnimations/pipe.json';
 import Avatar from '../../components/Avatar';
 import {
   alertModal,

@@ -697,6 +697,8 @@ const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
                           className="avatar"
                           src={this.props.creator_avatar}
                           alt=""
+                          rank={this.props.rank}
+
                           darkMode={this.props.isDarkMode}
                         />
                       </a>
@@ -914,6 +916,7 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
+  rank: state.logic.curRoomInfo.rank,
 
 });
 

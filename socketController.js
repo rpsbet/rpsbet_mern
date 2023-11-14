@@ -21,8 +21,12 @@ module.exports.sendMessage = (to_user_id, data) => {
   send('SEND_CHAT', to_user_id, data);
 };
 
+module.exports.sendNotification = (to_user_id, data) => {
+  send('SEND_NOTIFICATION', to_user_id, data);
+};
+
 module.exports.newTransaction = transaction => {
-  send('NEW_TRANSACTION', transaction);
+  send('NEW_TRANSACTION', transaction['user']['_id'], transaction);
 };
 module.exports.socketio = server => {
   const io = socket_io(server);
@@ -45,6 +49,7 @@ module.exports.socketio = server => {
         messageType,
         messageContent,
         avatar,
+        rank,
         replyTo
       } = data;
 
@@ -54,9 +59,12 @@ module.exports.socketio = server => {
         messageType: messageType,
         messageContent: messageContent,
         avatar: avatar,
+        rank: rank,
+
         replyTo: replyTo
           ? {
-              sender: replyTo.senderId, // Assign senderId temporarily
+              sender: replyTo.senderId,
+              rank: replyTo.rank,
               avatar: replyTo.avatar,
               message: replyTo.message,
               messageType: replyTo.messageType,
@@ -93,10 +101,12 @@ module.exports.socketio = server => {
                 messageType: messageType,
                 messageContent: messageContent,
                 avatar: avatar,
+                rank: rank,
                 replyTo: replyTo
                   ? {
-                      sender: replyToUsername, // Assign the fetched username
+                      sender: replyToUsername,
                       avatar: replyTo.avatar,
+                      rank: replyTo.rank,
                       message: replyTo.message,
                       messageType: replyTo.messageType,
                       time: Moment(replyTo.created_at).format('hh:mm')
@@ -120,11 +130,11 @@ module.exports.socketio = server => {
       Chat.find({})
         .sort({ created_at: -1 }) // Sort in descending order of created_at
         .limit(50)
-        .populate({ path: 'sender', model: User, select: 'username avatar' })
+        .populate({ path: 'sender', model: User, select: 'username avatar totalWagered' })
         .populate({
           path: 'replyTo',
           model: 'Chat',
-          populate: { path: 'sender', model: User, select: 'username avatar' }
+          populate: { path: 'sender', model: User, select: 'username avatar totalWagered' }
         })
         .then(results => {
           const transformedResults = results.map(
@@ -142,6 +152,7 @@ module.exports.socketio = server => {
                 ? {
                     sender: extractedReplyTo.sender?.username ?? '',
                     avatar: extractedReplyTo.sender?.avatar ?? '',
+                    rank: extractedReplyTo.sender?.totalWagered ?? '',
                     message: extractedReplyTo.message,
                     messageType: extractedReplyTo.messageType,
                     time: Moment(extractedReplyTo.created_at).format('hh:mm')
@@ -156,6 +167,7 @@ module.exports.socketio = server => {
                 messageContent: messageContent,
                 avatar: sender?.avatar ?? '',
                 replyTo: transformedReplyTo,
+                rank: sender?.totalWagered ?? '',
                 time: Moment(created_at).format('hh:mm')
               };
             }

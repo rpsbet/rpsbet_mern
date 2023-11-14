@@ -6,16 +6,13 @@ import styled from 'styled-components';
 import { styleColor } from '../../../../Styles/styleThem';
 import Upload from './upload/Upload';
 import Grid from '@material-ui/core/Grid';
-import DateFnsUtils from '@date-io/date-fns';
-import {MuiPickersUtilsProvider, KeyboardDateTimePicker} from '@material-ui/pickers';
+
 import { connect } from 'react-redux';
 
 function CreateProductForm({
   _id,
   productName,
   price,
-  startDateTime,
-  expireDateTime,
   onSubmitFrom,
   updateTextField,
   handleChange,
@@ -24,16 +21,9 @@ function CreateProductForm({
   onSaveForm,
   setOnDelete
 }) {
-  function handleStartDateChange(date) {
-    handleChange("startDateTime", date)
-  }
-
-  function handleExpireDateChange(date) {
-    handleChange("expireDateTime", date)
-  }
 
   return (
-    <PaperEl elevation={12}>
+    <div>
       <FormEl onSubmit={e => onSubmitFrom(e)}>
         <TopDiv>
           <Grid container spacing={2}>
@@ -64,44 +54,11 @@ function CreateProductForm({
                   />
                 </Grid>
               </Grid>
-              <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <KeyboardDateTimePicker
-                      disableToolbar
-                      variant="inline"
-                      format="yyyy-MM-dd HH:mm"
-                      margin="normal"
-                      name="startDateTime"
-                      label="Start Date & Time"
-                      value={startDateTime}
-                      onChange={handleStartDateChange}
-                      KeyboardButtonProps={{
-                        'aria-label': 'change date',
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <KeyboardDateTimePicker
-                      disableToolbar
-                      variant="inline"
-                      format="yyyy-MM-dd HH:mm"
-                      margin="normal"
-                      label="Expire Date & Time"
-                      name="expireDateTime"
-                      value={expireDateTime}
-                      onChange={handleExpireDateChange}
-                      KeyboardButtonProps={{
-                        'aria-label': 'change date',
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-              </MuiPickersUtilsProvider>  
+             
             </Grid>
           </Grid>
         </TopDiv>
-        <ButtonDiv>
+        {/* <ButtonDiv>
           <ButtonEl
             onClick={handelCancel}
             variant="contained"
@@ -137,9 +94,9 @@ function CreateProductForm({
               </ButtonEl>
             </EditColumn>
           )}
-        </ButtonDiv>
+        </ButtonDiv> */}
       </FormEl>
-    </PaperEl>
+    </div>
   );
 }
 
@@ -148,8 +105,8 @@ const mapStateToProps = state => ({
   productName: state.itemReducer.productName,
   price: state.itemReducer.price,
   image: state.itemReducer.image,
-  startDateTime: state.itemReducer.startDateTime,
-  expireDateTime: state.itemReducer.expireDateTime
+  // startDateTime: state.itemReducer.startDateTime,
+  // expireDateTime: state.itemReducer.expireDateTime
 });
 
 const mapDispatchToProps = {

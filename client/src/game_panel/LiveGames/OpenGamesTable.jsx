@@ -8,7 +8,8 @@ import {
 import { Box, Button, Typography, IconButton } from '@material-ui/core';
 import { Add, Remove, Visibility } from '@material-ui/icons';
 import ReactApexChart from 'react-apexcharts';
-
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
+// import gemBg from '../LottieAnimations/gem-bg.json';
 import Avatar from '../../components/Avatar';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
@@ -29,14 +30,9 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 
 import like from '../LottieAnimations/like.json';
-import avaHex from '../LottieAnimations/avahex.json';
 
 import history from '../../redux/history';
-const gifUrls = [
-  '/img/rock.gif',
-  '/img/paper.gif',
-  '/img/scissors.gif'
-];
+const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 
 class OpenGamesTable extends Component {
@@ -137,7 +133,7 @@ class OpenGamesTable extends Component {
 
   componentDidMount() {
     const { roomList } = this.props;
-
+   
     this.setState({ roomList });
     const roomIds = roomList.map(room => room._id);
     this.getRoomData(roomIds);
@@ -147,13 +143,16 @@ class OpenGamesTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.roomList !== this.props.roomList) {
+    if (prevProps.roomList !== this.props.roomList
+      ) {
       const { roomList } = this.props;
       this.setState({ roomList, isLoading: false });
       const roomIds = roomList.map(room => room._id);
+
       this.getRoomData(roomIds);
     }
   }
+  
 
   getRoomData = async roomIds => {
     try {
@@ -417,16 +416,17 @@ class OpenGamesTable extends Component {
                 // {...this.state.selectedRow}
               />
             )}
-{this.props.roomList.length > 0 && (
-            <div className="table-header">
-              <div className="table-cell room-id">Room ID</div>
-              <div className="table-cell bet-info">host / PLAYER</div>
-              <div className="table-cell payout">
-Net profit              </div>
-              {/* <div className="table-cell winnings">WINNINGS</div> */}
-              <div className="table-cell action desktop-only">Bet/Bankroll</div>
-            </div>
-          )}
+            {this.props.roomList.length > 0 && (
+              <div className="table-header">
+                <div className="table-cell room-id">Room ID</div>
+                <div className="table-cell bet-info">host / PLAYER</div>
+                <div className="table-cell payout">Net profit </div>
+                {/* <div className="table-cell winnings">WINNINGS</div> */}
+                <div className="table-cell action desktop-only">
+                  Bet/Bankroll
+                </div>
+              </div>
+            )}
             {this.state.roomList.map(
               (row, key) => (
                 <div
@@ -435,6 +435,9 @@ Net profit              </div>
                   key={row._id}
                 >
                   {' '}
+                 
+                  {renderLottieAvatarAnimation(row.gameBackground)}
+                  
                   <div>
                     <div className="table-cell cell-room-info">
                       <img
@@ -450,20 +453,7 @@ Net profit              </div>
                       </div>
                     </div>
                     <div className="table-cell desktop-only cell-user-name">
-                      <Lottie
-                        options={{
-                          loop: true,
-                          autoplay: true,
-                          animationData: avaHex
-                        }}
-                        style={{
-                          position: 'relative',
-                          width: '142px',
-                          height: '90px',
-                          filter: 'hue-rotate(111deg)',
-                          margin: '-26px -88px'
-                        }}
-                      />
+                      
                       <a
                         className="player"
                         onClick={() =>
@@ -473,6 +463,8 @@ Net profit              </div>
                         <Avatar
                           className="avatar"
                           src={row.creator_avatar}
+                          accessory={row.creator_accessory}
+                          rank={row.rank}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -492,25 +484,23 @@ Net profit              </div>
                           <Battle />
                           {row.joiner_avatars
                             .slice(0, 2)
-                            .map((avatar, index) => (
-
+                            .map((joiner, index) => (
                               <a
-                        className="player"
-                        onClick={() =>
-                          this.handleOpenPlayerModal(
-                          row.joiners
-                          )
-                        }
-                      >
-
-                              <Avatar
-                                className="avatar"
-                                key={index}
-                                src={avatar}
-                                alt=""
-                                darkMode={this.props.isDarkMode}
+                                className="player"
+                                onClick={() =>
+                                  this.handleOpenPlayerModal(row.joiners)
+                                }
+                              >
+                                <Avatar
+                                  className="avatar"
+                                  key={index}
+                                  accessory={joiner.accessory}
+                                  src={joiner.avatar}
+                                  rank={joiner.rank}
+                                  alt=""
+                                  darkMode={this.props.isDarkMode}
                                 />
-                                </a>
+                              </a>
                             ))}
                           {row.joiner_avatars.length > 2 && (
                             <div className="avatar-square">
@@ -548,7 +538,12 @@ Net profit              </div>
                             type: 'gradient',
                             gradient: {
                               shade: 'light',
-                              gradientToColors: hostNetProfitList[key] > 0 ? ['#00FF00'] : hostNetProfitList[key] < 0 ? ['#FF0000'] : ['#808080'],
+                              gradientToColors:
+                                hostNetProfitList[key] > 0
+                                  ? ['#00FF00']
+                                  : hostNetProfitList[key] < 0
+                                  ? ['#FF0000']
+                                  : ['#808080'],
                               shadeIntensity: 1,
                               type: 'vertical',
                               opacityFrom: 0.7,
@@ -588,16 +583,18 @@ Net profit              </div>
                         height="100"
                         series={[
                           {
-                            data: roomStatistics.hostNetProfits[key] && roomStatistics.hostBetsValue[key]
-                              ? roomStatistics.hostNetProfits[key].map((value, index) => [
-                                  roomStatistics.hostBetsValue[key][index],
-                                  value
-                                ])
-                              : []
+                            data:
+                              roomStatistics.hostNetProfits[key] &&
+                              roomStatistics.hostBetsValue[key]
+                                ? roomStatistics.hostNetProfits[
+                                    key
+                                  ].map((value, index) => [
+                                    roomStatistics.hostBetsValue[key][index],
+                                    value
+                                  ])
+                                : []
                           }
                         ]}
-                        
-                        
                       />
                       <div style={{ display: 'flex', alignItems: 'center' }}>
                         {/* {this.renderArrow(hostNetProfitList[key])} */}
@@ -724,20 +721,7 @@ Net profit              </div>
                   </div>
                   <div className="mobile-only">
                     <div className="table-cell cell-user-name">
-                      <Lottie
-                        options={{
-                          loop: true,
-                          autoplay: true,
-                          animationData: avaHex
-                        }}
-                        style={{
-                          position: 'relative',
-                          width: '114px',
-                          height: '80 px',
-                          filter: 'hue-rotate(111deg)',
-                          margin: '-24px -74px -22px -37px'
-                        }}
-                      />
+                     
                       <a
                         className="player"
                         onClick={() =>
@@ -747,6 +731,9 @@ Net profit              </div>
                         <Avatar
                           className="avatar"
                           src={row.creator_avatar}
+                          accessory={row.creator_accessory}
+                          rank={row.rank}
+
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -766,12 +753,14 @@ Net profit              </div>
                           <Battle />
                           {row.joiner_avatars
                             .slice(0, 8)
-                            .map((avatar, index) => (
+                            .map((joiner_avatar, index) => (
                               <Avatar
                                 className="avatar"
                                 key={index}
-                                src={avatar}
+                                src={joiner_avatar.avatar}
+                                rank={joiner_avatar.rank}
                                 alt=""
+                                accessory={joiner_avatar.accessory}
                                 darkMode={this.props.isDarkMode}
                               />
                             ))}

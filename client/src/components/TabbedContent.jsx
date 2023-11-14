@@ -90,7 +90,6 @@ class TabbedContent extends Component {
 
   render() {
     const { selectedTab } = this.state;
-    // console.log("hi" , this.props.roomInfo)
     return (
       <div>
         <Tabs

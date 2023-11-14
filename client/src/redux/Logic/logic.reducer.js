@@ -26,6 +26,9 @@ import {
   ONLINE_USER_LIST_UPDATED,
   SELECT_MAIN_TAB,
   MY_CHAT_LOADED,
+  NOTIFICATIONS_LOADED,
+  // FETCH_ACCESSORY_SUCCESS,
+  SET_NOTIFICATIONS_ROOM_INFO,
   GLOBAL_CHAT_RECEIVED,
   SET_GLOBAL_CHAT
 } from '../types';
@@ -59,6 +62,8 @@ const initialState = {
     _id: 0,
     creator_id: '',
     creator_avatar: '',
+    rank: 0,
+    creator_accessory: '',
     aveMultiplier: '',
     joiners: {},
     game_type: '',
@@ -77,6 +82,7 @@ const initialState = {
   betResults: [],
   bankroll: 0,
   rain: 0,
+  accessories: [],
   roomStatus: '',
   myGames: [],
   myGamesTotalPage: 0,
@@ -85,11 +91,20 @@ const initialState = {
   myHistoryTotalPage: 0,
   myHistoryPageNumber: 1,
   myChat: [],
+  notifications: [],
   chatRoomInfo: {
     user_id: '',
     avatar: '',
+    rank: 0,
     username: '',
     chatLogs: []
+  },
+  notificationsRoomInfo: {
+    user_id: '',
+    avatar: '',
+    rank: '',
+    username: '',
+    notificationsLogs: []
   },
   onlineUserList: [],
   selectedMainTabIndex: 0,
@@ -123,6 +138,11 @@ export default function(state = initialState, action) {
         ...state,
         drop_guesses: action.drop_guesses
       };
+      // case FETCH_ACCESSORY_SUCCESS:
+      //   return {
+      //     ...state,
+      //     accessory: action.payload
+      //   };
     case BANG_GUESSES:
       return {
         ...state,
@@ -188,12 +208,17 @@ export default function(state = initialState, action) {
         }
       };
     case ROOMS_LOADED:
+      const { roomList, pages, total, page } = payload;
+
+      const accessories = roomList.map(room => room.creator_accessory);
+
       return {
         ...state,
-        roomList: payload.roomList,
-        totalPage: payload.pages,
-        roomCount: payload.total,
-        pageNumber: payload.page
+        roomList,
+    accessories,
+    totalPage: pages,
+    roomCount: total,
+    pageNumber: page,
       };
     case HISTORY_LOADED:
       return {
@@ -221,6 +246,16 @@ export default function(state = initialState, action) {
         ...state,
         myChat: payload
       };
+      case NOTIFICATIONS_LOADED:
+      return {
+        ...state,
+        notifications: payload
+      };
+      case SET_NOTIFICATIONS_ROOM_INFO:
+        return {
+          ...state,
+          notificationsRoomInfo: payload
+        };
     case MSG_CREATE_ROOM_SUCCESS:
     case MSG_CREATE_ROOM_FAIL:
     case SET_URL:

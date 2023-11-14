@@ -5,7 +5,7 @@ import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
-import bjBg from '../LottieAnimations/bjBg.json';
+// import bjBg from '../LottieAnimations/bjBg.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import { Button, TextField } from '@material-ui/core';
@@ -1036,7 +1036,7 @@ class Blackjack extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            <div className="bjBg">
+            {/* <div className="bjBg">
               <Lottie
                 options={{
                   loop: true,
@@ -1049,7 +1049,7 @@ class Blackjack extends Component {
                   opacity: '0.1'
                 }}
               />
-            </div>
+            </div> */}
             <div className="deck">
               <div className="card-back">
                 <div className="rps-logo">

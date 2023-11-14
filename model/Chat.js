@@ -7,7 +7,7 @@ const ChatSchema = new Schema({
     ref: 'User'
   },
   message: {
-    type: String,
+    type: String
   },
   messageType: {
     type: String,
@@ -15,7 +15,7 @@ const ChatSchema = new Schema({
     default: 'text'
   },
   messageContent: {
-    type: String,
+    type: String
   },
   created_at: {
     type: Date,
@@ -25,14 +25,22 @@ const ChatSchema = new Schema({
     type: String,
     ref: 'User.avatar'
   },
+  rank: {
+    type: Number,
+    ref: 'User.totalWagered'
+  },
   replyTo: [
     {
       sender: {
         type: Schema.Types.ObjectId,
-    ref: 'User'
+        ref: 'User'
       },
       avatar: {
         type: String
+      },
+      rank: {
+        type: Number,
+        ref: 'User.totalWagered'
       },
       message: {
         type: String

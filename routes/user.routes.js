@@ -161,6 +161,7 @@ const newUser = new User({
   email,
   password,
   bio,
+  totalWagered: 0,
   balance: 0,
   rewards: 0,
   status: 'off',
@@ -208,7 +209,6 @@ newUser.avatar = generateAvatar(newUser.username);
 router.post('/get-info', async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.body._id });
-    
     res.json({
       success: true,
       query: req.query,
@@ -225,7 +225,7 @@ router.post('/get-info', async (req, res) => {
 router.post('/getId', admin, async (req, res) => {
   try {
     const userId = await User.findOne({ username: req.body.username }, { _id: 1 });
-console.log("userId", userId);
+// console.log("userId", userId);
     if (!userId) {
       return res.json({
         success: true,

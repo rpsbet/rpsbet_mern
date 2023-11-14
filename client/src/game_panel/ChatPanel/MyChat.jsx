@@ -17,11 +17,12 @@ class MyChat extends Component {
 	}
 
 	openChat = (e) => {
-		const { avatar, username } = e.currentTarget.dataset;
+		const { avatar, username, rank } = e.currentTarget.dataset;
 		const chatRoomId = e.currentTarget.dataset.id;
 	  
 		this.props.setChatRoomInfo({
 		  avatar,
+		  rank,
 		  username,
 		  chatLogs: []
 		});
@@ -56,7 +57,7 @@ class MyChat extends Component {
 								<div className="table-row" key={key}>
 									<div>
 										<div className="table-cell">
-											<Avatar src={this.state.myChat[row].avatar} alt="" className="avatar" darkMode={this.props.isDarkMode} />
+											<Avatar rank={this.state.myChat[row].rank} src={this.state.myChat[row].avatar} alt="" className="avatar" darkMode={this.props.isDarkMode} />
 											{this.state.myChat[row].username}
 										</div>
 									</div>
@@ -74,6 +75,7 @@ class MyChat extends Component {
 											onClick={this.openChat}
 											data-id={this.state.myChat[row]._id} 
 											data-avatar={this.state.myChat[row].avatar} 
+											data-rank={this.state.myChat[row].totalWagered} 
 											data-username={this.state.myChat[row].username} 
 											>
 											Open

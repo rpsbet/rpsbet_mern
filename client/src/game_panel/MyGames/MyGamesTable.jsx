@@ -40,8 +40,8 @@ class MyGamesTable extends Component {
       holding: false,
       timer: null,
       balance: this.props.balance,
-      anchorEl: null,
       selectedFilter: 'open',
+      anchorEl: null,
       sortAnchorEl: null,
       selectedSort: 'desc',
       creatingRoom: false
@@ -113,7 +113,9 @@ class MyGamesTable extends Component {
 				bet_amount: row.bet_amount,
 				endgame_amount: row.endgame_amount,
 				// is_anonymous: row.is_anonymous,
-				youtubeUrl: row.youtubeUrl
+				youtubeUrl: row.youtubeUrl,
+        gameBackground: row.gameBackground,
+
       }
       );
       
@@ -366,7 +368,9 @@ class MyGamesTable extends Component {
       endgame_amount: this.props.endgame_amount,
       is_anonymous: this.props.is_anonymous,
       room_password: this.props.room_password,
-      youtubeUrl: this.props.youtubeUrl
+      youtubeUrl: this.props.youtubeUrl,
+      gameBackground: this.props.gameBackground
+
     });
   }
 

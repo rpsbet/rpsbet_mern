@@ -82,7 +82,6 @@ class HistoryTable extends Component {
       this.attachUserLinkListeners();
 
       this.setState({ history: updateFromNow(this.props.history) });
-      // console.log("wdwed", this.state.settings);
     }
   }
 
@@ -386,6 +385,7 @@ class HistoryTable extends Component {
             modalIsOpen={this.state.showPlayerModal}
             closeModal={this.handleClosePlayerModal}
             selectedCreator={this.state.selectedCreator}
+
             // player_name={this.state.userName}
             // balance={this.state.balance}
             // avatar={this.props.user.avatar}

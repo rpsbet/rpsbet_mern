@@ -21,6 +21,7 @@ import { Warning } from '@material-ui/icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { convertToCurrency } from '../../util/conversion';
+
 import { faMoneyBill } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
 import { alertModal } from '../modal/ConfirmAlerts';
 import axios from '../../util/Api';
@@ -59,8 +60,10 @@ class PlayerModal extends Component {
       _id: props.selectedCreator || '',
       username: '',
       avatar: '',
+      accessory: '',
       selectedCreatorBalance: '',
       loading: true,
+      rank: '',
       isLoading: false,
       myChat: [],
       actorType: 'Both',
@@ -150,8 +153,12 @@ class PlayerModal extends Component {
       ...result,
       username: userData.username,
       avatar: userData.avatar,
+      rank: userData.totalWagered,
       loading: false
     });
+    console.log(this.state.username)
+    console.log(this.state.rank)
+
   };
 
   handleOpenChat = e => {
@@ -165,6 +172,7 @@ class PlayerModal extends Component {
         _id: selectedCreator,
         username: e.target.getAttribute('username'),
         avatar: e.target.getAttribute('avatar'),
+        rank: e.target.getAttribute('totalWagered'),
         chatLogs: []
       };
       this.setState(prevState => ({
@@ -176,6 +184,8 @@ class PlayerModal extends Component {
       // Handle case where chat exists
       this.props.setChatRoomInfo({
         avatar: e.target.getAttribute('avatar'),
+        rank: e.target.getAttribute('totalWagered'),
+
         username: e.target.getAttribute('username'),
         chatLogs: chatExists.chatLogs
       });
@@ -255,6 +265,8 @@ class PlayerModal extends Component {
                         ? this.state.avatar
                         : '/img/profile-thumbnail.svg'
                     }
+                    accessory={this.state.accessory}
+                    rank={this.state.rank}
                     alt=""
                   />
                 )}
@@ -274,6 +286,7 @@ class PlayerModal extends Component {
                     gameHosted={this.state.gameHosted}
                     gameJoined={this.state.gameJoined}
                     totalWagered={this.state.totalWagered}
+                    rank={this.state.rank}
                     netProfit={this.state.netProfit}
                     profitAllTimeHigh={this.state.profitAllTimeHigh}
                     profitAllTimeLow={this.state.profitAllTimeLow}

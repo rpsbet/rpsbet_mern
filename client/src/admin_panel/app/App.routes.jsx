@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import { Route, Switch } from 'react-router-dom';
 import LayoutCop from '../Layout/LayoutCop';
 import StatisticsPage from './StatisticsPage/StatisticsPage';
-import ProductPage from '../app/ProductPages/ProductSerchPage/ProductPage';
-import ProductCreatePage from './ProductPages/ProductCreatePage/ProductCreatePage';
+// import ProductPage from './ProductPages/ProductSerchPage/ProductPage';
+// import ProductCreatePage from './ProductPages/ProductCreatePage/ProductCreatePage';
 import CustomersPage from './Customer/CustomerPage';
 import ActivityPage from './Activity/ActivityPage';
 import EditCustomerPage from './Customer/EditCustomerPage/EditCustomerPage';
@@ -54,7 +54,7 @@ export class AppMainRoute extends Component {
             path={`${match.path}/question/:_id`}
             component={QuestionEditPage}
           />
-          <Route 
+          {/* <Route 
             exact
             path={`${match.path}/product`}
             component={ProductPage}
@@ -68,7 +68,7 @@ export class AppMainRoute extends Component {
             exact
             path={`${match.path}/product/:_id`}
             component={ProductCreatePage}
-          />
+          /> */}
           <Route
             exact
             path={`${match.path}/statistics`}

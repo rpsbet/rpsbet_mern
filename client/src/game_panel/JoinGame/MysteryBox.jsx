@@ -762,6 +762,7 @@ class MysteryBox extends Component {
                         <Avatar
                           className="avatar"
                           src={this.props.creator_avatar}
+                          rank={this.props.rank}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -1139,6 +1140,7 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
+  rank: state.logic.curRoomInfo.rank,
 
 });
 

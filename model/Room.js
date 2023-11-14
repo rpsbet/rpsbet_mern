@@ -120,6 +120,10 @@ const RoomSchema = new Schema({
     type: String,
     default: ''
   },
+  gameBackground: {
+    type: String,
+    default: ''
+  },
   created_at: {
     type: Date,
     default: Date.now

@@ -7,20 +7,13 @@ const auth = require('../middleware/auth');
 const User = require('../model/User');
 const Receipt = require('../model/Receipt');
 const Transaction = require('../model/Transaction');
+const Item = require('../model/Item');
 const GameLog = require('../model/GameLog');
 const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const SystemSetting = require('../model/SystemSetting');
 const RoomBoxPrize = require('../model/RoomBoxPrize');
 
-getCommission = async () => {
-  const commission = await SystemSetting.findOne({ name: 'commission' });
-  if (commission?.value) {
-    return parseFloat(commission.value);
-  }
-
-  return 0;
-};
 
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
@@ -144,9 +137,21 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       }
     }
 
-    const commission = await getCommission();
+   
+  
 
     for (const gameLog of gameLogs) {
+      const tax = await SystemSetting.findOne({ name: 'commission' });
+      const creatorUser = await User.findOne({ _id: gameLog.creator }).select('accessory');
+      const accessory = creatorUser ? creatorUser.accessory : null;
+      let item;
+      if (accessory) {
+        item = await Item.findOne({ image: accessory }).select('CP');
+      } else {
+        item = { CP: tax.value };
+      }
+    
+      const commission = item.CP;
       if (!gameLog.room) {
         continue; // Skip gameLogs with null room property
       }
@@ -798,7 +803,6 @@ router.get('/get-leaderboards', auth, async (req, res) => {
 router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
-    const commission = await getCommission();
 
     const gameLogs = await GameLog.find({
       $and: [{ room: { $ne: null } }, { game_result: { $nin: [3, -100] } }],
@@ -810,14 +814,27 @@ router.get('/get-room-statistics', async (req, res) => {
       .populate({
         path: 'joined_user',
         model: User,
-        select: '_id username avatar'
+        select: '_id username avatar totalWagered'
       });
 
     const playerStats = {};
 
     for (const gameLog of gameLogs) {
+      const tax = await SystemSetting.findOne({ name: 'commission' });
+      const creatorUser = await User.findOne({ _id: gameLog.creator }).select('accessory');
+      const accessory = creatorUser ? creatorUser.accessory : null;
+      let item;
+      if (accessory) {
+        item = await Item.findOne({ image: accessory }).select('CP');
+      } else {
+        item = { CP: tax.value };
+      }
+    
+      const commission = item.CP;
       const _id = gameLog.joined_user._id;
       const avatar = gameLog.joined_user.avatar;
+      const rank = gameLog.joined_user.totalWagered;
+
       const actor = gameLog.joined_user.username;
       const wagered = gameLog.bet_amount;
       let net_profit = 0;
@@ -858,6 +875,7 @@ router.get('/get-room-statistics', async (req, res) => {
       // Accumulate net profit for each player
       if (playerStats[actor]) {
         playerStats[actor].avatar = avatar;
+        playerStats[actor].rank = wagered;
         playerStats[actor]._id = _id;
         playerStats[actor].wagered += wagered;
         playerStats[actor].net_profit += net_profit;
@@ -878,6 +896,7 @@ router.get('/get-room-statistics', async (req, res) => {
           _id,
           actor,
           wagered,
+          rank,
           net_profit,
           bets:
             gameLog.game_result === 0 ||
@@ -900,6 +919,7 @@ router.get('/get-room-statistics', async (req, res) => {
     const room_info = Object.values(playerStats).map(player => ({
       _id: player._id,
       avatar: player.avatar,
+      rank: player.wagered,
       actor: player.actor,
       wagered: player.wagered,
       net_profit: player.net_profit,

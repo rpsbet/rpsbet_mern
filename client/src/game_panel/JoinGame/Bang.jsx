@@ -15,7 +15,7 @@ import {
   validateLocalStorageLength
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
-import rocksBg from '../LottieAnimations/rocksBg.json';
+// import rocksBg from '../LottieAnimations/rocksBg.json';
 import bomb from '../LottieAnimations/bomb.json';
 import explosion from '../LottieAnimations/explosion.json';
 import animationData from '../LottieAnimations/spinningIcon';

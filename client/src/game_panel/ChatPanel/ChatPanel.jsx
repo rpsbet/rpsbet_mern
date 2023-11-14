@@ -110,6 +110,7 @@ class ChatPanel extends Component {
       selectedMessage: {
         sender: null,
         avatar: null,
+        rank: null,
         message: null,
         messageType: null,
         time: null
@@ -131,6 +132,7 @@ class ChatPanel extends Component {
           message: text,
           avatar: this.props.user.avatar,
           replyTo: selectedMessage,
+          rank: this.props.user.totalWagered,
           showEmojiPanel: false,
           showSearchPopup: false
         });
@@ -144,6 +146,7 @@ class ChatPanel extends Component {
       selectedMessage: {
         sender: null,
         avatar: null,
+        rank: null,
         message: null,
         messageType: null,
         time: null,
@@ -342,7 +345,8 @@ class ChatPanel extends Component {
                 <div className="tooltip-content">
                   Replying to:
                   <div className="tooltip-avatar">
-                    <Avatar src={selectedMessage.avatar} alt="Avatar" />
+                    <Avatar rank={selectedMessage.rank}
+ src={selectedMessage.avatar} alt="Avatar" />
                   </div>
                   {selectedMessage.sender}
                   <Button  className="tooltip-cross">

@@ -42,14 +42,13 @@ class Summary extends Component {
           {convertToCurrency(this.props.spleesh_bet_unit * 10)}
         </>
       );
-      public_max_return = convertToCurrency(this.props.spleesh_bet_unit * 5.5 + this.props.bet_amount /* 0.9 */
-        );
+      public_max_return = convertToCurrency(
+        this.props.spleesh_bet_unit * 5.5 + this.props.bet_amount /* 0.9 */
+      );
     } else if (this.props.game_mode === 'Quick Shoot') {
-      public_max_return = convertToCurrency(
-        this.props.max_return);
+      public_max_return = convertToCurrency(this.props.max_return);
     } else if (this.props.game_mode === 'RPS') {
-      public_max_return = convertToCurrency(
-        this.props.bet_amount);
+      public_max_return = convertToCurrency(this.props.bet_amount);
     }
 
     return (
@@ -121,9 +120,7 @@ class Summary extends Component {
 
   total_summery() {
     let public_bet_amount = this.props.public_bet_amount;
-    let public_max_return = (
-      <> {convertToCurrency(this.props.max_prize)} </>
-    );
+    let public_max_return = <> {convertToCurrency(this.props.max_prize)} </>;
 
     if (this.props.game_mode === 'Spleesh!') {
       public_bet_amount = (
@@ -186,19 +183,22 @@ class Summary extends Component {
             <div className="summary-item">
               <div className="summary-item-name">Payout</div>
               <div className="summary-item-value">
-                {convertToCurrency(
-                  this.props.endgame_amount
-                )}
+                {convertToCurrency(this.props.endgame_amount)}
               </div>
             </div>
           )}
-      <div className="summary-item">
-  <div className="summary-item-name">Music</div>
-  <div className="summary-item-value">
-    {this.props.youtubeUrl ? this.props.youtubeUrl : "No Music"}
-  </div>
-</div>
-
+          <div className="summary-item">
+            <div className="summary-item-name">Music</div>
+            <div className="summary-item-value">
+              {this.props.youtubeUrl ? this.props.youtubeUrl : 'No Music'}
+            </div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-item-name">Background</div>
+            <div className="summary-item-value">
+              {this.props.gameBackground ? this.props.gameBackground : 'No Background'}
+            </div>
+          </div>
           <div className="summary-item">
             <div className="summary-item-name">Privacy</div>
             <div className="summary-item-value">

@@ -83,6 +83,7 @@ class GlobalChat extends Component {
         sender: null,
         senderId: null,
         avatar: null,
+        rank: null,
         message: null,
         messageType: null,
         replyTo: null,
@@ -92,6 +93,7 @@ class GlobalChat extends Component {
       // Select the clicked message
       setSelectedMessage({
         sender: message.sender,
+        rank: message.rank,
         senderId: message.senderId,
         avatar: message.avatar,
         message: message.message,
@@ -306,6 +308,7 @@ class GlobalChat extends Component {
                       className="avatar"
                       src={chat.replyTo.avatar}
                       alt=""
+                      rank={chat.replyTo.rank}
                       darkMode={this.props.isDarkMode}
                     />
                   </a>
@@ -334,6 +337,7 @@ class GlobalChat extends Component {
                     className="avatar"
                     src={chat.avatar}
                     alt=""
+                    rank={chat.rank}
                     darkMode={this.props.isDarkMode}
                   />
                 </a>
@@ -363,6 +367,7 @@ class GlobalChat extends Component {
 }
 const mapStateToProps = state => ({
   userName: state.auth.userName,
+  user: state.auth.user,
   isDarkMode: state.auth.isDarkMode,
   socket: state.auth.socket,
   globalChatList: state.logic.globalChatList

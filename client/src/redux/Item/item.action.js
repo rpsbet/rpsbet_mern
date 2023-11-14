@@ -5,29 +5,62 @@ import {
   MSG_WARNING,
   ITEM_QUERY,
   ITEM_QUERY_ONE,
+  MY_ITEM_QUERY,
+  MY_ITEM_QUERY_ONE,
   LOADING_ITEM_TABLE,
   PAGINATION_FOR_ITEM,
   SET_CURRENT_PRODUCT_INFO,
   SET_CURRENT_PRODUCT_ID,
-  ADD_TOTAL
+  ADD_TOTAL,
+  MY_ADD_TOTAL
 } from '../types';
 
-export const acQueryItem = (pagination, page) => async (
+export const acQueryMyItem = (pagination, page, sortCriteria, itemType) => async (
   dispatch,
   getState
 ) => {
-  dispatch({ type: ITEM_QUERY, payload: [] });
+  dispatch({ type: MY_ITEM_QUERY, payload: [] });
   dispatch({ type: LOADING_ITEM_TABLE, payload: true });
   let payload = {
     pagination,
-    page
+    page,
+    sortCriteria,   
+    itemType, 
   };
   dispatch({ type: PAGINATION_FOR_ITEM, payload });
   let body = {};
   body.pagination = getState().itemReducer.pagination;
   body.page = getState().itemReducer.page;
   try {
-    const { data } = await api.get('item', { params: body });
+    const { data } = await api.get('/item/my-items', { params: payload });
+    if (data.success) {
+      dispatch({ type: MY_ITEM_QUERY, payload: data.items });
+      dispatch({ type: MY_ADD_TOTAL, payload: data });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+    dispatch({ type: LOADING_ITEM_TABLE, payload: false });
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+
+
+export const acQueryItem = (pagination, page, sortCriteria, itemType) => async (
+  dispatch
+) => {
+  dispatch({ type: ITEM_QUERY, payload: [] });
+  dispatch({ type: LOADING_ITEM_TABLE, payload: true });
+  let payload = {
+    pagination,
+    page,
+    sortCriteria,   
+    itemType, 
+  };
+  dispatch({ type: PAGINATION_FOR_ITEM, payload });
+  try {
+    const { data } = await api.get('item', { params: payload });
 
     if (data.success) {
       dispatch({ type: ITEM_QUERY, payload: data.items });
@@ -50,25 +83,8 @@ export const createItem = body => async (dispatch, getState) => {
   }
 
   body.userId = getState().auth.user._id;
-
-  console.log(body);
   try {
     const { data } = await api.post('item/create', body);
-    console.log(data);
-    if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: data.message });
-    } else {
-      dispatch({ type: MSG_ERROR, payload: data.message });
-    }
-  } catch (error) {
-    console.log('error***', error);
-    dispatch({ type: MSG_WARNING, payload: error });
-  }
-};
-
-export const updateItem = body => async dispatch => {
-  try {
-    const { data } = await api.post('item/update', body);
     if (data.success) {
       dispatch({ type: MSG_SUCCESS, payload: data.message });
     } else {
@@ -89,6 +105,8 @@ export const getItem = () => async (dispatch, getState) => {
         productName: '',
         price: '',
         image: '',
+        item_type: '',
+        CP: '',
         startDateTime: new Date(),
         expireDateTime: new Date()
       }});
@@ -122,8 +140,8 @@ export const deleteItem = _id => async dispatch => {
   }
 };
 
-export const setCurrentProductInfo = info => dispatch => {
-  dispatch({ type: SET_CURRENT_PRODUCT_INFO, payload: info });
+export const setCurrentProductInfo = owner => dispatch => {
+  dispatch({ type: SET_CURRENT_PRODUCT_INFO, payload: owner });
 };
 
 export const setCurrentProductId = _id => dispatch => {

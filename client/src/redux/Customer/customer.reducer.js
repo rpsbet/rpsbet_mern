@@ -5,6 +5,7 @@ import {
   LOADING_CUSTOMER_TABLE,
   ADD_MAIN_INFO,
   ACTIVITY_QUERY,
+  LOADING_LEADERBOARDS_TABLE,
   LOAD_LEADERBOARDS
 } from '../types';
 
@@ -33,6 +34,8 @@ export default (state = initialState, { type, payload }) => {
         totalResults: payload.total,
         pages: payload.pages
       };
+      case LOADING_LEADERBOARDS_TABLE:
+      return { ...state, loading: payload };
       case LOAD_LEADERBOARDS:
         return {
           ...state,

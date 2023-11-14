@@ -8,7 +8,8 @@ import { userSignIn, getUser } from '../../redux/Auth/user.actions';
 import {
   getMyGames,
   getMyHistory,
-  getMyChat
+  getMyChat,
+  getNotifications
 } from '../../redux/Logic/logic.actions';
 import history from '../../redux/history';
 
@@ -74,6 +75,7 @@ class LoginModal extends Component {
       // } else {
       this.props.initSocket();
       this.props.getMyGames();
+      this.props.getNotifications();
       this.props.getMyHistory();
       this.props.getMyChat();
       history.push('/');
@@ -166,7 +168,8 @@ const mapDispatchToProps = {
   getUser,
   getMyGames,
   getMyHistory,
-  getMyChat
+  getMyChat,
+  getNotifications
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LoginModal);
