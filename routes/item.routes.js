@@ -234,7 +234,6 @@ router.post('/equip', auth, async (req, res) => {
 
 
 router.get('/my-items', auth, async (req, res) => {
-  console.log(req.query)
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const sort = 'owners.price';

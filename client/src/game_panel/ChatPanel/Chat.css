@@ -68,7 +68,7 @@
 
   .chat-player .avatar {
       background-color: rgb(235, 235, 235);
-      border: 4px solid #f8f9fa;
+      /* border: 4px solid #f8f9fa; */
     position: relative;
     overflow: hidden;
     width: 50px !important;

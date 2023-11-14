@@ -27,6 +27,7 @@
 .lottie-container div {
   top: 5px;
   position: absolute;
+  z-index: 99;
 }
 .avatar img {
   border-radius: 6px;

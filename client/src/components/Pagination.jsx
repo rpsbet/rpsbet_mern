@@ -3,7 +3,6 @@ import React from 'react';
 const Pagination = (props) => {
     const handlePageNumberClicked = (e) => {
 		e.preventDefault();
-        console.log(e.target.getAttribute('page_number'));
 		props.handlePageNumberClicked(e.target.getAttribute('page_number'));
 	}
 

@@ -45,8 +45,8 @@ class Avatar extends Component {
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
 
     let borderColor = dominantColor
-      ? `4px solid rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`
-      : '4px solid transparent';
+      ? `3px solid rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`
+      : '3px solid transparent';
 
     const rankColors = {
       1: 'steelblue',
@@ -66,9 +66,9 @@ class Avatar extends Component {
     if (rank !== null) {
       rank = getRank(rank);
       if (rank in rankColors) {
-        borderColor = `4px solid ${rankColors[rank]}`;
+        borderColor = `3px solid ${rankColors[rank]}`;
       } else {
-        borderColor = '4px solid red';
+        borderColor = '3px solid red';
       }
     }
 

@@ -156,8 +156,6 @@ class PlayerModal extends Component {
       rank: userData.totalWagered,
       loading: false
     });
-    console.log(this.state.username)
-    console.log(this.state.rank)
 
   };
 

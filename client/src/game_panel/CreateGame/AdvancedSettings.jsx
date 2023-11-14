@@ -60,10 +60,6 @@ const ProductCard = styled.div`
     await acQueryMyItem(10, 1, 'price', '653ee7df17c9f5ee2124564a');
   }
 
-logStep() {
-  console.log("wn", this.props.step, this.props.child_step)
-
-}
 
   render() {
     return (
@@ -75,7 +71,6 @@ logStep() {
               <Button
                 className={!this.props.is_private ? ' active' : ''}
                 onClick={() => {
-                  this.logStep();
                   this.props.onChangeState({
                     is_private: false,
                     room_password: ''
@@ -118,8 +113,6 @@ logStep() {
               <Button
                 className={!this.props.endgame_type ? ' active' : ''}
                 onClick={() => {
-                  this.logStep();
-
                   this.props.onChangeState({ endgame_type: false });
                 }}
               >
@@ -202,7 +195,7 @@ logStep() {
                 value={this.props.youtubeUrl}
                 onChange={this.props.handleUrlChange}
               />
-              <Button type="submit" onClick={this.logStep()} variant="contained" color="primary">
+              <Button type="submit" variant="contained" color="primary">
                 Play
               </Button>
             </form>
