@@ -27,8 +27,12 @@
   .react-confirm-alert .modal-body.alert-body {
     border-radius: 0.6em !important;
     border: 1px solid #ffffff2d;
-  }
+}
 
+.password-modal-body {
+      text-align: center !important;
+
+  }
   
   .react-confirm-alert .modal-body.alert-body.result-body{
     animation: pulse 1s ease-in-out infinite;

@@ -9,7 +9,7 @@ import {
   Tab,
   Button,
   InputAdornment,
-  TextField,
+  TextField
 } from '@material-ui/core';
 import { InsertEmoticon, Gif, Clear } from '@material-ui/icons';
 import GlobalChat from './GlobalChat';
@@ -111,6 +111,7 @@ class ChatPanel extends Component {
         sender: null,
         avatar: null,
         rank: null,
+        accessory: null,
         message: null,
         messageType: null,
         time: null
@@ -119,11 +120,11 @@ class ChatPanel extends Component {
   }
   onTextAreaKeyDown = e => {
     if (!this.props.socket) return;
-  
+
     if (e.keyCode === 13) {
       e.preventDefault();
       const text = this.state.text.trim();
-  
+
       if (text !== '') {
         const { selectedMessage } = this.state;
         this.props.socket.emit('GLOBAL_CHAT_SEND', {
@@ -131,6 +132,8 @@ class ChatPanel extends Component {
           senderId: this.props.user._id,
           message: text,
           avatar: this.props.user.avatar,
+          accessory: this.props.user.accessory,
+
           replyTo: selectedMessage,
           rank: this.props.user.totalWagered,
           showEmojiPanel: false,
@@ -140,12 +143,13 @@ class ChatPanel extends Component {
       }
     }
   };
-  
+
   handleClearTooltip = () => {
     this.setState({
       selectedMessage: {
         sender: null,
         avatar: null,
+        accessory: null,
         rank: null,
         message: null,
         messageType: null,
@@ -155,7 +159,6 @@ class ChatPanel extends Component {
       text: '' // Clear the text field input by updating the 'text' state
     });
   };
-  
 
   handleMouseEnter = index => {
     this.setState({ hoverTabIndex: index });
@@ -178,6 +181,7 @@ class ChatPanel extends Component {
         senderId: this.props.user._id,
         message: JSON.stringify(message),
         avatar: this.props.user.avatar,
+        accessory: this.props.user.accessory,
         messageType: 'gif'
       });
 
@@ -208,8 +212,6 @@ class ChatPanel extends Component {
   handleTabChange = (event, newValue) => {
     this.setState({ selected_tab_index: newValue });
   };
-
-  
 
   toggleEmojiPanel = () => {
     this.setState(prevState => ({
@@ -333,27 +335,29 @@ class ChatPanel extends Component {
           <MyChat />
         ) : (
           <GlobalChat
-          emojis={emojis}
+            emojis={emojis}
             setSelectedMessage={this.setSelectedMessage}
             selectedMessage={selectedMessage}
           />
         )}
         {selected_tab_index === 1 && (
           <div className="chat-input-panel">
-            {selectedMessage && selectedMessage.sender &&(
+            {selectedMessage && selectedMessage.sender && (
               <div className="tooltip reply">
                 <div className="tooltip-content">
                   Replying to:
                   <div className="tooltip-avatar">
-                    <Avatar rank={selectedMessage.rank}
- src={selectedMessage.avatar} alt="Avatar" />
+                    <Avatar
+                      rank={selectedMessage.rank}
+                      accessory={selectedMessage.accessory}
+                      src={selectedMessage.avatar}
+                      alt="Avatar"
+                    />
                   </div>
                   {selectedMessage.sender}
-                  <Button  className="tooltip-cross">
-
-                  <Clear onClick={this.handleClearTooltip} />
+                  <Button className="tooltip-cross">
+                    <Clear onClick={this.handleClearTooltip} />
                   </Button>
-
                 </div>
               </div>
             )}
@@ -388,14 +392,14 @@ class ChatPanel extends Component {
                     <Button
                       className="btn-show-emoticon"
                       onClick={this.toggleEmojiPanel}
-                      style={{ minWidth: '32px'}}
+                      style={{ minWidth: '32px' }}
                     >
                       <InsertEmoticon style={{ fontSize: '16px' }} />
                     </Button>
                     <Button
                       className="btn-search-gifs"
                       onClick={this.toggleSearchPopup}
-                      style={{ minWidth: '32px', marginLeft: '2px'}}
+                      style={{ minWidth: '32px', marginLeft: '2px' }}
                     >
                       <Gif style={{ fontSize: '32px' }} />
                     </Button>

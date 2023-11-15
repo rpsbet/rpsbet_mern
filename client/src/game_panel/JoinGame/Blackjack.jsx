@@ -1344,6 +1344,8 @@ class Blackjack extends Component {
 const mapStateToProps = state => ({
   socket: state.auth.socket,
   isAuthenticated: state.auth.isAuthenticated,
+  accessory: state.logic.curRoomInfo.accessory,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
 
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,

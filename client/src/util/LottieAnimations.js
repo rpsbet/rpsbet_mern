@@ -4,7 +4,7 @@ import dropOff from '../game_panel/LottieAnimations/the-drop-off.json';
 import goalBg from '../game_panel/LottieAnimations/quantum-goal.json';
 import blackjackSettings from '../game_panel/LottieAnimations/blackjack-settings.json';
 import boatBg from '../game_panel/LottieAnimations/gone-fishing.json';
-import floaraGardens from '../game_panel/LottieAnimations/floara-gardens.json';
+import floaraGardens from '../game_panel/LottieAnimations/floaro-gardens.json';
 import mountainsBg from '../game_panel/LottieAnimations/mountains-bg.json';
 import mountainRail from '../game_panel/LottieAnimations/mountain-rail.json';
 import mountMarmalade from '../game_panel/LottieAnimations/mount-marmalade.json';
@@ -70,7 +70,7 @@ export const renderLottieAnimation = image => {
           <Lottie options={{ animationData: boatBg }} />
         </div>
       );
-    case 'floara-gardens':
+    case 'floaro-gardens':
       return (
         <div className="lottie-bg-container">
           <Lottie options={{ animationData: floaraGardens }} />

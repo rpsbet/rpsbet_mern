@@ -763,6 +763,7 @@ class MysteryBox extends Component {
                           className="avatar"
                           src={this.props.creator_avatar}
                           rank={this.props.rank}
+                          accessory={this.props.accessory}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />

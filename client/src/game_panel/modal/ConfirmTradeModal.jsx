@@ -9,6 +9,7 @@ import { Button, TextField } from '@material-ui/core';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { convertToCurrency } from '../../util/conversion';
 
 Modal.setAppElement('#root');
 
@@ -34,7 +35,9 @@ class ConfirmTradeModal extends Component {
 
     this.state = {
       item: '',
-      owner: ''
+      owner: '',
+      price: 0,
+      productName: ''
     };
   }
   onBtnOkClicked = async e => {
@@ -68,7 +71,7 @@ class ConfirmTradeModal extends Component {
           <div className="modal-body alert-body password-modal-body">
             <div className={`modal-icon result-icon-trade`}></div>
             <h5>CONFIRM TRADE</h5>
-            <h6>{this.props.item}</h6>
+            <h6>Confirm purchase of 1 x [ {this.props.productName} ] in exchange for [{convertToCurrency(this.props.price)} ]?</h6>
           </div>
           <div className="modal-footer">
             <Button className="btn-submit" onClick={this.onBtnOkClicked}>
@@ -92,7 +95,9 @@ const mapStateToProps = state => ({
   isOpen: state.snackbar.showConfirmTradeModal,
   title: state.snackbar.title,
   item: state.itemReducer._id,
-  owner: state.itemReducer.owner,
+  owner: state.itemReducer.data.owner,
+  price: state.itemReducer.data.price,
+  productName: state.itemReducer.data.productName,
   alertMessage: state.snackbar.alertMessage,
   alertType: state.snackbar.alertType
 });

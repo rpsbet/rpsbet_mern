@@ -69,7 +69,7 @@ class PlayerModal extends Component {
       actorType: 'Both',
       message: '',
       gameType: 'All',
-      timeType: '7',
+      timeType: '24',
       isTipModalOpen: false,
       tipAmount: '',
       balance: props.balance
@@ -170,6 +170,7 @@ class PlayerModal extends Component {
         _id: selectedCreator,
         username: e.target.getAttribute('username'),
         avatar: e.target.getAttribute('avatar'),
+        accessory: e.target.getAttribute('accessory'),
         rank: e.target.getAttribute('totalWagered'),
         chatLogs: []
       };
@@ -183,7 +184,7 @@ class PlayerModal extends Component {
       this.props.setChatRoomInfo({
         avatar: e.target.getAttribute('avatar'),
         rank: e.target.getAttribute('totalWagered'),
-
+        accessory: e.target.getAttribute('accessory'),
         username: e.target.getAttribute('username'),
         chatLogs: chatExists.chatLogs
       });

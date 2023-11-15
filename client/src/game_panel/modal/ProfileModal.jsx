@@ -60,7 +60,7 @@ class ProfileModal extends Component {
       _id: this.props.userInfo._id,
       actorType: 'Both',
       gameType: 'All',
-      timeType: '7',
+      timeType: '24',
       referralCode: '',
       rewards: this.props.userInfo.rewards,
       username: this.props.userInfo.username,
@@ -78,6 +78,7 @@ class ProfileModal extends Component {
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.avatar !== props.avatar ||
+      current_state.accessory !== props.accessory ||
       current_state.username !== props.username ||
       current_state.email !== props.email ||
       current_state.totalWagered !== props.totalWagered ||
@@ -87,6 +88,7 @@ class ProfileModal extends Component {
       return {
         ...current_state,
         avatar: props.userInfo.avatar,
+        accessory: props.userInfo.accessory,
         username: props.userInfo.username,
         email: props.userInfo.email,
         totalWagered: props.userInfo.totalWagered,
@@ -184,6 +186,7 @@ class ProfileModal extends Component {
                 setImageFilename={this.handleAvatarLoaded}
                 darkMode={this.props.isDarkMode}
                 rank={this.state.rank}
+                accessory={this.state.accessory}
                 avatar={this.state.avatar}
               />
             </div>

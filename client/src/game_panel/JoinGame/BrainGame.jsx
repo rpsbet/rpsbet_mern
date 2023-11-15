@@ -185,16 +185,14 @@ class BrainGame extends Component {
     } = this.props;
 
     playSound('select');
-    
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-    
 
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-    
 
     if (roomStatus === 'finished') {
       alertModal(isDarkMode, 'THIS STAKE HAS ENDED');
@@ -570,13 +568,13 @@ class BrainGame extends Component {
     let arrayName = `score_array_${brain_game_type}`;
     return is_started === true ? (
       <div className="game-page">
-          {showPlayerModal && (
-            <PlayerModal
-              selectedCreator={selectedCreator}
-              modalIsOpen={showPlayerModal}
-              closeModal={handleClosePlayerModal}
-            />
-          )}
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+          />
+        )}
         <div className="game-contents">
           <div className="game-info-panel brain-game-play-panel">
             {/* <div
@@ -778,7 +776,7 @@ class BrainGame extends Component {
                           className="avatar"
                           src={this.props.creator_avatar}
                           rank={this.props.rank}
-
+                          accessory={this.props.accessory}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -1004,8 +1002,8 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  rank: state.logic.curRoomInfo.rank,
-
+  accessory: state.logic.curRoomInfo.accessory,
+  rank: state.logic.curRoomInfo.rank
 });
 
 const mapDispatchToProps = {

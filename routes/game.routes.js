@@ -261,7 +261,7 @@ router.get('/room/:id', async (req, res) => {
         creator_id: room['creator'],
         creator_avatar: creator['avatar'],
         rank: creator['totalWagered'],
-        creator_accessory: creator['accessory'],
+        accessory: creator['accessory'],
         aveMultiplier: room['aveMultiplier'],
         creator_name: creator['username'],
         endgame_amount: room['endgame_amount'],
@@ -395,9 +395,9 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         status: gameLog['room']['status']
       };
 
-      const joined_user_avatar = `<img class='avatar' data-userid="${gameLog['joined_user']['_id']}" rank='${gameLog['joined_user']['totalWagered']}' src='${gameLog['joined_user']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['joined_user']['totalWagered'])}" />`;
+      const joined_user_avatar = `<img class='avatar' data-userid="${gameLog['joined_user']['_id']}" rank='${gameLog['joined_user']['totalWagered']}' src='${gameLog['joined_user']['avatar']}' accessory='${gameLog['creator']['joined_user']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['joined_user']['totalWagered'])}" />`;
 
-const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" rank='${gameLog['creator']['totalWagered']}' src='${gameLog['creator']['avatar']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
+const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']}" rank='${gameLog['creator']['totalWagered']}' src='${gameLog['creator']['avatar']}' accessory='${gameLog['creator']['accessory']}' alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(gameLog['creator']['totalWagered'])}" />`;
 const joined_user_link = `<a href="javascript:void(0)" class="user-link" data-userid="${gameLog['joined_user']['_id']}">${joined_user_avatar}</a>`;
       const creator_link = `<a href="javascript:void(0)" class="user-link" data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
 
@@ -809,7 +809,7 @@ const getRoomList = async (pagination, page, game_type) => {
         })),
         rank: room.creator.totalWagered,
         creator_avatar: room.creator ? room.creator.avatar : '',
-        creator_accessory: room.creator ? room.creator.accessory : '',
+        accessory: room.creator ? room.creator.accessory : '',
         creator_status: room.creator ? room.creator.status : '',
         game_type: room.game_type,
         bet_amount: room.bet_amount,
@@ -1183,9 +1183,11 @@ async function getRoomNetProfits(room_id) {
 
     for (const gameLog of gameLogs) {
       const tax = await SystemSetting.findOne({ name: 'commission' });
+
       const creatorUser = await User.findOne({ _id: gameLog.creator }).select(
         'accessory'
       );
+
       const accessory = creatorUser ? creatorUser.accessory : null;
       let item;
       if (accessory) {
@@ -1200,7 +1202,6 @@ async function getRoomNetProfits(room_id) {
       const wagered = gameLog.bet_amount;
       let net_profit = 0;
 
-      // Calculate net profit based on game type
       if (gameLog.game_type && gameLog.game_type.short_name === 'S!') {
         net_profit = 0 - wagered * commission;
       } else if (gameLog.game_type && gameLog.game_type.short_name === 'QS') {
@@ -1232,7 +1233,6 @@ async function getRoomNetProfits(room_id) {
         }
       }
 
-      // Accumulate net profit for each player
       if (playerStats[actor]) {
         playerStats[actor].wagered += wagered;
         playerStats[actor].net_profit += net_profit;
@@ -1256,7 +1256,6 @@ async function getRoomNetProfits(room_id) {
       }
     }
 
-    // Extract only net_profit and bets for the response
     const room_info = Object.values(playerStats).map(player => ({
       net_profit: player.net_profit,
       bets: player.bets
@@ -1608,6 +1607,7 @@ router.get('/my_chat', auth, async (req, res) => {
           message: message.message,
           username: message.to.username,
           avatar: message.to.avatar,
+          accessory: message.to.accessory,
           rank: message.to.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),
@@ -1633,6 +1633,7 @@ router.get('/my_chat', auth, async (req, res) => {
           message: message.message,
           username: message.from.username,
           avatar: message.from.avatar,
+          accessory: message.from.accessory,
           rank: message.from.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),
@@ -1687,6 +1688,7 @@ router.get('/notifications', auth, async (req, res) => {
           message: message.message,
           username: message.to.username,
           avatar: message.to.avatar,
+          accessory: message.to.accessory,
           rank: message.to.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),

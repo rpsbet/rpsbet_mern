@@ -129,9 +129,9 @@ class JoinGame extends Component {
     return null;
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this.setState({ loading: true });
-    this.getRoomData(this.props.match.params.id);
+    await this.getRoomData(this.props.match.params.id);
 
   setTimeout(() => {
     this.setState({ loading: false });
@@ -270,12 +270,15 @@ class JoinGame extends Component {
   };
   
   getRoomData = async roomId => {
+    console.log("room", roomId);
     try {
       const actionList = await this.props.getRoomStatisticsData(roomId);
+      console.log("PIZZZZZZZZZZZZZZZZZZAAAAAAAAAAA PARTY", actionList);
       this.setState({
         actionList: actionList
       });
-      
+      console.log("WANKAA PARTY", this.state.actionList);
+
     } catch (error) {
       console.error('Error fetching room data:', error);
     }

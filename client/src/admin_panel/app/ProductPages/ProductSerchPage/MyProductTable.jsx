@@ -173,12 +173,19 @@ const ProductImage = styled.img`
   border-radius: 10px;
 `;
 
-const ProductCreator = styled.h5`
-  max-width: 100%;
-  height: auto;
-  left: 10px;
-  position: absolute;
-  z-index: 1;
+
+const CommissionPower = styled.span`
+position: absolute;
+top: 20px;
+right: 20px;
+width: 30px;
+height: 30px;
+background: #28a745;
+border-radius: 10px;
+box-shadow: inset 0px -1px 11px #005b15;
+color: #fff;
+font-weight: 500;
+text-align: center;
 `;
 
 const ProductInfo = styled.div`
@@ -490,7 +497,12 @@ class MyProductTable extends Component {
                 ) : (
                   <ProductImage src={row.image} alt={row.productName} />
                 )}
-                <span>{row.CP}</span>
+                {row.item_type === '653ee81117c9f5ee2124564b' ? (
+                  <CommissionPower>{row.CP}</CommissionPower>
+                ) : (
+                  ''
+                )}
+
                 <ProductInfo>
                   <ProductName>{row.productName}</ProductName>
                   <TableContainer>

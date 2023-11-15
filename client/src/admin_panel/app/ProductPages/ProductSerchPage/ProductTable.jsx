@@ -411,7 +411,9 @@ class ProductTable extends Component {
                 onClick={() => {
                   setCurrentProductId(row._id);
                   setCurrentProductInfo({
-                    owner: row.owners[0].user
+                    owner: row.owners[0].user,
+                    productName: row.productName,
+                    price: row.owners[0].price
                   });
                   history.push(`/product/${row._id}`);
                 }}
@@ -433,6 +435,7 @@ class ProductTable extends Component {
                           className="avatar"
                           src={customerInfo[owner.user].avatar}
                           rank={customerInfo[owner.user].totalWagered}
+                          accessory={customerInfo[owner.user].accessory}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />

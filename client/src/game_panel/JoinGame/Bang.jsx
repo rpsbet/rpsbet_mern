@@ -1405,7 +1405,10 @@ const mapStateToProps = state => ({
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
+  accessory: state.logic.curRoomInfo.accessory,
   creator: state.logic.curRoomInfo.creator_name,
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
+
   betResults: state.logic.betResults
 });
 

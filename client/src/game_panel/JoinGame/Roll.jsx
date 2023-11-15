@@ -16,10 +16,6 @@ import {
   validateBetAmount,
   validateLocalStorageLength
 } from '../modal/betValidations';
-// import boatBg from '../LottieAnimations/boatBg.json';
-
-// import gBg from '../LottieAnimations/g-bg.json';
-// import portal from '../LottieAnimations/portal.json';
 import rollHex from '../LottieAnimations/roll-hex.json';
 import Avatar from '../../components/Avatar';
 import {
@@ -1458,7 +1454,10 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
-  betResults: state.logic.betResults
+  creator_avatar: state.logic.curRoomInfo.creator_avatar,
+  betResults: state.logic.betResults,
+  accessory: state.logic.curRoomInfo.accessory,
+
 });
 
 const mapDispatchToProps = {

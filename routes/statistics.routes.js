@@ -803,7 +803,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
 router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
-
+    
     const gameLogs = await GameLog.find({
       $and: [{ room: { $ne: null } }, { game_result: { $nin: [3, -100] } }],
       room: room_id
@@ -814,25 +814,26 @@ router.get('/get-room-statistics', async (req, res) => {
       .populate({
         path: 'joined_user',
         model: User,
-        select: '_id username avatar totalWagered'
+        select: '_id username avatar accessory totalWagered'
       });
-
-    const playerStats = {};
-
-    for (const gameLog of gameLogs) {
-      const tax = await SystemSetting.findOne({ name: 'commission' });
-      const creatorUser = await User.findOne({ _id: gameLog.creator }).select('accessory');
-      const accessory = creatorUser ? creatorUser.accessory : null;
+      
+      const playerStats = {};
+      
+      for (const gameLog of gameLogs) {
+        const tax = await SystemSetting.findOne({ name: 'commission' });
+        const creatorUser = await User.findOne({ _id: gameLog.creator }).select('accessory');
+      let accessory = creatorUser ? creatorUser.accessory : null;
       let item;
       if (accessory) {
         item = await Item.findOne({ image: accessory }).select('CP');
       } else {
         item = { CP: tax.value };
       }
-    
+      
       const commission = item.CP;
       const _id = gameLog.joined_user._id;
       const avatar = gameLog.joined_user.avatar;
+      accessory = gameLog.joined_user.accessory;
       const rank = gameLog.joined_user.totalWagered;
 
       const actor = gameLog.joined_user.username;
@@ -875,6 +876,7 @@ router.get('/get-room-statistics', async (req, res) => {
       // Accumulate net profit for each player
       if (playerStats[actor]) {
         playerStats[actor].avatar = avatar;
+        playerStats[actor].accessory = accessory;
         playerStats[actor].rank = wagered;
         playerStats[actor]._id = _id;
         playerStats[actor].wagered += wagered;
@@ -919,6 +921,7 @@ router.get('/get-room-statistics', async (req, res) => {
     const room_info = Object.values(playerStats).map(player => ({
       _id: player._id,
       avatar: player.avatar,
+      accessory: player.accessory,
       rank: player.wagered,
       actor: player.actor,
       wagered: player.wagered,

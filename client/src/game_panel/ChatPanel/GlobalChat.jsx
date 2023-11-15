@@ -61,6 +61,7 @@ class GlobalChat extends Component {
         chat_list: props.globalChatList
       };
     }
+    
 
     return null;
   }
@@ -83,6 +84,7 @@ class GlobalChat extends Component {
         sender: null,
         senderId: null,
         avatar: null,
+        accessory: null,
         rank: null,
         message: null,
         messageType: null,
@@ -94,6 +96,7 @@ class GlobalChat extends Component {
       setSelectedMessage({
         sender: message.sender,
         rank: message.rank,
+        accessory: message.accessory,
         senderId: message.senderId,
         avatar: message.avatar,
         message: message.message,
@@ -104,10 +107,10 @@ class GlobalChat extends Component {
     }
   };
 
-   fetchAndUpdateId(username) {
+  fetchAndUpdateId(username) {
     // Check if the user is already in the state
     const mentionedUser = this.state.mentionedUsers[username];
-  
+
     if (mentionedUser && mentionedUser._id) {
       // User already has an _id, no need to fetch
       return Promise.resolve(mentionedUser);
@@ -115,25 +118,24 @@ class GlobalChat extends Component {
       // Fetch the _id for the mentioned user
       return new Promise((resolve, reject) => {
         fetchId(username)
-          .then((user) => {
+          .then(user => {
             if (user && user._id) {
               // Update the state with the fetched _id
-              this.setState((prevState) => ({
+              this.setState(prevState => ({
                 mentionedUsers: {
                   ...prevState.mentionedUsers,
-                  [username]: user,
-                },
+                  [username]: user
+                }
               }));
             }
             resolve(user);
           })
-          .catch((error) => {
+          .catch(error => {
             reject(error);
           });
       });
     }
   }
-  
 
   render() {
     const { chat_list } = this.state;
@@ -154,48 +156,48 @@ class GlobalChat extends Component {
           />
         )}
         {chat_list.map((chat, key) => {
-  const message = chat.message;
-  const mentions = message.match(/@(\w+)/g);
+          const message = chat.message;
+          const mentions = message.match(/@(\w+)/g);
 
-  const wrappedMessage = message
-    .split(/(@\w+|:\w+:)/g)
-    .map((part, index) => {
-      if (part.startsWith('@')) {
-        const username = part.substring(1);
+          const wrappedMessage = message
+            .split(/(@\w+|:\w+:)/g)
+            .map((part, index) => {
+              if (part.startsWith('@')) {
+                const username = part.substring(1);
 
-        // Call fetchAndUpdateId to fetch the _id and update the state
-        const mentionedUser = this.fetchAndUpdateId(username);
+                // Call fetchAndUpdateId to fetch the _id and update the state
+                const mentionedUser = this.fetchAndUpdateId(username);
 
-        if (mentionedUser && mentionedUser._id) {
-          // Render the link with _id if available
-          return (
-            <a
-              key={index}
-              className="player"
-              onClick={(event) => {
-                event.stopPropagation();
-                this.handleOpenPlayerModal(mentionedUser._id);
-              }}
-            >
-              {part}
-            </a>
-          );
-        } else if (mentionedUser && !mentionedUser._id) {
-          // Mentioned user exists but doesn't have an _id
-          return (
-            <span key={index} className="mention-link">
-              {part}
-            </span>
-          );
-        } else {
-          // Fetching the _id, render the mention link without _id for now
-          return (
-            <span key={index} className="mention-link">
-              {part}
-            </span>
-          );
-        }
-      } else if (part.startsWith(':') && part.endsWith(':')) {
+                if (mentionedUser && mentionedUser._id) {
+                  // Render the link with _id if available
+                  return (
+                    <a
+                      key={index}
+                      className="player"
+                      onClick={event => {
+                        event.stopPropagation();
+                        this.handleOpenPlayerModal(mentionedUser._id);
+                      }}
+                    >
+                      {part}
+                    </a>
+                  );
+                } else if (mentionedUser && !mentionedUser._id) {
+                  // Mentioned user exists but doesn't have an _id
+                  return (
+                    <span key={index} className="mention-link">
+                      {part}
+                    </span>
+                  );
+                } else {
+                  // Fetching the _id, render the mention link without _id for now
+                  return (
+                    <span key={index} className="mention-link">
+                      {part}
+                    </span>
+                  );
+                }
+              } else if (part.startsWith(':') && part.endsWith(':')) {
                 const emojiCommand = part;
                 const emoji = emojis.find(
                   emoji => emoji.command === emojiCommand
@@ -232,7 +234,6 @@ class GlobalChat extends Component {
                           event.stopPropagation();
                           this.handleOpenPlayerModal(mentionedUser._id);
                         }}
-                        
                       >
                         {part}
                       </a>
@@ -299,9 +300,7 @@ class GlobalChat extends Component {
                 <div className="reply-to">
                   <a
                     className="chat-player"
-                    onClick={() =>
-                      this.handleOpenPlayerModal(chat.senderId)
-                    }
+                    onClick={() => this.handleOpenPlayerModal(chat.senderId)}
                   >
                     <div className="reply-border"></div>
                     <Avatar
@@ -309,6 +308,7 @@ class GlobalChat extends Component {
                       src={chat.replyTo.avatar}
                       alt=""
                       rank={chat.replyTo.rank}
+                      accessory={chat.replyTo.accessory}
                       darkMode={this.props.isDarkMode}
                     />
                   </a>
@@ -336,6 +336,7 @@ class GlobalChat extends Component {
                   <Avatar
                     className="avatar"
                     src={chat.avatar}
+                    accessory={chat.accessory}
                     alt=""
                     rank={chat.rank}
                     darkMode={this.props.isDarkMode}

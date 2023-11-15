@@ -463,7 +463,7 @@ class OpenGamesTable extends Component {
                         <Avatar
                           className="avatar"
                           src={row.creator_avatar}
-                          accessory={row.creator_accessory}
+                          accessory={row.accessory}
                           rank={row.rank}
                           alt=""
                           darkMode={this.props.isDarkMode}
@@ -731,7 +731,7 @@ class OpenGamesTable extends Component {
                         <Avatar
                           className="avatar"
                           src={row.creator_avatar}
-                          accessory={row.creator_accessory}
+                          accessory={row.accessory}
                           rank={row.rank}
 
                           alt=""

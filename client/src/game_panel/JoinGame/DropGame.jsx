@@ -735,6 +735,7 @@ class DropGame extends Component {
                         <Avatar
                           className="avatar"
                           src={this.props.creator_avatar}
+                          accessory={this.props.accessory}
                           rank={this.props.rank}
                           alt=""
                           darkMode={this.props.isDarkMode}
@@ -1021,6 +1022,7 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
+  accessory: state.logic.curRoomInfo.accessory,
 
   betResults: state.logic.betResults
 });

@@ -49,6 +49,7 @@ module.exports.socketio = server => {
         messageType,
         messageContent,
         avatar,
+        accessory,
         rank,
         replyTo
       } = data;
@@ -60,12 +61,13 @@ module.exports.socketio = server => {
         messageContent: messageContent,
         avatar: avatar,
         rank: rank,
-
+        accessory: accessory,
         replyTo: replyTo
           ? {
               sender: replyTo.senderId,
               rank: replyTo.rank,
               avatar: replyTo.avatar,
+              accessory: replyTo.accessory,
               message: replyTo.message,
               messageType: replyTo.messageType,
               time: Moment(replyTo.created_at).format('hh:mm')
@@ -101,11 +103,13 @@ module.exports.socketio = server => {
                 messageType: messageType,
                 messageContent: messageContent,
                 avatar: avatar,
+                accessory: accessory,
                 rank: rank,
                 replyTo: replyTo
                   ? {
                       sender: replyToUsername,
                       avatar: replyTo.avatar,
+                      accessory: replyTo.accessory,
                       rank: replyTo.rank,
                       message: replyTo.message,
                       messageType: replyTo.messageType,
@@ -153,6 +157,7 @@ module.exports.socketio = server => {
                     sender: extractedReplyTo.sender?.username ?? '',
                     avatar: extractedReplyTo.sender?.avatar ?? '',
                     rank: extractedReplyTo.sender?.totalWagered ?? '',
+                    accessory: extractedReplyTo.sender?.accessory ?? '',
                     message: extractedReplyTo.message,
                     messageType: extractedReplyTo.messageType,
                     time: Moment(extractedReplyTo.created_at).format('hh:mm')
@@ -166,6 +171,7 @@ module.exports.socketio = server => {
                 messageType: messageType,
                 messageContent: messageContent,
                 avatar: sender?.avatar ?? '',
+                accessory: sender?.accessory ?? '',
                 replyTo: transformedReplyTo,
                 rank: sender?.totalWagered ?? '',
                 time: Moment(created_at).format('hh:mm')

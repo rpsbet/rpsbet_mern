@@ -210,12 +210,15 @@ export const getRoomStatisticsData = room_id => async dispatch => {
     const { data } = await api.get('statistics/get-room-statistics', {
       params: { room_id }
     });
+
     if (data.success) {
       return data;
     } else {
+
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
   } catch (error) {
+
     console.log('error***', error);
     dispatch({ type: MSG_WARNING, payload: error });
   }

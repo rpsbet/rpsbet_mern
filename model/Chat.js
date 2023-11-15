@@ -25,6 +25,10 @@ const ChatSchema = new Schema({
     type: String,
     ref: 'User.avatar'
   },
+  accessory: {
+    type: String,
+    ref: 'User.accessory'
+  },
   rank: {
     type: Number,
     ref: 'User.totalWagered'
@@ -41,6 +45,10 @@ const ChatSchema = new Schema({
       rank: {
         type: Number,
         ref: 'User.totalWagered'
+      },
+      accessory: {
+        type: String,
+        ref: 'User.accessory'
       },
       message: {
         type: String

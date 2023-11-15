@@ -1105,6 +1105,7 @@ class SiteWrapper extends Component {
                       <Avatar
                         src={this.props.user.avatar}
                         rank={this.props.user.totalWagered}
+                        accessory={this.props.user.accessory}
                         alt=""
                         className="avatar"
                         darkMode={this.props.isDarkMode}
@@ -1701,6 +1702,7 @@ class SiteWrapper extends Component {
               closeModal={this.handleCloseProfileModal}
               player_name={this.state.userName}
               balance={this.state.balance}
+              accessory={this.props.user.accessory}
               avatar={this.props.user.avatar}
               email={this.props.user.email}
               totalWagered={this.props.user.totalWagered}
@@ -1713,6 +1715,7 @@ class SiteWrapper extends Component {
               player_name={this.state.userName}
               balance={this.state.balance}
               avatar={this.props.user.avatar}
+              accessory={this.props.user.accessory}
             />
           )}
           {this.state.showLeaderboardsModal && (

@@ -170,10 +170,11 @@ class LeaderboardsModal extends Component {
                               className="avatar"
                               src={entry.avatar}
                               rank={entry.totalWagered}
+                              accessory={entry.accessory}
                               alt=""
                               darkMode={isDarkMode}
                             />
-                            {entry.username}
+                            {/* {entry.username} */}
                           </a>
                           {/* <i
                         className={`online-status${

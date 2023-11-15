@@ -762,7 +762,13 @@ class RPS extends Component {
                             type: 'gradient',
                             gradient: {
                               shade: 'light',
-                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
+                              gradientToColors:
+                                roomStatistics.hostNetProfit?.slice(-1)[0] > 0
+                                  ? ['#00FF00']
+                                  : roomStatistics.hostNetProfit?.slice(-1)[0] <
+                                    0
+                                  ? ['#FF0000']
+                                  : ['#808080'],
                               shadeIntensity: 1,
                               type: 'vertical',
                               opacityFrom: 0.7,
@@ -830,6 +836,7 @@ class RPS extends Component {
                           className="avatar"
                           src={this.props.creator_avatar}
                           rank={this.props.rank}
+                          accessory={this.props.accessory}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -852,7 +859,7 @@ class RPS extends Component {
                       <div className="label public-max-return">Created</div>
                     </div>
                     <div className="value">
-                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                      {Moment(this.props.roomInfo.created_at).fromNow()}
                     </div>
                   </div>
                 </React.Fragment>
@@ -863,7 +870,7 @@ class RPS extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-                     {renderLottieAvatarAnimation(this.props.gameBackground)}
+            {renderLottieAvatarAnimation(this.props.gameBackground)}
 
             <div className="guesses">
               {this.state.rps
@@ -1133,9 +1140,10 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  betResults: state.logic.betResults,
-  rank: state.logic.curRoomInfo.rank,
+  accessory: state.logic.curRoomInfo.accessory,
 
+  betResults: state.logic.betResults,
+  rank: state.logic.curRoomInfo.rank
 });
 
 const mapDispatchToProps = {

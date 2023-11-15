@@ -739,7 +739,7 @@ class QuickShoot extends Component {
   render() {
     const { qs_game_type } = this.props;
     const roomStatistics = this.props.actionList || [];
-
+console.log("roomStatistics", roomStatistics)
     const { isDisabled, bankroll, betting, timerValue } = this.state;
     const { selectedCreator, showPlayerModal, roomInfo } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
@@ -947,6 +947,7 @@ class QuickShoot extends Component {
                           className="avatar"
                           src={this.props.creator_avatar}
                           rank={this.props.rank}
+                          accessory={this.props.accessory}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -1166,7 +1167,9 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
-  betResults: state.logic.betResults
+  betResults: state.logic.betResults,
+  accessory: state.logic.curRoomInfo.accessory,
+
 });
 
 const mapDispatchToProps = {

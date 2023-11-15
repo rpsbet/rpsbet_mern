@@ -26,7 +26,11 @@ const initialState = {
   page: 1,
   totalResults: 0,
   pages: 1,
-  loading: false
+  loading: false,
+  data: {
+    price: 0,
+    productName: ''
+  }
 };
 
 export default (state = initialState, { type, payload }) => {
@@ -34,7 +38,7 @@ export default (state = initialState, { type, payload }) => {
     case ITEM_QUERY_ONE:
     case MY_ITEM_QUERY_ONE:
     case SET_CURRENT_PRODUCT_INFO:
-      return { ...state, owner: payload.owner};
+      return { ...state, data: payload};
     case ITEM_QUERY:
       return { ...state, itemArray: payload };
     case MY_ITEM_QUERY:

@@ -63,7 +63,7 @@ const initialState = {
     creator_id: '',
     creator_avatar: '',
     rank: 0,
-    creator_accessory: '',
+    accessory: '',
     aveMultiplier: '',
     joiners: {},
     game_type: '',
@@ -96,6 +96,7 @@ const initialState = {
     user_id: '',
     avatar: '',
     rank: 0,
+    accessory: '',
     username: '',
     chatLogs: []
   },
@@ -103,6 +104,7 @@ const initialState = {
     user_id: '',
     avatar: '',
     rank: '',
+    accessory: '',
     username: '',
     notificationsLogs: []
   },
@@ -210,7 +212,7 @@ export default function(state = initialState, action) {
     case ROOMS_LOADED:
       const { roomList, pages, total, page } = payload;
 
-      const accessories = roomList.map(room => room.creator_accessory);
+      const accessories = roomList.map(room => room.accessory);
 
       return {
         ...state,

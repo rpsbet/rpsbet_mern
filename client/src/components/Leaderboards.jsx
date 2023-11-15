@@ -45,7 +45,6 @@ class Leaderboards extends Component {
 
   componentDidMount() {
     this.IsAuthenticatedReroute();
-    // this.props.getRoomData(this.props.getRoomInfo);
   }
 
   IsAuthenticatedReroute = () => {
@@ -117,6 +116,7 @@ class Leaderboards extends Component {
                           className="avatar"
                           src={playerData.avatar}
                           rank={playerData.totalWagered}
+                          accessory={playerData.accessory}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />

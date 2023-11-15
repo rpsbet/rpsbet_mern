@@ -57,8 +57,8 @@ class MyChat extends Component {
 								<div className="table-row" key={key}>
 									<div>
 										<div className="table-cell">
-											<Avatar rank={this.state.myChat[row].rank} src={this.state.myChat[row].avatar} alt="" className="avatar" darkMode={this.props.isDarkMode} />
-											{this.state.myChat[row].username}
+											<Avatar accessory={this.state.myChat[row].accessory} rank={this.state.myChat[row].rank} src={this.state.myChat[row].avatar} alt="" className="avatar" darkMode={this.props.isDarkMode} />
+											{/* {this.state.myChat[row].username} */}
 										</div>
 									</div>
 									<div className="message-panel">

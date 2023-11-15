@@ -94,12 +94,12 @@ class ChatPage extends Component {
                                 {row.message}
                             </div>
                             <div className="message-header">
-                                {row.from !== this.state.my_info._id && <Avatar src={this.props.avatar} className="avatar" />}
+                                {row.from !== this.state.my_info._id && <Avatar src={this.props.avatar} rank={this.props.rank} accessory={this.props.accessory} className="avatar" />}
                                 <div>
                                     <div className="message-time">{row.created_at}</div>
                                     <div className="message_username">{row.from === this.state.my_info._id ? this.state.my_info.username : this.props.username}</div>
                                 </div>
-                                {row.from === this.state.my_info._id && <Avatar src={this.state.my_info.avatar} className="avatar" />}
+                                {row.from === this.state.my_info._id && <Avatar src={this.state.my_info.avatar} rank={this.props.rank} accessory={this.props.accessory} className="avatar" />}
                             </div>
                         </div>
                     ))}
@@ -146,6 +146,8 @@ const mapStateToProps = state => ({
   socket: state.auth.socket,
   user_id: state.logic.chatRoomInfo.user_id,
   avatar: state.logic.chatRoomInfo.avatar,
+  rank: state.logic.chatRoomInfo.rank,
+  accessory: state.logic.chatRoomInfo.accessory,
   username: state.logic.chatRoomInfo.username,
   chatLogs: state.logic.chatRoomInfo.chatLogs,
 });
