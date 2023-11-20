@@ -8,6 +8,8 @@ import {
   PAGINATION_FOR_CUSTOMER,
   PAGINATION_FOR_ACTIVITY,
   LOADING_CUSTOMER_TABLE,
+  START_LOADING,
+  END_LOADING,
   ACTIVITY_QUERY,
   LOAD_LEADERBOARDS,
   LOADING_LEADERBOARDS_TABLE
@@ -186,6 +188,7 @@ export const getCustomerStatisticsData = (
   timeType
 ) => async dispatch => {
   try {
+    dispatch({ type: START_LOADING });
     const { data } = await api.get('statistics/get-customer-statistics', {
       params: {
         _id: _id,
@@ -194,6 +197,7 @@ export const getCustomerStatisticsData = (
         timeType: timeType
       }
     });
+    dispatch({ type: END_LOADING });
     if (data.success) {
       return data.statistics;
     } else {

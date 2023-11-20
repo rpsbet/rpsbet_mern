@@ -396,10 +396,11 @@ class CreateGame extends Component {
   onPrevButtonClicked = () => {
     if (this.state.game_mode !== 'Mystery Box' && this.state.step < 5) {
       if (this.state.step === 3 && this.state.child_step === 1) {
-        if (this.state.game_mode === 'Quick Shoot') {
+        if ((this.state.game_mode === 'Quick Shoot') ||(this.state.game_mode === 'RPS' && this.state.rps_game_type === 1)) {
           this.setState({
             step: 2,
-            child_step: 3
+            child_step: 3,
+rps_list: []
           });
         } else {
           this.setState({
@@ -430,10 +431,12 @@ class CreateGame extends Component {
       bet_amount,
       balance,
       qs_list,
+      rps_list,
       spleesh_bet_unit,
       endgame_amount,
       max_return,
       room_password,
+      rps_game_type,
       is_private
     } = this.state;
 
@@ -467,12 +470,14 @@ class CreateGame extends Component {
       }
 
       if (
-        game_mode === 'Quick Shoot' &&
+        (game_mode === 'RPS' ||
+        game_mode === 'Quick Shoot') &&
         child_step === 1 &&
-        qs_list.length > 0
+        (qs_list.length > 0 || rps_list.length > 0)
       ) {
         this.setState({
           qs_list: [],
+          rps_list: [],
           winChance: 0,
           step: step > 1 ? step : step + 1
         });
@@ -480,19 +485,20 @@ class CreateGame extends Component {
       }
 
       if (
-        (game_mode === 'RPS' ||
+        (
           game_mode === 'Quick Shoot' ||
           game_mode === 'Drop Game' ||
           game_mode === 'Bang!' ||
           game_mode === 'Roll' ||
           game_mode === 'Blackjack') &&
-        child_step === 2 &&
+        child_step === 2 || (game_mode === 'RPS' && child_step === 3 && rps_game_type === 0) &&
         isMinimumRunsNeeded(3, this.state[`${game_mode.toLowerCase()}_list`])
       ) {
         return;
       }
 
       if (
+        (game_mode === 'RPS' && child_step < 3) ||
         (game_mode === 'Quick Shoot' && child_step < 4) ||
         (game_mode !== 'Mystery Box' && child_step === 1)
       ) {
@@ -815,7 +821,7 @@ class CreateGame extends Component {
                 marginBottom: '10px'
               }}
             />
-            <div>Summoning AI...</div>
+            <div>Creating Battle Room...</div>
           </div>
         }
       >
@@ -866,7 +872,7 @@ class CreateGame extends Component {
             <div className="create-game-panel">
               <div className="game-page">
                 <div className="page-title">
-                  <h2>CREATE {this.state.game_mode} AI</h2>
+                  <h2>CREATE {this.state.game_mode} BATTLE</h2>
                   {this.state.step === 6 &&
                   this.state.game_mode === 'Brain Game' &&
                   this.state.isPlayingBrain ? (
@@ -881,6 +887,7 @@ class CreateGame extends Component {
                       child_step={this.state.child_step}
                       game_mode={this.state.game_mode}
                       max_prize={this.state.max_prize}
+                      
                       winChance={this.state.winChance}
                       public_bet_amount={this.state.public_bet_amount}
                       youtubeUrl={this.state.youtubeUrl}
@@ -904,6 +911,8 @@ class CreateGame extends Component {
                       aveMultiplier={this.state.aveMultiplier}
                       calcAveMultiplier={this.props.calcAveMultiplier}
                       child_step={this.state.child_step}
+                      rps_game_type={this.state.rps_game_type}
+                      qs_game_type={this.state.qs_game_type}
                       game_mode={this.state.game_mode}
                       max_prize={this.state.max_prize}
                       public_bet_amount={this.state.public_bet_amount}

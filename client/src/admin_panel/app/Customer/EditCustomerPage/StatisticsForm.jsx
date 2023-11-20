@@ -30,7 +30,7 @@ class StatisticsForm extends React.Component {
       showButton: false,
       actorType: 'Both',
       gameType: 'All',
-      timeType: '24',
+      timeType: '7',
       url: '',
       roomName: '',
       roomId: '',

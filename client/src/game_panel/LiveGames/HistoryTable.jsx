@@ -4,13 +4,12 @@ import { getHistory } from '../../redux/Logic/logic.actions';
 import Moment from 'moment';
 import { getSettings } from '../../redux/Setting/setting.action';
 import { convertToCurrency } from '../../util/conversion';
+import ReactDOM from 'react-dom';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
+
 import CountUp from 'react-countup';
 import InlineSVG from 'react-inlinesvg';
-
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import PlayerModal from '../modal/PlayerModal';
-import { Box, Button, IconButton } from '@material-ui/core';
 import Lottie from 'react-lottie';
 import rain from '../LottieAnimations/rain.json';
 import waves from '../LottieAnimations/waves.json';
@@ -40,7 +39,7 @@ class HistoryTable extends Component {
   async componentDidMount() {
     this.updateReminderTime();
     this.attachUserLinkListeners();
-
+    this.attachAccessories();
     this.interval = setInterval(this.updateReminderTime(), 3000);
     const settings = await this.props.getSettings();
     this.setState({ ...settings });
@@ -80,6 +79,7 @@ class HistoryTable extends Component {
   componentDidUpdate(prevProps) {
     if (prevProps.history !== this.props.history) {
       this.attachUserLinkListeners();
+      this.attachAccessories();
 
       this.setState({ history: updateFromNow(this.props.history) });
     }
@@ -92,6 +92,16 @@ class HistoryTable extends Component {
         const userId = event.target.getAttribute('data-userid');
         this.handleOpenPlayerModal(userId);
       });
+    });
+  };
+  attachAccessories = () => {
+    const userLinks = document.querySelectorAll('.user-link');
+    userLinks.forEach(element => {
+      const accessory = element.getAttribute('accessory');
+      const lottieAnimation = renderLottieAvatarAnimation(accessory);
+      const portalContainer = document.createElement('div');
+      ReactDOM.render(lottieAnimation, portalContainer);
+      element.parentNode.insertBefore(portalContainer, element);
     });
   };
 
@@ -359,6 +369,8 @@ class HistoryTable extends Component {
                 key={row._id}
               >
                 {' '}
+                {renderLottieAvatarAnimation(row.gameBackground)}
+
                 <div>
                   <div className="table-cell">
                     <div className="room-id">{row.status}</div>

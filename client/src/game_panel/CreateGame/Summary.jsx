@@ -119,17 +119,33 @@ class Summary extends Component {
   }
 
   total_summery() {
-    let public_bet_amount = this.props.public_bet_amount;
-    let public_max_return = <> {convertToCurrency(this.props.max_prize)} </>;
+    const {
+      rps_game_type,
+      qs_game_type,
+      bet_amount,
+      winChance,
+      max_return,
+      aveMultiplier,
+      public_bet_amount,
+      max_prize,
+      game_mode,
+      spleesh_bet_unit,
+      gameBackground,
+      is_private,
+      youtubeUrl,
+      endgame_amount,
+      endgame_type
+    } = this.props;
+    let public_max_return = <> {convertToCurrency(max_prize)} </>;
 
-    if (this.props.game_mode === 'Spleesh!') {
+    if (game_mode === 'Spleesh!') {
       public_bet_amount = (
         <>
-          {convertToCurrency(this.props.spleesh_bet_unit)} -{' '}
-          {convertToCurrency(this.props.spleesh_bet_unit * 10)}
+          {convertToCurrency(spleesh_bet_unit)} -{' '}
+          {convertToCurrency(spleesh_bet_unit * 10)}
         </>
       );
-    } else if (this.props.game_mode === 'Quick Shoot') {
+    } else if (game_mode === 'Quick Shoot') {
       public_max_return = convertToCurrency(this.props.max_return);
     }
 
@@ -140,17 +156,35 @@ class Summary extends Component {
           <div className="summary-item">
             <div className="summary-item-name">Expected Value</div>
             <div className="summary-item-value">
-              {convertToCurrency(this.props.winChance)}
+              {convertToCurrency(winChance)}
             </div>
           </div>
           <div className="summary-item">
             <div className="summary-item-name">Bet Amount</div>
             <div className="summary-item-value">
-              {convertToCurrency(this.props.bet_amount)}
+              {convertToCurrency(bet_amount)}
             </div>
           </div>
-          {(this.props.game_mode === 'Spleesh!' ||
-            this.props.game_mode === 'Quick Shoot') && (
+          {game_mode === 'RPS' && (
+            <div className="summary-item">
+              <div className="summary-item-name">Game Mode</div>
+              <div className="summary-item-value">
+                {rps_game_type === 0
+                  ? 'Classic'
+                  : rps_game_type === 1
+                  ? 'RRPS'
+                  : 'Other'}
+              </div>
+            </div>
+          )}
+
+          {game_mode === 'Quick Shoot' && (
+            <div className="summary-item">
+              <div className="summary-item-name">Game Mode</div>
+              <div className="summary-item-value">{qs_game_type}</div>
+            </div>
+          )}
+          {(game_mode === 'Spleesh!' || game_mode === 'Quick Shoot') && (
             <div className="summary-item">
               <div className="summary-item-name">Public Bet Amount</div>
               <div className="summary-item-value">
@@ -158,51 +192,49 @@ class Summary extends Component {
               </div>
             </div>
           )}
-          {this.props.game_mode === 'Quick Shoot' && (
+          {game_mode === 'Quick Shoot' && (
             <div className="summary-item">
               <div className="summary-item-name">Public Max Return</div>
               <div className="summary-item-value">{public_max_return}</div>
             </div>
           )}
-          {this.props.game_mode === 'Bang!' ||
-            (this.props.game_mode === 'Roll' && (
+          {game_mode === 'Bang!' ||
+            (game_mode === 'Roll' && (
               <div className="summary-item">
                 <div className="summary-item-name">Average Multiplier</div>
-                <div className="summary-item-value">
-                  {this.props.aveMultiplier}x
-                </div>
+                <div className="summary-item-value">{aveMultiplier}x</div>
               </div>
             ))}
           <div className="summary-item">
             <div className="summary-item-name">TARGET ROI</div>
             <div className="summary-item-value">
-              {convertToCurrency(this.props.max_return)}
+              {convertToCurrency(max_return)}
             </div>
           </div>
-          {this.props.endgame_type && (
+          {endgame_type && (
             <div className="summary-item">
               <div className="summary-item-name">Payout</div>
               <div className="summary-item-value">
-                {convertToCurrency(this.props.endgame_amount)}
+                {convertToCurrency(endgame_amount)}
               </div>
             </div>
           )}
           <div className="summary-item">
             <div className="summary-item-name">Music</div>
             <div className="summary-item-value">
-              {this.props.youtubeUrl ? this.props.youtubeUrl : 'No Music'}
+              {youtubeUrl ? youtubeUrl : 'No Music'}
             </div>
           </div>
           <div className="summary-item">
             <div className="summary-item-name">Background</div>
             <div className="summary-item-value">
-              {this.props.gameBackground ? this.props.gameBackground : 'No Background'}
+              {gameBackground ? gameBackground : 'No Background'}
             </div>
           </div>
           <div className="summary-item">
             <div className="summary-item-name">Privacy</div>
             <div className="summary-item-value">
-              {this.props.is_private ? 'Private' : 'Public'}
+              {is_private ? 'Private' : 'Public'}
             </div>
           </div>
         </div>

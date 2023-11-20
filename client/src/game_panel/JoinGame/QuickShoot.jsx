@@ -739,7 +739,6 @@ class QuickShoot extends Component {
   render() {
     const { qs_game_type } = this.props;
     const roomStatistics = this.props.actionList || [];
-console.log("roomStatistics", roomStatistics)
     const { isDisabled, bankroll, betting, timerValue } = this.state;
     const { selectedCreator, showPlayerModal, roomInfo } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;

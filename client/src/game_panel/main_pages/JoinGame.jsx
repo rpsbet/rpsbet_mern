@@ -270,14 +270,11 @@ class JoinGame extends Component {
   };
   
   getRoomData = async roomId => {
-    console.log("room", roomId);
     try {
       const actionList = await this.props.getRoomStatisticsData(roomId);
-      console.log("PIZZZZZZZZZZZZZZZZZZAAAAAAAAAAA PARTY", actionList);
       this.setState({
         actionList: actionList
       });
-      console.log("WANKAA PARTY", this.state.actionList);
 
     } catch (error) {
       console.error('Error fetching room data:', error);
@@ -392,6 +389,7 @@ class JoinGame extends Component {
                     playSound={this.playSound}
                     join={this.join}
                     roomInfo={this.props.roomInfo}
+                    rps_game_type={this.props.roomInfo.rps_game_type}
                     user_id={this.props.user_id}
                     handleOpenPlayerModal={this.handleOpenPlayerModal}
                     handleClosePlayerModal={this.handleClosePlayerModal}

@@ -60,7 +60,7 @@ class ProfileModal extends Component {
       _id: this.props.userInfo._id,
       actorType: 'Both',
       gameType: 'All',
-      timeType: '24',
+      timeType: '7',
       referralCode: '',
       rewards: this.props.userInfo.rewards,
       username: this.props.userInfo.username,
@@ -83,7 +83,6 @@ class ProfileModal extends Component {
       current_state.email !== props.email ||
       current_state.totalWagered !== props.totalWagered ||
       current_state.rewards !== props.rewards
-
     ) {
       return {
         ...current_state,
@@ -104,14 +103,18 @@ class ProfileModal extends Component {
   }
 
   fetchStatisticsData = async () => {
-  const { _id, actorType, gameType, timeType } = this.state;
-  const result = await this.props.getCustomerStatisticsData(_id, actorType, gameType, timeType);
+    const { _id, actorType, gameType, timeType } = this.state;
+    const result = await this.props.getCustomerStatisticsData(
+      _id,
+      actorType,
+      gameType,
+      timeType
+    );
 
-  this.setState({
-    ...result 
-  });
-};
-
+    this.setState({
+      ...result
+    });
+  };
 
   handleDropdownChange = (dropdownName, selectedValue) => {
     this.setState(
@@ -123,7 +126,7 @@ class ProfileModal extends Component {
       }
     );
   };
-  
+
   handleAvatarLoaded = filename => {
     this.props.setUserInfo({ ...this.props.userInfo, avatar: filename });
   };
@@ -162,18 +165,40 @@ class ProfileModal extends Component {
     this.props.closeModal();
   };
 
-  
   render() {
-    const gameLogList = this.props.gameLogList;
+    const { loading, gameLogList, modalIsOpen, isDarkMode } = this.props;
+
+    const {
+      rank,
+      accessory,
+      avatar,
+      username,
+      joined_date,
+      deposit,
+      withdraw,
+      gameProfit,
+      balance,
+      gamePlayed,
+      gameHosted,
+      gameJoined,
+      totalWagered,
+      netProfit,
+      profitAllTimeHigh,
+      profitAllTimeLow,
+      averageWager,
+      averageGamesPlayedPerRoom,
+      averageProfit
+    } = this.state;
+
     const series = [{ name: 'Jan', data: generateData(gameLogList) }];
     return (
       <Modal
-        isOpen={this.props.modalIsOpen}
+        isOpen={modalIsOpen}
         onRequestClose={this.handleCloseModal}
         style={customStyles}
         contentLabel="Profile Modal"
       >
-        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+        <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
             <h2 className="modal-title">Your Profile</h2>
             <Button className="btn-close" onClick={this.handleCloseModal}>
@@ -181,40 +206,47 @@ class ProfileModal extends Component {
             </Button>
           </div>
           <div className="modal-body edit-modal-body">
-            <div className="edit-avatar-panel">
-              <AvatarUpload
-                setImageFilename={this.handleAvatarLoaded}
-                darkMode={this.props.isDarkMode}
-                rank={this.state.rank}
-                accessory={this.state.accessory}
-                avatar={this.state.avatar}
-              />
+            <div className="align-center">
+              {loading ? (
+                <div className="loading-spinner"></div>
+              ) : (
+                <div className="edit-avatar-panel">
+                  <AvatarUpload
+                    setImageFilename={this.handleAvatarLoaded}
+                    darkMode={isDarkMode}
+                    rank={rank}
+                    accessory={accessory}
+                    avatar={avatar}
+                  />
+                </div>
+              )}
             </div>
-            <div className="user-statistics">
-              <StatisticsForm
-                onDropdownChange={this.handleDropdownChange}
-                username={this.state.username}
-                joined_date={this.state.joined_date}
-                gameLogList={this.state.gameLogList}
-                deposit={this.state.deposit}
-                withdraw={this.state.withdraw}
-                gameProfit={this.state.gameProfit}
-                balance={this.state.balance}
-                gamePlayed={this.state.gamePlayed}
-                gameHosted={this.state.gameHosted}
-                gameJoined={this.state.gameJoined}
-                totalWagered={this.state.totalWagered}
-                rank={this.props.totalWagered}
-                netProfit={this.state.netProfit}
-                profitAllTimeHigh={this.state.profitAllTimeHigh}
-                profitAllTimeLow={this.state.profitAllTimeLow}
-                averageWager={this.state.averageWager}
-                averageGamesPlayedPerRoom={this.state.averageGamesPlayedPerRoom}
-                averageProfit={this.state.averageProfit}
-                // getRoomStatisticsData={this.props.getRoomStatisticsData}
-              />
-            </div>
-
+            {loading ? null : (
+              <div className="user-statistics">
+                <StatisticsForm
+                  onDropdownChange={this.handleDropdownChange}
+                  username={username}
+                  joined_date={joined_date}
+                  gameLogList={gameLogList}
+                  deposit={deposit}
+                  withdraw={withdraw}
+                  gameProfit={gameProfit}
+                  balance={balance}
+                  gamePlayed={gamePlayed}
+                  gameHosted={gameHosted}
+                  gameJoined={gameJoined}
+                  totalWagered={totalWagered}
+                  rank={this.props.totalWagered}
+                  netProfit={netProfit}
+                  profitAllTimeHigh={profitAllTimeHigh}
+                  profitAllTimeLow={profitAllTimeLow}
+                  averageWager={averageWager}
+                  averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
+                  averageProfit={averageProfit}
+                  // getRoomStatisticsData={this.props.getRoomStatisticsData}
+                />
+              </div>
+            )}
             <div className="modal-edit-panel">
               <div>
                 <TextField
@@ -300,7 +332,8 @@ class ProfileModal extends Component {
 
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
-  userInfo: state.auth.user
+  userInfo: state.auth.user,
+  loading: state.logic.isActiveLoadingOverlay
 });
 
 const mapDispatchToProps = {
@@ -330,7 +363,7 @@ const H2 = styled.h2`
 
 const Span = styled.span`
   font-size: 14px;
-  float: right; 
+  float: right;
   margin-top: 18px;
 `;
 

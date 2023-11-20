@@ -6,10 +6,9 @@ import { Box, Button } from '@material-ui/core';
 import CountUp from 'react-countup';
 import { getSettings } from '../../redux/Setting/setting.action';
 import InlineSVG from 'react-inlinesvg';
-
 import Moment from 'moment';
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import ReactDOM from 'react-dom';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import Pagination from '../../components/Pagination';
 import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
@@ -62,6 +61,7 @@ class MyHistoryTable extends Component {
   async componentDidMount() {
     this.updateReminderTime();
     this.attachUserLinkListeners();
+    this.attachAccessories();
 
     this.interval = setInterval(this.updateReminderTime(), 3000);
     const settings = await this.props.getSettings();
@@ -79,10 +79,22 @@ class MyHistoryTable extends Component {
   componentDidUpdate(prevProps) {
     if (prevProps.history !== this.props.history) {
       this.attachUserLinkListeners();
+      this.attachAccessories();
 
       this.setState({ history: updateFromNow(this.props.history) });
     }
   }
+
+  attachAccessories = () => {
+    const userLinks = document.querySelectorAll('.user-link');
+    userLinks.forEach(element => {
+      const accessory = element.getAttribute('accessory');
+      const lottieAnimation = renderLottieAvatarAnimation(accessory);
+      const portalContainer = document.createElement('div');
+      ReactDOM.render(lottieAnimation, portalContainer);
+      element.parentNode.insertBefore(portalContainer, element);
+    });
+  };
 
   attachUserLinkListeners = () => {
     const userLinks = document.querySelectorAll('.user-link');
@@ -346,10 +358,16 @@ class MyHistoryTable extends Component {
           )}
           {this.state.myHistory?.map(
             (row, key) => (
-              <div className="table-row" key={'my_history' + row._id}>
+              <div
+                className={`table-row ${key < 10 ? 'slide-in' : ''}`}
+                style={{ animationDelay: `${key * 0.1}s` }}
+                key={row._id}
+              >
+                 {' '}
+                 {renderLottieAvatarAnimation(row.gameBackground)}
                 <div>
                   <div className="table-cell">
-                  <div className="room-id">{row.status}</div>
+                    <div className="room-id">{row.status}</div>
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}

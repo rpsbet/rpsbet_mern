@@ -134,11 +134,11 @@ module.exports.socketio = server => {
       Chat.find({})
         .sort({ created_at: -1 }) // Sort in descending order of created_at
         .limit(50)
-        .populate({ path: 'sender', model: User, select: 'username avatar totalWagered' })
+        .populate({ path: 'sender', model: User, select: 'username avatar accessory totalWagered' })
         .populate({
           path: 'replyTo',
           model: 'Chat',
-          populate: { path: 'sender', model: User, select: 'username avatar totalWagered' }
+          populate: { path: 'sender', model: User, select: 'username avatar accessory totalWagered' }
         })
         .then(results => {
           const transformedResults = results.map(

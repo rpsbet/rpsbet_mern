@@ -1781,6 +1781,7 @@ class SiteWrapper extends Component {
             <InventoryModal
               modalIsOpen={this.state.showInventoryModal}
               closeModal={this.handleCloseInventoryModal}
+              handleOpenMarketplaceModal={this.handleOpenMarketplaceModal}
             />
           )}
           {this.state.showWithdrawModal && (

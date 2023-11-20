@@ -2,6 +2,7 @@ import React from 'react';
 import Lottie from 'react-lottie';
 import dropOff from '../game_panel/LottieAnimations/the-drop-off.json';
 import goalBg from '../game_panel/LottieAnimations/quantum-goal.json';
+import deepSea from '../game_panel/LottieAnimations/deep-sea.json';
 import blackjackSettings from '../game_panel/LottieAnimations/blackjack-settings.json';
 import boatBg from '../game_panel/LottieAnimations/gone-fishing.json';
 import floaraGardens from '../game_panel/LottieAnimations/floaro-gardens.json';
@@ -14,6 +15,9 @@ import fish from '../game_panel/LottieAnimations/fish.json';
 import cat_pop from '../game_panel/LottieAnimations/cat_pop.json';
 import cool_banana from '../game_panel/LottieAnimations/cool_banana.json';
 import flame from '../game_panel/LottieAnimations/flame.json';
+import roo from '../game_panel/LottieAnimations/roo.json';
+import bat from '../game_panel/LottieAnimations/bat.json';
+
 import glee from '../game_panel/LottieAnimations/glee.json';
 import bird from '../game_panel/LottieAnimations/bird.json';
 import smoke from '../game_panel/LottieAnimations/smoke.json';
@@ -23,6 +27,7 @@ import poker from '../game_panel/LottieAnimations/poker.json';
 import penguin from '../game_panel/LottieAnimations/penguin.json';
 import dragon from '../game_panel/LottieAnimations/dragon.json';
 import dolphin from '../game_panel/LottieAnimations/red-dolphins.json';
+import octopus from '../game_panel/LottieAnimations/octopus.json';
 
 import ufo from '../game_panel/LottieAnimations/ufo.json';
 import shark2 from '../game_panel/LottieAnimations/shark2.json';
@@ -44,19 +49,19 @@ import snowman from '../game_panel/LottieAnimations/snowman.json';
 import santaHat from '../game_panel/LottieAnimations/santaHat.json';
 
 export const renderLottieAvatarAnimation = image => {
+  const convertToReactNode = (animationData, className) => (
+    <div className={className}>
+      <Lottie options={{ animationData }} />
+    </div>
+  );
+
   switch (image) {
     case 'the-drop-off':
-      return (
-        <div className="lottie-bg">
-          <Lottie options={{ animationData: dropOff }} />
-        </div>
-      );
+      return convertToReactNode(dropOff, 'lottie-bg');
+
     case 'quantum-goal':
-      return (
-        <div className="lottie-bg goal">
-          <Lottie options={{ animationData: goalBg }} />
-        </div>
-      );
+      return convertToReactNode(goalBg, 'lottie-bg goal');
+
     case 'blackjack-settings':
       return (
         <div className="lottie-bg">
@@ -67,6 +72,12 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-bg">
           <Lottie options={{ animationData: boatBg }} />
+        </div>
+      );
+    case 'deep-sea':
+      return (
+        <div className="lottie-bg">
+          <Lottie options={{ animationData: deepSea }} />
         </div>
       );
     case 'floara-gardens':
@@ -87,12 +98,12 @@ export const renderLottieAvatarAnimation = image => {
           <Lottie options={{ animationData: mountainRail }} />
         </div>
       );
-      case 'mount-marmalade':
-        return (
-          <div className="lottie-bg rocks">
-            <Lottie options={{ animationData: mountMarmalade }} />
-          </div>
-        );
+    case 'mount-marmalade':
+      return (
+        <div className="lottie-bg rocks">
+          <Lottie options={{ animationData: mountMarmalade }} />
+        </div>
+      );
     case 'gem':
       return (
         <div className="lottie-container">
@@ -103,10 +114,12 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              top: '-8px'
-              // transform: 'translate: (50%, 50%)'
-            }}
+            style={
+              {
+                // top: '-8px'
+                // transform: 'translate: (50%, 50%)'
+              }
+            }
             options={{ animationData: fish }}
           />
         </div>
@@ -122,7 +135,7 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              top: '-1px'
+              marginTop: '-6px'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: cat_pop }}
@@ -133,10 +146,12 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              left: '-10px'
-              // transform: 'translate: (50%, 50%)'
-            }}
+            style={
+              {
+                // left: '-10px'
+                // transform: 'translate: (50%, 50%)'
+              }
+            }
             options={{ animationData: cool_banana }}
           />
         </div>
@@ -145,10 +160,12 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              left: '-10px'
-              // transform: 'translate: (50%, 50%)'
-            }}
+            style={
+              {
+                // left: '-10px'
+                // transform: 'translate: (50%, 50%)'
+              }
+            }
             options={{ animationData: flame }}
           />
         </div>
@@ -157,11 +174,13 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              right: '-10px',
-              top: '-10px'
-              // transform: 'translate: (50%, 50%)'
-            }}
+            style={
+              {
+                // right: '-10px',
+                // top: '-10px'
+                // transform: 'translate: (50%, 50%)'
+              }
+            }
             options={{ animationData: glee }}
           />
         </div>
@@ -171,8 +190,8 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              left: '-10px',
-              top: '-10px'
+              marginLeft: '-10px'
+              // top: '-10px'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: bird }}
@@ -184,8 +203,8 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              top: '-10px',
-              position: 'absolute'
+              marginTop: '-10px'
+              // position: 'absolute'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: smoke }}
@@ -198,18 +217,23 @@ export const renderLottieAvatarAnimation = image => {
           <Lottie options={{ animationData: butterfly }} />
         </div>
       );
-
+    case 'bat':
+      return (
+        <div className="lottie-container">
+          <Lottie options={{ animationData: bat }} />
+        </div>
+      );
     case 'gas':
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              width: '300%',
-              height: '300%',
-              top: '-30px',
-              left: '-30px',
-              zIndex: '1'
-            }}
+            // style={{
+            //   width: '300%',
+            //   height: '300%',
+            //   top: '-30px',
+            //   left: '-30px',
+            //   zIndex: '1'
+            // }}
             options={{ animationData: gas }}
           />
         </div>
@@ -218,41 +242,63 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              top: '-10px'
-            }}
+            style={
+              {
+                // top: '-10px'
+              }
+            }
             options={{ animationData: poker }}
           />
         </div>
       );
     case 'dragon':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container dragon">
           <Lottie
             style={{
-              top: '-10px'
+              width: '80px',
+              top: '0',
+              left: '-10px',
+              transform: 'scaleX(-1)'
             }}
             options={{ animationData: dragon }}
           />
         </div>
       );
-      case 'red-dolphins':
+    case 'red-dolphins':
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              top: '-10px'
-            }}
+            style={
+              {
+                // top: '-10px'
+              }
+            }
             options={{ animationData: dolphin }}
+          />
+        </div>
+      );
+    case 'octopus':
+      return (
+        <div className="lottie-container">
+          <Lottie
+            style={
+              {
+                // top: '-10px'
+              }
+            }
+            options={{ animationData: octopus }}
           />
         </div>
       );
     case 'penguin':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container penguin">
           <Lottie
             style={{
-              top: '-10px'
+              width: '90px',
+              height: 'auto',
+              left: '40px'
             }}
             options={{ animationData: penguin }}
           />
@@ -260,10 +306,10 @@ export const renderLottieAvatarAnimation = image => {
       );
     case 'ufo':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container ufo">
           <Lottie
             style={{
-              top: '-10px'
+              marginTop: '-30px'
             }}
             options={{ animationData: ufo }}
           />
@@ -271,10 +317,10 @@ export const renderLottieAvatarAnimation = image => {
       );
     case 'crown':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container crown">
           <Lottie
             style={{
-              top: '-10px'
+              top: '0px'
             }}
             options={{ animationData: crown }}
           />
@@ -282,21 +328,22 @@ export const renderLottieAvatarAnimation = image => {
       );
     case 'shark':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container shark">
           <Lottie
             style={{
-              top: '-10px'
+              marginTop: '30%'
             }}
             options={{ animationData: shark }}
           />
         </div>
       );
     case 'shark2':
+    case 'shark2':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container shark2">
           <Lottie
             style={{
-              top: '-10px'
+              marginTop: '10px'
             }}
             options={{ animationData: shark2 }}
           />
@@ -304,10 +351,12 @@ export const renderLottieAvatarAnimation = image => {
       );
     case 'cat':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container cat">
           <Lottie
             style={{
-              top: '-10px'
+              transform: 'scaleX(-1)',
+              left: '-10px',
+              top: '8px'
             }}
             options={{ animationData: cat }}
           />
@@ -318,9 +367,20 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              top: '-10px'
+              marginLeft: '-8px'
             }}
             options={{ animationData: bunny }}
+          />
+        </div>
+      );
+    case 'roo':
+      return (
+        <div className="lottie-container">
+          <Lottie
+            style={{
+              marginLeft: '-8px'
+            }}
+            options={{ animationData: roo }}
           />
         </div>
       );
@@ -329,7 +389,7 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              left: '-10px'
+              marginLeft: '-8px'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: snake }}
@@ -340,21 +400,23 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              left: '-10px'
-              // transform: 'translate: (50%, 50%)'
-            }}
+            style={
+              {
+                // left: '-10px'
+                // transform: 'translate: (50%, 50%)'
+              }
+            }
             options={{ animationData: planet }}
           />
         </div>
       );
     case 'halo':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container halo">
           <Lottie
             style={{
-              right: '-10px',
-              top: '-10px'
+              width: '50%',
+              marginTop: '-10px'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: halo }}
@@ -366,7 +428,8 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              left: '-10px'
+              width: '65px'
+              // left: '-10px'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: swords }}
@@ -378,7 +441,9 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              left: '-10px'
+              width: '40px',
+              marginLeft: '-8px',
+              marginTop: '5px'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: cannabis }}
@@ -387,11 +452,12 @@ export const renderLottieAvatarAnimation = image => {
       );
     case 'ak47':
       return (
-        <div className="lottie-container">
+        <div className="lottie-container ak47">
           <Lottie
             style={{
-              right: '-10px',
-              top: '-10px'
+              width: '70px',
+              left: '30px'
+              // top: '-10px'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: ak47 }}
@@ -403,9 +469,8 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              right: '-10px',
-              top: '-10px'
-              // transform: 'translate: (50%, 50%)'
+              left: '20%'
+              // top: '-10px'
             }}
             options={{ animationData: fox }}
           />
@@ -415,11 +480,13 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              right: '-10px',
-              top: '-10px'
-              // transform: 'translate: (50%, 50%)'
-            }}
+            style={
+              {
+                // right: '-10px',
+                // top: '-10px'
+                // transform: 'translate: (50%, 50%)'
+              }
+            }
             options={{ animationData: cow_head }}
           />
         </div>
@@ -443,8 +510,8 @@ export const renderLottieAvatarAnimation = image => {
         <div className="lottie-container">
           <Lottie
             style={{
-              left: '-10px',
-              top: '-10px'
+              // left: '-10px',
+              top: '0'
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: santaHat }}
@@ -455,11 +522,13 @@ export const renderLottieAvatarAnimation = image => {
       return (
         <div className="lottie-container">
           <Lottie
-            style={{
-              top: '-10px',
-              position: 'absolute'
-              // transform: 'translate: (50%, 50%)'
-            }}
+            style={
+              {
+                // top: '-10px',
+                // position: 'absolute'
+                // transform: 'translate: (50%, 50%)'
+              }
+            }
             options={{ animationData: snowflakes }}
           />
         </div>

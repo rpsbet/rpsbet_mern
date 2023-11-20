@@ -51,6 +51,10 @@ const RoomSchema = new Schema({
     type: Number,
     default: 2
   },
+  rps_game_type: {
+    type: Number,
+    default: 0
+  },
   brain_game_type: {
     type: Schema.Types.ObjectId,
     ref: 'BrainGameType',

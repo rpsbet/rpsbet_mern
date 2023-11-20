@@ -62,14 +62,13 @@ class PlayerModal extends Component {
       avatar: '',
       accessory: '',
       selectedCreatorBalance: '',
-      loading: true,
       rank: '',
       isLoading: false,
       myChat: [],
       actorType: 'Both',
       message: '',
       gameType: 'All',
-      timeType: '24',
+      timeType: '7',
       isTipModalOpen: false,
       tipAmount: '',
       balance: props.balance
@@ -153,8 +152,8 @@ class PlayerModal extends Component {
       ...result,
       username: userData.username,
       avatar: userData.avatar,
+      accessory: userData.accessory,
       rank: userData.totalWagered,
-      loading: false
     });
 
   };
@@ -209,16 +208,16 @@ class PlayerModal extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps._id !== this.props._id) {
-      this.setState({ loading: true, isLoading: false });
+      this.setState({ isLoading: false });
       this.props
         .getCustomerStatisticsData(nextProps._id)
-        .then(result => this.setState({ ...result, loading: false }));
+        .then(result => this.setState({ ...result}));
     }
   }
 
   render() {
     const { isLoading } = this.state;
-
+const { loading } = this.props;
     return (
       <>
         {isLoading && (
@@ -255,7 +254,7 @@ class PlayerModal extends Component {
             </div>
             <div className="modal-body edit-modal-body">
               <div className="align-center">
-                {this.state.loading ? (
+                {loading ? (
                   <div className="loading-spinner"></div>
                 ) : (
                   <Avatar
@@ -270,7 +269,7 @@ class PlayerModal extends Component {
                   />
                 )}
               </div>
-              {this.state.loading ? null : (
+              {loading ? null : (
                 <div className="user-statistics">
                   <StatisticsForm
                     onDropdownChange={this.handleDropdownChange}
@@ -404,6 +403,7 @@ class PlayerModal extends Component {
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   myChat: state.logic.myChat,
+  loading: state.logic.isActiveLoadingOverlay,
   userInfo: state.auth.user,
   balance: state.auth.balance
 });

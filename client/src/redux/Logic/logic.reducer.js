@@ -73,6 +73,7 @@ const initialState = {
     box_price: 0,
     room_history: [],
     box_list: [],
+    rps_game_type: 0,
     qs_game_type: 2,
     likes: 0,
     dislikes: 0,

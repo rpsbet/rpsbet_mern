@@ -5,6 +5,14 @@ import { acQueryMyItem } from '../../redux/Item/item.action';
 import { Button, TextField } from '@material-ui/core';
 import styled from 'styled-components';
 
+const ProductGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 20px;
+  max-width: 100%;
+  margin: 20px 0;
+`;
+
 const ProductCard = styled.div`
   position: relative;
   background: linear-gradient(156deg, #303438, #cf0c0e);
@@ -47,19 +55,18 @@ const ProductCard = styled.div`
   }
 `;
 
-  class AdvancedSettings extends Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        selectedBackgroundId: null, // Initialize with no selected background
-      };
-    }
+class AdvancedSettings extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedBackgroundId: null // Initialize with no selected background
+    };
+  }
 
   async componentDidMount() {
     const { acQueryMyItem } = this.props;
     await acQueryMyItem(10, 1, 'price', '653ee7df17c9f5ee2124564a');
   }
-
 
   render() {
     return (
@@ -77,15 +84,24 @@ const ProductCard = styled.div`
                   });
                 }}
               >
+                <img
+                  width="20px"
+                  src={'/img/icons/public.svg'}
+                  alt={`Public Game`}
+                />
                 Public
               </Button>
               <Button
                 className={this.props.is_private ? ' active' : ''}
                 onClick={() => {
-                  
                   this.props.onChangeState({ is_private: true });
                 }}
               >
+                <img
+                  width="20px"
+                  src={'/img/icons/private.svg'}
+                  alt={`{Private} Game`}
+                />
                 Private
               </Button>
               <TextField
@@ -116,15 +132,24 @@ const ProductCard = styled.div`
                   this.props.onChangeState({ endgame_type: false });
                 }}
               >
+                <img
+                  width="20px"
+                  src={'/img/icons/manual.svg'}
+                  alt={`{Private} Game`}
+                />
                 Manual
               </Button>
               <Button
                 className={this.props.endgame_type ? ' active' : ''}
                 onClick={() => {
-                  
                   this.props.onChangeState({ endgame_type: true });
                 }}
               >
+                <img
+                  width="20px"
+                  src={'/img/icons/automatic.svg'}
+                  alt={`{Private} Game`}
+                />
                 Automatic
               </Button>
               <div
@@ -195,7 +220,7 @@ const ProductCard = styled.div`
                 value={this.props.youtubeUrl}
                 onChange={this.props.handleUrlChange}
               />
-              <Button type="submit" variant="contained" color="primary">
+              <Button style={{marginLeft: "10px"}} type="submit" variant="contained" color="primary">
                 Play
               </Button>
             </form>
@@ -216,25 +241,33 @@ const ProductCard = styled.div`
         {this.props.child_step === 4 && (
           <div className="game-background-panel game-info-panel">
             <h3 className="game-sub-title">Add Background?</h3>
-            {this.props.data.map(row => (
-              <ProductCard
-                key={row._id}
-                onClick={() => {
-                this.setState({ selectedBackgroundId: row._id }); 
-                this.props.onChangeState({
-                  gameBackground: row.image
-                })
-              }}
-              className={this.state.selectedBackgroundId === row._id ? 'selected' : ''}
-              >
-                {row.image && renderLottieAnimation(row.image) ? (
-                  renderLottieAnimation(row.image)
-                ) : (
-                  <img src={row.image} alt={row.productName} />
-                )}
-                <div>{row.productName}</div>
-              </ProductCard>
-            ))}
+            <ProductGrid>
+              {this.props.data
+                .filter(row => row.item_type === "653ee7df17c9f5ee2124564a")
+              .map(row => (
+                <ProductCard
+                  key={row._id}
+                  onClick={() => {
+                    this.setState({ selectedBackgroundId: row._id });
+                    this.props.onChangeState({
+                      gameBackground: row.image
+                    });
+                  }}
+                  className={
+                    this.state.selectedBackgroundId === row._id
+                      ? 'selected'
+                      : ''
+                  }
+                >
+                  {row.image && renderLottieAnimation(row.image) ? (
+                    renderLottieAnimation(row.image)
+                  ) : (
+                    <img src={row.image} alt={row.productName} />
+                  )}
+                  <div>{row.productName}</div>
+                </ProductCard>
+              ))}
+            </ProductGrid>
             <p className="tip">
               GAME BACKGROUNDS AVAILABLE VIA THE MARKETPLACE
             </p>

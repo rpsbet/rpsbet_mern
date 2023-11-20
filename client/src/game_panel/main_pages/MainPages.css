@@ -163,7 +163,6 @@ div.table .table-row .table-cell button:last-child:before,
   margin: auto !important;
   width: 330px;
 }
-.game-page .game-contents .game-info-panel button,
 #rps-radio div {
   padding: 0 15px;
   margin: 10px 4px 8px;
@@ -255,15 +254,14 @@ div.table .table-row .table-cell button:last-child:hover,
   left:  0;
   position: absolute;
   height: auto !important;
-  bottom: 0;
+  top: 0;
 }
 
 .lottie-bg-container {
-  height: 136px;
-  width: 100%;
-  display: flex;
-  overflow: hidden;
-  align-items: center;
+  height: 100px;
+    display: flex;
+    overflow: hidden;
+    align-items: center;
 }
 
 .lottie-bg-container div{
@@ -469,7 +467,7 @@ div.table.my-chat-table .table-cell button.btn_join {
 
 .bet-amounts {
   text-align: center;
-  display: flex;
+  /* display: flex; */
   align-items: baseline;
 }
 
@@ -687,8 +685,8 @@ div.table .table-row .table-cell img.game-type-icon {
 }
 
 .cell-joiners svg {
-  width: 20px !important;
-  margin: auto 5px auto 3px;
+  width: 50px !important;
+    margin: auto -10px;
 }
 
 div.table.main-game-table::-webkit-scrollbar,
@@ -1557,7 +1555,7 @@ input {
   z-index: 4;
   height: 150px;
   background-color: red; /* Set the background color to red */
-  border-radius: 5px;
+  border-radius: 0.9rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1861,6 +1859,12 @@ svg#delete:hover {
   padding: 0.5px;
   transition: 0.2s;
 }
+
+#rps-game-type-radio img {
+width: 32px !important;
+margin-right: 5px;
+}
+
 #rps-game-type-radio,
 #rps-radio {
   display: flex;
@@ -1868,14 +1872,10 @@ svg#delete:hover {
   text-align: center;
 }
 #rps-game-type-radio button {
-  text-align: center;
-  margin: 0 16px;
+  margin: 0 10px;
   display: inline-block;
-  padding-top: 20px;
-  width: 200px;
+  /* width: 200px; */
   height: 70px;
-  background-position: center;
-  border-radius: 12px;
   animation: pulse 0.2s;
 }
 
@@ -1885,6 +1885,7 @@ svg#delete:hover {
   background-size: contain !important;
   background-repeat: no-repeat !important;
   width: 72px;
+  margin: 0 4px;
   height: 120px !important;
   cursor: pointer;
   background-color: #c20017;

@@ -9,7 +9,7 @@ import MyProductTable from './MyProductTable';
 export class MyProductPage extends Component {
   componentDidMount() {
     // this.props.setUrl(this.props.match.path);
-    this.props.acQueryMyItem(30, 1, '', '');
+    this.props.acQueryMyItem(30, 1, 'price', '653ee7ac17c9f5ee21245649');
     // console.log(this.props)
   }
 

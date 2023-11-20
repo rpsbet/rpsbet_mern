@@ -7,8 +7,16 @@ import ReactApexChart from 'react-apexcharts';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
 import Moment from 'moment';
+import { acQueryMyItem } from '../../redux/Item/item.action';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 
-import { Button, Switch, FormControlLabel } from '@material-ui/core';
+import {
+  Button,
+  Switch,
+  IconButton,
+  Tooltip,
+  FormControlLabel
+} from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import Lottie from 'react-lottie';
@@ -27,10 +35,86 @@ import {
   confirmModalCreate,
   gameResultModal
 } from '../modal/ConfirmAlerts';
-import history from '../../redux/history';
+import styled from 'styled-components';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
-import { LensOutlined } from '@material-ui/icons';
+
+const ProductGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 20px;
+  max-width: 100%;
+  margin: 20px 0;
+`;
+
+const ProductImage = styled.img`
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+  border: 1px solid #f9f9;
+  box-shadow: 0 1px 17px #333;
+  border-radius: 10px;
+`;
+
+const ProductCard = styled.div`
+  position: relative;
+  background: linear-gradient(156deg, #303438, #cf0c0e);
+  border-radius: 20px;
+  padding: 10px;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  cursor: pointer;
+  -webkit-transition: -webkit-transform 0.2s;
+  -webkit-transition: transform 0.2s;
+  transition: transform 0.2s;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+
+  &:hover {
+    transform: scale(1.03);
+  }
+`;
+
+const UseItemButton = styled.div`
+opacity: 0;
+  position: absolute;
+  margin-top: auto;
+  bottom: 0;
+  
+  margin
+  right: 0; 
+    cursor: pointer;
+    -webkit-transition: -webkit-transform 0.2s;
+    -webkit-transition: transform 0.2s;
+    transition: transform 0.2s,  bottom 0.2s;
+
+    ${ProductCard}:hover & {
+      opacity: 1;
+        bottom: calc(50% + 90px);;
+`;
 
 const defaultOptions = {
   loop: true,
@@ -277,7 +361,7 @@ class RPS extends Component {
     }
   };
 
-  componentDidMount = () => {
+  async componentDidMount() {
     const { socket } = this.props;
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({
@@ -296,9 +380,16 @@ class RPS extends Component {
         }
       );
     });
-    socket.emit('emitRps'); // Request RPS data on load
-    document.addEventListener('mousedown', this.handleClickOutside);
-  };
+    socket.emit('emitRps');
+    if (this.props.rps_game_type === 0) {
+      document.addEventListener('mousedown', this.handleClickOutside);
+    }
+
+    if (this.props.rps_game_type === 1) {
+      const { acQueryMyItem } = this.props;
+      await acQueryMyItem(10, 1, 'price', '653ee7ac17c9f5ee21245649');
+    }
+  }
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
@@ -349,6 +440,7 @@ class RPS extends Component {
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
+    console.log("gzi", selected_rps)
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
@@ -608,10 +700,10 @@ class RPS extends Component {
       return;
     }
 
-    if (this.state.selected_rps !== null) {
+    if (selected_rps !== null) {
       const result = await this.props.join({
         bet_amount: parseFloat(bet_amount),
-        selected_rps: this.state.selected_rps,
+        selected_rps: selected_rps,
         is_anonymous: is_anonymous,
         rps_bet_item_id: rps_bet_item_id,
         slippage: slippage
@@ -669,7 +761,11 @@ class RPS extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h2>PLAY - RPS</h2>
+          {this.props.rps_game_type === 1 ? (
+            <h2>PLAY - RRPS</h2>
+          ) : (
+            <h2>PLAY - RPS</h2>
+          )}{' '}
         </div>
         {showPlayerModal && (
           <PlayerModal
@@ -871,222 +967,309 @@ class RPS extends Component {
             style={{ position: 'relative', zIndex: 10 }}
           >
             {renderLottieAvatarAnimation(this.props.gameBackground)}
-
-            <div className="guesses">
-              {this.state.rps
-                .slice()
-                .reverse()
-                .map((item, index) => (
-                  <p key={index}>{item.rps}</p>
-                ))}
-            </div>
-
-            {this.state.startedPlaying && (
-              <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">
+            {this.props.rps_game_type === 1 && (
+              <div className="game-background-panel game-info-panel">
+                <div className="deck">
+                  <div className="card-back">
+                    <div className="rps-logo">
+                      <img
+                        src={'/img/rps-logo-white.svg'}
+                        alt="RPS Game Logo"
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div
-                  className={`rps-option ${
-                    this.state.rps[this.state.rps.length - 1]?.rps === 'R'
-                      ? 'rock'
-                      : ''
-                  }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    rpsValueAtLastIndex === 'R'
-                      ? ' win-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 0 && rpsValueAtLastIndex === 'R'
-                      ? ' draw-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 && rpsValueAtLastIndex === 'R'
-                      ? ' lose-bg'
-                      : ''
-                  }`}
-                ></div>
-                <div
-                  className={`rps-option ${
-                    this.state.rps[this.state.rps.length - 1]?.rps === 'P'
-                      ? 'paper'
-                      : ''
-                  }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    rpsValueAtLastIndex === 'P'
-                      ? ' win-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 0 && rpsValueAtLastIndex === 'P'
-                      ? ' draw-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 && rpsValueAtLastIndex === 'P'
-                      ? ' lose-bg'
-                      : ''
-                  }`}
-                ></div>
-                <div
-                  className={`rps-option ${
-                    this.state.rps[this.state.rps.length - 1]?.rps === 'S'
-                      ? 'scissors'
-                      : ''
-                  }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    rpsValueAtLastIndex === 'S'
-                      ? ' win-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 0 && rpsValueAtLastIndex === 'S'
-                      ? ' draw-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 && rpsValueAtLastIndex === 'S'
-                      ? ' lose-bg'
-                      : ''
-                  }`}
-                ></div>
-              </div>
-            )}
-            {!this.state.startedPlaying ? (
-              <h3 style={{ zIndex: 9 }} className="game-sub-title">
-                Select: R - P - S!
-              </h3>
-            ) : (
-              <h3 style={{ zIndex: 9 }} className="game-sub-title fade-out">
-                Select: R - P - S!
-              </h3>
-            )}
-
-            <div id="rps-radio" style={{ zIndex: 1 }}>
-              {options.map(({ classname, selection }) => (
-                <Button
-                  variant="contained"
-                  id={`rps-${classname}`}
-                  className={`rps-option ${classname}${
-                    this.state.selected_rps === selection ? ' active' : ''
-                  }${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    this.state.selected_rps === selection
-                      ? ' lose-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 0 &&
-                    this.state.selected_rps === selection
-                      ? ' draw-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 &&
-                    this.state.selected_rps === selection
-                      ? ' win-bg'
-                      : ''
-                  }`}
-                  onClick={() => {
-                    this.setState({ selected_rps: selection }, () => {
-                      this.onBtnBetClick(selection);
-                    });
-                    this.props.playSound('select');
-                  }}
+                  className="card-container"
+                  style={{ margin: '30px auto 10px' }}
+                >
+                  <div
+                    className="card-hidden"
+                    style={{
+                      height: '100%',
+                      width: '130px',
+                      borderRadius: '1rem'
+                    }}
+                  ></div>
+                </div>
+                <h3 className="game-sub-title">Select a Card</h3>
+                <ProductGrid>
+                  {this.props.data
+                    .filter(row => row.item_type === '653ee7ac17c9f5ee21245649')
+                    .map(row => (
+                      <ProductCard
+                        key={row._id}
+                        onClick={() => {
+                          this.setState({
+                            selected_rps: row.productName
+                          });
+                        }}
+                        className={
+                          this.state.selected_rps === row.productName ? 'selected' : ''
+                        }
+                      >
+                        <ProductImage src={row.image} alt={row.productName} />
+                        <div>{row.productName}</div>
+                        <UseItemButton>
+                          <Tooltip title={'Use Item'}>
+                            <IconButton
+                              className="btn-back"
+                              onClick={() => {
+                                this.setState({ selected_rps: row.productName }, () => {
+                                  this.onBtnBetClick(row.productName);
+                                });
+                              }}
+                            >
+                              Play
+                              <PlayArrowIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </UseItemButton>
+                      </ProductCard>
+                    ))}
+                </ProductGrid>
+                <BetAmountInput
+                  betAmount={this.state.bet_amount}
+                  handle2xButtonClick={this.handle2xButtonClick}
+                  handleHalfXButtonClick={this.handleHalfXButtonClick}
+                  handleMaxButtonClick={this.handleMaxButtonClick}
+                  onChangeState={this.onChangeState}
+                  isDarkMode={this.props.isDarkMode}
                 />
-              ))}
-            </div>
-            <BetAmountInput
-              betAmount={this.state.bet_amount}
-              handle2xButtonClick={this.handle2xButtonClick}
-              handleHalfXButtonClick={this.handleHalfXButtonClick}
-              handleMaxButtonClick={this.handleMaxButtonClick}
-              onChangeState={this.onChangeState}
-              isDarkMode={this.props.isDarkMode}
-            />
-            <SettingsOutlinedIcon
-              id="btn-rps-settings"
-              onClick={() =>
-                this.setState({
-                  settings_panel_opened: !this.state.settings_panel_opened
-                })
-              }
-            />
-            <div
-              ref={this.settingsRef}
-              className={`transaction-settings ${
-                this.state.settings_panel_opened ? 'active' : ''
-              }`}
-            >
-              <h5>AI Play Settings</h5>
-              <p>CHOOSE AN ALGORITHM</p>
-              <div className="tiers">
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Speed</td>
-                      <td>
-                        <div className="bar" style={{ width: '100%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '100%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '80%' }}></div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Reasoning</td>
-                      <td>
-                        <div className="bar" style={{ width: '50%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Abilities</td>
-                      <td>
-                        <div className="bar" style={{ width: '30%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <p className="tip">
+                  GAME BACKGROUNDS AVAILABLE VIA THE MARKETPLACE
+                </p>
               </div>
-              <div className="slippage-select-panel">
-                <Button
-                  className={this.state.slippage === 100 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 100 });
-                  }}
+            )}
+            {this.props.rps_game_type === 0 && (
+              <div className="game-info-panel">
+                <div className="guesses">
+                  {this.state.rps
+                    .slice()
+                    .reverse()
+                    .map((item, index) => (
+                      <p key={index}>{item.rps}</p>
+                    ))}
+                </div>
+
+                {this.state.startedPlaying && (
+                  <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">
+                    <div
+                      className={`rps-option ${
+                        this.state.rps[this.state.rps.length - 1]?.rps === 'R'
+                          ? 'rock'
+                          : ''
+                      }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${
+                        this.state.bgColorChanged &&
+                        this.state.betResult === -1 &&
+                        rpsValueAtLastIndex === 'R'
+                          ? ' win-bg'
+                          : ''
+                      }${
+                        this.state.betResult === 0 &&
+                        rpsValueAtLastIndex === 'R'
+                          ? ' draw-bg'
+                          : ''
+                      }${
+                        this.state.betResult === 1 &&
+                        rpsValueAtLastIndex === 'R'
+                          ? ' lose-bg'
+                          : ''
+                      }`}
+                    ></div>
+                    <div
+                      className={`rps-option ${
+                        this.state.rps[this.state.rps.length - 1]?.rps === 'P'
+                          ? 'paper'
+                          : ''
+                      }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${
+                        this.state.bgColorChanged &&
+                        this.state.betResult === -1 &&
+                        rpsValueAtLastIndex === 'P'
+                          ? ' win-bg'
+                          : ''
+                      }${
+                        this.state.betResult === 0 &&
+                        rpsValueAtLastIndex === 'P'
+                          ? ' draw-bg'
+                          : ''
+                      }${
+                        this.state.betResult === 1 &&
+                        rpsValueAtLastIndex === 'P'
+                          ? ' lose-bg'
+                          : ''
+                      }`}
+                    ></div>
+                    <div
+                      className={`rps-option ${
+                        this.state.rps[this.state.rps.length - 1]?.rps === 'S'
+                          ? 'scissors'
+                          : ''
+                      }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${
+                        this.state.bgColorChanged &&
+                        this.state.betResult === -1 &&
+                        rpsValueAtLastIndex === 'S'
+                          ? ' win-bg'
+                          : ''
+                      }${
+                        this.state.betResult === 0 &&
+                        rpsValueAtLastIndex === 'S'
+                          ? ' draw-bg'
+                          : ''
+                      }${
+                        this.state.betResult === 1 &&
+                        rpsValueAtLastIndex === 'S'
+                          ? ' lose-bg'
+                          : ''
+                      }`}
+                    ></div>
+                  </div>
+                )}
+                {!this.state.startedPlaying ? (
+                  <h3 style={{ zIndex: 9 }} className="game-sub-title">
+                    Select: R - P - S!
+                  </h3>
+                ) : (
+                  <h3 style={{ zIndex: 9 }} className="game-sub-title fade-out">
+                    Select: R - P - S!
+                  </h3>
+                )}
+                <div id="rps-radio" style={{ zIndex: 1 }}>
+                  {options.map(({ classname, selection }) => (
+                    <Button
+                      variant="contained"
+                      id={`rps-${classname}`}
+                      className={`rps-option ${classname}${
+                        this.state.selected_rps === selection ? ' active' : ''
+                      }${
+                        this.state.bgColorChanged &&
+                        this.state.betResult === -1 &&
+                        this.state.selected_rps === selection
+                          ? ' lose-bg'
+                          : ''
+                      }${
+                        this.state.betResult === 0 &&
+                        this.state.selected_rps === selection
+                          ? ' draw-bg'
+                          : ''
+                      }${
+                        this.state.betResult === 1 &&
+                        this.state.selected_rps === selection
+                          ? ' win-bg'
+                          : ''
+                      }`}
+                      onClick={() => {
+                        this.setState({ selected_rps: selection }, () => {
+                          this.onBtnBetClick(selection);
+                        });
+                        this.props.playSound('select');
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <BetAmountInput
+                  betAmount={this.state.bet_amount}
+                  handle2xButtonClick={this.handle2xButtonClick}
+                  handleHalfXButtonClick={this.handleHalfXButtonClick}
+                  handleMaxButtonClick={this.handleMaxButtonClick}
+                  onChangeState={this.onChangeState}
+                  isDarkMode={this.props.isDarkMode}
+                />
+                <SettingsOutlinedIcon
+                  id="btn-rps-settings"
+                  onClick={() =>
+                    this.setState({
+                      settings_panel_opened: !this.state.settings_panel_opened
+                    })
+                  }
+                />
+                <div
+                  ref={this.settingsRef}
+                  className={`transaction-settings ${
+                    this.state.settings_panel_opened ? 'active' : ''
+                  }`}
                 >
-                  Markov
-                </Button>
-                <Button
-                  className="disabled"
-                  // className={this.state.slippage === 200 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 200 });
-                  }}
-                  disabled={isDisabled}
-                >
-                  Carlo
-                </Button>
-                <Button
-                  className="disabled"
-                  // className={this.state.slippage === 500 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 500 });
-                  }}
-                  disabled={isDisabled}
-                >
-                  Q Bot
-                </Button>
-                {/* <button
+                  <h5>AI Play Settings</h5>
+                  <p>CHOOSE AN ALGORITHM</p>
+                  <div className="tiers">
+                    <table>
+                      <tbody>
+                        <tr>
+                          <td>Speed</td>
+                          <td>
+                            <div
+                              className="bar"
+                              style={{ width: '100%' }}
+                            ></div>
+                          </td>
+                          <td>
+                            <div
+                              className="bar"
+                              style={{ width: '100%' }}
+                            ></div>
+                          </td>
+                          <td>
+                            <div className="bar" style={{ width: '80%' }}></div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Reasoning</td>
+                          <td>
+                            <div className="bar" style={{ width: '50%' }}></div>
+                          </td>
+                          <td>
+                            <div className="bar" style={{ width: '0%' }}></div>
+                          </td>
+                          <td>
+                            <div className="bar" style={{ width: '0%' }}></div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Abilities</td>
+                          <td>
+                            <div className="bar" style={{ width: '30%' }}></div>
+                          </td>
+                          <td>
+                            <div className="bar" style={{ width: '0%' }}></div>
+                          </td>
+                          <td>
+                            <div className="bar" style={{ width: '0%' }}></div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="slippage-select-panel">
+                    <Button
+                      className={this.state.slippage === 100 ? 'active' : ''}
+                      onClick={() => {
+                        this.setState({ slippage: 100 });
+                      }}
+                    >
+                      Markov
+                    </Button>
+                    <Button
+                      className="disabled"
+                      // className={this.state.slippage === 200 ? 'active' : ''}
+                      onClick={() => {
+                        this.setState({ slippage: 200 });
+                      }}
+                      disabled={isDisabled}
+                    >
+                      Carlo
+                    </Button>
+                    <Button
+                      className="disabled"
+                      // className={this.state.slippage === 500 ? 'active' : ''}
+                      onClick={() => {
+                        this.setState({ slippage: 500 });
+                      }}
+                      disabled={isDisabled}
+                    >
+                      Q Bot
+                    </Button>
+                    {/* <button
                   className={this.state.slippage === 'unlimited' ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 'unlimited' });
@@ -1094,34 +1277,38 @@ class RPS extends Component {
                 >
                   V4
                 </button> */}
-              </div>
-            </div>
-            <div>
-              <FormControlLabel
-                control={
-                  <Switch
-                    id="aiplay-switch"
-                    checked={betting}
-                    onChange={this.handleSwitchChange}
-                  />
-                }
-                label={betting ? 'AI ON' : 'AI OFF'}
-              />
-              {betting ? (
-                <div id="stop">
-                  {/* <span>Stop</span> */}
-                  <Lottie options={defaultOptions} width={22} />
+                  </div>
                 </div>
-              ) : (
                 <div>
-                  {timerValue !== 2000 ? (
-                    <span>{(timerValue / 2000).toFixed(2)}s</span>
-                  ) : null}
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        id="aiplay-switch"
+                        checked={betting}
+                        onChange={this.handleSwitchChange}
+                      />
+                    }
+                    label={betting ? 'AI ON' : 'AI OFF'}
+                  />
+                  {betting ? (
+                    <div id="stop">
+                      {/* <span>Stop</span> */}
+                      <Lottie options={defaultOptions} width={22} />
+                    </div>
+                  ) : (
+                    <div>
+                      {timerValue !== 2000 ? (
+                        <span>{(timerValue / 2000).toFixed(2)}s</span>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-          <BetArray arrayName="rps_array" label="rps" />
+          {this.props.rps_game_type === 0 && (
+            <BetArray arrayName="rps_array" label="rps" />
+          )}
 
           <div className="action-panel">
             <Share roomInfo={this.props.roomInfo} />
@@ -1141,15 +1328,14 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   accessory: state.logic.curRoomInfo.accessory,
-
+  data: state.itemReducer.myItemArray,
   betResults: state.logic.betResults,
   rank: state.logic.curRoomInfo.rank
 });
 
 const mapDispatchToProps = {
-  openGamePasswordModal
-
-  // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
+  openGamePasswordModal,
+  acQueryMyItem
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

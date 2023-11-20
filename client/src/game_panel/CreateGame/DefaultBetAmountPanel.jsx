@@ -10,15 +10,23 @@ import { createTheme, ThemeProvider } from '@material-ui/core/styles';
 class DefaultBetAmountPanel extends Component {
   constructor(props) {
     super(props);
-    const defaultBetAmounts = this.props.defaultBetAmounts
-      ? this.props.defaultBetAmounts
-      : [0.001, 0.002, 0.005, 0.01, 0.1];
     this.state = {
-      defaultBetAmounts: defaultBetAmounts,
       isFocused: false,
-      is_other:
-        defaultBetAmounts.indexOf(this.props.bet_amount) < 0 ? true : false
-    };
+      is_other: false    };
+
+    const defaultBetAmounts = this.props.defaultBetAmounts
+    ? this.props.defaultBetAmounts
+    : [0.001, 0.002, 0.005, 0.01, 0.1];
+
+  // Add corresponding image sources for each bet amount
+  this.images = [
+    '/img/icons/coins-xs.svg',
+    '/img/icons/coins-s.svg',
+    '/img/icons/coins-m.svg',
+    '/img/icons/coins-l.svg',
+    '/img/icons/coins-xl.svg',
+
+  ];
   }
 
   handleHalfXButtonClick = () => {
@@ -138,9 +146,9 @@ class DefaultBetAmountPanel extends Component {
       },
     });
 
-    const {defaultBetAmounts,isFocused, is_other} = this.state;
+    const {isFocused, is_other} = this.state;
     
-    const {bet_amount, game_type, onChangeState, qs_game_type} = this.props;
+    const {defaultBetAmounts, bet_amount, game_type, onChangeState, qs_game_type} = this.props;
    
     const formattedBetAmount = this.formatBetAmount(bet_amount);
     return (
@@ -175,6 +183,8 @@ class DefaultBetAmountPanel extends Component {
               }}
               key={index}
             >
+            <img width="20px" src={this.images[index]} alt={`Bet Amount: ${amount}`} />
+
               {convertToCurrency(amount)}
             </Button>
           ))}
