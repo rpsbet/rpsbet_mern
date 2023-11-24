@@ -7,6 +7,8 @@ import ChatRoomHover from '../game_panel/icons/ChatRoomHover';
 import Leaderboards from './Leaderboards';
 import Moment from 'moment';
 import PlayerModal from '../game_panel/modal/PlayerModal';
+import ReactDOM from 'react-dom';
+import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 
 function updateFromNow(history) {
   if (!history) {
@@ -51,7 +53,8 @@ class TabbedContent extends Component {
 
   async componentDidMount() {
     // this.updateReminderTime();
-    this.attachUserLinkListeners();
+    // this.attachUserLinkListeners();
+    // this.attachAccessories();
   }
 
   attachUserLinkListeners = () => {
@@ -64,10 +67,21 @@ class TabbedContent extends Component {
     });
   };
 
+  attachAccessories = () => {
+    const userLinks = document.querySelectorAll('.user-link');
+    userLinks.forEach(element => {
+      const accessory = element.getAttribute('accessory');
+      const lottieAnimation = renderLottieAvatarAnimation(accessory);
+      const portalContainer = document.createElement('div');
+      ReactDOM.render(lottieAnimation, portalContainer);
+      element.parentNode.insertBefore(portalContainer, element);
+    });
+  };
+
   componentDidUpdate(prevProps) {
     if (prevProps.roomInfo.room_history !== this.props.roomInfo.room_history) {
       this.attachUserLinkListeners();
-
+      this.attachAccessories();
     }
   }
 
@@ -131,28 +145,41 @@ class TabbedContent extends Component {
                   )}
                   {this.props.roomInfo.room_history
                     .slice(0, this.state.numToShow)
-                    .map((row, key) => (
-                      <div className="table-row" key={'history' + row._id}>
-                        <div>
-                          <div className="table-cell">
-                            <div className="room-id">{row.room_name}</div>
+                    .map(
+                      (row, key) => (
+                        <div
+                          className={`table-row ${key < 10 ? 'slide-in' : ''}`}
+                          style={{ animationDelay: `${key * 0.1}s` }}
+                          key={row._id}
+                        >
+                          {' '}
+                          {renderLottieAvatarAnimation(row.gameBackground)}
+                          <div>
+                            <div className="table-cell">
+                              <div className="room-id">{row.status}</div>
+                              <div
+                                className="desktop-only"
+                                dangerouslySetInnerHTML={{
+                                  __html: row.history
+                                }}
+                              ></div>
+                            </div>
+                            <div className="table-cell">
+                              {Moment(row.created_at).fromNow()}{' '}
+                            </div>
                             <div
-                              dangerouslySetInnerHTML={{
-                                __html: row.history
-                              }}
+                              className="mobile-only"
+                              dangerouslySetInnerHTML={{ __html: row.history }}
                             ></div>
                           </div>
-                          <div className="table-cell">
-                            {' '}
-                            {Moment(row.created_at).fromNow()}{' '}
-                          </div>
+                          {key ===
+                            this.props.roomInfo.room_history.length - 1 && (
+                            <div ref={this.lastItemRef}></div>
+                          )}
                         </div>
-                        {key ===
-                          this.props.roomInfo.room_history.length - 1 && (
-                          <div ref={this.lastItemRef}></div>
-                        )}
-                      </div>
-                    ))}
+                      ),
+                      this
+                    )}
                   {this.state.numToShow <
                     this.props.roomInfo.room_history.length && (
                     <div className="load-more-btn">

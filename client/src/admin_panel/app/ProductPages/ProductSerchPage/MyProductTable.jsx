@@ -402,7 +402,7 @@ class MyProductTable extends Component {
       <MarketplaceContainer>
         <FilterSortContainer>
           <div className="filters">
-            <Button onClick={this.handleFilterClick} variant="contained">
+            <Button onClick={this.handleFilterClick}>
               Filter&nbsp;
               <FontAwesomeIcon icon={faFilter} />
             </Button>

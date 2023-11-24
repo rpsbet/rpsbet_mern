@@ -15,7 +15,7 @@ import {
   validateLocalStorageLength
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
-// import rocksBg from '../LottieAnimations/rocksBg.json';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import bomb from '../LottieAnimations/bomb.json';
 import explosion from '../LottieAnimations/explosion.json';
 import animationData from '../LottieAnimations/spinningIcon';
@@ -1101,15 +1101,8 @@ class Bang extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* <div className="rocksBg">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: rocksBg
-                }}
-              />
-            </div> */}
+                       {renderLottieAvatarAnimation(this.props.gameBackground)}
+
             <div className="game-info-panel">
               <div
                 onClick={() =>

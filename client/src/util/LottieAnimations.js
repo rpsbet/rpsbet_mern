@@ -6,12 +6,18 @@ import blackjackSettings from '../game_panel/LottieAnimations/blackjack-settings
 import boatBg from '../game_panel/LottieAnimations/gone-fishing.json';
 import deepSea from '../game_panel/LottieAnimations/deep-sea.json';
 import floaraGardens from '../game_panel/LottieAnimations/floaro-gardens.json';
-import mountainsBg from '../game_panel/LottieAnimations/mountains-bg.json';
+import shootingStars from '../game_panel/LottieAnimations/shooting-stars.json';
 import mountainRail from '../game_panel/LottieAnimations/mountain-rail.json';
 import mountMarmalade from '../game_panel/LottieAnimations/mount-marmalade.json';
+import vacation from '../game_panel/LottieAnimations/vacation.json';
+import arctic from '../game_panel/LottieAnimations/arctic.json';
+import orionTrip from '../game_panel/LottieAnimations/orion-trip.json';
+import ape from '../game_panel/LottieAnimations/ape.json';
 import roo from '../game_panel/LottieAnimations/roo.json';
 import bat from '../game_panel/LottieAnimations/bat.json';
-
+import paradise from '../game_panel/LottieAnimations/paradise.json';
+import sunrise from '../game_panel/LottieAnimations/sunrise.json';
+import rainforest from '../game_panel/LottieAnimations/rainforest.json';
 import snowflakes from '../game_panel/LottieAnimations/snowflakes.json';
 import xmasTree from '../game_panel/LottieAnimations/xmasTree.json';
 import snowman from '../game_panel/LottieAnimations/snowman.json';
@@ -74,6 +80,24 @@ export const renderLottieAnimation = image => {
           <Lottie options={{ animationData: boatBg }} />
         </div>
       );
+      case 'vacation':
+      return (
+        <div className="lottie-bg-container">
+          <Lottie options={{ animationData: vacation }} />
+        </div>
+      );
+      case 'orion-trip':
+      return (
+        <div className="lottie-bg-container">
+          <Lottie options={{ animationData: orionTrip }} />
+        </div>
+      );
+      case 'arctic':
+      return (
+        <div className="lottie-bg-container">
+          <Lottie options={{ animationData: arctic }} />
+        </div>
+      );
     case 'deep-sea':
       return (
         <div className="lottie-bg-container">
@@ -86,12 +110,25 @@ export const renderLottieAnimation = image => {
           <Lottie options={{ animationData: floaraGardens }} />
         </div>
       );
-    case 'mountains-bg':
-      return (
-        <div className="lottie-bg-container">
-          <Lottie options={{ animationData: mountainsBg }} />
-        </div>
-      );
+      case 'sunrise':
+        return (
+          <div className="lottie-bg-container sunrise">
+            <Lottie options={{ animationData: sunrise }} />
+          </div>
+        );
+        
+        case 'rainforest':
+          return (
+            <div className="lottie-bg-container rainforest">
+              <Lottie options={{ animationData: rainforest }} />
+            </div>
+          );
+      case 'shooting-stars':
+        return (
+          <div className="lottie-bg-container shooting_stars">
+            <Lottie options={{ animationData: shootingStars }} />
+          </div>
+        );
     case 'mountain-rail':
       return (
         <div className="lottie-bg-container rocks">
@@ -113,6 +150,18 @@ export const renderLottieAnimation = image => {
               // transform: 'translate: (50%, 50%)'
             }}
             options={{ animationData: gem }}
+          />
+        </div>
+      );
+      case 'paradise':
+      return (
+        <div className="lottie">
+          <Lottie
+            style={{
+              marginTop: '-10px'
+              // transform: 'translate: (50%, 50%)'
+            }}
+            options={{ animationData: paradise }}
           />
         </div>
       );
@@ -376,6 +425,17 @@ export const renderLottieAnimation = image => {
           />
         </div>
       );
+      case 'ape':
+        return (
+          <div className="lottie">
+            <Lottie
+              style={{
+                top: '-10px'
+              }}
+              options={{ animationData: ape }}
+            />
+          </div>
+        );
     case 'ak47':
       return (
         <div className="lottie">

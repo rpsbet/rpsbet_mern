@@ -437,7 +437,7 @@ class RPS extends Component {
               <Button
                 className={rps_game_type === 0 ? 'active' : ''}
                 onClick={() => {
-                  onChangeState({ rps_game_type: 0 });
+                  onChangeState({ rps_game_type: 0,  game_mode: this.state.game_mode });
                 }}
               >
                 <img src="/img/icons/RPS_badge.svg" alt="Classic RPS" />

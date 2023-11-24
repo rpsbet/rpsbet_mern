@@ -25,6 +25,7 @@ import {
 } from '../modal/betValidations';
 
 import Lottie from 'react-lottie';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 
 import animationData from '../LottieAnimations/spinningIcon';
 import {
@@ -980,18 +981,8 @@ class QuickShoot extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* <div className="goalBg">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: goalBg
-                }}
-                style={{
-                  opacity: '0.4'
-                }}
-              />
-            </div> */}
+                       {renderLottieAvatarAnimation(this.props.gameBackground)}
+
             <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
             <div
               className="qs-image-panel"

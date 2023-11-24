@@ -8,6 +8,7 @@ import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 
 import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
@@ -193,7 +194,7 @@ class DropGame extends Component {
   predictNext = dropAmounts => {
     // Find the unique values in dropAmounts
     const uniqueValues = [...new Set(dropAmounts.map(drop => drop.drop))];
-  
+
     if (uniqueValues.length === 1) {
       // If there is only one unique value, return that value
       return uniqueValues[0];
@@ -201,36 +202,41 @@ class DropGame extends Component {
       // Log all the drops
       const allDrops = dropAmounts.map(drop => drop.drop);
       // console.log('All drops:', allDrops.join(', '));
-  
+
       // Calculate the segment size
       const minDrop = Math.min(...allDrops);
       const maxDrop = Math.max(...allDrops);
       const difference = maxDrop - minDrop;
       const segmentSize = difference / 20;
-  
+
       // Sort drops into segments
       const segments = Array.from({ length: 20 }, (_, index) => {
         const lowerBound = minDrop + index * segmentSize;
         const upperBound = minDrop + (index + 1) * segmentSize;
         const dropsInSegment = allDrops.filter(drop => {
-          return drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound));
+          return (
+            drop >= lowerBound &&
+            (drop < upperBound || (index === 19 && drop === upperBound))
+          );
         });
-  
+
         return {
           segment: index + 1,
           drops: dropsInSegment
         };
       });
-  
+
       // Calculate the weights for each segment based on segment length
       const totalDropsCount = allDrops.length;
-      const weights = segments.map(segment => segment.drops.length / totalDropsCount);
-  
+      const weights = segments.map(
+        segment => segment.drops.length / totalDropsCount
+      );
+
       // Generate a random number to select a segment
       const randomValue = Math.random();
       let cumulativeWeight = 0;
       let selectedSegment;
-  
+
       for (let i = 0; i < segments.length; i++) {
         cumulativeWeight += weights[i];
         if (randomValue <= cumulativeWeight) {
@@ -239,10 +245,12 @@ class DropGame extends Component {
           break;
         }
       }
-  
+
       // Generate a random number to add to the selected segment range
       const randomAddition = Math.random() * segmentSize; // Random value between 0 and segmentSize
-      const newNumber = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
+      const newNumber = selectedSegment
+        ? selectedSegment.drops[0] + randomAddition
+        : null;
       // console.log('Randomly generated new number:', newNumber);
       return newNumber;
     }
@@ -569,7 +577,13 @@ class DropGame extends Component {
   };
 
   render() {
-    const { showAnimation, isDisabled, bankroll, betting, timerValue } = this.state;
+    const {
+      showAnimation,
+      isDisabled,
+      bankroll,
+      betting,
+      timerValue
+    } = this.state;
     const roomStatistics = this.props.actionList || [];
     const { selectedCreator, showPlayerModal, roomInfo } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
@@ -608,9 +622,8 @@ class DropGame extends Component {
                     </div>
                     <div className="value bankroll">
                       {convertToCurrency(this.state.bankroll)}
-                     
                     </div>
-                    </div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">
@@ -620,7 +633,7 @@ class DropGame extends Component {
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
-                        (this.state.bet_amount) + ' + ??'
+                        this.state.bet_amount + ' + ??'
                         // )
                       )}
                     </div>
@@ -668,7 +681,13 @@ class DropGame extends Component {
                             type: 'gradient',
                             gradient: {
                               shade: 'light',
-                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
+                              gradientToColors:
+                                roomStatistics.hostNetProfit?.slice(-1)[0] > 0
+                                  ? ['#00FF00']
+                                  : roomStatistics.hostNetProfit?.slice(-1)[0] <
+                                    0
+                                  ? ['#FF0000']
+                                  : ['#808080'],
                               shadeIntensity: 1,
                               type: 'vertical',
                               opacityFrom: 0.7,
@@ -759,7 +778,7 @@ class DropGame extends Component {
                       <div className="label public-max-return">Created</div>
                     </div>
                     <div className="value">
-                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                      {Moment(this.props.roomInfo.created_at).fromNow()}
                     </div>
                   </div>
                 </React.Fragment>
@@ -770,18 +789,8 @@ class DropGame extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* <div className="gemBg" 
-            >
+            {renderLottieAvatarAnimation(this.props.gameBackground)}
 
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: gemBg
-              }}
-        style={{ filter: 'hue-rotate(321deg)'}}
-            />
-                    </div> */}
             <div className="game-info-panel">
               <h3 className="game-sub-title">Previous Drops</h3>
               <div className="gradient-container">

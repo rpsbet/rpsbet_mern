@@ -178,6 +178,11 @@ class CreateGame extends Component {
     await this.setState(newState);
   };
 
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.game_mode !== this.state.game_mode) {
+    }
+  }
+
   toggleDrawer = () => {
     this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
@@ -454,7 +459,7 @@ rps_list: []
       }
       return false;
     };
-// console.log(step, child_step)
+    
     if (step === 2) {
       if (
         (game_mode !== 'RPS' || (game_mode === 'RPS' && child_step === 1)) &&

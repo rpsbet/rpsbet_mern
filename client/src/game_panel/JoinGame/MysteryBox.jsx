@@ -3,13 +3,21 @@ import { connect } from 'react-redux';
 import history from '../../redux/history';
 import BetArray from '../../components/BetArray';
 import Lottie from 'react-lottie';
-// import mountainsBg from '../LottieAnimations/mountains-bg.json';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import ReactApexChart from 'react-apexcharts';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
-import { Button, Switch, FormControlLabel, Table, TableBody, TableCell, TableRow, } from '@material-ui/core';
+import {
+  Button,
+  Switch,
+  FormControlLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow
+} from '@material-ui/core';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -418,7 +426,6 @@ class MysteryBox extends Component {
       return;
     }
 
-
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
     if (localStorage.getItem('hideConfirmModal') === 'true') {
@@ -524,7 +531,7 @@ class MysteryBox extends Component {
 
   getBetForm = () => {
     const { bankroll, isDisabled, betting, timerValue } = this.state;
-    
+
     let prizes = [];
     let prices = [];
     let openedBoxes = 0;
@@ -572,26 +579,28 @@ class MysteryBox extends Component {
       text = 'COPIED!';
     }
     const roomStatistics = this.props.actionList || [];
-    
+
     const { selectedCreator, showPlayerModal, roomInfo } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
-  
+
     const barStyle = {
       width: `${payoutPercentage + 10}%`,
       backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
     };
 
     const uniquePrizes = prizes
-    .reduce((accumulator, item) => {
-      const existingItem = accumulator.find((element) => element.prize === item.prize);
-      if (existingItem) {
-        existingItem.count += 1;
-      } else {
-        accumulator.push({ prize: item.prize, count: 1 });
-      }
-      return accumulator;
-    }, [])
-    .sort((a, b) => b.prize - a.prize);
+      .reduce((accumulator, item) => {
+        const existingItem = accumulator.find(
+          element => element.prize === item.prize
+        );
+        if (existingItem) {
+          existingItem.count += 1;
+        } else {
+          accumulator.push({ prize: item.prize, count: 1 });
+        }
+        return accumulator;
+      }, [])
+      .sort((a, b) => b.prize - a.prize);
 
     return (
       <div className="game-page">
@@ -627,7 +636,6 @@ class MysteryBox extends Component {
                     </div>
                     <div className="value bankroll">
                       {convertToCurrency(this.state.bankroll)}
-                      
                     </div>
                   </div>
 
@@ -695,7 +703,13 @@ class MysteryBox extends Component {
                             type: 'gradient',
                             gradient: {
                               shade: 'light',
-                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
+                              gradientToColors:
+                                roomStatistics.hostNetProfit?.slice(-1)[0] > 0
+                                  ? ['#00FF00']
+                                  : roomStatistics.hostNetProfit?.slice(-1)[0] <
+                                    0
+                                  ? ['#FF0000']
+                                  : ['#808080'],
                               shadeIntensity: 1,
                               type: 'vertical',
                               opacityFrom: 0.7,
@@ -786,7 +800,7 @@ class MysteryBox extends Component {
                       <div className="label public-max-return">Created</div>
                     </div>
                     <div className="value">
-                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                      {Moment(this.props.roomInfo.created_at).fromNow()}
                     </div>
                   </div>
                 </React.Fragment>
@@ -797,51 +811,27 @@ class MysteryBox extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* <div className="mountains-bg">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: mountainsBg
-                }}
-                style={{
-                  width: '100vw',
-                  zIndex: '-1',
-                  filter: 'brightness(0.72)'
-                }}
-              />
-            </div>
-            <div className="mountains-bg-last">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: mountainsBg
-                }}
-                style={{
-                  width: '100vw',
-                  zIndex: '-1',
-                  filter: 'brightness(0.72)'
-                }}
-              />
-              </div> */}
+            {renderLottieAvatarAnimation(this.props.gameBackground)}
+
             <h3 className="game-sub-title">Prizes</h3>
-            <Table className='prize-key'>
-        <TableBody>
-          {uniquePrizes.map((item, key) => (
-            <TableRow key={key}>
-              <TableCell>
-                <span className={item.prize === 0 ? 'EMPTY' : ''}>
-                  {item.prize === 0 ? 'EMPTY' : convertToCurrency(item.prize)}
-                </span>
-              </TableCell>
-              <TableCell>
-                {((item.count / prizes.length) * 100).toFixed(2)}%
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+            <Table className="prize-key">
+              <TableBody>
+                {uniquePrizes.map((item, key) => (
+                  <TableRow key={key}>
+                    <TableCell>
+                      <span className={item.prize === 0 ? 'EMPTY' : ''}>
+                        {item.prize === 0
+                          ? 'EMPTY'
+                          : convertToCurrency(item.prize)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {((item.count / prizes.length) * 100).toFixed(2)}%
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
             <h3 className="game-sub-title">
               {attempts.toFixed(2)} guesses remaining
@@ -1036,12 +1026,11 @@ class MysteryBox extends Component {
 
     // Calculate probability of winning
     let probabilityWinning = 1 - probabilityNotWinning;
-    
+
     return probabilityWinning;
   };
-  
+
   getBetResultForm = () => {
-    
     let prizes = [];
     this.state.box_list.map(row => {
       prizes.push({
@@ -1061,17 +1050,16 @@ class MysteryBox extends Component {
 
     return (
       <div className="game-page">
-       
         <div className="game-contents mystery-box-result-contents">
           <div className="game-info-panel">
             <i className="disclaimer">*NOT IN THIS ORDER*</i>
             <p className="game-modal box-prizes">
-            {prizes.map((item, key) => (
-              <span className={item.status} key={key}>
+              {prizes.map((item, key) => (
+                <span className={item.status} key={key}>
                   {convertToCurrency(item.prize === 0 ? 'EMPTY' : item.prize)}
                 </span>
               ))}
-              </p>
+            </p>
             <div
               className={`mystery-box-result ${
                 this.state.betResult === 0 ? 'failed' : 'success'
@@ -1099,7 +1087,7 @@ class MysteryBox extends Component {
     );
   };
 
-  render() { 
+  render() {
     return (
       <div>
         {this.getBetForm()}
@@ -1141,8 +1129,7 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  rank: state.logic.curRoomInfo.rank,
-
+  rank: state.logic.curRoomInfo.rank
 });
 
 const mapDispatchToProps = {

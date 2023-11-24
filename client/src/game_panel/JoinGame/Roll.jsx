@@ -8,6 +8,8 @@ import BetAmountInput from '../../components/BetAmountInput';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
+
 import { Button, TextField } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
 import {
@@ -967,18 +969,11 @@ class Roll extends Component {
           <div
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
-          ><h3 className='game-sub-title'>Match the Face</h3>
-            {/* <div className="boatBg">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: boatBg
-                }}
-                style={{ filter: 'hue-rotate(302deg)' }}
-              />
-            </div> */}
-            
+          >
+                        {renderLottieAvatarAnimation(this.props.gameBackground)}
+
+            <h3 className='game-sub-title'>Match the Face</h3>
+           
               <Lottie
                 options={{
                   loop: true,

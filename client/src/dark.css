@@ -14,7 +14,11 @@
 	background-color: #101010;
 	color: #f9f9f9;
 }
-
+.dark_mode .lottie-bg.deep-sea div,
+.dark_mode .lottie-bg.shooting_stars div
+	{
+	filter: unset;
+  }
 .dark_mode .lottie-bg div {
 	filter: brightness(0.25);
   }

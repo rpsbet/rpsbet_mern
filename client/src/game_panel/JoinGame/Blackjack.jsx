@@ -5,7 +5,7 @@ import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
-// import bjBg from '../LottieAnimations/bjBg.json';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import { Button, TextField } from '@material-ui/core';
@@ -779,7 +779,7 @@ class Blackjack extends Component {
         document.getElementById('betamount').focus();
       }
     );
-  }
+  };
 
   handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
@@ -805,7 +805,7 @@ class Blackjack extends Component {
         }
       );
     }
-  }
+  };
 
   handleMaxButtonClick = () => {
     const maxBetAmount = Math.floor(this.state.balance * 100) / 100; // Round down to two decimal places
@@ -817,7 +817,7 @@ class Blackjack extends Component {
         document.getElementById('betamount').focus();
       }
     );
-  }
+  };
 
   handleButtonClick = () => {
     const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
@@ -1024,10 +1024,11 @@ class Blackjack extends Component {
                     </div>
                     <div className="value">{this.props.roomInfo.room_name}</div>
                   </div>
-                  {this.props.youtubeUrl && 
-                  <div className="data-item">
-                  <YouTubeVideo url={this.props.youtubeUrl} />
-                  </div>}
+                  {this.props.youtubeUrl && (
+                    <div className="data-item">
+                      <YouTubeVideo url={this.props.youtubeUrl} />
+                    </div>
+                  )}
                 </React.Fragment>
               ))}
             </div>
@@ -1036,20 +1037,8 @@ class Blackjack extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* <div className="bjBg">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: bjBg
-                }}
-                style={{
-                  transform: 'rotate(180deg)',
-                  filter: 'grayscale(1)',
-                  opacity: '0.1'
-                }}
-              />
-            </div> */}
+            {renderLottieAvatarAnimation(this.props.gameBackground)}
+
             <div className="deck">
               <div className="card-back">
                 <div className="rps-logo">
@@ -1110,13 +1099,13 @@ class Blackjack extends Component {
               {score}
             </h6>
             <BetAmountInput
-          betAmount={this.state.bet_amount}
-          handle2xButtonClick={this.handle2xButtonClick}
-          handleHalfXButtonClick={this.handleHalfXButtonClick}
-          handleMaxButtonClick={this.handleMaxButtonClick}
-          onChange={this.handleChange}
-          isDarkMode={this.props.isDarkMode}
-        />
+              betAmount={this.state.bet_amount}
+              handle2xButtonClick={this.handle2xButtonClick}
+              handleHalfXButtonClick={this.handleHalfXButtonClick}
+              handleMaxButtonClick={this.handleMaxButtonClick}
+              onChange={this.handleChange}
+              isDarkMode={this.props.isDarkMode}
+            />
             <div>
               <div id="bj-radio" style={{ zIndex: 1 }}>
                 <Button

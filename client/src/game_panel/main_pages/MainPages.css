@@ -168,6 +168,10 @@ div.table .table-row .table-cell button:last-child:before,
   margin: 10px 4px 8px;
 }
 
+.tip {
+  text-align: center;
+}
+
 #rps-radio div.active {
   opacity: 0.9;
   border: unset;
@@ -247,6 +251,10 @@ div.table .table-row .table-cell button:last-child:hover,
   transform: translateY(-1px);
   filter: brightness(1.06);
   transition: 0.1s;
+}
+.lottie-bg.deep-sea div,
+.lottie-bg.shooting_stars div {
+  filter: invert(1);
 }
 
 .lottie-bg div {
@@ -768,11 +776,6 @@ div.table.my-open-game-table::-webkit-scrollbar {
 }
 
 .rain#busd {
-  margin-top: -12px;
-  margin-right: -21px;
-  margin-left: -18px;
-  width: 3.5em !important;
-  height: 1.5em !important;
   filter: hue-rotate(45deg);
 }
 #roll {
@@ -1737,7 +1740,7 @@ input {
 }
 .guesses {
   position: absolute;
-  right: 10px;
+  left: 10px;
   top: 5px;
 }
 .guesses p:first-child {

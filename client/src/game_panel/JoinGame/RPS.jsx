@@ -6,6 +6,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import ReactApexChart from 'react-apexcharts';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
+import YouTubeModal from '../modal/YouTubeModal';
 import Moment from 'moment';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
@@ -315,6 +316,7 @@ class RPS extends Component {
       rps1Received: false,
       bgColorChanged: false,
       selected_rps: '',
+      modalOpen: false,
       startedPlaying: false,
       advanced_status: '',
       is_anonymous: false,
@@ -336,6 +338,14 @@ class RPS extends Component {
     this.setState({ bet_amount: e.target.value });
     this.setState({ potential_return: e.target.value * 2 });
   }
+  handleOpenModal = () => {
+    this.setState({ modalOpen: true });
+  };
+
+  handleCloseModal = () => {
+    this.setState({ modalOpen: false });
+  };
+
 
   getPreviousBets() {
     let previousBets = 0;
@@ -369,16 +379,21 @@ class RPS extends Component {
         startedPlaying: true
       });
     });
+    console.log("statte", this.state.startedPlaying);
     socket.on('RPS_1', data => {
+      if (data.length > 0) {
       this.setState(
         {
           rps: data,
-          rps1Received: true
+          rps1Received: true,
+          startedPlaying: true
+
         },
         () => {
           // console.log(' RPS:', this.state.rps);
         }
       );
+      }
     });
     socket.emit('emitRps');
     if (this.props.rps_game_type === 0) {
@@ -440,7 +455,7 @@ class RPS extends Component {
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
-    console.log("gzi", selected_rps)
+    // console.log('gzi', selected_rps);
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
@@ -462,7 +477,9 @@ class RPS extends Component {
       text = 'TROLLOLOLOL! LOSER!';
       playSound('lose');
       this.changeBgColor(result.betResult);
+      this.handleOpenModal();
     }
+if (result.betResult !== -1 && this.state.rps_game_type === 1) {
 
     gameResultModal(
       isDarkMode,
@@ -499,7 +516,7 @@ class RPS extends Component {
 
     refreshHistory();
   };
-
+  }
   onBtnBetClick = async () => {
     const {
       openGamePasswordModal,
@@ -969,6 +986,8 @@ class RPS extends Component {
             {renderLottieAvatarAnimation(this.props.gameBackground)}
             {this.props.rps_game_type === 1 && (
               <div className="game-background-panel game-info-panel">
+              <YouTubeModal open={this.state.modalOpen} onClose={this.handleCloseModal} rps={rpsValueAtLastIndex} />
+
                 <div className="deck">
                   <div className="card-back">
                     <div className="rps-logo">
@@ -1005,7 +1024,9 @@ class RPS extends Component {
                           });
                         }}
                         className={
-                          this.state.selected_rps === row.productName ? 'selected' : ''
+                          this.state.selected_rps === row.productName
+                            ? 'selected'
+                            : ''
                         }
                       >
                         <ProductImage src={row.image} alt={row.productName} />
@@ -1015,9 +1036,12 @@ class RPS extends Component {
                             <IconButton
                               className="btn-back"
                               onClick={() => {
-                                this.setState({ selected_rps: row.productName }, () => {
-                                  this.onBtnBetClick(row.productName);
-                                });
+                                this.setState(
+                                  { selected_rps: row.productName },
+                                  () => {
+                                    this.onBtnBetClick(row.productName);
+                                  }
+                                );
                               }}
                             >
                               Play
@@ -1041,16 +1065,16 @@ class RPS extends Component {
                 </p>
               </div>
             )}
-            {this.props.rps_game_type === 0 && (
-              <div className="game-info-panel">
                 <div className="guesses">
                   {this.state.rps
                     .slice()
                     .reverse()
                     .map((item, index) => (
                       <p key={index}>{item.rps}</p>
-                    ))}
+                      ))}
                 </div>
+                      {this.props.rps_game_type === 0 && (
+                      <div className="game-info-panel">
 
                 {this.state.startedPlaying && (
                   <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">

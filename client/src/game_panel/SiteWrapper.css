@@ -24,7 +24,8 @@
   height: 100% !important;
 }
 
-.sub-panel .lottie-container div{
+.sub-panel .lottie-container div,
+.room-history-panel .lottie-container div{
   padding-left: 2px;
 width: 12px !important;
 top: 47.5px;
@@ -41,17 +42,23 @@ position: absolute;
     left: 12px !important;
     }
 
+    .sub-panel .lottie-container.glee div{
+      top: 49%  !important;
+     left: 18px !important;
+     }
+     
+
   .sub-panel .lottie-container.dragon div{
      top: 3px !important;
     left: 24px !important;
     }
+
     .sub-panel .lottie-container.penguin div {
       width: 32px !important;
       left: 30px !important;
       }
       .sub-panel .lottie-container.shark div {
         margin-top: 4px !important;
-
         }
 
       .sub-panel .lottie-container.ufo div {
@@ -74,7 +81,7 @@ position: absolute;
   top: 60%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 99;
+  z-index: 0;
 }
 .avatar img {
   border-radius: 6px;

@@ -396,7 +396,7 @@ class MyGamesTable extends Component {
             <Button
               className="game-type-panel"
               onClick={this.handleFilterClick}
-              variant="contained"
+              // variant="contained"
             >
               <FontAwesomeIcon icon={faFilter} />
             </Button>
@@ -421,7 +421,7 @@ class MyGamesTable extends Component {
             <Button
               className="game-type-panel"
               onClick={this.handleSortClick}
-              variant="contained"
+              // variant="contained"
             >
               <FontAwesomeIcon icon={faSort} />
             </Button>

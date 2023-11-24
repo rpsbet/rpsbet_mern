@@ -38,8 +38,8 @@ class HistoryTable extends Component {
 
   async componentDidMount() {
     this.updateReminderTime();
-    this.attachUserLinkListeners();
-    this.attachAccessories();
+    // this.attachUserLinkListeners();
+    // this.attachAccessories();
     this.interval = setInterval(this.updateReminderTime(), 3000);
     const settings = await this.props.getSettings();
     this.setState({ ...settings });
@@ -233,7 +233,7 @@ class HistoryTable extends Component {
       <div className="overflowX">
         <div className="outer-div">
           <div className="border-mask" />
-          <div className="desktop-only">
+          {/* <div className="desktop-only">
             <Lottie
               options={{
                 loop: true,
@@ -271,7 +271,7 @@ class HistoryTable extends Component {
                 maxWidth: '100%'
               }}
             />
-          </div>
+          </div> */}
           <Lottie
             options={{
               loop: true,
@@ -279,17 +279,16 @@ class HistoryTable extends Component {
               animationData: hex
             }}
             style={{
-              transform: 'translateY(-66px)',
               width: '142px',
               height: '100%',
               overflow: 'hidden',
-              margin: '-2px 0px -187px',
+              margin: '-2px 0px -136px',
               outline: 'none',
               filter: 'hue-rotate(2deg)',
               maxWidth: '100%'
             }}
           />
-          <Lottie
+          {/* <Lottie
             options={{
               loop: true,
               autoplay: true,
@@ -305,7 +304,7 @@ class HistoryTable extends Component {
               filter: 'hue-rotate(48deg)',
               maxWidth: '100%'
             }}
-          />
+          /> */}
           <InlineSVG
             className="rain"
             id="busd"
@@ -324,26 +323,27 @@ class HistoryTable extends Component {
                 ref={countUpRef}
                 style={{
                   color: '#fff',
-                  fontSize: '2em',
+                  fontSize: '1em',
                   position: 'relative',
                   display: 'inline-block',
                   zIndex: '1',
-                  textShadow: '0 0 12px #0058b6'
+                  textShadow: '0 0 4px #0058b6'
                 }}
               />
             )}
           </CountUp>
-          <p
+          <span
             style={{
               color: '#fff',
               position: 'relative',
               zIndex: '1',
+              fontSize: '0.6em',
               paddingLeft: '10px',
               textShadow: '0 0 12px #0058b6'
             }}
           >
             Returned to Bankrolls (RTBs)
-          </p>
+          </span>
         </div>
         {/* <div className="game-type-container">
           <div
@@ -370,7 +370,6 @@ class HistoryTable extends Component {
               >
                 {' '}
                 {renderLottieAvatarAnimation(row.gameBackground)}
-
                 <div>
                   <div className="table-cell">
                     <div className="room-id">{row.status}</div>

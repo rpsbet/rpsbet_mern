@@ -145,7 +145,7 @@ router.get('/room/:id', async (req, res) => {
       _id: 'asc'
     });
     const rpsBetItem = await RpsBetItem.findOne({
-      room: room,
+      room: room._id,
       joiner_rps: ''
     }).sort({ _id: 'asc' });
     const bjBetItem = await BjBetItem.findOne({
@@ -171,13 +171,13 @@ router.get('/room/:id', async (req, res) => {
 
     async function emitRps(req) {
       const rpsItems = await RpsBetItem.find({ room: room });
-      const rps1 = rpsItems.filter(item => item.joiner !== null).slice(-5);
-      if (rps1.length > 0 && req.io.sockets) {
-        req.io.sockets.emit('RPS_1', rps1);
+      const rps1 = rpsItems.filter(item => item.joiner_rps !== '').slice(-5);
+      if (rps1.length > 0 && req.io) {
+        req.io.emit('RPS_1', rps1);
       }
     }
 
-    emitRps(req);
+    await emitRps(req);
 
     let hasEmitted = false;
 
@@ -2066,72 +2066,95 @@ router.post('/bet', auth, async (req, res) => {
     const rain = await SystemSetting.findOne({ name: 'rain' });
     const platform = await SystemSetting.findOne({ name: 'platform' });
     const RockType = ['Rock', 'MoonRock', 'Quick Ball'];
-    const PaperType = ['Paper', 'MoonPaper', 'Microwave', 'Tumbledryer', 'Brain'];
+    const PaperType = [
+      'Paper',
+      'MoonPaper',
+      'Microwave',
+      'Tumbledryer',
+      'Brain'
+    ];
     const ScissorsType = ['Scissors', 'Knife', 'Blender', 'MoonScissors'];
     const BearType = ['Bear', 'MoonBear', 'Gorilla'];
-    const BullType = ['Rock', 'MoonRock'];
+    const BullType = ['Bull', 'MoonBull'];
     const WhaleType = ['Whale', 'MoonWhale', 'Snowman', 'Sledge'];
     function determineGameResult(userSelection, systemSelection) {
       const key = {
         win: [
-          [RockType, PaperType],
-          [PaperType, ScissorsType],
-          [ScissorsType, RockType],
-          [PaperType, RockType],
-          [ScissorsType, PaperType],
           [RockType, ScissorsType],
-          [RockType, WhaleType],
-          [BullType, BearType],
+          [RockType, BearType],
+          [RockType, BullType],
+          [PaperType, RockType],
+          [PaperType, BearType],
+          [ScissorsType, PaperType],
+          [ScissorsType, BullType],
+          [ScissorsType, WhaleType],
           [BearType, ScissorsType],
-          [BullType, WhaleType]
+          [BullType, BearType],
         ],
         draw: [
           [RockType, RockType],
           [PaperType, PaperType],
           [PaperType, BullType],
+          [PaperType, WhaleType],
           [ScissorsType, ScissorsType],
           [BearType, BearType],
           [BullType, BullType],
+          [BullType, PaperType],
+          [WhaleType, PaperType],
           [WhaleType, WhaleType],
-          [PaperType, WhaleType]
         ],
         lose: [
           [RockType, PaperType],
+          [RockType, WhaleType],
           [PaperType, ScissorsType],
+          [ScissorsType, RockType],
           [ScissorsType, BearType],
+          [BearType, BullType],
+          [BearType, PaperType],
+          [BearType, RockType],
           [BearType, WhaleType],
+          [BullType, RockType],
+          [BullType, ScissorsType],
           [BullType, WhaleType],
-          [RockType, ScissorsType],
-          [RockType, BullType],
-          [PaperType, BullType],
-          [ScissorsType, BullType],
-          [WhaleType, BullType],
           [WhaleType, ScissorsType]
         ]
       };
-    
+
       for (const [userType, systemType] of key.win) {
-        if (userType.includes(userSelection) && systemType.includes(systemSelection)) {
+        if (
+          userType.includes(userSelection) &&
+          systemType.includes(systemSelection)
+        ) {
+          console.log('win');
           return 1; // User wins
         }
       }
-    
+
       for (const [userType, systemType] of key.draw) {
-        if (userType.includes(userSelection) && systemType.includes(systemSelection)) {
+        if (
+          userType.includes(userSelection) &&
+          systemType.includes(systemSelection)
+        ) {
+          console.log('draw');
+
           return 0; // Draw
         }
       }
-    
+
       for (const [userType, systemType] of key.lose) {
-        if (userType.includes(userSelection) && systemType.includes(systemSelection)) {
+        if (
+          userType.includes(userSelection) &&
+          systemType.includes(systemSelection)
+        ) {
+          console.log('loss');
+
           return -1; // User loses
         }
       }
-    
-      return 1; // Default: User wins
+
+      return 0; // Default
     }
-    
-        
+
     const start = new Date();
     if (req.body._id) {
       if (!check_access_time(req.user._id)) {
@@ -2226,7 +2249,6 @@ router.post('/bet', auth, async (req, res) => {
       });
 
       if (roomInfo['game_type']['game_type_name'] === 'RPS') {
-
         if (
           parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet']) ||
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
@@ -2237,15 +2259,14 @@ router.post('/bet', auth, async (req, res) => {
             .json({ error: 'Bet amount exceeds available balance.' });
         }
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
-        
+
         const availableBetItem = await RpsBetItem.findOne({
           _id: req.body.rps_bet_item_id,
           joiner_rps: ''
         });
-        
-        
+
         let bet_item = availableBetItem;
-        
+
         if (!bet_item) {
           if (roomInfo['rps_game_type'] === 0) {
             const allBetItems = await RpsBetItem.find({
@@ -2416,17 +2437,14 @@ router.post('/bet', auth, async (req, res) => {
               roomInfo['room_number'];
           }
         } else {
-          
           const userSelection = req.body.selected_rps;
           const systemSelection = bet_item.rps;
-          console.log("userSelection", userSelection)
-          console.log("systemSelection", systemSelection)
+          console.log('userSelection', userSelection);
+          console.log('systemSelection', systemSelection);
 
           result = determineGameResult(userSelection, systemSelection);
-      console.log("result, ", result)
-          if (
-            result === 1
-          ) {
+          console.log('result, ', result);
+          if (result === 1) {
             newGameLog.game_result = 1;
             newTransactionJ.amount +=
               parseFloat(req.body.bet_amount) * 2 * ((100 - commission) / 100);
@@ -2579,18 +2597,17 @@ router.post('/bet', auth, async (req, res) => {
 
         if (roomInfo['rps_game_type'] === 1) {
           const nextItem = await RpsBetItem.findOne({
-            _id: req.body.rps_bet_item_id,
+            room: req.body._id,
             joiner_rps: ''
           });
-            if (nextItem) {
+          if (nextItem) {
             await nextItem.save();
           } else {
-            console.log("hi")
+            console.log('hi');
 
             roomInfo.status = 'finished';
           }
         }
-        
 
         if (!roomInfo.joiners.includes(req.user)) {
           roomInfo.joiners.addToSet(req.user);

@@ -12,7 +12,7 @@ import PlayerModal from '../modal/PlayerModal';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 // import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
-// import brainBg from '../LottieAnimations/brainBg.json';
+import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import animationData from '../LottieAnimations/spinningIcon';
 import brain from '../LottieAnimations/brain.json';
 import { Button, Switch, FormControlLabel } from '@material-ui/core';
@@ -577,21 +577,8 @@ class BrainGame extends Component {
         )}
         <div className="game-contents">
           <div className="game-info-panel brain-game-play-panel">
-            {/* <div
-              className="brainBg"
-              style={{ position: 'relative', zIndex: 10 }}
-            >
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: brainBg
-                }}
-                style={{
-                  opacity: '0.4'
-                }}
-              />
-            </div> */}
+            {renderLottieAvatarAnimation(this.props.gameBackground)}
+
             <div className="play-panel-header">
               <div className="timer">
                 <div className="timer-title">Timer: </div>
