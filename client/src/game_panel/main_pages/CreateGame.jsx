@@ -1054,12 +1054,12 @@ rps_list: []
                 </svg>
                 {this.state.selectedMobileTab === 'my_games' && 'YOUR BATTLES'}
               </Button>
-              {/* <button
-              className={`mobile-tab-leaderboards ${
-                this.state.selectedMobileTab === 'leaderboards' ? 'active' : ''
+              <button
+              className={`mobile-tab-marketplace ${
+                this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
               }`}
               onClick={e => {
-                this.setState({ selectedMobileTab: 'leaderboards' });
+                this.setState({ selectedMobileTab: 'marketplace' });
               }}
             >
               <svg
@@ -1071,7 +1071,7 @@ rps_list: []
               >
                 <path
                   stroke={
-                    this.state.selectedMobileTab === 'leaderboards'
+                    this.state.selectedMobileTab === 'marketplace'
                       ? '#fff'
                       : '#8E9297'
                   }
@@ -1079,9 +1079,9 @@ rps_list: []
                   d="M10.083 6.083h11.833v8.584c0 3.268-2.649 5.917-5.916 5.917-3.268 0-5.917-2.65-5.917-5.917V6.083zM9.333 26.666h13.333M22.223 14.597c3.528-.571 4.444-4.538 4.444-6.597H22M9.777 14.597C6.25 14.026 5.333 10.06 5.333 8H10M16 21.334v5.333"
                 />
               </svg>
-              {this.state.selectedMobileTab === 'leaderboards' &&
-                'LEADERBOARDS'}
-            </button> */}
+              {this.state.selectedMobileTab === 'marketplace' &&
+                'MARKETPLACE'}
+            </button>
               <Button
                 className={`mobile-tab-chat ${
                   this.state.selectedMobileTab === 'chat' ? 'active' : ''

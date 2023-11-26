@@ -3,10 +3,10 @@ import { connect } from 'react-redux';
 
 import Modal from 'react-modal';
 import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage';
-import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
+// import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
 import { Button } from '@material-ui/core';
 import AttachMoney from '@material-ui/icons/AttachMoney';
-import { createItem, getItem, updateItem, deleteItem, setCurrentProductInfo} from '../../redux/Item/item.action';
+// import { createItem, getItem, updateItem, deleteItem, setCurrentProductInfo} from '../../redux/Item/item.action';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import InventoryModal from '../modal/InventoryModal';
 

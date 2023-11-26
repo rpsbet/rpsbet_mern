@@ -91,7 +91,7 @@
 	box-shadow: 0 0 20px #6100a3;
   } */
 
-.dark_mode .contents_wrapper .room-history-panel h2.room-history-title {
+.dark_mode h2.room-history-title {
 	color: #8e9297;
 }
 
@@ -256,10 +256,10 @@ border-top: 2px solid #36393f;
     position: relative;
     font-size: 1em;
 } */
-
+/* 
 .dark_mode .game_header .main_header {
 	box-shadow: 0px 1px 2px #101010;
-}
+} */
 .dark_mode .chat-wrapper div[role="tablist"] {
     border-bottom: solid 1px  #101010;
 }

@@ -41,6 +41,28 @@ class Avatar extends Component {
     };
   }
 
+  static getDerivedStateFromProps(nextProps, prevState) {
+    // Check if any prop values have changed
+    if (
+      nextProps.src !== prevState.src ||
+      nextProps.alt !== prevState.alt ||
+      nextProps.accessory !== prevState.accessory ||
+      nextProps.rank !== prevState.rank 
+    ) {
+      // If any prop has changed, return the updated state
+      return {
+        src: nextProps.src,
+        alt: nextProps.alt,
+        accessory: nextProps.accessory,
+        rank: nextProps.rank,
+        dominantColor: null // Reset dominantColor when props change
+      };
+    }
+
+    // If no prop has changed, return null
+    return null;
+  }
+
   render() {
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
 
@@ -77,6 +99,7 @@ class Avatar extends Component {
     return (
       <div
         {...this.props}
+        
         style={{
           position: 'relative',
           backgroundColor

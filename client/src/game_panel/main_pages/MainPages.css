@@ -1208,7 +1208,7 @@ table td.amount.red {
   gap: 10px;
 }
 
-.contents_wrapper .room-history-panel h2.room-history-title {
+h2.room-history-title {
   font-size: 12px;
   font-weight: 500;
   color: #212529;
@@ -2891,7 +2891,8 @@ input {
     bottom: 0;
     display: flex;
     z-index: 99999;
-    padding: 12px 24px;
+    align-items: center;
+    padding: 12px 16px;
     justify-content: space-between;
     background: #dee2e6;
   }
@@ -2919,7 +2920,7 @@ input {
   div.main-page-nav-button-group button.active {
     /* background: #747f8d !important; */
     color: unset;
-    padding: 0 15px;
+    /* padding: 0 15px; */
     border-radius: 0.3em;
   }
 

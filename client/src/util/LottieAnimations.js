@@ -5,6 +5,7 @@ import goalBg from '../game_panel/LottieAnimations/quantum-goal.json';
 import blackjackSettings from '../game_panel/LottieAnimations/blackjack-settings.json';
 import boatBg from '../game_panel/LottieAnimations/gone-fishing.json';
 import deepSea from '../game_panel/LottieAnimations/deep-sea.json';
+import lilBoat from '../game_panel/LottieAnimations/lil-boat.json';
 import floaraGardens from '../game_panel/LottieAnimations/floaro-gardens.json';
 import shootingStars from '../game_panel/LottieAnimations/shooting-stars.json';
 import mountainRail from '../game_panel/LottieAnimations/mountain-rail.json';
@@ -104,6 +105,12 @@ export const renderLottieAnimation = image => {
           <Lottie options={{ animationData: deepSea }} />
         </div>
       );
+      case 'lil-boat':
+        return (
+          <div className="lottie-bg-container">
+            <Lottie options={{ animationData: lilBoat }} />
+          </div>
+        );
     case 'floaro-gardens':
       return (
         <div className="lottie-bg-container">

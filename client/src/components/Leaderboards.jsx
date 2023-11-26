@@ -77,7 +77,7 @@ class Leaderboards extends Component {
       <div className="leaderboards-page">
 
         <div className="leaderboards-content">
-        <div className="room-history-panel">
+        <div className="leaderboards-panel">
 
         <h2 className="room-history-title">Leaderboards</h2>
 

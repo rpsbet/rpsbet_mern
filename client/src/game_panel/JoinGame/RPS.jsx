@@ -313,7 +313,6 @@ class RPS extends Component {
       timer: null,
       timerValue: 2000,
       intervalId: null,
-      rps1Received: false,
       bgColorChanged: false,
       selected_rps: '',
       modalOpen: false,
@@ -346,7 +345,6 @@ class RPS extends Component {
     this.setState({ modalOpen: false });
   };
 
-
   getPreviousBets() {
     let previousBets = 0;
     if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
@@ -374,25 +372,22 @@ class RPS extends Component {
   async componentDidMount() {
     const { socket } = this.props;
     socket.on('UPDATED_BANKROLL', data => {
-      this.setState({
-        bankroll: data.bankroll,
-        startedPlaying: true
-      });
-    });
-    console.log("statte", this.state.startedPlaying);
-    socket.on('RPS_1', data => {
-      if (data.length > 0) {
       this.setState(
         {
-          rps: data,
-          rps1Received: true,
+          bankroll: data.bankroll,
+          rps: data.rps,
           startedPlaying: true
-
-        },
-        () => {
-          // console.log(' RPS:', this.state.rps);
         }
       );
+    });
+    socket.on('RPS_1', data => {
+      if (data.length > 0) {
+        this.setState(
+          {
+            rps: data,
+            startedPlaying: true
+          }
+        );
       }
     });
     socket.emit('emitRps');
@@ -451,7 +446,8 @@ class RPS extends Component {
       isDarkMode,
       refreshHistory,
       join,
-      playSound
+      playSound,
+      rps_game_type
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
@@ -479,44 +475,46 @@ class RPS extends Component {
       this.changeBgColor(result.betResult);
       this.handleOpenModal();
     }
-if (result.betResult !== -1 && this.state.rps_game_type === 1) {
 
-    gameResultModal(
-      isDarkMode,
-      text,
-      result.betResult,
-      'Okay',
-      null,
-      () => {},
-      () => {}
-    );
+    if ((result.betResult !== -1 && rps_game_type === 1) || 
+    rps_game_type === 0) {
+      gameResultModal(
+        isDarkMode,
+        text,
+        result.betResult,
+        'Okay',
+        null,
+        () => {},
+        () => {}
+      );
 
-    if (result.status === 'success') {
-      const { user, room } = this.props;
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: user, room: room }
-        ]
-      }));
-    } else {
-      if (result.message) {
-        alertModal(isDarkMode, result.message);
+      if (result.status === 'success') {
+        const { user, room } = this.props;
+        this.setState(prevState => ({
+          betResults: [
+            ...prevState.betResults,
+            { ...result, user: user, room: room }
+          ]
+        }));
+      } else {
+        if (result.message) {
+          alertModal(isDarkMode, result.message);
+        }
       }
+
+      let stored_rps_array =
+        JSON.parse(localStorage.getItem('rps_array')) || [];
+      while (stored_rps_array.length >= 20) {
+        stored_rps_array.shift();
+      }
+      stored_rps_array = stored_rps_array.filter(item => item && item.rps);
+
+      stored_rps_array.push({ rps: selected_rps });
+      localStorage.setItem('rps_array', JSON.stringify(stored_rps_array));
+
+      refreshHistory();
     }
-
-    let stored_rps_array = JSON.parse(localStorage.getItem('rps_array')) || [];
-    while (stored_rps_array.length >= 20) {
-      stored_rps_array.shift();
-    }
-    stored_rps_array = stored_rps_array.filter(item => item && item.rps);
-
-    stored_rps_array.push({ rps: selected_rps });
-    localStorage.setItem('rps_array', JSON.stringify(stored_rps_array));
-
-    refreshHistory();
   };
-  }
   onBtnBetClick = async () => {
     const {
       openGamePasswordModal,
@@ -986,7 +984,11 @@ if (result.betResult !== -1 && this.state.rps_game_type === 1) {
             {renderLottieAvatarAnimation(this.props.gameBackground)}
             {this.props.rps_game_type === 1 && (
               <div className="game-background-panel game-info-panel">
-              <YouTubeModal open={this.state.modalOpen} onClose={this.handleCloseModal} rps={rpsValueAtLastIndex} />
+                <YouTubeModal
+                  open={this.state.modalOpen}
+                  onClose={this.handleCloseModal}
+                  rps={rpsValueAtLastIndex}
+                />
 
                 <div className="deck">
                   <div className="card-back">
@@ -1065,17 +1067,16 @@ if (result.betResult !== -1 && this.state.rps_game_type === 1) {
                 </p>
               </div>
             )}
-                <div className="guesses">
-                  {this.state.rps
-                    .slice()
-                    .reverse()
-                    .map((item, index) => (
-                      <p key={index}>{item.rps}</p>
-                      ))}
-                </div>
-                      {this.props.rps_game_type === 0 && (
-                      <div className="game-info-panel">
-
+            <div className="guesses">
+              {this.state.rps
+                .slice()
+                .reverse()
+                .map((item, index) => (
+                  <p key={index}>{item.rps}</p>
+                ))}
+            </div>
+            {this.props.rps_game_type === 0 && (
+              <div className="game-info-panel">
                 {this.state.startedPlaying && (
                   <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">
                     <div

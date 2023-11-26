@@ -1,3 +1,4 @@
+
 import React, { Component } from 'react';
 import {
   createTheme,
@@ -418,17 +419,17 @@ class SiteWrapper extends Component {
     this.setState({ transactions: updateFromNow(this.state.transactions) });
   };
 
-  initSocket = () => {
+  async initSocket() {
     const socket = socketIOClient(this.state.endpoint);
-
-    socket.on('CONNECTED', data => {
+    socket.on('CONNECTED', async data => {
       socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
       socket.emit('FETCH_GLOBAL_CHAT');
     });
 
-    socket.on('UPDATED_ROOM_LIST', data => {
-      this.props.setRoomList(data);
-      this.props.getUser(
+    socket.on('UPDATED_ROOM_LIST', async data => {
+      await this.props.setRoomList(data);
+
+      await this.props.getUser(
         true,
         false,
         0,
@@ -437,9 +438,9 @@ class SiteWrapper extends Component {
         this.state.sortBy,
         this.state.searchQuery
       );
-      this.props.getMyGames(1);
-      this.props.getMyHistory();
-      this.props.getHistory();
+      await this.props.getMyGames(1);
+      await this.props.getMyHistory();
+      await this.props.getHistory();
     });
 
     socket.on('PLAY_CORRECT_SOUND', socketId => {
@@ -573,7 +574,7 @@ class SiteWrapper extends Component {
     socket.on('SET_GLOBAL_CHAT', this.props.setGlobalChat);
 
     this.props.setSocket(socket);
-  };
+  }
   loadWeb3 = async () => {
     try {
       const web3 = new Web3(Web3.givenProvider);
@@ -599,15 +600,8 @@ class SiteWrapper extends Component {
       });
     }
     // this.counter = setInterval(this.updateCounter, 25);
-    setTimeout(() => {
-      this.setState({ websiteLoading: false });
-    }, 1500);
-
-    this.initializeAudio();
-
-    this.initSocket();
-
-    const result = await this.props.getUser(
+    await this.initSocket();
+    await this.props.getUser(
       true,
       false,
       0,
@@ -617,11 +611,26 @@ class SiteWrapper extends Component {
       this.state.searchQuery
     );
 
-    if (result.status === 'success') {
-      // if (!result.user.is_activated) {
-      //   this.handleOpenVerificationModal();
-      // }
-    }
+    this.initializeAudio();
+
+    // const result = await this.props.getUser(
+    //   true,
+    //   false,
+    //   0,
+    //   false,
+    //   false,
+    //   this.state.sortBy,
+    //   this.state.searchQuery
+    // );
+
+    // if (result.status === 'success') {
+    //   if (!result.user.is_activated) {
+    //       this.handleOpenVerificationModal();
+    //     }
+    //   }
+
+    await this.fetchData();
+    setInterval(() => this.fetchData(), 2000);
 
     this.interval = setInterval(this.updateReminderTime, 3000);
 
@@ -636,8 +645,9 @@ class SiteWrapper extends Component {
     }
 
     this.loadWeb3();
-    this.fetchData();
-    setInterval(() => this.fetchData(), 2000);
+    setTimeout(() => {
+      this.setState({ websiteLoading: false });
+    }, 1500);
   }
 
   initializeAudio() {
@@ -883,23 +893,58 @@ class SiteWrapper extends Component {
   };
 
   render() {
-    const { isMuted, balance, oldBalance } = this.state;
-    const { websiteLoading } = this.state;
+    const {
+      series,
+      anchorEl,
+      hoverTabIndex,
+      websiteLoading,
+      balance,
+      web3,
+      oldBalance,
+      web3account,
+      transactions,
+      web3balance,
+      userName,
+      showInventoryModal,
+      showNotifications,
+      showSearch,
+      showProfileModal,
+      showPlayerModal,
+      showSort,
+      showWithdrawModal,
+      showResetPasswordModal,
+      showDepositModal,
+      showAllGameLogs,
+      showLeaderboardsModal,
+      showHowToPlayModal,
+      showVerificationModal,
+      showMarketplaceModal,
+      showLoginModal,
+      showSignupModal
+    } = this.state;
+    const {
+      isMuted,
+      toggleMute,
+      isDarkMode,
+      notifications,
+      selectedMainTabIndex,
+      isAuthenticated,
+      children,
+      oneDayProfit,
+      sevenDayProfit,
+      allTimeProfit,
+      user
+    } = this.props;
     const balanceString = balance.toString();
     const decimalIndex = balanceString.indexOf('.');
     const numDecimals =
       decimalIndex !== -1
         ? Math.min(balanceString.length - decimalIndex - 1, 5)
         : 0;
-    const notificationsArray = Object.values(this.props.notifications);
-
+    const notificationsArray = Object.values(notifications);
     return (
-      <MuiThemeProvider theme={this.props.isDarkMode ? darkTheme : mainTheme}>
-        <div
-          className={`site_wrapper row ${
-            this.props.isDarkMode ? 'dark_mode' : ''
-          }`}
-        >
+      <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
+        <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
           {websiteLoading && (
             <div
               className="loading-overlay"
@@ -944,23 +989,21 @@ class SiteWrapper extends Component {
                 {' '}
               </a>
               <Tabs
-                value={this.props.selectedMainTabIndex}
+                value={selectedMainTabIndex}
                 onChange={this.handleMainTabChange}
                 TabIndicatorProps={{ style: { background: '#ff0000' } }}
                 className="main-game-page-tabs desktop-only"
               >
                 <Tab
                   className={`custom-tab ${
-                    this.state.hoverTabIndex === 0 ||
-                    this.props.selectedMainTabIndex === 0
+                    hoverTabIndex === 0 || selectedMainTabIndex === 0
                       ? 'fade-animation fade-in'
                       : 'fade-animation fade-out'
                   }`}
                   label="PVP"
                   labelPlacement="left"
                   icon={
-                    this.state.hoverTabIndex === 0 ||
-                    this.props.selectedMainTabIndex === 0 ? (
+                    hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
                       <BattleHover />
                     ) : (
                       <Battle />
@@ -973,16 +1016,14 @@ class SiteWrapper extends Component {
 
                 <Tab
                   className={`custom-tab ${
-                    this.state.hoverTabIndex === 1 ||
-                    this.props.selectedMainTabIndex === 1
+                    hoverTabIndex === 1 || selectedMainTabIndex === 1
                       ? 'fade-animation fade-in'
                       : 'fade-animation fade-out'
                   }`}
                   label="Manage"
                   labelPlacement="left"
                   icon={
-                    this.state.hoverTabIndex === 1 ||
-                    this.props.selectedMainTabIndex === 1 ? (
+                    hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
                       <ManageHover />
                     ) : (
                       <Manage />
@@ -997,6 +1038,7 @@ class SiteWrapper extends Component {
               <div className="header_action_panel">
                 <a
                   href="#"
+                  className='desktop-only'
                   onClick={e => {
                     e.preventDefault();
                     this.handleOpenMarketplaceModal();
@@ -1005,13 +1047,14 @@ class SiteWrapper extends Component {
                   onMouseEnter={() => this.handleMouseEnter(5)}
                   onMouseLeave={this.handleMouseLeave}
                 >
-                  {this.state.hoverTabIndex === 5 ? (
+                  {hoverTabIndex === 5 ? (
                     <StoreHover width="18pt" />
                   ) : (
                     <Store />
                   )}
                 </a>
                 <a
+                className='desktop-only'
                   href="#"
                   onClick={e => {
                     e.preventDefault();
@@ -1021,7 +1064,7 @@ class SiteWrapper extends Component {
                   onMouseEnter={() => this.handleMouseEnter(4)}
                   onMouseLeave={this.handleMouseLeave}
                 >
-                  {this.state.hoverTabIndex === 4 ? (
+                  {hoverTabIndex === 4 ? (
                     <LeaderboardsHover width="18pt" />
                   ) : (
                     <Leaderboards />
@@ -1029,6 +1072,7 @@ class SiteWrapper extends Component {
                 </a>
                 <a
                   href="#"
+                  className='desktop-only'
                   onClick={e => {
                     e.preventDefault();
                     this.handleNotificationsClick();
@@ -1037,13 +1081,13 @@ class SiteWrapper extends Component {
                   onMouseEnter={() => this.handleMouseEnter(3)}
                   onMouseLeave={this.handleMouseLeave}
                 >
-                  {this.state.hoverTabIndex === 3 ? (
+                  {hoverTabIndex === 3 ? (
                     <NotificationsHover width="18pt" />
                   ) : (
                     <Notifications />
                   )}
                 </a>
-                {this.props.isAuthenticated ? (
+                {isAuthenticated ? (
                   <>
                     <div id="balance">
                       <InlineSVG
@@ -1095,7 +1139,23 @@ class SiteWrapper extends Component {
                         </span>
                       </Button>
                     </div>
-
+                    <a
+                  href="#"
+                  className='mobile-only'
+                  onClick={e => {
+                    e.preventDefault();
+                    this.handleNotificationsClick();
+                  }}
+                  id="btn_notifications"
+                  onMouseEnter={() => this.handleMouseEnter(3)}
+                  onMouseLeave={this.handleMouseLeave}
+                >
+                  {hoverTabIndex === 3 ? (
+                    <NotificationsHover width="18pt" />
+                  ) : (
+                    <Notifications />
+                  )}
+                </a>
                     <Button
                       area-constrols="profile-menu"
                       aria-haspopup="true"
@@ -1103,23 +1163,23 @@ class SiteWrapper extends Component {
                       className="profile-menu"
                     >
                       <Avatar
-                        src={this.props.user.avatar}
-                        rank={this.props.user.totalWagered}
-                        accessory={this.props.user.accessory}
+                        src={user.avatar}
+                        rank={user.totalWagered}
+                        accessory={user.accessory}
                         alt=""
                         className="avatar"
-                        darkMode={this.props.isDarkMode}
+                        darkMode={isDarkMode}
                       />
                       {/* <span className="username">{this.state.userName}</span> */}
                       <ArrowDropDown />
                     </Button>
                     <Menu
                       id="profile-menu"
-                      anchorEl={this.state.anchorEl}
+                      anchorEl={anchorEl}
                       getContentAnchorEl={null}
-                      open={Boolean(this.state.anchorEl)}
+                      open={Boolean(anchorEl)}
                       onClose={this.handleCloseMenu}
-                      isDarkMode={this.props.isDarkMode}
+                      isDarkMode={isDarkMode}
                       anchorOrigin={{
                         vertical: 'bottom',
                         horizontal: 'center'
@@ -1131,12 +1191,10 @@ class SiteWrapper extends Component {
                       PaperProps={{
                         style: {
                           width: '200px',
-                          border: this.props.isDarkMode
+                          border: isDarkMode
                             ? '2px solid #212529'
                             : '2px solid #e5e5e5',
-                          background: this.props.isDarkMode
-                            ? '#101010'
-                            : '#f9f9f9'
+                          background: isDarkMode ? '#101010' : '#f9f9f9'
                         }
                       }}
                       BackdropProps={{
@@ -1209,7 +1267,7 @@ class SiteWrapper extends Component {
                               }
                             }
                           }}
-                          series={this.state.series}
+                          series={series}
                           type="line"
                           height="80"
                         />
@@ -1234,11 +1292,11 @@ class SiteWrapper extends Component {
                       </MenuItem> */}
                       <MenuItem>
                         <ListItemText>
-                          {this.props.isMuted ? (
+                          {isMuted ? (
                             <div
                               className="playBtn"
                               onClick={e => {
-                                this.props.toggleMute(!this.props.isMuted);
+                                toggleMute(!isMuted);
                                 this.handleMute();
                               }}
                             >
@@ -1251,7 +1309,7 @@ class SiteWrapper extends Component {
                             <div
                               className="playBtn"
                               onClick={e => {
-                                this.props.toggleMute(!this.props.isMuted);
+                                toggleMute(!isMuted);
                                 this.handleUnmute();
                               }}
                             >
@@ -1265,11 +1323,11 @@ class SiteWrapper extends Component {
                       </MenuItem>
                       <MenuItem
                         onClick={e => {
-                          this.props.setDarkMode(!this.props.isDarkMode);
+                          this.props.setDarkMode(!isDarkMode);
                         }}
                       >
                         <ListItemIcon>
-                          {this.props.isDarkMode ? (
+                          {isDarkMode ? (
                             <Brightness7 />
                           ) : (
                             <Brightness4 />
@@ -1277,7 +1335,7 @@ class SiteWrapper extends Component {
                         </ListItemIcon>
 
                         <ListItemText>
-                          {this.props.isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
+                          {isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
                         </ListItemText>
                       </MenuItem>
                       <MenuItem onClick={this.handleOpenHowToPlayModal}>
@@ -1316,7 +1374,7 @@ class SiteWrapper extends Component {
             </div>
             <div
               id="notifications"
-              className={this.state.showNotifications ? '' : 'hidden'}
+              className={showNotifications ? '' : 'hidden'}
               onClick={this.handleNotificationsClick}
             >
               <div className="arrow-up"></div>
@@ -1340,7 +1398,7 @@ class SiteWrapper extends Component {
                 }
               </div>
             </div>
-            {this.state.showAllGameLogs && (
+            {showAllGameLogs && (
               <div className="game-logs-modal-container">
                 <div className="modal-header">
                   <h2>ALL HISTORY</h2>
@@ -1358,7 +1416,7 @@ class SiteWrapper extends Component {
                         <FontAwesomeIcon icon={faSort} />
                         &nbsp;&nbsp;Sort by
                       </Button>
-                      {this.state.showSort && (
+                      {showSort && (
                         <div className="popup">
                           <div className="popup-content">
                             <RadioGroup
@@ -1419,7 +1477,7 @@ class SiteWrapper extends Component {
                         &nbsp;&nbsp;Search
                       </Button>
 
-                      {this.state.showSearch && (
+                      {showSearch && (
                         <div className="search">
                           <div className="search-content">
                             <TextField
@@ -1438,15 +1496,15 @@ class SiteWrapper extends Component {
                       <span>1-Day</span>
                       <span
                         style={{
-                          color: this.props.oneDayProfit > 0 ? '#57ca22' : 'red'
+                          color: oneDayProfit > 0 ? '#57ca22' : 'red'
                         }}
                       >
-                        {this.props.oneDayProfit > 0 ? (
+                        {oneDayProfit > 0 ? (
                           <ArrowUpward />
                         ) : (
                           <ArrowDownward />
                         )}
-                        {convertToCurrency(this.props.oneDayProfit)}
+                        {convertToCurrency(oneDayProfit)}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -1454,15 +1512,15 @@ class SiteWrapper extends Component {
                       <span
                         style={{
                           color:
-                            this.props.sevenDayProfit > 0 ? '#57ca22' : 'red'
+                            sevenDayProfit > 0 ? '#57ca22' : 'red'
                         }}
                       >
-                        {this.props.sevenDayProfit > 0 ? (
+                        {sevenDayProfit > 0 ? (
                           <ArrowUpward />
                         ) : (
                           <ArrowDownward />
                         )}
-                        {convertToCurrency(this.props.sevenDayProfit)}
+                        {convertToCurrency(sevenDayProfit)}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -1470,15 +1528,15 @@ class SiteWrapper extends Component {
                       <span
                         style={{
                           color:
-                            this.props.allTimeProfit > 0 ? '#57ca22' : 'red'
+                            allTimeProfit > 0 ? '#57ca22' : 'red'
                         }}
                       >
-                        {this.props.allTimeProfit > 0 ? (
+                        {allTimeProfit > 0 ? (
                           <ArrowUpward />
                         ) : (
                           <ArrowDownward />
                         )}
-                        {convertToCurrency(this.props.allTimeProfit)}
+                        {convertToCurrency(allTimeProfit)}
                       </span>
                     </div>
                   </div>
@@ -1494,12 +1552,12 @@ class SiteWrapper extends Component {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {this.state.transactions.length === 0 ? (
+                      {transactions.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan="4">...</TableCell>
                         </TableRow>
                       ) : (
-                        this.state.transactions.map((row, key) => (
+                        transactions.map((row, key) => (
                           <TableRow key={key}>
                             <TableCell
                               className={
@@ -1573,12 +1631,12 @@ class SiteWrapper extends Component {
                   <div>
                     <table>
                       <tbody>
-                        {this.state.transactions.length === 0 ? (
+                        {transactions.length === 0 ? (
                           <tr>
                             <td>...</td>
                           </tr>
                         ) : (
-                          this.state.transactions.map((row, key) => (
+                          transactions.map((row, key) => (
                             <tr key={key}>
                               {row.hash ? ( // Check if row has a 'hash' property
                                 <a
@@ -1648,7 +1706,7 @@ class SiteWrapper extends Component {
                 <div className="transaction-panel">
                   <Button
                     className="btn-inventory"
-                    isDarkMode={this.props.isDarkMode}
+                    isDarkMode={isDarkMode}
                     onClick={this.handleOpenInventoryModal}
                   >
                     Inventory
@@ -1658,24 +1716,24 @@ class SiteWrapper extends Component {
                   <Button
                     className="btn-withdraw"
                     onClick={this.handleOpenWithdrawModal}
-                    isDarkMode={this.props.isDarkMode}
+                    isDarkMode={isDarkMode}
                   >
                     Withdraw
                   </Button>
                   <Button
                     className="btn-deposit"
                     onClick={this.handleOpenDepositModal}
-                    isDarkMode={this.props.isDarkMode}
+                    isDarkMode={isDarkMode}
                   >
                     Deposit
                   </Button>
                   <hr />
-                  {this.state.web3account ? (
+                  {web3account ? (
                     <>
                       <input
                         id="wallet-address"
                         type="text"
-                        value={this.state.web3account}
+                        value={web3account}
                         readOnly
                       />
                       <Button className="connect" onClick={this.disconnectWeb3}>
@@ -1693,61 +1751,61 @@ class SiteWrapper extends Component {
           </div>
 
           <div className="game_wrapper">
-            <div className="contents_wrapper">{this.props.children}</div>
+            <div className="contents_wrapper">{children}</div>
           </div>
 
-          {this.state.showProfileModal && (
+          {showProfileModal && (
             <ProfileModal
-              modalIsOpen={this.state.showProfileModal}
+              modalIsOpen={showProfileModal}
               closeModal={this.handleCloseProfileModal}
-              player_name={this.state.userName}
-              balance={this.state.balance}
-              accessory={this.props.user.accessory}
-              avatar={this.props.user.avatar}
-              email={this.props.user.email}
-              totalWagered={this.props.user.totalWagered}
+              player_name={userName}
+              balance={balance}
+              accessory={user.accessory}
+              avatar={user.avatar}
+              email={user.email}
+              totalWagered={user.totalWagered}
             />
           )}
-          {this.state.showPlayerModal && (
+          {showPlayerModal && (
             <PlayerModal
-              modalIsOpen={this.state.showPlayerModal}
+              modalIsOpen={showPlayerModal}
               closeModal={this.handleClosePlayerModal}
-              player_name={this.state.userName}
-              balance={this.state.balance}
-              avatar={this.props.user.avatar}
-              accessory={this.props.user.accessory}
+              player_name={userName}
+              balance={balance}
+              avatar={user.avatar}
+              accessory={user.accessory}
             />
           )}
-          {this.state.showLeaderboardsModal && (
+          {showLeaderboardsModal && (
             <LeaderboardsModal
-              modalIsOpen={this.state.showLeaderboardsModal}
+              modalIsOpen={showLeaderboardsModal}
               closeModal={this.handleCloseLeaderboardsModal}
-              player_name={this.state.userName}
-              balance={this.state.balance}
-              isDarkMode={this.props.isDarkMode}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
             />
           )}
-          {this.state.showHowToPlayModal && (
+          {showHowToPlayModal && (
             <HowToPlayModal
-              modalIsOpen={this.state.showHowToPlayModal}
+              modalIsOpen={showHowToPlayModal}
               closeModal={this.handleCloseHowToPlayModal}
-              player_name={this.state.userName}
-              balance={this.state.balance}
-              isDarkMode={this.props.isDarkMode}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
             />
           )}
-          {this.state.showMarketplaceModal && (
+          {showMarketplaceModal && (
             <MarketplaceModal
-              modalIsOpen={this.state.showMarketplaceModal}
+              modalIsOpen={showMarketplaceModal}
               closeModal={this.handleCloseMarketplaceModal}
-              player_name={this.state.userName}
-              balance={this.state.balance}
-              isDarkMode={this.props.isDarkMode}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
             />
           )}
-          {this.state.showLoginModal && (
+          {showLoginModal && (
             <LoginModal
-              modalIsOpen={this.state.showLoginModal}
+              modalIsOpen={showLoginModal}
               closeModal={this.handleCloseLoginModal}
               openSignupModal={this.handleOpenSignupModal}
               openVerificationModal={this.handleOpenVerificationModal}
@@ -1755,47 +1813,47 @@ class SiteWrapper extends Component {
               openResetPasswordModal={this.handleOpenResetPasswordModal}
             />
           )}
-          {this.state.showSignupModal && (
+          {showSignupModal && (
             <SignupModal
-              modalIsOpen={this.state.showSignupModal}
+              modalIsOpen={showSignupModal}
               closeModal={this.handleCloseSignupModal}
               openLoginModal={this.handleOpenLoginModal}
             />
           )}
-          {this.state.showVerificationModal && (
+          {showVerificationModal && (
             <VerificationModal
-              modalIsOpen={this.state.showVerificationModal}
+              modalIsOpen={showVerificationModal}
               closeModal={this.handleCloseVerificationModal}
             />
           )}
-          {this.state.showDepositModal && (
+          {showDepositModal && (
             <DepositModal
-              modalIsOpen={this.state.showDepositModal}
+              modalIsOpen={showDepositModal}
               closeModal={this.handleCloseDepositModal}
-              web3={this.state.web3}
-              balance={this.state.web3balance}
-              account={this.state.web3account}
+              web3={web3}
+              balance={web3balance}
+              account={web3account}
             />
           )}
-          {this.state.showInventoryModal && (
+          {showInventoryModal && (
             <InventoryModal
-              modalIsOpen={this.state.showInventoryModal}
+              modalIsOpen={showInventoryModal}
               closeModal={this.handleCloseInventoryModal}
               handleOpenMarketplaceModal={this.handleOpenMarketplaceModal}
             />
           )}
-          {this.state.showWithdrawModal && (
+          {showWithdrawModal && (
             <WithdrawModal
-              modalIsOpen={this.state.showWithdrawModal}
+              modalIsOpen={showWithdrawModal}
               closeModal={this.handleCloseWithdrawModal}
-              balance={this.state.balance}
-              web3={this.state.web3}
-              account={this.state.web3account}
+              balance={balance}
+              web3={web3}
+              account={web3account}
             />
           )}
-          {this.state.showResetPasswordModal && (
+          {showResetPasswordModal && (
             <ResetPasswordModal
-              modalIsOpen={this.state.showResetPasswordModal}
+              modalIsOpen={showResetPasswordModal}
               closeModal={this.handleCloseResetPasswordModal}
               openLoginModal={this.handleOpenLoginModal}
             />

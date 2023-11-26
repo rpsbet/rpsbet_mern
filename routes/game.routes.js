@@ -985,6 +985,7 @@ router.get('/rooms', async (req, res) => {
 
 router.post('/rooms', auth, async (req, res) => {
   try {
+    console.log("pd")
     const {
       bet_amount,
       game_type,
@@ -2090,6 +2091,10 @@ router.post('/bet', auth, async (req, res) => {
           [ScissorsType, WhaleType],
           [BearType, ScissorsType],
           [BullType, BearType],
+          [WhaleType, RockType],
+          [WhaleType, BullType],
+          [WhaleType, BearType],
+
         ],
         draw: [
           [RockType, RockType],
@@ -2125,7 +2130,6 @@ router.post('/bet', auth, async (req, res) => {
           userType.includes(userSelection) &&
           systemType.includes(systemSelection)
         ) {
-          console.log('win');
           return 1; // User wins
         }
       }
@@ -2135,8 +2139,6 @@ router.post('/bet', auth, async (req, res) => {
           userType.includes(userSelection) &&
           systemType.includes(systemSelection)
         ) {
-          console.log('draw');
-
           return 0; // Draw
         }
       }
@@ -2146,8 +2148,6 @@ router.post('/bet', auth, async (req, res) => {
           userType.includes(userSelection) &&
           systemType.includes(systemSelection)
         ) {
-          console.log('loss');
-
           return -1; // User loses
         }
       }
@@ -2332,19 +2332,16 @@ router.post('/bet', auth, async (req, res) => {
                   ((commission - 0.5) / 100);
             }
             const lastFiveBetItems = await RpsBetItem.find({
-              room: new ObjectId(req.body._id)
+              room: req.body._id,
+              joiner_rps: { $ne: null } // Filter out items with null joiner
             })
               .sort({ created_at: -1 })
               .limit(5);
 
-            const filteredBetItems = lastFiveBetItems.filter(
-              item => item.joiner !== null
-            ); // Filter out items with null joiner
-
-            if (filteredBetItems.length > 0 && req.io.sockets) {
+            if (req.io.sockets && lastFiveBetItems.length > 0) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
                 bankroll: roomInfo['user_bet'],
-                rps: filteredBetItems
+                rps: lastFiveBetItems
               });
             }
 
@@ -2360,8 +2357,8 @@ router.post('/bet', auth, async (req, res) => {
             newGameLog.game_result = 0;
 
             const lastFiveBetItems = await RpsBetItem.find({
-              room: new ObjectId(req.body._id),
-              joiner: { $ne: null } // Filter out items with null joiner
+              room: req.body._id,
+              joiner_rps: { $ne: null } // Filter out items with null joiner
             })
               .sort({ created_at: -1 })
               .limit(5);
@@ -2415,8 +2412,8 @@ router.post('/bet', auth, async (req, res) => {
               ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
             }
             const lastFiveBetItems = await RpsBetItem.find({
-              room: new ObjectId(req.body._id),
-              joiner: { $ne: null } // Filter out items with null joiner
+              room: req.body._id,
+              joiner_rps: { $ne: null } // Filter out items with null joiner
             })
               .sort({ created_at: -1 })
               .limit(5);
@@ -2439,11 +2436,7 @@ router.post('/bet', auth, async (req, res) => {
         } else {
           const userSelection = req.body.selected_rps;
           const systemSelection = bet_item.rps;
-          console.log('userSelection', userSelection);
-          console.log('systemSelection', systemSelection);
-
           result = determineGameResult(userSelection, systemSelection);
-          console.log('result, ', result);
           if (result === 1) {
             newGameLog.game_result = 1;
             newTransactionJ.amount +=
@@ -2485,19 +2478,16 @@ router.post('/bet', auth, async (req, res) => {
                   ((commission - 0.5) / 100);
             }
             const lastFiveBetItems = await RpsBetItem.find({
-              room: new ObjectId(req.body._id)
+              room: req.body._id,
+              joiner_rps: { $ne: null } // Filter out items with null joiner
             })
               .sort({ created_at: -1 })
               .limit(5);
 
-            const filteredBetItems = lastFiveBetItems.filter(
-              item => item.joiner !== null
-            ); // Filter out items with null joiner
-
-            if (filteredBetItems.length > 0 && req.io.sockets) {
+            if (req.io.sockets && lastFiveBetItems.length > 0) {
               req.io.sockets.emit('UPDATED_BANKROLL', {
                 bankroll: roomInfo['user_bet'],
-                rps: filteredBetItems
+                rps: lastFiveBetItems
               });
             }
 
@@ -2513,8 +2503,8 @@ router.post('/bet', auth, async (req, res) => {
             newGameLog.game_result = 0;
 
             const lastFiveBetItems = await RpsBetItem.find({
-              room: new ObjectId(req.body._id),
-              joiner: { $ne: null } // Filter out items with null joiner
+              room: req.body._id,
+              joiner_rps: { $ne: null } // Filter out items with null joiner
             })
               .sort({ created_at: -1 })
               .limit(5);
@@ -2525,7 +2515,6 @@ router.post('/bet', auth, async (req, res) => {
                 rps: lastFiveBetItems
               });
             }
-
             newTransactionJ.amount += parseFloat(req.body.bet_amount);
             message.message =
               'We split ' +
@@ -2568,8 +2557,8 @@ router.post('/bet', auth, async (req, res) => {
               ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
             }
             const lastFiveBetItems = await RpsBetItem.find({
-              room: new ObjectId(req.body._id),
-              joiner: { $ne: null } // Filter out items with null joiner
+              room: req.body._id,
+              joiner_rps: { $ne: null } // Filter out items with null joiner
             })
               .sort({ created_at: -1 })
               .limit(5);
@@ -2580,7 +2569,6 @@ router.post('/bet', auth, async (req, res) => {
                 rps: lastFiveBetItems
               });
             }
-
             message.message =
               'I lost ' +
               req.body.bet_amount +
@@ -2603,7 +2591,6 @@ router.post('/bet', auth, async (req, res) => {
           if (nextItem) {
             await nextItem.save();
           } else {
-            console.log('hi');
 
             roomInfo.status = 'finished';
           }

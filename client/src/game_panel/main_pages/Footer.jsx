@@ -11,6 +11,7 @@ import ltc from '../icons/ltc.png';
 import { withStyles } from '@material-ui/core/styles';
 import PrivacyModal from '../modal/PrivacyModal'
 import TermsModal from '../modal/TermsModal';
+import LeaderboardsModal from '../modal/LeaderboardsModal';
 
 const styles = (theme) => ({
     root: {
@@ -91,6 +92,7 @@ class Footer extends Component {
             open: this.props.open,
             showPrivacyModal: false,
             showTermsModal: false,
+            showLeaderboardsModal: false,
         }
     }
 
@@ -101,6 +103,14 @@ class Footer extends Component {
     componentDidMount() {
         // this.IsAuthenticatedReroute();
     }
+
+    handleOpenLeaderboardsModal = () => {
+        this.setState({ showLeaderboardsModal: true });
+      };
+    
+      handleCloseLeaderboardsModal = () => {
+        this.setState({ showLeaderboardsModal: false });
+      };
     
     IsAuthenticatedReroute = () => {
         if (!this.props.auth) {
@@ -125,10 +135,22 @@ class Footer extends Component {
 
 
     render() {
-        const { classes } = this.props;
+        const { classes, isDarkMode } = this.props;
+        
+        const { showLeaderboardsModal } = this.state;
+
         return (
             <div className="bottom-footer" style={this.props.style}>
                 <div id="footer-container" className={classes.footerContainer}>
+                {showLeaderboardsModal && (
+            <LeaderboardsModal
+              modalIsOpen={showLeaderboardsModal}
+              closeModal={this.handleCloseLeaderboardsModal}
+            //   player_name={userName}
+            //   balance={balance}
+              isDarkMode={isDarkMode}
+            />
+          )}
                 <div className="social-icons">
                     <a href="https://discord.gg/anMJntW4AD">
                         <FontAwesomeIcon icon={faDiscord} />
@@ -164,7 +186,11 @@ class Footer extends Component {
 
                               </div>
                 <div className={classes.links}>
-                {/* <a className={classes.link} href="#">Contact</a>&nbsp;✗&nbsp; */}
+                <a  className={(classes.link, 'mobile-only')} href="#"
+                  onClick={e => {
+                    e.preventDefault();
+                    this.handleOpenLeaderboardsModal();
+                  }} >Leaderboards</a>&nbsp;✗&nbsp;
                     {/* <a className={classes.link} href="#">Blog</a>&nbsp;✗&nbsp; */}
                     {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
                     <a className={classes.link}

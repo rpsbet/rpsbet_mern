@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/ProductPage';
 import {
   getRoomList,
   getHistory,
@@ -11,9 +12,7 @@ import {
   getMyChat,
   getGameTypeList
 } from '../../redux/Logic/logic.actions';
-import {
-  toggleDrawer
-} from '../../redux/Auth/user.actions';
+import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import ShowHistory from '../icons/ShowHistory.js';
@@ -26,7 +25,7 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import { Button } from '@material-ui/core';
 
-import { Tabs, Tab, Drawer  } from '@material-ui/core';
+import { Tabs, Tab, Drawer } from '@material-ui/core';
 import DrawerButton from './DrawerButton';
 import './MainPages.css';
 import ChatPanel from '../ChatPanel/ChatPanel';
@@ -47,7 +46,7 @@ const defaultOptions = {
   autoplay: true,
   animationData: animationData,
   rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice"
+    preserveAspectRatio: 'xMidYMid slice'
   }
 };
 
@@ -62,7 +61,6 @@ class MainPage extends Component {
       isDrawerOpen: true
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
-
   }
 
   async componentDidMount() {
@@ -76,11 +74,7 @@ class MainPage extends Component {
       getMyChat
     } = this.props;
 
-    const promises = [
-      getRoomList(),
-      getHistory(),
-      getGameTypeList()
-    ];
+    const promises = [getRoomList(), getHistory(), getGameTypeList()];
 
     if (isAuthenticated) {
       promises.push(getMyGames());
@@ -89,8 +83,7 @@ class MainPage extends Component {
     }
 
     await Promise.all(promises);
-}
-
+  }
 
   showOpenGameOrHistory = (e, newValue) => {
     e.preventDefault();
@@ -105,37 +98,54 @@ class MainPage extends Component {
 
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
-    (!this.state.is_mobile && this.props.selectedMainTabIndex === 0)
-      ? <div id="liveStakes">{this.props.roomCount} BATTLE BOTS
-      <Lottie 
-        options={defaultOptions}
-          width={40}
-        /></div>
-      : 'Your Battles';
+    (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
+      <div id="liveStakes">
+        {this.props.roomCount} BATTLE BOTS
+        <Lottie options={defaultOptions} width={40} />
+      </div>
+    ) : (
+      'Your Battles'
+    );
 
   render() {
     const { isDrawerOpen } = this.props;
 
     return (
-      
-      <div className="main-game" style={{ gridTemplateColumns: this.props.isDrawerOpen ? '260px calc(100% - 610px) 350px' : 'calc(100% - 350px) 350px' }}>
+      <div
+        className="main-game"
+        style={{
+          gridTemplateColumns: this.props.isDrawerOpen
+            ? '260px calc(100% - 610px) 350px'
+            : 'calc(100% - 350px) 350px'
+        }}
+      >
         {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
-          !this.state.is_mobile) &&
-          
+          !this.state.is_mobile) && (
           <Drawer
-          
-          className="mat-chat" style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
-        variant="persistent"
-          anchor="left"
-          open={isDrawerOpen}
+            className="mat-chat"
+            style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
+            variant="persistent"
+            anchor="left"
+            open={isDrawerOpen}
           >
             <ChatPanel />
           </Drawer>
-          }
+        )}
+        {(this.state.is_mobile && this.state.selectedMobileTab === 'marketplace')  && (
+          // <Drawer
+          //   className="mat-chat"
+          //   style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
+          //   variant="persistent"
+          //   anchor="left"
+          //   open={isDrawerOpen}
+          // >
+            <ProductPage />
+          // </Drawer>
+        )}
         {this.state.is_mobile &&
           (this.state.selectedMobileTab === 'live_games' ||
             this.state.selectedMobileTab === 'my_games') && (
-              <Tabs
+            <Tabs
               value={this.state.show_open_game}
               onChange={this.showOpenGameOrHistory}
               TabIndicatorProps={{ style: { background: '#ff0000' } }}
@@ -143,36 +153,38 @@ class MainPage extends Component {
             >
               <Tab
                 label={
-                  (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'live_games') ? (
-                    "PVP"
-                  ) : (
-                    (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'my_games') ? (
-                      "MANAGE"
-                    ) : (
-                      this.state.selectedMobileTab === 'live_games' ? "PVP" : "MANAGE"
-                    )
-                  )
+                  this.state.show_open_game === 0 &&
+                  this.state.selectedMobileTab === 'live_games'
+                    ? 'PVP'
+                    : this.state.show_open_game === 0 &&
+                      this.state.selectedMobileTab === 'my_games'
+                    ? 'MANAGE'
+                    : this.state.selectedMobileTab === 'live_games'
+                    ? 'PVP'
+                    : 'MANAGE'
                 }
                 icon={
-                  (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'live_games') ? (
+                  this.state.show_open_game === 0 &&
+                  this.state.selectedMobileTab === 'live_games' ? (
                     <BattleHover />
+                  ) : this.state.show_open_game === 0 &&
+                    this.state.selectedMobileTab === 'my_games' ? (
+                    <ManageHover />
+                  ) : this.state.selectedMobileTab === 'live_games' ? (
+                    <Battle />
                   ) : (
-                    (this.state.show_open_game === 0 && this.state.selectedMobileTab === 'my_games') ? (
-                      <ManageHover />
-                    ) : (
-                      this.state.selectedMobileTab === 'live_games' ? <Battle /> : <Manage />
-                    )
+                    <Manage />
                   )
                 }
                 style={customStyles.tabRoot}
               />
               <Tab
                 label={
-                  this.state.show_open_game === 1 ? (
-                    this.state.selectedMobileTab === 'live_games' ? "History" : "My History"
-                  ) : (
-                    "History"
-                  )
+                  this.state.show_open_game === 1
+                    ? this.state.selectedMobileTab === 'live_games'
+                      ? 'History'
+                      : 'My History'
+                    : 'History'
                 }
                 icon={
                   this.state.show_open_game === 1 ? (
@@ -184,8 +196,6 @@ class MainPage extends Component {
                 style={customStyles.tabRoot}
               />
             </Tabs>
-            
-
           )}
         <div className="main-panel">
           <h2 className="main-title desktop-only">{this.getActiveTabText()}</h2>
@@ -226,7 +236,7 @@ class MainPage extends Component {
           <DrawerButton
             open={this.props.isDrawerOpen}
             toggleDrawer={this.toggleDrawer}
-        />
+          />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <MyHistoryTable />
           )}
@@ -295,34 +305,83 @@ class MainPage extends Component {
               </svg>
               {this.state.selectedMobileTab === 'my_games' && 'YOUR BATTLES'}
             </Button>
-            {/* <button
-              className={`mobile-tab-leaderboards ${
-                this.state.selectedMobileTab === 'leaderboards' ? 'active' : ''
+            <button
+              className={`mobile-tab-marketplace ${
+                this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
               }`}
               onClick={e => {
-                this.setState({ selectedMobileTab: 'leaderboards' });
+                this.setState({ selectedMobileTab: 'marketplace' });
               }}
             >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
                 width="32"
                 height="32"
-                fill="none"
                 viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
+                {/* <rect width="32" height="32" rx="8" fill="#3A3F42"/> */}
                 <path
-                  stroke={
-                    this.state.selectedMobileTab === 'leaderboards'
+                  d="M25 14L21.5 7L18 14H25Z"
+                  fill={
+                    this.state.selectedMobileTab === 'marketplace'
                       ? '#fff'
                       : '#8E9297'
                   }
-                  strokeWidth="1.5"
-                  d="M10.083 6.083h11.833v8.584c0 3.268-2.649 5.917-5.916 5.917-3.268 0-5.917-2.65-5.917-5.917V6.083zM9.333 26.666h13.333M22.223 14.597c3.528-.571 4.444-4.538 4.444-6.597H22M9.777 14.597C6.25 14.026 5.333 10.06 5.333 8H10M16 21.334v5.333"
+                  stroke="#EEEEEC"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M7 18.25L13.75 25"
+                  fill={
+                    this.state.selectedMobileTab === 'marketplace'
+                      ? '#fff'
+                      : '#8E9297'
+                  }
+                  stroke="#ECEDEE"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M13.75 18.25L7 25"
+                  fill={
+                    this.state.selectedMobileTab === 'marketplace'
+                      ? '#fff'
+                      : '#8E9297'
+                  }
+                  stroke="#ECEDEE"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <rect
+                  x="7"
+                  y="7"
+                  width="7"
+                  height="7"
+                  rx="1"
+                  fill="#FFA7A7"
+                  stroke="#ECEDEE"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <circle
+                  cx="21.5"
+                  cy="21.5"
+                  r="3.5"
+                  fill={
+                    this.state.selectedMobileTab === 'marketplace'
+                      ? '#fff'
+                      : '#8E9297'
+                  }
+                  stroke="#ECEDEE"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
                 />
               </svg>
-              {this.state.selectedMobileTab === 'leaderboards' &&
-                'LEADERBOARDS'}
-            </button> */}
+
+              {this.state.selectedMobileTab === 'marketplace' && 'MARKETPLACE'}
+            </button>
             <Button
               className={`mobile-tab-chat ${
                 this.state.selectedMobileTab === 'chat' ? 'active' : ''
@@ -377,9 +436,11 @@ class MainPage extends Component {
             </Button>
           </div>
         )}
-            <Footer className="footer" open={this.props.isDrawerOpen} style={{ marginLeft: this.props.isDrawerOpen ? '270px' : '0' }} />
-
-
+        <Footer
+          className="footer"
+          open={this.props.isDrawerOpen}
+          style={{ marginLeft: this.props.isDrawerOpen ? '270px' : '0' }}
+        />
       </div>
     );
   }

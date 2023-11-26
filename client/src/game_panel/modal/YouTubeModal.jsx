@@ -31,7 +31,7 @@ const YouTubeModal = ({ open, onClose, rps }) => {
 
       case 'Scissors':
       case 'MoonScissors':
-        return 'https://www.youtube.com/embed/Cl_9RfmvqIk';
+        return 'https://www.youtube.com/embed/hlHQFZbwEh0';
 
       case 'Tumbledryer':
         return 'https://www.youtube.com/embed/T20K8xxg9pk';
@@ -43,13 +43,13 @@ const YouTubeModal = ({ open, onClose, rps }) => {
         return 'https://www.youtube.com/embed/HBmwkU0AR7I';
 
       case 'Microwave':
-        return 'https://www.youtube.com/embed/HBmwkU0AR7I';
+        return 'https://www.youtube.com/embed/NEFMNrqwzgs';
 
       case 'Quick Ball':
-        return 'https://www.youtube.com/embed/HBmwkU0AR7I';
+        return 'https://www.youtube.com/embed/ofwlVjaUcK8';
 
       case 'Blender':
-        return 'https://www.youtube.com/embed/HBmwkU0AR7I';
+        return 'https://www.youtube.com/embed/VDnLRAmtk6U';
 
       case 'Snowman':
         return 'https://www.youtube.com/embed/hlc-IW-6TC4';
