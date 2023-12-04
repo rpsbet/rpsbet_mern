@@ -67,7 +67,7 @@ class GamePasswordModal extends Component {
                     <div className={`modal-icon result-icon-password`}></div>
                     <h5>PASSWORD REQUIRED</h5>
                     <TextField
-                    type="password"
+                    // type="password"
                     id="game_password"
                     variant="outlined"
                     value={this.state.password}

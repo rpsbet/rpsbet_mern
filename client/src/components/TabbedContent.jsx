@@ -68,10 +68,11 @@ class TabbedContent extends Component {
   };
 
   attachAccessories = () => {
+    const {isLowGraphics} = this.props;
     const userLinks = document.querySelectorAll('.user-link');
     userLinks.forEach(element => {
       const accessory = element.getAttribute('accessory');
-      const lottieAnimation = renderLottieAvatarAnimation(accessory);
+      const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
       const portalContainer = document.createElement('div');
       ReactDOM.render(lottieAnimation, portalContainer);
       element.parentNode.insertBefore(portalContainer, element);
@@ -104,6 +105,7 @@ class TabbedContent extends Component {
 
   render() {
     const { selectedTab } = this.state;
+    const {roomInfo, isLowGraphics} = this.props;
     return (
       <div>
         <Tabs
@@ -129,9 +131,9 @@ class TabbedContent extends Component {
           {selectedTab === 0 && (
             <div className="room-history-panel">
               <h2 className="room-history-title">Battle History</h2>
-              {this.props.roomInfo &&
-              this.props.roomInfo.room_history &&
-              this.props.roomInfo.room_history.length > 0 ? (
+              {roomInfo &&
+              roomInfo.room_history &&
+              roomInfo.room_history.length > 0 ? (
                 <div className="table main-history-table">
                   {this.state.showPlayerModal && (
                     <PlayerModal
@@ -143,7 +145,7 @@ class TabbedContent extends Component {
                       // avatar={this.props.user.avatar}
                     />
                   )}
-                  {this.props.roomInfo.room_history
+                  {roomInfo.room_history
                     .slice(0, this.state.numToShow)
                     .map(
                       (row, key) => (
@@ -153,7 +155,7 @@ class TabbedContent extends Component {
                           key={row._id}
                         >
                           {' '}
-                          {renderLottieAvatarAnimation(row.gameBackground)}
+                          {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)}
                           <div>
                             <div className="table-cell">
                               <div className="room-id">{row.status}</div>
@@ -173,7 +175,7 @@ class TabbedContent extends Component {
                             ></div>
                           </div>
                           {key ===
-                            this.props.roomInfo.room_history.length - 1 && (
+                            roomInfo.room_history.length - 1 && (
                             <div ref={this.lastItemRef}></div>
                           )}
                         </div>
@@ -181,7 +183,7 @@ class TabbedContent extends Component {
                       this
                     )}
                   {this.state.numToShow <
-                    this.props.roomInfo.room_history.length && (
+                    roomInfo.room_history.length && (
                     <div className="load-more-btn">
                       <Button
                         id="load-btn"
@@ -203,8 +205,6 @@ class TabbedContent extends Component {
             <div>
               <Leaderboards
                 actionList={this.props.actionList}
-                getRoomInfo={this.props.roomInfo._id}
-                getRoomData={this.props.getRoomData}
               />
             </div>
           )}

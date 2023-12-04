@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import TabbedContent from '../../components/TabbedContent';
 import Moment from 'moment';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
-import { Button, Drawer } from '@material-ui/core';
+import { Button, Drawer, LinearProgress } from '@material-ui/core';
 import LoadingOverlay from 'react-loading-overlay';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import RPS from '../JoinGame/RPS';
@@ -35,7 +35,6 @@ import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
 import Footer from './Footer';
-import { toggleMute } from '../../redux/Auth/user.actions';
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -48,14 +47,10 @@ function updateFromNow(history) {
 const customStyles = {
   tabRoot: {
     textTransform: 'none',
-    width: '50%',
+    width: '50%'
   }
 };
-const gifUrls = [
-  '/img/rock.gif',
-  '/img/paper.gif',
-  '/img/scissors.gif'
-];
+const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 
 const getRandomGifUrl = () => {
   const randomIndex = Math.floor(Math.random() * gifUrls.length);
@@ -80,12 +75,13 @@ class JoinGame extends Component {
       selectedCreator: '',
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
-      joiningRoom: false,
       roomInfo: this.props.roomInfo,
-      bankroll:
-        parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
+      limit: 10,
+      image: '',
+      productName: '',
+      bankroll: '',
+      // parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets(),
       history: this.props.history,
-      loading: false,
       sounds: {
         win: new Audio('/sounds/win-sound.mp3'),
         split: new Audio('/sounds/split-sound.mp3'),
@@ -99,9 +95,9 @@ class JoinGame extends Component {
         correct: new Audio('/sounds/correct.mp3'),
         bang: new Audio('/sounds/bang.mp3'),
         shine: new Audio('/sounds/shine.mp3'),
-        cards: new Audio('/sounds/card.mp3'),
+        cards: new Audio('/sounds/card.mp3')
       },
-      currentSound: null,
+      currentSound: null
     };
 
     this.toggleDrawer = this.toggleDrawer.bind(this);
@@ -128,31 +124,55 @@ class JoinGame extends Component {
 
     return null;
   }
-
   async componentDidMount() {
-    this.setState({ loading: true });
-    await this.getRoomData(this.props.match.params.id);
-
-  setTimeout(() => {
-    this.setState({ loading: false });
-  }, 2000);
+    const { id } = this.props.match.params;
+    await this.initializeRoomData(id);
     window.addEventListener('unload', this.handleUnload);
-
-    Object.values(this.state.sounds).forEach(sound => {
-      sound.load();
-    });
-    this.props.getHistory();
-    this.props.getGameTypeList();
-    if (this.props.isAuthenticated) {
-      this.props.getMyGames();
-      this.props.getMyHistory();
-      this.props.getMyChat();
-    }
-    this.props.getRoomInfo(this.props.match.params.id);
   }
+
+  async initializeRoomData(id) {
+    try {
+      await Promise.all([
+        this.getRoomData(id),
+        this.loadSounds(),
+        this.props.getHistory(),
+        this.props.getGameTypeList(),
+        this.props.isAuthenticated && this.props.getMyGames(),
+        this.props.isAuthenticated && this.props.getMyHistory(),
+        this.props.isAuthenticated && this.props.getMyChat(),
+        this.props.getRoomInfo(
+          this.props.match.params.id,
+          this.state.limit,
+          true
+        )
+      ]);
+    } catch (error) {
+      console.error('Error initializing room data:', error);
+    }
+  }
+
+  async getRoomData(roomId) {
+    try {
+      const actionList = await this.props.getRoomStatisticsData(roomId);
+      this.setState({
+        actionList
+      });
+    } catch (error) {
+      console.error('Error fetching room data:', error);
+    }
+  }
+
+  async loadSounds() {
+    await Promise.all(
+      Object.values(this.state.sounds).map(async sound => {
+        await sound.load();
+      })
+    );
+  }
+
   handleUnload = () => {
     this.stopAllSounds();
-  }
+  };
 
   componentWillUnmount() {
     window.removeEventListener('unload', this.handleUnload);
@@ -167,53 +187,22 @@ class JoinGame extends Component {
       currentSound.currentTime = 0;
       this.setState({ currentSound: null });
     }
-  }
-
+  };
 
   toggleDrawer = () => {
     this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.history !== this.props.history) {
-      this.setState({ history: updateFromNow(this.props.history) });
-    }
-    if (this.props.match.params.id !== prevProps.match.params.id) {
-      if (this.props.isAuthenticated) {
-        if (this.props.roomInfo.status !== 'finished') {
-          this.refreshHistory();
-        }
-      }
-    }
-  }
-
   updateReminderTime = () => {
     this.setState({ history: updateFromNow(this.state.history) });
   };
 
-  getPreviousBets() {
-    let previousBets = 0;
-    if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
-      this.props.roomInfo.game_log_list.forEach(room_history => {
-        if (room_history.bet_amount) {
-          previousBets += parseFloat(room_history.bet_amount);
-        }
-      });
-    }
-    return previousBets;
-  }
-
   join = async betInfo => {
-    this.setState({ joiningRoom: true });
-    // await new Promise(resolve => setTimeout(resolve, 1000));
-
     const result = await this.props.bet({
       _id: this.state.roomInfo._id,
       game_type: this.props.roomInfo.game_type,
       ...betInfo
     });
-
-    this.setState({ joiningRoom: false });
 
     return result;
   };
@@ -234,7 +223,7 @@ class JoinGame extends Component {
       this.setState({ currentSound: audio });
     }
   };
-  
+
   playSoundLoop = sound => {
     if (!this.props.isMuted) {
       const audio = this.state.sounds[sound];
@@ -251,15 +240,12 @@ class JoinGame extends Component {
       }
     }
   };
-  
 
   onChangeState = async newState => {
     await this.setState(newState);
   };
 
-  
-  stopSound = (sound) => {
-    
+  stopSound = sound => {
     const { currentSound } = this.state;
     // console.log("stop", currentSound);
     if (currentSound && currentSound.src.includes(sound)) {
@@ -268,19 +254,7 @@ class JoinGame extends Component {
       this.setState({ currentSound: null }); // Clear the reference to the currently playing sound
     }
   };
-  
-  getRoomData = async roomId => {
-    try {
-      const actionList = await this.props.getRoomStatisticsData(roomId);
-      this.setState({
-        actionList: actionList
-      });
 
-    } catch (error) {
-      console.error('Error fetching room data:', error);
-    }
-  };
-  
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
@@ -289,10 +263,13 @@ class JoinGame extends Component {
     this.setState({ showPlayerModal: false });
   };
 
-  refreshHistory = () => {
-    this.props.getRoomInfo(this.props.match.params.id);
-    this.getRoomData(this.props.match.params.id);
-
+  refreshHistory = async () => {
+    await this.props.getRoomInfo(
+      this.props.match.params.id,
+      this.state.limit,
+      false
+    ); // room call
+    await this.getRoomData(this.props.match.params.id); // room stats
   };
 
   showOpenGameOrHistory = (e, newValue) => {
@@ -314,14 +291,31 @@ class JoinGame extends Component {
     );
 
   render() {
-    const { open } = this.props;
-    const { joiningRoom, loading } = this.state;
+    const {
+      showPlayerModal,
+      is_mobile,
+      selectedCreator,
+      bankroll,
+      actionList,
+      show_open_game,
+      selectedMobileTab,
+      betResult
+    } = this.state;
+    const {
+      open,
+      roomInfo,
+      loading,
+      gameTypeList,
+      isDrawerOpen,
+      user_id,
+      selectedMainTabIndex
+    } = this.props;
 
     return (
       <>
         <LoadingOverlay
           className="custom-loading-overlay"
-          active={loading || joiningRoom}
+          active={loading}
           spinner={
             <div className="rpsLoader">
               <img
@@ -335,7 +329,7 @@ class JoinGame extends Component {
                   marginBottom: '10px'
                 }}
               />
-      <div>{loading ? 'Joining Room...' : 'Please wait...'}</div>
+              <div>{loading ? 'Loading Room...' : 'Please wait...'}</div>
             </div>
           }
         >
@@ -347,31 +341,29 @@ class JoinGame extends Component {
                 : 'calc(100% - 350px) 350px'
             }}
           >
-            {((this.state.is_mobile &&
-              this.state.selectedMobileTab === 'chat') ||
-              !this.state.is_mobile) && (
+            {((is_mobile && selectedMobileTab === 'chat') || !is_mobile) && (
               <Drawer
                 className="mat-chat"
-                style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
+                style={{ display: isDrawerOpen ? 'flex' : 'none' }}
                 variant="persistent"
                 anchor="left"
-                open={this.props.isDrawerOpen}
+                open={isDrawerOpen}
               >
                 <ChatPanel />
               </Drawer>
             )}
-            {!this.state.is_mobile &&
-              (!this.state.selectedMobileTab === 'live_games' ||
-                !this.state.selectedMobileTab === 'my_games') && (
+            {!is_mobile &&
+              (!selectedMobileTab === 'live_games' ||
+                !selectedMobileTab === 'my_games') && (
                 <Tabs
-                  value={this.state.show_open_game}
+                  value={show_open_game}
                   onChange={this.showOpenGameOrHistory}
                   TabIndicatorProps={{ style: { background: '#ff0000' } }}
                   className="main-game-page-tabs"
                 >
                   <Tab
                     label={
-                      this.state.selectedMobileTab === 'live_games'
+                      selectedMobileTab === 'live_games'
                         ? 'Live Battles'
                         : 'Your Battles'
                     }
@@ -382,257 +374,264 @@ class JoinGame extends Component {
               )}
 
             <div className="main-panel">
-              <div className="join-game-panel">
-                {this.props.roomInfo.game_type === 'RPS' && (
-                  <RPS
-                    refreshHistory={this.refreshHistory}
-                    playSound={this.playSound}
-                    join={this.join}
-                    roomInfo={this.props.roomInfo}
-                    rps_game_type={this.props.roomInfo.rps_game_type}
-                    user_id={this.props.user_id}
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
-                    creator_id={this.props.roomInfo.creator_id}
-                    bet_amount={this.props.roomInfo.bet_amount}
-                    bankroll={this.state.bankroll}
-                    rps_bet_item_id={this.props.roomInfo.rps_bet_item_id}
-                    is_private={this.props.roomInfo.is_private}
-                    youtubeUrl={this.props.roomInfo.youtubeUrl}
-                    gameBackground={this.props.roomInfo.gameBackground}
-                    actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {this.props.roomInfo.game_type === 'Spleesh!' && (
-                  <Spleesh
-                    refreshHistory={this.refreshHistory}
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
-                    join={this.join}
-                    spleesh_bet_unit={this.props.roomInfo.spleesh_bet_unit}
-                    game_log_list={this.props.roomInfo.game_log_list || []}
-                    user_id={this.props.user_id}
-                    creator_id={this.props.roomInfo.creator_id}
-                    roomInfo={this.props.roomInfo}
-                    endgame_amount={this.props.roomInfo.endgame_amount}
-                    playSound={this.playSound}
-                    is_private={this.props.roomInfo.is_private}
-                    youtubeUrl={this.props.roomInfo.youtubeUrl}
-                    gameBackground={this.props.roomInfo.gameBackground}
-                    actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {this.props.roomInfo.game_type === 'Mystery Box' &&
-                  this.props.roomInfo.box_list.length > 0 && (
-                    <MysteryBox
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
+              {roomInfo.game_type ? (
+                <div className="join-game-panel">
+                  {roomInfo.game_type === 'RPS' && (
+                    <RPS
                       refreshHistory={this.refreshHistory}
-                      join={this.join}
-                      box_list={this.props.roomInfo.box_list}
-                      box_price={this.props.roomInfo.box_price}
-                      user_id={this.props.user_id}
-                      creator_id={this.props.roomInfo.creator_id}
-                      is_private={this.props.roomInfo.is_private}
-                      roomInfo={this.props.roomInfo}
                       playSound={this.playSound}
-                      betResult={this.state.betResult}
-                      youtubeUrl={this.props.roomInfo.youtubeUrl}
-                      gameBackground={this.props.roomInfo.gameBackground}
-                      actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
+                      join={this.join}
+                      roomInfo={roomInfo}
+                      rps_game_type={roomInfo.rps_game_type}
+                      user_id={user_id}
+                      handleOpenPlayerModal={this.handleOpenPlayerModal}
+                      handleClosePlayerModal={this.handleClosePlayerModal}
+                      selectedCreator={selectedCreator}
+                      showPlayerModal={showPlayerModal}
+                      creator_id={roomInfo.creator_id}
+                      bet_amount={roomInfo.bet_amount}
+                      bankroll={bankroll}
+                      rps_bet_item_id={roomInfo.rps_bet_item_id}
+                      is_private={roomInfo.is_private}
+                      youtubeUrl={roomInfo.youtubeUrl}
+                      gameBackground={roomInfo.gameBackground}
+                      actionList={actionList}
+                      getRoomData={this.getRoomData}
                     />
                   )}
-                {this.props.roomInfo.game_type === 'Brain Game' && (
-                  <BrainGame
-                  handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    brain_game_type={this.props.roomInfo.brain_game_type}
-                    brain_game_score={this.props.roomInfo.brain_game_score}
-                    bet_amount={this.props.roomInfo.bet_amount}
-                    user_id={this.props.user_id}
-                    creator_id={this.props.roomInfo.creator_id}
-                    joined_count={
-                      this.props.roomInfo.game_log_list
-                        ? this.props.roomInfo.game_log_list.length
-                        : 0
-                    }
-                    is_private={this.props.roomInfo.is_private}
-                    roomInfo={this.props.roomInfo}
-                    playSound={this.playSound}
-                    youtubeUrl={this.props.roomInfo.youtubeUrl}
-                    gameBackground={this.props.roomInfo.gameBackground}
-                    actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {this.props.roomInfo.game_type === 'Quick Shoot' && (
-                  <QuickShoot
-                  handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    user_id={this.props.user_id}
-                    creator_id={this.props.roomInfo.creator_id}
-                    qs_game_type={this.props.roomInfo.qs_game_type}
-                    bet_amount={this.props.roomInfo.bet_amount}
-                    bankroll={this.state.bankroll}
-                    qs_bet_item_id={this.props.roomInfo.qs_bet_item_id}
-                    is_private={this.props.roomInfo.is_private}
-                    roomInfo={this.props.roomInfo}
-                    playSound={this.playSound}
-                    youtubeUrl={this.props.roomInfo.youtubeUrl}
-                    gameBackground={this.props.roomInfo.gameBackground}
-                    actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {this.props.roomInfo.game_type === 'Drop Game' && (
-                  <DropGame
-                  handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    user_id={this.props.user_id}
-                    creator_id={this.props.roomInfo.creator_id}
-                    bet_amount={this.props.roomInfo.bet_amount}
-                    bankroll={this.state.bankroll}
-                    drop_bet_item_id={this.props.roomInfo.drop_bet_item_id}
-                    is_private={this.props.roomInfo.is_private}
-                    roomInfo={this.props.roomInfo}
-                    playSound={this.playSound}
-                    youtubeUrl={this.props.roomInfo.youtubeUrl}
-                    gameBackground={this.props.roomInfo.gameBackground}
-                    actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {this.props.roomInfo.game_type === 'Bang!' && (
-                  <Bang
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
-                    user_id={this.props.user_id}
-                    creator_id={this.props.roomInfo.creator_id}
-                    aveMultiplier={this.props.roomInfo.aveMultiplier}
-                    bet_amount={this.props.roomInfo.bet_amount}
-                    crashed={this.props.roomInfo.crashed}
-                    cashoutAmount={this.props.roomInfo.cashoutAmount}
-                    bankroll={this.state.bankroll}
-                    bang_bet_item_id={this.props.roomInfo.bang_bet_item_id}
-                    is_private={this.props.roomInfo.is_private}
-                    roomInfo={this.props.roomInfo}
-                    playSound={this.playSound}
-                    playSoundLoop={this.playSoundLoop}
-                    stopSound={this.stopSound}
-                    youtubeUrl={this.props.roomInfo.youtubeUrl}
-                    gameBackground={this.props.roomInfo.gameBackground}
-                    actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                {this.props.roomInfo.game_type === 'Roll' && (
-                  <Roll
-                  handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    join={this.join}
-                    user_id={this.props.user_id}
-                    creator_id={this.props.roomInfo.creator_id}
-                    aveMultiplier={this.props.roomInfo.aveMultiplier}
-                    bet_amount={this.props.roomInfo.bet_amount}
-                    crashed={this.props.roomInfo.crashed}
-                    cashoutAmount={this.props.roomInfo.cashoutAmount}
-                    bankroll={this.state.bankroll}
-                    roll_bet_item_id={this.state.roomInfo.roll_bet_item_id}
-                    is_private={this.props.roomInfo.is_private}
-                    roomInfo={this.props.roomInfo}
-                    playSound={this.playSound}
-                    stopSound={this.stopSound}
-                    youtubeUrl={this.props.roomInfo.youtubeUrl}
-                    gameBackground={this.props.roomInfo.gameBackground}
-                    actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-{this.props.roomInfo.game_type === 'Blackjack' && (
-                  <Blackjack
-                  handleOpenPlayerModal={this.handleOpenPlayerModal}
-                    handleClosePlayerModal={this.handleClosePlayerModal}
-                    selectedCreator={this.state.selectedCreator}
-                    showPlayerModal={this.state.showPlayerModal}
-                    refreshHistory={this.refreshHistory}
-                    playSound={this.playSound}
-                    join={this.join}
-                    roomInfo={this.props.roomInfo}
-                    user_id={this.props.user_id}
-                    creator_id={this.props.roomInfo.creator_id}
-                    bet_amount={this.props.roomInfo.bet_amount}
-                    bankroll={this.state.bankroll}
-                    bj_bet_item_id={this.props.roomInfo.bj_bet_item_id}
-                    is_private={this.props.roomInfo.is_private}
-                    youtubeUrl={this.props.roomInfo.youtubeUrl}
-                    gameBackground={this.props.roomInfo.gameBackground}
-                    actionList={this.state.actionList}
-                    getRoomData={this.getRoomData}
-                  />
-                )}
-                
-              </div>
-              <TabbedContent actionList={this.state.actionList} roomInfo={this.props.roomInfo} getRoomData={this.getRoomData}/>
+                  {roomInfo.game_type === 'Spleesh!' && (
+                    <Spleesh
+                      refreshHistory={this.refreshHistory}
+                      handleOpenPlayerModal={this.handleOpenPlayerModal}
+                      handleClosePlayerModal={this.handleClosePlayerModal}
+                      selectedCreator={selectedCreator}
+                      showPlayerModal={showPlayerModal}
+                      join={this.join}
+                      spleesh_bet_unit={roomInfo.spleesh_bet_unit}
+                      game_log_list={roomInfo.game_log_list || []}
+                      user_id={user_id}
+                      creator_id={roomInfo.creator_id}
+                      roomInfo={roomInfo}
+                      endgame_amount={roomInfo.endgame_amount}
+                      playSound={this.playSound}
+                      is_private={roomInfo.is_private}
+                      youtubeUrl={roomInfo.youtubeUrl}
+                      gameBackground={roomInfo.gameBackground}
+                      actionList={actionList}
+                      getRoomData={this.getRoomData}
+                    />
+                  )}
+                  {roomInfo.game_type === 'Mystery Box' &&
+                    roomInfo.box_list.length > 0 && (
+                      <MysteryBox
+                        handleOpenPlayerModal={this.handleOpenPlayerModal}
+                        handleClosePlayerModal={this.handleClosePlayerModal}
+                        selectedCreator={selectedCreator}
+                        showPlayerModal={showPlayerModal}
+                        refreshHistory={this.refreshHistory}
+                        join={this.join}
+                        box_list={roomInfo.box_list}
+                        box_price={roomInfo.box_price}
+                        user_id={user_id}
+                        creator_id={roomInfo.creator_id}
+                        is_private={roomInfo.is_private}
+                        roomInfo={roomInfo}
+                        playSound={this.playSound}
+                        betResult={betResult}
+                        youtubeUrl={roomInfo.youtubeUrl}
+                        gameBackground={roomInfo.gameBackground}
+                        actionList={actionList}
+                        getRoomData={this.getRoomData}
+                      />
+                    )}
+                  {roomInfo.game_type === 'Brain Game' && (
+                    <BrainGame
+                      handleOpenPlayerModal={this.handleOpenPlayerModal}
+                      handleClosePlayerModal={this.handleClosePlayerModal}
+                      selectedCreator={selectedCreator}
+                      showPlayerModal={showPlayerModal}
+                      refreshHistory={this.refreshHistory}
+                      join={this.join}
+                      brain_game_type={roomInfo.brain_game_type}
+                      brain_game_score={roomInfo.brain_game_score}
+                      bet_amount={roomInfo.bet_amount}
+                      user_id={this.props.user_id}
+                      creator_id={roomInfo.creator_id}
+                      joined_count={
+                        roomInfo.game_log_list
+                          ? roomInfo.game_log_list.length
+                          : 0
+                      }
+                      is_private={roomInfo.is_private}
+                      roomInfo={roomInfo}
+                      playSound={this.playSound}
+                      youtubeUrl={roomInfo.youtubeUrl}
+                      gameBackground={roomInfo.gameBackground}
+                      actionList={actionList}
+                      getRoomData={this.getRoomData}
+                    />
+                  )}
+                  {roomInfo.game_type === 'Quick Shoot' && (
+                    <QuickShoot
+                      handleOpenPlayerModal={this.handleOpenPlayerModal}
+                      handleClosePlayerModal={this.handleClosePlayerModal}
+                      selectedCreator={selectedCreator}
+                      showPlayerModal={showPlayerModal}
+                      refreshHistory={this.refreshHistory}
+                      join={this.join}
+                      user_id={user_id}
+                      creator_id={roomInfo.creator_id}
+                      qs_game_type={roomInfo.qs_game_type}
+                      bet_amount={roomInfo.bet_amount}
+                      bankroll={bankroll}
+                      qs_bet_item_id={roomInfo.qs_bet_item_id}
+                      is_private={roomInfo.is_private}
+                      roomInfo={roomInfo}
+                      playSound={this.playSound}
+                      youtubeUrl={roomInfo.youtubeUrl}
+                      gameBackground={roomInfo.gameBackground}
+                      actionList={actionList}
+                      getRoomData={this.getRoomData}
+                    />
+                  )}
+                  {roomInfo.game_type === 'Drop Game' && (
+                    <DropGame
+                      handleOpenPlayerModal={this.handleOpenPlayerModal}
+                      handleClosePlayerModal={this.handleClosePlayerModal}
+                      selectedCreator={selectedCreator}
+                      showPlayerModal={showPlayerModal}
+                      refreshHistory={this.refreshHistory}
+                      join={this.join}
+                      user_id={user_id}
+                      creator_id={roomInfo.creator_id}
+                      bet_amount={roomInfo.bet_amount}
+                      bankroll={bankroll}
+                      drop_bet_item_id={roomInfo.drop_bet_item_id}
+                      is_private={roomInfo.is_private}
+                      roomInfo={roomInfo}
+                      playSound={this.playSound}
+                      youtubeUrl={roomInfo.youtubeUrl}
+                      gameBackground={roomInfo.gameBackground}
+                      actionList={actionList}
+                      getRoomData={this.getRoomData}
+                    />
+                  )}
+                  {roomInfo.game_type === 'Bang!' && (
+                    <Bang
+                      refreshHistory={this.refreshHistory}
+                      join={this.join}
+                      handleOpenPlayerModal={this.handleOpenPlayerModal}
+                      handleClosePlayerModal={this.handleClosePlayerModal}
+                      selectedCreator={selectedCreator}
+                      showPlayerModal={showPlayerModal}
+                      user_id={user_id}
+                      creator_id={roomInfo.creator_id}
+                      aveMultiplier={roomInfo.aveMultiplier}
+                      bet_amount={roomInfo.bet_amount}
+                      crashed={roomInfo.crashed}
+                      cashoutAmount={roomInfo.cashoutAmount}
+                      bankroll={bankroll}
+                      bang_bet_item_id={roomInfo.bang_bet_item_id}
+                      is_private={roomInfo.is_private}
+                      roomInfo={roomInfo}
+                      playSound={this.playSound}
+                      playSoundLoop={this.playSoundLoop}
+                      stopSound={this.stopSound}
+                      youtubeUrl={roomInfo.youtubeUrl}
+                      gameBackground={roomInfo.gameBackground}
+                      actionList={actionList}
+                      getRoomData={this.getRoomData}
+                    />
+                  )}
+                  {roomInfo.game_type === 'Roll' && (
+                    <Roll
+                      handleOpenPlayerModal={this.handleOpenPlayerModal}
+                      handleClosePlayerModal={this.handleClosePlayerModal}
+                      selectedCreator={selectedCreator}
+                      showPlayerModal={showPlayerModal}
+                      refreshHistory={this.refreshHistory}
+                      join={this.join}
+                      user_id={user_id}
+                      creator_id={roomInfo.creator_id}
+                      aveMultiplier={roomInfo.aveMultiplier}
+                      bet_amount={roomInfo.bet_amount}
+                      crashed={roomInfo.crashed}
+                      cashoutAmount={roomInfo.cashoutAmount}
+                      bankroll={bankroll}
+                      roll_bet_item_id={roomInfo.roll_bet_item_id}
+                      is_private={roomInfo.is_private}
+                      roomInfo={roomInfo}
+                      playSound={this.playSound}
+                      stopSound={this.stopSound}
+                      youtubeUrl={roomInfo.youtubeUrl}
+                      gameBackground={roomInfo.gameBackground}
+                      actionList={actionList}
+                      getRoomData={this.getRoomData}
+                    />
+                  )}
+                  {roomInfo.game_type === 'Blackjack' && (
+                    <Blackjack
+                      handleOpenPlayerModal={this.handleOpenPlayerModal}
+                      handleClosePlayerModal={this.handleClosePlayerModal}
+                      selectedCreator={selectedCreator}
+                      showPlayerModal={showPlayerModal}
+                      refreshHistory={this.refreshHistory}
+                      playSound={this.playSound}
+                      join={this.join}
+                      roomInfo={roomInfo}
+                      user_id={user_id}
+                      creator_id={roomInfo.creator_id}
+                      bet_amount={roomInfo.bet_amount}
+                      bankroll={bankroll}
+                      bj_bet_item_id={roomInfo.bj_bet_item_id}
+                      is_private={roomInfo.is_private}
+                      youtubeUrl={roomInfo.youtubeUrl}
+                      gameBackground={roomInfo.gameBackground}
+                      actionList={actionList}
+                      getRoomData={this.getRoomData}
+                    />
+                  )}
+                </div>
+              ) : (
+                <LinearProgress color="secondary" />
+              )}
+              <TabbedContent
+                actionList={actionList}
+                roomInfo={roomInfo}
+                getRoomData={this.getRoomData}
+                isLowGraphics={this.props.isLowGraphics}
+              />
               <div>
-                {((!this.state.is_mobile &&
-                  this.props.selectedMainTabIndex === 1) ||
-                  (this.state.is_mobile &&
-                    this.state.selectedMobileTab === 'my_games' &&
-                    this.state.show_open_game === 0)) && (
-                  <MyGamesTable gameTypeList={this.props.gameTypeList} />
+                {((!is_mobile && selectedMainTabIndex === 1) ||
+                  (is_mobile &&
+                    selectedMobileTab === 'my_games' &&
+                    show_open_game === 0)) && (
+                  <MyGamesTable gameTypeList={gameTypeList} />
                 )}
-                {this.state.is_mobile &&
-                  this.state.selectedMobileTab === 'live_games' &&
-                  this.state.show_open_game === 1 && <HistoryTable />}
-                {this.state.is_mobile &&
-                  this.state.selectedMobileTab === 'my_games' &&
-                  this.state.show_open_game === 1 && <MyHistoryTable />}
+                {is_mobile &&
+                  selectedMobileTab === 'live_games' &&
+                  show_open_game === 1 && <HistoryTable />}
+                {is_mobile &&
+                  selectedMobileTab === 'my_games' &&
+                  show_open_game === 1 && <MyHistoryTable />}
               </div>
             </div>
             <div className="sub-panel">
               <h2 className="main-title desktop-only">HISTORY</h2>
-              {!this.state.is_mobile &&
-                this.props.selectedMainTabIndex === 0 && <HistoryTable />}
+              {!is_mobile &&
+                selectedMainTabIndex === 0 && <HistoryTable />}
               <DrawerButton
-                open={this.props.isDrawerOpen}
+                open={isDrawerOpen}
                 toggleDrawer={this.toggleDrawer}
               />
-              {!this.state.is_mobile &&
-                this.props.selectedMainTabIndex === 1 && <MyHistoryTable />}
+              {!is_mobile &&
+                selectedMainTabIndex === 1 && <MyHistoryTable />}
             </div>
-            {!this.state.is_mobile && (
+            {!is_mobile && (
               <div className="mobile-only main-page-nav-button-group">
                 <Button
                   className={`mobile-tab-live ${
-                    this.state.selectedMobileTab === 'live_games'
+                    selectedMobileTab === 'live_games'
                       ? 'active'
                       : ''
                   }`}
@@ -649,7 +648,7 @@ class JoinGame extends Component {
                   >
                     <path
                       stroke={
-                        this.state.selectedMobileTab === 'live_games'
+                        selectedMobileTab === 'live_games'
                           ? '#fff'
                           : '#8E9297'
                       }
@@ -657,12 +656,12 @@ class JoinGame extends Component {
                       d="M24.9 25.945c2.625-2.578 4.1-6.076 4.1-9.722 0-3.647-1.475-7.144-4.1-9.723M7.1 25.945C4.476 23.367 3 19.87 3 16.223 3 12.576 4.475 9.079 7.1 6.5M21 22.5c1.92-1.658 3-3.906 3-6.25s-1.08-4.592-3-6.25M14 17.678v-3.356c0-.79.871-1.268 1.537-.844l2.637 1.678c.618.393.618 1.295 0 1.688l-2.637 1.678c-.666.424-1.537-.055-1.537-.844zM11 22.5c-1.92-1.658-3-3.906-3-6.25s1.08-4.592 3-6.25"
                     />
                   </svg>
-                  {this.state.selectedMobileTab === 'live_games' &&
+                  {selectedMobileTab === 'live_games' &&
                     'LIVE BATTLES'}
                 </Button>
                 <Button
                   className={`mobile-tab-my ${
-                    this.state.selectedMobileTab === 'my_games' ? 'active' : ''
+                    selectedMobileTab === 'my_games' ? 'active' : ''
                   }`}
                   onClick={e => {
                     this.setState({ selectedMobileTab: 'my_games' });
@@ -677,7 +676,7 @@ class JoinGame extends Component {
                   >
                     <path
                       stroke={
-                        this.state.selectedMobileTab === 'my_games'
+                        selectedMobileTab === 'my_games'
                           ? '#fff'
                           : '#8E9297'
                       }
@@ -686,46 +685,49 @@ class JoinGame extends Component {
                     />
                     <path
                       fill={
-                        this.state.selectedMobileTab === 'my_games'
+                        selectedMobileTab === 'my_games'
                           ? '#fff'
                           : '#8E9297'
                       }
                       d="M18.651 12.702l-.674.33.674-.33zm-.294-.602l.674-.33c-.126-.257-.387-.42-.674-.42v.75zm-3.714 0v-.75c-.287 0-.548.163-.674.42l.674.33zm7.607-4.75v4.302h1.5V7.35h-1.5zm-2.925 5.022l-.294-.601-1.348.658.294.602 1.348-.659zm-.968-1.022h-3.714v1.5h3.714v-1.5zm-4.388.42l-.294.602 1.348.66.294-.603-1.348-.658zm-3.219-.118V7.35h-1.5v4.302h1.5zm2.036-6.402h7.428v-1.5h-7.428v1.5zm-.49 8c-.838 0-1.546-.7-1.546-1.598h-1.5c0 1.695 1.348 3.098 3.046 3.098v-1.5zm8.408 0c-.576 0-1.113-.333-1.379-.878l-1.348.66c.512 1.046 1.565 1.718 2.727 1.718v-1.5zm1.546-1.598c0 .899-.708 1.598-1.546 1.598v1.5c1.698 0 3.046-1.403 3.046-3.098h-1.5zm-8.575.72c-.266.545-.803.878-1.38.878v1.5c1.163 0 2.216-.672 2.728-1.719l-1.348-.659zM23.75 7.35c0-1.972-1.567-3.6-3.536-3.6v1.5c1.109 0 2.036.924 2.036 2.1h1.5zm-13 0c0-1.176.928-2.1 2.036-2.1v-1.5c-1.969 0-3.536 1.628-3.536 3.6h1.5zm1.571 1.7h2.786v-1.5h-2.786v1.5zm.643-2.175v2.85h1.5v-2.85h-1.5zM19.75 8.1h.929V6.6h-.929v1.5zM17.893 10h.928V8.5h-.928V10z"
                     />
                   </svg>
-                  {this.state.selectedMobileTab === 'my_games' && 'YOUR BATTLES'}
+                  {selectedMobileTab === 'my_games' &&
+                    'YOUR BATTLES'}
                 </Button>
                 <button
-              className={`mobile-tab-marketplace ${
-                this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
-              }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'marketplace' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                fill="none"
-                viewBox="0 0 32 32"
-              >
-                <path
-                  stroke={
-                    this.state.selectedMobileTab === 'marketplace'
-                      ? '#fff'
-                      : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                  d="M10.083 6.083h11.833v8.584c0 3.268-2.649 5.917-5.916 5.917-3.268 0-5.917-2.65-5.917-5.917V6.083zM9.333 26.666h13.333M22.223 14.597c3.528-.571 4.444-4.538 4.444-6.597H22M9.777 14.597C6.25 14.026 5.333 10.06 5.333 8H10M16 21.334v5.333"
-                />
-              </svg>
-              {this.state.selectedMobileTab === 'marketplace' &&
-                'MARKETPLACE'}
-            </button>
+                  className={`mobile-tab-marketplace ${
+                    selectedMobileTab === 'marketplace'
+                      ? 'active'
+                      : ''
+                  }`}
+                  onClick={e => {
+                    this.setState({ selectedMobileTab: 'marketplace' });
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    fill="none"
+                    viewBox="0 0 32 32"
+                  >
+                    <path
+                      stroke={
+                        selectedMobileTab === 'marketplace'
+                          ? '#fff'
+                          : '#8E9297'
+                      }
+                      strokeWidth="1.5"
+                      d="M10.083 6.083h11.833v8.584c0 3.268-2.649 5.917-5.916 5.917-3.268 0-5.917-2.65-5.917-5.917V6.083zM9.333 26.666h13.333M22.223 14.597c3.528-.571 4.444-4.538 4.444-6.597H22M9.777 14.597C6.25 14.026 5.333 10.06 5.333 8H10M16 21.334v5.333"
+                    />
+                  </svg>
+                  {selectedMobileTab === 'marketplace' &&
+                    'MARKETPLACE'}
+                </button>
                 <Button
                   className={`mobile-tab-chat ${
-                    this.state.selectedMobileTab === 'chat' ? 'active' : ''
+                    selectedMobileTab === 'chat' ? 'active' : ''
                   }`}
                   onClick={e => {
                     this.setState({ selectedMobileTab: 'chat' });
@@ -740,7 +742,7 @@ class JoinGame extends Component {
                   >
                     <path
                       stroke={
-                        this.state.selectedMobileTab === 'chat'
+                        selectedMobileTab === 'chat'
                           ? '#fff'
                           : '#8E9297'
                       }
@@ -752,7 +754,7 @@ class JoinGame extends Component {
                       cy="16"
                       r="2"
                       stroke={
-                        this.state.selectedMobileTab === 'chat'
+                        selectedMobileTab === 'chat'
                           ? '#fff'
                           : '#8E9297'
                       }
@@ -763,7 +765,7 @@ class JoinGame extends Component {
                       cy="16"
                       r="2"
                       stroke={
-                        this.state.selectedMobileTab === 'chat'
+                        selectedMobileTab === 'chat'
                           ? '#fff'
                           : '#8E9297'
                       }
@@ -774,21 +776,21 @@ class JoinGame extends Component {
                       cy="16"
                       r="2"
                       stroke={
-                        this.state.selectedMobileTab === 'chat'
+                        selectedMobileTab === 'chat'
                           ? '#fff'
                           : '#8E9297'
                       }
                       strokeWidth="1.5"
                     />
                   </svg>
-                  {this.state.selectedMobileTab === 'chat' && 'CHAT'}
+                  {selectedMobileTab === 'chat' && 'CHAT'}
                 </Button>
               </div>
             )}
             <Footer
               className="footer"
-              open={this.props.isDrawerOpen}
-              style={{ marginLeft: this.props.isDrawerOpen ? '270px' : '0' }}
+              open={isDrawerOpen}
+              style={{ marginLeft: isDrawerOpen ? '270px' : '0' }}
             />
           </div>
         </LoadingOverlay>
@@ -804,13 +806,15 @@ const mapStateToProps = state => ({
   user_id: state.auth.user._id,
   isMuted: state.auth.isMuted,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
-  isDrawerOpen: state.auth.isDrawerOpen
+  isDrawerOpen: state.auth.isDrawerOpen,
+  loading: state.logic.isActiveLoadingOverlay,
+  isDarkMode: state.auth.isDarkMode,
+  isLowGraphics: state.auth.isLowGraphics
 });
 
 const mapDispatchToProps = {
   getRoomInfo,
   bet,
-  toggleMute,
   setCurRoomInfo,
   loadRoomInfo,
   getMyChat,

@@ -26,6 +26,8 @@ import {
   validateBankroll
 } from '../modal/betValidations';
 import animationData from '../LottieAnimations/spinningIcon';
+import loadingChart from '../LottieAnimations/loadingChart.json';
+
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { convertToCurrency } from '../../util/conversion';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
@@ -106,6 +108,15 @@ class MysteryBox extends Component {
     return null;
   }
 
+  speak = message => {
+    if (window.speechSynthesis) {
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
+      utterance.lang = 'en-US'; // set the language to US English
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   onBoxClicked = e => {
     e.preventDefault();
     this.props.playSound('select');
@@ -135,27 +146,36 @@ class MysteryBox extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.roomInfo && this.props.roomInfo) {
-      if (prevProps.roomInfo.host_pr !== this.props.roomInfo.host_pr) {
-        this.setState({
-          bankroll: parseFloat(this.props.roomInfo.host_pr)
-        });
-      }
+    const { roomInfo, actionList, refreshHistory, join } = this.props;
+    const {
+      box_list,
+      isPasswordCorrect,
+      selected_id,
+      bet_amount,
+      is_anonymous
+    } = this.state;
+    if (prevProps.actionList !== actionList) {
+      this.setState({
+        actionList: actionList
+      });
     }
-    if (prevState.box_list !== this.state.box_list) {
-      this.props.refreshHistory(() => {
-        if (
-          this.state.isPasswordCorrect === true &&
-          this.state.selected_id !== null
-        ) {
-          this.props.join({
-            bet_amount: this.state.bet_amount,
-            selected_id: this.state.selected_id,
-            is_anonymous: this.state.is_anonymous
+    if (roomInfo && prevProps.roomInfo?.host_pr !== roomInfo.host_pr) {
+      this.setState({
+        bankroll: parseFloat(roomInfo.host_pr)
+      });
+    }
+
+    if (prevState.box_list !== box_list) {
+      refreshHistory(() => {
+        if (isPasswordCorrect && selected_id !== null) {
+          join({
+            bet_amount,
+            selected_id,
+            is_anonymous
           });
 
-          const updatedBoxList = this.state.box_list.map(el =>
-            el._id === this.state.selected_id ? { ...el, status: 'opened' } : el
+          const updatedBoxList = box_list.map(el =>
+            el._id === selected_id ? { ...el, status: 'opened' } : el
           );
 
           this.setState({ box_list: updatedBoxList });
@@ -363,14 +383,12 @@ class MysteryBox extends Component {
       if (result.betResult === 1) {
         betResult = 'win';
         playSound('win');
-        this.changeBgColor(result.betResult);
-      } else if (result.betResult === 0) {
-        betResult = 'draw';
-        playSound('split');
+        this.speak('NICE, ISSA MONEY BOX');
         this.changeBgColor(result.betResult);
       } else {
         betResult = 'lose';
         playSound('lose');
+        this.speak('WRONG BOX DICKHEAD!');
         this.changeBgColor(result.betResult);
       }
 
@@ -484,14 +502,14 @@ class MysteryBox extends Component {
       if (result.betResult === 1) {
         betResult = 'win';
         playSound('win');
-        this.changeBgColor(result.betResult);
-      } else if (result.betResult === 0) {
-        betResult = 'draw';
-        playSound('split');
+        this.speak('NICE, ISSA MONEY BOX');
+
         this.changeBgColor(result.betResult);
       } else {
         betResult = 'lose';
         playSound('lose');
+        this.speak('WRONG BOX, DICKHEAD');
+
         this.changeBgColor(result.betResult);
       }
 
@@ -530,7 +548,20 @@ class MysteryBox extends Component {
   };
 
   getBetForm = () => {
-    const { bankroll, isDisabled, betting, timerValue } = this.state;
+    const {
+      bankroll,
+      isDisabled,
+      betting,
+      timerValue,
+      actionList
+    } = this.state;
+    const {
+      selectedCreator,
+      showPlayerModal,
+      roomInfo,
+      isLowGraphics,
+      isMusicEnabled
+    } = this.props;
 
     let prizes = [];
     let prices = [];
@@ -578,9 +609,7 @@ class MysteryBox extends Component {
       styles.push('clicked');
       text = 'COPIED!';
     }
-    const roomStatistics = this.props.actionList || [];
 
-    const { selectedCreator, showPlayerModal, roomInfo } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
     const barStyle = {
@@ -675,89 +704,104 @@ class MysteryBox extends Component {
                       <div className="label net-profit">Host Profit</div>
                     </div>
                     <div className="value bankroll">
-                      {convertToCurrency(
-                        roomStatistics.hostNetProfit?.slice(-1)[0]
-                      )}
-                      <ReactApexChart
-                        className="bankroll-graph"
-                        options={{
-                          chart: {
-                            animations: {
-                              enabled: false
-                            },
-                            toolbar: {
-                              show: false
-                            },
-                            events: {},
-                            zoom: {
-                              enabled: false
-                            }
-                          },
-                          grid: {
-                            show: false
-                          },
-                          tooltip: {
-                            enabled: false
-                          },
-                          fill: {
-                            type: 'gradient',
-                            gradient: {
-                              shade: 'light',
-                              gradientToColors:
-                                roomStatistics.hostNetProfit?.slice(-1)[0] > 0
-                                  ? ['#00FF00']
-                                  : roomStatistics.hostNetProfit?.slice(-1)[0] <
-                                    0
-                                  ? ['#FF0000']
-                                  : ['#808080'],
-                              shadeIntensity: 1,
-                              type: 'vertical',
-                              opacityFrom: 0.7,
-                              opacityTo: 0.9,
-                              stops: [0, 100, 100]
-                            }
-                          },
+                      {actionList && actionList.hostBetsValue.length > 0 ? (
+                        <>
+                          {convertToCurrency(
+                            actionList.hostNetProfit?.slice(-1)[0]
+                          )}
+                          <ReactApexChart
+                            className="bankroll-graph"
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
+                              },
+                              grid: {
+                                show: false
+                              },
+                              tooltip: {
+                                enabled: false
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    actionList.hostNetProfit?.slice(-1)[0] > 0
+                                      ? ['#00FF00']
+                                      : actionList.hostNetProfit?.slice(-1)[0] <
+                                        0
+                                      ? ['#FF0000']
+                                      : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
 
-                          stroke: {
-                            curve: 'smooth'
-                          },
-                          xaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          },
-                          yaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          }
-                        }}
-                        type="line"
-                        width={120}
-                        height="100"
-                        series={[
-                          {
-                            data: roomStatistics.hostNetProfit.map(
-                              (value, index) => [
-                                roomStatistics.hostBetsValue[index],
-                                value
-                              ]
-                            )
-                          }
-                        ]}
-                      />
+                              stroke: {
+                                curve: 'smooth'
+                              },
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              },
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              }
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data: actionList.hostNetProfit.map(
+                                  (value, index) => [
+                                    actionList.hostBetsValue[index],
+                                    value
+                                  ]
+                                )
+                              }
+                            ]}
+                          />
+                        </>
+                      ) : (
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                   <div className="data-item">
@@ -792,7 +836,7 @@ class MysteryBox extends Component {
                   </div>
                   {this.props.youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} />
+                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled}/>
                     </div>
                   )}
                   <div className="data-item">
@@ -811,7 +855,7 @@ class MysteryBox extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {renderLottieAvatarAnimation(this.props.gameBackground)}
+            {renderLottieAvatarAnimation(this.props.gameBackground, isLowGraphics)}
 
             <h3 className="game-sub-title">Prizes</h3>
             <Table className="prize-key">
@@ -1052,7 +1096,11 @@ class MysteryBox extends Component {
       <div className="game-page">
         <div className="game-contents mystery-box-result-contents">
           <div className="game-info-panel">
-            <i className="disclaimer">*NOT IN THIS ORDER*</i>
+            <h4 className="game-sub-title" style={{ marginTop: '30px' }}>
+              {this.state.betResult === 0
+                ? `WRONG BOX DICKHEAD!`
+                : `NICE 😎 ISSA MONEY BOX`}
+            </h4>
             <p className="game-modal box-prizes">
               {prizes.map((item, key) => (
                 <span className={item.status} key={key}>
@@ -1067,14 +1115,10 @@ class MysteryBox extends Component {
             >
               {convertToCurrency(this.state.betResult)}
             </div>
-            <h4 className="game-sub-title" style={{ marginTop: '30px' }}>
-              {this.state.betResult === 0
-                ? `WRONG BOX DICKHEAD!`
-                : `NICE 😎 ISSA MONEY BOX`}
-            </h4>
             {/* <p>
               {this.state.betResult === 0 ? `THIS BOX IS EMPTY` : `YOU WON!`}
             </p> */}
+            {/* <i className="disclaimer">*NOT IN THIS ORDER*</i> */}
           </div>
           <div className="countdown-timer">
             <div
@@ -1129,7 +1173,9 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  rank: state.logic.curRoomInfo.rank
+  rank: state.logic.curRoomInfo.rank,
+  isLowGraphics: state.auth.isLowGraphics,
+  isMusicEnabled: state.auth.isMusicEnabled
 });
 
 const mapDispatchToProps = {

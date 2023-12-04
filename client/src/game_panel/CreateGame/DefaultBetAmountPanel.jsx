@@ -14,9 +14,8 @@ class DefaultBetAmountPanel extends Component {
       isFocused: false,
       is_other: false    };
 
-    const defaultBetAmounts = this.props.defaultBetAmounts
-    ? this.props.defaultBetAmounts
-    : [0.001, 0.002, 0.005, 0.01, 0.1];
+
+
 
   // Add corresponding image sources for each bet amount
   this.images = [
@@ -101,6 +100,8 @@ class DefaultBetAmountPanel extends Component {
   };
 
   render() {
+    const defaultBetAmounts = this.props.defaultBetAmounts || this.state.defaultBetAmounts || [0.001, 0.002, 0.005, 0.01, 0.1];
+
     const isDarkMode = this.props.isDarkMode;
     const theme = createTheme({
       overrides: {
@@ -148,7 +149,7 @@ class DefaultBetAmountPanel extends Component {
 
     const {isFocused, is_other} = this.state;
     
-    const {defaultBetAmounts, bet_amount, game_type, onChangeState, qs_game_type} = this.props;
+    const {bet_amount, game_type, onChangeState, qs_game_type} = this.props;
    
     const formattedBetAmount = this.formatBetAmount(bet_amount);
     return (

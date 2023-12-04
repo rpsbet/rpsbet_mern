@@ -145,8 +145,16 @@ const predictNextBang = bangAmounts => {
 };
 
 const getCurrentTime = async () => {
+  const timeoutDuration = 5000; // 5 seconds timeout
+
   return new Promise((resolve, reject) => {
-    ntpClient.getNetworkTime('time.google.com', 123, function(err, date) {
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Timeout waiting for NTP response'));
+    }, timeoutDuration);
+
+    ntpClient.getNetworkTime('time.google.com', 123, function (err, date) {
+      clearTimeout(timeoutId);
+
       if (err) {
         reject(err);
       } else {
@@ -155,6 +163,7 @@ const getCurrentTime = async () => {
     });
   });
 };
+
 
 module.exports = {
   predictNextBang,

@@ -1,34 +1,38 @@
 import React from 'react';
 import Lottie from 'react-lottie';
+
 import dropOff from '../game_panel/LottieAnimations/the-drop-off.json';
 import goalBg from '../game_panel/LottieAnimations/quantum-goal.json';
-import blackjackSettings from '../game_panel/LottieAnimations/blackjack-settings.json';
-import boatBg from '../game_panel/LottieAnimations/gone-fishing.json';
 import deepSea from '../game_panel/LottieAnimations/deep-sea.json';
 import lilBoat from '../game_panel/LottieAnimations/lil-boat.json';
-import floaraGardens from '../game_panel/LottieAnimations/floaro-gardens.json';
+import grasslands from '../game_panel/LottieAnimations/grasslands.json';
+import campfire from '../game_panel/LottieAnimations/campfire.json';
+import campfire2 from '../game_panel/LottieAnimations/campfire2.json';
+import happyBirthday from '../game_panel/LottieAnimations/happy-birthday.json';
+import lateDrive from '../game_panel/LottieAnimations/late-drive.json';
+import theNetherlands from '../game_panel/LottieAnimations/the-netherlands.json';
+import blackjackSettings from '../game_panel/LottieAnimations/blackjack-settings.json';
+import boatBg from '../game_panel/LottieAnimations/gone-fishing.json';
+import floaroGardens from '../game_panel/LottieAnimations/floaro-gardens.json';
 import shootingStars from '../game_panel/LottieAnimations/shooting-stars.json';
 import mountainRail from '../game_panel/LottieAnimations/mountain-rail.json';
-import mountMarmalade from '../game_panel/LottieAnimations/mount-marmalade.json';
-import vacation from '../game_panel/LottieAnimations/vacation.json';
-import arctic from '../game_panel/LottieAnimations/arctic.json';
-import orionTrip from '../game_panel/LottieAnimations/orion-trip.json';
-import ape from '../game_panel/LottieAnimations/ape.json';
-import roo from '../game_panel/LottieAnimations/roo.json';
-import bat from '../game_panel/LottieAnimations/bat.json';
-import paradise from '../game_panel/LottieAnimations/paradise.json';
 import sunrise from '../game_panel/LottieAnimations/sunrise.json';
 import rainforest from '../game_panel/LottieAnimations/rainforest.json';
-import snowflakes from '../game_panel/LottieAnimations/snowflakes.json';
-import xmasTree from '../game_panel/LottieAnimations/xmasTree.json';
-import snowman from '../game_panel/LottieAnimations/snowman.json';
-import santaHat from '../game_panel/LottieAnimations/santaHat.json';
+import mountMarmalade from '../game_panel/LottieAnimations/mount-marmalade.json';
 import gem from '../game_panel/LottieAnimations/gem.json';
 import shooting_stars from '../game_panel/LottieAnimations/shooting_stars.json';
 import fish from '../game_panel/LottieAnimations/fish.json';
+import ape from '../game_panel/LottieAnimations/ape.json';
+import cow from '../game_panel/LottieAnimations/cow.json';
 import cat_pop from '../game_panel/LottieAnimations/cat_pop.json';
 import cool_banana from '../game_panel/LottieAnimations/cool_banana.json';
 import flame from '../game_panel/LottieAnimations/flame.json';
+import roo from '../game_panel/LottieAnimations/roo.json';
+import vacation from '../game_panel/LottieAnimations/vacation.json';
+import orionTrip from '../game_panel/LottieAnimations/orion-trip.json';
+import arctic from '../game_panel/LottieAnimations/arctic.json';
+import paradise from '../game_panel/LottieAnimations/paradise.json';
+import bat from '../game_panel/LottieAnimations/bat.json';
 import glee from '../game_panel/LottieAnimations/glee.json';
 import bird from '../game_panel/LottieAnimations/bird.json';
 import smoke from '../game_panel/LottieAnimations/smoke.json';
@@ -49,478 +53,216 @@ import bunny from '../game_panel/LottieAnimations/bunny.json';
 import snake from '../game_panel/LottieAnimations/snake.json';
 import planet from '../game_panel/LottieAnimations/planet.json';
 import halo from '../game_panel/LottieAnimations/halo.json';
-import cannabis from '../game_panel/LottieAnimations/cannabis.json';
 import swords from '../game_panel/LottieAnimations/swords.json';
 import ak47 from '../game_panel/LottieAnimations/ak47.json';
+import cannabis from '../game_panel/LottieAnimations/cannabis.json';
 import fox from '../game_panel/LottieAnimations/fox.json';
 import cow_head from '../game_panel/LottieAnimations/cow_head.json';
+import snowflakes from '../game_panel/LottieAnimations/snowflakes.json';
+import xmasTree from '../game_panel/LottieAnimations/xmasTree.json';
+import snowman from '../game_panel/LottieAnimations/snowman.json';
+import santaHat from '../game_panel/LottieAnimations/santaHat.json';
 
-export const renderLottieAnimation = image => {
-  switch (image) {
-    case 'the-drop-off':
-      return (
-        <div className="lottie-bg-container">
-          <Lottie options={{ animationData: dropOff }} />
-        </div>
-      );
-    case 'quantum-goal':
-      return (
-        <div className="lottie-bg-container goal">
-          <Lottie options={{ animationData: goalBg }} />
-        </div>
-      );
-    case 'blackjack-settings':
-      return (
-        <div className="lottie-bg-container bj">
-          <Lottie options={{ animationData: blackjackSettings }} />
-        </div>
-      );
-    case 'gone-fishing':
-      return (
-        <div className="lottie-bg-container">
-          <Lottie options={{ animationData: boatBg }} />
-        </div>
-      );
-      case 'vacation':
-      return (
-        <div className="lottie-bg-container">
-          <Lottie options={{ animationData: vacation }} />
-        </div>
-      );
-      case 'orion-trip':
-      return (
-        <div className="lottie-bg-container">
-          <Lottie options={{ animationData: orionTrip }} />
-        </div>
-      );
-      case 'arctic':
-      return (
-        <div className="lottie-bg-container">
-          <Lottie options={{ animationData: arctic }} />
-        </div>
-      );
-    case 'deep-sea':
-      return (
-        <div className="lottie-bg-container">
-          <Lottie options={{ animationData: deepSea }} />
-        </div>
-      );
-      case 'lil-boat':
-        return (
-          <div className="lottie-bg-container">
-            <Lottie options={{ animationData: lilBoat }} />
-          </div>
-        );
-    case 'floaro-gardens':
-      return (
-        <div className="lottie-bg-container">
-          <Lottie options={{ animationData: floaraGardens }} />
-        </div>
-      );
-      case 'sunrise':
-        return (
-          <div className="lottie-bg-container sunrise">
-            <Lottie options={{ animationData: sunrise }} />
-          </div>
-        );
-        
-        case 'rainforest':
-          return (
-            <div className="lottie-bg-container rainforest">
-              <Lottie options={{ animationData: rainforest }} />
-            </div>
-          );
-      case 'shooting-stars':
-        return (
-          <div className="lottie-bg-container shooting_stars">
-            <Lottie options={{ animationData: shootingStars }} />
-          </div>
-        );
-    case 'mountain-rail':
-      return (
-        <div className="lottie-bg-container rocks">
-          <Lottie options={{ animationData: mountainRail }} />
-        </div>
-      );
-    case 'mount-marmalade':
-      return (
-        <div className="lottie-bg-container rocks">
-          <Lottie options={{ animationData: mountMarmalade }} />
-        </div>
-      );
-    case 'gem':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              marginTop: '-10px'
-              // transform: 'translate: (50%, 50%)'
-            }}
-            options={{ animationData: gem }}
-          />
-        </div>
-      );
-      case 'paradise':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              marginTop: '-10px'
-              // transform: 'translate: (50%, 50%)'
-            }}
-            options={{ animationData: paradise }}
-          />
-        </div>
-      );
-    case 'fish':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: fish }} />
-        </div>
-      );
-    case 'shooting_stars':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: shooting_stars }} />
-        </div>
-      );
-    case 'cat_pop':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: cat_pop }} />
-        </div>
-      );
-    case 'cool_banana':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: cool_banana }} />
-        </div>
-      );
-    case 'flame':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: flame }} />
-        </div>
-      );
-    case 'glee':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: glee }} />
-        </div>
-      );
-    case 'bird':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: bird }} />
-        </div>
-      );
-    case 'smoke':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: smoke }} />
-        </div>
-      );
-    case 'butterfly':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: butterfly }} />
-        </div>
-      );
-    case 'gas':
-      return (
-        <div className="lottie">
-          <Lottie options={{ animationData: gas }} />
-        </div>
-      );
-    case 'poker':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: poker }}
-          />
-        </div>
-      );
-    case 'dragon':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: dragon }}
-          />
-        </div>
-      );
-    case 'octopus':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={
-              {
-                // top: '-10px'
-              }
-            }
-            options={{ animationData: octopus }}
-          />
-        </div>
-      );
-    case 'red-dolphins':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: dolphin }}
-          />
-        </div>
-      );
-    case 'penguin':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: penguin }}
-          />
-        </div>
-      );
-    case 'ufo':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: ufo }}
-          />
-        </div>
-      );
-    case 'crown':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: crown }}
-          />
-        </div>
-      );
-    case 'shark':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: shark }}
-          />
-        </div>
-      );
-    case 'shark2':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: shark2 }}
-          />
-        </div>
-      );
-    case 'cat':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: cat }}
-          />
-        </div>
-      );
-    case 'bat':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: bat }}
-          />
-        </div>
-      );
-    case 'roo':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: roo }}
-          />
-        </div>
-      );
-    case 'bunny':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: bunny }}
-          />
-        </div>
-      );
-    case 'snake':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: snake }}
-          />
-        </div>
-      );
-    case 'planet':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: planet }}
-          />
-        </div>
-      );
-    case 'halo':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: halo }}
-          />
-        </div>
-      );
-    case 'swords':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: swords }}
-          />
-        </div>
-      );
-    case 'cannabis':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: cannabis }}
-          />
-        </div>
-      );
-      case 'ape':
-        return (
-          <div className="lottie">
-            <Lottie
-              style={{
-                top: '-10px'
-              }}
-              options={{ animationData: ape }}
-            />
-          </div>
-        );
-    case 'ak47':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: ak47 }}
-          />
-        </div>
-      );
-    case 'fox':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: fox }}
-          />
-        </div>
-      );
-    case 'cow_head':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: cow_head }}
-          />
-        </div>
-      );
-    case 'santaHat':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: santaHat }}
-          />
-        </div>
-      );
-    case 'snowflakes':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: snowflakes }}
-          />
-        </div>
-      );
-    case 'xmasTree':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: xmasTree }}
-          />
-        </div>
-      );
-    case 'snowman':
-      return (
-        <div className="lottie">
-          <Lottie
-            style={{
-              top: '-10px'
-            }}
-            options={{ animationData: snowman }}
-          />
-        </div>
-      );
-    default:
-      return null; // No matching animation
+const animationMap = {
+  'the-drop-off': { animationData: dropOff, className: 'lottie-bg-container' },
+  'quantum-goal': { animationData: goalBg, className: 'lottie-bg-container goal' },
+  'deep-sea': { animationData: deepSea, className: 'lottie-bg-container deep-sea' },
+  'lil-boat': { animationData: lilBoat, className: 'lottie-bg-container lil-boat' },
+  grasslands: { animationData: grasslands, className: 'lottie-bg-container' },
+  campfire: { animationData: campfire, className: 'lottie-bg-container campfire' },
+  campfire2: {
+    animationData: campfire2,
+    className: 'lottie-bg-container campfire2',
+  },
+  'happy-birthday': { animationData: happyBirthday, className: 'lottie-bg-container' },
+  'late-drive': { animationData: lateDrive, className: 'lottie-bg-container' },
+  'the-netherlands': {
+    animationData: theNetherlands,
+    className: 'lottie-bg-container deep-sea'
+  },
+  'blackjack-settings': {
+    animationData: blackjackSettings,
+    className: 'lottie-bg-container'
+  },
+  'gone-fishing': { animationData: boatBg, className: 'lottie-bg-container' },
+  'floaro-gardens': { animationData: floaroGardens, className: 'lottie-bg-container' },
+  'shooting-stars': {
+    animationData: shootingStars,
+    className: 'lottie-bg-container shooting_stars'
+  },
+  'mountain-rail': {
+    animationData: mountainRail,
+    className: 'lottie-bg-container rocks'
+  },
+  sunrise: { animationData: sunrise, className: 'lottie-bg-container sunrise' },
+  rainforest: { animationData: rainforest, className: 'lottie-bg-container rainforest' },
+  'mount-marmalade': {
+    animationData: mountMarmalade,
+    className: 'lottie-bg-container rocks'
+  },
+  gem: { animationData: gem, className: 'lottie' },
+  fish: { animationData: fish, className: 'lottie' },
+  shooting_stars: {
+    animationData: shooting_stars,
+    className: 'lottie'
+  },
+  cat_pop: {
+    animationData: cat_pop,
+    className: 'lottie',
+    styles: { marginTop: '-6px' }
+  },
+  cool_banana: { animationData: cool_banana, className: 'lottie' },
+  flame: { animationData: flame, className: 'lottie' },
+  glee: {
+    animationData: glee,
+    className: 'lottie glee',
+    styles: { left: '30%', top: '30%' }
+  },
+  bird: {
+    animationData: bird,
+    className: 'lottie',
+    styles: { marginLeft: '-10px' }
+  },
+  cow: {
+    animationData: cow,
+    className: 'lottie',
+    styles: { marginLeft: '-10px' }
+  },
+  smoke: {
+    animationData: smoke,
+    className: 'lottie',
+    styles: { marginTop: '-10px' }
+  },
+  butterfly: { animationData: butterfly, className: 'lottie' },
+  bat: { animationData: bat, className: 'lottie' },
+  gas: { animationData: gas, className: 'lottie' },
+  poker: { animationData: poker, className: 'lottie' },
+  dragon: {
+    animationData: dragon,
+    className: 'lottie dragon',
+    styles: { width: '80px', top: '0', left: '-10px', transform: 'scaleX(-1)' }
+  },
+  'red-dolphins': { animationData: dolphin, className: 'lottie' },
+  octopus: { animationData: octopus, className: 'lottie' },
+  penguin: {
+    animationData: penguin,
+    className: 'lottie penguin',
+    styles: { width: '90px', height: 'auto', left: '40px' }
+  },
+  ufo: {
+    animationData: ufo,
+    className: 'lottie ufo',
+    styles: { marginTop: '-30px' }
+  },
+  crown: {
+    animationData: crown,
+    className: 'lottie crown',
+    styles: { top: '0px' }
+  },
+  shark: {
+    animationData: shark,
+    className: 'lottie shark',
+    styles: { marginTop: '30%' }
+  },
+  shark2: {
+    animationData: shark2,
+    className: 'lottie shark2',
+    styles: { marginTop: '10px' }
+  },
+  cat: {
+    animationData: cat,
+    className: 'lottie cat',
+    styles: { transform: 'scaleX(-1)', left: '-10px', top: '8px' }
+  },
+  bunny: {
+    animationData: bunny,
+    className: 'lottie',
+    styles: { marginLeft: '-8px' }
+  },
+  roo: {
+    animationData: roo,
+    className: 'lottie',
+    styles: { marginLeft: '-8px' }
+  },
+  snake: {
+    animationData: snake,
+    className: 'lottie',
+    styles: { marginLeft: '-8px' }
+  },
+  planet: { animationData: planet, className: 'lottie' },
+  halo: {
+    animationData: halo,
+    className: 'lottie halo',
+    styles: { width: '50%', marginTop: '-10px' }
+  },
+  swords: {
+    animationData: swords,
+    className: 'lottie',
+    styles: { width: '65px' }
+  },
+  cannabis: {
+    animationData: cannabis,
+    className: 'lottie',
+    styles: { width: '40px', marginLeft: '-8px', marginTop: '5px' }
+  },
+  ape: {
+    animationData: ape,
+    className: 'lottie',
+    styles: { width: '40px', marginLeft: '-8px', marginTop: '5px' }
+  },
+  ak47: {
+    animationData: ak47,
+    className: 'lottie ak47',
+    styles: { width: '70px', left: '30px' }
+  },
+  fox: {
+    animationData: fox,
+    className: 'lottie',
+    styles: { left: '20%' }
+  },
+  cow_head: { animationData: cow_head, className: 'lottie' },
+  xmasTree: {
+    animationData: xmasTree,
+    className: 'lottie',
+    styles: { right: '-10px', top: '-10px' }
+  },
+  santaHat: {
+    animationData: santaHat,
+    className: 'lottie',
+    styles: { top: '0' }
+  },
+  snowflakes: { animationData: snowflakes, className: 'lottie' },
+  snowman: { animationData: snowman, className: 'lottie' },
+  vacation: { animationData: vacation, className: 'lottie-bg-container vacation' },
+  'orion-trip': { animationData: orionTrip, className: 'lottie-bg-container orion' },
+  arctic: { animationData: arctic, className: 'lottie-bg-container arctic' },
+  paradise: { animationData: paradise, className: 'lottie-bg-container paradise' }
+};
+
+export const renderLottieAnimation = (image, isLowGraphics) => {
+  const convertToReactNode = ({ animationData, className, styles }) => {
+    const options = {
+      animationData,
+      loop: !isLowGraphics,
+      autoplay: !isLowGraphics,
+      segments: [30],
+      isStopped: isLowGraphics,
+      isPaused: isLowGraphics
+    };
+
+
+    return (
+      <div className={className}>
+        <Lottie style={styles} options={options} />
+      </div>
+    );
+  };
+
+  const animationInfo = animationMap[image];
+
+  if (animationInfo) {
+    return convertToReactNode(animationInfo);
+  } else {
+    return null;
   }
 };

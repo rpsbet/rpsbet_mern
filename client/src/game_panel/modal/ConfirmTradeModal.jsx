@@ -99,7 +99,7 @@ const mapStateToProps = state => ({
   price: state.itemReducer.data.price,
   productName: state.itemReducer.data.productName,
   alertMessage: state.snackbar.alertMessage,
-  alertType: state.snackbar.alertType
+  alertType: state.snackbar.alertType,
 });
 
 const mapDispatchToProps = {

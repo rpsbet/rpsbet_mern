@@ -22,6 +22,8 @@ import {
   SET_DARK_MODE,
   SET_REFERRAL_CODE,
   TOGGLE_MUTE,
+  TOGGLE_LOW_GRAPHICS,
+  TOGGLE_MUSIC_ENABLED,
   TOGGLE_DRAWER
 } from '../types';
 
@@ -31,6 +33,10 @@ const initialState = {
   isAuthenticated: localStorage.getItem('isAuthenticated'),
   isDarkMode: localStorage.getItem('darkMode') === 'false' ? false : true,
   isAdmin: false,
+  isMusicEnabled:
+    localStorage.getItem('isMusicEnabled') === 'true' ? true : false,
+  isLowGraphics:
+    localStorage.getItem('isLowGraphics') === 'false' ? false : true,
   isMuted: localStorage.getItem('isMuted') === 'false' ? false : true,
   isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : true,
   loading: true,
@@ -64,6 +70,18 @@ export default function(state = initialState, action) {
         ...state,
         isMuted: payload
       };
+    case TOGGLE_LOW_GRAPHICS:
+      localStorage.setItem('isLowGraphics', payload);
+      return {
+        ...state,
+        isLowGraphics: payload
+      };
+    case TOGGLE_MUSIC_ENABLED:
+      localStorage.setItem('isMusicEnabled', payload);
+      return {
+        ...state,
+        isMusicEnabled: payload
+      };
     case TOGGLE_DRAWER:
       localStorage.setItem('isDrawerOpen', payload);
       return {
@@ -88,21 +106,21 @@ export default function(state = initialState, action) {
         ...state,
         transactions: newTransactions
       };
-      case SET_SEVEN_DAY_PROFIT:
-        return {
-          ...state,
-          sevenDayProfit: payload
-        };
-      case SET_ONE_DAY_PROFIT:
-        return {
-          ...state,
-          oneDayProfit: payload
-        };
-      case SET_ALL_TIME_PROFIT:
-        return {
-          ...state,
-          allTimeProfit: payload
-        };
+    case SET_SEVEN_DAY_PROFIT:
+      return {
+        ...state,
+        sevenDayProfit: payload
+      };
+    case SET_ONE_DAY_PROFIT:
+      return {
+        ...state,
+        oneDayProfit: payload
+      };
+    case SET_ALL_TIME_PROFIT:
+      return {
+        ...state,
+        allTimeProfit: payload
+      };
     case SET_AVATAR:
       return {
         ...state,

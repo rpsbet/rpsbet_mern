@@ -234,6 +234,9 @@ div.table .table-row .table-cell button:last-child:active,
   background-color: #d81719;
   box-shadow: none !important;
 }
+.boxes-panel.boxes-join p {
+  margin-top: 0 !important;
+}
 
 div.table .table-row .table-cell button span,
 .create-room-btn-panel button.btn-create-room span,
@@ -536,7 +539,7 @@ div.table .table-header {
 }
 div.table.main-history-table,
 div.table.my-open-game-table {
-  height: calc(100vh - 185px);
+  height: calc(100vh - 240px);
 }
 div.table.main-history-table .table-row > div {
   align-items: flex-start;
@@ -1479,6 +1482,52 @@ input {
   align-items: center;
   height: 200px;
 }
+/* .card-hidden.rotate {
+  transform: rotate(180deg) !important;
+} */
+.animated-card {
+  animation: drawCardAnimation 1s forwards; /* Adjust the duration as needed */
+}
+
+@keyframes drawCardAnimation {
+  from {
+    transform: translate(100%, -100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.flipped {
+animation: flipping 0.5s ease-in-out forwards;
+transform-origin: center;
+}
+
+@keyframes flipping {
+0% {
+  transform: translate(0, 0) rotateX(90deg);
+  opacity: 0.9;
+}
+100% {
+  transform: translate(0, 0) rotateY(0);
+  opacity: 1;
+}
+}
+
+.animated-rrps-card {
+  background-size: 100%;
+  animation: drawrrpsCardAnimation 1s forwards;
+}
+
+@keyframes drawrrpsCardAnimation {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 
 .card {
   position: relative;
@@ -1498,28 +1547,41 @@ input {
 
 @keyframes cardAnimation {
   0% {
-    transform: translate(100%, -100%) rotateY(180deg); /* Initial position in the top right corner */
+    transform: translate(100%, -100%) rotateY(180deg);
     opacity: 0.8;
   }
   90% {
-    transform: translate(0, 0) rotateY(90deg); /* Halfway through the animation, the card is halfway flipped */
-    opacity: 0.9; /* The card is partially visible */
+    transform: translate(0, 0) rotateY(90deg);
+    opacity: 0.9;
   }
   100% {
     transform: translate(0, 0) rotateY(0); /* Final position, fully flipped */
     opacity: 1; /* The card is fully visible */
   }
 }
+
+.card-hidden.dashed {
+  background: #ff000000 !important;
+  border: 3px dashed !important;
+}
+
+
 .card-hidden,
 #rps-radio div {
-  background-color: red;
+  transition: transform 0.5s ease-in-out;
+
   border: none;
+  background-color: red;
   border: 3px solid white;
   box-shadow: 0px 0px 4px #323232;
   background-image: url('/img/rps-logo-white.svg');
   background-repeat: no-repeat;
   background-position: center;
-  transform: rotate(180deg);
+}
+
+.card-hidden.upside-down {
+  background-image: url('/img/rps-logo-ud.svg') !important;
+
 }
 
 .card-hidden .card-suit,
@@ -1552,7 +1614,7 @@ input {
 .card-back {
   position: absolute;
   bottom: -90px;
-  left: 320px;
+  left: 160px;
   border: 3px solid white;
   width: 100px;
   z-index: 4;
@@ -2318,13 +2380,19 @@ input {
 .game-page .game-contents .game-info-panel .create-box-panel button {
   margin: 0;
 }
-
 .msgtooltip {
+  cursor: pointer;
   width: 100%;
-  height: 100%;
-  background-color: red;
-  z-index: 99;
-  position: absolute;
+  border-top-right-radius: 6px;
+  border-top-left-radius: 6px;
+  background-color: #d81719;
+  z-index: 2;
+  text-align: center;
+  top: calc(100% - 22px);
+  left: 0;
+  padding: 5px 10px;
+  position: sticky;
+  box-shadow: inset 0px 2px 0px #ff4a4a;
 }
 .game-page .game-contents.mystery-box-result-contents {
   width: 550px;
@@ -2569,7 +2637,6 @@ input {
 }
 .chat-page {
   background-color: white;
-  padding-bottom: 24px;
 }
 .chat-page .chat-header {
   background: #f2f3f5;
@@ -2578,7 +2645,6 @@ input {
   justify-content: center;
   align-items: center;
   padding: 16px;
-  width: 100%;
   z-index: 2;
   position: fixed;
   box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.25);
@@ -2594,8 +2660,8 @@ input {
   left: 16px;
 }
 .chat-page .chat-log-panel {
-  padding: 60px 80px;
-  height: 85vh;
+  padding: 75px 20px;
+  height: calc(100vh - 140px);
   overflow-y: auto;
 }
 /* .chat-page .chat-log-panel::-webkit-scrollbar, .pre-summary-panel::-webkit-scrollbar {
@@ -2646,41 +2712,39 @@ input {
 }
 .chat-page .chat-input-panel {
   background-color: #f2f3f5;
-  /* margin: 24px 24px 0; */
+  position: relative;
   display: flex;
   align-items: center;
   padding: 10px 16px;
   bottom: 0px;
   width: 100%;
-  position: fixed;
 }
 
 .chat-page .chat-input-panel .emoticon-panel {
-  display: none;
   position: absolute;
-  font-size: 30px;
-  bottom: 100%;
-  left: 0;
-  background-color: #b9bbbe;
-  padding: 10px 30px;
-  border-radius: 40px 40px 0 0;
-  max-width: 90%;
+    font-size: 1em;
+    padding: 10px;
+    border-radius: 0.6em;
+    z-index: 2;
+    display: none;
+    max-width: 93%;
+    bottom: 100%;
 }
 .chat-page .chat-input-panel .emoticon-panel.active {
   display: block;
 }
 .chat-page .chat-input-panel .emoticon-panel > span {
-  margin: 0 10px;
   cursor: pointer;
-  border: 2px solid transparent;
-  width: 45px;
-  height: 45px;
-  line-height: 45px;
-  text-align: center;
-  display: inline-block;
+    border: 1px solid transparent;
+    width: 27px;
+    height: 27px;
+    line-height: 24px;
+    text-align: center;
+    display: inline-block;
 }
 .chat-page .chat-input-panel .emoticon-panel > span:hover {
-  border-color: #808dff;
+  transform: translateY(-2px);
+  transition: 0.3s;
 }
 .chat-page .chat-input-panel button {
   background-color: transparent;

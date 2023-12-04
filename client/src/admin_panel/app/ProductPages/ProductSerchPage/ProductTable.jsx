@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
+import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTag,
@@ -300,7 +301,8 @@ class ProductTable extends Component {
       acQueryItem,
       setCurrentProductId,
       setCurrentProductInfo,
-      openConfirmTradeModal
+      openConfirmTradeModal,
+      isLowGraphics
     } = this.props;
 
     const {
@@ -445,8 +447,8 @@ class ProductTable extends Component {
                     )}
                   </ProductCreator>
                 ))}
-                {row.image && renderLottieAnimation(row.image) ? (
-                  renderLottieAnimation(row.image)
+                {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                  renderLottieAnimation(row.image, isLowGraphics)
                 ) : (
                   <ProductImage src={row.image} alt={row.productName} />
                 )}
@@ -490,7 +492,11 @@ class ProductTable extends Component {
                       onClick={() => {
                         setCurrentProductId(row._id);
                         setCurrentProductInfo(row.owners[0].user);
-                        openConfirmTradeModal();
+                        if (row.owners[0].user !== this.props.user) {
+                          openConfirmTradeModal();
+                        } else {
+                          alertModal(this.props.isDarkMode, "This is already yours dumbass!")
+                        }
                       }}
                     >
                       Trade <SwapHoriz />
@@ -527,7 +533,9 @@ const mapStateToProps = state => ({
   loading: state.itemReducer.loading,
   total: state.itemReducer.totalResults,
   showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  user: state.auth.user._id,
+  isLowGraphics: state.auth.isLowGraphics
 });
 
 const mapDispatchToProps = {

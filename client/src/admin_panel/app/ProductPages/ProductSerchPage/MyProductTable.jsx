@@ -376,7 +376,8 @@ class MyProductTable extends Component {
       setCurrentProductId,
       setCurrentProductInfo,
       openListItemModal,
-      openDeListItemModal
+      openDeListItemModal,
+      isLowGraphics
     } = this.props;
 
     const {
@@ -492,8 +493,8 @@ class MyProductTable extends Component {
                   history.push(`/product/${row._id}`);
                 }}
               >
-                {row.image && renderLottieAnimation(row.image) ? (
-                  renderLottieAnimation(row.image)
+                {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                  renderLottieAnimation(row.image, isLowGraphics)
                 ) : (
                   <ProductImage src={row.image} alt={row.productName} />
                 )}
@@ -631,7 +632,8 @@ const mapStateToProps = state => ({
   accessory: state.itemReducer.accessory,
   showListItemModal: state.snackbar.showListItemModal,
   isDarkMode: state.auth.isDarkMode,
-  userInfo: state.auth.user
+  userInfo: state.auth.user,
+  isLowGraphics: state.auth.isLowGraphics
 });
 
 const mapDispatchToProps = {

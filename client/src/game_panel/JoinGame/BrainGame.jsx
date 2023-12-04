@@ -7,6 +7,7 @@ import { YouTubeVideo } from '../../components/YoutubeVideo';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import ReactApexChart from 'react-apexcharts';
+import loadingChart from '../LottieAnimations/loadingChart.json';
 
 import PlayerModal from '../modal/PlayerModal';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
@@ -548,10 +549,12 @@ class BrainGame extends Component {
       handleOpenPlayerModal,
       handleClosePlayerModal,
       roomInfo,
-      bet_amount
+      bet_amount,
+      actionList,
+      isLowGraphics,
+      isMusicEnabled,
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
-    const roomStatistics = this.props.actionList || [];
 
     const barStyle = {
       width: `${payoutPercentage + 10}%`,
@@ -577,7 +580,7 @@ class BrainGame extends Component {
         )}
         <div className="game-contents">
           <div className="game-info-panel brain-game-play-panel">
-            {renderLottieAvatarAnimation(this.props.gameBackground)}
+            {renderLottieAvatarAnimation(this.props.gameBackground, isLowGraphics)}
 
             <div className="play-panel-header">
               <div className="timer">
@@ -663,9 +666,11 @@ class BrainGame extends Component {
                       <div className="label net-profit">Host Profit</div>
                     </div>
                     <div className="value bankroll">
-                      {roomStatistics.hostNetProfit?.slice(-1)[0] != null
+                    {actionList && actionList.hostBetsValue.length > 0 ? (
+                        <>
+                      {actionList.hostNetProfit?.slice(-1)[0] != null
                         ? convertToCurrency(
-                            roomStatistics.hostNetProfit?.slice(-1)[0]
+                          actionList.hostNetProfit?.slice(-1)[0]
                           )
                         : convertToCurrency(0)}
                       <ReactApexChart
@@ -694,9 +699,9 @@ class BrainGame extends Component {
                             gradient: {
                               shade: 'light',
                               gradientToColors:
-                                roomStatistics.hostNetProfit?.slice(-1)[0] > 0
+                              actionList.hostNetProfit?.slice(-1)[0] > 0
                                   ? ['#00FF00']
-                                  : roomStatistics.hostNetProfit?.slice(-1)[0] <
+                                  : actionList.hostNetProfit?.slice(-1)[0] <
                                     0
                                   ? ['#FF0000']
                                   : ['#808080'],
@@ -739,15 +744,28 @@ class BrainGame extends Component {
                         height="100"
                         series={[
                           {
-                            data: roomStatistics.hostNetProfit.map(
+                            data: actionList.hostNetProfit.map(
                               (value, index) => [
-                                roomStatistics.hostBetsValue[index],
+                                actionList.hostBetsValue[index],
                                 value
                               ]
                             )
                           }
                         ]}
-                      />
+                        />
+                        </>
+                        ) : (
+                          <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px',
+                          }}
+                        />                
+                        )}
                     </div>
                   </div>
                   <div className="data-item">
@@ -778,7 +796,7 @@ class BrainGame extends Component {
                   </div>
                   {this.props.youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} />
+                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled}/>
                     </div>
                   )}
                   <div className="data-item">
@@ -990,7 +1008,9 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   accessory: state.logic.curRoomInfo.accessory,
-  rank: state.logic.curRoomInfo.rank
+  rank: state.logic.curRoomInfo.rank,
+  isLowGraphics: state.auth.isLowGraphics,
+  isMusicEnabled: state.auth.isMusicEnabled
 });
 
 const mapDispatchToProps = {

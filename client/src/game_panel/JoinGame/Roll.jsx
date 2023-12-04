@@ -140,7 +140,10 @@ class Roll extends Component {
   };
   static getDerivedStateFromProps(props, current_state) {
     const { balance, isPasswordCorrect } = props;
-    if (current_state.balance !== balance || current_state.isPasswordCorrect !== isPasswordCorrect) {
+    if (
+      current_state.balance !== balance ||
+      current_state.isPasswordCorrect !== isPasswordCorrect
+    ) {
       return {
         ...current_state,
         isPasswordCorrect,
@@ -149,14 +152,14 @@ class Roll extends Component {
     }
     return null;
   }
-  
+
   componentDidUpdate(prevProps, prevState) {
     const { isWaiting, disabledButtons } = this.state;
-  
+
     if (isWaiting && disabledButtons) {
       this.pushBet();
     }
-  
+
     const { roomInfo } = this.props;
     if (prevProps.roomInfo && roomInfo) {
       if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
@@ -165,12 +168,15 @@ class Roll extends Component {
         });
       }
     }
-  
-    if (prevState.isPasswordCorrect !== this.state.isPasswordCorrect && this.state.isPasswordCorrect) {
+
+    if (
+      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
+      this.state.isPasswordCorrect
+    ) {
       this.joinGame();
     }
   }
-  
+
   componentDidMount = () => {
     this.panelRef.current.addEventListener('scroll', this.handleScroll);
     const roomId = this.props.roomInfo._id;
@@ -180,7 +186,7 @@ class Roll extends Component {
           roll,
           face: data.faces[i]
         }));
-  
+
         this.startSlider();
         this.props.playSound('sweep');
         this.setState(
@@ -192,20 +198,21 @@ class Roll extends Component {
             setTimeout(() => {
               this.setState({ disabledButtons: true }, () => {
                 if (this.state.buttonClicked) {
-                  this.props.deductBalanceWhenStartRoll({ bet_amount: this.state.bet_amount });
+                  this.props.deductBalanceWhenStartRoll({
+                    bet_amount: this.state.bet_amount
+                  });
                 }
               });
             }, 1000);
             setTimeout(() => {
               this.props.playSound('shine');
               this.setState({ disabledButtons: false });
-             
             }, 10000);
           }
         );
       }
     });
-  
+
     this.socket.on(`ROLL_GUESSES1_${roomId}`, data => {
       if (data && data.rolls && data.rolls.length > 0 && this.state.listen) {
         const roll_guesses = data.rolls.map((roll, i) => ({
@@ -220,7 +227,7 @@ class Roll extends Component {
         this.startSlider();
       }
     });
-  
+
     const items = [
       {
         label: 'Host',
@@ -240,15 +247,15 @@ class Roll extends Component {
       }
     ];
     this.setState({ items });
-  
+
     const { socket } = this.props;
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll });
     });
-  
+
     document.addEventListener('mousedown', this.handleClickOutside);
   };
-  
+
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId, this.timer);
     document.removeEventListener('mousedown', this.handleClickOutside);
@@ -257,7 +264,6 @@ class Roll extends Component {
     this.socket.off(`ROLL_GUESSES_${roomId}`);
     this.socket.off(`ROLL_GUESSES1_${roomId}`);
   };
-  
 
   predictNext = roll_list => {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
@@ -326,7 +332,7 @@ class Roll extends Component {
   joinGame = async () => {
     const { playSound, join, user, room, isDarkMode } = this.props;
     const { selected_roll, bet_amount } = this.state;
-  
+
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_roll: selected_roll
@@ -334,10 +340,10 @@ class Roll extends Component {
       // roll_bet_item_id: this.props.roll_bet_item
       // slippage: this.state.slippage
     });
-  
+
     setTimeout(() => {
       let text = 'HAHAA, YOU LOST!!!';
-  
+
       if (result.betResult === 1) {
         playSound('win');
         text = 'WINNER, WINNER, VEGAN DINNER!';
@@ -347,20 +353,21 @@ class Roll extends Component {
         playSound('lose');
         this.changeBgColor(result.betResult);
       }
-  
-      let stored_roll_array = JSON.parse(localStorage.getItem('roll_array')) || [];
-  
+
+      let stored_roll_array =
+        JSON.parse(localStorage.getItem('roll_array')) || [];
+
       while (stored_roll_array.length >= 20) {
         stored_roll_array.shift();
       }
       stored_roll_array.push({ roll: bet_amount });
       localStorage.setItem('roll_array', JSON.stringify(stored_roll_array));
-  
+
       if (result.status === 'success') {
         this.setState(prevState => ({
           betResults: [...prevState.betResults, { ...result, user, room }]
         }));
-  
+
         gameResultModal(
           isDarkMode,
           text,
@@ -377,26 +384,32 @@ class Roll extends Component {
           alertModal(isDarkMode, result.message);
         }
       }
-  
+
       this.props.refreshHistory();
     }, 5000);
   };
-  
+
   onBtnBetClick = async () => {
-    const { isAuthenticated, isDarkMode, creator_id, user_id, playSound } = this.props;
+    const {
+      isAuthenticated,
+      isDarkMode,
+      creator_id,
+      user_id,
+      playSound
+    } = this.props;
     const { buttonClicked, isWaiting } = this.state;
     playSound('select');
-  
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       this.setState({ selected_roll: null, buttonClicked: false });
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       this.setState({ selected_roll: null, buttonClicked: false });
       return;
     }
-  
+
     if (!buttonClicked && isWaiting) {
       return;
     } else {
@@ -405,16 +418,22 @@ class Roll extends Component {
       }, 3000);
     }
   };
-  
+
   pushBet = async () => {
-    const { openGamePasswordModal, balance, isDarkMode, is_private, roomInfo } = this.props;
+    const {
+      openGamePasswordModal,
+      balance,
+      isDarkMode,
+      is_private,
+      roomInfo
+    } = this.props;
     const { bet_amount } = this.state;
-  
+
     await validateBetAmount(bet_amount, balance, isDarkMode);
-  
+
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-  
+
     if (is_private === true && passwordCorrect !== true) {
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         openGamePasswordModal();
@@ -435,39 +454,40 @@ class Roll extends Component {
       this.resetButtonState();
     }
   };
-  
+
   resetButtonState = () => {
     this.setState({
       buttonClicked: false,
       isWaiting: false
     });
   };
-  
+
   startSlider = () => {
     const sliderImages = this.sliderRef.current;
     if (!sliderImages) return;
-  
+
     let currentPos = 0;
     let startTime = null;
-  
+
     function animate(timestamp) {
       if (!startTime) startTime = timestamp;
       const elapsedTime = timestamp - startTime;
       const progress = Math.min(elapsedTime / 20000, 0.8); // 20 seconds
       const ease = 1 - Math.pow(1 - progress, 10); // cubic easing
-  
+
       currentPos = ease * 0.65 * sliderImages.offsetWidth;
-  
-      sliderImages.style.transform = `translateX(${sliderImages.offsetWidth / 3 - currentPos}px)`;
-  
+
+      sliderImages.style.transform = `translateX(${sliderImages.offsetWidth /
+        3 -
+        currentPos}px)`;
+
       if (progress < 1) {
         requestAnimationFrame(animate);
       }
     }
-  
+
     requestAnimationFrame(animate);
   };
-  
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
@@ -480,7 +500,7 @@ class Roll extends Component {
         document.getElementById('betamount').focus();
       }
     );
-  }
+  };
 
   handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
@@ -502,7 +522,7 @@ class Roll extends Component {
         }
       );
     }
-  }
+  };
 
   handleMaxButtonClick = () => {
     const maxBetAmount = this.state.balance;
@@ -514,7 +534,7 @@ class Roll extends Component {
         document.getElementById('betamount').focus();
       }
     );
-  }
+  };
 
   handleButtonClick = () => {
     const { isAuthenticated, creator_id, user_id, isDarkMode } = this.props;
@@ -670,7 +690,7 @@ class Roll extends Component {
       waiting,
       newRound
     } = this.state;
-    const { playSound, playSoundLoop, stopSound } = this.props;
+    const { isLowGraphics, isMusicEnabled } = this.props;
     let content;
     if (showRoll) {
       if (
@@ -957,10 +977,11 @@ class Roll extends Component {
                     </div>
                     <div className="value">{this.props.roomInfo.room_name}</div>
                   </div>
-                  {this.props.youtubeUrl && 
-                  <div className="data-item">
-                  <YouTubeVideo url={this.props.youtubeUrl} />
-                  </div>}
+                  {this.props.youtubeUrl && (
+                    <div className="data-item">
+                      <YouTubeVideo url={this.props.youtubeUrl} />
+                    </div>
+                  )}
                 </React.Fragment>
               ))}
             </div>
@@ -970,70 +991,72 @@ class Roll extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-                        {renderLottieAvatarAnimation(this.props.gameBackground)}
+            {renderLottieAvatarAnimation(
+              this.props.gameBackground,
+              isLowGraphics
+            )}
 
-            <h3 className='game-sub-title'>Match the Face</h3>
-           
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: rollHex
-                }}
-                style={{
-                  marginTop: '10px',
-                  marginBottom: '-155px',
-                  filter: 'hue-rotate(45deg)',
-                  maxWidth: '100%',
-                  width: '160px'
-                }}
-              />
-             
+            <h3 className="game-sub-title">Match the Face</h3>
 
-              <div className="slider-images" id="top" ref={this.sliderRef}>
-                <p className="previous-guesses roll">
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      pointerEvents: 'none'
-                    }}
-                  >
-                    {this.state.roll_guesses.length > 0 ? (
-                      this.state.roll_guesses.slice(-30).map((guess, index) => (
-                        <div
-                          style={{
-                            width: '120px',
-                            height: '120px',
-                            backgroundPosition: 'center',
-                            backgroundSize: 'contain',
-                            pointerEvents: 'none'
-                          }}
-                          key={index}
-                          alt={guess.face}
-                          className={
-                            guess.face === 'R'
-                              ? 'rock'
-                              : guess.face === 'P'
-                              ? 'paper'
-                              : guess.face === 'S'
-                              ? 'scissors'
-                              : guess.face === 'W'
-                              ? 'whale'
-                              : guess.face === 'B'
-                              ? 'bear'
-                              : guess.face === 'Bu'
-                              ? 'bull'
-                              : ''
-                          }
-                        />
-                      ))
-                    ) : (
-                      <span id="no-guesses"></span>
-                    )}
-                  </div>
-                </p>
-              </div>
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: rollHex
+              }}
+              style={{
+                marginTop: '10px',
+                marginBottom: '-155px',
+                filter: 'hue-rotate(45deg)',
+                maxWidth: '100%',
+                width: '160px'
+              }}
+            />
+
+            <div className="slider-images" id="top" ref={this.sliderRef}>
+              <p className="previous-guesses roll">
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  {this.state.roll_guesses.length > 0 ? (
+                    this.state.roll_guesses.slice(-30).map((guess, index) => (
+                      <div
+                        style={{
+                          width: '120px',
+                          height: '120px',
+                          backgroundPosition: 'center',
+                          backgroundSize: 'contain',
+                          pointerEvents: 'none'
+                        }}
+                        key={index}
+                        alt={guess.face}
+                        className={
+                          guess.face === 'R'
+                            ? 'rock'
+                            : guess.face === 'P'
+                            ? 'paper'
+                            : guess.face === 'S'
+                            ? 'scissors'
+                            : guess.face === 'W'
+                            ? 'whale'
+                            : guess.face === 'B'
+                            ? 'bear'
+                            : guess.face === 'Bu'
+                            ? 'bull'
+                            : ''
+                        }
+                      />
+                    ))
+                  ) : (
+                    <span id="no-guesses"></span>
+                  )}
+                </div>
+              </p>
+            </div>
             <div className="rollTimer">
               {roll_guesses.length ? (
                 content
@@ -1043,273 +1066,268 @@ class Roll extends Component {
             </div>
 
             <BetAmountInput
-          betAmount={this.state.bet_amount}
-          handle2xButtonClick={this.handle2xButtonClick}
-          handleHalfXButtonClick={this.handleHalfXButtonClick}
-          handleMaxButtonClick={this.handleMaxButtonClick}
-          onChange={this.handleChange}
-          isDarkMode={this.props.isDarkMode}
-        />
-              <div id="roll">
-                <Button
-                  className={`rock button-2x-r${
-                    this.state.selected_roll === 'R' ? ' active' : ''
-                  }${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    this.state.selected_roll === 'R'
-                      ? ' lose-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 &&
-                    this.state.selected_roll === 'R'
-                      ? ' win-bg'
-                      : ''
-                  }`}
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-                  variant="contained"
-                  onClick={() => {
-                    this.onBtnBetClick();
+              betAmount={this.state.bet_amount}
+              handle2xButtonClick={this.handle2xButtonClick}
+              handleHalfXButtonClick={this.handleHalfXButtonClick}
+              handleMaxButtonClick={this.handleMaxButtonClick}
+              onChange={this.handleChange}
+              isDarkMode={this.props.isDarkMode}
+            />
+            <div id="roll">
+              <Button
+                className={`rock button-2x-r${
+                  this.state.selected_roll === 'R' ? ' active' : ''
+                }${
+                  this.state.bgColorChanged &&
+                  this.state.betResult === -1 &&
+                  this.state.selected_roll === 'R'
+                    ? ' lose-bg'
+                    : ''
+                }${
+                  this.state.betResult === 1 && this.state.selected_roll === 'R'
+                    ? ' win-bg'
+                    : ''
+                }`}
+                disabled={this.state.disabledButtons}
+                style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                variant="contained"
+                onClick={() => {
+                  this.onBtnBetClick();
 
-                    const currentActive = document.querySelector('.active');
-                    if (currentActive) {
-                      currentActive.style.animation = 'none';
-                      void currentActive.offsetWidth;
-                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-                    }
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
 
-                    this.setState(
-                      { selected_roll: null, bgColorChanged: false },
-                      () => {
-                        this.setState({
-                          selected_roll: 'R',
-                          buttonClicked: true
-                        });
-                      }
-                    );
-                  }}
-                >
-                  <span>2x (4x)</span>
-                </Button>
-                <Button
-                  className={`paper button-2x-p${
-                    this.state.selected_roll === 'P' ? ' active' : ''
-                  }${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    this.state.selected_roll === 'P'
-                      ? ' lose-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 &&
-                    this.state.selected_roll === 'P'
-                      ? ' win-bg'
-                      : ''
-                  }`}
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-                  variant="contained"
-                  onClick={() => {
-                    this.onBtnBetClick();
-                    const currentActive = document.querySelector('.active');
-                    if (currentActive) {
-                      currentActive.style.animation = 'none';
-                      void currentActive.offsetWidth;
-                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  this.setState(
+                    { selected_roll: null, bgColorChanged: false },
+                    () => {
+                      this.setState({
+                        selected_roll: 'R',
+                        buttonClicked: true
+                      });
                     }
+                  );
+                }}
+              >
+                <span>2x (4x)</span>
+              </Button>
+              <Button
+                className={`paper button-2x-p${
+                  this.state.selected_roll === 'P' ? ' active' : ''
+                }${
+                  this.state.bgColorChanged &&
+                  this.state.betResult === -1 &&
+                  this.state.selected_roll === 'P'
+                    ? ' lose-bg'
+                    : ''
+                }${
+                  this.state.betResult === 1 && this.state.selected_roll === 'P'
+                    ? ' win-bg'
+                    : ''
+                }`}
+                disabled={this.state.disabledButtons}
+                style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                variant="contained"
+                onClick={() => {
+                  this.onBtnBetClick();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
 
-                    this.setState(
-                      {
-                        selected_roll: null,
-                        betResult: 0,
-                        bgColorChanged: false
-                      },
-                      () => {
-                        this.setState({
-                          selected_roll: 'P',
-                          buttonClicked: true
-                        });
-                      }
-                    );
-                  }}
-                >
-                  <span>2x (4x)</span>
-                </Button>
-                <Button
-                  className={`scissors button-2x-s${
-                    this.state.selected_roll === 'S' ? ' active' : ''
-                  }${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    this.state.selected_roll === 'S'
-                      ? ' lose-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 &&
-                    this.state.selected_roll === 'S'
-                      ? ' win-bg'
-                      : ''
-                  }`}
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-                  variant="contained"
-                  onClick={() => {
-                    this.onBtnBetClick();
-                    const currentActive = document.querySelector('.active');
-                    if (currentActive) {
-                      currentActive.style.animation = 'none';
-                      void currentActive.offsetWidth;
-                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  this.setState(
+                    {
+                      selected_roll: null,
+                      betResult: 0,
+                      bgColorChanged: false
+                    },
+                    () => {
+                      this.setState({
+                        selected_roll: 'P',
+                        buttonClicked: true
+                      });
                     }
+                  );
+                }}
+              >
+                <span>2x (4x)</span>
+              </Button>
+              <Button
+                className={`scissors button-2x-s${
+                  this.state.selected_roll === 'S' ? ' active' : ''
+                }${
+                  this.state.bgColorChanged &&
+                  this.state.betResult === -1 &&
+                  this.state.selected_roll === 'S'
+                    ? ' lose-bg'
+                    : ''
+                }${
+                  this.state.betResult === 1 && this.state.selected_roll === 'S'
+                    ? ' win-bg'
+                    : ''
+                }`}
+                disabled={this.state.disabledButtons}
+                style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                variant="contained"
+                onClick={() => {
+                  this.onBtnBetClick();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
 
-                    this.setState(
-                      {
-                        selected_roll: null,
-                        betResult: 0,
-                        bgColorChanged: false
-                      },
-                      () => {
-                        this.setState({
-                          selected_roll: 'S',
-                          buttonClicked: true
-                        });
-                      }
-                    );
-                  }}
-                >
-                  <span>2x (4x)</span>
-                </Button>
-                <Button
-                  className={`whale button-2x-w${
-                    this.state.selected_roll === 'W' ? ' active' : ''
-                  }${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    this.state.selected_roll === 'W'
-                      ? ' lose-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 &&
-                    this.state.selected_roll === 'W'
-                      ? ' win-bg'
-                      : ''
-                  }`}
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-                  variant="contained"
-                  onClick={() => {
-                    this.onBtnBetClick();
-                    const currentActive = document.querySelector('.active');
-                    if (currentActive) {
-                      currentActive.style.animation = 'none';
-                      void currentActive.offsetWidth;
-                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  this.setState(
+                    {
+                      selected_roll: null,
+                      betResult: 0,
+                      bgColorChanged: false
+                    },
+                    () => {
+                      this.setState({
+                        selected_roll: 'S',
+                        buttonClicked: true
+                      });
                     }
-                    this.setState(
-                      {
-                        selected_roll: null,
-                        betResult: 0,
-                        bgColorChanged: false
-                      },
-                      () => {
-                        this.setState({
-                          selected_roll: 'W',
-                          buttonClicked: true
-                        });
-                      }
-                    );
-                  }}
-                >
-                  <span>14x</span>
-                </Button>
-                <Button
-                  className={`bear button-2x-b${
-                    this.state.selected_roll === 'B' ? ' active' : ''
-                  }${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    this.state.selected_roll === 'B'
-                      ? ' lose-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 &&
-                    this.state.selected_roll === 'B'
-                      ? ' win-bg'
-                      : ''
-                  }`}
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-                  variant="contained"
-                  onClick={() => {
-                    this.onBtnBetClick();
-                    const currentActive = document.querySelector('.active');
-                    if (currentActive) {
-                      currentActive.style.animation = 'none';
-                      void currentActive.offsetWidth;
-                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  );
+                }}
+              >
+                <span>2x (4x)</span>
+              </Button>
+              <Button
+                className={`whale button-2x-w${
+                  this.state.selected_roll === 'W' ? ' active' : ''
+                }${
+                  this.state.bgColorChanged &&
+                  this.state.betResult === -1 &&
+                  this.state.selected_roll === 'W'
+                    ? ' lose-bg'
+                    : ''
+                }${
+                  this.state.betResult === 1 && this.state.selected_roll === 'W'
+                    ? ' win-bg'
+                    : ''
+                }`}
+                disabled={this.state.disabledButtons}
+                style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                variant="contained"
+                onClick={() => {
+                  this.onBtnBetClick();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                  this.setState(
+                    {
+                      selected_roll: null,
+                      betResult: 0,
+                      bgColorChanged: false
+                    },
+                    () => {
+                      this.setState({
+                        selected_roll: 'W',
+                        buttonClicked: true
+                      });
                     }
-                    this.setState(
-                      {
-                        selected_roll: null,
-                        betResult: 0,
-                        bgColorChanged: false
-                      },
-                      () => {
-                        this.setState({
-                          selected_roll: 'B',
-                          buttonClicked: true
-                        });
-                      }
-                    );
-                  }}
-                >
-                  <span>1.5x</span>
-                </Button>
-                <Button
-                  className={`bull button-2x-bu${
-                    this.state.selected_roll === 'Bu' ? ' active' : ''
-                  }${
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1 &&
-                    this.state.selected_roll === 'Bu'
-                      ? ' lose-bg'
-                      : ''
-                  }${
-                    this.state.betResult === 1 &&
-                    this.state.selected_roll === 'Bu'
-                      ? ' win-bg'
-                      : ''
-                  }`}
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
-                  variant="contained"
-                  onClick={() => {
-                    this.onBtnBetClick();
-                    const currentActive = document.querySelector('.active');
-                    if (currentActive) {
-                      currentActive.style.animation = 'none';
-                      void currentActive.offsetWidth;
-                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  );
+                }}
+              >
+                <span>14x</span>
+              </Button>
+              <Button
+                className={`bear button-2x-b${
+                  this.state.selected_roll === 'B' ? ' active' : ''
+                }${
+                  this.state.bgColorChanged &&
+                  this.state.betResult === -1 &&
+                  this.state.selected_roll === 'B'
+                    ? ' lose-bg'
+                    : ''
+                }${
+                  this.state.betResult === 1 && this.state.selected_roll === 'B'
+                    ? ' win-bg'
+                    : ''
+                }`}
+                disabled={this.state.disabledButtons}
+                style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                variant="contained"
+                onClick={() => {
+                  this.onBtnBetClick();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                  this.setState(
+                    {
+                      selected_roll: null,
+                      betResult: 0,
+                      bgColorChanged: false
+                    },
+                    () => {
+                      this.setState({
+                        selected_roll: 'B',
+                        buttonClicked: true
+                      });
                     }
-                    this.setState(
-                      {
-                        selected_roll: null,
-                        betResult: 0,
-                        bgColorChanged: false
-                      },
-                      () => {
-                        this.setState({
-                          selected_roll: 'Bu',
-                          buttonClicked: true
-                        });
-                      }
-                    );
-                  }}
-                >
-                  <span>7x</span>
-                </Button>
-              </div>
+                  );
+                }}
+              >
+                <span>1.5x</span>
+              </Button>
+              <Button
+                className={`bull button-2x-bu${
+                  this.state.selected_roll === 'Bu' ? ' active' : ''
+                }${
+                  this.state.bgColorChanged &&
+                  this.state.betResult === -1 &&
+                  this.state.selected_roll === 'Bu'
+                    ? ' lose-bg'
+                    : ''
+                }${
+                  this.state.betResult === 1 &&
+                  this.state.selected_roll === 'Bu'
+                    ? ' win-bg'
+                    : ''
+                }`}
+                disabled={this.state.disabledButtons}
+                style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                variant="contained"
+                onClick={() => {
+                  this.onBtnBetClick();
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                  this.setState(
+                    {
+                      selected_roll: null,
+                      betResult: 0,
+                      bgColorChanged: false
+                    },
+                    () => {
+                      this.setState({
+                        selected_roll: 'Bu',
+                        buttonClicked: true
+                      });
+                    }
+                  );
+                }}
+              >
+                <span>7x</span>
+              </Button>
+            </div>
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>
@@ -1452,7 +1470,8 @@ const mapStateToProps = state => ({
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   betResults: state.logic.betResults,
   accessory: state.logic.curRoomInfo.accessory,
-
+  isLowGraphics: state.auth.isLowGraphics,
+  isMusicEnabled: state.auth.isMusicEnabled
 });
 
 const mapDispatchToProps = {

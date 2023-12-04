@@ -153,9 +153,8 @@ class PlayerModal extends Component {
       username: userData.username,
       avatar: userData.avatar,
       accessory: userData.accessory,
-      rank: userData.totalWagered,
+      rank: userData.totalWagered
     });
-
   };
 
   handleOpenChat = e => {
@@ -211,13 +210,13 @@ class PlayerModal extends Component {
       this.setState({ isLoading: false });
       this.props
         .getCustomerStatisticsData(nextProps._id)
-        .then(result => this.setState({ ...result}));
+        .then(result => this.setState({ ...result }));
     }
   }
 
   render() {
     const { isLoading } = this.state;
-const { loading } = this.props;
+    const { loading } = this.props;
     return (
       <>
         {isLoading && (
@@ -237,164 +236,167 @@ const { loading } = this.props;
             }}
           />
         )}
-              {!isLoading && (
-
-        <Modal
-          isOpen={this.props.modalIsOpen}
-          onRequestClose={this.handleCloseModal}
-          style={customStyles}
-          contentLabel="Player Modal"
-        >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-            <div className="modal-header">
-              <h2 className="modal-title">Player Card</h2>
-              <Button className="btn-close" onClick={this.handleCloseModal}>
-                ×
-              </Button>
-            </div>
-            <div className="modal-body edit-modal-body">
-              <div className="align-center">
-                {loading ? (
-                  <div className="loading-spinner"></div>
-                ) : (
-                  <Avatar
-                    src={
-                      this.state.avatar
-                        ? this.state.avatar
-                        : '/img/profile-thumbnail.svg'
-                    }
-                    accessory={this.state.accessory}
-                    rank={this.state.rank}
-                    alt=""
-                  />
-                )}
-              </div>
-              {loading ? null : (
-                <div className="user-statistics">
-                  <StatisticsForm
-                    onDropdownChange={this.handleDropdownChange}
-                    username={this.state.username}
-                    joined_date={this.state.joined_date}
-                    gameLogList={this.state.gameLogList}
-                    deposit={this.state.deposit}
-                    withdraw={this.state.withdraw}
-                    gameProfit={this.state.gameProfit}
-                    balance={this.state.balance}
-                    gamePlayed={this.state.gamePlayed}
-                    gameHosted={this.state.gameHosted}
-                    gameJoined={this.state.gameJoined}
-                    totalWagered={this.state.totalWagered}
-                    rank={this.state.rank}
-                    netProfit={this.state.netProfit}
-                    profitAllTimeHigh={this.state.profitAllTimeHigh}
-                    profitAllTimeLow={this.state.profitAllTimeLow}
-                    averageWager={this.state.averageWager}
-                    averageGamesPlayedPerRoom={
-                      this.state.averageGamesPlayedPerRoom
-                    }
-                    averageProfit={this.state.averageProfit}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <Button className="tip-button" onClick={this.handleTip}>
-                Tip&nbsp;
-                <FontAwesomeIcon icon={faMoneyBill} />
-              </Button>
-              <Button className="send-msg" onClick={this.handleOpenChat}>
-                Send Message
-              </Button>
-            </div>
-          </div>
+        {!isLoading && (
           <Modal
-            isOpen={this.state.isTipModalOpen}
-            onRequestClose={this.handleCloseTipModal}
+            isOpen={this.props.modalIsOpen}
+            onRequestClose={this.handleCloseModal}
             style={customStyles}
-            contentLabel="Tip Modal"
+            contentLabel="Player Modal"
           >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className="modal-header">
-                <h2>ENTER TIP AMOUNT</h2>
+                <h2 className="modal-title">Player Card</h2>
+                <Button className="btn-close" onClick={this.handleCloseModal}>
+                  ×
+                </Button>
               </div>
-              <div className="modal-body">
-                <div className="modal-content-wrapper">
-                  <div className="modal-content-panel">
-                    <div className="input-amount">
-                      <TextField
-                        label="Amount"
-                        value={this.state.tipAmount}
-                        onChange={this.handleTipAmountChange}
-                        pattern="^\\d*\\.?\\d*$"
-                        variant="outlined"
-                        autoComplete="off"
-                        InputProps={{
-                          endAdornment: 'ETH'
-                        }}
-                        className="form-control"
-                      />
-                    </div>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <span>IN-GAME BALANCE:</span>
-                          </TableCell>
-                          <TableCell>
-                            {convertToCurrency(this.props.balance)}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <span>TIP AMOUNT:</span>
-                          </TableCell>
-                          <TableCell style={{ color: 'red' }}>
-                            {convertToCurrency(this.state.tipAmount * -1)}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <span>NEW BALANCE:</span>
-                          </TableCell>
-                          <TableCell>
-                            {convertToCurrency(
-                              this.props.balance - this.state.tipAmount
-                            )}
-                            &nbsp;
-                            {this.props.balance - this.state.tipAmount < 0 && (
-                              <Warning width="15pt" />
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                    <div className="input-amount">
-                      <Typography>Add Message?</Typography>
-                      <TextField
-                        label="Message"
-                        value={this.state.message}
-                        onChange={this.handleMessage}
-                        variant="outlined"
-                        autoComplete="off"
-                        className="form-control"
-                        inputProps={{ maxLength: 8 }}
-                      />
+              <div className="modal-body edit-modal-body">
+                <div className="align-center">
+                  {loading ? (
+                    <div className="loading-spinner"></div>
+                  ) : (
+                    <Avatar
+                      src={
+                        this.state.avatar
+                          ? this.state.avatar
+                          : '/img/profile-thumbnail.svg'
+                      }
+                      accessory={this.state.accessory}
+                      rank={this.state.rank}
+                      alt=""
+                    />
+                  )}
+                </div>
+                {loading ? null : (
+                  <div className="user-statistics">
+                    <StatisticsForm
+                      onDropdownChange={this.handleDropdownChange}
+                      username={this.state.username}
+                      joined_date={this.state.joined_date}
+                      gameLogList={this.state.gameLogList}
+                      deposit={this.state.deposit}
+                      withdraw={this.state.withdraw}
+                      gameProfit={this.state.gameProfit}
+                      balance={this.state.balance}
+                      gamePlayed={this.state.gamePlayed}
+                      gameHosted={this.state.gameHosted}
+                      gameJoined={this.state.gameJoined}
+                      totalWagered={this.state.totalWagered}
+                      rank={this.state.rank}
+                      netProfit={this.state.netProfit}
+                      profitAllTimeHigh={this.state.profitAllTimeHigh}
+                      profitAllTimeLow={this.state.profitAllTimeLow}
+                      averageWager={this.state.averageWager}
+                      averageGamesPlayedPerRoom={
+                        this.state.averageGamesPlayedPerRoom
+                      }
+                      averageProfit={this.state.averageProfit}
+                    />
+                  </div>
+                )}
+              </div>
+              {this.props.userInfo._id !== this.state._id ? (
+                <div className="modal-footer">
+                  <Button className="tip-button" onClick={this.handleTip}>
+                    Tip&nbsp;
+                    <FontAwesomeIcon icon={faMoneyBill} />
+                  </Button>
+                  <Button className="send-msg" onClick={this.handleOpenChat}>
+                    Send Message
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+            <Modal
+              isOpen={this.state.isTipModalOpen}
+              onRequestClose={this.handleCloseTipModal}
+              style={customStyles}
+              contentLabel="Tip Modal"
+            >
+              <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+                <div className="modal-header">
+                  <h2>ENTER TIP AMOUNT</h2>
+                </div>
+                <div className="modal-body">
+                  <div className="modal-content-wrapper">
+                    <div className="modal-content-panel">
+                      <div className="input-amount">
+                        <TextField
+                          label="Amount"
+                          value={this.state.tipAmount}
+                          onChange={this.handleTipAmountChange}
+                          pattern="^\\d*\\.?\\d*$"
+                          variant="outlined"
+                          autoComplete="off"
+                          InputProps={{
+                            endAdornment: 'ETH'
+                          }}
+                          className="form-control"
+                        />
+                      </div>
+                      <Table>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>
+                              <span>IN-GAME BALANCE:</span>
+                            </TableCell>
+                            <TableCell>
+                              {convertToCurrency(this.props.balance)}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <span>TIP AMOUNT:</span>
+                            </TableCell>
+                            <TableCell style={{ color: 'red' }}>
+                              {convertToCurrency(this.state.tipAmount * -1)}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <span>NEW BALANCE:</span>
+                            </TableCell>
+                            <TableCell>
+                              {convertToCurrency(
+                                this.props.balance - this.state.tipAmount
+                              )}
+                              &nbsp;
+                              {this.props.balance - this.state.tipAmount <
+                                0 && <Warning width="15pt" />}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                      <div className="input-amount">
+                        <Typography>Add Message?</Typography>
+                        <TextField
+                          label="Message"
+                          value={this.state.message}
+                          onChange={this.handleMessage}
+                          variant="outlined"
+                          autoComplete="off"
+                          className="form-control"
+                          inputProps={{ maxLength: 8 }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div className="modal-footer">
+                  <Button className="btn-submit" onClick={this.handleSendTip}>
+                    Send Tip
+                  </Button>
+                  <Button
+                    className="btn-back"
+                    onClick={this.handleCloseTipModal}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              <div className="modal-footer">
-                <Button className="btn-submit" onClick={this.handleSendTip}>
-                  Send Tip
-                </Button>
-                <Button className="btn-back" onClick={this.handleCloseTipModal}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
+            </Modal>
           </Modal>
-        </Modal>
-              )}
+        )}
       </>
     );
   }

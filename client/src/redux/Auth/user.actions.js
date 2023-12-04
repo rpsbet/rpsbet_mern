@@ -22,7 +22,9 @@ import {
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   TOGGLE_MUTE,
+  TOGGLE_LOW_GRAPHICS,
   TOGGLE_DRAWER,
+  TOGGLE_MUSIC_ENABLED,
   START_LOADING,
   END_LOADING,
   SET_REFERRAL_CODE
@@ -42,7 +44,7 @@ export const getUser = (is_reload, viewAll, loadMore, showWithdrawals, showDepos
     const res = await axios.get(`/auth/user?viewAll=${viewAll}&loadMore=${loadMore}&showWithdrawals=${showWithdrawals}&showDeposits=${showDeposits}&sortBy=${sortBy}&search=${search}`);
     
     if (res.data.success) {
-      console.log("poke", res.data.user)
+      // console.log("poke", res.data.user)
       dispatch({ type: USER_LOADED, payload: res.data.user });
       dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: res.data.unread_message_count });
       dispatch({ type: TRANSACTION_LOADED, payload: res.data.transactions });
@@ -279,6 +281,14 @@ export const setGasfee = params => async dispatch => {
 
 export const toggleMute = isMuted => dispatch => {
   dispatch({ type: TOGGLE_MUTE, payload: isMuted });
+}
+
+export const toggleLowGraphics = isLowGraphics => dispatch => {
+  dispatch({ type: TOGGLE_LOW_GRAPHICS, payload: isLowGraphics });
+}
+
+export const toggleMusic = isMusicEnabled => dispatch => {
+  dispatch({ type: TOGGLE_MUSIC_ENABLED, payload: isMusicEnabled });
 }
 
 export const toggleDrawer = isDrawerOpen => dispatch => {

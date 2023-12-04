@@ -515,6 +515,10 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 .dark_mode .modal-body .modal-icon.result-icon-password {
 	background-image: url("/img/icons/dark-result-icon-password.svg");
 }
+.dark_mode .modal-body .modal-icon.result-icon-prize {
+    background-image: url("/img/icons/dark-alert-prize-icon.svg");
+}
+
 .dark_mode .modal-body .modal-icon.result-icon-trade {
 	background-image: url("/img/icons/dark-result-icon-trade.svg");
 }

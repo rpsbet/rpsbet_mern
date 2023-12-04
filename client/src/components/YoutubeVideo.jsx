@@ -9,9 +9,9 @@ export class YouTubeVideo extends React.Component {
     super(props);
     this.player = null;
     this.state = {
-      isPlaying: true,
-      volume: 50, // Initial volume value
-      videoTitle: '' // Holds the video title
+      isPlaying: this.props.isMusicEnabled ? true : false,
+      volume: 50,
+      videoTitle: '' 
     };
   }
 
@@ -28,7 +28,7 @@ export class YouTubeVideo extends React.Component {
         showinfo: 0,
         rel: 0,
         loop: 1,
-        playlist: videoId // Set the playlist to the current video ID for looping
+        playlist: videoId
       },
       events: {
         onReady: this.onPlayerReady,
@@ -36,17 +36,16 @@ export class YouTubeVideo extends React.Component {
       }
     });
 
-    // Fetch the video details using YouTube Data API
     this.fetchVideoDetails(videoId);
   };
 
   onPlayerReady = event => {
-    event.target.playVideo(); // Play the video programmatically
+    event.target.playVideo();
   };
 
   onPlayerStateChange = event => {
     if (event.data === window.YT.PlayerState.ENDED) {
-      event.target.playVideo(); // Play the video again when it ends
+      event.target.playVideo();
     }
   };
 
@@ -103,7 +102,7 @@ export class YouTubeVideo extends React.Component {
 
   render() {
     const containerStyle = {
-      position: 'relative' // 16:9 aspect ratio (change based on your aspect ratio)
+      position: 'relative'
     };
 
     const overlayStyle = {
@@ -169,27 +168,18 @@ export class YouTubeVideo extends React.Component {
 }
 
 function extractVideoId(url) {
-  // Regular expressions to match YouTube video URLs in both formats.
   const regexLong = /[?&]v=([^?&]+)/;
   const regexShort = /youtu\.be\/([^?&]+)/;
-
-  // Try to match the long URL format first.
   const matchLong = url.match(regexLong);
 
-  // If a match is found in the long format, return the video ID.
   if (matchLong && matchLong[1]) {
     return matchLong[1];
   }
 
-  // If no match is found in the long format, try the short format.
   const matchShort = url.match(regexShort);
-
-  // If a match is found in the short format, return the video ID.
   if (matchShort && matchShort[1]) {
     return matchShort[1];
   }
-
-  // If no match is found in either format, return null to indicate that no video ID was found.
   return null;
 }
 

@@ -127,9 +127,9 @@ export function updateRollGuesses() {
 // join game
 export const bet = bet_info => async dispatch => {
   try {
-    dispatch({ type: START_LOADING });
+    // dispatch({ type: START_LOADING });
     const res = await axios.post('/game/bet', bet_info);
-    dispatch({ type: END_LOADING });
+    // dispatch({ type: END_LOADING });
 
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
@@ -199,10 +199,15 @@ export const loadRoomInfo = roomInfo => {
   };
 };
 // GetRoomInfo
-export const getRoomInfo = room_id => async dispatch => {
+export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
   try {
-    dispatch({ type: START_LOADING });
-    const res = await axios.get(`/game/room/${room_id}`);
+    if (loading) {
+      dispatch({ type: START_LOADING });
+    }
+
+    // Include the 'limit' parameter in the API request URL if provided
+    const apiURL = limit ? `/game/room/${room_id}?limit=${limit}` : `/game/room/${room_id}`;
+    const res = await axios.get(apiURL);
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
     } else {
@@ -211,12 +216,16 @@ export const getRoomInfo = room_id => async dispatch => {
   } catch (err) {
     dispatch({ type: MSG_ROOMS_LOAD_FAILED, payload: err });
   } finally {
-    dispatch({ type: END_LOADING });
+    if (loading) {
+      dispatch({ type: END_LOADING });
+    }
   }
 };
 
+
+
 export const actionRoom = ({ roomId, type }) => async dispatch => {
-  dispatch({ type: START_LOADING });
+  // dispatch({ type: START_LOADING });
 
   try {
     const res = await axios.patch(`/game/room/${roomId}/${type}`);
@@ -230,7 +239,7 @@ export const actionRoom = ({ roomId, type }) => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: err });
   }
 
-  dispatch({ type: END_LOADING });
+  // dispatch({ type: END_LOADING });
 };
 
 export const checkGamePassword = data => async dispatch => {
@@ -325,7 +334,7 @@ export const equipItem = data => async dispatch => {
 };
 
 export const getRoomList = search_condition => async dispatch => {
-  dispatch({ type: START_LOADING });
+  // dispatch({ type: START_LOADING });
   try {
     const res = await axios.get('/game/rooms', { params: search_condition });
     if (res.data.success) {
@@ -333,7 +342,7 @@ export const getRoomList = search_condition => async dispatch => {
     }
   } catch (err) {
   } finally {
-    dispatch({ type: END_LOADING });
+    // dispatch({ type: END_LOADING });
   }
 };
 
@@ -417,9 +426,13 @@ export const getMyHistory = search_condition => async dispatch => {
 
 export const getMyChat = () => async dispatch => {
   try {
+    dispatch({ type: START_LOADING });
+
     const res = await axios.get('/game/my_chat');
     if (res.data.success) {
       dispatch({ type: MY_CHAT_LOADED, payload: res.data.myChat });
+      dispatch({ type: END_LOADING });
+
     }
   } catch (err) {
     console.log(err);
@@ -457,12 +470,15 @@ export const getNotificationsRoomInfo = user_id => async dispatch => {
 
 export const getChatRoomInfo = user_id => async dispatch => {
   try {
+    dispatch({ type: START_LOADING });
     const res = await axios.post('/game/get_chat_room_info', { user_id });
     if (res.data.success) {
       dispatch({ type: SET_CHAT_ROOM_INFO, payload: res.data.chatRoomInfo });
+      dispatch({ type: END_LOADING });
     } else {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
+
   } catch (err) {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
@@ -574,6 +590,7 @@ export const addChatLog = chatLog => (dispatch, getState) => {
       (newHistory[otherId] ? newHistory[otherId].unread_message_count : 0) + 1,
     _id: otherId,
     message: chatLog.message,
+    is_read: chatLog.is_read,
     created_at_str: chatLog.created_at,
     updated_at: getNow()
   };
@@ -596,14 +613,6 @@ export function updateBetResult(betResult) {
     betResult
   };
 }
-
-export const updateBetResults = betResults => {
-  return {
-    type: 'UPDATE_BET_RESULTS',
-    payload: betResults
-  };
-};
-
 export const addNewTransaction = data => dispatch => {
   dispatch({ type: NEW_TRANSACTION, payload: data });
 };
@@ -612,13 +621,13 @@ export const setUrl = url => dispatch => {
   dispatch({ type: SET_URL, payload: url });
 };
 
-export const startLoading = () => dispatch => {
-  dispatch({ type: START_LOADING });
-};
+// export const startLoading = () => dispatch => {
+//   dispatch({ type: START_LOADING });
+// };
 
-export const endLoading = () => dispatch => {
-  dispatch({ type: END_LOADING });
-};
+// export const endLoading = () => dispatch => {
+//   dispatch({ type: END_LOADING });
+// };
 
 export const updateOnlineUserList = user_list => dispatch => {
   dispatch({ type: ONLINE_USER_LIST_UPDATED, payload: user_list });

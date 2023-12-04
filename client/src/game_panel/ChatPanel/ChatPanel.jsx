@@ -90,6 +90,12 @@ const emojis = [
   }
 ];
 
+const initialGifState = {
+  loaded: false,
+  url: '',
+  title: '',
+};
+
 const customStyles = {
   tabRoot: {
     minWidth: '50%',
@@ -105,8 +111,9 @@ class ChatPanel extends Component {
       text: '',
       showEmojiPanel: false,
       showSearchPopup: false,
-      gifs: [],
+      gifs: Array(10).fill(initialGifState),
       emojis: {},
+      loading: false,
       selectedMessage: {
         sender: null,
         avatar: null,
@@ -244,23 +251,33 @@ class ChatPanel extends Component {
             </div>
 
             {/* Display the searched GIFs */}
+            {this.state.loading ? (
+            // Show loading text while GIFs are being loaded
+            <div>Loading...</div>
+          ) : (
             <div className="gif-results">
-              {this.state.gifs.map(gif => (
+              {this.state.gifs.map((gif, index) => (
                 <img
-                  key={gif.id}
-                  src={gif.images.fixed_height.url}
+                  key={index}
+                  src={gif.url}
                   alt={gif.title}
-                  onClick={() =>
-                    this.handleGifClick(gif.images.fixed_height.url)
-                  }
+                  onLoad={() => this.handleGifLoad(index)}
+                  onClick={() => this.handleGifClick(gif.url)}
                 />
               ))}
             </div>
+          )}
           </>
         )}
       </div>
     );
   }
+  handleGifLoad = index => {
+    // Update the loaded state for the specific gif
+    const updatedGifs = [...this.state.gifs];
+    updatedGifs[index].loaded = true;
+    this.setState({ gifs: updatedGifs });
+  };
 
   handleSearchInputChange = async event => {
     const searchTerm = event.target.value;
@@ -268,11 +285,17 @@ class ChatPanel extends Component {
     const url = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}`;
 
     try {
+      this.setState({ loading: true });
       const response = await axios.get(url);
-      const gifs = response.data.data;
-      this.setState({ gifs });
+      const gifs = response.data.data.map(gif => ({
+        ...initialGifState,
+        url: gif.images.fixed_height.url,
+        title: gif.title,
+      }));
+      this.setState({ gifs, loading: false });
     } catch (error) {
       console.error('Error fetching GIFs:', error);
+      this.setState({ loading: false });
     }
   };
 

@@ -10,6 +10,7 @@ import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import { Button, TextField } from '@material-ui/core';
 import { deductBalanceWhenStartBlackjack } from '../../redux/Logic/logic.actions';
+import loadingChart from '../LottieAnimations/loadingChart.json';
 
 import {
   validateIsAuthenticated,
@@ -970,6 +971,9 @@ class Blackjack extends Component {
       cardVisibility
     } = this.state;
 
+    const {isLowGraphics,
+      isMusicEnabled } = this.props;
+
     return (
       <div className="game-page">
         <div className="page-title">
@@ -1026,7 +1030,7 @@ class Blackjack extends Component {
                   </div>
                   {this.props.youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} />
+                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled}/>
                     </div>
                   )}
                 </React.Fragment>
@@ -1037,7 +1041,7 @@ class Blackjack extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {renderLottieAvatarAnimation(this.props.gameBackground)}
+            {renderLottieAvatarAnimation(this.props.gameBackground, isLowGraphics)}
 
             <div className="deck">
               <div className="card-back">
@@ -1332,15 +1336,16 @@ class Blackjack extends Component {
 
 const mapStateToProps = state => ({
   socket: state.auth.socket,
+  isDarkMode: state.auth.isDarkMode,
   isAuthenticated: state.auth.isAuthenticated,
   accessory: state.logic.curRoomInfo.accessory,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
-
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
-  isDarkMode: state.auth.isDarkMode,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
-  betResults: state.logic.betResults
+  betResults: state.logic.betResults,
+  isLowGraphics: state.auth.isLowGraphics,
+  isMusicEnabled: state.auth.isMusicEnabled
 });
 
 const mapDispatchToProps = {

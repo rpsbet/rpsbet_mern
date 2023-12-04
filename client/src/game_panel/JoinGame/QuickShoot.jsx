@@ -35,6 +35,7 @@ import {
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
+import loadingChart from '../LottieAnimations/loadingChart.json';
 
 const defaultOptions = {
   loop: true,
@@ -130,8 +131,14 @@ class QuickShoot extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    const { roomInfo } = this.props;
+    const { roomInfo, actionList } = this.props;
     const { isPasswordCorrect } = this.state;
+
+    if (prevProps.actionList !== actionList) {
+      this.setState({
+        actionList: actionList
+      });
+    }
 
     if (prevProps.roomInfo && roomInfo) {
       if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
@@ -168,7 +175,7 @@ class QuickShoot extends Component {
     });
 
     if (result.status === 'success') {
-      let text = 'LOST, KEEPER SAVED IT!';
+      let text = 'LOST, SAVED BY THE KEEPER!';
       this.changeBgColor(result.betResult);
       playSound('lose');
       if (result.betResult === 1) {
@@ -738,10 +745,33 @@ class QuickShoot extends Component {
   }
 
   render() {
-    const { qs_game_type } = this.props;
-    const roomStatistics = this.props.actionList || [];
-    const { isDisabled, bankroll, betting, timerValue } = this.state;
-    const { selectedCreator, showPlayerModal, roomInfo } = this.props;
+    const {
+      isDisabled,
+      bankroll,
+      betting,
+      timerValue,
+      actionList,
+      slippage,
+      settings_panel_opened,
+      selected_qs_position,
+      bet_amount
+    } = this.state;
+    const {
+      selectedCreator,
+      showPlayerModal,
+      roomInfo,
+      creator_id,
+      qs_game_type,
+      rank,
+      accessory,
+      youtubeUrl,
+      creator_avatar,
+      handleClosePlayerModal,
+      handleOpenPlayerModal,
+      isDarkMode,
+      isLowGraphics,
+      isMusicEnabled
+    } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
     const barStyle = {
@@ -782,7 +812,7 @@ class QuickShoot extends Component {
           <PlayerModal
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
-            closeModal={this.props.handleClosePlayerModal}
+            closeModal={handleClosePlayerModal}
             // {...this.state.selectedRow}
           />
         )}
@@ -799,7 +829,7 @@ class QuickShoot extends Component {
                     <div>
                       <div className="label room-id">STATUS</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.status}</div>
+                    <div className="value">{roomInfo.status}</div>
                   </div>
 
                   <div className="data-item">
@@ -807,8 +837,7 @@ class QuickShoot extends Component {
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
                     <div className="value bankroll">
-                      {convertToCurrency(this.state.bankroll)}
-                
+                      {convertToCurrency(bankroll)}
                     </div>
                   </div>
 
@@ -818,8 +847,8 @@ class QuickShoot extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(
-                        this.state.bet_amount / (this.props.qs_game_type - 1) +
-                          parseFloat(this.state.bet_amount) /* 0.95 */
+                        bet_amount / (qs_game_type - 1) +
+                          parseFloat(bet_amount) /* 0.95 */
                       )}
                     </div>
                   </div>
@@ -828,15 +857,10 @@ class QuickShoot extends Component {
                       <div className="label win-chance">Win Chance</div>
                     </div>
                     <div className="value">
-                      {(
-                        ((this.props.qs_game_type - 1) /
-                          this.props.qs_game_type) *
-                        100
-                      ).toFixed(2)}
-                      %
+                      {(((qs_game_type - 1) / qs_game_type) * 100).toFixed(2)}%
                     </div>
                   </div>
-                  {this.props.roomInfo.endgame_amount > 0 && (
+                  {roomInfo.endgame_amount > 0 && (
                     <div className="data-item">
                       <div>
                         <div className="label created">Auto-Payout</div>
@@ -851,83 +875,104 @@ class QuickShoot extends Component {
                       <div className="label net-profit">Host Profit</div>
                     </div>
                     <div className="value bankroll">
-                      {convertToCurrency(
-                        roomStatistics.hostNetProfit?.slice(-1)[0]
-                      )}
-                      <ReactApexChart
-                        className="bankroll-graph"
-                        options={{
-                          chart: {
-                            animations: {
-                              enabled: false
-                            },
-                            toolbar: {
-                              show: false
-                            },
-                            events: {},
-                            zoom: {
-                              enabled: false
-                            }
-                          },
-                          grid: {
-                            show: false
-                          },
-                          tooltip: {
-                            enabled: false
-                          },
-                          fill: {
-                            type: 'gradient',
-                            gradient: {
-                              shade: 'light',
-                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
-                              shadeIntensity: 1,
-                              type: 'vertical',
-                              opacityFrom: 0.7,
-                              opacityTo: 0.9,
-                              stops: [0, 100, 100]
-                            }
-                          },
+                      {actionList && actionList.hostBetsValue.length > 0 ? (
+                        <>
+                          {convertToCurrency(
+                            actionList.hostNetProfit?.slice(-1)[0]
+                          )}
+                          <ReactApexChart
+                            className="bankroll-graph"
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
+                              },
+                              grid: {
+                                show: false
+                              },
+                              tooltip: {
+                                enabled: false
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    actionList.hostNetProfit?.slice(-1)[0] > 0
+                                      ? ['#00FF00']
+                                      : actionList.hostNetProfit?.slice(-1)[0] <
+                                        0
+                                      ? ['#FF0000']
+                                      : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
 
-                          stroke: {
-                            curve: 'smooth'
-                          },
-                          xaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          },
-                          yaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          }
-                        }}
-                        type="line"
-                        width={120}
-                        height="100"
-                        series={[
-                          {
-                            data: roomStatistics.hostNetProfit.map(
-                              (value, index) => [
-                                roomStatistics.hostBetsValue[index],
-                                value
-                              ]
-                            )
-                          }
-                        ]}
-                      />
+                              stroke: {
+                                curve: 'smooth'
+                              },
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              },
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              }
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data: actionList.hostNetProfit.map(
+                                  (value, index) => [
+                                    actionList.hostBetsValue[index],
+                                    value
+                                  ]
+                                )
+                              }
+                            ]}
+                          />
+                        </>
+                      ) : (
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                   <div className="data-item">
@@ -937,19 +982,15 @@ class QuickShoot extends Component {
                     <div className="value host">
                       <a
                         className="player"
-                        onClick={() =>
-                          this.props.handleOpenPlayerModal(
-                            this.props.creator_id
-                          )
-                        }
+                        onClick={() => handleOpenPlayerModal(creator_id)}
                       >
                         <Avatar
                           className="avatar"
-                          src={this.props.creator_avatar}
-                          rank={this.props.rank}
-                          accessory={this.props.accessory}
+                          src={creator_avatar}
+                          rank={rank}
+                          accessory={accessory}
                           alt=""
-                          darkMode={this.props.isDarkMode}
+                          darkMode={isDarkMode}
                         />
                       </a>
                     </div>
@@ -958,11 +999,11 @@ class QuickShoot extends Component {
                     <div>
                       <div className="label room-name">Room ID</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.room_name}</div>
+                    <div className="value">{roomInfo.room_name}</div>
                   </div>
-                  {this.props.youtubeUrl && (
+                  {youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} />
+                      <YouTubeVideo url={youtubeUrl} isMusicEnabled={isMusicEnabled}/>
                     </div>
                   )}
                   <div className="data-item">
@@ -970,7 +1011,7 @@ class QuickShoot extends Component {
                       <div className="label public-max-return">Created</div>
                     </div>
                     <div className="value">
-                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                      {Moment(roomInfo.created_at).fromNow()}
                     </div>
                   </div>
                 </React.Fragment>
@@ -981,7 +1022,10 @@ class QuickShoot extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-                       {renderLottieAvatarAnimation(this.props.gameBackground)}
+            {renderLottieAvatarAnimation(
+              this.props.gameBackground,
+              isLowGraphics
+            )}
 
             <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
             <div
@@ -991,11 +1035,7 @@ class QuickShoot extends Component {
               }}
             >
               <img
-                src={`/img/gametype/quick_shoot/gametype${
-                  this.props.qs_game_type
-                }/type${this.props.qs_game_type}-${
-                  position_short_name[this.state.selected_qs_position]
-                }.png`}
+                src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
                 alt=""
                 style={{
                   width: '600px',
@@ -1007,25 +1047,25 @@ class QuickShoot extends Component {
             </div>
 
             <BetAmountInput
-              betAmount={this.state.bet_amount}
+              betAmount={bet_amount}
               handle2xButtonClick={this.handle2xButtonClick}
               handleHalfXButtonClick={this.handleHalfXButtonClick}
               handleMaxButtonClick={this.handleMaxButtonClick}
               onChangeState={this.onChangeState}
-              isDarkMode={this.props.isDarkMode}
+              isDarkMode={isDarkMode}
             />
             <SettingsOutlinedIcon
               id="btn-rps-settings"
               onClick={() =>
                 this.setState({
-                  settings_panel_opened: !this.state.settings_panel_opened
+                  settings_panel_opened: !settings_panel_opened
                 })
               }
             />
             <div
               ref={this.settingsRef}
               className={`transaction-settings ${
-                this.state.settings_panel_opened ? 'active' : ''
+                settings_panel_opened ? 'active' : ''
               }`}
             >
               <h5>AI Play Settings</h5>
@@ -1074,7 +1114,7 @@ class QuickShoot extends Component {
               </div>
               <div className="slippage-select-panel">
                 <Button
-                  className={this.state.slippage === 100 ? 'active' : ''}
+                  className={slippage === 100 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 100 });
                   }}
@@ -1097,7 +1137,7 @@ class QuickShoot extends Component {
                   onClick={() => {
                     this.setState({ slippage: 500 });
                   }}
-                  disabled={this.state.isDisabled}
+                  disabled={isDisabled}
                 >
                   Q Bot
                 </Button>
@@ -1139,7 +1179,7 @@ class QuickShoot extends Component {
           <BetArray arrayName={arrayName} label="qs" />
 
           <div className="action-panel">
-            <Share roomInfo={this.props.roomInfo} />
+            <Share roomInfo={roomInfo} />
           </div>
         </div>
       </div>
@@ -1159,7 +1199,8 @@ const mapStateToProps = state => ({
   rank: state.logic.curRoomInfo.rank,
   betResults: state.logic.betResults,
   accessory: state.logic.curRoomInfo.accessory,
-
+  isLowGraphics: state.auth.isLowGraphics,
+  isMusicEnabled: state.auth.isMusicEnabled
 });
 
 const mapDispatchToProps = {

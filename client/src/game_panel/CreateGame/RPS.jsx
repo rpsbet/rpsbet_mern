@@ -448,7 +448,7 @@ class RPS extends Component {
                 className={rps_game_type === 1 ? 'active' : ''}
                 onClick={() => {
                   if (rps_game_type !== 1) {
-                    onChangeState({ rps_game_type: 1 });
+                    onChangeState({ rps_game_type: 1,  game_mode: this.state.game_mode });
                   }
                 }}
               >

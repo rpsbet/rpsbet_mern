@@ -143,19 +143,22 @@ const predictNextRoll = (roll_list) => {
 };
 
 const getCurrentRollTime = async () => {
+  const timeoutDuration = 5000; // 5 seconds timeout
+
   return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Timeout waiting for NTP response'));
+    }, timeoutDuration);
+
     ntpClient.getNetworkTime('time.google.com', 123, function (err, date) {
+      clearTimeout(timeoutId);
+
       if (err) {
         reject(err);
       } else {
         resolve(date);
       }
     });
-  })
-  .catch((error) => {
-    // Handle the error here
-    console.error('Error retrieving network time:', error);
-    throw error; // Rethrow the error to propagate it further if needed
   });
 };
 

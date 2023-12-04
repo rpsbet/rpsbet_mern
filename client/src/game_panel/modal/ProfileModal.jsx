@@ -9,7 +9,6 @@ import {
 } from '../../redux/Auth/user.actions';
 import {
   getCustomerStatisticsData
-  // getRoomStatisticsData
 } from '../../redux/Customer/customer.action';
 import { alertModal } from './ConfirmAlerts';
 import ReactApexChart from 'react-apexcharts';
@@ -243,7 +242,6 @@ class ProfileModal extends Component {
                   averageWager={averageWager}
                   averageGamesPlayedPerRoom={averageGamesPlayedPerRoom}
                   averageProfit={averageProfit}
-                  // getRoomStatisticsData={this.props.getRoomStatisticsData}
                 />
               </div>
             )}
@@ -341,7 +339,6 @@ const mapDispatchToProps = {
   changePasswordAndAvatar,
   getUser,
   getCustomerStatisticsData
-  // getRoomStatisticsData
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProfileModal);

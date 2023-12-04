@@ -8,6 +8,7 @@ const YouTubeModal = ({ open, onClose, rps }) => {
   const [videoURL, setVideoURL] = useState('');
 
   const getYouTubeURL = rps => {
+    console.log("olkj", rps)
     switch (rps) {
       case 'Bear':
       case 'MoonBear':

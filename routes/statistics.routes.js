@@ -473,7 +473,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
     })
       .sort({ [sortField]: sortOrder })
       .select(
-        '_id username avatar totalWagered totalProfit profitAllTimeHigh profitAllTimeLow gamePlayed'
+        '_id username avatar accessory totalWagered totalProfit profitAllTimeHigh profitAllTimeLow gamePlayed'
       )
       .limit(100);
 
@@ -592,6 +592,7 @@ const accessoryMap = new Map(users.map(user => [user._id.toString(), user.access
       } else {
         playerStats[actor] = {
           avatar,
+          accessory,
           _id,
           actor,
           wagered,

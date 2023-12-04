@@ -29,6 +29,7 @@ import {
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
 import Share from '../../components/Share';
+import loadingChart from '../LottieAnimations/loadingChart.json';
 
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
@@ -582,10 +583,31 @@ class DropGame extends Component {
       isDisabled,
       bankroll,
       betting,
-      timerValue
+      timerValue,
+      actionList,
+      drop_guesses,
+      bet_amount,
+      slippage,
+      settings_panel_opened
     } = this.state;
-    const roomStatistics = this.props.actionList || [];
-    const { selectedCreator, showPlayerModal, roomInfo } = this.props;
+
+    const {
+      selectedCreator,
+      showPlayerModal,
+      accessory,
+      rank,
+      creator_id,
+      roomInfo,
+      youtubeUrl,
+      handleOpenPlayerModal,
+      handleClosePlayerModal,
+      creator_avatar,
+      gameBackground,
+      isDarkMode,
+      isLowGraphics,
+      isMusicEnabled,
+    } = this.props;
+
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
     const barStyle = {
@@ -601,7 +623,7 @@ class DropGame extends Component {
           <PlayerModal
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
-            closeModal={this.props.handleClosePlayerModal}
+            closeModal={handleClosePlayerModal}
             // {...this.state.selectedRow}
           />
         )}
@@ -614,14 +636,14 @@ class DropGame extends Component {
                     <div>
                       <div className="label room-id">STATUS</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.status}</div>
+                    <div className="value">{roomInfo.status}</div>
                   </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
                     <div className="value bankroll">
-                      {convertToCurrency(this.state.bankroll)}
+                      {convertToCurrency(bankroll)}
                     </div>
                   </div>
                   <div className="data-item">
@@ -638,7 +660,7 @@ class DropGame extends Component {
                       )}
                     </div>
                   </div>
-                  {this.props.roomInfo.endgame_amount > 0 && (
+                  {roomInfo.endgame_amount > 0 && (
                     <div className="data-item">
                       <div>
                         <div className="label created">Auto-Payout</div>
@@ -653,89 +675,104 @@ class DropGame extends Component {
                       <div className="label net-profit">Host Profit</div>
                     </div>
                     <div className="value bankroll">
-                      {convertToCurrency(
-                        roomStatistics.hostNetProfit?.slice(-1)[0]
-                      )}
-                      <ReactApexChart
-                        className="bankroll-graph"
-                        options={{
-                          chart: {
-                            animations: {
-                              enabled: false
-                            },
-                            toolbar: {
-                              show: false
-                            },
-                            events: {},
-                            zoom: {
-                              enabled: false
-                            }
-                          },
-                          grid: {
-                            show: false
-                          },
-                          tooltip: {
-                            enabled: false
-                          },
-                          fill: {
-                            type: 'gradient',
-                            gradient: {
-                              shade: 'light',
-                              gradientToColors:
-                                roomStatistics.hostNetProfit?.slice(-1)[0] > 0
-                                  ? ['#00FF00']
-                                  : roomStatistics.hostNetProfit?.slice(-1)[0] <
-                                    0
-                                  ? ['#FF0000']
-                                  : ['#808080'],
-                              shadeIntensity: 1,
-                              type: 'vertical',
-                              opacityFrom: 0.7,
-                              opacityTo: 0.9,
-                              stops: [0, 100, 100]
-                            }
-                          },
+                      {actionList && actionList.hostBetsValue.length > 0 ? (
+                        <>
+                          {convertToCurrency(
+                            actionList.hostNetProfit?.slice(-1)[0]
+                          )}
+                          <ReactApexChart
+                            className="bankroll-graph"
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
+                              },
+                              grid: {
+                                show: false
+                              },
+                              tooltip: {
+                                enabled: false
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    actionList.hostNetProfit?.slice(-1)[0] > 0
+                                      ? ['#00FF00']
+                                      : actionList.hostNetProfit?.slice(-1)[0] <
+                                        0
+                                      ? ['#FF0000']
+                                      : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
 
-                          stroke: {
-                            curve: 'smooth'
-                          },
-                          xaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          },
-                          yaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          }
-                        }}
-                        type="line"
-                        width={120}
-                        height="100"
-                        series={[
-                          {
-                            data: roomStatistics.hostNetProfit.map(
-                              (value, index) => [
-                                roomStatistics.hostBetsValue[index],
-                                value
-                              ]
-                            )
-                          }
-                        ]}
-                      />
+                              stroke: {
+                                curve: 'smooth'
+                              },
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              },
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              }
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data: actionList.hostNetProfit.map(
+                                  (value, index) => [
+                                    actionList.hostBetsValue[index],
+                                    value
+                                  ]
+                                )
+                              }
+                            ]}
+                          />
+                        </>
+                      ) : (
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                   <div className="data-item">
@@ -745,19 +782,15 @@ class DropGame extends Component {
                     <div className="value host">
                       <a
                         className="player"
-                        onClick={() =>
-                          this.props.handleOpenPlayerModal(
-                            this.props.creator_id
-                          )
-                        }
+                        onClick={() => handleOpenPlayerModal(creator_id)}
                       >
                         <Avatar
                           className="avatar"
-                          src={this.props.creator_avatar}
-                          accessory={this.props.accessory}
-                          rank={this.props.rank}
+                          src={creator_avatar}
+                          accessory={accessory}
+                          rank={rank}
                           alt=""
-                          darkMode={this.props.isDarkMode}
+                          darkMode={isDarkMode}
                         />
                       </a>
                     </div>
@@ -766,11 +799,11 @@ class DropGame extends Component {
                     <div>
                       <div className="label room-name">Room ID</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.room_name}</div>
+                    <div className="value">{roomInfo.room_name}</div>
                   </div>
-                  {this.props.youtubeUrl && (
+                  {youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} />
+                      <YouTubeVideo url={youtubeUrl} isMusicEnabled={isMusicEnabled}/>
                     </div>
                   )}
                   <div className="data-item">
@@ -778,7 +811,7 @@ class DropGame extends Component {
                       <div className="label public-max-return">Created</div>
                     </div>
                     <div className="value">
-                      {Moment(this.props.roomInfo.created_at).fromNow()}
+                      {Moment(roomInfo.created_at).fromNow()}
                     </div>
                   </div>
                 </React.Fragment>
@@ -789,15 +822,15 @@ class DropGame extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {renderLottieAvatarAnimation(this.props.gameBackground)}
+            {renderLottieAvatarAnimation(gameBackground, isLowGraphics)}
 
             <div className="game-info-panel">
               <h3 className="game-sub-title">Previous Drops</h3>
               <div className="gradient-container">
                 <p className="previous-guesses drop">
                   <div>
-                    {this.state.drop_guesses.length > 0 ? (
-                      this.state.drop_guesses.map((guess, index) => (
+                    {drop_guesses.length > 0 ? (
+                      drop_guesses.map((guess, index) => (
                         <span
                           key={index}
                           style={{
@@ -823,8 +856,8 @@ class DropGame extends Component {
                     )}
                   </div>
                   <div>
-                    {this.state.drop_guesses.length > 0 ? (
-                      this.state.drop_guesses.map((guess, index) => (
+                    {drop_guesses.length > 0 ? (
+                      drop_guesses.map((guess, index) => (
                         <span
                           key={index}
                           style={{
@@ -873,12 +906,12 @@ class DropGame extends Component {
               <h3 className="game-sub-title">Highest Drop Wins!</h3>
             </div>
             <BetAmountInput
-              betAmount={this.state.bet_amount}
+              betAmount={bet_amount}
               handle2xButtonClick={this.handle2xButtonClick}
               handleHalfXButtonClick={this.handleHalfXButtonClick}
               handleMaxButtonClick={this.handleMaxButtonClick}
               onChangeState={this.onChangeState}
-              isDarkMode={this.props.isDarkMode}
+              isDarkMode={isDarkMode}
             />
             <Button
               className="place-bet"
@@ -893,14 +926,14 @@ class DropGame extends Component {
               id="btn-rps-settings"
               onClick={() =>
                 this.setState({
-                  settings_panel_opened: !this.state.settings_panel_opened
+                  settings_panel_opened: !settings_panel_opened
                 })
               }
             />
             <div
               ref={this.settingsRef}
               className={`transaction-settings ${
-                this.state.settings_panel_opened ? 'active' : ''
+                settings_panel_opened ? 'active' : ''
               }`}
             >
               <h5>AI Play Settings</h5>
@@ -949,7 +982,7 @@ class DropGame extends Component {
               </div>
               <div className="slippage-select-panel">
                 <Button
-                  className={this.state.slippage === 100 ? 'active' : ''}
+                  className={slippage === 100 ? 'active' : ''}
                   onClick={() => {
                     this.setState({ slippage: 100 });
                   }}
@@ -962,7 +995,7 @@ class DropGame extends Component {
                   onClick={() => {
                     this.setState({ slippage: 200 });
                   }}
-                  disabled={this.state.isDisabled}
+                  disabled={isDisabled}
                 >
                   Carlo
                 </Button>
@@ -1032,8 +1065,9 @@ const mapStateToProps = state => ({
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
   accessory: state.logic.curRoomInfo.accessory,
-
-  betResults: state.logic.betResults
+  betResults: state.logic.betResults,
+  isLowGraphics: state.auth.isLowGraphics,
+  isMusicEnabled: state.auth.isMusicEnabled
 });
 
 const mapDispatchToProps = {

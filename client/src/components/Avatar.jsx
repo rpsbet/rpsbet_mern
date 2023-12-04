@@ -47,7 +47,7 @@ class Avatar extends Component {
       nextProps.src !== prevState.src ||
       nextProps.alt !== prevState.alt ||
       nextProps.accessory !== prevState.accessory ||
-      nextProps.rank !== prevState.rank 
+      nextProps.rank !== prevState.rank
     ) {
       // If any prop has changed, return the updated state
       return {
@@ -65,7 +65,7 @@ class Avatar extends Component {
 
   render() {
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
-
+const {isLowGraphics} = this.props;
     let borderColor = dominantColor
       ? `3px solid rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`
       : '3px solid transparent';
@@ -83,8 +83,6 @@ class Avatar extends Component {
       10: 'firebrick'
     };
 
-    
-    
     if (rank !== null) {
       rank = getRank(rank);
       if (rank in rankColors) {
@@ -99,7 +97,6 @@ class Avatar extends Component {
     return (
       <div
         {...this.props}
-        
         style={{
           position: 'relative',
           backgroundColor
@@ -108,14 +105,18 @@ class Avatar extends Component {
         <img
           src={src}
           alt={alt}
-          style={{ width: '100%', height: '100%' }}
+          style={{
+            width: '100%',
+            height: '100%',
+            border: borderColor // Add border style to the image
+          }}
           onError={e => {
             e.target.src = darkMode
               ? '/img/profile-thumbnail-dark.svg'
               : '/img/profile-thumbnail.svg';
           }}
         />
-        {renderLottieAvatarAnimation(accessory)}
+        {renderLottieAvatarAnimation(accessory, isLowGraphics)}
         {dominantColor && (
           <div
             style={{
@@ -130,14 +131,15 @@ class Avatar extends Component {
             }}
           />
         )}
-        <div></div>
       </div>
     );
   }
 }
 
 const mapStateToProps = state => ({
-  userInfo: state.auth.user
+  userInfo: state.auth.user,
+  isLowGraphics: state.auth.isLowGraphics,
+
 });
 
 const mapDispatchToProps = {

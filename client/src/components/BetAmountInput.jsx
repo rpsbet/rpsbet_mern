@@ -128,7 +128,6 @@ export default function BetAmountInput(props) {
                   variant="contained"
                   color="primary"
                   onClick={handle2xButtonClick}
-                  style={{ marginBottom: '8px' }}
                 >
                   2x
                 </Button>
@@ -136,7 +135,6 @@ export default function BetAmountInput(props) {
                   variant="contained"
                   color="primary"
                   onClick={handleHalfXButtonClick}
-                  style={{ marginBottom: '8px' }}
                 >
                   1/2x
                 </Button>

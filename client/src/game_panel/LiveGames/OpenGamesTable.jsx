@@ -30,7 +30,7 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import PlayerModal from '../modal/PlayerModal';
 
 import like from '../LottieAnimations/like.json';
-
+import loadingChart from '../LottieAnimations/loadingChart.json';
 import history from '../../redux/history';
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
@@ -133,7 +133,7 @@ class OpenGamesTable extends Component {
 
   componentDidMount() {
     const { roomList } = this.props;
-   
+
     this.setState({ roomList });
     const roomIds = roomList.map(room => room._id);
     this.getRoomData(roomIds);
@@ -143,8 +143,7 @@ class OpenGamesTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.roomList !== this.props.roomList
-      ) {
+    if (prevProps.roomList !== this.props.roomList) {
       const { roomList } = this.props;
       this.setState({ roomList, isLoading: false });
       const roomIds = roomList.map(room => room._id);
@@ -152,7 +151,6 @@ class OpenGamesTable extends Component {
       this.getRoomData(roomIds);
     }
   }
-  
 
   getRoomData = async roomIds => {
     try {
@@ -380,6 +378,7 @@ class OpenGamesTable extends Component {
       showPlayerModal,
       selectedCreator
     } = this.state;
+    const {isLowGraphics} = this.props;
     const roomStatistics = this.state.actionList || {
       hostNetProfits: [],
       hostBetsValue: []
@@ -435,9 +434,7 @@ class OpenGamesTable extends Component {
                   key={row._id}
                 >
                   {' '}
-                 
-                  {renderLottieAvatarAnimation(row.gameBackground)}
-                  
+                  {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)}
                   <div>
                     <div className="table-cell cell-room-info">
                       <img
@@ -453,7 +450,6 @@ class OpenGamesTable extends Component {
                       </div>
                     </div>
                     <div className="table-cell desktop-only cell-user-name">
-                      
                       <a
                         className="player"
                         onClick={() =>
@@ -512,103 +508,125 @@ class OpenGamesTable extends Component {
                         </div>
                       ) : null}
                     </div>
-                    <div className="table-cell desktop-only cell-amount">
-                      <ReactApexChart
-                        className="bankroll-graph"
-                        options={{
-                          chart: {
-                            animations: {
-                              enabled: false
-                            },
-                            toolbar: {
-                              show: false
-                            },
-                            events: {},
-                            zoom: {
-                              enabled: false
-                            }
-                          },
-                          grid: {
-                            show: false
-                          },
-                          tooltip: {
-                            enabled: false
-                          },
-                          fill: {
-                            type: 'gradient',
-                            gradient: {
-                              shade: 'light',
-                              gradientToColors:
-                                hostNetProfitList[key] > 0
-                                  ? ['#00FF00']
-                                  : hostNetProfitList[key] < 0
-                                  ? ['#FF0000']
-                                  : ['#808080'],
-                              shadeIntensity: 1,
-                              type: 'vertical',
-                              opacityFrom: 0.7,
-                              opacityTo: 0.9,
-                              stops: [0, 100, 100]
-                            }
-                          },
+                    <div className="table-cell cell-amount">
+                      {roomStatistics &&
+                      roomStatistics.hostBetsValue.length > 0 ? (
+                        <>
+                          <ReactApexChart
+                            className="bankroll-graph"
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
+                              },
+                              grid: {
+                                show: false
+                              },
+                              tooltip: {
+                                enabled: false
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    hostNetProfitList[key] > 0
+                                      ? ['#00FF00']
+                                      : hostNetProfitList[key] < 0
+                                      ? ['#FF0000']
+                                      : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
 
-                          stroke: {
-                            curve: 'smooth'
-                          },
-                          xaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          },
-                          yaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          }
+                              stroke: {
+                                curve: 'smooth'
+                              },
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              },
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              }
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data:
+                                  roomStatistics.hostNetProfits[key] &&
+                                  roomStatistics.hostBetsValue[key]
+                                    ? roomStatistics.hostNetProfits[
+                                        key
+                                      ].map((value, index) => [
+                                        roomStatistics.hostBetsValue[key][
+                                          index
+                                        ],
+                                        value
+                                      ])
+                                    : []
+                              }
+                            ]}
+                          />
+                          <div
+                            style={{ display: 'flex', alignItems: 'center' }}
+                          >
+                            {/* {this.renderArrow(hostNetProfitList[key])} */}
+                            <span
+                              style={{
+                                color: this.calculateColor(
+                                  hostNetProfitList[key]
+                                )
+                              }}
+                            >
+                              {convertToCurrency(hostNetProfitList[key])}
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <Lottie
+                        options={{
+                          loop: true,
+                          autoplay: true,
+                          animationData: loadingChart
                         }}
-                        type="line"
-                        width={120}
-                        height="100"
-                        series={[
-                          {
-                            data:
-                              roomStatistics.hostNetProfits[key] &&
-                              roomStatistics.hostBetsValue[key]
-                                ? roomStatistics.hostNetProfits[
-                                    key
-                                  ].map((value, index) => [
-                                    roomStatistics.hostBetsValue[key][index],
-                                    value
-                                  ])
-                                : []
-                          }
-                        ]}
-                      />
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        {/* {this.renderArrow(hostNetProfitList[key])} */}
-                        <span
-                          style={{
-                            color: this.calculateColor(hostNetProfitList[key])
-                          }}
-                        >
-                          {convertToCurrency(hostNetProfitList[key])}
-                        </span>
-                      </div>
+                        style={{
+                          width: '32px',
+                        }}
+                      />                      
+                      )}
                     </div>
 
-                    <div className="table-cell cell-likes">
+                    <div className="table-cell desktop-only cell-likes">
                       <div id="view">
                         <Visibility style={{ fontSize: '1rem' }} />
                         <Typography variant="body1">
@@ -721,7 +739,6 @@ class OpenGamesTable extends Component {
                   </div>
                   <div className="mobile-only">
                     <div className="table-cell cell-user-name">
-                     
                       <a
                         className="player"
                         onClick={() =>
@@ -733,7 +750,6 @@ class OpenGamesTable extends Component {
                           src={row.creator_avatar}
                           accessory={row.accessory}
                           rank={row.rank}
-
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
@@ -774,16 +790,45 @@ class OpenGamesTable extends Component {
                         </div>
                       ) : null}
                     </div>
-                    <div className="table-cell mobile-only cell-amount">
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        {/* {this.renderArrow(hostNetProfitList[key])} */}
-                        <span
-                          style={{
-                            color: this.calculateColor(hostNetProfitList[key])
-                          }}
-                        >
-                          {convertToCurrency(hostNetProfitList[key])}
-                        </span>
+                    <div className="table-cell mobile-only cell-likes">
+                    <div id="view">
+                        <Visibility style={{ fontSize: '1rem' }} />
+                        <Typography variant="body1">
+                          {row.views?.length || 0}
+                        </Typography>
+                      </div>
+
+                      <div>
+                        <IconButton onClick={() => this.handleLike(row)}>
+                          {row.likes?.includes(this.props.user._id) ? (
+                            <>
+                              {!row.likeAnimation && (
+                                <ThumbUp
+                                  style={{ fontSize: '1rem', color: 'red' }}
+                                />
+                              )}
+                              {row.likeAnimation && (
+                                <Lottie
+                                  options={{
+                                    loop: false,
+                                    autoplay: true,
+                                    animationData: like
+                                  }}
+                                  style={{
+                                    width: '32px',
+                                    height: '38px',
+                                    margin: '-26px -8px -20px -8px'
+                                  }}
+                                />
+                              )}
+                            </>
+                          ) : (
+                            <ThumbUpOutlined style={{ fontSize: '1rem' }} />
+                          )}
+                        </IconButton>
+                        <Typography variant="body1">
+                          {row.likes?.length || 0}
+                        </Typography>
                       </div>
                     </div>
                   </div>
@@ -813,7 +858,9 @@ const mapStateToProps = state => ({
   joiners: state.logic.curRoomInfo.joiners,
   isAuthenticated: state.auth.isAuthenticated,
   userName: state.auth.userName,
-  user: state.auth.user
+  user: state.auth.user,
+  isLowGraphics: state.auth.isLowGraphics
+
 });
 
 const mapDispatchToProps = {

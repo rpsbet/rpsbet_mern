@@ -1,4 +1,3 @@
-
 import React, { Component } from 'react';
 import {
   createTheme,
@@ -22,6 +21,7 @@ import {
   RadioGroup,
   FormControlLabel
 } from '@material-ui/core';
+import SettingsModal from './modal/SettingsModal.jsx';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import ReactApexChart from 'react-apexcharts';
@@ -29,14 +29,7 @@ import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
 import progress from './LottieAnimations/progress.json';
 import InlineSVG from 'react-inlinesvg';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faSort,
-  faSearch,
-  faFilter,
-  faArrowAltCircleDown,
-  faArrowAltCircleUp
-} from '@fortawesome/free-solid-svg-icons';
+import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import {
   Close,
   Link,
@@ -50,7 +43,8 @@ import {
   VolumeOff,
   ExitToApp,
   PersonOutline,
-  Help
+  Help,
+  Settings
 } from '@material-ui/icons';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
@@ -94,7 +88,6 @@ import {
   getUser,
   setUnreadMessageCount,
   setDarkMode,
-  toggleMute
 } from '../redux/Auth/user.actions';
 import {
   setRoomList,
@@ -170,8 +163,6 @@ const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 const hueRotateValue = (gifUrls.indexOf(randomGifUrl) + 1) * 75;
 
-const { SpeechSynthesis } = window.speechSynthesis;
-
 function updateFromNow(transactions) {
   const result = JSON.parse(JSON.stringify(transactions));
   for (let i = 0; i < result.length; i++) {
@@ -208,7 +199,7 @@ class SiteWrapper extends Component {
       showInventoryModal: false,
       showResetPasswordModal: false,
       showGameLog: false,
-      notifications: this.props.notifications,
+      notifications: updateFromNow(this.props.notifications),
       showNotifications: false,
       userParams: [false, true],
       loadMore: 20,
@@ -222,12 +213,16 @@ class SiteWrapper extends Component {
       showSearch: false,
       searchQuery: '',
       showWithdrawals: false,
+      showSettingsModal: false,
       showDeposits: false,
       web3: null,
       web3account: '',
-      web3balance: 0
+      web3balance: 0,
+      
     };
     this.state.notifications = this.props.notification || {};
+    this.initSocket = this.initSocket.bind(this);
+
   }
   static getDerivedStateFromProps(props, currentState) {
     const { balance, betResult, userName, notifications } = props;
@@ -241,7 +236,7 @@ class SiteWrapper extends Component {
       return {
         ...currentState,
         balance,
-        notifications: props.notifications,
+        notifications: updateFromNow(props.notifications),
         userName,
         transactions: updateFromNow(props.transactions),
         betResult
@@ -281,44 +276,6 @@ class SiteWrapper extends Component {
         this.state.searchQuery
       );
     });
-  };
-
-  toggleShowWithdrawals = () => {
-    this.setState(
-      prevState => ({
-        showWithdrawals: !prevState.showWithdrawals
-      }),
-      () => {
-        this.props.getUser(
-          false,
-          true,
-          this.state.loadMore,
-          this.state.showWithdrawals,
-          this.state.showDeposits,
-          this.state.sortBy,
-          this.state.searchQuery
-        );
-      }
-    );
-  };
-
-  toggleShowDeposits = () => {
-    this.setState(
-      prevState => ({
-        showDeposits: !prevState.showDeposits
-      }),
-      () => {
-        this.props.getUser(
-          false,
-          true,
-          this.state.loadMore,
-          this.state.showWithdrawals,
-          this.state.showDeposits,
-          this.state.sortBy,
-          this.state.searchQuery
-        );
-      }
-    );
   };
 
   handleSearch = event => {
@@ -416,7 +373,10 @@ class SiteWrapper extends Component {
   };
 
   updateReminderTime = () => {
-    this.setState({ transactions: updateFromNow(this.state.transactions) });
+    this.setState({
+      transactions: updateFromNow(this.state.transactions),
+      notifications: updateFromNow(this.state.notifications)
+    });
   };
 
   async initSocket() {
@@ -575,6 +535,7 @@ class SiteWrapper extends Component {
 
     this.props.setSocket(socket);
   }
+  
   loadWeb3 = async () => {
     try {
       const web3 = new Web3(Web3.givenProvider);
@@ -647,7 +608,7 @@ class SiteWrapper extends Component {
     this.loadWeb3();
     setTimeout(() => {
       this.setState({ websiteLoading: false });
-    }, 1500);
+    }, 1000);
   }
 
   initializeAudio() {
@@ -749,6 +710,13 @@ class SiteWrapper extends Component {
     userSignOut(clear_token);
   };
 
+  handleOpenSettingsModal = () => {
+    this.setState({ showSettingsModal: true });
+  };
+  handleCloseSettingsModal = () => {
+    this.setState({ showSettingsModal: false });
+  };
+
   handleOpenLoginModal = () => {
     this.setState({ showLoginModal: true });
   };
@@ -776,8 +744,8 @@ class SiteWrapper extends Component {
   handleCloseProfileModal = () => {
     this.setState({ showProfileModal: false });
   };
-  handleOpenPlayerModal = () => {
-    this.setState({ showPlayerModal: true, anchorEl: null });
+  handleOpenPlayerModal = selectedCreator => {
+    this.setState({ showPlayerModal: true, selectedCreator: selectedCreator });
   };
   handleClosePlayerModal = () => {
     this.setState({ showPlayerModal: false });
@@ -899,6 +867,8 @@ class SiteWrapper extends Component {
       hoverTabIndex,
       websiteLoading,
       balance,
+      searchQuery,
+      sortBy,
       web3,
       oldBalance,
       web3account,
@@ -910,21 +880,28 @@ class SiteWrapper extends Component {
       showSearch,
       showProfileModal,
       showPlayerModal,
+      toggleShowWithdrawals,
+      toggleShowDeposits,
+      selectedCreator,
       showSort,
       showWithdrawModal,
       showResetPasswordModal,
       showDepositModal,
+      showFilter,
       showAllGameLogs,
       showLeaderboardsModal,
       showHowToPlayModal,
       showVerificationModal,
       showMarketplaceModal,
       showLoginModal,
-      showSignupModal
+      showWithdrawals,
+      showSignupModal,
+      handleLoadMore,
+      showDeposits,
+      showSettingsModal
     } = this.state;
     const {
       isMuted,
-      toggleMute,
       isDarkMode,
       notifications,
       selectedMainTabIndex,
@@ -941,7 +918,7 @@ class SiteWrapper extends Component {
       decimalIndex !== -1
         ? Math.min(balanceString.length - decimalIndex - 1, 5)
         : 0;
-    const notificationsArray = Object.values(notifications);
+    const notificationsArray = updateFromNow(Object.values(notifications));
     return (
       <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
         <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
@@ -970,7 +947,7 @@ class SiteWrapper extends Component {
                 }}
                 style={{
                   marginTop: '-40px',
-                  filter: `hue-rotate(${hueRotateValue}deg)`, // Use the calculated hue-rotate value
+                  filter: `hue-rotate(${hueRotateValue}deg)`,
                   width: '300px',
                   height: '100px'
                 }}
@@ -1038,7 +1015,7 @@ class SiteWrapper extends Component {
               <div className="header_action_panel">
                 <a
                   href="#"
-                  className='desktop-only'
+                  className="desktop-only"
                   onClick={e => {
                     e.preventDefault();
                     this.handleOpenMarketplaceModal();
@@ -1054,7 +1031,7 @@ class SiteWrapper extends Component {
                   )}
                 </a>
                 <a
-                className='desktop-only'
+                  className="desktop-only"
                   href="#"
                   onClick={e => {
                     e.preventDefault();
@@ -1072,7 +1049,7 @@ class SiteWrapper extends Component {
                 </a>
                 <a
                   href="#"
-                  className='desktop-only'
+                  className="desktop-only"
                   onClick={e => {
                     e.preventDefault();
                     this.handleNotificationsClick();
@@ -1140,22 +1117,22 @@ class SiteWrapper extends Component {
                       </Button>
                     </div>
                     <a
-                  href="#"
-                  className='mobile-only'
-                  onClick={e => {
-                    e.preventDefault();
-                    this.handleNotificationsClick();
-                  }}
-                  id="btn_notifications"
-                  onMouseEnter={() => this.handleMouseEnter(3)}
-                  onMouseLeave={this.handleMouseLeave}
-                >
-                  {hoverTabIndex === 3 ? (
-                    <NotificationsHover width="18pt" />
-                  ) : (
-                    <Notifications />
-                  )}
-                </a>
+                      href="#"
+                      className="mobile-only"
+                      onClick={e => {
+                        e.preventDefault();
+                        this.handleNotificationsClick();
+                      }}
+                      id="btn_notifications"
+                      onMouseEnter={() => this.handleMouseEnter(3)}
+                      onMouseLeave={this.handleMouseLeave}
+                    >
+                      {hoverTabIndex === 3 ? (
+                        <NotificationsHover width="18pt" />
+                      ) : (
+                        <Notifications />
+                      )}
+                    </a>
                     <Button
                       area-constrols="profile-menu"
                       aria-haspopup="true"
@@ -1290,54 +1267,13 @@ class SiteWrapper extends Component {
                           {this.props.isDarkMode ? 'MARKOV' : 'Q-BOT'}
                         </ListItemText>
                       </MenuItem> */}
-                      <MenuItem>
-                        <ListItemText>
-                          {isMuted ? (
-                            <div
-                              className="playBtn"
-                              onClick={e => {
-                                toggleMute(!isMuted);
-                                this.handleMute();
-                              }}
-                            >
-                              <ListItemIcon>
-                                <VolumeOff />
-                              </ListItemIcon>
-                              UNMUTE
-                            </div>
-                          ) : (
-                            <div
-                              className="playBtn"
-                              onClick={e => {
-                                toggleMute(!isMuted);
-                                this.handleUnmute();
-                              }}
-                            >
-                              <ListItemIcon>
-                                <VolumeUp />
-                              </ListItemIcon>
-                              MUTE
-                            </div>
-                          )}
-                        </ListItemText>
-                      </MenuItem>
-                      <MenuItem
-                        onClick={e => {
-                          this.props.setDarkMode(!isDarkMode);
-                        }}
-                      >
+                      <MenuItem onClick={this.handleOpenSettingsModal}>
                         <ListItemIcon>
-                          {isDarkMode ? (
-                            <Brightness7 />
-                          ) : (
-                            <Brightness4 />
-                          )}
+                          <Settings />
                         </ListItemIcon>
-
-                        <ListItemText>
-                          {isDarkMode ? 'LIGHT MODE' : 'DARK MODE'}
-                        </ListItemText>
+                        <ListItemText>SETTINGS</ListItemText>
                       </MenuItem>
+                     
                       <MenuItem onClick={this.handleOpenHowToPlayModal}>
                         <ListItemIcon>
                           <Help />
@@ -1379,16 +1315,36 @@ class SiteWrapper extends Component {
             >
               <div className="arrow-up"></div>
               <div className="header_panel_contents">
-                {<h2>NOTIFICATIONS HISTORY</h2>}
+                {<h2>NOTIFICATIONS</h2>}
                 {
                   <div>
                     {notificationsArray.length > 0 ? (
                       notificationsArray.map((notification, index) => (
-                        <div key={index}>
-                          {/* Render notification details here */}
-                          <p>{notification.message}</p>
-                          <p>From: {notification.username}</p>
-                          {/* Add more fields as needed */}
+                        <div className="notification-container" key={index}>
+                            <a
+                              className="player"
+                              onClick={() =>
+                                this.handleOpenPlayerModal(notification._id)
+                              }
+                              style={{ display: 'flex', flexDirection: 'row' }}
+                            >
+                              <Avatar
+                                src={notification.avatar}
+                                rank={notification.rank}
+                                accessory={notification.accessory}
+                                className="avatar"
+                              />
+                            </a>
+                            <div  className="notification">
+
+                          <p
+                            dangerouslySetInnerHTML={{
+                              __html: notification.message
+                            }}
+                            />
+                            <p className="fromNow">{notification.from_now}</p>
+                            </div>
+                          
                         </div>
                       ))
                     ) : (
@@ -1399,224 +1355,29 @@ class SiteWrapper extends Component {
               </div>
             </div>
             {showAllGameLogs && (
-              <div className="game-logs-modal-container">
-                <div className="modal-header">
-                  <h2>ALL HISTORY</h2>
-                  <Button
-                    className="close-button"
-                    onClick={this.toggleAllTransactions}
-                  >
-                    <Close />
-                  </Button>
-                </div>
-                <div className="summary">
-                  <div className="summary-flex">
-                    <div>
-                      <Button onClick={this.toggleSort}>
-                        <FontAwesomeIcon icon={faSort} />
-                        &nbsp;&nbsp;Sort by
-                      </Button>
-                      {showSort && (
-                        <div className="popup">
-                          <div className="popup-content">
-                            <RadioGroup
-                              aria-label="sort-options"
-                              name="sort-options"
-                              value={this.state.sortBy}
-                              onChange={event =>
-                                this.handleSortBy(event.target.value)
-                              }
-                            >
-                              <FormControlLabel
-                                value="date"
-                                control={<Radio color="primary" />}
-                                label="Newest"
-                              />
-                              <FormControlLabel
-                                value="amount"
-                                control={<Radio color="primary" />}
-                                label="Biggest"
-                              />
-                            </RadioGroup>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <Button onClick={this.toggleFilter}>
-                        <FontAwesomeIcon icon={faFilter} />
-                        &nbsp;&nbsp;Filter
-                      </Button>
-                      {this.state.showFilter && (
-                        <div className="filter">
-                          <div className="filter-content">
-                            <label>
-                              <FontAwesomeIcon icon={faArrowAltCircleUp} />{' '}
-                              Withdrawals:
-                              <Checkbox
-                                checked={this.state.showWithdrawals}
-                                onChange={this.toggleShowWithdrawals}
-                              />
-                            </label>
-                            <label>
-                              <FontAwesomeIcon icon={faArrowAltCircleDown} />{' '}
-                              Deposits:
-                              <Checkbox
-                                checked={this.state.showDeposits}
-                                onChange={this.toggleShowDeposits}
-                              />
-                            </label>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <Button onClick={this.toggleSearch}>
-                        <FontAwesomeIcon icon={faSearch} />
-                        &nbsp;&nbsp;Search
-                      </Button>
-
-                      {showSearch && (
-                        <div className="search">
-                          <div className="search-content">
-                            <TextField
-                              name="search"
-                              margin="normal"
-                              value={this.state.searchQuery}
-                              onChange={this.handleSearch}
-                            ></TextField>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="summary-flex">
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>1-Day</span>
-                      <span
-                        style={{
-                          color: oneDayProfit > 0 ? '#57ca22' : 'red'
-                        }}
-                      >
-                        {oneDayProfit > 0 ? (
-                          <ArrowUpward />
-                        ) : (
-                          <ArrowDownward />
-                        )}
-                        {convertToCurrency(oneDayProfit)}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>7-Day</span>
-                      <span
-                        style={{
-                          color:
-                            sevenDayProfit > 0 ? '#57ca22' : 'red'
-                        }}
-                      >
-                        {sevenDayProfit > 0 ? (
-                          <ArrowUpward />
-                        ) : (
-                          <ArrowDownward />
-                        )}
-                        {convertToCurrency(sevenDayProfit)}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>All-time</span>
-                      <span
-                        style={{
-                          color:
-                            allTimeProfit > 0 ? '#57ca22' : 'red'
-                        }}
-                      >
-                        {allTimeProfit > 0 ? (
-                          <ArrowUpward />
-                        ) : (
-                          <ArrowDownward />
-                        )}
-                        {convertToCurrency(allTimeProfit)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="game-logs-container">
-                  <Table className="game-logs-table">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Amount</TableCell>
-                        <TableCell>From Now</TableCell>
-                        <TableCell>Description</TableCell>
-                        <TableCell>Link</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {transactions.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan="4">...</TableCell>
-                        </TableRow>
-                      ) : (
-                        transactions.map((row, key) => (
-                          <TableRow key={key}>
-                            <TableCell
-                              className={
-                                'amount ' + (row.amount > 0 ? 'green' : 'red')
-                              }
-                            >
-                              {row.amount > 0 ? (
-                                <>
-                                  {'+ '}
-                                  {convertToCurrency(row.amount, true)}
-                                </>
-                              ) : (
-                                <>
-                                  {'- '}
-                                  {convertToCurrency(
-                                    Math.abs(row.amount),
-                                    true
-                                  )}
-                                </>
-                              )}
-                            </TableCell>
-                            <TableCell className="fromNow">
-                              {row.from_now}
-                            </TableCell>
-                            <TableCell className="description">
-                              {row.description}
-                            </TableCell>
-                            <TableCell className="hash">
-                              {row.hash ? (
-                                <a
-                                  href={`https://etherscan.io/tx/${row.hash}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <Link />
-                                </a>
-                              ) : row.room ? (
-                                <a
-                                  href={`/join/${row.room}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <Link />
-                                </a>
-                              ) : (
-                                // If there's no room value, don't display a link
-                                ''
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-                <div className="load-more-button">
-                  <Button onClick={this.handleLoadMore}>LOAD MORE</Button>
-                </div>
-              </div>
+              <AllTransactionsModal
+                modalIsOpen={showAllGameLogs}
+                isDarkMode={isDarkMode}
+                toggleSort={this.toggleSort}
+                toggleFilter={this.toggleFilter}
+                handleSortBy={this.handleSortBy}
+                showFilter={showFilter}
+                close={this.toggleAllTransactions}
+                showSearch={showSearch}
+                sortBy={sortBy}
+                showSort={showSort}
+                showDeposits={showDeposits}
+                showWithdrawals={showWithdrawals}
+                toggleShowWithdrawals={this.toggleShowWithdrawals}
+                toggleShowDeposits={this.toggleShowDeposits}
+                transactions={transactions}
+                toggleSearch={this.toggleSearch}
+                searchQuery={searchQuery}
+                handleLoadMore={this.handleLoadMore}
+                oneDayProfit={oneDayProfit}
+                sevenDayProfit={sevenDayProfit}
+                allTimeProfit={allTimeProfit}
+              />
             )}
 
             <div
@@ -1767,15 +1528,20 @@ class SiteWrapper extends Component {
             />
           )}
           {showPlayerModal && (
-            <PlayerModal
-              modalIsOpen={showPlayerModal}
-              closeModal={this.handleClosePlayerModal}
-              player_name={userName}
-              balance={balance}
-              avatar={user.avatar}
-              accessory={user.accessory}
-            />
-          )}
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={this.handleClosePlayerModal}
+          />
+        )}
+         {showSettingsModal && (
+          <SettingsModal
+            modalIsOpen={showSettingsModal}
+            closeModal={this.handleCloseSettingsModal}
+            handleMute={this.handleMute}
+            handleUnmute={this.handleUnmute}
+          />
+        )}
           {showLeaderboardsModal && (
             <LeaderboardsModal
               modalIsOpen={showLeaderboardsModal}
@@ -1880,7 +1646,6 @@ const mapStateToProps = state => ({
   isMuted: state.auth.isMuted,
   user: state.auth.user,
   unreadMessageCount: state.auth.unreadMessageCount,
-  // isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   transactions: state.auth.transactions,
   isDarkMode: state.auth.isDarkMode,
@@ -1907,7 +1672,6 @@ const mapDispatchToProps = {
   updateOnlineUserList,
   selectMainTab,
   globalChatReceived,
-  toggleMute,
   setGlobalChat,
   updateBetResult
 };

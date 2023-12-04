@@ -69,9 +69,13 @@
 .modal-body.result-body .modal-icon {
     margin-bottom: 0 !important;
 }
+.modal-body .modal-icon.result-icon-prize {
+    background-image: url("/img/icons/alert-prize-icon.svg");
+}
 .modal-body .modal-icon.alert-icon {
     background-image: url("/img/icons/alert-icon.svg");
 }
+
 .modal-body .modal-icon.alert-icon-closed {
     background-image: url("/img/icons/alert-icon-closed.svg");
 }

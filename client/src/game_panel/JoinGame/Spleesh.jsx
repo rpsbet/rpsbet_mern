@@ -10,6 +10,8 @@ import ReactApexChart from 'react-apexcharts';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
+import loadingChart from '../LottieAnimations/loadingChart.json';
+
 import bear from '../LottieAnimations/bear.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import {
@@ -125,13 +127,22 @@ class Spleesh extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    const { actionList } = this.props;
+    const { isPasswordCorrect, bet_amount, is_anonymous } = this.state;
+
+    if (prevProps.actionList !== actionList) {
+      this.setState({
+        actionList: actionList
+      });
+    }
+
     if (
-      prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
-      this.state.isPasswordCorrect === true
+      prevState.isPasswordCorrect !== isPasswordCorrect &&
+      isPasswordCorrect === true
     ) {
       this.props.join({
-        bet_amount: this.state.bet_amount,
-        is_anonymous: this.state.is_anonymous
+        bet_amount: bet_amount,
+        is_anonymous: is_anonymous
       });
     }
   }
@@ -442,20 +453,25 @@ class Spleesh extends Component {
   };
 
   render() {
-
-    const { selectedCreator, showPlayerModal, roomInfo, spleesh_bet_unit, endgame_amount } = this.props;
-    const roomStatistics = this.props.actionList || [];
+    const {
+      selectedCreator,
+      showPlayerModal,
+      roomInfo,
+      spleesh_bet_unit,
+      endgame_amount
+    } = this.props;
 
     const {
       spleesh_guesses,
       showAnimation,
       isDisabled,
+      actionList,
       betting,
       bankroll,
       timerValue
     } = this.state;
 
-const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
+    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
     const barStyle = {
       width: `${payoutPercentage + 10}%`,
@@ -502,7 +518,7 @@ const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
     let maxGuesses = 0;
     let maxStep = 1;
 
-    if (spleesh_bet_unit === 0.10) {
+    if (spleesh_bet_unit === 0.1) {
       for (let i = 10; i <= 100; i += 10) {
         if (!guessedAmounts.includes(i)) {
           maxSum += i;
@@ -536,7 +552,7 @@ const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
     const marginTop =
       marginTopMin + ((averageGuesses - 1) / 9) * (marginTopMax - marginTopMin);
     const marginTopScaled = marginTop;
-   
+
     return (
       <div className="game-page">
         <div className="page-title">
@@ -601,83 +617,104 @@ const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
                       <div className="label net-profit">Host Profit</div>
                     </div>
                     <div className="value bankroll">
-                      {convertToCurrency(
-                        roomStatistics.hostNetProfit?.slice(-1)[0]
-                      )}
-                      <ReactApexChart
-                        className="bankroll-graph"
-                        options={{
-                          chart: {
-                            animations: {
-                              enabled: false
-                            },
-                            toolbar: {
-                              show: false
-                            },
-                            events: {},
-                            zoom: {
-                              enabled: false
-                            }
-                          },
-                          grid: {
-                            show: false
-                          },
-                          tooltip: {
-                            enabled: false
-                          },
-                          fill: {
-                            type: 'gradient',
-                            gradient: {
-                              shade: 'light',
-                              gradientToColors: roomStatistics.hostNetProfit?.slice(-1)[0] > 0 ? ['#00FF00'] : roomStatistics.hostNetProfit?.slice(-1)[0] < 0 ? ['#FF0000'] : ['#808080'],
-                              shadeIntensity: 1,
-                              type: 'vertical',
-                              opacityFrom: 0.7,
-                              opacityTo: 0.9,
-                              stops: [0, 100, 100]
-                            }
-                          },
+                      {actionList && actionList.hostBetsValue.length > 0 ? (
+                        <>
+                          {convertToCurrency(
+                            actionList.hostNetProfit?.slice(-1)[0]
+                          )}
+                          <ReactApexChart
+                            className="bankroll-graph"
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
+                              },
+                              grid: {
+                                show: false
+                              },
+                              tooltip: {
+                                enabled: false
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    actionList.hostNetProfit?.slice(-1)[0] > 0
+                                      ? ['#00FF00']
+                                      : actionList.hostNetProfit?.slice(-1)[0] <
+                                        0
+                                      ? ['#FF0000']
+                                      : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
 
-                          stroke: {
-                            curve: 'smooth'
-                          },
-                          xaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          },
-                          yaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          }
-                        }}
-                        type="line"
-                        width={120}
-                        height="100"
-                        series={[
-                          {
-                            data: roomStatistics.hostNetProfit.map(
-                              (value, index) => [
-                                roomStatistics.hostBetsValue[index],
-                                value
-                              ]
-                            )
-                          }
-                        ]}
-                      />
+                              stroke: {
+                                curve: 'smooth'
+                              },
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              },
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              }
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data: actionList.hostNetProfit.map(
+                                  (value, index) => [
+                                    actionList.hostBetsValue[index],
+                                    value
+                                  ]
+                                )
+                              }
+                            ]}
+                          />
+                        </>
+                      ) : (
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                   <div className="data-item">
@@ -720,7 +757,7 @@ const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
                       <div className="label public-max-return">Created</div>
                     </div>
                     <div className="value">
-                    {Moment(this.props.roomInfo.created_at).fromNow()}
+                      {Moment(this.props.roomInfo.created_at).fromNow()}
                     </div>
                   </div>
                 </React.Fragment>
@@ -917,8 +954,7 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
-  accessory: state.logic.curRoomInfo.accessory,
-
+  accessory: state.logic.curRoomInfo.accessory
 });
 
 const mapDispatchToProps = {

@@ -21,7 +21,7 @@
 
 .lottie div {
   width: 160px !important;
-  height: 100% !important;
+  height: auto !important;
 }
 
 .sub-panel .lottie-container div,
@@ -87,11 +87,6 @@ position: absolute;
   border-radius: 6px;
 }
 
-.avatar {
-
-  overflow: visible !important;
-
-}
 
 .avatar-square {
   background: #b9bbbe;
@@ -232,6 +227,44 @@ div[role='tablist'] {
   max-height: 50px;
   overflow: hidden;
   align-items: center;
+}
+.notification-container a{
+  width: 30%;
+  display: inline-block !important;
+  margin: auto;
+}
+.notification-container a div:first-child{
+  width: 60% !important;
+  height: 60% !important;
+  margin-bottom: 15px !important;
+}
+.notification-container .notification{
+  width: 70%;
+  display: inline-block;
+}
+
+.notification-container {
+  display: flex;
+  justify-content: start;
+  margin-bottom: 10px;
+  border-bottom: 2px solid;
+}
+
+.notification {
+  display: flex;
+  align-content: normal;
+  
+}
+.notification p{
+  font-weight: 600;
+}
+
+.notification-container:last-child {
+  border-bottom: unset;
+}
+
+.notification .fromNow {
+  font-size: 0.8em;
 }
 
 .game_header .main_header #btn_notifications.desktop-only,

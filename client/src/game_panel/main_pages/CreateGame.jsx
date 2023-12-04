@@ -401,11 +401,14 @@ class CreateGame extends Component {
   onPrevButtonClicked = () => {
     if (this.state.game_mode !== 'Mystery Box' && this.state.step < 5) {
       if (this.state.step === 3 && this.state.child_step === 1) {
-        if ((this.state.game_mode === 'Quick Shoot') ||(this.state.game_mode === 'RPS' && this.state.rps_game_type === 1)) {
+        if (
+          this.state.game_mode === 'Quick Shoot' ||
+          (this.state.game_mode === 'RPS' && this.state.rps_game_type === 1)
+        ) {
           this.setState({
             step: 2,
             child_step: 3,
-rps_list: []
+            rps_list: []
           });
         } else {
           this.setState({
@@ -459,7 +462,7 @@ rps_list: []
       }
       return false;
     };
-    
+
     if (step === 2) {
       if (
         (game_mode !== 'RPS' || (game_mode === 'RPS' && child_step === 1)) &&
@@ -475,8 +478,7 @@ rps_list: []
       }
 
       if (
-        (game_mode === 'RPS' ||
-        game_mode === 'Quick Shoot') &&
+        (game_mode === 'RPS' || game_mode === 'Quick Shoot') &&
         child_step === 1 &&
         (qs_list.length > 0 || rps_list.length > 0)
       ) {
@@ -490,14 +492,16 @@ rps_list: []
       }
 
       if (
-        (
-          game_mode === 'Quick Shoot' ||
+        ((game_mode === 'Quick Shoot' ||
           game_mode === 'Drop Game' ||
           game_mode === 'Bang!' ||
           game_mode === 'Roll' ||
           game_mode === 'Blackjack') &&
-        child_step === 2 || (game_mode === 'RPS' && child_step === 3 && rps_game_type === 0) &&
-        isMinimumRunsNeeded(3, this.state[`${game_mode.toLowerCase()}_list`])
+          child_step === 2) ||
+        (game_mode === 'RPS' &&
+          child_step === 3 &&
+          rps_game_type === 0 &&
+          isMinimumRunsNeeded(3, this.state[`${game_mode.toLowerCase()}_list`]))
       ) {
         return;
       }
@@ -561,7 +565,6 @@ rps_list: []
     this.setState({
       step: step > 3 && child_step < 4 ? step : step + 1,
       child_step: child_step + 1
-
     });
   };
 
@@ -771,8 +774,7 @@ rps_list: []
               Previous
             </Button>
           )}
-          {(this.state.step === 3 ||
-            this.state.step === 4) && (
+          {(this.state.step === 3 || this.state.step === 4) && (
             <Button id="btn_skip" onClick={this.onSkipButtonClicked}>
               Skip
             </Button>
@@ -892,7 +894,6 @@ rps_list: []
                       child_step={this.state.child_step}
                       game_mode={this.state.game_mode}
                       max_prize={this.state.max_prize}
-                      
                       winChance={this.state.winChance}
                       public_bet_amount={this.state.public_bet_amount}
                       youtubeUrl={this.state.youtubeUrl}
@@ -946,7 +947,6 @@ rps_list: []
                       is_anonymous={this.state.is_anonymous}
                       step={this.state.step}
                       child_step={this.state.child_step}
-
                       box_list={this.state.box_list}
                       youtubeUrl={this.state.youtubeUrl}
                       gameBackground={this.state.gameBackground}
@@ -1055,33 +1055,33 @@ rps_list: []
                 {this.state.selectedMobileTab === 'my_games' && 'YOUR BATTLES'}
               </Button>
               <button
-              className={`mobile-tab-marketplace ${
-                this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
-              }`}
-              onClick={e => {
-                this.setState({ selectedMobileTab: 'marketplace' });
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                fill="none"
-                viewBox="0 0 32 32"
+                className={`mobile-tab-marketplace ${
+                  this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
+                }`}
+                onClick={e => {
+                  this.setState({ selectedMobileTab: 'marketplace' });
+                }}
               >
-                <path
-                  stroke={
-                    this.state.selectedMobileTab === 'marketplace'
-                      ? '#fff'
-                      : '#8E9297'
-                  }
-                  strokeWidth="1.5"
-                  d="M10.083 6.083h11.833v8.584c0 3.268-2.649 5.917-5.916 5.917-3.268 0-5.917-2.65-5.917-5.917V6.083zM9.333 26.666h13.333M22.223 14.597c3.528-.571 4.444-4.538 4.444-6.597H22M9.777 14.597C6.25 14.026 5.333 10.06 5.333 8H10M16 21.334v5.333"
-                />
-              </svg>
-              {this.state.selectedMobileTab === 'marketplace' &&
-                'MARKETPLACE'}
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  fill="none"
+                  viewBox="0 0 32 32"
+                >
+                  <path
+                    stroke={
+                      this.state.selectedMobileTab === 'marketplace'
+                        ? '#fff'
+                        : '#8E9297'
+                    }
+                    strokeWidth="1.5"
+                    d="M10.083 6.083h11.833v8.584c0 3.268-2.649 5.917-5.916 5.917-3.268 0-5.917-2.65-5.917-5.917V6.083zM9.333 26.666h13.333M22.223 14.597c3.528-.571 4.444-4.538 4.444-6.597H22M9.777 14.597C6.25 14.026 5.333 10.06 5.333 8H10M16 21.334v5.333"
+                  />
+                </svg>
+                {this.state.selectedMobileTab === 'marketplace' &&
+                  'MARKETPLACE'}
+              </button>
               <Button
                 className={`mobile-tab-chat ${
                   this.state.selectedMobileTab === 'chat' ? 'active' : ''

@@ -6,6 +6,8 @@ import { getSettings } from '../../redux/Setting/setting.action';
 import { convertToCurrency } from '../../util/conversion';
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHeart, faHeartBroken, faStopwatch} from '@fortawesome/free-solid-svg-icons';
 
 import CountUp from 'react-countup';
 import InlineSVG from 'react-inlinesvg';
@@ -38,8 +40,8 @@ class HistoryTable extends Component {
 
   async componentDidMount() {
     this.updateReminderTime();
-    // this.attachUserLinkListeners();
-    // this.attachAccessories();
+    this.attachUserLinkListeners();
+    this.attachAccessories();
     this.interval = setInterval(this.updateReminderTime(), 3000);
     const settings = await this.props.getSettings();
     this.setState({ ...settings });
@@ -95,15 +97,24 @@ class HistoryTable extends Component {
     });
   };
   attachAccessories = () => {
+    const {isLowGraphics} = this.props;
     const userLinks = document.querySelectorAll('.user-link');
     userLinks.forEach(element => {
+      const userId = element.getAttribute('data-userid'); // Get userId from the user-link element
       const accessory = element.getAttribute('accessory');
-      const lottieAnimation = renderLottieAvatarAnimation(accessory);
+      const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
       const portalContainer = document.createElement('div');
       ReactDOM.render(lottieAnimation, portalContainer);
       element.parentNode.insertBefore(portalContainer, element);
+  
+      // Attach click event listener to the accessory element
+      portalContainer.addEventListener('click', () => {
+        this.handleOpenPlayerModal(userId);
+      });
+        portalContainer.style.cursor = 'pointer';
     });
   };
+  
 
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -227,55 +238,23 @@ class HistoryTable extends Component {
   };
 
   render() {
+    const {isLowGraphics} = this.props;
     // const gameTypePanel = this.generateGameTypePanel();
-
+    const HeartIcon = ({ isOpen }) => {
+      const icon = isOpen ? faHeart : faHeartBroken;
+    
+      return <FontAwesomeIcon icon={icon} />;
+    };
+    
     return (
       <div className="overflowX">
         <div className="outer-div">
           <div className="border-mask" />
-          {/* <div className="desktop-only">
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: rain
-              }}
-              style={{
-                transform: 'translateY(-66px)',
-                width: '250px',
-                height: '100%',
-                overflow: 'hidden',
-                margin: '-2px 0px -178px',
-                outline: 'none',
-                filter: 'hue-rotate(2deg)',
-                maxWidth: '100%'
-              }}
-            />
-          </div>
-          <div className="mobile-only">
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: rain
-              }}
-              className="mobile-only"
-              style={{
-                transform: 'translateY(-66px)',
-                width: '250px',
-                height: '100%',
-                overflow: 'hidden',
-                margin: '-2px 0px -270px',
-                outline: 'none',
-                filter: 'hue-rotate(2deg)',
-                maxWidth: '100%'
-              }}
-            />
-          </div> */}
+          
           <Lottie
             options={{
-              loop: true,
-              autoplay: true,
+              loop: isLowGraphics ? false: true,
+              autoplay: isLowGraphics ? false: true,
               animationData: hex
             }}
             style={{
@@ -284,7 +263,7 @@ class HistoryTable extends Component {
               overflow: 'hidden',
               margin: '-2px 0px -136px',
               outline: 'none',
-              filter: 'hue-rotate(2deg)',
+              filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(2deg)',
               maxWidth: '100%'
             }}
           />
@@ -369,16 +348,18 @@ class HistoryTable extends Component {
                 key={row._id}
               >
                 {' '}
-                {renderLottieAvatarAnimation(row.gameBackground)}
+                {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)}
                 <div>
                   <div className="table-cell">
-                    <div className="room-id">{row.status}</div>
+                    <div className="room-id">
+                      {row.status}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
+                      </div>
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}
                     ></div>
                   </div>
-                  <div className="table-cell">{row.from_now}</div>
+                  <div className="table-cell">{row.from_now}&nbsp;<FontAwesomeIcon icon={faStopwatch} /></div>
                 </div>
                 <div>
                   <div
@@ -423,7 +404,8 @@ const mapStateToProps = state => ({
   history: state.logic.history,
   pageNumber: state.logic.historyPageNumber,
   totalPage: state.logic.historyTotalPage,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  isLowGraphics: state.auth.isLowGraphics
   // gameTypeList: state.logic.gameTypeList
 });
 

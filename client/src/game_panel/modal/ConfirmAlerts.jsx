@@ -5,7 +5,7 @@ const showAlert = (isDarkMode, text, icon) => {
   confirmAlert({
     customUI: ({ onClose }) => {
       return (
-        <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div style={{borderRadius: "0.6em"}} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body">
             <Button className="btn-close" onClick={onClose}>
               ×
@@ -33,7 +33,7 @@ const showConfirm = (
   confirmAlert({
     customUI: ({ onClose }) => {
       return (
-        <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div  style={{borderRadius: "0.6em"}} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body confirm-body">
             <Button className="btn-close" onClick={onClose}>
               ×
@@ -109,36 +109,48 @@ export const confirmModalClosed = (
     callback
   );
 };
+
+const speak = (message) => {
+  if (window.speechSynthesis) {
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
+    utterance.lang = 'en-US'; // set the language to US English
+    window.speechSynthesis.speak(utterance);
+  }
+};
+
 const showResultModal = (
   isDarkMode,
   text,
   icon,
-  cancelButtonTitle,
-  callback,
-  callback2
 ) => {
-  let timeLeft = 1500; // duration of modal in milliseconds
+  let timeLeft = 1500;
   const intervalId = setInterval(() => {
     timeLeft -= 100;
     if (timeLeft === 0) {
       clearInterval(intervalId);
     }
-  }, 100); // countdown interval
+  }, 100);
+
+  // Speak the message
+  speak(text);
+
   confirmAlert({
     overlayClassName: 'overlay-result',
     closeOnEscape: false,
     closeOnClickOutside: false,
     customUI: ({ onClose }) => {
-      setTimeout(() => onClose(), 1500); // dismiss modal after 2 seconds
+      setTimeout(() => {
+        onClose();
+        window.speechSynthesis.cancel();
+      }, 1500);
+
       return (
-        <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div   style={{borderRadius: "0.6em"}} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body result-body">
             <div className={`modal-icon result-icon${icon}`}></div>
             <h1>{text}</h1>
             <div className="modal-footer">
-              {/* { cancelButtonTitle &&
-                                <button className="btn-back" onClick={() => {callback2(); onClose();}}>{cancelButtonTitle}</button>
-                            } */}
               <div className="countdown-timer">
                 <div
                   className="countdown-bar"
@@ -152,6 +164,7 @@ const showResultModal = (
     }
   });
 };
+
 export const gameResultModal = (
   isDarkMode,
   text,
@@ -175,3 +188,4 @@ export const gameResultModal = (
     callback2
   );
 };
+

@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { getMyHistory } from '../../redux/Logic/logic.actions';
 import IconButton from '@material-ui/core/IconButton';
 import { Box, Button } from '@material-ui/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import CountUp from 'react-countup';
 import { getSettings } from '../../redux/Setting/setting.action';
 import InlineSVG from 'react-inlinesvg';
@@ -15,6 +17,7 @@ import Lottie from 'react-lottie';
 import rain from '../LottieAnimations/rain.json';
 import waves from '../LottieAnimations/waves.json';
 import hex from '../LottieAnimations/hex.json';
+import { faHeart, faHeartBroken, faStopwatch} from '@fortawesome/free-solid-svg-icons';
 
 function updateFromNow(history = []) {
   const result = JSON.parse(JSON.stringify(history));
@@ -60,8 +63,8 @@ class MyHistoryTable extends Component {
 
   async componentDidMount() {
     this.updateReminderTime();
-    // this.attachUserLinkListeners();
-    // this.attachAccessories();
+    this.attachUserLinkListeners();
+    this.attachAccessories();
 
     this.interval = setInterval(this.updateReminderTime(), 3000);
     const settings = await this.props.getSettings();
@@ -78,8 +81,8 @@ class MyHistoryTable extends Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.history !== this.props.history) {
-      this.attachUserLinkListeners();
-      this.attachAccessories();
+      // this.attachUserLinkListeners();
+      // this.attachAccessories();
 
       this.setState({ history: updateFromNow(this.props.history) });
     }
@@ -222,55 +225,22 @@ class MyHistoryTable extends Component {
   };
 
   render() {
-    // const gameTypePanel = this.generateGameTypePanel();
-
+    const {isLowGraphics} = this.props;
+    const HeartIcon = ({ isOpen }) => {
+      const icon = isOpen ? faHeart : faHeartBroken;
+    
+      return <FontAwesomeIcon icon={icon} />;
+    };
+    
     return (
       <div className="overflowX">
         <div className="outer-div">
           <div className="border-mask" />
-          {/* <div className="desktop-only">
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: rain
-              }}
-              style={{
-                transform: 'translateY(-66px)',
-                width: '250px',
-                height: '100%',
-                overflow: 'hidden',
-                margin: '-2px 0px -178px',
-                outline: 'none',
-                filter: 'hue-rotate(2deg)',
-                maxWidth: '100%'
-              }}
-            />
-          </div>
-          <div className="mobile-only">
-            <Lottie
-              options={{
-                loop: true,
-                autoplay: true,
-                animationData: rain
-              }}
-              className="mobile-only"
-              style={{
-                transform: 'translateY(-66px)',
-                width: '250px',
-                height: '100%',
-                overflow: 'hidden',
-                margin: '-2px 0px -270px',
-                outline: 'none',
-                filter: 'hue-rotate(2deg)',
-                maxWidth: '100%'
-              }}
-            />
-          </div> */}
+          
           <Lottie
             options={{
-              loop: true,
-              autoplay: true,
+              loop: isLowGraphics ? false: true,
+              autoplay: isLowGraphics ? false: true,
               animationData: hex
             }}
             style={{
@@ -279,7 +249,7 @@ class MyHistoryTable extends Component {
               overflow: 'hidden',
               margin: '-2px 0px -136px',
               outline: 'none',
-              filter: 'hue-rotate(2deg)',
+              filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(2deg)',
               maxWidth: '100%'
             }}
           />
@@ -367,13 +337,13 @@ class MyHistoryTable extends Component {
                  {renderLottieAvatarAnimation(row.gameBackground)}
                 <div>
                   <div className="table-cell">
-                    <div className="room-id">{row.status}</div>
+                  {row.status}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}
                     ></div>
                   </div>
-                  <div className="table-cell">{row.from_now}</div>
+                  <div className="table-cell">{row.from_now}&nbsp;<FontAwesomeIcon icon={faStopwatch} /></div>
                 </div>
                 <div>
                   <div
