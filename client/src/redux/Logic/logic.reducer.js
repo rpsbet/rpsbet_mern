@@ -27,7 +27,8 @@ import {
   SELECT_MAIN_TAB,
   MY_CHAT_LOADED,
   NOTIFICATIONS_LOADED,
-  // FETCH_ACCESSORY_SUCCESS,
+  TNX_COMPLETE,
+  TNX_INCOMPLETE,
   SET_NOTIFICATIONS_ROOM_INFO,
   GLOBAL_CHAT_RECEIVED,
   SET_GLOBAL_CHAT
@@ -35,6 +36,7 @@ import {
 
 const initialState = {
   isActiveLoadingOverlay: false,
+  transactionComplete: false,
   socket: null,
   game_mode: 'All',
   roomList: [],
@@ -177,6 +179,17 @@ export default function(state = initialState, action) {
         ...state,
         isActiveLoadingOverlay: false
       };
+
+      case TNX_INCOMPLETE:
+        return {
+          ...state,
+          transactionComplete: false
+        };
+    case TNX_COMPLETE:
+        return {
+          ...state,
+          transactionComplete: true
+        };
     case SET_GAME_MODE:
       return {
         ...state,
@@ -211,7 +224,7 @@ export default function(state = initialState, action) {
         }
       };
     case ROOMS_LOADED:
-      const { roomList, pages, total, page } = payload;
+      const { roomList, pageSize, total } = payload;
 
       const accessories = roomList.map(room => room.accessory);
 
@@ -219,9 +232,9 @@ export default function(state = initialState, action) {
         ...state,
         roomList,
     accessories,
-    totalPage: pages,
+    // totalPage: pages,
     roomCount: total,
-    pageNumber: page,
+    pageSize: pageSize,
       };
     case HISTORY_LOADED:
       return {

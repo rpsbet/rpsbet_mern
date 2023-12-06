@@ -134,9 +134,6 @@
     max-width: 80vw !important;
 }
 
-button:disabled {
-    background: rgb(189, 189, 189, 0.02) !important;
-}
 /*******************/
 /*** MODAL HEADER **/
 /*******************/

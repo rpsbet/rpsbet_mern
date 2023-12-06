@@ -35,7 +35,8 @@ class DeListItemModal extends Component {
     };
   }
   onBtnOkClicked = async e => {
-    const { item, closeDeListItemModal, isDarkMode } = this.props;
+    const { item, closeDeListItemModal, isDarkMode, deListItem } = this.props;
+    console.log("item", item);
     const response = await deListItem({ item_id: item });
     if (response.success) {
       const { message } = response;
@@ -86,6 +87,8 @@ const mapStateToProps = state => ({
   isOpen: state.snackbar.showDeListItemModal,
   title: state.snackbar.title,
   item: state.itemReducer._id,
+  price: state.itemReducer.data.price,
+  productName: state.itemReducer.data.productName,
   alertMessage: state.snackbar.alertMessage,
   alertType: state.snackbar.alertType
 });

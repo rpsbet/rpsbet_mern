@@ -74,7 +74,6 @@ router.post('/', (req, res) => {
 // @desc    Get user data
 // @access  Private
 // Calculate profits without including transactions with 'withdraw' or 'deposit' in the description
-
 router.get('/user', auth, async (req, res) => {
   try {
     let queryLimit = req.query.viewAll === 'true' ? 7 : 4;
@@ -84,27 +83,27 @@ router.get('/user', auth, async (req, res) => {
       queryLimit += loadMoreValue;
     }
 
-    let query = { user: req.user };
+    const query = { user: req.user };
 
-    if (req.query.showWithdrawals === 'true') {
+    if (req.query.filterType === 'showWithdrawals') {
       query.description = { $regex: 'withdraw', $options: 'i' };
-    } else if (req.query.showDeposits === 'true') {
+    } else if (req.query.filterType === 'showDeposits') {
       query.description = { $regex: 'deposit', $options: 'i' };
+    } else if (req.query.filterType === 'showTrades') {
+      query.description = { $regex: 'trade', $options: 'i' };
+    } else if (req.query.filterType === 'showTips') {
+      query.description = { $regex: 'tip', $options: 'i' };
     } else if (req.query.search) {
       query.description = { $regex: req.query.search, $options: 'i' };
     }
+    
 
     const transactions = await Transaction.find(query)
       .sort(req.query.sortBy === 'amount' ? { amount: -1 } : { created_at: -1 })
       .limit(queryLimit);
-   
-      const transactions2 = await Transaction.find(query)
-    let profitData = {};
-    if (req.query.viewAll === 'true') {
-      profitData.sevenDayProfit = calculate7dayProfit(transactions2);
-      profitData.oneDayProfit = calculate1dayProfit(transactions2);
-      profitData.allTimeProfit = calculateAllTimeProfit(transactions2);
-    }
+
+    const transactions2 = await Transaction.find(query);
+    const profitData = getProfitData(req.query.viewAll === 'true', transactions2);
 
     const count = await Message.countDocuments({
       to: req.user,
@@ -122,6 +121,19 @@ router.get('/user', auth, async (req, res) => {
     res.json({ success: false, error: error.message });
   }
 });
+
+// Function to calculate profit data
+const getProfitData = (viewAll, transactions) => {
+  if (!viewAll) {
+    return {};
+  }
+
+  return {
+    sevenDayProfit: calculate7dayProfit(transactions),
+    oneDayProfit: calculate1dayProfit(transactions),
+    allTimeProfit: calculateAllTimeProfit(transactions)
+  };
+};
 
 
 // Forgot Password

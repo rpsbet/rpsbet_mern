@@ -7,8 +7,8 @@ const moment = require('moment');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 
-const Room = require('../model/Room');
 const User = require('../model/User');
+const Room = require('../model/Room');
 
 const Item = require('../model/Item');
 const GameType = require('../model/GameType');
@@ -720,7 +720,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
   return result;
 };
 
-const getHistory = async (pagination, page, my_id, game_type) => {
+const getHistory = async (pageSize, my_id, game_type) => {
   try {
     const id_condition = {};
     const game_type_condition = {};
@@ -738,8 +738,7 @@ const getHistory = async (pagination, page, my_id, game_type) => {
 
     const gameLogQuery = GameLog.find(search_condition)
       .sort({ created_at: 'desc' })
-      .skip(pagination * (page - 1))
-      .limit(pagination)
+      .limit(pageSize)
       .populate({ path: 'room', model: Room })
       .populate({ path: 'game_type', model: GameType })
       .populate({ path: 'creator', model: User })
@@ -753,8 +752,7 @@ const getHistory = async (pagination, page, my_id, game_type) => {
     return {
       history: result,
       count,
-      page,
-      totalPage: Math.ceil(count / pagination)
+      pageSize
     };
   } catch (err) {
     return false;
@@ -767,7 +765,7 @@ const updateDigitToPoint2 = number => {
   }
   return number;
 };
-const getRoomList = async (pagination, page, game_type) => {
+const getRoomList = async (pageSize, game_type) => {
   const search_condition = { status: 'open', game_type: { $ne: null } };
 
   if (game_type !== 'All') {
@@ -775,10 +773,11 @@ const getRoomList = async (pagination, page, game_type) => {
     search_condition.game_type = gameType._id;
   }
 
+  const totalCount = await Room.countDocuments(search_condition);
+
   const preRooms = await Room.find(search_condition)
     .sort({ created_at: 'desc' })
-    .skip(pagination * (page - 1))
-    .limit(pagination);
+    .limit(pageSize);
 
   const roomIds = preRooms.map(({ _id }) => _id);
   const rooms = await Room.find({ _id: { $in: roomIds } })
@@ -787,17 +786,17 @@ const getRoomList = async (pagination, page, game_type) => {
     .populate({ path: 'brain_game_type', model: BrainGameType });
 
   const result = await Promise.all(
-    rooms.map(async room => {
+    rooms.map(async (room) => {
       const room_id = `${room.game_type.short_name}-${room.room_number}`;
       try {
         const joinerData = await Promise.all(
-          room.joiners.map(async joinedUser => {
+          room.joiners.map(async (joinedUser) => {
             const user = await User.findOne({ _id: joinedUser });
             return {
               avatar: user.avatar,
               totalWagered: user.totalWagered,
               accessory: user.accessory,
-              rank: user.totalWagered
+              rank: user.totalWagered,
             };
           })
         );
@@ -854,28 +853,29 @@ const getRoomList = async (pagination, page, game_type) => {
             break;
           case 2:
             const gameLogList = await GameLog.find({ room }).sort({
-              bet_amount: 'desc'
+              bet_amount: 'desc',
             });
             if (!gameLogList || gameLogList.length === 0) {
               temp.winnings = temp.spleesh_bet_unit + room.user_bet;
             } else {
-              for (let i = 10; i > 0; i--) {
-                const is_exist = gameLogList.some(
-                  log => log.bet_amount === i * temp.spleesh_bet_unit
-                );
-                if (!is_exist) {
-                  temp.winnings = i * temp.spleesh_bet_unit + room.user_bet;
-                  break;
-                }
-              }
+              const winningBet = [temp.spleesh_bet_unit + room.user_bet];
+              const possibleWinnings = Array.from({ length: 9 }, (_, i) => i + 1)
+                .reverse()
+                .map(async (i) => {
+                  const is_exist = await Promise.all(
+                    gameLogList.map(async (log) => log.bet_amount === i * temp.spleesh_bet_unit)
+                  );
+                  return !is_exist.includes(true) ? i * temp.spleesh_bet_unit + room.user_bet : null;
+                });
+
+              temp.winnings = (await Promise.all(possibleWinnings)).find((value) => value !== null) || winningBet[0];
             }
             break;
           case 3:
             temp.winnings = room.pr;
             break;
           case 4:
-            temp.winnings =
-              parseFloat(room.host_pr) + parseFloat(room.user_bet);
+            temp.winnings = parseFloat(room.host_pr) + parseFloat(room.user_bet);
             break;
           case 5:
           case 6:
@@ -893,34 +893,32 @@ const getRoomList = async (pagination, page, game_type) => {
     })
   );
 
-  const filteredResults = result.filter(temp => temp !== null);
+  const filteredResults = result.filter((temp) => temp !== null);
 
   return {
-    rooms: filteredResults.sort((a, b) =>
-      a.created_at > b.created_at ? -1 : 1
-    ),
-    count: filteredResults.length,
-    page
+    rooms: filteredResults.sort((a, b) => (a.created_at > b.created_at ? -1 : 1)),
+    count: totalCount,
+    pageSize,
   };
 };
 
+
 router.get('/history', async (req, res) => {
   try {
-    const { pagination = 10, page = 1, game_type = 'All' } = req.query;
+    const { pageSize = 10, game_type = 'All' } = req.query;
 
     const history = await getHistory(
-      parseInt(pagination),
-      parseInt(page),
+      parseInt(pageSize),
       null,
       game_type
     );
 
     res.json({
       success: true,
-      page: parseInt(page),
-      history: history.history,
+      pageSize: parseInt(pageSize),
       total: history.count,
-      pages: Math.ceil(history.count / parseInt(pagination))
+
+      history: history.history
     });
   } catch (err) {
     res.json({
@@ -932,21 +930,20 @@ router.get('/history', async (req, res) => {
 
 router.get('/my_history', auth, async (req, res) => {
   try {
-    const { pagination = 10, page = 1, game_type = 'All' } = req.query;
+    const { pageSize = 10,game_type = 'All' } = req.query;
 
     const history = await getHistory(
-      parseInt(pagination),
-      parseInt(page),
+      parseInt(pageSize),
       req.user._id,
       game_type
     );
 
     res.json({
       success: true,
-      page: parseInt(page),
+      pageSize: parseInt(pageSize),
       history: history.history,
       total: history.count,
-      pages: Math.ceil(history.count / parseInt(pagination))
+
     });
   } catch (err) {
     res.json({
@@ -958,19 +955,18 @@ router.get('/my_history', auth, async (req, res) => {
 
 // /api/rooms call
 router.get('/rooms', async (req, res) => {
-  const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
-  const page = req.query.page ? parseInt(req.query.page) : 1;
+  const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
   const game_type = req.query.game_type ? req.query.game_type : 'All';
 
   try {
-    const rooms = await getRoomList(pagination, page, game_type);
+    const rooms = await getRoomList(pageSize, game_type);
     res.json({
-      page: page,
+      pageSize: pageSize,
       success: true,
       query: req.query,
       total: rooms.count,
+
       roomList: rooms.rooms,
-      pages: Math.ceil(rooms.count / pagination)
     });
   } catch (err) {
     res.json({
@@ -1155,11 +1151,11 @@ router.post('/rooms', auth, async (req, res) => {
     await req.user.save();
     await newTransaction.save();
 
-    const rooms = await getRoomList(10, 1, 'All');
+    const rooms = await getRoomList(10, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
-      total: rooms.count,
+      pageSize: rooms.pageSize,
       roomList: rooms.rooms,
-      pages: Math.ceil(rooms.count / 10)
+      total: rooms.count
     });
 
     res.json({
@@ -1284,8 +1280,7 @@ async function getRoomNetProfits(room_id) {
 
 const getMyRooms = async (
   user_id,
-  pagination,
-  page,
+  pageSize,
   game_type,
   status = 'open',
   sort = 'desc'
@@ -1307,8 +1302,7 @@ const getMyRooms = async (
 
   const rooms = await Room.find(search_condition)
     .populate({ path: 'game_type', model: GameType })
-    .skip(pagination * page - pagination)
-    .limit(pagination);
+    .limit(pageSize);
 
   const count = await Room.countDocuments(search_condition);
 
@@ -1413,17 +1407,15 @@ const getMyRooms = async (
 
 router.get('/my_games', auth, async (req, res) => {
   try {
-    const pagination = req.query.pagination
-      ? parseInt(req.query.pagination)
-      : 8;
-    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const pageSize = req.query.pageSize
+      ? parseInt(req.query.pageSize)
+      : 10;
     const game_type = req.query.game_type ? req.query.game_type : 'All';
     const status = req.query.status;
     const sort = req.query.sort ? req.query.sort : 'desc';
     const rooms = await getMyRooms(
       req.user._id,
-      pagination,
-      page,
+      pageSize,
       game_type,
       status,
       sort
@@ -1431,10 +1423,9 @@ router.get('/my_games', auth, async (req, res) => {
 
     res.json({
       success: true,
-      page: page,
+      pageSize: pageSize,
       myGames: rooms.rooms,
       total: rooms.count,
-      pages: Math.ceil(rooms.count / pagination)
     });
   } catch (err) {
     res.json({
@@ -1574,16 +1565,16 @@ router.post('/end_game', auth, async (req, res) => {
     res.json({
       success: true,
       myGames: myRooms.rooms,
-      pages: Math.ceil(myRooms.count / 8),
+      pageSize: myRooms.pageSize,
       newTransaction
     });
 
-    const rooms = await getRoomList(10, 1, 'All');
+    const rooms = await getRoomList(10, 'All');
 
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
       roomList: rooms.rooms,
-      pages: Math.ceil(rooms.count / 10)
+      pageSize: rooms.pageSize
     });
   } catch (err) {
     res.json({
@@ -2377,8 +2368,8 @@ router.post('/bet', auth, async (req, res) => {
         if (
           parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet']) ||
           parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
-        ) {
-          // Return an error or some other response to the user, e.g.:
+          ) {
+            // Return an error or some other response to the user, e.g.:
           return res
             .status(400)
             .json({ error: 'Bet amount exceeds available balance.' });
@@ -2392,6 +2383,7 @@ router.post('/bet', auth, async (req, res) => {
         let bet_item = availableBetItem;
 
         if (!bet_item) {
+          
           if (roomInfo['rps_game_type'] === 0) {
             const allBetItems = await RpsBetItem.find({
               room: new ObjectId(req.body._id)
@@ -2522,8 +2514,8 @@ router.post('/bet', auth, async (req, res) => {
           const userSelection = req.body.selected_rps;
           const systemSelection = bet_item.rps;
           result = determineGameResult(userSelection, systemSelection);
-          console.log(userSelection, systemSelection);
-          console.log(result);
+          // console.log(userSelection, systemSelection);
+          // console.log(result);
 
           
           if (result === 1) {
@@ -2531,7 +2523,7 @@ router.post('/bet', auth, async (req, res) => {
               parseFloat(req.body.bet_amount),
               userSelection
             );
-            console.log(winnings);
+            // console.log(winnings);
             newGameLog.game_result = 1;
             newTransactionJ.amount += winnings * ((100 - commission) / 100);
 
@@ -4368,12 +4360,14 @@ router.post('/bet', auth, async (req, res) => {
         await roomInfo.save();
       }
       setTimeout(async () => {
-        const rooms = await getRoomList(10, 1, 'All');
+        const rooms = await getRoomList(10, 'All');
         req.io.sockets.emit('UPDATED_ROOM_LIST', {
           _id: roomInfo['_id'],
           total: rooms.count,
+                    total: rooms.count,
+
           roomList: rooms.rooms,
-          pages: Math.ceil(rooms.count / 10)
+          pageSize: rooms.pageSize
         });
 
         if (newTransactionJ.amount !== 0) {

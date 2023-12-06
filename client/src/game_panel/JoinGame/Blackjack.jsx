@@ -8,10 +8,14 @@ import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
-import { Button, TextField } from '@material-ui/core';
+import { Button } from '@material-ui/core';
 import { deductBalanceWhenStartBlackjack } from '../../redux/Logic/logic.actions';
-import loadingChart from '../LottieAnimations/loadingChart.json';
+import Moment from 'moment';
 
+import loadingChart from '../LottieAnimations/loadingChart.json';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import ReactApexChart from 'react-apexcharts';
+import PlayerModal from '../modal/PlayerModal';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -241,7 +245,7 @@ class Blackjack extends Component {
       cards_host: [],
       score: 0,
       score_host: 0,
-      bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
+      bankroll: parseFloat(this.props.bet_amount),
       // bankroll: 0,
       betResult: null,
       balance: this.props.balance,
@@ -259,18 +263,6 @@ class Blackjack extends Component {
     this.setState({ potential_return: e.target.value * 2 });
   }
 
-  getPreviousBets() {
-    let previousBets = 0;
-    if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
-      this.props.roomInfo.game_log_list.forEach(room_history => {
-        if (room_history.bet_amount) {
-          previousBets += parseFloat(room_history.bet_amount);
-        }
-      });
-    }
-    return previousBets;
-  }
-
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true });
     await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
@@ -284,33 +276,13 @@ class Blackjack extends Component {
   };
 
   componentDidMount = () => {
-    this.resetGame();
-    // Initialize items array
-    const items = [
-      {
-        label: 'Host',
-        value: this.props.creator
-      },
-      {
-        label: 'Bankroll',
-        value: convertToCurrency(this.state.bankroll)
-      },
-      {
-        label: 'Bet Amount',
-        value: convertToCurrency(this.state.bet_amount)
-      },
-      {
-        label: 'Potential Return',
-        value: convertToCurrency(
-          updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
-        )
-      }
-    ];
-    this.setState({ items });
     const { socket } = this.props;
-    socket.on('UPDATED_BANKROLL', data => {
-      this.setState({ bankroll: data.bankroll });
-    });
+    this.resetGame();
+    if (socket) {
+      socket.on('UPDATED_BANKROLL', data => {
+        this.setState({ bankroll: data.bankroll });
+      });
+    }
     document.addEventListener('mousedown', this.handleClickOutside);
   };
 
@@ -555,15 +527,18 @@ class Blackjack extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { roomInfo } = this.props;
-    const { isPasswordCorrect, selected_bj } = this.state;
+    const { roomInfo, actionList } = this.props;
+    const {
+      isPasswordCorrect,
+      selected_bj,
+      isWaiting,
+      disabledButtons
+    } = this.state;
 
-    if (prevProps.roomInfo && roomInfo) {
-      if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
-        this.setState({
-          bankroll: parseFloat(roomInfo.bet_amount) - this.getPreviousBets()
-        });
-      }
+    if (prevProps.actionList !== actionList) {
+      this.setState({
+        actionList: actionList
+      });
     }
 
     if (
@@ -573,24 +548,6 @@ class Blackjack extends Component {
       this.joinGame(selected_bj);
     }
   }
-
-  // handleScroll = event => {
-  //   const panel = event.target;
-  //   const scrollLeft = panel.scrollLeft;
-  //   const maxScrollLeft = panel.scrollWidth - panel.clientWidth;
-
-  //   if (scrollLeft >= maxScrollLeft) {
-  //     const items = this.state.items.concat(this.state.items);
-  //     this.setState({ items }, () => {
-  //       panel.style.animation = 'none';
-  //       panel.scrollTo({ left: 0, behavior: 'auto' });
-  //       void panel.offsetWidth;
-  //       panel.style.animation = 'ticker 20s linear infinite';
-  //     });
-  //   } else {
-  //     panel.style.animation = 'none';
-  //   }
-  // };
 
   getSuitSymbol = card => {
     switch (card) {
@@ -968,12 +925,37 @@ class Blackjack extends Component {
       cards_host,
       score_host,
       scoreAnimation,
-      cardVisibility
+      cardVisibility,
+      selected_bj,
+      disabledButtons,
+      bankroll,
+      slippage,
+      settings_panel_opened,
+      bet_amount,
+      isDisabled,
+      betting,
+      timerValue,
+      actionList
     } = this.state;
 
-    const {isLowGraphics,
-      isMusicEnabled } = this.props;
+    const {
+      isLowGraphics,
+      isMusicEnabled,
+      roomInfo,
+      accessory,
+      handleOpenPlayerModal,
+      creator_avatar,
+      rank,
+      isDarkMode,
+      youtubeUrl
+    } = this.props;
 
+    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
+
+    const barStyle = {
+      width: `${payoutPercentage + 10}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
+    };
     return (
       <div className="game-page">
         <div className="page-title">
@@ -993,15 +975,13 @@ class Blackjack extends Component {
                     <div>
                       <div className="label room-id">STATUS</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.status}</div>
+                    <div className="value">{roomInfo.status}</div>
                   </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bankroll)}
-                    </div>
+                    <div className="value">{convertToCurrency(bankroll)}</div>
                   </div>
 
                   <div className="data-item">
@@ -1010,9 +990,122 @@ class Blackjack extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(
-                          this.state.bet_amount * 2 /* * 0.95 */
-                        )
+                        updateDigitToPoint2(bet_amount * 2 /* * 0.95 */)
+                      )}
+                    </div>
+                  </div>
+                  {roomInfo.endgame_amount > 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label net-profit">Host Profit</div>
+                    </div>
+                    <div className="value bankroll">
+                      {actionList && actionList.hostBetsValue.length > 0 ? (
+                        <>
+                          {convertToCurrency(
+                            actionList.hostNetProfit?.slice(-1)[0]
+                          )}
+                          <ReactApexChart
+                            className="bankroll-graph"
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
+                              },
+                              grid: {
+                                show: false
+                              },
+                              tooltip: {
+                                enabled: false
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    actionList.hostNetProfit?.slice(-1)[0] > 0
+                                      ? ['#00FF00']
+                                      : actionList.hostNetProfit?.slice(-1)[0] <
+                                        0
+                                      ? ['#FF0000']
+                                      : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
+
+                              stroke: {
+                                curve: 'smooth'
+                              },
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              },
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              }
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data: actionList.hostNetProfit.map(
+                                  (value, index) => [
+                                    actionList.hostBetsValue[index],
+                                    value
+                                  ]
+                                )
+                              }
+                            ]}
+                          />
+                        </>
+                      ) : (
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
                       )}
                     </div>
                   </div>
@@ -1020,19 +1113,46 @@ class Blackjack extends Component {
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">{this.props.creator}</div>
+                    <div className="value host">
+                      <a
+                        className="player"
+                        onClick={() =>
+                          handleOpenPlayerModal(this.props.creator_id)
+                        }
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={creator_avatar}
+                          rank={rank}
+                          accessory={accessory}
+                          alt=""
+                          darkMode={isDarkMode}
+                        />
+                      </a>
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
                       <div className="label room-name">Room ID</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.room_name}</div>
+                    <div className="value">{roomInfo.room_name}</div>
                   </div>
-                  {this.props.youtubeUrl && (
+                  {youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled}/>
+                      <YouTubeVideo
+                        url={youtubeUrl}
+                        isMusicEnabled={isMusicEnabled}
+                      />
                     </div>
                   )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label public-max-return">Created</div>
+                    </div>
+                    <div className="value">
+                      {Moment(roomInfo.created_at).fromNow()}
+                    </div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -1041,7 +1161,10 @@ class Blackjack extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {renderLottieAvatarAnimation(this.props.gameBackground, isLowGraphics)}
+            {renderLottieAvatarAnimation(
+              this.props.gameBackground,
+              isLowGraphics
+            )}
 
             <div className="deck">
               <div className="card-back">
@@ -1103,22 +1226,20 @@ class Blackjack extends Component {
               {score}
             </h6>
             <BetAmountInput
-              betAmount={this.state.bet_amount}
+              betAmount={bet_amount}
               handle2xButtonClick={this.handle2xButtonClick}
               handleHalfXButtonClick={this.handleHalfXButtonClick}
               handleMaxButtonClick={this.handleMaxButtonClick}
               onChange={this.handleChange}
-              isDarkMode={this.props.isDarkMode}
+              isDarkMode={isDarkMode}
             />
             <div>
               <div id="bj-radio" style={{ zIndex: 1 }}>
                 <Button
-                  className={
-                    'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
-                  }
+                  className={'hit' + (selected_bj === 'hit' ? ' active' : '')}
                   variant="contained"
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  disabled={disabledButtons}
+                  style={{ opacity: disabledButtons ? 0.5 : 1 }}
                   onClick={() => {
                     this.hit();
                     const currentActive = document.querySelector('.active');
@@ -1133,12 +1254,11 @@ class Blackjack extends Component {
                 </Button>
                 <Button
                   className={
-                    'stand' +
-                    (this.state.selected_bj === 'stand' ? ' active' : '')
+                    'stand' + (selected_bj === 'stand' ? ' active' : '')
                   }
                   variant="contained"
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  disabled={disabledButtons}
+                  style={{ opacity: disabledButtons ? 0.5 : 1 }}
                   onClick={() => {
                     this.stand();
                     const currentActive = document.querySelector('.active');
@@ -1153,12 +1273,10 @@ class Blackjack extends Component {
                 </Button>
 
                 <Button
-                  className={
-                    'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
-                  }
+                  className={'hit' + (selected_bj === 'hit' ? ' active' : '')}
                   variant="contained"
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  disabled={disabledButtons}
+                  style={{ opacity: disabledButtons ? 0.5 : 1 }}
                   onClick={() => {
                     this.hit();
                     const currentActive = document.querySelector('.active');
@@ -1173,12 +1291,11 @@ class Blackjack extends Component {
                 </Button>
                 <Button
                   className={
-                    'stand' +
-                    (this.state.selected_bj === 'stand' ? ' active' : '')
+                    'stand' + (selected_bj === 'stand' ? ' active' : '')
                   }
                   variant="contained"
-                  disabled={this.state.disabledButtons}
-                  style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
+                  disabled={disabledButtons}
+                  style={{ opacity: disabledButtons ? 0.5 : 1 }}
                   onClick={() => {
                     this.stand();
                     const currentActive = document.querySelector('.active');
@@ -1201,103 +1318,7 @@ class Blackjack extends Component {
                 BET
               </Button>
             </div>
-            <SettingsOutlinedIcon
-              id="btn-rps-settings"
-              onClick={() =>
-                this.setState({
-                  settings_panel_opened: !this.state.settings_panel_opened
-                })
-              }
-            />
-            <div
-              ref={this.settingsRef}
-              className={`transaction-settings ${
-                this.state.settings_panel_opened ? 'active' : ''
-              }`}
-            >
-              <h5>AI Play Settings</h5>
-              <p>CHOOSE AN ALGORITHM</p>
-              <div className="tiers">
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Speed</td>
-                      <td>
-                        <div className="bar" style={{ width: '100%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '100%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '80%' }}></div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Reasoning</td>
-                      <td>
-                        <div className="bar" style={{ width: '50%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Abilities</td>
-                      <td>
-                        <div className="bar" style={{ width: '30%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div className="slippage-select-panel">
-                <Button
-                  className={this.state.slippage === 100 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 100 });
-                  }}
-                >
-                  Markov
-                </Button>
-                <Button
-                  className="disabled"
-                  // className={this.state.slippage === 200 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 200 });
-                  }}
-                  disabled={this.state.isDisabled}
-                >
-                  Carlo
-                </Button>
-                <Button
-                  className="disabled"
-                  // className={this.state.slippage === 500 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 500 });
-                  }}
-                  disabled={this.state.isDisabled}
-                >
-                  Q Bot
-                </Button>
-                {/* <button
-                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 'unlimited' });
-                  }}
-                >
-                  V4
-                </button> */}
-              </div>
-            </div>
+            
             <Button
               id="aiplay"
               className="disabled"
@@ -1307,15 +1328,15 @@ class Blackjack extends Component {
               onTouchStart={this.handleButtonClick}
               onTouchEnd={this.handleButtonRelease}
             >
-              {this.state.betting ? (
+              {betting ? (
                 <div id="stop">
                   <span>Stop</span>
                   <Lottie options={defaultOptions} width={22} />
                 </div>
               ) : (
                 <div>
-                  {this.state.timerValue !== 2000 ? (
-                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
+                  {timerValue !== 2000 ? (
+                    <span>{(timerValue / 2000).toFixed(2)}s</span>
                   ) : (
                     <span>AI Play (Coming Soon)</span>
                   )}
@@ -1326,7 +1347,7 @@ class Blackjack extends Component {
           <BetArray arrayName="bj_array" label="bj" />
 
           <div className="action-panel">
-            <Share roomInfo={this.props.roomInfo} />
+            <Share roomInfo={roomInfo} />
           </div>
         </div>
       </div>
@@ -1343,6 +1364,7 @@ const mapStateToProps = state => ({
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
+  rank: state.logic.curRoomInfo.rank,
   betResults: state.logic.betResults,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled

@@ -250,9 +250,11 @@ export const renderLottieAvatarAnimation = (image, isLowGraphics) => {
       isPaused: isLowGraphics
     };
 
+    const conditionalStyles = className.includes('lottie-bg') && isLowGraphics ? { filter: 'grayscale(100%)', opacity: 0.5} : {};
+
     return (
       <div className={className}>
-        <Lottie style={styles} options={options} />
+        <Lottie style={{ ...styles, ...conditionalStyles }} options={options} />
       </div>
     );
   };

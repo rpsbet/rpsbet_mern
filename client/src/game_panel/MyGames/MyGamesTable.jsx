@@ -470,7 +470,6 @@ class MyGamesTable extends Component {
           </div>
         </div>
         <div className="create-room-btn-panel">
-          <label>15% APY ➜</label>
           <Button
             className="btn-create-room"
             onClick={this.handleCreateBtnClicked}

@@ -4,6 +4,8 @@ import {
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
+  TNX_COMPLETE,
+  TNX_INCOMPLETE,
   ROOMS_LOADED,
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
@@ -259,35 +261,37 @@ export const checkGamePassword = data => async dispatch => {
 
 export const listItem = data => async (dispatch) => {
   try {
-    dispatch({ type: START_LOADING});
+    dispatch({ type: TNX_INCOMPLETE });
+
     const res = await axios.post('/item/list-for-sale', data );
     if (res.data.success) {
       return res.data;
     }
   } catch (err) {
   } finally {
-    dispatch({ type: END_LOADING });
+    dispatch({ type: TNX_COMPLETE });
   }
   return false;
 };
 
 export const deListItem = data => async (dispatch) => {
   try {
-    dispatch({ type: START_LOADING});
+    dispatch({ type: TNX_INCOMPLETE });
+
     const res = await axios.post('/item/delist-from-sale', data );
     if (res.data.success) {
       return res.data;
     }
   } catch (err) {
   } finally {
-    dispatch({ type: END_LOADING });
+    dispatch({ type: TNX_COMPLETE });
   }
   return false;
 };
 
 export const confirmTrade = data => async dispatch => {
   try {
-    dispatch({ type: START_LOADING }); 
+    dispatch({ type: TNX_INCOMPLETE });
     const res = await axios.post('/item/trade/', data);
     if (res.data.success) {
 
@@ -295,7 +299,7 @@ export const confirmTrade = data => async dispatch => {
     }
   } catch (err) {
   } finally {
-    dispatch({ type: END_LOADING });
+    dispatch({ type: TNX_COMPLETE });
   }
   return false;
 };
@@ -334,7 +338,7 @@ export const equipItem = data => async dispatch => {
 };
 
 export const getRoomList = search_condition => async dispatch => {
-  // dispatch({ type: START_LOADING });
+  dispatch({ type: START_LOADING });
   try {
     const res = await axios.get('/game/rooms', { params: search_condition });
     if (res.data.success) {
@@ -342,7 +346,7 @@ export const getRoomList = search_condition => async dispatch => {
     }
   } catch (err) {
   } finally {
-    // dispatch({ type: END_LOADING });
+    dispatch({ type: END_LOADING });
   }
 };
 

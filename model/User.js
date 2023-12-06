@@ -19,6 +19,10 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
+  ai_mode: {
+    type: String,
+    default: 'Markov'
+  },
   referralCode: {
     type: String,
     required: true,

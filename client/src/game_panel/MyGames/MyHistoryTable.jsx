@@ -11,7 +11,6 @@ import InlineSVG from 'react-inlinesvg';
 import Moment from 'moment';
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
-import Pagination from '../../components/Pagination';
 import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
 import rain from '../LottieAnimations/rain.json';
@@ -366,7 +365,7 @@ class MyHistoryTable extends Component {
             // avatar={this.props.user.avatar}
           />
         )}
-        {this.state.myHistory?.length > 0 && (
+        {/* {this.state.myHistory?.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
             handlePrevPageClicked={this.handlePrevPageClicked}
@@ -375,7 +374,7 @@ class MyHistoryTable extends Component {
             totalPage={this.props.totalPage}
             prefix="MyHistory"
           />
-        )}
+        )} */}
       </div>
     );
   }

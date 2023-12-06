@@ -13,7 +13,7 @@ import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import Avatar from '../../components/Avatar';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-import Pagination from '../../components/Pagination';
+// import Pagination from '.. /../components/Pagination';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
@@ -40,7 +40,7 @@ class OpenGamesTable extends Component {
     super(props);
     this.state = {
       selectedGameType: '',
-      isLoading: false,
+      isLoading: this.props.isLoading,
       showPlayerModal: false,
       selectedCreator: '',
       mouseDown: false,
@@ -133,24 +133,50 @@ class OpenGamesTable extends Component {
 
   componentDidMount() {
     const { roomList } = this.props;
-
     this.setState({ roomList });
     const roomIds = roomList.map(room => room._id);
     this.getRoomData(roomIds);
-    window.addEventListener('load', () => {
-      this.setState({ loaded: true, selectedGameType: 'All' });
-    });
+    window.addEventListener('load', this.handleLoad);
+    window.addEventListener('scroll', this.handleScroll);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('load', this.handleLoad);
+
   }
 
   componentDidUpdate(prevProps, prevState) {
+    const { roomList } = this.props;
+    const roomIds = roomList.map(room => room._id);
     if (prevProps.roomList !== this.props.roomList) {
-      const { roomList } = this.props;
       this.setState({ roomList, isLoading: false });
-      const roomIds = roomList.map(room => room._id);
-
       this.getRoomData(roomIds);
     }
+    if (prevState.selectedGameType !== this.state.selectedGameType) {
+      this.setState({ isLoading: true });
+
+    }
   }
+
+  handleLoad = () => {
+    this.setState({ loaded: true, selectedGameType: 'All' });
+  };
+
+   handleScroll = async () => {
+    const tableElement = document.querySelector('.table.main-game-table');
+    if (tableElement) {
+      const { bottom } = tableElement.getBoundingClientRect();
+      const isTableAtBottom = bottom <= window.innerHeight;
+
+      if (isTableAtBottom && this.state.roomList.length !== this.props.roomCount) {
+        await this.props.getRoomList({
+          pageSize: this.state.roomList.length + 6,
+          game_type: this.state.selectedGameType
+        });
+      }
+    }
+  };
 
   getRoomData = async roomIds => {
     try {
@@ -307,16 +333,13 @@ class OpenGamesTable extends Component {
     });
     history.push('/join/' + room_id);
   };
+
   handleGameTypeButtonClicked = async short_name => {
-    this.setState({ selectedGameType: short_name, isLoading: true });
-    try {
-      await this.props.getRoomList({
+    this.setState({ selectedGameType: short_name });
+    await this.props.getRoomList({
         game_type: short_name
       });
-    } catch (error) {
-      this.setState({ isLoading: false });
-    }
-    return;
+   
   };
 
   handleBtnLeftClicked = e => {
@@ -329,34 +352,7 @@ class OpenGamesTable extends Component {
     this.game_type_panel.scrollLeft += scrollAmount;
   };
 
-  handlePageNumberClicked = page => {
-    this.setState({ isLoading: true });
-
-    this.props.getRoomList({
-      page: page,
-      game_type: this.state.selectedGameType
-    });
-  };
-
-  handlePrevPageClicked = () => {
-    this.setState({ isLoading: true });
-
-    if (this.props.pageNumber === 1) return;
-    this.props.getRoomList({
-      page: this.props.pageNumber - 1,
-      game_type: this.state.selectedGameType
-    });
-  };
-
-  handleNextPageClicked = () => {
-    this.setState({ isLoading: true });
-
-    if (this.props.pageNumber === this.props.totalPage) return;
-    this.props.getRoomList({
-      page: this.props.pageNumber + 1,
-      game_type: this.state.selectedGameType
-    });
-  };
+ 
 
   renderArrow = value => {
     return value >= 0 ? (
@@ -378,25 +374,33 @@ class OpenGamesTable extends Component {
       showPlayerModal,
       selectedCreator
     } = this.state;
-    const {isLowGraphics} = this.props;
+    const { isLowGraphics, loading } = this.props;
     const roomStatistics = this.state.actionList || {
       hostNetProfits: [],
       hostBetsValue: []
     };
     // console.log(roomStatistics)
     return (
-      <div className="overflowX">
-        <div className="game-type-container">
-          <div
-            className="game-type-panel"
-            ref={elem => {
-              this.game_type_panel = elem;
-            }}
-          >
-            {gameTypePanel}
+      <>
+        <div className="overflowX">
+          <div className="game-type-container">
+            <div
+              className="game-type-panel"
+              ref={elem => {
+                this.game_type_panel = elem;
+              }}
+            >
+              {gameTypePanel}
+            </div>
           </div>
-        </div>
-        {isLoading ? (
+          {/* <div className="table-header">
+            <div className="table-cell room-id">Room ID</div>
+            <div className="table-cell bet-info">host / PLAYER</div>
+            <div className="table-cell payout">Net profit </div>
+            <div className="table-cell action desktop-only">Bet/Bankroll</div>
+          </div>*/}
+        </div> 
+        {isLoading && loading ? (
           <div className="loading-gif-container">
             <img src={randomGifUrl} id="isLoading" alt="loading" />
           </div>
@@ -415,17 +419,7 @@ class OpenGamesTable extends Component {
                 // {...this.state.selectedRow}
               />
             )}
-            {this.props.roomList.length > 0 && (
-              <div className="table-header">
-                <div className="table-cell room-id">Room ID</div>
-                <div className="table-cell bet-info">host / PLAYER</div>
-                <div className="table-cell payout">Net profit </div>
-                {/* <div className="table-cell winnings">WINNINGS</div> */}
-                <div className="table-cell action desktop-only">
-                  Bet/Bankroll
-                </div>
-              </div>
-            )}
+
             {this.state.roomList.map(
               (row, key) => (
                 <div
@@ -434,7 +428,10 @@ class OpenGamesTable extends Component {
                   key={row._id}
                 >
                   {' '}
-                  {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)}
+                  {renderLottieAvatarAnimation(
+                    row.gameBackground,
+                    isLowGraphics
+                  )}
                   <div>
                     <div className="table-cell cell-room-info">
                       <img
@@ -464,7 +461,6 @@ class OpenGamesTable extends Component {
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
-                        {/* <span>{row.creator}</span> */}
                       </a>
                       <i
                         className={`online-status${
@@ -614,15 +610,15 @@ class OpenGamesTable extends Component {
                         </>
                       ) : (
                         <Lottie
-                        options={{
-                          loop: true,
-                          autoplay: true,
-                          animationData: loadingChart
-                        }}
-                        style={{
-                          width: '32px',
-                        }}
-                      />                      
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
                       )}
                     </div>
 
@@ -666,20 +662,6 @@ class OpenGamesTable extends Component {
                           {row.likes?.length || 0}
                         </Typography>
                       </div>
-                      {/* <div>
-                        <IconButton onClick={() => this.handleDislike(row)}>
-                          {row.dislikes?.includes(this.props.user._id) ? (
-                            <ThumbDown
-                              style={{ fontSize: '1rem', color: 'red' }}
-                            />
-                          ) : (
-                            <ThumbDownOutlined style={{ fontSize: '1rem' }} />
-                          )}
-                        </IconButton>
-                        <Typography variant="body1">
-                          {row.dislikes?.length || 0}
-                        </Typography>
-                      </div> */}
                     </div>
                     <div
                       className="table-cell cell-action"
@@ -791,7 +773,7 @@ class OpenGamesTable extends Component {
                       ) : null}
                     </div>
                     <div className="table-cell mobile-only cell-likes">
-                    <div id="view">
+                      <div id="view">
                         <Visibility style={{ fontSize: '1rem' }} />
                         <Typography variant="body1">
                           {row.views?.length || 0}
@@ -838,18 +820,11 @@ class OpenGamesTable extends Component {
             )}
           </div>
         )}
-        {!this.state.isLoading && this.props.roomList.length > 0 && (
-          <Pagination
-            handlePageNumberClicked={this.handlePageNumberClicked}
-            handlePrevPageClicked={this.handlePrevPageClicked}
-            handleNextPageClicked={this.handleNextPageClicked}
-            pageNumber={this.props.pageNumber}
-            totalPage={this.props.totalPage}
-            prefix="LiveGames"
-          />
+        {!isLoading && (this.props.roomList.length !== this.props.roomCount) && (
+        <div className='loading-spinner'></div>
         )}
-      </div>
-    );
+      </>
+    )
   }
 }
 
@@ -859,8 +834,8 @@ const mapStateToProps = state => ({
   isAuthenticated: state.auth.isAuthenticated,
   userName: state.auth.userName,
   user: state.auth.user,
-  isLowGraphics: state.auth.isLowGraphics
-
+  isLowGraphics: state.auth.isLowGraphics,
+  loading: state.logic.isActiveLoadingOverlay
 });
 
 const mapDispatchToProps = {

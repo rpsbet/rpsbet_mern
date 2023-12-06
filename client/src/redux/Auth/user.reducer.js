@@ -34,7 +34,7 @@ const initialState = {
   isDarkMode: localStorage.getItem('darkMode') === 'false' ? false : true,
   isAdmin: false,
   isMusicEnabled:
-    localStorage.getItem('isMusicEnabled') === 'true' ? true : false,
+    localStorage.getItem('isMusicEnabled') === 'false' ? false : true,
   isLowGraphics:
     localStorage.getItem('isLowGraphics') === 'false' ? false : true,
   isMuted: localStorage.getItem('isMuted') === 'false' ? false : true,

@@ -4,6 +4,8 @@ import {
   USER_LOADED,
   AUTH_ERROR,
   LOGIN_SUCCESS,
+  TNX_COMPLETE,
+  TNX_INCOMPLETE,
   LOGIN_FAIL,
   LOGOUT,
   MSG_ERROR,
@@ -33,22 +35,23 @@ import {
 import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
 import history from '../history';
-
 // Load User
-export const getUser = (is_reload, viewAll, loadMore, showWithdrawals, showDeposits, sortBy, search) => async dispatch => {
-  if (localStorage.token) {
-    localStorage.removeItem('isAdminAuthenticated');
-    setAuthToken(localStorage.token);
-  }
+export const getUser = (is_reload, viewAll, loadMore, filterType, sortType, search) => async dispatch => {
   try {
-    const res = await axios.get(`/auth/user?viewAll=${viewAll}&loadMore=${loadMore}&showWithdrawals=${showWithdrawals}&showDeposits=${showDeposits}&sortBy=${sortBy}&search=${search}`);
-    
+    if (localStorage.token) {
+      localStorage.removeItem('isAdminAuthenticated');
+      setAuthToken(localStorage.token);
+    }
+
+    dispatch({ type: TNX_COMPLETE });
+    const res = await axios.get(`/auth/user?viewAll=${viewAll}&loadMore=${loadMore}&filterType=${filterType}&sortBy=${sortType}&search=${search}`);
+
     if (res.data.success) {
-      // console.log("poke", res.data.user)
-      dispatch({ type: USER_LOADED, payload: res.data.user });
-      dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: res.data.unread_message_count });
-      dispatch({ type: TRANSACTION_LOADED, payload: res.data.transactions });
-      const { sevenDayProfit, oneDayProfit, allTimeProfit } = res.data; // Extract profit values from the response
+      const { user, unread_message_count, transactions, sevenDayProfit, oneDayProfit, allTimeProfit, message } = res.data;
+
+      dispatch({ type: USER_LOADED, payload: user });
+      dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: unread_message_count });
+      dispatch({ type: TRANSACTION_LOADED, payload: transactions });
 
       if (sevenDayProfit !== undefined) {
         dispatch({ type: SET_SEVEN_DAY_PROFIT, payload: sevenDayProfit });
@@ -62,23 +65,26 @@ export const getUser = (is_reload, viewAll, loadMore, showWithdrawals, showDepos
         dispatch({ type: SET_ALL_TIME_PROFIT, payload: allTimeProfit });
       }
 
-      if (!is_reload && res.data.message) {
-        dispatch({ type: MSG_INFO, payload: res.data.message });
+      if (!is_reload && message) {
+        dispatch({ type: MSG_INFO, payload: message });
       }
+
+      dispatch({ type: TNX_INCOMPLETE });
+
       return {
         status: 'success',
-        user: res.data.user
+        user
       };
     } else {
       dispatch({ type: AUTH_ERROR });
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     dispatch({ type: MSG_WARNING, payload: err });
+    return {
+      status: 'failed'
+    };
   }
-  return {
-    status: 'failed'
-  };
 };
 
 

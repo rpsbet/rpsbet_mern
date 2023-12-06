@@ -9,7 +9,7 @@ import {
   faGem,
   faSort,
   faFilter
-} from '@fortawesome/free-solid-svg-icons'; // Import the desired icons
+} from '@fortawesome/free-solid-svg-icons';
 import {
   acQueryItem,
   setCurrentProductId,
@@ -20,8 +20,6 @@ import history from '../../../../redux/history';
 import {
   LinearProgress,
   Button,
-  Menu,
-  MenuItem,
   IconButton,
   Table,
   TableBody,
@@ -29,7 +27,8 @@ import {
   TableContainer,
   TableRow,
   Tooltip,
-  Select
+  Menu,
+  MenuItem
 } from '@material-ui/core';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import Pagination from 'material-ui-flat-pagination';
@@ -168,17 +167,17 @@ const LinearContainer = styled.div`
 `;
 
 const CommissionPower = styled.span`
-position: absolute;
-top: 20px;
-right: 20px;
-width: 30px;
-height: 30px;
-background: #28a745;
-border-radius: 10px;
-box-shadow: inset 0px -1px 11px #005b15;
-color: #fff;
-font-weight: 500;
-text-align: center;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  background: #28a745;
+  border-radius: 10px;
+  box-shadow: inset 0px -1px 11px #005b15;
+  color: #fff;
+  font-weight: 500;
+  text-align: center;
 `;
 
 const PaginationContainer = styled.div`
@@ -204,14 +203,19 @@ class ProductTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (
-      this.state.itemType !== prevState.itemType ||
-      (this.props.showConfirmTradeModal === false &&
-        prevProps.showConfirmTradeModal !== false)
-    ) {
-      // The itemType or showConfirmTradeModal prop has changed to false, re-fetch data
+    const prevOwners = prevProps.data ? prevProps.data.owners : [];
+    const currentOwners = this.props.data ? this.props.data.owners : [];
+
+    // Check if there's any change in the owners sub-array
+    if (!this.areOwnersEqual(prevOwners, currentOwners)) {
+      // Fetch items when there's a change in the owners sub-array
       this.fetchItems();
     }
+  }
+
+  areOwnersEqual(prevOwners, currentOwners) {
+    // Compare the owners array by stringifying them and checking for equality
+    return JSON.stringify(prevOwners) === JSON.stringify(currentOwners);
   }
 
   handleFilterChange = event => {
@@ -219,10 +223,10 @@ class ProductTable extends Component {
     this.fetchItems();
   };
 
-  // handleSortChange = event => {
-  //   this.setState({ sortCriteria: event.target.value });
-  //   this.fetchItems();
-  // }
+  handleSortChange = event => {
+    this.setState({ sortCriteria: event.target.value, sortAnchorEl: null  });
+    this.fetchItems();
+  }
 
   fetchItems() {
     const { acQueryItem, page } = this.props;
@@ -234,8 +238,8 @@ class ProductTable extends Component {
     this.setState({ anchorEl: event.currentTarget });
   };
 
-  handleFilterClose = filter => {
-    this.setState({ anchorEl: null, itemType: filter });
+  handleFilterClose = itemType => {
+    this.setState({ anchorEl: null, itemType });
   };
 
   handleSortClick = event => {
@@ -275,7 +279,7 @@ class ProductTable extends Component {
                     ...prevState.customerInfo,
                     [owner.user]: {
                       username: 'Anon',
-                      avatar: 'default-avatar-url',
+                      avatar: 'default-avatar-url'
                     }
                   }
                 }));
@@ -379,22 +383,24 @@ class ProductTable extends Component {
             </Menu>
           </div>
           <div className="filters">
-            {/* <Button onClick={this.handleSortClick} variant="contained">
+            <Button onClick={this.handleSortClick}>
               Sort By&nbsp;
               <FontAwesomeIcon icon={faSort} />
-            </Button> */}
+            </Button>
             <Menu
-              sortAnchorEl={sortAnchorEl}
+              anchorEl={sortAnchorEl}
               open={Boolean(sortAnchorEl)}
               onClose={() => this.handleSortClose(null)}
             >
-              <Select
-                value={this.state.sortType}
-                onChange={this.handleSortChange}
-              >
-                <MenuItem value="updated_at">Sort by Date</MenuItem>
-                <MenuItem value="price">Sort by Price</MenuItem>
-              </Select>
+              <MenuItem onClick={() =>
+                  this.handleSortClose('updated_at')
+                }
+                selected={sortCriteria === 'updated_at'}>Sort by Date</MenuItem>
+              <MenuItem onClick={() =>
+                  this.handleSortClose('price')
+                }
+                selected={sortCriteria === 'price'}>
+Sort by Price</MenuItem>
             </Menu>
           </div>
         </FilterSortContainer>
@@ -447,7 +453,8 @@ class ProductTable extends Component {
                     )}
                   </ProductCreator>
                 ))}
-                {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                {row.image &&
+                renderLottieAnimation(row.image, isLowGraphics) ? (
                   renderLottieAnimation(row.image, isLowGraphics)
                 ) : (
                   <ProductImage src={row.image} alt={row.productName} />
@@ -495,7 +502,10 @@ class ProductTable extends Component {
                         if (row.owners[0].user !== this.props.user) {
                           openConfirmTradeModal();
                         } else {
-                          alertModal(this.props.isDarkMode, "This is already yours dumbass!")
+                          alertModal(
+                            this.props.isDarkMode,
+                            'This is already yours dumbass!'
+                          );
                         }
                       }}
                     >

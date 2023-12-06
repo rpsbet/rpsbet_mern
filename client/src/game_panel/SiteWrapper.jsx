@@ -87,7 +87,7 @@ import {
   userSignOut,
   getUser,
   setUnreadMessageCount,
-  setDarkMode,
+  setDarkMode
 } from '../redux/Auth/user.actions';
 import {
   setRoomList,
@@ -205,24 +205,22 @@ class SiteWrapper extends Component {
       loadMore: 20,
       showAllGameLogs: false,
       transactions: updateFromNow(this.props.transactions),
-      anchorEl: null,
       websiteLoading: true,
-      sortBy: 'date',
-      showFilter: false,
-      showSort: false,
+      anchorEl: null,
+      sortAnchorEl: null,
+      filterAnchorEl: null,
+      sortType: 'date',
+      filterType: '',
       showSearch: false,
       searchQuery: '',
-      showWithdrawals: false,
       showSettingsModal: false,
       showDeposits: false,
       web3: null,
       web3account: '',
-      web3balance: 0,
-      
+      web3balance: 0
     };
     this.state.notifications = this.props.notification || {};
     this.initSocket = this.initSocket.bind(this);
-
   }
   static getDerivedStateFromProps(props, currentState) {
     const { balance, betResult, userName, notifications } = props;
@@ -245,54 +243,6 @@ class SiteWrapper extends Component {
 
     return null;
   }
-
-  toggleSort = () => {
-    this.setState(prevState => ({
-      showSort: !prevState.showSort
-    }));
-  };
-
-  toggleSearch = () => {
-    this.setState(prevState => ({
-      showSearch: !prevState.showSearch
-    }));
-  };
-
-  toggleFilter = () => {
-    this.setState(prevState => ({
-      showFilter: !prevState.showFilter
-    }));
-  };
-
-  handleSortBy = option => {
-    this.setState({ sortBy: option }, () => {
-      this.props.getUser(
-        false,
-        true,
-        this.state.loadMore,
-        this.state.showWithdrawals,
-        this.state.showDeposits,
-        option,
-        this.state.searchQuery
-      );
-    });
-  };
-
-  handleSearch = event => {
-    const searchQuery = event.target.value;
-    this.setState({ searchQuery }, () => {
-      // Call the function to fetch data with the updated search query
-      this.props.getUser(
-        false,
-        true,
-        this.state.loadMore,
-        this.state.showWithdrawals,
-        this.state.showDeposits,
-        this.state.sortBy,
-        searchQuery
-      );
-    });
-  };
 
   handleMainTabChange = (event, newValue) => {
     const { selectMainTab } = this.props;
@@ -393,9 +343,8 @@ class SiteWrapper extends Component {
         true,
         false,
         0,
-        false,
-        false,
-        this.state.sortBy,
+        this.state.filterType,
+        this.state.sortType,
         this.state.searchQuery
       );
       await this.props.getMyGames(1);
@@ -535,7 +484,7 @@ class SiteWrapper extends Component {
 
     this.props.setSocket(socket);
   }
-  
+
   loadWeb3 = async () => {
     try {
       const web3 = new Web3(Web3.givenProvider);
@@ -566,9 +515,8 @@ class SiteWrapper extends Component {
       true,
       false,
       0,
-      false,
-      false,
-      this.state.sortBy,
+      this.state.filterType,
+      this.state.sortType,
       this.state.searchQuery
     );
 
@@ -580,7 +528,7 @@ class SiteWrapper extends Component {
     //   0,
     //   false,
     //   false,
-    //   this.state.sortBy,
+    //   this.state.sortType,
     //   this.state.searchQuery
     // );
 
@@ -808,23 +756,76 @@ class SiteWrapper extends Component {
     this.setState({ showNotifications: !this.state.showNotifications });
   };
 
-  handleLoadMore = () => {
-    const {
-      loadMore,
-      showWithdrawals,
-      showDeposits,
-      sortBy,
-      searchQuery
-    } = this.state;
+  handleSearchClose = event => {
+    this.setState({ searchAnchorEl: null });
+  };
+  
+  onSearchQueryChange = event => {
+    const searchQuery = event;
+    this.setState({ searchQuery }, () => {
+      // Call the function to fetch data with the updated search query
+      this.props.getUser(
+        false,
+        true,
+        this.state.loadMore,
+        this.state.filterType,
+        this.state.sortType,
+        searchQuery
+      );
+    });
+  };
+
+  handleSearchClick = event => {
+    this.setState({ searchAnchorEl: event.currentTarget });
+  };
+
+  handleFilterClick = event => {
+    this.setState({ filterAnchorEl: event.currentTarget });
+  };
+
+  handleFilterClose = event => {
+    this.setState(
+      { filterType: event, filterAnchorEl: null },
+      () => {
+        this.props.getUser(
+          false,
+          true,
+          this.state.loadMore,
+          event,
+          this.state.sortType,
+          this.state.searchQuery
+        );
+      }
+    );
+  };
+
+  handleSortClick = event => {
+    this.setState({ sortAnchorEl: event.currentTarget });
+  };
+
+  handleSortClose = event => {
+    this.setState({ sortType: event, sortAnchorEl: null }, () => {
+      this.props.getUser(
+        false,
+        true,
+        this.state.loadMore,
+        this.state.filterType,
+        event,
+        this.state.searchQuery
+      );
+    });
+  };
+
+  handleLoadMore = async () => {
+    const { loadMore, filterType, sortType, searchQuery } = this.state;
     const nextLoadMore = loadMore >= 0 ? loadMore + 10 : 10;
 
-    this.props.getUser(
+    await this.props.getUser(
       false,
       true,
       nextLoadMore,
-      showWithdrawals,
-      showDeposits,
-      sortBy,
+      filterType,
+      sortType,
       searchQuery
     );
 
@@ -839,9 +840,8 @@ class SiteWrapper extends Component {
       param1,
       param2,
       0,
-      this.state.showWithdrawals,
-      this.state.showDeposits,
-      this.state.sortBy,
+      this.state.filterType,
+      this.state.sortType,
       this.state.searchQuery
     );
 
@@ -863,12 +863,15 @@ class SiteWrapper extends Component {
   render() {
     const {
       series,
-      anchorEl,
+      sortAnchorEl,
+      filterAnchorEl,
+      searchAnchorEl,
       hoverTabIndex,
       websiteLoading,
       balance,
       searchQuery,
-      sortBy,
+      sortType,
+      filterType,
       web3,
       oldBalance,
       web3account,
@@ -877,31 +880,25 @@ class SiteWrapper extends Component {
       userName,
       showInventoryModal,
       showNotifications,
-      showSearch,
       showProfileModal,
       showPlayerModal,
-      toggleShowWithdrawals,
-      toggleShowDeposits,
       selectedCreator,
-      showSort,
       showWithdrawModal,
       showResetPasswordModal,
       showDepositModal,
-      showFilter,
       showAllGameLogs,
       showLeaderboardsModal,
       showHowToPlayModal,
       showVerificationModal,
       showMarketplaceModal,
       showLoginModal,
-      showWithdrawals,
       showSignupModal,
-      handleLoadMore,
-      showDeposits,
-      showSettingsModal
+      anchorEl,
+      showSettingsModal,
     } = this.state;
     const {
       isMuted,
+      tnxComplete,
       isDarkMode,
       notifications,
       selectedMainTabIndex,
@@ -1273,7 +1270,7 @@ class SiteWrapper extends Component {
                         </ListItemIcon>
                         <ListItemText>SETTINGS</ListItemText>
                       </MenuItem>
-                     
+
                       <MenuItem onClick={this.handleOpenHowToPlayModal}>
                         <ListItemIcon>
                           <Help />
@@ -1321,30 +1318,28 @@ class SiteWrapper extends Component {
                     {notificationsArray.length > 0 ? (
                       notificationsArray.map((notification, index) => (
                         <div className="notification-container" key={index}>
-                            <a
-                              className="player"
-                              onClick={() =>
-                                this.handleOpenPlayerModal(notification._id)
-                              }
-                              style={{ display: 'flex', flexDirection: 'row' }}
-                            >
-                              <Avatar
-                                src={notification.avatar}
-                                rank={notification.rank}
-                                accessory={notification.accessory}
-                                className="avatar"
-                              />
-                            </a>
-                            <div  className="notification">
-
-                          <p
-                            dangerouslySetInnerHTML={{
-                              __html: notification.message
-                            }}
+                          <a
+                            className="player"
+                            onClick={() =>
+                              this.handleOpenPlayerModal(notification._id)
+                            }
+                            style={{ display: 'flex', flexDirection: 'row' }}
+                          >
+                            <Avatar
+                              src={notification.avatar}
+                              rank={notification.rank}
+                              accessory={notification.accessory}
+                              className="avatar"
+                            />
+                          </a>
+                          <div className="notification">
+                            <p
+                              dangerouslySetInnerHTML={{
+                                __html: notification.message
+                              }}
                             />
                             <p className="fromNow">{notification.from_now}</p>
-                            </div>
-                          
+                          </div>
                         </div>
                       ))
                     ) : (
@@ -1358,21 +1353,22 @@ class SiteWrapper extends Component {
               <AllTransactionsModal
                 modalIsOpen={showAllGameLogs}
                 isDarkMode={isDarkMode}
-                toggleSort={this.toggleSort}
-                toggleFilter={this.toggleFilter}
-                handleSortBy={this.handleSortBy}
-                showFilter={showFilter}
                 close={this.toggleAllTransactions}
-                showSearch={showSearch}
-                sortBy={sortBy}
-                showSort={showSort}
-                showDeposits={showDeposits}
-                showWithdrawals={showWithdrawals}
-                toggleShowWithdrawals={this.toggleShowWithdrawals}
-                toggleShowDeposits={this.toggleShowDeposits}
+                sortType={sortType}
+                sortAnchorEl={sortAnchorEl}
+                searchAnchorEl={searchAnchorEl}
+                filterAnchorEl={filterAnchorEl}
+                filterType={filterType}
                 transactions={transactions}
-                toggleSearch={this.toggleSearch}
+                tnxComplete={tnxComplete}
+                handleSortClick={this.handleSortClick}
+                handleFilterClick={this.handleFilterClick}
+                handleFilterClose={this.handleFilterClose}
+                handleSortClose={this.handleSortClose}
+                handleSearchClose={this.handleSearchClose}
                 searchQuery={searchQuery}
+                onSearchQueryChange={this.onSearchQueryChange}
+                handleSearchClick={this.handleSearchClick}
                 handleLoadMore={this.handleLoadMore}
                 oneDayProfit={oneDayProfit}
                 sevenDayProfit={sevenDayProfit}
@@ -1525,23 +1521,24 @@ class SiteWrapper extends Component {
               avatar={user.avatar}
               email={user.email}
               totalWagered={user.totalWagered}
+              selectedCreator={user._id}
             />
           )}
           {showPlayerModal && (
-          <PlayerModal
-            selectedCreator={selectedCreator}
-            modalIsOpen={showPlayerModal}
-            closeModal={this.handleClosePlayerModal}
-          />
-        )}
-         {showSettingsModal && (
-          <SettingsModal
-            modalIsOpen={showSettingsModal}
-            closeModal={this.handleCloseSettingsModal}
-            handleMute={this.handleMute}
-            handleUnmute={this.handleUnmute}
-          />
-        )}
+            <PlayerModal
+              selectedCreator={selectedCreator}
+              modalIsOpen={showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
+            />
+          )}
+          {showSettingsModal && (
+            <SettingsModal
+              modalIsOpen={showSettingsModal}
+              closeModal={this.handleCloseSettingsModal}
+              handleMute={this.handleMute}
+              handleUnmute={this.handleUnmute}
+            />
+          )}
           {showLeaderboardsModal && (
             <LeaderboardsModal
               modalIsOpen={showLeaderboardsModal}
@@ -1648,6 +1645,7 @@ const mapStateToProps = state => ({
   unreadMessageCount: state.auth.unreadMessageCount,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   transactions: state.auth.transactions,
+  tnxComplete: state.logic.transactionComplete,
   isDarkMode: state.auth.isDarkMode,
   betResult: state.logic.betResult,
   sevenDayProfit: state.auth.sevenDayProfit,

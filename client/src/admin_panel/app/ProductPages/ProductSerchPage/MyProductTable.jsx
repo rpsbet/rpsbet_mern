@@ -244,7 +244,7 @@ class MyProductTable extends Component {
 
   async componentDidMount() {
     await this.fetchAccessory( this.state._id);
-
+    await this.fetchItems();
   }
 
   async fetchAccessory(_id) {
@@ -261,8 +261,7 @@ class MyProductTable extends Component {
   componentDidUpdate(prevProps, prevState) {
     if (
       this.state.itemType !== prevState.itemType ||
-      (this.props.showListItemModal === false &&
-        prevProps.showListItemModal !== false)
+      this.props.tnxComplete !== prevProps.tnxComplete
     ) {
       // The itemType or showConfirmTradeModal prop has changed to false, re-fetch data
       this.fetchItems();
@@ -630,6 +629,7 @@ const mapStateToProps = state => ({
   loading: state.itemReducer.loading,
   total: state.itemReducer.totalResults,
   accessory: state.itemReducer.accessory,
+  tnxComplete: state.logic.transactionComplete,
   showListItemModal: state.snackbar.showListItemModal,
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,

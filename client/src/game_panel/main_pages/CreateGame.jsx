@@ -11,6 +11,7 @@ import MyHistoryTable from '../MyGames/MyHistoryTable';
 import HistoryTable from '../LiveGames/HistoryTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import DrawerButton from './DrawerButton';
+import AiPanel from '../../components/AiPanel';
 
 import RPS from '../CreateGame/RPS';
 import Spleesh from '../CreateGame/Spleesh';
@@ -179,7 +180,11 @@ class CreateGame extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.game_mode !== this.state.game_mode) {
+    if (prevState.step !== this.state.step) {
+      console.log('step', this.state.step);
+    }
+    if (prevState.child_step !== this.state.child_step) {
+      console.log('child', this.state.child_step);
     }
   }
 
@@ -491,24 +496,33 @@ class CreateGame extends Component {
         return;
       }
 
+      let list;
+      if (game_mode === 'Quick Shoot') {
+        list = this.state.qs_list;
+      } else if (game_mode === 'Bang!') {
+        list = this.state.bang_list;
+      } else if (game_mode === 'Blackjack') {
+        list = this.state.bj_list;
+      } else if (game_mode === 'Drop Game') {
+        list = this.state.drop_list;
+      } else {
+        list = this.state[`${game_mode.toLowerCase()}_list`];
+      }
+
       if (
-        ((game_mode === 'Quick Shoot' ||
-          game_mode === 'Drop Game' ||
-          game_mode === 'Bang!' ||
-          game_mode === 'Roll' ||
-          game_mode === 'Blackjack') &&
+        ((['Drop Game', 'Bang!', 'Roll', 'Blackjack'].includes(game_mode) &&
           child_step === 2) ||
-        (game_mode === 'RPS' &&
-          child_step === 3 &&
-          rps_game_type === 0 &&
-          isMinimumRunsNeeded(3, this.state[`${game_mode.toLowerCase()}_list`]))
+          (((game_mode === 'RPS' && rps_game_type === 0) ||
+            game_mode === 'Quick Shoot') &&
+            child_step === 3)) &&
+        isMinimumRunsNeeded(3, list)
       ) {
         return;
       }
 
       if (
         (game_mode === 'RPS' && child_step < 3) ||
-        (game_mode === 'Quick Shoot' && child_step < 4) ||
+        (game_mode === 'Quick Shoot' && child_step < 3) ||
         (game_mode !== 'Mystery Box' && child_step === 1)
       ) {
         this.setState({
@@ -977,13 +991,23 @@ class CreateGame extends Component {
             </div>
           </div>
           <div className="sub-panel">
-            <h2 className="main-title desktop-only">HISTORY</h2>
             {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
-              <HistoryTable />
+              <>
+                <h2 className="main-title desktop-only">HISTORY</h2>
+                <HistoryTable />
+              </>
             )}
+
             {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
-              <MyHistoryTable />
+              <>
+                <h2 className="main-title desktop-only">AI PANEL</h2>
+                <AiPanel user_id={this.props.user_id} />
+                <h2 className="main-title desktop-only">MY HISTORY</h2>
+
+                <MyHistoryTable />
+              </>
             )}
+
             <DrawerButton
               open={this.props.isDrawerOpen}
               toggleDrawer={this.toggleDrawer}

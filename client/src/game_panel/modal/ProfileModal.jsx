@@ -24,16 +24,6 @@ import { convertToCurrency } from '../../util/conversion';
 
 Modal.setAppElement('#root');
 
-function generateData(gameLogList) {
-  const series = [];
-  let totalProfit = 0;
-  gameLogList &&
-    gameLogList.forEach((log, index) => {
-      totalProfit += log.profit;
-      series.push({ x: `${Number(index) + 1}`, y: totalProfit });
-    });
-  return series;
-}
 
 const customStyles = {
   overlay: {
@@ -109,7 +99,6 @@ class ProfileModal extends Component {
       gameType,
       timeType
     );
-
     this.setState({
       ...result
     });
@@ -165,7 +154,7 @@ class ProfileModal extends Component {
   };
 
   render() {
-    const { loading, gameLogList, modalIsOpen, isDarkMode } = this.props;
+    const { loading, modalIsOpen, isDarkMode } = this.props;
 
     const {
       rank,
@@ -173,6 +162,7 @@ class ProfileModal extends Component {
       avatar,
       username,
       joined_date,
+      gameLogList,
       deposit,
       withdraw,
       gameProfit,
@@ -189,7 +179,6 @@ class ProfileModal extends Component {
       averageProfit
     } = this.state;
 
-    const series = [{ name: 'Jan', data: generateData(gameLogList) }];
     return (
       <Modal
         isOpen={modalIsOpen}
@@ -307,7 +296,6 @@ class ProfileModal extends Component {
                     shrink: true
                   }}
                   className="form-control"
-                  value={this.state.password}
                   variant="outlined"
                   label="PASSWORD"
                   autoComplete="off"
@@ -342,26 +330,3 @@ const mapDispatchToProps = {
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProfileModal);
-
-const ChartDivEl = styled.div`
-  grid-area: Charts;
-  justify-self: center;
-  width: 100%;
-  border-radius: 5px;
-  background-color: #424242;
-  padding: 25px;
-  align-items: center;
-  ${Elevation[2]}
-`;
-
-const H2 = styled.h2`
-  border-bottom: 3px solid white;
-`;
-
-const Span = styled.span`
-  font-size: 14px;
-  float: right;
-  margin-top: 18px;
-`;
-
-const ChartEl = styled(ReactApexChart)``;

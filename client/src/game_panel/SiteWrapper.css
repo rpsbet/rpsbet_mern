@@ -309,23 +309,22 @@ div[role='tablist'] {
 }
 
 .game-logs-modal-container .summary {
-    padding: 5px 30px !important;
     display: flex;
-    justify-content: space-around;
     align-items: center;
 }
 
 .summary-flex {
     width: 50%;
     display: inline-flex;
+    justify-content: space-between;
     flex-direction: row;
-    justify-content: space-evenly;
 }
 
 .summary-flex div {
     text-align: center;
     display: flex;
     flex-direction: column;
+    padding: 5px 10px;
 }
 
 .summary-flex div span{
@@ -457,12 +456,8 @@ div.table .table-row .table-cell img.avatar,
 .your-multiplier {
   margin-top: 20px;
   margin-bottom: 30px;
-  width: 100%;
 }
 
-.your-multiplier div {
-  width: 100%;
-}
 .room-history-panel,
 .action-panel {
   padding: 20px;
@@ -503,9 +498,6 @@ div.table .table-row .table-cell img.avatar,
   .game-logs-modal-container .summary {
     flex-direction: column;
   }
-  .game-logs-container {
-    max-height: calc(100vh - 380px) !important;
-  }
   .game-logs-modal-container {
     background: #f9f9f9;
   }
@@ -523,7 +515,7 @@ div.table .table-row .table-cell img.avatar,
     padding: 8px 16px;
   }
   div.table .table-row,
-  div.table.main-game-table .table-header {
+.table-header {
     margin-right: unset;
   }
 

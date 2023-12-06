@@ -101,18 +101,6 @@ class StatisticsForm extends React.Component {
     this.handleTooltipToggle();
   }
 
-  // componentDidUpdate(prevProps) {
-  //   if (
-  //     prevProps.gamePlayed !== this.props.gamePlayed ||
-  //     prevProps.totalWagered !== this.props.totalWagered
-  //     // prevProps.gameProfit !== this.props.gameProfit ||
-  //     // prevProps.profitAllTimeHigh !== this.props.profitAllTimeHigh ||
-  //     // prevProps.profitAllTimeLow !== this.props.profitAllTimeLow
-  //   ) {
-  //     this.setState({ loaded: true });
-  //   }
-  // }
-
   handleTooltipToggle = () => {
     this.setState({ showButton: true });
   };
@@ -312,7 +300,6 @@ class StatisticsForm extends React.Component {
         }
       }
     ];
-    // console.log('Series Data:', series);
 
     const {
       gamePlayed,

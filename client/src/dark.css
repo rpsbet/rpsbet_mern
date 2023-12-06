@@ -6,6 +6,7 @@
 	box-shadow: none;
 }
 
+
 .dark_mode .modal-title {
 	color: #f9f9f9;
 }
@@ -86,6 +87,10 @@
     );
 }
 
+.dark_mode .main-game h2.main-title {
+	background: #060607;
+}
+
 
 /* .dark_mode .qs-image-panel img {
 	box-shadow: 0 0 20px #6100a3;
@@ -102,6 +107,11 @@
 .dark_mode div.main-page-nav-button-group {
 	border-top: 1px solid #111;
 background: #060607;
+}
+
+.dark_mode .overflowX {
+	background: #060607;
+	box-shadow: 0px 4px 4px black;
 }
 
 .dark_mode .tooltip.reply .tooltip-content {
@@ -121,12 +131,12 @@ background: #060607;
 	/* border: 3px solid #111; */
 }
 .dark_mode .chat-msg,
-.dark_mode div.table .table-row, .dark_mode div.table .table-header {
+.dark_mode div.table .table-row, .dark_mode .table-header {
 	border-top: 2px solid #4443434f;
 	border-bottom: 3px solid #000;
   }
 
-  .dark_mode div.table .table-header {
+  .dark_mode .table-header {
 	background-color: #141414;
   }
 
@@ -358,7 +368,7 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 	color: white;
 }
 
-.bow h3.game-sub-title {
+.bow span.game-sub-title {
     color: #343a40 !important;
 }
 

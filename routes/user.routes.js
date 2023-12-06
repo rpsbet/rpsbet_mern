@@ -164,6 +164,7 @@ const newUser = new User({
   totalWagered: 0,
   balance: 0,
   rewards: 0,
+  ai_mode: 'Markov',
   status: 'off',
   avatar,
   referralCode: generateReferralCode(),

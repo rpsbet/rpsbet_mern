@@ -293,14 +293,22 @@ div.table .table-cell button.btn_join img {
   margin-right: 4px;
 }
 
+.overflowX {
+  position: sticky;
+    top: 0px;
+    z-index: 2;
+    background: #f9f9f9;
+    margin-bottom: 10px;
+    box-shadow: 0px 4px 4px #e5e5e5;
+}
+
 .game-type-panel .btn-game-type {
   text-align: center;
   cursor: pointer;
   line-height: 1.71;
   opacity: 0.7;
   padding: 0;
-  margin-right: 10px !important;
-  margin-bottom: 10px !important;
+  margin-right: 10px !important;  
   white-space: nowrap;
   display: flex;
   flex: 0 0 auto;
@@ -428,25 +436,32 @@ div.table .table-cell button.btn_join img {
 }
 
 .contents_wrapper .main-game .main-panel {
-  padding: 48px 6px 8px 16px;
+  padding: 0 6px 8px 16px;
   background-color: rgba(235, 237, 239, 0.5);
   position: relative;
   height: calc(100vh - -50px);
   overflow-y: scroll;
 }
 .contents_wrapper .main-game .sub-panel {
-  padding: 24px 18px 8px;
+  padding: 10px 12px 0px;
   position: initial;
   border-left: 1px solid rgb(206 212 240);
 
   background-color: rgba(235, 237, 239, 0.5);
 }
+.main-game .sub-panel h2.main-title, .sub-panel .overflowX {
+  background: unset;
+}
 .main-game h2.main-title {
   font-size: 13px;
   font-weight: 400;
-  color: #060607;
-  padding-bottom: 12px;
+  color: #101010;
+  background: #f9f9f9;
+  padding-top: 15px;
   text-transform: uppercase;
+  padding-bottom: 5px;
+  margin: 0;
+  padding-left: 10px;
 }
 
 /*********************************/
@@ -519,7 +534,7 @@ div.table.my-chat-table .table-cell button.btn_join {
 /***********************************/
 
 div.table .table-row,
-div.table .table-header {
+.table-header {
   border-radius: 6px;
   border-top: 2px solid #f8f9fa;
   border-bottom: 2px solid #e1e1e1;
@@ -531,7 +546,7 @@ div.table .table-header {
   overflow: hidden;
 }
 div.table .table-row > div,
-div.table .table-header {
+.table-header {
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -613,7 +628,7 @@ div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
   cursor: pointer;
 }
 
-div.table .table-header {
+.table-header {
   background-color: #f9f9f9;
   position: sticky;
   margin: 0;
@@ -687,6 +702,10 @@ div.table .table-row .table-cell img.game-type-icon {
   border-radius: 0.3em;
   filter: brightness(0.5);
   /* transform: scale(1.5); */
+}
+
+.chat-line .avatar {
+  overflow: visible !important;
 }
 .avatar {
   width: 32px;
@@ -807,9 +826,11 @@ div.table.my-open-game-table::-webkit-scrollbar {
 
 .gamified-container {
   border: 2px solid #b9bbbe;
-  border-radius: 10px;
-  padding: 20px;
-  margin: 20px;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 10px 0 10px 30px;
+    display: flex;
+    justify-content: center;
 }
 
 .gamified-heading {
@@ -855,10 +876,10 @@ div.table.my-open-game-table {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
-div.table.main-game-table,
+/* div.table.main-game-table,
 div.table.my-open-game-table {
   height: calc(100vh - 264px);
-}
+} */
 
 div.table.main-game-table .table-row .table-cell.cell-room-info {
   width: 20%;
@@ -884,16 +905,16 @@ div.table.main-game-table
   .table-row
   .table-cell.cell-user-name
   i.online-status {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  margin-left: 8px;
-  background-color: #b9bbbe;
-  border-radius: 6px;
-  left: 268px;
-  border: 2px solid #f9f9f9;
-  margin-left: -19px;
-  transform: translate(-1px, 15px);
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 8px;
+    background-color: #b9bbbe;
+    border-radius: 6px;
+    left: 268px;
+    border: 1px solid #f9f9f9;
+    margin-left: -19px;
+    transform: translate(0px, 21px);
 }
 
 div.table.main-game-table
@@ -1163,17 +1184,7 @@ div.table.my-history-table .table-row .table-cell img.avatar {
   background: rgb(87 202 34 / 11%);
 }
 
-.game-logs-container {
-  max-height: calc(100vh - 270px);
-  overflow-y: scroll;
-}
 
-.game-logs-table thead {
-  position: sticky;
-  top: 0;
-  background-color: #f9f9f9;
-  color: #101010;
-}
 
 table td.amount.green {
   color: rgb(87, 202, 34) !important;
@@ -1440,6 +1451,7 @@ h6.score {
 
 .bow h3.game-sub-title {
   color: #fff !important;
+  margin-bottom: 22px !important;
 }
 
 input {
@@ -1610,7 +1622,13 @@ transform-origin: center;
   width: 0px;
   height: 0px;
 }
+.bj-add-run-form {
+  width: 100%;
+}
 
+.bj-add-run-form .card-back {
+  left: calc(50vw - 120px);
+}
 .card-back {
   position: absolute;
   bottom: -90px;
@@ -2134,12 +2152,36 @@ button.btn-submit:active,
   z-index: -1;
 }
 
+.side-tab-switcher {
+  width: 30px;
+    position: absolute;
+    left: -5px;
+    top: 10px;
+}
+
+.side-tab-switcher button{
+  min-width: 22px !important;
+}
+
+.side-tab-switcher button svg{
+  font-size: 1em !important;
+}
+
+
+.side-tab-switcher button.Mui-selected svg{
+  color: #ff0000 !important;
+}
+
+.side-tab-switcher button svg{
+  color: #7c7c7c !important;
+}
 #btn-rps-settings {
-  /* bottom: -3.1rem; */
   position: relative;
-  transform: translate(6em, 1.2em);
+  transform: translate(0px, -30px);
   cursor: pointer;
-  z-index: 99;
+  z-index: 2;
+  float: right;
+
 }
 .loading-gif-container {
   display: flex;
@@ -2173,6 +2215,7 @@ button.btn-submit:active,
 .transaction-settings {
   /* position: fixed; */
   top: 30vh;
+  left: 50%;
   color: #343a40;
   padding: 20px 20px !important;
   background: #a9a9a9;
@@ -2188,7 +2231,6 @@ button.btn-submit:active,
   position: fixed;
   transform: translate(0%, 10vh);
   color: #343a40;
-  padding: 20px 30px !important;
   background: #a9a9a9;
   border-radius: 9px;
   opacity: 0;
@@ -2895,6 +2937,7 @@ input {
 }
 
 @media (min-width: 1024px) {
+  
   .mobile-only {
     display: none !important;
   }
@@ -2904,7 +2947,10 @@ input {
     grid-template-columns: 100% !important;
     margin-bottom: 60px;
   }
-
+  .gamified-container {
+    padding: 20px;
+    margin: 20px;
+  }
   .bottom-footer {
     margin-left: 0 !important;
   }

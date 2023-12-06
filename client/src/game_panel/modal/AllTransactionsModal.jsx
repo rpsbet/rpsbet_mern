@@ -8,22 +8,22 @@ import {
   faSearch,
   faFilter,
   faArrowAltCircleDown,
-  faArrowAltCircleUp
+  faArrowAltCircleUp,
+  faExchangeAlt,
+  faGift
 } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
+  LinearProgress,
   TextField,
   TableBody,
   TableHead,
   Table,
   TableCell,
   TableRow,
-  Radio,
-  Checkbox,
-  RadioGroup,
-  FormControlLabel
+  Menu,
+  MenuItem
 } from '@material-ui/core';
-
 import { Link, ArrowUpward, ArrowDownward } from '@material-ui/icons';
 
 Modal.setAppElement('#root');
@@ -53,30 +53,40 @@ class AllTransactionsModal extends Component {
     };
   }
 
+  handleScroll = event => {
+    const { scrollHeight, scrollTop, clientHeight } = event.target;
+
+    // Check if the scroll is at the bottom of the modal
+    const isAtBottom = scrollHeight - scrollTop === clientHeight;
+    if (isAtBottom) {
+      this.props.handleLoadMore();
+    }
+  };
+
   render() {
     const {
       showAllGameLogs,
-      showSearch,
       transactions,
       searchQuery,
-      sortBy,
-      showWithdrawals,
+      sortType,
+      filterType,
       oneDayProfit,
-      toggleShowWithdrawals,
-      toggleShowDeposits,
-      handleSortBy,
-      toggleFilter,
-      toggleSort,
-      toggleSearch,
+      handleSearchClose,
+      onSearchQueryChange,
       sevenDayProfit,
       allTimeProfit,
-      handleLoadMore,
       isDarkMode,
-      showFilter,
-      showSort,
-      showDeposits,
+      tnxComplete,
       modalIsOpen,
-      close
+      sortAnchorEl,
+      filterAnchorEl,
+      searchAnchorEl,
+      close,
+      handleSortClick,
+      handleSortClose,
+      handleSearchClick,
+      handleFilterClick,
+      handleFilterClose
     } = this.props;
 
     return (
@@ -86,202 +96,261 @@ class AllTransactionsModal extends Component {
         style={customStyles}
         contentLabel="All Transactions Modal"
       >
-        <div className={isDarkMode ? 'dark_mode' : ''}>
-            <div className="modal-header">
-              <h2 className="modal-title">ALL HISTORY</h2>
-              <Button className="btn-close" onClick={close}>×</Button>
+        <div
+          className={isDarkMode ? 'dark_mode' : ''}
+          onScroll={this.handleScroll}
+        >
+          <div className="modal-header">
+            <h2 className="modal-title">ALL TRANSACTIONS</h2>
+            <Button className="btn-close" onClick={close}>
+              ×
+            </Button>
+          </div>
+          <div className="modal-body" style={{ padding: 0 }}>
+            <div className="game-logs-modal-container">
+              {oneDayProfit !== null ? (
+                <>
+                  <div className="overflowX">
+                    <div className="summary">
+                      <div className="summary-flex">
+                        <div className="filters">
+                          <Button onClick={handleFilterClick}>
+                            Filter&nbsp;
+                            <FontAwesomeIcon icon={faFilter} />
+                          </Button>
 
-            </div>
-          <div className="game-logs-modal-container">
-            <div className="summary">
-              <div className="summary-flex">
-                <div>
-                  <Button onClick={toggleSort}>
-                    <FontAwesomeIcon icon={faSort} />
-                    &nbsp;&nbsp;Sort by
-                  </Button>
-                  {showSort && (
-                    <div className="popup">
-                      <div className="popup-content">
-                        <RadioGroup
-                          aria-label="sort-options"
-                          name="sort-options"
-                          value={sortBy}
-                          onChange={event =>
-                            handleSortBy(event.target.value)
-                          }
-                        >
-                          <FormControlLabel
-                            value="date"
-                            control={<Radio color="primary" />}
-                            label="Newest"
-                          />
-                          <FormControlLabel
-                            value="amount"
-                            control={<Radio color="primary" />}
-                            label="Biggest"
-                          />
-                        </RadioGroup>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <Button onClick={toggleFilter}>
-                    <FontAwesomeIcon icon={faFilter} />
-                    &nbsp;&nbsp;Filter
-                  </Button>
-                  {showFilter && (
-                    <div className="filter">
-                      <div className="filter-content">
-                        <label>
-                          <FontAwesomeIcon icon={faArrowAltCircleUp} />{' '}
-                          Withdrawals:
-                          <Checkbox
-                            checked={showWithdrawals}
-                            onChange={toggleShowWithdrawals}
-                          />
-                        </label>
-                        <label>
-                          <FontAwesomeIcon icon={faArrowAltCircleDown} />{' '}
-                          Deposits:
-                          <Checkbox
-                            checked={showDeposits}
-                            onChange={toggleShowDeposits}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <Button onClick={toggleSearch}>
-                    <FontAwesomeIcon icon={faSearch} />
-                    &nbsp;&nbsp;Search
-                  </Button>
-
-                  {showSearch && (
-                    <div className="search">
-                      <div className="search-content">
-                        <TextField
-                          name="search"
-                          margin="normal"
-                          value={searchQuery}
-                          onChange={this.handleSearch}
-                        ></TextField>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="summary-flex">
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span>1-Day</span>
-                  <span
-                    style={{
-                      color: oneDayProfit > 0 ? '#57ca22' : 'red'
-                    }}
-                  >
-                    {oneDayProfit > 0 ? <ArrowUpward /> : <ArrowDownward />}
-                    {convertToCurrency(oneDayProfit)}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span>7-Day</span>
-                  <span
-                    style={{
-                      color: sevenDayProfit > 0 ? '#57ca22' : 'red'
-                    }}
-                  >
-                    {sevenDayProfit > 0 ? <ArrowUpward /> : <ArrowDownward />}
-                    {convertToCurrency(sevenDayProfit)}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span>All-time</span>
-                  <span
-                    style={{
-                      color: allTimeProfit > 0 ? '#57ca22' : 'red'
-                    }}
-                  >
-                    {allTimeProfit > 0 ? <ArrowUpward /> : <ArrowDownward />}
-                    {convertToCurrency(allTimeProfit)}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="game-logs-container">
-              <Table className="game-logs-table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>From Now</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Link</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {transactions.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan="4">...</TableCell>
-                    </TableRow>
-                  ) : (
-                    transactions.map((row, key) => (
-                      <TableRow key={key}>
-                        <TableCell
-                          className={
-                            'amount ' + (row.amount > 0 ? 'green' : 'red')
-                          }
-                        >
-                          {row.amount > 0 ? (
-                            <>
-                              {'+ '}
-                              {convertToCurrency(row.amount, true)}
-                            </>
-                          ) : (
-                            <>
-                              {'- '}
-                              {convertToCurrency(Math.abs(row.amount), true)}
-                            </>
-                          )}
-                        </TableCell>
-                        <TableCell className="fromNow">
-                          {row.from_now}
-                        </TableCell>
-                        <TableCell className="description">
-                          {row.description}
-                        </TableCell>
-                        <TableCell className="hash">
-                          {row.hash ? (
-                            <a
-                              href={`https://etherscan.io/tx/${row.hash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                          <Menu
+                            anchorEl={filterAnchorEl}
+                            open={Boolean(filterAnchorEl)}
+                            onClose={() => handleFilterClose(null)}
+                          >
+                            <MenuItem
+                              onClick={() => handleFilterClose(null)}
+                              selected={filterType === null}
                             >
-                              <Link />
-                            </a>
-                          ) : row.room ? (
-                            <a
-                              href={`/join/${row.room}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              &nbsp;Show All
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => handleFilterClose('showDeposits')}
+                              selected={filterType === 'showDeposits'}
                             >
-                              <Link />
-                            </a>
-                          ) : (
-                            // If there's no room value, don't display a link
-                            ''
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="load-more-button">
-              <Button onClick={handleLoadMore}>LOAD MORE</Button>
+                              <FontAwesomeIcon icon={faArrowAltCircleUp} />
+                              &nbsp;Show Deposits
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() =>
+                                handleFilterClose('showWithdrawals')
+                              }
+                              selected={filterType === 'showWithdrawals'}
+                            >
+                              <FontAwesomeIcon icon={faArrowAltCircleDown} />
+                              &nbsp;Show Withdrawals
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => handleFilterClose('showTrades')}
+                              selected={filterType === 'showTrades'}
+                            >
+                              <FontAwesomeIcon icon={faExchangeAlt} />
+                              &nbsp;Show Trades
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => handleFilterClose('showTips')}
+                              selected={filterType === 'showTips'}
+                            >
+                              <FontAwesomeIcon icon={faGift} />
+                              &nbsp;Show Tips
+                            </MenuItem>
+                          </Menu>
+                        </div>
+                        <div className="filters">
+                          <Button onClick={handleSortClick}>
+                            Sort By&nbsp;
+                            <FontAwesomeIcon icon={faSort} />
+                          </Button>
+                          <Menu
+                            anchorEl={sortAnchorEl}
+                            open={Boolean(sortAnchorEl)}
+                            onClose={() => handleSortClose(null)}
+                          >
+                            <MenuItem
+                              onClick={() => handleSortClose('date')}
+                              selected={sortType === 'date'}
+                            >
+                              Sort by Date
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => handleSortClose('amount')}
+                              selected={sortType === 'amount'}
+                            >
+                              Sort by Amount
+                            </MenuItem>
+                          </Menu>
+                        </div>
+                        <div className="filters" style={{marginRight: "30px"}}>
+                          <Button onClick={handleSearchClick}>
+                            SEARCH&nbsp;
+                            <FontAwesomeIcon icon={faSearch} />
+                          </Button>
+
+                          <Menu
+                            anchorEl={searchAnchorEl}
+                            open={Boolean(searchAnchorEl)}
+                            onClose={() => handleSearchClose(null)}
+                          >
+                            <MenuItem>
+                              <div className="search">
+                                <div className="search-content">
+                                  <TextField
+                                    name="search"
+                                    margin="normal"
+                                    value={searchQuery}
+                                    onChange={e =>
+                                      onSearchQueryChange(e.target.value)
+                                    }
+                                  ></TextField>
+                                </div>
+                              </div>
+                            </MenuItem>
+                          </Menu>
+                        </div>
+                      </div>
+
+                      <div className="summary-flex">
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>1-DAY</span>
+                          <span
+                            style={{
+                              color: oneDayProfit > 0 ? '#57ca22' : 'red'
+                            }}
+                          >
+                            {oneDayProfit > 0 ? (
+                              <ArrowUpward />
+                            ) : (
+                              <ArrowDownward />
+                            )}
+                            {convertToCurrency(oneDayProfit)}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>7-DAY</span>
+                          <span
+                            style={{
+                              color: sevenDayProfit > 0 ? '#57ca22' : 'red'
+                            }}
+                          >
+                            {sevenDayProfit > 0 ? (
+                              <ArrowUpward />
+                            ) : (
+                              <ArrowDownward />
+                            )}
+                            {convertToCurrency(sevenDayProfit)}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>ALL-TIME</span>
+                          <span
+                            style={{
+                              color: allTimeProfit > 0 ? '#57ca22' : 'red'
+                            }}
+                          >
+                            {allTimeProfit > 0 ? (
+                              <ArrowUpward />
+                            ) : (
+                              <ArrowDownward />
+                            )}
+                            {convertToCurrency(allTimeProfit)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <Table style={{ width: '100%' }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>AMOUNT</TableCell>
+                          <TableCell>FROM NOW</TableCell>
+                          <TableCell>DESCRIPTION</TableCell>
+                          <TableCell>LINK</TableCell>
+                        </TableRow>
+                      </TableHead>
+                    </Table>
+                  </div>
+                  <div className="game-logs-container">
+                    <Table className="game-logs-table">
+                      <TableBody>
+                        {transactions.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan="4">...</TableCell>
+                          </TableRow>
+                        ) : (
+                          transactions.map((row, key) => (
+                            <TableRow key={key}>
+                              <TableCell
+                                className={
+                                  'amount ' + (row.amount > 0 ? 'green' : 'red')
+                                }
+                              >
+                                {row.amount > 0 ? (
+                                  <>
+                                    {'+ '}
+                                    {convertToCurrency(row.amount, true)}
+                                  </>
+                                ) : (
+                                  <>
+                                    {'- '}
+                                    {convertToCurrency(
+                                      Math.abs(row.amount),
+                                      true
+                                    )}
+                                  </>
+                                )}
+                              </TableCell>
+                              <TableCell className="fromNow">
+                                {row.from_now}
+                              </TableCell>
+                              <TableCell className="description">
+                                {row.description}
+                              </TableCell>
+                              <TableCell className="hash">
+                                {row.hash ? (
+                                  <a
+                                    href={`https://etherscan.io/tx/${row.hash}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Link />
+                                  </a>
+                                ) : row.room ? (
+                                  <a
+                                    href={`/join/${row.room}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Link />
+                                  </a>
+                                ) : (
+                                  // If there's no room value, don't display a link
+                                  ''
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                        <TableRow>
+                          <TableCell colSpan={4}>
+                            {tnxComplete && (
+                              <div className="loading-spinner"></div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <LinearProgress color="secondary" />
+                </div>
+              )}
             </div>
           </div>
         </div>

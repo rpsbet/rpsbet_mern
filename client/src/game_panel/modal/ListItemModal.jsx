@@ -39,7 +39,6 @@ class ListItemModal extends Component {
     const { price } = this.state;
     const { item, closeListItemModal, isDarkMode, listItem } = this.props;
     const response = await listItem({ item_id: item, price: price });
-    // console.log(response);
     if (response.success) {
       const { message } = response;
 
@@ -107,7 +106,8 @@ const mapStateToProps = state => ({
   title: state.snackbar.title,
   item: state.itemReducer._id,
   isOpen: state.snackbar.showListItemModal,
-  // owner: state.itemReducer.owner,
+  price: state.itemReducer.data.price,
+  productName: state.itemReducer.data.productName,
   alertMessage: state.snackbar.alertMessage,
   alertType: state.snackbar.alertType
 });

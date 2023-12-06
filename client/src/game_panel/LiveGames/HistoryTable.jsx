@@ -8,7 +8,7 @@ import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faHeartBroken, faStopwatch} from '@fortawesome/free-solid-svg-icons';
-
+import BetArray from '../../components/BetArray';
 import CountUp from 'react-countup';
 import InlineSVG from 'react-inlinesvg';
 import PlayerModal from '../modal/PlayerModal';
@@ -16,7 +16,6 @@ import Lottie from 'react-lottie';
 import rain from '../LottieAnimations/rain.json';
 import waves from '../LottieAnimations/waves.json';
 import hex from '../LottieAnimations/hex.json';
-import Pagination from '../../components/Pagination';
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -377,22 +376,9 @@ class HistoryTable extends Component {
             modalIsOpen={this.state.showPlayerModal}
             closeModal={this.handleClosePlayerModal}
             selectedCreator={this.state.selectedCreator}
-
-            // player_name={this.state.userName}
-            // balance={this.state.balance}
-            // avatar={this.props.user.avatar}
           />
         )}
-        {this.state.history?.length > 0 && (
-          <Pagination
-            handlePageNumberClicked={this.handlePageNumberClicked}
-            handlePrevPageClicked={this.handlePrevPageClicked}
-            handleNextPageClicked={this.handleNextPageClicked}
-            pageNumber={this.props.pageNumber}
-            totalPage={this.props.totalPage}
-            prefix="History"
-          />
-        )}
+        
       </div>
     );
   }

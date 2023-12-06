@@ -8,8 +8,11 @@ import { updateDigitToPoint2 } from '../../util/helper';
 import { Button, TextField } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
+import Moment from 'moment';
 import loadingChart from '../LottieAnimations/loadingChart.json';
-
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import ReactApexChart from 'react-apexcharts';
+import PlayerModal from '../modal/PlayerModal';
 import {
   validateIsAuthenticated,
   validateCreatorId,
@@ -88,7 +91,6 @@ class Bang extends Component {
       requestId: null,
       nextBangInterval: null,
       countdown: null,
-      items: [],
       executeBet: false,
       newRound: false,
       bgColorChanged: false,
@@ -100,7 +102,7 @@ class Bang extends Component {
       waiting: false,
       is_anonymous: false,
       bet_amount: 1,
-      bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
+      bankroll: this.props.bet_amount,
       bang_guesses1Received: false,
       multiplier: 1.01,
       crashed: true,
@@ -121,18 +123,6 @@ class Bang extends Component {
   onChangeState(e) {
     this.setState({ bet_amount: e.target.value });
     this.setState({ potential_return: e.target.value * 2 });
-  }
-
-  getPreviousBets() {
-    let previousBets = 0;
-    if (this.props.roomInfo && this.props.roomInfo.game_log_list) {
-      this.props.roomInfo.game_log_list.forEach(room_history => {
-        if (room_history.bet_amount) {
-          previousBets += parseFloat(room_history.bet_amount);
-        }
-      });
-    }
-    return previousBets;
   }
 
   changeBgColor = async result => {
@@ -173,7 +163,15 @@ class Bang extends Component {
       cashoutAmount
     } = this.state;
 
-    const { playSound, playSoundLoop, stopSound } = this.props;
+    const { playSound, roomInfo, actionList, stopSound } = this.props;
+
+    const { isWaiting, disabledButtons } = this.state;
+
+    if (prevProps.actionList !== actionList) {
+      this.setState({
+        actionList: actionList
+      });
+    }
 
     if (!showBang && !showCountdown) {
       stopSound('countDown');
@@ -201,15 +199,6 @@ class Bang extends Component {
       );
     }
 
-    if (prevProps.roomInfo && this.props.roomInfo) {
-      if (prevProps.roomInfo.bet_amount !== this.props.roomInfo.bet_amount) {
-        this.setState({
-          bankroll:
-            parseFloat(this.props.roomInfo.bet_amount) - this.getPreviousBets()
-        });
-      }
-    }
-
     if (
       prevState.isPasswordCorrect !== this.state.isPasswordCorrect &&
       this.state.isPasswordCorrect === true
@@ -219,57 +208,38 @@ class Bang extends Component {
   }
 
   componentDidMount = () => {
-    const roomId = this.props.roomInfo._id;
-    this.socket.on(`BANG_GUESSES_${roomId}`, data => {
-      if (data && data.bangs && data.bangs.length > 0) {
-        const lastBang = data.bangs[data.bangs.length - 1];
-        const nextBangInterval = lastBang;
-        this.setState({
-          bang_guesses: data.bangs,
-          nextBangInterval: nextBangInterval
-        });
-      }
-    });
-
-    this.socket.on(`BANG_GUESSES1_${roomId}`, data => {
-      if (data && data.bangs && data.bangs.length > 0 && this.state.listen) {
-        const lastBang = data.bangs[data.bangs.length - 1];
-        // console.log('lastBang', lastBang);
-        const nextBangInterval = lastBang;
-        this.setState({
-          bang_guesses: data.bangs,
-          nextBangInterval: nextBangInterval,
-          elapsedTime: data.elapsedTime,
-          listen: false
-        });
-      }
-    });
-
-    const items = [
-      {
-        label: 'Host',
-        value: this.props.creator
-      },
-      {
-        label: 'Bankroll',
-        value: convertToCurrency(this.state.bankroll)
-      },
-      {
-        label: 'Bet Amount',
-        value: convertToCurrency(this.state.bet_amount)
-      },
-      {
-        label: 'Potential Return',
-        value: convertToCurrency(
-          updateDigitToPoint2(this.state.bet_amount * 2 /* * 0.95 */)
-        )
-      }
-    ];
-    this.setState({ items });
     const { socket } = this.props;
-    socket.on('UPDATED_BANKROLL', data => {
-      this.setState({ bankroll: data.bankroll });
-    });
+    const roomId = this.props.roomInfo._id;
+    if (socket) {
+      this.socket.on(`BANG_GUESSES_${roomId}`, data => {
+        if (data && data.bangs && data.bangs.length > 0) {
+          const lastBang = data.bangs[data.bangs.length - 1];
+          const nextBangInterval = lastBang;
+          this.setState({
+            bang_guesses: data.bangs,
+            nextBangInterval: nextBangInterval
+          });
+        }
+      });
+
+      this.socket.on(`BANG_GUESSES1_${roomId}`, data => {
+        if (data && data.bangs && data.bangs.length > 0 && this.state.listen) {
+          const lastBang = data.bangs[data.bangs.length - 1];
+          // console.log('lastBang', lastBang);
+          const nextBangInterval = lastBang;
+          this.setState({
+            bang_guesses: data.bangs,
+            nextBangInterval: nextBangInterval,
+            elapsedTime: data.elapsedTime,
+            listen: false
+          });
+        }
+      });
+
+      socket.on('UPDATED_BANKROLL', data => {
+        this.setState({ bankroll: data.bankroll });
+      });
+    }
 
     document.addEventListener('mousedown', this.handleClickOutside);
   };
@@ -277,9 +247,9 @@ class Bang extends Component {
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
     document.removeEventListener('mousedown', this.handleClickOutside);
-    this.socket.off(`BANG_GUESSES_${this.props.roomInfo._id}`);
-    this.socket.off(`BANG_GUESSES1_${this.props.roomInfo._id}`);
-    this.socket.off('UPDATED_BANKROLL');
+    // this.socket.off(`BANG_GUESSES_${this.props.roomInfo._id}`);
+    // this.socket.off(`BANG_GUESSES1_${this.props.roomInfo._id}`);
+    // this.socket.off('UPDATED_BANKROLL');
   };
 
   predictNext = bangAmounts => {
@@ -701,10 +671,30 @@ class Bang extends Component {
       elapsedTime,
       showCountdown,
       waiting,
-      newRound
+      bankroll,
+      runs_panel_opened,
+      newRound,
+      countdown,
+      actionList
     } = this.state;
-    const { isLowGraphics, isMusicEnabled } = this.props;
-    // Determine whether to show the countup animation or the bang message
+    const {
+      isLowGraphics,
+      isMusicEnabled,
+      creator_id,
+      handleOpenPlayerModal,
+      creator_avatar,
+      rank,
+      accessory,
+      youtubeUrl,
+      roomInfo,
+      isDarkMode
+    } = this.props;
+    const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
+
+    const barStyle = {
+      width: `${payoutPercentage + 10}%`,
+      backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
+    };
     let content;
     if (showBang) {
       if (
@@ -772,9 +762,7 @@ class Bang extends Component {
         );
       }
     } else if (showCountdown) {
-      content = (
-        <span id="nextBangIn">Next Bang in...{this.state.countdown}</span>
-      );
+      content = <span id="nextBangIn">Next Bang in...{countdown}</span>;
     } else {
       let countupStart;
       if (elapsedTime && elapsedTime / 1000 > nextBangInterval + 2) {
@@ -793,7 +781,7 @@ class Bang extends Component {
             });
             // Start the countdown
             const countdownTimer = setInterval(() => {
-              const countdown = this.state.countdown - 1;
+              const countdown = countdown - 1;
               if (countdown <= 0) {
                 // Countdown is finished, restart everything
                 clearInterval(countdownTimer);
@@ -802,7 +790,7 @@ class Bang extends Component {
                   countdown: null,
                   elapsedTime: ''
                 });
-                if (this.state.waiting) {
+                if (waiting) {
                   this.setState({ newRound: true });
                 }
               } else {
@@ -840,7 +828,7 @@ class Bang extends Component {
                       });
                       // Start the countdown
                       const countdownTimer = setInterval(() => {
-                        const countdown = this.state.countdown - 1;
+                        const countdown = countdown - 1;
                         if (countdown <= 0) {
                           // Countdown is finished, restart everything
                           clearInterval(countdownTimer);
@@ -849,7 +837,7 @@ class Bang extends Component {
                             countdown: null,
                             elapsedTime: ''
                           });
-                          if (this.state.waiting) {
+                          if (waiting) {
                             this.setState({ newRound: true });
                           }
                         } else {
@@ -939,7 +927,7 @@ class Bang extends Component {
                       });
                       // Start the countdown
                       const countdownTimer = setInterval(() => {
-                        const countdown = this.state.countdown - 1;
+                        const countdown = countdown - 1;
                         if (countdown <= 0) {
                           // Countdown is finished, restart everything
                           clearInterval(countdownTimer);
@@ -947,7 +935,7 @@ class Bang extends Component {
                             showCountdown: false,
                             countdown: null
                           });
-                          if (this.state.waiting) {
+                          if (waiting) {
                             this.setState({ newRound: true });
                           }
                         } else {
@@ -1009,7 +997,7 @@ class Bang extends Component {
                     });
                     // Start the countdown
                     const countdownTimer = setInterval(() => {
-                      const countdown = this.state.countdown - 1;
+                      const countdown = countdown - 1;
                       if (countdown <= 0) {
                         // Countdown is finished, restart everything
                         clearInterval(countdownTimer);
@@ -1017,7 +1005,7 @@ class Bang extends Component {
                           showCountdown: false,
                           countdown: null
                         });
-                        if (this.state.waiting) {
+                        if (waiting) {
                           this.setState({ newRound: true });
                         }
                       } else {
@@ -1051,15 +1039,13 @@ class Bang extends Component {
                     <div>
                       <div className="label room-id">STATUS</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.status}</div>
+                    <div className="value">{roomInfo.status}</div>
                   </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
-                    <div className="value">
-                      {convertToCurrency(this.state.bankroll)}
-                    </div>
+                    <div className="value">{convertToCurrency(bankroll)}</div>
                   </div>
 
                   <div className="data-item">
@@ -1076,23 +1062,163 @@ class Bang extends Component {
                     </div>
                   </div>
 
+                  {roomInfo.endgame_amount > 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <div className="payout-bar">
+                        <div className="value" style={barStyle}></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label net-profit">Host Profit</div>
+                    </div>
+                    <div className="value bankroll">
+                      {actionList && actionList.hostBetsValue.length > 0 ? (
+                        <>
+                          {convertToCurrency(
+                            actionList.hostNetProfit?.slice(-1)[0]
+                          )}
+                          <ReactApexChart
+                            className="bankroll-graph"
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
+                              },
+                              grid: {
+                                show: false
+                              },
+                              tooltip: {
+                                enabled: false
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    actionList.hostNetProfit?.slice(-1)[0] > 0
+                                      ? ['#00FF00']
+                                      : actionList.hostNetProfit?.slice(-1)[0] <
+                                        0
+                                      ? ['#FF0000']
+                                      : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
+
+                              stroke: {
+                                curve: 'smooth'
+                              },
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              },
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              }
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data: actionList.hostNetProfit.map(
+                                  (value, index) => [
+                                    actionList.hostBetsValue[index],
+                                    value
+                                  ]
+                                )
+                              }
+                            ]}
+                          />
+                        </>
+                      ) : (
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Host</div>
                     </div>
-                    <div className="value">{this.props.creator}</div>
+                    <div className="value host">
+                      <a
+                        className="player"
+                        onClick={() => handleOpenPlayerModal(creator_id)}
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={creator_avatar}
+                          rank={rank}
+                          accessory={accessory}
+                          alt=""
+                          darkMode={isDarkMode}
+                        />
+                      </a>
+                    </div>
                   </div>
                   <div className="data-item">
                     <div>
                       <div className="label room-name">Room ID</div>
                     </div>
-                    <div className="value">{this.props.roomInfo.room_name}</div>
+                    <div className="value">{roomInfo.room_name}</div>
                   </div>
-                  {this.props.youtubeUrl && (
+                  {youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled}/>
+                      <YouTubeVideo
+                        url={youtubeUrl}
+                        isMusicEnabled={isMusicEnabled}
+                      />
                     </div>
                   )}
+                  <div className="data-item">
+                    <div>
+                      <div className="label public-max-return">Created</div>
+                    </div>
+                    <div className="value">
+                      {Moment(roomInfo.created_at).fromNow()}
+                    </div>
+                  </div>
                 </React.Fragment>
               ))}
             </div>
@@ -1101,33 +1227,34 @@ class Bang extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {renderLottieAvatarAnimation(this.props.gameBackground, isLowGraphics)}
+            {renderLottieAvatarAnimation(
+              this.props.gameBackground,
+              isLowGraphics
+            )}
 
             <div className="game-info-panel">
-              <div
+              <Button
                 onClick={() =>
                   this.setState({
-                    runs_panel_opened: !this.state.runs_panel_opened
+                    runs_panel_opened: !runs_panel_opened
                   })
                 }
                 style={{
                   background: '#f8f9fa54',
-                  padding: '4px 10px',
+                  border: 'unset',
+                  boxShadow: 'unset',
                   borderRadius: '7px',
-                  marginTop: '30px'
+                  marginTop: '30px',
+                  marginRight: '0'
                 }}
               >
                 {' '}
-                <h5>View All Bangs</h5>
-              </div>
+                <span>Bang History</span>
+              </Button>
               <div
                 ref={this.runsRef}
-                className={`runs-modal ${
-                  this.state.runs_panel_opened ? 'active' : ''
-                }`}
+                className={`runs-modal ${runs_panel_opened ? 'active' : ''}`}
               >
-                <h5>LAST 100</h5>
-
                 <div className="slippage-select-panel">
                   <div>
                     {bang_guesses
@@ -1146,7 +1273,7 @@ class Bang extends Component {
                           }}
                           key={index}
                         >
-                          {bang}x
+                          {bang.toFixed(2)}x
                         </div>
                       ))}
                   </div>
@@ -1155,30 +1282,28 @@ class Bang extends Component {
               <div className="gradient-container">
                 <p className="previous-guesses drop">
                   <div>
-                    {this.state.bang_guesses.length > 0 ? (
-                      this.state.bang_guesses
-                        .slice(0, -1)
-                        .map((guess, index) => (
-                          <span
-                            key={index}
-                            style={{
-                              background: guess < 2 ? '#e3e103c2' : '#e30303c2',
-                              border: '3px solid',
-                              borderColor: guess < 2 ? '#e3e103' : '#e30303',
-                              padding: '0.3em 0.2em',
-                              textAlign: 'center'
-                            }}
-                          >
-                            x{guess}
-                          </span>
-                        ))
+                    {bang_guesses.length > 0 ? (
+                      bang_guesses.slice(0, -1).map((guess, index) => (
+                        <span
+                          key={index}
+                          style={{
+                            background: guess < 2 ? '#e3e103c2' : '#e30303c2',
+                            border: '3px solid',
+                            borderColor: guess < 2 ? '#e3e103' : '#e30303',
+                            padding: '0.3em 0.2em',
+                            textAlign: 'center'
+                          }}
+                        >
+                          x{guess}
+                        </span>
+                      ))
                     ) : (
                       <span id="no-guesses"></span>
                     )}
                   </div>
                   {/* <div>
-                    {this.state.bang_guesses.length > 0 ? (
-                      this.state.bang_guesses.map((guess, index) => (
+                    {bang_guesses.length > 0 ? (
+                      bang_guesses.map((guess, index) => (
                         <span
                           key={index}
                           style={{
@@ -1223,7 +1348,7 @@ class Bang extends Component {
                 name="multiplier"
                 variant="outlined"
                 id="betamount"
-                label="AUTO CASH OUT"
+                label="AUTO-CASHOUT"
                 value={this.state.multiplier}
                 onChange={event =>
                   this.setState({ multiplier: event.target.value })
@@ -1249,7 +1374,7 @@ class Bang extends Component {
             >
               {this.state.buttonClicked ? (
                 `Cash Out @ ${parseFloat(this.state.cashoutAmount)(2)}`
-              ) : this.state.waiting ? (
+              ) : waiting ? (
                 <span style={{ animation: 'blink 0.75s linear infinite' }}>
                   Joining Next Round
                 </span>
@@ -1257,103 +1382,7 @@ class Bang extends Component {
                 'BANG OUT'
               )}
             </Button>
-            <SettingsOutlinedIcon
-              id="btn-rps-settings"
-              onClick={() =>
-                this.setState({
-                  settings_panel_opened: !this.state.settings_panel_opened
-                })
-              }
-            />
-            <div
-              ref={this.settingsRef}
-              className={`transaction-settings ${
-                this.state.settings_panel_opened ? 'active' : ''
-              }`}
-            >
-              <h5>AI Play Settings</h5>
-              <p>CHOOSE AN ALGORITHM</p>
-              <div className="tiers">
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>Speed</td>
-                      <td>
-                        <div className="bar" style={{ width: '100%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '100%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '80%' }}></div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Reasoning</td>
-                      <td>
-                        <div className="bar" style={{ width: '50%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Abilities</td>
-                      <td>
-                        <div className="bar" style={{ width: '30%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                      <td>
-                        <div className="bar" style={{ width: '0%' }}></div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div className="slippage-select-panel">
-                <Button
-                  className={this.state.slippage === 100 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 100 });
-                  }}
-                >
-                  Markov
-                </Button>
-                <Button
-                  className="disabled"
-                  // className={this.state.slippage === 200 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 200 });
-                  }}
-                  disabled={this.state.isDisabled}
-                >
-                  Carlo
-                </Button>
-                <Button
-                  className="disabled"
-                  // className={this.state.slippage === 500 ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 500 });
-                  }}
-                  disabled={this.state.isDisabled}
-                >
-                  Q Bot
-                </Button>
-                {/* <button
-                  className={this.state.slippage === 'unlimited' ? 'active' : ''}
-                  onClick={() => {
-                    this.setState({ slippage: 'unlimited' });
-                  }}
-                >
-                  V4
-                </button> */}
-              </div>
-            </div>
+            
             <Button
               id="aiplay"
               className="disabled"
@@ -1382,7 +1411,7 @@ class Bang extends Component {
           <BetArray arrayName="bang_array" label="bang" />
 
           <div className="action-panel">
-            <Share roomInfo={this.props.roomInfo} />
+            <Share roomInfo={roomInfo} />
           </div>
         </div>
       </div>
@@ -1401,6 +1430,7 @@ const mapStateToProps = state => ({
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   betResults: state.logic.betResults,
   isLowGraphics: state.auth.isLowGraphics,
+  rank: state.logic.curRoomInfo.rank,
   isMusicEnabled: state.auth.isMusicEnabled
 });
 

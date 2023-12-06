@@ -329,7 +329,7 @@ router.post('/list-for-sale', auth, async (req, res) => {
 
       return res.json({
         success: true,
-        message: `Item '${item.productName}' listed for sale at $${price}`,
+        message: `Item '${item.productName}' listed for sale at ${price} ETH`,
       });
     } else {
       return res.json({
@@ -348,13 +348,11 @@ router.post('/list-for-sale', auth, async (req, res) => {
 });
 
 // Delist an item from sale
-router.get('/delist-from-sale', auth, async (req, res) => {
+router.post('/delist-from-sale', auth, async (req, res) => {
   try {
     const { item_id } = req.body;
 
-    // Find the item using the new model
     const item = await Item.findOne({ _id: item_id });
-
     if (!item) {
       return res.json({
         success: false,
@@ -362,7 +360,6 @@ router.get('/delist-from-sale', auth, async (req, res) => {
       });
     }
 
-    // Find the owner's index in the owners sub-array
     const ownerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(req.user._id));
 
     if (ownerIndex === -1) {

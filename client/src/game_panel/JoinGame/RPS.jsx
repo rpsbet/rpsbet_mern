@@ -3,14 +3,15 @@ import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import ReactApexChart from 'react-apexcharts';
-import Avatar from '../../components/Avatar';
-import PlayerModal from '../modal/PlayerModal';
 import YouTubeModal from '../modal/YouTubeModal';
 import Moment from 'moment';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import ReactApexChart from 'react-apexcharts';
+import Avatar from '../../components/Avatar';
+import PlayerModal from '../modal/PlayerModal';
 import loadingChart from '../LottieAnimations/loadingChart.json';
+import { YouTubeVideo } from '../../components/YoutubeVideo';
 
 import {
   Button,
@@ -19,7 +20,6 @@ import {
   Tooltip,
   FormControlLabel
 } from '@material-ui/core';
-import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
@@ -27,7 +27,6 @@ import {
   validateIsAuthenticated,
   validateCreatorId,
   validateBetAmount,
-  validateLocalStorageLength,
   validateBankroll
 } from '../modal/betValidations';
 
@@ -38,7 +37,6 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import styled from 'styled-components';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
 import ImageResultModal from '../modal/ImageResultModal';
 
@@ -126,14 +124,6 @@ const UseItemButton = styled.div`
           bottom: calc(50%);;
   `;
 
-const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: animationData,
-  rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
-};
 
 const styles = {
   focused: {
@@ -147,169 +137,6 @@ const options = [
   { classname: 'scissors', selection: 'S' }
 ];
 
-const calcWinChance = prevStates => {
-  let total = prevStates.length;
-  let rock = 0;
-  let paper = 0;
-  let scissors = 0;
-  prevStates.map(el => {
-    if (el.rps === 'R') {
-      rock++;
-    } else if (el.rps === 'P') {
-      paper++;
-    } else if (el.rps === 'S') {
-      scissors++;
-    }
-  });
-  const rockWinChance = (rock / total) * 100;
-  const paperWinChance = (paper / total) * 100;
-  const scissorsWinChance = (scissors / total) * 100;
-  let lowest = rockWinChance;
-  let highest = rockWinChance;
-  if (paperWinChance < lowest) {
-    lowest = paperWinChance;
-  }
-  if (scissorsWinChance < lowest) {
-    lowest = scissorsWinChance;
-  }
-  if (paperWinChance > highest) {
-    highest = paperWinChance;
-  }
-  if (scissorsWinChance > highest) {
-    highest = scissorsWinChance;
-  }
-  if (lowest === highest) {
-    return lowest.toFixed(2) + '%';
-  }
-  return lowest.toFixed(2) + '% - ' + highest.toFixed(2) + '%';
-};
-
-const predictNext = rps_list => {
-  // Create a transition matrix to store the probability of transitioning from one state to another
-  const transitionMatrix = {
-    R: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
-    },
-    P: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
-    },
-    S: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
-    }
-  };
-
-  // Iterate through the previous states to populate the transition matrix
-  for (let i = 0; i < rps_list.length - 3; i++) {
-    transitionMatrix[rps_list[i].rps][rps_list[i + 1].rps][rps_list[i + 2].rps][
-      rps_list[i + 3].rps
-    ]++;
-  }
-
-  // Normalize the transition matrix
-  Object.keys(transitionMatrix).forEach(fromState1 => {
-    Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-        fromState3 => {
-          const totalTransitions = Object.values(
-            transitionMatrix[fromState1][fromState2][fromState3]
-          ).reduce((a, b) => a + b);
-          Object.keys(
-            transitionMatrix[fromState1][fromState2][fromState3]
-          ).forEach(toState => {
-            transitionMatrix[fromState1][fromState2][fromState3][
-              toState
-            ] /= totalTransitions;
-          });
-        }
-      );
-    });
-  });
-
-  // Check for consistency
-  const winChance = calcWinChance(rps_list);
-  let deviation = 0;
-  if (winChance !== '33.33%') {
-    deviation = (1 - 1 / 3) / 2;
-  }
-  // Use the transition matrix to predict the next state based on the current state
-  let currentState1 = rps_list[rps_list.length - 3].rps;
-  let currentState2 = rps_list[rps_list.length - 2].rps;
-  let currentState3 = rps_list[rps_list.length - 1].rps;
-  let nextState = currentState3;
-  let maxProb = 0;
-  Object.keys(
-    transitionMatrix[currentState1][currentState2][currentState3]
-  ).forEach(state => {
-    if (
-      transitionMatrix[currentState1][currentState2][currentState3][state] >
-      maxProb
-    ) {
-      maxProb =
-        transitionMatrix[currentState1][currentState2][currentState3][state];
-      nextState = state;
-    }
-  });
-
-  // Add randomness
-  let randomNum = Math.random();
-  if (randomNum < deviation) {
-    let randomState = '';
-    do {
-      randomNum = Math.random();
-      if (randomNum < 1 / 3) {
-        randomState = 'R';
-      } else if (randomNum < 2 / 3) {
-        randomState = 'P';
-      } else {
-        randomState = 'S';
-      }
-    } while (randomState === currentState3);
-    nextState = randomState;
-  }
-  return nextState;
-};
 
 class RPS extends Component {
   constructor(props) {
@@ -318,14 +145,10 @@ class RPS extends Component {
     this.settingsRef = React.createRef();
     this.socket = this.props.socket;
     this.state = {
-      betting: false,
       timer: null,
-      timerValue: 2000,
-      intervalId: null,
       showImageModal: false,
       image: '',
       productName: '',
-      bgColorChanged: false,
       selected_rps: '',
       modalOpen: false,
       startedPlaying: false,
@@ -338,7 +161,6 @@ class RPS extends Component {
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
-      betResults: props.betResults,
       settings_panel_opened: false,
       animateCard: false
     };
@@ -370,12 +192,6 @@ class RPS extends Component {
     return previousBets;
   }
 
-  changeBgColor = async result => {
-    this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Wait for 1 second
-    this.setState({ bgColorChanged: false });
-  };
-
   handleClickOutside = e => {
     if (
       this.settingsRef &&
@@ -391,11 +207,14 @@ class RPS extends Component {
     if (socket) {
       socket.on('CARD_PRIZE', data => {
         if (data) {
-          this.setState({
-            image: data.image,
-            productName: data.productName,
-            showImageModal: true
-          }, () => playSound(''));
+          this.setState(
+            {
+              image: data.image,
+              productName: data.productName,
+              showImageModal: true
+            },
+            () => playSound('')
+          );
         }
       });
 
@@ -566,7 +385,8 @@ class RPS extends Component {
       refreshHistory,
       join,
       playSound,
-      rps_game_type
+      rps_game_type,
+      changeBgColor
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
@@ -583,15 +403,15 @@ class RPS extends Component {
     if (result.betResult === 1) {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN DINNER!';
-      this.changeBgColor(result.betResult);
+      changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
       text = 'SPLIT! EQUAL MATCH!';
       playSound('split');
-      this.changeBgColor(result.betResult);
+      changeBgColor(result.betResult);
     } else {
       text = 'TROLLOLOLOL! LOSER!';
       playSound('lose');
-      this.changeBgColor(result.betResult);
+      changeBgColor(result.betResult);
       if (rps_game_type === 1) {
         this.handleOpenModal();
         this.speak(text);
@@ -615,15 +435,7 @@ class RPS extends Component {
         () => {}
       );
 
-      if (result.status === 'success') {
-        const { user, room } = this.props;
-        this.setState(prevState => ({
-          betResults: [
-            ...prevState.betResults,
-            { ...result, user: user, room: room }
-          ]
-        }));
-      } else {
+      if (result.status !== 'success') {
         if (result.message) {
           alertModal(isDarkMode, result.message);
         }
@@ -741,180 +553,37 @@ class RPS extends Component {
     );
   };
 
-  handleSwitchChange = () => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-      balance
-    } = this.props;
-    const { betting, bet_amount } = this.state;
-
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      return;
-    }
-
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      return;
-    }
-
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
-
-    if (!betting) {
-      this.startBetting();
-    } else {
-      this.stopBetting();
-    }
-  };
-
-  startBetting = () => {
-    const {
-      isDarkMode,
-      playSound,
-      is_private,
-      openGamePasswordModal,
-      roomInfo
-    } = this.props;
-
-    const storageName = 'rps_array';
-    if (!validateLocalStorageLength(storageName, isDarkMode)) {
-      return;
-    }
-    const stored_rps_array =
-      JSON.parse(localStorage.getItem(storageName)) || [];
-    const intervalId = setInterval(() => {
-      const randomItem = predictNext(stored_rps_array);
-      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-      const passwordCorrect = rooms[roomInfo._id];
-      if (is_private === true && passwordCorrect !== 'true') {
-        openGamePasswordModal();
-      } else {
-        this.joinGame2(randomItem);
-      }
-    }, 4000);
-    playSound('start');
-    this.setState({ intervalId, betting: true });
-  };
-
-  stopBetting = () => {
-    this.props.playSound('stop');
-    clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
-  };
-
-  joinGame2 = async randomItem => {
-    const {
-      rps_bet_item_id,
-      balance,
-      isDarkMode,
-      refreshHistory,
-      playSound
-    } = this.props;
-    const {
-      bet_amount,
-      bankroll,
-      slippage,
-      is_anonymous,
-      selected_rps,
-      betting
-    } = this.state;
-
-    if (!betting) {
-      return;
-    }
-
-    await this.setState({ selected_rps: randomItem });
-
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
-    if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
-      return;
-    }
-
-    if (selected_rps !== null) {
-      const result = await this.props.join({
-        bet_amount: parseFloat(bet_amount),
-        selected_rps: selected_rps,
-        is_anonymous: is_anonymous,
-        rps_bet_item_id: rps_bet_item_id,
-        slippage: slippage
-      });
-
-      const currentUser = this.props.user;
-      const currentRoom = this.props.room;
-      if (result.status === 'success') {
-        this.setState(prevState => ({
-          betResults: [
-            ...prevState.betResults,
-            { ...result, user: currentUser, room: currentRoom }
-          ]
-        }));
-        let text = 'HAHAA, YOU LOST!!!';
-
-        if (result.betResult === 1) {
-          playSound('win');
-
-          text = 'NOT BAD, WINNER!';
-
-          setTimeout(() => {
-            this.changeBgColor(result.betResult);
-          }, 1000);
-        } else if (result.betResult === 0) {
-          playSound('split');
-
-          text = 'DRAW, NO WINNER!';
-          setTimeout(() => {
-            this.changeBgColor(result.betResult);
-          }, 1000);
-        } else {
-          setTimeout(() => {
-            this.changeBgColor(result.betResult);
-          }, 1000);
-          playSound('lose');
-        }
-
-        refreshHistory();
-      }
-    }
-  };
-
   render() {
     const {
       showImageModal,
-      isDisabled,
-      betting,
       image,
-      timerValue,
       bankroll,
-      bgColorChanged,
       startedPlaying,
       betResult,
       rps,
       selected_rps,
-      slippage,
       productName,
-      settings_panel_opened,
       actionList
     } = this.state;
     const {
+      bgColorChanged,
       selectedCreator,
       accessory,
       rank,
       isDarkMode,
       isLowGraphics,
+      isMusicEnabled,
       handleClosePlayerModal,
       showPlayerModal,
+      youtubeUrl,
       roomInfo,
       handleOpenPlayerModal,
       creator_avatar,
       rps_game_type,
-      youtubeUrl,
       gameBackground,
-      playSound
+      playSound,
+      betting,
+      handleSwitchChange
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
@@ -942,15 +611,10 @@ class RPS extends Component {
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
             closeModal={handleClosePlayerModal}
-            // {...this.state.selectedRow}
           />
         )}
         <div className="game-contents">
-          <div
-            className="pre-summary-panel"
-            ref={this.panelRef}
-            // onScroll={this.handleScroll}
-          >
+          <div className="pre-summary-panel" ref={this.panelRef}>
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
                 <React.Fragment key={i}>
@@ -1130,7 +794,10 @@ class RPS extends Component {
                   </div>
                   {youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={youtubeUrl} />
+                      <YouTubeVideo
+                        url={youtubeUrl}
+                        isMusicEnabled={isMusicEnabled}
+                      />
                     </div>
                   )}
                   <div className="data-item">
@@ -1372,138 +1039,18 @@ class RPS extends Component {
                   onChangeState={this.onChangeState}
                   isDarkMode={isDarkMode}
                 />
-                <SettingsOutlinedIcon
-                  id="btn-rps-settings"
-                  onClick={() =>
-                    this.setState({
-                      settings_panel_opened: !settings_panel_opened
-                    })
-                  }
-                />
-                <div
-                  ref={this.settingsRef}
-                  className={`transaction-settings ${
-                    settings_panel_opened ? 'active' : ''
-                  }`}
-                >
-                  <h5>AI Play Settings</h5>
-                  <p>CHOOSE AN ALGORITHM</p>
-                  <div className="tiers">
-                    <table>
-                      <tbody>
-                        <tr>
-                          <td>Speed</td>
-                          <td>
-                            <div
-                              className="bar"
-                              style={{ width: '100%' }}
-                            ></div>
-                          </td>
-                          <td>
-                            <div
-                              className="bar"
-                              style={{ width: '100%' }}
-                            ></div>
-                          </td>
-                          <td>
-                            <div className="bar" style={{ width: '80%' }}></div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Reasoning</td>
-                          <td>
-                            <div className="bar" style={{ width: '50%' }}></div>
-                          </td>
-                          <td>
-                            <div className="bar" style={{ width: '0%' }}></div>
-                          </td>
-                          <td>
-                            <div className="bar" style={{ width: '0%' }}></div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Abilities</td>
-                          <td>
-                            <div className="bar" style={{ width: '30%' }}></div>
-                          </td>
-                          <td>
-                            <div className="bar" style={{ width: '0%' }}></div>
-                          </td>
-                          <td>
-                            <div className="bar" style={{ width: '0%' }}></div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="slippage-select-panel">
-                    <Button
-                      className={this.state.slippage === 100 ? 'active' : ''}
-                      onClick={() => {
-                        this.setState({ slippage: 100 });
-                      }}
-                    >
-                      Markov
-                    </Button>
-                    <Button
-                      className="disabled"
-                      // className={this.state.slippage === 200 ? 'active' : ''}
-                      onClick={() => {
-                        this.setState({ slippage: 200 });
-                      }}
-                      disabled={isDisabled}
-                    >
-                      Carlo
-                    </Button>
-                    <Button
-                      className="disabled"
-                      // className={this.state.slippage === 500 ? 'active' : ''}
-                      onClick={() => {
-                        this.setState({ slippage: 500 });
-                      }}
-                      disabled={isDisabled}
-                    >
-                      Q Bot
-                    </Button>
-                    {/* <button
-                    className={this.state.slippage === 'unlimited' ? 'active' : ''}
-                    onClick={() => {
-                      this.setState({ slippage: 'unlimited' });
-                    }}
-                  >
-                    V4
-                  </button> */}
-                  </div>
-                </div>
-                <div>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        id="aiplay-switch"
-                        checked={betting}
-                        onChange={this.handleSwitchChange}
-                      />
-                    }
-                    label={betting ? 'AI ON' : 'AI OFF'}
-                  />
-                  {betting ? (
-                    <div id="stop">
-                      {/* <span>Stop</span> */}
-                      <Lottie options={defaultOptions} width={22} />
-                    </div>
-                  ) : (
-                    <div>
-                      {timerValue !== 2000 ? (
-                        <span>{(timerValue / 2000).toFixed(2)}s</span>
-                      ) : null}
-                    </div>
-                  )}
-                </div>
+
+                <div></div>
               </div>
             )}
           </div>
           {rps_game_type === 0 && (
-            <BetArray arrayName="rps_array" label="rps" />
+            <BetArray
+              arrayName="rps_array"
+              label="rps"
+              betting={betting}
+              handleSwitchChange={handleSwitchChange}
+            />
           )}
 
           <div className="action-panel">
@@ -1524,10 +1071,9 @@ const mapStateToProps = state => ({
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   accessory: state.logic.curRoomInfo.accessory,
   data: state.itemReducer.myItemArray,
-  betResults: state.logic.betResults,
   rank: state.logic.curRoomInfo.rank,
-  isLowGraphics: state.auth.isLowGraphics
-
+  isLowGraphics: state.auth.isLowGraphics,
+  isMusicEnabled: state.auth.isMusicEnabled
 });
 
 const mapDispatchToProps = {

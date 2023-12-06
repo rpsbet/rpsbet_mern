@@ -24,6 +24,7 @@ import ManageHover from '../icons/ManageHover';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import { Button } from '@material-ui/core';
+import AiPanel from '../../components/AiPanel';
 
 import { Tabs, Tab, Drawer } from '@material-ui/core';
 import DrawerButton from './DrawerButton';
@@ -64,6 +65,8 @@ class MainPage extends Component {
   }
 
   async componentDidMount() {
+    const { id } = this.props.match.path;
+    console.log(id);
     const {
       getRoomList,
       getHistory,
@@ -100,7 +103,7 @@ class MainPage extends Component {
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
       <div id="liveStakes">
-        {this.props.roomCount} BATTLE BOTS
+        {this.props.roomCount} BATTLES
         <Lottie options={defaultOptions} width={40} />
       </div>
     ) : (
@@ -131,17 +134,18 @@ class MainPage extends Component {
             <ChatPanel />
           </Drawer>
         )}
-        {(this.state.is_mobile && this.state.selectedMobileTab === 'marketplace')  && (
-          // <Drawer
-          //   className="mat-chat"
-          //   style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
-          //   variant="persistent"
-          //   anchor="left"
-          //   open={isDrawerOpen}
-          // >
+        {this.state.is_mobile &&
+          this.state.selectedMobileTab === 'marketplace' && (
+            // <Drawer
+            //   className="mat-chat"
+            //   style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
+            //   variant="persistent"
+            //   anchor="left"
+            //   open={isDrawerOpen}
+            // >
             <ProductPage />
-          // </Drawer>
-        )}
+            // </Drawer>
+          )}
         {this.state.is_mobile &&
           (this.state.selectedMobileTab === 'live_games' ||
             this.state.selectedMobileTab === 'my_games') && (
@@ -229,16 +233,36 @@ class MainPage extends Component {
             this.state.show_open_game === 1 && <MyHistoryTable />}
         </div>
         <div className="sub-panel">
-          <h2 className="main-title desktop-only">HISTORY</h2>
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
-            <HistoryTable />
+            <>
+              <h2 className="main-title desktop-only">AI PANEL</h2>
+              <AiPanel user_id={this.props.user._id} />
+            </>
+          )}
+
+          {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
+            <>
+              <h2 className="main-title desktop-only">HISTORY</h2>
+              <HistoryTable />
+            </>
           )}
           <DrawerButton
             open={this.props.isDrawerOpen}
             toggleDrawer={this.toggleDrawer}
           />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
-            <MyHistoryTable />
+            <>
+              <h2 className="main-title desktop-only">AI PANEL</h2>
+
+              <AiPanel user_id={this.props.user._id} />
+            </>
+          )}
+          {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
+            <>
+              <h2 className="main-title desktop-only">MY HISTORY</h2>
+
+              <MyHistoryTable />
+            </>
           )}
         </div>
         {this.state.is_mobile && (

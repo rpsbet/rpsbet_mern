@@ -17,7 +17,6 @@ const RoomBoxPrize = require('../model/RoomBoxPrize');
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
     const { _id, actorType, gameType, timeType } = req.query;
-
     let transactionConditions = {};
     const gameLogsQuery = {
       $and: [
@@ -51,6 +50,8 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       transactionConditions.$and.push({ description: /B!/i });
     } else if (gameType === '6536946933e70418b45fbe2f') {
       transactionConditions.$and.push({ description: /R/i });
+    }else if (gameType === '656cd55bb2c2d9dfb59a4bfa') {
+      transactionConditions.$and.push({ description: /BJ/i });
     }
 
     if (actorType === 'As Host') {
@@ -321,6 +322,8 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         net_profit
       });
     }
+
+    // console.log(statistics.gameLogList)
 
     const response = {
       success: true,

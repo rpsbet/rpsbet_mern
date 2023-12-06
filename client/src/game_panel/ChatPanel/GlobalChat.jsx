@@ -71,7 +71,6 @@ class GlobalChat extends Component {
 
     this.setState({ isLoaded: true });
 
-    console.log('hdh');
   }
 
   handleScroll = () => {

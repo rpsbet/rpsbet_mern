@@ -65,7 +65,7 @@ class Avatar extends Component {
 
   render() {
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
-const {isLowGraphics} = this.props;
+const {isLowGraphics, isDarkMode} = this.props;
     let borderColor = dominantColor
       ? `3px solid rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`
       : '3px solid transparent';
@@ -131,6 +131,28 @@ const {isLowGraphics} = this.props;
             }}
           />
         )}
+        {rank !== null && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '1px',
+              left: '-6px',
+              width: '1.8em',
+              height: '1.8em',
+              backgroundColor: rankColors[rank],
+              color:  isDarkMode ? '#2d2d2d': '#f9f9f9',
+              borderRadius: '5px',
+              border: isDarkMode ? '1px solid #2d2d2d': '1px solid #f9f9f9',
+              fontSize: '0.55em',
+              fontWeight: 'bold',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            {rank}
+          </div>
+        )}
       </div>
     );
   }
@@ -139,6 +161,7 @@ const {isLowGraphics} = this.props;
 const mapStateToProps = state => ({
   userInfo: state.auth.user,
   isLowGraphics: state.auth.isLowGraphics,
+  isDarkMode: state.auth.isDarkMode
 
 });
 

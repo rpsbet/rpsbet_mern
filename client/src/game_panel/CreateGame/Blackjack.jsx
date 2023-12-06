@@ -145,7 +145,7 @@ class Blackjack extends Component {
     super(props);
     this.state = {
       selected_bj: '',
-      bet_amount: 5.0,
+      bet_amount: 0.001,
       winChance: 33,
       bj_list: [],
       cards: [],
@@ -417,7 +417,7 @@ class Blackjack extends Component {
     this.setState({ bet_amount: new_state.selected_bet_amount });
   };
   render() {
-    const defaultBetAmounts = [10, 25, 50, 100, 250];
+    const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
     const { score, cards, scoreAnimation } = this.state;
 
     return this.props.step === 1 ? (
@@ -433,7 +433,6 @@ class Blackjack extends Component {
       </div>
     ) : (
       <div className="game-info-panel">
-        <div className="qs-add-run-panel">
           <div className="bj-add-run-form">
             <div className="deck">
               <div className="card-back">
@@ -526,7 +525,6 @@ class Blackjack extends Component {
                 )}
               </tbody>
             </table>
-          </div>
         </div>
       </div>
     );
