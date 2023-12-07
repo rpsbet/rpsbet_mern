@@ -313,9 +313,9 @@ class Bang extends Component {
 
     if (result.betResult === 1) {
       playSound('win');
-      text = 'WINNER, WINNER, VEGAN DINNER!';
+      text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
     } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUAL MATCH!';
+      text = 'SPLIT! EQUALLY SHIT!';
       playSound('split');
     } else {
       text = 'TROLLOLOLOL! LOSER!';

@@ -28,6 +28,7 @@ import ReactApexChart from 'react-apexcharts';
 import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
 import progress from './LottieAnimations/progress.json';
+import coins from './LottieAnimations/coins.json';
 import InlineSVG from 'react-inlinesvg';
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import {
@@ -213,6 +214,7 @@ class SiteWrapper extends Component {
       filterType: '',
       showSearch: false,
       searchQuery: '',
+      isCoinsAnimation: false,
       showSettingsModal: false,
       showDeposits: false,
       web3: null,
@@ -242,6 +244,36 @@ class SiteWrapper extends Component {
     }
 
     return null;
+  }
+
+  async componentDidUpdate(prevProps, prevState) {
+    const { transactions , tnxComplete} = this.props;
+
+    if ( (prevProps.transactions !== transactions) &&   !tnxComplete) {
+      this.playCoinsAnimation();
+
+      try {
+        await this.props.getUser(true, false);
+        await this.props.getHistory();
+      }  catch (error) {
+        console.error("An error occurred during asynchronous operations:", error);
+        // Handle the error appropriately, e.g., show an error message to the user
+      }
+
+      if (!this.isUnmounted) {
+        this.stopCoinsAnimationAfterDelay();
+      }
+    }
+  }
+
+  playCoinsAnimation() {
+    this.setState({ isCoinsAnimation: true });
+  }
+
+  stopCoinsAnimationAfterDelay() {
+    setTimeout(() => {
+      this.setState({ isCoinsAnimation: false });
+    }, 1500); // Adjust the delay based on your Lottie animation duration
   }
 
   handleMainTabChange = (event, newValue) => {
@@ -342,7 +374,7 @@ class SiteWrapper extends Component {
       await this.props.getUser(
         true,
         false,
-        0,
+        4,
         this.state.filterType,
         this.state.sortType,
         this.state.searchQuery
@@ -641,7 +673,7 @@ class SiteWrapper extends Component {
     }
     clearInterval(this.interval);
     clearInterval(this.timer);
-    // clearInterval(this.counter);
+    this.isUnmounted = true;
   }
   handleLogout = clear_token => {
     this.setState({
@@ -894,6 +926,7 @@ class SiteWrapper extends Component {
       showLoginModal,
       showSignupModal,
       anchorEl,
+      isCoinsAnimation,
       showSettingsModal,
     } = this.state;
     const {
@@ -1082,6 +1115,22 @@ class SiteWrapper extends Component {
                           this.setState({ oldBalance: balance }); // update oldBalance after animation completes
                         }}
                       />
+                      <Lottie
+                options={{
+                  loop: false,
+                  autoplay: isCoinsAnimation,
+                  animationData: coins,
+                  rendererSettings: {
+                    preserveAspectRatio: 'xMidYMid slice',
+                  },
+                }}
+                style={{
+                  marginTop: '-0px',
+                  position: `absolute`,
+                  width: '100px',
+                  height: '100px'
+                }}
+              />
                       <Button
                         id="wallet-btn"
                         style={{

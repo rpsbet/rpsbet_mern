@@ -129,13 +129,13 @@ export function updateRollGuesses() {
 // join game
 export const bet = bet_info => async dispatch => {
   try {
-    // dispatch({ type: START_LOADING });
+    dispatch({ type: START_LOADING });
     const res = await axios.post('/game/bet', bet_info);
-    // dispatch({ type: END_LOADING });
-
+    dispatch({ type: END_LOADING });
+    
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-
+      
       if (bet_info.game_type === 'Mystery Box') {
         dispatch({ type: BET_SUCCESS, payload: res.data });
       } else if (bet_info.game_type === 'Brain Game') {
@@ -351,10 +351,15 @@ export const getRoomList = search_condition => async dispatch => {
 };
 
 export const getHistory = search_condition => async dispatch => {
+  
+  dispatch({ type: TNX_COMPLETE });
+
   try {
     const res = await axios.get('/game/history', { params: search_condition });
     if (res.data.success) {
       dispatch({ type: HISTORY_LOADED, payload: res.data });
+      dispatch({ type: TNX_INCOMPLETE });
+
     }
   } catch (err) {}
 };

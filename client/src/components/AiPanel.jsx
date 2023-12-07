@@ -18,7 +18,7 @@ const AiPanel = ({ isDarkMode, game_type, betting, handleSwitchChange }) => {
       list = 'drop_array';
       break;
     default:
-      list = `${game_type.toLowerCase()}_array`;
+      list = `rps_array`;
   }
 
   return (

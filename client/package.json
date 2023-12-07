@@ -13,11 +13,14 @@
     "@reduxjs/toolkit": "^1.8.1",
     "@stripe/react-stripe-js": "^1.1.2",
     "@stripe/stripe-js": "^1.5.0",
+    "@tensorflow/tfjs": "^4.2.0",
+    "@tensorflow/tfjs-layers": "^4.2.0",
     "apexcharts": "^3.8.6",
-    "axios": "^0.19.0",
+    "axios": "^1.6.2",
+    "canvas": "^2.11.2",
     "crypto-browserify": "^3.12.0",
-    "dotenv": "^16.0.0",
-    "material-ui-datetimepicker": "^1.0.7",
+    "dotenv": "^16.3.1",
+    "material-ui-datetimepicker": "^0.0.5",
     "material-ui-flat-pagination": "^4.0.0",
     "nodemailer": "^6.7.7",
     "react": "^16.9.0",
@@ -33,19 +36,17 @@
     "react-paypal-button-v2": "^2.6.2",
     "react-redux": "^7.1.0",
     "react-router-dom": "^5.0.1",
-    "react-scripts": "^3.4.1",
+    "react-scripts": "^5.0.1",
     "redux": "^4.0.4",
     "redux-devtools-extension": "^2.13.8",
     "redux-thunk": "^2.3.0",
     "socket.io-client": "^2.3.0",
-    "@tensorflow/tfjs": "^4.2.0",
-    "@tensorflow/tfjs-layers": "^4.2.0",
     "uniqid": "^5.0.3",
-    "web3": "^1.0.0-beta.55"
+    "web3": "^4.3.0"
   },
   "scripts": {
-    "start": "SET PORT=1337&&SET SKIP_PREFLIGHT_CHECK=true&&react-scripts start",
-    "build": "SET SKIP_PREFLIGHT_CHECK=true&&react-scripts build",
+    "start": "export PORT=1337&&export SKIP_PREFLIGHT_CHECK=true&&react-scripts start",
+    "build": "export SKIP_PREFLIGHT_CHECK=true&&react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -62,7 +63,7 @@
     ]
   },
   "devDependencies": {
-    "gulp": "4.0.2",
+    "gulp": "^3.9.1",
     "gulp-append-prepend": "1.0.8",
     "react-error-overlay": "^6.0.9"
   }

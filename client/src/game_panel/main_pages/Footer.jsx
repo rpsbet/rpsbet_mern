@@ -190,7 +190,10 @@ class Footer extends Component {
                   onClick={e => {
                     e.preventDefault();
                     this.handleOpenLeaderboardsModal();
-                  }} >Leaderboards</a>&nbsp;✗&nbsp;
+                  }} >Leaderboards</a><span className={(classes.link, 'mobile-only')} >
+                  &nbsp;✗&nbsp;
+                  
+                  </span>
                     {/* <a className={classes.link} href="#">Blog</a>&nbsp;✗&nbsp; */}
                     {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
                     <a className={classes.link}

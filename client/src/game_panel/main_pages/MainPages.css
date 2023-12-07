@@ -88,6 +88,7 @@ button.btn {
 
 .bet-amount {
   margin-top: 30px;
+  margin-bottom: 20px;
   display: flex;
   width: 330px;
   flex-direction: column;
@@ -858,7 +859,7 @@ div.table.my-open-game-table::-webkit-scrollbar {
 
 .bet-array-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(25px, 1fr));
   gap: 0.1rem;
 }
 
@@ -1230,6 +1231,7 @@ h2.room-history-title {
 
 .page-title {
   margin-bottom: -30px;
+  margin-top: 20px;
 }
 
 .contents_wrapper .game-page .page-title h2 {
@@ -2153,9 +2155,9 @@ button.btn-submit:active,
 }
 
 .side-tab-switcher {
-  width: 30px;
+  width: 24px;
     position: absolute;
-    left: -5px;
+    left: 0;
     top: 10px;
 }
 
@@ -3046,6 +3048,7 @@ input {
     display: block;
   }
   .contents_wrapper .game-page .page-title h2 {
+ 
     font-size: 16px;
     padding-left: 44px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' viewBox='0 0 24 24'%3E%3Cpath fill='%23060607' d='M15.474 17.705l-.67.336.67-.336zm-.495-.99l.67-.336c-.127-.254-.386-.415-.67-.415v.75zm-6.258 0v-.75c-.284 0-.543.16-.67.414l.67.335zM22.05 8.892v7.083h1.5V8.893h-1.5zm-5.905 8.477l-.496-.991-1.341.67.495.992 1.342-.671zm-1.166-1.406H8.72v1.5h6.258v-1.5zm-6.928.415l-.496.99 1.342.672.495-.991-1.341-.671zm-6.401-.403V8.893H.15v7.083h1.5zM5.593 4.95h12.514v-1.5H5.593v1.5zm-.826 14.143c-1.722 0-3.117-1.396-3.117-3.117H.15c0 2.55 2.067 4.617 4.617 4.617v-1.5zm14.166 0c-1.18 0-2.26-.667-2.788-1.723l-1.342.67c.782 1.565 2.38 2.553 4.13 2.553v-1.5zm3.117-3.117c0 1.721-1.396 3.117-3.117 3.117v1.5c2.55 0 4.617-2.067 4.617-4.617h-1.5zM7.555 17.37c-.528 1.056-1.607 1.723-2.788 1.723v1.5c1.749 0 3.348-.988 4.13-2.552l-1.342-.671zM23.55 8.893c0-3.006-2.437-5.443-5.443-5.443v1.5c2.178 0 3.943 1.765 3.943 3.943h1.5zm-21.9 0c0-2.178 1.765-3.943 3.943-3.943v-1.5C2.587 3.45.15 5.887.15 8.893h1.5zm3.16 2.314h4.693v-1.5H4.811v1.5zm1.597-3.096v4.692h1.5V8.111h-1.5zm10.918 1.532h1.564v-1.5h-1.564v1.5zm-3.129 3.128h1.565v-1.5h-1.565v1.5z'/%3E%3C/svg%3E%0A");

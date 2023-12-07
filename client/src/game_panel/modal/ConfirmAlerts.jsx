@@ -142,7 +142,7 @@ const showResultModal = (
     customUI: ({ onClose }) => {
       setTimeout(() => {
         onClose();
-        window.speechSynthesis.cancel();
+        // window.speechSynthesis.cancel();
       }, 1500);
 
       return (

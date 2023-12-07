@@ -26,7 +26,7 @@ class ImageResultModal extends Component {
     const { productName } = this.props;
     setTimeout(() => {
 
-    this.speak("You've found a motherfucking " + productName + ', NICE!');
+    this.speak("You've found a motherfucking " + productName + ', have a cookie you fat fuck!');
     }, 1500);
   }
 
@@ -63,7 +63,7 @@ class ImageResultModal extends Component {
             <h1
               style={{ fontSize: '2em', color: isDarkMode ? '#fff' : '#333' }}
             >
-              Congratulations! 🎉
+              Congratulations! 🍪
             </h1>
             <p style={{ color: isDarkMode ? '#ddd' : '#555' }}>
               You've found a {productName}!

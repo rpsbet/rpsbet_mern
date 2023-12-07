@@ -272,10 +272,10 @@ class DropGame extends Component {
 
     if (result.betResult === 1) {
       playSound('win');
-      text = 'WINNER, WINNER, VEGAN DINNER!';
+      text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
       // this.changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUAL MATCH!';
+      text = 'SPLIT! EQUALLY SHIT!';
       playSound('split');
       // this.changeBgColor(result.betResult);
     } else {

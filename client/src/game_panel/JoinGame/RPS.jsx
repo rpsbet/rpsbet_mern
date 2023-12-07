@@ -402,10 +402,10 @@ class RPS extends Component {
     let text;
     if (result.betResult === 1) {
       playSound('win');
-      text = 'WINNER, WINNER, VEGAN DINNER!';
+      text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
       changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUAL MATCH!';
+      text = 'SPLIT! EQUALLY SHIT!';
       playSound('split');
       changeBgColor(result.betResult);
     } else {

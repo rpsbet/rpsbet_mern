@@ -336,7 +336,7 @@ class Roll extends Component {
 
       if (result.betResult === 1) {
         playSound('win');
-        text = 'WINNER, WINNER, VEGAN DINNER!';
+        text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
         this.changeBgColor(result.betResult);
       } else {
         text = 'TROLLOLOLOL! LOSER!';

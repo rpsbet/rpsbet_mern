@@ -4360,15 +4360,15 @@ router.post('/bet', auth, async (req, res) => {
         await roomInfo.save();
       }
       setTimeout(async () => {
-        const rooms = await getRoomList(10, 'All');
-        req.io.sockets.emit('UPDATED_ROOM_LIST', {
-          _id: roomInfo['_id'],
-          total: rooms.count,
-                    total: rooms.count,
+        // const rooms = await getRoomList(10, 'All');
+        // req.io.sockets.emit('UPDATED_ROOM_LIST', {
+        //   _id: roomInfo['_id'],
+        //   total: rooms.count,
+        //             total: rooms.count,
 
-          roomList: rooms.rooms,
-          pageSize: rooms.pageSize
-        });
+        //   roomList: rooms.rooms,
+        //   pageSize: rooms.pageSize
+        // });
 
         if (newTransactionJ.amount !== 0) {
           newTransactionJ.save();

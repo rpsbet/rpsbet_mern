@@ -283,12 +283,12 @@ class Blackjack extends Component {
         this.setState({ bankroll: data.bankroll });
       });
     }
-    document.addEventListener('mousedown', this.handleClickOutside);
+    // document.addEventListener('mousedown', this.handleClickOutside);
   };
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
-    document.removeEventListener('mousedown', this.handleClickOutside);
+    // document.removeEventListener('mousedown', this.handleClickOutside);
   };
 
   // Obfuscated code example
@@ -595,10 +595,10 @@ class Blackjack extends Component {
     let text;
     if (result.betResult === 1) {
       playSound('win');
-      text = 'WINNER, WINNER, VEGAN DINNER!';
+      text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
       this.changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUAL MATCH!';
+      text = 'SPLIT! EQUALLY SHIT!';
       playSound('split');
       this.changeBgColor(result.betResult);
     } else {
