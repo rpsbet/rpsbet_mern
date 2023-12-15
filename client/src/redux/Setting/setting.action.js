@@ -14,9 +14,9 @@ export const getSettings = () => async (dispatch) => {
   try {
     const { data } = await axios.get('/settings', {});
     if (data.success) {
-        return data.settings;
+      return data.settings;
     } else {
-        dispatch({ type: MSG_ERROR, payload: data.message });
+      dispatch({ type: MSG_ERROR, payload: data.message });
     }
   } catch (error) {
     console.log('error***', error);
@@ -25,7 +25,7 @@ export const getSettings = () => async (dispatch) => {
 
 export const saveSettings = settings => async dispatch => {
   try {
-    const { data } = await axios.post('/settings', {settings});
+    const { data } = await axios.post('/settings', { settings });
     if (data.success) {
       dispatch({ type: MSG_SUCCESS, payload: 'System settings have been saved.' });
     } else {
@@ -58,7 +58,13 @@ export const addToQueue = (videoId, title, totalDuration) => async (dispatch) =>
 export const getQueue = () => async (dispatch) => {
   try {
     const response = await axios.get('/settings/get-queue');
-    dispatch({ type: GET_QUEUE, payload: response.data });
+    if (response.status >= 200 && response.status < 300) {
+      dispatch({ type: GET_QUEUE, payload: response.data });
+    } else {
+      console.error('Error fetching queue. Server responded with:', response.status, response.statusText);
+
+    }
+
   } catch (error) {
     console.log('error***', error);
 

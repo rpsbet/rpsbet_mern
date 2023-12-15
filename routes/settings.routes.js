@@ -59,8 +59,6 @@ router.post('/', auth, async (req, res) => {
 
 router.post('/add-to-queue', async (req, res) => {
   const { videoId, title, totalDuration } = req.body;
-  console.log("hi:", videoId, title, totalDuration);
-
   try {
     if (totalDuration > 10) {
       const newVideo = new Jukebox({
@@ -70,8 +68,6 @@ router.post('/add-to-queue', async (req, res) => {
       });
 
       const savedVideo = await newVideo.save();
-
-      console.log("Video saved successfully:", savedVideo);
       res.json(savedVideo);
     } else {
       // Respond with an error if the video duration is less than or equal to 10 seconds
@@ -85,8 +81,8 @@ router.post('/add-to-queue', async (req, res) => {
 
 router.get('/get-queue', async (req, res) => {
   try {
-    
     const queue = await Jukebox.find().sort({ _id: 1 }); // Order by insertion time
+    console.log("get", queue)
     res.json(queue);
   } catch (error) {
     res.status(500).json({ error: 'Unable to retrieve the video queue.' });
