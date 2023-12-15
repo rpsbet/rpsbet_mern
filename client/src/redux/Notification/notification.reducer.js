@@ -9,10 +9,16 @@ import {
   CLOSE_GAME_PASSWORD_MODAL,
   OPEN_CONFIRM_TRADE_MODAL,
   CLOSE_CONFIRM_TRADE_MODAL,
+  OPEN_CONFIRM_LOAN_MODAL,
+  CLOSE_CONFIRM_LOAN_MODAL,
   OPEN_LIST_ITEM_MODAL,
   CLOSE_LIST_ITEM_MODAL,
   OPEN_DELIST_ITEM_MODAL,
   CLOSE_DELIST_ITEM_MODAL,
+  OPEN_LIST_LOAN_MODAL,
+  CLOSE_LIST_LOAN_MODAL,
+  OPEN_DELIST_LOAN_MODAL,
+  CLOSE_DELIST_LOAN_MODAL,
   SET_PASSWORD_CORRECT
 } from '../types';
 
@@ -28,7 +34,8 @@ const initialState = {
   showConfirmTradeModal: false,
   showListItemModal: false,
   showDeListItemModal: false,
-
+  showListLoanModal: false,
+  showDeListLoanModal: false,
   title: '',
   alertMessage: '',
   alertType: '',
@@ -126,6 +133,36 @@ export default function(state = initialState, action) {
         return {
           ...state,
           showDeListItemModal: false
+        };
+        case OPEN_CONFIRM_LOAN_MODAL:
+      return {
+        ...state,
+        showConfirmLoanModal: true
+      };
+    case CLOSE_CONFIRM_LOAN_MODAL:
+      return {
+        ...state,
+        showConfirmLoanModal: false
+      };
+        case OPEN_LIST_LOAN_MODAL:
+        return {
+          ...state,
+          showListLoanModal: true
+        };
+      case CLOSE_LIST_LOAN_MODAL:
+        return {
+          ...state,
+          showListLoanModal: false
+        };
+      case OPEN_DELIST_LOAN_MODAL:
+        return {
+          ...state,
+          showDeListLoanModal: true
+        };
+      case CLOSE_DELIST_LOAN_MODAL:
+        return {
+          ...state,
+          showDeListLoanModal: false
         };
     default:
       return state;

@@ -1002,7 +1002,7 @@ class CreateGame extends Component {
               <>
                 <h2 className="main-title desktop-only">AI PANEL</h2>
                 <AiPanel user_id={this.props.user_id} />
-                <h2 className="main-title desktop-only">MY HISTORY</h2>
+                <h2 className="main-title desktop-only">YOUR HISTORY</h2>
 
                 <MyHistoryTable />
               </>

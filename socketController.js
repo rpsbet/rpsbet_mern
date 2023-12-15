@@ -12,6 +12,13 @@ const send = (msg_type, to_id, data) => {
     sockets[to_id].emit(msg_type, data);
   }
 };
+// Assuming you have the io instance available globally or passed as a parameter
+
+module.exports.sendUpdate = (socket_io, videoId, progress) => {
+  socket_io.emit('UPDATE_PROGRESS', { videoId, progress });
+  console.log('UPDATE_PROGRESS', videoId, progress);
+};
+
 
 module.exports.playSound = (from_user_id, data) => {
   send('PLAY_SOUND', from_user_id, data);
@@ -30,8 +37,11 @@ module.exports.newTransaction = transaction => {
 };
 module.exports.socketio = server => {
   const io = socket_io(server);
-
-  io.on('connection', socket => {
+  
+  io.on('connection', (socket) => {
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
     socket.emit('CONNECTED', {});
 
     socket.on('STORE_CLIENT_USER_ID', data => {
@@ -216,6 +226,8 @@ module.exports.socketio = server => {
       socket.broadcast.emit('RPS_1', data);
     });
 
+
+    
     socket.on('DROP_GUESSES', data => {
       socket.broadcast.emit('DROP_GUESSES', data);
     });

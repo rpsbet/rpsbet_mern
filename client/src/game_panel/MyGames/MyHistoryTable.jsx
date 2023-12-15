@@ -4,10 +4,11 @@ import { getMyHistory } from '../../redux/Logic/logic.actions';
 import IconButton from '@material-ui/core/IconButton';
 import { Box, Button } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
 import CountUp from 'react-countup';
 import { getSettings } from '../../redux/Setting/setting.action';
 import InlineSVG from 'react-inlinesvg';
+import busdSvg from '../JoinGame/busd.svg';
+
 import Moment from 'moment';
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
@@ -272,7 +273,7 @@ class MyHistoryTable extends Component {
           <InlineSVG
             className="rain"
             id="busd"
-            src={require('../JoinGame/busd.svg')}
+            src={busdSvg}
           />
           <CountUp
             end={this.state.rain}

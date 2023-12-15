@@ -184,49 +184,49 @@ border-top: 2px solid #36393f;
 }
 
 .dark_mode 	.modal-body .modal-content-wrapper.drop-game h4 {
-    background-image: url("/img/icons/modal-drop-game-dark-mode.svg");
+    background-image: url("../public/img/icons/modal-drop-game-dark-mode.svg");
 }
 .dark_mode 	.modal-body .modal-content-wrapper.craps h4 {
-    background-image: url("/img/icons/modal-craps-dark-mode.svg");
+    background-image: url("../public/img/icons/modal-craps-dark-mode.svg");
 }
 
 .dark_mode 	.modal-body .modal-content-wrapper.roll h4 {
-    background-image: url("/img/icons/modal-roll-dark-mode.svg");
+    background-image: url("../public/img/icons/modal-roll-dark-mode.svg");
 }
 .dark_mode 	.modal-body .modal-content-wrapper.slots h4 {
-    background-image: url("/img/icons/modal-slots-dark.svg");
+    background-image: url("../public/img/icons/modal-slots-dark.svg");
 }
 
 .dark_mode 	.modal-body .modal-content-wrapper.clips h4 {
-    background-image: url("/img/icons/modal-clips.svg");
+    background-image: url("../public/img/icons/modal-clips.svg");
 }
 
 .dark_mode 	.modal-body .modal-content-wrapper.wheel h4 {
-    background-image: url("/img/icons/modal-wheel-dark.svg");
+    background-image: url("../public/img/icons/modal-wheel-dark.svg");
 }
 
 .dark_mode 	.modal-body .modal-content-wrapper.pot h4 {
-    background-image: url("/img/icons/modal-pot-dark.svg");
+    background-image: url("../public/img/icons/modal-pot-dark.svg");
 }
 
 .dark_mode 	.modal-body .modal-content-wrapper.bang h4 {
-    background-image: url("/img/icons/modal-bang-dark.svg");
+    background-image: url("../public/img/icons/modal-bang-dark.svg");
 }
 
 .dark_mode 	.modal-body .modal-content-wrapper.blackjack h4 {
-    background-image: url("/img/icons/modal-blackjack-dark.svg");
+    background-image: url("../public/img/icons/modal-blackjack-dark.svg");
 }
 
 .dark_mode .modal-body .modal-content-wrapper.provably-fair h4 {
-    background-image: url("/img/icons/modal-provably-fair-dark-mode.svg");
+    background-image: url("../public/img/icons/modal-provably-fair-dark-mode.svg");
 }
 
 .dark_mode .modal-body .modal-content-wrapper.house-edge h4 {
-    background-image: url("/img/icons/modal-house-edge-dark-mode.svg");
+    background-image: url("../public/img/icons/modal-house-edge-dark-mode.svg");
 }
 
 .dark_mode .modal-body .modal-content-wrapper.support h4 {
-    background-image: url("/img/icons/modal-support-dark-mode.svg");
+    background-image: url("../public/img/icons/modal-support-dark-mode.svg");
 }
 
 .dark_mode a.player,
@@ -277,7 +277,7 @@ border-top: 2px solid #36393f;
 	background-color: #060607;
 }
 .dark_mode .game_header .main_header a.game_logo {
-    background-image: url("/img/dark-game-logo.svg")
+    background-image: url("../public/img/dark-game-logo.svg")
 }
 .dark_mode .game_header .main_header .header_action_panel button.profile-menu {
 	color: #8e9297;
@@ -300,7 +300,7 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: #0c0c0c;
-	background-image: linear-gradient(-135deg, transparent, #0c0c0c 95%), url(/img/bgm.webp) !important;
+	background-image: linear-gradient(-135deg, transparent, #0c0c0c 95%), url(../public/img/bgm.webp) !important;
 }
 
 .dark_mode .avatar-square {
@@ -387,7 +387,7 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 }
 .dark_mode .contents_wrapper .game-page .page-title h2 {
 	color: white;
-	background-image: url("/img/icons/dark-game-page-title.svg");
+	background-image: url("../public/img/icons/dark-game-page-title.svg");
 }
 .dark_mode .contents_wrapper .game-page .page-title span {
 	color: #72767d;
@@ -427,10 +427,10 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 	border: 0;
 }
 .dark_mode .game-page .game-contents .game-info-panel .qs-action-panel button.btn-left {
-    background-image: url("/img/icons/dark-icon-left.svg");
+    background-image: url("../public/img/icons/dark-icon-left.svg");
 }
 .dark_mode .game-page .game-contents .game-info-panel .qs-action-panel button.btn-right {
-    background-image: url("/img/icons/dark-icon-right.svg");
+    background-image: url("../public/img/icons/dark-icon-right.svg");
 }
 .dark_mode .game-page .game-contents .game-info-panel .qs-action-panel label {
 	color: white;
@@ -514,23 +514,23 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 
 
 .dark_mode .modal-body .modal-icon.alert-icon {
-	background-image: url("/img/icons/dark-alert-icon.svg");
+	background-image: url("../public/img/icons/dark-alert-icon.svg");
 }
 .dark_mode .modal-body .modal-icon.alert-icon-closed {
-	background-image: url("/img/icons/dark-alert-icon-closed.svg");
+	background-image: url("../public/img/icons/dark-alert-icon-closed.svg");
 }
 .dark_mode .modal-body .modal-icon.alert-icon-create {
-	background-image: url("/img/icons/dark-alert-icon-create.svg");
+	background-image: url("../public/img/icons/dark-alert-icon-create.svg");
 }
 .dark_mode .modal-body .modal-icon.result-icon-password {
-	background-image: url("/img/icons/dark-result-icon-password.svg");
+	background-image: url("../public/img/icons/dark-result-icon-password.svg");
 }
 .dark_mode .modal-body .modal-icon.result-icon-prize {
-    background-image: url("/img/icons/dark-alert-prize-icon.svg");
+    background-image: url("../public/img/icons/dark-alert-prize-icon.svg");
 }
 
 .dark_mode .modal-body .modal-icon.result-icon-trade {
-	background-image: url("/img/icons/dark-result-icon-trade.svg");
+	background-image: url("../public/img/icons/dark-result-icon-trade.svg");
 }
 .dark_mode .modal-body .modal-content-wrapper h4 {
     color: white;

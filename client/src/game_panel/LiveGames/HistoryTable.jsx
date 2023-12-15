@@ -11,6 +11,7 @@ import { faHeart, faHeartBroken, faStopwatch} from '@fortawesome/free-solid-svg-
 import BetArray from '../../components/BetArray';
 import CountUp from 'react-countup';
 import InlineSVG from 'react-inlinesvg';
+import busdSvg from '../JoinGame/busd.svg';
 import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
 import rain from '../LottieAnimations/rain.json';
@@ -53,6 +54,7 @@ class HistoryTable extends Component {
           prevRain: prevState.rain
         }));
       });
+      
     } else {
       console.error('Socket is null or undefined');
     }
@@ -286,7 +288,7 @@ class HistoryTable extends Component {
           <InlineSVG
             className="rain"
             id="busd"
-            src={require('../JoinGame/busd.svg')}
+            src={busdSvg}
           />
           <CountUp
             end={this.state.rain}

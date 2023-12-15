@@ -12,6 +12,8 @@ import {
   SET_CUR_ROOM_INFO,
   SET_URL,
   MY_GAMES_LOADED,
+  MY_GAMES_LOADED_WITHOUT_STATS,
+  MY_GAMES_LOADED_WITH_STATS,
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
   UPDATE_BET_RESULT,
@@ -115,7 +117,7 @@ const initialState = {
   selectedMainTabIndex: 0,
   globalChatList: []
 };
-export default function(state = initialState, action) {
+export default function (state = initialState, action) {
   const { type, payload } = action;
   switch (type) {
     case BET_SUCCESS:
@@ -132,7 +134,7 @@ export default function(state = initialState, action) {
         };
       }
       return state;
-   
+
     case SPLEESH_GUESSES:
       return {
         ...state,
@@ -143,11 +145,11 @@ export default function(state = initialState, action) {
         ...state,
         drop_guesses: action.drop_guesses
       };
-      // case FETCH_ACCESSORY_SUCCESS:
-      //   return {
-      //     ...state,
-      //     accessory: action.payload
-      //   };
+    // case FETCH_ACCESSORY_SUCCESS:
+    //   return {
+    //     ...state,
+    //     accessory: action.payload
+    //   };
     case BANG_GUESSES:
       return {
         ...state,
@@ -180,16 +182,16 @@ export default function(state = initialState, action) {
         isActiveLoadingOverlay: false
       };
 
-      case TNX_INCOMPLETE:
-        return {
-          ...state,
-          transactionComplete: false
-        };
+    case TNX_INCOMPLETE:
+      return {
+        ...state,
+        transactionComplete: false
+      };
     case TNX_COMPLETE:
-        return {
-          ...state,
-          transactionComplete: true
-        };
+      return {
+        ...state,
+        transactionComplete: true
+      };
     case SET_GAME_MODE:
       return {
         ...state,
@@ -231,10 +233,10 @@ export default function(state = initialState, action) {
       return {
         ...state,
         roomList,
-    accessories,
-    // totalPage: pages,
-    roomCount: total,
-    pageSize: pageSize,
+        accessories,
+        // totalPage: pages,
+        roomCount: total,
+        pageSize: pageSize,
       };
     case HISTORY_LOADED:
       return {
@@ -250,6 +252,17 @@ export default function(state = initialState, action) {
         myGamesTotalPage: payload.pages,
         myGamesPageNumber: payload.page
       };
+
+    case MY_GAMES_LOADED_WITHOUT_STATS:
+      return {
+        ...state,
+        myGamesWithStats: false
+      };
+    case MY_GAMES_LOADED_WITH_STATS:
+      return {
+        ...state,
+        myGamesWithStats: true
+      };
     case MY_HISTORY_LOADED:
       return {
         ...state,
@@ -262,16 +275,16 @@ export default function(state = initialState, action) {
         ...state,
         myChat: payload
       };
-      case NOTIFICATIONS_LOADED:
+    case NOTIFICATIONS_LOADED:
       return {
         ...state,
         notifications: payload
       };
-      case SET_NOTIFICATIONS_ROOM_INFO:
-        return {
-          ...state,
-          notificationsRoomInfo: payload
-        };
+    case SET_NOTIFICATIONS_ROOM_INFO:
+      return {
+        ...state,
+        notificationsRoomInfo: payload
+      };
     case MSG_CREATE_ROOM_SUCCESS:
     case MSG_CREATE_ROOM_FAIL:
     case SET_URL:

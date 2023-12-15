@@ -25,7 +25,7 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import { Button } from '@material-ui/core';
 import AiPanel from '../../components/AiPanel';
-
+import JukeboxPanel from '../../components/JukeboxPanel.jsx';
 import { Tabs, Tab, Drawer } from '@material-ui/core';
 import DrawerButton from './DrawerButton';
 import './MainPages.css';
@@ -187,7 +187,7 @@ class MainPage extends Component {
                   this.state.show_open_game === 1
                     ? this.state.selectedMobileTab === 'live_games'
                       ? 'History'
-                      : 'My History'
+                      : 'Your History'
                     : 'History'
                 }
                 icon={
@@ -233,6 +233,13 @@ class MainPage extends Component {
             this.state.show_open_game === 1 && <MyHistoryTable />}
         </div>
         <div className="sub-panel">
+        {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
+            <>
+              <h2 className="main-title desktop-only">JUKEBOX</h2>
+              <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} />
+            </>
+          )}
+
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
               <h2 className="main-title desktop-only">AI PANEL</h2>
@@ -259,7 +266,7 @@ class MainPage extends Component {
           )}
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>
-              <h2 className="main-title desktop-only">MY HISTORY</h2>
+              <h2 className="main-title desktop-only">YOUR HISTORY</h2>
 
               <MyHistoryTable />
             </>
@@ -479,6 +486,7 @@ const mapStateToProps = state => ({
   totalPage: state.logic.totalPage,
   balance: state.auth.balance,
   user: state.auth.user,
+  isMusicEnabled: state.auth.isMusicEnabled,
   isDarkMode: state.auth.isDarkMode,
   onlineUserList: state.logic.onlineUserList,
   isDrawerOpen: state.auth.isDrawerOpen,

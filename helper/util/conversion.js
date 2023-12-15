@@ -11,8 +11,8 @@ const convertToCurrency = (input, isFull = false) => {
     decimal = decimal.replace(/0+$/, '');
 
     whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return `<svg id='busd' width="0.7em" height="0.7em" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-      viewBox="0 0 1920 1920" enable-background="new 0 0 1920 1920" xml:space="preserve">
+    return `<svg id='busd' width="0.7em" height="0.7em" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+      viewBox="0 0 1920 1920" enable-background="new 0 0 1920 1920" xmlSpace="preserve">
    <g>
      <polygon fill="#8A92B2" points="959.8,80.7 420.1,976.3 959.8,731 	"/>
      <polygon fill="#62688F" points="959.8,731 420.1,976.3 959.8,1295.4 	"/>

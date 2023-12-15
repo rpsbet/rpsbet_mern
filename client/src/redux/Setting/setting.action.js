@@ -4,6 +4,10 @@ import {
   MSG_ERROR,
   MSG_WARNING,
   MSG_SUCCESS,
+  ADD_TO_QUEUE,
+  GET_QUEUE,
+  // UPDATE_PROGRESS
+
 } from '../types';
 
 export const getSettings = () => async (dispatch) => {
@@ -32,3 +36,40 @@ export const saveSettings = settings => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
+
+
+export const addToQueue = (videoId, title, totalDuration) => async (dispatch) => {
+  try {
+    const response = await axios.post('/settings/add-to-queue', { videoId, title, totalDuration });
+
+    // Check if the response status is in the range of 2xx
+    if (response.status >= 200 && response.status < 300) {
+      dispatch({ type: ADD_TO_QUEUE, payload: response.data });
+    } else {
+      console.error('Error adding to queue. Server responded with:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error adding to queue:', error);
+    console.log('Error details:', error.response ? error.response.data : 'N/A');
+  }
+};
+
+
+export const getQueue = () => async (dispatch) => {
+  try {
+    const response = await axios.get('/settings/get-queue');
+    dispatch({ type: GET_QUEUE, payload: response.data });
+  } catch (error) {
+    console.log('error***', error);
+
+  }
+};
+
+// export const updateProgress = (id, progress) => async (dispatch) => {
+//   try {
+//     const response = await axios.put(`/settings/update-progress/${id}`, { progress });
+//     dispatch({ type: UPDATE_PROGRESS, payload: response.data });
+//   } catch (error) {
+//     console.log('error***', error);
+//   }
+// };

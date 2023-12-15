@@ -70,32 +70,32 @@
     margin-bottom: 0 !important;
 }
 .modal-body .modal-icon.result-icon-prize {
-    background-image: url("/img/icons/alert-prize-icon.svg");
+    background-image: url("../../../public/img/icons/alert-prize-icon.svg");
 }
 .modal-body .modal-icon.alert-icon {
-    background-image: url("/img/icons/alert-icon.svg");
+    background-image: url("../../../public/img/icons/alert-icon.svg");
 }
 
 .modal-body .modal-icon.alert-icon-closed {
-    background-image: url("/img/icons/alert-icon-closed.svg");
+    background-image: url("../../../public/img/icons/alert-icon-closed.svg");
 }
 .modal-body .modal-icon.alert-icon-create {
-    background-image: url("/img/icons/alert-icon-create.svg");
+    background-image: url("../../../public/img/icons/alert-icon-create.svg");
 }
 .modal-body .modal-icon.result-icon-draw {
-    background-image: url("/img/icons/result-icon-draw.svg");
+    background-image: url("../../../public/img/icons/result-icon-draw.svg");
 }
 .modal-body .modal-icon.result-icon-win {
-    background-image: url("/img/icons/result-icon-win.svg");
+    background-image: url("../../../public/img/icons/result-icon-win.svg");
 }
 .modal-body .modal-icon.result-icon-lost {
-    background-image: url("/img/icons/result-icon-lost.svg");
+    background-image: url("../../../public/img/icons/result-icon-lost.svg");
 }
 .modal-body .modal-icon.result-icon-password {
-    background-image: url("/img/icons/result-icon-password.svg");
+    background-image: url("../../../public/img/icons/result-icon-password.svg");
 }
 .modal-body .modal-icon.result-icon-trade {
-    background-image: url("/img/icons/result-icon-trade.svg");
+    background-image: url("../../../public/img/icons/result-icon-trade.svg");
 }
 .modal-body.alert-body button.btn-close {
     top: 10px;
@@ -360,16 +360,16 @@ div[role="presentation"] div {
     border-color: #eb3db8;
 }
 .modal-body .withdraw-modal-tabs button.btn-paypal {
-    background-image: url("/img/icons/btn-paypal.svg");
+    background-image: url("../../../public/img/icons/btn-paypal.svg");
 }
 .modal-body .withdraw-modal-tabs button.btn-bank {
-    background-image: url("/img/icons/btn-bank.svg");
+    background-image: url("../../../public/img/icons/btn-bank.svg");
 }
 .modal-body .withdraw-modal-tabs button.active.btn-paypal {
-    background-image: url("/img/icons/btn-paypal-active.svg");
+    background-image: url("../../../public/img/icons/btn-paypal-active.svg");
 }
 .modal-body .withdraw-modal-tabs button.active.btn-bank {
-    background-image: url("/img/icons/btn-bank-active.svg");
+    background-image: url("../../../public/img/icons/btn-bank-active.svg");
 }
 
 /***********************/
@@ -471,63 +471,63 @@ div[role="presentation"] div {
     color: #fff;
 }
 .modal-body .modal-content-wrapper.roll h4 {
-    background-image: url("/img/icons/modal-roll.svg");
+    background-image: url("../../../public/img/icons/modal-roll.svg");
 }
 .modal-body .modal-content-wrapper.craps h4 {
-    background-image: url("/img/icons/modal-craps.svg");
+    background-image: url("../../../public/img/icons/modal-craps.svg");
 }
 .modal-body .modal-content-wrapper.roll h4 {
-    background-image: url("/img/icons/modal-roll.svg");
+    background-image: url("../../../public/img/icons/modal-roll.svg");
 }
 
 .modal-body .modal-content-wrapper.quick-shoot h4 {
-    background-image: url("/img/icons/modal-quick-shoot.svg");
+    background-image: url("../../../public/img/icons/modal-quick-shoot.svg");
 }
 .modal-body .modal-content-wrapper.rps h4 {
-    background-image: url("/img/icons/modal-rps.svg");
+    background-image: url("../../../public/img/icons/modal-rps.svg");
 }
 .modal-body .modal-content-wrapper.mystery-box h4 {
-    background-image: url("/img/icons/modal-mystery-box.svg");
+    background-image: url("../../../public/img/icons/modal-mystery-box.svg");
 }
 .modal-body .modal-content-wrapper.spleesh h4 {
-    background-image: url("/img/icons/modal-spleesh.svg");
+    background-image: url("../../../public/img/icons/modal-spleesh.svg");
 }
 
 .modal-body .modal-content-wrapper.wheel h4 {
-    background-image: url("/img/icons/modal-wheel.svg");
+    background-image: url("../../../public/img/icons/modal-wheel.svg");
 }
 .modal-body .modal-content-wrapper.slots h4 {
-    background-image: url("/img/icons/modal-slots.svg");
+    background-image: url("../../../public/img/icons/modal-slots.svg");
 }
 .modal-body .modal-content-wrapper.pot h4 {
-    background-image: url("/img/icons/modal-pot.svg");
+    background-image: url("../../../public/img/icons/modal-pot.svg");
 }
 .modal-body .modal-content-wrapper.clips h4 {
-    background-image: url("/img/icons/modal-clips-dark.svg");
+    background-image: url("../../../public/img/icons/modal-clips-dark.svg");
 }
 .modal-body .modal-content-wrapper.brain-game h4 {
-    background-image: url("/img/icons/modal-brain-game.svg");
+    background-image: url("../../../public/img/icons/modal-brain-game.svg");
 }
 
 .modal-body .modal-content-wrapper.bang h4 {
-    background-image: url("/img/icons/modal-bang.svg");
+    background-image: url("../../../public/img/icons/modal-bang.svg");
 }
 .modal-body .modal-content-wrapper.blackjack h4 {
-    background-image: url("/img/icons/modal-blackjack.svg");
+    background-image: url("../../../public/img/icons/modal-blackjack.svg");
 }
 
 .modal-body .modal-content-wrapper.drop-game h4 {
-    background-image: url("/img/icons/modal-drop-game.svg");
+    background-image: url("../../../public/img/icons/modal-drop-game.svg");
 }
 
 .modal-body .modal-content-wrapper.house-edge h4 {
-    background-image: url("/img/icons/modal-house-edge.svg");
+    background-image: url("../../../public/img/icons/modal-house-edge.svg");
 }
 .modal-body .modal-content-wrapper.provably-fair h4 {
-    background-image: url("/img/icons/modal-provably-fair.svg");
+    background-image: url("../../../public/img/icons/modal-provably-fair.svg");
 }
 .modal-body .modal-content-wrapper.support h4 {
-    background-image: url("/img/icons/modal-support.svg");
+    background-image: url("../../../public/img/icons/modal-support.svg");
 }
 .modal-body .modal-content-wrapper div.modal-content-panel {
     padding: 20px 24px;

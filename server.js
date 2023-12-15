@@ -24,11 +24,14 @@ app.use(function(req, res, next) {
 });
 
 var corsOptions = {
-  origin: 'https://localhost:3000',
+  origin: 'http://localhost:1337',
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   credentials: true,
   optionsSuccessStatus: 200
 };
+
+app.use(cors(corsOptions));
+// app.use(cors());
 
 const adminAuthRoutes = require('./routes/admin_auth.routes');
 const authRoutes = require('./routes/auth.routes');
@@ -37,6 +40,7 @@ const landingRoutes = require('./routes/landing.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const gameRoutes = require('./routes/game.routes');
 const itemRoutes = require('./routes/item.routes');
+const loanRoutes = require('./routes/loan.routes');
 const questionRoutes = require('./routes/admin_question.routes');
 const brainGameTypeRoutes = require('./routes/admin_brain_game_type.route');
 const stripeRoutes = require('./routes/stripe.routes');
@@ -48,12 +52,10 @@ const cronJob = require('./helper/util/createCronJob.js');
 // Initialize the cron job to periodically check for confirmations
 cronJob.checkConfirmations();
 
-app.use(helmet());
+// app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// app.use(cors(corsOptions));
-app.use(cors());
 
 app.use(express.json({ extended: false }));
 app.use(fileUpload());
@@ -76,6 +78,7 @@ app.use('/api/landing', landingRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/item', itemRoutes);
+app.use('/api/loan', loanRoutes);
 app.use('/api/question', questionRoutes);
 app.use('/api/brain_game_type', brainGameTypeRoutes);
 app.use('/api/stripe', stripeRoutes);

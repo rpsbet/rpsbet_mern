@@ -6,6 +6,8 @@
   top: 0;
 }
 
+
+
 .selected {
   border: 2px solid #cf0c0e;
   box-shadow: 0 0 5px rgba(207, 12, 14, 0.7);
@@ -200,7 +202,7 @@ div[role='tablist'] {
 .game_header .main_header a.game_logo {
   width: 127px;
   height: 34px;
-  background-image: url('/img/game-logo.svg');
+  background-image: url('../../public/img/game-logo.svg');
   background-repeat: no-repeat;
   background-position: center center;
 }
@@ -268,9 +270,10 @@ div[role='tablist'] {
 }
 
 .game_header .main_header #btn_notifications.desktop-only,
-.game_header .main_header #btn_leaderboards.desktop-only, .game_header .main_header #btn_marketplace.desktop-only
+.game_header .main_header #btn_leaderboards.desktop-only, .game_header .main_header #btn_marketplace.desktop-only,
+.game_header .main_header #btn_bank.desktop-only
 {
-  margin-right: 15px;
+  margin-right: 10px;
 }
 .game_header .main_header #btn_notifications.mobile-only
 {
@@ -526,7 +529,7 @@ div.table .table-row .table-cell img.avatar,
     width: 84px;
     height: 34px;
     margin-right: 20px;
-    background-image: url('/img/game-logo-mobile.svg');
+    background-image: url('../../public/img/game-logo-mobile.svg');
   }
 
   .game_header .main_header .header_action_panel button span.username

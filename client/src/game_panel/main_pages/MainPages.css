@@ -148,7 +148,7 @@ div.table .table-row .table-cell button:last-child:before,
   opacity: 0.4;
   filter: brightness(0.15);
   height: 200%;
-  background-image: url('/img/rock-bg.png');
+  background-image: url('../../../public/img/rock-bg.png');
   background-size: 100% auto;
   animation: move-diagonal 10s linear infinite;
 }
@@ -440,9 +440,9 @@ div.table .table-cell button.btn_join img {
   padding: 0 6px 8px 16px;
   background-color: rgba(235, 237, 239, 0.5);
   position: relative;
-  height: calc(100vh - -50px);
   overflow-y: scroll;
 }
+
 .contents_wrapper .main-game .sub-panel {
   padding: 10px 12px 0px;
   position: initial;
@@ -552,10 +552,6 @@ div.table .table-row > div,
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-div.table.main-history-table,
-div.table.my-open-game-table {
-  height: calc(100vh - 240px);
 }
 div.table.main-history-table .table-row > div {
   align-items: flex-start;
@@ -679,7 +675,7 @@ div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
 div.table
   .table-row
   .table-cell
-  img.game-type-icon[src='/img/gametype/icons/DG.svg'] {
+  img.game-type-icon[src='../../../public/img/gametype/icons/DG.svg'] {
   width: 34px !important;
   height: 34px !important;
   margin-left: 2px !important;
@@ -980,11 +976,12 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
     font-family: 'Mitr', sans-serif !important;
 }
 
-#all-products .value {
+#all-products .value{
     color: #414141  !important;
 }
 
-#my-products .value {
+#my-products .value,
+#all-loans .value  {
   color: #ffb000  !important;
 }
 
@@ -1351,34 +1348,34 @@ h6.score {
 }
 
 .game-page .pre-summary-panel div.room-id {
-  background-image: url('/img/game.svg');
+  background-image: url('../../../public/img/game.svg');
   background-repeat: no-repeat;
   background-position: 0 5px;
   background-size: 1.58em;
 }
 
 .game-page .pre-summary-panel div.net-profit {
-  background-image: url('/img/net_profit.svg');
+  background-image: url('../../../public/img/net_profit.svg');
   background-repeat: no-repeat;
   background-position: 0 8px;
   background-size: 1.54em;
 }
 
 .game-page .pre-summary-panel div.created {
-  background-image: url('/img/created.svg');
+  background-image: url('../../../public/img/created.svg');
   background-repeat: no-repeat;
   background-position: 0 8px;
   background-size: 1.54em;
 }
 .game-page .pre-summary-panel div.room-name {
-  background-image: url('/img/room_name.svg');
+  background-image: url('../../../public/img/room_name.svg');
   background-repeat: no-repeat;
   background-position: 0 8px;
   background-size: 1.54em;
 }
 
 .game-page .pre-summary-panel div.host-display-name {
-  background-image: url('/img/profile-thumbnail-dark.svg');
+  background-image: url('../../../public/img/profile-thumbnail-dark.svg');
   background-repeat: no-repeat;
   background-position: 0 3px;
   background-size: 1.84em;
@@ -1588,13 +1585,13 @@ transform-origin: center;
   background-color: red;
   border: 3px solid white;
   box-shadow: 0px 0px 4px #323232;
-  background-image: url('/img/rps-logo-white.svg');
+  background-image: url('../../../public/img/rps-logo-white.svg');
   background-repeat: no-repeat;
   background-position: center;
 }
 
 .card-hidden.upside-down {
-  background-image: url('/img/rps-logo-ud.svg') !important;
+  background-image: url('../../../public/img/rps-logo-ud.svg') !important;
 
 }
 
@@ -2019,13 +2016,13 @@ margin-right: 5px;
 }
 
 #rps-radio .rock {
-  background-image: url('/img/rock-weapon.gif') !important;
+  background-image: url('../../../public/img/rock-weapon.gif') !important;
 }
 #rps-radio .paper {
-  background-image: url('/img/paper-weapon.gif') !important;
+  background-image: url('../../../public/img/paper-weapon.gif') !important;
 }
 #rps-radio .scissors {
-  background-image: url('/img/scissors-weapon.gif') !important;
+  background-image: url('../../../public/img/scissors-weapon.gif') !important;
 }
 /* #rps-radio .rock {
     background-position: center;
@@ -2263,7 +2260,7 @@ input {
 
 .boxes-panel .box {
   /* background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='74' height='72' fill='none' viewBox='0 0 74 72'%3E%3Cpath fill='%23FEBE7E' d='M47.956 72L0 61.182V9.23l47.956 7.2v55.57z'/%3E%3Cpath fill='%23C47D49' d='M74 55.237L47.956 72V16.43L74 5.133v50.105z'/%3E%3Cpath fill='%23FEDC98' d='M74 5.132L27.962 0 0 9.23l47.956 7.2L74 5.133z'/%3E%3Cpath fill='%23BA835D' d='M27.15 24.148l-9.48-1.514V11.926l9.48 1.44v10.782z'/%3E%3Cpath fill='%23C99570' d='M27.15 13.366l-9.48-1.44 26.192-10.19 8.927 1.033L27.15 13.366z'/%3E%3Cpath fill='%23A37452' d='M64.888 19.163l-5.976 2.77V11.704l5.976-2.585v10.043zM64.888 61.145l-5.976 3.84V54.091l5.976-3.212v10.264z'/%3E%3Cpath fill='%23C99570' d='M64.888 9.12L18.408 3.14 11.583 5.39l47.33 6.314 5.975-2.585z'/%3E%3Cpath fill='%23BA835D' d='M27.15 67.31l-9.48-2.067V54.5l9.48 1.44V67.31z'/%3E%3Cpath fill='%23BF6726' d='M0 9.231s3.726.148 6.825.554c4.574.59 11.03 2.141 11.03 2.141L0 9.231zM27.298 13.255s3.32.333 4.464.443c7.968.776 16.194 2.696 16.194 2.696l-20.658-3.139z'/%3E%3C/svg%3E%0A") !important; */
-  /* background-image: url('/img/closeBoxMb.svg') !important; */
+  /* background-image: url('../../../public/img/closeBoxMb.svg') !important; */
   position: relative;
   padding: 0px;
   display: inline-block;
@@ -2335,7 +2332,7 @@ input {
 }
 
 .create-game-panel .boxes-panel .box {
-  /* background-image: url('/img/closeBoxMb.svg'); */
+  /* background-image: url('../../../public/img/closeBoxMb.svg'); */
   /* background-color: #ff0000aa; */
   width: 74px;
   height: 72px;
@@ -2446,7 +2443,7 @@ input {
   /* background-color: #f9f9f9 !important; */
 }
 .game-page .game-contents.mystery-box-result-contents .mystery-box-result {
-  /* background-image: url('/img/openBoxMb.svg');
+  /* background-image: url('../../../public/img/openBoxMb.svg');
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain; */

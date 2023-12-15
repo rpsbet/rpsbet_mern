@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import ColorThief from 'color-thief';
+// import ColorThief from 'color-thief';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import { getRank } from '../util/getRank';
 import { connect } from 'react-redux';
@@ -17,7 +17,7 @@ class Avatar extends Component {
       dominantColor: null
     };
 
-    this.colorThief = new ColorThief();
+    // this.colorThief = new ColorThief();
   }
 
   componentDidMount() {
@@ -35,10 +35,10 @@ class Avatar extends Component {
     image.crossOrigin = 'Anonymous';
     image.src = this.props.src;
 
-    image.onload = () => {
-      const dominantColor = this.colorThief.getColor(image);
-      this.setState({ dominantColor });
-    };
+    // image.onload = () => {
+    //   const dominantColor = this.colorThief.getColor(image);
+    //   this.setState({ dominantColor });
+    // };
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -55,7 +55,7 @@ class Avatar extends Component {
         alt: nextProps.alt,
         accessory: nextProps.accessory,
         rank: nextProps.rank,
-        dominantColor: null // Reset dominantColor when props change
+        dominantColor: '3px solid transparent' // Reset dominantColor when props change
       };
     }
 
@@ -66,9 +66,7 @@ class Avatar extends Component {
   render() {
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
 const {isLowGraphics, isDarkMode} = this.props;
-    let borderColor = dominantColor
-      ? `3px solid rgb(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]})`
-      : '3px solid transparent';
+    let borderColor ='3px solid transparent';
 
     const rankColors = {
       1: 'steelblue',

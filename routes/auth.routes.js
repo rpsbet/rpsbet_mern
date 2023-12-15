@@ -76,38 +76,27 @@ router.post('/', (req, res) => {
 // Calculate profits without including transactions with 'withdraw' or 'deposit' in the description
 router.get('/user', auth, async (req, res) => {
   try {
-    let queryLimit = req.query.viewAll === 'true' ? 7 : 4;
-
-    if (req.query.loadMore) {
-      const loadMoreValue = parseInt(req.query.loadMore);
-      queryLimit += loadMoreValue;
-    }
+    const { loadMore, viewAll, filterType, search, sortBy } = req.query;
+    const queryLimit = parseInt(loadMore) ? 7 + parseInt(loadMore) : viewAll === 'true' ? 7 : 4;
 
     const query = { user: req.user };
+    const filterTypes = { showWithdrawals: 'withdraw', showDeposits: 'deposit', showTrades: 'trade', showLoans: 'loan', showTips: 'tip', };
 
-    if (req.query.filterType === 'showWithdrawals') {
-      query.description = { $regex: 'withdraw', $options: 'i' };
-    } else if (req.query.filterType === 'showDeposits') {
-      query.description = { $regex: 'deposit', $options: 'i' };
-    } else if (req.query.filterType === 'showTrades') {
-      query.description = { $regex: 'trade', $options: 'i' };
-    } else if (req.query.filterType === 'showTips') {
-      query.description = { $regex: 'tip', $options: 'i' };
-    } else if (req.query.search) {
-      query.description = { $regex: req.query.search, $options: 'i' };
+    if (filterType && filterTypes[filterType]) {
+      query.description = { $regex: filterTypes[filterType], $options: 'i' };
+    } else if (search) {
+      query.description = { $regex: search, $options: 'i' };
     }
-    
 
     const transactions = await Transaction.find(query)
-      .sort(req.query.sortBy === 'amount' ? { amount: -1 } : { created_at: -1 })
+      .sort(sortBy === 'amount' ? { amount: -1 } : { created_at: -1 })
       .limit(queryLimit);
 
-    const transactions2 = await Transaction.find(query);
-    const profitData = getProfitData(req.query.viewAll === 'true', transactions2);
+    const profitData = viewAll === 'true' ? getProfitData(transactions) : {};
 
     const count = await Message.countDocuments({
       to: req.user,
-      is_read: false
+      is_read: false,
     });
 
     res.json({
@@ -115,26 +104,18 @@ router.get('/user', auth, async (req, res) => {
       user: req.user,
       unread_message_count: count,
       transactions,
-      ...profitData
+      ...profitData,
     });
   } catch (error) {
     res.json({ success: false, error: error.message });
   }
 });
 
-// Function to calculate profit data
-const getProfitData = (viewAll, transactions) => {
-  if (!viewAll) {
-    return {};
-  }
-
-  return {
-    sevenDayProfit: calculate7dayProfit(transactions),
-    oneDayProfit: calculate1dayProfit(transactions),
-    allTimeProfit: calculateAllTimeProfit(transactions)
-  };
-};
-
+const getProfitData = (transactions) => ({
+  sevenDayProfit: calculate7dayProfit(transactions),
+  oneDayProfit: calculate1dayProfit(transactions),
+  allTimeProfit: calculateAllTimeProfit(transactions),
+});
 
 // Forgot Password
 router.post('/sendResetPasswordEmail', async (req, res) => {

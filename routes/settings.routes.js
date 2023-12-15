@@ -1,11 +1,13 @@
 const express = require('express');
-
+const socket = require('../socketController.js');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const cron = require('node-cron');
 
 // User Model
 const User = require('../model/User');
 const SystemSetting = require('../model/SystemSetting');
+const Jukebox = require('../model/Jukebox');
 
 router.get('/', async (req, res) => {
   try {
@@ -54,5 +56,69 @@ router.post('/', auth, async (req, res) => {
       });
     }
 });
+
+router.post('/add-to-queue', async (req, res) => {
+  const { videoId, title, totalDuration } = req.body;
+  console.log("hi:", videoId, title, totalDuration);
+
+  try {
+    if (totalDuration > 10) {
+      const newVideo = new Jukebox({
+        videoId,
+        title,
+        totalDuration
+      });
+
+      const savedVideo = await newVideo.save();
+
+      console.log("Video saved successfully:", savedVideo);
+      res.json(savedVideo);
+    } else {
+      // Respond with an error if the video duration is less than or equal to 10 seconds
+      res.status(400).json({ error: 'Video duration must be more than 10 seconds.' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Unable to add video to the queue.' });
+  }
+});
+
+
+router.get('/get-queue', async (req, res) => {
+  try {
+    
+    const queue = await Jukebox.find().sort({ _id: 1 }); // Order by insertion time
+    res.json(queue);
+  } catch (error) {
+    res.status(500).json({ error: 'Unable to retrieve the video queue.' });
+  }
+});
+
+// route
+
+cron.schedule('*/10 * * * * *', async () => {
+  try {
+    // Fetch the current video in the queue
+    const currentVideo = await Jukebox.findOne({ /* Your query criteria for the current video */ });
+
+    if (currentVideo) {
+      // Calculate the new progress
+      const newProgress = currentVideo.progress + 10;
+
+      // Check if the progress exceeds the total duration
+      if (newProgress > currentVideo.totalDuration) {
+        // Remove the document if the progress exceeds the total duration
+        await currentVideo.remove();
+      } else {
+        // Update the progress and save the document
+        currentVideo.progress = newProgress;
+        await currentVideo.save();
+      }
+    }
+  } catch (error) {
+    console.error('Error updating progress:', error);
+  }
+});
+
+
 
 module.exports = router;

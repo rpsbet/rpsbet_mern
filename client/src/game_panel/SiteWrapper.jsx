@@ -30,6 +30,8 @@ import Lottie from 'react-lottie';
 import progress from './LottieAnimations/progress.json';
 import coins from './LottieAnimations/coins.json';
 import InlineSVG from 'react-inlinesvg';
+import busdSvg from './JoinGame/busd.svg';
+
 import AllTransactionsModal from './modal/AllTransactionsModal.jsx';
 import {
   Close,
@@ -57,13 +59,16 @@ import ProfileModal from './modal/ProfileModal';
 import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
 import MarketplaceModal from './modal/MarketplaceModal';
+import BankModal from './modal/BankModal';
 
 import LeaderboardsModal from './modal/LeaderboardsModal';
 import { getNotifications } from '../redux/Logic/logic.actions';
 import ConfirmTradeModal from './modal/ConfirmTradeModal';
+import ConfirmLoanModal from './modal/ConfirmLoanModal';
 import ListItemModal from './modal/ListItemModal';
 import DeListItemModal from './modal/DeListItemModal';
-
+import ListLoanModal from './modal/ListLoanModal';
+import DeListLoanModal from './modal/DeListLoanModal';
 import GamePasswordModal from './modal/GamePasswordModal';
 import LoginModal from './modal/LoginModal';
 import SignupModal from './modal/SignupModal';
@@ -82,6 +87,8 @@ import Leaderboards from './icons/Leaderboards.js';
 import LeaderboardsHover from './icons/LeaderboardsHover';
 import Store from './icons/Store.js';
 import StoreHover from './icons/StoreHover';
+import Bank from './icons/Bank.js';
+import BankHover from './icons/BankHover';
 
 import {
   setSocket,
@@ -190,6 +197,7 @@ class SiteWrapper extends Component {
       showPlayerModal: false,
       showHowToPlayModal: false,
       showMarketplaceModal: false,
+      showBankModal: false,
       showLeaderboardsModal: false,
       isPlaying: false,
       showLoginModal: false,
@@ -203,7 +211,7 @@ class SiteWrapper extends Component {
       notifications: updateFromNow(this.props.notifications),
       showNotifications: false,
       userParams: [false, true],
-      loadMore: 20,
+      loadMore: 0,
       showAllGameLogs: false,
       transactions: updateFromNow(this.props.transactions),
       websiteLoading: true,
@@ -247,9 +255,11 @@ class SiteWrapper extends Component {
   }
 
   async componentDidUpdate(prevProps, prevState) {
+    const { loadMore} = this.state;
+
     const { transactions , tnxComplete} = this.props;
 
-    if ( (prevProps.transactions !== transactions) &&   !tnxComplete) {
+    if ( (prevProps.transactions !== transactions) && loadMore === 0 && !tnxComplete) {
       this.playCoinsAnimation();
 
       try {
@@ -398,6 +408,10 @@ class SiteWrapper extends Component {
       }
     });
 
+    socket.on('UPDATE_PROGRESS', (data) => {
+      console.log('Received UPDATE_PROGRESS:', data);
+    });
+
     socket.on('SEND_CHAT', data => {
       try {
         if (!this.props.isMuted) {
@@ -513,83 +527,73 @@ class SiteWrapper extends Component {
     });
 
     socket.on('SET_GLOBAL_CHAT', this.props.setGlobalChat);
-
     this.props.setSocket(socket);
   }
 
   loadWeb3 = async () => {
     try {
-      const web3 = new Web3(Web3.givenProvider);
-      this.setState({ web3 });
-      const accounts = await web3.eth.requestAccounts();
-      this.setState({ web3account: accounts[0] });
-
-      // Get ETH balance of the account
-      const ethBalance = await web3.eth.getBalance(accounts[0]);
-      const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
-      this.setState({ web3balance: tokenAmount });
+      // Check if there is a provider available
+      if (window.ethereum) {
+        const web3 = new Web3(window.ethereum);
+        // Set the provider explicitly
+        web3.setProvider(window.ethereum);
+  
+        // Request accounts using the new Ethereum provider
+        const accounts = await web3.eth.requestAccounts();
+        this.setState({ web3, web3account: accounts[0] });
+  
+        // Get ETH balance of the account
+        const ethBalance = await web3.eth.getBalance(accounts[0]);
+        const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
+        this.setState({ web3balance: tokenAmount });
+      } else {
+        console.error("No Ethereum provider found. Please install MetaMask or enable Ethereum in your browser.");
+      }
     } catch (e) {
-      console.log(e);
+      console.error("Error loading Web3:", e);
     }
   };
+  
 
   async componentDidMount() {
-    let currentUrl = window.location.pathname;
-    await this.props.getNotifications();
-    if (currentUrl.indexOf('create') !== -1) {
-      this.setState({
-        selectedMainTabIndex: this.props.selectMainTab(1)
-      });
-    }
-    // this.counter = setInterval(this.updateCounter, 25);
-    await this.initSocket();
-    await this.props.getUser(
-      true,
-      false,
-      0,
-      this.state.filterType,
-      this.state.sortType,
-      this.state.searchQuery
-    );
-
-    this.initializeAudio();
-
-    // const result = await this.props.getUser(
-    //   true,
-    //   false,
-    //   0,
-    //   false,
-    //   false,
-    //   this.state.sortType,
-    //   this.state.searchQuery
-    // );
-
-    // if (result.status === 'success') {
-    //   if (!result.user.is_activated) {
-    //       this.handleOpenVerificationModal();
-    //     }
-    //   }
-
-    await this.fetchData();
-    setInterval(() => this.fetchData(), 2000);
-
-    this.interval = setInterval(this.updateReminderTime, 3000);
-
-    //web3
-    if (window.ethereum) {
-      window.ethereum.on('chainChanged', () => {
-        this.loadWeb3();
-      });
-      window.ethereum.on('accountsChanged', () => {
-        this.loadWeb3();
-      });
-    }
-
-    this.loadWeb3();
-    setTimeout(() => {
+    try {
+      this.setState({ websiteLoading: true });
+  
+      const currentUrl = window.location.pathname;
+      
+      // Perform independent asynchronous operations concurrently
+      await Promise.all([
+        this.props.getNotifications(),
+        this.initSocket(),
+        this.props.getUser(true, false, 0, null, null, null),
+        this.initializeAudio(),
+        this.fetchData(),
+      ]);
+  
+      // Set selectedMainTabIndex based on the current URL
+      if (currentUrl.includes('create')) {
+        this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
+      }
+  
+      // Set up intervals for fetchData and updateReminderTime
+      setInterval(() => this.fetchData(), 2000);
+      this.interval = setInterval(this.updateReminderTime, 3000);
+  
+      // Set up Ethereum event listeners
+      if (window.ethereum) {
+        window.ethereum.on('chainChanged', () => this.loadWeb3());
+        window.ethereum.on('accountsChanged', () => this.loadWeb3());
+      }
+  
+      // Load Web3
+      this.loadWeb3();
+    } catch (error) {
+      console.error(error);
+    } finally {
       this.setState({ websiteLoading: false });
-    }, 1000);
+    }
   }
+  
 
   initializeAudio() {
     try {
@@ -745,6 +749,15 @@ class SiteWrapper extends Component {
     this.setState({ showMarketplaceModal: false });
   };
 
+  
+  handleOpenBankModal = () => {
+    this.setState({ showBankModal: true });
+  };
+  handleCloseBankModal = () => {
+    this.setState({ showBankModal: false });
+  };
+
+
   handleOpenLeaderboardsModal = () => {
     this.setState({ showLeaderboardsModal: true });
   };
@@ -817,7 +830,7 @@ class SiteWrapper extends Component {
 
   handleFilterClose = event => {
     this.setState(
-      { filterType: event, filterAnchorEl: null },
+      { transactions: [], filterType: event, filterAnchorEl: null },
       () => {
         this.props.getUser(
           false,
@@ -923,6 +936,7 @@ class SiteWrapper extends Component {
       showHowToPlayModal,
       showVerificationModal,
       showMarketplaceModal,
+      showBankModal,
       showLoginModal,
       showSignupModal,
       anchorEl,
@@ -1043,6 +1057,23 @@ class SiteWrapper extends Component {
               </Tabs>
 
               <div className="header_action_panel">
+              <a
+                  href="#"
+                  className="desktop-only"
+                  onClick={e => {
+                    e.preventDefault();
+                    this.handleOpenBankModal();
+                  }}
+                  id="btn_bank"
+                  onMouseEnter={() => this.handleMouseEnter(6)}
+                  onMouseLeave={this.handleMouseLeave}
+                >
+                  {hoverTabIndex === 6 ? (
+                    <BankHover width="18pt" />
+                  ) : (
+                    <Bank />
+                  )}
+                </a>
                 <a
                   href="#"
                   className="desktop-only"
@@ -1099,7 +1130,7 @@ class SiteWrapper extends Component {
                     <div id="balance">
                       <InlineSVG
                         id="busd"
-                        src={require('./JoinGame/busd.svg')}
+                        src={busdSvg}
                       />
                       <CountUp
                         start={oldBalance}
@@ -1606,6 +1637,15 @@ class SiteWrapper extends Component {
               isDarkMode={isDarkMode}
             />
           )}
+          {showBankModal && (
+            <BankModal
+              modalIsOpen={showBankModal}
+              closeModal={this.handleCloseBankModal}
+              player_name={userName}
+              balance={balance}
+              isDarkMode={isDarkMode}
+            />
+          )}
           {showMarketplaceModal && (
             <MarketplaceModal
               modalIsOpen={showMarketplaceModal}
@@ -1651,7 +1691,6 @@ class SiteWrapper extends Component {
             <InventoryModal
               modalIsOpen={showInventoryModal}
               closeModal={this.handleCloseInventoryModal}
-              handleOpenMarketplaceModal={this.handleOpenMarketplaceModal}
             />
           )}
           {showWithdrawModal && (
@@ -1673,6 +1712,9 @@ class SiteWrapper extends Component {
           <ListItemModal />
           <DeListItemModal />
           <ConfirmTradeModal />
+          <ListLoanModal />
+          <DeListLoanModal />
+          <ConfirmLoanModal />
           <GamePasswordModal />
         </div>
       </MuiThemeProvider>
@@ -1682,6 +1724,8 @@ class SiteWrapper extends Component {
 
 const mapStateToProps = state => ({
   isAuthenticated: state.auth.isAuthenticated,
+  showListLoanModal: state.snackbar.showListLoanModal,
+  showDeListLoanModal: state.snackbar.showDeListLoanModal,
   showListItemModal: state.snackbar.showListItemModal,
   showDeListItemModal: state.snackbar.showDeListItemModal,
   showConfirmTradeModal: state.snackbar.showConfirmTradeModal,

@@ -12,15 +12,18 @@ import Battle from '../icons/Battle';
 
 import {
   createRoom,
-} from '../../redux/Logic/logic.actions';import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
-import Pagination from '../../components/Pagination';
+} from '../../redux/Logic/logic.actions'; import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
+// import Pagination from '../../components/Pagination';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
+import loadingChart from '../LottieAnimations/loadingChart';
 import InlineSVG from 'react-inlinesvg';
+import busdSvg from '../JoinGame/busd.svg';
+
 import { Box, Button, Menu, MenuItem } from '@material-ui/core';
 
 const defaultOptions = {
@@ -44,12 +47,13 @@ class MyGamesTable extends Component {
       anchorEl: null,
       sortAnchorEl: null,
       selectedSort: 'desc',
-      creatingRoom: false
+      creatingRoom: false,
+      myGames: this.props.myGames
     };
   }
 
-  componentDidMount() {
-    this.fetchData();
+  async componentDidMount() {
+    await this.fetchData();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -60,15 +64,25 @@ class MyGamesTable extends Component {
       // Filter value has changed, re-fetch data
       this.fetchData();
     }
+
+    if (
+      this.props.myGamesWithStats !== prevProps.myGamesWithStats) {
+        console.log("dd")
+      this.setState({ myGames: this.props.myGames })
+    }
   }
 
-  fetchData = () => {
+  fetchData =  () => {
     const { selectedFilter, selectedGameType, selectedSort } = this.state;
 
-    this.props.getMyGames({
+     this.props.getMyGames({
       game_type: selectedGameType,
       status: selectedFilter === 'open' ? 'open' : 'finished',
       sort: selectedSort
+    }, () => {
+      this.setState({
+        myGames: this.props.myGames,
+      });
     });
   };
 
@@ -102,23 +116,23 @@ class MyGamesTable extends Component {
     );
   }
 
-  
+
 
   onCreateRoom = async (row) => {
-    
+
     if (localStorage.getItem('hideConfirmModal') === 'true') {
       this.setState({ creatingRoom: true });
       await this.props.createRoom({
         game_type: row.game_type,
-				bet_amount: row.bet_amount,
-				endgame_amount: row.endgame_amount,
-				// is_anonymous: row.is_anonymous,
-				youtubeUrl: row.youtubeUrl,
+        bet_amount: row.bet_amount,
+        endgame_amount: row.endgame_amount,
+        // is_anonymous: row.is_anonymous,
+        youtubeUrl: row.youtubeUrl,
         gameBackground: row.gameBackground,
 
       }
       );
-      
+
       this.setState({ creatingRoom: false });
     } else {
       confirmModalCreate(
@@ -262,9 +276,8 @@ class MyGamesTable extends Component {
         </Box>
 
         <Button
-          className={`btn-game-type btn-icon all-games ${
-            this.state.selectedGameType === 'All' ? 'active' : ''
-          }`}
+          className={`btn-game-type btn-icon all-games ${this.state.selectedGameType === 'All' ? 'active' : ''
+            }`}
           key="open-game-all-game-button"
           onClick={() => {
             this.handleGameTypeButtonClicked('All');
@@ -277,13 +290,11 @@ class MyGamesTable extends Component {
         </Button>
         {this.props.gameTypeList.map((gameType, index) => (
           <Button
-            className={`btn-game-type btn-icon ${
-              gameTypeStyleClass[gameType.short_name]
-            } ${
-              this.state.selectedGameType === gameType.short_name
+            className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]
+              } ${this.state.selectedGameType === gameType.short_name
                 ? 'active'
                 : ''
-            }`}
+              }`}
             key={index}
             onClick={() => {
               this.handleGameTypeButtonClicked(gameType.short_name);
@@ -396,7 +407,7 @@ class MyGamesTable extends Component {
             <Button
               className="game-type-panel"
               onClick={this.handleFilterClick}
-              // variant="contained"
+            // variant="contained"
             >
               <FontAwesomeIcon icon={faFilter} />
             </Button>
@@ -421,7 +432,7 @@ class MyGamesTable extends Component {
             <Button
               className="game-type-panel"
               onClick={this.handleSortClick}
-              // variant="contained"
+            // variant="contained"
             >
               <FontAwesomeIcon icon={faSort} />
             </Button>
@@ -491,7 +502,7 @@ class MyGamesTable extends Component {
               <div className="table-cell action desktop-only">Bankroll/Re-Create</div>
             </div>
           )}
-          {this.props.myGames.length === 0 ? (
+          {this.state.myGames.length === 0 ? (
             <div className="dont-have-game-msg">
               <Lottie options={defaultOptions} width={50} />
               <span>
@@ -500,26 +511,26 @@ class MyGamesTable extends Component {
               </span>
             </div>
           ) : (
-            this.props.myGames.map(
+            this.state.myGames.map(
               (row, key) => (
                 <div className="table-row" key={row._id}>
                   <div>
                     <div className="table-cell room-id">
-                    <a href={`/join/${row._id}`}>
-                      <img
-                        src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                        alt=""
-                        className="game-type-icon"
-                        />
-                      {row.game_type.short_name + '-' + row.index}
-                      {row.is_private && (
+                      <a href={`/join/${row._id}`}>
                         <img
-                        src="/img/icon-lock.png"
-                        alt=""
-                        className="lock-icon"
+                          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                          alt=""
+                          className="game-type-icon"
                         />
+                        {row.game_type.short_name + '-' + row.index}
+                        {row.is_private && (
+                          <img
+                            src="/img/icon-lock.png"
+                            alt=""
+                            className="lock-icon"
+                          />
                         )}
-                        </a>
+                      </a>
                     </div>
                     <div className="table-cell bet-info">
                       <span className="bet-pr">
@@ -532,17 +543,51 @@ class MyGamesTable extends Component {
                     </div>
                     <div className="table-cell endgame">
                       <span className="end-amount">
-                      {row.endgame_amount === 0 ? "M" : convertToCurrency(row.endgame_amount)}
+                        {row.endgame_amount === 0 ? "M" : convertToCurrency(row.endgame_amount)}
                       </span>
                     </div>
-                    <div className="table-cell winnings">
-                      <span>{convertToCurrency(row.net_profit)}</span>
-                    </div>
-                    <div className="table-cell bets">
-                      <Battle width="24px" />
-                      &nbsp;
-                      <span>{row.bets}</span>
-                    </div>
+                    {!this.props.myGamesWithStats ? (
+                      <>
+                       <div className="table-cell winnings">
+                       <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
+                     </div>
+                     <div className="table-cell bets" style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
+                       <Battle width="24px"/>
+                       &nbsp;
+                       <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: loadingChart
+                          }}
+                          style={{
+                            width: '32px'
+                          }}
+                        />
+                     </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="table-cell winnings">
+                          <span>{convertToCurrency(row.net_profit)}</span>
+                        </div>
+                        <div className="table-cell bets">
+                          <Battle width="24px" />
+                          &nbsp;
+                          <span>{row.bets}</span>
+                        </div>
+                      </>
+                    )}
+
 
                     <div className="table-cell action desktop-only">
                       {row.status === 'finished' ? (
@@ -563,7 +608,7 @@ class MyGamesTable extends Component {
                           _id={row._id}
                         >
                           {this.state[row._id] &&
-                          this.state[row._id].holding ? (
+                            this.state[row._id].holding ? (
                             `${(this.state[row._id].timeLeft / 1000).toFixed(
                               2
                             )}s`
@@ -613,7 +658,7 @@ class MyGamesTable extends Component {
             )
           )}
         </div>
-        {this.props.myGames.length > 0 && (
+        {/* {this.props.myGames.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
             handlePrevPageClicked={this.handlePrevPageClicked}
@@ -622,7 +667,7 @@ class MyGamesTable extends Component {
             totalPage={this.props.totalPage}
             prefix="MyGames"
           />
-        )}
+        )} */}
       </div>
     );
   }
@@ -631,6 +676,7 @@ class MyGamesTable extends Component {
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   myGames: state.logic.myGames,
+  myGamesWithStats: state.logic.myGamesWithStats,
   totalPage: state.logic.myGamesTotalPage,
   pageNumber: state.logic.myGamesPageNumber,
   socket: state.auth.socket,

@@ -17,7 +17,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
-
+import blob from '../LottieAnimations/blob.json';
 import Battle from '../icons/Battle';
 import {
   ThumbUp,
@@ -51,6 +51,7 @@ class OpenGamesTable extends Component {
   }
 
   generateGameTypePanel = () => {
+    const {isLowGraphics} = this.props;
     const gameTypeStyleClass = {
       R: 'roll',
       RPS: 'rps',
@@ -63,7 +64,7 @@ class OpenGamesTable extends Component {
       BJ: 'blackjack',
       CR: 'craps'
     };
-
+  
     const gameTypePanel = (
       <Box
         display="flex"
@@ -80,7 +81,7 @@ class OpenGamesTable extends Component {
             <ChevronLeftIcon />
           </Button>
         </Box>
-
+  
         <Button
           className={`btn-game-type btn-icon all-games ${
             this.state.selectedGameType === 'All' ? 'active' : ''
@@ -90,6 +91,23 @@ class OpenGamesTable extends Component {
             this.handleGameTypeButtonClicked('All');
           }}
         >
+          {this.state.selectedGameType === 'All' && (
+            <Lottie
+              options={{
+                loop: false,
+                autoplay: false,
+                animationData: blob
+              }}
+              style={{
+                width: '100px',
+                position: 'absolute',
+                // filter: 'hue-rotate(222deg)',
+                opacity: '0.4',
+                margin: '0px -18px 0 auto',
+                zIndex: '-1'
+              }}
+            />
+          )}
           <div className="icon">
             <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
             <span>All Games</span>
@@ -109,6 +127,23 @@ class OpenGamesTable extends Component {
               this.handleGameTypeButtonClicked(gameType.short_name);
             }}
           >
+            {this.state.selectedGameType === gameType.short_name && (
+              <Lottie
+                options={{
+                  loop: false,
+                autoplay: false,
+                  animationData: blob
+                }}
+                style={{
+                  width: '100px',
+                  position: 'absolute',
+                  // filter: 'hue-rotate(222deg)',
+                  opacity: '0.4',
+                  margin: '0px -18px 0 auto',
+                  zIndex: '-1'
+                }}
+              />
+            )}
             <div className="icon">
               <img
                 src={`/img/gametype/icons/${gameType.short_name}.svg`}
@@ -127,9 +162,10 @@ class OpenGamesTable extends Component {
         </Button>
       </Box>
     );
-
+  
     return gameTypePanel;
   };
+  
 
   componentDidMount() {
     const { roomList } = this.props;

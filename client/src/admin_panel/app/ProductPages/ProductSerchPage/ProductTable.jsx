@@ -15,7 +15,7 @@ import {
   setCurrentProductId,
   setCurrentProductInfo
 } from '../../../../redux/Item/item.action';
-import { openConfirmTradeModal } from '../../../../redux/Notification/notification.actions';
+import { openConfirmLoanModal } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
 import {
   LinearProgress,
@@ -100,7 +100,7 @@ const ProductCard = styled.div`
   }
 `;
 
-const TradeButton = styled.div`
+const LoanButton = styled.div`
 opacity: 0;
   position: absolute;
   margin-top: auto;
@@ -218,13 +218,13 @@ class ProductTable extends Component {
     return JSON.stringify(prevOwners) === JSON.stringify(currentOwners);
   }
 
-  handleFilterChange = event => {
-    this.setState({ itemType: event.target.value, anchorEl: null });
+  handleFilterChange() {
+    this.setState({ anchorEl: null });
     this.fetchItems();
   };
 
-  handleSortChange = event => {
-    this.setState({ sortCriteria: event.target.value, sortAnchorEl: null  });
+  handleSortChange() {
+    this.setState({ sortAnchorEl: null  });
     this.fetchItems();
   }
 
@@ -239,7 +239,9 @@ class ProductTable extends Component {
   };
 
   handleFilterClose = itemType => {
-    this.setState({ anchorEl: null, itemType });
+    this.setState({ anchorEl: null, itemType }, () => {
+      this.handleFilterChange();
+    });
   };
 
   handleSortClick = event => {
@@ -247,7 +249,9 @@ class ProductTable extends Component {
   };
 
   handleSortClose = sortCriteria => {
-    this.setState({ sortAnchorEl: null, sortCriteria });
+    this.setState({ sortAnchorEl: null, sortCriteria }, () => {
+      this.handleSortChange();
+    });
   };
 
   handleOpenPlayerModal = creator_id => {
@@ -305,7 +309,7 @@ class ProductTable extends Component {
       acQueryItem,
       setCurrentProductId,
       setCurrentProductInfo,
-      openConfirmTradeModal,
+      openConfirmLoanModal,
       isLowGraphics
     } = this.props;
 
@@ -395,7 +399,7 @@ class ProductTable extends Component {
               <MenuItem onClick={() =>
                   this.handleSortClose('updated_at')
                 }
-                selected={sortCriteria === 'updated_at'}>Sort by Date</MenuItem>
+                selected={sortCriteria === 'updated_at'}>Sort by Date Added</MenuItem>
               <MenuItem onClick={() =>
                   this.handleSortClose('price')
                 }
@@ -462,7 +466,7 @@ Sort by Price</MenuItem>
                 <ProductInfo>
                   <ProductName>{row.productName}</ProductName>
                   <TableContainer>
-                    <Table id="all-products" className="product-detail">
+                    <Table id="all-loans" className="product-detail">
                       <TableBody>
                         <TableRow>
                           <TableCell>
@@ -492,15 +496,15 @@ Sort by Price</MenuItem>
                     </Table>
                   </TableContainer>
                 </ProductInfo>
-                <TradeButton>
-                  <Tooltip title="Trade">
+                <LoanButton>
+                  <Tooltip title="Loan">
                     <IconButton
                       className="btn-back"
                       onClick={() => {
                         setCurrentProductId(row._id);
                         setCurrentProductInfo(row.owners[0].user);
                         if (row.owners[0].user !== this.props.user) {
-                          openConfirmTradeModal();
+                          openConfirmLoanModal();
                         } else {
                           alertModal(
                             this.props.isDarkMode,
@@ -509,10 +513,10 @@ Sort by Price</MenuItem>
                         }
                       }}
                     >
-                      Trade <SwapHoriz />
+                      Loan <SwapHoriz />
                     </IconButton>
                   </Tooltip>
-                </TradeButton>
+                </LoanButton>
               </ProductCard>
             ))}
           </ProductGrid>
@@ -542,7 +546,7 @@ const mapStateToProps = state => ({
   page: state.itemReducer.page,
   loading: state.itemReducer.loading,
   total: state.itemReducer.totalResults,
-  showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
+  showConfirmLoanModal: state.snackbar.showConfirmLoanModal,
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user._id,
   isLowGraphics: state.auth.isLowGraphics
@@ -552,7 +556,7 @@ const mapDispatchToProps = {
   acQueryItem,
   setCurrentProductId,
   setCurrentProductInfo,
-  openConfirmTradeModal,
+  openConfirmLoanModal,
   acGetCustomerInfo
 };
 

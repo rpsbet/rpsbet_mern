@@ -236,7 +236,7 @@ const animationMap = {
   vacation: { animationData: vacation, className: 'lottie-bg vacation' },
   'orion-trip': { animationData: orionTrip, className: 'lottie-bg orion' },
   arctic: { animationData: arctic, className: 'lottie-bg arctic' },
-  paradise: { animationData: paradise, className: 'lottie-bg paradise' }
+  paradise: { animationData: paradise, className: 'lottie-container paradise' }
 };
 
 export const renderLottieAvatarAnimation = (image, isLowGraphics) => {

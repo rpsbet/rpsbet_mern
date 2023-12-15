@@ -49,7 +49,7 @@ class AllTransactionsModal extends Component {
     super(props);
 
     this.state = {
-      showAllGameLogs: false
+      showAllGameLogs: false,
     };
   }
 
@@ -154,6 +154,13 @@ class AllTransactionsModal extends Component {
                               &nbsp;Show Trades
                             </MenuItem>
                             <MenuItem
+                              onClick={() => handleFilterClose('showLoans')}
+                              selected={filterType === 'showLoans'}
+                            >
+                              <FontAwesomeIcon icon={faExchangeAlt} />
+                              &nbsp;Show Loans
+                            </MenuItem>
+                            <MenuItem
                               onClick={() => handleFilterClose('showTips')}
                               selected={filterType === 'showTips'}
                             >
@@ -186,7 +193,7 @@ class AllTransactionsModal extends Component {
                             </MenuItem>
                           </Menu>
                         </div>
-                        <div className="filters" style={{marginRight: "30px"}}>
+                        <div className="filters">
                           <Button onClick={handleSearchClick}>
                             SEARCH&nbsp;
                             <FontAwesomeIcon icon={faSearch} />
@@ -215,7 +222,7 @@ class AllTransactionsModal extends Component {
                         </div>
                       </div>
 
-                      <div className="summary-flex">
+                      <div style={{ marginLeft: '45px' }}className="summary-flex">
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                           <span>1-DAY</span>
                           <span
@@ -246,7 +253,7 @@ class AllTransactionsModal extends Component {
                             {convertToCurrency(sevenDayProfit)}
                           </span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}>
                           <span>ALL-TIME</span>
                           <span
                             style={{

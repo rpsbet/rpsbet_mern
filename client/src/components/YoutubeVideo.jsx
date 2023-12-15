@@ -70,22 +70,36 @@ export class YouTubeVideo extends React.Component {
     });
   };
 
-  fetchVideoDetails = async videoId => {
-    const apiKey = 'AIzaSyAc_yDOErOvwY6gkRnJERq-xTQq4Z6ic5Q';
-    const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`;
-
-    try {
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-
-      if (data.items.length > 0) {
-        const videoTitle = data.items[0].snippet.title;
-        this.setState({ videoTitle });
+  fetchVideoDetails = async (videoId) => {
+    const apiKey1 = 'AIzaSyDVLe__R6zFlcRYn5GXTOOVmRGHVM3w8hk';
+    const apiKey2 = 'AIzaSyBWskONpYP9zTdGM-yd7cDLu1rv0SK-8jg';
+  
+    const tryApiKey = async (apiKey) => {
+      const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`;
+  
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+  
+        if (data.items.length > 0) {
+          const videoTitle = data.items[0].snippet.title;
+          this.setState({ videoTitle });
+        }
+      } catch (error) {
+        console.log('Error fetching video details:', error);
+  
+        // If the first API key fails, try using the second one
+        if (apiKey === apiKey1) {
+          console.log('Trying with the second API key.');
+          await tryApiKey(apiKey2);
+        }
       }
-    } catch (error) {
-      console.log('Error fetching video details:', error);
-    }
+    };
+  
+    // Start with the first API key
+    await tryApiKey(apiKey1);
   };
+  
 
   componentDidMount() {
     if (!window.YT) {

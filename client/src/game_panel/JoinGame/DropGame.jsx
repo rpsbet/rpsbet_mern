@@ -12,6 +12,8 @@ import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 
 import { Button, Switch, FormControlLabel } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
+import busdSvg from '../JoinGame/busd.svg';
+
 import {
   validateIsAuthenticated,
   validateCreatorId,

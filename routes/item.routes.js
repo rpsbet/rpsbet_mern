@@ -436,7 +436,6 @@ router.get('/', async (req, res) => {
     if (itemTypeFilter) {
       query['item_type'] = itemTypeFilter;
     }
-
     const items = await Item.find(query)
       .skip(pagination * page - pagination)
       .limit(pagination);
@@ -472,7 +471,6 @@ router.get('/', async (req, res) => {
         }
       }
     }
-
     if (sort === 'created_at') {
       item_list.sort((a, b) => a.created_at - b.created_at);
     } else {

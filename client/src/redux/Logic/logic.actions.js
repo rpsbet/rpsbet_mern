@@ -19,6 +19,8 @@ import {
   SET_CUR_ROOM_INFO,
   SET_URL,
   MY_GAMES_LOADED,
+  MY_GAMES_LOADED_WITHOUT_STATS,
+  MY_GAMES_LOADED_WITH_STATS,
   MY_HISTORY_LOADED,
   SET_CHAT_ROOM_INFO,
   SET_NOTIFICATIONS_ROOM_INFO,
@@ -132,10 +134,10 @@ export const bet = bet_info => async dispatch => {
     dispatch({ type: START_LOADING });
     const res = await axios.post('/game/bet', bet_info);
     dispatch({ type: END_LOADING });
-    
+
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-      
+
       if (bet_info.game_type === 'Mystery Box') {
         dispatch({ type: BET_SUCCESS, payload: res.data });
       } else if (bet_info.game_type === 'Brain Game') {
@@ -145,8 +147,8 @@ export const bet = bet_info => async dispatch => {
             res.data.betResult === 1
               ? 'win'
               : res.data.betResult === 0
-              ? 'draw'
-              : 'lose'
+                ? 'draw'
+                : 'lose'
         });
       } else {
         dispatch({
@@ -155,8 +157,8 @@ export const bet = bet_info => async dispatch => {
             res.data.betResult === 1
               ? 'win'
               : res.data.betResult === 0
-              ? 'draw'
-              : 'lose'
+                ? 'draw'
+                : 'lose'
         });
       }
 
@@ -259,11 +261,41 @@ export const checkGamePassword = data => async dispatch => {
   return false;
 };
 
+export const listLoan = data => async (dispatch) => {
+  try {
+    dispatch({ type: TNX_INCOMPLETE });
+
+    const res = await axios.post('/loan/list-for-sale', data);
+    if (res.data.success) {
+      return res.data;
+    }
+  } catch (err) {
+  } finally {
+    dispatch({ type: TNX_COMPLETE });
+  }
+  return false;
+};
+
+export const deListLoan = data => async (dispatch) => {
+  try {
+    dispatch({ type: TNX_INCOMPLETE });
+
+    const res = await axios.post('/loan/delist-from-sale', data);
+    if (res.data.success) {
+      return res.data;
+    }
+  } catch (err) {
+  } finally {
+    dispatch({ type: TNX_COMPLETE });
+  }
+  return false;
+};
+
 export const listItem = data => async (dispatch) => {
   try {
     dispatch({ type: TNX_INCOMPLETE });
 
-    const res = await axios.post('/item/list-for-sale', data );
+    const res = await axios.post('/item/list-for-sale', data);
     if (res.data.success) {
       return res.data;
     }
@@ -278,7 +310,7 @@ export const deListItem = data => async (dispatch) => {
   try {
     dispatch({ type: TNX_INCOMPLETE });
 
-    const res = await axios.post('/item/delist-from-sale', data );
+    const res = await axios.post('/item/delist-from-sale', data);
     if (res.data.success) {
       return res.data;
     }
@@ -293,6 +325,21 @@ export const confirmTrade = data => async dispatch => {
   try {
     dispatch({ type: TNX_INCOMPLETE });
     const res = await axios.post('/item/trade/', data);
+    if (res.data.success) {
+
+      return res.data;
+    }
+  } catch (err) {
+  } finally {
+    dispatch({ type: TNX_COMPLETE });
+  }
+  return false;
+};
+
+export const confirmLoan = data => async dispatch => {
+  try {
+    dispatch({ type: TNX_INCOMPLETE });
+    const res = await axios.post('/item/lend/', data);
     if (res.data.success) {
 
       return res.data;
@@ -323,7 +370,7 @@ export const fetchAccessory = data => async dispatch => {
 
 export const equipItem = data => async dispatch => {
   try {
-    dispatch({ type: START_LOADING }); 
+    dispatch({ type: START_LOADING });
     const res = await axios.post('/item/equip/', data);
 
     if (res.data.success) {
@@ -351,7 +398,7 @@ export const getRoomList = search_condition => async dispatch => {
 };
 
 export const getHistory = search_condition => async dispatch => {
-  
+
   dispatch({ type: TNX_COMPLETE });
 
   try {
@@ -361,7 +408,7 @@ export const getHistory = search_condition => async dispatch => {
       dispatch({ type: TNX_INCOMPLETE });
 
     }
-  } catch (err) {}
+  } catch (err) { }
 };
 
 export const getGameTypeList = () => async dispatch => {
@@ -376,16 +423,28 @@ export const getGameTypeList = () => async dispatch => {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
-
 export const getMyGames = search_condition => async dispatch => {
   dispatch({ type: START_LOADING });
   try {
-    const res = await axios.get('/game/my_games', {
-      params: { ...search_condition }
+    const resWithoutRoomStats = await axios.get('/game/my_games', {
+      params: { ...search_condition, excludeRoomStats: true }
     });
+    if (resWithoutRoomStats.data.success) {
+      dispatch({ type: MY_GAMES_LOADED_WITHOUT_STATS });
+      dispatch({ type: MY_GAMES_LOADED, payload: { ...resWithoutRoomStats.data } });
 
-    if (res.data.success) {
-      dispatch({ type: MY_GAMES_LOADED, payload: { ...res.data } });
+      const resWithRoomStats = await axios.get('/game/my_games', {
+        params: { ...search_condition, excludeRoomStats: false }
+      });
+
+      if (resWithRoomStats.data.success) {
+
+        dispatch({ type: MY_GAMES_LOADED, payload: { ...resWithRoomStats.data } });
+        dispatch({ type: MY_GAMES_LOADED_WITH_STATS });
+
+      } else {
+        dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+      }
     } else {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
@@ -395,6 +454,8 @@ export const getMyGames = search_condition => async dispatch => {
     dispatch({ type: END_LOADING });
   }
 };
+
+
 
 export const endGame = (room_id, callback) => async dispatch => {
   try {

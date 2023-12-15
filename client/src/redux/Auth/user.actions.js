@@ -42,7 +42,6 @@ export const getUser = (is_reload, viewAll, loadMore, filterType, sortType, sear
       localStorage.removeItem('isAdminAuthenticated');
       setAuthToken(localStorage.token);
     }
-
     dispatch({ type: TNX_COMPLETE });
     const res = await axios.get(`/auth/user?viewAll=${viewAll}&loadMore=${loadMore}&filterType=${filterType}&sortBy=${sortType}&search=${search}`);
 
