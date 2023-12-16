@@ -4,6 +4,7 @@ import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import { getRank } from '../util/getRank';
 import { connect } from 'react-redux';
 import { fetchAccessory } from '../redux/Logic/logic.actions';
+import chroma from 'chroma-js';
 
 class Avatar extends Component {
   constructor(props) {
@@ -21,25 +22,25 @@ class Avatar extends Component {
   }
 
   componentDidMount() {
-    this.getColor();
+    // this.getColor();
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.src !== prevProps.src) {
-      this.getColor();
-    }
-  }
+  // componentDidUpdate(prevProps) {
+  //   if (this.props.src !== prevProps.src) {
+  //     this.getColor();
+  //   }
+  // }
 
-  getColor() {
-    const image = new Image();
-    image.crossOrigin = 'Anonymous';
-    image.src = this.props.src;
+  // getColor() {
+  //   const image = new Image();
+  //   image.crossOrigin = 'Anonymous';
+  //   image.src = this.props.src;
 
-    // image.onload = () => {
-    //   const dominantColor = this.colorThief.getColor(image);
-    //   this.setState({ dominantColor });
-    // };
-  }
+  //   image.onload = () => {
+  //     const dominantColor = this.colorThief.getColor(image);
+  //     this.setState({ dominantColor });
+  //   };
+  // }
 
   static getDerivedStateFromProps(nextProps, prevState) {
     // Check if any prop values have changed
@@ -67,26 +68,35 @@ class Avatar extends Component {
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
 const {isLowGraphics, isDarkMode} = this.props;
     let borderColor ='3px solid transparent';
-
+    let rankColor ='#3498db';
+    let shadedColor = chroma(rankColor).darken(4).hex();
+    if (!darkMode) {
+      rankColor = '#2c3e50'; // Change to your dark mode color
+      shadedColor = chroma(rankColor).brighten(8).hex(); // Adjust as needed for dark mode shading
+    }
     const rankColors = {
-      1: 'steelblue',
-      2: 'forestgreen',
-      3: 'slategray',
-      4: 'indigo',
-      5: 'darkorange',
-      6: 'saddlebrown',
-      7: 'teal',
-      8: 'maroon',
-      9: 'navy',
-      10: 'firebrick'
+      1: '#3498db',   // Royal Blue
+      2: '#2ecc71',   // Emerald Green
+      3: '#95a5a6',   // Silver
+      4: '#9b59b6',   // Amethyst
+      5: '#e67e22',   // Carrot Orange
+      6: '#d35400',   // Pumpkin
+      7: '#008080',   // Teal
+      8: '#c0392b',   // Red
+      9: '#001f3f',   // Navy
+      10: '#b22222'   // Fire Brick
     };
+    
 
     if (rank !== null) {
       rank = getRank(rank);
       if (rank in rankColors) {
         borderColor = `3px solid ${rankColors[rank]}`;
+        rankColor=rankColors[rank];
       } else {
         borderColor = '3px solid red';
+        rankColor='red';
+
       }
     }
 
@@ -106,7 +116,8 @@ const {isLowGraphics, isDarkMode} = this.props;
           style={{
             width: '100%',
             height: '100%',
-            border: borderColor // Add border style to the image
+            border: borderColor ,
+            boxShadow: `0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor}`,
           }}
           onError={e => {
             e.target.src = darkMode
@@ -125,6 +136,7 @@ const {isLowGraphics, isDarkMode} = this.props;
               height: '100%',
               borderRadius: '6px',
               border: borderColor,
+              boxShadow: `0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor} `,
               boxSizing: 'border-box'
             }}
           />

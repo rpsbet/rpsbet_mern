@@ -491,7 +491,6 @@ router.get('/get-leaderboards', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
-
 router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
@@ -501,113 +500,76 @@ router.get('/get-room-statistics', async (req, res) => {
       room: room_id
     })
       .sort({ created_at: 'asc' })
-      .populate({ path: 'game_type', model: GameType, select: 'short_name' })
-      .populate({ path: 'room', model: Room, select: 'qs_game_type' })
-      .populate({
-        path: 'joined_user',
-        model: User,
-        select: '_id username avatar accessory totalWagered'
-      });
+      .limit(100); // Adjust the limit based on your requirements
+
+    const tax = await SystemSetting.findOne({ name: 'commission' });
+
+    const userIds = gameLogs.map(log => log.creator);
+    const usersPromises = userIds.map(async userId => {
+      const user = await User.findById(userId).select('accessory');
+      return { userId, user };
+    });
+
+    const usersResults = await Promise.all(usersPromises);
+    const accessoryMap = new Map(usersResults.map(({ userId, user }) => [userId.toString(), user.accessory]));
 
     const playerStats = {};
 
-    const tax = await SystemSetting.findOne({ name: 'commission' });
-    const userIds = gameLogs.map(log => log.creator);
-const users = await User.find({ _id: { $in: userIds } }).select('accessory');
-const accessoryMap = new Map(users.map(user => [user._id.toString(), user.accessory]));
-
     for (const gameLog of gameLogs) {
       const {
-        creator,
         joined_user,
-        room,
         bet_amount,
         game_type,
         selected_drop,
         game_result
       } = gameLog;
 
-      const creatorUser = await User.findOne({ _id: creator }).select(
-        'accessory'
-      );
-      let accessory = creatorUser ? creatorUser.accessory : null;
-      let item;
-      if (accessory) {
-        item = await Item.findOne({ image: accessory }).select('CP');
-      } else {
-        item = { CP: tax.value };
-      }
+      const { _id, avatar, accessory, username, totalWagered } = joined_user;
+      const commission = accessory ? (await Item.findOne({ image: accessory }).select('CP')).CP : tax.value;
 
-      const commission = item.CP;
-      const _id = joined_user._id;
-      const avatar = joined_user.avatar;
-      accessory = joined_user.accessory;
-      const rank = joined_user.totalWagered;
-
-      const actor = joined_user.username;
-      const wagered = bet_amount;
       let net_profit = 0;
 
-      if (game_type && game_type.short_name === 'S!') {
-        net_profit = 0 - wagered * commission;
-      } else if (game_type && game_type.short_name === 'QS') {
-        if (game_result === -1) {
-          net_profit = 0 - wagered;
-        } else {
-          net_profit =
-            (wagered + wagered / (room.qs_game_type - 1)) *
-              ((100 - commission) / 100) -
-            wagered;
-        }
-      } else if (game_type && game_type.short_name === 'DG') {
-        if (game_result === -1) {
-          net_profit = 0 - wagered;
-        } else {
-          net_profit =
-            ((wagered + selected_drop) * (100 - commission)) / 100 - wagered;
-        }
-      } else if (game_type && game_type.short_name === 'MB') {
-        net_profit = game_result - wagered;
-      } else {
-        if (game_result === 0) {
-          net_profit = 0;
-        } else if (game_result === 1) {
-          net_profit = wagered * 2 * ((100 - commission) / 100) - wagered;
-        } else {
-          net_profit = 0 - wagered;
-        }
+      switch (game_type?.short_name) {
+        case 'S!':
+          net_profit = 0 - bet_amount * commission;
+          break;
+        case 'QS':
+          net_profit = game_result === -1 ? 0 - bet_amount : (bet_amount + bet_amount / (gameLog.room.qs_game_type - 1)) * ((100 - commission) / 100) - bet_amount;
+          break;
+        case 'DG':
+          net_profit = game_result === -1 ? 0 - bet_amount : ((bet_amount + selected_drop) * (100 - commission)) / 100 - bet_amount;
+          break;
+        case 'MB':
+          net_profit = game_result - bet_amount;
+          break;
+        default:
+          net_profit = game_result === 0 ? 0 : game_result === 1 ? bet_amount * 2 * ((100 - commission) / 100) - bet_amount : 0 - bet_amount;
       }
 
-      if (playerStats[actor]) {
-        playerStats[actor].avatar = avatar;
-        playerStats[actor].accessory = accessory;
-        playerStats[actor].rank = wagered;
-        playerStats[actor]._id = _id;
-        playerStats[actor].wagered += wagered;
-        playerStats[actor].net_profit += net_profit;
-        playerStats[actor].bets +=
-          game_result === 0 || game_result === -1 || game_result === 1 ? 1 : 0;
+      if (playerStats[username]) {
+        playerStats[username].avatar = avatar;
+        playerStats[username].accessory = accessory;
+        playerStats[username].rank = bet_amount;
+        playerStats[username]._id = _id;
+        playerStats[username].wagered += bet_amount;
+        playerStats[username].net_profit += net_profit;
+        playerStats[username].bets += [0, -1, 1].includes(game_result) ? 1 : 0;
 
-        playerStats[actor].net_profit_values.push(
-          playerStats[actor].net_profit
-        );
-        playerStats[actor].bets_values.push(playerStats[actor].bets);
+        playerStats[username].net_profit_values.push(playerStats[username].net_profit);
+        playerStats[username].bets_values.push(playerStats[username].bets);
       } else {
-        playerStats[actor] = {
+        playerStats[username] = {
           avatar,
           accessory,
           _id,
-          actor,
-          wagered,
-          rank,
+          actor: username,
+          wagered: bet_amount,
+          rank: totalWagered,
           net_profit,
-          bets:
-            game_result === 0 || game_result === -1 || game_result === 1 ? 1 : 0
+          bets: [0, -1, 1].includes(game_result) ? 1 : 0
         };
-        playerStats[actor].net_profit_values = [net_profit];
-        playerStats[actor].bets_values = [
-          game_result === 0 || game_result === -1 || game_result === 1 ? 1 : 0
-        ];
+        playerStats[username].net_profit_values = [net_profit];
+        playerStats[username].bets_values = [playerStats[username].bets];
       }
     }
 
@@ -627,38 +589,14 @@ const accessoryMap = new Map(users.map(user => [user._id.toString(), user.access
     room_info.sort((a, b) => b.net_profit - a.net_profit);
 
     // Calculate hostNetProfit
-    const hostNetProfit = [];
-    for (const player of room_info) {
-      const netProfitValues = player.net_profit_values;
-      while (hostNetProfit.length < netProfitValues.length) {
-        hostNetProfit.push(0);
-      }
-
-      for (let i = 0; i < netProfitValues.length; i++) {
-        hostNetProfit[i] += -1 * netProfitValues[i];
-      }
-    }
+    const hostNetProfit = calculateHostValues(room_info, 'net_profit_values', -1);
 
     // Calculate hostBetsValue
-    const hostBetsValue = [];
-    for (const player of room_info) {
-      const betsValues = player.bets_values;
-      while (hostBetsValue.length < betsValues.length) {
-        hostBetsValue.push(0);
-      }
-
-      for (let i = 0; i < betsValues.length; i++) {
-        hostBetsValue[i] += 1;
-      }
-    }
-
-    for (let i = 1; i < hostBetsValue.length; i++) {
-      hostBetsValue[i] += hostBetsValue[i - 1];
-    }
+    const hostBetsValue = calculateHostValues(room_info, 'bets_values', 1);
 
     const response = {
       success: true,
-      room_info: room_info,
+      room_info,
       hostNetProfit,
       hostBetsValue
     };
@@ -669,5 +607,20 @@ const accessoryMap = new Map(users.map(user => [user._id.toString(), user.access
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
+function calculateHostValues(room_info, property, multiplier) {
+  const hostValues = [];
+  for (const player of room_info) {
+    const values = player[property];
+    while (hostValues.length < values.length) {
+      hostValues.push(0);
+    }
+
+    for (let i = 0; i < values.length; i++) {
+      hostValues[i] += multiplier * values[i];
+    }
+  }
+  return hostValues;
+}
 
 module.exports = router;
