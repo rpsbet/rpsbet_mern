@@ -82,7 +82,6 @@ router.post('/add-to-queue', async (req, res) => {
 router.get('/get-queue', async (req, res) => {
   try {
     const queue = await Jukebox.find().sort({ _id: 1 }); // Order by insertion time
-    console.log("get", queue)
     res.json(queue);
   } catch (error) {
     res.status(500).json({ error: 'Unable to retrieve the video queue.' });

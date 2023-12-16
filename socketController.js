@@ -14,7 +14,7 @@ const send = (msg_type, to_id, data) => {
 };
 // Assuming you have the io instance available globally or passed as a parameter
 
-module.exports.sendUpdate = (socket_io, videoId, progress) => {
+module.exports.sendUpdate = (videoId, progress) => {
   socket_io.emit('UPDATE_PROGRESS', { videoId, progress });
   console.log('UPDATE_PROGRESS', videoId, progress);
 };
@@ -95,7 +95,6 @@ module.exports.socketio = server => {
             return User.findById(userId)
               .then(user => user.username)
               .catch(error => {
-                console.error('Error fetching username:', error);
                 return null;
               });
           };

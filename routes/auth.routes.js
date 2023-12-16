@@ -88,10 +88,9 @@ router.get('/user', auth, async (req, res) => {
       query.description = { $regex: search, $options: 'i' };
     }
 
-    const transactions = await Transaction.find(query)
+    const transactions = await Transaction.find(query._id)
       .sort(sortBy === 'amount' ? { amount: -1 } : { created_at: -1 })
       .limit(queryLimit);
-
     const profitData = viewAll === 'true' ? getProfitData(transactions) : {};
 
     const count = await Message.countDocuments({

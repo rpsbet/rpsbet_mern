@@ -213,7 +213,7 @@ class SiteWrapper extends Component {
       userParams: [false, true],
       loadMore: 0,
       showAllGameLogs: false,
-      transactions: updateFromNow(this.props.transactions),
+      transactions: [],
       websiteLoading: true,
       anchorEl: null,
       sortAnchorEl: null,
@@ -255,26 +255,33 @@ class SiteWrapper extends Component {
   }
 
   async componentDidUpdate(prevProps, prevState) {
-    const { loadMore} = this.state;
-
-    const { transactions , tnxComplete} = this.props;
-
-    if ( (prevProps.transactions !== transactions) && loadMore === 0 && !tnxComplete) {
+    const { loadMore } = this.state;
+    const { transactions, tnxComplete } = this.props;
+  
+    const shouldUpdate =
+      prevProps.transactions !== transactions &&
+      transactions.length > 0 &&
+      loadMore === 0 &&
+      !tnxComplete;
+  
+    if (shouldUpdate) {
       this.playCoinsAnimation();
-
+  
       try {
         await this.props.getUser(true, false);
+  
         await this.props.getHistory();
-      }  catch (error) {
+      } catch (error) {
         console.error("An error occurred during asynchronous operations:", error);
         // Handle the error appropriately, e.g., show an error message to the user
       }
-
+  
       if (!this.isUnmounted) {
         this.stopCoinsAnimationAfterDelay();
       }
     }
   }
+  
 
   playCoinsAnimation() {
     this.setState({ isCoinsAnimation: true });
@@ -381,14 +388,14 @@ class SiteWrapper extends Component {
     socket.on('UPDATED_ROOM_LIST', async data => {
       await this.props.setRoomList(data);
 
-      await this.props.getUser(
-        true,
-        false,
-        4,
-        this.state.filterType,
-        this.state.sortType,
-        this.state.searchQuery
-      );
+      // await this.props.getUser(
+      //   true,
+      //   false,
+      //   4,
+      //   this.state.filterType,
+      //   this.state.sortType,
+      //   this.state.searchQuery
+      // );
       await this.props.getMyGames(1);
       await this.props.getMyHistory();
       await this.props.getHistory();
@@ -561,15 +568,15 @@ class SiteWrapper extends Component {
   
       const currentUrl = window.location.pathname;
       
-      // Perform independent asynchronous operations concurrently
       await Promise.all([
         this.props.getNotifications(),
         this.initSocket(),
-        this.props.getUser(true, false, 0, null, null, null),
+        this.props.getUser(true, false, null, null, null, null),
         this.initializeAudio(),
         this.fetchData(),
       ]);
-  
+      console.log("sss", this.props.transactions);
+
       // Set selectedMainTabIndex based on the current URL
       if (currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });

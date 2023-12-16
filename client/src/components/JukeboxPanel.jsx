@@ -68,10 +68,10 @@ const JukeboxPanel = ({
     const fetchData = async () => {
       await getQueue();
     };
-  
+
     fetchData();
   }, [getQueue]); // The dependency array ensures that the effect runs when getQueue changes
-  
+
 
   useEffect(() => {
     if (isPlayerReady && queue.length > 0 && player) {
@@ -276,6 +276,7 @@ const JukeboxPanel = ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    width: '100%',
     position: 'relative',
   };
 
@@ -287,7 +288,7 @@ const JukeboxPanel = ({
   const QueueList = () => (
     <div style={{ padding: "5px" }}>
       <h6 style={{ margin: "10px auto 0", fontWeight: "400", whiteSpace: "nowrap" }}>Up Next:</h6>
-      <ul style={{ height: "50px", overflowY: "scroll", overflowX: "hidden" }}>
+      <ul style={{ height: "40px", overflowY: "scroll", overflowX: "hidden" }}>
         {queue.slice(1).map((video, index) => (
           <li style={{ fontSize: "0.8em" }} key={index}>
             {video.title.length > 30 ? `${video.title.slice(0, 30)}...` : video.title}
@@ -300,10 +301,12 @@ const JukeboxPanel = ({
 
 
   return (
-    <div style={containerStyle}>
+    <div  style={containerStyle}>
       <div style={overlayStyle}>
-        <div id="youtube-player" style={{display: "none"}} ></div>
+        <div id="youtube-player" style={{ display: "none" }} ></div>
         <div style={controlsStyle}>
+          
+
           <IconButton onClick={handleMenuOpen} className="search-icon">
             <SearchIcon />
           </IconButton>
@@ -311,14 +314,14 @@ const JukeboxPanel = ({
             anchorEl={menuAnchorEl}
             open={Boolean(menuAnchorEl)}
             onClose={handleMenuClose}
-          >
+            >
             <TextField
               label="Search YouTube"
               variant="outlined"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleTextFieldKeyPress}
-            />
+              />
             {searchResults.map((result) => (
               <MenuItem key={result.id.videoId} onClick={() => setSearchQuery(result.id.videoId)}>
                 {result.snippet.title}
@@ -329,24 +332,40 @@ const JukeboxPanel = ({
               Search and Play
             </MenuItem>
           </Menu>
-          <div style={{
-            height: "4px", display: "flex", justifyContent: "left", alignItems: "start",
-            background: "#ff000099"
-          }} >
-
-          </div>
-          <LinearProgress
+          {/* <LinearProgress
+  style={{
+    width: `${(progress / totalDuration) * 100}%`, // Use template literals for dynamic width
+    position: "relative",
+  }}
+  variant="determinate"
+  value={progress}
+/> */}
+<div
             style={{
-              width: "100%", position: "relative",
-            }} variant="determinate" value={progress} />
-          <p>{progress}/{totalDuration}</p>
-          <div className="ticker-container">
-            <p className="ticker-text">{videoTitle}</p>
+              display: 'flex',
+              justifyContent: 'space-around',
+              width: '100%',
+              alignItems: 'center',
+            }}
+          >
+
+          <div  style={{
+              fontSize: '0.8em',
+            }} >{((progress / totalDuration) * 100).toFixed(2)}%</div>
+          <div  style={{
+              overflow: 'hidden',
+              padding: '0 5px',
+              width: '70%',
+              fontSize: '0.8em',
+            }} >
+            <div className="ticker-text">{videoTitle}</div>
+          </div>
+          </div>
           </div>
           <div
             style={{
               display: 'flex',
-              justifyContent: 'space-between',
+              justifyContent: 'space-around',
               width: '100%',
               alignItems: 'center',
             }}
@@ -373,7 +392,7 @@ const JukeboxPanel = ({
           </div>
         </div>
       </div>
-    </div>
+
   );
 };
 
