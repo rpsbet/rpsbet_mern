@@ -139,8 +139,8 @@ export const deleteLoan = _id => async dispatch => {
   }
 };
 
-export const setCurrentLoanInfo = owner => dispatch => {
-  dispatch({ type: SET_CURRENT_LOAN_INFO, payload: owner });
+export const setCurrentLoanInfo = loaner => dispatch => {
+  dispatch({ type: SET_CURRENT_LOAN_INFO, payload: loaner });
 };
 
 export const setCurrentLoanId = _id => dispatch => {

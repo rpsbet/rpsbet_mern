@@ -21,7 +21,7 @@
 	filter: unset;
   }
 .dark_mode .lottie-bg div {
-	filter: brightness(0.25);
+	filter: brightness(0.75);
   }
 
 /* .dark_mode 

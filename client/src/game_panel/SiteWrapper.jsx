@@ -575,7 +575,6 @@ class SiteWrapper extends Component {
         this.initializeAudio(),
         this.fetchData(),
       ]);
-      console.log("sss", this.props.transactions);
 
       // Set selectedMainTabIndex based on the current URL
       if (currentUrl.includes('create')) {

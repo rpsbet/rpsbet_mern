@@ -92,17 +92,17 @@ position: absolute;
 
 .avatar-square {
   background: #b9bbbe;
-  border: 3px solid #dee2e6;
-  color: #f8f9fa;
-
-  width: 32px;
-  margin-left: -5px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 33px;
-  border-radius: 9px;
-  z-index: 2;
+    border: 3px solid #dee2e6;
+    color: #f8f9fa;
+    width: 60px;
+    margin-left: 44px;
+    display: flex;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+    border-radius: 9px;
+    z-index: 2;
 }
 .fade-animation {
   transition: opacity 0.3s ease-in-out;

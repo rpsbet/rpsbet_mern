@@ -465,6 +465,19 @@ div.table .table-cell button.btn_join img {
   padding-left: 10px;
 }
 
+img.palm-trees.desktop-only {
+  transform: translate(40%, -100%);
+  width: 66px;
+  height: auto;
+  opacity: 0.8;
+}
+
+#palmTree {
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
 /*********************************/
 /********* GAME PANEL ***********/
 /*********************************/
@@ -711,8 +724,20 @@ div.table .table-row .table-cell img.game-type-icon {
   border-radius: 9px;
 }
 
+.main-game-table .avatar.desktop-only img,
+.main-game-table avatar.desktop-only img {
+  border-width: 6px !important;
+  border-radius: 12px  !important  ; 
+}
+
+.main-game-table .avatar.desktop-only,
+.main-game-table avatar.desktop-only  {
+  width: 60px !important;
+  height:60px  !important  ; 
+}
+
 .cell-joiners svg {
-  width: 50px !important;
+  width: 60px !important;
     margin: auto -10px;
 }
 
@@ -3366,6 +3391,8 @@ input {
   div.table.my-open-game-table {
     height: unset;
   }
+
+
   /* div.table.main-history-table {
         padding-top: 35px;
 

@@ -1,27 +1,36 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const OwnerSchema = new Schema({
+const LoanerSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
-    count: {
+    amount: {
         type: Number,
         default: 0
     },
-    price: {
+    paidBack: {
         type: String,
         default: 0
     },
-    onSale: {
+    period: {
+        type: Number,
+        default: 0
+    },
+    apy: {
         type: Number,
         default: 0
     }
 });
 
 const LoanSchema = new Schema({
-    owners: [OwnerSchema],
+    lender: {
+        type: Schema.Types.ObjectId,
+        ref: 'lender',
+        default: null
+    },
+    loaners: [LoanerSchema],
     loan_amount: {
         type: Number,
         default: 0
@@ -30,6 +39,7 @@ const LoanSchema = new Schema({
         type: Number,
         default: 0
     },
+
     loan_type: {
         type: Schema.Types.ObjectId,
         ref: 'loanType',

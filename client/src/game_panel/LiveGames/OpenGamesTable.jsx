@@ -8,6 +8,7 @@ import {
 import { Box, Button, Typography, IconButton } from '@material-ui/core';
 import { Add, Remove, Visibility } from '@material-ui/icons';
 import ReactApexChart from 'react-apexcharts';
+import palmTree from '../icons/palm-tree.svg'
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 // import gemBg from '../LottieAnimations/gem-bg.json';
 import Avatar from '../../components/Avatar';
@@ -51,7 +52,7 @@ class OpenGamesTable extends Component {
   }
 
   generateGameTypePanel = () => {
-    const {isLowGraphics} = this.props;
+    const { isLowGraphics } = this.props;
     const gameTypeStyleClass = {
       R: 'roll',
       RPS: 'rps',
@@ -64,7 +65,7 @@ class OpenGamesTable extends Component {
       BJ: 'blackjack',
       CR: 'craps'
     };
-  
+
     const gameTypePanel = (
       <Box
         display="flex"
@@ -81,11 +82,10 @@ class OpenGamesTable extends Component {
             <ChevronLeftIcon />
           </Button>
         </Box>
-  
+
         <Button
-          className={`btn-game-type btn-icon all-games ${
-            this.state.selectedGameType === 'All' ? 'active' : ''
-          }`}
+          className={`btn-game-type btn-icon all-games ${this.state.selectedGameType === 'All' ? 'active' : ''
+            }`}
           key="open-game-all-game-button"
           onClick={() => {
             this.handleGameTypeButtonClicked('All');
@@ -115,13 +115,11 @@ class OpenGamesTable extends Component {
         </Button>
         {this.props.gameTypeList.map((gameType, index) => (
           <Button
-            className={`btn-game-type btn-icon ${
-              gameTypeStyleClass[gameType.short_name]
-            } ${
-              this.state.selectedGameType === gameType.short_name
+            className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]
+              } ${this.state.selectedGameType === gameType.short_name
                 ? 'active'
                 : ''
-            }`}
+              }`}
             key={index}
             onClick={() => {
               this.handleGameTypeButtonClicked(gameType.short_name);
@@ -131,7 +129,7 @@ class OpenGamesTable extends Component {
               <Lottie
                 options={{
                   loop: false,
-                autoplay: false,
+                  autoplay: false,
                   animationData: blob
                 }}
                 style={{
@@ -162,10 +160,10 @@ class OpenGamesTable extends Component {
         </Button>
       </Box>
     );
-  
+
     return gameTypePanel;
   };
-  
+
 
   componentDidMount() {
     const { roomList } = this.props;
@@ -199,7 +197,7 @@ class OpenGamesTable extends Component {
     this.setState({ loaded: true, selectedGameType: 'All' });
   };
 
-   handleScroll = async () => {
+  handleScroll = async () => {
     const tableElement = document.querySelector('.table.main-game-table');
     if (tableElement) {
       const { bottom } = tableElement.getBoundingClientRect();
@@ -373,9 +371,9 @@ class OpenGamesTable extends Component {
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name });
     await this.props.getRoomList({
-        game_type: short_name
-      });
-   
+      game_type: short_name
+    });
+
   };
 
   handleBtnLeftClicked = e => {
@@ -388,7 +386,7 @@ class OpenGamesTable extends Component {
     this.game_type_panel.scrollLeft += scrollAmount;
   };
 
- 
+
 
   renderArrow = value => {
     return value >= 0 ? (
@@ -435,7 +433,7 @@ class OpenGamesTable extends Component {
             <div className="table-cell payout">Net profit </div>
             <div className="table-cell action desktop-only">Bet/Bankroll</div>
           </div>*/}
-        </div> 
+        </div>
         {isLoading && loading ? (
           <div className="loading-gif-container">
             <img src={randomGifUrl} id="isLoading" alt="loading" />
@@ -452,7 +450,7 @@ class OpenGamesTable extends Component {
                 selectedCreator={selectedCreator}
                 modalIsOpen={showPlayerModal}
                 closeModal={this.handleClosePlayerModal}
-                // {...this.state.selectedRow}
+              // {...this.state.selectedRow}
               />
             )}
 
@@ -490,7 +488,7 @@ class OpenGamesTable extends Component {
                         }
                       >
                         <Avatar
-                          className="avatar"
+                          className="avatar desktop-only"
                           src={row.creator_avatar}
                           accessory={row.accessory}
                           rank={row.rank}
@@ -499,19 +497,18 @@ class OpenGamesTable extends Component {
                         />
                       </a>
                       <i
-                        className={`online-status${
-                          this.props.onlineUserList.filter(
-                            user => user === row.creator_id
-                          ).length > 0
+                        className={`online-status${this.props.onlineUserList.filter(
+                          user => user === row.creator_id
+                        ).length > 0
                             ? ' online'
                             : ''
-                        }`}
+                          }`}
                       ></i>
                       {row.joiners && row.joiners.length > 0 ? (
-                        <div className="table-cell desktop-only cell-joiners">
+                        <div className="table-cell avatar desktop-only cell-joiners">
                           <Battle />
                           {row.joiner_avatars
-                            .slice(0, 2)
+                            .slice(0, 1)
                             .map((joiner, index) => (
                               <a
                                 className="player"
@@ -520,7 +517,7 @@ class OpenGamesTable extends Component {
                                 }
                               >
                                 <Avatar
-                                  className="avatar"
+                                  className="avatar desktop-only"
                                   key={index}
                                   accessory={joiner.accessory}
                                   src={joiner.avatar}
@@ -530,10 +527,10 @@ class OpenGamesTable extends Component {
                                 />
                               </a>
                             ))}
-                          {row.joiner_avatars.length > 2 && (
+                          {row.joiner_avatars.length > 1 && (
                             <div className="avatar-square">
                               <div className="avatar-count">
-                                +{row.joiner_avatars.length - 2}
+                                +{row.joiner_avatars.length - 1}
                               </div>
                             </div>
                           )}
@@ -542,7 +539,7 @@ class OpenGamesTable extends Component {
                     </div>
                     <div className="table-cell cell-amount">
                       {roomStatistics &&
-                      roomStatistics.hostBetsValue.length > 0 ? (
+                        roomStatistics.hostBetsValue.length > 0 ? (
                         <>
                           <ReactApexChart
                             className="bankroll-graph"
@@ -573,8 +570,8 @@ class OpenGamesTable extends Component {
                                     hostNetProfitList[key] > 0
                                       ? ['#00FF00']
                                       : hostNetProfitList[key] < 0
-                                      ? ['#FF0000']
-                                      : ['#808080'],
+                                        ? ['#FF0000']
+                                        : ['#808080'],
                                   shadeIntensity: 1,
                                   type: 'vertical',
                                   opacityFrom: 0.7,
@@ -616,15 +613,15 @@ class OpenGamesTable extends Component {
                               {
                                 data:
                                   roomStatistics.hostNetProfits[key] &&
-                                  roomStatistics.hostBetsValue[key]
+                                    roomStatistics.hostBetsValue[key]
                                     ? roomStatistics.hostNetProfits[
-                                        key
-                                      ].map((value, index) => [
-                                        roomStatistics.hostBetsValue[key][
-                                          index
-                                        ],
-                                        value
-                                      ])
+                                      key
+                                    ].map((value, index) => [
+                                      roomStatistics.hostBetsValue[key][
+                                      index
+                                      ],
+                                      value
+                                    ])
                                     : []
                               }
                             ]}
@@ -643,6 +640,14 @@ class OpenGamesTable extends Component {
                               {convertToCurrency(hostNetProfitList[key])}
                             </span>
                           </div>
+                          {row.joiners && row.joiners.length > 0 ? (
+
+                            <div id="palmTree">
+
+                              <img className="palm-trees desktop-only" src={palmTree} />
+                            </div>
+                          ) : (null)
+                          }
                         </>
                       ) : (
                         <Lottie
@@ -774,19 +779,18 @@ class OpenGamesTable extends Component {
                         {/* <span>{row.creator}</span> */}
                       </a>
                       <i
-                        className={`online-status${
-                          this.props.onlineUserList.filter(
-                            user => user === row.creator_id
-                          ).length > 0
+                        className={`online-status${this.props.onlineUserList.filter(
+                          user => user === row.creator_id
+                        ).length > 0
                             ? ' online'
                             : ''
-                        }`}
+                          }`}
                       ></i>
                       {row.joiners && row.joiners.length > 0 ? (
                         <div className="table-cell mobile-only cell-joiners">
                           <Battle />
                           {row.joiner_avatars
-                            .slice(0, 8)
+                            .slice(0, 5)
                             .map((joiner_avatar, index) => (
                               <Avatar
                                 className="avatar"
@@ -798,10 +802,10 @@ class OpenGamesTable extends Component {
                                 darkMode={this.props.isDarkMode}
                               />
                             ))}
-                          {row.joiner_avatars.length > 8 && (
+                          {row.joiner_avatars.length > 5 && (
                             <div className="avatar-square">
                               <div className="avatar-count">
-                                +{row.joiner_avatars.length - 8}
+                                +{row.joiner_avatars.length - 5}
                               </div>
                             </div>
                           )}
@@ -857,7 +861,7 @@ class OpenGamesTable extends Component {
           </div>
         )}
         {!isLoading && (this.props.roomList.length !== this.props.roomCount) && (
-        <div className='loading-spinner'></div>
+          <div className='loading-spinner'></div>
         )}
       </>
     )

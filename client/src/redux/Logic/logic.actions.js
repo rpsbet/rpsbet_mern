@@ -339,7 +339,7 @@ export const confirmTrade = data => async dispatch => {
 export const confirmLoan = data => async dispatch => {
   try {
     dispatch({ type: TNX_INCOMPLETE });
-    const res = await axios.post('/item/lend/', data);
+    const res = await axios.post('/loan/lend/', data);
     if (res.data.success) {
 
       return res.data;

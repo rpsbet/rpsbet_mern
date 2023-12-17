@@ -14,7 +14,7 @@ import {
 const initialState = {
   _id: '',
   loan_amount: 0,
-  owner: '',
+  lender: '',
   apy: 0,
   loan_period: 0,
   loanType: '',

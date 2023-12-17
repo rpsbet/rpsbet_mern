@@ -191,21 +191,22 @@ class BankTable extends Component {
       loanType: ''
     };
   }
+  
 
-  componentDidUpdate(prevProps, prevState) {
-    const prevOwners = prevProps.data ? prevProps.data.owners : [];
-    const currentOwners = this.props.data ? this.props.data.owners : [];
+  // componentDidUpdate(prevProps, prevState) {
+  //   const prevLoaners = prevProps.data ? prevProps.data.loaners : [];
+  //   const currentLoaners = this.props.data ? this.props.data.loaners : [];
 
-    // Check if there's any change in the owners sub-array
-    if (!this.areOwnersEqual(prevOwners, currentOwners)) {
-      // Fetch loans when there's a change in the owners sub-array
-      this.fetchLoans();
-    }
-  }
+  //   // Check if there's any change in the loaners sub-array
+  //   if (!this.areLoanersEqual(prevLoaners, currentLoaners)) {
+  //     // Fetch loans when there's a change in the loaners sub-array
+  //     this.fetchLoans();
+  //   }
+  // }
 
-  areOwnersEqual(prevOwners, currentOwners) {
-    // Compare the owners array by stringifying them and checking for equality
-    return JSON.stringify(prevOwners) === JSON.stringify(currentOwners);
+  areLoanersEqual(prevLoaners, currentLoaners) {
+    // Compare the loaners array by stringifying them and checking for equality
+    return JSON.stringify(prevLoaners) === JSON.stringify(currentLoaners);
   }
 
   handleFilterChange() {
@@ -254,40 +255,33 @@ class BankTable extends Component {
 
   async fetchCustomerInfo() {
     const { data, acGetCustomerInfo } = this.props;
-    for (const product of data) {
-      if (product.owners && product.owners.length > 0) {
-        for (const owner of product.owners) {
-          if (!this.state.customerInfo[owner.user]) {
-            try {
-              const info = await acGetCustomerInfo(owner.user);
-              if (info) {
-                this.setState(prevState => ({
-                  customerInfo: {
-                    ...prevState.customerInfo,
-                    [owner.user]: info
-                  }
-                }));
-              } else {
-                this.setState(prevState => ({
-                  customerInfo: {
-                    ...prevState.customerInfo,
-                    [owner.user]: {
-                      username: 'Anon',
-                      avatar: 'default-avatar-url'
-                    }
-                  }
-                }));
-              }
-            } catch (error) {
-              console.error(
-                `Error fetching customer info for ${owner.user}:`,
-                error
-              );
-            }
-          }
+    for (const lender of data) {
+
+      try {
+        const info = await acGetCustomerInfo(lender.lender);
+        if (info) {
+          this.setState((prevState) => ({
+            customerInfo: {
+              ...prevState.customerInfo,
+              [lender.lender]: info,
+            },
+          }));
+        } else {
+          this.setState((prevState) => ({
+            customerInfo: {
+              ...prevState.customerInfo,
+              [lender.lender]: {
+                username: 'Anon',
+                avatar: 'default-avatar-url',
+              },
+            },
+          }));
         }
+      } catch (error) {
+        console.error(`Error fetching customer info for ${data.lender}:`, error);
       }
     }
+
   }
 
   render() {
@@ -376,8 +370,9 @@ class BankTable extends Component {
                 onClick={() => {
                   setCurrentLoanId(row._id);
                   setCurrentLoanInfo({
-                    owner: row.owners[0].user,
+                    lender: row.lender,
                     loan_amount: row.loan_amount,
+                    loan_period: row.loan_period,
                     apy: row.apy
                   });
                   history.push(`/loan/${row._id}`);
@@ -385,27 +380,24 @@ class BankTable extends Component {
               >
                 <APY>{updateDigitToPoint2(row.apy) * 100}%</APY>
 
-                {row.owners.map(owner => (
-                  <ProductCreator key={owner.user}>
-                    {customerInfo[owner.user] ? (
-                      <a
-                        className="player"
-                        onClick={() => this.handleOpenPlayerModal(owner.user)}
-                      >
-                        <Avatar
-                          className="avatar"
-                          src={customerInfo[owner.user].avatar}
-                          rank={customerInfo[owner.user].totalWagered}
-                          accessory={customerInfo[owner.user].accessory}
-                          alt=""
-                          darkMode={this.props.isDarkMode}
-                        />
-                      </a>
-                    ) : (
-                      <div className="loading-spinner"></div>
-                    )}
-                  </ProductCreator>
-                ))}
+
+                <ProductCreator>
+                  {loading ? (
+                    <div className="loading-spinner"></div>
+                  ) : (
+                    <a className="player" onClick={() => this.handleOpenPlayerModal(row.lender)}>
+                      <Avatar
+                        className="avatar"
+                        src={customerInfo[row.lender]?.avatar || 'default-avatar-url'}
+                        rank={customerInfo[row.lender]?.totalWagered}
+                        accessory={customerInfo[row.lender]?.accessory}
+                        alt=""
+                        darkMode={this.props.isDarkMode}
+                      />
+                    </a>
+                  )}
+                </ProductCreator>
+
 
                 <ProductInfo>
                   <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
@@ -431,8 +423,8 @@ class BankTable extends Component {
                       className="btn-back"
                       onClick={() => {
                         setCurrentLoanId(row._id);
-                        setCurrentLoanInfo(row.owners[0].user);
-                        if (row.owners[0].user !== this.props.user) {
+                        setCurrentLoanInfo(row.lender);
+                        if (row.lender !== this.props.user) {
                           openConfirmLoanModal();
                         } else {
                           alertModal(

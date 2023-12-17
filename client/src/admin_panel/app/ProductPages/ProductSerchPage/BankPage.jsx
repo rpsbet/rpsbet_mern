@@ -10,7 +10,7 @@ export class BankPage extends Component {
 
   componentDidMount() {
     // this.props.setUrl(this.props.match.path);
-    this.props.acQueryLoan(30, 1, 'price', '653ee7ac17c9f5ee21245649');
+    this.props.acQueryLoan(30, 1, 'price', '653ee7df17c9f5ee2124564a');
     
   }
 

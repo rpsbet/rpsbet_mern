@@ -15,7 +15,7 @@ import {
   setCurrentProductId,
   setCurrentProductInfo
 } from '../../../../redux/Item/item.action';
-import { openConfirmLoanModal } from '../../../../redux/Notification/notification.actions';
+import { openConfirmTradeModal } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
 import {
   LinearProgress,
@@ -100,7 +100,7 @@ const ProductCard = styled.div`
   }
 `;
 
-const LoanButton = styled.div`
+const TradeButton = styled.div`
 opacity: 0;
   position: absolute;
   margin-top: auto;
@@ -309,7 +309,7 @@ class ProductTable extends Component {
       acQueryItem,
       setCurrentProductId,
       setCurrentProductInfo,
-      openConfirmLoanModal,
+      openConfirmTradeModal,
       isLowGraphics
     } = this.props;
 
@@ -466,7 +466,7 @@ Sort by Price</MenuItem>
                 <ProductInfo>
                   <ProductName>{row.productName}</ProductName>
                   <TableContainer>
-                    <Table id="all-loans" className="product-detail">
+                    <Table id="all-trades" className="product-detail">
                       <TableBody>
                         <TableRow>
                           <TableCell>
@@ -496,15 +496,15 @@ Sort by Price</MenuItem>
                     </Table>
                   </TableContainer>
                 </ProductInfo>
-                <LoanButton>
-                  <Tooltip title="Loan">
+                <TradeButton>
+                  <Tooltip title="Trade">
                     <IconButton
                       className="btn-back"
                       onClick={() => {
                         setCurrentProductId(row._id);
                         setCurrentProductInfo(row.owners[0].user);
                         if (row.owners[0].user !== this.props.user) {
-                          openConfirmLoanModal();
+                          openConfirmTradeModal();
                         } else {
                           alertModal(
                             this.props.isDarkMode,
@@ -513,10 +513,10 @@ Sort by Price</MenuItem>
                         }
                       }}
                     >
-                      Loan <SwapHoriz />
+                      Trade <SwapHoriz />
                     </IconButton>
                   </Tooltip>
-                </LoanButton>
+                </TradeButton>
               </ProductCard>
             ))}
           </ProductGrid>
@@ -546,7 +546,7 @@ const mapStateToProps = state => ({
   page: state.itemReducer.page,
   loading: state.itemReducer.loading,
   total: state.itemReducer.totalResults,
-  showConfirmLoanModal: state.snackbar.showConfirmLoanModal,
+  showConfirmTradeModal: state.snackbar.showConfirmTradeModal,
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user._id,
   isLowGraphics: state.auth.isLowGraphics
@@ -556,7 +556,7 @@ const mapDispatchToProps = {
   acQueryItem,
   setCurrentProductId,
   setCurrentProductInfo,
-  openConfirmLoanModal,
+  openConfirmTradeModal,
   acGetCustomerInfo
 };
 
