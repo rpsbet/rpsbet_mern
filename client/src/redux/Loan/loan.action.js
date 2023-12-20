@@ -4,14 +4,17 @@ import {
   MSG_SUCCESS,
   MSG_WARNING,
   LOAN_QUERY,
+  SET_USER_LOANS,
   LOAN_QUERY_ONE,
   MY_LOAN_QUERY,
   MY_LOAN_QUERY_ONE,
   LOADING_LOAN_TABLE,
   PAGINATION_FOR_LOAN,
   SET_CURRENT_LOAN_INFO,
+  LOADING_PAYBACK_LOAN,
   SET_CURRENT_LOAN_ID,
   ADD_TOTAL,
+  LOADING_REMAINING_LOANS, CALCULATE_REMAINING_LOANS,
   MY_ADD_TOTAL
 } from '../types';
 
@@ -24,8 +27,8 @@ export const acQueryMyLoan = (pagination, page, sortCriteria, loanType) => async
   let payload = {
     pagination,
     page,
-    sortCriteria,   
-    loanType, 
+    sortCriteria,
+    loanType,
   };
   dispatch({ type: PAGINATION_FOR_LOAN, payload });
   let body = {};
@@ -55,13 +58,12 @@ export const acQueryLoan = (pagination, page, sortCriteria, loanType) => async (
   let payload = {
     pagination,
     page,
-    sortCriteria,   
-    loanType, 
+    sortCriteria,
+    loanType,
   };
   dispatch({ type: PAGINATION_FOR_LOAN, payload });
   try {
     const { data } = await api.get('loan', { params: payload });
-
     if (data.success) {
       dispatch({ type: LOAN_QUERY, payload: data.loans });
       dispatch({ type: ADD_TOTAL, payload: data });
@@ -69,6 +71,55 @@ export const acQueryLoan = (pagination, page, sortCriteria, loanType) => async (
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
     dispatch({ type: LOADING_LOAN_TABLE, payload: false });
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+// Define the action to calculate remaining loans
+export const acCalculateRemainingLoans = () => async (dispatch, getState) => {
+  dispatch({ type: LOADING_REMAINING_LOANS, payload: true });
+
+  try {
+    // Make a request to the backend route to calculate remaining loans
+    const { data } = await api.get('/loan/calculate-remaining-loans');
+
+    if (data.success) {
+      dispatch({ type: CALCULATE_REMAINING_LOANS, payload: data.remainingLoans });
+      dispatch({ type: SET_USER_LOANS, payload: data.userLoans }); // Add this line
+      console.log('Remaining Loans:', data.remainingLoans);
+      console.log('User Loans:', data.userLoans);
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+
+    dispatch({ type: LOADING_REMAINING_LOANS, payload: false });
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+
+// Define the action to pay back a loan
+export const paybackLoan = (loanId, paybackAmount) => async (dispatch) => {
+  dispatch({ type: LOADING_PAYBACK_LOAN, payload: true });
+  let body = {
+    loanId,
+    paybackAmount
+  };
+  try {
+    // Make a request to the backend route to pay back the loan
+    const { data } = await api.post('/loan/payback', body);
+    console.log(data)
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: data.message });
+
+      return data;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+
+    dispatch({ type: LOADING_PAYBACK_LOAN, payload: false });
   } catch (error) {
     console.log('error***', error);
     dispatch({ type: MSG_WARNING, payload: error });
@@ -100,15 +151,17 @@ export const getLoan = () => async (dispatch, getState) => {
   const _id = getState().loanReducer._id;
   try {
     if (_id === '') {
-      dispatch({ type: LOAN_QUERY_ONE, payload: {
-        _id: '',
-        loan_amount: 0,
-        apy: 0,
-        loan_period: 0,
-        loan_type: '',
-        startDateTime: new Date(),
-        expireDateTime: new Date()
-      }});
+      dispatch({
+        type: LOAN_QUERY_ONE, payload: {
+          _id: '',
+          loan_amount: 0,
+          apy: 0,
+          loan_period: 0,
+          loan_type: '',
+          startDateTime: new Date(),
+          expireDateTime: new Date()
+        }
+      });
     } else {
       const { data } = await api.get('loan/' + _id);
       if (data.success) {

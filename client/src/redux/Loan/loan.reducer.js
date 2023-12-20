@@ -8,11 +8,16 @@ import {
   SET_CURRENT_LOAN_INFO,
   SET_CURRENT_LOAN_ID,
   ADD_TOTAL,
-  MY_ADD_TOTAL
+  MY_ADD_TOTAL,
+  LOADING_REMAINING_LOANS,
+  CALCULATE_REMAINING_LOANS,
+  SET_USER_LOANS,
+  LOADING_PAYBACK_LOAN
 } from '../types';
 
 const initialState = {
   _id: '',
+  loadingPaybackLoan: false,
   loan_amount: 0,
   lender: '',
   apy: 0,
@@ -27,6 +32,9 @@ const initialState = {
   totalResults: 0,
   pages: 1,
   loading: false,
+  remainingLoans: null,
+  userLoans: [], // Add this line
+  loadingRemainingLoans: false,
   data: {
     price: 0,
     loan_amount: ''
@@ -54,6 +62,14 @@ export default (state = initialState, { type, payload }) => {
         pagination: payload.pagination,
         page: payload.page
       };
+      case LOADING_PAYBACK_LOAN: // Add this case
+      return { ...state, loadingPaybackLoan: payload };
+      case CALCULATE_REMAINING_LOANS:
+        return { ...state, remainingLoans: payload };
+      case SET_USER_LOANS: // Add this case
+        return { ...state, userLoans: payload };
+      case LOADING_REMAINING_LOANS:
+        return { ...state, loadingRemainingLoans: payload };
     case LOADING_LOAN_TABLE:
       return { ...state, loading: payload };
     case SET_CURRENT_LOAN_ID:

@@ -3,11 +3,10 @@ import { connect } from 'react-redux';
 
 import Modal from 'react-modal';
 import BankPage from '../../admin_panel/app/ProductPages/ProductSerchPage/BankPage';
-// import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
+import MyLoansModal from '../modal/MyLoansModal';
 import { Button } from '@material-ui/core';
 import AttachMoney from '@material-ui/icons/AttachMoney';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
-import InventoryModal from '../modal/InventoryModal';
 
 
 Modal.setAppElement('#root');
@@ -33,18 +32,22 @@ class BankModal extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      showInventoryModal: false,
+      showMyLoansModal: false,
       sortCriteria: 'updated_at',
       itemType: '653ee7ac17c9f5ee21245649',
     };
   }
 
-  handleOpenInventoryModal = () => {
-    this.setState({ showInventoryModal: true, anchorEl: null });
+  handleOpenMyLoansModal = () => {
+    if (!this.state.showMyLoansModal) {
+      this.setState({ showMyLoansModal: true, anchorEl: null });
+    }
   };
-  handleCloseInventoryModal = () => {
-    this.setState({ showInventoryModal: false });
+  
+  handleCloseMyLoansModal = () => {
+    this.setState({ showMyLoansModal: false });
   };
+  
   
   onSubmitFrom = () => {
     // e.preventDefault();
@@ -75,14 +78,14 @@ class BankModal extends Component {
             </div>
           </div>
           <div className="modal-footer">
-            <Button className="btn-back" onClick={this.handleOpenInventoryModal}>List a Loan &nbsp; <AttachMoney /></Button>
+            <Button className="btn-back" onClick={this.handleOpenMyLoansModal}>Manage Your Loans&nbsp; <AttachMoney /></Button>
           </div>
         </div>
 
-        {this.state.showInventoryModal && (
-            <InventoryModal
-              modalIsOpen={this.state.showInventoryModal}
-              closeModal={this.handleCloseInventoryModal}
+        {this.state.showMyLoansModal && (
+            <MyLoansModal
+              modalIsOpen={this.state.showMyLoansModal}
+              closeModal={this.handleCloseMyLoansModal}
             />
           )}
       </Modal>

@@ -414,6 +414,7 @@ background-size: 1.2em;
 }
 
 .stars {
+  display: flex;
   font-size: 0.85em;
   text-align: center;
   line-height: 0.8;

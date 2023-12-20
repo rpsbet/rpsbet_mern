@@ -21,6 +21,14 @@ const LoanerSchema = new Schema({
     apy: {
         type: Number,
         default: 0
+    },
+    created_at: {
+        type: Date,
+        default: Date.now
+    },
+    updated_at: {
+        type: Date,
+        default: Date.now
     }
 });
 

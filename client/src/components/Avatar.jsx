@@ -103,28 +103,29 @@ const {isLowGraphics, isDarkMode} = this.props;
     const backgroundColor = darkMode ? '#2D2D2D' : '#F3F3F3';
 
     return (
-      <div
-        {...this.props}
-        style={{
-          position: 'relative',
-          backgroundColor
-        }}
-      >
-        <img
-          src={src}
-          alt={alt}
+        <div
+          {...this.props}
           style={{
-            width: '100%',
-            height: '100%',
-            border: borderColor ,
-            boxShadow: `0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor}, 0 0 20px ${shadedColor} inset`,
+            position: 'relative',
+            backgroundColor,
           }}
-          onError={e => {
-            e.target.src = darkMode
-              ? '/img/profile-thumbnail-dark.svg'
-              : '/img/profile-thumbnail.svg';
-          }}
-        />
+        >
+          <img
+          
+            src={src}
+            alt={alt}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: borderColor ,
+              boxShadow: `0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor}, 0 0 20px ${shadedColor} inset`,
+            }}
+            onError={e => {
+              e.target.src = darkMode
+                ? '/img/profile-thumbnail-dark.svg'
+                : '/img/profile-thumbnail.svg';
+            }}
+          />
         {renderLottieAvatarAnimation(accessory, isLowGraphics)}
         {dominantColor && (
           <div

@@ -153,7 +153,8 @@ class PlayerModal extends Component {
       username: userData.username,
       avatar: userData.avatar,
       accessory: userData.accessory,
-      rank: userData.totalWagered
+      rank: userData.totalWagered,
+      dateJoined: userData.created_at
     });
   };
 
@@ -255,6 +256,7 @@ class PlayerModal extends Component {
                   {loading ? (
                     <div className="loading-spinner"></div>
                   ) : (
+                    <div className='avatar-border'>
                     <Avatar
                       src={
                         this.state.avatar
@@ -265,6 +267,7 @@ class PlayerModal extends Component {
                       rank={this.state.rank}
                       alt=""
                     />
+                    </div>
                   )}
                 </div>
                 {loading ? null : (
@@ -272,7 +275,7 @@ class PlayerModal extends Component {
                     <StatisticsForm
                       onDropdownChange={this.handleDropdownChange}
                       username={this.state.username}
-                      joined_date={this.state.joined_date}
+                      dateJoined={this.state.dateJoined}
                       gameLogList={this.state.gameLogList}
                       deposit={this.state.deposit}
                       withdraw={this.state.withdraw}

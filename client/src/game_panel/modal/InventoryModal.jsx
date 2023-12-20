@@ -3,11 +3,10 @@ import { connect } from 'react-redux';
 
 import Modal from 'react-modal';
 import MyProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/MyProductPage';
-import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
 import { Button } from '@material-ui/core';
 import AttachMoney from '@material-ui/icons/AttachMoney';
-import { createItem, getItem, updateItem, deleteItem, setCurrentProductInfo} from '../../redux/Item/item.action';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
+import MarketplaceModal from './MarketplaceModal';
 
 
 Modal.setAppElement('#root');
@@ -33,26 +32,17 @@ class InventoryModal extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      productCreateModalIsOpen: false,
+      showMarketplaceModal: false,
     };
   }
 
-  openProductCreateModal = () => {
-    this.setState({ productCreateModalIsOpen: true });
+  handleOpenMarketplaceModal = () => {
+    this.setState({ showMarketplaceModal: true });
   };
 
-  closeProductCreateModal = () => {
-    this.setState({ productCreateModalIsOpen: false });
+  handleCloseMarketplaceModal = () => {
+    this.setState({ showMarketplaceModal: false });
   };
-
-  
-  onSubmitFrom = () => {
-    // e.preventDefault();
-    // console.log(this.state);
-    this.props.infoMsgBar(`New Item Listed!`);
-    this.props.createItem(this.state);
-    this.closeProductCreateModal();
-    };
 
   render() {
     return (
@@ -77,60 +67,31 @@ class InventoryModal extends Component {
             </div>
           </div>
           <div className="modal-footer">
-            <Button className="btn-back" onClick={this.props.handleOpenMarketplaceModal}>Browse More &nbsp; <AttachMoney /></Button>
+            <Button className="btn-back" onClick={this.handleOpenMarketplaceModal}>Browse More &nbsp; <AttachMoney /></Button>
           </div>
         </div>
 
-        {/* ProductCreatePage Modal */}
-        <Modal
-          isOpen={this.state.productCreateModalIsOpen}
-          onRequestClose={this.closeProductCreateModal}
-          style={customStyles}
-          contentLabel="Sell Something"
-        >
-           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-header">
-            <h2 className="modal-title">New Trade</h2>
-            <Button className="btn-close" onClick={this.closeProductCreateModal}>
-              ×
-            </Button>
-          </div>
-          <div className="modal-body edit-modal-body inventory-modal-body">
-            <div className="modal-content-wrapper">
-              <div className="modal-content-panel">
-              <ProductCreatePage />
-              </div>
-            </div>
-          </div>
-          <div className="modal-footer">
-            <Button className="btn-submit" onClick={this.onSubmitFrom}>Submit</Button>
-          </div>
-        </div>
-        </Modal>
-      </Modal>
+        {this.state.showMarketplaceModal && (
+            <MarketplaceModal
+              modalIsOpen={this.state.showMarketplaceModal}
+              closeModal={this.handleCloseMarketplaceModal}
+              isDarkMode={this.props.isDarkMode}
+            />
+          )}
+  </Modal>
     );
   }
 }
 
+
 const mapStateToProps = state => ({
-  // _id: state.itemReducer._id,
-  // productName: state.itemReducer.productName,
-  // price: state.itemReducer.price,
-  // image: state.itemReducer.image,
   isDarkMode: state.auth.isDarkMode,
 
 });
 
 const mapDispatchToProps = {
-  // setUrl,
   warningMsgBar,
-  infoMsgBar,
-  createItem,
-  // getItem,
-  
-  // updateItem,
-  // deleteItem,
-  // setCurrentProductInfo
+  infoMsgBar
 };
 
 export default connect(

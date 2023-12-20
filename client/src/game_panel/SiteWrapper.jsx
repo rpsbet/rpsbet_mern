@@ -60,9 +60,11 @@ import PlayerModal from './modal/PlayerModal';
 import HowToPlayModal from './modal/HowToPlayModal';
 import MarketplaceModal from './modal/MarketplaceModal';
 import BankModal from './modal/BankModal';
+import DebtsModal from './modal/DebtsModal';
 
 import LeaderboardsModal from './modal/LeaderboardsModal';
 import { getNotifications } from '../redux/Logic/logic.actions';
+import { acCalculateRemainingLoans } from '../redux/Loan/loan.action';
 import ConfirmTradeModal from './modal/ConfirmTradeModal';
 import ConfirmLoanModal from './modal/ConfirmLoanModal';
 import ListItemModal from './modal/ListItemModal';
@@ -227,6 +229,7 @@ class SiteWrapper extends Component {
       showDeposits: false,
       web3: null,
       web3account: '',
+      remainingLoans: this.props.remainingLoans,
       web3balance: 0
     };
     this.state.notifications = this.props.notification || {};
@@ -256,32 +259,36 @@ class SiteWrapper extends Component {
 
   async componentDidUpdate(prevProps, prevState) {
     const { loadMore } = this.state;
-    const { transactions, tnxComplete } = this.props;
-  
+    const { transactions, tnxComplete, remainingLoans } = this.props;
+
     const shouldUpdate =
       prevProps.transactions !== transactions &&
       transactions.length > 0 &&
       loadMore === 0 &&
       !tnxComplete;
-  
+
+    if (prevProps.remainingLoans !== remainingLoans) {
+      console.log(remainingLoans)
+      this.setState({ remainingLoans: remainingLoans });
+    }
     if (shouldUpdate) {
       this.playCoinsAnimation();
-  
+
       try {
         await this.props.getUser(true, false);
-  
+
         await this.props.getHistory();
       } catch (error) {
         console.error("An error occurred during asynchronous operations:", error);
         // Handle the error appropriately, e.g., show an error message to the user
       }
-  
+
       if (!this.isUnmounted) {
         this.stopCoinsAnimationAfterDelay();
       }
     }
   }
-  
+
 
   playCoinsAnimation() {
     this.setState({ isCoinsAnimation: true });
@@ -544,11 +551,11 @@ class SiteWrapper extends Component {
         const web3 = new Web3(window.ethereum);
         // Set the provider explicitly
         web3.setProvider(window.ethereum);
-  
+
         // Request accounts using the new Ethereum provider
         const accounts = await web3.eth.requestAccounts();
         this.setState({ web3, web3account: accounts[0] });
-  
+
         // Get ETH balance of the account
         const ethBalance = await web3.eth.getBalance(accounts[0]);
         const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
@@ -560,46 +567,50 @@ class SiteWrapper extends Component {
       console.error("Error loading Web3:", e);
     }
   };
-  
+
 
   async componentDidMount() {
     try {
       this.setState({ websiteLoading: true });
-  
+
       const currentUrl = window.location.pathname;
-      
+
       await Promise.all([
         this.props.getNotifications(),
         this.initSocket(),
         this.props.getUser(true, false, null, null, null, null),
+        this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
         this.fetchData(),
       ]);
+
 
       // Set selectedMainTabIndex based on the current URL
       if (currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
       }
-  
+
       // Set up intervals for fetchData and updateReminderTime
       setInterval(() => this.fetchData(), 2000);
       this.interval = setInterval(this.updateReminderTime, 3000);
-  
+
       // Set up Ethereum event listeners
       if (window.ethereum) {
         window.ethereum.on('chainChanged', () => this.loadWeb3());
         window.ethereum.on('accountsChanged', () => this.loadWeb3());
       }
-  
+
       // Load Web3
       this.loadWeb3();
     } catch (error) {
       console.error(error);
     } finally {
       this.setState({ websiteLoading: false });
+
     }
   }
-  
+
+
 
   initializeAudio() {
     try {
@@ -714,6 +725,14 @@ class SiteWrapper extends Component {
     this.setState({ showLoginModal: false });
   };
 
+  handleOpenDebtsModal = () => {
+    this.setState({ showDebtsModal: true });
+  };
+  handleCloseDebtsModal = () => {
+    this.setState({ showDebtsModal: false });
+  };
+
+
   handleOpenSignupModal = () => {
     this.setState({ showSignupModal: true });
   };
@@ -755,7 +774,7 @@ class SiteWrapper extends Component {
     this.setState({ showMarketplaceModal: false });
   };
 
-  
+
   handleOpenBankModal = () => {
     this.setState({ showBankModal: true });
   };
@@ -810,7 +829,7 @@ class SiteWrapper extends Component {
   handleSearchClose = event => {
     this.setState({ searchAnchorEl: null });
   };
-  
+
   onSearchQueryChange = event => {
     const searchQuery = event;
     this.setState({ searchQuery }, () => {
@@ -945,6 +964,7 @@ class SiteWrapper extends Component {
       showBankModal,
       showLoginModal,
       showSignupModal,
+      showDebtsModal,
       anchorEl,
       isCoinsAnimation,
       showSettingsModal,
@@ -1022,11 +1042,10 @@ class SiteWrapper extends Component {
                 className="main-game-page-tabs desktop-only"
               >
                 <Tab
-                  className={`custom-tab ${
-                    hoverTabIndex === 0 || selectedMainTabIndex === 0
+                  className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
                       ? 'fade-animation fade-in'
                       : 'fade-animation fade-out'
-                  }`}
+                    }`}
                   label="PVP"
                   labelPlacement="left"
                   icon={
@@ -1042,11 +1061,10 @@ class SiteWrapper extends Component {
                 />
 
                 <Tab
-                  className={`custom-tab ${
-                    hoverTabIndex === 1 || selectedMainTabIndex === 1
+                  className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
                       ? 'fade-animation fade-in'
                       : 'fade-animation fade-out'
-                  }`}
+                    }`}
                   label="Manage"
                   labelPlacement="left"
                   icon={
@@ -1063,7 +1081,7 @@ class SiteWrapper extends Component {
               </Tabs>
 
               <div className="header_action_panel">
-              <a
+                <a
                   href="#"
                   className="desktop-only"
                   onClick={e => {
@@ -1153,21 +1171,21 @@ class SiteWrapper extends Component {
                         }}
                       />
                       <Lottie
-                options={{
-                  loop: false,
-                  autoplay: isCoinsAnimation,
-                  animationData: coins,
-                  rendererSettings: {
-                    preserveAspectRatio: 'xMidYMid slice',
-                  },
-                }}
-                style={{
-                  marginTop: '-0px',
-                  position: `absolute`,
-                  width: '100px',
-                  height: '100px'
-                }}
-              />
+                        options={{
+                          loop: false,
+                          autoplay: isCoinsAnimation,
+                          animationData: coins,
+                          rendererSettings: {
+                            preserveAspectRatio: 'xMidYMid slice',
+                          },
+                        }}
+                        style={{
+                          marginTop: '-0px',
+                          position: `absolute`,
+                          width: '100px',
+                          height: '100px'
+                        }}
+                      />
                       <Button
                         id="wallet-btn"
                         style={{
@@ -1445,6 +1463,7 @@ class SiteWrapper extends Component {
                 searchAnchorEl={searchAnchorEl}
                 filterAnchorEl={filterAnchorEl}
                 filterType={filterType}
+                user={user._id}
                 transactions={transactions}
                 tnxComplete={tnxComplete}
                 handleSortClick={this.handleSortClick}
@@ -1474,70 +1493,76 @@ class SiteWrapper extends Component {
                   <div>
                     <table>
                       <tbody>
-                        {transactions.length === 0 ? (
+                        {transactions.filter(row => row.user === this.props.user._id)
+                          .length === 0 ? (
                           <tr>
                             <td>...</td>
                           </tr>
                         ) : (
-                          transactions.map((row, key) => (
-                            <tr key={key}>
-                              {row.hash ? ( // Check if row has a 'hash' property
-                                <a
-                                  href={`https://etherscan.io/tx/${row.hash}`}
-                                  rel="noopener noreferrer"
-                                >
-                                  <td
-                                    className={
-                                      'amount ' +
-                                      (row.amount > 0 ? 'green' : 'red')
-                                    }
+                          transactions.filter(row => row.user === this.props.user._id)
+                            .map((row, key) => (
+                              // row.user === this.props.user && (
+                              <tr key={key}>
+                                {row.hash ? ( // Check if row has a 'hash' property
+                                  <a
+                                    href={`https://etherscan.io/tx/${row.hash}`}
+                                    rel="noopener noreferrer"
                                   >
-                                    {row.amount > 0 ? (
-                                      <>
-                                        {'+ '}
-                                        {convertToCurrency(row.amount, true)}
-                                      </>
-                                    ) : (
-                                      <>
-                                        {'- '}
-                                        {convertToCurrency(
-                                          Math.abs(row.amount),
-                                          true
-                                        )}
-                                      </>
-                                    )}
-                                  </td>
-                                  <td className="fromNow">{row.from_now}</td>
-                                </a>
-                              ) : (
-                                <table>
-                                  {' '}
-                                  <td
-                                    className={
-                                      'amount ' +
-                                      (row.amount > 0 ? 'green' : 'red')
-                                    }
-                                  >
-                                    {row.amount > 0 ? (
-                                      <>
-                                        {'+ '}
-                                        {convertToCurrency(row.amount, true)}
-                                      </>
-                                    ) : (
-                                      <>
-                                        {'- '}
-                                        {convertToCurrency(
-                                          Math.abs(row.amount),
-                                          true
-                                        )}
-                                      </>
-                                    )}
-                                  </td>
-                                  <td className="fromNow">{row.from_now}</td>
-                                </table>
-                              )}
-                            </tr>
-                          ))
+                                    <td
+                                      className={
+                                        'amount ' +
+                                        (row.amount > 0 ? 'green' : 'red')
+                                      }
+                                    >
+                                      {row.amount > 0 ? (
+                                        <>
+                                          {'+ '}
+                                          {convertToCurrency(row.amount, true)}
+                                        </>
+                                      ) : (
+                                        <>
+                                          {'- '}
+                                          {convertToCurrency(
+                                            Math.abs(row.amount),
+                                            true
+                                          )}
+                                        </>
+                                      )}
+                                    </td>
+
+                                    <td className="fromNow">{row.from_now}</td>
+                                  </a>
+
+                                ) : (
+                                  <table>
+                                    {' '}
+                                    <td
+                                      className={
+                                        'amount ' +
+                                        (row.amount > 0 ? 'green' : 'red')
+                                      }
+                                    >
+                                      {row.amount > 0 ? (
+                                        <>
+                                          {'+ '}
+                                          {convertToCurrency(row.amount, true)}
+                                        </>
+                                      ) : (
+                                        <>
+                                          {'- '}
+                                          {convertToCurrency(
+                                            Math.abs(row.amount),
+                                            true
+                                          )}
+                                        </>
+                                      )}
+                                    </td>
+                                    <td className="fromNow">{row.from_now}</td>
+                                  </table>
+                                )}
+                              </tr>
+
+                            ))
                         )}
                       </tbody>
                       <Button onClick={this.toggleAllTransactions}>
@@ -1556,13 +1581,24 @@ class SiteWrapper extends Component {
                   </Button>
                 </div>
                 <div className="transaction-panel">
-                  <Button
-                    className="btn-withdraw"
-                    onClick={this.handleOpenWithdrawModal}
-                    isDarkMode={isDarkMode}
-                  >
-                    Withdraw
-                  </Button>
+                  {this.state.remainingLoans > 0 ? (
+                    <Button
+                      className="btn-withdraw debt"
+                      onClick={this.handleOpenDebtsModal}
+                      isDarkMode={isDarkMode}
+                    >
+                      <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
+                    </Button>
+                  ) : (
+                    <Button
+                      className="btn-withdraw"
+                      onClick={this.handleOpenWithdrawModal}
+                      isDarkMode={isDarkMode}
+                    >
+                      Withdraw
+                    </Button>
+                  )}
+
                   <Button
                     className="btn-deposit"
                     onClick={this.handleOpenDepositModal}
@@ -1671,6 +1707,13 @@ class SiteWrapper extends Component {
               openResetPasswordModal={this.handleOpenResetPasswordModal}
             />
           )}
+          {showDebtsModal && (
+            <DebtsModal
+              modalIsOpen={showDebtsModal}
+              closeModal={this.handleCloseDebtsModal}
+              openDebtsModal={this.handleOpenDebtsModal}
+            />
+          )}
           {showSignupModal && (
             <SignupModal
               modalIsOpen={showSignupModal}
@@ -1747,6 +1790,8 @@ const mapStateToProps = state => ({
   tnxComplete: state.logic.transactionComplete,
   isDarkMode: state.auth.isDarkMode,
   betResult: state.logic.betResult,
+  remainingLoans: state.loanReducer.remainingLoans,
+  userLoans: state.loanReducer.userLoans,
   sevenDayProfit: state.auth.sevenDayProfit,
   oneDayProfit: state.auth.oneDayProfit,
   allTimeProfit: state.auth.allTimeProfit,
@@ -1768,6 +1813,7 @@ const mapDispatchToProps = {
   setDarkMode,
   updateOnlineUserList,
   selectMainTab,
+  acCalculateRemainingLoans,
   globalChatReceived,
   setGlobalChat,
   updateBetResult

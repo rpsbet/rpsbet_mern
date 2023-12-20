@@ -580,7 +580,43 @@ div[role="presentation"] div {
     margin-left: 1rem;
     margin-bottom: 0;
   }
-  
+  .modal-body .avatar-border{
+    padding: 60px !important;
+  }
+
+
+  .AvatarPreviewPanel {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .modal-body .avatar-border div,
+  .modal-body .avatar-border img
+   {
+    border-radius: 2em !important;
+  }
+
+  .modal-body .avatar-border div div{
+    border-width: 10px !important;
+      box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px, rgb(149, 165, 166) 0px 6px 40px 0px, rgb(219, 219, 219) 0px 0px 10px inset  !important;;
+}
+.modal-body .avatar-border div.lottie-container div:last-child,
+.modal-body .avatar-border div.lottie-bg  div:last-child,
+.modal-body .avatar-border div.lottie-bg-container  div:last-child  {
+box-shadow: unset !important;
+    width: 50% !important;
+    height: 50% !important;
+}
+  .modal-body .avatar-border div div:last-child
+   {
+    border-radius: 0.8em !important;
+    width: 20% !important;
+    height: 20% !important;
+    border: 10px transparent !important;
+    font-size: 2em !important;
+    /* box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px, rgb(149, 165, 166) 0px 6px 20px 0px !important;  */
+
+  }
+
 
 @media (max-width: 768px) {
     .accordion {

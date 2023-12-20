@@ -191,18 +191,24 @@ class BankTable extends Component {
       loanType: ''
     };
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    // Check if there's any change in the loan_amount property for any document
+    const loanAmountChanged = this.props.data &&
+      prevProps.data &&
+      this.props.data.length === prevProps.data.length &&
+      this.props.data.some((currentLoan, index) => 
+        currentLoan && 
+        prevProps.data[index] && 
+        currentLoan.loan_amount !== prevProps.data[index].loan_amount
+      );
   
-
-  // componentDidUpdate(prevProps, prevState) {
-  //   const prevLoaners = prevProps.data ? prevProps.data.loaners : [];
-  //   const currentLoaners = this.props.data ? this.props.data.loaners : [];
-
-  //   // Check if there's any change in the loaners sub-array
-  //   if (!this.areLoanersEqual(prevLoaners, currentLoaners)) {
-  //     // Fetch loans when there's a change in the loaners sub-array
-  //     this.fetchLoans();
-  //   }
-  // }
+    if (loanAmountChanged) {
+      // Fetch loans when there's a change in the loan_amount property
+      this.fetchLoans();
+    }
+  }
+  
 
   areLoanersEqual(prevLoaners, currentLoaners) {
     // Compare the loaners array by stringifying them and checking for equality
@@ -254,36 +260,41 @@ class BankTable extends Component {
   };
 
   async fetchCustomerInfo() {
+    
     const { data, acGetCustomerInfo } = this.props;
-    for (const lender of data) {
-
-      try {
-        const info = await acGetCustomerInfo(lender.lender);
-        if (info) {
-          this.setState((prevState) => ({
-            customerInfo: {
-              ...prevState.customerInfo,
-              [lender.lender]: info,
-            },
-          }));
-        } else {
-          this.setState((prevState) => ({
-            customerInfo: {
-              ...prevState.customerInfo,
-              [lender.lender]: {
-                username: 'Anon',
-                avatar: 'default-avatar-url',
-              },
-            },
-          }));
-        }
-      } catch (error) {
-        console.error(`Error fetching customer info for ${data.lender}:`, error);
-      }
+    for (const product of data) {
+      // console.log("Sz", product.lender)
+      if (!this.state.customerInfo[product.lender]) {
+        try {
+          const info = await acGetCustomerInfo(product.lender);
+          if (info) {
+            this.setState(prevState => ({
+              customerInfo: {
+                ...prevState.customerInfo,
+                [product.lender]: info
+              }
+            }));
+          } else {
+            this.setState(prevState => ({
+              customerInfo: {
+                ...prevState.customerInfo,
+                [product.lender]: {
+                      username: 'Anon',
+                      avatar: 'default-avatar-url'
+                    }
+                  }
+                }));
+              }
+            } catch (error) {
+              console.error(
+                `Error fetching customer info for ${ldata.lender}:`,
+                error
+              );
+            }
+          }
+        
     }
-
   }
-
   render() {
     const {
       data,
@@ -380,24 +391,27 @@ class BankTable extends Component {
               >
                 <APY>{updateDigitToPoint2(row.apy) * 100}%</APY>
 
-
-                <ProductCreator>
-                  {loading ? (
-                    <div className="loading-spinner"></div>
-                  ) : (
-                    <a className="player" onClick={() => this.handleOpenPlayerModal(row.lender)}>
-                      <Avatar
-                        className="avatar"
-                        src={customerInfo[row.lender]?.avatar || 'default-avatar-url'}
-                        rank={customerInfo[row.lender]?.totalWagered}
-                        accessory={customerInfo[row.lender]?.accessory}
-                        alt=""
-                        darkMode={this.props.isDarkMode}
-                      />
-                    </a>
-                  )}
-                </ProductCreator>
-
+                
+                  <ProductCreator>
+                    {customerInfo[row.lender] ? (
+                      <a
+                        className="player"
+                        onClick={() => this.handleOpenPlayerModal(row.lender)}
+                      >
+                        <Avatar
+                          className="avatar"
+                          src={customerInfo[row.lender].avatar}
+                          rank={customerInfo[row.lender].totalWagered}
+                          accessory={customerInfo[row.lender].accessory}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                      </a>
+                    ) : (
+                      <div className="loading-spinner"></div>
+                    )}
+                  </ProductCreator>
+                
 
                 <ProductInfo>
                   <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
@@ -427,6 +441,7 @@ class BankTable extends Component {
                         if (row.lender !== this.props.user) {
                           openConfirmLoanModal();
                         } else {
+                          console.log(row.lender,  this.props.user)
                           alertModal(
                             this.props.isDarkMode,
                             'This is already yours dumbass!'

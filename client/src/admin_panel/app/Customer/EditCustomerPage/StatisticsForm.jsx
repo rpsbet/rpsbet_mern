@@ -4,6 +4,9 @@ import styled from 'styled-components';
 import Elevation from '../../../../Styles/Elevation';
 import moment from 'moment';
 import './style.css';
+import Lottie from 'react-lottie';
+
+import rankIcon from '../../../../game_panel/LottieAnimations/rankIcon.json';
 import { Button } from '@material-ui/core';
 import { FormControl, MenuItem, Select } from '@material-ui/core';
 import { Link as LinkIcon } from '@material-ui/icons';
@@ -58,8 +61,21 @@ class StatisticsForm extends React.Component {
   getRank(totalWagered) {
     // Calculate the level using a logarithmic function with base 2.
     const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-    const stars = '★'.repeat(level);
-
+    
+    // Create an array of React elements for stars
+    const stars = Array.from({ length: level }, (_, index) => (
+      <Lottie
+        key={index}
+        options={{
+          loop: true,
+          autoplay: true,
+          animationData: rankIcon,
+        }}
+        style={{
+          width: '32px',
+        }}
+      />
+    ));
     const nextLevelWager = Math.pow(3, level * 5) - 1;
     const progress = totalWagered / nextLevelWager;
     const progressBarWidth = 100;
@@ -67,7 +83,6 @@ class StatisticsForm extends React.Component {
 
     return (
       <div>
-        <div className="level-number">{level.toLocaleString()}</div>
         <div className="stars">{stars}</div>
         <div
           className="progress-bar-outer"
@@ -306,6 +321,7 @@ class StatisticsForm extends React.Component {
       gameHosted,
       gameJoined,
       totalWagered,
+      dateJoined,
       netProfit,
       gameProfit,
       averageWager,
@@ -315,11 +331,16 @@ class StatisticsForm extends React.Component {
       profitAllTimeLow
     } = this.props;
 
+    const date_joined = moment(dateJoined);
+const joinedAgo = date_joined.fromNow();
+
     return (
       <ChartDivEl>
         <div className="rank-badge">
           <h2>{this.props.username}</h2>
-          <div className="stars">{this.getRank(this.props.rank)}</div>
+          <span>
+        <b style={{ fontSize: 'x-small' }}>JOINED:</b> {joinedAgo}
+      </span>          <div className="stars">{this.getRank(this.props.rank)}</div>
         </div>
 
         <div className="statistics-container">

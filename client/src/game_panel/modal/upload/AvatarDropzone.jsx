@@ -112,12 +112,13 @@ class Dropzone extends Component {
   render() {
     return (
       <div
-        className={`AvatarDropzone ${this.state.hightlight ? "AvatarHighlight" : ""}`}
+        className={`AvatarDropzone ${this.state.hightlight ? "AvatarHighlight" : ""}` }
         onDragOver={this.onDragOver}
         onDragLeave={this.onDragLeave}
         onDrop={this.onDrop}
       >
         <input ref={this.fileInputRef} className="AvatarFileInput" type="file" accept="image/x-png,image/gif,image/jpeg, image/jpg, image/heic" onChange={this.onFileAdded} />
+        
         <Avatar className="AvatarPreviewPanel" alt="" src={this.props.imageUrl} darkMode={this.props.darkMode} />
         <div className="AvatarControlPanel">
           <div className="AvatarButtonPanel">

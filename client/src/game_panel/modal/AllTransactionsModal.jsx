@@ -290,7 +290,8 @@ class AllTransactionsModal extends Component {
                           </TableRow>
                         ) : (
                           transactions.map((row, key) => (
-                            <TableRow key={key}>
+                            row.user === this.props.user && (
+                              <TableRow key={key}>
                               <TableCell
                                 className={
                                   'amount ' + (row.amount > 0 ? 'green' : 'red')
@@ -340,6 +341,7 @@ class AllTransactionsModal extends Component {
                                 )}
                               </TableCell>
                             </TableRow>
+                            )
                           ))
                         )}
                         <TableRow>

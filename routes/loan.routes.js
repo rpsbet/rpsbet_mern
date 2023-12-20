@@ -4,6 +4,7 @@ var ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
+const convertToCurrency = require('../helper/util/conversion');
 
 const router = express.Router();
 const Loan = require('../model/Loan');
@@ -62,13 +63,13 @@ router.post('/create', auth, async (req, res) => {
   }
 });
 
-router.post('/lend', auth, async (req, res) => {
+router.post('/payback', auth, async (req, res) => {
   try {
-    const { loan_id, lender, responseText } = req.body;
-    console.log("ww", req.body);
+    const { loanId, paybackAmount } = req.body;
+console.log(loanId, paybackAmount )
+    const currentUser = req.user; // Store the user object directly
+    const loan = await Loan.findOne({ _id: loanId });
 
-    // Find the loan using the new model
-    const loan = await Loan.findOne({ _id: loan_id });
     if (!loan) {
       return res.json({
         success: false,
@@ -76,26 +77,175 @@ router.post('/lend', auth, async (req, res) => {
       });
     }
 
+    // Find the loaner's index in the loaners sub-array
+    const loanerIndex = loan.loaners.findIndex((loanerObj) => loanerObj.user.equals(currentUser._id));
 
+    if (loanerIndex === -1) {
+      return res.json({
+        success: false,
+        message: 'You are not the loaner of this loan',
+      });
+    }
+
+    if (currentUser.balance <= parseFloat(paybackAmount)) {
+      return res.json({
+        success: false,
+        message: 'Insufficient funds',
+      });
+    }
+
+    // Check if the paybackAmount is valid
+    if (parseFloat(paybackAmount) <= 0 || parseFloat(paybackAmount) > parseFloat(loan.loaners[loanerIndex].amount)) {
+      return res.json({
+        success: false,
+        message: 'Invalid payback amount',
+      });
+    }
+
+    const lender = await User.findOne({ _id: loan.lender });
+
+    const newTransactionC = new Transaction({
+      user: currentUser,
+      amount: -parseFloat(paybackAmount),
+      description: `Repayed loan to ${lender.username}`,
+    });
+
+    const newTransactionJ = new Transaction({
+      user: lender,
+      amount: parseFloat(paybackAmount),
+      description: `Received loan repayment from ${currentUser.username}`,
+    });
+
+    lender.balance += parseFloat(paybackAmount);
+    currentUser.balance -= parseFloat(paybackAmount);
+
+    // Update loan and loaner information
+    loan.loaners[loanerIndex].paidBack = parseFloat(loan.loaners[loanerIndex].paidBack) + parseFloat(paybackAmount);
+    loan.loaners[loanerIndex].amount -= parseFloat(paybackAmount);
+
+    if (loan.loaners[loanerIndex].amount <= 0.0005) {
+      loan.loaners.splice(loanerIndex, 1);
+    }
+    
+    // Save changes to the user and the loan
+    const savePromises = [
+      currentUser.save(),
+      lender.save(),
+      loan.save(),
+      newTransactionC.save(),
+      newTransactionJ.save(),
+    ];
+    
+    await Promise.all(savePromises);
+    return res.json({
+      success: true,
+      message: `Loan ${convertToCurrency(paybackAmount)} paid back successfully`,
+      balance: currentUser.balance,
+      newTransaction: newTransactionC,
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: 'An error occurred while processing the payback',
+      error: err.message,
+    });
+  }
+});
+
+
+// Calculate the sum of (amount - paidBack) for matching loans
+router.get('/calculate-remaining-loans', auth, async (req, res) => {
+  try {
+    const currentUser = req.user._id;
+
+    // Find loans where the loaners array includes the current user
+    const matchingLoans = await Loan.find({ 'loaners.user': currentUser });
+
+    let remainingAmount = 0;
+    let userLoans = [];
+
+    for (const loan of matchingLoans) {
+      const lender = await User.findOne({ _id: loan.lender });
+      
+      // Find the loaner's information in the loaners array
+      const loanerInfo = loan.loaners.find(loaner => loaner.user.equals(currentUser));
+      
+      // Calculate loan period based on the number of days since the loan was created
+      const currentDate = new Date();
+      const daysSinceLoan = Math.floor((currentDate - loanerInfo.created_at) / (1000 * 60 * 60 * 24));
+      const loanPeriod = loanerInfo.period - daysSinceLoan;
+
+      // Check if paidBack is less than amount and add the remaining amount
+      if (parseFloat(loanerInfo.paidBack) < parseFloat(loanerInfo.amount)) {
+        remainingAmount += (parseFloat(loanerInfo.amount) - parseFloat(loanerInfo.paidBack));
+      }
+
+      // Include loan details in the userLoans array
+      userLoans.push({
+        _id: loan._id,
+        amount: loanerInfo.amount,
+        paid_back: loanerInfo.paidBack,
+        loan_period: loanPeriod,
+        apy: loan.apy,
+        lender: lender.username,
+      });
+    }
+
+    res.json({
+      success: true,
+      remainingLoans: remainingAmount,
+      userLoans: userLoans,
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: 'An error occurred while calculating remaining loans',
+      error: err.message,
+    });
+  }
+});
+
+
+
+
+router.post('/lend', auth, async (req, res) => {
+  try {
+    const { loan_id, lender, responseText } = req.body;
+    // Find the loan using the new model
+    const loan = await Loan.findOne({ _id: loan_id });
+    
+    const loans = await Loan.find();
+
+    if (!loan) {
+      return res.json({
+        success: false,
+        message: 'Loan not found',
+      });
+    }
+
+    
     if (!loan.lender) {
       return res.json({
         success: false,
         message: 'Loaner not found or not available for loan',
       });
     }
+    
+    // // Find the loaner by ObjectId
+    // const loanerIndex = loan.loaners.findIndex((loanerObj) => loanerObj.user.equals(lender));
+    // console.log("w", loan.loaners);
 
-    // Find the loaner by ObjectId
-    const loanerIndex = loan.loaners.findIndex((loanerObj) => loanerObj.user.equals(loan.lender));
-
-    if (loanerIndex === -1 || loan.loaners[loanerIndex].count === 0) {
-      return res.json({
-        success: false,
-        message: 'Loaner not found or not available for loan',
-      });
-    }
+    // if (loanerIndex === -1 || loan.loaners[loanerIndex].count === 0) {
+    //   return res.json({
+    //     success: false,
+    //     message: 'Loaner not found or not available for loan',
+    //   });
+    // }
 
     // exceeded loan_amount
-    if (loanAmount > parseFloat(loan.loan_amount)) {
+    if (parseFloat(responseText) > parseFloat(loan.loan_amount)) {
       return res.json({
         success: false,
         message: 'Not enough available funds!',
@@ -138,18 +288,15 @@ router.post('/lend', auth, async (req, res) => {
     //     message: 'This account is currently not liable for loaning',
     //   });
     // }
+    const lender_username = await User.findOne({ _id: lender });
 
-    loan.loan_amount -= loanAmount;
+  
+    const loanPeriodInDays = Math.floor((Date.now() - loan.created_at.getTime()) / (1000 * 60 * 60 * 24));
 
-    loan.loaners[loanerIndex].user = currentUser._id;
-    loan.loaners[loanerIndex].amount += loanAmount;
-    currentUser.balance += parseFloat(loan.loanAmount);
-
-    // Create new transaction records
     const newTransaction = new Transaction({
       user: currentUser,
-      amount: loanAmount,
-      description: `Loan from ${lender.username}`,
+      amount: parseFloat(responseText),
+      description: `Loan from ${lender_username.username}`,
     });
 
     // Update the loan's loaners array to increment count for the new loaner
@@ -157,18 +304,25 @@ router.post('/lend', auth, async (req, res) => {
       user: currentUser._id,
       paidBack: 0,
       apy: loan.apy,
-      amount: loanAmount,
+      amount:  (parseFloat(responseText)) * loan.apy + parseFloat(responseText),
       period: loan.loan_period,
+      created_at: Date.now(),
+      updated_at: Date.now()
     };
+    loan.loan_amount -= parseFloat(responseText);
 
+     currentUser.balance += parseFloat(responseText);
     // Check if the new loaner already exists in the loaners array
     const newLoanerIndex = loan.loaners.findIndex((loanerObj) => loanerObj.user.equals(currentUser._id));
     if (newLoanerIndex !== -1) {
       loan.loaners[newLoanerIndex].period += (loan.loan_period - loan.loaners[newLoanerIndex].period) + loan.loan_period;
-      loan.loaners[newLoanerIndex].amount += loanAmount;
+      loan.loaners[newLoanerIndex].amount += parseFloat(responseText);
+      loan.loaners[newLoanerIndex].created_at = Date.now();
+      loan.loaners[newLoanerIndex].updated_at = Date.now();
+
     } else {
-      // If the new loaner doesn't exist, add them to the loaners array
-      loan.loaners.push(newLoanLoaner);
+
+        loan.loaners.push(newLoanLoaner);
     }
 
     // Save changes and transactions
@@ -226,8 +380,6 @@ router.get('/my-loans', auth, async (req, res) => {
         loan_amount: loan.loan_amount,
         apy: loaner ? loaner.apy : '',
         loan_period: loan.loan_period,
-        total_count: loaner.count,
-        onSale: loaner.onSale,
         loan_type: loan.loan_type,
         created_at: loan.created_at,
       });
@@ -395,7 +547,7 @@ router.get('/', async (req, res) => {
   const loanTypeFilter = req.query.loanType;
 
   try {
-    let query = { 'loaners.amount': { $gt: 0 } };
+    let query = { 'loan_amount': { $gt: 0 } };
     if (loanTypeFilter) {
       query['loan_type'] = loanTypeFilter;
     }
@@ -409,34 +561,26 @@ router.get('/', async (req, res) => {
 
     for (const loan of loans) {
 
-      for (const loaner of loan.loaners) {
+      // for (const loaner of loan.loaners) {
           loan_list.push({
             _id: loan._id,
             lender: loan.lender,
 
             loan_amount: loan.loan_amount,
-            loaners: [
-              {
-                user: loaner.user,
-                apy: loaner.apy,
-                period: loaner.period,
-                paidBack: loaner.paidBack,
-              },
-            ],
+           
             loan_type: loan.loan_type,
             loan_period: loan.loan_period,
             apy: loan.apy,
             created_at: loan.created_at,
           });
         
-      }
+      // }
     }
     if (sort === 'created_at') {
       loan_list.sort((a, b) => a.created_at - b.created_at);
     } else {
       loan_list.sort((a, b) => a.loaners[0].price - b.loaners[0].price);
     }
-
     res.json({
       success: true,
       query: req.query,

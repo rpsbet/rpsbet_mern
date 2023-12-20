@@ -60,7 +60,7 @@ class ProfileModal extends Component {
       passwordConfirmation: '',
       avatar: this.props.userInfo.avatar,
       rank: this.props.userInfo.totalWagered,
-      joined_date: this.props.userInfo.joined_date
+      dateJoined: this.props.userInfo.created_at
     };
   }
 
@@ -70,6 +70,7 @@ class ProfileModal extends Component {
       current_state.accessory !== props.accessory ||
       current_state.username !== props.username ||
       current_state.email !== props.email ||
+      current_state.totalWagered !== props.totalWagered ||
       current_state.totalWagered !== props.totalWagered ||
       current_state.rewards !== props.rewards
     ) {
@@ -161,7 +162,6 @@ class ProfileModal extends Component {
       accessory,
       avatar,
       username,
-      joined_date,
       gameLogList,
       deposit,
       withdraw,
@@ -176,7 +176,8 @@ class ProfileModal extends Component {
       profitAllTimeLow,
       averageWager,
       averageGamesPlayedPerRoom,
-      averageProfit
+      averageProfit,
+      dateJoined
     } = this.state;
 
     return (
@@ -198,7 +199,7 @@ class ProfileModal extends Component {
               {loading ? (
                 <div className="loading-spinner"></div>
               ) : (
-                <div className="edit-avatar-panel">
+                <div className="edit-avatar-panel ">
                   <AvatarUpload
                     setImageFilename={this.handleAvatarLoaded}
                     darkMode={isDarkMode}
@@ -214,7 +215,7 @@ class ProfileModal extends Component {
                 <StatisticsForm
                   onDropdownChange={this.handleDropdownChange}
                   username={username}
-                  joined_date={joined_date}
+                  dateJoined={dateJoined}
                   gameLogList={gameLogList}
                   deposit={deposit}
                   withdraw={withdraw}

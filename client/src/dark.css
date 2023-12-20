@@ -24,6 +24,11 @@
 	filter: brightness(0.75);
   }
 
+  .dark_mode .modal-body .avatar-border div div{
+	box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 18px, rgb(0, 0, 0) 0px 6px 30px 0px, rgba(31, 31, 31, 0.725) 0px 0px 20px inset  !important;;
+
+  }
+
 /* .dark_mode 
 .gradient-container .previous-guesses.drop:before  {
 	background: linear-gradient(90deg, #151515, transparent);
