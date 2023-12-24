@@ -303,29 +303,39 @@ border-radius: unset !important;
 }
 
 
-/* 
+
 .btn_join:hover,
 .btn-create-room:hover,
 .btn_end:hover,
-#balance:hover,
 #btn_next:hover,
 #btn_prev:hover,
+a:hover,
 button:hover,
 .btn-back:hover {
-  filter: brightness(0.9) contrast(1.2);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px #e9ecef1f, 0 6px 6px #f2f3f52e;
-  animation: pulse 0.5s ease-in-out 0.5s infinite alternate;
+  border: 2px solid #fff !important;
+  border-radius: 0.3em;
+  box-shadow: 0 10px 20px #e9ecef1f, 0 6px 6px hsla(220, 13%, 95%, 0.18);
+}
+a.player:hover,
+div.avatar:hover,
+a.avatar:hover,
+a.chat-player:hover{ 
+  border: none !important;
+  box-shadow: none !important;
+
+  filter: brightness(1.1) contrast(0.95);
+  transform: translateY(-1px);
+  animation: pulse 0.1s ease-in-out 0.1s alternate;
 }
 
 @keyframes pulse {
   0% {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
   }
   100% {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
   }
-} */
+}
 
 h1, h2, h3, h4, h5, h6, button span, button, li div, li div span, label
 {

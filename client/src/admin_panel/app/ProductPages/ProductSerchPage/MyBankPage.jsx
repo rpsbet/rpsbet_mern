@@ -9,7 +9,7 @@ import MyBankTable from './MyBankTable';
 export class MyBankPage extends Component {
   componentDidMount() {
     // this.props.setUrl(this.props.match.path);
-    this.props.acQueryMyLoan(30, 1, 'price', '653ee7ac17c9f5ee21245649');
+    this.props.acQueryMyLoan(30, 1, 'loan_amount', 'standard');
     // console.log(this.props)
   }
 

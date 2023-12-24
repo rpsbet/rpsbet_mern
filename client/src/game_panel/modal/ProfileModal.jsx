@@ -60,7 +60,8 @@ class ProfileModal extends Component {
       passwordConfirmation: '',
       avatar: this.props.userInfo.avatar,
       rank: this.props.userInfo.totalWagered,
-      dateJoined: this.props.userInfo.created_at
+      dateJoined: this.props.userInfo.created_at,
+      creditScore: this.props.userInfo.credit_score
     };
   }
 
@@ -177,7 +178,8 @@ class ProfileModal extends Component {
       averageWager,
       averageGamesPlayedPerRoom,
       averageProfit,
-      dateJoined
+      dateJoined,
+      creditScore
     } = this.state;
 
     return (
@@ -216,6 +218,7 @@ class ProfileModal extends Component {
                   onDropdownChange={this.handleDropdownChange}
                   username={username}
                   dateJoined={dateJoined}
+                  creditScore={creditScore}
                   gameLogList={gameLogList}
                   deposit={deposit}
                   withdraw={withdraw}

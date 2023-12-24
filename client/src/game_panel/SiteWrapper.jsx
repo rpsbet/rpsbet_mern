@@ -69,7 +69,6 @@ import ConfirmTradeModal from './modal/ConfirmTradeModal';
 import ConfirmLoanModal from './modal/ConfirmLoanModal';
 import ListItemModal from './modal/ListItemModal';
 import DeListItemModal from './modal/DeListItemModal';
-import ListLoanModal from './modal/ListLoanModal';
 import DeListLoanModal from './modal/DeListLoanModal';
 import GamePasswordModal from './modal/GamePasswordModal';
 import LoginModal from './modal/LoginModal';
@@ -268,7 +267,6 @@ class SiteWrapper extends Component {
       !tnxComplete;
 
     if (prevProps.remainingLoans !== remainingLoans) {
-      console.log(remainingLoans)
       this.setState({ remainingLoans: remainingLoans });
     }
     if (shouldUpdate) {
@@ -288,6 +286,7 @@ class SiteWrapper extends Component {
       }
     }
   }
+  
 
 
   playCoinsAnimation() {
@@ -1761,7 +1760,6 @@ class SiteWrapper extends Component {
           <ListItemModal />
           <DeListItemModal />
           <ConfirmTradeModal />
-          <ListLoanModal />
           <DeListLoanModal />
           <ConfirmLoanModal />
           <GamePasswordModal />
@@ -1773,7 +1771,6 @@ class SiteWrapper extends Component {
 
 const mapStateToProps = state => ({
   isAuthenticated: state.auth.isAuthenticated,
-  showListLoanModal: state.snackbar.showListLoanModal,
   showDeListLoanModal: state.snackbar.showDeListLoanModal,
   showListItemModal: state.snackbar.showListItemModal,
   showDeListItemModal: state.snackbar.showDeListItemModal,

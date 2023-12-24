@@ -34,7 +34,7 @@ class BankModal extends Component {
     this.state = {
       showMyLoansModal: false,
       sortCriteria: 'updated_at',
-      itemType: '653ee7ac17c9f5ee21245649',
+      loanType: 'standard',
     };
   }
 

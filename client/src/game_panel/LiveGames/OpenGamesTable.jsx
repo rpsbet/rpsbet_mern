@@ -777,7 +777,6 @@ class OpenGamesTable extends Component {
                           darkMode={this.props.isDarkMode}
                         />
                         {/* <span>{row.creator}</span> */}
-                      </a>
                       <i
                         className={`online-status${this.props.onlineUserList.filter(
                           user => user === row.creator_id
@@ -786,6 +785,7 @@ class OpenGamesTable extends Component {
                             : ''
                           }`}
                       ></i>
+                      </a>
                       {row.joiners && row.joiners.length > 0 ? (
                         <div className="table-cell mobile-only cell-joiners">
                           <Battle />

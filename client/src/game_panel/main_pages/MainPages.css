@@ -476,6 +476,7 @@ img.palm-trees.desktop-only {
   position: relative;
   width: 0;
   height: 0;
+  z-index: -1;
 }
 
 /*********************************/
@@ -917,7 +918,7 @@ div.table.my-open-game-table {
 } */
 
 div.table.main-game-table .table-row .table-cell.cell-room-info {
-  width: 20%;
+  width: 10%;
   display: flex;
   align-items: center;
 }
@@ -931,25 +932,29 @@ div.table.main-game-table .table-row .table-cell.cell-room-info {
   line-height: 17px;
 }
 div.table.main-game-table .table-row .table-cell.cell-user-name {
-  width: 35%;
+  width: 45%;
   display: flex;
   justify-content: center;
   text-align: center;
+}
+
+div.table.main-game-table .table-row .table-cell.cell-user-name .avatar{
+  margin-left: 10px;
 }
 div.table.main-game-table
   .table-row
   .table-cell.cell-user-name
   i.online-status {
     display: inline-block;
-    width: 10px;
-    height: 10px;
+    width: 15px;
+    height: 15px;
     margin-left: 8px;
     background-color: #b9bbbe;
-    border-radius: 6px;
+    border-radius: 5px;
     left: 268px;
     border: 1px solid #f9f9f9;
-    margin-left: -19px;
-    transform: translate(0px, 21px);
+    margin-left: -20px;
+    transform: translate(0px, 45px);
 }
 
 div.table.main-game-table
@@ -2198,6 +2203,7 @@ button.btn-submit:active,
 
 .side-tab-switcher button{
   min-width: 22px !important;
+  padding: 6px 10px !important;
 }
 
 .side-tab-switcher button svg{

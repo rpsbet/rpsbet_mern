@@ -49,9 +49,9 @@ const LoanSchema = new Schema({
     },
 
     loan_type: {
-        type: Schema.Types.ObjectId,
+        type: String,
         ref: 'loanType',
-        default: null
+        default: 'standard'
     },
     apy: {
         type: Number,

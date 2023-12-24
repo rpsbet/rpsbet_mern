@@ -154,7 +154,8 @@ class PlayerModal extends Component {
       avatar: userData.avatar,
       accessory: userData.accessory,
       rank: userData.totalWagered,
-      dateJoined: userData.created_at
+      dateJoined: userData.created_at,
+      creditScore: userData.credit_score
     });
   };
 
@@ -276,6 +277,7 @@ class PlayerModal extends Component {
                       onDropdownChange={this.handleDropdownChange}
                       username={this.state.username}
                       dateJoined={this.state.dateJoined}
+                      creditScore={this.state.creditScore}
                       gameLogList={this.state.gameLogList}
                       deposit={this.state.deposit}
                       withdraw={this.state.withdraw}

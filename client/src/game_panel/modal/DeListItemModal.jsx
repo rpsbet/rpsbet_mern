@@ -36,13 +36,13 @@ class DeListItemModal extends Component {
   }
   onBtnOkClicked = async e => {
     const { item, closeDeListItemModal, isDarkMode, deListItem } = this.props;
-    console.log("item", item);
     const response = await deListItem({ item_id: item });
     if (response.success) {
       const { message } = response;
   
       closeDeListItemModal();
       alertModal(isDarkMode, message);
+      
     } else {
       alertModal(isDarkMode, response.message);
     }
@@ -63,8 +63,9 @@ class DeListItemModal extends Component {
           <div className="modal-body alert-body password-modal-body">
             <div className={`modal-icon result-icon-trade`}></div>
             <h5>CONFIRM DE-LISTING</h5>
-            <h6>{this.props.item}</h6>
-          </div>
+            <br />
+            <h6>Are you sure you want to remove item from sale?</h6> <br />
+                      </div>
           <div className="modal-footer">
             <Button className="btn-submit" onClick={this.onBtnOkClicked}>
               CONFIRM

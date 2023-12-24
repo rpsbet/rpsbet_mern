@@ -64,6 +64,10 @@ class ConfirmLoanModal extends Component {
       alertModal(isDarkMode, "Entered loan amount exceeds the allowed amount.");
       return; // Do not proceed further
     }
+    if (parseFloat(responseText) < 0.0005) {
+      alertModal(isDarkMode, "Minimum is 0.0005 ETH");
+      return; // Do not proceed further
+    }
     const response = await confirmLoan({
       loan_id: item,
       loanAmount: loan_amount,
@@ -159,7 +163,7 @@ class ConfirmLoanModal extends Component {
                   <tbody>
                     <tr>
                       <td className="list-number">1.</td>
-                      <td>The loan amount is <span style={{ color: "#ff0000" }}>[{convertToCurrency(this.props.loan_amount)}]</span>.</td>
+                      <td>The loan amount is <span style={{ color: "#ff0000" }}>[{convertToCurrency(parseFloat(responseText))}]</span>.</td>
                     </tr>
                     <tr>
                       <td className="list-number">2.</td>
@@ -203,7 +207,15 @@ class ConfirmLoanModal extends Component {
                     </tr>
                     <tr>
                       <td className="list-number">12.</td>
-                      <td>Withdrawals to be suspended for the loaner whilst in debt.</td>
+                      <td>Withdrawals & Tipping to be suspended for the loaner whilst in debt.</td>
+                    </tr>
+                    <tr>
+                      <td className="list-number">13.</td>
+                      <td>All loans are final.</td>
+                    </tr>
+                    <tr>
+                      <td className="list-number">14.</td>
+                      <td>You are required to clean your genitals often.</td>
                     </tr>
                   </tbody>
                 </table>

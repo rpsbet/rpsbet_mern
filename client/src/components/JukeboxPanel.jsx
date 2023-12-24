@@ -301,11 +301,11 @@ const JukeboxPanel = ({
 
 
   return (
-    <div  style={containerStyle}>
+    <div style={containerStyle}>
       <div style={overlayStyle}>
         <div id="youtube-player" style={{ display: "none" }} ></div>
         <div style={controlsStyle}>
-          
+
 
           <IconButton onClick={handleMenuOpen} className="search-icon">
             <SearchIcon />
@@ -314,14 +314,14 @@ const JukeboxPanel = ({
             anchorEl={menuAnchorEl}
             open={Boolean(menuAnchorEl)}
             onClose={handleMenuClose}
-            >
+          >
             <TextField
               label="Search YouTube"
               variant="outlined"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleTextFieldKeyPress}
-              />
+            />
             {searchResults.map((result) => (
               <MenuItem key={result.id.videoId} onClick={() => setSearchQuery(result.id.videoId)}>
                 {result.snippet.title}
@@ -340,28 +340,6 @@ const JukeboxPanel = ({
   variant="determinate"
   value={progress}
 /> */}
-<div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-around',
-              width: '100%',
-              alignItems: 'center',
-            }}
-          >
-
-          <div  style={{
-              fontSize: '0.8em',
-            }} >{((progress / totalDuration) * 100).toFixed(2)}%</div>
-          <div  style={{
-              overflow: 'hidden',
-              padding: '0 5px',
-              width: '70%',
-              fontSize: '0.8em',
-            }} >
-            <div className="ticker-text">{videoTitle}</div>
-          </div>
-          </div>
-          </div>
           <div
             style={{
               display: 'flex',
@@ -371,27 +349,49 @@ const JukeboxPanel = ({
             }}
           >
 
-            <IconButton onClick={toggleMute} className="music-controls">
-              {isMuted ? (
-                <VolumeOff style={{ fontSize: '12px' }} />
-              ) : (
-                <VolumeUp style={{ fontSize: '12px' }} />
-              )}
-            </IconButton>
-
-
-            <Slider
-              value={volume}
-              onChange={handleVolumeChange}
-              min={0}
-              max={100}
-              style={sliderStyle}
-            />
-            <QueueList />
-
+            <div style={{
+              fontSize: '0.8em',
+            }} >{((progress / totalDuration) * 100).toFixed(2)}%</div>
+            <div style={{
+              overflow: 'hidden',
+              padding: '0 5px',
+              width: '70%',
+              fontSize: '0.8em',
+            }} >
+              <div className="ticker-text">{videoTitle}</div>
+            </div>
           </div>
         </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-around',
+            width: '100%',
+            alignItems: 'center',
+          }}
+        >
+
+          <IconButton onClick={toggleMute} className="music-controls">
+            {isMuted ? (
+              <VolumeOff style={{ fontSize: '12px' }} />
+            ) : (
+              <VolumeUp style={{ fontSize: '12px' }} />
+            )}
+          </IconButton>
+
+
+          <Slider
+            value={volume}
+            onChange={handleVolumeChange}
+            min={0}
+            max={100}
+            style={sliderStyle}
+          />
+          <QueueList />
+
+        </div>
       </div>
+    </div>
 
   );
 };

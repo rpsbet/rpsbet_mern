@@ -62,7 +62,8 @@ class ListItemModal extends Component {
           <div className="modal-body alert-body password-modal-body">
             <div className={`modal-icon result-icon-trade`}></div>
             <h5>CONFIRM LISTING</h5>
-            <h6>{this.props.item}</h6>
+            <br />
+            <h6>Enter the price you will sell this for:</h6> <br />
             <TextField
               type="text"
               name="price"

@@ -54,14 +54,41 @@ class StatisticsForm extends React.Component {
   handleTimeTypeChange = event => {
     this.setState({ timeType: event.target.value });
     this.props.onDropdownChange('timeType', event.target.value);
-    
+
   };
 
+  calculateDashOffset(creditScore) {
+    // Adjust the scaling factor based on the credit score range
+    const scalingFactor = 390 / (2000 - 900);
+    const invertedScore = 2000 - creditScore; // Invert the score so that lower scores result in more incomplete hexagons
+    return invertedScore * scalingFactor;
+  }
   
+   renderProgressHexagon(creditScore) {
+    const dashOffset = this.calculateDashOffset(creditScore);
+    return (
+      <polygon
+        points="60,15 105,40 105,80 60,105 15,80 15,40"
+        className={`progress-hexagon ${this.getHexagonColor(creditScore)}`}
+        style={{ strokeDashoffset: dashOffset }}
+      />
+    );
+  }
+  
+   getHexagonColor(creditScore) {
+    if (creditScore >= 950 && creditScore < 1150) {
+      return 'red';
+    } else if (creditScore >= 1150 && creditScore < 1400) {
+      return 'white';
+    } else {
+      return 'green';
+    }
+  }
+
   getRank(totalWagered) {
     // Calculate the level using a logarithmic function with base 2.
     const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-    
+
     // Create an array of React elements for stars
     const stars = Array.from({ length: level }, (_, index) => (
       <Lottie
@@ -194,7 +221,7 @@ class StatisticsForm extends React.Component {
       },
       yaxis: {
         labels: {
-          formatter: function(value) {
+          formatter: function (value) {
             const convertToCurrency = input => {
               let number = Number(input);
               if (!isNaN(number)) {
@@ -226,7 +253,7 @@ class StatisticsForm extends React.Component {
       },
 
       tooltip: {
-        custom: function({ series, seriesIndex, dataPointIndex, w }) {
+        custom: function ({ series, seriesIndex, dataPointIndex, w }) {
           const convertToCurrency = input => {
             let number = Number(input);
             if (!isNaN(number)) {
@@ -269,14 +296,14 @@ class StatisticsForm extends React.Component {
               <tr>
               <td>PLAYED: </td>
               <td>&nbsp;${moment(
-                gameLogList[dataPointIndex].played
-              ).fromNow()}</td>
+            gameLogList[dataPointIndex].played
+          ).fromNow()}</td>
               </tr>
               <tr>
               <td>BET: </td>
               <td>&nbsp;${convertToCurrency(
-                gameLogList[dataPointIndex].bet
-              )}</td>
+            gameLogList[dataPointIndex].bet
+          )}</td>
               </tr>
               <tr>
               <td>AGAINST: </td>
@@ -285,14 +312,14 @@ class StatisticsForm extends React.Component {
               <tr>
               <td>PROFIT: </td>
               <td>&nbsp;${convertToCurrency(
-                gameLogList[dataPointIndex].profit
-              )}</td>
+            gameLogList[dataPointIndex].profit
+          )}</td>
               </tr>
               <tr>
               <td>NET PROFIT: </td>
               <td>&nbsp;${convertToCurrency(
-                gameLogList[dataPointIndex].net_profit
-              )}</td>
+            gameLogList[dataPointIndex].net_profit
+          )}</td>
               </tr>
               
                 </table>`;
@@ -322,6 +349,7 @@ class StatisticsForm extends React.Component {
       gameJoined,
       totalWagered,
       dateJoined,
+      creditScore,
       netProfit,
       gameProfit,
       averageWager,
@@ -331,16 +359,44 @@ class StatisticsForm extends React.Component {
       profitAllTimeLow
     } = this.props;
 
+    // Determine the color based on the credit score
+    const dialColor = creditScore < 900 ? 'red' : creditScore > 1000 ? 'green' : 'orange';
+
+    // Define the inline styles for the dial
+    const dialStyles = {
+      width: '100px', // Adjust the width of the dial as needed
+      height: '100px', // Adjust the height of the dial as needed
+      borderRadius: '50%',
+      backgroundColor: dialColor,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white', // Adjust the text color based on the background color
+      fontSize: 'larger',
+    };
+
     const date_joined = moment(dateJoined);
-const joinedAgo = date_joined.fromNow();
+    const joinedAgo = date_joined.fromNow();
+    const roundedCreditScore = Math.ceil(this.props.creditScore);
 
     return (
       <ChartDivEl>
         <div className="rank-badge">
           <h2>{this.props.username}</h2>
           <span>
-        <b style={{ fontSize: 'x-small' }}>JOINED:</b> {joinedAgo}
-      </span>          <div className="stars">{this.getRank(this.props.rank)}</div>
+            <b style={{ fontSize: 'x-small' }}>JOINED:</b> {joinedAgo}
+          </span>
+          <div className="stars">{this.getRank(this.props.rank)}</div>
+        </div>
+        <div className="creditScore">
+          <svg className="dial" width="120" height="120">
+            {this.renderProgressHexagon(this.props.creditScore)}
+            <text x="25%" y="40%" textAnchor="top" alignmentBaseline="top" className="creditScoreTitle">
+CREDIT SCORE            </text>
+            <text x="50%" y="60%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreValue">
+              {roundedCreditScore} / 2000
+            </text>
+          </svg>
         </div>
 
         <div className="statistics-container">
@@ -349,47 +405,47 @@ const joinedAgo = date_joined.fromNow();
               <h5>PERFORMANCE</h5>
               <div className='filters'>
 
-              <FormControl>
-                <Select
-                  value={this.state.actorType}
-                  onChange={this.handleActorTypeChange}
+                <FormControl>
+                  <Select
+                    value={this.state.actorType}
+                    onChange={this.handleActorTypeChange}
                   >
-                  <MenuItem value="Both">Both</MenuItem>
-                  <MenuItem value="As Host">As Host</MenuItem>
-                  <MenuItem value="As Player">As Player</MenuItem>
-                </Select>
-              </FormControl>
+                    <MenuItem value="Both">Both</MenuItem>
+                    <MenuItem value="As Host">As Host</MenuItem>
+                    <MenuItem value="As Player">As Player</MenuItem>
+                  </Select>
+                </FormControl>
 
-              <FormControl>
-                <Select
-                  value={this.state.gameType}
-                  onChange={this.handleGameTypeChange}
-                >
-                  <MenuItem value="All">All</MenuItem>
-                  <MenuItem value="62a25d2a723b9f15709d1ae7">RPS</MenuItem>
-                  <MenuItem value="62a25d2a723b9f15709d1aeb">Quick Shoot</MenuItem>
-                  <MenuItem value="62a25d2a723b9f15709d1ae9">Brain Game</MenuItem>
-                  <MenuItem value="62a25d2a723b9f15709d1aea">Mystery Box</MenuItem>
-                  <MenuItem value="63dac60ba1316a1e70a468ab">Drop Game</MenuItem>
-                  <MenuItem value="62a25d2a723b9f15709d1ae8">Spleesh</MenuItem>
-                  <MenuItem value="6536a82933e70418b45fbe32">Bang!</MenuItem>
-                  <MenuItem value="6536946933e70418b45fbe2f">Roll</MenuItem>
-
-                </Select>
-              </FormControl>
-              <FormControl>
-                <Select
-                  value={this.state.timeType}
-                  onChange={this.handleTimeTypeChange}
+                <FormControl>
+                  <Select
+                    value={this.state.gameType}
+                    onChange={this.handleGameTypeChange}
                   >
-                  <MenuItem value="1">Last Hour</MenuItem>
-                  <MenuItem value="24">Last 24 Hours</MenuItem>
-                  <MenuItem value="7">Last 7 Days</MenuItem>
-                  <MenuItem value="30">Last 30 Days</MenuItem>
-                  <MenuItem value="allTime">All-time</MenuItem>
-                </Select>
-              </FormControl>
-                </div>
+                    <MenuItem value="All">All</MenuItem>
+                    <MenuItem value="62a25d2a723b9f15709d1ae7">RPS</MenuItem>
+                    <MenuItem value="62a25d2a723b9f15709d1aeb">Quick Shoot</MenuItem>
+                    <MenuItem value="62a25d2a723b9f15709d1ae9">Brain Game</MenuItem>
+                    <MenuItem value="62a25d2a723b9f15709d1aea">Mystery Box</MenuItem>
+                    <MenuItem value="63dac60ba1316a1e70a468ab">Drop Game</MenuItem>
+                    <MenuItem value="62a25d2a723b9f15709d1ae8">Spleesh</MenuItem>
+                    <MenuItem value="6536a82933e70418b45fbe32">Bang!</MenuItem>
+                    <MenuItem value="6536946933e70418b45fbe2f">Roll</MenuItem>
+
+                  </Select>
+                </FormControl>
+                <FormControl>
+                  <Select
+                    value={this.state.timeType}
+                    onChange={this.handleTimeTypeChange}
+                  >
+                    <MenuItem value="1">Last Hour</MenuItem>
+                    <MenuItem value="24">Last 24 Hours</MenuItem>
+                    <MenuItem value="7">Last 7 Days</MenuItem>
+                    <MenuItem value="30">Last 30 Days</MenuItem>
+                    <MenuItem value="allTime">All-time</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
               {!this.state.loaded ? (
                 <div className="loading">LOADING...</div>
               ) : (
@@ -471,8 +527,8 @@ const joinedAgo = date_joined.fromNow();
             series[0].data.length > 100
               ? 'step-10'
               : series[0].data.length > 20
-              ? 'step-5'
-              : 'step-1'
+                ? 'step-5'
+                : 'step-1'
           }
           type="line"
           height="350"

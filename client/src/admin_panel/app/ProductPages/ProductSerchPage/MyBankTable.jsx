@@ -2,16 +2,15 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import Pagination from '../../../../components/Pagination';
+import moment from 'moment';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faTag,
-  faCubes,
-  faGem,
-  faDollarSign,
-  faSort,
-  faFilter
-} from '@fortawesome/free-solid-svg-icons'; // Import the desired icons
+  faFilter,
+  faClock,
+  faUsers,
+  faCalendar
+} from '@fortawesome/free-solid-svg-icons';
 import {
   acQueryMyLoan,
   setCurrentLoanId,
@@ -21,7 +20,6 @@ import {
   getRoomList
 } from '../../../../redux/Logic/logic.actions';
 import {
-  openListLoanModal,
   openDeListLoanModal
 } from '../../../../redux/Notification/notification.actions';
 import history from '../../../../redux/history';
@@ -61,14 +59,14 @@ const FilterSortContainer = styled.div`
 
 const ProductGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
   gap: 20px;
   max-width: 100%;
   margin: 20px 0;
 `;
 const ProductCard = styled.div`
   position: relative;
-  background: linear-gradient(156deg, #303438, #cf0c0e);
+  background: linear-gradient(156deg, #303438, #28a745);
   border-radius: 20px;
   padding: 10px;
   display: -ms-flexbox;
@@ -108,41 +106,6 @@ const ProductCard = styled.div`
   }
 `;
 
-const EquipLoanButton = styled.div`
-opacity: 0;
-  position: absolute;
-  margin-top: auto;
-  bottom: 0;
-  
-  margin
-  right: 0; 
-    cursor: pointer;
-    -webkit-transition: -webkit-transform 0.2s;
-    -webkit-transition: transform 0.2s;
-    transition: transform 0.2s,  bottom 0.2s;
-
-    ${ProductCard}:hover & {
-      opacity: 1;
-        bottom: calc(50% + 90px);;
-`;
-
-const ListLoanButton = styled.div`
-opacity: 0;
-  position: absolute;
-  margin-top: auto;
-  bottom: 0;
-  
-  margin
-  right: 0; 
-    cursor: pointer;
-    -webkit-transition: -webkit-transform 0.2s;
-    -webkit-transition: transform 0.2s;
-    transition: transform 0.2s,  bottom 0.2s;
-
-    ${ProductCard}:hover & {
-      opacity: 1;
-        bottom: calc(50% + 30px);;
-`;
 
 const DeListLoanButton = styled.div`
 opacity: 0;
@@ -159,32 +122,9 @@ opacity: 0;
 
     ${ProductCard}:hover & {
       opacity: 1;
+      left: 30%; 
         bottom: calc(50% - 30px);
   
-`;
-
-const ProductImage = styled.img`
-  max-width: 100%;
-  height: auto;
-  background: #fff;
-  border: 1px solid #f9f9;
-  box-shadow: 0 1px 17px #333;
-  border-radius: 10px;
-`;
-
-
-const CommissionPower = styled.span`
-position: absolute;
-top: 20px;
-right: 20px;
-width: 30px;
-height: 30px;
-background: #28a745;
-border-radius: 10px;
-box-shadow: inset 0px -1px 11px #005b15;
-color: #fff;
-font-weight: 500;
-text-align: center;
 `;
 
 const ProductInfo = styled.div`
@@ -198,13 +138,13 @@ const LoanAmount = styled.h6`
   font-weight: 400;
   line-height: 1.75;
   letter-spacing: 0.00938em;
-  background: linear-gradient(354deg, #ea292975, #494e54);
+  background: linear-gradient(354deg, #00b03775, #494e54);
   width: 100%;
   border: 1px soli#9c0c0c;
   border-radius: 23%;
-  text-shadow: 2px -2px 4px #98090b;
+  text-shadow: 2px -2px 4px #00da32;
   text-transform: uppercase;
-  box-shadow: inset 0px 1px 14px #28a74524, -1px 2px #9d0d0e;
+  box-shadow: inset 0px 1px 14px #28a74524, -1px 2px #005b15;
   color: #fff;
   margin-top: 10px;
   border-bottom-right-radius: 21px;
@@ -215,6 +155,21 @@ const LinearContainer = styled.div`
   width: 80%;
   max-width: 1200px;
   margin: 20px 0;
+`;
+
+const CommissionPower = styled.span`
+position: absolute;
+top: 20px;
+right: 15px;
+width: 60px;
+height: 40px;
+line-height: 40px;
+background: #28a745;
+border-radius: 10px;
+box-shadow: inset 0px -1px 11px #005b15;
+color: #fff;
+font-weight: 500;
+text-align: center;
 `;
 
 const PaginationContainer = styled.div`
@@ -236,7 +191,7 @@ class MyBankTable extends Component {
       sortAnchorEl: null,
       sortCriteria: 'updated_at',
       _id: this.props.userInfo._id,
-      loanType: '653ee7ac17c9f5ee21245649'
+      loanType: 'standard'
     };
   }
 
@@ -344,7 +299,6 @@ class MyBankTable extends Component {
       acQueryMyLoan,
       setCurrentLoanId,
       setCurrentLoanInfo,
-      openListLoanModal,
       openDeListLoanModal,
       isLowGraphics
     } = this.props;
@@ -360,10 +314,7 @@ class MyBankTable extends Component {
       loanType,
     } = this.state;
     const loanTypeMap = {
-      '653ee7ac17c9f5ee21245649': 'RRPS Card',
-      '653ee7df17c9f5ee2124564a': 'Game Background',
-      '654231df29446bc96d689d0f': 'Tools',
-      '6542321929446bc96d689d10': 'Games'
+      'standard': 'Standard',
     };
     this.fetchCustomerInfo();
     return (
@@ -381,36 +332,13 @@ class MyBankTable extends Component {
             >
               <MenuItem
                 onClick={() =>
-                  this.handleFilterClose('653ee7ac17c9f5ee21245649')
+                  this.handleFilterClose('standard')
                 }
-                selected={loanType === '653ee7ac17c9f5ee21245649'}
+                selected={loanType === 'standard'}
               >
-                RRPS Card
+                Standard
               </MenuItem>
-              <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('653ee7df17c9f5ee2124564a')
-                }
-                selected={loanType === '653ee7df17c9f5ee2124564a'}
-              >
-                Game Background
-              </MenuItem>
-              <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('654231df29446bc96d689d0f')
-                }
-                selected={loanType === '654231df29446bc96d689d0f'}
-              >
-                Tools
-              </MenuItem>
-              <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('6542321929446bc96d689d10')
-                }
-                selected={loanType === '6542321929446bc96d689d10'}
-              >
-                Games
-              </MenuItem>
+
             </Menu>
           </div>
           <div className="filters">
@@ -429,7 +357,7 @@ class MyBankTable extends Component {
               >
                 <MenuItem value="updated_at">Sort by Date</MenuItem>
                 <MenuItem value="period">Sort by Loan Period</MenuItem>
-                <MenuItem value="apy">Sort by APY</MenuItem>
+                <MenuItem value="apy">Sort by Interest Rate</MenuItem>
 
               </Select>
             </Menu>
@@ -437,58 +365,48 @@ class MyBankTable extends Component {
         </FilterSortContainer>
         {!loading ? (
           <ProductGrid>
+
             {showPlayerModal && (
               <PlayerModal
-                selectedCreator={selectedCreator}
-                modalIsOpen={showPlayerModal}
-                closeModal={this.handleClosePlayerModal}
+              selectedCreator={selectedCreator}
+              modalIsOpen={showPlayerModal}
+              closeModal={this.handleClosePlayerModal}
               />
-            )}
+              )}
 
             {data.map(row => (
               <ProductCard
-                key={row._id}
-                onClick={() => {
-                  setCurrentLoanId(row._id);
-                  history.push(`/loan/${row._id}`);
-                }}
+              key={row._id}
+              onClick={() => {
+                setCurrentLoanId(row._id);
+                history.push(`/loan/${row._id}`);
+              }}
               >
-               
+                <CommissionPower>{row.apy * 100}%</CommissionPower>
 
                 <ProductInfo>
-                  <LoanAmount>{row.loan_amount}</LoanAmount>
+                  <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
                   <TableContainer>
                     <Table id="my-products" className="product-detail">
                       <TableBody>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faTag} /> Loan Period
+                            <FontAwesomeIcon icon={faCalendar} /> Loan Period
                           </TableCell>
-                          <TableCell className="value">
-                            {convertToCurrency(row.loan_period)}
-                          </TableCell>
+                          <TableCell className="value">{row.loan_period} days</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faDollarSign} /> On Sale:
+                            <FontAwesomeIcon icon={faUsers} /> Loaners:
                           </TableCell>
-                          <TableCell className="value">{row.onSale}</TableCell>
+                          <TableCell className="value">{row.loaners}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faCubes} /> Total:
+                            <FontAwesomeIcon icon={faClock} /> Created:
                           </TableCell>
-                          <TableCell className="value">
-                            {row.total_count}
-                          </TableCell>
-                        </TableRow>
-
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faGem} /> Type:
-                          </TableCell>
-                          <TableCell>
-                            {loanTypeMap[row.loan_type] || 'Unknown'}
+                          <TableCell  className="value">
+                          {moment(row.created_at).fromNow()}
                           </TableCell>
                         </TableRow>
                       </TableBody>
@@ -496,26 +414,11 @@ class MyBankTable extends Component {
                   </TableContainer>
                 </ProductInfo>
 
-
-                <ListLoanButton>
-                  {row.onSale === row.total_count ? null : (
-                    <Tooltip title="List Loan">
-                      <IconButton
-                        className="btn-back"
-                        onClick={() => {
-                          setCurrentLoanId(row._id);
-                          openListLoanModal();
-                        }}
-                      >
-                        List <SwapHoriz />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </ListLoanButton>
+               
 
                 <DeListLoanButton>
                   {row.onSale === 0 ? null : (
-                    <Tooltip title="De-List Loan">
+                    <Tooltip title="Withdraw Funds">
                       <IconButton
                         className="btn-back"
                         onClick={() => {
@@ -523,7 +426,7 @@ class MyBankTable extends Component {
                           openDeListLoanModal();
                         }}
                       >
-                        De-List <SwapHoriz />
+                        WITHDRAW <SwapHoriz />
                       </IconButton>
                     </Tooltip>
                   )}
@@ -558,7 +461,6 @@ const mapStateToProps = state => ({
   loading: state.loanReducer.loading,
   total: state.loanReducer.totalResults,
   tnxComplete: state.logic.transactionComplete,
-  showListLoanModal: state.snackbar.showListLoanModal,
   isDarkMode: state.auth.isDarkMode,
   userInfo: state.auth.user,
   isLowGraphics: state.auth.isLowGraphics
@@ -568,7 +470,6 @@ const mapDispatchToProps = {
   acQueryMyLoan,
   setCurrentLoanId,
   setCurrentLoanInfo,
-  openListLoanModal,
   openDeListLoanModal,
   acGetCustomerInfo,
   getRoomList,

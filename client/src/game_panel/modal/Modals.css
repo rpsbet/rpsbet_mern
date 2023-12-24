@@ -76,6 +76,10 @@
     background-image: url("../../../public/img/icons/alert-icon.svg");
 }
 
+#interest {
+    color: #28a745 !important;
+}
+
 .modal-body .modal-icon.alert-icon-closed {
     background-image: url("../../../public/img/icons/alert-icon-closed.svg");
 }
@@ -606,6 +610,7 @@ box-shadow: unset !important;
     width: 50% !important;
     height: 50% !important;
 }
+
   .modal-body .avatar-border div div:last-child
    {
     border-radius: 0.8em !important;

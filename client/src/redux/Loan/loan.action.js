@@ -22,6 +22,7 @@ export const acQueryMyLoan = (pagination, page, sortCriteria, loanType) => async
   dispatch,
   getState
 ) => {
+  console.log(pagination, page, sortCriteria, loanType)
   dispatch({ type: MY_LOAN_QUERY, payload: [] });
   dispatch({ type: LOADING_LOAN_TABLE, payload: true });
   let payload = {
@@ -86,9 +87,7 @@ export const acCalculateRemainingLoans = () => async (dispatch, getState) => {
 
     if (data.success) {
       dispatch({ type: CALCULATE_REMAINING_LOANS, payload: data.remainingLoans });
-      dispatch({ type: SET_USER_LOANS, payload: data.userLoans }); // Add this line
-      console.log('Remaining Loans:', data.remainingLoans);
-      console.log('User Loans:', data.userLoans);
+      dispatch({ type: SET_USER_LOANS, payload: data.userLoans });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
@@ -110,9 +109,8 @@ export const paybackLoan = (loanId, paybackAmount) => async (dispatch) => {
   try {
     // Make a request to the backend route to pay back the loan
     const { data } = await api.post('/loan/payback', body);
-    console.log(data)
     if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: data.message });
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
 
       return data;
     } else {
@@ -127,17 +125,13 @@ export const paybackLoan = (loanId, paybackAmount) => async (dispatch) => {
 };
 
 export const createLoan = body => async (dispatch, getState) => {
-  delete body.buttonDisable;
-
-  if (body._id === '') {
-    delete body._id;
-  }
 
   body.userId = getState().auth.user._id;
   try {
     const { data } = await api.post('loan/create', body);
     if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: data.message });
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+      return data;
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
@@ -157,7 +151,7 @@ export const getLoan = () => async (dispatch, getState) => {
           loan_amount: 0,
           apy: 0,
           loan_period: 0,
-          loan_type: '',
+          loan_type: 'standard',
           startDateTime: new Date(),
           expireDateTime: new Date()
         }

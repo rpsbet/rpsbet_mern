@@ -12,6 +12,7 @@ import {
   UPDATE_RAIN,
   UPDATE_BANKROLL_QS,
   BET_SUCCESS,
+  MSG_SUCCESS,
   MSG_CREATE_ROOM_SUCCESS,
   MSG_ROOMS_LOAD_FAILED,
   MSG_GAMETYPE_LOAD_FAILED,
@@ -267,6 +268,8 @@ export const listLoan = data => async (dispatch) => {
 
     const res = await axios.post('/loan/list-for-sale', data);
     if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+
       return res.data;
     }
   } catch (err) {
@@ -280,8 +283,10 @@ export const deListLoan = data => async (dispatch) => {
   try {
     dispatch({ type: TNX_INCOMPLETE });
 
-    const res = await axios.post('/loan/delist-from-sale', data);
+    const res = await axios.post('/loan/withdraw-loan', data);
     if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+
       return res.data;
     }
   } catch (err) {
@@ -297,6 +302,8 @@ export const listItem = data => async (dispatch) => {
 
     const res = await axios.post('/item/list-for-sale', data);
     if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+
       return res.data;
     }
   } catch (err) {
@@ -312,6 +319,8 @@ export const deListItem = data => async (dispatch) => {
 
     const res = await axios.post('/item/delist-from-sale', data);
     if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+
       return res.data;
     }
   } catch (err) {
@@ -326,6 +335,7 @@ export const confirmTrade = data => async dispatch => {
     dispatch({ type: TNX_INCOMPLETE });
     const res = await axios.post('/item/trade/', data);
     if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
 
       return res.data;
     }
@@ -341,6 +351,7 @@ export const confirmLoan = data => async dispatch => {
     dispatch({ type: TNX_INCOMPLETE });
     const res = await axios.post('/loan/lend/', data);
     if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
 
       return res.data;
     }
@@ -374,6 +385,7 @@ export const equipItem = data => async dispatch => {
     const res = await axios.post('/item/equip/', data);
 
     if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
 
       return res.data;
     }
@@ -470,6 +482,8 @@ export const endGame = (room_id, callback) => async dispatch => {
         }
       });
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+
     } else {
       if (res.data.already_finished) {
         // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });

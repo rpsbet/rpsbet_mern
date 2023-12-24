@@ -4,9 +4,11 @@ import { connect } from 'react-redux';
 import {
   closeDeListLoanModal
 } from '../../redux/Notification/notification.actions';
-import { deListLoan } from '../../redux/Logic/logic.actions';
+import { acQueryMyLoan, acQueryLoan} from '../../redux/Loan/loan.action';
 import { Button, TextField } from '@material-ui/core';
 import { alertModal } from './ConfirmAlerts';
+import { setBalance } from '../../redux/Auth/user.actions';
+import { addNewTransaction, deListLoan } from '../../redux/Logic/logic.actions';
 
 Modal.setAppElement('#root');
 
@@ -35,14 +37,17 @@ class DeListLoanModal extends Component {
     };
   }
   onBtnOkClicked = async e => {
-    const { loan, closeDeListLoanModal, isDarkMode, deListLoan } = this.props;
-    console.log("loan", loan);
+    const { loan, closeDeListLoanModal, isDarkMode, deListLoan, acQueryMyLoan, acQueryLoan } = this.props;
     const response = await deListLoan({ loan_id: loan });
     if (response.success) {
-      const { message } = response;
-  
+      const { balance, newTransaction, message } = response;
+  console.log(balance, newTransaction)
       closeDeListLoanModal();
       alertModal(isDarkMode, message);
+      setBalance(balance);
+      addNewTransaction(newTransaction);
+      await acQueryMyLoan(30, 1, 'loan_amount', 'standard');
+      await acQueryLoan(30, 1, 'loan_amount', 'standard');
     } else {
       alertModal(isDarkMode, response.message);
     }
@@ -61,9 +66,10 @@ class DeListLoanModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body password-modal-body">
-            <div className={`modal-icon result-icon-trade`}></div>
-            <h5>CONFIRM DE-LISTING</h5>
-            <h6>{this.props.loan}</h6>
+            <div className={`modal-icon result-icon-prize`}></div>
+            <h5>WITHDRAW FUNDS?</h5>
+            <br />
+            <h6>Delete this loan and return funds to your wallet?</h6><br />
           </div>
           <div className="modal-footer">
             <Button className="btn-submit" onClick={this.onBtnOkClicked}>
@@ -87,8 +93,8 @@ const mapStateToProps = state => ({
   isOpen: state.snackbar.showDeListLoanModal,
   title: state.snackbar.title,
   loan: state.loanReducer._id,
-  price: state.loanReducer.data.price,
-  loan_amount: state.loanReducer.data.loan_amount,
+  loan_amount: state.loanReducer.loan_amount,
+  // loan_amount: state.loanReducer.data.loan_amount,
   alertMessage: state.snackbar.alertMessage,
   alertType: state.snackbar.alertType
 });
@@ -96,6 +102,10 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   closeDeListLoanModal,
   deListLoan,
+  setBalance,
+  addNewTransaction,
+  acQueryMyLoan,
+  acQueryLoan
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(DeListLoanModal);

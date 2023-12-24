@@ -113,7 +113,7 @@ opacity: 0;
 
     ${ProductCard}:hover & {
       opacity: 1;
-        bottom: 25%%;
+        bottom: 30%;
         left: 25%;
 `;
 
@@ -188,7 +188,7 @@ class BankTable extends Component {
       anchorEl: null,
       sortAnchorEl: null,
       sortCriteria: 'updated_at',
-      loanType: ''
+      loanType: 'standard'
     };
   }
 
@@ -228,7 +228,7 @@ class BankTable extends Component {
   fetchLoans() {
     const { acQueryLoan, page } = this.props;
     const { sortCriteria, loanType } = this.state;
-    acQueryLoan(30, page, sortCriteria);
+    acQueryLoan(30, page, sortCriteria, loanType);
   }
 
   handleFilterClick = event => {
@@ -335,9 +335,9 @@ class BankTable extends Component {
             >
               <MenuItem
                 onClick={() =>
-                  this.handleFilterClose('')
+                  this.handleFilterClose('standard')
                 }
-                selected={loanType === ''}
+                selected={loanType === 'standard'}
               >
                 Standard
               </MenuItem>

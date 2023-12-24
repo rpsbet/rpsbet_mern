@@ -19,6 +19,16 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
+  credit_score: {
+    type: Number,
+    default: 0
+  },
+  lenders: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  ],
   ai_mode: {
     type: String,
     default: 'Markov'

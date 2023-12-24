@@ -7,6 +7,55 @@
 }
 
 
+.rank-badge {
+  position: relative;
+  text-align: center;
+}
+
+.dial {
+  position: relative;
+ 
+}
+
+.label {
+  font-size: x-small;
+  color: #555555; /* Dark gray color for the label */
+}
+
+.progress-hexagon {
+  fill: transparent;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 390; /* Dash array for a complete hexagon */
+  stroke-dashoffset: 390; /* Offset to hide the hexagon initially */
+  transition: stroke-dashoffset 0.5s ease-in-out;
+}
+
+.red {
+  stroke: #ff6961; /* Red color */
+}
+
+.white {
+  stroke: #ffffff; /* White color */
+}
+
+.green {
+  stroke: #77dd77; /* Green color */
+}
+
+.creditScore {
+  display: flex;
+  justify-content: center;
+}
+
+.creditScoreValue {
+  font-size: small;
+  fill: white;
+}
+.creditScoreTitle {
+  font-size: xx-small;
+  fill: white;
+}
 
 .selected {
   border: 2px solid #cf0c0e;
@@ -420,6 +469,12 @@ background-size: 1.2em;
   line-height: 0.8;
   color: #ffb000;
 }
+
+.rank-badge {
+  position: relative;
+  text-align: center;
+}
+
 
 .rank-badge {
   margin-top: 15px;

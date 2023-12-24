@@ -56,21 +56,34 @@ class DebtsModal extends Component {
 
   paybackLoan = async () => {
     const { paybackAmount, selectedLoan } = this.state;
-    const { paybackLoan, acCalculateRemainingLoans, setBalance, addNewTransaction, isDarkMode, } = this.props;
-
-
+    const { paybackLoan, acCalculateRemainingLoans, setBalance, addNewTransaction, isDarkMode } = this.props;
+  
     // Check if there's a selectedLoan
     if (!selectedLoan) {
       console.error('No selected loan to pay back.');
       return;
     }
 
+    if (parseFloat(paybackAmount) < 0) {
+      alertModal(isDarkMode, 'Payback amount cannot be negative dumfuq.');
+      return;
+    }    
+  
+    // Check if paybackAmount is a real number
+    if (isNaN(parseFloat(paybackAmount))) {
+      alertModal(isDarkMode, 'Invalid payback amount. Enter a valid number, stupid motherfucker.');
+      return;
+    }
+  
+    // Check if paybackAmount is more than the selectedLoan.amount
+    if (parseFloat(paybackAmount) > selectedLoan.amount) {
+      alertModal(isDarkMode, 'Payback amount cannot exceed the loan amount dickhead.');
+      return;
+    }
+  
     const loanId = selectedLoan._id;
-    const response = await paybackLoan(
-      loanId,
-      paybackAmount,
-    );
-
+    const response = await paybackLoan(loanId, paybackAmount);
+  
     if (response.success) {
       const { balance, newTransaction, message } = response;
       this.closePaybackModal();
@@ -82,7 +95,7 @@ class DebtsModal extends Component {
       alertModal(isDarkMode, response.message);
     }
   };
-
+  
 
 
   handleMaxButtonClick = () => {
