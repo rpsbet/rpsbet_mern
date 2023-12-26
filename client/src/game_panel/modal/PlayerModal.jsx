@@ -319,8 +319,11 @@ class PlayerModal extends Component {
               contentLabel="Tip Modal"
             >
               <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-                <div className="modal-header">
-                  <h2>ENTER TIP AMOUNT</h2>
+              <div className="modal-header">
+              <h2 className="modal-title">ENTER TIP AMOUNT</h2>
+            <Button className="btn-close" onClick={this.handleCloseModal}>
+              ×
+            </Button>
                 </div>
                 <div className="modal-body">
                   <div className="modal-content-wrapper">

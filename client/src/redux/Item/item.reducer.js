@@ -14,6 +14,7 @@ import {
 const initialState = {
   _id: '',
   productName: '',
+  rentOption: false,
   owner: '',
   price: '',
   itemType: '',

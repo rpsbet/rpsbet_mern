@@ -13,7 +13,8 @@ import {
 import {
   acQueryMyItem,
   setCurrentProductId,
-  setCurrentProductInfo
+  setCurrentProductInfo,
+  returnItem
 } from '../../../../redux/Item/item.action';
 import {
   equipItem,
@@ -41,7 +42,7 @@ import {
 } from '@material-ui/core';
 import { acGetCustomerInfo } from '../../../../redux/Customer/customer.action';
 import Pagination from 'material-ui-flat-pagination';
-import SwapHoriz from '@material-ui/icons/SwapHoriz';
+import { SwapHoriz, Cancel } from '@material-ui/icons/';
 import { convertToCurrency } from '../../../../util/conversion';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
 import PlayerModal from '../../../../game_panel/modal/PlayerModal';
@@ -145,6 +146,24 @@ opacity: 0;
         bottom: calc(50% + 30px);;
 `;
 
+const DiscontinueButton = styled.div`
+opacity: 0;
+  position: absolute;
+  margin-top: auto;
+  bottom: 0;
+  
+  margin
+  right: 0; 
+    cursor: pointer;
+    -webkit-transition: -webkit-transform 0.2s;
+    -webkit-transition: transform 0.2s;
+    transition: transform 0.2s,  bottom 0.2s;
+
+    ${ProductCard}:hover & {
+      opacity: 1;
+        bottom: calc(50% + 30px);;
+`;
+
 const DeListItemButton = styled.div`
 opacity: 0;
   position: absolute;
@@ -171,6 +190,20 @@ const ProductImage = styled.img`
   border: 1px solid #f9f9;
   box-shadow: 0 1px 17px #333;
   border-radius: 10px;
+`;
+
+const RentingLabel = styled.span`
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 80px; /* Adjust width as needed */
+  height: 30px;
+  background: ${({ isOwner }) => (isOwner ? 'linear-gradient(155deg, #cd81ff, #1976D2)' : 'linear-gradient(155deg, #f50057, #8a17d8)')};
+  border-radius: 10px;
+  box-shadow: inset 0px -1px 11px ${({ isOwner }) => (isOwner ? '#1565C0' : '#9f3fb5')};
+  color: #fff;
+  font-weight: 500;
+  text-align: center;
 `;
 
 
@@ -243,20 +276,20 @@ class MyProductTable extends Component {
   }
 
   async componentDidMount() {
-    await this.fetchAccessory( this.state._id);
+    await this.fetchAccessory(this.state._id);
     await this.fetchItems();
   }
 
   async fetchAccessory(_id) {
     try {
-      const accessory = await this.props.fetchAccessory({_id});
+      const accessory = await this.props.fetchAccessory({ _id });
       this.setState({ accessory });
     } catch (error) {
       // Handle the error, e.g., show an error message or log the error
       console.error('Error fetching accessory:', error);
     }
   }
-  
+
 
   componentDidUpdate(prevProps, prevState) {
     if (
@@ -316,8 +349,8 @@ class MyProductTable extends Component {
       if (response.success) {
         this.fetchAccessory(this.state._id);
         this.fetchItems();
-        this.props.getRoomList({game_type: 'RPS'});
-        this.props.getRoomList({game_type: 'All'});
+        this.props.getRoomList({ game_type: 'RPS' });
+        this.props.getRoomList({ game_type: 'All' });
 
         const { message } = response;
         alertModal(isDarkMode, message);
@@ -376,7 +409,8 @@ class MyProductTable extends Component {
       setCurrentProductInfo,
       openListItemModal,
       openDeListItemModal,
-      isLowGraphics
+      isLowGraphics,
+      returnItem
     } = this.props;
 
     const {
@@ -435,7 +469,7 @@ class MyProductTable extends Component {
               >
                 Accessory
               </MenuItem>
-              
+
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('654231df29446bc96d689d0f')
@@ -489,6 +523,13 @@ class MyProductTable extends Component {
                 key={row._id}
                 onClick={() => {
                   setCurrentProductId(row._id);
+                  setCurrentProductInfo({
+                    item_type: row.item_type,
+                    productName: row.productName,
+                    rentOption: row.rentOption,
+                    price: row.price,
+                    onSale: row.onSale,
+                  });
                   history.push(`/product/${row._id}`);
                 }}
               >
@@ -502,26 +543,51 @@ class MyProductTable extends Component {
                 ) : (
                   ''
                 )}
-
+                {row.onSale === 0 && row.rentOption ? (
+                  <RentingLabel>RENTING</RentingLabel>
+                ) : (
+                  <RentingLabel isOwner={true}>OWNER</RentingLabel>
+                )}
                 <ProductInfo>
                   <ProductName>{row.productName}</ProductName>
                   <TableContainer>
                     <Table id="my-products" className="product-detail">
                       <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faTag} /> Price Per Unit:
-                          </TableCell>
-                          <TableCell className="value">
-                            {convertToCurrency(row.price)}
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <FontAwesomeIcon icon={faDollarSign} /> On Sale:
-                          </TableCell>
-                          <TableCell className="value">{row.onSale}</TableCell>
-                        </TableRow>
+                        {row.rentOption && row.onSale === 0 ? (
+                          // Display Cost per Month when rentOption is true and onSale is 0
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faTag} /> Cost Per Month:
+                            </TableCell>
+                            <TableCell className="value">
+                              {convertToCurrency(row.price)}
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          // Display Price Per Month or Price Per Unit based on rentOption
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faTag} />
+                              {row.rentOption ? ' Price Per Month:' : ' Price Per Unit:'}
+                            </TableCell>
+                            <TableCell className="value">
+                              {convertToCurrency(row.price)}
+                            </TableCell>
+                          </TableRow>
+                        )}
+
+
+                        {row.rentOption && row.onSale === 0 ? null : (
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faDollarSign} />
+                              {row.rentOption ? ' Renting Out:' : ' On Sale:'}
+                            </TableCell>
+                            <TableCell className="value">{row.onSale}</TableCell>
+                          </TableRow>
+                        )}
+
+
                         <TableRow>
                           <TableCell>
                             <FontAwesomeIcon icon={faCubes} /> Total:
@@ -530,7 +596,7 @@ class MyProductTable extends Component {
                             {row.total_count}
                           </TableCell>
                         </TableRow>
-
+                        {row.rentOption}
                         <TableRow>
                           <TableCell>
                             <FontAwesomeIcon icon={faGem} /> Type:
@@ -544,61 +610,87 @@ class MyProductTable extends Component {
                   </TableContainer>
                 </ProductInfo>
                 <EquipItemButton>
-  {row.item_type !== '653ee81117c9f5ee2124564b' ? null : (
-    <Tooltip
-      title={
-        accessory && accessory.accessory === row.image
-          ? 'Unequip Item'
-          : 'Equip Item'
-      }
-    >
-      <IconButton
-        className="btn-back"
-        onClick={() => {
-          this.equipItem(row._id);
-        }}
-      >
-        {accessory && accessory.accessory === row.image
-          ? 'UNEQUIP'
-          : 'EQUIP'}{' '}
-        <SwapHoriz />
-      </IconButton>
-    </Tooltip>
-  )}
-</EquipItemButton>
+                  {row.item_type !== '653ee81117c9f5ee2124564b' ? null : (
+                    <Tooltip
+                      title={
+                        accessory && accessory.accessory === row.image
+                          ? 'Unequip Item'
+                          : 'Equip Item'
+                      }
+                    >
+                      <IconButton
+                        className="btn-back"
+                        onClick={() => {
+                          this.equipItem(row._id);
+                        }}
+                      >
+                        {accessory && accessory.accessory === row.image
+                          ? 'UNEQUIP'
+                          : 'EQUIP'}{' '}
+                        <SwapHoriz />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </EquipItemButton>
 
-
-                <ListItemButton>
-                  {row.onSale === row.total_count ? null : (
-                    <Tooltip title="List Item">
+                {row.onSale === 0 && row.rentOption ? (
+                  // Show "Discontinue" button
+                  <DiscontinueButton>
+                    <Tooltip title="Discontinue Renting">
                       <IconButton
                         className="btn-back"
                         onClick={() => {
                           setCurrentProductId(row._id);
-                          openListItemModal();
+                          returnItem(row._id)
                         }}
                       >
-                        List <SwapHoriz />
+                        RETURN <Cancel />
                       </IconButton>
                     </Tooltip>
-                  )}
-                </ListItemButton>
+                  </DiscontinueButton>
+                ) : (
+                  // Show List and De-List buttons
+                  <>
+                    <ListItemButton>
+                      {row.onSale === row.total_count ? null : (
+                        <Tooltip title="List Item">
+                          <IconButton
+                            className="btn-back"
+                            onClick={() => {
+                              setCurrentProductId(row._id);
+                              setCurrentProductInfo({
+                                item_type: row.item_type,
+                                productName: row.productName,
+                                rentOption: row.rentOption,
+                                price: row.price,
+                                onSale: row.onSale,
+                              });
+                              openListItemModal();
+                            }}
+                          >
+                            List <SwapHoriz />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </ListItemButton>
 
-                <DeListItemButton>
-                  {row.onSale === 0 ? null : (
-                    <Tooltip title="De-List Item">
-                      <IconButton
-                        className="btn-back"
-                        onClick={() => {
-                          setCurrentProductId(row._id);
-                          openDeListItemModal();
-                        }}
-                      >
-                        De-List <SwapHoriz />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </DeListItemButton>
+                    <DeListItemButton>
+                      {row.onSale === 0 ? null : (
+                        <Tooltip title="De-List Item">
+                          <IconButton
+                            className="btn-back"
+                            onClick={() => {
+                              setCurrentProductId(row._id);
+                              openDeListItemModal();
+                            }}
+                          >
+                            De-List <SwapHoriz />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </DeListItemButton>
+                  </>
+                )}
               </ProductCard>
             ))}
           </ProductGrid>
@@ -645,7 +737,8 @@ const mapDispatchToProps = {
   acGetCustomerInfo,
   equipItem,
   getRoomList,
-  fetchAccessory
+  fetchAccessory,
+  returnItem
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyProductTable);

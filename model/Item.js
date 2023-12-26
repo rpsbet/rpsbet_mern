@@ -17,7 +17,18 @@ const OwnerSchema = new Schema({
     onSale: {
         type: Number,
         default: 0
-    }
+    },
+    rentOption: {
+        type: Boolean,
+        default: false
+    },
+    lastPayment: {
+        type: Date
+    },
+    originalOwner: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
 });
 
 const ItemSchema = new Schema({

@@ -334,7 +334,7 @@ class MyHistoryTable extends Component {
                 key={row._id}
               >
                  {' '}
-                 {renderLottieAvatarAnimation(row.gameBackground)}
+                 {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)}
                 <div>
                   <div className="table-cell">
                   {row.status}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
@@ -384,6 +384,7 @@ class MyHistoryTable extends Component {
 const mapStateToProps = state => ({
   socket: state.auth.socket,
   isAuthenticated: state.auth.isAuthenticated,
+  isLowGraphics: state.auth.isLowGraphics,
 
   myHistory: state.logic.myHistory,
   pageNumber: state.logic.myHistoryPageNumber,

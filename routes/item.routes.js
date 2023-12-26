@@ -62,9 +62,71 @@ router.post('/create', auth, async (req, res) => {
   }
 });
 
+router.post('/return', auth, async (req, res) => {
+  try {
+    const { item_id } = req.body;
+
+    // Find the item using the new model
+    const item = await Item.findOne({ _id: item_id });
+
+    if (!item) {
+      return res.json({
+        success: false,
+        message: 'Item not found',
+      });
+    }
+
+    // Find the current user's index in the owners array
+    const currentUserIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(req.user._id));
+
+    if (currentUserIndex === -1 || item.owners[currentUserIndex].count === 0) {
+      return res.json({
+        success: false,
+        message: 'You do not own this item or it is not available for return',
+      });
+    }
+
+    // Decrement the count for the current user
+    item.owners[currentUserIndex].count -= 1;
+    item.owners[currentUserIndex].rentOption = false;
+    item.owners[currentUserIndex].originalOwner = '';
+
+    // Find the index of the original owner in the owners array
+    const originalOwnerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(item.owners[currentUserIndex].originalOwner));
+
+    // If the original owner exists, increment their count
+    if (originalOwnerIndex !== -1) {
+      item.owners[originalOwnerIndex].count += 1;
+    } else {
+      // If the original owner doesn't exist, create a new entry
+      item.owners.push({
+        user: item.owners[currentUserIndex].originalOwner,
+        count: 1,
+        // Add other necessary fields
+      });
+    }
+
+    // Save changes to the item
+    await item.save();
+
+    res.json({
+      success: true,
+      message: 'Item returned successfully',
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: 'An error occurred during the return',
+      error: err.message,
+    });
+  }
+});
+
+
 router.post('/trade', auth, async (req, res) => {
   try {
-    const { item_id, owner } = req.body;
+    const { item_id, owner} = req.body;
 
     // Find the item using the new model
     const item = await Item.findOne({ _id: item_id });
@@ -81,17 +143,18 @@ router.post('/trade', auth, async (req, res) => {
     if (ownerIndex === -1 || item.owners[ownerIndex].count === 0) {
       return res.json({
         success: false,
-        message: 'Owner not found or not available for trade',
+        message: rentOption ? 'Owner not found or not available for rental' : 'Owner not found or not available for trade',
       });
     }
 
+    const rentOption = item.owners[ownerIndex].rentOption;
     // Find the current user
     const currentUser = await User.findOne({ _id: req.user._id });
 
     if (currentUser.balance < parseFloat(item.owners[ownerIndex].price)) {
       return res.json({
         success: false,
-        message: 'Your balance is insufficient for this trade',
+        message: rentOption ? 'Your balance is insufficient for this rental' : 'Your balance is insufficient for this trade',
       });
     }
 
@@ -100,6 +163,9 @@ router.post('/trade', auth, async (req, res) => {
 
     item.owners[ownerIndex].count -= 1;
     item.owners[ownerIndex].onSale -= 1;
+    if (item.owners[ownerIndex].onSale === 0) {
+      item.owners[ownerIndex].rentOption = false;
+    }
 
     // Find the item creator
     const itemCreator = await User.findOne({ _id: owner });
@@ -111,13 +177,17 @@ router.post('/trade', auth, async (req, res) => {
     const newTransactionC = new Transaction({
       user: currentUser,
       amount: -parseFloat(item.owners[ownerIndex].price),
-      description: `Traded with ${itemCreator.username}`,
+      description:  rentOption
+      ? `Rented from ${itemCreator.username}`
+      : `Traded with ${itemCreator.username}`
     });
 
     const newTransactionJ = new Transaction({
       user: itemCreator,
       amount: parseFloat(item.owners[ownerIndex].price),
-      description: `Traded with ${currentUser.username}`,
+      description:  rentOption
+      ? `Rented to ${currentUser.username}`
+      : `Traded with ${currentUser.username}`
     });
 
     // Update the item's owners array to increment count for the new owner
@@ -126,13 +196,24 @@ router.post('/trade', auth, async (req, res) => {
       count: 1,
       price: item.owners[ownerIndex].price,
       onSale: 0,
+      rentOption: rentOption,
+      lastPayment: Date.now(),
+      originalOwner: itemCreator._id
     };
 
     // Check if the new owner already exists in the owners array
     const newOwnerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(currentUser._id));
     if (newOwnerIndex !== -1) {
       // If the new owner already exists, increment their count
-      item.owners[newOwnerIndex].count += 1;
+      if (rentOption) {
+        return res.json({
+          success: false,
+          message: 'Why would you rent the same item again? You are smoking crack...'
+        });
+      } else {
+        item.owners[newOwnerIndex].count += 1;
+        item.owners[newOwnerIndex].rentOption = rentOption;
+      }
     } else {
       // If the new owner doesn't exist, add them to the owners array
       item.owners.push(newItemOwner);
@@ -153,13 +234,13 @@ router.post('/trade', auth, async (req, res) => {
       success: true,
       balance: currentUser.balance,
       newTransaction: newTransactionC,
-      message: 'TRADE 🤝 SUCCESSFUL',
+      message: rentOption ? 'FIRST MONTH PAYMENT 🤝 SUCCESSFUL' : 'TRADE 🤝 SUCCESSFUL'
     });
   } catch (err) {
     console.error('Error:', err);
     res.json({
       success: false,
-      message: "An error occurred during the trade",
+      message: rentOption ? "An error occurred during the renting" : "An error occurred during the trade",
       error: err.message,
     });
   }
@@ -168,7 +249,7 @@ router.post('/trade', auth, async (req, res) => {
 // /api/accessory
 router.post('/accessory', auth, async (req, res) => {
   try {
-    const {_id} = req.body;
+    const { _id } = req.body;
     const user = await User.findOne({ _id: _id }).select('accessory');
     if (!user) {
       return res.json({
@@ -244,7 +325,7 @@ router.get('/my-items', auth, async (req, res) => {
     if (itemTypeFilter) {
       query['item_type'] = itemTypeFilter;
     }
-    const items = await Item.find({ 'owners.user': userId, ...query})
+    const items = await Item.find({ 'owners.user': userId, ...query })
       .sort({ updated_at: 'desc' })
       .skip(pagination * page - pagination)
       .limit(pagination);
@@ -260,6 +341,7 @@ router.get('/my-items', auth, async (req, res) => {
       item_list.push({
         _id: item._id,
         productName: item.productName,
+        rentOption: owner.rentOption,
         price: owner ? owner.price : '',
         total_count: owner.count,
         onSale: owner.onSale,
@@ -292,10 +374,10 @@ router.get('/my-items', auth, async (req, res) => {
   }
 });
 
-// List an item for sale
+// List an item for sale or rent
 router.post('/list-for-sale', auth, async (req, res) => {
   try {
-    const { item_id, price } = req.body;
+    const { item_id, price, rentOption } = req.body;
     // Find the item using the new model
     const item = await Item.findOne({ _id: item_id });
 
@@ -316,12 +398,25 @@ router.post('/list-for-sale', auth, async (req, res) => {
       });
     }
 
+    // Check if rentOption is true
+    if (rentOption) {
+      item.owners[ownerIndex].rentOption = rentOption;
+      // Ensure item_type is '653ee81117c9f5ee2124564b' when rentOption is true
+      if (item.item_type.toString() !== '653ee81117c9f5ee2124564b') {
+        return res.json({
+          success: false,
+          message: 'Rent option can only be applied to items of type "653ee81117c9f5ee2124564b"',
+        });
+      }
+    } else {
+      item.owners[ownerIndex].rentOption = false;
+
+    }
+
     // Check if the onSale value is less than the item's count
     if (item.owners[ownerIndex].onSale < item.owners[ownerIndex].count) {
       // Increment the onSale field
       item.owners[ownerIndex].onSale += 1;
-
-      // Set the price for the item
       item.owners[ownerIndex].price = price;
 
       // Save changes to the item
@@ -329,23 +424,26 @@ router.post('/list-for-sale', auth, async (req, res) => {
 
       return res.json({
         success: true,
-        message: `Item '${item.productName}' listed for sale at ${price} ETH`,
+        message: rentOption
+          ? `Item '${item.productName}' listed for rent at ${price} ETH per month`
+          : `Item '${item.productName}' listed for sale at ${price} ETH`,
       });
     } else {
       return res.json({
         success: false,
-        message: `No more '${item.productName}' left to sell.`,
+        message: `No more '${item.productName}' left to sell or rent.`,
       });
     }
   } catch (err) {
     console.error('Error:', err);
     res.json({
       success: false,
-      message: "An error occurred while listing the item for sale",
+      message: "An error occurred while listing the item for sale or rent",
       error: err.message,
     });
   }
 });
+
 
 // Delist an item from sale
 router.post('/delist-from-sale', auth, async (req, res) => {
@@ -374,9 +472,10 @@ router.post('/delist-from-sale', auth, async (req, res) => {
       // Decrement the onSale field
       item.owners[ownerIndex].onSale -= 1;
 
-      // Remove the price for the item (optional)
-      item.owners[ownerIndex].price = 0;
-
+      if (item.owners[ownerIndex].onSale -= 1
+      ) {
+        item.owners[ownerIndex].rentOption = false;
+      }
       // Save changes to the item
       await item.save();
 
@@ -460,6 +559,7 @@ router.get('/', async (req, res) => {
                 count: owner.count,
                 price: owner.price,
                 onSale: owner.onSale,
+                rentOption: owner.rentOption,
               },
             ],
             total_count: totalCount, // Include the total count

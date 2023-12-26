@@ -92,6 +92,7 @@ class DebtsModal extends Component {
       addNewTransaction(newTransaction);
       await acCalculateRemainingLoans();
     } else {
+      this.closePaybackModal();
       alertModal(isDarkMode, response.message);
     }
   };

@@ -75,6 +75,27 @@ export const acQueryItem = (pagination, page, sortCriteria, itemType) => async (
   }
 };
 
+
+export const returnItem = data => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.post('/item/return/', data);
+
+    if (res.data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+
+      return res.data;
+    } else {
+      return res.data;
+    }
+  } catch (err) {
+  } finally {
+    dispatch({ type: END_LOADING });
+  }
+  return false;
+};
+
+
 export const createItem = body => async (dispatch, getState) => {
   delete body.buttonDisable;
 
@@ -105,6 +126,7 @@ export const getItem = () => async (dispatch, getState) => {
         productName: '',
         price: '',
         image: '',
+        rentOption: '',
         item_type: '',
         CP: '',
         startDateTime: new Date(),

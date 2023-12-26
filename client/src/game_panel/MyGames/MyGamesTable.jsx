@@ -67,7 +67,6 @@ class MyGamesTable extends Component {
 
     if (
       this.props.myGamesWithStats !== prevProps.myGamesWithStats) {
-        console.log("dd")
       this.setState({ myGames: this.props.myGames })
     }
   }

@@ -115,6 +115,7 @@ export const paybackLoan = (loanId, paybackAmount) => async (dispatch) => {
       return data;
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
+      return data;
     }
 
     dispatch({ type: LOADING_PAYBACK_LOAN, payload: false });

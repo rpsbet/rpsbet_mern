@@ -41,7 +41,6 @@ class DeListLoanModal extends Component {
     const response = await deListLoan({ loan_id: loan });
     if (response.success) {
       const { balance, newTransaction, message } = response;
-  console.log(balance, newTransaction)
       closeDeListLoanModal();
       alertModal(isDarkMode, message);
       setBalance(balance);

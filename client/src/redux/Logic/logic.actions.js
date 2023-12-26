@@ -338,6 +338,8 @@ export const confirmTrade = data => async dispatch => {
       dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
 
       return res.data;
+    } else {
+      return res.data;
     }
   } catch (err) {
   } finally {
@@ -353,6 +355,8 @@ export const confirmLoan = data => async dispatch => {
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
 
+      return res.data;
+    } else {
       return res.data;
     }
   } catch (err) {

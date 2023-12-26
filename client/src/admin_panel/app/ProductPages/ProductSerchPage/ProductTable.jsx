@@ -224,7 +224,7 @@ class ProductTable extends Component {
   };
 
   handleSortChange() {
-    this.setState({ sortAnchorEl: null  });
+    this.setState({ sortAnchorEl: null });
     this.fetchItems();
   }
 
@@ -397,14 +397,14 @@ class ProductTable extends Component {
               onClose={() => this.handleSortClose(null)}
             >
               <MenuItem onClick={() =>
-                  this.handleSortClose('updated_at')
-                }
+                this.handleSortClose('updated_at')
+              }
                 selected={sortCriteria === 'updated_at'}>Sort by Date Added</MenuItem>
               <MenuItem onClick={() =>
-                  this.handleSortClose('price')
-                }
+                this.handleSortClose('price')
+              }
                 selected={sortCriteria === 'price'}>
-Sort by Price</MenuItem>
+                Sort by Price</MenuItem>
             </Menu>
           </div>
         </FilterSortContainer>
@@ -425,6 +425,7 @@ Sort by Price</MenuItem>
                   setCurrentProductInfo({
                     owner: row.owners[0].user,
                     productName: row.productName,
+                    rentOption: row.owners[0].rentOption,
                     price: row.owners[0].price
                   });
                   history.push(`/product/${row._id}`);
@@ -458,7 +459,7 @@ Sort by Price</MenuItem>
                   </ProductCreator>
                 ))}
                 {row.image &&
-                renderLottieAnimation(row.image, isLowGraphics) ? (
+                  renderLottieAnimation(row.image, isLowGraphics) ? (
                   renderLottieAnimation(row.image, isLowGraphics)
                 ) : (
                   <ProductImage src={row.image} alt={row.productName} />
@@ -470,7 +471,9 @@ Sort by Price</MenuItem>
                       <TableBody>
                         <TableRow>
                           <TableCell>
-                            <FontAwesomeIcon icon={faTag} /> Price Per Unit:
+                            <FontAwesomeIcon icon={faTag} />
+                            {row.owners[0].rentOption ? ' Price per month' : ' Price per unit'}:
+
                           </TableCell>
                           <TableCell className="value">
                             {convertToCurrency(row.owners[0].price)}
@@ -497,14 +500,34 @@ Sort by Price</MenuItem>
                   </TableContainer>
                 </ProductInfo>
                 <TradeButton>
-                  <Tooltip title="Trade">
+                  <Tooltip title={row.owners[0].rentOption ? 'Rent' : 'Trade'}>
                     <IconButton
                       className="btn-back"
                       onClick={() => {
                         setCurrentProductId(row._id);
-                        setCurrentProductInfo(row.owners[0].user);
+                        setCurrentProductInfo({
+                          owner: row.owners[0].user,
+                          productName: row.productName,
+                          rentOption: row.owners[0].rentOption,
+                          price: row.owners[0].price
+                        });
+
                         if (row.owners[0].user !== this.props.user) {
-                          openConfirmTradeModal();
+                          // Check if the server response requires confirmation
+                          if (row.showConfirmationModal) {
+                            const userConfirmed = window.confirm(row.message);
+
+                            if (userConfirmed) {
+                              // User confirmed, proceed with the action
+                              openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
+                            } else {
+                              // User declined, do not proceed with the action
+                              alertModal(this.props.isDarkMode, 'Trade action canceled by user.');
+                            }
+                          } else {
+                            // No need for confirmation, proceed as usual
+                            openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
+                          }
                         } else {
                           alertModal(
                             this.props.isDarkMode,
@@ -513,10 +536,11 @@ Sort by Price</MenuItem>
                         }
                       }}
                     >
-                      Trade <SwapHoriz />
+                      {row.owners[0].rentOption ? 'Rent' : 'Trade'} <SwapHoriz />
                     </IconButton>
                   </Tooltip>
                 </TradeButton>
+
               </ProductCard>
             ))}
           </ProductGrid>

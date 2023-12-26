@@ -49,9 +49,11 @@ const systemSetting = require('./routes/settings.routes');
 const helmet = require('helmet'); // for sec headers
 const cronJob = require('./helper/util/createCronJob.js');
 const creditScoreCron = require('./helper/util/creditScoreCron.js');
+const rentCron = require('./helper/util/rentCron.js');
 
 // Initialize the cron job to periodically check for confirmations
 creditScoreCron.checkOutstandingLoans();
+rentCron.checkRentalPayments();
 cronJob.checkConfirmations();
 
 // app.use(helmet());

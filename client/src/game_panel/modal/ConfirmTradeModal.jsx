@@ -4,11 +4,11 @@ import { connect } from 'react-redux';
 import {
   closeConfirmTradeModal
 } from '../../redux/Notification/notification.actions';
-import { confirmTrade } from '../../redux/Logic/logic.actions';
+import { confirmTrade, addNewTransaction } from '../../redux/Logic/logic.actions';
 import { Button, TextField } from '@material-ui/core';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
-import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { acQueryItem } from '../../redux/Item/item.action';
 import { convertToCurrency } from '../../util/conversion';
 
 Modal.setAppElement('#root');
@@ -41,46 +41,61 @@ class ConfirmTradeModal extends Component {
     };
   }
   onBtnOkClicked = async e => {
-    const { item, owner, closeConfirmTradeModal, setBalance, addNewTransaction, isDarkMode, confirmTrade} = this.props;
+    const { item, owner, closeConfirmTradeModal, setBalance, addNewTransaction, isDarkMode, confirmTrade, acQueryItem } = this.props;
+
     const response = await confirmTrade({ item_id: item, owner: owner });
-    // console.log(item, owner, response);
+
     if (response.success) {
       const { balance, newTransaction, message } = response;
-  
+
       closeConfirmTradeModal();
       alertModal(isDarkMode, message);
       setBalance(balance);
       addNewTransaction(newTransaction);
+      acQueryItem();
     } else {
+      closeConfirmTradeModal();
       alertModal(isDarkMode, response.message);
     }
   };
-  
+
+
 
   onBtnCancelClicked = e => {
     this.props.closeConfirmTradeModal();
   };
 
   render() {
+    const { isOpen, isDarkMode, productName, price, closeConfirmTradeModal, rentOption } = this.props;
+
     return (
-      <Modal
-        isOpen={this.props.isOpen}
-        style={customStyles}
-      >
-        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+      <Modal isOpen={isOpen} style={customStyles}>
+        <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body password-modal-body">
             <div className={`modal-icon result-icon-trade`}></div>
-            <h5>CONFIRM TRADE</h5>
-            <h6>Confirm purchase of 1 x [ {this.props.productName} ] in exchange for [{convertToCurrency(this.props.price)} ]?</h6>
+            <h5>
+              {rentOption ? 'RENT ' : 'PURCHASE '}
+              <span style={{ color: "#ffd000" }}> 1 x '{productName}' </span>?
+            </h5>
+            <h6>
+              Click {rentOption ? 'RENT' : 'TRADE'} to{' '}
+              {rentOption ? (
+                <span>
+                  pay {convertToCurrency(price)} per month
+                </span>
+              ) : (
+                <span>
+                  exchange for [{convertToCurrency(price)}]
+                </span>
+              )}
+            </h6>
+
           </div>
           <div className="modal-footer">
             <Button className="btn-submit" onClick={this.onBtnOkClicked}>
-              TRADE
+              {rentOption ? 'RENT' : 'TRADE'}
             </Button>
-            <Button
-              className="btn-back"
-              onClick={this.props.closeConfirmTradeModal}
-            >
+            <Button className="btn-back" onClick={closeConfirmTradeModal}>
               Cancel
             </Button>
           </div>
@@ -96,6 +111,7 @@ const mapStateToProps = state => ({
   title: state.snackbar.title,
   item: state.itemReducer._id,
   owner: state.itemReducer.data.owner,
+  rentOption: state.itemReducer.data.rentOption,
   price: state.itemReducer.data.price,
   productName: state.itemReducer.data.productName,
   alertMessage: state.snackbar.alertMessage,
@@ -107,6 +123,7 @@ const mapDispatchToProps = {
   confirmTrade,
   setBalance,
   addNewTransaction,
+  acQueryItem
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ConfirmTradeModal);

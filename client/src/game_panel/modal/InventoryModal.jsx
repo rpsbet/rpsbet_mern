@@ -67,7 +67,7 @@ class InventoryModal extends Component {
             </div>
           </div>
           <div className="modal-footer">
-            <Button className="btn-back" onClick={this.handleOpenMarketplaceModal}>Browse More &nbsp; <AttachMoney /></Button>
+            <Button className="btn-back" onClick={this.handleOpenMarketplaceModal}>BUY More &nbsp; <AttachMoney /></Button>
           </div>
         </div>
 
