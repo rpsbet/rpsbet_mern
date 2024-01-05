@@ -21,6 +21,7 @@ import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
 import loadingChart from '../LottieAnimations/loadingChart';
+import pressHold from '../LottieAnimations/pressHold.json';
 import InlineSVG from 'react-inlinesvg';
 import busdSvg from '../JoinGame/busd.svg';
 
@@ -71,10 +72,10 @@ class MyGamesTable extends Component {
     }
   }
 
-  fetchData =  () => {
+  fetchData = () => {
     const { selectedFilter, selectedGameType, selectedSort } = this.state;
 
-     this.props.getMyGames({
+    this.props.getMyGames({
       game_type: selectedGameType,
       status: selectedFilter === 'open' ? 'open' : 'finished',
       sort: selectedSort
@@ -175,16 +176,20 @@ class MyGamesTable extends Component {
   // };
 
   handleButtonClick = (winnings, room_id) => {
-    let startTime = 1500;
+    let startTime = 700;
+    const updateInterval = 10; // Interval in milliseconds
+    const updatesPerInterval = 1; // Update the display every interval
+
     this.setState({
       [room_id]: {
         holding: true,
         timeLeft: startTime,
         timer: setInterval(() => {
           this.setState(prevState => {
-            const timeLeft = prevState[room_id].timeLeft - 10;
-            if (timeLeft === 0) {
+            let timeLeft = prevState[room_id].timeLeft - updateInterval * updatesPerInterval;
+            if (timeLeft <= 0) {
               clearInterval(prevState[room_id].timer);
+              timeLeft = 0;
               this.endRoom(winnings, room_id);
             }
             return {
@@ -194,7 +199,7 @@ class MyGamesTable extends Component {
               }
             };
           });
-        }, 10)
+        }, updateInterval)
       }
     });
   };
@@ -354,7 +359,7 @@ class MyGamesTable extends Component {
     e.preventDefault();
 
     if (this.state.selectedGameType === 'All') {
-      alertModal(this.props.isDarkMode, `SELECT A GAME FIRST!!!`);
+      alertModal(this.props.isDarkMode, `SELECT A GAME FURR-ST!!!`);
       return;
     }
 
@@ -547,32 +552,32 @@ class MyGamesTable extends Component {
                     </div>
                     {!this.props.myGamesWithStats ? (
                       <>
-                       <div className="table-cell winnings">
-                       <Lottie
-                          options={{
-                            loop: true,
-                            autoplay: true,
-                            animationData: loadingChart
-                          }}
-                          style={{
-                            width: '32px'
-                          }}
-                        />
-                     </div>
-                     <div className="table-cell bets" style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
-                       <Battle width="24px"/>
-                       &nbsp;
-                       <Lottie
-                          options={{
-                            loop: true,
-                            autoplay: true,
-                            animationData: loadingChart
-                          }}
-                          style={{
-                            width: '32px'
-                          }}
-                        />
-                     </div>
+                        <div className="table-cell winnings">
+                          <Lottie
+                            options={{
+                              loop: true,
+                              autoplay: true,
+                              animationData: loadingChart
+                            }}
+                            style={{
+                              width: '32px'
+                            }}
+                          />
+                        </div>
+                        <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+                          <Battle width="24px" />
+                          &nbsp;
+                          <Lottie
+                            options={{
+                              loop: true,
+                              autoplay: true,
+                              animationData: loadingChart
+                            }}
+                            style={{
+                              width: '32px'
+                            }}
+                          />
+                        </div>
                       </>
                     ) : (
                       <>
@@ -605,12 +610,29 @@ class MyGamesTable extends Component {
                           onMouseUp={() => this.handleButtonRelease(row._id)}
                           onMouseLeave={() => this.handleButtonRelease(row._id)}
                           _id={row._id}
+                          style={
+                            this.state[row._id] && this.state[row._id].holding
+                              ? { filter: 'hue-rotate(-10deg)' }
+                              : {}
+                          }
                         >
                           {this.state[row._id] &&
                             this.state[row._id].holding ? (
-                            `${(this.state[row._id].timeLeft / 1000).toFixed(
-                              2
-                            )}s`
+                            <>
+                              <span style={{ position: 'absolute', zIndex: '2' }}>
+                                {(this.state[row._id].timeLeft / 100).toFixed(
+                                  1
+                                )}<span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
+                              </span>
+                              <Lottie
+                                options={{
+                                  loop: true,
+                                  autoplay: true,
+                                  animationData: pressHold
+                                }}
+                               
+                              />
+                            </>
                           ) : (
                             <>
                               {' '}
@@ -625,30 +647,45 @@ class MyGamesTable extends Component {
                   <div className="mobile-only">
                     <div className="table-cell room-id"></div>
                     <div className="table-cell action">
-                      <Button
-                        className="btn_end"
-                        onMouseDown={() =>
-                          this.handleButtonClick(row.bet_amount, row._id)
-                        }
-                        onMouseUp={() => this.handleButtonRelease(row._id)}
-                        onMouseLeave={() => this.handleButtonRelease(row._id)}
-                        onTouchStart={() =>
-                          this.handleButtonClick(row.bet_amount, row._id)
-                        }
-                        onTouchEnd={() => this.handleButtonRelease(row._id)}
-                        onTouchCancel={() => this.handleButtonRelease(row._id)}
-                        _id={row._id}
-                      >
-                        {this.state[row._id] && this.state[row._id].holding ? (
-                          `${(this.state[row._id].timeLeft / 2000).toFixed(2)}s`
-                        ) : (
-                          <>
-                            {' '}
-                            TAKE&nbsp;
-                            <span>{convertToCurrency(row.winnings)}</span>
-                          </>
-                        )}
-                      </Button>
+                    <Button
+                          className="btn_end"
+                          onMouseDown={() =>
+                            this.handleButtonClick(row.winnings, row._id)
+                          }
+                          onMouseUp={() => this.handleButtonRelease(row._id)}
+                          onMouseLeave={() => this.handleButtonRelease(row._id)}
+                          _id={row._id}
+                          style={
+                            this.state[row._id] && this.state[row._id].holding
+                              ? { filter: 'hue-rotate(-10deg)' }
+                              : {}
+                          }
+                        >
+                          {this.state[row._id] &&
+                            this.state[row._id].holding ? (
+                            <>
+                              <span style={{ position: 'absolute', zIndex: '2' }}>
+                                {(this.state[row._id].timeLeft / 100).toFixed(
+                                  1
+                                )}<span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
+                              </span>
+                              <Lottie
+                                options={{
+                                  loop: true,
+                                  autoplay: true,
+                                  animationData: pressHold
+                                }}
+                               
+                              />
+                            </>
+                          ) : (
+                            <>
+                              {' '}
+                              TAKE&nbsp;
+                              <span>{convertToCurrency(row.winnings)}</span>
+                            </>
+                          )}
+                        </Button>
                     </div>
                   </div>
                 </div>

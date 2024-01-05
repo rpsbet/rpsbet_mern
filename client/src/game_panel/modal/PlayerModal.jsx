@@ -96,13 +96,13 @@ class PlayerModal extends Component {
       if (this.state.tipAmount < 0) {
         alertModal(
           this.props.isDarkMode,
-          `TIP AMOUNT MUST BE MORE THAN 0 ETH DUMBASS`
+          `R U FURR-REAL? TIP AMOUNT MUST BE MORE THAN 0!`
         );
         return;
       }
 
       if (this.state.tipAmount > this.props.balance) {
-        alertModal(this.props.isDarkMode, `TRY LATER BROKIE`);
+        alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
         return;
       }
 
@@ -252,7 +252,7 @@ class PlayerModal extends Component {
                   ×
                 </Button>
               </div>
-              <div className="modal-body edit-modal-body">
+              <div className="modal-body profile edit-modal-body">
                 <div className="align-center">
                   {loading ? (
                     <div className="loading-spinner"></div>

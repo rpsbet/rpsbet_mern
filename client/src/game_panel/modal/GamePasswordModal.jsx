@@ -44,7 +44,7 @@ class GamePasswordModal extends Component {
         } else {
           alertModal(
             this.props.isDarkMode,
-            `WRONG F*CKING PASSWORD!`
+            `WRONG F*CKING PUSSWORD!`
           );
         }
       };

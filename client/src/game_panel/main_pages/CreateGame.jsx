@@ -180,12 +180,7 @@ class CreateGame extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.step !== this.state.step) {
-      console.log('step', this.state.step);
-    }
-    if (prevState.child_step !== this.state.child_step) {
-      console.log('child', this.state.child_step);
-    }
+
   }
 
   toggleDrawer = () => {
@@ -366,7 +361,7 @@ class CreateGame extends Component {
   onSkipButtonClicked = () => {
     if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
       if (this.state.max_return > this.state.bet_amount * 4) {
-        alertModal(this.props.isDarkMode, `TOO PROFITABLE! GAME IS UNFAIR`);
+        alertModal(this.props.isDarkMode, `TOO PURRROFITABLE! GAME IS UNFAIR`);
         return;
       }
     }
@@ -390,7 +385,7 @@ class CreateGame extends Component {
     } else {
       confirmModalCreate(
         this.props.isDarkMode,
-        'ARE YOU SURE YOU CANNOT BET MORE, BROKIE?',
+        'ARE YOU SURE YOU CANNOT BET MORE, PUSSY?',
         'Okay',
         'Cancel',
         () => {
@@ -462,7 +457,7 @@ class CreateGame extends Component {
 
     const isMinimumRunsNeeded = (minRuns, list) => {
       if (list.length < minRuns) {
-        alertAndReturn('MINIMUM 3 RUNS NEEDED');
+        alertAndReturn('PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA');
         return true;
       }
       return false;
@@ -473,12 +468,12 @@ class CreateGame extends Component {
         (game_mode !== 'RPS' || (game_mode === 'RPS' && child_step === 1)) &&
         (parseFloat(bet_amount) <= 0 || isNaN(parseFloat(bet_amount)))
       ) {
-        alertAndReturn("YOU DIDN'T BET ANYTHING!!!");
+        alertAndReturn("YOU DIDN'T BET (CAT) SHIT!!!");
         return;
       }
 
       if (bet_amount > balance) {
-        alertAndReturn('MAKE A DEPOSIT, BROKIE!');
+        alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
         return;
       }
 
@@ -544,7 +539,7 @@ class CreateGame extends Component {
           (spleesh_bet_unit === 0.1 && endgame_amount < 4.0))
       ) {
         alertAndReturn(
-          `TOO PROFITABLE! PAYOUT MUST BE AT LEAST ${40 * spleesh_bet_unit}`
+          `TOO PURRROFITABLE! PAYOUT MUST BE AT LEAST ${40 * spleesh_bet_unit}`
         );
         return;
       } else if (
@@ -552,13 +547,13 @@ class CreateGame extends Component {
         (max_return > bet_amount * 4 || endgame_amount < bet_amount)
       ) {
         if (max_return > bet_amount * 4) {
-          alertAndReturn('TOO PROFITABLE! GAME IS UNFAIR');
+          alertAndReturn('TOO PURRROFITABLE! GAME IS UNFAIR');
         } else {
           alertAndReturn('THIS GAME REQUIRES A PAYOUT MORE THAN BET AMOUNT');
         }
         return;
       } else if (isNaN(endgame_amount)) {
-        alertAndReturn('ENTER A VALID NUMBER, WANKER!');
+        alertAndReturn('IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
         return;
       }
       this.setState({

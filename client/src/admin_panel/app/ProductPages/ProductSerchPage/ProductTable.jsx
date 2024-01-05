@@ -522,7 +522,7 @@ class ProductTable extends Component {
                               openConfirmTradeModal(row.owners[0].rentOption ? 'rent' : 'trade');
                             } else {
                               // User declined, do not proceed with the action
-                              alertModal(this.props.isDarkMode, 'Trade action canceled by user.');
+                              alertModal(this.props.isDarkMode, 'TRADE ACTION CANCELLED,PUSSY-ED OUT');
                             }
                           } else {
                             // No need for confirmation, proceed as usual
@@ -531,7 +531,7 @@ class ProductTable extends Component {
                         } else {
                           alertModal(
                             this.props.isDarkMode,
-                            'This is already yours dumbass!'
+                            'THIS IS LITTER-ALLY YOURS ALREADY!'
                           );
                         }
                       }}

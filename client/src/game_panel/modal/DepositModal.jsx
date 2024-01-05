@@ -66,12 +66,12 @@ class DepositModal extends Component {
 
   send = async () => {
     if (this.state.amount <= 0) {
-      alertModal(this.props.isDarkMode, `ENTER AN AMOUNT DUMBASS!`);
+      alertModal(this.props.isDarkMode, `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`);
       return;
     }
 
     if (this.state.amount > this.state.balance) {
-      alertModal(this.props.isDarkMode, `TRY LATER, BROKIE!`);
+      alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
       return;
     }
     try {

@@ -48,7 +48,7 @@ class Bang extends Component {
     super(props);
     this.state = {
       selected_bang: '',
-      bet_amount: 0.001,
+      bet_amount: 1.01,
       bang: 1.0,
       balance: this.props.balance,
       winChance: 33,
@@ -125,7 +125,7 @@ class Bang extends Component {
 
       const randomChance = Math.random();
       const newValue = getRandomNumberInRange(1, 1.06);
-      const isChanged = randomChance <= 0.41;
+      const isChanged = randomChance <= 0.51;
 
       if (isChanged) {
         return newValue;
@@ -139,7 +139,7 @@ class Bang extends Component {
     if (this.props.bang_list.length > 2) {
       const predictedNum = this.predictNext(this.props.bang_list);
 
-      this.onAddRun(predictedNum);
+      this.onAddRun((predictedNum).toFixed(2));
     } else {
       alertModal(
         this.props.isDarkMode,
@@ -170,7 +170,7 @@ class Bang extends Component {
 
     bang = parsedDropAmount;
     if (isNaN(bang)) {
-      alertModal(this.props.isDarkMode, 'ENTER A VALID NUMBER');
+      alertModal(this.props.isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
       return;
     }
 
@@ -290,6 +290,7 @@ class Bang extends Component {
                 handleMaxButtonClick={this.handleMaxButtonClick}
                 onChangeState={this.onChangeState}
                 isDarkMode={this.props.isDarkMode}
+                bangGame={true}
               />
               {/* <TextField
                 type="text"
@@ -362,7 +363,7 @@ class Bang extends Component {
                   this.props.bang_list.map((bang, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      <td>{bang.bang}x</td>
+                      <td>{(bang.bang).toFixed(2)}x</td>
                       <td>
                         <HighlightOffIcon
                           onClick={() => this.onRemoveItem(index)}

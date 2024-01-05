@@ -1,54 +1,62 @@
-const predictNextDrop = dropAmounts => {
-  
-  const uniqueValues = [...new Set(dropAmounts.map(drop => drop.drop))];
+predictNextDrop = dropAmounts => {
+  const sortedDrops = dropAmounts.map(drop => drop.drop).sort((a, b) => a - b);
+  const uniqueValues = [...new Set(sortedDrops)];
 
   if (uniqueValues.length === 1) {
-    
-    return uniqueValues[0];
+      return uniqueValues[0];
   } else {
-    const allDrops = dropAmounts.map(drop => drop.drop);
-    
-    const minDrop = Math.min(...allDrops);
-    const maxDrop = Math.max(...allDrops);
-    const difference = maxDrop - minDrop;
-    const segmentSize = difference / 20;
+      let finalValue;
 
-    const segments = Array.from({ length: 20 }, (_, index) => {
-      const lowerBound = minDrop + index * segmentSize;
-      const upperBound = minDrop + (index + 1) * segmentSize;
-      const dropsInSegment = allDrops.filter(drop => {
-        return drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound));
-      });
+      do {
+          const minDrop = Math.min(...sortedDrops);
+          const maxDrop = Math.max(...sortedDrops);
+          const difference = maxDrop - minDrop;
+          const segmentSize = difference / 20;
 
-      return {
-        segment: index + 1,
-        drops: dropsInSegment
-      };
-    });
+          const segments = Array.from({ length: 20 }, (_, index) => {
+              const lowerBound = minDrop + index * segmentSize;
+              const upperBound = minDrop + (index + 1) * segmentSize;
+              const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
 
-    
-    const totalDropsCount = allDrops.length;
-    const weights = segments.map(segment => segment.drops.length / totalDropsCount);
+              return {
+                  segment: index + 1,
+                  drops: dropsInSegment
+              };
+          });
 
-    const randomValue = Math.random();
-    let cumulativeWeight = 0;
-    let selectedSegment;
+          const totalDropsCount = sortedDrops.length;
+          const weights = segments.map(segment => segment.drops.length / totalDropsCount);
 
-    for (let i = 0; i < segments.length; i++) {
-      cumulativeWeight += weights[i];
-      if (randomValue <= cumulativeWeight) {
-        selectedSegment = segments[i];
-        
-        break;
-      }
-    }
+          const randomValue = Math.random();
+          let cumulativeWeight = 0;
+          let selectedSegment;
 
-    const randomAddition = Math.random() * segmentSize;
-    const newNumber = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
-    
-    return newNumber;
+          for (let i = 0; i < segments.length; i++) {
+              cumulativeWeight += weights[i];
+              if (randomValue <= cumulativeWeight) {
+                  selectedSegment = segments[i];
+                  break;
+              }
+          }
+
+          const switchChance = Math.random();
+
+          if (switchChance <= 0.4) {
+              const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
+              finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
+          } else if (switchChance <= 0.8) {
+              const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
+              finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
+          } else {
+              const randomAddition = Math.random() * segmentSize;
+              finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
+          }
+
+      } while (finalValue !== null && finalValue < 0.000001);
+      return finalValue;
   }
 };
+
 
 module.exports = {
   predictNextDrop

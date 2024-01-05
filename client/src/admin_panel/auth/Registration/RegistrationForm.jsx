@@ -22,7 +22,7 @@ export class RegistrationForm extends Component {
       firstName: '',
       lastName: '',
       password: '',
-      email: '',
+
       disable: true
     });
     this.props.adminSignUp(this.state);

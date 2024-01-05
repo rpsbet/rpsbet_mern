@@ -137,12 +137,12 @@ class MysteryBox extends Component {
     socket.on('UPDATED_BOX_LIST', data => {
       this.setState({ box_list: data.box_list });
     });
-    document.addEventListener('mousedown', this.handleClickOutside);
+    // document.addEventListener('mousedown', this.handleClickOutside);
   }
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
-    document.removeEventListener('mousedown', this.handleClickOutside);
+    // document.removeEventListener('mousedown', this.handleClickOutside);
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -184,11 +184,11 @@ class MysteryBox extends Component {
     }
   }
 
-  handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
+  // handleClickOutside = e => {
+  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+  //     this.setState({ settings_panel_opened: false });
+  //   }
+  // };
 
   predictNext = (betAmountArray, boxList) => {
     let transitions = {};
@@ -351,7 +351,7 @@ class MysteryBox extends Component {
       return;
     }
     if (bet_amount > balance) {
-      alertModal(isDarkMode, `TOO BROKE!`);
+      alertModal(isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
       return;
     }
 
@@ -380,10 +380,10 @@ class MysteryBox extends Component {
     const currentRoom = this.props.room;
     if (result.status === 'success') {
       let betResult = '';
-      if (result.betResult === 1) {
+      if (result.betResult !== 0) {
         betResult = 'win';
         playSound('win');
-        this.speak('NICE, ISSA MONEY BOX');
+        this.speak('PURR-FECTO, ISSA MONEY BOX');
         this.changeBgColor(result.betResult);
       } else {
         betResult = 'lose';
@@ -440,7 +440,7 @@ class MysteryBox extends Component {
     }
 
     if (bet_amount > balance) {
-      alertModal(isDarkMode, `TOO BROKE!`);
+      alertModal(isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
       return;
     }
 
@@ -498,11 +498,12 @@ class MysteryBox extends Component {
     const currentUser = this.props.user;
     const currentRoom = this.props.room;
     if (result.status === 'success') {
+      // console.log(result);
       let betResult = '';
-      if (result.betResult === 1) {
+      if (result.betResult !== 0) {
         betResult = 'win';
         playSound('win');
-        this.speak('NICE, ISSA MONEY BOX');
+        this.speak('PURRFECTO, ISSA MONEY BOX');
 
         this.changeBgColor(result.betResult);
       } else {

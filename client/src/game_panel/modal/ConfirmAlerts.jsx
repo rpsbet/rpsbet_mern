@@ -18,9 +18,10 @@ const showAlert = (isDarkMode, text, icon) => {
     }
   });
 };
-export const alertModal = (isDarkMode, text) => {
-  showAlert(isDarkMode, text, '');
+export const alertModal = (isDarkMode, text, icon = '') => {
+  showAlert(isDarkMode, text, icon);
 };
+
 
 const showConfirm = (
   isDarkMode,

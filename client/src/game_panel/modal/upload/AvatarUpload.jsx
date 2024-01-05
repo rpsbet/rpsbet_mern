@@ -77,6 +77,9 @@ class Upload extends Component {
               darkMode={this.props.darkMode}
               imageUrl={this.props.avatar}
               setImageFilename={this.props.setImageFilename}
+              rank={this.props.rank}
+              accessory={this.props.accessory}
+              avatar={this.props.avatar}
             />
           </div>
         </div>

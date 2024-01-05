@@ -338,18 +338,20 @@ router.get('/my-items', auth, async (req, res) => {
       // Map the owners array to include only the owner matching the user ID
       const owner = item.owners.find(owner => owner.user.equals(userId));
 
-      item_list.push({
-        _id: item._id,
-        productName: item.productName,
-        rentOption: owner.rentOption,
-        price: owner ? owner.price : '',
-        total_count: owner.count,
-        onSale: owner.onSale,
-        image: item.image,
-        item_type: item.item_type,
-        CP: item.CP,
-        created_at: item.created_at,
-      });
+      if (owner && owner.count > 0) {
+        item_list.push({
+          _id: item._id,
+          productName: item.productName,
+          rentOption: owner.rentOption,
+          price: owner ? owner.price : '',
+          total_count: owner.count,
+          onSale: owner.onSale,
+          image: item.image,
+          item_type: item.item_type,
+          CP: item.CP,
+          created_at: item.created_at,
+        });
+      }
     }
 
     // if (sort === 'created_at') {

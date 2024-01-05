@@ -222,6 +222,10 @@ div.table .table-row .table-cell button:last-child,
   box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
     inset 0 2px #ff2525;
 }
+
+.modal-content-panel .Mui-disabled {
+  display: none !important;
+}
 div.table .table-row .table-cell button.active,
 #balance button:active,
 .game-page .game-contents .game-info-panel button.place-bet:active,
@@ -741,7 +745,7 @@ div.table .table-row .table-cell img.game-type-icon {
 .main-game-table .avatar.desktop-only img,
 .main-game-table avatar.desktop-only img {
   border-width: 6px !important;
-  border-radius: 12px  !important  ; 
+  border-radius: 6px  !important  ; 
 }
 
 .main-game-table .avatar.desktop-only,
@@ -832,7 +836,10 @@ div.table.my-open-game-table::-webkit-scrollbar {
   align-items: center;
   flex-direction: column;
 }
-
+.tooltip-avatar .rank-icon {
+  width: 14px !important;
+  height: 14px !important;
+}
 .rain#busd {
   filter: hue-rotate(45deg);
 }
@@ -1417,6 +1424,12 @@ h6.score {
   background-size: 1.54em;
 }
 
+
+.bang-add-run-table,
+.roll-add-run-table {
+  max-height: 90px !important;
+}
+
 .game-page .pre-summary-panel div.host-display-name {
   background-image: url('../../../public/img/profile-thumbnail-dark.svg');
   background-repeat: no-repeat;
@@ -1799,7 +1812,7 @@ transform-origin: center;
   overflow-x: scroll;
 }
 .gradient-container .previous-guesses.drop span {
-  min-width: 27%;
+  min-width: 41%;
   max-height: 30px;
   font-size: 0.9em;
   line-height: 16px;
@@ -1813,8 +1826,9 @@ transform-origin: center;
 }
 #x {
   position: absolute;
-  top: 140px !important;
+  top: 105px !important;
   left: 60px !important;
+  font-size: 2em;
 }
 
 #bang-text {
@@ -1842,7 +1856,7 @@ transform-origin: center;
   align-content: center;
   justify-items: center;
   line-height: 1.3em;
-  height: 295px;
+  height: 215px;
   width: 290px;
   border-radius: 0.25em;
 }
@@ -1851,6 +1865,7 @@ transform-origin: center;
   display: inline-block;
   position: absolute;
   top: 50%;
+  font-size: 3em;
   left: 50%;
   transform: translate(-50%, -50%);
   animation: bounce 0.5s linear;
@@ -2274,8 +2289,7 @@ button.btn-submit:active,
   position: fixed;
   transform: translate(0%, 10vh);
   color: #343a40;
-  background: #a9a9a9;
-  border-radius: 9px;
+  background: transparent;
   opacity: 0;
   transition: 0.2s;
   z-index: 4;
@@ -3261,7 +3275,8 @@ input {
     padding-left: 80px;
   }
   #x {
-    top: 130px !important;
+    top: 100px !important;
+    font-size: 3em;
   }
   .qs-image-panel {
     margin-bottom: 10px !important;
@@ -3377,6 +3392,7 @@ input {
   .rps-add-run-table table.tbl tr td:first-child {
     display: none;
   }
+
 
   .rps-add-run-table {
     padding-left: 0;

@@ -23,7 +23,7 @@ const YouTubeModal = ({ open, onClose, rps }) => {
 
       case 'Rock':
       case 'MoonRock':
-        return 'https://www.youtube.com/embed/yWQf28jbzM8';
+        return 'https://www.youtube.com/embed/j34WO0rf4jQ';
 
       case 'Paper':
       case 'MoonPaper':
@@ -45,7 +45,7 @@ const YouTubeModal = ({ open, onClose, rps }) => {
       case 'Microwave':
         return 'https://www.youtube.com/embed/NEFMNrqwzgs';
 
-      case 'Quick Ball':
+      case 'QuickBall':
         return 'https://www.youtube.com/embed/ofwlVjaUcK8';
 
       case 'Blender':

@@ -94,7 +94,7 @@ class DropGame extends Component {
       drop_guesses: [],
       advanced_status: '',
       is_anonymous: false,
-      bet_amount: 0.01,
+      bet_amount: 0.001,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       drop_guesses1Received: false,
       betResult: null,
@@ -132,11 +132,11 @@ class DropGame extends Component {
     this.setState({ bgColorChanged: false });
   };
 
-  handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
+  // handleClickOutside = e => {
+  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+  //     this.setState({ settings_panel_opened: false });
+  //   }
+  // };
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance ||
@@ -186,78 +186,75 @@ class DropGame extends Component {
       this.setState({ bankroll: data.bankroll });
     });
 
-    document.addEventListener('mousedown', this.handleClickOutside);
+    // document.addEventListener('mousedown', this.handleClickOutside);
   };
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
-    document.removeEventListener('mousedown', this.handleClickOutside);
+    // document.removeEventListener('mousedown', this.handleClickOutside);
   };
 
   predictNext = dropAmounts => {
-    // Find the unique values in dropAmounts
-    const uniqueValues = [...new Set(dropAmounts.map(drop => drop.drop))];
+    const sortedDrops = dropAmounts.map(drop => drop.drop).sort((a, b) => a - b);
+    const uniqueValues = [...new Set(sortedDrops)];
 
     if (uniqueValues.length === 1) {
-      // If there is only one unique value, return that value
-      return uniqueValues[0];
+        return uniqueValues[0];
     } else {
-      // Log all the drops
-      const allDrops = dropAmounts.map(drop => drop.drop);
-      // console.log('All drops:', allDrops.join(', '));
+        let finalValue;
 
-      // Calculate the segment size
-      const minDrop = Math.min(...allDrops);
-      const maxDrop = Math.max(...allDrops);
-      const difference = maxDrop - minDrop;
-      const segmentSize = difference / 20;
+        do {
+            const minDrop = Math.min(...sortedDrops);
+            const maxDrop = Math.max(...sortedDrops);
+            const difference = maxDrop - minDrop;
+            const segmentSize = difference / 20;
 
-      // Sort drops into segments
-      const segments = Array.from({ length: 20 }, (_, index) => {
-        const lowerBound = minDrop + index * segmentSize;
-        const upperBound = minDrop + (index + 1) * segmentSize;
-        const dropsInSegment = allDrops.filter(drop => {
-          return (
-            drop >= lowerBound &&
-            (drop < upperBound || (index === 19 && drop === upperBound))
-          );
-        });
+            const segments = Array.from({ length: 20 }, (_, index) => {
+                const lowerBound = minDrop + index * segmentSize;
+                const upperBound = minDrop + (index + 1) * segmentSize;
+                const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
 
-        return {
-          segment: index + 1,
-          drops: dropsInSegment
-        };
-      });
+                return {
+                    segment: index + 1,
+                    drops: dropsInSegment
+                };
+            });
 
-      // Calculate the weights for each segment based on segment length
-      const totalDropsCount = allDrops.length;
-      const weights = segments.map(
-        segment => segment.drops.length / totalDropsCount
-      );
+            const totalDropsCount = sortedDrops.length;
+            const weights = segments.map(segment => segment.drops.length / totalDropsCount);
 
-      // Generate a random number to select a segment
-      const randomValue = Math.random();
-      let cumulativeWeight = 0;
-      let selectedSegment;
+            const randomValue = Math.random();
+            let cumulativeWeight = 0;
+            let selectedSegment;
 
-      for (let i = 0; i < segments.length; i++) {
-        cumulativeWeight += weights[i];
-        if (randomValue <= cumulativeWeight) {
-          selectedSegment = segments[i];
-          // console.log('Randomly selected segment:', selectedSegment);
-          break;
-        }
-      }
+            for (let i = 0; i < segments.length; i++) {
+                cumulativeWeight += weights[i];
+                if (randomValue <= cumulativeWeight) {
+                    selectedSegment = segments[i];
+                    break;
+                }
+            }
 
-      // Generate a random number to add to the selected segment range
-      const randomAddition = Math.random() * segmentSize; // Random value between 0 and segmentSize
-      const newNumber = selectedSegment
-        ? selectedSegment.drops[0] + randomAddition
-        : null;
-      // console.log('Randomly generated new number:', newNumber);
-      return newNumber;
+            const switchChance = Math.random();
+
+            if (switchChance <= 0.4) {
+                const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
+                finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
+            } else if (switchChance <= 0.8) {
+                const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
+                finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
+            } else {
+                const randomAddition = Math.random() * segmentSize;
+                finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
+            }
+
+        } while (finalValue !== null && finalValue < 0.000001);
+        console.log("finalValue", finalValue)
+
+        return finalValue;
     }
-  };
+};
+
 
   joinGame = async () => {
     const { playSound } = this.props;
@@ -657,9 +654,9 @@ class DropGame extends Component {
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
-                        this.state.bet_amount + ' + ??'
-                        // )
-                      )}
+                        parseFloat(this.state.bet_amount))} + ??
+
+                      
                     </div>
                   </div>
                   {roomInfo.endgame_amount > 0 && (

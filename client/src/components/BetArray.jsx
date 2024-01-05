@@ -43,8 +43,8 @@ const SideTabs = ({ selectedTab, handleTabChange }) => (
     onChange={handleTabChange}
     className={`side-tab-switcher`}
   >
-    <Tab icon={<TableChartOutlinedIcon />} />
     <Tab icon={<TuneOutlinedIcon />} />
+    <Tab icon={<TableChartOutlinedIcon />} />
   </Tabs>
 );
 
@@ -221,6 +221,33 @@ function BetArray({
         />
         {selectedTab === 0 && (
           <div className="gamified-container">
+          <FormControlLabel
+            control={
+              <Switch
+                id="aiplay-switch"
+                checked={betting}
+                onChange={handleSwitchChange}
+              />
+            }
+            label={betting ? 'AI ON' : 'AI OFF'}
+          />
+          {betting ? (
+            <div id="stop">
+              <Lottie options={defaultOptions} width={32} />
+            </div>
+          ) : (
+            <div>
+              {timerValue !== 2000 ? (
+                <span>{(timerValue / 2000).toFixed(2)}s</span>
+              ) : null}
+            </div>
+          )}
+        </div>
+          
+        )}
+        {selectedTab === 1 && (
+          <>
+            <div className="gamified-container">
             <Grid item xs={12} sm={6}>
               <h2 className="gamified-heading">AI Prompt Box</h2>
               <div className="gamified-content">
@@ -255,32 +282,6 @@ function BetArray({
               )}
             </Grid>
           </div>
-        )}
-        {selectedTab === 1 && (
-          <>
-            <div className="gamified-container">
-              <FormControlLabel
-                control={
-                  <Switch
-                    id="aiplay-switch"
-                    checked={betting}
-                    onChange={handleSwitchChange}
-                  />
-                }
-                label={betting ? 'AI ON' : 'AI OFF'}
-              />
-              {betting ? (
-                <div id="stop">
-                  <Lottie options={defaultOptions} width={22} />
-                </div>
-              ) : (
-                <div>
-                  {timerValue !== 2000 ? (
-                    <span>{(timerValue / 2000).toFixed(2)}s</span>
-                  ) : null}
-                </div>
-              )}
-            </div>
           </>
         )}
       </div>

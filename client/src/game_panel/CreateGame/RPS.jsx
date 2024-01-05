@@ -64,6 +64,7 @@ const ProductCard = styled.div`
 
   &:hover {
     transform: scale(1.03);
+    border: 2px solid #fff;
   }
 `;
 
@@ -286,7 +287,7 @@ class RPS extends Component {
 
   async componentDidMount() {
     const { acQueryMyItem } = this.props;
-    await acQueryMyItem(10, 1, 'price', '653ee7ac17c9f5ee21245649');
+    await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
 
     this.setCardListState();
   }
@@ -312,7 +313,7 @@ class RPS extends Component {
     } else {
       alertModal(
         this.props.isDarkMode,
-        'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!'
+        'PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA'
       );
       return;
     }

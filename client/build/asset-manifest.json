@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.79585cc3.css",
-    "main.js": "/static/js/main.1f2df25a.js",
+    "main.css": "/static/css/main.7eb5ebc8.css",
+    "main.js": "/static/js/main.39d92571.js",
     "static/js/469.5d4d93cd.chunk.js": "/static/js/469.5d4d93cd.chunk.js",
     "static/js/857.01cd8b42.chunk.js": "/static/js/857.01cd8b42.chunk.js",
     "static/js/331.2aa29dd2.chunk.js": "/static/js/331.2aa29dd2.chunk.js",
@@ -62,6 +62,8 @@
     "static/media/palm-tree.svg": "/static/media/palm-tree.2517955bfef89f6144213fa83207695b.svg",
     "static/media/modal-slots.svg": "/static/media/modal-slots.50c71a43af334ddbe108.svg",
     "static/media/main-select.mp3": "/static/media/main-select.2309ad590228f14b524f.mp3",
+    "static/media/dark-alert-icon-cat.svg": "/static/media/dark-alert-icon-cat.e4ed7b5c8a62a451adc0.svg",
+    "static/media/alert-icon-cat.svg": "/static/media/alert-icon-cat.48ca5a70af0e44e38b76.svg",
     "static/media/etherscan-logo.svg": "/static/media/etherscan-logo.1f81ea6449881c84c2436e183a48f688.svg",
     "static/media/modal-slots-dark.svg": "/static/media/modal-slots-dark.c7d77cbfab16b1649d77.svg",
     "static/media/modal-clips.svg": "/static/media/modal-clips.64804cecac33e6e3e7b7.svg",
@@ -114,11 +116,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.79585cc3.css.map": "/static/css/main.79585cc3.css.map",
-    "main.1f2df25a.js.map": "/static/js/main.1f2df25a.js.map"
+    "main.7eb5ebc8.css.map": "/static/css/main.7eb5ebc8.css.map",
+    "main.39d92571.js.map": "/static/js/main.39d92571.js.map"
   },
   "entrypoints": [
-    "static/css/main.79585cc3.css",
-    "static/js/main.1f2df25a.js"
+    "static/css/main.7eb5ebc8.css",
+    "static/js/main.39d92571.js"
   ]
 }

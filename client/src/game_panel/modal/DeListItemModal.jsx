@@ -41,7 +41,7 @@ class DeListItemModal extends Component {
       const { message } = response;
   
       closeDeListItemModal();
-      alertModal(isDarkMode, message);
+      alertModal(isDarkMode, message, '-cat');
       
     } else {
       alertModal(isDarkMode, response.message);

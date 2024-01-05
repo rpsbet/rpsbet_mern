@@ -14,7 +14,8 @@ export default function BetAmountInput(props) {
     handleHalfXButtonClick,
     handleMaxButtonClick,
     onChangeState,
-    isDarkMode
+    isDarkMode,
+    bangGame
   } = props;
 
   const theme = createTheme({
@@ -105,10 +106,10 @@ export default function BetAmountInput(props) {
           name="betamount"
           variant="outlined"
           id="betamount"
-          label="BET AMOUNT"
+          label={bangGame ? "MULTIPLIER" : "BET AMOUNT"}
           value={betAmount}
           onChange={onChangeState}
-          placeholder="BET AMOUNT"
+          placeholder={bangGame ? "1.29x" : "BET AMOUNT"}
           inputProps={{
             pattern: '^\\d*\\.?\\d*$',
             maxLength: 9,

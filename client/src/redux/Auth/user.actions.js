@@ -86,25 +86,24 @@ export const getUser = (is_reload, viewAll, loadMore, filterType, sortType, sear
   }
 };
 
-
 // Register User
 export const userSignUp = ({
   userName,
-  email,
   password,
   bio,
   avatar,
-  referralCode
+  referralCode,
+  avatarMethod // Add avatarMethod to the action
 }) => async dispatch => {
-  const body = JSON.stringify({ username: userName, email, password, bio, avatar, referralCode }); // <- add referralCode to the request body
+  const body = JSON.stringify({ username: userName, password, bio, avatar, referralCode, avatarMethod }); // <- add avatarMethod to the request body
   try {
     dispatch({ type: START_LOADING });
     const res = await axios.post('/user', body);
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
-      dispatch({ type: SET_USERNAME_PASSWORD, payload: {email, password} });
-      dispatch(setReferralCode(referralCode)); // <- dispatch setReferralCode with the referralCode value
+      dispatch({ type: SET_USERNAME_PASSWORD, payload: {password} });
+      dispatch(setReferralCode(referralCode));
       return { status: 'success' };
     } else {
       dispatch({ type: REGISTER_FAIL });
@@ -117,6 +116,7 @@ export const userSignUp = ({
     return { status: 'failed', error: err };
   }
 };
+
 
 //referral
 export const setReferralCode = (referralCode) => {
@@ -305,15 +305,18 @@ export const setDarkMode = isDarkMode => dispatch => {
 }
 
 // Change User Name
-export const changeUserName = (newUserName) => async (dispatch) => {
+export const changeUserName = (newUsername) => async (dispatch) => {
   try {
-    const { data } = await axios.put('/user/username', { newUserName });
+    const { data } = await axios.post('/user/username', { newUsername }); // Wrap newUsername in an object
+
     if (data.success) {
-      dispatch({ type: USER_LOADED, payload: data.user });
+      // dispatch({ type: USER_LOADED, payload: data.user });
       dispatch({ type: MSG_SUCCESS, payload: 'Your username has been updated successfully' });
-      return { status: 'success', user: data.user };
+      
+      return data;
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });
+      return data;
     }
   } catch (error) {
     console.log('error', error);
@@ -321,7 +324,6 @@ export const changeUserName = (newUserName) => async (dispatch) => {
   }
   return { status: 'failed' };
 };
-
 
 
 export const setUserInfo = userInfo => dispatch => {

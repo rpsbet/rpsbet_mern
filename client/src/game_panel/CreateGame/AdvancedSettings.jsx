@@ -65,7 +65,7 @@ class AdvancedSettings extends Component {
 
   async componentDidMount() {
     const { acQueryMyItem } = this.props;
-    await acQueryMyItem(10, 1, 'price', '653ee7df17c9f5ee2124564a');
+    await acQueryMyItem(100, 1, 'price', '653ee7df17c9f5ee2124564a');
   }
 
   render() {

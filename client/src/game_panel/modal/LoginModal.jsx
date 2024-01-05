@@ -3,6 +3,8 @@ import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import './Modals.css';
 import { Button, TextField } from '@material-ui/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSignInAlt } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
 
 import { userSignIn, getUser } from '../../redux/Auth/user.actions';
 import {
@@ -27,7 +29,8 @@ const customStyles = {
     bottom: 'auto',
     transform: 'translate(-50%, -50%)',
     padding: 0,
-    background: 'transparent'
+    background: 'transparent',
+    width: '360px'
   }
 };
 
@@ -94,19 +97,27 @@ class LoginModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">LOGIN</h2>
+            <h2 className="modal-title">
+            <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
+
+              LOGIN
+              </h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
+          <div className="modal-img">
+          <img style={{maxWidth: "100%"}} src="/img/giant-login.webp" alt="Login" />
+          </div>
           <div className="modal-body">
-            <h4>WELCOME BACK! 🔫🤠</h4>
+
+            <h4>WELCOME BACK, GANG! 🔫😼</h4>
             <form onSubmit={this.onSubmitForm}>
               <TextField
                 type="text"
                 className="form-control"
                 variant="outlined"
-                label="Email or Username"
+                label="Username"
                 id="email"
                 value={this.state.email}
                 onChange={this.onChangeEmail}

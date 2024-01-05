@@ -385,7 +385,7 @@ class JoinGame extends Component {
 
   predictNextBetAmount(betArray, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
     if (betArray.length < 2) {
-      console.log("Insufficient data for prediction.");
+      // console.log("Insufficient data for prediction.");
       return null;
     }
   
@@ -396,13 +396,13 @@ class JoinGame extends Component {
     const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
   
     if (possibleNextStates.length === 0) {
-      console.log("No transition data for the current state. Using a fallback mechanism.");
+      // console.log("No transition data for the current state. Using a fallback mechanism.");
   
       // Implement a fallback mechanism - for example, choose a random state from all available states
       const allStates = Array.from(new Set(betArray)); // Get all unique states
       const fallbackState = allStates[Math.floor(Math.random() * allStates.length)];
   
-      console.log("Fallback prediction:", fallbackState);
+      // console.log("Fallback prediction:", fallbackState);
   
       // Ensure the fallback prediction is within the threshold and less than roomInfo.bet_amount
       return Math.min(Math.max(fallbackState, threshold), this.props.roomInfo.bet_amount);
@@ -417,7 +417,7 @@ class JoinGame extends Component {
     const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
     const nextState = possibleNextStates[nextStateIndex];
   
-    console.log("Predicted next bet:", nextState);
+    // console.log("Predicted next bet:", nextState);
   
     // Ensure the predicted next bet is within the threshold and less than roomInfo.bet_amount
     return Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
@@ -562,7 +562,7 @@ class JoinGame extends Component {
     const intervalId = setInterval(() => {
       const randomItem = this.predictNext(stored_rps_array);
       let predictedBetAmount = this.predictNextBetAmount(betArray,  0.01, 0.2);
-console.log(randomItem, predictedBetAmount)
+// console.log(randomItem, predictedBetAmount)
       if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
         return;
       }

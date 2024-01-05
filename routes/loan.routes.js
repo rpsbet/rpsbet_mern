@@ -118,7 +118,7 @@ router.post('/payback', auth, async (req, res) => {
     if (parseFloat(paybackAmount) <= 0 || parseFloat(paybackAmount) > parseFloat(loan.loaners[loanerIndex].amount)) {
       return res.json({
         success: false,
-        message: 'Invalid payback amount',
+        message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!',
       });
     }
 

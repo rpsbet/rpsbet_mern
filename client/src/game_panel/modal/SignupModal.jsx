@@ -5,7 +5,12 @@ import './Modals.css';
 import { userSignUp } from '../../redux/Auth/user.actions';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
-import { Button, TextField } from '@material-ui/core';
+import { Button, TextField, Typography, ButtonBase, Checkbox, FormControlLabel } from '@material-ui/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import TermsModal from '../modal/TermsModal';
+import { alertModal } from './ConfirmAlerts';
+import ReCAPTCHA from "react-google-recaptcha";
 
 Modal.setAppElement('#root')
 
@@ -30,21 +35,51 @@ class SignupModal extends Component {
 
     this.state = {
       userName: '',
-      email: '',
+      // email: '',
       password: '',
       bio: '',
       avatar: '',
-      referralCode: ''
+      referralCode: '',
+      showTermsModal: false,
+      avatarMethod: 'robohash',
+      termsChecked: false,
+      captchaValue: null,
+
     }
   }
+
+  handleCheckboxChange = () => {
+    this.setState((prevState) => ({ termsChecked: !prevState.termsChecked }));
+  };
+
+  handleCaptchaChange = (value) => {
+    this.setState({ captchaValue: value });
+  };
+
+
+  handleOpenTermsModal = () => {
+    this.setState({ showTermsModal: true });
+  };
+  handleCloseTermsModal = () => {
+    this.setState({ showTermsModal: false });
+  };
+
+
+  onChangeAvatarMethod = (e) => {
+    this.setState({ avatarMethod: e.target.value });
+  };
 
   onChangeUserName = (e) => {
     this.setState({ userName: e.target.value });
   }
 
-  onChangeEmail = (e) => {
-    this.setState({ email: e.target.value });
-  }
+  // onChangeEmail = (e) => {
+  //   this.setState({ email: e.target.value });
+  // }
+
+  onChangeAvatarMethod = (e) => {
+    this.setState({ avatarMethod: e.target.value });
+  };
 
   onChangePassword = (e) => {
     this.setState({ password: e.target.value });
@@ -59,23 +94,32 @@ class SignupModal extends Component {
 
   onSubmitForm = async (e) => {
     e.preventDefault();
+    if (!this.state.termsChecked) {
+      alertModal(this.props.isDarkMode, 'Please agree to the Terms and Conditions.');
+      return;
+    }
+
+    if (!this.state.captchaValue) {
+      alertModal(this.props.isDarkMode, 'Please complete the captcha.');
+      return;
+    }
     const result = await this.props.userSignUp(this.state);
-  
+
     if (result.status === 'success') {
       confirmAlert({
         customUI: ({ onClose }) => {
           return (
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className='modal-body'>
-                <h2>WELCOME TO RPS.GAME MTF! ⚔</h2>
+                <h2>WELCOME TO RPS.GAME TIGER! 🐯⚔</h2>
                 <p>CLICK YOUR BALANCE TO MAKE A DEPOSIT</p>
               </div>
               <div className="modal-footer">
-                <Button id="login_now" onClick={() => { 
-                  onClose(); 
+                <Button id="login_now" onClick={() => {
+                  onClose();
                   this.props.closeModal();
                   this.props.openLoginModal();
-                }}>Login now</Button>
+                }}>LFG!</Button>
               </div>
             </div>
           );
@@ -86,78 +130,133 @@ class SignupModal extends Component {
 
   render() {
     const { modalIsOpen, closeModal, openLoginModal, isDarkMode } = this.props;
-    const { userName, email, password, referralCode } = this.state;
+    const { userName, password, referralCode, avatarMethod, termsChecked } = this.state;
     return (
       <Modal
         isOpen={modalIsOpen}
         style={customStyles}
         contentLabel={this.props.title}
       >
+        {/* Right column with form */}
+
         <div className={isDarkMode ? 'dark_mode' : ''}>
-          <div className='modal-header'>
-            <h2 className='modal-title'>REGISTER</h2>
-            <Button className="btn-close" onClick={closeModal}>×</Button>
-          </div>
-          <div className="modal-body">
-            <h4>WELCOME! ⚔🥋</h4>
-            <form onSubmit={this.onSubmitForm} id="signupForm">
-              <TextField
-                placeholder="CasE SeNsItIvE"
-                label="Your Username"
-                required
-                value={userName}
-                onChange={this.onChangeUserName}
-                fullWidth
-                className="form-control"
-                variant="outlined"
-              />
-              <TextField
-                placeholder="FAKEEMAIL@DISCO.COM"
-                type="email"
-                label="Your Email"
-                required
-                value={email}
-                onChange={this.onChangeEmail}
-                fullWidth
-                className="form-control"
-                variant="outlined"
-              />
-              <TextField
-                required
-                placeholder="●●●●●●"
-                type="password"
-                label="Your Password"
-                value={password}
-                onChange={this.onChangePassword}
-                fullWidth
-                className="form-control"
-                variant="outlined"
-              />
-              <TextField
-                placeholder="V9FTGY"
-                label="Referral"
-                value={referralCode}
-                onChange={this.onChangeReferralCode}
-                fullWidth
-                className="form-control"
-                variant="outlined"
-              />
-            </form>
-          </div>
-          <div className="modal-footer">
-            <Button className="btn-submit" type="submit" form="signupForm">
-              Register
-            </Button>
-            <p className="m-0 sm-text-center">
-              GOT ACCOUNT?{' '}
-              <Button onClick={(e) => { closeModal(); openLoginModal(); }}>
-                LOGIN HERE →
-              </Button>
-            </p>
-            
+          <div className={"modal-container"}>
+            <div className='modal-left'>
+              {/* Left column with giant picture */}
+              <img className="giant-picture" src="/img/giant.webp" alt="Register" />
+            </div>
+            <div className='modal-right'>
+              <div style={{ borderTopLeftRadius: "0" }} className='modal-header'>
+                <h2 className='modal-title'>
+                  <FontAwesomeIcon icon={faUserPlus} className="mr-2" />
+
+                  REGISTER
+                </h2>
+                <Button className="btn-close" onClick={closeModal}>×</Button>
+              </div>
+              <div className="modal-body">
+                <h4>JOIN THE CAT (FIGHT) CLUB! 🥋</h4>
+                <form onSubmit={this.onSubmitForm} id="signupForm">
+                  <TextField
+                    placeholder="CasE SeNsItIvE"
+                    label="Your Username"
+                    required
+                    value={userName}
+                    onChange={this.onChangeUserName}
+                    fullWidth
+                    className="form-control"
+                    variant="outlined"
+                  />
+
+                  <div className="avatar-method-selection">
+                    <Typography>CHOOSE DEFAULT AVATAR</Typography>
+                    <ButtonBase
+                      focusRipple
+                      key="robohash"
+                      className={`avatar-option ${avatarMethod === 'robohash' ? 'selected' : ''}`}
+                      onClick={() => this.onChangeAvatarMethod({ target: { value: 'robohash' } })}
+                    >
+                      <img width="52px" height="52px" src="/img/robohashCat.webp" alt="Robohash" />
+                    </ButtonBase>
+                    <ButtonBase
+                      focusRipple
+                      key="jdenticon"
+                      className={`avatar-option ${avatarMethod === 'jdenticon' ? 'selected' : ''}`}
+                      onClick={() => this.onChangeAvatarMethod({ target: { value: 'jdenticon' } })}
+                    >
+                      <img width="52px" height="52px" src="/img/jdenticon.webp" alt="Jdenticon" />
+                    </ButtonBase>
+                  </div>
+                  <TextField
+                    required
+                    placeholder="●●●●●●"
+                    type="password"
+                    label="Your Password"
+                    value={password}
+                    onChange={this.onChangePassword}
+                    fullWidth
+                    className="form-control"
+                    variant="outlined"
+                  />
+                  <TextField
+                    placeholder="V9FTGY"
+                    label="Re-furr-al"
+                    value={referralCode}
+                    onChange={this.onChangeReferralCode}
+                    fullWidth
+                    className="form-control"
+                    variant="outlined"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={termsChecked}
+                        onChange={this.handleCheckboxChange}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <span>
+                        I agree to the{' '}
+                        <a onClick={this.handleOpenTermsModal}>
+                          <Typography component="span" color="primary">
+                            Terms and Conditions
+                          </Typography>
+                        </a>
+                      </span>
+                    }
+                  />
+                  <ReCAPTCHA
+                    sitekey="6LcHBEcpAAAAAL3z2qajpy9eEr-wDk3kfqsGRjot"
+                    onChange={this.handleCaptchaChange}
+                  />
+                </form>
+
+              </div>
+              <div style={{ borderBottomLeftRadius: "0" }} className="modal-footer">
+                <Button className="btn-submit" type="submit" form="signupForm">
+                  Register
+                </Button>
+                <p className="m-0 sm-text-center">
+                  GOT ACCOUNT?{' '}
+                  <Button onClick={(e) => { closeModal(); openLoginModal(); }}>
+                    LOGIN HERE →
+                  </Button>
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
+        {this.state.showTermsModal && (
+          <TermsModal
+            modalIsOpen={this.state.showTermsModal}
+            closeModal={this.handleCloseTermsModal}
+            isDarkMode={this.props.isDarkMode}
+          />
+        )}
       </Modal>
+
     );
   }
 }

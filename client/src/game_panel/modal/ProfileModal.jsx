@@ -5,7 +5,8 @@ import AvatarUpload from './upload/AvatarUpload';
 import {
   setUserInfo,
   changePasswordAndAvatar,
-  getUser
+  getUser,
+  changeUserName
 } from '../../redux/Auth/user.actions';
 import {
   getCustomerStatisticsData
@@ -55,13 +56,15 @@ class ProfileModal extends Component {
       username: this.props.userInfo.username,
       profitAllTimeHigh: this.props.userInfo.profitAllTimeHigh,
       profitAllTimeLow: this.props.userInfo.profitAllTimeLow,
-      email: this.props.userInfo.email,
+      // email: this.props.userInfo.email,
       password: '',
       passwordConfirmation: '',
       avatar: this.props.userInfo.avatar,
       rank: this.props.userInfo.totalWagered,
       dateJoined: this.props.userInfo.created_at,
-      creditScore: this.props.userInfo.credit_score
+      creditScore: this.props.userInfo.credit_score,
+      newUsername: "",
+      isNewUsernameModalOpen: false,
     };
   }
 
@@ -70,7 +73,7 @@ class ProfileModal extends Component {
       current_state.avatar !== props.avatar ||
       current_state.accessory !== props.accessory ||
       current_state.username !== props.username ||
-      current_state.email !== props.email ||
+      // current_state.email !== props.email ||
       current_state.totalWagered !== props.totalWagered ||
       current_state.totalWagered !== props.totalWagered ||
       current_state.rewards !== props.rewards
@@ -80,7 +83,7 @@ class ProfileModal extends Component {
         avatar: props.userInfo.avatar,
         accessory: props.userInfo.accessory,
         username: props.userInfo.username,
-        email: props.userInfo.email,
+        // email: props.userInfo.email,
         totalWagered: props.userInfo.totalWagered,
         referralCode: props.userInfo.referralCode,
         rewards: props.userInfo.rewards
@@ -91,6 +94,7 @@ class ProfileModal extends Component {
 
   async componentDidMount() {
     await this.fetchStatisticsData();
+    console.log(this.props.userInfo)
   }
 
   fetchStatisticsData = async () => {
@@ -104,6 +108,64 @@ class ProfileModal extends Component {
     this.setState({
       ...result
     });
+  };
+
+  handleChangeUsername = event => {
+    this.setState({ newUsername: event.target.value });
+  };
+
+  handleNewUsername = () => {
+    this.setState({ isNewUsernameModalOpen: true });
+  };
+
+  containsBadLanguage = (username) => {
+    const explicitWords = ['nigger', 'nigg3r', 'n1gger', 'coon', 'c00n', 'paki', 'chink', 'n i g g e r'];
+    const lowercasedUsername = username.toLowerCase();
+
+    return explicitWords.some((word) => lowercasedUsername.includes(word));
+  };
+
+  changeUserName = async () => {
+    const { newUsername } = this.state;
+    try {
+      if (this.containsBadLanguage(newUsername)) {
+        alertModal(
+          this.props.isDarkMode,
+          `HMMMmmmmmmmm ---___---`
+        );
+        return;
+      }
+
+      if (newUsername.trim() === '') {
+        alertModal(this.props.isDarkMode, 'Username cannot be thin air. Please enter some text.');
+        return;
+      }
+
+      this.setState({ isLoading: true });
+      const result = await this.props.changeUserName(
+        newUsername
+      );
+console.log(result)
+      if (result.success) {
+        alertModal(this.props.isDarkMode, result.message, "-cat");
+        this.setState({ isLoading: false });
+        this.handleCloseNewUsernameModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(this.props.isDarkMode, "USERNAME ALREADY EXISTS. CHOOSE A DIFFERENT ONE.");
+      }
+    } catch (e) {
+      this.setState({ isLoading: false });
+      if (this.state.newUsername <= 0) {
+        alertModal(this.props.isDarkMode, `Username might be taken already. Try something else more original you common cat.`);
+        return;
+      }
+    }
+  };
+
+
+  handleCloseNewUsernameModal = () => {
+    this.setState({ isNewUsernameModalOpen: false });
   };
 
   handleDropdownChange = (dropdownName, selectedValue) => {
@@ -196,7 +258,7 @@ class ProfileModal extends Component {
               ×
             </Button>
           </div>
-          <div className="modal-body edit-modal-body">
+          <div className="modal-body profile edit-modal-body">
             <div className="align-center">
               {loading ? (
                 <div className="loading-spinner"></div>
@@ -271,13 +333,13 @@ class ProfileModal extends Component {
                 />
               </div>
               <div>
-                <TextField
+                <Button
                   className="form-control"
-                  value={this.state.email}
                   variant="outlined"
-                  label="EMAIL"
-                  readOnly
-                />
+                  onClick={this.handleNewUsername}
+                >
+                  Change Username
+                </Button>
               </div>
               <div>
                 <TextField
@@ -315,6 +377,49 @@ class ProfileModal extends Component {
             </Button>
           </div>
         </div>
+        <Modal
+          isOpen={this.state.isNewUsernameModalOpen}
+          onRequestClose={this.handleCloseNewUsernameModal}
+          style={customStyles}
+          contentLabel="New Username Modal"
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
+              <h2 className="modal-title">ENTER NEW USERNAME</h2>
+              <Button className="btn-close" onClick={this.handleCloseModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  <div className="input-username">
+                    <TextField
+                      label="e.g. PUSSY_D3STROY3R"
+                      value={this.state.newUsername}
+                      onChange={this.handleChangeUsername}
+                      variant="outlined"
+                      autoComplete="off"
+                      className="form-control"
+                      inputProps={{ maxLength: 12 }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.changeUserName}>
+                Update
+              </Button>
+              <Button
+                className="btn-back"
+                onClick={this.handleCloseNewUsernameModal}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </Modal>
     );
   }
@@ -330,6 +435,7 @@ const mapDispatchToProps = {
   setUserInfo,
   changePasswordAndAvatar,
   getUser,
+  changeUserName,
   getCustomerStatisticsData
 };
 

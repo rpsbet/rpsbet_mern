@@ -11,16 +11,10 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  Checkbox,
-  TableBody,
-  TableHead,
-  Table,
-  TableCell,
-  TableRow,
-  Radio,
-  RadioGroup,
-  FormControlLabel
+  Tooltip
 } from '@material-ui/core';
+import { Info } from '@material-ui/icons';
+
 import SettingsModal from './modal/SettingsModal.jsx';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
@@ -260,6 +254,12 @@ class SiteWrapper extends Component {
     const { loadMore } = this.state;
     const { transactions, tnxComplete, remainingLoans } = this.props;
 
+    if (prevProps.transactions[0] !== transactions[0] && transactions[0].amount > 0) {
+      // console.log("D", transactions[0].amount)
+      if (!this.props.isLowGraphics) {
+        this.playCoinsAnimation();
+      }
+    }
     const shouldUpdate =
       prevProps.transactions !== transactions &&
       transactions.length > 0 &&
@@ -270,7 +270,6 @@ class SiteWrapper extends Component {
       this.setState({ remainingLoans: remainingLoans });
     }
     if (shouldUpdate) {
-      this.playCoinsAnimation();
 
       try {
         await this.props.getUser(true, false);
@@ -290,6 +289,7 @@ class SiteWrapper extends Component {
 
 
   playCoinsAnimation() {
+    // console.log("SD")
     this.setState({ isCoinsAnimation: true });
   }
 
@@ -419,10 +419,6 @@ class SiteWrapper extends Component {
         const audio = new Audio('/sounds/wrong.mp3');
         audio.play();
       }
-    });
-
-    socket.on('UPDATE_PROGRESS', (data) => {
-      console.log('Received UPDATE_PROGRESS:', data);
     });
 
     socket.on('SEND_CHAT', data => {
@@ -979,7 +975,8 @@ class SiteWrapper extends Component {
       oneDayProfit,
       sevenDayProfit,
       allTimeProfit,
-      user
+      user,
+      isLowGraphics
     } = this.props;
     const balanceString = balance.toString();
     const decimalIndex = balanceString.indexOf('.');
@@ -1169,22 +1166,24 @@ class SiteWrapper extends Component {
                           this.setState({ oldBalance: balance }); // update oldBalance after animation completes
                         }}
                       />
+                      {(isCoinsAnimation && !isLowGraphics) && 
                       <Lottie
-                        options={{
-                          loop: false,
-                          autoplay: isCoinsAnimation,
-                          animationData: coins,
-                          rendererSettings: {
-                            preserveAspectRatio: 'xMidYMid slice',
-                          },
-                        }}
-                        style={{
-                          marginTop: '-0px',
-                          position: `absolute`,
-                          width: '100px',
-                          height: '100px'
-                        }}
+                      options={{
+                        loop: false,
+                        autoplay: isCoinsAnimation,
+                        animationData: coins,
+                        rendererSettings: {
+                          preserveAspectRatio: 'xMidYMid slice',
+                        },
+                      }}
+                      style={{
+                        marginTop: '-0px',
+                        position: `absolute`,
+                        width: '100px',
+                        height: '100px'
+                      }}
                       />
+                    }
                       <Button
                         id="wallet-btn"
                         style={{
@@ -1487,10 +1486,31 @@ class SiteWrapper extends Component {
             >
               <div className="arrow-up"></div>
               <div className="header_panel_contents">
-                {<h2>BALANCE HISTORY</h2>}
+              {<Tooltip
+                    style={{position: "absolute", right: "20px"}}
+          title={
+            <>
+              <strong>WHY DO MY WINNINGS APPEAR LESS?</strong>
+              <br /><br />
+              You see less as this is net profit (winnings - bet amount) and
+              receive less due to RTB fees awarded to the Host (0% - 15%
+              Returned to Bankroll dependent on their accessory) and 0.5%
+              towards platform fees. For example, if you win {convertToCurrency(0.2)}&nbsp;
+               but bet {convertToCurrency(0.1)}, then you might see:
+              {convertToCurrency(0.2)} * 0.88 (12% RTB) - {convertToCurrency(0.1)} (net profit)
+              = {convertToCurrency(0.076)} (Final Calculation)
+            </>
+          }
+          placement="top"
+        >
+          <Info />
+        </Tooltip>}
+          <h2>BALANCE HISTORY</h2>
+        
                 {
                   <div>
                     <table>
+                    
                       <tbody>
                         {transactions.filter(row => row.user === this.props.user._id)
                           .length === 0 ? (
@@ -1640,7 +1660,6 @@ class SiteWrapper extends Component {
               balance={balance}
               accessory={user.accessory}
               avatar={user.avatar}
-              email={user.email}
               totalWagered={user.totalWagered}
               selectedCreator={user._id}
             />
@@ -1792,7 +1811,9 @@ const mapStateToProps = state => ({
   sevenDayProfit: state.auth.sevenDayProfit,
   oneDayProfit: state.auth.oneDayProfit,
   allTimeProfit: state.auth.allTimeProfit,
-  notifications: state.logic.notifications
+  notifications: state.logic.notifications,
+  isLowGraphics: state.auth.isLowGraphics,
+
 });
 
 const mapDispatchToProps = {

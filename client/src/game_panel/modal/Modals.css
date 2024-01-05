@@ -83,6 +83,9 @@
 .modal-body .modal-icon.alert-icon-closed {
     background-image: url("../../../public/img/icons/alert-icon-closed.svg");
 }
+.modal-body .modal-icon.alert-icon-cat {
+    background-image: url("../../../public/img/icons/alert-icon-cat.svg");
+}
 .modal-body .modal-icon.alert-icon-create {
     background-image: url("../../../public/img/icons/alert-icon-create.svg");
 }
@@ -181,7 +184,7 @@
     background-color: #e5e5e5;
     color: #747f8d;
     max-height: 55vh;
-    min-width: 540px;
+    min-width: 340px;
     overflow-y: scroll;
     position: relative;
 }
@@ -426,6 +429,8 @@ div[role="presentation"] div {
     align-items: center;
 }
 
+
+
 .played span {
     width: 50%;
 }
@@ -470,6 +475,41 @@ div[role="presentation"] div {
     border-radius: 13px !important;
     margin: 4px !important;
 }
+
+.avatar-option {
+    margin-right: 15px !important;
+    overflow: hidden;
+}
+
+.avatar-option img:hover {
+    cursor: pointer;
+}
+
+.modal-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    height: 100%; /* Ensure the container takes the full height */
+  }
+  .modal-img {
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+  }
+  .modal-left {
+    overflow: hidden; /* Ensure the left column doesn't overflow */
+  }
+  
+  .giant-picture {
+    width: 100%; /* Make the image take 100% of the column width */
+    height: 100%; /* Ensure the image takes the full height of the column */
+    object-fit: cover; /* Maintain aspect ratio and cover the entire column */
+  }
+  
+  .modal-right {
+    flex: 0 0 60%; /* Adjust the percentage to control the width of the right column */
+  }
 
 #login_now {
     color: #fff;
@@ -599,7 +639,8 @@ div[role="presentation"] div {
     border-radius: 2em !important;
   }
 
-  .modal-body .avatar-border div div{
+  .profile.modal-body .avatar-border div div,
+  .AvatarPreviewPanel img{
     border-width: 10px !important;
       box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px, rgb(149, 165, 166) 0px 6px 40px 0px, rgb(219, 219, 219) 0px 0px 10px inset  !important;;
 }
@@ -611,7 +652,7 @@ box-shadow: unset !important;
     height: 50% !important;
 }
 
-  .modal-body .avatar-border div div:last-child
+  .profile.modal-body div.rank-icon
    {
     border-radius: 0.8em !important;
     width: 20% !important;

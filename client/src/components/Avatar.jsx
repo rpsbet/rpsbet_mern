@@ -118,7 +118,7 @@ const {isLowGraphics, isDarkMode} = this.props;
               width: '100%',
               height: '100%',
               border: borderColor ,
-              boxShadow: `0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor}, 0 0 20px ${shadedColor} inset`,
+              boxShadow: `0 2px 4px rgba(0, 0, 0, 0.1), 0 0px 4px 0px ${rankColor}, 0 0 4px ${shadedColor}, 0 0 4px ${shadedColor} inset`,
             }}
             onError={e => {
               e.target.src = darkMode
@@ -135,7 +135,6 @@ const {isLowGraphics, isDarkMode} = this.props;
               left: 0,
               width: '100%',
               height: '100%',
-              borderRadius: '6px',
               border: borderColor,
               boxShadow: `0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor}`,
               boxSizing: 'border-box'
@@ -144,6 +143,7 @@ const {isLowGraphics, isDarkMode} = this.props;
         )}
         {rank !== null && (
           <div
+          className='rank-icon'
             style={{
               position: 'absolute',
               bottom: '1px',

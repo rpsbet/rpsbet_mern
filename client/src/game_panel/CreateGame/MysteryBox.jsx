@@ -238,24 +238,21 @@ class MysteryBox extends Component {
   
     // Map through the unique prizes and display the key
     const prizeKey = (
-      
       <div className="prize-key">
-                <h3 className="game-sub-title">Prizes</h3>
-
-                <Table>
-        
-        <TableBody>
-          {uniquePrizes.map((prize, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <span className={`box ${prize > 0 ? 'lose-bg' : 'win-bg'}`}></span>
-                {prize === 0.0 ? 'EMPTY' : convertToCurrency(prize)}
-              </TableCell>
-              <TableCell>{calculateProbability(prize).toFixed(2)}%</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+        <h3 className="game-sub-title">Prizes</h3>
+        <Table>
+          <TableBody>
+            {uniquePrizes.map((prize, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <span className={`box ${prize > boxList[index].box_price ? 'lose-bg' : 'win-bg'}`}></span>
+                  {prize === 0.0 ? 'EMPTY' : convertToCurrency(prize)}
+                </TableCell>
+                <TableCell>{calculateProbability(prize).toFixed(2)}%</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   
@@ -275,7 +272,7 @@ class MysteryBox extends Component {
                   <Draggable key={key} draggableId={`box-${key}`} index={key}>
                     {(provided) => (
                       <div
-                        className={`box ${row.box_prize > 0 ? 'lose-bg' : 'win-bg'}`}
+                        className={`box ${row.box_prize > boxList[key].box_price ? 'lose-bg' : 'win-bg'}`}
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
@@ -308,7 +305,7 @@ class MysteryBox extends Component {
                     pattern: '^\\d*\\.?\\d*$',
                     maxLength: 9
                   }}
-                  style={{ marginRight: '15px' }}
+                  style={{ background: "#ffd602cc", borderRadius: "0.2em", marginRight: '15px' }}
                   InputLabelProps={{
                     shrink: true
                   }}
@@ -326,6 +323,7 @@ class MysteryBox extends Component {
             <div>
               <div className="edit-amount-panel">
                 <TextField
+                style={{background: "#0fff00cc", borderRadius: "0.2em",}}
                   type="text"
                   variant="outlined"
                   inputProps={{

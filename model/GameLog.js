@@ -46,6 +46,10 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0
     },
+    winnings: {
+        type: Number,
+        default: 0
+    },
     selected_box: {
         type: Schema.Types.ObjectId,
         ref: 'RoomBoxPrize',

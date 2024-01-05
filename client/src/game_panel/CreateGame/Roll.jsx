@@ -157,7 +157,7 @@ class Roll extends Component {
     const { roll_list } = this.props;
   
     if (roll_list.length < 3) {
-      alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
+      alertModal(this.props.isDarkMode, 'PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA');
       return;
     }
   // console.log(roll_list)

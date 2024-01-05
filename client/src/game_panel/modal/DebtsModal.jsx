@@ -65,19 +65,19 @@ class DebtsModal extends Component {
     }
 
     if (parseFloat(paybackAmount) < 0) {
-      alertModal(isDarkMode, 'Payback amount cannot be negative dumfuq.');
+      alertModal(isDarkMode, 'PAYBACK AMEOWNT CANNOT BE NEGATIVE, DUMFUQ');
       return;
     }    
   
     // Check if paybackAmount is a real number
     if (isNaN(parseFloat(paybackAmount))) {
-      alertModal(isDarkMode, 'Invalid payback amount. Enter a valid number, stupid motherfucker.');
+      alertModal(isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
       return;
     }
   
     // Check if paybackAmount is more than the selectedLoan.amount
     if (parseFloat(paybackAmount) > selectedLoan.amount) {
-      alertModal(isDarkMode, 'Payback amount cannot exceed the loan amount dickhead.');
+      alertModal(isDarkMode, 'PAYBACK AMOUNT CANNOT EXCEED THE LOAN AMEOWNT!');
       return;
     }
   
@@ -87,7 +87,7 @@ class DebtsModal extends Component {
     if (response.success) {
       const { balance, newTransaction, message } = response;
       this.closePaybackModal();
-      alertModal(isDarkMode, message);
+      alertModal(isDarkMode, message, '-cat');
       setBalance(balance);
       addNewTransaction(newTransaction);
       await acCalculateRemainingLoans();

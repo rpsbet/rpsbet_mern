@@ -65,7 +65,7 @@ class ConfirmLoanModal extends Component {
       return; // Do not proceed further
     }
     if (parseFloat(responseText) < 0.0005) {
-      alertModal(isDarkMode, "Minimum is 0.0005 ETH");
+      alertModal(isDarkMode, "Meownimum is 0.0005 ETH");
       return; // Do not proceed further
     }
     const response = await confirmLoan({
@@ -79,12 +79,13 @@ class ConfirmLoanModal extends Component {
       const { balance, newTransaction, message } = response;
 
       closeConfirmLoanModal();
-      alertModal(isDarkMode, message);
+      alertModal(isDarkMode, message, '-cat');
       setBalance(balance);
       addNewTransaction(newTransaction);
       acQueryLoan();
       acCalculateRemainingLoans();
     } else {
+      closeConfirmLoanModal();
       alertModal(isDarkMode, response.message);
     }
   };

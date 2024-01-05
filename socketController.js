@@ -12,12 +12,6 @@ const send = (msg_type, to_id, data) => {
     sockets[to_id].emit(msg_type, data);
   }
 };
-// Assuming you have the io instance available globally or passed as a parameter
-
-module.exports.sendUpdate = (videoId, progress) => {
-  socket_io.emit('UPDATE_PROGRESS', { videoId, progress });
-  console.log('UPDATE_PROGRESS', videoId, progress);
-};
 
 
 module.exports.playSound = (from_user_id, data) => {

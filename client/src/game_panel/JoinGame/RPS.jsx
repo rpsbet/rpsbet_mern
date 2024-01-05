@@ -45,7 +45,7 @@ const ProductImage = styled.img`
   height: auto;
   background: #fff;
   border: 1px solid #f9f9;
-  box-shadow: 0 1px 17px #333;
+  box-shadow: 0 1px 1px #ccc9;
   border-radius: 10px;
 `;
 
@@ -64,11 +64,8 @@ const ProductCarousel = styled.div`
 
 const ProductCard = styled.div`
   position: relative;
-  // background: linear-gradient(156deg, #303438, #cf0c0e);
   border-radius: 0.8em;
   display: -ms-flexbox;
-  // width: 100px;
-
   display: flex;
   -webkit-flex-direction: column;
   -ms-flex-direction: column;
@@ -90,19 +87,14 @@ const ProductCard = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    // background: rgba(0, 0, 0, 0.5);
     border-radius: 20px;
-    // opacity: 0;
-    // transition: opacity 0.2s;
   }
-
-  // &:hover::before {
-  //   opacity: 1;
-  // }
 
   &:hover {
     transform: scale(1.2);
     width: 350px;
+    border: 2px solid #fff;
+
   }
 `;
 
@@ -153,6 +145,7 @@ class RPS extends Component {
       modalOpen: false,
       startedPlaying: false,
       advanced_status: '',
+      cardDealt: false,
       is_anonymous: false,
       bet_amount: 0.001,
       bankroll: this.props.bet_amount,
@@ -245,9 +238,12 @@ class RPS extends Component {
     if (rps_game_type === 1) {
       // Ensure acQueryMyItem is available
       if (acQueryMyItem) {
-        await acQueryMyItem(10, 1, 'price', '653ee7ac17c9f5ee21245649');
+        await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
         setTimeout(() => {
-          this.dealCard();
+
+          if (!this.state.cardDealt) {
+            this.dealCard();
+          }
         }, 1500);
       }
     }
@@ -259,57 +255,88 @@ class RPS extends Component {
     });
   };
   dealCard = () => {
-    // Create a new card element
+    // Check if the DOM is fully loaded
+    if (document.readyState !== 'loading') {
+      // If it's already loaded, call the dealCardLogic directly
+      this.dealCardLogic();
+    } else {
+      // If the DOM is still loading, wait for the 'DOMContentLoaded' event
+      document.addEventListener('DOMContentLoaded', this.dealCardLogic);
+    }
+  };
+  
+  dealCardLogic = () => {
     const newCard = document.createElement('div');
     newCard.className = 'card-hidden upside-down animated-card';
     newCard.style.height = '200px';
     newCard.style.width = '130px';
     newCard.style.borderRadius = '1rem';
     newCard.style.marginRight = '10px';
-
+  
     // Add the new card to the card-container
     const cardContainer = document.querySelector('.card-container');
-    cardContainer.insertBefore(newCard, cardContainer.firstChild);
-
-    this.props.playSound('cards');
-
-    const firstCardDashed = cardContainer.querySelector('.card-hidden.dashed');
-    if (firstCardDashed.style.display !== 'none') {
-      firstCardDashed.style.display = 'none';
-    } else {
-      // If '.card-hidden.dashed' doesn't exist, look for an element with 'flipped' class
-      const firstCardFlipped = cardContainer.querySelector('.flipped');
-      if (firstCardFlipped) {
-        firstCardFlipped.style.display = 'none';
+  
+    // Check if cardContainer exists before manipulating it
+    if (cardContainer) {
+      cardContainer.insertBefore(newCard, cardContainer.firstChild);
+  
+      this.props.playSound('cards');
+  
+      const firstCardDashed = cardContainer.querySelector('.card-hidden.dashed');
+      if (firstCardDashed && firstCardDashed.style.display !== 'none') {
+        firstCardDashed.style.display = 'none';
+      } else {
+        // If '.card-hidden.dashed' doesn't exist, look for an element with 'flipped' class
+        const firstCardFlipped = cardContainer.querySelector('.flipped');
+        if (firstCardFlipped) {
+          firstCardFlipped.style.display = 'none';
+        }
       }
+      this.setState({ cardDealt: true });
     }
   };
+  
 
   flipCard = () => {
     const rpsValueAtLastIndex = this.state.rps[this.state.rps.length - 1]?.rps;
     const cardContainer = document.querySelector('.card-container');
-    const card = cardContainer.querySelector('div');
-    if (card.classList.contains('card-hidden')) {
-      card.classList.remove('card-hidden');
+    if (cardContainer) {
+      const card = cardContainer.querySelector('div');
+
+      if (card) {
+        const card = cardContainer.querySelector('div');
+        if (card.classList.contains('card-hidden')) {
+          card.classList.remove('card-hidden');
+        }
+
+        if (card.classList.contains('animated-card')) {
+          card.classList.remove('animated-card');
+        }
+
+        this.props.playSound('cards');
+        card.classList.add('flipped');
+
+        const backgroundImageURL = '/img/marketplace/blender.svg';
+        const updatedBackgroundImageURL = backgroundImageURL.replace(
+          'blender',
+          rpsValueAtLastIndex
+        );
+        card.style.backgroundImage = `url('${updatedBackgroundImageURL}')`;
+        card.style.backgroundSize = `100%`;
+
+      } else {
+        console.error("No 'div' element found inside .card-container");
+      }
+    } else {
+      console.error("No element found with the class .card-container");
     }
-
-    if (card.classList.contains('animated-card')) {
-      card.classList.remove('animated-card');
-    }
-
-    this.props.playSound('cards');
-    card.classList.add('flipped');
-
-    const backgroundImageURL = '/img/marketplace/blender.svg';
-    const updatedBackgroundImageURL = backgroundImageURL.replace(
-      'blender',
-      rpsValueAtLastIndex
-    );
-    card.style.backgroundImage = `url('${updatedBackgroundImageURL}')`;
-    card.style.backgroundSize = `100%`;
 
     setTimeout(() => {
-      this.dealCard();
+
+      if (!this.state.cardDealt) {
+        this.dealCard();
+      }
+
     }, 5500);
   };
 
@@ -390,7 +417,7 @@ class RPS extends Component {
     } = this.props;
 
     const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
-    // console.log('gzi', selected_rps);
+    // console.log('selected_rps', selected_rps);
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
@@ -431,8 +458,8 @@ class RPS extends Component {
         result.betResult,
         'Okay',
         null,
-        () => {},
-        () => {}
+        () => { },
+        () => { }
       );
 
       if (result.status !== 'success') {
@@ -452,6 +479,7 @@ class RPS extends Component {
         localStorage.setItem('rps_array', JSON.stringify(stored_rps_array));
       }
       refreshHistory();
+      this.setState({ cardDealt: false });
     }
   };
 
@@ -643,12 +671,14 @@ class RPS extends Component {
                       )}
                     </div>
                   </div>
-                  <div className="data-item">
-                    <div>
-                      <div className="label win-chance">Win Chance</div>
+                  {this.props.rps_game_type === 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label win-chance">Win Chance</div>
+                      </div>
+                      <div className="value">33%</div>
                     </div>
-                    <div className="value">33%</div>
-                  </div>
+                  )}
                   {roomInfo.endgame_amount > 0 && (
                     <div className="data-item">
                       <div>
@@ -699,8 +729,8 @@ class RPS extends Component {
                                       ? ['#00FF00']
                                       : actionList.hostNetProfit?.slice(-1)[0] <
                                         0
-                                      ? ['#FF0000']
-                                      : ['#808080'],
+                                        ? ['#FF0000']
+                                        : ['#808080'],
                                   shadeIntensity: 1,
                                   type: 'vertical',
                                   opacityFrom: 0.7,
@@ -901,9 +931,7 @@ class RPS extends Component {
                   onChangeState={this.onChangeState}
                   isDarkMode={this.props.isDarkMode}
                 />
-                <p className="tip">
-                  GAME BACKGROUNDS AVAILABLE VIA THE MARKETPLACE
-                </p>
+              
               </div>
             )}
             {this.props.rps_game_type === 1 && (
@@ -928,65 +956,53 @@ class RPS extends Component {
                 {startedPlaying && (
                   <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">
                     <div
-                      className={`rps-option ${
-                        rps[this.state.rps.length - 1]?.rps === 'R'
-                          ? 'rock'
-                          : ''
-                      }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${
-                        bgColorChanged &&
-                        betResult === -1 &&
-                        rpsValueAtLastIndex === 'R'
+                      className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'R'
+                        ? 'rock'
+                        : ''
+                        }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${bgColorChanged &&
+                          betResult === -1 &&
+                          rpsValueAtLastIndex === 'R'
                           ? ' win-bg'
                           : ''
-                      }${
-                        betResult === 0 && rpsValueAtLastIndex === 'R'
+                        }${betResult === 0 && rpsValueAtLastIndex === 'R'
                           ? ' draw-bg'
                           : ''
-                      }${
-                        betResult === 1 && rpsValueAtLastIndex === 'R'
+                        }${betResult === 1 && rpsValueAtLastIndex === 'R'
                           ? ' lose-bg'
                           : ''
-                      }`}
+                        }`}
                     ></div>
                     <div
-                      className={`rps-option ${
-                        rps[this.state.rps.length - 1]?.rps === 'P'
-                          ? 'paper'
-                          : ''
-                      }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${
-                        bgColorChanged &&
-                        betResult === -1 &&
-                        rpsValueAtLastIndex === 'P'
+                      className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'P'
+                        ? 'paper'
+                        : ''
+                        }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${bgColorChanged &&
+                          betResult === -1 &&
+                          rpsValueAtLastIndex === 'P'
                           ? ' win-bg'
                           : ''
-                      }${
-                        betResult === 0 && rpsValueAtLastIndex === 'P'
+                        }${betResult === 0 && rpsValueAtLastIndex === 'P'
                           ? ' draw-bg'
                           : ''
-                      }${
-                        betResult === 1 && rpsValueAtLastIndex === 'P'
+                        }${betResult === 1 && rpsValueAtLastIndex === 'P'
                           ? ' lose-bg'
                           : ''
-                      }`}
+                        }`}
                     ></div>
                     <div
-                      className={`rps-option ${
-                        rps[rps.length - 1]?.rps === 'S' ? 'scissors' : ''
-                      }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${
-                        bgColorChanged &&
-                        betResult === -1 &&
-                        rpsValueAtLastIndex === 'S'
+                      className={`rps-option ${rps[rps.length - 1]?.rps === 'S' ? 'scissors' : ''
+                        }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${bgColorChanged &&
+                          betResult === -1 &&
+                          rpsValueAtLastIndex === 'S'
                           ? ' win-bg'
                           : ''
-                      }${
-                        betResult === 0 && rpsValueAtLastIndex === 'S'
+                        }${betResult === 0 && rpsValueAtLastIndex === 'S'
                           ? ' draw-bg'
                           : ''
-                      }${
-                        betResult === 1 && rpsValueAtLastIndex === 'S'
+                        }${betResult === 1 && rpsValueAtLastIndex === 'S'
                           ? ' lose-bg'
                           : ''
-                      }`}
+                        }`}
                     ></div>
                   </div>
                 )}
@@ -1004,23 +1020,19 @@ class RPS extends Component {
                     <Button
                       variant="contained"
                       id={`rps-${classname}`}
-                      className={`rps-option ${classname}${
-                        selected_rps === selection ? ' active' : ''
-                      }${
-                        bgColorChanged &&
-                        betResult === -1 &&
-                        selected_rps === selection
+                      className={`rps-option ${classname}${selected_rps === selection ? ' active' : ''
+                        }${bgColorChanged &&
+                          betResult === -1 &&
+                          selected_rps === selection
                           ? ' lose-bg'
                           : ''
-                      }${
-                        betResult === 0 && selected_rps === selection
+                        }${betResult === 0 && selected_rps === selection
                           ? ' draw-bg'
                           : ''
-                      }${
-                        betResult === 1 && selected_rps === selection
+                        }${betResult === 1 && selected_rps === selection
                           ? ' win-bg'
                           : ''
-                      }`}
+                        }`}
                       onClick={() => {
                         this.setState({ selected_rps: selection }, () => {
                           this.onBtnBetClick(selection);

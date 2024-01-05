@@ -73,7 +73,7 @@ class ListItemModal extends Component {
       const { message } = response;
 
       closeListItemModal();
-      alertModal(isDarkMode, message);
+      alertModal(isDarkMode, message, '-cat');
       this.setState({showOverrideConfirmation: false})
     } else {
       alertModal(isDarkMode, response.message);

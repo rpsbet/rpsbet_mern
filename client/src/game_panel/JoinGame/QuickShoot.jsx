@@ -78,12 +78,12 @@ class QuickShoot extends Component {
     socket.on('UPDATED_BANKROLL_QS', data => {
       this.setState({ bankroll: data.bankroll });
     });
-    document.addEventListener('mousedown', this.handleClickOutside);
+    // document.addEventListener('mousedown', this.handleClickOutside);
   }
 
   componentWillUnmount() {
     clearInterval(this.state.intervalId);
-    document.removeEventListener('mousedown', this.handleClickOutside);
+    // document.removeEventListener('mousedown', this.handleClickOutside);
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -123,12 +123,12 @@ class QuickShoot extends Component {
     this.onBtnBetClick();
   };
 
-  handleClickOutside = e => {
-    const { settingsRef } = this;
-    if (settingsRef && !settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
+  // handleClickOutside = e => {
+  //   const { settingsRef } = this;
+  //   if (settingsRef && !settingsRef.current.contains(e.target)) {
+  //     this.setState({ settings_panel_opened: false });
+  //   }
+  // };
 
   componentDidUpdate(prevProps, prevState) {
     const { roomInfo, actionList } = this.props;

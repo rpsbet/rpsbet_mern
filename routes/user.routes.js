@@ -4,7 +4,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jdenticon = require('jdenticon');
 const crypto = require('crypto');
-
+const robohashAvatars = require("robohash-avatars");
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const auth = require('../middleware/auth');
@@ -24,7 +24,7 @@ router.get('/', admin, async (req, res) => {
   try {
     const users = await User.find(
       { is_deleted: is_banned },
-      { _id: 1, username: 1, email: 1, created_at: 1, rewards: 1 }
+      { _id: 1, username: 1, created_at: 1, rewards: 1 }
     )
       .sort({ created_at: 'desc' })
       .skip(pagination * page - pagination)
@@ -36,8 +36,8 @@ router.get('/', admin, async (req, res) => {
       let temp = {
         _id: user['_id'],
         username: user['username'],
-        email: user['email'],
-        rewards: user['rewards'], 
+        // email: user['email'],
+        rewards: user['rewards'],
         date: moment(user['created_at']).format('YYYY-MM-DD')
       };
       result.push(temp);
@@ -70,7 +70,7 @@ router.get('/activity', admin, async (req, res) => {
     const count = await Transaction.countDocuments({});
 
     let result = [];
-    
+
     transactions.forEach((transaction, index) => {
       let temp = {
         _id: transaction['_id'],
@@ -99,112 +99,171 @@ router.get('/activity', admin, async (req, res) => {
     });
   }
 });
-
 router.post('/', async (req, res) => {
-  const { username, email, password, bio, avatar, referralCode  } = req.body;
+  try {
+    const { username, password, bio, avatar, referralCode, avatarMethod } = req.body;
 
-  // Simple validation
-  if (!username || !email || !password) {
-    return res.json({
-      success: false,
-      error: 'PLEASE FILL IN ALL THE FIELDS'
-    });
-  }
-
-  // Check for existing user
-  let user = await User.findOne({ email });
-
-  if (user)
-    return res.json({
-      success: false,
-      error: 'EMAIL ALREADY EXISTS'
-    });
-
-  user = await User.findOne({ username });
-  
-  if (user)
-    return res.json({
-      success: false,
-      error: 'USERNAME ALREADY EXISTS'
-    });
-
-  const verification_code = Math.floor(Math.random() * 8999) + 1000;
-  const referralId = req.body.referralCode ? await User.findOne({ referralCode: req.body.referralCode }) : null;
-
-  const generateReferralCode = () => {
-    let referralCode = "";
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    for (let i = 0; i < 6; i++) {
-      referralCode += characters.charAt(
-        Math.floor(Math.random() * characters.length)
-      );
+    // Simple validation
+    if (!username || !password) {
+      return res.json({
+        success: false,
+        error: 'PLEASE FILL IN ALL THE FIELDS'
+      });
     }
-    return referralCode;
-  };
 
-  // Find the owner of the referral code, if it exists
-  let referralOwner = null;
-  if (referralCode) {
-    referralOwner = await User.findOne({ referralCode });
-  }
+    // Check if username already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.json({
+        success: false,
+        error: 'USERNAME ALREADY EXISTS'
+      });
+    }
 
-  function generateAvatar(userId) {
-    const hash = crypto.createHash('sha256').update(userId).digest('hex');
-    const svg = jdenticon.toSvg(hash, 64, {padding: 0});
-    const encodedSvg = encodeURIComponent(svg);
-    const dataUri = `data:image/svg+xml,${encodedSvg}`;
-    return dataUri;
-  }
+    // Generate referral code
+    const generateReferralCode = () => {
+      let referralCode = "";
+      const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      for (let i = 0; i < 6; i++) {
+        referralCode += characters.charAt(
+          Math.floor(Math.random() * characters.length)
+        );
+      }
+      return referralCode;
+    };
 
-const newUser = new User({
-  username,
-  email,
-  password,
-  bio,
-  totalWagered: 0,
-  balance: 0,
-  rewards: 0,
-  ai_mode: 'Markov',
-  status: 'off',
-  avatar,
-  referralCode: generateReferralCode(),
-  referralId: referralOwner ? referralOwner._id : null
-});
+    // Find the owner of the referral code, if it exists
+    let referralOwner = null;
+    if (referralCode) {
+      referralOwner = await User.findOne({ referralCode });
+    }
 
-// Generate avatar for the user
-newUser.avatar = generateAvatar(newUser.username);
+    function generateAvatar(userId, avatarMethod) {
+      if (avatarMethod === 'robohash') {
+        // if robohash avatar style is chosen with a random background
+        const avatarURL = robohashAvatars.generateAvatar({
+          username: userId,
+          background: robohashAvatars.BackgroundSets.RandomBackground1,
+          characters: robohashAvatars.CharacterSets.Kittens,
+        });
+        return avatarURL;
+      } else {
+        // if jdenticon is chosen
+        const hash = crypto.createHash('sha256').update(userId).digest('hex');
+        const svg = jdenticon.toSvg(hash, 64, { padding: 0 });
+        const encodedSvg = encodeURIComponent(svg);
+        return `data:image/svg+xml,${encodedSvg}`;
+      }
+    }
+  
+    const newUser = new User({
+      username,
+      password,
+      bio,
+      totalWagered: 0,
+      balance: 0,
+      rewards: 0,
+      credit_score: 1000,
+      ai_mode: 'Markov',
+      status: 'off',
+      avatar,
+      referralCode: generateReferralCode(),
+      referralId: referralOwner ? referralOwner._id : null
+    });
 
-  // Create salt & hash
-  bcrypt.genSalt(10, (err, salt) => {
-    bcrypt.hash(newUser.password, salt, (err, hash) => {
+    // Generate avatar based on the chosen method
+    newUser.avatar = generateAvatar(username, avatarMethod);
+
+    // Create salt & hash
+    bcrypt.genSalt(10, (err, salt) => {
       if (err) throw err;
-      newUser.password = hash;
-      newUser.save().then(async user => {
+      bcrypt.hash(newUser.password, salt, async (err, hash) => {
+        if (err) throw err;
+        newUser.password = hash;
+        await newUser.save();
+
         // If there is a referral owner, update their balance
         if (referralOwner) {
           referralOwner.balance += 0;
           referralOwner.rewards += 1;
-
           await referralOwner.save();
         }
 
         jwt.sign(
-          { user: user, is_admin: 0 },
+          { user: newUser, is_admin: 0 },
           process.env.SECRET_OR_KEY,
           (err, token) => {
-            sendgrid.sendWelcomeEmail(email, username, verification_code);
-
+            // sendgrid.sendWelcomeEmail(email, username, verification_code);
             res.json({
               success: true,
               message: 'new user created',
               token,
-              user
+              user: newUser
             });
           }
         );
       });
     });
-  });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: 'INTERNAL SERVER ERROR'
+    });
+  }
+});
+
+router.post('/username', auth, async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming you have a user object in req from the auth middleware
+    const { newUsername } = req.body;
+
+    // Your logic to check for a valid new username
+    if (!newUsername || newUsername.trim() === '') {
+      return res.json({
+        success: false,
+        error: 'New username cannot be blank.'
+      });
+    }
+
+    const existingUser = await User.findOne({ username: newUsername });
+
+    // Check if the username is already taken
+    if (existingUser) {
+      return res.json({
+        success: false,
+        error: 'ERROR CODE 69 420'
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    // Check if the user exists
+    if (!user) {
+      return res.json({
+        success: false,
+        error: 'User not found.'
+      });
+    }
+
+    // Update the username
+    user.username = newUsername;
+
+    // Save the updated user
+    await user.save();
+
+    // Respond with success message
+    res.json({
+      success: true,
+      message: 'USERNAME CHANGED SUCCESSFULLY.<br /><br />REFRESH TO SEE CHANGES...RAWRR. 🐈'
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      error: err.message
+    });
+  }
 });
 
 router.post('/get-info', async (req, res) => {
@@ -226,7 +285,7 @@ router.post('/get-info', async (req, res) => {
 router.post('/getId', admin, async (req, res) => {
   try {
     const userId = await User.findOne({ username: req.body.username }, { _id: 1 });
-// console.log("userId", userId);
+    // console.log("userId", userId);
     if (!userId) {
       return res.json({
         success: true,

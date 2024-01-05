@@ -493,7 +493,6 @@ export const endGame = (room_id, callback) => async dispatch => {
         // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
       }
     }
-    callback();
   } catch (err) {
     console.log(err);
   }
@@ -597,6 +596,35 @@ export const deductBalanceWhenStartBlackjack = data => async dispatch => {
 
 export const deductBalanceWhenStartRoll = data => async dispatch => {
   return handleGameStart(dispatch, data, '/game/start_roll');
+};
+
+export const getRollGuesses = roomId => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.get('/game/get_roll_guesses', { params: { roomId } });
+    if (res.data.success) {
+      dispatch({ type: END_LOADING });
+    } else {
+      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+    }
+
+  } catch (err) {
+    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+  }
+};
+export const getBangGuesses = roomId => async dispatch => {
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.get('/game/get_bang_guess', { params: { roomId } });
+    if (res.data.success) {
+      dispatch({ type: END_LOADING });
+    } else {
+      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+    }
+
+  } catch (err) {
+    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+  }
 };
 
 export const updateBankroll = bankroll => {

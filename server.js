@@ -50,11 +50,14 @@ const helmet = require('helmet'); // for sec headers
 const cronJob = require('./helper/util/createCronJob.js');
 const creditScoreCron = require('./helper/util/creditScoreCron.js');
 const rentCron = require('./helper/util/rentCron.js');
-
+const rollCron = require('./helper/util/rollCron.js');
+const bangCron = require('./helper/util/bangCron.js');
 // Initialize the cron job to periodically check for confirmations
 creditScoreCron.checkOutstandingLoans();
 rentCron.checkRentalPayments();
 cronJob.checkConfirmations();
+rollCron.rollCron();
+bangCron.bangCron();
 
 // app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

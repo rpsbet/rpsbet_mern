@@ -20,6 +20,8 @@ import {
   validateLocalStorageLength
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
+import { getBangGuesses } from '../../redux/Logic/logic.actions';
+
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import bomb from '../LottieAnimations/bomb.json';
 import explosion from '../LottieAnimations/explosion.json';
@@ -31,7 +33,6 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
 
 const defaultOptions = {
@@ -101,7 +102,7 @@ class Bang extends Component {
       advanced_status: '',
       waiting: false,
       is_anonymous: false,
-      bet_amount: 1,
+      bet_amount: 0.001,
       bankroll: this.props.bet_amount,
       bang_guesses1Received: false,
       multiplier: 1.01,
@@ -131,14 +132,14 @@ class Bang extends Component {
     this.setState({ bgColorChanged: false });
   };
 
-  handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-    if (this.runsRef && !this.runsRef.current.contains(e.target)) {
-      this.setState({ runs_panel_opened: false });
-    }
-  };
+  // handleClickOutside = e => {
+  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+  //     this.setState({ settings_panel_opened: false });
+  //   }
+  //   if (this.runsRef && !this.runsRef.current.contains(e.target)) {
+  //     this.setState({ runs_panel_opened: false });
+  //   }
+  // };
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance ||
@@ -208,59 +209,63 @@ class Bang extends Component {
   }
 
   componentDidMount = () => {
-    const { socket } = this.props;
-    const roomId = this.props.roomInfo._id;
+    const { roomInfo, socket, getBangGuesses } = this.props;
+    const { _id: roomId } = roomInfo;
+    const fetchBangGuesses = () => {
+      const roomId = this.props.roomInfo._id;
+      // console.log("SSs  ")
+
+      getBangGuesses({
+        roomId: roomId
+      });
+    };
+    fetchBangGuesses();
+
+  
     if (socket) {
-      this.socket.on(`BANG_GUESSES_${roomId}`, data => {
+      socket.on(`BANG_GUESSES_${roomId}`, data => {
         if (data && data.bangs && data.bangs.length > 0) {
           const lastBang = data.bangs[data.bangs.length - 1];
-          const nextBangInterval = lastBang;
+
           this.setState({
             bang_guesses: data.bangs,
-            nextBangInterval: nextBangInterval
+            nextBangInterval: lastBang.toFixed(2)
+          }, () => {
+            setTimeout(() => {  
+              // console.log("sss", this.state.nextBangInterval * 1000 + 7000)
+              fetchBangGuesses();
+            }, (this.state.nextBangInterval * 1000 + 7000));
+          });
+
+          // this.socket.on(`BANG_GUESSES1_${roomId}`, (data) => {
+          //   if (data && data.bangs && data.bangs.length > 0 && this.state.listen) {
+          //     updateBangGuesses(data);
+          //   }
+          // });
+
+          socket.on('UPDATED_BANKROLL', (data) => {
+            this.setState({ bankroll: data.bankroll });
           });
         }
-      });
-
-      this.socket.on(`BANG_GUESSES1_${roomId}`, data => {
-        if (data && data.bangs && data.bangs.length > 0 && this.state.listen) {
-          const lastBang = data.bangs[data.bangs.length - 1];
-          // console.log('lastBang', lastBang);
-          const nextBangInterval = lastBang;
-          this.setState({
-            bang_guesses: data.bangs,
-            nextBangInterval: nextBangInterval,
-            elapsedTime: data.elapsedTime,
-            listen: false
-          });
-        }
-      });
-
-      socket.on('UPDATED_BANKROLL', data => {
-        this.setState({ bankroll: data.bankroll });
-      });
+      })
     }
 
-    document.addEventListener('mousedown', this.handleClickOutside);
+    
+     // document.addEventListener('mousedown', this.handleClickOutside);
   };
 
   componentWillUnmount = () => {
-    clearInterval(this.state.intervalId);
-    document.removeEventListener('mousedown', this.handleClickOutside);
-    // this.socket.off(`BANG_GUESSES_${this.props.roomInfo._id}`);
-    // this.socket.off(`BANG_GUESSES1_${this.props.roomInfo._id}`);
-    // this.socket.off('UPDATED_BANKROLL');
+    clearInterval(this.fetchInterval, this.state.intervalId);
+    // document.removeEventListener('mousedown', this.handleClickOutside);
+
   };
 
   predictNext = bangAmounts => {
-    // Find the unique values in bangAmounts
     const uniqueValues = [...new Set(bangAmounts.map(bang => bang.bang))];
 
     if (uniqueValues.length === 1) {
-      // If there is only one unique value, return that value
       return uniqueValues[0];
     } else {
-      // Otherwise, compute the range and generate a random number within that range
       const minValue = Math.min(...uniqueValues);
       const maxValue = Math.max(...uniqueValues);
       const rangeSize = Math.ceil((maxValue - minValue) / 200);
@@ -340,7 +345,7 @@ class Bang extends Component {
       () => {
         // history.push('/');
       },
-      () => {}
+      () => { }
     );
 
     if (result.status === 'success') {
@@ -707,20 +712,18 @@ class Bang extends Component {
         content = (
           <div>
             {' '}
+
             <Lottie
               options={{
-                loop: true,
-                autoplay: true,
+                loop: isLowGraphics ? false : true,
+                autoplay: isLowGraphics ? false : true,
                 animationData: explosion
               }}
               style={{
-                filter: 'hue-rotate(312deg)',
+                filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
                 maxWidth: '100%',
                 width: '300px',
                 marginBottom: '-50px'
-
-                // position: 'absolute',
-                // transform: 'translate: (50%, 50%)'
               }}
             />
             <span id="bang-text">
@@ -741,16 +744,15 @@ class Bang extends Component {
             {' '}
             <Lottie
               options={{
-                loop: true,
-                autoplay: true,
+                loop: isLowGraphics ? false : true,
+                autoplay: isLowGraphics ? false : true,
                 animationData: explosion
               }}
               style={{
+                filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
                 maxWidth: '100%',
                 width: '300px',
                 marginBottom: '-50px'
-                // position: 'absolute',
-                // transform: 'translate: (50%, 50%)'
               }}
             />
             <span id="bang-text">
@@ -779,10 +781,10 @@ class Bang extends Component {
               countdown: countdownStart,
               elapsedTime: ''
             });
-            // Start the countdown
+            // console.log("DDd");
             const countdownTimer = setInterval(() => {
-              const countdown = countdown - 1;
-              if (countdown <= 0) {
+              const countdownValue = countdown - 1;
+              if (countdownValue <= 0) {
                 // Countdown is finished, restart everything
                 clearInterval(countdownTimer);
                 this.setState({
@@ -794,7 +796,7 @@ class Bang extends Component {
                   this.setState({ newRound: true });
                 }
               } else {
-                this.setState({ countdown, elapsedTime: '' });
+                this.setState({ countdown: countdownValue, elapsedTime: '' });
               }
             }, 1000);
           });
@@ -826,11 +828,13 @@ class Bang extends Component {
                         countdown: 5,
                         elapsedTime: ''
                       });
-                      // Start the countdown
+                      // console.log("countdownTimer");
+
                       const countdownTimer = setInterval(() => {
-                        const countdown = countdown - 1;
-                        if (countdown <= 0) {
-                          // Countdown is finished, restart everything
+                        const countdownValue = countdown - 1;
+                        if (countdownValue <= 0) {
+                          // console.log("eee");
+
                           clearInterval(countdownTimer);
                           this.setState({
                             showCountdown: false,
@@ -841,7 +845,7 @@ class Bang extends Component {
                             this.setState({ newRound: true });
                           }
                         } else {
-                          this.setState({ countdown, elapsedTime: '' });
+                          this.setState({ countdown: countdownValue, elapsedTime: '' });
                         }
                       }, 1000);
                     }, 2000);
@@ -861,18 +865,15 @@ class Bang extends Component {
             <div>
               <Lottie
                 options={{
-                  loop: true,
-                  autoplay: true,
+                  loop: isLowGraphics ? false : true,
+                  autoplay: isLowGraphics ? false : true,
                   animationData: explosion
                 }}
                 style={{
-                  filter: 'hue-rotate(312deg)',
+                  filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
                   maxWidth: '100%',
                   width: '300px',
                   marginBottom: '-50px'
-
-                  // position: 'absolute',
-                  // transform: 'translate: (50%, 50%)'
                 }}
               />
               <span id="bang-text">
@@ -888,12 +889,12 @@ class Bang extends Component {
               <Lottie
                 id="bomb"
                 options={{
-                  loop: true,
-                  autoplay: true,
+                  loop: isLowGraphics ? false : true,
+                  autoplay: isLowGraphics ? false : true,
                   animationData: bomb
                 }}
                 style={{
-                  filter: 'hue-rotate(312deg)',
+                  filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
                   maxWidth: '100%',
                   width: '250px',
                   // position: 'absolute',
@@ -925,7 +926,8 @@ class Bang extends Component {
                         showCountdown: true,
                         countdown: 5
                       });
-                      // Start the countdown
+                      // console.log("ggg");
+
                       const countdownTimer = setInterval(() => {
                         const countdown = countdown - 1;
                         if (countdown <= 0) {
@@ -957,12 +959,12 @@ class Bang extends Component {
             <Lottie
               id="bomb"
               options={{
-                loop: true,
-                autoplay: true,
+                loop: isLowGraphics ? false : true,
+                autoplay: isLowGraphics ? false : true,
                 animationData: bomb
               }}
               style={{
-                filter: 'hue-rotate(312deg)',
+                filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
                 maxWidth: '100%',
                 width: '300px',
                 // position: 'absolute',
@@ -984,36 +986,45 @@ class Bang extends Component {
                 }
                 useEasing={false}
                 // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
-                onEnd={() => {
-                  // Show the bang message for 2 seconds, then start the countdown
-                  this.setState({
-                    showBang: true
-                  });
-                  setTimeout(() => {
-                    this.setState({
-                      showBang: false,
-                      showCountdown: true,
-                      countdown: 5
-                    });
-                    // Start the countdown
-                    const countdownTimer = setInterval(() => {
-                      const countdown = countdown - 1;
-                      if (countdown <= 0) {
-                        // Countdown is finished, restart everything
-                        clearInterval(countdownTimer);
-                        this.setState({
-                          showCountdown: false,
-                          countdown: null
-                        });
-                        if (waiting) {
-                          this.setState({ newRound: true });
-                        }
-                      } else {
-                        this.setState({ countdown, elapsedTime: '' });
-                      }
-                    }, 1000);
-                  }, 2000);
-                }}
+                // Assuming countdown is initialized in the component's state as this.state.countdown
+
+// ...
+
+onEnd={() => {
+  // Show the bang message for 2 seconds, then start the countdown
+  this.setState({
+    showBang: true
+  });
+  setTimeout(() => {
+    this.setState({
+      showBang: false,
+      showCountdown: true,
+      countdown: 5
+    });
+
+    // console.log("oooo");
+
+    const countdownTimer = setInterval(() => {
+      const { countdown } = this.state; // Correct variable name
+      const countdownValue = countdown - 1;
+
+      if (countdownValue <= 0) {
+        // Countdown is finished, restart everything
+        clearInterval(countdownTimer);
+        this.setState({
+          showCountdown: false,
+          countdown: null
+        });
+        if (waiting) {
+          this.setState({ newRound: true });
+        }
+      } else {
+        this.setState({ countdown: countdownValue, elapsedTime: '' });
+      }
+    }, 1000);
+  }, 2000);
+}}
+
               />
             </p>
           </div>
@@ -1030,7 +1041,7 @@ class Bang extends Component {
           <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            // onScroll={this.handleScroll}
+          // onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
@@ -1112,8 +1123,8 @@ class Bang extends Component {
                                       ? ['#00FF00']
                                       : actionList.hostNetProfit?.slice(-1)[0] <
                                         0
-                                      ? ['#FF0000']
-                                      : ['#808080'],
+                                        ? ['#FF0000']
+                                        : ['#808080'],
                                   shadeIntensity: 1,
                                   type: 'vertical',
                                   opacityFrom: 0.7,
@@ -1225,7 +1236,7 @@ class Bang extends Component {
           </div>
           <div
             className="game-info-panel"
-            style={{ position: 'relative', zIndex: 10 }}
+            style={{ position: 'relative', zIndex: 10, paddingBottom: "30px" }}
           >
             {renderLottieAvatarAnimation(
               this.props.gameBackground,
@@ -1294,7 +1305,7 @@ class Bang extends Component {
                             textAlign: 'center'
                           }}
                         >
-                          x{guess}
+                          x{guess.toFixed(2)}
                         </span>
                       ))
                     ) : (
@@ -1371,9 +1382,10 @@ class Bang extends Component {
               color="primary"
               onClick={() => this.onBtnBetClick()}
               variant="contained"
+
             >
               {this.state.buttonClicked ? (
-                `Cash Out @ ${parseFloat(this.state.cashoutAmount)(2)}`
+                `Cash Out @ ${(this.state.cashoutAmount).toFixed(2)}`
               ) : waiting ? (
                 <span style={{ animation: 'blink 0.75s linear infinite' }}>
                   Joining Next Round
@@ -1382,31 +1394,8 @@ class Bang extends Component {
                 'BANG OUT'
               )}
             </Button>
-            
-            <Button
-              id="aiplay"
-              className="disabled"
-              variant="contained"
-              onMouseDown={this.handleButtonClick}
-              onMouseUp={this.handleButtonRelease}
-              onTouchStart={this.handleButtonClick}
-              onTouchEnd={this.handleButtonRelease}
-            >
-              {this.state.betting ? (
-                <div id="stop">
-                  <span>Stop</span>
-                  <Lottie options={defaultOptions} width={22} />
-                </div>
-              ) : (
-                <div>
-                  {this.state.timerValue !== 2000 ? (
-                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
-                  ) : (
-                    <span>AI Play (Coming Soon)</span>
-                  )}
-                </div>
-              )}
-            </Button>
+
+
           </div>
           <BetArray arrayName="bang_array" label="bang" />
 
@@ -1435,7 +1424,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  openGamePasswordModal
+  openGamePasswordModal,
+  getBangGuesses
   // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
 };
 

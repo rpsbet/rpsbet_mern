@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import BetArray from '../../components/BetArray';
 import CountUp, { linearEasing } from 'react-countup';
-import { deductBalanceWhenStartRoll } from '../../redux/Logic/logic.actions';
+import { deductBalanceWhenStartRoll, getRollGuesses } from '../../redux/Logic/logic.actions';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
@@ -13,6 +13,8 @@ import Moment from 'moment';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ReactApexChart from 'react-apexcharts';
 import PlayerModal from '../modal/PlayerModal';
+import { setBalance } from '../../redux/Auth/user.actions';
+import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { Button } from '@material-ui/core';
 import {
@@ -92,7 +94,7 @@ class Roll extends Component {
       advanced_status: '',
       waiting: false,
       is_anonymous: false,
-      bet_amount: 1,
+      bet_amount: 0.001,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       roll_guesses1Received: false,
       multiplier: 1.01,
@@ -136,11 +138,11 @@ class Roll extends Component {
     }
   };
 
-  handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
+  // handleClickOutside = e => {
+  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+  //     this.setState({ settings_panel_opened: false });
+  //   }
+  // };
   static getDerivedStateFromProps(props, current_state) {
     const { balance, isPasswordCorrect } = props;
     if (
@@ -166,7 +168,7 @@ class Roll extends Component {
       });
     }
 
-    if (isWaiting && disabledButtons) {
+    if (isWaiting && disabledButtons && !prevState.disabledButtons) {
       this.pushBet();
     }
 
@@ -185,71 +187,99 @@ class Roll extends Component {
       this.joinGame();
     }
   }
-
-  componentDidMount = () => {
-    this.panelRef.current.addEventListener('scroll', this.handleScroll);
+  componentDidMount = async () => {
     const roomId = this.props.roomInfo._id;
-    const { socket } = this.props;
-    if (socket) {
-      this.socket.on(`ROLL_GUESSES_${roomId}`, data => {
-        if (data && data.rolls && data.rolls.length > 0) {
-          const roll_guesses = data.rolls.map((roll, i) => ({
-            roll,
-            face: data.faces[i]
-          }));
+    const gameType = this.props.roomInfo.game_type;
+    const { socket, getRollGuesses, deductBalanceWhenStartRoll, setBalance, addNewTransaction } = this.props;
 
-          this.startSlider();
-          this.props.playSound('sweep');
-          this.setState(
-            {
-              roll_guesses,
-              lastRollGuess: roll_guesses[roll_guesses.length - 6].face
-            },
-            () => {
-              setTimeout(() => {
-                this.setState({ disabledButtons: true }, () => {
-                  if (this.state.buttonClicked) {
-                    this.props.deductBalanceWhenStartRoll({
-                      bet_amount: this.state.bet_amount
-                    });
-                  }
-                });
-              }, 1000);
-              setTimeout(() => {
-                this.props.playSound('shine');
-                this.setState({ disabledButtons: false });
-              }, 10000);
-            }
-          );
-        }
+    const fetchRollGuesses = async () => {
+      await getRollGuesses({
+        roomId: roomId
       });
+    };
 
-      this.socket.on(`ROLL_GUESSES1_${roomId}`, data => {
-        if (data && data.rolls && data.rolls.length > 0 && this.state.listen) {
-          const roll_guesses = data.rolls.map((roll, i) => ({
-            roll,
-            face: data.faces[i]
-          }));
-          this.setState({
-            roll_guesses,
-            elapsedTime: data.elapsedTime,
-            listen: false
-          });
-          this.startSlider();
-        }
-      });
+    const startRoll = async () => {
+      await fetchRollGuesses();
 
-      socket.on('UPDATED_BANKROLL', data => {
-        this.setState({ bankroll: data.bankroll });
-      });
-    }
-    document.addEventListener('mousedown', this.handleClickOutside);
+      this.rollGuessesInterval = setInterval(async () => {
+        await fetchRollGuesses();
+      }, 15000);
+
+      if (socket) {
+        socket.on(`ROLL_GUESSES_${roomId}`, async data => {
+          if (data && data.rolls && data.rolls.length > 0) {
+            const roll_guesses = data.rolls.map((roll, i) => ({
+              roll,
+              face: data.faces[i]
+            }));
+
+            this.startSlider();
+            this.props.playSound('sweep');
+            this.setState(
+              {
+                roll_guesses,
+                lastRollGuess: roll_guesses[roll_guesses.length - 6].face
+              },
+              async () => {
+                setTimeout(async () => {
+                  this.setState({ disabledButtons: true }, async () => {
+                    if (this.state.buttonClicked) {
+                      const response = deductBalanceWhenStartRoll({
+                        bet_amount: this.state.bet_amount,
+                        roomId: roomId,
+                        gameType: gameType
+
+                      });
+                  
+                      if (response.success) {
+                        const { balance, newTransaction } = response;
+                        setBalance(balance);
+                        addNewTransaction(newTransaction);
+                        if (this.state.isWaiting !== true) {
+                          this.setState({ isWaiting: true })
+                        }
+                      }
+                    }
+                  });
+                }, 1000);
+                setTimeout(() => {
+                  this.props.playSound('shine');
+                  this.setState({ disabledButtons: false });
+                }, 10000);
+              }
+            );
+          }
+        });
+
+        // socket.on(`ROLL_GUESSES1_${roomId}`, async data => {
+        //   if (data && data.rolls && data.rolls.length > 0 && this.state.listen) {
+        //     const roll_guesses = data.rolls.map((roll, i) => ({
+        //       roll,
+        //       face: data.faces[i]
+        //     }));
+        //     this.setState({
+        //       roll_guesses,
+        //       elapsedTime: data.elapsedTime,
+        //       listen: false
+        //     });
+        //     this.startSlider();
+        //   }
+        // });
+
+        // socket.on('UPDATED_BANKROLL', data => {
+        //   this.setState({ bankroll: data.bankroll });
+        // });
+      }
+      // document.addEventListener('mousedown', this.handleClickOutside);
+    };
+
+    await startRoll();
   };
 
+
   componentWillUnmount = () => {
-    clearInterval(this.state.intervalId, this.timer);
-    document.removeEventListener('mousedown', this.handleClickOutside);
-    this.panelRef.current.removeEventListener('scroll', this.handleScroll);
+    clearInterval(this.state.intervalId, this.timer, this.rollGuessesInterval);
+    // document.removeEventListener('mousedown', this.handleClickOutside);
     const roomId = this.props.roomInfo._id;
     this.socket.off(`ROLL_GUESSES_${roomId}`);
     this.socket.off(`ROLL_GUESSES1_${roomId}`);
@@ -320,6 +350,7 @@ class Roll extends Component {
   };
 
   joinGame = async () => {
+    console.log("joining")
     const { playSound, join, user, room, isDarkMode } = this.props;
     const { selected_roll, bet_amount } = this.state;
 
@@ -327,8 +358,6 @@ class Roll extends Component {
       bet_amount: parseFloat(bet_amount),
       selected_roll: selected_roll
       // is_anonymous: this.state.is_anonymous,
-      // roll_bet_item_id: this.props.roll_bet_item
-      // slippage: slippage
     });
 
     setTimeout(() => {
@@ -367,7 +396,7 @@ class Roll extends Component {
           () => {
             // history.push('/');
           },
-          () => {}
+          () => { }
         );
       } else {
         if (result.message) {
@@ -465,7 +494,7 @@ class Roll extends Component {
       const progress = Math.min(elapsedTime / 20000, 0.8); // 20 seconds
       const ease = 1 - Math.pow(1 - progress, 10); // cubic easing
 
-      currentPos = ease * 0.65 * sliderImages.offsetWidth;
+      currentPos = ease * 0.5585 * sliderImages.offsetWidth;
 
       sliderImages.style.transform = `translateX(${sliderImages.offsetWidth /
         3 -
@@ -678,20 +707,19 @@ class Roll extends Component {
       elapsedTime,
       showCountdown,
       waiting,
-      newRound,
       countdown,
       bankroll,
       bet_amount,
       betResult,
-      isDisabled,
-      slippage,
       selected_roll,
-      settings_panel_opened,
       bgColorChanged,
       actionList,
     } = this.state;
     const {
+      selectedCreator,
       handleOpenPlayerModal,
+      handleClosePlayerModal,
+      showPlayerModal,
       rank,
       creator_avatar,
       isLowGraphics,
@@ -808,8 +836,8 @@ class Roll extends Component {
                     });
                     // Start the countdown
                     const countdownTimer = setInterval(() => {
-                      const countdown = countdown - 1;
-                      if (countdown <= 0) {
+                      const countdownValue = countdown - 1;
+                      if (countdownValue <= 0) {
                         // Countdown is finished, restart everything
                         clearInterval(countdownTimer);
                         this.setState({
@@ -821,7 +849,7 @@ class Roll extends Component {
                           this.setState({ newRound: true });
                         }
                       } else {
-                        this.setState({ countdown, elapsedTime: '' });
+                        this.setState({ countdown: countdownValue, elapsedTime: '' });
                       }
                     }, 1000);
                   }}
@@ -917,8 +945,8 @@ class Roll extends Component {
                   });
                   // Start the countdown
                   const countdownTimer = setInterval(() => {
-                    const countdown = countdown - 1;
-                    if (countdown <= 0) {
+                    const countdownValue = countdown - 1;
+                    if (countdownValue <= 0) {
                       clearInterval(countdownTimer);
                       this.setState({
                         showCountdown: false,
@@ -928,7 +956,7 @@ class Roll extends Component {
                         this.setState({ newRound: true });
                       }
                     } else {
-                      this.setState({ countdown, elapsedTime: '' });
+                      this.setState({ countdown: countdownValue, elapsedTime: '' });
                     }
                   }, 1000);
                 }}
@@ -941,16 +969,21 @@ class Roll extends Component {
 
     return (
       <div className="game-page">
-        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
-
         <div className="page-title">
           <h2>PLAY - Roll!</h2>
         </div>
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+            // {...this.state.selectedRow}
+          />
+        )}
         <div className="game-contents">
           <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
@@ -1031,8 +1064,8 @@ class Roll extends Component {
                                       ? ['#00FF00']
                                       : actionList.hostNetProfit?.slice(-1)[0] <
                                         0
-                                      ? ['#FF0000']
-                                      : ['#808080'],
+                                        ? ['#FF0000']
+                                        : ['#808080'],
                                   shadeIntensity: 1,
                                   type: 'vertical',
                                   opacityFrom: 0.7,
@@ -1163,7 +1196,7 @@ class Roll extends Component {
               style={{
                 marginTop: '10px',
                 marginBottom: '-155px',
-                filter: 'hue-rotate(45deg)',
+                filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(45deg)',
                 maxWidth: '100%',
                 width: '160px'
               }}
@@ -1194,16 +1227,16 @@ class Roll extends Component {
                           guess.face === 'R'
                             ? 'rock'
                             : guess.face === 'P'
-                            ? 'paper'
-                            : guess.face === 'S'
-                            ? 'scissors'
-                            : guess.face === 'W'
-                            ? 'whale'
-                            : guess.face === 'B'
-                            ? 'bear'
-                            : guess.face === 'Bu'
-                            ? 'bull'
-                            : ''
+                              ? 'paper'
+                              : guess.face === 'S'
+                                ? 'scissors'
+                                : guess.face === 'W'
+                                  ? 'whale'
+                                  : guess.face === 'B'
+                                    ? 'bear'
+                                    : guess.face === 'Bu'
+                                      ? 'bull'
+                                      : ''
                         }
                       />
                     ))
@@ -1226,18 +1259,16 @@ class Roll extends Component {
               handle2xButtonClick={this.handle2xButtonClick}
               handleHalfXButtonClick={this.handleHalfXButtonClick}
               handleMaxButtonClick={this.handleMaxButtonClick}
-              onChange={this.handleChange}
+              onChangeState={this.onChangeState}
               isDarkMode={isDarkMode}
             />
             <div id="roll">
               <Button
-                className={`rock button-2x-r${
-                  selected_roll === 'R' ? ' active' : ''
-                }${
-                  bgColorChanged && betResult === -1 && selected_roll === 'R'
+                className={`rock button-2x-r${selected_roll === 'R' ? ' active' : ''
+                  }${bgColorChanged && betResult === -1 && selected_roll === 'R'
                     ? ' lose-bg'
                     : ''
-                }${betResult === 1 && selected_roll === 'R' ? ' win-bg' : ''}`}
+                  }${betResult === 1 && selected_roll === 'R' ? ' win-bg' : ''}`}
                 disabled={this.state.disabledButtons}
                 style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                 variant="contained"
@@ -1265,13 +1296,11 @@ class Roll extends Component {
                 <span>2x (4x)</span>
               </Button>
               <Button
-                className={`paper button-2x-p${
-                  selected_roll === 'P' ? ' active' : ''
-                }${
-                  bgColorChanged && betResult === -1 && selected_roll === 'P'
+                className={`paper button-2x-p${selected_roll === 'P' ? ' active' : ''
+                  }${bgColorChanged && betResult === -1 && selected_roll === 'P'
                     ? ' lose-bg'
                     : ''
-                }${betResult === 1 && selected_roll === 'P' ? ' win-bg' : ''}`}
+                  }${betResult === 1 && selected_roll === 'P' ? ' win-bg' : ''}`}
                 disabled={this.state.disabledButtons}
                 style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                 variant="contained"
@@ -1302,13 +1331,11 @@ class Roll extends Component {
                 <span>2x (4x)</span>
               </Button>
               <Button
-                className={`scissors button-2x-s${
-                  selected_roll === 'S' ? ' active' : ''
-                }${
-                  bgColorChanged && betResult === -1 && selected_roll === 'S'
+                className={`scissors button-2x-s${selected_roll === 'S' ? ' active' : ''
+                  }${bgColorChanged && betResult === -1 && selected_roll === 'S'
                     ? ' lose-bg'
                     : ''
-                }${betResult === 1 && selected_roll === 'S' ? ' win-bg' : ''}`}
+                  }${betResult === 1 && selected_roll === 'S' ? ' win-bg' : ''}`}
                 disabled={this.state.disabledButtons}
                 style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                 variant="contained"
@@ -1339,13 +1366,11 @@ class Roll extends Component {
                 <span>2x (4x)</span>
               </Button>
               <Button
-                className={`whale button-2x-w${
-                  selected_roll === 'W' ? ' active' : ''
-                }${
-                  bgColorChanged && betResult === -1 && selected_roll === 'W'
+                className={`whale button-2x-w${selected_roll === 'W' ? ' active' : ''
+                  }${bgColorChanged && betResult === -1 && selected_roll === 'W'
                     ? ' lose-bg'
                     : ''
-                }${betResult === 1 && selected_roll === 'W' ? ' win-bg' : ''}`}
+                  }${betResult === 1 && selected_roll === 'W' ? ' win-bg' : ''}`}
                 disabled={this.state.disabledButtons}
                 style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                 variant="contained"
@@ -1375,13 +1400,11 @@ class Roll extends Component {
                 <span>14x</span>
               </Button>
               <Button
-                className={`bear button-2x-b${
-                  selected_roll === 'B' ? ' active' : ''
-                }${
-                  bgColorChanged && betResult === -1 && selected_roll === 'B'
+                className={`bear button-2x-b${selected_roll === 'B' ? ' active' : ''
+                  }${bgColorChanged && betResult === -1 && selected_roll === 'B'
                     ? ' lose-bg'
                     : ''
-                }${betResult === 1 && selected_roll === 'B' ? ' win-bg' : ''}`}
+                  }${betResult === 1 && selected_roll === 'B' ? ' win-bg' : ''}`}
                 disabled={this.state.disabledButtons}
                 style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                 variant="contained"
@@ -1411,13 +1434,11 @@ class Roll extends Component {
                 <span>1.5x</span>
               </Button>
               <Button
-                className={`bull button-2x-bu${
-                  selected_roll === 'Bu' ? ' active' : ''
-                }${
-                  bgColorChanged && betResult === -1 && selected_roll === 'Bu'
+                className={`bull button-2x-bu${selected_roll === 'Bu' ? ' active' : ''
+                  }${bgColorChanged && betResult === -1 && selected_roll === 'Bu'
                     ? ' lose-bg'
                     : ''
-                }${betResult === 1 && selected_roll === 'Bu' ? ' win-bg' : ''}`}
+                  }${betResult === 1 && selected_roll === 'Bu' ? ' win-bg' : ''}`}
                 disabled={this.state.disabledButtons}
                 style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                 variant="contained"
@@ -1447,30 +1468,8 @@ class Roll extends Component {
                 <span>7x</span>
               </Button>
             </div>
-           
-            <Button
-              id="aiplay"
-              className="disabled"
-              variant="contained"
-              onMouseDown={this.handleButtonClick}
-              onMouseUp={this.handleButtonRelease}
-              onTouchStart={this.handleButtonClick}
-              onTouchEnd={this.handleButtonRelease}
-            >
-              {this.state.betting ? (
-                <div id="stop">
-                  <span>Stop</span>
-                </div>
-              ) : (
-                <div>
-                  {this.state.timerValue !== 2000 ? (
-                    <span>{(this.state.timerValue / 2000).toFixed(2)}s</span>
-                  ) : (
-                    <span>AI Play (Coming Soon)</span>
-                  )}
-                </div>
-              )}
-            </Button>
+
+
           </div>
           <BetArray arrayName="roll_array" label="roll" />
 
@@ -1500,7 +1499,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   openGamePasswordModal,
-  deductBalanceWhenStartRoll
+  deductBalanceWhenStartRoll,
+  getRollGuesses
   // updateBetResult: (betResult) => dispatch(updateBetResult(betResult))
 };
 

@@ -40,7 +40,7 @@ const initialState = {
   isMuted: localStorage.getItem('isMuted') === 'false' ? false : true,
   isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : true,
   loading: true,
-  user: { _id: null, email: '', password: '' },
+  user: { _id: null, password: '' },
   unreadMessageCount: 0,
   balance: 0,
   gasfee: 0,

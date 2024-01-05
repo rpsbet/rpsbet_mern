@@ -338,7 +338,7 @@ class QuickShoot extends Component {
     } else {
       alertModal(
         this.props.isDarkMode,
-        'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!'
+        'PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA!'
       );
       return;
     }

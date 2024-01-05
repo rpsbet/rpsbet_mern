@@ -11,7 +11,8 @@
 	color: #f9f9f9;
 }
 
-.dark_mode .game-logs-table thead {
+.dark_mode .game-logs-table thead,
+.dark_mode .modal-img {
 	background-color: #101010;
 	color: #f9f9f9;
 }
@@ -80,7 +81,6 @@
 	color: #e9ecef;
  }
  .dark_mode .runs-modal {
-	background: #1010104f;
 	color: #e9ecef;
  }
 
@@ -523,6 +523,9 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 }
 .dark_mode .modal-body .modal-icon.alert-icon-closed {
 	background-image: url("../public/img/icons/dark-alert-icon-closed.svg");
+}
+.dark_mode .modal-body .modal-icon.alert-icon-cat {
+	background-image: url("../public/img/icons/dark-alert-icon-cat.svg");
 }
 .dark_mode .modal-body .modal-icon.alert-icon-create {
 	background-image: url("../public/img/icons/dark-alert-icon-create.svg");

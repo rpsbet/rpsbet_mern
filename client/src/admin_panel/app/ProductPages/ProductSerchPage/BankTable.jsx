@@ -444,7 +444,7 @@ class BankTable extends Component {
                           console.log(row.lender,  this.props.user)
                           alertModal(
                             this.props.isDarkMode,
-                            'This is already yours dumbass!'
+                            'THIS IS LITTER-ALLY YOURS ALREADY!'
                           );
                         }
                       }}

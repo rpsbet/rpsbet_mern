@@ -42,7 +42,7 @@ class DeListLoanModal extends Component {
     if (response.success) {
       const { balance, newTransaction, message } = response;
       closeDeListLoanModal();
-      alertModal(isDarkMode, message);
+      alertModal(isDarkMode, message, '-cat');
       setBalance(balance);
       addNewTransaction(newTransaction);
       await acQueryMyLoan(30, 1, 'loan_amount', 'standard');
