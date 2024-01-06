@@ -103,6 +103,7 @@ router.post('/', async (req, res) => {
   try {
     const { username, password, bio, avatar, referralCode, avatarMethod } = req.body;
 
+
     // Simple validation
     if (!username || !password) {
       return res.json({

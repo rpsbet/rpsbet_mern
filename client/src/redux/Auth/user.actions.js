@@ -86,6 +86,7 @@ export const getUser = (is_reload, viewAll, loadMore, filterType, sortType, sear
   }
 };
 
+
 // Register User
 export const userSignUp = ({
   userName,
@@ -93,30 +94,53 @@ export const userSignUp = ({
   bio,
   avatar,
   referralCode,
-  avatarMethod // Add avatarMethod to the action
-}) => async dispatch => {
-  const body = JSON.stringify({ username: userName, password, bio, avatar, referralCode, avatarMethod }); // <- add avatarMethod to the request body
+  avatarMethod,
+  recaptchaToken,
+}) => async (dispatch) => {
   try {
     dispatch({ type: START_LOADING });
+    const recaptchaSecretKey = '6LcHBEcpAAAAAKD0U8ALIV0a6dbwbqOB5zTg-JVw'; // Replace with your actual reCAPTCHA secret key
+    const recaptchaVerifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`;
+    
+    // // Verify reCAPTCHA
+    const recaptchaResponse = await axios.post(recaptchaVerifyURL);
+    const recaptchaSuccess = recaptchaResponse.data.success;
+    console.log(recaptchaSuccess)
+
+    if (!recaptchaSuccess) {
+      dispatch({ type: END_LOADING });
+      dispatch({ type: MSG_ERROR, payload: 'reCAPTCHA verification failed' });
+      return { status: 'failed', error: 'reCAPTCHA verification failed' };
+    }
+
+    // Register User
+    const body = JSON.stringify({
+      username: userName,
+      password,
+      bio,
+      avatar,
+      referralCode,
+      avatarMethod,
+    });
+
     const res = await axios.post('/user', body);
     dispatch({ type: END_LOADING });
 
     if (res.data.success) {
-      dispatch({ type: SET_USERNAME_PASSWORD, payload: {password} });
+      dispatch({ type: SET_USERNAME_PASSWORD, payload: { password } });
       dispatch(setReferralCode(referralCode));
       return { status: 'success' };
     } else {
       dispatch({ type: REGISTER_FAIL });
       dispatch({ type: MSG_ERROR, payload: res.data.error });
-      return { status: 'failed', error: res.data.error};
+      return { status: 'failed', error: res.data.error };
     }
   } catch (err) {
     console.log('err***', err);
     dispatch({ type: MSG_WARNING, payload: err });
-    return { status: 'failed', error: err };
+    return { status: 'failed', error: err.message || 'An error occurred' };
   }
 };
-
 
 //referral
 export const setReferralCode = (referralCode) => {

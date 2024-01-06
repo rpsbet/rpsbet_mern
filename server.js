@@ -56,8 +56,8 @@ const bangCron = require('./helper/util/bangCron.js');
 creditScoreCron.checkOutstandingLoans();
 rentCron.checkRentalPayments();
 cronJob.checkConfirmations();
-rollCron.rollCron();
-bangCron.bangCron();
+// rollCron.rollCron();
+// bangCron.bangCron();
 
 // app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import TermsModal from '../modal/TermsModal';
 import { alertModal } from './ConfirmAlerts';
-import ReCAPTCHA from "react-google-recaptcha";
+import { GoogleReCaptchaProvider, GoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 Modal.setAppElement('#root')
 
@@ -43,8 +43,7 @@ class SignupModal extends Component {
       showTermsModal: false,
       avatarMethod: 'robohash',
       termsChecked: false,
-      captchaValue: null,
-
+      recaptchaToken: null,
     }
   }
 
@@ -52,10 +51,9 @@ class SignupModal extends Component {
     this.setState((prevState) => ({ termsChecked: !prevState.termsChecked }));
   };
 
-  handleCaptchaChange = (value) => {
-    this.setState({ captchaValue: value });
-  };
-
+  onChangeReCAPTCHA = (token) => {
+    this.setState({ recaptchaToken: token });
+  };  
 
   handleOpenTermsModal = () => {
     this.setState({ showTermsModal: true });
@@ -63,7 +61,6 @@ class SignupModal extends Component {
   handleCloseTermsModal = () => {
     this.setState({ showTermsModal: false });
   };
-
 
   onChangeAvatarMethod = (e) => {
     this.setState({ avatarMethod: e.target.value });
@@ -73,23 +70,12 @@ class SignupModal extends Component {
     this.setState({ userName: e.target.value });
   }
 
-  // onChangeEmail = (e) => {
-  //   this.setState({ email: e.target.value });
-  // }
-
-  onChangeAvatarMethod = (e) => {
-    this.setState({ avatarMethod: e.target.value });
-  };
-
   onChangePassword = (e) => {
     this.setState({ password: e.target.value });
   }
 
   onChangeReferralCode = (e) => {
     this.setState({ referralCode: e.target.value });
-  }
-
-  componentDidMount() {
   }
 
   onSubmitForm = async (e) => {
@@ -99,10 +85,12 @@ class SignupModal extends Component {
       return;
     }
 
-    if (!this.state.captchaValue) {
+    if (!this.state.recaptchaToken) {
       alertModal(this.props.isDarkMode, 'Please complete the captcha.');
       return;
     }
+    console.log("reCAPTCHA Token:", this.state.recaptchaToken);
+
     const result = await this.props.userSignUp(this.state);
 
     if (result.status === 'success') {
@@ -131,15 +119,15 @@ class SignupModal extends Component {
   render() {
     const { modalIsOpen, closeModal, openLoginModal, isDarkMode } = this.props;
     const { userName, password, referralCode, avatarMethod, termsChecked } = this.state;
+
     return (
       <Modal
         isOpen={modalIsOpen}
         style={customStyles}
         contentLabel={this.props.title}
       >
-        {/* Right column with form */}
-
-        <div className={isDarkMode ? 'dark_mode' : ''}>
+        <GoogleReCaptchaProvider reCaptchaKey="6LcHBEcpAAAAAL3z2qajpy9eEr-wDk3kfqsGRjot">
+          <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className={"modal-container"}>
             <div className='modal-left'>
               {/* Left column with giant picture */}
@@ -226,10 +214,9 @@ class SignupModal extends Component {
                       </span>
                     }
                   />
-                  <ReCAPTCHA
-                    sitekey="6LcHBEcpAAAAAL3z2qajpy9eEr-wDk3kfqsGRjot"
-                    onChange={this.handleCaptchaChange}
-                  />
+                  <GoogleReCaptcha
+                  onVerify={this.onChangeReCAPTCHA}
+                />
                 </form>
 
               </div>
@@ -248,6 +235,7 @@ class SignupModal extends Component {
 
           </div>
         </div>
+            </GoogleReCaptchaProvider>
         {this.state.showTermsModal && (
           <TermsModal
             modalIsOpen={this.state.showTermsModal}
