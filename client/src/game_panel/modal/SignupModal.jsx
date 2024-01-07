@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import TermsModal from '../modal/TermsModal';
 import { alertModal } from './ConfirmAlerts';
-import { GoogleReCaptchaProvider, GoogleReCaptcha } from 'react-google-recaptcha-v3';
+import ReCAPTCHA from "react-google-recaptcha";
 
 Modal.setAppElement('#root')
 
@@ -43,7 +43,7 @@ class SignupModal extends Component {
       showTermsModal: false,
       avatarMethod: 'robohash',
       termsChecked: false,
-      recaptchaToken: null,
+      recaptchaValue: null,
     }
   }
 
@@ -51,9 +51,12 @@ class SignupModal extends Component {
     this.setState((prevState) => ({ termsChecked: !prevState.termsChecked }));
   };
 
-  onChangeReCAPTCHA = (token) => {
-    this.setState({ recaptchaToken: token });
-  };  
+  onChangeReCAPTCHA = (value) => {
+    console.log("ReCAPTCHA value:", value);
+
+    // Update the state with the reCAPTCHA value
+    this.setState({ recaptchaValue: value });
+  };
 
   handleOpenTermsModal = () => {
     this.setState({ showTermsModal: true });
@@ -89,7 +92,6 @@ class SignupModal extends Component {
       alertModal(this.props.isDarkMode, 'Please complete the captcha.');
       return;
     }
-    console.log("reCAPTCHA Token:", this.state.recaptchaToken);
 
     const result = await this.props.userSignUp(this.state);
 
@@ -107,7 +109,7 @@ class SignupModal extends Component {
                   onClose();
                   this.props.closeModal();
                   this.props.openLoginModal();
-                }}>LFG!</Button>
+                }}>LOGIN NOW!</Button>
               </div>
             </div>
           );
@@ -126,8 +128,7 @@ class SignupModal extends Component {
         style={customStyles}
         contentLabel={this.props.title}
       >
-        <GoogleReCaptchaProvider reCaptchaKey="6LcHBEcpAAAAAL3z2qajpy9eEr-wDk3kfqsGRjot">
-          <div className={isDarkMode ? 'dark_mode' : ''}>
+        <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className={"modal-container"}>
             <div className='modal-left'>
               {/* Left column with giant picture */}
@@ -214,9 +215,11 @@ class SignupModal extends Component {
                       </span>
                     }
                   />
-                  <GoogleReCaptcha
-                  onVerify={this.onChangeReCAPTCHA}
-                />
+                  <ReCAPTCHA
+                    sitekey="6LcE5kgpAAAAAGkmu6IJZfl-NxuR049R6a_Oy4nS"
+                    onChange={this.onChangeReCAPTCHA}
+                    size="invisible"
+                  />
                 </form>
 
               </div>
@@ -235,7 +238,6 @@ class SignupModal extends Component {
 
           </div>
         </div>
-            </GoogleReCaptchaProvider>
         {this.state.showTermsModal && (
           <TermsModal
             modalIsOpen={this.state.showTermsModal}

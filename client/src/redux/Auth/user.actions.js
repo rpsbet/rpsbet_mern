@@ -105,6 +105,7 @@ export const userSignUp = ({
     // // Verify reCAPTCHA
     const recaptchaResponse = await axios.post(recaptchaVerifyURL);
     const recaptchaSuccess = recaptchaResponse.data.success;
+    console.log(recaptchaResponse)
     console.log(recaptchaSuccess)
 
     if (!recaptchaSuccess) {
