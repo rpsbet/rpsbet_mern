@@ -204,6 +204,14 @@ div.table .table-row .table-cell button:last-child:before,
   background-position: 12.5px 7.5px;
 }
 
+.game-contents .game-info-panel button {
+  margin-left: 5px !important;
+  margin-right: 10px;
+}
+.game-contents .game-info-panel button.place-bet {
+  margin-left: auto !important;
+}
+
 div.table .table-row .table-cell button:last-child,
 .boxes-panel.boxes-join .box,
 .game_header .main_header .header_action_panel button#btn-login,
@@ -212,6 +220,7 @@ div.table .table-row .table-cell button:last-child,
 .game-contents .game-info-panel button,
 #rps-radio div.active {
   padding: 0 10px;
+  margin-left: 15px;
   border-radius: 0.25em;
   color: #fff;
   font-size: 0.8em;
@@ -475,13 +484,13 @@ img.palm-trees.desktop-only {
   height: auto;
   opacity: 0.8;
 }
-
+/* 
 #palmTree {
   position: relative;
   width: 0;
   height: 0;
   z-index: -1;
-}
+} */
 
 /*********************************/
 /********* GAME PANEL ***********/
@@ -735,27 +744,29 @@ div.table .table-row .table-cell img.game-type-icon {
 .chat-line .avatar {
   overflow: visible !important;
 }
-.avatar {
+.header_action_panel
+.avatar,
+.my-chat-table .avatar,
+.player .avatar {
   width: 32px;
   height: 32px;
-  margin-right: 10px;
-  border-radius: 9px;
+
 }
 
-.main-game-table .avatar.desktop-only img,
-.main-game-table avatar.desktop-only img {
-  border-width: 6px !important;
-  border-radius: 6px  !important  ; 
+.avatar {
+  
+  border-radius: 9px;
 }
 
 .main-game-table .avatar.desktop-only,
 .main-game-table avatar.desktop-only  {
-  width: 60px !important;
-  height:60px  !important  ; 
+  margin-right: 5px;
+  width: 40px !important;
+  height:40px  !important  ; 
 }
 
 .cell-joiners svg {
-  width: 60px !important;
+  width: 40px !important;
     margin: auto -10px;
 }
 
@@ -955,13 +966,10 @@ div.table.main-game-table
     display: inline-block;
     width: 15px;
     height: 15px;
-    margin-left: 8px;
     background-color: #b9bbbe;
     border-radius: 5px;
-    left: 268px;
-    border: 1px solid #f9f9f9;
     margin-left: -20px;
-    transform: translate(0px, 45px);
+    transform: translate(5px, 24px);
 }
 
 div.table.main-game-table

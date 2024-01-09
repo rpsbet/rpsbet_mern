@@ -720,7 +720,7 @@ class Bang extends Component {
                 animationData: explosion
               }}
               style={{
-                filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
+                filter: 'grayscale(100%)',
                 maxWidth: '100%',
                 width: '300px',
                 marginBottom: '-50px'
@@ -749,7 +749,7 @@ class Bang extends Component {
                 animationData: explosion
               }}
               style={{
-                filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
+                filter: 'grayscale(100%)',
                 maxWidth: '100%',
                 width: '300px',
                 marginBottom: '-50px'
@@ -870,7 +870,7 @@ class Bang extends Component {
                   animationData: explosion
                 }}
                 style={{
-                  filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
+                  filter: 'grayscale(100%)',
                   maxWidth: '100%',
                   width: '300px',
                   marginBottom: '-50px'
@@ -894,7 +894,7 @@ class Bang extends Component {
                   animationData: bomb
                 }}
                 style={{
-                  filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
+                  filter: 'grayscale(100%)',
                   maxWidth: '100%',
                   width: '250px',
                   // position: 'absolute',
@@ -964,7 +964,7 @@ class Bang extends Component {
                 animationData: bomb
               }}
               style={{
-                filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(312deg)',
+                filter: 'grayscale(100%)',
                 maxWidth: '100%',
                 width: '300px',
                 // position: 'absolute',

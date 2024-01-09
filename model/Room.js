@@ -21,7 +21,8 @@ const RoomSchema = new Schema({
   }],
   game_type: {
     type: Schema.Types.ObjectId,
-    ref: 'GameType'
+    ref: 'GameType',
+    index: true
   },
   selected_rps: {
     type: Number,
@@ -119,7 +120,7 @@ const RoomSchema = new Schema({
     ref: 'User',
     default: []
   }],
-  status: { type: String },
+  status: { type: String, index: true },
   youtubeUrl: {
     type: String,
     default: ''

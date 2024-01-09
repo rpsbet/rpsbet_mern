@@ -246,7 +246,7 @@ const ProductName = styled.h6`
 `;
 
 const LinearContainer = styled.div`
-  width: 80%;
+  width: 100%;
   max-width: 1200px;
   margin: 20px 0;
 `;

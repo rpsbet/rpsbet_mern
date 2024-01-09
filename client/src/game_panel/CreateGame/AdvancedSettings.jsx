@@ -220,7 +220,7 @@ class AdvancedSettings extends Component {
                 value={this.props.youtubeUrl}
                 onChange={this.props.handleUrlChange}
               />
-              <Button style={{marginLeft: "10px"}} type="submit" variant="contained" color="primary">
+              <Button style={{marginLeft: "10px !important"}} type="submit" variant="contained" color="primary">
                 Play
               </Button>
             </form>

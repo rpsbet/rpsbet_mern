@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { alertModal } from '../../../../game_panel/modal/ConfirmAlerts';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTag,
@@ -419,7 +420,7 @@ class ProductTable extends Component {
             )}
             {data.map(row => (
               <ProductCard
-                key={row._id}
+                key={`${row._id}-${row.owners[0].user}`}
                 onClick={() => {
                   setCurrentProductId(row._id);
                   setCurrentProductInfo({

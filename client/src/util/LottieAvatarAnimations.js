@@ -7,7 +7,6 @@ import deepSea from '../game_panel/LottieAnimations/deep-sea.json';
 import lilBoat from '../game_panel/LottieAnimations/lil-boat.json';
 import grasslands from '../game_panel/LottieAnimations/grasslands.json';
 import campfire from '../game_panel/LottieAnimations/campfire.json';
-import campfire2 from '../game_panel/LottieAnimations/campfire2.json';
 import happyBirthday from '../game_panel/LottieAnimations/happy-birthday.json';
 import lateDrive from '../game_panel/LottieAnimations/late-drive.json';
 import theNetherlands from '../game_panel/LottieAnimations/the-netherlands.json';
@@ -70,10 +69,6 @@ const animationMap = {
   'lil-boat': { animationData: lilBoat, className: 'lottie-bg lil-boat' },
   grasslands: { animationData: grasslands, className: 'lottie-bg' },
   campfire: { animationData: campfire, className: 'lottie-bg campfire' },
-  campfire2: {
-    animationData: campfire2,
-    className: 'lottie-bg campfire2'
-  },
   'happy-birthday': { animationData: happyBirthday, className: 'lottie-bg' },
   'late-drive': { animationData: lateDrive, className: 'lottie-bg' },
   'the-netherlands': {
@@ -250,7 +245,7 @@ export const renderLottieAvatarAnimation = (image, isLowGraphics) => {
       isPaused: isLowGraphics
     };
 
-    const conditionalStyles = className.includes('lottie-bg') && isLowGraphics ? { filter: 'grayscale(100%)', opacity: 0.5} : {};
+    const conditionalStyles = className.includes('lottie-bg') ? { filter: 'grayscale(100%)', opacity: 0.5} : {};
 
     return (
       <div className={className}>

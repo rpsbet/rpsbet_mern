@@ -56,10 +56,10 @@ const bangCron = require('./helper/util/bangCron.js');
 creditScoreCron.checkOutstandingLoans();
 rentCron.checkRentalPayments();
 cronJob.checkConfirmations();
-// rollCron.rollCron();
-// bangCron.bangCron();
+rollCron.rollCron();
+bangCron.bangCron();
 
-// app.use(helmet());
+app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
@@ -73,7 +73,8 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
-    useCreateIndex: true
+    useCreateIndex: true,
+    poolSize: 10,
   })
   .then(() => console.log(`***mongodb connected`))
   .catch(err => console.log(err));

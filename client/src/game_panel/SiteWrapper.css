@@ -151,13 +151,13 @@ position: absolute;
   background: #b9bbbe;
     border: 3px solid #dee2e6;
     color: #f8f9fa;
-    width: 60px;
+    width: 40px;
     margin-left: 44px;
     display: flex;
     position: absolute;
     justify-content: center;
     align-items: center;
-    height: 60px;
+    height: 40px;
     border-radius: 9px;
     z-index: 2;
 }

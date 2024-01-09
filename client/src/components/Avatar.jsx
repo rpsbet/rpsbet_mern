@@ -66,9 +66,9 @@ class Avatar extends Component {
 
   render() {
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
-const {isLowGraphics, isDarkMode} = this.props;
-    let borderColor ='3px solid transparent';
-    let rankColor ='#3498db';
+    const { isLowGraphics, isDarkMode } = this.props;
+    let borderColor = '3px solid transparent';
+    let rankColor = '#3498db';
     let shadedColor = chroma(rankColor).darken(4).hex();
     if (!darkMode) {
       rankColor = '#2c3e50'; // Change to your dark mode color
@@ -86,16 +86,16 @@ const {isLowGraphics, isDarkMode} = this.props;
       9: '#001f3f',   // Navy
       10: '#b22222'   // Fire Brick
     };
-    
+
 
     if (rank !== null) {
       rank = getRank(rank);
       if (rank in rankColors) {
         borderColor = `3px solid ${rankColors[rank]}`;
-        rankColor=rankColors[rank];
+        rankColor = rankColors[rank];
       } else {
         borderColor = '3px solid red';
-        rankColor='red';
+        rankColor = 'red';
 
       }
     }
@@ -103,29 +103,30 @@ const {isLowGraphics, isDarkMode} = this.props;
     const backgroundColor = darkMode ? '#2D2D2D' : '#F3F3F3';
 
     return (
-        <div
-          {...this.props}
+      <div
+        // {...this.props}
+        className='avatar desktop-only'
+        style={{
+          position: 'relative',
+          backgroundColor,
+        }}
+      >
+        <img
+
+          src={src}
+          alt={alt}
           style={{
-            position: 'relative',
-            backgroundColor,
+            width: '100%',
+            height: '100%',
+            border: borderColor,
+            boxShadow: `0 2px 4px rgba(0, 0, 0, 0.1), 0 0px 4px 0px ${rankColor}, 0 0 4px ${shadedColor}, 0 0 4px ${shadedColor} inset`,
           }}
-        >
-          <img
-          
-            src={src}
-            alt={alt}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: borderColor ,
-              boxShadow: `0 2px 4px rgba(0, 0, 0, 0.1), 0 0px 4px 0px ${rankColor}, 0 0 4px ${shadedColor}, 0 0 4px ${shadedColor} inset`,
-            }}
-            onError={e => {
-              e.target.src = darkMode
-                ? '/img/profile-thumbnail-dark.svg'
-                : '/img/profile-thumbnail.svg';
-            }}
-          />
+          onError={e => {
+            e.target.src = darkMode
+              ? '/img/profile-thumbnail-dark.svg'
+              : '/img/profile-thumbnail.svg';
+          }}
+        />
         {renderLottieAvatarAnimation(accessory, isLowGraphics)}
         {dominantColor && (
           <div
@@ -137,13 +138,14 @@ const {isLowGraphics, isDarkMode} = this.props;
               height: '100%',
               border: borderColor,
               boxShadow: `0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor}`,
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              borderRadius: '9px'
             }}
           />
         )}
         {rank !== null && (
           <div
-          className='rank-icon'
+            className='rank-icon'
             style={{
               position: 'absolute',
               bottom: '1px',
@@ -151,10 +153,11 @@ const {isLowGraphics, isDarkMode} = this.props;
               width: '1.8em',
               height: '1.8em',
               backgroundColor: rankColors[rank],
-              color:  isDarkMode ? '#2d2d2d': '#f9f9f9',
+              color: isDarkMode ? '#2d2d2d' : '#f9f9f9',
               borderRadius: '5px',
-              border: isDarkMode ? '1px solid #2d2d2d': '1px solid #f9f9f9',
+              // border: isDarkMode ? '1px solid #2d2d2d' : '1px solid #f9f9f9',
               fontSize: '0.55em',
+              boxShadow: `0 0px 2px rgba(0, 0, 0, 0.1), 0 0px 2px 0px ${rankColor}, 0 0 1px ${shadedColor}`,
               fontWeight: 'bold',
               display: 'flex',
               justifyContent: 'center',

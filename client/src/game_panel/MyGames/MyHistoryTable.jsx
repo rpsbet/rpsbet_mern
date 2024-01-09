@@ -249,7 +249,7 @@ class MyHistoryTable extends Component {
               overflow: 'hidden',
               margin: '-2px 0px -136px',
               outline: 'none',
-              filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(2deg)',
+              filter: 'grayscale(100%)',
               maxWidth: '100%'
             }}
           />

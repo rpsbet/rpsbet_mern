@@ -16,7 +16,7 @@ const RollBetItemSchema = new Schema({
     },
     status: {
         type: String,
-        defalut: ''
+        default: ''
     },
     created_at: {
         type: Date,

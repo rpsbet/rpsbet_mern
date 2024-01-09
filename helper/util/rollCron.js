@@ -5,6 +5,7 @@ const Room = require('../../model/Room');
 const roomBetsMap = new Map();
 
 const rollCron = async () => {
+
   try {
     // Find open rooms with game_type = 'Roll'
     const openRooms = await Room.find({
@@ -12,14 +13,22 @@ const rollCron = async () => {
       game_type: '6536946933e70418b45fbe2f',
     });
 
-    // Iterate through open rooms
-    for (const room of openRooms) {
-      const roomId = room._id;
+    // Define batch size
+    const batchSize = 5; // Adjust this according to your needs
 
-      const roomBets = await RollBetItem.find({ room: roomId });
-      if (roomBets.length > 0) {
-        await predictAndSave(roomBets, roomId);
-      }
+    // Iterate through open rooms in batches
+    for (let i = 0; i < openRooms.length; i += batchSize) {
+      const batch = openRooms.slice(i, i + batchSize);
+
+      // Process each room in the batch
+      await Promise.all(batch.map(async (room) => {
+        const roomId = room._id;
+
+        const roomBets = await RollBetItem.find({ room: roomId });
+        if (roomBets.length > 0) {
+          await predictAndSave(roomBets, roomId);
+        }
+      }));
     }
   } catch (error) {
     console.error('Error in rollCron:', error);
@@ -27,31 +36,35 @@ const rollCron = async () => {
 };
 const predictAndSave = async (roomBets, roomId) => {
   const allFaces = [];
+;
 
   for (let i = 0; i < 20; i++) {
     const { roll: rollNumber, face: nextStateFace } = await predictNextRoll(roomBets);
+    
+    // Create a new bet
     const newBet = new RollBetItem({
       room: roomId,
       roll: rollNumber,
       face: nextStateFace,
       created_at: Date.now(),
     });
-    
-    await newBet.save();
-    
-    const roomBetsForRoom = roomBetsMap.get(roomId) || [];
 
-    if (roomBetsForRoom.length >= 100) {
-      roomBetsForRoom.shift();
+    // Check the total count of existing bets for the room in the database
+    const roomBetsCount = await RollBetItem.countDocuments({ room: roomId });
+
+    if (roomBetsCount >= 100) {
+      // If the limit is reached, delete the oldest bet(s) to make room for the new one
+      const oldestBets = await RollBetItem.find({ room: roomId }).sort({ created_at: 1 }).limit(roomBetsCount - 99);
+      await RollBetItem.deleteMany({ _id: { $in: oldestBets.map(bet => bet._id) } });
     }
 
-    roomBetsForRoom.push(newBet);
-    roomBetsMap.set(roomId, roomBetsForRoom);
+    // Save the new bet to the database
+    await newBet.save();
 
     allFaces.push(nextStateFace);
-    
   }
-}
+};
+
 const predictNextRoll = (roll_list, maxOrder = 3, initialWeight = 1.5, decayFactor = 0.9, smoothingFactor = 0.1) => {
   const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
   const sequence = roll_list.map((roll) => roll.face);

@@ -285,7 +285,7 @@ class SiteWrapper extends Component {
       }
     }
   }
-  
+
 
 
   playCoinsAnimation() {
@@ -578,6 +578,7 @@ class SiteWrapper extends Component {
         this.initializeAudio(),
         this.fetchData(),
       ]);
+      this.setState({ websiteLoading: false });
 
 
       // Set selectedMainTabIndex based on the current URL
@@ -599,10 +600,8 @@ class SiteWrapper extends Component {
       this.loadWeb3();
     } catch (error) {
       console.error(error);
-    } finally {
-      this.setState({ websiteLoading: false });
-
     }
+    
   }
 
 
@@ -1039,8 +1038,8 @@ class SiteWrapper extends Component {
               >
                 <Tab
                   className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-                      ? 'fade-animation fade-in'
-                      : 'fade-animation fade-out'
+                    ? 'fade-animation fade-in'
+                    : 'fade-animation fade-out'
                     }`}
                   label="PVP"
                   labelPlacement="left"
@@ -1058,8 +1057,8 @@ class SiteWrapper extends Component {
 
                 <Tab
                   className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
-                      ? 'fade-animation fade-in'
-                      : 'fade-animation fade-out'
+                    ? 'fade-animation fade-in'
+                    : 'fade-animation fade-out'
                     }`}
                   label="Manage"
                   labelPlacement="left"
@@ -1166,24 +1165,24 @@ class SiteWrapper extends Component {
                           this.setState({ oldBalance: balance }); // update oldBalance after animation completes
                         }}
                       />
-                      {(isCoinsAnimation && !isLowGraphics) && 
-                      <Lottie
-                      options={{
-                        loop: false,
-                        autoplay: isCoinsAnimation,
-                        animationData: coins,
-                        rendererSettings: {
-                          preserveAspectRatio: 'xMidYMid slice',
-                        },
-                      }}
-                      style={{
-                        marginTop: '-0px',
-                        position: `absolute`,
-                        width: '100px',
-                        height: '100px'
-                      }}
-                      />
-                    }
+                      {(isCoinsAnimation && !isLowGraphics) &&
+                        <Lottie
+                          options={{
+                            loop: false,
+                            autoplay: isCoinsAnimation,
+                            animationData: coins,
+                            rendererSettings: {
+                              preserveAspectRatio: 'xMidYMid slice',
+                            },
+                          }}
+                          style={{
+                            marginTop: '-0px',
+                            position: `absolute`,
+                            width: '100px',
+                            height: '100px'
+                          }}
+                        />
+                      }
                       <Button
                         id="wallet-btn"
                         style={{
@@ -1486,114 +1485,86 @@ class SiteWrapper extends Component {
             >
               <div className="arrow-up"></div>
               <div className="header_panel_contents">
-              {<Tooltip
-                    style={{position: "absolute", right: "20px"}}
-          title={
-            <>
-              <strong>WHY DO MY WINNINGS APPEAR LESS?</strong>
-              <br /><br />
-              You see less as this is net profit (winnings - bet amount) and
-              receive less due to RTB fees awarded to the Host (0% - 15%
-              Returned to Bankroll dependent on their accessory) and 0.5%
-              towards platform fees. For example, if you win {convertToCurrency(0.2)}&nbsp;
-               but bet {convertToCurrency(0.1)}, then you might see:
-              {convertToCurrency(0.2)} * 0.88 (12% RTB) - {convertToCurrency(0.1)} (net profit)
-              = {convertToCurrency(0.076)} (Final Calculation)
-            </>
-          }
-          placement="top"
-        >
-          <Info />
-        </Tooltip>}
-          <h2>BALANCE HISTORY</h2>
-        
+                {<Tooltip
+                  style={{ position: "absolute", right: "20px" }}
+                  title={
+                    <>
+                      <strong>WHY DO MY WINNINGS APPEAR LESS?</strong>
+                      <br /><br />
+                      You see less as this is net profit (winnings - bet amount) and
+                      receive less due to RTB fees awarded to the Host (0% - 15%
+                      Returned to Bankroll dependent on their accessory) and 0.5%
+                      towards platform fees. For example, if you win {convertToCurrency(0.2)}&nbsp;
+                      but bet {convertToCurrency(0.1)}, then you might see:
+                      {convertToCurrency(0.2)} * 0.88 (12% RTB) - {convertToCurrency(0.1)} (net profit)
+                      = {convertToCurrency(0.076)} (Final Calculation)
+                    </>
+                  }
+                  placement="top"
+                >
+                  <Info />
+                </Tooltip>}
+                <h2>BALANCE HISTORY</h2>
+
                 {
                   <div>
                     <table>
-                    
                       <tbody>
-                        {transactions.filter(row => row.user === this.props.user._id)
-                          .length === 0 ? (
+                        {transactions.filter(row => row.user === this.props.user._id).length === 0 ? (
                           <tr>
                             <td>...</td>
                           </tr>
                         ) : (
-                          transactions.filter(row => row.user === this.props.user._id)
-                            .map((row, key) => (
-                              // row.user === this.props.user && (
-                              <tr key={key}>
-                                {row.hash ? ( // Check if row has a 'hash' property
-                                  <a
-                                    href={`https://etherscan.io/tx/${row.hash}`}
-                                    rel="noopener noreferrer"
-                                  >
-                                    <td
-                                      className={
-                                        'amount ' +
-                                        (row.amount > 0 ? 'green' : 'red')
-                                      }
-                                    >
-                                      {row.amount > 0 ? (
-                                        <>
-                                          {'+ '}
-                                          {convertToCurrency(row.amount, true)}
-                                        </>
-                                      ) : (
-                                        <>
-                                          {'- '}
-                                          {convertToCurrency(
-                                            Math.abs(row.amount),
-                                            true
-                                          )}
-                                        </>
-                                      )}
-                                    </td>
-
-                                    <td className="fromNow">{row.from_now}</td>
-                                  </a>
-
-                                ) : (
-                                  <table>
-                                    {' '}
-                                    <td
-                                      className={
-                                        'amount ' +
-                                        (row.amount > 0 ? 'green' : 'red')
-                                      }
-                                    >
-                                      {row.amount > 0 ? (
-                                        <>
-                                          {'+ '}
-                                          {convertToCurrency(row.amount, true)}
-                                        </>
-                                      ) : (
-                                        <>
-                                          {'- '}
-                                          {convertToCurrency(
-                                            Math.abs(row.amount),
-                                            true
-                                          )}
-                                        </>
-                                      )}
-                                    </td>
-                                    <td className="fromNow">{row.from_now}</td>
-                                  </table>
-                                )}
-                              </tr>
-
-                            ))
+                          transactions.filter(row => row.user === this.props.user._id).map((row, key) => (
+                            <tr key={key}>
+                              {row.hash ? (
+                                <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
+                                  <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
+                                    {row.amount > 0 ? (
+                                      <>
+                                        {'+ '}
+                                        {convertToCurrency(row.amount, true)}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {'- '}
+                                        {convertToCurrency(Math.abs(row.amount), true)}
+                                      </>
+                                    )}
+                                  </td>
+                                  <td className="fromNow">{row.from_now}</td>
+                                </a>
+                              ) : (
+                                <>
+                                  <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
+                                    {row.amount > 0 ? (
+                                      <>
+                                        {'+ '}
+                                        {convertToCurrency(row.amount, true)}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {'- '}
+                                        {convertToCurrency(Math.abs(row.amount), true)}
+                                      </>
+                                    )}
+                                  </td>
+                                  <td className="fromNow">{row.from_now}</td>
+                                </>
+                              )}
+                            </tr>
+                          ))
                         )}
                       </tbody>
-                      <Button onClick={this.toggleAllTransactions}>
-                        View All
-                      </Button>
                     </table>
+                    <Button onClick={this.toggleAllTransactions}>View All</Button>
                   </div>
                 }
+
                 <div className="transaction-panel">
                   <Button
                     className="btn-inventory"
-                    isDarkMode={isDarkMode}
+                    // isDarkMode={isDarkMode}
                     onClick={this.handleOpenInventoryModal}
                   >
                     Inventory
@@ -1604,7 +1575,7 @@ class SiteWrapper extends Component {
                     <Button
                       className="btn-withdraw debt"
                       onClick={this.handleOpenDebtsModal}
-                      isDarkMode={isDarkMode}
+                      // isDarkMode={isDarkMode}
                     >
                       <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
                     </Button>
@@ -1612,7 +1583,7 @@ class SiteWrapper extends Component {
                     <Button
                       className="btn-withdraw"
                       onClick={this.handleOpenWithdrawModal}
-                      isDarkMode={isDarkMode}
+                      // isDarkMode={isDarkMode}
                     >
                       Withdraw
                     </Button>
@@ -1621,7 +1592,7 @@ class SiteWrapper extends Component {
                   <Button
                     className="btn-deposit"
                     onClick={this.handleOpenDepositModal}
-                    isDarkMode={isDarkMode}
+                    // isDarkMode={isDarkMode}
                   >
                     Deposit
                   </Button>

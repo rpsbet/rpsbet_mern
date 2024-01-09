@@ -39,6 +39,7 @@ const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 class OpenGamesTable extends Component {
   constructor(props) {
     super(props);
+    this._isMounted = true;
     this.state = {
       selectedGameType: '',
       isLoading: this.props.isLoading,
@@ -49,6 +50,7 @@ class OpenGamesTable extends Component {
       hostNetProfitList: [],
       actionList: null
     };
+    
   }
 
   generateGameTypePanel = () => {
@@ -74,7 +76,7 @@ class OpenGamesTable extends Component {
         gap="15px"
         ref={ref => (this.game_type_panel = ref)}
       >
-        <Box item key="open-game-left-button">
+        <Box key="open-game-left-button">
           <Button
             className="btn-arrow-left"
             onClick={this.handleBtnLeftClicked}
@@ -167,6 +169,7 @@ class OpenGamesTable extends Component {
 
   componentDidMount() {
     const { roomList } = this.props;
+    this._isMounted = true;
     this.setState({ roomList });
     const roomIds = roomList.map(room => room._id);
     this.getRoomData(roomIds);
@@ -175,6 +178,7 @@ class OpenGamesTable extends Component {
   }
 
   componentWillUnmount() {
+    this._isMounted = false;
     window.removeEventListener('scroll', this.handleScroll);
     window.removeEventListener('load', this.handleLoad);
 
@@ -184,11 +188,15 @@ class OpenGamesTable extends Component {
     const { roomList } = this.props;
     const roomIds = roomList.map(room => room._id);
     if (prevProps.roomList !== this.props.roomList) {
+      if (this._isMounted) {
       this.setState({ roomList, isLoading: false });
       this.getRoomData(roomIds);
+      }
     }
     if (prevState.selectedGameType !== this.state.selectedGameType) {
+      if (this._isMounted) {
       this.setState({ isLoading: true });
+      }
 
     }
   }
@@ -228,7 +236,7 @@ class OpenGamesTable extends Component {
 
       const hostNetProfits = hostNetProfitLists.map(item => item.hostNetProfit);
       const hostBetsValue = hostNetProfitLists.map(item => item.hostBetsValue);
-
+      if (this._isMounted) { 
       this.setState({
         hostNetProfitList: netProfitsByRoom,
         actionList: {
@@ -236,10 +244,11 @@ class OpenGamesTable extends Component {
           hostBetsValue
         }
       });
-    } catch (error) {
-      console.error('Error fetching room data:', error);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching room data:', error);
+  }
+};
 
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -457,7 +466,7 @@ class OpenGamesTable extends Component {
             {this.state.roomList.map(
               (row, key) => (
                 <div
-                  className={`table-row ${key < 10 ? 'slide-in' : ''}`}
+                  className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
                   style={{ animationDelay: `${key * 0.1}s` }}
                   key={row._id}
                 >
@@ -640,14 +649,14 @@ class OpenGamesTable extends Component {
                               {convertToCurrency(hostNetProfitList[key])}
                             </span>
                           </div>
-                          {row.joiners && row.joiners.length > 0 ? (
+                          {/* {row.joiners && row.joiners.length > 0 ? (
 
                             <div id="palmTree">
 
                               <img className="palm-trees desktop-only" src={palmTree} />
                             </div>
                           ) : (null)
-                          }
+                          } */}
                         </>
                       ) : (
                         <Lottie

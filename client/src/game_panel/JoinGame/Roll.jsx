@@ -1196,7 +1196,7 @@ class Roll extends Component {
               style={{
                 marginTop: '10px',
                 marginBottom: '-155px',
-                filter: isLowGraphics ? 'grayscale(100%)' : 'hue-rotate(45deg)',
+                filter: 'grayscale(100%)',
                 maxWidth: '100%',
                 width: '160px'
               }}

@@ -633,10 +633,18 @@ div[role="presentation"] div {
     width: 100% !important;
     height: 100% !important;
   }
-  .modal-body .avatar-border div,
-  .modal-body .avatar-border img
+  .modal-body.profile div.avatar div,
+  .modal-body.profile div.avatar,
+  .modal-body.profile div.avatar img
    {
     border-radius: 2em !important;
+    width: 100%;
+  }
+
+  .modal-body.profile div.avatar div .rank-icon,
+  .modal-body.profile div.avatar .rank-icon {
+    border-radius: 0.5em !important;
+
   }
 
   .profile.modal-body .avatar-border div div,

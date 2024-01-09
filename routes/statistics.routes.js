@@ -16,6 +16,8 @@ const RoomBoxPrize = require('../model/RoomBoxPrize');
 
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
+
+
     const { _id, actorType, gameType, timeType } = req.query;
     let transactionConditions = {};
     const gameLogsQuery = {
@@ -76,6 +78,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       startDate = new Date(new Date().setHours(new Date().getHours() - 1));
     }
 
+
     if (startDate) {
       transactionConditions.$and.push({ created_at: { $gte: startDate } });
       gameLogsQuery.$and.push({ created_at: { $gte: startDate } });
@@ -100,6 +103,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         { path: 'room', model: Room, select: 'room_number qs_game_type' },
         { path: 'game_type', model: GameType, select: 'short_name' }
       ]);
+
 
     let statistics = {
       deposit: 0,
@@ -322,6 +326,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
         net_profit
       });
     }
+
 
     // console.log(statistics.gameLogList)
 
