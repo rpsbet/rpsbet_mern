@@ -131,7 +131,7 @@ const predictNextBang = bangAmounts => {
 
 };
 
-bangCron();
+// bangCron();
 
 
 module.exports = {
