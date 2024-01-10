@@ -287,6 +287,12 @@ div[role='tablist'] {
   overflow: hidden;
   align-items: center;
 }
+
+.notification-element {
+  height: 300px;
+  padding: 10px;
+  overflow-y: scroll;
+}
 .notification-container a{
   width: 30%;
   display: inline-block !important;

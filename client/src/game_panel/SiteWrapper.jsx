@@ -1415,7 +1415,7 @@ class SiteWrapper extends Component {
               <div className="header_panel_contents">
                 {<h2>NOTIFICATIONS</h2>}
                 {
-                  <div>
+                  <div className="notification-element">
                     {notificationsArray.length > 0 ? (
                       notificationsArray.map((notification, index) => (
                         <div className="notification-container" key={index}>

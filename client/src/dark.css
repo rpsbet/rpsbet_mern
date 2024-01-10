@@ -588,7 +588,7 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 color: #fff;
 }
 .dark_mode div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px;
+    box-shadow: 0 0px 2px rgba(0, 0, 0, 0.1), 0 0px 2px 0px;
 }
 
   .dark_mode .btn_join:hover,

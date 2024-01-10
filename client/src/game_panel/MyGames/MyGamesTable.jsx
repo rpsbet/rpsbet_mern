@@ -517,7 +517,11 @@ class MyGamesTable extends Component {
           ) : (
             this.state.myGames.map(
               (row, key) => (
-                <div className="table-row" key={row._id}>
+                <div
+                className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
+                style={{ animationDelay: `${key * 0.1}s` }}
+                key={row._id}
+              >
                   <div>
                     <div className="table-cell room-id">
                       <a href={`/join/${row._id}`}>

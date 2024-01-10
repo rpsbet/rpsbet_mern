@@ -219,7 +219,8 @@ class SignupModal extends Component {
                     sitekey="6LcE5kgpAAAAAGkmu6IJZfl-NxuR049R6a_Oy4nS"
                     onChange={this.onChangeReCAPTCHA}
                     size="invisible"
-                  />
+                    style={{display: "none"}}
+                    />
                 </form>
 
               </div>

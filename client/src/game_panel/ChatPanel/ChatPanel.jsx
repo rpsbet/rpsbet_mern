@@ -306,7 +306,9 @@ class ChatPanel extends Component {
       hoverTabIndex,
       showEmojiPanel
     } = this.state;
-    const { selectedMainTabIndex } = this.props;
+    const { selectedMainTabIndex, isAuthenticated } = this.props;
+    const isChatEnabled = isAuthenticated;
+
     return (
       <div className="chat-wrapper">
         <Tabs
@@ -400,7 +402,7 @@ class ChatPanel extends Component {
               className="form-control"
               variant="outlined"
               onKeyDown={this.onTextAreaKeyDown}
-              placeholder="Chat here..."
+              placeholder={isChatEnabled ? "Chat here..." : "NOT LOGGED IN"}
               onChange={this.onChangeText}
               value={this.state.text}
               ref={elem => {
@@ -429,6 +431,7 @@ class ChatPanel extends Component {
                   </InputAdornment>
                 )
               }}
+              disabled={!isChatEnabled} 
             />
           </div>
         )}

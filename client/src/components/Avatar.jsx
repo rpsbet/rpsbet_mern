@@ -119,7 +119,7 @@ class Avatar extends Component {
             width: '100%',
             height: '100%',
             border: borderColor,
-            boxShadow: `0 2px 4px rgba(0, 0, 0, 0.1), 0 0px 4px 0px ${rankColor}, 0 0 4px ${shadedColor}, 0 0 4px ${shadedColor} inset`,
+            boxShadow: `0 0px 4px 0px ${rankColor}`,
           }}
           onError={e => {
             e.target.src = darkMode
@@ -137,7 +137,7 @@ class Avatar extends Component {
               width: '100%',
               height: '100%',
               border: borderColor,
-              boxShadow: `0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor}`,
+              boxShadow: `0 6px 20px 0px ${rankColor}, 0 0 10px ${shadedColor}`,
               boxSizing: 'border-box',
               borderRadius: '9px'
             }}
@@ -157,7 +157,7 @@ class Avatar extends Component {
               borderRadius: '5px',
               // border: isDarkMode ? '1px solid #2d2d2d' : '1px solid #f9f9f9',
               fontSize: '0.55em',
-              boxShadow: `0 0px 2px rgba(0, 0, 0, 0.1), 0 0px 2px 0px ${rankColor}, 0 0 1px ${shadedColor}`,
+              boxShadow: `0 0px 2px 0px ${rankColor}, 0 0 1px ${shadedColor}`,
               fontWeight: 'bold',
               display: 'flex',
               justifyContent: 'center',

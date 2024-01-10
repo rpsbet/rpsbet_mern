@@ -1917,9 +1917,12 @@ router.get('/notifications', auth, async (req, res) => {
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
+    const recentNotifications = sortedNotifications.slice(0, 10);
+
+
     res.json({
       success: true,
-      notifications: sortedNotifications
+      notifications: recentNotifications
     });
   } catch (err) {
     console.log(err);

@@ -1,6 +1,8 @@
 const cron = require('node-cron');
+const socket_io = require('socket.io');
 const Item = require('../../model/Item');
 const User = require('../../model/User');
+const Chat = require('../../model/Chat');
 const Transaction = require('../../model/Transaction');
 
 async function checkRentalPayments() {
@@ -108,7 +110,36 @@ async function checkRentalPayments() {
 // Schedule the cron job to run every day at midnight (00:00)
 cron.schedule('0 0 * * *', async () => {
   await checkRentalPayments();
+
+  // Emit a global chat message after rental payments have been processed
+  const currentDate = new Date();
+  const senderId = '629685058f368a1838372754'; // Replace with the actual sender ID
+  const message = 'All outstanding rent and arrears have been processed.';
+  const messageType = 'text';
+  const avatar = ''; // Replace with the actual avatar URL
+  const accessory = ''; // Replace with the actual accessory URL
+  const rank = 0; // Replace with the actual rank
+  const replyTo = null; // No need for a reply in this case
+
+  const data = {
+    sender: senderId,
+    senderId: senderId,
+    message: message,
+    messageType: messageType,
+    avatar: avatar,
+    accessory: accessory,
+    rank: rank,
+    replyTo: replyTo,
+  };
+
+  // Emit the GLOBAL_CHAT_SEND event
+  io.sockets.emit('GLOBAL_CHAT_SEND', data);
 });
+
+// Export an object containing the function
+module.exports = {
+  checkRentalPayments,
+};
 
 // Export an object containing the function
 module.exports = {
