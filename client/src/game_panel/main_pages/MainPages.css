@@ -2487,18 +2487,23 @@ input {
 .game-page .game-contents .game-info-panel .create-box-panel button {
   margin: 0;
 }
+.msgtooltip-container {
+  position: relative !important;
+
+}
 .msgtooltip {
   cursor: pointer;
   width: 100%;
-  border-top-right-radius: 6px;
-  border-top-left-radius: 6px;
-  background-color: #d81719;
-  z-index: 2;
+  border-top-right-radius: 6px !important;
+  border-top-left-radius: 6px !important;
+  background-color: #d81719 !important;
+  z-index: 99;
   text-align: center;
   top: calc(100% - 22px);
   left: 0;
-  padding: 5px 10px;
-  position: sticky;
+  padding: 5px 10px 80px;
+position: sticky !important;
+
   box-shadow: inset 0px 2px 0px #ff4a4a;
 }
 .game-page .game-contents.mystery-box-result-contents {

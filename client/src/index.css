@@ -866,6 +866,7 @@ a.player:hover {
   color: red;
   margin-right: 5px;
   margin-top: 5px;
+  font-size: 0.7em;
     margin-bottom: 5px;
 }
 .game-page .game-contents .game-info-panel button.add-new-game-type {
@@ -881,9 +882,6 @@ a.player:hover {
   font-weight: 600 !important;
   color: #fff;
   cursor: pointer;
-}
-.game-contents .game-info-panel button {
-  margin-right: 10px;
 }
 .share-options input[type="text"] {
   overflow: hidden;

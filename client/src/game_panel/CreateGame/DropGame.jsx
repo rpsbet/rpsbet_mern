@@ -53,7 +53,7 @@ class DropGame extends Component {
 
   }
 
-    
+
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance
@@ -80,61 +80,59 @@ class DropGame extends Component {
     const uniqueValues = [...new Set(sortedDrops)];
 
     if (uniqueValues.length === 1) {
-        return uniqueValues[0];
+      return uniqueValues[0];
     } else {
-        let finalValue;
+      let finalValue;
 
-        do {
-            const minDrop = Math.min(...sortedDrops);
-            const maxDrop = Math.max(...sortedDrops);
-            const difference = maxDrop - minDrop;
-            const segmentSize = difference / 20;
+      do {
+        const minDrop = Math.min(...sortedDrops);
+        const maxDrop = Math.max(...sortedDrops);
+        const difference = maxDrop - minDrop;
+        const segmentSize = difference / 20;
 
-            const segments = Array.from({ length: 20 }, (_, index) => {
-                const lowerBound = minDrop + index * segmentSize;
-                const upperBound = minDrop + (index + 1) * segmentSize;
-                const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
+        const segments = Array.from({ length: 20 }, (_, index) => {
+          const lowerBound = minDrop + index * segmentSize;
+          const upperBound = minDrop + (index + 1) * segmentSize;
+          const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
 
-                return {
-                    segment: index + 1,
-                    drops: dropsInSegment
-                };
-            });
+          return {
+            segment: index + 1,
+            drops: dropsInSegment
+          };
+        });
 
-            const totalDropsCount = sortedDrops.length;
-            const weights = segments.map(segment => segment.drops.length / totalDropsCount);
+        const totalDropsCount = sortedDrops.length;
+        const weights = segments.map(segment => segment.drops.length / totalDropsCount);
 
-            const randomValue = Math.random();
-            let cumulativeWeight = 0;
-            let selectedSegment;
+        const randomValue = Math.random();
+        let cumulativeWeight = 0;
+        let selectedSegment;
 
-            for (let i = 0; i < segments.length; i++) {
-                cumulativeWeight += weights[i];
-                if (randomValue <= cumulativeWeight) {
-                    selectedSegment = segments[i];
-                    break;
-                }
-            }
+        for (let i = 0; i < segments.length; i++) {
+          cumulativeWeight += weights[i];
+          if (randomValue <= cumulativeWeight) {
+            selectedSegment = segments[i];
+            break;
+          }
+        }
 
-            const switchChance = Math.random();
+        const switchChance = Math.random();
 
-            if (switchChance <= 0.4) {
-                const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
-                finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
-            } else if (switchChance <= 0.8) {
-                const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
-                finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
-            } else {
-                const randomAddition = Math.random() * segmentSize;
-                finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
-            }
+        if (switchChance <= 0.4) {
+          const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
+          finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
+        } else if (switchChance <= 0.8) {
+          const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
+          finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
+        } else {
+          const randomAddition = Math.random() * segmentSize;
+          finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
+        }
 
-        } while (finalValue !== null && finalValue < 0.000001);
-        console.log("finalValue", finalValue)
-
-        return finalValue;
+      } while (finalValue !== null && finalValue < 0.000001);
+      return finalValue;
     }
-};
+  };
 
 
   onAutoPlay = () => {
@@ -146,10 +144,10 @@ class DropGame extends Component {
       alertModal(this.props.isDarkMode, 'MINIMUM 3 RUNS, TO MAKE A PREDICTION!!!');
     }
   };
-  
 
-  
-  
+
+
+
   onRemoveItem = index => {
     this.props.playSound('tap');
 
@@ -176,16 +174,16 @@ class DropGame extends Component {
       alertModal(this.props.isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
       return;
     }
-  
+
     this.setState({ drop: drop });
     const newArray = JSON.parse(JSON.stringify(this.props.drop_list));
 
-  
+
     // // Check if the drop_list is empty and if the drop value exceeds this.props.bet_amount
     // if (newArray.length === 0 && drop > this.props.bet_amount) {
     //   drop = this.props.bet_amount; // Set the drop value to this.props.bet_amount
     // }
-  
+
     newArray.push({
       drop: drop
     });
@@ -215,11 +213,11 @@ class DropGame extends Component {
     const multipliedBetAmount = this.state.drop * 0.5;
     const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
     this.setState({
-    drop: roundedBetAmount
+      drop: roundedBetAmount
     }, () => {
-    document.getElementById("betamount").focus();
+      document.getElementById("betamount").focus();
     });
-    }
+  }
 
   handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
@@ -232,94 +230,94 @@ class DropGame extends Component {
       this.setState({
         drop: roundedBetAmount
       }, () => {
-      document.getElementById("betamount").focus();
+        document.getElementById("betamount").focus();
       });
     }
   }
 
-  
-    handleMaxButtonClick = () => {
-      const maxBetAmount = (this.state.balance);
-      this.setState({
-        drop: Math.min(maxBetAmount, this.props.bet_amount)
-      }, () => {
+
+  handleMaxButtonClick = () => {
+    const maxBetAmount = (this.state.balance);
+    this.setState({
+      drop: Math.min(maxBetAmount, this.props.bet_amount)
+    }, () => {
       document.getElementById("betamount").focus();
-      });
-    }
+    });
+  }
   onChangeBetAmount = new_state => {
     this.setState({ drop: new_state.selected_bet_amount });
   };
   render() {
-    
+
     const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
+    const generateRandomDropAmount = () => {
+      const isBetweenSmallerRange = Math.random() <= 0.8;
+      if (isBetweenSmallerRange) {
+        return Math.random() * 0.0005 + 0.0005; // Random value between 0.0005 and 0.001
+      } else {
+        return Math.random() * (0.05 - 0.001) + 0.001; // Random value between 0.001 and 0.05
+      }
+    };
+
+    const suggestedDropAmounts = Array.from({ length: 6 }, (_, index) => generateRandomDropAmount());
 
     return this.props.step === 1 ? (
-      
+
       <div className="game-info-panel">
         {/* <h3 className="game-sub-title">Bankroll</h3> */}
         <DefaultBetAmountPanel
-              bet_amount={this.props.bet_amount}
-              onChangeState={this.props.onChangeState}
-              game_type="DropGame"
-              defaultBetAmounts={defaultBetAmounts}
-            />
-     
+          bet_amount={this.props.bet_amount}
+          onChangeState={this.props.onChangeState}
+          game_type="DropGame"
+          defaultBetAmounts={defaultBetAmounts}
+        />
+
       </div>
     ) : (
-      
+
       <div className="game-info-panel">
-                          {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
+        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="rps-add-run-panel">
-        <div className="drop-add-run-form">
-           
+          <div className="drop-add-run-form">
+
             <h3 className="game-sub-title">
               Drop some amounts!{' '}
             </h3>
             <div className="your-bet-amount">
-            <BetAmountInput
-              betAmount={this.state.drop}
-              handle2xButtonClick={this.handle2xButtonClick}
-              handleHalfXButtonClick={this.handleHalfXButtonClick}
-              handleMaxButtonClick={this.handleMaxButtonClick}
-              onChangeState={this.onChangeState}
-              isDarkMode={this.props.isDarkMode}
-            />
-              {/* <TextField
-                type="text"
-                pattern="[0-9]*"
-                name="betamount"
-                variant="outlined"
-                id="betamount"
-                maxLength="9"
-                value={this.state.drop}
-                onChange={(event) => this.setState({ drop: event.target.value })}
-                placeholder="BET AMOUNT"
-                InputProps={{
-                  endAdornment: "ETH",
-                }}
-              /> */}
-              <div>
-              <div className='max'>
-            {/* <Button variant="contained" color="primary" onClick={() => this.handleHalfXButtonClick()}>0.5x</Button>
-            <Button variant="contained" color="primary" onClick={() => this.handle2xButtonClick()}>2x</Button>
-            <Button variant="contained" color="primary" onClick={() => this.handleMaxButtonClick()}>Max</Button> */}
-          </div>
+              <BetAmountInput
+                betAmount={this.state.drop}
+                handle2xButtonClick={this.handle2xButtonClick}
+                handleHalfXButtonClick={this.handleHalfXButtonClick}
+                handleMaxButtonClick={this.handleMaxButtonClick}
+                onChangeState={this.onChangeState}
+                isDarkMode={this.props.isDarkMode}
+              />
+<div className='bet-amount'>
+
+              <div className="suggested-drop-amounts">
+                {suggestedDropAmounts.map((dropAmount, index) => (
+                  <Button
+                  key={index}
+                  onClick={() => this.onAddRun(dropAmount)}
+                  >
+                    {convertToCurrency(dropAmount)}
+                  </Button>
+                ))}
               </div>
               <div className='drop addRun'>
-              <Button 
-              id="drop-button"
+                <Button
+                  id="drop-button"
                   onClick={() => {
                     this.onAddRun(this.state.drop);
-
+                    
                   }}>
-                    Add Run
-              </Button>
+                  Add Run
+                </Button>
               </div>
             </div>
+                </div>
             <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</Button>
-            {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
-</label> */}
 
           </div>
           <div className="rps-add-run-table drop-add-run-table">

@@ -350,7 +350,7 @@ class Roll extends Component {
   };
 
   joinGame = async () => {
-    console.log("joining")
+
     const { playSound, join, user, room, isDarkMode } = this.props;
     const { selected_roll, bet_amount } = this.state;
 

@@ -9,45 +9,46 @@ let isProcessing = false;
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const bangCron = async () => {
-  if (isProcessing) {
-    // If already processing, skip this iteration
-    return;
-  }
+  while (true) {
+    if (!isProcessing) {
+      isProcessing = true;
 
-  isProcessing = true;
-
-  try {
-    // Find open rooms with game_type = 'Bang'
-    const openRooms = await Room.find({
-      status: 'open',
-      game_type: '6536a82933e70418b45fbe32',
-    });
-
-    // Iterate through open rooms
-    for (const room of openRooms) {
-      const roomId = room._id;
-
-      const roomBets = await BangBetItem.find({ room: roomId });
-      if (roomBets.length > 0) {
-        await predictAndSave(roomBets, roomId);
+      try {
+        await processOpenRooms();
+      } catch (error) {
+        console.error('Error in bangCron:', error);
+      } finally {
+        isProcessing = false;
       }
+
+      // Calculate the next interval based on the current prediction
+      const interval = (nextBangPrediction * 1000) + 7000;
+
+      // Schedule the next execution after the interval
+      await delay(interval);
     }
-  } catch (error) {
-    console.error('Error in bangCron:', error);
-  } finally {
-    isProcessing = false;
   }
+};
 
-  // Calculate the next interval based on the current prediction
-  const interval = (nextBangPrediction * 1000) + 7000;
+const processOpenRooms = async () => {
+  // Find open rooms with game_type = 'Bang'
+  const openRooms = await Room.find({
+    status: 'open',
+    game_type: '6536a82933e70418b45fbe32',
+  });
 
-  // Schedule the next execution after the interval
-  await delay(interval);
-  await bangCron(); // Recursive call
+  // Iterate through open rooms
+  for (const room of openRooms) {
+    const roomId = room._id;
+
+    const roomBets = await BangBetItem.find({ room: roomId });
+    if (roomBets.length > 0) {
+      await predictAndSave(roomBets, roomId);
+    }
+  }
 };
 
 const predictAndSave = async (roomBets, roomId) => {
-
   try {
     const allBangs = [];
 
@@ -74,7 +75,6 @@ const predictAndSave = async (roomBets, roomId) => {
     console.error('Error in predictAndSave:', error);
   }
 };
-
 
 const predictNextBang = bangAmounts => {
 

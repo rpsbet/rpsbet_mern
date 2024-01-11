@@ -4,6 +4,7 @@ import './Chat.css';
 import PlayerModal from '../modal/PlayerModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
+import ButtonBase from '@material-ui/core/ButtonBase';
 
 import Avatar from '../../components/Avatar';
 import {
@@ -47,9 +48,7 @@ class GlobalChat extends Component {
           newMessages:
             this.props.globalChatList.length - prevProps.globalChatList.length,
           showTooltip: true
-        },
-        () => console.log(this.state.newMessages, this.state.showTooltip)
-      );
+        });
     }
     if (
       prevProps.isDrawerOpen !== this.props.isDrawerOpen ||
@@ -75,16 +74,16 @@ class GlobalChat extends Component {
 
   handleScroll = () => {
     const chatBox = this.chatBoxRef.current;
-  
+
     // Calculate the difference between the scroll height and the scroll position plus the client height
     const scrollDifference = chatBox.scrollHeight - (chatBox.scrollTop + chatBox.clientHeight);
-  
+
     // If the difference is very small (considering potential floating point errors), assume the user is at the bottom
     if (scrollDifference < 30) {
       this.setState({ showTooltip: false });
     }
   };
-  
+
   static getDerivedStateFromProps(props, current_state) {
     if (!props.globalChatList) return null;
 
@@ -176,7 +175,7 @@ class GlobalChat extends Component {
     return (
       <div className="chat-panel global-chat" ref={this.chatBoxRef} onScroll={this.handleScroll}>
         {this.state.showTooltip && (
-          <div
+          <ButtonBase
             onClick={() => {
               this.chatBoxRef.current.scrollTop =
                 this.chatBoxRef.current.scrollHeight + offset;
@@ -186,7 +185,7 @@ class GlobalChat extends Component {
           >
             {this.state.newMessages} new chat(s) &nbsp;{' '}
             <FontAwesomeIcon icon={faHandPointDown} />
-          </div>
+          </ButtonBase>
         )}
         {this.state.showPlayerModal && (
           <PlayerModal
@@ -343,9 +342,8 @@ class GlobalChat extends Component {
               return (
                 <div
                   key={key}
-                  className={`chat-line ${
-                    selectedMessage === chat ? 'selected' : ''
-                  }`}
+                  className={`chat-line ${selectedMessage === chat ? 'selected' : ''} ${chat.sender === 'SYSTEM ANNOUNCEMENT' ? 'special-message' : ''
+                    }`}
                   onClick={() => this.handleMessageClick(chat)}
                 >
                   {chat.replyTo && chat.replyTo.sender && (

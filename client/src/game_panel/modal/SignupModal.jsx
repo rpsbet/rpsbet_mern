@@ -52,8 +52,6 @@ class SignupModal extends Component {
   };
 
   onChangeReCAPTCHA = (value) => {
-    console.log("ReCAPTCHA value:", value);
-
     // Update the state with the reCAPTCHA value
     this.setState({ recaptchaValue: value });
   };

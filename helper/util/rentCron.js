@@ -1,13 +1,16 @@
 const cron = require('node-cron');
-const socket_io = require('socket.io');
 const Item = require('../../model/Item');
 const User = require('../../model/User');
-const Chat = require('../../model/Chat');
 const Transaction = require('../../model/Transaction');
+const socketController = require('../../socketController');
 
-async function checkRentalPayments() {
+let socketio = null;
+
+async function checkRentalPayments(io) {
   try {
-    // Get all items from the database
+    if (io) {
+      socketio = io;
+    }
     const items = await Item.find();
 
     // Iterate through each item
@@ -40,25 +43,25 @@ async function checkRentalPayments() {
               // If so, deduct enough to make the balance 0
               amountToDeduct = currentUser.balance;
 
-               // Check if the original owner already exists in the owners array
-            const originalOwnerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(owner.originalOwner));
+              // Check if the original owner already exists in the owners array
+              const originalOwnerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(owner.originalOwner));
 
-            if (originalOwnerIndex !== -1) {
-              // If the original owner already exists, increment their count
-              item.owners[originalOwnerIndex].count += 1;
-            } else {
-              // If the original owner doesn't exist, add them to the owners array
-              item.owners.push({
-                user: owner.originalOwner,
-                count: 1,
-                price: owner.price,
-                rentOption: true
-              });
-            }
+              if (originalOwnerIndex !== -1) {
+                // If the original owner already exists, increment their count
+                item.owners[originalOwnerIndex].count += 1;
+              } else {
+                // If the original owner doesn't exist, add them to the owners array
+                item.owners.push({
+                  user: owner.originalOwner,
+                  count: 1,
+                  price: owner.price,
+                  rentOption: true
+                });
+              }
 
-            // Set the count to 0 for the current owner
-            owner.count = 0;
-            owner.rentOption = false;
+              // Set the count to 0 for the current owner
+              owner.count = 0;
+              owner.rentOption = false;
             }
 
             // Deduct the amount from the user's balance
@@ -86,8 +89,6 @@ async function checkRentalPayments() {
             // Update the lastPayment for the item owner
             owner.lastPayment = currentDate;
 
-           
-
             // Save changes and transactions
             await Promise.all([
               currentUser.save(),
@@ -97,7 +98,36 @@ async function checkRentalPayments() {
               item.save(),
             ]);
 
-            console.log(`Rental payment processed for item ${item.productName}`);
+
+            const senderId = '629685058f368a1838372754'; // Replace with the actual sender ID
+            const message = 'Daily rent check complete. All outstanding rent and arrears have been processed.';
+            const messageType = 'text';
+
+            // Fetch user information from the User model using the senderId
+            const senderUser = await User.findById(senderId);
+
+            // Extract relevant user information
+            const avatar = senderUser.avatar || ''; // Replace with the actual avatar URL
+            const accessory = senderUser.accessory || ''; // Replace with the actual accessory URL
+            const rank = senderUser.totalWagered || 0; // Replace with the actual rank
+
+            const replyTo = null; // No need for a reply in this case
+
+            const data = {
+              sender: senderUser.username, // Assuming there's a 'username' field in the User model
+              senderId: senderId,
+              message: message,
+              messageType: messageType,
+              avatar: avatar,
+              accessory: accessory,
+              rank: rank,
+              replyTo: replyTo,
+            };
+
+            // Emit the GLOBAL_CHAT_SEND event
+            socketController.globalChatSend(socketio, data);
+
+            // console.log(`Rental payment processed for item ${item.productName}`);
           }
         }
       }
@@ -108,38 +138,9 @@ async function checkRentalPayments() {
 }
 
 // Schedule the cron job to run every day at midnight (00:00)
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('*/15 * * * * *', async () => {
   await checkRentalPayments();
-
-  // Emit a global chat message after rental payments have been processed
-  const currentDate = new Date();
-  const senderId = '629685058f368a1838372754'; // Replace with the actual sender ID
-  const message = 'All outstanding rent and arrears have been processed.';
-  const messageType = 'text';
-  const avatar = ''; // Replace with the actual avatar URL
-  const accessory = ''; // Replace with the actual accessory URL
-  const rank = 0; // Replace with the actual rank
-  const replyTo = null; // No need for a reply in this case
-
-  const data = {
-    sender: senderId,
-    senderId: senderId,
-    message: message,
-    messageType: messageType,
-    avatar: avatar,
-    accessory: accessory,
-    rank: rank,
-    replyTo: replyTo,
-  };
-
-  // Emit the GLOBAL_CHAT_SEND event
-  io.sockets.emit('GLOBAL_CHAT_SEND', data);
 });
-
-// Export an object containing the function
-module.exports = {
-  checkRentalPayments,
-};
 
 // Export an object containing the function
 module.exports = {

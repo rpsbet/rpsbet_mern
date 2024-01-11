@@ -259,11 +259,18 @@ class Bang extends Component {
       }
     );
   };
-  // onChangeBetAmount = new_state => {
-  //   this.setState({ bang: new_state.selected_bet_amount });
-  // };
+ 
   render() {
     const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
+    const generateRandomMultiplier = () => {
+      const isBetweenOneAndTwo = Math.random() <= 0.8;
+      if (isBetweenOneAndTwo) {
+        return Math.random() + 1; // Random value between 1 and 2
+      } else {
+        return Math.random() * 49 + 2; // Random value between 2 and 50
+      }
+    };
+    const suggestedMultipliers = Array.from({ length: 8 }, (_, index) => generateRandomMultiplier());
 
     return this.props.step === 1 ? (
       <div className="game-info-panel">
@@ -284,7 +291,7 @@ class Bang extends Component {
             <h3 className="game-sub-title">Add some Bangs! </h3>
             <div className="bet-amount">
               <BetAmountInput
-                betAmount={this.state.drop}
+                betAmount={this.state.bang}
                 handle2xButtonClick={this.handle2xButtonClick}
                 handleHalfXButtonClick={this.handleHalfXButtonClick}
                 handleMaxButtonClick={this.handleMaxButtonClick}
@@ -292,52 +299,21 @@ class Bang extends Component {
                 isDarkMode={this.props.isDarkMode}
                 bangGame={true}
               />
-              {/* <TextField
-                type="text"
-                pattern="[0-9]*"
-                name="betamount"
-                variant="outlined"
-                id="betamount"
-                maxLength="9"
-                value={this.state.bang}
-                onChange={(event) => this.setState({ bang: event.target.value })}
-                placeholder="BET AMOUNT"
-                InputProps={{
-                  onFocus: this.handleFocus,
-                  onBlur: this.handleBlur,
-                  endAdornment: (
-                    <ButtonGroup
-                      className={isFocused ? 'fade-in' : 'fade-out'}
-                    >
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => this.handle2xButtonClick()}
-                        style={{ marginTop: '8px' }}
-                      >
-                        2x
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => this.handleHalfXButtonClick()}
-                        style={{ marginTop: '8px' }}
-                      >
-                        1/2x
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => this.handleMaxButtonClick()}
-                        style={{ marginTop: '8px' }}
-                      >
-                        Max
-                      </Button>
-                    </ButtonGroup>
-                  ),
-                }}
-              /> */}
-              <div></div>
+              
+              <div className="suggested-multipliers">
+          {suggestedMultipliers.map((multiplier, index) => (
+            <Button
+              key={index}
+              onClick={() => {
+                this.onAddRun(multiplier.toFixed(2));
+                this.setState({bang: multiplier.toFixed(2)})
+              }
+              }
+            >
+              {multiplier.toFixed(2)}x
+            </Button>
+          ))}
+        </div>
               <div className="bang addRun">
                 <Button
                   id="bang-button"
@@ -352,8 +328,7 @@ class Bang extends Component {
             <Button id="aiplay" onClick={this.onAutoPlay}>
               Test AI Play
             </Button>
-            {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
-</label> */}
+            
           </div>
           <div className="rps-add-run-table bang-add-run-table">
             <h3 className="game-sub-title">Training Data</h3>

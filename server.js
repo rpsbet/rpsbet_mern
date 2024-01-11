@@ -17,7 +17,6 @@ const server = app.listen(process.env.PORT, () =>
 );
 
 const io = socketContoller.socketio(server, { origins: '*:*' });
-
 app.use(function(req, res, next) {
   req.io = io;
   next();
@@ -53,8 +52,8 @@ const rentCron = require('./helper/util/rentCron.js');
 const rollCron = require('./helper/util/rollCron.js');
 const bangCron = require('./helper/util/bangCron.js');
 // Initialize the cron job to periodically check for confirmations
-creditScoreCron.checkOutstandingLoans();
-rentCron.checkRentalPayments();
+creditScoreCron.checkOutstandingLoans(io);
+rentCron.checkRentalPayments(io);
 cronJob.checkConfirmations();
 rollCron.rollCron();
 bangCron.bangCron();
@@ -108,3 +107,5 @@ app.use(express.static('client/build'));
 //     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
 //   });
 // }
+
+module.exports = { app, server, io };

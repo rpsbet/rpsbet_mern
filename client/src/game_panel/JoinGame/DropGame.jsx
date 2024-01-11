@@ -249,7 +249,6 @@ class DropGame extends Component {
             }
 
         } while (finalValue !== null && finalValue < 0.000001);
-        console.log("finalValue", finalValue)
 
         return finalValue;
     }

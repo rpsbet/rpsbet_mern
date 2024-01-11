@@ -1,5 +1,6 @@
 const ObjectId = require('mongoose').Types.ObjectId;
 const socket_io = require('socket.io');
+const { server, io } = require('./server.js');
 const Message = require('./model/Message');
 const Moment = require('moment');
 const Chat = require('./model/Chat');
@@ -12,6 +13,96 @@ const send = (msg_type, to_id, data) => {
     sockets[to_id].emit(msg_type, data);
   }
 };
+
+const globalChatSend = (io, data) => {
+  const {
+    sender,
+    senderId,
+    message,
+    messageType,
+    messageContent,
+    avatar,
+    accessory,
+    rank,
+    replyTo
+  } = data;
+
+  const chat = new Chat({
+    sender: senderId,
+    message: message,
+    messageType: messageType,
+    messageContent: messageContent,
+    avatar: avatar,
+    rank: rank,
+    accessory: accessory,
+    replyTo: replyTo
+      ? {
+          sender: replyTo.senderId,
+          rank: replyTo.rank,
+          avatar: replyTo.avatar,
+          accessory: replyTo.accessory,
+          message: replyTo.message,
+          messageType: replyTo.messageType,
+          time: Moment(replyTo.created_at).format('hh:mm')
+        }
+      : null // Include the replyTo message details if it exists
+  });
+
+  chat
+    .save()
+    .then(savedChat => {
+      // Fetch the username for replyTo.senderId from your data source
+      const fetchUsername = userId => {
+        // Implementation to fetch username using userId
+        // Replace this with your actual implementation
+        return User.findById(userId)
+          .then(user => user.username)
+          .catch(error => {
+            return null;
+          });
+      };
+
+      const fetchReplyToUsername = replyTo
+        ? fetchUsername(replyTo.senderId)
+        : null;
+
+      Promise.all([fetchReplyToUsername])
+        .then(([replyToUsername]) => {
+          io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
+            sender: sender,
+            senderId: senderId,
+            message: message,
+            messageType: messageType,
+            messageContent: messageContent,
+            avatar: avatar,
+            accessory: accessory,
+            rank: rank,
+            replyTo: replyTo
+              ? {
+                  sender: replyToUsername,
+                  avatar: replyTo.avatar,
+                  accessory: replyTo.accessory,
+                  rank: replyTo.rank,
+                  message: replyTo.message,
+                  messageType: replyTo.messageType,
+                  time: Moment(replyTo.created_at).format('hh:mm')
+                }
+              : null, // Include the replyTo message details if it exists
+            time: Moment(savedChat.created_at).format('hh:mm')
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching replyTo username:', error);
+          // Handle error if fetching the replyTo username fails
+        });
+    })
+    .catch(error => {
+      console.error('Error saving chat:', error);
+      // Handle error if chat saving fails
+
+});
+};
+module.exports.globalChatSend = globalChatSend;
 
 
 module.exports.playSound = (from_user_id, data) => {
@@ -46,91 +137,7 @@ module.exports.socketio = server => {
     });
 
     socket.on('GLOBAL_CHAT_SEND', data => {
-      const {
-        sender,
-        senderId,
-        message,
-        messageType,
-        messageContent,
-        avatar,
-        accessory,
-        rank,
-        replyTo
-      } = data;
-
-      const chat = new Chat({
-        sender: senderId,
-        message: message,
-        messageType: messageType,
-        messageContent: messageContent,
-        avatar: avatar,
-        rank: rank,
-        accessory: accessory,
-        replyTo: replyTo
-          ? {
-              sender: replyTo.senderId,
-              rank: replyTo.rank,
-              avatar: replyTo.avatar,
-              accessory: replyTo.accessory,
-              message: replyTo.message,
-              messageType: replyTo.messageType,
-              time: Moment(replyTo.created_at).format('hh:mm')
-            }
-          : null // Include the replyTo message details if it exists
-      });
-
-      chat
-        .save()
-        .then(savedChat => {
-          // Fetch the username for replyTo.senderId from your data source
-          const fetchUsername = userId => {
-            // Implementation to fetch username using userId
-            // Replace this with your actual implementation
-            return User.findById(userId)
-              .then(user => user.username)
-              .catch(error => {
-                return null;
-              });
-          };
-
-          const fetchReplyToUsername = replyTo
-            ? fetchUsername(replyTo.senderId)
-            : null;
-
-          Promise.all([fetchReplyToUsername])
-            .then(([replyToUsername]) => {
-              io.sockets.emit('GLOBAL_CHAT_RECEIVED', {
-                sender: sender,
-                senderId: senderId,
-                message: message,
-                messageType: messageType,
-                messageContent: messageContent,
-                avatar: avatar,
-                accessory: accessory,
-                rank: rank,
-                replyTo: replyTo
-                  ? {
-                      sender: replyToUsername,
-                      avatar: replyTo.avatar,
-                      accessory: replyTo.accessory,
-                      rank: replyTo.rank,
-                      message: replyTo.message,
-                      messageType: replyTo.messageType,
-                      time: Moment(replyTo.created_at).format('hh:mm')
-                    }
-                  : null, // Include the replyTo message details if it exists
-                time: Moment(savedChat.created_at).format('hh:mm')
-              });
-            })
-            .catch(error => {
-              console.error('Error fetching replyTo username:', error);
-              // Handle error if fetching the replyTo username fails
-            });
-        })
-        .catch(error => {
-          console.error('Error saving chat:', error);
-          // Handle error if chat saving fails
-        });
+      globalChatSend(io, data);
     });
 
     socket.on('FETCH_GLOBAL_CHAT', () => {

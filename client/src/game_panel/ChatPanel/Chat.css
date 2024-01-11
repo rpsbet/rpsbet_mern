@@ -13,6 +13,32 @@
     align-items: center;
     margin: -10px 0 5px 0!important;
 }
+.special-message {
+    pointer-events: none;
+    text-align: center;
+}
+.special-message .chat-player {
+    display: none;
+}
+.special-message .chat-msg{
+    margin-left: unset !important;
+    text-transform: uppercase;
+    background: linear-gradient(#4c0048, #21005b) !important; /* You can customize this style as needed */
+    font-weight: bold !important; /* Add any additional styles you want for special messages */
+  }
+
+  .chat-wrapper .chat-panel .chat-line.special-message .sender-name {
+    margin-left: unset !important;
+    color: red !important;
+    position: relative;
+
+  }
+.special-message .chat-text {
+    margin-left: unset !important;
+    text-transform: uppercase;
+    color: #f9f9f9 !important; /* You can customize this style as needed */
+    font-weight: bold !important; /* Add any additional styles you want for special messages */
+  }
 
 .reply-border {
     position: absolute;
@@ -219,6 +245,7 @@ display: grid;
     opacity: 0;
     transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
     height: 0;
+    display: none;
     position: absolute;
     bottom: 100%;
     width: 100%;
@@ -243,6 +270,7 @@ display: grid;
     opacity: 1;
     overflow-y: scroll;
     z-index: 99;
+    display: grid;
 }
 
 .chat-time {
