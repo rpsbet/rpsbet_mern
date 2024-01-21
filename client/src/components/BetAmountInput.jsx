@@ -15,7 +15,8 @@ export default function BetAmountInput(props) {
     handleMaxButtonClick,
     onChangeState,
     isDarkMode,
-    bangGame
+    bangGame,
+    disabledButtons
   } = props;
 
   const theme = createTheme({
@@ -106,6 +107,7 @@ export default function BetAmountInput(props) {
           name="betamount"
           variant="outlined"
           id="betamount"
+          disabled={!disabledButtons ? true : false}
           label={bangGame ? "MULTIPLIER" : "BET AMOUNT"}
           value={betAmount}
           onChange={onChangeState}

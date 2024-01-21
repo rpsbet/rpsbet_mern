@@ -182,16 +182,18 @@ class ChatPanel extends Component {
         type: 'gif',
         content: gifUrl
       };
+      if (this.props.user) {
 
-      this.props.socket.emit('GLOBAL_CHAT_SEND', {
-        sender: this.props.userName,
-        senderId: this.props.user._id,
-        message: JSON.stringify(message),
-        avatar: this.props.user.avatar,
-        accessory: this.props.user.accessory,
-        messageType: 'gif'
-      });
+        this.props.socket.emit('GLOBAL_CHAT_SEND', {
+          sender: this.props.userName,
+          senderId: this.props.user._id,
+          message: JSON.stringify(message),
+          avatar: this.props.user.avatar,
+          accessory: this.props.user.accessory,
+          messageType: 'gif'
+        });
 
+      }
       // Close the search popup and clear the search input
       this.setState({ showSearchPopup: false, searchInput: '' });
     }
@@ -252,21 +254,21 @@ class ChatPanel extends Component {
 
             {/* Display the searched GIFs */}
             {this.state.loading ? (
-            // Show loading text while GIFs are being loaded
-            <div>Loading...</div>
-          ) : (
-            <div className="gif-results">
-              {this.state.gifs.map((gif, index) => (
-                <img
-                  key={index}
-                  src={gif.url}
-                  alt={gif.title}
-                  onLoad={() => this.handleGifLoad(index)}
-                  onClick={() => this.handleGifClick(gif.url)}
-                />
-              ))}
-            </div>
-          )}
+              // Show loading text while GIFs are being loaded
+              <div>Loading...</div>
+            ) : (
+              <div className="gif-results">
+                {this.state.gifs.map((gif, index) => (
+                  <img
+                    key={index}
+                    src={gif.url}
+                    alt={gif.title}
+                    onLoad={() => this.handleGifLoad(index)}
+                    onClick={() => this.handleGifClick(gif.url)}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -318,11 +320,10 @@ class ChatPanel extends Component {
           className="main-game-page-tabs"
         >
           <Tab
-            className={`custom-tab ${
-              hoverTabIndex === 0 || selectedMainTabIndex === 0
+            className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
                 ? 'fade-animation fade-in'
                 : 'fade-animation fade-out'
-            }`}
+              }`}
             label="Inbox"
             labelPlacement="left"
             icon={
@@ -337,11 +338,10 @@ class ChatPanel extends Component {
             onMouseLeave={this.handleMouseLeave}
           />
           <Tab
-            className={`custom-tab ${
-              hoverTabIndex === 0 || selectedMainTabIndex === 0
+            className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
                 ? 'fade-animation fade-in'
                 : 'fade-animation fade-out'
-            }`}
+              }`}
             label="Chat"
             labelPlacement="left"
             icon={
@@ -431,7 +431,7 @@ class ChatPanel extends Component {
                   </InputAdornment>
                 )
               }}
-              disabled={!isChatEnabled} 
+              disabled={!isChatEnabled}
             />
           </div>
         )}

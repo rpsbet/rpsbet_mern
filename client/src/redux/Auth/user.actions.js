@@ -95,24 +95,10 @@ export const userSignUp = ({
   avatar,
   referralCode,
   avatarMethod,
-  recaptchaToken,
+  recaptchaToken
 }) => async (dispatch) => {
   try {
     dispatch({ type: START_LOADING });
-    const recaptchaSecretKey = '6LcHBEcpAAAAAKD0U8ALIV0a6dbwbqOB5zTg-JVw'; // Replace with your actual reCAPTCHA secret key
-    const recaptchaVerifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${recaptchaSecretKey}&response=${recaptchaToken}`;
-    
-    // // Verify reCAPTCHA
-    const recaptchaResponse = await axios.post(recaptchaVerifyURL);
-    const recaptchaSuccess = recaptchaResponse.data.success;
-    console.log(recaptchaResponse)
-    console.log(recaptchaSuccess)
-
-    if (!recaptchaSuccess) {
-      dispatch({ type: END_LOADING });
-      dispatch({ type: MSG_ERROR, payload: 'reCAPTCHA verification failed' });
-      return { status: 'failed', error: 'reCAPTCHA verification failed' };
-    }
 
     // Register User
     const body = JSON.stringify({
@@ -122,6 +108,7 @@ export const userSignUp = ({
       avatar,
       referralCode,
       avatarMethod,
+      recaptchaToken
     });
 
     const res = await axios.post('/user', body);

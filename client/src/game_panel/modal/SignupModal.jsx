@@ -10,7 +10,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import TermsModal from '../modal/TermsModal';
 import { alertModal } from './ConfirmAlerts';
-import ReCAPTCHA from "react-google-recaptcha";
 
 Modal.setAppElement('#root')
 
@@ -43,17 +42,17 @@ class SignupModal extends Component {
       showTermsModal: false,
       avatarMethod: 'robohash',
       termsChecked: false,
-      recaptchaValue: null,
+      recaptchaToken: '',
     }
   }
 
+  handleRecaptchaToken = (token) => {
+    this.setState({ recaptchaToken: token });
+  };
+  
+
   handleCheckboxChange = () => {
     this.setState((prevState) => ({ termsChecked: !prevState.termsChecked }));
-  };
-
-  onChangeReCAPTCHA = (value) => {
-    // Update the state with the reCAPTCHA value
-    this.setState({ recaptchaValue: value });
   };
 
   handleOpenTermsModal = () => {
@@ -68,8 +67,18 @@ class SignupModal extends Component {
   };
 
   onChangeUserName = (e) => {
-    this.setState({ userName: e.target.value });
+    const username = e.target.value;
+  
+    // Define a regular expression for allowed characters (e.g., alphanumeric and underscores)
+    const allowedCharsRegex = /^[a-zA-Z0-9_]+$/;
+  
+    if (allowedCharsRegex.test(username)) {
+      this.setState({ userName: username });
+    } else {
+      alertModal(this.props.isDarkMode, 'Invalid characters in username. Only alphanumeric characters and underscores are meowed.');
+    }
   }
+  
 
   onChangePassword = (e) => {
     this.setState({ password: e.target.value });
@@ -79,17 +88,28 @@ class SignupModal extends Component {
     this.setState({ referralCode: e.target.value });
   }
 
+
   onSubmitForm = async (e) => {
     e.preventDefault();
+  
+    // Execute reCAPTCHA
+    const recaptchaToken = await this.executeRecaptcha();
+    console.log('Submitted reCAPTCHA Token:', recaptchaToken);
+    this.setState({ recaptchaToken });
+  
+    // Check if reCAPTCHA token is available
+    if (!recaptchaToken) {
+      alertModal(this.props.isDarkMode, 'reCAPTCHA verification failed. Please try again.');
+      return;
+    }
+  
+
     if (!this.state.termsChecked) {
       alertModal(this.props.isDarkMode, 'Please agree to the Terms and Conditions.');
       return;
     }
 
-    if (!this.state.recaptchaToken) {
-      alertModal(this.props.isDarkMode, 'Please complete the captcha.');
-      return;
-    }
+
 
     const result = await this.props.userSignUp(this.state);
 
@@ -115,6 +135,19 @@ class SignupModal extends Component {
       });
     }
   }
+
+  executeRecaptcha = () => {
+    return new Promise((resolve) => {
+      window.grecaptcha.ready(() => {
+        window.grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' }).then((token) => {
+          console.log('reCAPTCHA Token:', token); // Log the token
+          resolve(token);
+        });
+      });
+    });
+  };
+  
+
 
   render() {
     const { modalIsOpen, closeModal, openLoginModal, isDarkMode } = this.props;
@@ -213,12 +246,8 @@ class SignupModal extends Component {
                       </span>
                     }
                   />
-                  <ReCAPTCHA
-                    sitekey="6LcE5kgpAAAAAGkmu6IJZfl-NxuR049R6a_Oy4nS"
-                    onChange={this.onChangeReCAPTCHA}
-                    size="invisible"
-                    style={{display: "none"}}
-                    />
+                <input type="hidden" name="recaptchaToken" value={this.state.recaptchaToken} />
+
                 </form>
 
               </div>
@@ -249,6 +278,8 @@ class SignupModal extends Component {
     );
   }
 }
+
+
 
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,

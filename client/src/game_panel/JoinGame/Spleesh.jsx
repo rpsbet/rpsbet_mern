@@ -54,6 +54,8 @@ class Spleesh extends Component {
       items: [],
       bet_amount: this.props.spleesh_bet_unit,
       advanced_status: '',
+      productName: '',
+      showImageModal: false,
       spleesh_guesses: [],
       is_anonymous: false,
       balance: this.props.balance,
@@ -112,6 +114,18 @@ class Spleesh extends Component {
   };
 
   componentDidMount() {
+    socket.on('CARD_PRIZE', data => {
+      if (data) {
+        this.setState(
+          {
+            image: data.image,
+            productName: data.productName,
+            showImageModal: true
+          },
+          () => playSound('')
+        );
+      }
+    });
     this.socket.on('SPLEESH_GUESSES', data => {
       this.setState({ spleesh_guesses: data });
     });
@@ -421,6 +435,13 @@ class Spleesh extends Component {
       this.stopBetting();
     }
   };
+
+  toggleImageModal = () => {
+    this.setState({
+      showImageModal: false
+    });
+  };
+
   startBetting = () => {
     this.props.playSound('start');
     const intervalId = setInterval(() => {
@@ -464,7 +485,7 @@ class Spleesh extends Component {
     const {
       spleesh_guesses,
       showAnimation,
-      isDisabled,
+      showImageModal,
       actionList,
       betting,
       bankroll,
@@ -768,18 +789,7 @@ class Spleesh extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* <div className="threedBg">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: threedBg
-                }}
-                style={{
-                  filter: 'hue-rotate(99deg)',
-                }}
-              />
-            </div> */}
+           
 
             {/* <div className="waves">
               <Lottie
@@ -846,7 +856,7 @@ class Spleesh extends Component {
               )}
             </div>
           </div>
-          <BetArray arrayName={arrayName} label="spleesh" />
+          {/* <BetArray arrayName={arrayName} label="spleesh" /> */}
 
           <div className="action-panel">
             <Share roomInfo={this.props.roomInfo} />

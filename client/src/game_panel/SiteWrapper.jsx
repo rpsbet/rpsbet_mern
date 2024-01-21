@@ -13,7 +13,9 @@ import {
   Divider,
   Tooltip
 } from '@material-ui/core';
+import Footer from './main_pages/Footer';
 import { Info } from '@material-ui/icons';
+import Countdown from 'react-countdown';
 
 import SettingsModal from './modal/SettingsModal.jsx';
 import { connect } from 'react-redux';
@@ -207,6 +209,7 @@ class SiteWrapper extends Component {
       showNotifications: false,
       userParams: [false, true],
       loadMore: 0,
+      isLive: false,
       showAllGameLogs: false,
       transactions: [],
       websiteLoading: true,
@@ -601,7 +604,7 @@ class SiteWrapper extends Component {
     } catch (error) {
       console.error(error);
     }
-    
+
   }
 
 
@@ -962,6 +965,7 @@ class SiteWrapper extends Component {
       anchorEl,
       isCoinsAnimation,
       showSettingsModal,
+      isLive,
     } = this.state;
     const {
       isMuted,
@@ -984,239 +988,244 @@ class SiteWrapper extends Component {
         ? Math.min(balanceString.length - decimalIndex - 1, 5)
         : 0;
     const notificationsArray = updateFromNow(Object.values(notifications));
+
+    const valentinesDay = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
+    const currentDate = new Date();
+    const timeRemaining = valentinesDay - currentDate;
+
+    // Convert the remaining time to seconds
+    this.secondsRemaining = Math.floor(timeRemaining / 1000);
     return (
       <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
-        <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
-          {websiteLoading && (
-            <div
-              className="loading-overlay"
-              style={{
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              <img src={randomGifUrl} alt="Loading" />
-              <span
-                style={{
-                  marginTop: '10px',
-                  color: '#fff'
-                }}
-              >
-                {`Connecting...`}
-              </span>
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: progress
-                }}
-                style={{
-                  marginTop: '-40px',
-                  filter: `hue-rotate(${hueRotateValue}deg)`,
-                  width: '300px',
-                  height: '100px'
-                }}
-              />
+        {!isLive ? (
+          <>
+            <div className="coming-home-screen" style={{ textAlign: 'center', padding: '50px' }}>
+              <img style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
+
+              <p style={{ textTransform: 'uppercase', color: "#fff" }}>Are you the House's cat? 🐈 Or are you the king-of-the-jungle 🦁, blood-thirsty 🩸, Big Cat 💰— type cat—? 😼</p>
+              <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="countdown-side" style={{ width: "50%", padding: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', height: '400px' }} >
+
+                  <img style={{ width: "420px", border: '0.6em solid #6002a6', borderRadius: '2em' }} src="../img/coming-soon.webp" />
+                  <Countdown
+                    // style={{ zIndex: '1', position: 'absolute' }}
+                    date={valentinesDay}
+                    renderer={({ days, hours, minutes, seconds, completed }) => (
+                      <div style={{ zIndex: '1', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {!completed ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{days}</div>
+                            <div style={{ fontSize: '1.2em', color: '#666' }}>days</div>
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '2em', color: '#e91e63', fontWeight: 'bold' }}>Countdown completed!</div>
+                        )}
+
+                        {!completed ? (
+                          <div style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                        ) : null}
+
+                        {!completed ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{hours}</div>
+                            <div style={{ fontSize: '1.2em', color: '#666' }}>hours</div>
+                          </div>
+                        ) : null}
+
+                        {!completed ? (
+                          <div style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                        ) : null}
+
+                        {!completed ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{minutes}</div>
+                            <div style={{ fontSize: '1.2em', color: '#666' }}>minutes</div>
+                          </div>
+                        ) : null}
+
+                        {!completed ? (
+                          <div style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                        ) : null}
+
+                        {!completed ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{seconds}</div>
+                            <div style={{ fontSize: '1.2em', color: '#666' }}>seconds</div>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  />
+                </div>
+                <div className="youtube-side" style={{ padding: '50px', height: '400px', width: '50%' }}>
+                  <h5 style={{ color: '#fff', marginBottom: '10px' }}>WATCH TRAILER</h5>
+                  <hr style={{ borderColor: '#fff' }} />
+
+                  <div >
+                    <iframe
+                      width="460"
+                      height="215"
+                      src="https://www.youtube.com/embed/CnpVcIx3wz4"
+                      title="YouTube video player"
+                      frameborder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen
+                    ></iframe>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-          <div className="game_header">
-            <div className="main_header">
-              <a
-                className="game_logo"
-                href="#"
-                onClick={e => {
-                  history.push('/');
-                }}
-              >
-                {' '}
-              </a>
-              <Tabs
-                value={selectedMainTabIndex}
-                onChange={this.handleMainTabChange}
-                TabIndicatorProps={{ style: { background: '#ff0000' } }}
-                className="main-game-page-tabs desktop-only"
-              >
-                <Tab
-                  className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-                    ? 'fade-animation fade-in'
-                    : 'fade-animation fade-out'
-                    }`}
-                  label="PVP"
-                  labelPlacement="left"
-                  icon={
-                    hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
-                      <BattleHover />
-                    ) : (
-                      <Battle />
-                    )
-                  }
-                  style={customStyles.tabRoot}
-                  onMouseEnter={() => this.handleMouseEnter(0)}
-                  onMouseLeave={this.handleMouseLeave}
-                />
-
-                <Tab
-                  className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
-                    ? 'fade-animation fade-in'
-                    : 'fade-animation fade-out'
-                    }`}
-                  label="Manage"
-                  labelPlacement="left"
-                  icon={
-                    hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
-                      <ManageHover />
-                    ) : (
-                      <Manage />
-                    )
-                  }
-                  style={customStyles.tabRoot}
-                  onMouseEnter={() => this.handleMouseEnter(1)}
-                  onMouseLeave={this.handleMouseLeave}
-                />
-              </Tabs>
-
-              <div className="header_action_panel">
-                <a
-                  href="#"
-                  className="desktop-only"
-                  onClick={e => {
-                    e.preventDefault();
-                    this.handleOpenBankModal();
+            <Footer className="footer"
+              open={this.props.isDrawerOpen}
+              style={{ marginLeft: '0' }}
+            />
+          </>
+        ) : (
+          <>
+            <div className={`site_wrapper row ${isDarkMode ? 'dark_mode' : ''}`}>
+              {websiteLoading && (
+                <div
+                  className="loading-overlay"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column'
                   }}
-                  id="btn_bank"
-                  onMouseEnter={() => this.handleMouseEnter(6)}
-                  onMouseLeave={this.handleMouseLeave}
                 >
-                  {hoverTabIndex === 6 ? (
-                    <BankHover width="18pt" />
-                  ) : (
-                    <Bank />
-                  )}
-                </a>
-                <a
-                  href="#"
-                  className="desktop-only"
-                  onClick={e => {
-                    e.preventDefault();
-                    this.handleOpenMarketplaceModal();
-                  }}
-                  id="btn_marketplace"
-                  onMouseEnter={() => this.handleMouseEnter(5)}
-                  onMouseLeave={this.handleMouseLeave}
-                >
-                  {hoverTabIndex === 5 ? (
-                    <StoreHover width="18pt" />
-                  ) : (
-                    <Store />
-                  )}
-                </a>
-                <a
-                  className="desktop-only"
-                  href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    this.handleOpenLeaderboardsModal();
-                  }}
-                  id="btn_leaderboards"
-                  onMouseEnter={() => this.handleMouseEnter(4)}
-                  onMouseLeave={this.handleMouseLeave}
-                >
-                  {hoverTabIndex === 4 ? (
-                    <LeaderboardsHover width="18pt" />
-                  ) : (
-                    <Leaderboards />
-                  )}
-                </a>
-                <a
-                  href="#"
-                  className="desktop-only"
-                  onClick={e => {
-                    e.preventDefault();
-                    this.handleNotificationsClick();
-                  }}
-                  id="btn_notifications"
-                  onMouseEnter={() => this.handleMouseEnter(3)}
-                  onMouseLeave={this.handleMouseLeave}
-                >
-                  {hoverTabIndex === 3 ? (
-                    <NotificationsHover width="18pt" />
-                  ) : (
-                    <Notifications />
-                  )}
-                </a>
-                {isAuthenticated ? (
-                  <>
-                    <div id="balance">
-                      <InlineSVG
-                        id="busd"
-                        src={busdSvg}
-                      />
-                      <CountUp
-                        start={oldBalance}
-                        end={balance}
-                        // prefix="$"
-                        separator=","
-                        decimal="."
-                        decimals={numDecimals}
-                        duration={1.5}
-                        redraw={true}
-                        preserveValue={true}
-                        onEnd={() => {
-                          this.setState({ oldBalance: balance }); // update oldBalance after animation completes
-                        }}
-                      />
-                      {(isCoinsAnimation && !isLowGraphics) &&
-                        <Lottie
-                          options={{
-                            loop: false,
-                            autoplay: isCoinsAnimation,
-                            animationData: coins,
-                            rendererSettings: {
-                              preserveAspectRatio: 'xMidYMid slice',
-                            },
-                          }}
-                          style={{
-                            marginTop: '-0px',
-                            position: `absolute`,
-                            width: '100px',
-                            height: '100px'
-                          }}
-                        />
+                  <img src={randomGifUrl} alt="Loading" />
+                  <span
+                    style={{
+                      marginTop: '10px',
+                      color: '#fff'
+                    }}
+                  >
+                    {`Connecting...`}
+                  </span>
+                  <Lottie
+                    options={{
+                      loop: true,
+                      autoplay: true,
+                      animationData: progress
+                    }}
+                    style={{
+                      marginTop: '-40px',
+                      filter: `hue-rotate(${hueRotateValue}deg)`,
+                      width: '300px',
+                      height: '100px'
+                    }}
+                  />
+                </div>
+              )}
+              <div className="game_header">
+                <div className="main_header">
+                  <a
+                    className="game_logo"
+                    href="#"
+                    onClick={e => {
+                      history.push('/');
+                    }}
+                  >
+                    {' '}
+                  </a>
+                  <Tabs
+                    value={selectedMainTabIndex}
+                    onChange={this.handleMainTabChange}
+                    TabIndicatorProps={{ style: { background: '#ff0000' } }}
+                    className="main-game-page-tabs desktop-only"
+                  >
+                    <Tab
+                      className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
+                        ? 'fade-animation fade-in'
+                        : 'fade-animation fade-out'
+                        }`}
+                      label="PVP"
+                      labelPlacement="left"
+                      icon={
+                        hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
+                          <BattleHover />
+                        ) : (
+                          <Battle />
+                        )
                       }
-                      <Button
-                        id="wallet-btn"
-                        style={{
-                          minWidth: '32px',
-                          maxHeight: '33px',
-                          borderRadius: '0.25em'
-                        }}
-                        onClick={this.handleBalanceClick}
-                      >
-                        <AccountBalanceWallet
-                          style={{
-                            position: 'relative',
-                            zIndex: '1',
-                            width: '18px',
-                            height: '18px',
-                            margin: '0 5px 0 10px'
-                          }}
-                        />
-                        <span
-                          id="wallet-text"
-                          style={{
-                            position: 'relative',
-                            zIndex: '1',
-                            fontSize: '0.6em',
-                            paddingRight: '10px'
-                          }}
-                        >
-                          Wallet
-                        </span>
-                      </Button>
-                    </div>
+                      style={customStyles.tabRoot}
+                      onMouseEnter={() => this.handleMouseEnter(0)}
+                      onMouseLeave={this.handleMouseLeave}
+                    />
+
+                    <Tab
+                      className={`custom-tab ${hoverTabIndex === 1 || selectedMainTabIndex === 1
+                        ? 'fade-animation fade-in'
+                        : 'fade-animation fade-out'
+                        }`}
+                      label="Manage"
+                      labelPlacement="left"
+                      icon={
+                        hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
+                          <ManageHover />
+                        ) : (
+                          <Manage />
+                        )
+                      }
+                      style={customStyles.tabRoot}
+                      onMouseEnter={() => this.handleMouseEnter(1)}
+                      onMouseLeave={this.handleMouseLeave}
+                    />
+                  </Tabs>
+
+                  <div className="header_action_panel">
                     <a
                       href="#"
-                      className="mobile-only"
+                      className="desktop-only"
+                      onClick={e => {
+                        e.preventDefault();
+                        this.handleOpenBankModal();
+                      }}
+                      id="btn_bank"
+                      onMouseEnter={() => this.handleMouseEnter(6)}
+                      onMouseLeave={this.handleMouseLeave}
+                    >
+                      {hoverTabIndex === 6 ? (
+                        <BankHover width="18pt" />
+                      ) : (
+                        <Bank />
+                      )}
+                    </a>
+                    <a
+                      href="#"
+                      className="desktop-only"
+                      onClick={e => {
+                        e.preventDefault();
+                        this.handleOpenMarketplaceModal();
+                      }}
+                      id="btn_marketplace"
+                      onMouseEnter={() => this.handleMouseEnter(5)}
+                      onMouseLeave={this.handleMouseLeave}
+                    >
+                      {hoverTabIndex === 5 ? (
+                        <StoreHover width="18pt" />
+                      ) : (
+                        <Store />
+                      )}
+                    </a>
+                    <a
+                      className="desktop-only"
+                      href="#"
+                      onClick={e => {
+                        e.preventDefault();
+                        this.handleOpenLeaderboardsModal();
+                      }}
+                      id="btn_leaderboards"
+                      onMouseEnter={() => this.handleMouseEnter(4)}
+                      onMouseLeave={this.handleMouseLeave}
+                    >
+                      {hoverTabIndex === 4 ? (
+                        <LeaderboardsHover width="18pt" />
+                      ) : (
+                        <Leaderboards />
+                      )}
+                    </a>
+                    <a
+                      href="#"
+                      className="desktop-only"
                       onClick={e => {
                         e.preventDefault();
                         this.handleNotificationsClick();
@@ -1231,124 +1240,211 @@ class SiteWrapper extends Component {
                         <Notifications />
                       )}
                     </a>
-                    <Button
-                      area-constrols="profile-menu"
-                      aria-haspopup="true"
-                      onClick={this.handleClickMenu}
-                      className="profile-menu"
-                    >
-                      <Avatar
-                        src={user.avatar}
-                        rank={user.totalWagered}
-                        accessory={user.accessory}
-                        alt=""
-                        className="avatar"
-                        darkMode={isDarkMode}
-                      />
-                      {/* <span className="username">{this.state.userName}</span> */}
-                      <ArrowDropDown />
-                    </Button>
-                    <Menu
-                      id="profile-menu"
-                      anchorEl={anchorEl}
-                      getContentAnchorEl={null}
-                      open={Boolean(anchorEl)}
-                      onClose={this.handleCloseMenu}
-                      isDarkMode={isDarkMode}
-                      anchorOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'center'
-                      }}
-                      transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'center'
-                      }}
-                      PaperProps={{
-                        style: {
-                          width: '200px',
-                          border: isDarkMode
-                            ? '2px solid #212529'
-                            : '2px solid #e5e5e5',
-                          background: isDarkMode ? '#101010' : '#f9f9f9'
-                        }
-                      }}
-                      BackdropProps={{
-                        invisible: true
-                      }}
-                    >
-                      <MenuItem onClick={this.handleOpenProfileModal}>
-                        <ListItemIcon>
-                          <PersonOutline />
-                        </ListItemIcon>
-                        <ListItemText>PROFILE</ListItemText>
-                      </MenuItem>
-
-                      <MenuItem onClick={this.playPause}>
-                        <ReactApexChart
-                          options={{
-                            chart: {
-                              animations: {
-                                enabled: false
-                              },
-                              toolbar: {
-                                show: false
-                              },
-                              events: {},
-                              zoom: {
-                                enabled: false
-                              }
-                            },
-                            grid: {
-                              show: false
-                            },
-                            tooltip: {
-                              enabled: false
-                            },
-                            fill: {
-                              type: 'gradient',
-                              gradient: {
-                                shade: 'light',
-                                gradientToColors: ['#8F7CC3'],
-                                shadeIntensity: 1,
-                                type: 'vertical',
-                                opacityFrom: 0.7,
-                                opacityTo: 0.9,
-                                stops: [0, 100, 100]
-                              }
-                            },
-                            stroke: {
-                              curve: 'smooth'
-                            },
-                            xaxis: {
-                              labels: {
-                                show: false
-                              },
-                              axisTicks: {
-                                show: false
-                              },
-                              axisBorder: {
-                                show: false
-                              }
-                            },
-                            yaxis: {
-                              labels: {
-                                show: false
-                              },
-                              axisTicks: {
-                                show: false
-                              },
-                              axisBorder: {
-                                show: false
-                              }
+                    {isAuthenticated ? (
+                      <>
+                        <div id="balance">
+                          <InlineSVG
+                            id="busd"
+                            src={busdSvg}
+                          />
+                          <CountUp
+                            start={oldBalance}
+                            end={balance}
+                            // prefix="$"
+                            separator=","
+                            decimal="."
+                            decimals={numDecimals}
+                            duration={1.5}
+                            redraw={true}
+                            preserveValue={true}
+                            onEnd={() => {
+                              this.setState({ oldBalance: balance }); // update oldBalance after animation completes
+                            }}
+                          />
+                          {(isCoinsAnimation && !isLowGraphics) &&
+                            <Lottie
+                              options={{
+                                loop: false,
+                                autoplay: isCoinsAnimation,
+                                animationData: coins,
+                                rendererSettings: {
+                                  preserveAspectRatio: 'xMidYMid slice',
+                                },
+                              }}
+                              style={{
+                                marginTop: '-0px',
+                                position: `absolute`,
+                                width: '100px',
+                                height: '100px'
+                              }}
+                            />
+                          }
+                          <Button
+                            id="wallet-btn"
+                            style={{
+                              minWidth: '32px',
+                              maxHeight: '33px',
+                              borderRadius: '0.25em'
+                            }}
+                            onClick={this.handleBalanceClick}
+                          >
+                            <AccountBalanceWallet
+                              style={{
+                                position: 'relative',
+                                zIndex: '1',
+                                width: '18px',
+                                height: '18px',
+                                margin: '0 5px 0 10px'
+                              }}
+                            />
+                            <span
+                              id="wallet-text"
+                              style={{
+                                position: 'relative',
+                                zIndex: '1',
+                                fontSize: '0.6em',
+                                paddingRight: '10px'
+                              }}
+                            >
+                              Wallet
+                            </span>
+                          </Button>
+                        </div>
+                        <a
+                          href="#"
+                          className="mobile-only"
+                          onClick={e => {
+                            e.preventDefault();
+                            this.handleNotificationsClick();
+                          }}
+                          id="btn_notifications"
+                          onMouseEnter={() => this.handleMouseEnter(3)}
+                          onMouseLeave={this.handleMouseLeave}
+                        >
+                          {hoverTabIndex === 3 ? (
+                            <NotificationsHover width="18pt" />
+                          ) : (
+                            <Notifications />
+                          )}
+                        </a>
+                        <Button
+                          area-constrols="profile-menu"
+                          aria-haspopup="true"
+                          onClick={this.handleClickMenu}
+                          className="profile-menu"
+                        >
+                          <Avatar
+                            src={user.avatar}
+                            rank={user.totalWagered}
+                            accessory={user.accessory}
+                            alt=""
+                            className="avatar"
+                            darkMode={isDarkMode}
+                          />
+                          {/* <span className="username">{this.state.userName}</span> */}
+                          <ArrowDropDown />
+                        </Button>
+                        <Menu
+                          id="profile-menu"
+                          anchorEl={anchorEl}
+                          getContentAnchorEl={null}
+                          open={Boolean(anchorEl)}
+                          onClose={this.handleCloseMenu}
+                          isDarkMode={isDarkMode}
+                          anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'center'
+                          }}
+                          transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center'
+                          }}
+                          PaperProps={{
+                            style: {
+                              width: '200px',
+                              border: isDarkMode
+                                ? '2px solid #212529'
+                                : '2px solid #e5e5e5',
+                              background: isDarkMode ? '#101010' : '#f9f9f9'
                             }
                           }}
-                          series={series}
-                          type="line"
-                          height="80"
-                        />
-                      </MenuItem>
-                      <Divider />
-                      {/* <MenuItem
+                          BackdropProps={{
+                            invisible: true
+                          }}
+                        >
+                          <MenuItem onClick={this.handleOpenProfileModal}>
+                            <ListItemIcon>
+                              <PersonOutline />
+                            </ListItemIcon>
+                            <ListItemText>PROFILE</ListItemText>
+                          </MenuItem>
+
+                          <MenuItem onClick={this.playPause}>
+                            <ReactApexChart
+                              options={{
+                                chart: {
+                                  animations: {
+                                    enabled: false
+                                  },
+                                  toolbar: {
+                                    show: false
+                                  },
+                                  events: {},
+                                  zoom: {
+                                    enabled: false
+                                  }
+                                },
+                                grid: {
+                                  show: false
+                                },
+                                tooltip: {
+                                  enabled: false
+                                },
+                                fill: {
+                                  type: 'gradient',
+                                  gradient: {
+                                    shade: 'light',
+                                    gradientToColors: ['#8F7CC3'],
+                                    shadeIntensity: 1,
+                                    type: 'vertical',
+                                    opacityFrom: 0.7,
+                                    opacityTo: 0.9,
+                                    stops: [0, 100, 100]
+                                  }
+                                },
+                                stroke: {
+                                  curve: 'smooth'
+                                },
+                                xaxis: {
+                                  labels: {
+                                    show: false
+                                  },
+                                  axisTicks: {
+                                    show: false
+                                  },
+                                  axisBorder: {
+                                    show: false
+                                  }
+                                },
+                                yaxis: {
+                                  labels: {
+                                    show: false
+                                  },
+                                  axisTicks: {
+                                    show: false
+                                  },
+                                  axisBorder: {
+                                    show: false
+                                  }
+                                }
+                              }}
+                              series={series}
+                              type="line"
+                              height="80"
+                            />
+                          </MenuItem>
+                          <Divider />
+                          {/* <MenuItem
                         onClick={e => {
                           this.props.setDarkMode(!this.props.isDarkMode);
                         }}
@@ -1365,395 +1461,397 @@ class SiteWrapper extends Component {
                           {this.props.isDarkMode ? 'MARKOV' : 'Q-BOT'}
                         </ListItemText>
                       </MenuItem> */}
-                      <MenuItem onClick={this.handleOpenSettingsModal}>
-                        <ListItemIcon>
-                          <Settings />
-                        </ListItemIcon>
-                        <ListItemText>SETTINGS</ListItemText>
-                      </MenuItem>
+                          <MenuItem onClick={this.handleOpenSettingsModal}>
+                            <ListItemIcon>
+                              <Settings />
+                            </ListItemIcon>
+                            <ListItemText>SETTINGS</ListItemText>
+                          </MenuItem>
 
-                      <MenuItem onClick={this.handleOpenHowToPlayModal}>
-                        <ListItemIcon>
-                          <Help />
-                        </ListItemIcon>
-                        <ListItemText>HELP</ListItemText>
-                      </MenuItem>
-                      <Divider />
-                      <MenuItem
-                        onClick={e => {
-                          this.handleLogout(true);
-                        }}
-                      >
-                        <ListItemIcon>
-                          <ExitToApp size="small" />
-                        </ListItemIcon>
-                        <ListItemText>LOG OUT</ListItemText>
-                      </MenuItem>
-                    </Menu>
-                  </>
-                ) : (
-                  <>
-                    <Button id="btn-login" onClick={this.handleOpenLoginModal}>
-                      Login
-                    </Button>
-                    {/* <Button
+                          <MenuItem onClick={this.handleOpenHowToPlayModal}>
+                            <ListItemIcon>
+                              <Help />
+                            </ListItemIcon>
+                            <ListItemText>HELP</ListItemText>
+                          </MenuItem>
+                          <Divider />
+                          <MenuItem
+                            onClick={e => {
+                              this.handleLogout(true);
+                            }}
+                          >
+                            <ListItemIcon>
+                              <ExitToApp size="small" />
+                            </ListItemIcon>
+                            <ListItemText>LOG OUT</ListItemText>
+                          </MenuItem>
+                        </Menu>
+                      </>
+                    ) : (
+                      <>
+                        <Button id="btn-login" onClick={this.handleOpenLoginModal}>
+                          Login
+                        </Button>
+                        {/* <Button
                       id="btn-signup"
                       onClick={this.handleOpenSignupModal}
                     >
                       Register
                     </Button> */}
-                  </>
-                )}
-              </div>
-            </div>
-            <div
-              id="notifications"
-              className={showNotifications ? '' : 'hidden'}
-              onClick={this.handleNotificationsClick}
-            >
-              <div className="arrow-up"></div>
-              <div className="header_panel_contents">
-                {<h2>NOTIFICATIONS</h2>}
-                {
-                  <div className="notification-element">
-                    {notificationsArray.length > 0 ? (
-                      notificationsArray.map((notification, index) => (
-                        <div className="notification-container" key={index}>
-                          <a
-                            className="player"
-                            onClick={() =>
-                              this.handleOpenPlayerModal(notification._id)
-                            }
-                            style={{ display: 'flex', flexDirection: 'row' }}
-                          >
-                            <Avatar
-                              src={notification.avatar}
-                              rank={notification.rank}
-                              accessory={notification.accessory}
-                              className="avatar"
-                            />
-                          </a>
-                          <div className="notification">
-                            <p
-                              dangerouslySetInnerHTML={{
-                                __html: notification.message
-                              }}
-                            />
-                            <p className="fromNow">{notification.from_now}</p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No notifications available.</p>
+                      </>
                     )}
                   </div>
-                }
-              </div>
-            </div>
-            {showAllGameLogs && (
-              <AllTransactionsModal
-                modalIsOpen={showAllGameLogs}
-                isDarkMode={isDarkMode}
-                close={this.toggleAllTransactions}
-                sortType={sortType}
-                sortAnchorEl={sortAnchorEl}
-                searchAnchorEl={searchAnchorEl}
-                filterAnchorEl={filterAnchorEl}
-                filterType={filterType}
-                user={user._id}
-                transactions={transactions}
-                tnxComplete={tnxComplete}
-                handleSortClick={this.handleSortClick}
-                handleFilterClick={this.handleFilterClick}
-                handleFilterClose={this.handleFilterClose}
-                handleSortClose={this.handleSortClose}
-                handleSearchClose={this.handleSearchClose}
-                searchQuery={searchQuery}
-                onSearchQueryChange={this.onSearchQueryChange}
-                handleSearchClick={this.handleSearchClick}
-                handleLoadMore={this.handleLoadMore}
-                oneDayProfit={oneDayProfit}
-                sevenDayProfit={sevenDayProfit}
-                allTimeProfit={allTimeProfit}
-              />
-            )}
-
-            <div
-              id="game_logs"
-              className={this.state.showGameLog ? '' : 'hidden'}
-              onClick={this.handleBalanceClick}
-            >
-              <div className="arrow-up"></div>
-              <div className="header_panel_contents">
-                {<Tooltip
-                  style={{ position: "absolute", right: "20px" }}
-                  title={
-                    <>
-                      <strong>WHY DO MY WINNINGS APPEAR LESS?</strong>
-                      <br /><br />
-                      You see less as this is net profit (winnings - bet amount) and
-                      receive less due to RTB fees awarded to the Host (0% - 15%
-                      Returned to Bankroll dependent on their accessory) and 0.5%
-                      towards platform fees. For example, if you win {convertToCurrency(0.2)}&nbsp;
-                      but bet {convertToCurrency(0.1)}, then you might see:
-                      {convertToCurrency(0.2)} * 0.88 (12% RTB) - {convertToCurrency(0.1)} (net profit)
-                      = {convertToCurrency(0.076)} (Final Calculation)
-                    </>
-                  }
-                  placement="top"
+                </div>
+                <div
+                  id="notifications"
+                  className={showNotifications ? '' : 'hidden'}
+                  onClick={this.handleNotificationsClick}
                 >
-                  <Info />
-                </Tooltip>}
-                <h2>BALANCE HISTORY</h2>
-
-                {
-                  <div>
-                    <table>
-                      <tbody>
-                        {transactions.filter(row => row.user === this.props.user._id).length === 0 ? (
-                          <tr>
-                            <td>...</td>
-                          </tr>
-                        ) : (
-                          transactions.filter(row => row.user === this.props.user._id).map((row, key) => (
-                            <tr key={key}>
-                              {row.hash ? (
-                                <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
-                                  <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
-                                    {row.amount > 0 ? (
-                                      <>
-                                        {'+ '}
-                                        {convertToCurrency(row.amount, true)}
-                                      </>
-                                    ) : (
-                                      <>
-                                        {'- '}
-                                        {convertToCurrency(Math.abs(row.amount), true)}
-                                      </>
-                                    )}
-                                  </td>
-                                  <td className="fromNow">{row.from_now}</td>
-                                </a>
-                              ) : (
-                                <>
-                                  <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
-                                    {row.amount > 0 ? (
-                                      <>
-                                        {'+ '}
-                                        {convertToCurrency(row.amount, true)}
-                                      </>
-                                    ) : (
-                                      <>
-                                        {'- '}
-                                        {convertToCurrency(Math.abs(row.amount), true)}
-                                      </>
-                                    )}
-                                  </td>
-                                  <td className="fromNow">{row.from_now}</td>
-                                </>
-                              )}
-                            </tr>
+                  <div className="arrow-up"></div>
+                  <div className="header_panel_contents">
+                    {<h2>NOTIFICATIONS</h2>}
+                    {
+                      <div className="notification-element">
+                        {notificationsArray.length > 0 ? (
+                          notificationsArray.map((notification, index) => (
+                            <div className="notification-container" key={index}>
+                              <a
+                                className="player"
+                                onClick={() =>
+                                  this.handleOpenPlayerModal(notification._id)
+                                }
+                                style={{ display: 'flex', flexDirection: 'row' }}
+                              >
+                                <Avatar
+                                  src={notification.avatar}
+                                  rank={notification.rank}
+                                  accessory={notification.accessory}
+                                  className="avatar"
+                                />
+                              </a>
+                              <div className="notification">
+                                <p
+                                  dangerouslySetInnerHTML={{
+                                    __html: notification.message
+                                  }}
+                                />
+                                <p className="fromNow">{notification.from_now}</p>
+                              </div>
+                            </div>
                           ))
+                        ) : (
+                          <p>No notifications available.</p>
                         )}
-                      </tbody>
-                    </table>
-                    <Button onClick={this.toggleAllTransactions}>View All</Button>
+                      </div>
+                    }
                   </div>
-                }
-
-                <div className="transaction-panel">
-                  <Button
-                    className="btn-inventory"
-                    // isDarkMode={isDarkMode}
-                    onClick={this.handleOpenInventoryModal}
-                  >
-                    Inventory
-                  </Button>
                 </div>
-                <div className="transaction-panel">
-                  {this.state.remainingLoans > 0 ? (
-                    <Button
-                      className="btn-withdraw debt"
-                      onClick={this.handleOpenDebtsModal}
-                      // isDarkMode={isDarkMode}
-                    >
-                      <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
-                    </Button>
-                  ) : (
-                    <Button
-                      className="btn-withdraw"
-                      onClick={this.handleOpenWithdrawModal}
-                      // isDarkMode={isDarkMode}
-                    >
-                      Withdraw
-                    </Button>
-                  )}
+                {showAllGameLogs && (
+                  <AllTransactionsModal
+                    modalIsOpen={showAllGameLogs}
+                    isDarkMode={isDarkMode}
+                    close={this.toggleAllTransactions}
+                    sortType={sortType}
+                    sortAnchorEl={sortAnchorEl}
+                    searchAnchorEl={searchAnchorEl}
+                    filterAnchorEl={filterAnchorEl}
+                    filterType={filterType}
+                    user={user._id}
+                    transactions={transactions}
+                    tnxComplete={tnxComplete}
+                    handleSortClick={this.handleSortClick}
+                    handleFilterClick={this.handleFilterClick}
+                    handleFilterClose={this.handleFilterClose}
+                    handleSortClose={this.handleSortClose}
+                    handleSearchClose={this.handleSearchClose}
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={this.onSearchQueryChange}
+                    handleSearchClick={this.handleSearchClick}
+                    handleLoadMore={this.handleLoadMore}
+                    oneDayProfit={oneDayProfit}
+                    sevenDayProfit={sevenDayProfit}
+                    allTimeProfit={allTimeProfit}
+                  />
+                )}
 
-                  <Button
-                    className="btn-deposit"
-                    onClick={this.handleOpenDepositModal}
-                    // isDarkMode={isDarkMode}
-                  >
-                    Deposit
-                  </Button>
-                  <hr />
-                  {web3account ? (
-                    <>
-                      <input
-                        id="wallet-address"
-                        type="text"
-                        value={web3account}
-                        readOnly
-                      />
-                      <Button className="connect" onClick={this.disconnectWeb3}>
-                        Disconnect
+                <div
+                  id="game_logs"
+                  className={this.state.showGameLog ? '' : 'hidden'}
+                  onClick={this.handleBalanceClick}
+                >
+                  <div className="arrow-up"></div>
+                  <div className="header_panel_contents">
+                    {<Tooltip
+                      style={{ position: "absolute", right: "20px" }}
+                      title={
+                        <>
+                          <strong>WHY DO MY WINNINGS APPEAR LESS?</strong>
+                          <br /><br />
+                          You see less as this is net profit (winnings - bet amount) and
+                          receive less due to RTB fees awarded to the Host (0% - 15%
+                          Returned to Bankroll dependent on their accessory) and 0.5%
+                          towards platform fees. For example, if you win {convertToCurrency(0.2)}&nbsp;
+                          but bet {convertToCurrency(0.1)}, then you might see:
+                          {convertToCurrency(0.2)} * 0.88 (12% RTB) - {convertToCurrency(0.1)} (net profit)
+                          = {convertToCurrency(0.076)} (Final Calculation)
+                        </>
+                      }
+                      placement="top"
+                    >
+                      <Info />
+                    </Tooltip>}
+                    <h2>BALANCE HISTORY</h2>
+
+                    {
+                      <div>
+                        <table>
+                          <tbody>
+                            {transactions.filter(row => row.user === this.props.user._id).length === 0 ? (
+                              <tr>
+                                <td>...</td>
+                              </tr>
+                            ) : (
+                              transactions.filter(row => row.user === this.props.user._id).map((row, key) => (
+                                <tr key={key}>
+                                  {row.hash ? (
+                                    <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
+                                      <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
+                                        {row.amount > 0 ? (
+                                          <>
+                                            {'+ '}
+                                            {convertToCurrency(row.amount, true)}
+                                          </>
+                                        ) : (
+                                          <>
+                                            {'- '}
+                                            {convertToCurrency(Math.abs(row.amount), true)}
+                                          </>
+                                        )}
+                                      </td>
+                                      <td className="fromNow">{row.from_now}</td>
+                                    </a>
+                                  ) : (
+                                    <>
+                                      <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
+                                        {row.amount > 0 ? (
+                                          <>
+                                            {'+ '}
+                                            {convertToCurrency(row.amount, true)}
+                                          </>
+                                        ) : (
+                                          <>
+                                            {'- '}
+                                            {convertToCurrency(Math.abs(row.amount), true)}
+                                          </>
+                                        )}
+                                      </td>
+                                      <td className="fromNow">{row.from_now}</td>
+                                    </>
+                                  )}
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                        <Button onClick={this.toggleAllTransactions}>View All</Button>
+                      </div>
+                    }
+
+                    <div className="transaction-panel">
+                      <Button
+                        className="btn-inventory"
+                        // isDarkMode={isDarkMode}
+                        onClick={this.handleOpenInventoryModal}
+                      >
+                        Inventory
                       </Button>
-                    </>
-                  ) : (
-                    <Button className="connect" onClick={this.loadWeb3}>
-                      Wallet Not connected
-                    </Button>
-                  )}
+                    </div>
+                    <div className="transaction-panel">
+                      {this.state.remainingLoans > 0 ? (
+                        <Button
+                          className="btn-withdraw debt"
+                          onClick={this.handleOpenDebtsModal}
+                        // isDarkMode={isDarkMode}
+                        >
+                          <div>{convertToCurrency(this.state.remainingLoans)} IN DEBT</div>
+                        </Button>
+                      ) : (
+                        <Button
+                          className="btn-withdraw"
+                          onClick={this.handleOpenWithdrawModal}
+                        // isDarkMode={isDarkMode}
+                        >
+                          Withdraw
+                        </Button>
+                      )}
+
+                      <Button
+                        className="btn-deposit"
+                        onClick={this.handleOpenDepositModal}
+                      // isDarkMode={isDarkMode}
+                      >
+                        Deposit
+                      </Button>
+                      <hr />
+                      {web3account ? (
+                        <>
+                          <input
+                            id="wallet-address"
+                            type="text"
+                            value={web3account}
+                            readOnly
+                          />
+                          <Button className="connect" onClick={this.disconnectWeb3}>
+                            Disconnect
+                          </Button>
+                        </>
+                      ) : (
+                        <Button className="connect" onClick={this.loadWeb3}>
+                          Wallet Not connected
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              <div className="game_wrapper">
+                <div className="contents_wrapper">{children}</div>
+              </div>
+
+              {showProfileModal && (
+                <ProfileModal
+                  modalIsOpen={showProfileModal}
+                  closeModal={this.handleCloseProfileModal}
+                  player_name={userName}
+                  balance={balance}
+                  accessory={user.accessory}
+                  avatar={user.avatar}
+                  totalWagered={user.totalWagered}
+                  selectedCreator={user._id}
+                />
+              )}
+              {showPlayerModal && (
+                <PlayerModal
+                  selectedCreator={selectedCreator}
+                  modalIsOpen={showPlayerModal}
+                  closeModal={this.handleClosePlayerModal}
+                />
+              )}
+              {showSettingsModal && (
+                <SettingsModal
+                  modalIsOpen={showSettingsModal}
+                  closeModal={this.handleCloseSettingsModal}
+                  handleMute={this.handleMute}
+                  handleUnmute={this.handleUnmute}
+                />
+              )}
+              {showLeaderboardsModal && (
+                <LeaderboardsModal
+                  modalIsOpen={showLeaderboardsModal}
+                  closeModal={this.handleCloseLeaderboardsModal}
+                  player_name={userName}
+                  balance={balance}
+                  isDarkMode={isDarkMode}
+                />
+              )}
+              {showHowToPlayModal && (
+                <HowToPlayModal
+                  modalIsOpen={showHowToPlayModal}
+                  closeModal={this.handleCloseHowToPlayModal}
+                  player_name={userName}
+                  balance={balance}
+                  isDarkMode={isDarkMode}
+                />
+              )}
+              {showBankModal && (
+                <BankModal
+                  modalIsOpen={showBankModal}
+                  closeModal={this.handleCloseBankModal}
+                  player_name={userName}
+                  balance={balance}
+                  isDarkMode={isDarkMode}
+                />
+              )}
+              {showMarketplaceModal && (
+                <MarketplaceModal
+                  modalIsOpen={showMarketplaceModal}
+                  closeModal={this.handleCloseMarketplaceModal}
+                  player_name={userName}
+                  balance={balance}
+                  isDarkMode={isDarkMode}
+                />
+              )}
+              {showLoginModal && (
+                <LoginModal
+                  modalIsOpen={showLoginModal}
+                  closeModal={this.handleCloseLoginModal}
+                  openSignupModal={this.handleOpenSignupModal}
+                  openVerificationModal={this.handleOpenVerificationModal}
+                  initSocket={this.initSocket}
+                  openResetPasswordModal={this.handleOpenResetPasswordModal}
+                />
+              )}
+              {showDebtsModal && (
+                <DebtsModal
+                  modalIsOpen={showDebtsModal}
+                  closeModal={this.handleCloseDebtsModal}
+                  openDebtsModal={this.handleOpenDebtsModal}
+                />
+              )}
+              {showSignupModal && (
+                <SignupModal
+                  modalIsOpen={showSignupModal}
+                  closeModal={this.handleCloseSignupModal}
+                  openLoginModal={this.handleOpenLoginModal}
+                />
+              )}
+              {showVerificationModal && (
+                <VerificationModal
+                  modalIsOpen={showVerificationModal}
+                  closeModal={this.handleCloseVerificationModal}
+                />
+              )}
+              {showDepositModal && (
+                <DepositModal
+                  modalIsOpen={showDepositModal}
+                  closeModal={this.handleCloseDepositModal}
+                  web3={web3}
+                  balance={web3balance}
+                  account={web3account}
+                />
+              )}
+              {showInventoryModal && (
+                <InventoryModal
+                  modalIsOpen={showInventoryModal}
+                  closeModal={this.handleCloseInventoryModal}
+                />
+              )}
+              {showWithdrawModal && (
+                <WithdrawModal
+                  modalIsOpen={showWithdrawModal}
+                  closeModal={this.handleCloseWithdrawModal}
+                  balance={balance}
+                  web3={web3}
+                  account={web3account}
+                />
+              )}
+              {showResetPasswordModal && (
+                <ResetPasswordModal
+                  modalIsOpen={showResetPasswordModal}
+                  closeModal={this.handleCloseResetPasswordModal}
+                  openLoginModal={this.handleOpenLoginModal}
+                />
+              )}
+              <ListItemModal />
+              <DeListItemModal />
+              <ConfirmTradeModal />
+              <DeListLoanModal />
+              <ConfirmLoanModal />
+              <GamePasswordModal />
             </div>
-          </div>
-
-          <div className="game_wrapper">
-            <div className="contents_wrapper">{children}</div>
-          </div>
-
-          {showProfileModal && (
-            <ProfileModal
-              modalIsOpen={showProfileModal}
-              closeModal={this.handleCloseProfileModal}
-              player_name={userName}
-              balance={balance}
-              accessory={user.accessory}
-              avatar={user.avatar}
-              totalWagered={user.totalWagered}
-              selectedCreator={user._id}
-            />
-          )}
-          {showPlayerModal && (
-            <PlayerModal
-              selectedCreator={selectedCreator}
-              modalIsOpen={showPlayerModal}
-              closeModal={this.handleClosePlayerModal}
-            />
-          )}
-          {showSettingsModal && (
-            <SettingsModal
-              modalIsOpen={showSettingsModal}
-              closeModal={this.handleCloseSettingsModal}
-              handleMute={this.handleMute}
-              handleUnmute={this.handleUnmute}
-            />
-          )}
-          {showLeaderboardsModal && (
-            <LeaderboardsModal
-              modalIsOpen={showLeaderboardsModal}
-              closeModal={this.handleCloseLeaderboardsModal}
-              player_name={userName}
-              balance={balance}
-              isDarkMode={isDarkMode}
-            />
-          )}
-          {showHowToPlayModal && (
-            <HowToPlayModal
-              modalIsOpen={showHowToPlayModal}
-              closeModal={this.handleCloseHowToPlayModal}
-              player_name={userName}
-              balance={balance}
-              isDarkMode={isDarkMode}
-            />
-          )}
-          {showBankModal && (
-            <BankModal
-              modalIsOpen={showBankModal}
-              closeModal={this.handleCloseBankModal}
-              player_name={userName}
-              balance={balance}
-              isDarkMode={isDarkMode}
-            />
-          )}
-          {showMarketplaceModal && (
-            <MarketplaceModal
-              modalIsOpen={showMarketplaceModal}
-              closeModal={this.handleCloseMarketplaceModal}
-              player_name={userName}
-              balance={balance}
-              isDarkMode={isDarkMode}
-            />
-          )}
-          {showLoginModal && (
-            <LoginModal
-              modalIsOpen={showLoginModal}
-              closeModal={this.handleCloseLoginModal}
-              openSignupModal={this.handleOpenSignupModal}
-              openVerificationModal={this.handleOpenVerificationModal}
-              initSocket={this.initSocket}
-              openResetPasswordModal={this.handleOpenResetPasswordModal}
-            />
-          )}
-          {showDebtsModal && (
-            <DebtsModal
-              modalIsOpen={showDebtsModal}
-              closeModal={this.handleCloseDebtsModal}
-              openDebtsModal={this.handleOpenDebtsModal}
-            />
-          )}
-          {showSignupModal && (
-            <SignupModal
-              modalIsOpen={showSignupModal}
-              closeModal={this.handleCloseSignupModal}
-              openLoginModal={this.handleOpenLoginModal}
-            />
-          )}
-          {showVerificationModal && (
-            <VerificationModal
-              modalIsOpen={showVerificationModal}
-              closeModal={this.handleCloseVerificationModal}
-            />
-          )}
-          {showDepositModal && (
-            <DepositModal
-              modalIsOpen={showDepositModal}
-              closeModal={this.handleCloseDepositModal}
-              web3={web3}
-              balance={web3balance}
-              account={web3account}
-            />
-          )}
-          {showInventoryModal && (
-            <InventoryModal
-              modalIsOpen={showInventoryModal}
-              closeModal={this.handleCloseInventoryModal}
-            />
-          )}
-          {showWithdrawModal && (
-            <WithdrawModal
-              modalIsOpen={showWithdrawModal}
-              closeModal={this.handleCloseWithdrawModal}
-              balance={balance}
-              web3={web3}
-              account={web3account}
-            />
-          )}
-          {showResetPasswordModal && (
-            <ResetPasswordModal
-              modalIsOpen={showResetPasswordModal}
-              closeModal={this.handleCloseResetPasswordModal}
-              openLoginModal={this.handleOpenLoginModal}
-            />
-          )}
-          <ListItemModal />
-          <DeListItemModal />
-          <ConfirmTradeModal />
-          <DeListLoanModal />
-          <ConfirmLoanModal />
-          <GamePasswordModal />
-        </div>
+          </>
+        )}
       </MuiThemeProvider>
     );
   }

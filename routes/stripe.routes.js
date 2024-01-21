@@ -10,11 +10,9 @@ const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 const ethers = require('ethers');
 const { JsonRpcProvider } = require('@ethersproject/providers');
-// const cronJob = require('../helper/util/createCronJob');
-
 // const ganacheEndpoint = 'http://localhost:7544';
 // const provider = new JsonRpcProvider(ganacheEndpoint); 
-const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09'); // Replace 'YOUR_INFURA_PROJECT_ID' with your actual Infura project ID.
+const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09');
 const walletKey = process.env.WK;
 
 async function getWalletBalance(signer) {

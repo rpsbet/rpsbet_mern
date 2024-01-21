@@ -88,12 +88,14 @@ class Bang extends Component {
       betting: false,
       timer: null,
       timerValue: 2000,
+      showImageModal: false,
       intervalId: null,
       requestId: null,
       nextBangInterval: null,
       countdown: null,
       executeBet: false,
       newRound: false,
+      productName: '',
       bgColorChanged: false,
       countupValue: 0,
       buttonClicked: false,
@@ -221,8 +223,21 @@ class Bang extends Component {
     };
     fetchBangGuesses();
 
-  
+
     if (socket) {
+      socket.on('CARD_PRIZE', data => {
+        if (data) {
+          this.setState(
+            {
+              image: data.image,
+              productName: data.productName,
+              showImageModal: true
+            },
+            () => playSound('')
+          );
+        }
+      });
+
       socket.on(`BANG_GUESSES_${roomId}`, data => {
         if (data && data.bangs && data.bangs.length > 0) {
           const lastBang = data.bangs[data.bangs.length - 1];
@@ -231,7 +246,7 @@ class Bang extends Component {
             bang_guesses: data.bangs,
             nextBangInterval: lastBang.toFixed(2)
           }, () => {
-            setTimeout(() => {  
+            setTimeout(() => {
               // console.log("sss", this.state.nextBangInterval * 1000 + 7000)
               fetchBangGuesses();
             }, (this.state.nextBangInterval * 1000 + 7000));
@@ -250,8 +265,8 @@ class Bang extends Component {
       })
     }
 
-    
-     // document.addEventListener('mousedown', this.handleClickOutside);
+
+    // document.addEventListener('mousedown', this.handleClickOutside);
   };
 
   componentWillUnmount = () => {
@@ -679,6 +694,7 @@ class Bang extends Component {
       bankroll,
       runs_panel_opened,
       newRound,
+      showImageModal,
       countdown,
       actionList
     } = this.state;
@@ -692,7 +708,10 @@ class Bang extends Component {
       accessory,
       youtubeUrl,
       roomInfo,
-      isDarkMode
+      showPlayerModal,
+      selectedCreator,
+      isDarkMode,
+      handleClosePlayerModal
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
@@ -988,42 +1007,42 @@ class Bang extends Component {
                 // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
                 // Assuming countdown is initialized in the component's state as this.state.countdown
 
-// ...
+                // ...
 
-onEnd={() => {
-  // Show the bang message for 2 seconds, then start the countdown
-  this.setState({
-    showBang: true
-  });
-  setTimeout(() => {
-    this.setState({
-      showBang: false,
-      showCountdown: true,
-      countdown: 5
-    });
+                onEnd={() => {
+                  // Show the bang message for 2 seconds, then start the countdown
+                  this.setState({
+                    showBang: true
+                  });
+                  setTimeout(() => {
+                    this.setState({
+                      showBang: false,
+                      showCountdown: true,
+                      countdown: 5
+                    });
 
-    // console.log("oooo");
+                    // console.log("oooo");
 
-    const countdownTimer = setInterval(() => {
-      const { countdown } = this.state; // Correct variable name
-      const countdownValue = countdown - 1;
+                    const countdownTimer = setInterval(() => {
+                      const { countdown } = this.state; // Correct variable name
+                      const countdownValue = countdown - 1;
 
-      if (countdownValue <= 0) {
-        // Countdown is finished, restart everything
-        clearInterval(countdownTimer);
-        this.setState({
-          showCountdown: false,
-          countdown: null
-        });
-        if (waiting) {
-          this.setState({ newRound: true });
-        }
-      } else {
-        this.setState({ countdown: countdownValue, elapsedTime: '' });
-      }
-    }, 1000);
-  }, 2000);
-}}
+                      if (countdownValue <= 0) {
+                        // Countdown is finished, restart everything
+                        clearInterval(countdownTimer);
+                        this.setState({
+                          showCountdown: false,
+                          countdown: null
+                        });
+                        if (waiting) {
+                          this.setState({ newRound: true });
+                        }
+                      } else {
+                        this.setState({ countdown: countdownValue, elapsedTime: '' });
+                      }
+                    }, 1000);
+                  }, 2000);
+                }}
 
               />
             </p>
@@ -1037,6 +1056,22 @@ onEnd={() => {
         <div className="page-title">
           <h2>PLAY - Bang!</h2>
         </div>
+        {showImageModal && (
+          <ImageResultModal
+            modalIsOpen={showImageModal}
+            closeModal={this.toggleImageModal}
+            isDarkMode={isDarkMode}
+            image={image}
+            productName={productName}
+          />
+        )}
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+          />
+        )}
         <div className="game-contents">
           <div
             className="pre-summary-panel"
@@ -1397,7 +1432,7 @@ onEnd={() => {
 
 
           </div>
-          <BetArray arrayName="bang_array" label="bang" />
+          {/* <BetArray arrayName="bang_array" label="bang" /> */}
 
           <div className="action-panel">
             <Share roomInfo={roomInfo} />

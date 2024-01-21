@@ -34,6 +34,114 @@
   animation: slideIn 0.5s ease-in-out;
   white-space: nowrap;
 }
+
+.progress-bar-outer {
+  border-radius: 2px;
+  overflow: hidden;
+  height: 10px;
+  width: 100%;
+  margin: 20px auto -10px !important;
+  position: relative;
+
+}
+
+/* .rank-indicators div::before {
+  content: '';
+  display: block;
+position: relative;
+  top: -8px;  
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 14px;
+  z-index: 99;
+  background-color: white;
+  border-top-right-radius: 2px; 
+  border-top-left-radius: 2px;
+} */
+
+
+/* Add these styles to your existing style.css file or in a style tag in your component */
+
+.progress-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 0.6em;
+  display: none;
+}
+
+.rank-indicators {
+  display: flex;
+  justify-content: space-between;
+}
+.rank-indicators div{
+  margin-top: -5px !important;
+ /* background: linear-gradient(#ffdd00, hsla(275, 100%, 52%, 0.6)); */
+ padding: 4px;
+ border-radius: 50%;
+ /* border: 2px solid; */
+ box-shadow:  0 0 4px #f9f9f972;
+ /* text-shadow: 0 0 3px #f9f9f9; */
+}
+
+.progress-label-left {
+  left: 5px !important;
+}
+
+.progress-label-right {
+  right: 5px !important;
+}
+.rank-indicators .rank-minus-one {
+  transform: translateX(-20px) !important;
+  
+}
+.rank-indicators .rank-plus-one {
+  transform: translateX(20px) !important;
+
+}
+
+.progress-bar-filled {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  background: linear-gradient(#e1ff00, #fdb500 ) !important; /* Green color for filled progress */
+}
+
+.progress-bar-filled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0; /* Adjust the position as needed */
+  width: 0px;
+  height: 0;
+  border-style: solid;
+  border-width: 0px 2px 20px 4px; /* Adjust the size of the triangle */
+  border-color: #fb03ff98; /* Adjust the colors */
+  z-index: 3;
+}
+
+
+.progress-bar-remaining {
+  height: 100%;
+  background: linear-gradient(#af02ff, #f01fff) !important; /* Red color for remaining progress */
+  position: relative;
+  z-index: 1;
+  float: right;
+  margin-top: -10px !important;
+}
+
+
+/* Add some spacing for clarity */
+.statistics-panel {
+  margin-bottom: 20px;
+}
+
+.filters {
+  margin-bottom: 10px;
+}
+
 .room-link {
   z-index: 9;
   background-color: rgba(0, 0, 0, 0.5);

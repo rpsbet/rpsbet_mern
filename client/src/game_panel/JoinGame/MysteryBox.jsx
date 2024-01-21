@@ -81,7 +81,8 @@ class MysteryBox extends Component {
       isOpen: true,
       betting: false,
       bankroll: this.props.roomInfo.host_pr,
-
+      showImageModal: false,
+      productName: '',
       timer: null,
       bgColorChanged: false,
       timerValue: 2000,
@@ -134,6 +135,18 @@ class MysteryBox extends Component {
 
   componentDidMount() {
     const { socket } = this.props;
+    socket.on('CARD_PRIZE', data => {
+      if (data) {
+        this.setState(
+          {
+            image: data.image,
+            productName: data.productName,
+            showImageModal: true
+          },
+          () => playSound('')
+        );
+      }
+    });
     socket.on('UPDATED_BOX_LIST', data => {
       this.setState({ box_list: data.box_list });
     });
@@ -264,6 +277,12 @@ class MysteryBox extends Component {
     }
 
     return prediction;
+  };
+
+  toggleImageModal = () => {
+    this.setState({
+      showImageModal: false
+    });
   };
 
   changeBgColor = async result => {
@@ -637,6 +656,15 @@ class MysteryBox extends Component {
         <div className="page-title">
           <h2>PLAY - Mystery Box</h2>
         </div>
+        {showImageModal && (
+          <ImageResultModal
+            modalIsOpen={showImageModal}
+            closeModal={this.toggleImageModal}
+            isDarkMode={isDarkMode}
+            image={image}
+            productName={productName}
+          />
+        )}
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -945,7 +973,7 @@ class MysteryBox extends Component {
               )}
             </div>
           </div>
-          <BetArray arrayName="bet_array" label="bet" />
+          {/* <BetArray arrayName="bet_array" label="bet" /> */}
 
           <div className="action-panel">
             <Share roomInfo={this.props.roomInfo} />

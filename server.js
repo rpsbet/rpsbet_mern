@@ -52,11 +52,11 @@ const rentCron = require('./helper/util/rentCron.js');
 const rollCron = require('./helper/util/rollCron.js');
 const bangCron = require('./helper/util/bangCron.js');
 // Initialize the cron job to periodically check for confirmations
-creditScoreCron.checkOutstandingLoans(io);
-rentCron.checkRentalPayments(io);
-cronJob.checkConfirmations();
-rollCron.rollCron();
-bangCron.bangCron();
+// creditScoreCron.checkOutstandingLoans(io);
+// rentCron.checkRentalPayments(io);
+// cronJob.checkConfirmations();
+// rollCron.rollCron();
+// bangCron.bangCron();
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

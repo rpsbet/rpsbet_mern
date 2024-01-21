@@ -6,7 +6,9 @@ const User = require('../../model/User');
 const Transaction = require('../../model/Transaction');
 const { setBalance } = require('../../routes/user.routes');
 
-const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09');
+const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/5fedb9ded8fd4b149026d0140baacf98');
+// console.log('Infura API Key:', provider.apiKey);
+// console.log('Provider:', provider);
 
 const withdrawalConfirmationThreshold = 0;
 const depositConfirmationThreshold = 6;
@@ -14,8 +16,9 @@ const depositConfirmationThreshold = 6;
 async function checkConfirmations() {
   try {
     // console.log('Checking for confirmations...');
-
+    
     const currentBlock = await provider.getBlockNumber();
+    // console.log('Current Block:', currentBlock);
     const pendingTransactions = await Transaction.find({ status: 'pending' });
 
     for (const transaction of pendingTransactions) {

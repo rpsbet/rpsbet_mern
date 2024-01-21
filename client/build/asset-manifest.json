@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.0d7cfcda.css",
-    "main.js": "/static/js/main.e5648a1f.js",
+    "main.css": "/static/css/main.80c4e08f.css",
+    "main.js": "/static/js/main.fb9ea051.js",
     "static/js/469.5d4d93cd.chunk.js": "/static/js/469.5d4d93cd.chunk.js",
     "static/js/857.01cd8b42.chunk.js": "/static/js/857.01cd8b42.chunk.js",
     "static/js/331.2aa29dd2.chunk.js": "/static/js/331.2aa29dd2.chunk.js",
@@ -80,6 +80,7 @@
     "static/media/game-logo-mobile.svg": "/static/media/game-logo-mobile.5069dd69209a4e934ad9.svg",
     "static/media/result-icon-draw.svg": "/static/media/result-icon-draw.0cc3e012d870bef72575.svg",
     "static/media/modal-drop-game.svg": "/static/media/modal-drop-game.4543c0756bb77bdf62e6.svg",
+    "index.html": "/index.html",
     "static/media/modal-brain-game.svg": "/static/media/modal-brain-game.06ceb716fa17ade6c308.svg",
     "static/media/dark-alert-prize-icon.svg": "/static/media/dark-alert-prize-icon.0446232552809aef09b3.svg",
     "static/media/modal-blackjack.svg": "/static/media/modal-blackjack.bb3a59f32061d96025f5.svg",
@@ -88,7 +89,6 @@
     "static/media/alert-prize-icon.svg": "/static/media/alert-prize-icon.b802a035ae07af05a68b.svg",
     "static/media/dark-result-icon-trade.svg": "/static/media/dark-result-icon-trade.7bf5dd91d6f27b0fe263.svg",
     "static/media/modal-rps.svg": "/static/media/modal-rps.aeda0dc62ee617090df6.svg",
-    "index.html": "/index.html",
     "static/media/dark-alert-icon.svg": "/static/media/dark-alert-icon.7a2b04fa58daceef2a17.svg",
     "static/media/alert-icon.svg": "/static/media/alert-icon.f6b3805095f1aa08ef54.svg",
     "static/media/modal-mystery-box.svg": "/static/media/modal-mystery-box.4c9bc8e111b5b2eaa3f5.svg",
@@ -116,11 +116,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.0d7cfcda.css.map": "/static/css/main.0d7cfcda.css.map",
-    "main.e5648a1f.js.map": "/static/js/main.e5648a1f.js.map"
+    "main.80c4e08f.css.map": "/static/css/main.80c4e08f.css.map",
+    "main.fb9ea051.js.map": "/static/js/main.fb9ea051.js.map"
   },
   "entrypoints": [
-    "static/css/main.0d7cfcda.css",
-    "static/js/main.e5648a1f.js"
+    "static/css/main.80c4e08f.css",
+    "static/js/main.fb9ea051.js"
   ]
 }

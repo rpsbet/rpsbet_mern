@@ -341,11 +341,12 @@ class GlobalChat extends Component {
 
               return (
                 <div
-                  key={key}
-                  className={`chat-line ${selectedMessage === chat ? 'selected' : ''} ${chat.sender === 'SYSTEM ANNOUNCEMENT' ? 'special-message' : ''
-                    }`}
-                  onClick={() => this.handleMessageClick(chat)}
-                >
+  key={key}
+  className={`chat-line ${selectedMessage === chat ? 'selected' : ''} ${
+    chat.sender === 'SYSTEM ANNOUNCEMENT' ? 'special-message' : ''
+  } ${chat.sender === 'SYSTEM ANNOUNCEMENT' && chat.message.includes('rent') ? 'special-message-rent' : ''}`}
+  onClick={() => this.handleMessageClick(chat)}
+>
                   {chat.replyTo && chat.replyTo.sender && (
                     <div className="reply-to">
                       <a

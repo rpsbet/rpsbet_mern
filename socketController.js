@@ -240,6 +240,10 @@ module.exports.socketio = server => {
       socket.broadcast.emit('UPDATED_BANKROLL', data);
     });
 
+    socket.on('CARDS_ARRAY', data => {
+      socket.broadcast.emit('CARDS_ARRAY', data);
+    });
+
     socket.on('BANG_GUESSES1', data => {
       const roomId = data.roomId; // assuming roomId is passed in the data object
       socket.to(roomId).emit('BANG_GUESSES1', data);

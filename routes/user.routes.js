@@ -1,4 +1,5 @@
 const express = require('express');
+const fetch = require('node-fetch');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -101,8 +102,25 @@ router.get('/activity', admin, async (req, res) => {
 });
 router.post('/', async (req, res) => {
   try {
-    const { username, password, bio, avatar, referralCode, avatarMethod } = req.body;
+    const { username, password, bio, avatar, referralCode, avatarMethod, recaptchaToken } = req.body;
 
+    // Validate reCAPTCHA
+    const secretKey = '6Lfto1EpAAAAAEOO1gb-uSsqMmkVDjcoJRHClm28';
+    const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${secretKey}&response=${recaptchaToken}`,
+    });
+    const recaptchaData = await recaptchaResponse.json();
+
+    if (!recaptchaData.success) {
+      return res.json({
+        success: false,
+        error: 'reCAPTCHA verification failed. Please try again.',
+      });
+    }
 
     // Simple validation
     if (!username || !password) {
@@ -213,6 +231,21 @@ router.post('/', async (req, res) => {
     });
   }
 });
+
+
+ verifyRecaptcha = async (token) => {
+    const secretKey = '6Lfto1EpAAAAAEOO1gb-uSsqMmkVDjcoJRHClm28';
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${secretKey}&response=${token}`,
+    });
+    const data = await response.json();
+    return data.success;
+  };
+  
 
 router.post('/username', auth, async (req, res) => {
   try {

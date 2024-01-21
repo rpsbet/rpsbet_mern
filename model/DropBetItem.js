@@ -15,10 +15,6 @@ const DropBetItemSchema = new Schema({
         type: Number,
         default: 0,
     },
-    drop_list: {
-        type: [String],
-        default: []
-    },
     bet_amount: {
         type: Number,
         default: 0

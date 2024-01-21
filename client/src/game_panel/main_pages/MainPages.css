@@ -702,6 +702,56 @@ div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
   background-color: #00ff0044;
   border: 1px solid;
 }
+
+
+.countdown-side,
+.youtube-side {
+  cursor: pointer;
+  transition: background 0.5s ease;
+}
+
+/* Countdown side gradient */
+.countdown-side {
+  background: linear-gradient(45deg, #da4ae2, #7b09ac) !important;
+}
+
+.countdown-side div div {
+ margin-top: -30px;
+ color: #fff !important;
+}
+.countdown-side div div div {
+  padding: 10px;
+  filter: hue-rotate(120deg);
+  border-radius: 0.3em;
+  text-shadow: 0 0 2px #da4ae2;
+}
+.countdown-side div div div:first-child {
+  background: linear-gradient(transparent, #ffb2ff);
+  margin-bottom: -20px !important ;
+  padding-bottom: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+.countdown-side div div div:last-child {
+  background: linear-gradient(0deg, transparent, #b3e0ff, #ffb2ff);
+  margin-top: 20px !important;
+  width: 100px;
+  text-transform:uppercase;
+}
+
+.countdown-side:hover {
+  background: linear-gradient(-45deg, #8e07d7, #ae00b8, #b3e0ff) !important;
+}
+
+/* YouTube side gradient */
+.youtube-side {
+  background: linear-gradient(45deg, #ff0000, #ff8c00, #ffd700) !important;
+}
+
+.youtube-side:hover {
+  background: linear-gradient(-45deg, #ff8c00, #ff0000, #ff7e1c) !important;
+}
+
 .tag.hot {
   color: #4d00c9;
   background-color: #4d00c944;
@@ -957,7 +1007,7 @@ div.table.main-game-table .table-row .table-cell.cell-user-name {
 }
 
 div.table.main-game-table .table-row .table-cell.cell-user-name .avatar{
-  margin-left: 10px;
+  margin-left: 20px;
 }
 div.table.main-game-table
   .table-row
@@ -2271,11 +2321,23 @@ button.btn-submit:active,
   }
 }
 
+.Mui-disabled:hover{
+filter: unset !important;
+  border: unset !important;
+}
+.Mui-disabled{
+  cursor: not-allowed !important;
+pointer-events: unset !important;
+}
+.Mui-disabled{
+  border: unset !important;
+  cursor: not-allowed !important;
+pointer-events: unset !important;
+}
 .disabled {
   background: grey !important;
   box-shadow: none !important;
-  pointer-events: none !important;
-  cursor: none !important;
+  cursor: not-allowed !important;
   filter: grayscale(1);
 }
 .transaction-settings {

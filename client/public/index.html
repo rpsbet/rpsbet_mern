@@ -69,7 +69,19 @@
     src="https://www.googletagmanager.com/gtag/js?id=UA-55401494-4"
   ></script>
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
+  <script src="https://www.google.com/recaptcha/api.js?render=6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv"></script>
+  <script>
+    const form = document.getElementById('signupForm');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      grecaptcha.ready(function () {
+        grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' }).then(function (token) {
+          form.querySelector('input[name="recaptchaToken"]').value = token;
+          form.submit();
+        });
+      });
+    });
+  </script>
 
   <script>
     window.dataLayer = window.dataLayer || [];

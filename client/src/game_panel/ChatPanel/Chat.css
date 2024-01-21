@@ -13,13 +13,16 @@
     align-items: center;
     margin: -10px 0 5px 0!important;
 }
+.special-message-rent,
 .special-message {
     pointer-events: none;
     text-align: center;
 }
+.special-message-rent .chat-player,
 .special-message .chat-player {
     display: none;
 }
+.special-message-rent .chat-msg,
 .special-message .chat-msg{
     margin-left: unset !important;
     text-transform: uppercase;
@@ -27,12 +30,21 @@
     font-weight: bold !important; /* Add any additional styles you want for special messages */
   }
 
-  .chat-wrapper .chat-panel .chat-line.special-message .sender-name {
-    margin-left: unset !important;
-    color: red !important;
-    position: relative;
-
+  .special-message-rent .chat-msg{
+    background: linear-gradient(#4c3108, #540303) !important; 
   }
+  
+  .chat-wrapper .chat-panel .chat-line.special-message-rent .sender-name,
+  .chat-wrapper .chat-panel .chat-line.special-message .sender-name {
+      margin-left: unset !important;
+      color: rgb(255, 47, 47) !important;
+      position: relative;
+      
+    }
+    .chat-wrapper .chat-panel .chat-line.special-message-rent .sender-name {
+        color: rgb(255, 47, 0) !important;
+    }
+.special-message-rent .chat-text,
 .special-message .chat-text {
     margin-left: unset !important;
     text-transform: uppercase;

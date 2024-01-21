@@ -33,7 +33,6 @@ import history from '../../redux/history';
 import Share from '../../components/Share';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { convertToCurrency } from '../../util/conversion';
 
 const defaultOptions = {
@@ -89,11 +88,13 @@ class DropGame extends Component {
       timer: null,
       timerValue: 2000,
       intervalId: null,
+      showImageModal: false,
       showAnimation: false,
       bgColorChanged: false,
       drop_guesses: [],
       advanced_status: '',
       is_anonymous: false,
+      productName: '',
       bet_amount: 0.001,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       drop_guesses1Received: false,
@@ -170,7 +171,20 @@ class DropGame extends Component {
   }
 
   componentDidMount = () => {
-    this.socket.on('DROP_GUESSES1', data => {
+    const { socket } = this.props;
+    socket.on('CARD_PRIZE', data => {
+      if (data) {
+        this.setState(
+          {
+            image: data.image,
+            productName: data.productName,
+            showImageModal: true
+          },
+          () => playSound('')
+        );
+      }
+    });
+    socket.on('DROP_GUESSES1', data => {
       if (!this.state.drop_guesses1Received) {
         this.setState({
           drop_guesses: data,
@@ -178,10 +192,9 @@ class DropGame extends Component {
         });
       }
     });
-    this.socket.on('DROP_GUESSES', data => {
+    socket.on('DROP_GUESSES', data => {
       this.setState({ drop_guesses: data });
     });
-    const { socket } = this.props;
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll });
     });
@@ -199,60 +212,60 @@ class DropGame extends Component {
     const uniqueValues = [...new Set(sortedDrops)];
 
     if (uniqueValues.length === 1) {
-        return uniqueValues[0];
+      return uniqueValues[0];
     } else {
-        let finalValue;
+      let finalValue;
 
-        do {
-            const minDrop = Math.min(...sortedDrops);
-            const maxDrop = Math.max(...sortedDrops);
-            const difference = maxDrop - minDrop;
-            const segmentSize = difference / 20;
+      do {
+        const minDrop = Math.min(...sortedDrops);
+        const maxDrop = Math.max(...sortedDrops);
+        const difference = maxDrop - minDrop;
+        const segmentSize = difference / 20;
 
-            const segments = Array.from({ length: 20 }, (_, index) => {
-                const lowerBound = minDrop + index * segmentSize;
-                const upperBound = minDrop + (index + 1) * segmentSize;
-                const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
+        const segments = Array.from({ length: 20 }, (_, index) => {
+          const lowerBound = minDrop + index * segmentSize;
+          const upperBound = minDrop + (index + 1) * segmentSize;
+          const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
 
-                return {
-                    segment: index + 1,
-                    drops: dropsInSegment
-                };
-            });
+          return {
+            segment: index + 1,
+            drops: dropsInSegment
+          };
+        });
 
-            const totalDropsCount = sortedDrops.length;
-            const weights = segments.map(segment => segment.drops.length / totalDropsCount);
+        const totalDropsCount = sortedDrops.length;
+        const weights = segments.map(segment => segment.drops.length / totalDropsCount);
 
-            const randomValue = Math.random();
-            let cumulativeWeight = 0;
-            let selectedSegment;
+        const randomValue = Math.random();
+        let cumulativeWeight = 0;
+        let selectedSegment;
 
-            for (let i = 0; i < segments.length; i++) {
-                cumulativeWeight += weights[i];
-                if (randomValue <= cumulativeWeight) {
-                    selectedSegment = segments[i];
-                    break;
-                }
-            }
+        for (let i = 0; i < segments.length; i++) {
+          cumulativeWeight += weights[i];
+          if (randomValue <= cumulativeWeight) {
+            selectedSegment = segments[i];
+            break;
+          }
+        }
 
-            const switchChance = Math.random();
+        const switchChance = Math.random();
 
-            if (switchChance <= 0.4) {
-                const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
-                finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
-            } else if (switchChance <= 0.8) {
-                const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
-                finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
-            } else {
-                const randomAddition = Math.random() * segmentSize;
-                finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
-            }
+        if (switchChance <= 0.4) {
+          const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
+          finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
+        } else if (switchChance <= 0.8) {
+          const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
+          finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
+        } else {
+          const randomAddition = Math.random() * segmentSize;
+          finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
+        }
 
-        } while (finalValue !== null && finalValue < 0.000001);
+      } while (finalValue !== null && finalValue < 0.000001);
 
-        return finalValue;
+      return finalValue;
     }
-};
+  };
 
 
   joinGame = async () => {
@@ -300,7 +313,7 @@ class DropGame extends Component {
       () => {
         // history.push('/');
       },
-      () => {}
+      () => { }
     );
 
     if (result.status === 'success') {
@@ -463,6 +476,12 @@ class DropGame extends Component {
     }
   };
 
+  toggleImageModal = () => {
+    this.setState({
+      showImageModal: false
+    });
+  };
+
   startBetting = () => {
     const { isDarkMode, playSound, is_private, roomInfo } = this.props;
 
@@ -578,15 +597,13 @@ class DropGame extends Component {
   render() {
     const {
       showAnimation,
-      isDisabled,
       bankroll,
       betting,
       timerValue,
       actionList,
       drop_guesses,
       bet_amount,
-      slippage,
-      settings_panel_opened
+      showImageModal
     } = this.state;
 
     const {
@@ -617,12 +634,21 @@ class DropGame extends Component {
         <div className="page-title">
           <h2>PLAY - Drop Game</h2>
         </div>
+        {showImageModal && (
+          <ImageResultModal
+            modalIsOpen={showImageModal}
+            closeModal={this.toggleImageModal}
+            isDarkMode={isDarkMode}
+            image={image}
+            productName={productName}
+          />
+        )}
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
             closeModal={handleClosePlayerModal}
-            // {...this.state.selectedRow}
+          // {...this.state.selectedRow}
           />
         )}
         <div className="game-contents">
@@ -655,7 +681,7 @@ class DropGame extends Component {
                         // updateDigitToPoint2(
                         parseFloat(this.state.bet_amount))} + ??
 
-                      
+
                     </div>
                   </div>
                   {roomInfo.endgame_amount > 0 && (
@@ -708,8 +734,8 @@ class DropGame extends Component {
                                       ? ['#00FF00']
                                       : actionList.hostNetProfit?.slice(-1)[0] <
                                         0
-                                      ? ['#FF0000']
-                                      : ['#808080'],
+                                        ? ['#FF0000']
+                                        : ['#808080'],
                                   shadeIntensity: 1,
                                   type: 'vertical',
                                   opacityFrom: 0.7,
@@ -801,7 +827,7 @@ class DropGame extends Component {
                   </div>
                   {youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={youtubeUrl} isMusicEnabled={isMusicEnabled}/>
+                      <YouTubeVideo url={youtubeUrl} isMusicEnabled={isMusicEnabled} />
                     </div>
                   )}
                   <div className="data-item">
@@ -883,9 +909,8 @@ class DropGame extends Component {
               </div>
             </div>
             <div
-              className={`animation-container${
-                showAnimation ? ' animate' : ''
-              }`}
+              className={`animation-container${showAnimation ? ' animate' : ''
+                }`}
             >
               <Lottie
                 options={{
@@ -920,7 +945,7 @@ class DropGame extends Component {
               DROP AMOUNT
             </Button>
 
-            
+
             <div>
               <FormControlLabel
                 control={
@@ -946,7 +971,7 @@ class DropGame extends Component {
               )}
             </div>
           </div>
-          <BetArray arrayName="drop_array" label="drop" />
+          {/* <BetArray arrayName="drop_array" label="drop" /> */}
 
           <div className="action-panel">
             <Share roomInfo={this.props.roomInfo} />

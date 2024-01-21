@@ -17,21 +17,21 @@ async function checkRentalPayments(io) {
     for (const item of items) {
       // Iterate through each owner in the item's owners array
       for (const owner of item.owners) {
-        // Check the specified conditions
         if (
           owner.count === 1 &&
           owner.onSale === 0 &&
           owner.rentOption === true &&
           owner.originalOwner &&
           owner.lastPayment
-        ) {
-          const currentDate = new Date();
-          const lastPaymentDate = new Date(owner.lastPayment);
-          const oneMonthAgo = new Date();
-          oneMonthAgo.setMonth(currentDate.getMonth() - 1);
-
-          // Check if it's been more than 1 month since the last payment
-          if (lastPaymentDate <= oneMonthAgo) {
+          ) {
+            const currentDate = new Date();
+            const lastPaymentDate = new Date(owner.lastPayment);
+            const oneMonthAgo = new Date();
+            oneMonthAgo.setMonth(currentDate.getMonth() - 1);
+            
+            // Check if it's been more than 1 month since the last payment
+            console.log("check")
+            if (lastPaymentDate <= oneMonthAgo) {
             // Find the current user
             const currentUser = await User.findOne({ _id: owner.user });
 
@@ -99,46 +99,46 @@ async function checkRentalPayments(io) {
             ]);
 
 
-            const senderId = '629685058f368a1838372754'; // Replace with the actual sender ID
-            const message = 'Daily rent check complete. All outstanding rent and arrears have been processed.';
-            const messageType = 'text';
-
-            // Fetch user information from the User model using the senderId
-            const senderUser = await User.findById(senderId);
-
-            // Extract relevant user information
-            const avatar = senderUser.avatar || ''; // Replace with the actual avatar URL
-            const accessory = senderUser.accessory || ''; // Replace with the actual accessory URL
-            const rank = senderUser.totalWagered || 0; // Replace with the actual rank
-
-            const replyTo = null; // No need for a reply in this case
-
-            const data = {
-              sender: senderUser.username, // Assuming there's a 'username' field in the User model
-              senderId: senderId,
-              message: message,
-              messageType: messageType,
-              avatar: avatar,
-              accessory: accessory,
-              rank: rank,
-              replyTo: replyTo,
-            };
-
-            // Emit the GLOBAL_CHAT_SEND event
-            socketController.globalChatSend(socketio, data);
-
+            
             // console.log(`Rental payment processed for item ${item.productName}`);
           }
         }
       }
     }
+    const senderId = '629685058f368a1838372754'; // Replace with the actual sender ID
+    const message = 'Daily rent check complete. All outstanding rent and arrears have been processed.';
+    const messageType = 'text';
+
+    // Fetch user information from the User model using the senderId
+    const senderUser = await User.findById(senderId);
+
+    // Extract relevant user information
+    const avatar = senderUser.avatar || ''; // Replace with the actual avatar URL
+    const accessory = senderUser.accessory || ''; // Replace with the actual accessory URL
+    const rank = senderUser.totalWagered || 0; // Replace with the actual rank
+
+    const replyTo = null; // No need for a reply in this case
+
+    const data = {
+      sender: senderUser.username, // Assuming there's a 'username' field in the User model
+      senderId: senderId,
+      message: message,
+      messageType: messageType,
+      avatar: avatar,
+      accessory: accessory,
+      rank: rank,
+      replyTo: replyTo,
+    };
+
+    // Emit the GLOBAL_CHAT_SEND event
+    socketController.globalChatSend(socketio, data);
   } catch (error) {
     console.error('Error taking rental payments', error);
   }
 }
 
 // Schedule the cron job to run every day at midnight (00:00)
-cron.schedule('*/15 * * * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   await checkRentalPayments();
 });
 

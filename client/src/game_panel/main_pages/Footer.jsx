@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTwitter, faTelegram, faDiscord } from '@fortawesome/free-brands-svg-icons';
+import { faXTwitter, faTelegram, faYoutube, faDiscord } from '@fortawesome/free-brands-svg-icons';
 import bscscan from '../icons/etherscan-logo.svg';
 import busd from '../icons/b-usd.png';
 import btc from '../icons/btc.png';
@@ -101,147 +101,149 @@ class Footer extends Component {
     }
 
     componentDidMount() {
+        console.log(this.props.isDarkMode)
         // this.IsAuthenticatedReroute();
     }
 
     handleOpenLeaderboardsModal = () => {
         this.setState({ showLeaderboardsModal: true });
-      };
-    
-      handleCloseLeaderboardsModal = () => {
+    };
+
+    handleCloseLeaderboardsModal = () => {
         this.setState({ showLeaderboardsModal: false });
-      };
-    
+    };
+
     IsAuthenticatedReroute = () => {
         if (!this.props.auth) {
             history.push('/');
         }
     };
 
-    
-  handleOpenTermsModal = () => {
-    this.setState({ showTermsModal: true });
-  };
-  handleCloseTermsModal = () => {
-    this.setState({ showTermsModal: false });
-  };
 
-  handleOpenPrivacyModal = () => {
-    this.setState({ showPrivacyModal: true, anchorEl: null });
-  };
-  handleClosePrivacyModal = () => {
-    this.setState({ showPrivacyModal: false });
-  };
+    handleOpenTermsModal = () => {
+        this.setState({ showTermsModal: true });
+    };
+    handleCloseTermsModal = () => {
+        this.setState({ showTermsModal: false });
+    };
+
+    handleOpenPrivacyModal = () => {
+        this.setState({ showPrivacyModal: true, anchorEl: null });
+    };
+    handleClosePrivacyModal = () => {
+        this.setState({ showPrivacyModal: false });
+    };
 
 
     render() {
         const { classes, isDarkMode } = this.props;
-        
+
         const { showLeaderboardsModal } = this.state;
+        const bottomFooterClasses = `bottom-footer ${isDarkMode ? 'dark_mode' : ''}`;
 
         return (
-            <div className="bottom-footer" style={this.props.style}>
-                <div id="footer-container" className={classes.footerContainer}>
-                {showLeaderboardsModal && (
-            <LeaderboardsModal
-              modalIsOpen={showLeaderboardsModal}
-              closeModal={this.handleCloseLeaderboardsModal}
-            //   player_name={userName}
-            //   balance={balance}
-              isDarkMode={isDarkMode}
-            />
-          )}
-                <div className="social-icons">
-                    <a href="https://discord.gg/anMJntW4AD">
-                        <FontAwesomeIcon icon={faDiscord} />
-                    </a>
-                    <a href="https://twitter.com/officialrpsgame">
-                        <FontAwesomeIcon icon={faTwitter} />
-                    </a>
-                    <a href="https://t.me/rpsfinance">
-                        <FontAwesomeIcon icon={faTelegram} />
-                    </a>
-                    {/* <a href="https://www.youtube.com/@rps_game/">
+            <div className={bottomFooterClasses} style={this.props.style}>
+            <div id="footer-container" className={classes.footerContainer}>
+                    {showLeaderboardsModal && (
+                        <LeaderboardsModal
+                            modalIsOpen={showLeaderboardsModal}
+                            closeModal={this.handleCloseLeaderboardsModal}
+                            //   player_name={userName}
+                            //   balance={balance}
+                            isDarkMode={isDarkMode}
+                        />
+                    )}
+                    <div className="social-icons" style={{display: 'flex', alignItems: 'center'}}>
+                        {/* <a href="https://discord.gg/anMJntW4AD">
+                            <FontAwesomeIcon icon={faDiscord} />
+                        </a> */}<span>CHECK SOCIALS FOR UPDATES ►</span>
+                        <a href="https://x.com/officialrpsgame">
+                            <FontAwesomeIcon icon={faXTwitter} />
+                        </a>
+                        {/* <a href="https://t.me/rpsfinance">
+                            <FontAwesomeIcon icon={faTelegram} />
+                        </a> */}
+                        <a href="https://www.youtube.com/channel/UCikMJVhTSPUYcGSWEdAj6cQ">
                         <FontAwesomeIcon icon={faYoutube} />
-                    </a>
-                    <a href="https://www.instagram.com/rps.game/">
+                    </a> 
+                   {/* <a href="https://www.instagram.com/rps.game/">
                         <FontAwesomeIcon icon={faInstagram} />
                     </a>
                     <a href="https://www.twitch.tv/rpsbet">
                         <FontAwesomeIcon icon={faTwitch} />
                     </a> */}
-                </div>
-                <div className={classes.currencies}>
-    <img className={classes.currency} src={busd} alt="BUSD" />
-    <img className={classes.currency} src={btc} alt="BTC" />
-    <img className={classes.availableCurrency} src={eth} alt="ETH" />
-    <img className={classes.currency} src={ltc} alt="LTC" />
-</div>
-                <div className={classes.proof}>
-                    <p>Proof of Funds</p>
-                    <a target="_blank" href="https://etherscan.com/address/0xD291Db607053cFcdcFFdADCcfE8A3a8bA8Cd8c6B">
+                    </div>
+                    <div className={classes.currencies}>
+                        <img className={classes.currency} src={busd} alt="BUSD" />
+                        <img className={classes.currency} src={btc} alt="BTC" />
+                        <img className={classes.availableCurrency} src={eth} alt="ETH" />
+                        <img className={classes.currency} src={ltc} alt="LTC" />
+                    </div>
+                    <div className={classes.proof}>
+                        {/* <p>Proof of Funds</p>
+                        <a target="_blank" href="https://etherscan.com/address/0xD291Db607053cFcdcFFdADCcfE8A3a8bA8Cd8c6B">
 
-                <img  className={classes.bscscan} src={bscscan} alt="etherscan" />
-                    </a>
+                            <img className={classes.bscscan} src={bscscan} alt="etherscan" />
+                        </a> */}
 
-                              </div>
-                <div className={classes.links}>
-                <a  className={(classes.link, 'mobile-only')} href="#"
-                  onClick={e => {
-                    e.preventDefault();
-                    this.handleOpenLeaderboardsModal();
-                  }} >Leaderboards</a><span className={(classes.link, 'mobile-only')} >
-                  &nbsp;✗&nbsp;
-                  
-                  </span>
-                    {/* <a className={classes.link} href="#">Blog</a>&nbsp;✗&nbsp; */}
-                    {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
-                    <a className={classes.link}
-                    href="#terms"
-                    id="terms"
-                    onClick={this.handleOpenTermsModal}
-                    >
-                        Terms
-                    </a>&nbsp;✗&nbsp;
-                    <a className={classes.link}
-                        href="#privacy"
-                        id="privacy"
-                        onClick={this.handleOpenPrivacyModal}
-                    >
-                        Privacy
-                    </a>
-                    {/* <a className={classes.link} href="#">Fair</a> */}
+                    </div>
+                    <div className={classes.links}>
+                        <a className={(classes.link, 'mobile-only')} href="#"
+                            onClick={e => {
+                                e.preventDefault();
+                                this.handleOpenLeaderboardsModal();
+                            }} >Leaderboards</a><span className={(classes.link, 'mobile-only')} >
+                            &nbsp;✗&nbsp;
+
+                        </span>
+                        {/* <a className={classes.link} href="#">Blog</a>&nbsp;✗&nbsp; */}
+                        {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
+                        <a className={classes.link}
+                            href="#terms"
+                            id="terms"
+                            onClick={this.handleOpenTermsModal}
+                        >
+                            Terms
+                        </a>&nbsp;✗&nbsp;
+                        <a className={classes.link}
+                            href="#privacy"
+                            id="privacy"
+                            onClick={this.handleOpenPrivacyModal}
+                        >
+                            Privacy
+                        </a>
+                        {/* <a className={classes.link} href="#">Fair</a> */}
+                    </div>
+                    <div className={classes.address}>
+                        <p>This website falls under provable fairness because (1) P2P, skill games are transformative and (2) players have a 100% control-rate over the AI technology used to replace an intermediary.
+                        </p>
+                        <p>Also rps.game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
+                        </p>
+                    </div>
                 </div>
-                <div className={classes.address}>
-                    <p>This website falls under provable fairness because (1) P2P, skill games are transformative and (2) players have a 100% control-rate over the AI technology used to replace an intermediary. 
-</p>
-                    <p>Also rps.game has absolutely no involvement with any third-party gambling provider software or 'provably-fair' algorithms.
-</p>
-                </div>
-            </div>
-            {this.state.showTermsModal && (
-            <TermsModal
-              modalIsOpen={this.state.showTermsModal}
-              closeModal={this.handleCloseTermsModal}
-              isDarkMode={this.props.isDarkMode}
-            />
-          )}
-          {this.state.showPrivacyModal && (
-            <PrivacyModal
-              modalIsOpen={this.state.showPrivacyModal}
-              closeModal={this.handleClosePrivacyModal}
-              isDarkMode={this.props.isDarkMode}
-            />
-          )}
+                {this.state.showTermsModal && (
+                    <TermsModal
+                        modalIsOpen={this.state.showTermsModal}
+                        closeModal={this.handleCloseTermsModal}
+                        isDarkMode={this.props.isDarkMode}
+                    />
+                )}
+                {this.state.showPrivacyModal && (
+                    <PrivacyModal
+                        modalIsOpen={this.state.showPrivacyModal}
+                        closeModal={this.handleClosePrivacyModal}
+                        isDarkMode={this.props.isDarkMode}
+                    />
+                )}
             </div>
         );
     }
 }
 
 const mapStateToProps = state => ({
-  auth: state.auth.isAuthenticated,
-  user_id: state.auth.user._id,
-  isDarkMode: state.auth.isDarkMode,
+    auth: state.auth.isAuthenticated,
+    user_id: state.auth.user._id,
+    isDarkMode: state.auth.isDarkMode,
 });
 
 const mapDispatchToProps = {

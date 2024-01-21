@@ -215,10 +215,10 @@ function BetArray({
           handleSettingsIconClick={handleSettingsIconClick}
         />
         <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
-        <SettingsOutlinedIcon
+        {/* <SettingsOutlinedIcon
           id="btn-rps-settings"
           onClick={handleSettingsIconClick}
-        />
+        /> */}
         {selectedTab === 0 && (
           <div className="gamified-container">
           <FormControlLabel

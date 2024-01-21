@@ -67,7 +67,8 @@ class BrainGame extends Component {
       answers: [],
       items: [],
       bankroll: this.props.roomInfo.user_bet,
-
+      showImageModal: false,
+      productName: '',
       next_question: null,
       next_answers: [],
       isPasswordCorrect: this.props.isPasswordCorrect,
@@ -118,6 +119,7 @@ class BrainGame extends Component {
   };
 
   componentDidMount() {
+
     this.getNextQuestion();
     document.addEventListener('mousedown', this.handleClickOutside);
   }
@@ -323,7 +325,7 @@ class BrainGame extends Component {
             () => {
               history.push('/');
             },
-            () => {}
+            () => { }
           );
         } else {
           gameResultModal(
@@ -408,11 +410,17 @@ class BrainGame extends Component {
     }
   };
 
+  toggleImageModal = () => {
+    this.setState({
+      showImageModal: false
+    });
+  };
+
   predictNext = score_array => {
     if (score_array.length < 5) {
       return Math.round(
         score_array.reduce((total, item) => total + item.score, 0) /
-          score_array.length
+        score_array.length
       );
     }
 
@@ -432,7 +440,7 @@ class BrainGame extends Component {
     } else {
       return Math.round(
         score_array.reduce((total, item) => total + item.score, 0) /
-          score_array.length
+        score_array.length
       );
     }
   };
@@ -539,7 +547,7 @@ class BrainGame extends Component {
       bankroll,
       answers,
       score,
-      settings_panel_opened
+      showImageModal
     } = this.state;
     const {
       brain_game_type,
@@ -571,6 +579,15 @@ class BrainGame extends Component {
     let arrayName = `score_array_${brain_game_type}`;
     return is_started === true ? (
       <div className="game-page">
+        {showImageModal && (
+          <ImageResultModal
+            modalIsOpen={showImageModal}
+            closeModal={this.toggleImageModal}
+            isDarkMode={isDarkMode}
+            image={image}
+            productName={productName}
+          />
+        )}
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -666,96 +683,96 @@ class BrainGame extends Component {
                       <div className="label net-profit">Host Profit</div>
                     </div>
                     <div className="value bankroll">
-                    {actionList && actionList.hostBetsValue.length > 0 ? (
+                      {actionList && actionList.hostBetsValue.length > 0 ? (
                         <>
-                      {actionList.hostNetProfit?.slice(-1)[0] != null
-                        ? convertToCurrency(
-                          actionList.hostNetProfit?.slice(-1)[0]
-                          )
-                        : convertToCurrency(0)}
-                      <ReactApexChart
-                        className="bankroll-graph"
-                        options={{
-                          chart: {
-                            animations: {
-                              enabled: false
-                            },
-                            toolbar: {
-                              show: false
-                            },
-                            events: {},
-                            zoom: {
-                              enabled: false
-                            }
-                          },
-                          grid: {
-                            show: false
-                          },
-                          tooltip: {
-                            enabled: false
-                          },
-                          fill: {
-                            type: 'gradient',
-                            gradient: {
-                              shade: 'light',
-                              gradientToColors:
-                              actionList.hostNetProfit?.slice(-1)[0] > 0
-                                  ? ['#00FF00']
-                                  : actionList.hostNetProfit?.slice(-1)[0] <
-                                    0
-                                  ? ['#FF0000']
-                                  : ['#808080'],
-                              shadeIntensity: 1,
-                              type: 'vertical',
-                              opacityFrom: 0.7,
-                              opacityTo: 0.9,
-                              stops: [0, 100, 100]
-                            }
-                          },
-
-                          stroke: {
-                            curve: 'smooth'
-                          },
-                          xaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          },
-                          yaxis: {
-                            labels: {
-                              show: false
-                            },
-                            axisTicks: {
-                              show: false
-                            },
-                            axisBorder: {
-                              show: false
-                            }
-                          }
-                        }}
-                        type="line"
-                        width={120}
-                        height="100"
-                        series={[
-                          {
-                            data: actionList.hostNetProfit.map(
-                              (value, index) => [
-                                actionList.hostBetsValue[index],
-                                value
-                              ]
+                          {actionList.hostNetProfit?.slice(-1)[0] != null
+                            ? convertToCurrency(
+                              actionList.hostNetProfit?.slice(-1)[0]
                             )
-                          }
-                        ]}
-                        />
+                            : convertToCurrency(0)}
+                          <ReactApexChart
+                            className="bankroll-graph"
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
+                              },
+                              grid: {
+                                show: false
+                              },
+                              tooltip: {
+                                enabled: false
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    actionList.hostNetProfit?.slice(-1)[0] > 0
+                                      ? ['#00FF00']
+                                      : actionList.hostNetProfit?.slice(-1)[0] <
+                                        0
+                                        ? ['#FF0000']
+                                        : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
+
+                              stroke: {
+                                curve: 'smooth'
+                              },
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              },
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
+                              }
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data: actionList.hostNetProfit.map(
+                                  (value, index) => [
+                                    actionList.hostBetsValue[index],
+                                    value
+                                  ]
+                                )
+                              }
+                            ]}
+                          />
                         </>
-                        ) : (
-                          <Lottie
+                      ) : (
+                        <Lottie
                           options={{
                             loop: true,
                             autoplay: true,
@@ -764,8 +781,8 @@ class BrainGame extends Component {
                           style={{
                             width: '32px',
                           }}
-                        />                
-                        )}
+                        />
+                      )}
                     </div>
                   </div>
                   <div className="data-item">
@@ -796,7 +813,7 @@ class BrainGame extends Component {
                   </div>
                   {this.props.youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled}/>
+                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled} />
                     </div>
                   )}
                   <div className="data-item">
@@ -871,7 +888,7 @@ class BrainGame extends Component {
             <Button id="btn_bet" onClick={this.onStartGame}>
               Start
             </Button>
-            
+
             <div>
               <FormControlLabel
                 control={
@@ -897,7 +914,7 @@ class BrainGame extends Component {
               )}
             </div>
           </div>
-          <BetArray arrayName={arrayName} label="score" />
+          {/* <BetArray arrayName={arrayName} label="score" /> */}
 
           <div className="action-panel">
             <div className="action-panel">

@@ -319,7 +319,8 @@ button:hover,
 a.player:hover,
 div.avatar:hover,
 a.avatar:hover,
-a.chat-player:hover{ 
+a.chat-player:hover,
+.bottom-footer a{ 
   border: none !important;
   box-shadow: none !important;
 
@@ -576,8 +577,18 @@ table#runs th {
   transform-origin: 0 0;
 }
 
+.bj-add-run-table #runs {
+  max-height: 100px;
+  overflow-x: hidden;
+}
+
 .YourButton.holding:active:before {
   transform: scale(10);
+}
+
+.coming-home-screen {
+  background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/65abf45f3f6ffd7ffad37174_blur-screen.webp');
+  background-size: cover;
 }
 
 

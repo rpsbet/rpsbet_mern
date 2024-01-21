@@ -84,46 +84,58 @@ class StatisticsForm extends React.Component {
       return 'green';
     }
   }
-
   getRank(totalWagered) {
-    // Calculate the level using a logarithmic function with base 2.
     const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-
-    // Create an array of React elements for stars
+    console.log("totalWagered: ", totalWagered);
+    console.log("level: ", level);
+    
     const stars = Array.from({ length: level }, (_, index) => (
       <Lottie
-        key={index}
-        options={{
-          loop: true,
-          autoplay: true,
-          animationData: rankIcon,
-        }}
-        style={{
-          width: '32px',
-        }}
+      key={index}
+      options={{
+        loop: true,
+        autoplay: true,
+        animationData: rankIcon,
+      }}
+      style={{
+        width: '32px',
+      }}
       />
-    ));
-    const nextLevelWager = Math.pow(3, level * 5) - 1;
+      ));
+      
+      const nextLevelWager = Math.pow(2, 1.2 * (level)) - 1;
+      console.log("nextLevelWager: ", nextLevelWager);
     const progress = totalWagered / nextLevelWager;
     const progressBarWidth = 100;
-    const progressBarFilled = progress * progressBarWidth;
-
+    const roundedProgress = (progress * progressBarWidth).toFixed(2);
+    const remainingProgress = progressBarWidth - roundedProgress;
+  
+    // Calculate rank - 1 and rank + 1
+    const rank = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
+    const rankPlusOne = rank + 1;
+  
+  
     return (
       <div>
         <div className="stars">{stars}</div>
-        <div
-          className="progress-bar-outer"
-          style={{ width: `${progressBarWidth}px` }}
-        >
-          <div
-            className="progress-bar-filled"
-            style={{ width: `${progressBarFilled}px` }}
-          ></div>
+        <div className="progress-bar-outer" style={{ width: `${progressBarWidth}px`, position: 'relative' }}>
+          <div className="progress-bar-filled" style={{ width: `${roundedProgress}%` }}>
+            <div className="progress-label progress-label-left">{`${roundedProgress}%`}</div>
+          </div>
+          <div className="progress-bar-remaining" style={{ width: `${remainingProgress}%` }}>
+            <div className="progress-label progress-label-right">{`${remainingProgress}%`}</div>
+          </div>
+          {/* Display rank - 1 and rank + 1 outside the progress bar */}
         </div>
+          <div className="rank-indicators">
+            <div className="rank-minus-one">{`${rank}`}</div>
+            <div className="rank-plus-one">{`${rankPlusOne}`}</div>
+          </div>
       </div>
     );
   }
-
+  
+  
   getRoomLink(dataPointIndex) {
     const gameLog = this.props.gameLogList[dataPointIndex];
     const roomId = gameLog.room_id;

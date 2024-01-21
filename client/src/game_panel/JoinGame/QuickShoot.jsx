@@ -66,6 +66,8 @@ class QuickShoot extends Component {
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       balance: this.props.balance,
       betResults: props.betResults,
+      productName: '',
+      showImageModal: false,
       settings_panel_opened: false,
       isPasswordCorrect: this.props.isPasswordCorrect
     };
@@ -75,6 +77,18 @@ class QuickShoot extends Component {
   }
   componentDidMount() {
     const { socket } = this.props;
+    socket.on('CARD_PRIZE', data => {
+      if (data) {
+        this.setState(
+          {
+            image: data.image,
+            productName: data.productName,
+            showImageModal: true
+          },
+          () => playSound('')
+        );
+      }
+    });
     socket.on('UPDATED_BANKROLL_QS', data => {
       this.setState({ bankroll: data.bankroll });
     });
@@ -336,6 +350,12 @@ class QuickShoot extends Component {
       potential_return:
         this.state.bet_amount / (this.props.qs_game_type - 1) +
         parseFloat(this.state.bet_amount) /* 0.95 */
+    });
+  };
+
+  toggleImageModal = () => {
+    this.setState({
+      showImageModal: false
     });
   };
 
@@ -746,13 +766,11 @@ class QuickShoot extends Component {
 
   render() {
     const {
-      isDisabled,
       bankroll,
       betting,
       timerValue,
       actionList,
-      slippage,
-      settings_panel_opened,
+      showImageModal,
       selected_qs_position,
       bet_amount
     } = this.state;
@@ -808,6 +826,15 @@ class QuickShoot extends Component {
         <div className="page-title">
           <h2>PLAY - Quick Shoot</h2>
         </div>
+        {showImageModal && (
+          <ImageResultModal
+            modalIsOpen={showImageModal}
+            closeModal={this.toggleImageModal}
+            isDarkMode={isDarkMode}
+            image={image}
+            productName={productName}
+          />
+        )}
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
@@ -1080,7 +1107,7 @@ class QuickShoot extends Component {
               )}
             </div>
           </div>
-          <BetArray arrayName={arrayName} label="qs" />
+          {/* <BetArray arrayName={arrayName} label="qs" /> */}
 
           <div className="action-panel">
             <Share roomInfo={roomInfo} />

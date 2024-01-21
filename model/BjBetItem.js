@@ -19,10 +19,6 @@ const BjBetItemSchema = new Schema({
         type: Number,
         default: 0,
     },
-    bj_list: {
-        type: [String],
-        default: []
-    },
     bet_amount: {
         type: Number,
         default: 0

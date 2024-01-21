@@ -10,7 +10,6 @@ import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import Moment from 'moment';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ReactApexChart from 'react-apexcharts';
 import PlayerModal from '../modal/PlayerModal';
 import { setBalance } from '../../redux/Auth/user.actions';
@@ -103,6 +102,8 @@ class Roll extends Component {
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
       listen: true,
+      productName: '',
+      showImageModal: false,
       selected_roll: '',
       betResults: props.betResults,
       settings_panel_opened: false
@@ -206,6 +207,18 @@ class Roll extends Component {
       }, 15000);
 
       if (socket) {
+        socket.on('CARD_PRIZE', data => {
+          if (data) {
+            this.setState(
+              {
+                image: data.image,
+                productName: data.productName,
+                showImageModal: true
+              },
+              () => playSound('')
+            );
+          }
+        });
         socket.on(`ROLL_GUESSES_${roomId}`, async data => {
           if (data && data.rolls && data.rolls.length > 0) {
             const roll_guesses = data.rolls.map((roll, i) => ({
@@ -230,7 +243,7 @@ class Roll extends Component {
                         gameType: gameType
 
                       });
-                  
+
                       if (response.success) {
                         const { balance, newTransaction } = response;
                         setBalance(balance);
@@ -347,6 +360,12 @@ class Roll extends Component {
     }
 
     return { roll: rollNumber, face: nextStateFace };
+  };
+
+  toggleImageModal = () => {
+    this.setState({
+      showImageModal: false
+    });
   };
 
   joinGame = async () => {
@@ -710,6 +729,7 @@ class Roll extends Component {
       countdown,
       bankroll,
       bet_amount,
+      showImageModal,
       betResult,
       selected_roll,
       bgColorChanged,
@@ -972,12 +992,21 @@ class Roll extends Component {
         <div className="page-title">
           <h2>PLAY - Roll!</h2>
         </div>
+        {showImageModal && (
+          <ImageResultModal
+            modalIsOpen={showImageModal}
+            closeModal={this.toggleImageModal}
+            isDarkMode={isDarkMode}
+            image={image}
+            productName={productName}
+          />
+        )}
         {showPlayerModal && (
           <PlayerModal
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
             closeModal={handleClosePlayerModal}
-            // {...this.state.selectedRow}
+          // {...this.state.selectedRow}
           />
         )}
         <div className="game-contents">
@@ -1471,7 +1500,7 @@ class Roll extends Component {
 
 
           </div>
-          <BetArray arrayName="roll_array" label="roll" />
+          {/* <BetArray arrayName="roll_array" label="roll" /> */}
 
           <div className="action-panel">
             <Share roomInfo={this.props.roomInfo} />
