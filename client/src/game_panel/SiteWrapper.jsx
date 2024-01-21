@@ -1033,22 +1033,22 @@ class SiteWrapper extends Component {
                         ) : null}
 
                         {!completed ? (
-                          <div style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                          <div  className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
                         ) : null}
 
                         {!completed ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{minutes}</div>
                             <div style={{ fontSize: '1.2em', color: '#666' }}>minutes</div>
                           </div>
                         ) : null}
 
                         {!completed ? (
-                          <div style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                          <div  className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
                         ) : null}
 
                         {!completed ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div  className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{seconds}</div>
                             <div style={{ fontSize: '1.2em', color: '#666' }}>seconds</div>
                           </div>

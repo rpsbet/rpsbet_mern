@@ -3328,6 +3328,25 @@ position: sticky !important;
   }
 }
 @media (max-width: 400px) {
+
+  .coming-home-screen .countdown {
+    flex-direction: column;
+  }
+  .coming-home-screen .countdown div.countdown-side,
+  .coming-home-screen .countdown div.youtube-side {
+    width: 100% !important;
+  }
+
+  .coming-home-screen iframe {
+    width: 200px !important;
+  }
+
+  .countdown .countdown-side div:first-child {
+height: 50px !important;
+  }
+  .countdown-side img {
+    width: 260px !important;
+  }
   .contents_wrapper .main-game .main-panel {
     height: unset;
   }
