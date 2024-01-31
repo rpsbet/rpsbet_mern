@@ -6,6 +6,7 @@ import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+
 import {
   Button,
   TextField,
@@ -15,9 +16,10 @@ import {
   TableCell,
   IconButton,
   Tooltip,
+  Icon,
   Typography
 } from '@material-ui/core';
-import { Info, Warning, Link, FiberManualRecord } from '@material-ui/icons';
+import { Info, Warning, AccountBalanceWallet, Link, FiberManualRecord } from '@material-ui/icons';
 import { convertToCurrency } from '../../util/conversion';
 import { tokenAddr, adminWallet } from '../../config/index.js';
 
@@ -142,7 +144,9 @@ class DepositModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">DEPOSIT</h2>
+              <h2 className="modal-title">    <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Use Material-UI Icon component */}
+
+DEPOSIT</h2>
               <Button className="btn-close" onClick={this.props.closeModal}>
                 ×
               </Button>

@@ -7,6 +7,9 @@ import Avatar from '../../components/Avatar';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import { withStyles } from '@material-ui/core/styles';
 import { convertToCurrency } from '../../util/conversion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faList } from '@fortawesome/free-solid-svg-icons'; // Example icon, choose appropriate icon
+
 import {
   Button,
   Table,
@@ -107,7 +110,9 @@ class LeaderboardsModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">Leaderboards</h2>
+            <h2 className="modal-title">
+            <FontAwesomeIcon icon={faList} className="mr-2" /> {/* Use appropriate icon */}
+Leaderboards</h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>

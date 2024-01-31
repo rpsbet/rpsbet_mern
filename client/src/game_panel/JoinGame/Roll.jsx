@@ -30,7 +30,7 @@ import {
   gameResultModal
 } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import ImageResultModal from '../modal/ImageResultModal';
 import { convertToCurrency } from '../../util/conversion';
 import Share from '../../components/Share';
 
@@ -103,6 +103,7 @@ class Roll extends Component {
       slippage: 100,
       listen: true,
       productName: '',
+      image: '',
       showImageModal: false,
       selected_roll: '',
       betResults: props.betResults,
@@ -111,6 +112,8 @@ class Roll extends Component {
     this.panelRef = React.createRef();
     this.sliderRef = React.createRef();
     this.onChangeState = this.onChangeState.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+
   }
 
   onChangeState(e) {
@@ -191,7 +194,8 @@ class Roll extends Component {
   componentDidMount = async () => {
     const roomId = this.props.roomInfo._id;
     const gameType = this.props.roomInfo.game_type;
-    const { socket, getRollGuesses, deductBalanceWhenStartRoll, setBalance, addNewTransaction } = this.props;
+    const { socket, getRollGuesses, deductBalanceWhenStartRoll, setBalance, addNewTransaction, playSound } = this.props;
+    document.addEventListener('keydown', this.handleKeyPress);
 
     const fetchRollGuesses = async () => {
       await getRollGuesses({
@@ -225,6 +229,8 @@ class Roll extends Component {
               roll,
               face: data.faces[i]
             }));
+            const facesArray = roll_guesses.map(guess => guess.face);
+            // console.log('Faces:', facesArray);
 
             this.startSlider();
             this.props.playSound('sweep');
@@ -291,12 +297,44 @@ class Roll extends Component {
 
 
   componentWillUnmount = () => {
+    document.removeEventListener('keydown', this.handleKeyPress);
+
     clearInterval(this.state.intervalId, this.timer, this.rollGuessesInterval);
     // document.removeEventListener('mousedown', this.handleClickOutside);
     const roomId = this.props.roomInfo._id;
     this.socket.off(`ROLL_GUESSES_${roomId}`);
     this.socket.off(`ROLL_GUESSES1_${roomId}`);
   };
+
+  handleKeyPress(event) {
+    const { selected_roll } = this.state;
+    switch (event.key) {
+      case 'r':
+        this.onBtnBetClick('R');
+        break;
+      case 'p':
+        this.onBtnBetClick('P');
+        break;
+      case 's':
+        this.onBtnBetClick('S');
+        break;
+      case 'w':
+        this.onBtnBetClick('W');
+        break;
+      case 'b':
+        this.onBtnBetClick('B');
+        break;
+      case 'u':
+        this.onBtnBetClick('BU');
+        break;
+      case ' ':
+        event.preventDefault();
+          this.onAutoPlay();
+          break;
+      default:
+        break;
+    }
+  }
 
   predictNext = roll_list => {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
@@ -427,7 +465,7 @@ class Roll extends Component {
     }, 5000);
   };
 
-  onBtnBetClick = async () => {
+  onBtnBetClick = async (selected_roll) => {
     const {
       isAuthenticated,
       isDarkMode,
@@ -437,6 +475,15 @@ class Roll extends Component {
     } = this.props;
     const { buttonClicked, isWaiting } = this.state;
     playSound('select');
+    this.setState(
+      { selected_roll: null, bgColorChanged: false },
+      () => {
+        this.setState({
+          selected_roll: selected_roll,
+          buttonClicked: true
+        });
+      }
+    );
 
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       this.setState({ selected_roll: null, buttonClicked: false });
@@ -731,6 +778,8 @@ class Roll extends Component {
       bet_amount,
       showImageModal,
       betResult,
+      image,
+      productName,
       selected_roll,
       bgColorChanged,
       actionList,
@@ -1302,7 +1351,7 @@ class Roll extends Component {
                 style={{ opacity: this.state.disabledButtons ? 0.5 : 1 }}
                 variant="contained"
                 onClick={() => {
-                  this.onBtnBetClick();
+                  this.onBtnBetClick('R');
 
                   const currentActive = document.querySelector('.active');
                   if (currentActive) {
@@ -1311,18 +1360,12 @@ class Roll extends Component {
                     currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                   }
 
-                  this.setState(
-                    { selected_roll: null, bgColorChanged: false },
-                    () => {
-                      this.setState({
-                        selected_roll: 'R',
-                        buttonClicked: true
-                      });
-                    }
-                  );
+                 
                 }}
               >
-                <span>2x (4x)</span>
+                <span>2x (4x)</span>&nbsp;
+                <span className="roll-tag">[R]</span>
+
               </Button>
               <Button
                 className={`paper button-2x-p${selected_roll === 'P' ? ' active' : ''
@@ -1357,7 +1400,8 @@ class Roll extends Component {
                   );
                 }}
               >
-                <span>2x (4x)</span>
+                <span>2x (4x)</span>&nbsp;
+                <span className="roll-tag">[P]</span>
               </Button>
               <Button
                 className={`scissors button-2x-s${selected_roll === 'S' ? ' active' : ''
@@ -1392,7 +1436,8 @@ class Roll extends Component {
                   );
                 }}
               >
-                <span>2x (4x)</span>
+                <span>2x (4x)</span>&nbsp;
+                <span className="roll-tag">[S]</span>
               </Button>
               <Button
                 className={`whale button-2x-w${selected_roll === 'W' ? ' active' : ''
@@ -1426,7 +1471,8 @@ class Roll extends Component {
                   );
                 }}
               >
-                <span>14x</span>
+                <span>14x</span>&nbsp;
+                <span className="roll-tag">[W]</span>
               </Button>
               <Button
                 className={`bear button-2x-b${selected_roll === 'B' ? ' active' : ''
@@ -1460,7 +1506,8 @@ class Roll extends Component {
                   );
                 }}
               >
-                <span>1.5x</span>
+                <span>1.5x</span>&nbsp;
+                <span className="roll-tag">[B]</span>
               </Button>
               <Button
                 className={`bull button-2x-bu${selected_roll === 'Bu' ? ' active' : ''
@@ -1494,7 +1541,8 @@ class Roll extends Component {
                   );
                 }}
               >
-                <span>7x</span>
+                <span>7x</span>&nbsp;
+                <span className="roll-tag">[BU]</span>
               </Button>
             </div>
 

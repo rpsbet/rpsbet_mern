@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button } from '@material-ui/core';
-
+import { Button, IconButton } from '@material-ui/core';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
 
@@ -158,17 +159,58 @@ class Blackjack extends Component {
       }
     };
     this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.handleReset = this.handleReset.bind(this);
+  }
+
+
+
+  async componentDidMount() {
+    document.addEventListener('keydown', this.handleKeyPress);
+
+  }
+
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+  }
+
+  handleKeyPress(event) {
+    switch (event.key) {
+      case 'h':
+        this.onAddRun(this.state.score, 'hit');
+                this.hit();
+        break;
+      case 's':
+        this.stand();
+        break;
+
+      case ' ':
+        event.preventDefault(); 
+        this.onAutoPlay();
+        break;
+      default:
+        break;
+    }
+  }
+
+  handleReset() {
+    this.props.onChangeState({
+      bj_list: [],
+      winChance: 0,
+      aveMultiplier: 0
+    });
   }
 
 
   startGame = () => {
     const cards = this.drawCards(2);
     const score = this.calculateScore(cards);
-  
+
     setTimeout(() => {
       this.props.playSound('cards');
     }, 500);
-  
+
     this.setState({ cards, score }, () => {
       // Trigger the animation after the state is updated
       const drawnCards = document.querySelectorAll('.card');
@@ -176,14 +218,14 @@ class Blackjack extends Component {
         card.style.animationDelay = `${index * 0.2}s`; // Delay the animation for each card
         card.classList.add('card-hidden'); // Apply the .card-hidden class to all card elements
       });
-  
+
       if (score === 21) {
         setTimeout(() => {
           // Remove the .card-hidden class to revert back to the original state
           drawnCards.forEach((card) => {
             card.classList.remove('card-hidden');
           });
-  
+
           setTimeout(() => {
             this.setState({ cards: [], score: 0 }, () => {
               // Trigger the animation after the state is updated
@@ -201,7 +243,7 @@ class Blackjack extends Component {
       }
     });
   };
-  
+
 
   drawCard = () => {
     const suits = ['♠', '♣', '♥', '♦'];
@@ -308,16 +350,19 @@ class Blackjack extends Component {
       this.startGame();
     });
   };
+
+  
+
   onAutoPlay = () => {
     if (this.props.bj_list.length > 2) {
       const prevStates = this.props.bj_list;
-  
+
       const nextBj = predictNext(this.props.bj_list, this.state.score);
-      
+
       if (this.state.score !== 21) {
         this.onAddRun(this.state.score, nextBj);
       }
-      
+
       this.setState({ cards: [], score: 0 }, () => {
         // Trigger the animation after the state is updated
         this.startGame();
@@ -330,7 +375,7 @@ class Blackjack extends Component {
       return;
     }
   };
-  
+
 
   onChangeWinChance = winChance => {
     this.setState({ winChance });
@@ -433,98 +478,101 @@ class Blackjack extends Component {
       </div>
     ) : (
       <div className="game-info-panel">
-          <div className="bj-add-run-form">
-            <div className="deck">
-              <div className="card-back">
-                <div className="rps-logo">
-                  <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
-                </div>
+        <div className="bj-add-run-form">
+          <div className="deck">
+            <div className="card-back">
+              <div className="rps-logo">
+                <img src={'/img/rps-logo-white.svg'} alt="RPS Game Logo" />
               </div>
             </div>
-            <div className="card-container">
-              {cards.map((card, index) => (
-                <div
-                  key={index}
-                  className={`card suit-${card.suit.toLowerCase()}`}
-                >
-                  <div className="card-suit">
-                    {this.getSuitSymbol(card.suit)}
-                  </div>
-                  <div className="card-number">{card.card}</div>
+          </div>
+          <div className="card-container">
+            {cards.map((card, index) => (
+              <div
+                key={index}
+                className={`card suit-${card.suit.toLowerCase()}`}
+              >
+                <div className="card-suit">
+                  {this.getSuitSymbol(card.suit)}
                 </div>
-              ))}
-            </div>
-            <h6 className={scoreAnimation ? 'score animated' : 'score'}>
-              {score}
-            </h6>
-            <div id="bj-radio">
-              <Button
-                className={
-                  'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
+                <div className="card-number">{card.card}</div>
+              </div>
+            ))}
+          </div>
+          <h6 className={scoreAnimation ? 'score animated' : 'score'}>
+            {score}
+          </h6>
+          <div id="bj-radio">
+            <Button
+              className={
+                'hit' + (this.state.selected_bj === 'hit' ? ' active' : '')
+              }
+              variant="contained"
+              onClick={() => {
+                this.onAddRun(this.state.score, 'hit');
+                this.hit();
+                const currentActive = document.querySelector('.active');
+                if (currentActive) {
+                  currentActive.style.animation = 'none';
+                  void currentActive.offsetWidth;
+                  currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                 }
-                variant="contained"
-                onClick={() => {
-                  this.onAddRun(this.state.score, 'hit');
-                  this.hit();
-                  const currentActive = document.querySelector('.active');
-                  if (currentActive) {
-                    currentActive.style.animation = 'none';
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-                  }
-                }}
-              >
-                HIT!
-              </Button>
-              <Button
-                className={
-                  'stand' +
-                  (this.state.selected_bj === 'stand' ? ' active' : '')
+              }}
+            >
+              HIT!&nbsp;<span className="roll-tag">[H]</span>
+            </Button>
+            <Button
+              className={
+                'stand' +
+                (this.state.selected_bj === 'stand' ? ' active' : '')
+              }
+              variant="contained"
+              onClick={() => {
+                this.stand();
+                const currentActive = document.querySelector('.active');
+                if (currentActive) {
+                  currentActive.style.animation = 'none';
+                  void currentActive.offsetWidth;
+                  currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                 }
-                variant="contained"
-                onClick={() => {
-                  this.stand();
-                  const currentActive = document.querySelector('.active');
-                  if (currentActive) {
-                    currentActive.style.animation = 'none';
-                    void currentActive.offsetWidth;
-                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-                  }
-                }}
-              >
-                STAND
-              </Button>
-            </div>
-            <Button id="aiplay" variant="contained" onClick={this.onAutoPlay}>
-              Test AI Play
+              }}
+            >
+              STAND&nbsp;<span className="roll-tag">[S]</span>
             </Button>
           </div>
-          <div className="bj-add-run-table">
-            <h3 className="game-sub-title">Train the Dealer!</h3>
-            <table id="runs">
-              <tbody>
-                {this.props.bj_list && this.props.bj_list.length > 0 ? (
-                  this.props.bj_list.map((bj, index) => (
-                    <tr key={index}>
-                      <td>{index + 1}</td>
-                      <td>{bj.score}</td>
-                      <td>{bj.bj}</td>
-                      <td>
-                        <HighlightOffIcon id="delete"
-                          onClick={() => this.onRemoveItem(index)}
-                        />
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td id="add-run" colSpan="4">
-                      Provide the AI with example outputs
+          <Button id="aiplay" variant="contained" onClick={this.onAutoPlay}>
+            Test AI Play&nbsp;<span className="roll-tag">[space]</span>
+          </Button>
+        </div>
+        <div className="bj-add-run-table">
+          <h3 className="game-sub-title">Train the Dealer!</h3>
+          <table id="runs">
+            <tbody>
+              {this.props.bj_list && this.props.bj_list.length > 0 ? (
+                this.props.bj_list.map((bj, index) => (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td>{bj.score}</td>
+                    <td>{bj.bj}</td>
+                    <td>
+                      <HighlightOffIcon id="delete"
+                        onClick={() => this.onRemoveItem(index)}
+                      />
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                ))
+              ) : (
+                <tr>
+                  <td id="add-run" colSpan="4">
+                    Provide the AI with example outputs
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+            <FontAwesomeIcon icon={faTrash} />
+          </IconButton>
         </div>
       </div>
     );

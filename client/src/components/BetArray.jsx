@@ -143,10 +143,10 @@ const PlaceholderComponent = ({
         handleSettingsIconClick={handleSettingsIconClick}
       />
       <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
-      <SettingsOutlinedIcon
+      {/* <SettingsOutlinedIcon
         id="btn-rps-settings"
         onClick={handleSettingsIconClick}
-      />
+      /> */}
       {selectedTab === 0 && (
         <div className="gamified-container">
           Join a room to use AI Model Markov!

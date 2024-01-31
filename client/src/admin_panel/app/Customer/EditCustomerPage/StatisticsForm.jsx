@@ -4,10 +4,11 @@ import styled from 'styled-components';
 import Elevation from '../../../../Styles/Elevation';
 import moment from 'moment';
 import './style.css';
-import Lottie from 'react-lottie';
+// import Lottie from 'react-lottie';
 
 import rankIcon from '../../../../game_panel/LottieAnimations/rankIcon.json';
-import { Button } from '@material-ui/core';
+import { Button, Table, TableBody, TableCell, TableRow } from '@material-ui/core';
+
 import { FormControl, MenuItem, Select } from '@material-ui/core';
 import { Link as LinkIcon } from '@material-ui/icons';
 import { convertToCurrency } from '../../../../util/conversion';
@@ -31,9 +32,7 @@ class StatisticsForm extends React.Component {
       room_info: null,
       loaded: true,
       showButton: false,
-      actorType: 'Both',
-      gameType: 'All',
-      timeType: '7',
+
       url: '',
       roomName: '',
       roomId: '',
@@ -42,7 +41,6 @@ class StatisticsForm extends React.Component {
   }
 
   handleActorTypeChange = event => {
-    this.setState({ actorType: event.target.value });
     this.props.onDropdownChange('actorType', event.target.value);
   };
 
@@ -54,7 +52,6 @@ class StatisticsForm extends React.Component {
   handleTimeTypeChange = event => {
     this.setState({ timeType: event.target.value });
     this.props.onDropdownChange('timeType', event.target.value);
-
   };
 
   calculateDashOffset(creditScore) {
@@ -63,8 +60,8 @@ class StatisticsForm extends React.Component {
     const invertedScore = 2000 - creditScore; // Invert the score so that lower scores result in more incomplete hexagons
     return invertedScore * scalingFactor;
   }
-  
-   renderProgressHexagon(creditScore) {
+
+  renderProgressHexagon(creditScore) {
     const dashOffset = this.calculateDashOffset(creditScore);
     return (
       <polygon
@@ -74,8 +71,8 @@ class StatisticsForm extends React.Component {
       />
     );
   }
-  
-   getHexagonColor(creditScore) {
+
+  getHexagonColor(creditScore) {
     if (creditScore >= 950 && creditScore < 1150) {
       return 'red';
     } else if (creditScore >= 1150 && creditScore < 1400) {
@@ -86,56 +83,58 @@ class StatisticsForm extends React.Component {
   }
   getRank(totalWagered) {
     const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-    console.log("totalWagered: ", totalWagered);
-    console.log("level: ", level);
-    
-    const stars = Array.from({ length: level }, (_, index) => (
-      <Lottie
-      key={index}
-      options={{
-        loop: true,
-        autoplay: true,
-        animationData: rankIcon,
-      }}
-      style={{
-        width: '32px',
-      }}
-      />
-      ));
-      
-      const nextLevelWager = Math.pow(2, 1.2 * (level)) - 1;
-      console.log("nextLevelWager: ", nextLevelWager);
+    // console.log("totalWagered: ", totalWagered);
+    // console.log("level: ", level);
+
+    // const stars = Array.from({ length: level }, (_, index) => (
+    //   <Lottie
+    //     key={index}
+    //     options={{
+    //       loop: true,
+    //       autoplay: true,
+    //       animationData: rankIcon,
+    //     }}
+    //     style={{
+    //       width: '32px',
+    //     }}
+    //   />
+    // ));
+
+    const nextLevelWager = Math.pow(2, 1.2 * (level)) - 1;
     const progress = totalWagered / nextLevelWager;
     const progressBarWidth = 100;
     const roundedProgress = (progress * progressBarWidth).toFixed(2);
     const remainingProgress = progressBarWidth - roundedProgress;
-  
+
     // Calculate rank - 1 and rank + 1
     const rank = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
     const rankPlusOne = rank + 1;
-  
-  
+
+
     return (
       <div>
-        <div className="stars">{stars}</div>
+        
         <div className="progress-bar-outer" style={{ width: `${progressBarWidth}px`, position: 'relative' }}>
+        
           <div className="progress-bar-filled" style={{ width: `${roundedProgress}%` }}>
             <div className="progress-label progress-label-left">{`${roundedProgress}%`}</div>
+            
           </div>
           <div className="progress-bar-remaining" style={{ width: `${remainingProgress}%` }}>
+            
             <div className="progress-label progress-label-right">{`${remainingProgress}%`}</div>
           </div>
-          {/* Display rank - 1 and rank + 1 outside the progress bar */}
+          {/* <div className="stars">{stars}</div> */}
         </div>
-          <div className="rank-indicators">
-            <div className="rank-minus-one">{`${rank}`}</div>
-            <div className="rank-plus-one">{`${rankPlusOne}`}</div>
-          </div>
+        <div className="rank-indicators">
+          <div className="rank-minus-one">{`${rank}`}</div>
+          <div className="rank-plus-one">{`${rankPlusOne}`}</div>
+        </div>
       </div>
     );
   }
-  
-  
+
+
   getRoomLink(dataPointIndex) {
     const gameLog = this.props.gameLogList[dataPointIndex];
     const roomId = gameLog.room_id;
@@ -361,6 +360,7 @@ class StatisticsForm extends React.Component {
       gameJoined,
       totalWagered,
       dateJoined,
+      last_seen,
       creditScore,
       netProfit,
       gameProfit,
@@ -388,28 +388,54 @@ class StatisticsForm extends React.Component {
     };
 
     const date_joined = moment(dateJoined);
+    const lastSeen = moment(last_seen);
     const joinedAgo = date_joined.fromNow();
+    const lastSeenAgo = lastSeen.fromNow();
     const roundedCreditScore = Math.ceil(this.props.creditScore);
 
     return (
       <ChartDivEl>
         <div className="rank-badge">
           <h2>{this.props.username}</h2>
-          <span>
-            <b style={{ fontSize: 'x-small' }}>JOINED:</b> {joinedAgo}
-          </span>
-          <div className="stars">{this.getRank(this.props.rank)}</div>
-        </div>
-        <div className="creditScore">
+         <br />
+          <h5>BREAKDOWN</h5>
+          <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>LAST SEEN</b></TableCell>
+            <TableCell style={{ color: "#ffb000",textAlign: 'center' }}>{lastSeenAgo}</TableCell>
+          </TableRow>
+        <TableRow>
+            <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>JOINED</b></TableCell>
+            <TableCell  style={{ color: "#ffb000", textAlign: 'center' }}>{joinedAgo}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>RANK</b></TableCell>
+            <TableCell> <div className="stars" style={{display:"flex", justifyContent: "center"}}>{this.getRank(this.props.rank)}</div></TableCell>
+          </TableRow>
+        <TableRow>
+          <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>CREDIT SCORE</b></TableCell>
+          <TableCell>
+          <div className="creditScore">
           <svg className="dial" width="120" height="120">
-            {this.renderProgressHexagon(this.props.creditScore)}
-            <text x="25%" y="40%" textAnchor="top" alignmentBaseline="top" className="creditScoreTitle">
-CREDIT SCORE            </text>
-            <text x="50%" y="60%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreValue">
-              {roundedCreditScore} / 2000
-            </text>
-          </svg>
+  {this.renderProgressHexagon(this.props.creditScore)}
+  <text x="50%" y="40%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreStatus" style={{ fill: '#ffb000' }}>
+    {roundedCreditScore >= 1000 && roundedCreditScore <= 1500 && 'OK'}
+    {roundedCreditScore > 1500 && roundedCreditScore <= 2000 && 'HIGH'}
+    {roundedCreditScore < 1000 && 'BAD'}
+  </text>
+  <text x="50%" y="60%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreValue" style={{ fill: '#ffb000' }}>
+    {roundedCreditScore} / 2000
+  </text>
+</svg>
+
         </div>
+        </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+        </div>
+        
 
         <div className="statistics-container">
           <div>
@@ -419,7 +445,7 @@ CREDIT SCORE            </text>
 
                 <FormControl>
                   <Select
-                    value={this.state.actorType}
+                    value={this.props.actorType}
                     onChange={this.handleActorTypeChange}
                   >
                     <MenuItem value="Both">Both</MenuItem>
@@ -430,7 +456,7 @@ CREDIT SCORE            </text>
 
                 <FormControl>
                   <Select
-                    value={this.state.gameType}
+                    value={this.props.gameType}
                     onChange={this.handleGameTypeChange}
                   >
                     <MenuItem value="All">All</MenuItem>
@@ -447,7 +473,7 @@ CREDIT SCORE            </text>
                 </FormControl>
                 <FormControl>
                   <Select
-                    value={this.state.timeType}
+                    value={this.props.timeType}
                     onChange={this.handleTimeTypeChange}
                   >
                     <MenuItem value="1">Last Hour</MenuItem>
@@ -461,72 +487,62 @@ CREDIT SCORE            </text>
               {!this.state.loaded ? (
                 <div className="loading">LOADING...</div>
               ) : (
-                <table>
-                  <tbody>
-                    <tr>
-                      <td className="label">Games Played</td>
-                      <td className="value played">
-                        <span>{gamePlayed}</span>
-                        <span className="bar">
-                          <div
-                            className="vs-bar host"
-                            style={{
-                              width: `${(gameHosted / gamePlayed) * 100}%`
-                            }}
-                            title={`As Host: ${gameHosted}`}
-                          ></div>
-                          <div
-                            className="vs-bar player"
-                            style={{
-                              width: `${(gameJoined / gamePlayed) * 100}%`
-                            }}
-                            title={`As Player: ${gameJoined}`}
-                          ></div>
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="label">Total Wagered</td>
-                      <td className="value">
-                        {convertToCurrency(totalWagered)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="label">Net Profit</td>
-                      <td className="value">{convertToCurrency(gameProfit)}</td>
-                    </tr>
-                    <tr>
-                      <td className="label">Ave. Wager</td>
-                      <td className="value">
-                        {convertToCurrency(averageWager)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="label">Ave. Games Played Per Room</td>
-                      <td className="value">
-                        {updateDigitToPoint2(averageGamesPlayedPerRoom)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="label">Ave. Profit Per Game</td>
-                      <td className="value">
-                        {convertToCurrency(averageProfit)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="label">Profit ATH</td>
-                      <td className="value">
-                        {convertToCurrency(profitAllTimeHigh)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="label">Profit ATL</td>
-                      <td className="value">
-                        {convertToCurrency(profitAllTimeLow)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell className="label">Games Played</TableCell>
+            <TableCell className="value" align="center">
+              <span>{gamePlayed}</span>
+              <span className="bar">
+                <div
+                  className="vs-bar host"
+                  style={{
+                    width: `${(gameHosted / gamePlayed) * 100}%`
+                  }}
+                  title={`As Host: ${gameHosted}`}
+                ></div>
+                <div
+                  className="vs-bar player"
+                  style={{
+                    width: `${(gameJoined / gamePlayed) * 100}%`
+                  }}
+                  title={`As Player: ${gameJoined}`}
+                ></div>
+              </span>
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="label">Total Wagered</TableCell>
+            <TableCell className="value" align="center">
+              {convertToCurrency(totalWagered)}
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="label">Net Profit</TableCell>
+            <TableCell className="value" align="center">{convertToCurrency(gameProfit)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="label">Ave. Wager</TableCell>
+            <TableCell className="value" align="center">{convertToCurrency(averageWager)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="label">Ave. Games Played Per Room</TableCell>
+            <TableCell className="value" align="center">{updateDigitToPoint2(averageGamesPlayedPerRoom)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="label">Ave. Profit Per Game</TableCell>
+            <TableCell className="value" align="center">{convertToCurrency(averageProfit)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="label">Profit ATH</TableCell>
+            <TableCell className="value" align="center">{convertToCurrency(profitAllTimeHigh)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="label">Profit ATL</TableCell>
+            <TableCell className="value" align="center">{convertToCurrency(profitAllTimeLow)}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
               )}
             </div>
           </div>

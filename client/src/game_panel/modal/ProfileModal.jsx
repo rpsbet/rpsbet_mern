@@ -12,13 +12,13 @@ import {
   getCustomerStatisticsData
 } from '../../redux/Customer/customer.action';
 import { alertModal } from './ConfirmAlerts';
-import ReactApexChart from 'react-apexcharts';
-import styled from 'styled-components';
-import { Button, TextField } from '@material-ui/core';
 
-import Elevation from '../../Styles/Elevation';
+import { Button, TextField } from '@material-ui/core';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
-import { addCurrencySignal } from '../../util/helper';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { faUser } from '@fortawesome/free-solid-svg-icons';
+
 import moment from 'moment';
 import './Modals.css';
 import { convertToCurrency } from '../../util/conversion';
@@ -145,7 +145,7 @@ class ProfileModal extends Component {
       const result = await this.props.changeUserName(
         newUsername
       );
-console.log(result)
+
       if (result.success) {
         alertModal(this.props.isDarkMode, result.message, "-cat");
         this.setState({ isLoading: false });
@@ -223,6 +223,9 @@ console.log(result)
     const {
       rank,
       accessory,
+      actorType,
+      gameType,
+      timeType,
       avatar,
       username,
       gameLogList,
@@ -253,7 +256,10 @@ console.log(result)
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">Your Profile</h2>
+            <h2 className="modal-title">
+            <FontAwesomeIcon icon={faUser} className="mr-2" />
+
+              Your Profile</h2>
             <Button className="btn-close" onClick={this.handleCloseModal}>
               ×
             </Button>
@@ -282,6 +288,9 @@ console.log(result)
                   dateJoined={dateJoined}
                   creditScore={creditScore}
                   gameLogList={gameLogList}
+                  actorType={actorType}
+                  gameType={gameType}
+                  timeType={timeType}
                   deposit={deposit}
                   withdraw={withdraw}
                   gameProfit={gameProfit}

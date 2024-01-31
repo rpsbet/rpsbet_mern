@@ -102,7 +102,11 @@ const UserSchema = new Schema({
   updated_at: {
     type: Date,
     default: Date.now
-  }
+  },
+  last_seen:  {
+    type: Date,
+    default: Date.now
+  },
 });
 
 module.exports = User = mongoose.model('rps_users', UserSchema);

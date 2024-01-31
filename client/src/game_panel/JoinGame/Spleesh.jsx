@@ -11,6 +11,7 @@ import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
 import loadingChart from '../LottieAnimations/loadingChart.json';
+import ImageResultModal from '../modal/ImageResultModal';
 
 import bear from '../LottieAnimations/bear.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
@@ -26,8 +27,7 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/spinningIcon';
 import { alertModal, gameResultModal } from '../modal/ConfirmAlerts';
 import history from '../../redux/history';
-import { convertToCurrency } from '../../util/conversion';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import { convertToCurrency } from '../../util/conversion'
 
 const defaultOptions = {
   loop: true,
@@ -84,11 +84,11 @@ class Spleesh extends Component {
     e.preventDefault();
   };
 
-  handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
+  // handleClickOutside = e => {
+  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
+  //     this.setState({ settings_panel_opened: false });
+  //   }
+  // };
   static getDerivedStateFromProps(props, currentState) {
     if (
       currentState.isPasswordCorrect !== props.isPasswordCorrect ||
@@ -107,14 +107,9 @@ class Spleesh extends Component {
     e.preventDefault();
   };
 
-  handleClickOutside = e => {
-    if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
 
   componentDidMount() {
-    socket.on('CARD_PRIZE', data => {
+    this.socket.on('CARD_PRIZE', data => {
       if (data) {
         this.setState(
           {
@@ -137,7 +132,7 @@ class Spleesh extends Component {
         });
       }
     });
-    document.addEventListener('mousedown', this.handleClickOutside);
+    // document.addEventListener('mousedown', this.handleClickOutside);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -163,7 +158,7 @@ class Spleesh extends Component {
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
-    document.removeEventListener('mousedown', this.handleClickOutside);
+    // document.removeEventListener('mousedown', this.handleClickOutside);
   };
   joinGame = async () => {
     const { is_anonymous, bet_amount } = this.state;
@@ -486,6 +481,8 @@ class Spleesh extends Component {
       spleesh_guesses,
       showAnimation,
       showImageModal,
+      image,
+      productName,
       actionList,
       betting,
       bankroll,
@@ -576,11 +573,28 @@ class Spleesh extends Component {
 
     return (
       <div className="game-page">
+        
         <div className="page-title">
           <h2>
             PLAY - <i>Spleesh!</i>
           </h2>
         </div>
+        {showImageModal && (
+          <ImageResultModal
+            modalIsOpen={showImageModal}
+            closeModal={this.toggleImageModal}
+            isDarkMode={isDarkMode}
+            image={image}
+            productName={productName}
+          />
+        )}
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+          />
+        )}
         <div className="game-contents">
           <div
             className="pre-summary-panel"

@@ -3,6 +3,7 @@ import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
+
 import {
   setChatRoomInfo,
   addNewTransaction
@@ -22,7 +23,7 @@ import { Warning } from '@material-ui/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { convertToCurrency } from '../../util/conversion';
 
-import { faMoneyBill } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
+import { faMoneyBill, faUser } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
 import { alertModal } from '../modal/ConfirmAlerts';
 import axios from '../../util/Api';
 
@@ -71,7 +72,10 @@ class PlayerModal extends Component {
       timeType: '7',
       isTipModalOpen: false,
       tipAmount: '',
-      balance: props.balance
+      balance: props.balance,
+      actorType: 'Both',
+      gameType: 'All',
+      timeType: '7',
     };
   }
 
@@ -155,7 +159,10 @@ class PlayerModal extends Component {
       accessory: userData.accessory,
       rank: userData.totalWagered,
       dateJoined: userData.created_at,
-      creditScore: userData.credit_score
+      creditScore: userData.credit_score,
+      actorType: actorType,
+      gameType: gameType,
+      timeType: timeType,
     });
   };
 
@@ -247,7 +254,10 @@ class PlayerModal extends Component {
           >
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className="modal-header">
-                <h2 className="modal-title">Player Card</h2>
+                <h2 className="modal-title">
+                <FontAwesomeIcon icon={faUser} className="mr-2" />
+
+                  Player Card</h2>
                 <Button className="btn-close" onClick={this.handleCloseModal}>
                   ×
                 </Button>
@@ -276,7 +286,11 @@ class PlayerModal extends Component {
                     <StatisticsForm
                       onDropdownChange={this.handleDropdownChange}
                       username={this.state.username}
+                      actorType={this.state.actorType}
+                      gameType={this.state.gameType}
+                      timeType={this.state.timeType}
                       dateJoined={this.state.dateJoined}
+                      last_seen={this.state.last_seen}
                       creditScore={this.state.creditScore}
                       gameLogList={this.state.gameLogList}
                       deposit={this.state.deposit}
@@ -320,7 +334,10 @@ class PlayerModal extends Component {
             >
               <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className="modal-header">
-              <h2 className="modal-title">ENTER TIP AMOUNT</h2>
+              <h2 className="modal-title">
+              <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
+
+                ENTER TIP AMOUNT</h2>
             <Button className="btn-close" onClick={this.handleCloseModal}>
               ×
             </Button>

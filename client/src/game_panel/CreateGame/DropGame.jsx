@@ -1,14 +1,15 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button, TextField } from '@material-ui/core';
+import { Button, IconButton } from '@material-ui/core';
 import { convertToCurrency } from '../../util/conversion';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import {
   alertModal
 } from '../modal/ConfirmAlerts';
 import BetAmountInput from '../../components/BetAmountInput';
-
+import { faTrash } from '@fortawesome/free-solid-svg-icons'; 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const calcWinChance = (prevStates) => {
   let total = prevStates.length;
@@ -50,6 +51,9 @@ class DropGame extends Component {
     };
     // this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
     this.onChangeState = this.onChangeState.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+
+    this.handleReset = this.handleReset.bind(this);
 
   }
 
@@ -199,6 +203,17 @@ class DropGame extends Component {
     this.setState({ winChance });
   };
 
+  componentWillMount() {
+  document.addEventListener('keydown', this.handleKeyPress);
+
+ }
+
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+  }
+
+
   componentDidUpdate(prevProps) {
     if (prevProps.drop_list.length !== this.props.drop_list.length) {
       const table = document.getElementById('runs');
@@ -235,6 +250,27 @@ class DropGame extends Component {
     }
   }
 
+  handleKeyPress(event) {
+    const { selected_roll } = this.state;
+    switch (event.key) {
+
+      case ' ':
+        event.preventDefault(); 
+        this.onAutoPlay();
+        break;
+      default:
+        break;
+    }
+  }
+
+  handleReset() {
+    // Clear the roll_list and reset winChance and aveMultiplier
+    this.props.onChangeState({
+      drop_list: [],
+      winChance: 0, // You may want to reset to default values
+      aveMultiplier: 0 // You may want to reset to default values
+    });
+  }
 
   handleMaxButtonClick = () => {
     const maxBetAmount = (this.state.balance);
@@ -317,7 +353,7 @@ class DropGame extends Component {
               </div>
             </div>
                 </div>
-            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</Button>
+            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play&nbsp;<span className="roll-tag">[space]</span></Button>
 
           </div>
           <div className="rps-add-run-table drop-add-run-table">
@@ -343,6 +379,9 @@ class DropGame extends Component {
                 )}
               </tbody>
             </table>
+            <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+                  <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+                </IconButton>
           </div>
         </div>
       </div>

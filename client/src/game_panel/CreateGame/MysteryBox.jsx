@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import { convertToCurrency } from '../../util/conversion';
 import { alertModal } from '../modal/ConfirmAlerts';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { Table, TableBody, TableCell, TableRow, Button, TextField } from '@material-ui/core';
+import { Table, TableBody, TableCell, TableRow, Button, TextField, IconButton } from '@material-ui/core';
 import { connect } from 'react-redux';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
@@ -354,14 +356,12 @@ class MysteryBox extends Component {
             </Button>
           </div>
 
-          <Button
-            id="reset"
+          <IconButton style={{background: "transparent"}} id="reset"
             href="/#"
             onClick={this.onEmptyBoxes}
-            title="Empty all boxes?"
-          >
-            Reset
-          </Button>
+            title="Empty all boxes?">
+          <FontAwesomeIcon style={{width: "15px"}} icon={faTrash} /> {/* Use the faRedo icon */}
+        </IconButton>
         </div>
         <p className="tip">
           Boxes will be displayed to the public in the order you have added

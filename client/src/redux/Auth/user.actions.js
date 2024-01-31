@@ -37,6 +37,7 @@ import setAuthToken from '../../util/setAuthToken';
 import history from '../history';
 // Load User
 export const getUser = (is_reload, viewAll, loadMore, filterType, sortType, search) => async dispatch => {
+  console.log(loadMore)
   try {
     if (localStorage.token) {
       localStorage.removeItem('isAdminAuthenticated');

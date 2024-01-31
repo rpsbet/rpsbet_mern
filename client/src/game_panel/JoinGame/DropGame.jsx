@@ -20,6 +20,7 @@ import {
   validateBetAmount,
   validateLocalStorageLength
 } from '../modal/betValidations';
+import ImageResultModal from '../modal/ImageResultModal';
 
 import animationData from '../LottieAnimations/spinningIcon';
 import drop from '../LottieAnimations/drop.json';
@@ -89,6 +90,7 @@ class DropGame extends Component {
       timerValue: 2000,
       intervalId: null,
       showImageModal: false,
+      image: '',
       showAnimation: false,
       bgColorChanged: false,
       drop_guesses: [],
@@ -171,8 +173,9 @@ class DropGame extends Component {
   }
 
   componentDidMount = () => {
-    const { socket } = this.props;
+    const { socket, playSound } = this.props;
     socket.on('CARD_PRIZE', data => {
+      console.log(data)
       if (data) {
         this.setState(
           {
@@ -603,7 +606,9 @@ class DropGame extends Component {
       actionList,
       drop_guesses,
       bet_amount,
-      showImageModal
+      showImageModal,
+      image,
+      productName
     } = this.state;
 
     const {
@@ -620,7 +625,7 @@ class DropGame extends Component {
       gameBackground,
       isDarkMode,
       isLowGraphics,
-      isMusicEnabled,
+      isMusicEnabled
     } = this.props;
 
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;

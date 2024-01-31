@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { IconButton, Button } from '@material-ui/core';
-
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { getQsLottieAnimation } from '../../util/helper';
 import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
+
 
 class QuickShoot extends Component {
   constructor(props) {
@@ -16,41 +18,77 @@ class QuickShoot extends Component {
       is_other: 'hidden',
       selected_qs_position: '',
       qs_list: [],
+      activeButtonId: null,
       winChance: 33,
       animation: <div />
     };
     this.handlePositionSelection = this.handlePositionSelection.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.handleReset = this.handleReset.bind(this);
   }
-  async handlePositionSelection(selected_qs_position) {
-    await this.props.onChangeState({
-      selected_qs_position: selected_qs_position
+  async handlePositionSelection(selected_qs_position, buttonId) {
+    this.setState({ activeButtonId: buttonId }, async () => {
+      
+      await this.props.onChangeState({
+        selected_qs_position: selected_qs_position
+      });
+      this.onAddRun(selected_qs_position);
+      
+      this.updateAnimation();
     });
-    this.onAddRun(selected_qs_position);
-    
-    this.updateAnimation();
 
+  }
 
+  
+  handleKeyPress(event) {
+    const { selected_roll } = this.state;
+    switch (event.key) {
+      // case 'r':
+      //   this.onAddRun('R');
+      //   break;
+      // case 'p':
+      //   this.onAddRun('P');
+      //   break;
+      // case 's':
+      //   this.onAddRun('S');
+      //   break;
+
+      case ' ':
+        event.preventDefault(); 
+        this.onAutoPlay();
+        break;
+      default:
+        break;
+    }
+  }
+
+  handleReset() {
+    this.props.onChangeState({
+      qs_list: [],
+      winChance: 0
+    });
+    this.setState({qs_list: []});
   }
 
   updateAnimation = async () => {
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
-  
+
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
-      
+
     } else if (this.props.qs_game_type === 3) {
       position_short_name = ['bl', 'center', 'br'];
     } else if (this.props.qs_game_type === 4) {
       position_short_name = ['tl', 'tr', 'bl', 'br'];
     }
 
-    
-    
+
+
     const animationData = await getQsLottieAnimation(
       this.props.qs_nation,
       position_short_name[this.props.selected_qs_position]
-      );
-   
+    );
+
 
     this.setState({
       animation: (
@@ -72,42 +110,42 @@ class QuickShoot extends Component {
     this.setState({ winChance });
   };
 
-   calcWinChance = (gameType, rounds) => {
+  calcWinChance = (gameType, rounds) => {
     // Calculate base probabilities
     let probWin = (100 / gameType).toFixed(2);
     let probLose = (100 - probWin).toFixed(2);
-  
+
     // Initialize the frequency of each unique qs value to 0
     const freq = {};
     for (let i = 0; i < gameType; i++) {
       freq[i] = 0;
     }
-  
+
     // Count the frequency of each unique qs value
     rounds.forEach(round => {
       freq[round.qs]++;
     });
-  
+
     // Calculate the range of frequencies
     const freqValues = Object.values(freq);
     const range = Math.max(...freqValues) - Math.min(...freqValues);
-  
+
     // Adjust probabilities based on the range of frequencies
     const sensitivityFactor = (range / 100) * gameType; // You can adjust this value to increase or decrease sensitivity
     const adjustmentFactor = (range / gameType) * sensitivityFactor;
     probWin = (+probWin - adjustmentFactor).toFixed(2);
     probLose = (+probLose + adjustmentFactor).toFixed(2);
-  
+
     return `${probWin}% - ${probLose}%`;
   };
-  
-   calcEV = (gameType, betAmount, winLoseProb) => {
+
+  calcEV = (gameType, betAmount, winLoseProb) => {
     const winAmount = betAmount * (gameType - 1);
     const loseAmount = betAmount;
-  
+
     // Extract the probWin and probLose values from the winLoseProb string
     const [probWin, probLose] = winLoseProb.split(" - ").map(prob => parseFloat(prob));
-  
+
     const ev = (probWin * winAmount - probLose * loseAmount) / 100;
     return ev.toFixed(2);
   };
@@ -116,7 +154,7 @@ class QuickShoot extends Component {
     const options = [...Array(gameType).keys()];
     const transitionMatrix = {};
     const randomnessFactor = 0.15; // Adjust this value to control the level of randomness
-  
+
     options.forEach(option1 => {
       transitionMatrix[option1] = {};
       options.forEach(option2 => {
@@ -129,12 +167,12 @@ class QuickShoot extends Component {
         });
       });
     });
-  
+
     // Count transitions
     for (let i = 0; i < qs_list.length - 3; i++) {
       transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][qs_list[i + 3].qs]++;
     }
-  
+
     // Normalize transition probabilities
     Object.keys(transitionMatrix).forEach(fromState1 => {
       Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
@@ -146,17 +184,17 @@ class QuickShoot extends Component {
         });
       });
     });
-  
+
     // Calculate winChance and deviation
     const winChance = this.calcWinChance(gameType, qs_list);
     const targetProbability = 100 / gameType;
     const deviation = Math.abs(winChance - targetProbability);
-  
+
     // Choose next state based on transition probabilities and deviation
     let currentState1 = qs_list[qs_list.length - 3].qs;
     let currentState2 = qs_list[qs_list.length - 2].qs;
     let currentState3 = qs_list[qs_list.length - 1].qs;
-  
+
     // Weighted random choice based on transition probabilities
     const weightedOptions = [];
     Object.entries(transitionMatrix[currentState1][currentState2][currentState3]).forEach(([state, prob]) => {
@@ -164,23 +202,23 @@ class QuickShoot extends Component {
         weightedOptions.push(state);
       }
     });
-  
+
     let nextState;
     if (weightedOptions.length > 0) {
       nextState = weightedOptions[Math.floor(Math.random() * weightedOptions.length)];
     } else {
       nextState = options[Math.floor(Math.random() * options.length)];
     }
-  
+
     // Introduce randomness based on the randomnessFactor
     if (Math.random() < randomnessFactor) {
       nextState = options[Math.floor(Math.random() * options.length)];
     }
-  
+
     return nextState;
   };
-  
-  
+
+
 
   onAddRun = selected_qs_position => {
 
@@ -215,9 +253,9 @@ class QuickShoot extends Component {
     if (position_short_name[this.props.selected_qs_position] === 'center') {
       this.props.playSound('grunt2');
 
-      } else {
-        this.props.playSound('grunt')
-      }
+    } else {
+      this.props.playSound('grunt')
+    }
 
     this.setState(prevState => {
       const updatedQsList = [
@@ -239,7 +277,7 @@ class QuickShoot extends Component {
   }
 
   onRemoveItem = index => {
-        this.props.playSound('tap');
+    this.props.playSound('tap');
 
     this.setState(prevState => {
       const updatedQsList = [...prevState.qs_list];
@@ -260,18 +298,24 @@ class QuickShoot extends Component {
 
   async componentDidMount() {
     await this.updateAnimation();
+    document.addEventListener('keydown', this.handleKeyPress);
   }
 
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+  }
   renderButtons() {
     const { qs_game_type } = this.props;
-  
+    const { activeButtonId } = this.state;
+
     if (qs_game_type === 2) {
       return (
         <div className="qs-buttons">
-          <IconButton id="l" onClick={() => {this.handlePositionSelection(0);}}>
+          <IconButton id="l" onClick={() => { this.handlePositionSelection(0, 'l'); }} className={activeButtonId === 'l' ? 'active' : ''}>
             {/* Left */}
           </IconButton>
-          <IconButton id="r" onClick={() => {this.handlePositionSelection(1);}}>
+          <IconButton id="r" onClick={() => { this.handlePositionSelection(1, 'r'); }} className={activeButtonId === 'r' ? 'active' : ''}>
             {/* Right */}
           </IconButton>
         </div>
@@ -279,13 +323,13 @@ class QuickShoot extends Component {
     } else if (qs_game_type === 3) {
       return (
         <div className="qs-buttons">
-          <IconButton id="l" onClick={() => {this.handlePositionSelection(0);}}>
+          <IconButton id="l" onClick={() => { this.handlePositionSelection(0, 'l'); }} className={activeButtonId === 'l' ? 'active' : ''}>
             {/* Left */}
           </IconButton>
-          <IconButton id="cc" onClick={() => {this.handlePositionSelection(1);}}>
+          <IconButton id="cc" onClick={() => { this.handlePositionSelection(1, 'cc'); }} className={activeButtonId === 'cc' ? 'active' : ''}>
             {/* Center */}
           </IconButton>
-          <IconButton id="r" onClick={() => {this.handlePositionSelection(2); }}>
+          <IconButton id="r" onClick={() => { this.handlePositionSelection(2, 'r'); }} className={activeButtonId === 'r' ? 'active' : ''}>
             {/* Right */}
           </IconButton>
         </div>
@@ -293,16 +337,16 @@ class QuickShoot extends Component {
     } else if (qs_game_type === 4) {
       return (
         <div className="qs-buttons">
-          <IconButton id="tl" onClick={() => {this.handlePositionSelection(0);}}>
+          <IconButton id="tl" onClick={() => { this.handlePositionSelection(0, 'tl'); }} className={activeButtonId === 'tl' ? 'active' : ''}>
             {/* Top Left */}
           </IconButton>
-          <IconButton id="tr" onClick={() => {this.handlePositionSelection(1);}}>
+          <IconButton id="tr" onClick={() => { this.handlePositionSelection(1, 'tr'); }} className={activeButtonId === 'tr' ? 'active' : ''}>
             {/* Top Right */}
           </IconButton>
-          <IconButton id="bl" onClick={() => {this.handlePositionSelection(2);}}>
+          <IconButton id="bl" onClick={() => { this.handlePositionSelection(2, 'bl'); }} className={activeButtonId === 'bl' ? 'active' : ''}>
             {/* Bottom Left */}
           </IconButton>
-          <IconButton id="br" onClick={() => {this.handlePositionSelection(3);}}>
+          <IconButton id="br" onClick={() => { this.handlePositionSelection(3, 'br'); }} className={activeButtonId === 'br' ? 'active' : ''}>
             {/* Bottom Right */}
           </IconButton>
         </div>
@@ -310,31 +354,44 @@ class QuickShoot extends Component {
     } else if (qs_game_type === 5) {
       return (
         <div className="qs-buttons">
-          <IconButton id="tl" onClick={() => {this.handlePositionSelection(1);}}>
+          <IconButton id="tl" onClick={() => { this.handlePositionSelection(1, 'tl'); }} className={activeButtonId === 'tl' ? 'active' : ''}>
             {/* TL */}
           </IconButton>
-          <IconButton id="tr" onClick={() => {this.handlePositionSelection(2);}}>
+          <IconButton id="tr" onClick={() => { this.handlePositionSelection(2, 'tr'); }} className={activeButtonId === 'tr' ? 'active' : ''}>
             {/* TR */}
           </IconButton>
-          <IconButton id="bl" onClick={() => {this.handlePositionSelection(3);}}>
+          <IconButton id="bl" onClick={() => { this.handlePositionSelection(3, 'bl'); }} className={activeButtonId === 'bl' ? 'active' : ''}>
             {/* BL */}
           </IconButton>
-          <IconButton id="br" onClick={() => {this.handlePositionSelection(4);}}>
+          <IconButton id="br" onClick={() => { this.handlePositionSelection(4, 'br'); }} className={activeButtonId === 'br' ? 'active' : ''}>
             {/* BR */}
           </IconButton>
-          <IconButton id="c" onClick={() => {this.handlePositionSelection(0);;}}>
+          <IconButton id="c" onClick={() => { this.handlePositionSelection(0, 'c'); }} className={activeButtonId === 'c' ? 'active' : ''}>
             {/* C */}
           </IconButton>
         </div>
       );
     }
   }
-  
+
   onAutoPlay = () => {
     if (this.props.qs_list.length > 2) {
       const prevStates = this.props.qs_list;
-      const nextQS = this.predictNext(prevStates, this.props.qs_game_type);
-      this.handlePositionSelection(nextQS);
+      let nextQS = this.predictNext(prevStates, this.props.qs_game_type);
+      
+      // Get the button ID corresponding to the nextQS
+      let buttonId;
+      nextQS = parseInt(nextQS);
+      if (this.props.qs_game_type === 2) {
+        buttonId = nextQS === 0 ? 'l' : 'r';
+      } else if (this.props.qs_game_type === 3) {
+        buttonId = nextQS === 0 ? 'l' : nextQS === 1 ? 'cc' : 'r';
+      } else if (this.props.qs_game_type === 4) {
+        buttonId = nextQS === 0 ? 'tl' : nextQS === 1 ? 'tr' : nextQS === 2 ? 'bl' : 'br';
+      } else if (this.props.qs_game_type === 5) {
+        buttonId = nextQS === 0 ? 'c' : nextQS === 1 ? 'tl' : nextQS === 2 ? 'tr' : nextQS === 3 ? 'bl' : 'br';
+      }
+      this.handlePositionSelection(nextQS, buttonId);
     } else {
       alertModal(
         this.props.isDarkMode,
@@ -343,6 +400,8 @@ class QuickShoot extends Component {
       return;
     }
   };
+
+  
 
   render() {
     let position_name = [
@@ -404,7 +463,7 @@ class QuickShoot extends Component {
                 {this.state.animation}
                 {this.renderButtons()}
                 <Button id="aiplay" onClick={this.onAutoPlay}>
-                  Test AI Play
+                  Test AI Play&nbsp;<span className="roll-tag">[space]</span>
                 </Button>
               </div>
               <div className="qs-add-run-table">
@@ -418,7 +477,7 @@ class QuickShoot extends Component {
                           <td>{index + 1}</td>
                           <td>{qs.qs}</td>
                           <td>
-                            <HighlightOffIcon  id="delete"
+                            <HighlightOffIcon id="delete"
                               onClick={() => this.onRemoveItem(index)}
                             />
                           </td>
@@ -433,6 +492,9 @@ class QuickShoot extends Component {
                     )}
                   </tbody>
                 </table>
+                <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+                  <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+                </IconButton>
               </div>
             </div>
           </div>

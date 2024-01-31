@@ -46,7 +46,7 @@ class Leaderboards extends Component {
 
   componentDidMount() {
     const { actionList } = this.props;
-    // console.log(actionList)
+    console.log(actionList)
     this.setState({
       actionList: actionList
     });
@@ -130,7 +130,7 @@ class Leaderboards extends Component {
                           <Avatar
                             className="avatar"
                             src={playerData.avatar}
-                            rank={playerData.totalWagered}
+                            rank={playerData.rank}
                             accessory={playerData.accessory}
                             alt=""
                             darkMode={this.props.isDarkMode}

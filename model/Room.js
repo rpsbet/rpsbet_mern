@@ -136,7 +136,29 @@ const RoomSchema = new Schema({
   updated_at: {
     type: Date,
     default: Date.now
-  }
+  },
+  hosts: [{
+    host: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    rank: {
+      type: Number,
+      default: 0
+    },
+    avatar: {
+      type: String,
+      default: ''
+    },
+    accessory: {
+      type: String,
+      default: ''
+    },
+    share: {
+      type: Number,
+      default: 0
+    }
+  }]
 });
 
 module.exports = Room = mongoose.model('rps_rooms', RoomSchema);

@@ -13,7 +13,6 @@ import {
   Switch,
   FormControlLabel
 } from '@material-ui/core';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import {
@@ -26,6 +25,7 @@ import {
 
 import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
+import ImageResultModal from '../modal/ImageResultModal';
 
 import animationData from '../LottieAnimations/spinningIcon';
 import {
@@ -67,6 +67,7 @@ class QuickShoot extends Component {
       balance: this.props.balance,
       betResults: props.betResults,
       productName: '',
+      image: '',
       showImageModal: false,
       settings_panel_opened: false,
       isPasswordCorrect: this.props.isPasswordCorrect
@@ -76,7 +77,7 @@ class QuickShoot extends Component {
     this.panelRef = React.createRef();
   }
   componentDidMount() {
-    const { socket } = this.props;
+    const { socket, playSound } = this.props;
     socket.on('CARD_PRIZE', data => {
       if (data) {
         this.setState(
@@ -772,7 +773,9 @@ class QuickShoot extends Component {
       actionList,
       showImageModal,
       selected_qs_position,
-      bet_amount
+      bet_amount,
+      image,
+      productName
     } = this.state;
     const {
       selectedCreator,

@@ -208,7 +208,7 @@ class SiteWrapper extends Component {
       notifications: updateFromNow(this.props.notifications),
       showNotifications: false,
       userParams: [false, true],
-      loadMore: 0,
+      loadMore: 10,
       isLive: false,
       showAllGameLogs: false,
       transactions: [],
@@ -275,7 +275,7 @@ class SiteWrapper extends Component {
     if (shouldUpdate) {
 
       try {
-        await this.props.getUser(true, false);
+        await this.props.getUser(true, false, 10);
 
         await this.props.getHistory();
       } catch (error) {
@@ -576,7 +576,7 @@ class SiteWrapper extends Component {
       await Promise.all([
         this.props.getNotifications(),
         this.initSocket(),
-        this.props.getUser(true, false, null, null, null, null),
+        this.props.getUser(true, false, 10, null, null, null),
         this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
         this.fetchData(),
@@ -885,8 +885,8 @@ class SiteWrapper extends Component {
 
   handleLoadMore = async () => {
     const { loadMore, filterType, sortType, searchQuery } = this.state;
-    const nextLoadMore = loadMore >= 0 ? loadMore + 10 : 10;
-
+    const nextLoadMore = loadMore >= 10 ? loadMore + 10 : 10;
+console.log("nextLoadMore", nextLoadMore)
     await this.props.getUser(
       false,
       true,
@@ -906,7 +906,7 @@ class SiteWrapper extends Component {
     this.props.getUser(
       param1,
       param2,
-      0,
+      10,
       this.state.filterType,
       this.state.sortType,
       this.state.searchQuery
@@ -1002,11 +1002,11 @@ class SiteWrapper extends Component {
             <div className="coming-home-screen" style={{ textAlign: 'center', padding: '50px' }}>
               <img style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
 
-              <p style={{ textTransform: 'uppercase', color: "#fff" }}>Are you the House's cat? 🐈 Or are you the king-of-the-jungle 🦁, blood-thirsty 🩸, Big Cat 💰— type cat—? 😼</p>
+              <p style={{ textTransform: 'uppercase', color: "#fff" }}>GET RICH 💰 OR DIE 🩸 😼</p>
               <div className="countdown" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div className="countdown-side" style={{ width: "50%", padding: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', height: '400px' }} >
 
-                  <img style={{ width: "420px", border: '0.6em solid #6002a6', borderRadius: '2em' }} src="../img/coming-soon.webp" />
+                  <img style={{ width: "420px", border: '0.6em solid #6002a6', borderRadius: '2em' }} src="../img/coming-soon.svg" />
                   <Countdown
                     // style={{ zIndex: '1', position: 'absolute' }}
                     date={valentinesDay}
@@ -1058,14 +1058,14 @@ class SiteWrapper extends Component {
                   />
                 </div>
                 <div className="youtube-side" style={{ padding: '50px', height: '400px', width: '50%' }}>
-                  <h5 style={{ color: '#fff', marginBottom: '10px' }}>WATCH TRAILER</h5>
+                  <h5 style={{ color: '#fff', marginBottom: '10px' }}>WATCH TRAILER #2</h5>
                   <hr style={{ borderColor: '#fff' }} />
 
                   <div >
                     <iframe
                       width="460"
                       height="215"
-                      src="https://www.youtube.com/embed/CnpVcIx3wz4"
+                      src="https://www.youtube.com/embed/G1cUiW0ZXm8?si=zvwvvG_aiHItaOva"
                       title="YouTube video player"
                       frameborder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1611,7 +1611,7 @@ class SiteWrapper extends Component {
                                 <td>...</td>
                               </tr>
                             ) : (
-                              transactions.filter(row => row.user === this.props.user._id).map((row, key) => (
+                              transactions.filter(row => row.user === this.props.user._id).slice(0, 5).map((row, key) => (
                                 <tr key={key}>
                                   {row.hash ? (
                                     <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">

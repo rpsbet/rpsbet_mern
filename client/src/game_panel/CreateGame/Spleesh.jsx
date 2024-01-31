@@ -12,8 +12,8 @@ class Spleesh extends Component {
   }
 
 
-  
-  
+
+
   onChangeWinChance = winChance => {
     this.setState({ winChance });
   };
@@ -29,7 +29,7 @@ class Spleesh extends Component {
               : ''
           }
           onClick={() => {
-this.props.playSound('boop');
+            this.props.playSound('boop');
             this.props.onChangeState({
               bet_amount: i * this.props.spleesh_bet_unit,
               endgame_amount: this.props.spleesh_bet_unit * (55 - i),
@@ -51,7 +51,7 @@ this.props.playSound('boop');
       <div className="game-info-panel">
         <h3 className="game-sub-title">Game Type</h3>
         <div id="select-buttons-panel">
-          {[1, 10].map(item => (
+          {[0.1, 1, 10].map(item => (
             <Button
               className={this.props.spleesh_bet_unit === item ? 'active' : ''}
               onClick={() => {
@@ -66,13 +66,13 @@ this.props.playSound('boop');
               {convertToCurrency(item / 100)} - {convertToCurrency(item * 10 / 100)}
             </Button>
           ))}
-        
+
         </div>
       </div>
     ) : (
       <div className="game-info-panel">
         <h3 className="game-sub-title">Your Number</h3>
-        <div id="select-buttons-panel">{this.createNumberPanel()}</div>
+        <div id="select-buttons-panel" className="spleesh">{this.createNumberPanel()}</div>
         <p className="tip">
           Pick a number for players to guess (Your Bet Amount)
         </p>

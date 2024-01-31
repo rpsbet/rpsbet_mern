@@ -5,7 +5,11 @@
 	color: white;
 	box-shadow: none;
 }
-
+.dark_mode .notification p:first-child {
+	color: #e9ecef;
+	font-size: 0.8em !important;
+	margin-bottom: 0;
+  }
 
 .dark_mode .modal-title {
 	color: #f9f9f9;
@@ -399,7 +403,7 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 }
 .dark_mode .game-page .game-contents {
 	color: white;
-	background-color: #151515;
+	background: linear-gradient(45deg, #120e0e, #151515, #070707);
 }
 .dark_mode .game-page hr {
 	border-color: #36393f;
@@ -448,7 +452,7 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 .dark_mode .modal-body,
 .dark_mode .modal-header{
 	color: #8e9297;
-	background-color: #101010;
+	background: linear-gradient(45deg, #060607, #212529, #101010);
 }
 .dark_mode .modal-body h2,
 .dark_mode .modal-body h5,

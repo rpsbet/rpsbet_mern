@@ -181,7 +181,7 @@
 /*****************/
 
 .modal-body {
-    background-color: #e5e5e5;
+    background: linear-gradient(45deg, #cfcfcf, #fffbfb, #c3c3c3);
     color: #747f8d;
     max-height: 55vh;
     min-width: 340px;
@@ -196,7 +196,7 @@
 
 .modal-body button,
 .modal-body button.btn-back {
-	border-radius: 6px;
+    margin-left: 5px;
 }
 
 .modal-body.edit-modal-body.question-modal-body div[class*='MuiGrid-grid'] {
@@ -625,7 +625,7 @@ div[role="presentation"] div {
     margin-bottom: 0;
   }
   .modal-body .avatar-border{
-    padding: 60px !important;
+    padding: 60px 60px 30px 60px !important;
   }
 
 

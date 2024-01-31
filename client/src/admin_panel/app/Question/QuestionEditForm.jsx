@@ -47,8 +47,8 @@ function QuestionEditForm({
     <PaperEl elevation={12}>
       <FormEl onSubmit={e => onSubmitFrom(e)}>
         <TopDiv>
-          <Grid container spacing={2}>
-            <Grid item xs={4}>
+          <Grid container spacing={1}>
+            <Grid item style={{ width:"100%" }}>
               <Typography variant="h6">GAME TYPE</Typography>
               <RadioGroup
                 aria-label="brain_game_type"
@@ -57,7 +57,7 @@ function QuestionEditForm({
                 onChange={e => handleChange(e.target.name, e.target.value)}
               >
                 {game_type_list.map((game_type, index) => (
-                  <Grid item xs={12} key={index}>
+                  <Grid item style={{ width:"100%" }} key={index}>
                     <FormControlLabel
                       value={game_type._id}
                       control={<Radio color="primary" />}
@@ -79,7 +79,7 @@ function QuestionEditForm({
               <List>
                 <ListItem>
                   <TextField
-                    label=" 🧠"
+                    label="e.g. Cat Quiz"
                     variant="outlined"
                     name="new_brain_game_type"
                     margin="normal"
@@ -89,7 +89,7 @@ function QuestionEditForm({
                     onChange={e =>
                       updateTextField(e.target.name, e.target.value, 255)
                     }
-                  />
+                  />&nbsp;&nbsp;&nbsp;&nbsp;
                   <ListItemSecondaryAction>
                     <IconButtonEl
                       edge="end"
@@ -107,12 +107,12 @@ function QuestionEditForm({
                 </ListItem>
               </List>
             </Grid>
-            <Grid item xs={8}>
-              <Grid item xs={12}>
+            <Grid item style={{ width:"100%" }}>
+              <Grid item style={{ width:"100%" }}>
                 <Typography variant="h6">QUESTION</Typography>
                 <TextField
                   autoFocus={true}
-                  label="&nbsp;Are birds real?"
+                  label="e.g.  What do cats think?"
                   variant="outlined"
                   name="question"
                   margin="normal"
@@ -124,7 +124,7 @@ function QuestionEditForm({
                   }
                 />
               </Grid>
-              <Grid item xs={12} style={{ marginTop: 50 }}>
+              <Grid item style={{ width:"100%", marginTop: 50 }}>
                 <Grid item xs={6}>
                   <Typography variant="h6">CORRECT ANSWERS</Typography>
                   <List>
@@ -155,7 +155,7 @@ function QuestionEditForm({
                     ))}
                     <ListItem>
                       <TextField
-                        label="&nbsp;Yes"
+                        label="e.g. Yes"
                         name="new_answer"
                         margin="normal"
                         variant="outlined"
@@ -165,7 +165,7 @@ function QuestionEditForm({
                         onChange={e =>
                           updateTextField(e.target.name, e.target.value, 255)
                         }
-                      />
+                      />&nbsp;&nbsp;&nbsp;&nbsp;
                       <ListItemSecondaryAction>
                         <IconButtonEl
                           edge="end"
@@ -184,12 +184,12 @@ function QuestionEditForm({
                     </ListItem>
                   </List>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item style={{ width:"100%" }}>
                   <Typography variant="h6">INCORRECT ANSWERS</Typography>
                   <List>
                     {incorrect_answers.map((row, index) => (
                       <React.Fragment key={index}>
-                        <ListItem key={index}>
+                        <ListItem key={index} >
                           <ListItemAvatar>
                             <Avatar>
                               <CommentIcon />
@@ -217,7 +217,7 @@ function QuestionEditForm({
                     ))}
                     <ListItem>
                       <TextField
-                        label="&nbsp;No"
+                        label="e.g. No"
                         variant="outlined"
                         name="new_incorrect_answer"
                         margin="normal"
@@ -227,7 +227,7 @@ function QuestionEditForm({
                         onChange={e =>
                           updateTextField(e.target.name, e.target.value, 255)
                         }
-                      />
+                      />&nbsp;&nbsp;&nbsp;&nbsp;
                       <ListItemSecondaryAction>
                         <IconButtonEl
                           edge="end"
@@ -253,7 +253,7 @@ function QuestionEditForm({
             </Grid>
           </Grid>
         </TopDiv>
-        <ButtonDiv>
+        {/* <ButtonDiv>
           <ButtonEl
             onClick={handelCancel}
             variant="contained"
@@ -290,7 +290,7 @@ function QuestionEditForm({
               </ButtonEl>
             </EditColumn>
           )}
-        </ButtonDiv>
+        </ButtonDiv> */}
       </FormEl>
     </PaperEl>
   );

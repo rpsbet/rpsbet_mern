@@ -6,7 +6,8 @@ import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/Pro
 // import ProductCreatePage from '../../admin_panel/app/ProductPages/ProductCreatePage/ProductCreatePage';
 import { Button } from '@material-ui/core';
 import AttachMoney from '@material-ui/icons/AttachMoney';
-// import { createItem, getItem, updateItem, deleteItem, setCurrentProductInfo} from '../../redux/Item/item.action';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faStore } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import InventoryModal from '../modal/InventoryModal';
 
@@ -65,7 +66,9 @@ class MarketplaceModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">Marketplace</h2>
+            <h2 className="modal-title">
+            <FontAwesomeIcon icon={faStore} className="mr-2" />
+Marketplace</h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>

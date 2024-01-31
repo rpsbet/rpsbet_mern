@@ -71,6 +71,7 @@ const initialState = {
     aveMultiplier: '',
     joiners: {},
     game_type: '',
+    hosts: {},
     endgame_amount: 54,
     bet_amount: 0,
     spleesh_bet_unit: 1,

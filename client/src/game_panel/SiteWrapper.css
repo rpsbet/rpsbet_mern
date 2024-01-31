@@ -58,16 +58,16 @@
 }
 
 #signupForm .selected {
-  border: 3px solid #cf0c0e;
-  box-shadow: 0 0 5px rgba(207, 12, 14);
+  border: 3px solid #ffd000;
+  box-shadow: 0 0 5px #ffd00077;
   transition: all 0.3s;
   /* width: 52px !important; */
   height: 52px !important;
 }
 
 .selected {
-  border: 2px solid #cf0c0e;
-  box-shadow: 0 0 5px rgba(207, 12, 14, 0.7);
+  border: 2px solid #ffd000;
+  box-shadow: 0 0 5px #ffd00077;
   transition: all 0.3s;
 }
 .main-game-page-tabs button span {
@@ -146,19 +146,24 @@ position: absolute;
   border-radius: 6px;
 }
 
+.hosts.avatar-square {
+  margin-left: -10px;
+  margin-right: 0px;
+  position: relative;
+}
 
 .avatar-square {
   background: #b9bbbe;
     border: 3px solid #dee2e6;
     color: #f8f9fa;
     width: 40px;
-    margin-left: 44px;
+    margin-left: 100px;
     display: flex;
     position: absolute;
     justify-content: center;
     align-items: center;
     height: 40px;
-    border-radius: 9px;
+    border-radius: 0.3em;
     z-index: 2;
 }
 .fade-animation {
@@ -320,10 +325,16 @@ div[role='tablist'] {
   align-content: normal;
   
 }
-.notification p{
+.notification p {
   font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 0.6em !important;
 }
-
+.notification p:first-child {
+  color: #444;
+  font-size: 0.8em !important;
+  margin-bottom: 0;
+}
 .notification-container:last-child {
   border-bottom: unset;
 }

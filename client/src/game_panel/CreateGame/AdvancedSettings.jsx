@@ -51,6 +51,7 @@ const ProductCard = styled.div`
   }
 
   &:hover {
+    border: 3px solid #fff;
     transform: scale(1.03);
   }
 `;

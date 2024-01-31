@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button, TextField } from '@material-ui/core';
+import { Button, IconButton } from '@material-ui/core';
 import BetAmountInput from '../../components/BetAmountInput';
-
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
 
@@ -55,6 +56,8 @@ class Bang extends Component {
       aveMultiplier: 0
     };
     this.onChangeState = this.onChangeState.bind(this);
+    // this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.handleReset = this.handleReset.bind(this);
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -78,6 +81,15 @@ class Bang extends Component {
   onChangeAveMultiplier = aveMultiplier => {
     this.setState({ aveMultiplier });
   };
+
+  handleReset() {
+    this.props.onChangeState({
+      bang_list: [],
+      winChance: 0,
+      aveMultiplier: 0
+    });
+  }
+
 
   predictNext = bangAmounts => {
     // Find the unique values in bangAmounts
@@ -220,7 +232,7 @@ class Bang extends Component {
       }
     );
   };
-  
+
 
   handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
@@ -259,7 +271,7 @@ class Bang extends Component {
       }
     );
   };
- 
+
   render() {
     const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
     const generateRandomMultiplier = () => {
@@ -299,21 +311,21 @@ class Bang extends Component {
                 isDarkMode={this.props.isDarkMode}
                 bangGame={true}
               />
-              
+
               <div className="suggested-multipliers">
-          {suggestedMultipliers.map((multiplier, index) => (
-            <Button
-              key={index}
-              onClick={() => {
-                this.onAddRun(multiplier.toFixed(2));
-                this.setState({bang: multiplier.toFixed(2)})
-              }
-              }
-            >
-              {multiplier.toFixed(2)}x
-            </Button>
-          ))}
-        </div>
+                {suggestedMultipliers.map((multiplier, index) => (
+                  <Button
+                    key={index}
+                    onClick={() => {
+                      this.onAddRun(multiplier.toFixed(2));
+                      this.setState({ bang: multiplier.toFixed(2) })
+                    }
+                    }
+                  >
+                    {multiplier.toFixed(2)}x
+                  </Button>
+                ))}
+              </div>
               <div className="bang addRun">
                 <Button
                   id="bang-button"
@@ -326,9 +338,9 @@ class Bang extends Component {
               </div>
             </div>
             <Button id="aiplay" onClick={this.onAutoPlay}>
-              Test AI Play
+              Test AI Play&nbsp;<span className="roll-tag">[space]</span>
             </Button>
-            
+
           </div>
           <div className="rps-add-run-table bang-add-run-table">
             <h3 className="game-sub-title">Training Data</h3>
@@ -355,6 +367,9 @@ class Bang extends Component {
                 )}
               </tbody>
             </table>
+            <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+              <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+            </IconButton>
           </div>
         </div>
       </div>

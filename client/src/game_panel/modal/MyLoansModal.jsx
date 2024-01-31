@@ -8,6 +8,9 @@ import { Button } from '@material-ui/core';
 import AttachMoney from '@material-ui/icons/AttachMoney';
 import { createLoan, getLoan, updateLoan, deleteLoan, setCurrentProductInfo, acQueryMyLoan, acQueryLoan} from '../../redux/Loan/loan.action';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCoins } from '@fortawesome/free-solid-svg-icons';
+
 
 
 Modal.setAppElement('#root');
@@ -86,7 +89,7 @@ class MyLoansModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">Your Loans</h2>
+            <h2 className="modal-title"><FontAwesomeIcon icon={faCoins} className="mr-2" />Your Loans</h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>

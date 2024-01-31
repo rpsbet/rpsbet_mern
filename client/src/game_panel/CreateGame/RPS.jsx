@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button } from '@material-ui/core';
+import { Button, IconButton } from '@material-ui/core';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import styled from 'styled-components';
+import { faTrash } from '@fortawesome/free-solid-svg-icons'; 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
@@ -283,14 +285,55 @@ class RPS extends Component {
       }
     };
     this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.handleReset = this.handleReset.bind(this);
   }
 
   async componentDidMount() {
     const { acQueryMyItem } = this.props;
     await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
+    document.addEventListener('keydown', this.handleKeyPress);
 
     this.setCardListState();
   }
+
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+  }
+
+  handleKeyPress(event) {
+    const { selected_roll } = this.state;
+    switch (event.key) {
+      case 'r':
+        this.onAddRun('R');
+        break;
+      case 'p':
+        this.onAddRun('P');
+        break;
+      case 's':
+        this.onAddRun('S');
+        break;
+
+      case ' ':
+        event.preventDefault(); 
+        this.onAutoPlay();
+        break;
+      default:
+        break;
+    }
+  }
+
+  handleReset() {
+    // Clear the roll_list and reset winChance and aveMultiplier
+    this.props.onChangeState({
+      rps_list: [],
+      winChance: 33, // You may want to reset to default values
+      aveMultiplier: 0 // You may want to reset to default values
+    });
+  }
+
+
   setCardListState() {
     const { data } = this.props;
     const modifiedData = data.map(item => ({
@@ -365,6 +408,7 @@ class RPS extends Component {
   };
 
   onAddRun = selected_rps => {
+    this.props.playSound('boop');
     const wager = 1;
     const winPayout = 2;
     const lossPayout = 0;
@@ -414,7 +458,6 @@ class RPS extends Component {
       rps_game_type,
       step,
       bet_amount,
-      playSound,
       rps_list,
       onChangeState
     } = this.props;
@@ -438,7 +481,7 @@ class RPS extends Component {
               <Button
                 className={rps_game_type === 0 ? 'active' : ''}
                 onClick={() => {
-                  onChangeState({ rps_game_type: 0,  game_mode: this.state.game_mode });
+                  onChangeState({ rps_game_type: 0, game_mode: this.state.game_mode });
                 }}
               >
                 <img src="/img/icons/RPS_badge.svg" alt="Classic RPS" />
@@ -449,7 +492,7 @@ class RPS extends Component {
                 className={rps_game_type === 1 ? 'active' : ''}
                 onClick={() => {
                   if (rps_game_type !== 1) {
-                    onChangeState({ rps_game_type: 1,  game_mode: this.state.game_mode });
+                    onChangeState({ rps_game_type: 1, game_mode: this.state.game_mode });
                   }
                 }}
               >
@@ -497,7 +540,7 @@ class RPS extends Component {
                         // onChangeState({
                         //   selected_rps: row.image
                         // });
-                        playSound('boop');
+
                         this.onAddRun(row.productName);
                       }}
                       className={selected_rps === row._id ? 'selected' : ''}
@@ -541,6 +584,7 @@ class RPS extends Component {
                   )}
                 </tbody>
               </table>
+             
             </div>
             <p className="tip">RRPS CARDS AVAILABLE VIA THE MARKETPLACE</p>
           </div>
@@ -555,7 +599,7 @@ class RPS extends Component {
                     className={'rock' + (selected_rps === 'R' ? ' active' : '')}
                     variant="contained"
                     onClick={() => {
-                      playSound('boop');
+
                       this.onAddRun('R');
                       const currentActive = document.querySelector('.active');
                       if (currentActive) {
@@ -565,14 +609,14 @@ class RPS extends Component {
                           'pulse 0.2s ease-in-out ';
                       }
                     }}
-                  ></Button>
+                  ><span className="roll-tag">[R]</span></Button>
                   <Button
                     className={
                       'paper' + (selected_rps === 'P' ? ' active' : '')
                     }
                     variant="contained"
                     onClick={() => {
-                      playSound('boop');
+
                       this.onAddRun('P');
                       const currentActive = document.querySelector('.active');
                       if (currentActive) {
@@ -582,7 +626,7 @@ class RPS extends Component {
                           'pulse 0.2s ease-in-out ';
                       }
                     }}
-                  ></Button>
+                  ><span className="roll-tag">[P]</span></Button>
                   <Button
                     className={
                       'scissors' + (selected_rps === 'S' ? ' active' : '')
@@ -598,14 +642,14 @@ class RPS extends Component {
                           'pulse 0.2s ease-in-out ';
                       }
                     }}
-                  ></Button>
+                  ><span className="roll-tag">[S]</span></Button>
                 </div>
                 <Button
                   id="aiplay"
                   variant="contained"
                   onClick={this.onAutoPlay}
                 >
-                  Test AI Play
+                  Test AI Play&nbsp;<span className="roll-tag">[space]</span>
                 </Button>
               </div>
               <div className="rps-add-run-table">
@@ -634,6 +678,9 @@ class RPS extends Component {
                     )}
                   </tbody>
                 </table>
+                <IconButton style={{background: "transparent", boxShadow: "none"}} color="secondary" onClick={this.handleReset}>
+          <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+        </IconButton>  
               </div>
             </div>
           </div>

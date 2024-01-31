@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { acGetCustomerInfo } from '../../redux/Customer/customer.action';
+import { Button } from '@material-ui/core';
 
 import { setUrl, getUser } from '../../redux/Auth/user.actions';
 import {
@@ -139,13 +140,13 @@ class AddQuestionModal extends Component {
         contentLabel="Add Question Modal"
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-          <div className="modal-body edit-modal-body question-modal-body">
             <div className="modal-header">
               <h2 className="modal-title">Submit Your Own Brain Game</h2>
-              <button className="btn-close" onClick={this.handelCancel}>
+              <Button className="btn-close" onClick={this.handelCancel}>
                 ×
-              </button>
+              </Button>
             </div>
+          <div className="modal-body edit-modal-body question-modal-body">
             <QuestionEditForm
               handelCancel={this.handelCancel}
               updateTextField={this.updateTextField}
@@ -157,6 +158,25 @@ class AddQuestionModal extends Component {
               addBrainGameType={this.props.addBrainGameType}
               removeBrainGameType={this.props.removeBrainGameType}
             />
+          </div>
+          <div className="modal-footer">
+          <Button
+            onClick={this.handelCancel}
+            variant="contained"
+            cancel="true"
+            className='btn-back'
+            style={{marginRight: "10px"}}
+            >
+            cancel
+          </Button>
+            <Button
+              disabled={this.state.buttonDisable}
+              onClick={this.onSubmitForm}
+              variant="contained"
+              className='btn-submit'
+            >
+              Submit
+            </Button>
           </div>
         </div>
       </Modal>

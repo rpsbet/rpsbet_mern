@@ -100,10 +100,10 @@ class Footer extends Component {
         return null;
     }
 
-    componentDidMount() {
-        console.log(this.props.isDarkMode)
-        // this.IsAuthenticatedReroute();
-    }
+    // componentDidMount() {
+    //     console.log(this.props.isDarkMode)
+    //     // this.IsAuthenticatedReroute();
+    // }
 
     handleOpenLeaderboardsModal = () => {
         this.setState({ showLeaderboardsModal: true });

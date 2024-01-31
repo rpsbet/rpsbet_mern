@@ -10,7 +10,8 @@ import {
   faArrowAltCircleDown,
   faArrowAltCircleUp,
   faExchangeAlt,
-  faGift
+  faGift,
+  faCreditCard
 } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
@@ -52,16 +53,15 @@ class AllTransactionsModal extends Component {
       showAllGameLogs: false,
     };
   }
-
   handleScroll = event => {
-    const { scrollHeight, scrollTop, clientHeight } = event.target;
+    const { target } = event;
 
     // Check if the scroll is at the bottom of the modal
-    const isAtBottom = scrollHeight - scrollTop === clientHeight;
+    const isAtBottom = target.scrollHeight - target.scrollTop === target.clientHeight;
     if (isAtBottom) {
-      this.props.handleLoadMore();
+        this.props.handleLoadMore();
     }
-  };
+};
 
   render() {
     const {
@@ -98,10 +98,14 @@ class AllTransactionsModal extends Component {
       >
         <div
           className={isDarkMode ? 'dark_mode' : ''}
-          onScroll={this.handleScroll}
+          
+
         >
           <div className="modal-header">
-            <h2 className="modal-title">ALL TRANSACTIONS</h2>
+            <h2 className="modal-title">
+            <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
+
+              ALL TRANSACTIONS</h2>
             <Button className="btn-close" onClick={close}>
               ×
             </Button>
@@ -281,7 +285,8 @@ class AllTransactionsModal extends Component {
                       </TableHead>
                     </Table>
                   </div>
-                  <div className="game-logs-container">
+                  <div className="game-logs-container"  onScroll={this.handleScroll}
+          style={{ maxHeight: '280px', overflowY: 'scroll' }}>
                     <Table className="game-logs-table">
                       <TableBody>
                         {transactions.length === 0 ? (
@@ -344,13 +349,14 @@ class AllTransactionsModal extends Component {
                             )
                           ))
                         )}
-                        <TableRow>
-                          <TableCell colSpan={4}>
-                            {tnxComplete && (
-                              <div className="loading-spinner"></div>
-                            )}
-                          </TableCell>
-                        </TableRow>
+                       {tnxComplete && (
+                      <TableRow>
+                        <TableCell colSpan={4}>
+                          <div className="loading-spinner"></div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                   
                       </TableBody>
                     </Table>
                   </div>

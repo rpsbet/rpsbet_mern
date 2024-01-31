@@ -9,6 +9,8 @@ import ReactApexChart from 'react-apexcharts';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
+import ImageResultModal from '../modal/ImageResultModal';
+
 import {
   Button,
   Switch,
@@ -82,6 +84,7 @@ class MysteryBox extends Component {
       betting: false,
       bankroll: this.props.roomInfo.host_pr,
       showImageModal: false,
+      image: '',
       productName: '',
       timer: null,
       bgColorChanged: false,
@@ -134,7 +137,7 @@ class MysteryBox extends Component {
   };
 
   componentDidMount() {
-    const { socket } = this.props;
+    const { socket, playSound } = this.props;
     socket.on('CARD_PRIZE', data => {
       if (data) {
         this.setState(
@@ -570,17 +573,20 @@ class MysteryBox extends Component {
   getBetForm = () => {
     const {
       bankroll,
-      isDisabled,
+      showImageModal,
       betting,
       timerValue,
-      actionList
+      actionList,
+      productName,
+      image
     } = this.state;
     const {
       selectedCreator,
       showPlayerModal,
       roomInfo,
       isLowGraphics,
-      isMusicEnabled
+      isMusicEnabled,
+      isDarkMode
     } = this.props;
 
     let prizes = [];

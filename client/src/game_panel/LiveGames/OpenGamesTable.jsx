@@ -5,21 +5,32 @@ import {
   getRoomList,
   setCurRoomInfo
 } from '../../redux/Logic/logic.actions';
-import { Box, Button, Typography, IconButton } from '@material-ui/core';
-import { Add, Remove, Visibility } from '@material-ui/icons';
+import { Box, Button, Typography, IconButton, ButtonGroup, TextField, Table, TableBody, TableCell, TableRow } from '@material-ui/core';
+import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
 import ReactApexChart from 'react-apexcharts';
 import palmTree from '../icons/palm-tree.svg'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUsers } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
+
+import {
+  addNewTransaction
+} from '../../redux/Logic/logic.actions';
+import { setBalance } from '../../redux/Auth/user.actions';
+
+import busdSvg from '../JoinGame/busd.svg';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
-// import gemBg from '../LottieAnimations/gem-bg.json';
 import Avatar from '../../components/Avatar';
+import AddBoxOutlined from '@material-ui/icons/AddBoxOutlined';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-// import Pagination from '.. /../components/Pagination';
+import Modal from 'react-modal';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
 import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 import blob from '../LottieAnimations/blob.json';
 import Battle from '../icons/Battle';
+import axios from '../../util/Api';
+
 import {
   ThumbUp,
   ThumbDown,
@@ -35,6 +46,21 @@ import loadingChart from '../LottieAnimations/loadingChart.json';
 import history from '../../redux/history';
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
+const customStyles = {
+  overlay: {
+    zIndex: 3,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+  },
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    transform: 'translate(-50%, -50%)',
+    background: 'transparent',
+    padding: 0
+  }
+};
 
 class OpenGamesTable extends Component {
   constructor(props) {
@@ -48,9 +74,11 @@ class OpenGamesTable extends Component {
       mouseDown: false,
       roomList: [],
       hostNetProfitList: [],
-      actionList: null
+      actionList: null,
+      isCoHostModalOpen: false,
+      isFocused: false
     };
-    
+
   }
 
   generateGameTypePanel = () => {
@@ -165,17 +193,16 @@ class OpenGamesTable extends Component {
 
     return gameTypePanel;
   };
-
-
   componentDidMount() {
     const { roomList } = this.props;
-    this._isMounted = true;
     this.setState({ roomList });
+    this._isMounted = true;
     const roomIds = roomList.map(room => room._id);
     this.getRoomData(roomIds);
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.handleScroll);
   }
+
 
   componentWillUnmount() {
     this._isMounted = false;
@@ -189,13 +216,13 @@ class OpenGamesTable extends Component {
     const roomIds = roomList.map(room => room._id);
     if (prevProps.roomList !== this.props.roomList) {
       if (this._isMounted) {
-      this.setState({ roomList, isLoading: false });
-      this.getRoomData(roomIds);
+        this.setState({ roomList, isLoading: false });
+        this.getRoomData(roomIds);
       }
     }
     if (prevState.selectedGameType !== this.state.selectedGameType) {
       if (this._isMounted) {
-      this.setState({ isLoading: true });
+        this.setState({ isLoading: true });
       }
 
     }
@@ -220,6 +247,64 @@ class OpenGamesTable extends Component {
     }
   };
 
+  handleCoHost = (row) => {
+    this.setState({ isCoHostModalOpen: true, selectedRow: row });
+  };
+
+  handleCloseCoHostModal = () => {
+    this.setState({ isCoHostModalOpen: false });
+  };
+
+  handleCoHostAmountChange = event => {
+    this.setState({ coHostAmount: event.target.value });
+  };
+
+  handleSendCoHost = async () => {
+    try {
+      if (this.state.coHostAmount < 0) {
+        alertModal(
+          this.props.isDarkMode,
+          `R U FURR-REAL? COHOST AMOUNT MUST BE MORE THAN 0!`
+        );
+        return;
+      }
+
+      if (this.state.coHostAmount > this.props.balance) {
+        alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+        return;
+      }
+
+      this.setState({ isLoading: true });
+      const result = await axios.post('/game/coHost/', {
+        amount: this.state.coHostAmount,
+        rowId: this.state.selectedRow._id,
+      });
+
+
+      if (result.data.success) {
+
+        alertModal(this.props.isDarkMode, result.data.message, '-cat');
+        this.props.setBalance(result.data.balance);
+        this.props.addNewTransaction(result.data.newTransaction);
+        await this.props.getRoomList({
+          pageSize: this.state.roomList.length,
+          game_type: this.state.selectedGameType
+        });
+        this.setState({ isLoading: false });
+        this.handleCloseCoHostModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(this.props.isDarkMode, result.data.message);
+      }
+    } catch (e) {
+      this.setState({ isLoading: false });
+      if (this.state.amount <= 0) {
+        alertModal(this.props.isDarkMode, `Failed transaction.`);
+        return;
+      }
+    }
+  };
+
   getRoomData = async roomIds => {
     try {
       const hostNetProfitListPromises = roomIds.map(roomId =>
@@ -236,21 +321,22 @@ class OpenGamesTable extends Component {
 
       const hostNetProfits = hostNetProfitLists.map(item => item.hostNetProfit);
       const hostBetsValue = hostNetProfitLists.map(item => item.hostBetsValue);
-      if (this._isMounted) { 
-      this.setState({
-        hostNetProfitList: netProfitsByRoom,
-        actionList: {
-          hostNetProfits,
-          hostBetsValue
-        }
-      });
+      if (this._isMounted) {
+        this.setState({
+          hostNetProfitList: netProfitsByRoom,
+          actionList: {
+            hostNetProfits,
+            hostBetsValue
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching room data:', error);
     }
-  } catch (error) {
-    console.error('Error fetching room data:', error);
-  }
-};
+  };
 
   handleOpenPlayerModal = creator_id => {
+    console.log(creator_id)
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
 
@@ -361,6 +447,7 @@ class OpenGamesTable extends Component {
       game_type: e.currentTarget.getAttribute('data-gameType'),
       bet_amount: bet_amount,
       creator_id: creator_id,
+      hosts: [],
       // endgame_amount: e.currentTarget.getAttribute('data-endgame_amount'),
       spleesh_bet_unit: parseInt(
         e.currentTarget.getAttribute('data-spleeshBetUnit')
@@ -409,13 +496,39 @@ class OpenGamesTable extends Component {
     return value >= 0 ? '#57ca22' : 'red';
   };
 
+
+  handleMaxButtonClick = () => {
+    // Check if there's a selectedLoan
+    if (this.props.balance) {
+      const maxPayoutAmount = this.props.balance;
+      const roundedMaxPayoutAmount = Math.floor(maxPayoutAmount * 1e6) / 1e6;
+
+      this.setState(
+        {
+          coHostAmount: roundedMaxPayoutAmount,
+        },
+        () => {
+          document.getElementById('payout').focus();
+
+        }
+      );
+    }
+  };
+
+  handleFocus = () => {
+    this.setState({ isFocused: true });
+  };
+
+
+
   render() {
     const gameTypePanel = this.generateGameTypePanel();
     const {
       hostNetProfitList,
       isLoading,
       showPlayerModal,
-      selectedCreator
+      selectedCreator,
+      isFocused
     } = this.state;
     const { isLowGraphics, loading } = this.props;
     const roomStatistics = this.state.actionList || {
@@ -451,7 +564,7 @@ class OpenGamesTable extends Component {
           <div className="table main-game-table">
             {this.props.roomList.length === 0 && (
               <div className="dont-have-game-msg">
-                <div>NO BATTLES YET, GO TO 'MANAGE' AND CREATE ONE</div>
+                <div>NO LIVE BATTLES, GO TO 'MANAGE' TO CREATE ONE</div>
               </div>
             )}
             {showPlayerModal && (
@@ -490,6 +603,7 @@ class OpenGamesTable extends Component {
                       </div>
                     </div>
                     <div className="table-cell desktop-only cell-user-name">
+
                       <a
                         className="player"
                         onClick={() =>
@@ -509,15 +623,45 @@ class OpenGamesTable extends Component {
                         className={`online-status${this.props.onlineUserList.filter(
                           user => user === row.creator_id
                         ).length > 0
-                            ? ' online'
-                            : ''
+                          ? ' online'
+                          : ''
                           }`}
                       ></i>
+
+                      {row.hosts && row.hosts
+                        .slice(1, 2)
+                        .map((host, index) => (
+
+                          <div className="hosts" key={index}>
+                            <a
+                              className="player"
+                              onClick={() => this.handleOpenPlayerModal(host.host._id)}
+                            >
+                              <Avatar
+                                className="avatar desktop-only"
+                                src={host.avatar}
+                                accessory={host.accessory}
+                                rank={host.rank}
+                                alt=""
+                                darkMode={this.props.isDarkMode}
+                              />
+                            </a>
+                          </div>
+
+                        ))}
+                      {row.hosts.length > 2 && (
+                        <div className="hosts avatar-square">
+                          <div className="avatar-count">
+                            +{row.hosts.length - 2}
+                          </div>
+                        </div>
+                      )}
+
                       {row.joiners && row.joiners.length > 0 ? (
                         <div className="table-cell avatar desktop-only cell-joiners">
                           <Battle />
                           {row.joiner_avatars
-                            .slice(0, 1)
+                            .slice(0, 2)
                             .map((joiner, index) => (
                               <a
                                 className="player"
@@ -536,10 +680,10 @@ class OpenGamesTable extends Component {
                                 />
                               </a>
                             ))}
-                          {row.joiner_avatars.length > 1 && (
+                          {row.joiner_avatars.length > 2 && (
                             <div className="avatar-square">
                               <div className="avatar-count">
-                                +{row.joiner_avatars.length - 1}
+                                +{row.joiner_avatars.length - 2}
                               </div>
                             </div>
                           )}
@@ -717,6 +861,16 @@ class OpenGamesTable extends Component {
                       className="table-cell cell-action"
                       onClick={() => this.handleView(row)}
                     >
+                      {row.creator_id !== this.props.user._id && (
+
+                        <a
+                          className="ml-1"
+                          onClick={() => this.handleCoHost(row)}
+                          style={{ color: "#28a745", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid #28a745", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
+                        >
+                          <AddBoxOutlined style={{ width: "25px" }} /><img style={{ width: "15px" }} src={busdSvg} />
+                        </a>
+                      )}
                       <Button
                         className="btn_join"
                         onClick={event => {
@@ -786,14 +940,15 @@ class OpenGamesTable extends Component {
                           darkMode={this.props.isDarkMode}
                         />
                         {/* <span>{row.creator}</span> */}
-                      <i
-                        className={`online-status${this.props.onlineUserList.filter(
-                          user => user === row.creator_id
-                        ).length > 0
+                        <i
+                          className={`online-status${this.props.onlineUserList.filter(
+                            user => user === row.creator_id
+                          ).length > 0
                             ? ' online'
                             : ''
-                          }`}
-                      ></i>
+                            }`}
+                        ></i>
+
                       </a>
                       {row.joiners && row.joiners.length > 0 ? (
                         <div className="table-cell mobile-only cell-joiners">
@@ -872,7 +1027,180 @@ class OpenGamesTable extends Component {
         {!isLoading && (this.props.roomList.length !== this.props.roomCount) && (
           <div className='loading-spinner'></div>
         )}
+        <Modal
+          isOpen={this.state.isCoHostModalOpen}
+          onRequestClose={this.handleCloseCoHostModal}
+          style={customStyles}
+          contentLabel="CoHost Modal"
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
+
+              <h2 className="modal-title">
+            <FontAwesomeIcon icon={faUsers} className="mr-2" />
+                CO-HOST
+                </h2>
+              <Button className="btn-close" onClick={this.handleCloseCoHostModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  <div className="input-amount">
+
+                    <TextField
+                      label="Amount"
+                      value={this.state.coHostAmount}
+                      onChange={this.handleCoHostAmountChange}
+                      pattern="^\\d*\\.?\\d*$"
+                      variant="outlined"
+                      autoComplete="off"
+                      id="payout"
+
+                      className="form-control"
+                      InputProps={{
+                        onFocus: this.handleFocus,
+                        endAdornment: !this.state.isFocused ? ' ETH ' : (
+                          <ButtonGroup
+                            className={isFocused ? 'fade-in' : 'fade-out'}
+                          >
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              onClick={() => this.handleMaxButtonClick()}
+                              style={{ marginRight: '-10px' }}
+                            >
+                              Max
+                            </Button>
+                          </ButtonGroup>
+                        ),
+                      }}
+                    />
+                  </div>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <span>IN-GAME BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(this.props.balance)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(
+                            (this.props.balance || 0) - (this.state.coHostAmount || 0)
+                          )}
+                          &nbsp;
+                          {((this.props.balance || 0) - (this.state.coHostAmount || 0)) < 0 && <Warning width="15pt" />}
+                        </TableCell>
+
+
+                      </TableRow>
+
+
+                      <TableRow>
+                        <TableCell>
+                          <span>CURRENT BANKROLL:</span>
+                        </TableCell>
+                        <TableCell style={{ color: "#ffb000" }}>
+                          {this.state.selectedRow ? (
+                            convertToCurrency(this.state.selectedRow.user_bet)
+                          ) : (
+                            null
+                          )}
+                        </TableCell>
+
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW BANKROLL:</span>
+                        </TableCell>
+                        <TableCell style={{ color: "#ffb000" }}>
+                          {this.state.selectedRow ? (
+                            convertToCurrency(parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0))
+                          ) : (
+                            null
+                          )}
+                        </TableCell>
+                      </TableRow>
+
+                      <TableRow>
+                        <TableCell>
+                          <span>CURRENT STAKE:</span>
+                        </TableCell>
+                        {this.state.selectedRow ? (
+
+                          <TableCell style={{ color: 'red' }}>
+                            {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
+                              <>
+                                {convertToCurrency(`${this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share}`)} (
+                                {`${(((this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share / parseFloat(this.state.selectedRow.user_bet))) * 100).toFixed(2)}%`}
+                                )
+                              </>
+                            ) : (
+                              convertToCurrency('0')
+                            )}
+                          </TableCell>
+                        ) : (
+                          null
+                        )}
+
+                      </TableRow>
+
+
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW STAKE:</span>
+                        </TableCell>
+                        {this.state.selectedRow ? (
+                          <TableCell style={{ color: 'red' }}>
+                            {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
+                              // If user is a host
+                              // Assuming selectedRow.hosts is an array of objects with a structure like { host: 'user_id', share: 'share_value' }
+                              <>
+                                {convertToCurrency(`${(parseFloat(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) + (parseFloat(this.state.coHostAmount) || 0))}`)} (
+                                {((`${(parseFloat(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) + (parseFloat(this.state.coHostAmount) || 0))}` / (parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0))) * 100).toFixed(2)}
+                                %)
+                              </>
+                            ) : (
+                              // If user is not a host, display an empty value or default text
+                              convertToCurrency(`${this.state.coHostAmount || 0}`)
+
+                            )}
+                          </TableCell>
+
+                        ) : (
+                          null
+                        )}
+
+                      </TableRow>
+
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.handleSendCoHost}>
+                CONTRIBUTE
+              </Button>
+              <Button
+                className="btn-back"
+                onClick={this.handleCloseCoHostModal}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </>
+
     )
   }
 }
@@ -891,7 +1219,9 @@ const mapDispatchToProps = {
   getRoomList,
   setCurRoomInfo,
   actionRoom,
-  getRoomStatisticsData
+  getRoomStatisticsData,
+  setBalance,
+  addNewTransaction
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);

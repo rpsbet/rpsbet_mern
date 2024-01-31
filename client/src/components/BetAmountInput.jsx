@@ -107,7 +107,7 @@ export default function BetAmountInput(props) {
           name="betamount"
           variant="outlined"
           id="betamount"
-          disabled={!disabledButtons ? true : false}
+          disabled={disabledButtons || false}
           label={bangGame ? "MULTIPLIER" : "BET AMOUNT"}
           value={betAmount}
           onChange={onChangeState}

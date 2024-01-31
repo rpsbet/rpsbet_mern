@@ -272,7 +272,8 @@ class ChatPage extends Component {
                 accessory={accessory}
                 className="avatar"
               />
-              <span>{username}</span>
+                
+              <span style={{marginLeft: "10px", display: "flex", alignItems: "center"}}>{username}</span>
             </a>
           </div>
 
@@ -294,12 +295,17 @@ class ChatPage extends Component {
                     <div className="message-content">{row.message}</div>
                     <div className="message-header">
                       {row.from !== my_info._id && (
+                        <div
+                        onClick={() => this.handleOpenPlayerModal(user_id)}
+                        style={{ cursor: "pointer", position: "relative" }}
+                        >
                         <Avatar
                           src={avatar}
                           rank={rank}
                           accessory={accessory}
                           className="avatar"
                         />
+                        </div>
                       )}
                       <div>
                         <div className="message-time">{row.created_at}</div>
@@ -310,12 +316,17 @@ class ChatPage extends Component {
                         </div>
                       </div>
                       {row.from === my_info._id && (
+                        <div
+                        onClick={() => this.handleOpenPlayerModal(my_info._id)}
+                        style={{ cursor: "pointer", position: "relative" }}
+                        >
                         <Avatar
                           src={my_info.avatar}
-                          rank={rank}
-                          accessory={accessory}
+                          rank={my_info.totalWagered}
+                          accessory={my_info.accessory}
                           className="avatar"
                         />
+                        </div>
                       )}
                     </div>
                   </div>

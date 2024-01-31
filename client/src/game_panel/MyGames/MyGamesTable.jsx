@@ -1,21 +1,31 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setBalance } from '../../redux/Auth/user.actions';
+import Modal from 'react-modal';
+import axios from '../../util/Api';
+import { Warning, Link } from '@material-ui/icons';
+
 import {
   getMyGames,
   endGame,
+  unstake,
   addNewTransaction
 } from '../../redux/Logic/logic.actions';
-import { faFilter, faSort } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Battle from '../icons/Battle';
-
+import blob from '../LottieAnimations/blob.json';
 import {
+  setGameMode,
   createRoom,
-} from '../../redux/Logic/logic.actions'; import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
+  reCreateRoom
+} from '../../redux/Logic/logic.actions';
+import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
 // import Pagination from '../../components/Pagination';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import AddCircleOutline from '@material-ui/icons/AddCircleOutline';
+import EditOutline from '@material-ui/icons/EditOutlined';
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import Lottie from 'react-lottie';
@@ -25,7 +35,9 @@ import pressHold from '../LottieAnimations/pressHold.json';
 import InlineSVG from 'react-inlinesvg';
 import busdSvg from '../JoinGame/busd.svg';
 
-import { Box, Button, Menu, MenuItem } from '@material-ui/core';
+import { Box, Button, ButtonGroup, Menu, MenuItem, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
+const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
+const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 
 const defaultOptions = {
   loop: true,
@@ -36,9 +48,26 @@ const defaultOptions = {
   }
 };
 
+const customStyles = {
+  overlay: {
+    zIndex: 3,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+  },
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    transform: 'translate(-50%, -50%)',
+    background: 'transparent',
+    padding: 0
+  }
+};
+
 class MyGamesTable extends Component {
   constructor(props) {
     super(props);
+    this._isMounted = true;
     this.state = {
       selectedGameType: 'All',
       holding: false,
@@ -46,15 +75,31 @@ class MyGamesTable extends Component {
       balance: this.props.balance,
       selectedFilter: 'open',
       anchorEl: null,
+      closing: false,
       sortAnchorEl: null,
       selectedSort: 'desc',
       creatingRoom: false,
-      myGames: this.props.myGames
+      myGames: this.props.myGames,
+      loading: this.props.loading,
+      isTopUpModalOpen: false,
+      isPayoutModalOpen: false,
+      selectedRow: null,
+      paymentMethod: 'manual',
+      payoutAmount: 0,
+      isFocused: false
     };
   }
 
+
   async componentDidMount() {
     await this.fetchData();
+    this._isMounted = true;
+  }
+  componentWillUnmount() {
+    this._isMounted = false;
+    // window.removeEventListener('scroll', this.handleScroll);
+    // window.removeEventListener('load', this.handleLoad);
+
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -68,13 +113,31 @@ class MyGamesTable extends Component {
 
     if (
       this.props.myGamesWithStats !== prevProps.myGamesWithStats) {
-      this.setState({ myGames: this.props.myGames })
+      this.setState({ myGames: this.props.myGames, loading: false })
+    }
+    if ((this.props.loading !== prevProps.loading) && (prevProps.myGames !== this.props.myGames)) {
+      this.setState({ loading: this.props.loading })
+    }
+
+    if (prevProps.myGames !== this.props.myGames) {
+      if (this._isMounted) {
+        this.setState({ myGames: this.props.myGames, isLoading: false });
+
+      }
+    }
+    if (prevState.selectedGameType !== this.state.selectedGameType) {
+      if (this._isMounted) {
+        this.setState({ isLoading: true });
+      }
+
     }
   }
 
   fetchData = () => {
     const { selectedFilter, selectedGameType, selectedSort } = this.state;
-
+    this.setState({
+      myGames: this.props.myGames,
+    });
     this.props.getMyGames({
       game_type: selectedGameType,
       status: selectedFilter === 'open' ? 'open' : 'finished',
@@ -84,6 +147,130 @@ class MyGamesTable extends Component {
         myGames: this.props.myGames,
       });
     });
+  };
+
+  handleTopUp = (row) => {
+
+    this.setState({ isTopUpModalOpen: true, selectedRow: row });
+  };
+
+  handleCloseTopUpModal = () => {
+    this.setState({ isTopUpModalOpen: false });
+  };
+
+  handleTopUpAmountChange = event => {
+    this.setState({ topUpAmount: event.target.value });
+  };
+
+  handleSendTopUp = async () => {
+    try {
+      if (this.state.topUpAmount < 0) {
+        alertModal(
+          this.props.isDarkMode,
+          `R U FURR-REAL? TOPUP AMOUNT MUST BE MORE THAN 0!`
+        );
+        return;
+      }
+
+      if (this.state.topUpAmount > this.props.balance) {
+        alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+        return;
+      }
+
+      this.setState({ isLoading: true });
+      const result = await axios.post('/game/topUp/', {
+        amount: this.state.topUpAmount,
+        rowId: this.state.selectedRow._id,
+      });
+
+      if (result.data.success) {
+        this.props.setBalance(result.data.balance);
+        this.props.addNewTransaction(result.data.newTransaction);
+        await this.fetchData();
+        alertModal(this.props.isDarkMode, result.data.message, '-cat');
+        this.setState({ isLoading: false });
+        this.handleCloseTopUpModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(this.props.isDarkMode, result.data.message);
+      }
+    } catch (e) {
+      this.setState({ isLoading: false });
+      if (this.state.amount <= 0) {
+        alertModal(this.props.isDarkMode, `Failed transaction.`);
+        return;
+      }
+    }
+  };
+  handlePayout = (row) => {
+    let paymentMethod = 'automatic';
+    let payoutAmount = row.endgame_amount;
+
+    if (row.endgame_amount === 0) {
+      paymentMethod = 'manual';
+    }
+
+    this.setState({
+      isPayoutModalOpen: true,
+      selectedRow: row,
+      paymentMethod: paymentMethod,
+      payoutAmount: payoutAmount
+    });
+  };
+
+
+
+  handleClosePayoutModal = () => {
+    this.setState({ isPayoutModalOpen: false });
+  };
+
+  handlePayoutAmountChange = event => {
+    this.setState({ payoutAmount: event.target.value });
+  };
+
+  handleSendPayout = async () => {
+    try {
+      if (this.state.payoutAmount < 0) {
+        alertModal(
+          this.props.isDarkMode,
+          `R U FURR-REAL? PAYOUT AMOUNT MUST BE MORE THAN 0!`
+        );
+        return;
+      }
+
+      this.setState({ isLoading: true });
+      const result = await axios.post('/game/editPayout/', {
+        amount: this.state.payoutAmount,
+        rowId: this.state.selectedRow._id,
+      });
+
+      if (result.data.success) {
+        await this.fetchData();
+        alertModal(this.props.isDarkMode, result.data.message, '-cat');
+        this.setState({ isLoading: false });
+        this.handleClosePayoutModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(this.props.isDarkMode, result.data.message);
+      }
+    } catch (e) {
+      this.setState({ isLoading: false });
+      if (this.state.amount <= 0) {
+        alertModal(this.props.isDarkMode, `Failed to adjust payout.`);
+        return;
+      }
+    }
+  };
+
+  handlePaymentMethodChange = (event) => {
+    const selectedMethod = event.target.value;
+
+    // Update the payment method state
+    this.setState({ paymentMethod: selectedMethod });
+    // If "manual" is selected, set the payoutAmount to "0"
+    if (this.state.selectedMethod !== 'manual') {
+      this.setState({ payoutAmount: this.state.selectedRow.bet_amount });
+    }
   };
 
   handleFilterClick = event => {
@@ -102,6 +289,9 @@ class MyGamesTable extends Component {
     this.setState({ sortAnchorEl: null, selectedSort });
   };
 
+
+
+
   openRecreateModal = (row) => {
     confirmModalCreate(
       this.props.isDarkMode,
@@ -110,7 +300,7 @@ class MyGamesTable extends Component {
       'Fuck No',
       async () => {
         this.setState({ creatingRoom: true });
-        await this.onCreateRoom(row);
+        await this.props.reCreateRoom(row._id);
         this.setState({ creatingRoom: false });
       }
     );
@@ -176,6 +366,7 @@ class MyGamesTable extends Component {
   // };
 
   handleButtonClick = (winnings, room_id) => {
+
     let startTime = 700;
     const updateInterval = 10; // Interval in milliseconds
     const updatesPerInterval = 1; // Update the display every interval
@@ -212,30 +403,82 @@ class MyGamesTable extends Component {
       [room_id]: { holding: false }
     });
   };
-
   endRoom = async (winnings, room_id) => {
-    try {
-      await this.props.endGame(room_id);
-      await this.props.getMyGames({
-        game_type: this.state.selectedGameType,
+
+    // Set the closing state to indicate the process
+    this.setState(prevState => ({
+      [room_id]: {
+        ...prevState[room_id],
+        closing: true
+      }
+    }), async () => {
+      try {
+        await this.props.endGame(room_id);
+        await this.props.getMyGames({
+          game_type: this.state.selectedGameType,
+          status: this.state.selectedFilter,
+          sort: this.state.selectedSort
+        });
+        await this.props.addNewTransaction({ amount: winnings, room_id });
+        this.props.setBalance(this.state.balance + parseFloat(winnings));
+        this.fetchData();
+      } catch (error) {
+        console.error('Error ending room:', error);
+      } finally {
+        // Reset the closing state once the operation is done
+        this.setState(prevState => ({
+          [room_id]: {
+            ...prevState[room_id],
+            closing: false
+          }
+        }));
+      }
+    });
+  };
+  unstake = async (winnings, room_id) => {
+
+    // Set the closing state to indicate the process
+    this.setState(prevState => ({
+      [room_id]: {
+        ...prevState[room_id],
+        closing: true
+      }
+    }), async () => {
+      try {
+        await this.props.unstake(room_id);
+        await this.props.getMyGames({
+          game_type: this.state.selectedGameType,
+          status: this.state.selectedFilter,
+          sort: this.state.selectedSort
+        });
+        await this.props.addNewTransaction({ amount: winnings, room_id });
+        this.props.setBalance(this.state.balance + parseFloat(winnings));
+        this.fetchData();
+      } catch (error) {
+        console.error('Error unstaking from room:', error);
+      } finally {
+        // Reset the closing state once the operation is done
+        this.setState(prevState => ({
+          [room_id]: {
+            ...prevState[room_id],
+            closing: false
+          }
+        }));
+      }
+    });
+  };
+
+
+  handleGameTypeButtonClicked = async short_name => {
+    this.setState({ selectedGameType: short_name }, () => {
+      this.props.getMyGames({
+        game_type: short_name,
         status: this.state.selectedFilter,
         sort: this.state.selectedSort
       });
-      await this.props.addNewTransaction({ amount: winnings, room_id });
-      this.props.setBalance((this.state.balance += parseFloat(winnings)));
-    } catch (error) {
-      console.error('Error ending room:', error);
-    }
-  };
-
-  handleGameTypeButtonClicked = async short_name => {
-    this.setState({ selectedGameType: short_name });
-    this.props.getMyGames({
-      game_type: short_name,
-      status: this.state.selectedFilter,
-      sort: this.state.selectedSort
+      return;
     });
-    return;
+
   };
 
   handleBtnLeftClicked = e => {
@@ -287,7 +530,26 @@ class MyGamesTable extends Component {
             this.handleGameTypeButtonClicked('All');
           }}
         >
-          <div className="icon">
+          {this.state.selectedGameType === 'All' && (
+            <Lottie
+              options={{
+                loop: false,
+                autoplay: false,
+                animationData: blob
+              }}
+              style={{
+                width: '100px',
+                position: 'absolute',
+                filter: 'hue-rotate(222deg)',
+                opacity: '0.4',
+                margin: '0px -18px 0 auto',
+                zIndex: '0'
+              }}
+            />
+          )}
+          <div className="icon" style={{
+            zIndex: '1'
+          }}>
             <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
             <span>All Games</span>
           </div>
@@ -304,7 +566,26 @@ class MyGamesTable extends Component {
               this.handleGameTypeButtonClicked(gameType.short_name);
             }}
           >
-            <div className="icon">
+            {this.state.selectedGameType === gameType.short_name && (
+              <Lottie
+                options={{
+                  loop: false,
+                  autoplay: false,
+                  animationData: blob
+                }}
+                style={{
+                  width: '100px',
+                  position: 'absolute',
+                  // filter: 'hue-rotate(222deg)',
+                  opacity: '0.4',
+                  margin: '0px -18px 0 auto',
+                  zIndex: '0'
+                }}
+              />
+            )}
+            <div className="icon" style={{
+              zIndex: '1'
+            }}>
               <img
                 src={`/img/gametype/icons/${gameType.short_name}.svg`}
                 alt={gameType.game_type_name}
@@ -355,23 +636,48 @@ class MyGamesTable extends Component {
     });
   };
 
+
+  handleMaxButtonClick = () => {
+    // Check if there's a selectedLoan
+    if (this.props.balance) {
+      const maxPayoutAmount = this.state.balance;
+      const roundedMaxPayoutAmount = Math.floor(maxPayoutAmount * 1e6) / 1e6;
+
+      this.setState(
+        {
+          topUpAmount: roundedMaxPayoutAmount,
+        },
+        () => {
+          document.getElementById('payout').focus();
+
+        }
+      );
+    }
+  };
+
+  handleFocus = () => {
+    this.setState({ isFocused: true });
+  };
+
+
   handleCreateBtnClicked = e => {
     e.preventDefault();
-
-    if (this.state.selectedGameType === 'All') {
+    if (!this.state.selectedGameType) {
       alertModal(this.props.isDarkMode, `SELECT A GAME FURR-ST!!!`);
       return;
     }
-
-    for (let i = 0; i < this.props.gameTypeList.length; i++) {
-      if (
-        this.props.gameTypeList[i].short_name === this.state.selectedGameType
-      ) {
-        history.push(`/create/${this.props.gameTypeList[i].game_type_name}`);
-        break;
-      }
+    const selectedGameType = this.props.gameTypeList.find(
+      gameType => gameType.short_name === this.state.selectedGameType
+    );
+    if (selectedGameType) {
+      this.props.setGameMode(selectedGameType.game_type_name);
+      history.push(`/create/${selectedGameType.game_type_name}`);
+    } else {
+      this.props.setGameMode('');
+      history.push(`/create/}`);
     }
   };
+
 
   createRoom() {
     this.props.createRoom({
@@ -392,7 +698,7 @@ class MyGamesTable extends Component {
   render() {
     const gameTypePanel = this.generateGameTypePanel();
     const { row } = this.props;
-    const { anchorEl, selectedFilter, sortAnchorEl, selectedSort } = this.state;
+    const { isLoading, anchorEl, isFocused, selectedFilter, sortAnchorEl, selectedSort, loading } = this.state;
 
     return (
       <div className="my-open-games">
@@ -483,221 +789,268 @@ class MyGamesTable extends Component {
               </MenuItem>
             </Menu>
           </div>
+          <div className="create-room-btn-panel">
+            <Button
+              className="btn-create-room"
+              onClick={this.handleCreateBtnClicked}
+            >
+              CREATE BATTLE
+            </Button>
+          </div>
         </div>
-        <div className="create-room-btn-panel">
-          <Button
-            className="btn-create-room"
-            onClick={this.handleCreateBtnClicked}
-          >
-            CREATE BATTLE
-          </Button>
-        </div>
-        <div className="table my-open-game-table">
-          {this.props.myGames.length > 0 && (
-            <div className="table-header">
-              <div className="table-cell room-id">Room ID</div>
-              <div className="table-cell payout">
-                INITIAL BET
-              </div>
-              <div className="table-cell winnings">Payout</div>
-              <div className="table-cell bet-info">Net Profit</div>
-              <div className="table-cell winnings">Plays</div>
-
-              <div className="table-cell action desktop-only">Bankroll/Re-Create</div>
-            </div>
-          )}
-          {this.state.myGames.length === 0 ? (
-            <div className="dont-have-game-msg">
-              <Lottie options={defaultOptions} width={50} />
-              <span>
-                SELECT A GAME <br />
-                AND CLICK "CREATE BATTLE"
-              </span>
-            </div>
-          ) : (
-            this.state.myGames.map(
-              (row, key) => (
-                <div
-                className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
-                style={{ animationDelay: `${key * 0.1}s` }}
-                key={row._id}
-              >
-                  <div>
-                    <div className="table-cell room-id">
-                      <a href={`/join/${row._id}`}>
-                        <img
-                          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                          alt=""
-                          className="game-type-icon"
-                        />
-                        {row.game_type.short_name + '-' + row.index}
-                        {row.is_private && (
-                          <img
-                            src="/img/icon-lock.png"
-                            alt=""
-                            className="lock-icon"
-                          />
-                        )}
-                      </a>
-                    </div>
-                    <div className="table-cell bet-info">
-                      <span className="bet-pr">
-                        {/* {'('} */}
-                        {convertToCurrency(row.bet_amount)}
-                        {/* {') '} */}
-
-                        {/* {convertToCurrency(updateDigitToPoint2(row.pr))} */}
-                      </span>
-                    </div>
-                    <div className="table-cell endgame">
-                      <span className="end-amount">
-                        {row.endgame_amount === 0 ? "M" : convertToCurrency(row.endgame_amount)}
-                      </span>
-                    </div>
-                    {!this.props.myGamesWithStats ? (
-                      <>
-                        <div className="table-cell winnings">
-                          <Lottie
-                            options={{
-                              loop: true,
-                              autoplay: true,
-                              animationData: loadingChart
-                            }}
-                            style={{
-                              width: '32px'
-                            }}
-                          />
-                        </div>
-                        <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-                          <Battle width="24px" />
-                          &nbsp;
-                          <Lottie
-                            options={{
-                              loop: true,
-                              autoplay: true,
-                              animationData: loadingChart
-                            }}
-                            style={{
-                              width: '32px'
-                            }}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="table-cell winnings">
-                          <span>{convertToCurrency(row.net_profit)}</span>
-                        </div>
-                        <div className="table-cell bets">
-                          <Battle width="24px" />
-                          &nbsp;
-                          <span>{row.bets}</span>
-                        </div>
-                      </>
-                    )}
-
-
-                    <div className="table-cell action desktop-only">
-                      {row.status === 'finished' ? (
-                        <Button
-                          className="btn_recreate"
-                          onClick={() => this.openRecreateModal(row)}
-                        >
-                          RE-CREATE
-                        </Button>
-                      ) : (
-                        <Button
-                          className="btn_end"
-                          onMouseDown={() =>
-                            this.handleButtonClick(row.winnings, row._id)
-                          }
-                          onMouseUp={() => this.handleButtonRelease(row._id)}
-                          onMouseLeave={() => this.handleButtonRelease(row._id)}
-                          _id={row._id}
-                          style={
-                            this.state[row._id] && this.state[row._id].holding
-                              ? { filter: 'hue-rotate(-10deg)' }
-                              : {}
-                          }
-                        >
-                          {this.state[row._id] &&
-                            this.state[row._id].holding ? (
-                            <>
-                              <span style={{ position: 'absolute', zIndex: '2' }}>
-                                {(this.state[row._id].timeLeft / 100).toFixed(
-                                  1
-                                )}<span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
-                              </span>
-                              <Lottie
-                                options={{
-                                  loop: true,
-                                  autoplay: true,
-                                  animationData: pressHold
-                                }}
-                               
-                              />
-                            </>
-                          ) : (
-                            <>
-                              {' '}
-                              TAKE&nbsp;
-                              <span>{convertToCurrency(row.winnings)}</span>
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mobile-only">
-                    <div className="table-cell room-id"></div>
-                    <div className="table-cell action">
-                    <Button
-                          className="btn_end"
-                          onMouseDown={() =>
-                            this.handleButtonClick(row.winnings, row._id)
-                          }
-                          onMouseUp={() => this.handleButtonRelease(row._id)}
-                          onMouseLeave={() => this.handleButtonRelease(row._id)}
-                          _id={row._id}
-                          style={
-                            this.state[row._id] && this.state[row._id].holding
-                              ? { filter: 'hue-rotate(-10deg)' }
-                              : {}
-                          }
-                        >
-                          {this.state[row._id] &&
-                            this.state[row._id].holding ? (
-                            <>
-                              <span style={{ position: 'absolute', zIndex: '2' }}>
-                                {(this.state[row._id].timeLeft / 100).toFixed(
-                                  1
-                                )}<span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
-                              </span>
-                              <Lottie
-                                options={{
-                                  loop: true,
-                                  autoplay: true,
-                                  animationData: pressHold
-                                }}
-                               
-                              />
-                            </>
-                          ) : (
-                            <>
-                              {' '}
-                              TAKE&nbsp;
-                              <span>{convertToCurrency(row.winnings)}</span>
-                            </>
-                          )}
-                        </Button>
-                    </div>
-                  </div>
+        {isLoading || loading ? (
+          <div className="loading-gif-container">
+            <img src={randomGifUrl} id="isLoading" alt="loading" />
+          </div>
+        ) : (
+          <div className="table my-open-game-table">
+            {this.props.myGames.length > 0 && (
+              <div className="table-header">
+                <div className="table-cell room-id">Room ID</div>
+                <div className="table-cell payout">
+                  INITIAL BET
                 </div>
-              ),
-              this
-            )
-          )}
-        </div>
+                <div className="table-cell winnings">Payout</div>
+                <div className="table-cell bet-info">Net Profit</div>
+                <div className="table-cell winnings">Plays</div>
+
+                <div className="table-cell action desktop-only">Bankroll/Re-Create</div>
+              </div>
+            )}
+            {this.state.myGames.length === 0 ? (
+              <div className="dont-have-game-msg">
+                <Lottie options={defaultOptions} width={50} />
+                <span>
+                  SELECT A GAME <br />
+                  AND CLICK "CREATE BATTLE"
+                </span>
+              </div>
+            ) : (
+              this.state.myGames.map(
+                (row, key) => (
+                  <div
+                    className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
+                    style={{ animationDelay: `${key * 0.1}s` }}
+                    key={row._id}
+                  >
+                    <div>
+                      <div className="table-cell room-id">
+                        <a href={`/join/${row._id}`}>
+                          <img
+                            src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                            alt=""
+                            className="game-type-icon"
+                          />
+                          {row.game_type.short_name + '-' + row.index}
+                          {row.is_private && (
+                            <img
+                              src="/img/icon-lock.png"
+                              alt=""
+                              className="lock-icon"
+                            />
+                          )}
+                          <Link style={{ paddingRight: "5px", paddingLeft: "2.5px" }} />
+                        </a>
+                      </div>
+                      <div className="table-cell bet-info">
+                        <span className="bet-pr">
+                          {/* Display the bet amount */}
+                          {convertToCurrency(row.bet_amount)}
+
+                          {/* Add the Font Awesome edit icon with onClick functionality */}
+                        </span>
+                        {selectedFilter === 'open' && (
+
+                          <a
+                            className="ml-1"
+                            onClick={() => this.handleTopUp(row)}
+                            style={{ color: "#ffb000", cursor: "pointer", borderRadius: "30px", display: "inline-flex", verticalAlign: "middle", marginBottom: "4px" }}
+                          >
+                            <AddCircleOutline />
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="table-cell endgame">
+                        <span className="end-amount">
+                          {row.endgame_amount === 0 ? "M" : convertToCurrency(row.endgame_amount)}
+                        </span>
+                        {(!row.coHost) &&
+                          (selectedFilter === 'open') && (
+
+                            <a
+                              className="ml-1"
+                              onClick={() => this.handlePayout(row)}
+                              style={{ color: "#ff0000", cursor: "pointer", borderRadius: "30px", display: "inline-flex", verticalAlign: "middle", marginBottom: "4px" }}
+                            >
+                              <EditOutline style={{ padding: "2.5px", width: "22px" }} />
+                            </a>
+                          )}
+                      </div>
+                      {!this.props.myGamesWithStats ? (
+                        <>
+                          <div className="table-cell winnings">
+                            <Lottie
+                              options={{
+                                loop: true,
+                                autoplay: true,
+                                animationData: loadingChart
+                              }}
+                              style={{
+                                width: '32px'
+                              }}
+                            />
+                          </div>
+                          <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+                            <Battle width="24px" />
+                            &nbsp;
+                            <Lottie
+                              options={{
+                                loop: true,
+                                autoplay: true,
+                                animationData: loadingChart
+                              }}
+                              style={{
+                                width: '32px'
+                              }}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="table-cell winnings">
+                            <span>{convertToCurrency(row.net_profit)}</span>
+                          </div>
+                          <div className="table-cell bets">
+                            <Battle width="24px" />
+                            &nbsp;
+                            <span>{row.bets}</span>
+                          </div>
+                        </>
+                      )}
+
+
+                      <div className="table-cell action desktop-only">
+                        {row.status === 'finished' ? (
+                          <Button
+                            className="btn_recreate"
+                            onClick={() => this.openRecreateModal(row)}
+                          >
+                            RE-CREATE
+                          </Button>
+                        ) : (
+                          <div>
+                            {this.state[row._id] && this.state[row._id].closing ? (
+                              <span style={{ color: 'red' }}>closing...</span>
+                            ) : (
+                              <div>
+                                {row.coHost ? (
+                                  <Button
+                                    className="btn_withdraw btn_end"
+                                    onClick={() => this.unstake(row.winnings, row._id)}
+
+                                  >
+                                    Unstake <span>{convertToCurrency(row.winnings)}</span>
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    className="btn_end"
+                                    onMouseDown={() => this.handleButtonClick(row.winnings, row._id)}
+                                    onMouseUp={() => this.handleButtonRelease(row._id)}
+                                    onMouseLeave={() => this.handleButtonRelease(row._id)}
+                                    _id={row._id}
+                                    style={
+                                      this.state[row._id] && this.state[row._id].holding
+                                        ? { filter: 'hue-rotate(-10deg)' }
+                                        : {}
+                                    }
+                                  >
+                                    {this.state[row._id] && this.state[row._id].holding ? (
+                                      <>
+                                        <span style={{ position: 'absolute', zIndex: '2' }}>
+                                          {(this.state[row._id].timeLeft / 100).toFixed(1)}
+                                          <span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
+                                        </span>
+                                        <Lottie
+                                          options={{
+                                            loop: true,
+                                            autoplay: true,
+                                            animationData: pressHold
+                                          }}
+                                        />
+                                      </>
+                                    ) : (
+                                      <>
+                                        {' '}
+                                        RUG&nbsp;
+                                        <span>{convertToCurrency(row.winnings)}</span>
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                    <div className="mobile-only">
+                      <div className="table-cell room-id"></div>
+                      <div className="table-cell action">
+                        <Button
+                          className="btn_end"
+                          onMouseDown={() =>
+                            this.handleButtonClick(row.winnings, row._id)
+                          }
+                          onMouseUp={() => this.handleButtonRelease(row._id)}
+                          onMouseLeave={() => this.handleButtonRelease(row._id)}
+                          _id={row._id}
+                          style={
+                            this.state[row._id] && this.state[row._id].holding
+                              ? { filter: 'hue-rotate(-10deg)' }
+                              : {}
+                          }
+                        >
+                          {this.state[row._id] &&
+                            this.state[row._id].holding ? (
+                            <>
+                              <span style={{ position: 'absolute', zIndex: '2' }}>
+                                {(this.state[row._id].timeLeft / 100).toFixed(
+                                  1
+                                )}<span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
+                              </span>
+                              <Lottie
+                                options={{
+                                  loop: true,
+                                  autoplay: true,
+                                  animationData: pressHold
+                                }}
+
+                              />
+                            </>
+                          ) : (
+                            <>
+                              {' '}
+                              RUG&nbsp;
+                              <span>{convertToCurrency(row.winnings)}</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ),
+                this
+              )
+            )}
+
+          </div>
+
+        )}
+
+
+
         {/* {this.props.myGames.length > 0 && (
           <Pagination
             handlePageNumberClicked={this.handlePageNumberClicked}
@@ -708,9 +1061,223 @@ class MyGamesTable extends Component {
             prefix="MyGames"
           />
         )} */}
+        <Modal
+          isOpen={this.state.isTopUpModalOpen}
+          onRequestClose={this.handleCloseTopUpModal}
+          style={customStyles}
+          contentLabel="TopUp Modal"
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+              <FontAwesomeIcon icon={faPiggyBank} className="mr-2" />
+
+                BANKROLL
+                </h2>
+              <Button className="btn-close" onClick={this.handleCloseTopUpModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  <div className="input-amount">
+
+                    <TextField
+                      label="Amount"
+                      value={this.state.topUpAmount}
+                      onChange={this.handleTopUpAmountChange}
+                      pattern="^\\d*\\.?\\d*$"
+                      variant="outlined"
+                      autoComplete="off"
+                      id="payout"
+
+                      className="form-control"
+                      InputProps={{
+                        onFocus: this.handleFocus,
+                        endAdornment: !this.state.isFocused ? ' ETH ' : (
+                          <ButtonGroup
+                            className={isFocused ? 'fade-in' : 'fade-out'}
+                          >
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              onClick={() => this.handleMaxButtonClick()}
+                              style={{ marginRight: '-10px' }}
+                            >
+                              Max
+                            </Button>
+                          </ButtonGroup>
+                        ),
+                      }}
+                    />
+                  </div>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <span>IN-GAME BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(this.props.balance)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>TOP-UP AMOUNT:</span>
+                        </TableCell>
+                        <TableCell style={{ color: 'red' }}>
+                          {convertToCurrency(this.state.topUpAmount * -1)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>CURRENT BANKROLL:</span>
+                        </TableCell>
+                        <TableCell style={{ color: "#ffb000" }}>
+                          {this.state.selectedRow ? (
+                            convertToCurrency(this.state.selectedRow.bet_amount)
+                          ) : (
+                            null
+                          )}
+                        </TableCell>
+
+                      </TableRow>
+
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(
+                            this.props.balance - this.state.topUpAmount
+                          )}
+                          &nbsp;
+                          {this.props.balance - this.state.topUpAmount <
+                            0 && <Warning width="15pt" />}
+                        </TableCell>
+
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW BANKROLL:</span>
+                        </TableCell>
+                        <TableCell style={{ color: "#ffb000" }}>
+                          {this.state.selectedRow ? (
+                            convertToCurrency(this.state.selectedRow.bet_amount + parseFloat(this.state.topUpAmount))
+                          ) : (
+                            null
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.handleSendTopUp}>
+                TOP-UP
+              </Button>
+              <Button
+                className="btn-back"
+                onClick={this.handleCloseTopUpModal}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Modal>
+        <Modal
+          isOpen={this.state.isPayoutModalOpen}
+          onRequestClose={this.handleClosePayoutModal}
+          style={customStyles}
+          contentLabel="Payout Modal"
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+              <FontAwesomeIcon icon={faMoneyCheckAlt} className="mr-2" />
+
+                AUTO-PAYOUT
+                </h2>
+              <Button className="btn-close" onClick={this.handleClosePayoutModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  <div>
+                    <Table>
+                      <TableBody>
+
+                        <TableRow>
+                          <TableCell>
+                            <span>CURRENT PAYOUT:</span>
+                          </TableCell>
+                          <TableCell style={{ color: "#ffb000" }}>
+                            {this.state.selectedRow && this.state.selectedRow.endgame_amount !== 0 ? (
+                              convertToCurrency(this.state.selectedRow.endgame_amount)
+                            ) : (
+                              <span>MANUAL</span>
+                            )}
+                          </TableCell>
+
+                        </TableRow>
+
+                      </TableBody>
+                    </Table>
+                    <RadioGroup
+                      aria-label="paymentMethod"
+                      name="paymentMethod"
+                      value={this.state.paymentMethod}
+                      onChange={this.handlePaymentMethodChange}
+                    >
+                      <h4 style={{ textAlign: "center", padding: "0" }}>Change Auto-Payout</h4>
+                      <FormControlLabel value="manual" control={<Radio />} label="Manual" />
+                      <FormControlLabel value="automatic" control={<Radio />} label="Automatic" />
+                    </RadioGroup>
+
+                    <div className="input-amount">
+                      <TextField
+                        label="Amount"
+                        value={this.state.payoutAmount}
+                        onChange={this.handlePayoutAmountChange}
+                        pattern="^\\d*\\.?\\d*$"
+                        variant="outlined"
+                        autoComplete="off"
+                        InputProps={{
+                          endAdornment: 'ETH'
+                        }}
+                        className="form-control"
+                        disabled={this.state.paymentMethod === "manual"}
+                      />
+                    </div>
+                  </div>
+
+
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.handleSendPayout}>
+                Update
+              </Button>
+              <Button
+                className="btn-back"
+                onClick={this.handleClosePayoutModal}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
+
     );
   }
+
 }
 
 const mapStateToProps = state => ({
@@ -720,15 +1287,19 @@ const mapStateToProps = state => ({
   totalPage: state.logic.myGamesTotalPage,
   pageNumber: state.logic.myGamesPageNumber,
   socket: state.auth.socket,
-  balance: state.auth.balance
+  balance: state.auth.balance,
+  loading: state.logic.isActiveLoadingOverlay
 });
 
 const mapDispatchToProps = {
   endGame,
+  unstake,
   createRoom,
   getMyGames,
   addNewTransaction,
-  setBalance
+  setGameMode,
+  setBalance,
+  reCreateRoom
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyGamesTable);

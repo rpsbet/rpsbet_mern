@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Button, Tabs, Tab, Drawer } from '@material-ui/core';
-
+import { Button, Tabs, Tab, Drawer, RadioGroup, Radio, Grid, FormControlLabel } from '@material-ui/core';
+import styled from 'styled-components';
+import Lottie from 'react-lottie';
 import Footer from './Footer';
 import Summary from '../CreateGame/Summary';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
@@ -12,7 +13,7 @@ import HistoryTable from '../LiveGames/HistoryTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import DrawerButton from './DrawerButton';
 import AiPanel from '../../components/AiPanel';
-
+import animationData from '../LottieAnimations/cat-place-bet.json';
 import RPS from '../CreateGame/RPS';
 import Spleesh from '../CreateGame/Spleesh';
 import MysteryBox from '../CreateGame/MysteryBox';
@@ -39,6 +40,74 @@ import { getBrainGameType } from '../../redux/Question/question.action';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 
 import { convertToCurrency } from '../../util/conversion';
+
+const StyledProductCard = styled.a`
+  position: relative;
+  background: linear-gradient(156deg, #303438, #cf0c0e);
+  border-radius: 0.3em;
+  width: 150px;
+  justify-content: center;
+  text-align: center;
+  padding: 10px;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  cursor: pointer;
+  -webkit-transition: -webkit-transform 0.2s;
+  -webkit-transition: transform 0.2s;
+  transition: transform 0.2s;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    // border-radius:10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+
+  &:hover {
+    transform: translateY(-10px);
+    border: 3px solid #fff;
+    filter: brightness(3);
+    transition: 0.3s;
+    background: linear-gradient(86deg, #cf0c0e, #ff0333,  #ff0999);
+
+  }
+`;
+
+const StyledRadioGrid = styled.div`
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+gap: 10px;
+max-width: 100%;
+margin: 20px 0;
+padding: 30px 60px;
+`;
+
+const StyledProductImage = styled.img`
+  width: 50px;
+  height: 100%;
+  object-fit: contain; /* Ensures the image covers the entire container */
+  border-radius: 10px;
+`;
+
+
 
 const customStyles = {
   tabRoot: {
@@ -90,6 +159,7 @@ class CreateGame extends Component {
       creatingRoom: false,
       max_prize: 0,
       winChance: 0,
+      selectedGameType: this.props.game_mode,
       lowest_box_price: 0,
       public_bet_amount: convertToCurrency(0),
       is_private: false,
@@ -119,6 +189,8 @@ class CreateGame extends Component {
         cards: new Audio('/sounds/card.mp3')
       }
     };
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -180,7 +252,14 @@ class CreateGame extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-
+    if (prevState.step !== this.state.step) {
+      console.log("1step: ", this.state.step)
+      console.log("1child_step: ", this.state.child_step)
+    }
+    if (prevState.child_step !== this.state.child_step) {
+      console.log("2step: ", this.state.step)
+      console.log("2child_step: ", this.state.child_step)
+    }
   }
 
   toggleDrawer = () => {
@@ -237,6 +316,8 @@ class CreateGame extends Component {
   }
 
   async componentDidMount() {
+    document.addEventListener('keydown', this.handleKeyPress);
+
     Object.values(this.state.sounds).forEach(sound => {
       sound.load();
     });
@@ -254,7 +335,7 @@ class CreateGame extends Component {
       this.props.getBrainGameType();
     }
     this.props.getBrainGameType();
-    await this.props.setGameMode(gameTypeName);
+
 
     let newState = {
       child_step: 1,
@@ -351,6 +432,28 @@ class CreateGame extends Component {
 
     this.setState(newState);
   }
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+  }
+
+  
+  handleKeyPress(event) {
+    const { selected_roll } = this.state;
+    switch (event.key) {
+        case 'Escape':
+          this.onPrevButtonClicked();
+          break;
+        case 'Enter':
+          this.onNextButtonClicked();
+          break;
+
+      case 'Shift':
+        this.onSkipButtonClicked();
+        break;
+      default:
+        break;
+    }
+  }
 
   IsAuthenticatedReroute = () => {
     if (!this.props.auth) {
@@ -359,6 +462,8 @@ class CreateGame extends Component {
   };
 
   onSkipButtonClicked = () => {
+    if ((this.state.step === 3) || this.state.step === 4) {
+    
     if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
       if (this.state.max_return > this.state.bet_amount * 4) {
         alertModal(this.props.isDarkMode, `TOO PURRROFITABLE! GAME IS UNFAIR`);
@@ -371,8 +476,11 @@ class CreateGame extends Component {
       gameBackground: '',
       is_anonymous: false,
       endgame_type: false,
-      step: this.state.step + 1
+      step: this.state.step + 1,
+      child_step: this.state.child_step + 1
     });
+  }
+  return;
   };
 
   onStartBrainGame = e => {
@@ -399,7 +507,7 @@ class CreateGame extends Component {
   };
 
   onPrevButtonClicked = () => {
-    if (this.state.game_mode !== 'Mystery Box' && this.state.step < 5) {
+    if (this.state.step < 5) {
       if (this.state.step === 3 && this.state.child_step === 1) {
         if (
           this.state.game_mode === 'Quick Shoot' ||
@@ -421,7 +529,11 @@ class CreateGame extends Component {
         this.setState({
           child_step: this.state.child_step - 1
         });
-
+        if ((this.state.step === 4) || (this.state.step === 2)) {
+          this.setState({
+            step: this.state.step - 1
+          });
+        }
         return;
       }
     }
@@ -429,6 +541,12 @@ class CreateGame extends Component {
     this.setState({
       step: this.state.step > 1 ? this.state.step - 1 : this.state.step
     });
+
+    if (this.state.child_step = 5) {
+      this.setState({
+        child_step: this.state.child_step - 1
+      });
+    }
   };
 
   onNextButtonClicked = () => {
@@ -462,6 +580,7 @@ class CreateGame extends Component {
       }
       return false;
     };
+if (step < 5) {
 
     if (step === 2) {
       if (
@@ -575,6 +694,8 @@ class CreateGame extends Component {
       step: step > 3 && child_step < 4 ? step : step + 1,
       child_step: child_step + 1
     });
+}
+return;
   };
 
   playSound = sound => {
@@ -600,209 +721,329 @@ class CreateGame extends Component {
           this.setState({ creatingRoom: true });
           await this.props.createRoom(this.state);
           this.setState({ creatingRoom: false });
+
         }
       );
     }
   };
 
-  step2 = () => {
-    if (this.state.game_mode === 'RPS') {
-      return (
-        <RPS
-          playSound={this.playSound}
-          onChangeState={this.onChangeState}
-          rps_list={this.state.rps_list}
-          bet_amount={this.state.bet_amount}
-          winChance={this.state.winChance}
-          is_private={this.state.is_private}
-          is_anonymous={this.state.is_anonymous}
-          room_password={this.state.room_password}
-          step={this.state.child_step}
-          endgame_amount={this.state.endgame_amount}
-          rps_game_type={this.state.rps_game_type}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-        />
-      );
-    } else if (this.state.game_mode === 'Spleesh!') {
-      return (
-        <Spleesh
-          playSound={this.playSound}
-          calculateEV={this.calculateEV}
-          onChangeState={this.onChangeState}
-          bet_amount={this.state.bet_amount}
-          spleesh_bet_unit={this.state.spleesh_bet_unit}
-          is_private={this.state.is_private}
-          is_anonymous={this.state.is_anonymous}
-          room_password={this.state.room_password}
-          winChance={this.state.winChance}
-          endgame_type={this.state.endgame_type}
-          endgame_amount={this.state.endgame_amount}
-          step={this.state.child_step}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-        />
-      );
-    } else if (this.state.game_mode === 'Mystery Box') {
-      return (
-        <MysteryBox
-          playSound={this.playSound}
-          calcMysteryBoxEV={this.calcMysteryBoxEV}
-          onChangeState={this.onChangeState}
-          box_list={this.state.box_list}
-          bet_amount={this.state.bet_amount}
-          max_return={this.state.max_return}
-          max_prize={this.state.max_prize}
-          winChance={this.state.winChance}
-          endgame_amount={this.state.endgame_amount}
-          calcWinChance={this.calcWinChance}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-        />
-      );
-    } else if (this.state.game_mode === 'Brain Game') {
-      return (
-        <BrainGame
-          playSound={this.playSound}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-          onChangeState={this.onChangeState}
-          bet_amount={this.state.bet_amount}
-          winChance={this.state.winChance}
-          brain_game_type={this.state.brain_game_type}
-          step={this.state.child_step}
-          endgame_amount={this.state.endgame_amount}
-        />
-      );
-    } else if (this.state.game_mode === 'Quick Shoot') {
-      return (
-        <QuickShoot
-          playSound={this.playSound}
-          onChangeState={this.onChangeState}
-          qs_list={this.state.qs_list}
-          bet_amount={this.state.bet_amount}
-          is_private={this.state.is_private}
-          is_anonymous={this.state.is_anonymous}
-          winChance={this.state.winChance}
-          room_password={this.state.room_password}
-          endgame_amount={this.state.endgame_amount}
-          qs_game_type={this.state.qs_game_type}
-          selected_qs_position={this.state.selected_qs_position}
-          step={this.state.child_step}
-          qs_nation={this.state.qs_nation}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-        />
-      );
-    } else if (this.state.game_mode === 'Drop Game') {
-      return (
-        <DropGame
-          playSound={this.playSound}
-          onChangeState={this.onChangeState}
-          drop_list={this.state.drop_list}
-          bet_amount={this.state.bet_amount}
-          winChance={this.state.winChance}
-          is_private={this.state.is_private}
-          is_anonymous={this.state.is_anonymous}
-          room_password={this.state.room_password}
-          step={this.state.child_step}
-          endgame_amount={this.state.endgame_amount}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-        />
-      );
-    } else if (this.state.game_mode === 'Bang!') {
-      return (
-        <Bang
-          playSound={this.playSound}
-          onChangeState={this.onChangeState}
-          bang_list={this.state.bang_list}
-          bet_amount={this.state.bet_amount}
-          winChance={this.state.winChance}
-          aveMultiplier={this.state.aveMultiplier}
-          is_private={this.state.is_private}
-          is_anonymous={this.state.is_anonymous}
-          room_password={this.state.room_password}
-          step={this.state.child_step}
-          endgame_amount={this.state.endgame_amount}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-        />
-      );
-    } else if (this.state.game_mode === 'Roll') {
-      return (
-        <Roll
-          playSound={this.playSound}
-          onChangeState={this.onChangeState}
-          roll_list={this.state.roll_list}
-          bet_amount={this.state.bet_amount}
-          winChance={this.state.winChance}
-          aveMultiplier={this.state.aveMultiplier}
-          is_private={this.state.is_private}
-          is_anonymous={this.state.is_anonymous}
-          room_password={this.state.room_password}
-          step={this.state.child_step}
-          endgame_amount={this.state.endgame_amount}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-        />
-      );
-    } else if (this.state.game_mode === 'Blackjack') {
-      return (
-        <Blackjack
-          playSound={this.playSound}
-          onChangeState={this.onChangeState}
-          bj_list={this.state.bj_list}
-          bet_amount={this.state.bet_amount}
-          winChance={this.state.winChance}
-          is_private={this.state.is_private}
-          is_anonymous={this.state.is_anonymous}
-          room_password={this.state.room_password}
-          step={this.state.child_step}
-          endgame_amount={this.state.endgame_amount}
-          child_step={this.state.child_step}
-          youtubeUrl={this.state.youtubeUrl}
-          gameBackground={this.state.gameBackground}
-        />
-      );
+  handleChange = (event) => {
+    const { gameTypeList } = this.props;
+    const selectedShortName = event.target.value;
+
+    // Find the game type object based on the short_name
+    const selectedGame = gameTypeList.find(game => game.short_name === selectedShortName);
+
+    if (selectedGame) {
+      const selectedGameName = selectedGame.game_type_name;
+
+      // Update the URL with the game_type_name
+      const url = `/create/${selectedGameName}`;
+
+      // Update the state and call setGameMode
+      this.setState({ selectedGameType: event.target.value });
+      this.props.setGameMode(selectedGameName);
+      history.push(url);
     }
-    return <></>;
   };
+
+
+  step1 = () => {
+    const gameTypeStyleClass = {
+      RPS: 'rps',
+      'S!': 'spleesh',
+      MB: 'mystery-box',
+      BG: 'brain-game',
+      QS: 'quick-shoot',
+      DG: 'drop-game',
+      'B!': 'bang',
+      R: 'roll'
+    };
+
+    const { gameTypeList } = this.props;
+    const { selectedGameType } = this.state;
+
+    if (!gameTypeList) return null;
+
+    // if (this.props.gameTypeList !== 'All') {
+    return (
+      <div>
+        <RadioGroup value={selectedGameType} onChange={this.handleChange}>
+          <StyledRadioGrid>
+            {gameTypeList.map((gameType, index) => (
+              <FormControlLabel
+                key={index}
+                value={gameType.short_name}
+                control={<Radio
+                  icon={<div style={{ display: 'none' }} />} // Empty div to hide the default radio circle
+                  checkedIcon={<div style={{ display: 'none' }} />} // Hide checked state as well
+                />}
+                label={
+                  <StyledProductCard
+                    className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
+                      }`}
+                  >
+                    <StyledProductImage
+                      src={`/img/gametype/icons/${gameType.short_name}.svg`}
+                      alt={gameType.game_type_name}
+                    />
+                    <span>{gameType.game_type_name}</span>
+                  </StyledProductCard>
+                }
+              />
+            ))}
+          </StyledRadioGrid>
+        </RadioGroup>
+      </div>
+    );
+    // }
+  };
+
+  step2 = () => {
+    const { game_mode, child_step } = this.state;
+
+    switch (game_mode) {
+      case 'RPS':
+        return (
+          <RPS
+            playSound={this.playSound}
+            onChangeState={this.onChangeState}
+            rps_list={this.state.rps_list}
+            bet_amount={this.state.bet_amount}
+            winChance={this.state.winChance}
+            is_private={this.state.is_private}
+            is_anonymous={this.state.is_anonymous}
+            room_password={this.state.room_password}
+            step={child_step}
+            endgame_amount={this.state.endgame_amount}
+            rps_game_type={this.state.rps_game_type}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+          />
+        );
+      case 'Spleesh!':
+        return (
+          <Spleesh
+            playSound={this.playSound}
+            calculateEV={this.calculateEV}
+            onChangeState={this.onChangeState}
+            bet_amount={this.state.bet_amount}
+            spleesh_bet_unit={this.state.spleesh_bet_unit}
+            is_private={this.state.is_private}
+            is_anonymous={this.state.is_anonymous}
+            room_password={this.state.room_password}
+            winChance={this.state.winChance}
+            endgame_type={this.state.endgame_type}
+            endgame_amount={this.state.endgame_amount}
+            step={child_step}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+          />
+        );
+
+      case 'Mystery Box':
+        return (
+          <MysteryBox
+            playSound={this.playSound}
+            calcMysteryBoxEV={this.calcMysteryBoxEV}
+            onChangeState={this.onChangeState}
+            box_list={this.state.box_list}
+            bet_amount={this.state.bet_amount}
+            max_return={this.state.max_return}
+            max_prize={this.state.max_prize}
+            winChance={this.state.winChance}
+            endgame_amount={this.state.endgame_amount}
+            calcWinChance={this.calcWinChance}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+          />
+        );
+      case 'Brain Game':
+        return (
+          <BrainGame
+            playSound={this.playSound}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+            onChangeState={this.onChangeState}
+            bet_amount={this.state.bet_amount}
+            winChance={this.state.winChance}
+            brain_game_type={this.state.brain_game_type}
+            step={this.state.child_step}
+            endgame_amount={this.state.endgame_amount}
+          />
+        );
+      case 'Quick Shoot':
+        return (
+          <QuickShoot
+            playSound={this.playSound}
+            onChangeState={this.onChangeState}
+            qs_list={this.state.qs_list}
+            bet_amount={this.state.bet_amount}
+            is_private={this.state.is_private}
+            is_anonymous={this.state.is_anonymous}
+            winChance={this.state.winChance}
+            room_password={this.state.room_password}
+            endgame_amount={this.state.endgame_amount}
+            qs_game_type={this.state.qs_game_type}
+            selected_qs_position={this.state.selected_qs_position}
+            step={this.state.child_step}
+            qs_nation={this.state.qs_nation}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+          />
+        );
+      case 'Drop Game':
+        return (
+          <DropGame
+            playSound={this.playSound}
+            onChangeState={this.onChangeState}
+            drop_list={this.state.drop_list}
+            bet_amount={this.state.bet_amount}
+            winChance={this.state.winChance}
+            is_private={this.state.is_private}
+            is_anonymous={this.state.is_anonymous}
+            room_password={this.state.room_password}
+            step={this.state.child_step}
+            endgame_amount={this.state.endgame_amount}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+          />
+        );
+      case 'Bang!':
+        return (
+          <Bang
+            playSound={this.playSound}
+            onChangeState={this.onChangeState}
+            bang_list={this.state.bang_list}
+            bet_amount={this.state.bet_amount}
+            winChance={this.state.winChance}
+            aveMultiplier={this.state.aveMultiplier}
+            is_private={this.state.is_private}
+            is_anonymous={this.state.is_anonymous}
+            room_password={this.state.room_password}
+            step={this.state.child_step}
+            endgame_amount={this.state.endgame_amount}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+          />
+        );
+      case 'Roll':
+        return (
+          <Roll
+            playSound={this.playSound}
+            onChangeState={this.onChangeState}
+            roll_list={this.state.roll_list}
+            bet_amount={this.state.bet_amount}
+            winChance={this.state.winChance}
+            aveMultiplier={this.state.aveMultiplier}
+            is_private={this.state.is_private}
+            is_anonymous={this.state.is_anonymous}
+            room_password={this.state.room_password}
+            step={this.state.child_step}
+            endgame_amount={this.state.endgame_amount}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+          />
+        );
+      case 'Blackjack':
+        return (
+          <Blackjack
+            playSound={this.playSound}
+            onChangeState={this.onChangeState}
+            bj_list={this.state.bj_list}
+            bet_amount={this.state.bet_amount}
+            winChance={this.state.winChance}
+            is_private={this.state.is_private}
+            is_anonymous={this.state.is_anonymous}
+            room_password={this.state.room_password}
+            step={this.state.child_step}
+            endgame_amount={this.state.endgame_amount}
+            child_step={this.state.child_step}
+            youtubeUrl={this.state.youtubeUrl}
+            gameBackground={this.state.gameBackground}
+          />
+        );
+
+      default:
+        this.setState({ step: 1 });
+        this.props.setGameMode(game_mode)
+        return this.step1();
+    }
+  };
+
 
   action_panel = () => {
     return (
       <>
         <hr />
         <div className="action-panel">
-          {this.state.step < 3 &&
-          this.state.step > 5 &&
-          this.state.child_step === 1 ? (
-            <span></span>
-          ) : (
-            <Button id="btn_prev" onClick={this.onPrevButtonClicked}>
-              Previous
-            </Button>
-          )}
+          {
+            this.state.step === 1 ? (
+              <span></span>
+            ) : (
+              <Button id="btn_prev" onClick={this.onPrevButtonClicked}>
+                Previous&nbsp;<span className="roll-tag">[Esc]</span>
+              </Button>
+            )}
           {(this.state.step === 3 || this.state.step === 4) && (
             <Button id="btn_skip" onClick={this.onSkipButtonClicked}>
-              Skip
+              Skip&nbsp;<span className="roll-tag">[Shift]</span>
             </Button>
           )}
+
           {this.state.step === 5 &&
             this.state.game_mode === 'Brain Game' &&
             !this.state.isPlayingBrain && (
-              <Button id="btn_bet" onClick={this.onStartBrainGame}>
-                Start
-              </Button>
+              <>
+                <div style={{ position: 'relative', marginLeft: '-37.5%' }}>
+                  <Button id="btn_bet" onClick={this.onStartBrainGame}>
+                    Start
+                  </Button>
+                  <div className="lottie-container-btn_bet">
+                    <Lottie
+                      options={{
+                        loop: true,
+                        autoplay: true,
+                        animationData: animationData
+                      }}
+                      style={{
+                        width: '62px',
+                        position: 'absolute',
+                        filter: 'grayscale(1)'
+                      }}
+                    />
+                  </div>
+                </div>
+              </>
+
             )}
+
           {this.state.step === 5 && this.state.game_mode !== 'Brain Game' && (
-            <Button id="btn_bet" onClick={this.onCreateRoom}>
-              Place Bet
-            </Button>
+            <>
+              <div style={{ position: 'relative', marginLeft: '-37.5%' }}>
+                <Button id="btn_bet" onClick={this.onCreateRoom}>
+                  Place Bet
+                </Button>
+                <div className="lottie-container-btn_bet">
+                  <Lottie
+                    options={{
+                      loop: true,
+                      autoplay: true,
+                      animationData: animationData
+                    }}
+                    style={{
+                      width: '62px',
+                      position: 'absolute',
+                      filter: 'grayscale(1)'
+                    }}
+                  />
+                </div>
+              </div>
+            </>
           )}
-          {this.state.step < 5 && this.state.step !== 1 && (
+          {this.state.step < 5 && (
             <Button id="btn_next" onClick={this.onNextButtonClicked}>
-              Next
+              Next&nbsp;<span className="roll-tag">[Enter]</span>
             </Button>
           )}
         </div>
@@ -812,7 +1053,7 @@ class CreateGame extends Component {
 
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
-    (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
+      (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
       <div id="liveStakes">{this.props.roomCount} LIVE BATTLES</div>
     ) : (
       'Your Battles'
@@ -851,16 +1092,16 @@ class CreateGame extends Component {
         >
           {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
             !this.state.is_mobile) && (
-            <Drawer
-              className="mat-chat"
-              style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
-              variant="persistent"
-              anchor="left"
-              open={this.props.isDrawerOpen}
-            >
-              <ChatPanel />
-            </Drawer>
-          )}
+              <Drawer
+                className="mat-chat"
+                style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
+                variant="persistent"
+                anchor="left"
+                open={this.props.isDrawerOpen}
+              >
+                <ChatPanel />
+              </Drawer>
+            )}
           {!this.state.is_mobile &&
             (!this.state.selectedMobileTab === 'live_games' ||
               !this.state.selectedMobileTab === 'my_games') && (
@@ -890,8 +1131,8 @@ class CreateGame extends Component {
                 <div className="page-title">
                   <h2>CREATE {this.state.game_mode} BATTLE</h2>
                   {this.state.step === 6 &&
-                  this.state.game_mode === 'Brain Game' &&
-                  this.state.isPlayingBrain ? (
+                    this.state.game_mode === 'Brain Game' &&
+                    this.state.isPlayingBrain ? (
                     <Summary
                       bet_amount={this.state.bet_amount}
                       max_return={this.state.max_return}
@@ -913,31 +1154,32 @@ class CreateGame extends Component {
                   )}
                 </div>
                 <div className="game-contents">
-                  {(this.state.step !== 6 ||
+                  {(this.state.step !== 5 ||
                     this.state.game_mode !== 'Brain Game' ||
                     !this.state.isPlayingBrain) && (
-                    <Summary
-                      bet_amount={this.state.bet_amount}
-                      max_return={this.state.max_return}
-                      endgame_type={this.state.endgame_type}
-                      endgame_amount={this.state.endgame_amount}
-                      is_private={this.state.is_private}
-                      step={this.state.step}
-                      aveMultiplier={this.state.aveMultiplier}
-                      calcAveMultiplier={this.props.calcAveMultiplier}
-                      child_step={this.state.child_step}
-                      rps_game_type={this.state.rps_game_type}
-                      qs_game_type={this.state.qs_game_type}
-                      game_mode={this.state.game_mode}
-                      max_prize={this.state.max_prize}
-                      public_bet_amount={this.state.public_bet_amount}
-                      spleesh_bet_unit={this.state.spleesh_bet_unit}
-                      winChance={this.state.winChance}
-                      calcWinChance={this.props.calcWinChance}
-                      youtubeUrl={this.state.youtubeUrl}
-                      gameBackground={this.state.gameBackground}
-                    />
-                  )}
+                      <Summary
+                        bet_amount={this.state.bet_amount}
+                        max_return={this.state.max_return}
+                        endgame_type={this.state.endgame_type}
+                        endgame_amount={this.state.endgame_amount}
+                        is_private={this.state.is_private}
+                        step={this.state.step}
+                        aveMultiplier={this.state.aveMultiplier}
+                        calcAveMultiplier={this.props.calcAveMultiplier}
+                        child_step={this.state.child_step}
+                        rps_game_type={this.state.rps_game_type}
+                        qs_game_type={this.state.qs_game_type}
+                        game_mode={this.state.game_mode}
+                        max_prize={this.state.max_prize}
+                        public_bet_amount={this.state.public_bet_amount}
+                        spleesh_bet_unit={this.state.spleesh_bet_unit}
+                        winChance={this.state.winChance}
+                        calcWinChance={this.props.calcWinChance}
+                        youtubeUrl={this.state.youtubeUrl}
+                        gameBackground={this.state.gameBackground}
+                      />
+                    )}
+                  {this.state.step === 1 && this.step1()}
                   {this.state.step === 2 && this.step2()}
                   {(this.state.step === 3 || this.state.step === 4) && (
                     <AdvancedSettings
@@ -1011,9 +1253,8 @@ class CreateGame extends Component {
           {!this.state.is_mobile && (
             <div className="mobile-only main-page-nav-button-group">
               <Button
-                className={`mobile-tab-live ${
-                  this.state.selectedMobileTab === 'live_games' ? 'active' : ''
-                }`}
+                className={`mobile-tab-live ${this.state.selectedMobileTab === 'live_games' ? 'active' : ''
+                  }`}
                 onClick={e => {
                   this.setState({ selectedMobileTab: 'live_games' });
                 }}
@@ -1039,9 +1280,8 @@ class CreateGame extends Component {
                   'LIVE BATTLES'}
               </Button>
               <Button
-                className={`mobile-tab-my ${
-                  this.state.selectedMobileTab === 'my_games' ? 'active' : ''
-                }`}
+                className={`mobile-tab-my ${this.state.selectedMobileTab === 'my_games' ? 'active' : ''
+                  }`}
                 onClick={e => {
                   this.setState({ selectedMobileTab: 'my_games' });
                 }}
@@ -1074,9 +1314,8 @@ class CreateGame extends Component {
                 {this.state.selectedMobileTab === 'my_games' && 'YOUR BATTLES'}
               </Button>
               <button
-                className={`mobile-tab-marketplace ${
-                  this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
-                }`}
+                className={`mobile-tab-marketplace ${this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
+                  }`}
                 onClick={e => {
                   this.setState({ selectedMobileTab: 'marketplace' });
                 }}
@@ -1102,9 +1341,8 @@ class CreateGame extends Component {
                   'MARKETPLACE'}
               </button>
               <Button
-                className={`mobile-tab-chat ${
-                  this.state.selectedMobileTab === 'chat' ? 'active' : ''
-                }`}
+                className={`mobile-tab-chat ${this.state.selectedMobileTab === 'chat' ? 'active' : ''
+                  }`}
                 onClick={e => {
                   this.setState({ selectedMobileTab: 'chat' });
                 }}

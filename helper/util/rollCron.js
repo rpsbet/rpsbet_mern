@@ -62,6 +62,7 @@ const predictAndSave = async (roomBets, roomId) => {
     await newBet.save();
 
     allFaces.push(nextStateFace);
+    
   }
 };
 
@@ -70,7 +71,7 @@ const predictNextRoll = (roll_list, maxOrder = 3, initialWeight = 1.5, decayFact
   const sequence = roll_list.map((roll) => roll.face);
 
   if (sequence.length < maxOrder + 1) {
-    // Insufficient data, fall back to random selection
+    // Insufficient data, fall back to ranßdom selection
     const nextStateFace = faces[Math.floor(Math.random() * faces.length)];
     return { roll: '', face: nextStateFace };
   }

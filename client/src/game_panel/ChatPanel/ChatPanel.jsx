@@ -356,6 +356,9 @@ class ChatPanel extends Component {
             onMouseLeave={this.handleMouseLeave}
           />
         </Tabs>
+        <div id="online-banner">
+          <span>[{this.props.onlineUserList.length}] users online</span>
+        </div>
         {selected_tab_index === 0 ? (
           <MyChat />
         ) : (
@@ -445,7 +448,8 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   userName: state.auth.userName,
   user: state.auth.user,
-  socket: state.auth.socket
+  socket: state.auth.socket,
+  onlineUserList: state.logic.onlineUserList
 });
 
 const mapDispatchToProps = {};

@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button, TextField } from '@material-ui/core';
-
+import { Button, IconButton } from '@material-ui/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons'; 
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import {
   alertModal
 } from '../modal/ConfirmAlerts';
+
 
 
 const calcWinChance = (prevStates) => {
@@ -51,7 +53,7 @@ class Roll extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selected_roll: '',
+      selected_roll: null,
       bet_amount: 0.001,
       roll: '',
       roll_list: [],
@@ -60,6 +62,9 @@ class Roll extends Component {
       winChance: 33,
       aveMultiplier: 0,
     };
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.handleReset = this.handleReset.bind(this);
+
   }
 
   static getDerivedStateFromProps(props, current_state) {
@@ -74,6 +79,53 @@ class Roll extends Component {
     return null;
   }
 
+  componentDidMount() {
+    document.addEventListener('keydown', this.handleKeyPress);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+  }
+
+  handleKeyPress(event) {
+    const { selected_roll } = this.state;
+    switch (event.key) {
+      case 'r':
+        this.onAddRun('2', 'R');
+        break;
+      case 'p':
+        this.onAddRun('2', 'P');
+        break;
+      case 's':
+        this.onAddRun('2', 'S');
+        break;
+      case 'w':
+        this.onAddRun('14', 'W');
+        break;
+      case 'b':
+        this.onAddRun('1.5', 'B');
+        break;
+      case 'u':
+        this.onAddRun('7', 'Bu');
+        break;
+      case ' ':
+        event.preventDefault();
+          this.onAutoPlay();
+          break;
+      default:
+        break;
+    }
+  }
+
+  handleReset() {
+    // Clear the roll_list and reset winChance and aveMultiplier
+    this.props.onChangeState({
+      roll_list: [],
+      winChance: 33, // You may want to reset to default values
+      aveMultiplier: 0 // You may want to reset to default values
+    });
+  }
+
   onChangeWinChance = (winChance) => {
     this.setState({ winChance });
   };
@@ -85,14 +137,14 @@ class Roll extends Component {
     const faces = ['R', 'P', 'S', 'W', 'B', 'Bu'];
     const sequence = roll_list.map(roll => roll.face);
     const nextStates = {};
-  
+
     faces.forEach((face) => {
-      const count = sequence.filter((f, i) => i > 0 && sequence[i-1] === face).length;
+      const count = sequence.filter((f, i) => i > 0 && sequence[i - 1] === face).length;
       nextStates[face] = count / Math.max(1, sequence.length - 1);
     });
-  
+
     const allProbabilitiesOneOrZero = Object.values(nextStates).every(probability => probability === 0 || probability === 1);
-  
+
     if (allProbabilitiesOneOrZero) {
       const occurrences = {};
       roll_list.forEach((roll) => {
@@ -102,7 +154,7 @@ class Roll extends Component {
       let nextState = roll_list[randomIndex];
       return { roll: nextState.roll, face: nextState.face };
     }
-  
+
     // Randomly select the next face based on probabilities
     let nextStateFace = '';
     let randomNum = Math.random();
@@ -114,7 +166,7 @@ class Roll extends Component {
         break;
       }
     }
-  
+
     // Use the switch statement to determine the rollNumber for the predicted face
     let rollNumber;
     switch (nextStateFace) {
@@ -135,10 +187,10 @@ class Roll extends Component {
       default:
         rollNumber = '2';
     }
-  
+
     return { roll: rollNumber, face: nextStateFace };
   };
-  
+
   onRemoveItem = index => {
     this.props.playSound('tap');
 
@@ -155,25 +207,25 @@ class Roll extends Component {
   };
   onAutoPlay = () => {
     const { roll_list } = this.props;
-  
+
     if (roll_list.length < 3) {
       alertModal(this.props.isDarkMode, 'PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA');
       return;
     }
-  // console.log(roll_list)
+    // console.log(roll_list)
     const predictedState = this.predictNext(roll_list);
     this.onAddRun(predictedState.roll, predictedState.face);
   };
-  
+
 
   onAddRun = (roll, face) => {
-    // console.log(this.props.roll_list)
+    console.log(this.props.face)
     this.props.playSound('boop');
-  
+    this.setState({ selected_roll: face });
 
     const newArray = JSON.parse(JSON.stringify(this.props.roll_list));
 
- 
+
     newArray.push({
       roll: roll,
       face: face
@@ -206,131 +258,148 @@ class Roll extends Component {
     this.setState({ roll: new_state.selected_bet_amount });
   };
   render() {
-    
+
     const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
 
     return this.props.step === 1 ? (
-      
+
       <div className="game-info-panel">
         {/* <h3 className="game-sub-title">Bankroll</h3> */}
         <DefaultBetAmountPanel
-              bet_amount={this.props.bet_amount}
-              onChangeState={this.props.onChangeState}
-              game_type="roll"
-              defaultBetAmounts={defaultBetAmounts}
-            />
-     
+          bet_amount={this.props.bet_amount}
+          onChangeState={this.props.onChangeState}
+          game_type="roll"
+          defaultBetAmounts={defaultBetAmounts}
+        />
+
       </div>
     ) : (
-      
+
       <div className="game-info-panel">
-                          {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
+        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <div className="rps-add-run-panel">
-        <div className="roll-add-run-form">
-           
-        <h3 className="game-sub-title">
-  Add some rolls!
-</h3>
-<div id="roll">
-  <Button
-    className={
-      'rock button-2x-r' + (this.state.selected_roll === 'R' ? ' active' : '')
-    }
-    variant="contained"
-    onClick={() => {
-      this.onAddRun('2', 'R');
-      const currentActive = document.querySelector('.active');
-      if (currentActive) {
-        currentActive.style.animation = 'none';
-        void currentActive.offsetWidth;
-        currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-      }
-    }}
-  ><span>2x (4x)</span></Button>
-  <Button
-    className={
-      'paper button-2x-p' + (this.state.selected_roll === 'P' ? ' active' : '')
-    }
-    variant="contained"
-    onClick={() => {
-      this.onAddRun('2', 'P');
-      const currentActive = document.querySelector('.active');
-      if (currentActive) {
-        currentActive.style.animation = 'none';
-        void currentActive.offsetWidth;
-        currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-      }
-    }}
-  ><span>2x (4x)</span></Button>
-  <Button
-    className={
-      'scissors button-2x-s' +
-      (this.state.selected_roll === 'S' ? ' active' : '')
-    }
-    variant="contained"
-    onClick={() => {
-      this.onAddRun('2', 'S');
-      const currentActive = document.querySelector('.active');
-      if (currentActive) {
-        currentActive.style.animation = 'none';
-        void currentActive.offsetWidth;
-        currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-      }
-    }}
-  ><span>2x (4x)</span></Button>
-  <Button
-    className={
-      'whale button-14x' +
-      (this.state.selected_roll === 'W' ? ' active' : '')
-    }
-    variant="contained"
-    onClick={() => {
-      this.onAddRun('14', 'W');
-      const currentActive = document.querySelector('.active');
-      if (currentActive) {
-        currentActive.style.animation = 'none';
-        void currentActive.offsetWidth;
-        currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-      }
-    }}
-  ><span>14x</span></Button>
-  <Button
-    className={
-      'bear button-15x' +
-      (this.state.selected_roll === 'B' ? ' active' : '')
-    }
-    variant="contained"
-    onClick={() => {
-      this.onAddRun('1.5', 'B');
-      const currentActive = document.querySelector('.active');
-      if (currentActive) {
-        currentActive.style.animation = 'none';
-        void currentActive.offsetWidth;
-        currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-      }
-    }}
-  ><span>1.5x</span></Button>
-  <Button
-    className={
-      'bull button-7x' + (this.state.selected_roll === 'Bu' ? ' active' : '')
-    }
-    variant="contained"
-    onClick={() => {
-      this.onAddRun('7', 'Bu');
-      const currentActive = document.querySelector('.active');
-      if (currentActive) {
-        currentActive.style.animation = 'none';
-        void currentActive.offsetWidth;
-        currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-      }
-    }}
-  ><span>7x</span></Button>
-</div>
+          <div className="roll-add-run-form">
 
-            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play</Button>
+            <h3 className="game-sub-title">
+              Add some rolls!
+            </h3>
+            <div id="roll">
+              <Button
+                className={
+                  'rock button-2x-r' + (this.state.selected_roll === 'R' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.onAddRun('2', 'R');
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              >
+
+                <span>2x (4x)</span>&nbsp;
+                <span className="roll-tag">[R]</span>
+              </Button>
+              <Button
+                className={
+                  'paper button-2x-p' + (this.state.selected_roll === 'P' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.onAddRun('2', 'P');
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              >
+                <span>2x (4x)</span>&nbsp;
+                <span className="roll-tag">[P]</span>
+              </Button>
+              <Button
+                className={
+                  'scissors button-2x-s' +
+                  (this.state.selected_roll === 'S' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.onAddRun('2', 'S');
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              >
+                <span>2x (4x)</span>&nbsp;
+                <span className="roll-tag">[S]</span>
+              </Button>
+              <Button
+                className={
+                  'whale button-14x' +
+                  (this.state.selected_roll === 'W' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.onAddRun('14', 'W');
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              >
+                <span>14x</span>&nbsp;
+                <span className="roll-tag">[W]</span>
+              </Button>
+              <Button
+                className={
+                  'bear button-15x' +
+                  (this.state.selected_roll === 'B' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.onAddRun('1.5', 'B');
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              ><span>1.5x</span>&nbsp;
+              <span className="roll-tag">[B]</span>
+              </Button>
+              <Button
+                className={
+                  'bull button-7x' + (this.state.selected_roll === 'Bu' ? ' active' : '')
+                }
+                variant="contained"
+                onClick={() => {
+                  this.onAddRun('7', 'Bu');
+                  const currentActive = document.querySelector('.active');
+                  if (currentActive) {
+                    currentActive.style.animation = 'none';
+                    void currentActive.offsetWidth;
+                    currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+                  }
+                }}
+              ><span>7x</span>&nbsp;
+              <span className="roll-tag">[U]</span>
+              </Button>
+            </div>
+
+            <Button id="aiplay" onClick={this.onAutoPlay}>Test AI Play&nbsp;<span className='roll-tag'>[space]</span></Button>
             {/* <label>AUTOPLAY <input type="checkbox" onChange={()=>this.setState({autoplay: !this.state.autoplay})} />
-</label> */}
+  </label> */}
 
           </div>
           <div className="rps-add-run-table roll-add-run-table">
@@ -356,8 +425,11 @@ class Roll extends Component {
                 )}
               </tbody>
             </table>
+          <IconButton style={{background: "transparent", boxShadow: "none"}} color="secondary" onClick={this.handleReset}>
+          <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+        </IconButton>  
           </div>
-        </div>
+             </div>
       </div>
     );
   }

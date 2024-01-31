@@ -159,6 +159,8 @@ class RPS extends Component {
     };
     this.panelRef = React.createRef();
     this.onChangeState = this.onChangeState.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+
   }
 
   onChangeState(e) {
@@ -197,6 +199,8 @@ class RPS extends Component {
 
   async componentDidMount() {
     const { socket, rps_game_type, acQueryMyItem, playSound } = this.props;
+    document.addEventListener('keydown', this.handleKeyPress);
+
     if (socket) {
       socket.on('CARD_PRIZE', data => {
         if (data) {
@@ -248,6 +252,34 @@ class RPS extends Component {
       }
     }
   }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+  }
+
+  
+  handleKeyPress(event) {
+    const { selected_roll } = this.state;
+    switch (event.key) {
+      case 'r':
+        this.onBtnBetClick('R');
+        break;
+      case 'p':
+        this.onBtnBetClick('P');
+        break;
+      case 's':
+        this.onBtnBetClick('S');
+        break;
+
+      case ' ':
+        event.preventDefault(); 
+        this.onAutoPlay();
+        break;
+      default:
+        break;
+    }
+  }
+
 
   toggleImageModal = () => {
     this.setState({
@@ -483,7 +515,7 @@ class RPS extends Component {
     }
   };
 
-  onBtnBetClick = async () => {
+  onBtnBetClick = async (selection) => {
     const {
       openGamePasswordModal,
       isAuthenticated,
@@ -495,6 +527,9 @@ class RPS extends Component {
       roomInfo
     } = this.props;
     const { bet_amount, bankroll } = this.state;
+
+    this.setState({ selected_rps: selection });
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
@@ -906,12 +941,7 @@ class RPS extends Component {
                             <IconButton
                               className="btn-back"
                               onClick={() => {
-                                this.setState(
-                                  { selected_rps: row.productName },
-                                  () => {
                                     this.onBtnBetClick(row.productName);
-                                  }
-                                );
                               }}
                             >
                               Play
@@ -1034,12 +1064,11 @@ class RPS extends Component {
                           : ''
                         }`}
                       onClick={() => {
-                        this.setState({ selected_rps: selection }, () => {
                           this.onBtnBetClick(selection);
-                        });
+
                         playSound('select');
                       }}
-                    />
+                    >&nbsp;<span className="roll-tag">[{selection}]</span></Button>
                   ))}
                 </div>
 

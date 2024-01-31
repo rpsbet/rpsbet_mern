@@ -15,19 +15,36 @@ router.post('/create', auth, async (req, res) => {
   try {
     const { _id, loan_amount, loan_period, apy } = req.body;
     const currentUser = req.user;
-    if (!loan_amount ||
-      !loan_period ||
-      !apy) {
+
+    // Check if all required fields are provided
+    if (!loan_amount || !loan_period || !apy) {
       return res.json({
         success: false,
         error: 'Please enter all fields'
       });
     }
 
-    if (currentUser.balance <= parseFloat(loan_amount)) {
+    // Check if loan amount is a valid number and not zero
+    if (isNaN(parseFloat(loan_amount)) || parseFloat(loan_amount) <= 0) {
+      return res.json({
+        success: false,
+        message: 'Loan amount must be a valid positive number',
+      });
+    }
+
+    // Check if the user has sufficient funds for the loan
+    if (currentUser.balance < parseFloat(loan_amount)) {
       return res.json({
         success: false,
         message: 'Insufficient funds',
+      });
+    }
+
+    // Ensure loan period and APY are valid values
+    if (isNaN(parseFloat(loan_period)) || parseFloat(loan_period) <= 0 || isNaN(parseFloat(apy)) || parseFloat(apy) <= 0) {
+      return res.json({
+        success: false,
+        message: 'Loan period and APY must be valid positive numbers',
       });
     }
 
@@ -46,12 +63,10 @@ router.post('/create', auth, async (req, res) => {
 
     currentUser.balance -= parseFloat(loan_amount);
 
-
     const savePromises = [
       loanObj.save(),
       currentUser.save(),
       newTransaction.save()
-
     ];
 
     await Promise.all(savePromises);

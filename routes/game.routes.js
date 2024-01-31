@@ -829,7 +829,8 @@ const getRoomList = async (pageSize, game_type) => {
           created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
           likes: room.likes,
           dislikes: room.dislikes,
-          views: room.views
+          views: room.views,
+          hosts: room.hosts
         };
 
         switch (temp.game_type.game_type_id) {
@@ -1056,8 +1057,8 @@ router.post('/rooms', auth, async (req, res) => {
     const newRoom = new Room({
       ...req.body,
       creator: req.user,
-      // aveMultiplier,
       joiners: [],
+      hosts: [{ host: req.user._id, avatar: req.user.avatar, accessory: req.user.accessory, rank: req.user.totalWagered, share: req.body.bet_amount }],
       game_type: gameType,
       user_bet,
       pr,
@@ -1300,7 +1301,6 @@ async function getRoomNetProfits(room_id) {
     console.log('error***', error);
   }
 }
-
 const getMyRoomsWithStats = async (
   user_id,
   pageSize,
@@ -1308,32 +1308,33 @@ const getMyRoomsWithStats = async (
   status = 'open',
   sort = 'desc'
 ) => {
-  const search_condition = {
-    creator: new ObjectId(user_id)
+  const searchCondition = {
+    $or: [
+      { creator: user_id },
+      { 'hosts.host': user_id }
+    ]
   };
 
-  if (status) {
-    search_condition.status = status;
+  if (status !== undefined) {
+    searchCondition.status = status;
   }
   if (game_type !== 'All') {
     const gameType = await GameType.findOne({ short_name: game_type });
-    search_condition.game_type = gameType._id;
+    searchCondition.game_type = gameType._id;
   }
   if (status === 'finished') {
-    search_condition.joiners = { $exists: true, $ne: [] };
+    searchCondition.joiners = { $exists: true, $ne: [] };
   }
 
-  const rooms = await Room.find(search_condition)
+  const rooms = await Room.find(searchCondition)
     .populate({ path: 'game_type', model: GameType })
     .limit(pageSize);
 
-  const count = await Room.countDocuments(search_condition);
+  const count = await Room.countDocuments(searchCondition);
 
-  let result = [];
-
-  for (const room of rooms) {
+  const result = await Promise.all(rooms.map(async (room) => {
     try {
-      let temp = {
+      const temp = {
         _id: room._id,
         game_type: room.game_type,
         bet_amount: room.bet_amount,
@@ -1349,97 +1350,93 @@ const getMyRoomsWithStats = async (
         is_private: room.is_private,
         status: room.status,
         created_at: room.created_at,
-        // statistics: '',
-        net_profit: '',
-        bets: ''
+        coHost: false,
+        net_profit: 0,
+        bets: 0
       };
 
       const roomStatistics = await getRoomNetProfits(room._id);
       if (roomStatistics.room_info && roomStatistics.room_info.length > 0) {
-        const netProfitValue = roomStatistics.room_info[0].net_profit;
-        const betsValue = roomStatistics.room_info[0].bets;
-        temp.net_profit = netProfitValue;
-        temp.bets = betsValue;
-      } else {
-        temp.net_profit = 0;
-        temp.bets = 0;
+        const { net_profit, bets } = roomStatistics.room_info[0];
+        temp.net_profit = net_profit;
+        temp.bets = bets;
       }
+
       const gameLogCount = await GameLog.countDocuments({ room: room._id });
 
       if (gameLogCount === 0) {
         temp.winnings = temp.bet_amount;
-      } else if (room.game_type.game_type_id === 1) {
-        // RPS
-        temp.winnings = room.user_bet;
-      } else if (room.game_type.game_type_id === 2) {
-        // Spleesh!
-        temp.bet_amount =
-          room.user_bet === 0 && room.bet_amount === room.pr
-            ? room.pr
-            : temp.bet_amount;
-        temp.winnings =
-          parseFloat(room.user_bet) +
-          parseFloat(room.host_pr) +
-          temp.bet_amount;
-      } else if (room.game_type.game_type_id === 3) {
-        // Brain Game
-        temp.winnings = room.pr;
-      } else if (room.game_type.game_type_id === 4) {
-        // Mystery Box
-        temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr);
-      } else if (room.game_type.game_type_id === 5) {
-        // Quick Shoot
-        temp.winnings = room.user_bet;
-      } else if (room.game_type.game_type_id === 6) {
-        // Drop Game
-        temp.winnings = room.user_bet;
-      } else if (room.game_type.game_type_id === 7) {
-        // Bang!
-        temp.winnings = updateDigitToPoint2(room.user_bet);
-      } else if (room.game_type.game_type_id === 8) {
-        // Roll
-        temp.winnings = updateDigitToPoint2(room.user_bet);
-      } else if (room.game_type.game_type_id === 9) {
-        // Blackjack
-        temp.winnings = updateDigitToPoint2(room.user_bet);
+      } else {
+        switch (room.game_type.game_type_id) {
+          case 1: // RPS
+            temp.winnings = room.user_bet;
+            break;
+          case 2: // Spleesh!
+            temp.bet_amount = (room.user_bet === 0 && room.bet_amount === room.pr) ? room.pr : temp.bet_amount;
+            temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr) + temp.bet_amount;
+            break;
+          case 3: // Brain Game
+            temp.winnings = room.pr;
+            break;
+          case 4: // Mystery Box
+            temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr);
+            break;
+          case 5: // Quick Shoot
+          case 6: // Drop Game
+            temp.winnings = room.user_bet;
+            break;
+          case 7: // Bang!
+          case 8: // Roll
+          case 9: // Blackjack
+            temp.winnings = updateDigitToPoint2(room.user_bet);
+            break;
+          default:
+            break;
+        }
       }
 
-      result.push(temp);
-      if (sort === 'asc') {
-        result.sort((a, b) => a.created_at - b.created_at);
-      } else if (sort === 'desc') {
-        result.sort((a, b) => b.created_at - a.created_at);
-      } else if (sort === 'net_profit_asc') {
-        result.sort((a, b) => a.net_profit - b.net_profit);
-      } else if (sort === 'net_profit_desc') {
-        result.sort((a, b) => b.net_profit - a.net_profit);
-      } else if (sort === 'bets_asc') {
-        result.sort((a, b) => a.bets - b.bets);
-      } else {
-        result.sort((a, b) => b.bets - a.bets);
+      const isCoHost = room.hosts.slice(1).find(host => host.host.equals(user_id));
+      if (isCoHost) {
+        temp.coHost = true;
+        const hostShare = isCoHost.share;
+        temp.winnings = (hostShare / parseFloat(room.user_bet)) * parseFloat(room.user_bet);
       }
+
+      return temp;
     } catch (e) {
       console.log(e.toString());
     }
-  }
+  }));
 
-  return {
-    rooms: result,
-    count: count
+  // Sorting
+  const sortingMap = {
+    'asc': (a, b) => a.created_at - b.created_at,
+    'desc': (a, b) => b.created_at - a.created_at,
+    'net_profit_asc': (a, b) => a.net_profit - b.net_profit,
+    'net_profit_desc': (a, b) => b.net_profit - a.net_profit,
+    'bets_asc': (a, b) => a.bets - b.bets,
+    'bets_desc': (a, b) => b.bets - a.bets
   };
+
+  result.sort(sortingMap[sort] || sortingMap['desc']);
+
+  return { rooms: result, count };
 };
+
 
 router.get('/my_games', auth, async (req, res) => {
   try {
-    const pageSize = req.query.pageSize
-      ? parseInt(req.query.pageSize)
-      : 10;
+    // const pageSize = req.query.pageSize
+    //   ? parseInt(req.query.pageSize)
+    //   : 10;
+    const pageSize = 10;
     const game_type = req.query.game_type ? req.query.game_type : 'All';
     const status = req.query.status;
     const sort = req.query.sort ? req.query.sort : 'desc';
     const excludeRoomStats = req.query.excludeRoomStats;
     let rooms;
     if (excludeRoomStats === "true") {
+
       rooms = await getMyRooms(
         req.user._id,
         pageSize,
@@ -1447,7 +1444,10 @@ router.get('/my_games', auth, async (req, res) => {
         status,
         sort
       );
+
+
     } else {
+
       rooms = await getMyRoomsWithStats(
         req.user._id,
         pageSize,
@@ -1456,7 +1456,6 @@ router.get('/my_games', auth, async (req, res) => {
         sort
       );
     }
-
 
     res.json({
       success: true,
@@ -1471,7 +1470,6 @@ router.get('/my_games', auth, async (req, res) => {
     });
   }
 });
-
 const getMyRooms = async (
   user_id,
   pageSize,
@@ -1590,8 +1588,9 @@ const getMyRooms = async (
   };
 };
 
+
 router.post('/end_game', auth, async (req, res) => {
-  // console.log('End game route started...');
+
 
   try {
     const userId = req.user._id;
@@ -1615,6 +1614,349 @@ router.post('/end_game', auth, async (req, res) => {
         message: 'THIS GAME HAS ENDED ALREADY'
       });
     }
+
+    roomInfo.status = 'finished';
+    // stopBangGame(roomId, req.io.sockets);
+
+    const gameLogCount = await GameLog.countDocuments({ room: roomId });
+    let message = new Notification({
+      from: userId,
+      to: roomInfo.creator,
+      room: roomInfo._id,
+      message: '',
+      is_anonymous: req.body.is_anonymous,
+      is_read: false
+    });
+
+    const newTransaction = new Transaction({
+      user: roomInfo.creator,
+      amount: 0,
+      description: `ended ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+      room: roomId
+    });
+
+    const gameTypeName = roomInfo.game_type.game_type_name;
+    const rps_game_type = roomInfo.rps_game_type;
+    if (gameTypeName === 'RPS' && rps_game_type === 1) {
+
+      const rpsBetItems = await RpsBetItem.find({
+        room: roomInfo._id,
+        joiner_rps: ''
+      });
+
+      for (const item of rpsBetItems) {
+        const creatorItem = await Item.findOne({
+          'owners.user': roomInfo.creator._id,
+          'productName': item.rps,
+          'item_type': '653ee7ac17c9f5ee21245649'
+        });
+
+        if (creatorItem) {
+          const owner = creatorItem.owners.find(
+            (owner) => owner.user.toString() === roomInfo.creator._id.toString()
+          );
+
+          if (owner) {
+            owner.count += 1;
+            await creatorItem.save();
+          }
+        }
+      }
+    }
+
+    if (gameLogCount === 0) {
+      newTransaction.amount += roomInfo.bet_amount;
+
+      message.message =
+        `Earned ${convertToCurrency(roomInfo.bet_amount)} from ending ` +
+        `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
+    } else {
+      // set balance
+
+
+      if (gameTypeName === 'Spleesh!') {
+        const betAmount =
+          roomInfo.user_bet === 0 && roomInfo.bet_amount === roomInfo.pr
+            ? roomInfo.pr
+            : roomInfo.bet_amount;
+
+        const winnings =
+          parseFloat(roomInfo.user_bet) +
+          parseFloat(roomInfo.host_pr) +
+          betAmount;
+
+        newTransaction.amount += parseFloat(winnings);
+
+        message.message =
+          `Earned ${convertToCurrency(
+            roomInfo.host_pr + roomInfo.user_bet
+          )} from ending ` +
+          `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
+      } else if (
+        gameTypeName === 'RPS' ||
+        gameTypeName === 'Blackjack' ||
+        gameTypeName === 'Quick Shoot' ||
+        gameTypeName === 'Drop Game' ||
+        gameTypeName === 'Bang!' ||
+        gameTypeName === 'Roll'
+      ) {
+        newTransaction.amount += roomInfo.user_bet;
+        message.message =
+          `Earned ${convertToCurrency(roomInfo.user_bet)} from ending ` +
+          `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
+      } else if (gameTypeName === 'Mystery Box') {
+        newTransaction.amount +=
+          roomInfo.host_pr + parseFloat(roomInfo.user_bet);
+        message.message =
+          `Earned ${convertToCurrency(
+            roomInfo.host_pr + parseFloat(roomInfo.user_bet)
+          )} from ending ` +
+          `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
+      } else if (gameTypeName === 'Brain Game') {
+        newTransaction.amount += roomInfo.host_pr;
+        message.message =
+          `Earned ${convertToCurrency(roomInfo.host_pr)} from ending ` +
+          `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
+      }
+
+      newGameLog = new GameLog({
+        room: roomInfo,
+        creator: roomInfo.creator,
+        joined_user: roomInfo.creator,
+        game_type: roomInfo.game_type,
+        bet_amount: roomInfo.host_pr,
+        is_anonymous: roomInfo.is_anonymous,
+        game_result: -100
+      });
+
+      await newGameLog.save();
+    }
+
+    roomInfo.creator.balance += newTransaction.amount;
+    await roomInfo.creator.save();
+    await roomInfo.save();
+    await newTransaction.save();
+
+    sendEndedMessageToJoiners(
+      roomId,
+      roomInfo.creator._id,
+      message.message,
+      roomInfo.is_anonymous
+    );
+
+    const myRooms = await getMyRooms(userId);
+
+    res.json({
+      success: true,
+      myGames: myRooms.rooms,
+      pageSize: myRooms.pageSize,
+      newTransaction
+    });
+
+    const rooms = await getRoomList(10, 'All');
+
+    req.io.sockets.emit('UPDATED_ROOM_LIST', {
+      total: rooms.count,
+      roomList: rooms.rooms,
+      pageSize: rooms.pageSize
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      already_finished: false,
+      message: err
+    });
+  }
+});
+
+router.get('/my_chat', auth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const messages1 = await Message.find({ from: userId }).populate({
+      path: 'to',
+      model: User
+    });
+    const messages2 = await Message.find({ to: userId }).populate({
+      path: 'from',
+      model: User
+    });
+
+    const myChat = {};
+
+    for (let message of messages1) {
+      if (
+        message.to &&
+        (!myChat[message.to._id] ||
+          myChat[message.to._id].updated_at < message.updated_at)
+      ) {
+        myChat[message.to._id] = {
+          ...myChat[message.to._id],
+          _id: message.to._id,
+          message: message.message,
+          username: message.to.username,
+          avatar: message.to.avatar,
+          accessory: message.to.accessory,
+          rank: message.to.totalWagered,
+          created_at: message.created_at,
+          created_at_str: moment(message.created_at).format('LLL'),
+          updated_at: message.updated_at,
+          unread_message_count: 0
+        };
+      }
+    }
+
+    for (let message of messages2) {
+      if (message.from && message.from._id === message.to) {
+        continue;
+      }
+
+      if (
+        message.from &&
+        (!myChat[message.from._id] ||
+          myChat[message.from._id].updated_at < message.updated_at)
+      ) {
+        myChat[message.from._id] = {
+          ...myChat[message.from._id],
+          _id: message.from._id,
+          message: message.message,
+          username: message.from.username,
+          avatar: message.from.avatar,
+          accessory: message.from.accessory,
+          rank: message.from.totalWagered,
+          created_at: message.created_at,
+          created_at_str: moment(message.created_at).format('LLL'),
+          updated_at: message.updated_at
+        };
+      }
+
+      if (message.from && !myChat[message.from._id].unread_message_count) {
+        myChat[message.from._id].unread_message_count = 0;
+      }
+
+      if (message.from && !message.is_read) {
+        myChat[message.from._id].unread_message_count++;
+      }
+    }
+
+    res.json({
+      success: true,
+      myChat
+    });
+  } catch (err) {
+    console.log(err);
+    res.json({
+      success: false,
+      message: err
+    });
+  }
+});
+router.post('/unstake', auth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const roomId = req.body.room_id;
+
+    if (!check_access_time(userId)) {
+      return res.json({
+        success: false,
+        message: 'irregular action',
+        betResult: -1000
+      });
+    }
+
+    const roomInfo = await Room.findOne({ _id: roomId })
+      .populate({ path: 'creator', model: User })
+      .populate({ path: 'game_type', model: GameType });
+
+    if (roomInfo.status === 'finished') {
+      return res.json({
+        success: false,
+        already_finished: true,
+        message: 'THIS GAME HAS ENDED ALREADY'
+      });
+    }
+
+    // Find the host's share index
+    const hostIndex = roomInfo.hosts.findIndex(host => host.host.equals(userId));
+
+    if (hostIndex === -1) {
+      return res.json({
+        success: false,
+        message: 'You are not a host of this room'
+      });
+    }
+
+    // Deduct the unstake amount from the host's share
+    const unstakeAmount = roomInfo.hosts[hostIndex].share;
+    req.user.balance += unstakeAmount;
+    // Create a new transaction for unstaking
+    const newTransaction = new Transaction({
+      user: userId,
+      amount: unstakeAmount,
+      description: `Unstaked from ${roomInfo.game_type.short_name}-${roomInfo.room_number}`,
+      room: roomId
+    });
+
+    // Update room's user_bet and remove the host entry from the array
+    roomInfo.user_bet -= unstakeAmount;
+    roomInfo.endgame_amount -= unstakeAmount;
+    roomInfo.hosts.splice(hostIndex, 1); // Remove the host entry
+    await Promise.all([roomInfo.save(), req.user.save(), newTransaction.save()]);
+
+    // Retrieve the user's updated room list
+    const myRooms = await getMyRooms(userId);
+
+    // Send response with updated room list and new transaction
+    res.json({
+      success: true,
+      myGames: myRooms.rooms,
+      pageSize: myRooms.pageSize,
+      newTransaction
+    });
+
+    // Emit socket event to update room list for all users
+    const rooms = await getRoomList(10, 'All');
+    req.io.sockets.emit('UPDATED_ROOM_LIST', {
+      total: rooms.count,
+      roomList: rooms.rooms,
+      pageSize: rooms.pageSize
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      message: err.toString()
+    });
+  }
+});
+
+
+
+router.post('/end_game', auth, async (req, res) => {
+
+
+  try {
+    const userId = req.user._id;
+    const roomId = req.body.room_id;
+
+    if (!check_access_time(userId)) {
+      return res.json({
+        success: false,
+        message: 'irregular action',
+        betResult: -1000
+      });
+    }
+    const roomInfo = await Room.findOne({ _id: roomId })
+      .populate({ path: 'creator', model: User })
+      .populate({ path: 'game_type', model: GameType });
+
+    if (roomInfo.status === 'finished') {
+      return res.json({
+        success: false,
+        already_finished: true,
+        message: 'THIS GAME HAS ENDED ALREADY'
+      });
+    }
+
     roomInfo.status = 'finished';
     // stopBangGame(roomId, req.io.sockets);
 
@@ -1986,16 +2328,19 @@ router.get('/get_roll_guesses', async (req, res) => {
     const recentRolls = await RollBetItem.find({ room: room.roomId })
       .sort({ created_at: -1 })
       .limit(20);
-
+    await RollBetItem.updateMany(
+      { _id: { $in: recentRolls.map(item => item._id) } },
+      { $set: { status: 'FOUND' } }
+    );
     const rolls = recentRolls.map((item) => item.roll);
     const faces = recentRolls.map((item) => item.face);
 
-    const reversedRolls = rolls.slice().reverse();
-    const reversedFaces = faces.slice().reverse();
+    // const reversedRolls = rolls.slice().reverse();
+    // const reversedFaces = faces.slice().reverse();
 
     if (req.io.sockets) {
       const socketName = `ROLL_GUESSES_${room.roomId}`;
-      req.io.sockets.emit(socketName, { rolls: reversedRolls, faces: reversedFaces });
+      req.io.sockets.emit(socketName, { rolls: rolls, faces: faces });
     }
 
     res.json({
@@ -2227,6 +2572,224 @@ async function sendEndedMessageToJoiners(roomId, from, message, is_anonymous) {
   });
 }
 
+router.post('/coHost', auth, async (req, res) => {
+  try {
+    const rowId = req.body.rowId;
+    const room = await Room.findOne({ _id: rowId });
+    const gameType = await GameType.findOne({ _id: room.game_type });
+    if (!room) {
+      return res.json({
+        success: false,
+        message: 'ROOM NOT FOUND'
+      });
+    }
+
+    const now = moment().format('LLL');
+    const userBalance = req.user.balance;
+    const coHostAmount = parseFloat(req.body.amount); // Parse amount as a float
+
+    if (isNaN(coHostAmount) || coHostAmount <= 0) {
+      return res.json({
+        success: false,
+        message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
+      });
+    }
+
+    req.user.balance = req.user.balance || 0;
+
+    if (userBalance < coHostAmount) {
+      return res.json({
+        success: false,
+        message: 'NOT ENUFF FUNDS AT THIS MEOWMENT'
+      });
+    }
+
+    const description = `Co-hosted room ${gameType.short_name}-${room.room_number}`;
+
+    const existingHostIndex = room.hosts.findIndex(host => host.host.equals(req.user._id));
+
+    // Check if the user is not already the first host
+    if (existingHostIndex !== 0) {
+      if (existingHostIndex !== -1) {
+        room.hosts[existingHostIndex].share += coHostAmount;
+      } else {
+        room.hosts.push({ host: req.user._id, share: coHostAmount, accessory: req.user.accessory, rank: req.user.totalWagered });
+      }
+
+      const newTransactionJ = new Transaction({
+        created_at: now,
+        user: req.user._id,
+        amount: -coHostAmount,
+        description
+      });
+
+      // Update balances and save transactions
+      room.user_bet = parseFloat(room.user_bet) + coHostAmount;
+      room.endgame_amount += coHostAmount;
+      req.user.balance -= coHostAmount;
+
+      const savePromises = [
+        room.save(),
+        req.user.save(),
+        newTransactionJ.save()
+      ];
+
+      await Promise.all(savePromises);
+
+      return res.json({
+        success: true,
+        balance: req.user.balance,
+        newTransaction: newTransactionJ,
+        message: 'You are now a Co-Host. Bankroll increased!'
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: 'Why Co-Host when you are already the Host? Go to "Manage" and Top Up your game instead.'
+      });
+    }
+  } catch (e) {
+    console.log('ERROR in top_up_request', e);
+    return res.json({
+      success: false,
+      message: 'Failed to initiate coHostAmount'
+    });
+  }
+});
+
+router.post('/topUp', auth, async (req, res) => {
+  try {
+    const rowId = req.body.rowId;
+    const room = await Room.findOne({ _id: rowId });
+    const gameType = await GameType.findOne({ _id: room.game_type });
+    if (!room) {
+      return res.json({
+        success: false,
+        message: 'ROOM NOT FOUND'
+      });
+    }
+
+    const now = moment().format('LLL');
+    const userBalance = req.user.balance;
+    const topUpAmount = parseFloat(req.body.amount); // Parse amount as a float
+
+    if (isNaN(topUpAmount) || topUpAmount <= 0) {
+      return res.json({
+        success: false,
+        message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
+      });
+    }
+
+    req.user.balance = req.user.balance || 0;
+
+    if (userBalance < topUpAmount) {
+      return res.json({
+        success: false,
+        message: 'NOT ENUFF FUNDS AT THIS MEOWMENT'
+      });
+    }
+
+    const description = `Topped Up room ${gameType.short_name}-${room.room_number}`;
+
+
+    const newTransactionJ = new Transaction({
+      created_at: now,
+      user: req.user._id,
+      amount: -topUpAmount,
+      description
+    });
+
+    // Update balances and save transactions
+    room.bet_amount += topUpAmount;
+    room.user_bet = parseFloat(room.user_bet) + topUpAmount;
+    req.user.balance -= topUpAmount;
+
+    const savePromises = [
+      room.save(),
+      req.user.save(),
+      newTransactionJ.save()
+    ];
+
+    await Promise.all(savePromises);
+
+    return res.json({
+      success: true,
+      balance: req.user.balance,
+      newTransaction: newTransactionJ,
+      message: 'Top Up was successful. Bankroll increased!'
+    });
+  } catch (e) {
+    console.log('ERROR in top_up_request', e);
+    return res.json({
+      success: false,
+      message: 'Failed to initiate top-up'
+    });
+  }
+});
+
+router.post('/editPayout', auth, async (req, res) => {
+  try {
+    const rowId = req.body.rowId;
+    const room = await Room.findOne({ _id: rowId });
+    const gameType = await GameType.findOne({ _id: room.game_type });
+
+    if (!room) {
+      return res.json({
+        success: false,
+        message: 'ROOM NOT FOUND'
+      });
+    }
+
+    const now = moment().format('LLL');
+    const payoutAmount = parseFloat(req.body.amount); // Parse amount as a float
+
+    if (isNaN(payoutAmount) || payoutAmount < 0) {
+      return res.json({
+        success: false,
+        message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
+      });
+    }
+
+    if (
+      (gameType.short_name === 'MB') &&
+      (topUpAmount > room.bet_amount * 4) ||
+      (gameType.short_name === 'S!' &&
+        room.spleesh_bet_unit === 0.01 &&
+        room.endgame_amount < 0.4) ||
+      (gameType.short_name === 'S!' &&
+        room.spleesh_bet_unit === 0.1 &&
+        room.endgame_amount < 4.0)
+    ) {
+      return res.json({
+        success: false,
+        message: 'IM-PAW-SIBBLEEE, GAME TOO PROFITABLE!'
+      });
+    }
+
+
+    room.endgame_amount = payoutAmount;
+
+    const savePromises = [
+      room.save(),
+      req.user.save()
+    ];
+
+    await Promise.all(savePromises);
+
+
+    return res.json({
+      success: true,
+      message: 'Payout settings have been changed.!'
+    });
+  } catch (e) {
+    console.log('ERROR in payout_request', e);
+    return res.json({
+      success: false,
+      message: 'Failed to initiate payout settings'
+    });
+  }
+});
+
 router.post('/tip', auth, async (req, res) => {
   try {
     const toAddress = req.body.addressTo;
@@ -2309,9 +2872,80 @@ router.post('/tip', auth, async (req, res) => {
     });
   }
 });
+router.post('/reCreate', auth, async (req, res) => {
+  try {
+    const {
+      room_id
+    } = req.body;
+    const room = await Room.findOne({ _id: room_id });
+    console.log("sssssssssssS", room)
+    const gameType = await GameType.findOne({ _id: room.game_type });
+    if (!room) {
+      return res.json({
+        success: false,
+        message: 'ROOM NOT FOUND'
+      });
+    }
+
+    const mostRecentRoom = await Room.findOne().sort({ _id: -1 });
+
+    let newRoomNumber;
+    if (mostRecentRoom) {
+      newRoomNumber = mostRecentRoom.room_number + 1;
+    } else {
+      newRoomNumber = 1;
+    }
+
+    // Duplicate the found room
+    const duplicatedRoom = new Room({
+      game_type: room.game_type,
+      endgame_amount: room.endgame_amount,
+      creator: room.creator,
+      qs_list: room.qs_list,
+      rps_list: room.rps_list,
+      bet_amount: room.bet_amount,
+      room_number: newRoomNumber, // Use the incremented room number
+      // Copy other fields as needed
+    });
+
+    // Create a default description
+    let description = `Re-Created Room ${gameType.short_name}-${room.room_number}`;
+
+    const newTransactionJ = new Transaction({
+      created_at: now,
+      user: req.user._id,
+      amount: betAmount,
+      description
+    });
+
+    req.user.balance -= tipAmount;
+
+    const savePromises = [
+      req.user.save(),
+      newTransactionJ.save(),
+      duplicatedRoom.save()
+    ];
+
+    await Promise.all(savePromises);
+
+    return res.json({
+      success: true,
+      message: 'Room duplicated successfully',
+      newTransaction: newTransactionJ,
+
+    });
+
+  } catch (e) {
+    console.log('ERROR in re-create req', e);
+    return res.json({
+      success: false,
+      message: 'Failed to re-create room'
+    });
+  }
+});
+
 
 router.post('/bet', auth, async (req, res) => {
-  // console.log("******************************new game.********************")
   try {
     const tax = await SystemSetting.findOne({ name: 'commission' });
     const rain = await SystemSetting.findOne({ name: 'rain' });
@@ -2639,7 +3273,7 @@ router.post('/bet', auth, async (req, res) => {
     }
 
     // Function to calculate the value of a card
-      function getCardValue(card, currentScore) {
+    function getCardValue(card, currentScore) {
       if (card.card_host === 'A') {
         // Handle Ace as 11 or 1 based on the current score
         return currentScore + 11 <= 21 ? 11 : 1;
@@ -2656,10 +3290,10 @@ router.post('/bet', auth, async (req, res) => {
     function updateHostScore(currentScoreHost, currentScore) {
       const card = getRandomCard();
       const cardValue = getCardValue(card, currentScoreHost);
-    
+
       // Update the score_host and add the card to an array
       currentScoreHost += cardValue;
-    
+
       return {
         newScoreHost: currentScoreHost,
         card: { ...card, value: cardValue }, // Include the card along with its value
@@ -3182,6 +3816,7 @@ router.post('/bet', auth, async (req, res) => {
           await newGameLogC.save();
         }
       } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
+
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         if (
           parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
@@ -3840,14 +4475,20 @@ router.post('/bet', auth, async (req, res) => {
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         // newTransactionJ.amount -= parseFloat(req.body.bet_amount);
 
-        const recentItems = await RollBetItem.find({})
+        const recentItems = await RollBetItem.find({ room: roomInfo._id, status: 'FOUND' })
           .sort({ created_at: -1 }) // Sort in descending order based on created_at
           .limit(20);
 
+
         const reversedRecentItems = recentItems.slice().reverse();
 
-        // const faces = reversedRecentItems.map((item) => item.face);
-        const bet_item = reversedRecentItems[14];
+        const faces = recentItems.map((item) => item.face);
+        // console.log(faces)
+        const bet_item = recentItems[14];
+        const bet_item_thirt = recentItems[13];
+        const bet_item_fif = recentItems[15];
+        // console.log("bet_item: ", bet_item_thirt.face, bet_item.face, bet_item_fif.face);
+        // console.log("req.body.selected_roll: ", req.body.selected_roll);
 
         if (bet_item.face === req.body.selected_roll) {
           newGameLog.multiplier = bet_item.roll;
@@ -4414,21 +5055,22 @@ router.post('/bet', auth, async (req, res) => {
               }
 
               let updatedBoxList = originalBoxList.map((box, index) => {
-                let randomAmount = Math.random() < 0.5 ? -0.002 : 0.002;
-                let newPrice = box.box_price + randomAmount;
+                // Pick a random box_price from the originalBoxList
+                let randomIndex = Math.floor(Math.random() * originalBoxList.length);
+                let randomBoxPrice = originalBoxList[randomIndex].box_price;
 
-                while (newPrice <= 0) {
-                  newPrice += 1;
-                }
+                // Use the randomly picked box_price for the new box
                 let newBox = new RoomBoxPrize({
                   room: roomInfo,
                   box_prize: boxPrizes[index],
-                  box_price: newPrice,
+                  box_price: randomBoxPrice,
                   status: 'init'
                 });
+
                 newBox.save();
                 return newBox;
               });
+
 
               if (req.io.sockets) {
                 req.io.sockets.emit('UPDATED_BOX_LIST', {
@@ -4507,23 +5149,22 @@ router.post('/bet', auth, async (req, res) => {
             }
 
             let updatedBoxList = originalBoxList.map((box, index) => {
-              let randomAmount = Math.random() < 0.5 ? -0.001 : 0.001;
-              let newPrice = box.box_price + randomAmount;
+              // Pick a random box_price from the originalBoxList
+              let randomIndex = Math.floor(Math.random() * originalBoxList.length);
+              let randomBoxPrice = originalBoxList[randomIndex].box_price;
 
-              while (newPrice <= 0) {
-                newPrice += 1;
-              }
-
+              // Use the randomly picked box_price for the new box
               let newBox = new RoomBoxPrize({
                 room: roomInfo,
                 box_prize: boxPrizes[index],
-                box_price: newPrice,
+                box_price: randomBoxPrice,
                 status: 'init'
               });
 
               newBox.save();
               return newBox;
             });
+
 
             if (req.io.sockets) {
               req.io.sockets.emit('UPDATED_BOX_LIST', {
@@ -4561,7 +5202,7 @@ router.post('/bet', auth, async (req, res) => {
             while (currentScoreHost < 21 && predictNextBj(allBetItems, currentScoreHost) === 'hit') {
               const result = updateHostScore(currentScoreHost, score);
               currentScoreHost = result.newScoreHost;
-              cardsArray.push({card: result.card,  score: currentScoreHost});
+              cardsArray.push({ card: result.card, score: currentScoreHost });
             }
 
             console.log("New score_host after hits:", currentScoreHost);
@@ -4869,10 +5510,40 @@ router.post('/bet', auth, async (req, res) => {
           newTransactionJ.save();
         }
 
-        if (newTransactionC.amount !== 0) {
-          newTransactionC.save();
-          socket.newTransaction(newTransactionC);
+        console.log("222")
+        // Check if user_bet matches the share value of the first host
+        if (roomInfo['user_bet'] === roomInfo.hosts[0].share) {
+          
+          console.log(roomInfo.hosts[0].share)
+          if (newTransactionC.amount !== 0) {
+            newTransactionC.save();
+            socket.newTransaction(newTransactionC);
+          }
+        } else {
+          // If not, calculate shares for each host
+          console.log("else")
+          roomInfo.hosts.forEach(async (host) => {
+            // Calculate share percentage for the current host
+            const sharePercentage = (host.share / roomInfo.user_bet) * 100;
+
+            // Calculate the amount for the current host based on the share percentage
+            const amountForHost = (parseFloat(roomInfo.host_pr) * sharePercentage) / 100;
+
+            // Create a new transaction for the current host
+            const newTransactionForHost = new Transaction({
+              user: host.host,
+              amount: amountForHost,
+              description: 'Co-Hosting auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number,
+              room: req.body._id
+            });
+
+            if (newTransactionForHost.amount !== 0) {
+              await newTransactionForHost.save();
+              socket.newTransaction(newTransactionForHost);
+            }
+          });
         }
+
 
         if (message.from._id !== message.to._id) {
           message.save();

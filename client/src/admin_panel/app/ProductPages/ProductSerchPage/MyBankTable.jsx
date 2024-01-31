@@ -122,7 +122,7 @@ opacity: 0;
 
     ${ProductCard}:hover & {
       opacity: 1;
-      left: 30%; 
+      left: 7.5%; 
         bottom: calc(50% - 30px);
   
 `;
@@ -439,7 +439,7 @@ class MyBankTable extends Component {
             <LinearProgress color="secondary" />
           </LinearContainer>
         )}
-        <PaginationContainer>
+        {/* <PaginationContainer>
           <Pagination
             limit={1}
             offset={page - 1}
@@ -448,7 +448,7 @@ class MyBankTable extends Component {
               acQueryMyLoan(30, offset + 1, this.state.sortCriteria, this.state.loanType);
             }}
           />
-        </PaginationContainer>
+        </PaginationContainer> */}
       </MarketplaceContainer>
     );
   }

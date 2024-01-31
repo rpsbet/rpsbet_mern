@@ -24,6 +24,11 @@ export class GameMainRoute extends Component {
           />
           <Route 
             exact
+            path={`${match.path}create/`}
+            component={CreateGame}
+          />
+          <Route 
+            exact
             path={`${match.path}join/:id`}
             component={JoinGame}
           />

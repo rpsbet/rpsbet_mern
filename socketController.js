@@ -129,11 +129,20 @@ module.exports.socketio = server => {
     });
     socket.emit('CONNECTED', {});
 
-    socket.on('STORE_CLIENT_USER_ID', data => {
-      sockets[data.user_id] = socket;
-      io.sockets.emit('ONLINE_STATUS_UPDATED', {
-        user_list: Object.keys(sockets)
-      });
+    socket.on('STORE_CLIENT_USER_ID', async data => {
+      try {
+        // Update last_seen for the user
+        await User.updateOne({ _id: data.user_id }, { last_seen: new Date() });
+
+        sockets[data.user_id] = socket;
+        // Emit the updated online status
+        const onlineUsers = Object.keys(sockets);
+        io.sockets.emit('ONLINE_STATUS_UPDATED', {
+          user_list: onlineUsers
+        });
+      } catch (error) {
+        console.error('Error updating user last_seen:', error);
+      }
     });
 
     socket.on('GLOBAL_CHAT_SEND', data => {

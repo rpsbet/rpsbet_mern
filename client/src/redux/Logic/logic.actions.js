@@ -66,6 +66,26 @@ export const createRoom = room_info => async dispatch => {
     dispatch({ type: MSG_WARNING, payload: err });
   }
 };
+// reCreateRoom
+export const reCreateRoom = room_id => async dispatch => {
+  const body = JSON.stringify(room_id);
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.post('/game/reCreate', body);
+    dispatch({ type: END_LOADING });
+
+    if (res.data.success) {
+      dispatch({ type: MSG_CREATE_ROOM_SUCCESS, payload: res.data.message });
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      // dispatch({ type: SET_BALANCE, payload: res.data.newTransaction });
+    } else {
+      dispatch({ type: MSG_WARNING, payload: res.data.message });
+    }
+    history.push('/');
+  } catch (err) {
+    dispatch({ type: MSG_WARNING, payload: err });
+  }
+};
 
 export function updateSpleeshGuesses() {
   return dispatch => {
@@ -440,24 +460,26 @@ export const getGameTypeList = () => async dispatch => {
   }
 };
 export const getMyGames = search_condition => async dispatch => {
-  dispatch({ type: START_LOADING });
   try {
+    dispatch({ type: START_LOADING });
+
+
     const resWithoutRoomStats = await axios.get('/game/my_games', {
       params: { ...search_condition, excludeRoomStats: true }
     });
+
     if (resWithoutRoomStats.data.success) {
       dispatch({ type: MY_GAMES_LOADED_WITHOUT_STATS });
       dispatch({ type: MY_GAMES_LOADED, payload: { ...resWithoutRoomStats.data } });
+
 
       const resWithRoomStats = await axios.get('/game/my_games', {
         params: { ...search_condition, excludeRoomStats: false }
       });
 
       if (resWithRoomStats.data.success) {
-
         dispatch({ type: MY_GAMES_LOADED, payload: { ...resWithRoomStats.data } });
         dispatch({ type: MY_GAMES_LOADED_WITH_STATS });
-
       } else {
         dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
       }
@@ -465,8 +487,10 @@ export const getMyGames = search_condition => async dispatch => {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }
   } catch (err) {
+    console.error("Error while fetching games:", err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   } finally {
+    console.log("Request completed.");
     dispatch({ type: END_LOADING });
   }
 };
@@ -476,6 +500,30 @@ export const getMyGames = search_condition => async dispatch => {
 export const endGame = (room_id, callback) => async dispatch => {
   try {
     const res = await axios.post('/game/end_game', { room_id });
+    if (res.data.success) {
+      dispatch({
+        type: MY_GAMES_LOADED,
+        payload: {
+          myGames: res.data.myGames,
+          pages: res.data.pages,
+          pageNumber: 1
+        }
+      });
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+
+    } else {
+      if (res.data.already_finished) {
+        // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+export const unstake = (room_id, callback) => async dispatch => {
+  try {
+    const res = await axios.post('/game/unstake', { room_id });
     if (res.data.success) {
       dispatch({
         type: MY_GAMES_LOADED,

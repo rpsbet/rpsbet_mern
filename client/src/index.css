@@ -164,7 +164,7 @@ button {
     height: 2.75rem !important;
     border-radius: 50% !important;
     margin: 0 !important;
-    border: 3px solid #ddd !important;
+    border: 3px solid #ddd;
 }
 #footer-container {
   border-top: 1px solid rgba(235, 235, 235, 0.48);
@@ -599,7 +599,7 @@ table#runs th {
 }
 
 #runs {
-  max-height: 55vh;
+  max-height: 200px;
   display: flex;
   overflow-y: scroll;
   justify-content: center;

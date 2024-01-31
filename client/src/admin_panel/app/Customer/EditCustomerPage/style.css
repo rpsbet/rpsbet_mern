@@ -9,7 +9,7 @@
 }
 .statistics-panel table {
   width: 100%;
-  display: flex;
+  display: table;
   text-align-last: start;
   justify-content: space-evenly;
 }
@@ -27,12 +27,14 @@
   white-space: nowrap;
 }
 .statistics-panel .value {
-  text-align: left;
-  color: #ffb000;
+  text-align: center !important;
+    color: #ffb000;
+    font-size: 1.1em;
+    display: flex !important;
+    justify-content: center !important;
+    white-space: nowrap;
+    align-items: center;
 
-  font-size: 1.1em;
-  animation: slideIn 0.5s ease-in-out;
-  white-space: nowrap;
 }
 
 .progress-bar-outer {
@@ -40,7 +42,7 @@
   overflow: hidden;
   height: 10px;
   width: 100%;
-  margin: 20px auto -10px !important;
+  margin: 5px auto -10px !important;
   position: relative;
 
 }
@@ -138,9 +140,6 @@ position: relative;
   margin-bottom: 20px;
 }
 
-.filters {
-  margin-bottom: 10px;
-}
 
 .room-link {
   z-index: 9;
@@ -191,10 +190,6 @@ position: relative;
   margin: 5px;
 }
 
-.statistics-panel table th,
-.statistics-panel table td {
-  padding: 5px 20px;
-}
 
 .apexcharts-tooltip {
   padding: 10px;

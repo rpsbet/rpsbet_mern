@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Modal from 'react-modal';
 import {
@@ -17,7 +18,7 @@ import {
   Tooltip,
   Typography
 } from '@material-ui/core';
-import { Warning, Info, Link, FiberManualRecord } from '@material-ui/icons';
+import { Warning, Info, Link, FiberManualRecord , AccountBalanceWallet} from '@material-ui/icons';
 
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
@@ -143,7 +144,8 @@ class WithdrawModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">WITHDRAW</h2>
+              <h2 className="modal-title">  <Icon component={ArrowForward} className="mr-2" /> {/* Withdraw icon */}
+WITHDRAW</h2>
               <Button className="btn-close" onClick={this.props.closeModal}>
                 ×
               </Button>

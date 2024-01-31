@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { convertToCurrency } from '../../util/conversion';
+import { Warning, Info, CheckCircle } from '@material-ui/icons';
+import { Tooltip } from '@material-ui/core';
 // import { updateDigitToPoint2 } from '../../util/helper';
 
 class Summary extends Component {
@@ -137,9 +139,30 @@ class Summary extends Component {
       endgame_type
     } = this.props;
     let public_max_return = <> {convertToCurrency(max_prize)} </>;
+    let spleesh_public_bet_amount = public_bet_amount
 
+    const isNegative = winChance < 0;
+    const isPositive = winChance > 0;
+    const isZero = winChance === 0;
+
+    let valueColor = 'default';
+    let backgroundColor = 'default';
+    let icon = <Info style={{width: "10pt", cursor: "pointer", marginLeft: "5px"}}/>;
+    let tooltipText = 'Zero-sum game (fair)';
+
+    if (isNegative) {
+      valueColor = '#ff0000';
+      backgroundColor = '#ff000033';
+      icon = <Warning  style={{width: "10pt", cursor: "pointer", marginLeft: "5px"}}/>;
+      tooltipText = 'High Risk Game';
+    } else if (isPositive) {
+      valueColor = 'rgb(40, 167, 69)';
+      backgroundColor = 'rgba(40, 167, 69, 0.3)';
+      icon = <CheckCircle  style={{width: "10pt", cursor: "pointer", marginLeft: "5px"}}/>;
+      tooltipText = 'Low Risk Game';
+    }
     if (game_mode === 'Spleesh!') {
-      public_bet_amount = (
+      spleesh_public_bet_amount = (
         <>
           {convertToCurrency(spleesh_bet_unit)} -{' '}
           {convertToCurrency(spleesh_bet_unit * 10)}
@@ -155,8 +178,13 @@ class Summary extends Component {
         <div className="summary-info">
           <div className="summary-item">
             <div className="summary-item-name">Expected Value</div>
-            <div className="summary-item-value">
-              {convertToCurrency(winChance)}
+            <div className="summary-item-value" style={{ color: valueColor, background: backgroundColor }}>
+              {convertToCurrency(winChance) === -0
+                ? convertToCurrency(0.0).toFixed(2)
+                : convertToCurrency(winChance)}
+              <Tooltip title={tooltipText}>
+                {icon}
+              </Tooltip>
             </div>
           </div>
           <div className="summary-item">
@@ -172,8 +200,8 @@ class Summary extends Component {
                 {rps_game_type === 0
                   ? 'Classic'
                   : rps_game_type === 1
-                  ? 'RRPS'
-                  : 'Other'}
+                    ? 'RRPS'
+                    : 'Other'}
               </div>
             </div>
           )}
@@ -184,11 +212,19 @@ class Summary extends Component {
               <div className="summary-item-value">{qs_game_type}</div>
             </div>
           )}
-          {(game_mode === 'Spleesh!' || game_mode === 'Quick Shoot') && (
+          {(game_mode === 'Quick Shoot') && (
             <div className="summary-item">
               <div className="summary-item-name">Public Bet Amount</div>
               <div className="summary-item-value">
                 {convertToCurrency(public_bet_amount)}
+              </div>
+            </div>
+          )}
+          {(game_mode === 'Spleesh!') && (
+            <div className="summary-item">
+              <div className="summary-item-name">Public Bet Amount</div>
+              <div className="summary-item-value">
+                {convertToCurrency(spleesh_public_bet_amount)}
               </div>
             </div>
           )}

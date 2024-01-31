@@ -1,5 +1,5 @@
 .chat-wrapper .chat-panel.global-chat {
-    height:calc(100% - 115px);
+    height:calc(100% - 140px);
     overflow-y: scroll;
     width: 270px;
 }
