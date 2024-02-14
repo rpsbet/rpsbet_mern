@@ -214,12 +214,12 @@ class OpenGamesTable extends Component {
   componentDidUpdate(prevProps, prevState) {
     const { roomList } = this.props;
     const roomIds = roomList.map(room => room._id);
-    if (prevProps.roomList !== this.props.roomList) {
-      if (this._isMounted) {
-        this.setState({ roomList, isLoading: false });
-        this.getRoomData(roomIds);
-      }
-    }
+    // if (prevProps.roomList !== this.props.roomList) {
+    //   if (this._isMounted) {
+    //     this.setState({ roomList, isLoading: false });
+    //     this.getRoomData(roomIds);
+    //   }
+    // }
     if (prevState.selectedGameType !== this.state.selectedGameType) {
       if (this._isMounted) {
         this.setState({ isLoading: true });
