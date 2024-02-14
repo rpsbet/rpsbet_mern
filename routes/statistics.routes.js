@@ -141,7 +141,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
     const tax = await SystemSetting.findOne({ name: 'commission' });
     const userIds = gameLogs.map(log => log.creator);
     const users = await User.find({ _id: { $in: userIds } }).select(
-      'accessory'
+      'accessory avatar'
     );
     const accessoryMap = new Map(
       users.map(user => [user._id.toString(), user.accessory])

@@ -273,7 +273,8 @@ class PlayerModal extends Component {
     );
     const userData = await this.props.acGetCustomerInfo(
       this.props.selectedCreator
-    );
+      );
+      // console.log(userData)
 
     this.setState({
       ...result,

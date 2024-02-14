@@ -93,6 +93,13 @@ class WithdrawModal extends Component {
         );
         return;
       }
+      if (this.state.amount >= 0.02) {
+        alertModal(
+          this.props.isDarkMode,
+          `MAXIMUM PER TRANSACTION IS 0.02 ETH DURING LAUNCH PHASE`
+        );
+        return;
+      }
 
       if (this.state.amount > this.props.balance) {
         alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);

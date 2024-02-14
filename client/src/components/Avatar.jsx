@@ -23,6 +23,7 @@ class Avatar extends Component {
 
   componentDidMount() {
     // this.getColor();
+ 
   }
 
   // componentDidUpdate(prevProps) {
@@ -65,6 +66,7 @@ class Avatar extends Component {
   }
 
   render() {
+    
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
     const { isLowGraphics, isDarkMode } = this.props;
     let borderColor = '3px solid transparent';
@@ -105,7 +107,7 @@ class Avatar extends Component {
     return (
       <div
         // {...this.props}
-        className='avatar desktop-only'
+        className='avatar'
         style={{
           position: 'relative',
           backgroundColor,

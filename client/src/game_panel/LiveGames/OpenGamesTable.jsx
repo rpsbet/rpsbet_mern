@@ -336,7 +336,7 @@ class OpenGamesTable extends Component {
   };
 
   handleOpenPlayerModal = creator_id => {
-    // console.log(creator_id)
+    console.log(creator_id)
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
 

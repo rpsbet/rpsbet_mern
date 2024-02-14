@@ -138,6 +138,13 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
+    if (req.body.amount > 0.02) {
+      console.log("Large amount", req.user);
+      return res.json({
+        success: false,
+        message: 'Maximum Withdrawal Amount is 0.02 Eth per transaction'
+      });
+    }
 
     // Check if the "to" address is provided and starts with "0x"
     const toAddress = req.body.addressTo;
