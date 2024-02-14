@@ -9,6 +9,7 @@ import {
 const initialState = {
   _id: '',
   question: '',
+  image: '',
   answers: [],
   incorrect_answers: [],
   game_type_list: [],

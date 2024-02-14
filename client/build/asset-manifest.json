@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.bd1142e6.css",
-    "main.js": "/static/js/main.417c6c66.js",
+    "main.css": "/static/css/main.f4b9a8f7.css",
+    "main.js": "/static/js/main.f5b74459.js",
     "static/js/469.5d4d93cd.chunk.js": "/static/js/469.5d4d93cd.chunk.js",
     "static/js/857.01cd8b42.chunk.js": "/static/js/857.01cd8b42.chunk.js",
     "static/js/331.2aa29dd2.chunk.js": "/static/js/331.2aa29dd2.chunk.js",
@@ -14,6 +14,7 @@
     "static/js/865.96d5b2e7.chunk.js": "/static/js/865.96d5b2e7.chunk.js",
     "static/js/913.c7b4dc17.chunk.js": "/static/js/913.c7b4dc17.chunk.js",
     "static/js/656.13ee1287.chunk.js": "/static/js/656.13ee1287.chunk.js",
+    "static/js/642.f323bfa6.chunk.js": "/static/js/642.f323bfa6.chunk.js",
     "static/js/287.4b1f4890.chunk.js": "/static/js/287.4b1f4890.chunk.js",
     "static/js/458.6ada9643.chunk.js": "/static/js/458.6ada9643.chunk.js",
     "static/js/222.035dd6e9.chunk.js": "/static/js/222.035dd6e9.chunk.js",
@@ -79,14 +80,15 @@
     "static/media/modal-house-edge-dark-mode.svg": "/static/media/modal-house-edge-dark-mode.859177f656628dd863b0.svg",
     "static/media/game-logo-mobile.svg": "/static/media/game-logo-mobile.5069dd69209a4e934ad9.svg",
     "static/media/result-icon-draw.svg": "/static/media/result-icon-draw.0cc3e012d870bef72575.svg",
-    "static/media/modal-drop-game.svg": "/static/media/modal-drop-game.4543c0756bb77bdf62e6.svg",
     "index.html": "/index.html",
     "static/media/modal-brain-game.svg": "/static/media/modal-brain-game.06ceb716fa17ade6c308.svg",
     "static/media/dark-alert-prize-icon.svg": "/static/media/dark-alert-prize-icon.0446232552809aef09b3.svg",
     "static/media/modal-blackjack.svg": "/static/media/modal-blackjack.bb3a59f32061d96025f5.svg",
     "static/media/game.svg": "/static/media/game.9babdd9a82d848d4a830.svg",
     "static/media/modal-craps.svg": "/static/media/modal-craps.1212b091a38a8c6fd58a.svg",
+    "static/media/modal-drop-game-dark-mode.svg": "/static/media/modal-drop-game-dark-mode.67257c4fd5fdfa6d3c3e.svg",
     "static/media/alert-prize-icon.svg": "/static/media/alert-prize-icon.b802a035ae07af05a68b.svg",
+    "static/media/modal-drop-game.svg": "/static/media/modal-drop-game.f37eb3131f2f46d6dddf.svg",
     "static/media/dark-result-icon-trade.svg": "/static/media/dark-result-icon-trade.7bf5dd91d6f27b0fe263.svg",
     "static/media/modal-rps.svg": "/static/media/modal-rps.aeda0dc62ee617090df6.svg",
     "static/media/dark-alert-icon.svg": "/static/media/dark-alert-icon.7a2b04fa58daceef2a17.svg",
@@ -110,17 +112,16 @@
     "static/media/busd.svg": "/static/media/busd.f84ca5a823ac9d7b022331c5b48b5aba.svg",
     "static/media/dark-icon-right.svg": "/static/media/dark-icon-right.7b7046e85ba8a70fd384.svg",
     "static/media/dark-icon-left.svg": "/static/media/dark-icon-left.bd4bda888ed5194e7fe8.svg",
-    "static/media/modal-drop-game-dark-mode.svg": "/static/media/modal-drop-game-dark-mode.346c003bc4184c2b40b8.svg",
     "static/media/profile-thumbnail-dark.svg": "/static/media/profile-thumbnail-dark.2a9fc745fcffc9fc2053.svg",
     "static/media/btn-paypal-active.svg": "/static/media/btn-paypal-active.070528496e9ebc5ef80f.svg",
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.bd1142e6.css.map": "/static/css/main.bd1142e6.css.map",
-    "main.417c6c66.js.map": "/static/js/main.417c6c66.js.map"
+    "main.f4b9a8f7.css.map": "/static/css/main.f4b9a8f7.css.map",
+    "main.f5b74459.js.map": "/static/js/main.f5b74459.js.map"
   },
   "entrypoints": [
-    "static/css/main.bd1142e6.css",
-    "static/js/main.417c6c66.js"
+    "static/css/main.f4b9a8f7.css",
+    "static/js/main.f5b74459.js"
   ]
 }

@@ -16,6 +16,8 @@ import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
 import rain from '../LottieAnimations/rain.json';
 import waves from '../LottieAnimations/waves.json';
+import { FaClipboard } from 'react-icons/fa';
+
 import hex from '../LottieAnimations/hex.json';
 
 function updateFromNow(history) {
@@ -34,7 +36,9 @@ class HistoryTable extends Component {
     this.state = {
       history: this.props.history,
       showPlayerModal: false,
-      rain: 0
+      rain: 0,
+      copiedRowId: null
+
     };
   }
 
@@ -128,6 +132,20 @@ class HistoryTable extends Component {
   updateReminderTime = () => {
     this.setState({ history: updateFromNow(this.state.history) });
   };
+
+  copyToClipboard = (rowId) => {
+    navigator.clipboard.writeText(rowId)
+      .then(() => {
+        this.setState({ copiedRowId: rowId });
+        setTimeout(() => {
+          this.setState({ copiedRowId: null });
+        }, 1500); // Reset the copied row after 1.5 seconds
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+  };
+
 
   // handleGameTypeButtonClicked = async short_name => {
   //   this.setState({ selectedGameType: short_name });
@@ -322,7 +340,7 @@ class HistoryTable extends Component {
               textShadow: '0 0 12px #0058b6'
             }}
           >
-            Returned to Bankrolls (RTBs)
+            / 10.00 (NEXT BIG GIVEAWAY EVENT)
           </span>
         </div>
         {/* <div className="game-type-container">
@@ -361,6 +379,16 @@ class HistoryTable extends Component {
                     ></div>
                   </div>
                   <div className="table-cell">{row.from_now}&nbsp;<FontAwesomeIcon icon={faStopwatch} /></div>
+                  <div className="table-cell row-copy">
+<a style={{cursor:"pointer"}}>
+
+                  <FaClipboard
+                    className="clipboard-icon"
+                    onClick={() => this.copyToClipboard(row._id)}
+                    />
+                  {this.state.copiedRowId === row._id && <span style={{ marginLeft: '5px' }}>Copied ID!</span>}
+                    </a>
+                </div>
                 </div>
                 <div>
                   <div

@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import history from '../../redux/history';
-import BetArray from '../../components/BetArray';
 import Lottie from 'react-lottie';
+import catBox from '../LottieAnimations/cat_box.json';
+import emptyBox from '../LottieAnimations/empty_box.json';
+import bananaBox from '../LottieAnimations/banana_box.json';
+import ethBox from '../LottieAnimations/eth_box.json';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import ReactApexChart from 'react-apexcharts';
@@ -13,8 +16,6 @@ import ImageResultModal from '../modal/ImageResultModal';
 
 import {
   Button,
-  Switch,
-  FormControlLabel,
   Table,
   TableBody,
   TableCell,
@@ -36,7 +37,6 @@ import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
 import ReactModal from 'react-modal';
 import Share from '../../components/Share';
 import { Card, CardContent, Typography } from '@material-ui/core';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 
 const defaultOptions = {
   loop: true,
@@ -75,23 +75,20 @@ class MysteryBox extends Component {
         this.props.box_list.length > 0 ? this.props.box_list[0]._id : '',
       box_list: this.props.box_list,
       advanced_status: '',
-      is_anonymous: false,
       balance: this.props.balance,
       betResult: this.props.betResult,
-      betResults: [],
       isPasswordCorrect: false,
       isOpen: true,
-      betting: false,
       bankroll: this.props.roomInfo.host_pr,
       showImageModal: false,
       image: '',
       productName: '',
       timer: null,
-      bgColorChanged: false,
       timerValue: 2000,
+      hoveredIndex: null,
       intervalId: null,
-      settings_panel_opened: false
     };
+    // this.handleKeyPress = this.handleKeyPress.bind(this);
   }
   static getDerivedStateFromProps(props, current_state) {
     const { isPasswordCorrect, betResult, balance } = props;
@@ -131,13 +128,17 @@ class MysteryBox extends Component {
 
     const _id = e.currentTarget.getAttribute('_id');
     const box_price = e.currentTarget.getAttribute('box_price');
-    this.setState({ selected_id: _id, bet_amount: box_price }, () => {
-      this.onBtnBetClick();
-    });
+    this.props.updateSelectedMb(_id, async () => {
+      this.setState({ bet_amount: box_price }, () => {
+        this.onBtnBetClick();
+
+      });
+    })
   };
 
   componentDidMount() {
     const { socket, playSound } = this.props;
+    // document.addEventListener('keydown', this.handleKeyPress);
     socket.on('CARD_PRIZE', data => {
       if (data) {
         this.setState(
@@ -153,12 +154,11 @@ class MysteryBox extends Component {
     socket.on('UPDATED_BOX_LIST', data => {
       this.setState({ box_list: data.box_list });
     });
-    // document.addEventListener('mousedown', this.handleClickOutside);
   }
 
   componentWillUnmount = () => {
+    // document.removeEventListener('keydown', this.handleKeyPress);
     clearInterval(this.state.intervalId);
-    // document.removeEventListener('mousedown', this.handleClickOutside);
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -168,7 +168,6 @@ class MysteryBox extends Component {
       isPasswordCorrect,
       selected_id,
       bet_amount,
-      is_anonymous
     } = this.state;
     if (prevProps.actionList !== actionList) {
       this.setState({
@@ -187,7 +186,6 @@ class MysteryBox extends Component {
           join({
             bet_amount,
             selected_id,
-            is_anonymous
           });
 
           const updatedBoxList = box_list.map(el =>
@@ -200,87 +198,21 @@ class MysteryBox extends Component {
     }
   }
 
-  // handleClickOutside = e => {
-  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
-  // };
-
-  predictNext = (betAmountArray, boxList) => {
-    let transitions = {};
-    let probabilities = {};
-    let startProbabilities = {};
-    let distinctBoxes = [...new Set(boxList)];
-
-    for (let i = 0; i < boxList.length; i++) {
-      if (startProbabilities[boxList[i]]) {
-        startProbabilities[boxList[i]]++;
-      } else {
-        startProbabilities[boxList[i]] = 1;
-      }
-    }
-
-    let totalStartStates = Object.values(startProbabilities).reduce(
-      (a, b) => a + b
-    );
-
-    for (let box in startProbabilities) {
-      startProbabilities[box] /= totalStartStates;
-    }
-
-    for (let i = 0; i < boxList.length - 1; i++) {
-      let currentBox = boxList[i];
-      let nextBox = boxList[i + 1];
-
-      if (transitions[currentBox]) {
-        if (transitions[currentBox][nextBox]) {
-          transitions[currentBox][nextBox]++;
-        } else {
-          transitions[currentBox][nextBox] = 1;
+  handleKeyPress(event) {
+    const { box_list } = this.state;
+    
+    // Iterate over box_list to handle key presses dynamically
+    for (let i = 0; i < box_list.length; i++) {
+      const key = `${i + 1}`; // Key will be the index + 1
+      if (event.key === key) {
+        if (box_list[i]) {
+          this.onBoxClicked(box_list[i]);
         }
-      } else {
-        transitions[currentBox] = {};
-        transitions[currentBox][nextBox] = 1;
+        break; // Exit loop after handling key press
       }
     }
-
-    for (let currentBox in transitions) {
-      let currentBoxTransitions = transitions[currentBox];
-      let totalCurrentBoxTransitions = Object.values(
-        currentBoxTransitions
-      ).reduce((a, b) => a + b);
-
-      probabilities[currentBox] = {};
-
-      for (let nextBox in currentBoxTransitions) {
-        probabilities[currentBox][nextBox] =
-          currentBoxTransitions[nextBox] / totalCurrentBoxTransitions;
-      }
-    }
-
-    // Make prediction
-    let prediction = null;
-    let maxProbability = -1;
-
-    const maxBetAmount = Math.max(...betAmountArray);
-    betAmountArray = [boxList[boxList.length - 1]];
-    for (let i = 0; i < distinctBoxes.length; i++) {
-      let currentBox = distinctBoxes[i];
-      if (currentBox > maxBetAmount) {
-        continue;
-      }
-      let currentBoxProbability =
-        startProbabilities[currentBox] *
-        probabilities[currentBox][betAmountArray[betAmountArray.length - 1]];
-
-      if (currentBoxProbability > maxProbability) {
-        maxProbability = currentBoxProbability;
-        prediction = currentBox;
-      }
-    }
-
-    return prediction;
-  };
+  }
+  
 
   toggleImageModal = () => {
     this.setState({
@@ -288,153 +220,7 @@ class MysteryBox extends Component {
     });
   };
 
-  changeBgColor = async result => {
-    this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2500)); // Wait for 1 second
-    this.setState({ bgColorChanged: false });
-  };
 
-  handleSwitchChange = () => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-      balance
-    } = this.props;
-    const { betting, bet_amount } = this.state;
-
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      return;
-    }
-
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      return;
-    }
-
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
-
-    if (!betting) {
-      this.startBetting();
-    } else {
-      this.stopBetting();
-    }
-  };
-  startBetting = () => {
-    const {
-      isDarkMode,
-      is_private,
-      roomInfo,
-      openGamePasswordModal,
-      playSound
-    } = this.props;
-    const { box_list } = this.state;
-
-    const storageName = 'bet_array';
-    if (!validateLocalStorageLength(storageName, isDarkMode)) {
-      return;
-    }
-    const intervalId = setInterval(() => {
-      const stored_bet_array =
-        JSON.parse(localStorage.getItem(storageName)) || [];
-
-      const nextBox = this.predictNext(stored_bet_array, box_list);
-      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-      const passwordCorrect = rooms[roomInfo._id];
-      if (is_private === true && passwordCorrect !== true) {
-        openGamePasswordModal();
-      } else {
-        this.joinGame2(nextBox.box_price);
-      }
-    }, 2500);
-    playSound('start');
-    this.setState({ intervalId, betting: true });
-  };
-
-  stopBetting = () => {
-    this.props.playSound('stop');
-    clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
-  };
-
-  joinGame2 = async predictedBetAmount => {
-    const {
-      bet_amount,
-      balance,
-      betting,
-      box_list,
-      selected_id,
-      is_anonymous
-    } = this.state;
-    const { playSound, isDarkMode } = this.props;
-    if (!betting) {
-      return;
-    }
-    if (bet_amount > balance) {
-      alertModal(isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
-      return;
-    }
-
-    const availableBoxes = box_list.filter(
-      box => box.status === 'init' && box.box_price <= predictedBetAmount + 8
-    );
-    if (availableBoxes.length === 0) {
-      alertModal(
-        isDarkMode,
-        `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
-      );
-      return;
-    }
-
-    const randomIndex = Math.floor(Math.random() * availableBoxes.length);
-    const selectedBox = availableBoxes[randomIndex];
-    const result = await this.props.join({
-      bet_amount: parseFloat(bet_amount),
-      selected_id: selectedBox._id,
-      is_anonymous: is_anonymous
-      // slippage: this.state.slippage
-    });
-    this.setState({ selected_id: selectedBox._id });
-
-    const currentUser = this.props.user;
-    const currentRoom = this.props.room;
-    if (result.status === 'success') {
-      let betResult = '';
-      if (result.betResult !== 0) {
-        betResult = 'win';
-        playSound('win');
-        this.speak('PURR-FECTO, ISSA MONEY BOX');
-        this.changeBgColor(result.betResult);
-      } else {
-        betResult = 'lose';
-        playSound('lose');
-        this.speak('WRONG BOX DICKHEAD!');
-        this.changeBgColor(result.betResult);
-      }
-
-      this.setState(prevState => ({
-        box_list: prevState.box_list.map(el =>
-          el._id === selected_id ? { ...el, status: 'opened' } : el
-        ),
-        isOpen: false,
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
-
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
-
-      this.props.refreshHistory();
-    }
-  };
 
   onBtnBetClick = async e => {
     const {
@@ -495,12 +281,8 @@ class MysteryBox extends Component {
   joinGame = async () => {
     const {
       bet_amount,
-      betting,
-      box_list,
-      selected_id,
-      is_anonymous
     } = this.state;
-    const { playSound, refreshHistory } = this.props;
+    const { playSound, refreshHistory, changeBgColor, selected_id } = this.props;
 
     let stored_bet_array = JSON.parse(localStorage.getItem('bet_array')) || [];
     while (stored_bet_array.length >= 20) {
@@ -513,55 +295,37 @@ class MysteryBox extends Component {
     const result = await this.props.join({
       bet_amount: parseFloat(bet_amount),
       selected_id: selected_id,
-      is_anonymous: is_anonymous
-      // slippage: this.state.slippage
     });
 
-    const currentUser = this.props.user;
-    const currentRoom = this.props.room;
     if (result.status === 'success') {
-      // console.log(result);
       let betResult = '';
       if (result.betResult !== 0) {
         betResult = 'win';
         playSound('win');
         this.speak('PURRFECTO, ISSA MONEY BOX');
 
-        this.changeBgColor(result.betResult);
+        changeBgColor(result.betResult);
       } else {
         betResult = 'lose';
         playSound('lose');
         this.speak('WRONG BOX, DICKHEAD');
 
-        this.changeBgColor(result.betResult);
+        changeBgColor(result.betResult);
       }
 
-      // this.props.updateBetResult(betResult);
       this.setState(prevState => ({
         box_list: prevState.box_list.map(el =>
           el._id === selected_id ? { ...el, status: 'opened' } : el
         ),
         isOpen: true,
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
       }));
 
       setTimeout(() => {
         this.setState({ isOpen: false });
-      }, 3500);
-      this.setState(
-        prevState => ({
-          betResults: [
-            ...prevState.betResults,
-            { ...result, user: currentUser, room: currentRoom }
-          ]
-        }),
-        () => {
-          refreshHistory();
-        }
-      );
+      }, 1500);
+
+      refreshHistory();
+
     }
   };
 
@@ -570,12 +334,19 @@ class MysteryBox extends Component {
     history.push('/');
   };
 
+  handleHover = (index) => {
+    this.setState({ hoveredIndex: index });
+  };
+
+  // Function to handle mouse leave
+  handleMouseLeave = () => {
+    this.setState({ hoveredIndex: null });
+  };
+
   getBetForm = () => {
     const {
       bankroll,
       showImageModal,
-      betting,
-      timerValue,
       actionList,
       productName,
       image
@@ -586,7 +357,11 @@ class MysteryBox extends Component {
       roomInfo,
       isLowGraphics,
       isMusicEnabled,
-      isDarkMode
+      isDarkMode,
+      bgColorChanged,
+      borderColor,
+      betResult,
+      selected_id
     } = this.props;
 
     let prizes = [];
@@ -676,14 +451,14 @@ class MysteryBox extends Component {
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
             closeModal={this.props.handleClosePlayerModal}
-            // {...this.state.selectedRow}
+          // {...this.state.selectedRow}
           />
         )}
         <div className="game-contents">
           <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            // onScroll={this.handleScroll}
+          // onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner mystery-box">
               {[...Array(1)].map((_, i) => (
@@ -774,8 +549,8 @@ class MysteryBox extends Component {
                                       ? ['#00FF00']
                                       : actionList.hostNetProfit?.slice(-1)[0] <
                                         0
-                                      ? ['#FF0000']
-                                      : ['#808080'],
+                                        ? ['#FF0000']
+                                        : ['#808080'],
                                   shadeIntensity: 1,
                                   type: 'vertical',
                                   opacityFrom: 0.7,
@@ -871,7 +646,7 @@ class MysteryBox extends Component {
                   </div>
                   {this.props.youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled}/>
+                      <YouTubeVideo url={this.props.youtubeUrl} isMusicEnabled={isMusicEnabled} />
                     </div>
                   )}
                   <div className="data-item">
@@ -915,71 +690,88 @@ class MysteryBox extends Component {
             <h3 className="game-sub-title">
               {attempts.toFixed(2)} guesses remaining
             </h3>
-            <div className="boxes-panel boxes-join">
+            <div className="boxes-panel boxes-join" style={{
+              border: `3px solid ${borderColor}`,
+              boxShadow: `0 0 20px ${borderColor}`
+            }}>
               {this.state.box_list.map((row, index) => (
-                <Card
-                  variant="outlined"
-                  className={
-                    'box box-' +
-                    row.status +
-                    (this.state.selected_id &&
-                    row._id === this.state.selected_id
-                      ? ' active'
-                      : '') +
-                    (row._id === this.state.selected_id &&
-                    this.state.bgColorChanged &&
-                    this.state.betResult === -1
-                      ? ' draw-bg'
-                      : '') +
-                    (row._id === this.state.selected_id &&
-                    this.state.betResult === 0
-                      ? ' lose-bg'
-                      : '') +
-                    (row._id === this.state.selected_id &&
-                    this.state.betResult === 1
-                      ? ' win-bg'
-                      : '')
-                  }
-                  status={row.status}
-                  _id={row._id}
-                  box_price={row.box_price}
-                  index={index}
-                  key={row._id}
-                  onClick={this.onBoxClicked}
+                <a
+                  style={{ display: "flex", justifyContent: "center", alignContent: "center", alignItems: "center", padding: "2.5px", borderRadius: "0.6em" }}
+                  className="hover-translate"
+                  onMouseEnter={() => this.handleHover(index)} // Handle hover
+                  onMouseLeave={this.handleMouseLeave}
                 >
-                  <CardContent>
+
+                  <Card
+                    variant="outlined"
+                    className={
+                      'box box-' +
+                      row.status +
+                      (selected_id &&
+                        row._id === selected_id
+                        ? ' active'
+                        : '') +
+                      (row._id === selected_id &&
+                        bgColorChanged &&
+                        betResult === -1
+                        ? ' draw-bg'
+                        : '') +
+                      (row._id === selected_id &&
+                        betResult === 0
+                        ? ' lose-bg'
+                        : '') +
+                      (row._id === selected_id &&
+                        betResult === 1
+                        ? ' win-bg'
+                        : '')
+                    }
+                    status={row.status}
+                    _id={row._id}
+                    box_price={row.box_price}
+                    index={index}
+                    key={row._id}
+                    onClick={this.onBoxClicked}
+                    // onMouseEnter={() => console.log(row)}
+                  >
+                    <CardContent>
                     <Typography color="textSecondary">
-                      {convertToCurrency(row.box_price)}
-                    </Typography>
-                  </CardContent>
-                </Card>
+                        {convertToCurrency(row.box_price)}
+                      </Typography>
+                    <Lottie
+                      options={{
+                        loop: true,
+                        autoplay: true,
+                        animationData:
+                          row.status === "init"
+                            ? emptyBox
+                            : row.status === "opened"
+                              ? row.box_price > 0 && row.box_prize > 0 && row.box_price > row.box_prize
+                                ? bananaBox
+                                : row.box_price > 0 && row.box_price < row.box_prize
+                                  ? ethBox
+                                  : catBox
+                              : catBox,
+                      }}
+                      height={150} // Set the height of the animation
+                      width={150}
+                      style={{ marginTop: "-30px", marginBottom: "-60px",
+                      transition: "transform 0.3s ease",
+                      transform: this.state.hoveredIndex === index ? 'translateY(-4px)' : 'translateY(0)', }}
+                    />
+                    
+                    {/* <span  style={{ width: "35px", height: "20px", float: "right", marginBottom: "10px" , marginRight: "-5px" }} className="roll-tag">[{index + 1}]</span> */}
+                      
+                    </CardContent>
+                    
+
+
+                  </Card>
+                </a>
+
               ))}
             </div>
-            <div>
-              <FormControlLabel
-                control={
-                  <Switch
-                    id="aiplay-switch"
-                    checked={betting}
-                    onChange={this.handleSwitchChange}
-                  />
-                }
-                label={betting ? 'AI ON' : 'AI OFF'}
-              />
-              {betting ? (
-                <div id="stop">
-                  <Lottie options={defaultOptions} width={22} />
-                </div>
-              ) : (
-                <div>
-                  {timerValue !== 2000 ? (
-                    <span>{(timerValue / 2000).toFixed(2)}s</span>
-                  ) : null}
-                </div>
-              )}
-            </div>
+
           </div>
-          {/* <BetArray arrayName="bet_array" label="bet" /> */}
 
           <div className="action-panel">
             <Share roomInfo={this.props.roomInfo} />
@@ -1013,6 +805,7 @@ class MysteryBox extends Component {
   };
 
   getBetResultForm = () => {
+    const { betResult } = this.props;
     let prizes = [];
     this.state.box_list.map(row => {
       prizes.push({
@@ -1022,7 +815,7 @@ class MysteryBox extends Component {
       return true;
     });
     prizes.sort((a, b) => a.prize - b.prize);
-    let timeLeft = 3500; // duration of modal in milliseconds
+    let timeLeft = 1500; // duration of modal in milliseconds
     const intervalId = setInterval(() => {
       timeLeft -= 100;
       if (timeLeft === 0) {
@@ -1032,12 +825,12 @@ class MysteryBox extends Component {
 
     return (
       <div className="game-page">
-        <div className="game-contents mystery-box-result-contents">
+        <div className="mystery-box-result-contents">
           <div className="game-info-panel">
             <h4 className="game-sub-title" style={{ marginTop: '30px' }}>
-              {this.state.betResult === 0
+              {betResult === 0
                 ? `WRONG BOX DICKHEAD!`
-                : `NICE 😎 ISSA MONEY BOX`}
+                : `NICE, ISSA MONEY BOX`}
             </h4>
             <p className="game-modal box-prizes">
               {prizes.map((item, key) => (
@@ -1046,22 +839,27 @@ class MysteryBox extends Component {
                 </span>
               ))}
             </p>
-            <div
-              className={`mystery-box-result ${
-                this.state.betResult === 0 ? 'failed' : 'success'
-              }`}
+            <div  style={{marginBottom: "30px"}}
+              className={`mystery-box-result ${betResult === 0 ? 'failed' : 'success'
+                }`}
             >
-              {convertToCurrency(this.state.betResult)}
+              {convertToCurrency(betResult)}
             </div>
-            {/* <p>
-              {this.state.betResult === 0 ? `THIS BOX IS EMPTY` : `YOU WON!`}
-            </p> */}
-            {/* <i className="disclaimer">*NOT IN THIS ORDER*</i> */}
+            {/* <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: betResult === 0 ? emptyBox : catBox,
+              }}
+              height={200} // Set the height of the animation
+              width={200}
+              style={{ marginTop: "-70px", marginBottom: "-30px", transform: "translate(15px)" }}
+            /> */}
           </div>
           <div className="countdown-timer">
             <div
               className="countdown-bar"
-              style={{ width: `${(timeLeft / 3500) * 100}%` }}
+              style={{ width: `${(timeLeft / 1500) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -1070,10 +868,11 @@ class MysteryBox extends Component {
   };
 
   render() {
+    const { betResult } = this.props;
     return (
       <div>
         {this.getBetForm()}
-        {this.state.betResult !== -1 && this.state.isOpen && (
+        {betResult !== -1 && this.state.isOpen && (
           <ReactModal
             isOpen={this.state.isOpen}
             contentLabel="Prizes"

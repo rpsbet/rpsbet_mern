@@ -11,6 +11,10 @@ const QuestionSchema = new Schema({
         ref: 'BrainGameType',
         default: null
     },
+    image: {
+        type: String,
+        default: null
+    },
     created_at: {
         type: Date,
         default: Date.now

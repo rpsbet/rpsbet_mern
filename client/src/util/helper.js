@@ -38,10 +38,8 @@ export async function getQsLottieAnimation(nation, short_name) {
   } else if (nation === 1) {
     nationStr = 'EA';
   } else if (nation === 2) {
-    nationStr = 'BR';
-  } else if (nation === 3) {
     nationStr = 'AU';
-  } else if (nation === 4) {
+  } else if (nation === 3) {
     nationStr = 'AF';
   }
 

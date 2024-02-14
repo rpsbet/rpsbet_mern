@@ -293,17 +293,19 @@ class MyGamesTable extends Component {
 
 
   openRecreateModal = (row) => {
-    confirmModalCreate(
-      this.props.isDarkMode,
-      'CONFIRM RE-CREATE GAME?',
-      'LFG',
-      'Fuck No',
-      async () => {
-        this.setState({ creatingRoom: true });
-        await this.props.reCreateRoom(row._id);
-        this.setState({ creatingRoom: false });
-      }
-    );
+    alertModal(this.props.isDarkMode, `YOU DO NOT OWN A GAME RESTORER. GO TO MARKETPLACE TO PURCHASE`);
+      return;
+    // confirmModalCreate(
+    //   this.props.isDarkMode,
+    //   'CONFIRM RE-CREATE GAME?',
+    //   'LFG',
+    //   'Fuck No',
+    //   async () => {
+    //     this.setState({ creatingRoom: true });
+    //     await this.props.reCreateRoom(row._id);
+    //     this.setState({ creatingRoom: false });
+    //   }
+    // );
   }
 
 
@@ -668,13 +670,13 @@ class MyGamesTable extends Component {
     }
     const selectedGameType = this.props.gameTypeList.find(
       gameType => gameType.short_name === this.state.selectedGameType
-    );
+      );
     if (selectedGameType) {
       this.props.setGameMode(selectedGameType.game_type_name);
       history.push(`/create/${selectedGameType.game_type_name}`);
     } else {
       this.props.setGameMode('');
-      history.push(`/create/}`);
+      history.push(`/create/`);
     }
   };
 
@@ -702,7 +704,7 @@ class MyGamesTable extends Component {
 
     return (
       <div className="my-open-games">
-        <div className="filter-container">
+        <div className="filter-container overflowX">
           <div className="game-type-container">
             <div
               className="game-type-panel"
@@ -808,13 +810,13 @@ class MyGamesTable extends Component {
               <div className="table-header">
                 <div className="table-cell room-id">Room ID</div>
                 <div className="table-cell payout">
-                  INITIAL BET
+                  BANKROLL
                 </div>
                 <div className="table-cell winnings">Payout</div>
                 <div className="table-cell bet-info">Net Profit</div>
                 <div className="table-cell winnings">Plays</div>
 
-                <div className="table-cell action desktop-only">Bankroll/Re-Create</div>
+                <div className="table-cell action desktop-only">Unstake / Re-Create</div>
               </div>
             )}
             {this.state.myGames.length === 0 ? (
@@ -1287,6 +1289,7 @@ const mapStateToProps = state => ({
   totalPage: state.logic.myGamesTotalPage,
   pageNumber: state.logic.myGamesPageNumber,
   socket: state.auth.socket,
+  game_mode: state.logic.game_mode,
   balance: state.auth.balance,
   loading: state.logic.isActiveLoadingOverlay
 });

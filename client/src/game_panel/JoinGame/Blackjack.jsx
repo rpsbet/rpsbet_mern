@@ -5,6 +5,8 @@ import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
+import loadingChart from '../LottieAnimations/loadingChart.json';
+
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
@@ -13,7 +15,6 @@ import { deductBalanceWhenStartBlackjack } from '../../redux/Logic/logic.actions
 import Moment from 'moment';
 import ImageResultModal from '../modal/ImageResultModal';
 
-import loadingChart from '../LottieAnimations/loadingChart.json';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ReactApexChart from 'react-apexcharts';
 import PlayerModal from '../modal/PlayerModal';
@@ -248,11 +249,13 @@ class Blackjack extends Component {
       betResult: null,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
-      betResults: props.betResults,
-      settings_panel_opened: false
+      settings_panel_opened: false,
+      blackjack: false,
     };
     this.panelRef = React.createRef();
     this.onChangeState = this.onChangeState.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+
   }
 
   onChangeState(e) {
@@ -266,14 +269,11 @@ class Blackjack extends Component {
     this.setState({ bgColorChanged: false });
   };
 
-  // handleClickOutside = e => {
-  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
-  // };
 
   componentDidMount = () => {
-    const { socket } = this.props;
+    const { socket, playSound} = this.props;
+    document.addEventListener('keydown', this.handleKeyPress);
+
     this.resetGame();
     if (socket) {
       socket.on('CARD_PRIZE', data => {
@@ -292,17 +292,50 @@ class Blackjack extends Component {
         this.setState({ bankroll: data.bankroll });
       });
       socket.on('CARDS_ARRAY', data => {
-        console.log("cardsArray: ", data)
-        this.setState({ cardsArray: data.cardsArray });
+        this.setState({ cardsArray: data.cardsArray }, () => {
+          // console.log("cardsArray: ", data.cardsArray)
+          if (data.cardsArray === null) [
+            this.resetGame()
+          ]
+        });
       });
     }
-    // document.addEventListener('mousedown', this.handleClickOutside);
   };
+
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
-    // document.removeEventListener('mousedown', this.handleClickOutside);
+    document.removeEventListener('keydown', this.handleKeyPress);
+
   };
+
+  handleKeyPress = (event) => {
+    const { disabledButtons } = this.state;
+    switch (event.key) {
+      case 'h':
+        if (!disabledButtons) {
+          this.handleHit();
+        }
+        break;
+      case 's':
+        if (!disabledButtons) {
+          this.handleStand();
+        }
+        break;
+      case ' ':
+        event.preventDefault();
+        if (disabledButtons) {
+          this.setState({
+            disabledButtons: true
+          }, () => {
+            this.onBtnBetClick();
+          })
+        }
+        break;
+      default:
+        break;
+    }
+  }
 
   dealRemaining = (score) => {
     // Assuming cards_host and cardsArray are state variables in your component
@@ -354,7 +387,6 @@ class Blackjack extends Component {
   dealCards = (drawCardsFunc, calculateScoreFunc, cardsType, scoreType) => {
     const cards = drawCardsFunc(2);
     const score = calculateScoreFunc(cards);
-
     const cardVisibility = cards.map((_, index) =>
       index !== 1 || index > 2 ? true : false
     );
@@ -393,8 +425,12 @@ class Blackjack extends Component {
     );
 
     if (score === 21) {
-      this.joinGame();
+      this.setState({ blackjack: true }, () => {
+        this.joinGame();
+      })
     }
+
+
   };
 
   dealJoiner = () => {
@@ -481,7 +517,6 @@ class Blackjack extends Component {
       const card_host = this.drawCardHost();
       cards_host.push(card_host);
     }
-    console.log("cards_host", cards_host)
     return cards_host;
   };
 
@@ -553,12 +588,10 @@ class Blackjack extends Component {
 
     if (newScore >= 21) {
       this.setState({ cards: newCards, score: newScore }, () => {
-        console.log("21 > ", this.state.cards, this.state.score);
         this.joinGame();
       })
     } else {
       this.setState({ cards: newCards, score: newScore }, () => {
-        console.log("less than ", this.state.cards, this.state.score);
         // Trigger the animation for the newly drawn card
         const drawnCards = document.querySelectorAll('.card');
         const newCardElement = drawnCards[drawnCards.length - 1]; // Get the last card element
@@ -603,7 +636,7 @@ class Blackjack extends Component {
       prevState.isPasswordCorrect !== isPasswordCorrect &&
       isPasswordCorrect === true
     ) {
-      this.joinGame(selected_bj);
+      this.joinGame();
     }
   }
 
@@ -644,9 +677,15 @@ class Blackjack extends Component {
       score_host
     } = this.state;
 
+    let finalScore = score;
+
+    if (this.state.blackjack) {
+      finalScore = 6198;
+    }
+
     const result = await join({
       bet_amount: parseFloat(bet_amount),
-      score: score,
+      score: finalScore,
       score_host: score_host,
       bj_bet_item_id: bj_bet_item_id,
     });
@@ -678,12 +717,7 @@ class Blackjack extends Component {
 
     if (result.status === 'success') {
       const { user, room } = this.props;
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: user, room: room }
-        ]
-      }));
+
     } else {
       if (result.message) {
         alertModal(isDarkMode, result.message);
@@ -718,8 +752,6 @@ class Blackjack extends Component {
       score_host: 0,
       is_started: false,
       disabledButtons: true
-    }, () => {
-      console.log("1", this.state.is_started)
     });
   };
 
@@ -759,8 +791,7 @@ class Blackjack extends Component {
 
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-    this.setState({ disabledButtons: false });
-    console.log("1", this.state.is_started)
+    this.setState({ disabledButtons: false, });
 
 
     if (
@@ -790,15 +821,26 @@ class Blackjack extends Component {
     );
   };
 
+  handleHit = () => {
+    this.hit();
+    this.setState({ selected_bj: "hit" }, () => {
+      this.animateButton('.hit');
+    })
+  }
+
+  handleStand = () => {
+    this.joinGame();
+    this.setState({ selected_bj: "stand" }, () => {
+
+      this.animateButton('.stand');
+    })
+  }
+
   handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
-    const limitedBetAmount = Math.min(
-      multipliedBetAmount,
-      maxBetAmount,
-      this.props.bet_amount
-    );
-    const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
+    const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
+    const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
     if (roundedBetAmount < -2330223) {
       alertModal(
         this.props.isDarkMode,
@@ -815,6 +857,7 @@ class Blackjack extends Component {
       );
     }
   };
+
 
   handleMaxButtonClick = () => {
     const maxBetAmount = Math.floor(this.state.balance * 100) / 100; // Round down to two decimal places
@@ -942,12 +985,7 @@ class Blackjack extends Component {
     const currentUser = this.props.user;
     const currentRoom = this.props.room;
     if (result.status === 'success') {
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
+
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
@@ -969,6 +1007,15 @@ class Blackjack extends Component {
     }
   };
 
+  animateButton = (selector) => {
+    const currentActive = document.querySelector(selector);
+    if (currentActive) {
+      currentActive.style.animation = 'none';
+      void currentActive.offsetWidth;
+      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
+    }
+  }
+
   render() {
     const {
       score,
@@ -980,11 +1027,11 @@ class Blackjack extends Component {
       selected_bj,
       disabledButtons,
       bankroll,
-      slippage,
       image,
       showImageModal,
       bet_amount,
-      actionList
+      actionList,
+      productName
     } = this.state;
 
     const {
@@ -1011,7 +1058,7 @@ class Blackjack extends Component {
     return (
       <div className="game-page">
         <div className="page-title">
-          <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+          {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
           <h2>PLAY - Blackjack</h2>
         </div>
         {showImageModal && (
@@ -1291,7 +1338,7 @@ class Blackjack extends Component {
               {score}
             </h6>
             <BetAmountInput
-            disabledButtons={disabledButtons}
+              disabledButtons={!disabledButtons}
               betAmount={bet_amount}
               handle2xButtonClick={this.handle2xButtonClick}
               handleHalfXButtonClick={this.handleHalfXButtonClick}
@@ -1306,39 +1353,21 @@ class Blackjack extends Component {
                   variant="contained"
                   disabled={disabledButtons}
                   style={{ opacity: disabledButtons ? 0.5 : 1 }}
-                  onClick={() => {
-                    this.hit();
-                    const currentActive = document.querySelector('.active');
-                    if (currentActive) {
-                      currentActive.style.animation = 'none';
-                      void currentActive.offsetWidth;
-                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-                    }
-                  }}
+                  onClick={this.handleHit}
                 >
-                  HIT!
+                  HIT!&nbsp;<span className="roll-tag">[H]</span>
                 </Button>
                 <Button
-                  className={
-                    'stand' + (selected_bj === 'stand' ? ' active' : '')
-                  }
+                  className={'stand' + (selected_bj === 'stand' ? ' active' : '')}
                   variant="contained"
                   disabled={disabledButtons}
                   style={{ opacity: disabledButtons ? 0.5 : 1 }}
-                  onClick={() => {
-                    this.joinGame();
-                    const currentActive = document.querySelector('.active');
-                    if (currentActive) {
-                      currentActive.style.animation = 'none';
-                      void currentActive.offsetWidth;
-                      currentActive.style.animation = 'pulse 0.2s ease-in-out ';
-                    }
-                  }}
+                  onClick={this.handleStand}
                 >
-                  STAND
+                  STAND&nbsp;<span className="roll-tag">[S]</span>
                 </Button>
 
-                <Button
+                {/* <Button
                   className={'hit' + (selected_bj === 'hit' ? ' active' : '')}
                   variant="contained"
                   disabled={disabledButtons}
@@ -1373,7 +1402,7 @@ class Blackjack extends Component {
                   }}
                 >
                   DOUBLE
-                </Button>
+                </Button> */}
               </div>
               <Button
                 className="place-bet btnBlackjack"
@@ -1384,36 +1413,12 @@ class Blackjack extends Component {
 
                 disabled={!disabledButtons}
               >
-                BET
+                PLACE BET&nbsp;<span className="roll-tag">[SPACE]</span>
               </Button>
             </div>
 
-            {/* <Button
-              id="aiplay"
-              className="disabled"
-              variant="contained"
-              onMouseDown={this.handleButtonClick}
-              onMouseUp={this.handleButtonRelease}
-              onTouchStart={this.handleButtonClick}
-              onTouchEnd={this.handleButtonRelease}
-            >
-              {betting ? (
-                <div id="stop">
-                  <span>Stop</span>
-                  <Lottie options={defaultOptions} width={22} />
-                </div>
-              ) : (
-                <div>
-                  {timerValue !== 2000 ? (
-                    <span>{(timerValue / 2000).toFixed(2)}s</span>
-                  ) : (
-                    <span>AI Play (Coming Soon)</span>
-                  )}
-                </div>
-              )}
-            </Button> */}
+
           </div>
-          {/* <BetArray arrayName="bj_array" label="bj" /> */}
 
           <div className="action-panel">
             <Share roomInfo={roomInfo} />
@@ -1434,7 +1439,6 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
   rank: state.logic.curRoomInfo.rank,
-  betResults: state.logic.betResults,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled
 });

@@ -424,7 +424,7 @@ class Blackjack extends Component {
       bj_list: newArray
       // winChance: winChanceEV
     });
-    console.log(this.props.bj_list);
+    // console.log(this.props.bj_list);
     // this.onChangeWinChance(winChance);
     // this.setState({ winChance: winChanceEV });
   };
@@ -467,7 +467,7 @@ class Blackjack extends Component {
 
     return this.props.step === 1 ? (
       <div className="game-info-panel">
-        <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1>
+        {/* <h1> DEMO ONLY, GAME UNDER DEVELOPMENT 🚧</h1> */}
 
         <DefaultBetAmountPanel
           bet_amount={this.props.bet_amount}

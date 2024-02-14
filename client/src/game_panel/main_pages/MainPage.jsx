@@ -28,6 +28,7 @@ import AiPanel from '../../components/AiPanel';
 import JukeboxPanel from '../../components/JukeboxPanel.jsx';
 import { Tabs, Tab, Drawer } from '@material-ui/core';
 import DrawerButton from './DrawerButton';
+import SupportButton from './SupportButton';
 import './MainPages.css';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import OpenGamesTable from '../LiveGames/OpenGamesTable';
@@ -66,7 +67,6 @@ class MainPage extends Component {
 
   async componentDidMount() {
     const { id } = this.props.match.path;
-    console.log(id);
     const {
       getRoomList,
       getHistory,
@@ -233,7 +233,7 @@ class MainPage extends Component {
             this.state.show_open_game === 1 && <MyHistoryTable />}
         </div>
         <div className="sub-panel">
-        {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
+        {!this.state.is_mobile && (
             <>
               <h2 className="main-title desktop-only">JUKEBOX</h2>
               <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} />
@@ -256,6 +256,10 @@ class MainPage extends Component {
           <DrawerButton
             open={this.props.isDrawerOpen}
             toggleDrawer={this.toggleDrawer}
+          />
+          <SupportButton
+            open={this.props.isSupportOpen}
+            // toggleDrawer={this.toggleDrawer}
           />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>

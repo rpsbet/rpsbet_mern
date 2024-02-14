@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from 'react-redux';
 import VolumeUp from '@material-ui/icons/VolumeUp';
 import VolumeOff from '@material-ui/icons/VolumeOff';
+import DeleteIcon from '@material-ui/icons/Delete';
 
 
 import {
@@ -11,7 +12,8 @@ import {
   IconButton,
   Menu,
   MenuItem,
-  LinearProgress
+  LinearProgress,
+  Tooltip
 } from '@material-ui/core/';
 import SearchIcon from '@material-ui/icons/Search';
 import {
@@ -33,9 +35,10 @@ const JukeboxPanel = ({
   const [totalDuration, setDuration] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
-  const [progress, setProgress] = useState(0); // New state for progress
+  const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
-  const [searchResults, setSearchResults] = useState([]); // New state for search results
+  const [searchResults, setSearchResults] = useState([]);
+  const [recentSearches, setRecentSearches] = useState([]);
 
 
   const toggleMute = () => {
@@ -95,6 +98,13 @@ const JukeboxPanel = ({
     handleMenuClose();
     await getQueue();
     handleSearch();
+    updateRecentSearches(searchQuery);
+
+  };
+  const triggerSearch = async () => {
+    await getQueue();
+    handleSearch();
+
   };
 
   const onPlayerReady = (event) => {
@@ -197,6 +207,10 @@ const JukeboxPanel = ({
     await tryApiKey(apiKey1);
   };
 
+  const handleRecentSearch = async (search) => {
+    setSearchQuery(search);
+    await triggerSearch();
+  };
 
   const parseDuration = (isoDuration) => {
     const matches = isoDuration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
@@ -231,6 +245,30 @@ const JukeboxPanel = ({
     setPlayer(newPlayer);
   };
 
+  useEffect(() => {
+    const recentSearchesString = localStorage.getItem('recentSearches');
+    if (recentSearchesString) {
+      setRecentSearches(JSON.parse(recentSearchesString));
+    }
+  }, []);
+
+  const updateRecentSearches = (query) => {
+    // Trim the search query and check if it's empty
+    const trimmedQuery = query.trim();
+    if (trimmedQuery !== '') {
+      // Filter out duplicates and empty strings
+      const updatedSearches = [trimmedQuery, ...recentSearches.filter(item => item !== trimmedQuery).slice(0, 5)];
+      setRecentSearches(updatedSearches);
+      localStorage.setItem('recentSearches', JSON.stringify(updatedSearches));
+    }
+  };
+  
+  
+  
+  const handleClearRecentSearches = () => {
+    localStorage.removeItem('recentSearches');
+    setRecentSearches([]);
+  };
   useEffect(() => {
     if (!window.YT) {
       const tag = document.createElement('script');
@@ -286,8 +324,8 @@ const JukeboxPanel = ({
   };
 
   const QueueList = () => (
-    <div style={{ padding: "5px" }}>
-      <h6 style={{ margin: "10px auto 0", fontWeight: "400", whiteSpace: "nowrap" }}>Up Next:</h6>
+    <div style={{ width: "50%", padding: "5px" }}>
+      <h6 style={{ margin: "10px auto 0", fontWeight: "400", whiteSpace: "nowrap" , fontSize: "0.7em"}}>Up Next:</h6>
       <ul style={{ height: "40px", overflowY: "scroll", overflowX: "hidden" }}>
         {queue.slice(1).map((video, index) => (
           <li style={{ fontSize: "0.8em" }} key={index}>
@@ -332,14 +370,7 @@ const JukeboxPanel = ({
               Search and Play
             </MenuItem>
           </Menu>
-          {/* <LinearProgress
-  style={{
-    width: `${(progress / totalDuration) * 100}%`, // Use template literals for dynamic width
-    position: "relative",
-  }}
-  variant="determinate"
-  value={progress}
-/> */}
+          
           <div
             style={{
               display: 'flex',
@@ -388,6 +419,20 @@ const JukeboxPanel = ({
             style={sliderStyle}
           />
           <QueueList />
+        </div>
+          <div style={{display: "block", width:"100%"}}>
+          {recentSearches.map((search, index) => (
+            <Button id="recentSearches" style={{fontSize: "0.5em", borderRadius:"30px"}} key={index} onClick={() => handleRecentSearch(search)}>
+              {search}
+            </Button>
+          ))}
+          {recentSearches.length > 0 && (
+          <Tooltip title="Delete Recent Searches">
+            <IconButton  style={{padding:"0px 10px", marginLeft: "5px"}} onClick={handleClearRecentSearches}>
+              <DeleteIcon style={{width:"20px"}} />
+            </IconButton>
+          </Tooltip>
+        )}
 
         </div>
       </div>

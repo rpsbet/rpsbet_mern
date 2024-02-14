@@ -11,7 +11,7 @@ class PlayBrainGame extends Component {
 			remaining_time: 60,
 			score: 0,
 			intervalId: null,
-			question: { _id: '', question: '' },
+			question: { _id: '', question: '', image: '' },
 			answers: ['','','',''],
 			next_question: { _id: '', question: '' },
 			next_answers: ['','','','']
@@ -132,6 +132,11 @@ class PlayBrainGame extends Component {
 					</div>
 				</div>
 				<div className="quiz-panel">
+					{this.state.question.image && (
+						<div className="question-image">
+						<img width="150px" src={this.state.question.image} />
+					</div>
+						)}
 					<div className="question">
 						{this.state.question.question}
 					</div>

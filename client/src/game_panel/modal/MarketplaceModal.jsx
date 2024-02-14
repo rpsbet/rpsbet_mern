@@ -7,7 +7,7 @@ import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/Pro
 import { Button } from '@material-ui/core';
 import AttachMoney from '@material-ui/icons/AttachMoney';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStore } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
+import { faStore } from '@fortawesome/free-solid-svg-icons';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import InventoryModal from '../modal/InventoryModal';
 

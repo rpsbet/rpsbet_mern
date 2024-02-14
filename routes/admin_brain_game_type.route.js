@@ -25,7 +25,7 @@ router.post('/delete', auth, async (req, res) => {
 		}
 
 		await BrainGameType.deleteOne({ _id });
-		const brain_game_types = await BrainGameType.find({}).sort({game_type_name: 'asc'});
+		const brain_game_types = await BrainGameType.find({user_id: req.user._id}).sort({game_type_name: 'asc'});
 	
 		res.json({
 			success: true,
@@ -51,7 +51,7 @@ router.post('/', auth, async (req, res) => {
 	  });
   
 	  await brainGameType.save();
-	  const brain_game_types = await BrainGameType.find({}).sort({ game_type_name: 'asc' });
+	  const brain_game_types = await BrainGameType.find({user_id: req.user._id}).sort({ game_type_name: 'asc' });
   
 	  res.json({
 		success: true,
@@ -82,23 +82,6 @@ router.get('/:id', async (req, res) => {
         });
 	}
 });
-
-// router.get('/', async (req, res) => {
-// 	try {
-//         const brain_game_types = await BrainGameType.find({}).sort({created_at: 'asc'});
-
-// 		res.json({
-// 				success: true,
-// 				query: req.query,
-// 				brain_game_types,
-// 		});
-// 	} catch (err) {
-// 		res.json({
-// 				success: false,
-// 				err: err
-// 		});
-// 	}
-// });
 
 router.get('/', async (req, res) => {
 	try {

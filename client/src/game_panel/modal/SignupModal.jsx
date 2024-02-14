@@ -94,7 +94,7 @@ class SignupModal extends Component {
   
     // Execute reCAPTCHA
     const recaptchaToken = await this.executeRecaptcha();
-    console.log('Submitted reCAPTCHA Token:', recaptchaToken);
+    // console.log('Submitted reCAPTCHA Token:', recaptchaToken);
     this.setState({ recaptchaToken });
   
     // Check if reCAPTCHA token is available
@@ -140,7 +140,7 @@ class SignupModal extends Component {
     return new Promise((resolve) => {
       window.grecaptcha.ready(() => {
         window.grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' }).then((token) => {
-          console.log('reCAPTCHA Token:', token); // Log the token
+          // console.log('reCAPTCHA Token:', token); // Log the token
           resolve(token);
         });
       });
@@ -163,7 +163,7 @@ class SignupModal extends Component {
           <div className={"modal-container"}>
             <div className='modal-left'>
               {/* Left column with giant picture */}
-              <img className="giant-picture" src="/img/giant.webp" alt="Register" />
+              <img className="giant-picture" src="/img/giant.svg" alt="Register" />
             </div>
             <div className='modal-right'>
               <div style={{ borderTopLeftRadius: "0" }} className='modal-header'>
@@ -283,6 +283,7 @@ class SignupModal extends Component {
 
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
+  isActiveLoadingOverlay: state.logic.isActiveLoadingOverlay
 });
 
 const mapDispatchToProps = {

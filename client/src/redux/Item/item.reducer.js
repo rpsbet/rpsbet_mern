@@ -1,6 +1,7 @@
 import {
   ITEM_QUERY_ONE,
   ITEM_QUERY,
+PRODUCT_QUERY,
   MY_ITEM_QUERY_ONE,
   MY_ITEM_QUERY,
   PAGINATION_FOR_ITEM,
@@ -8,7 +9,8 @@ import {
   SET_CURRENT_PRODUCT_INFO,
   SET_CURRENT_PRODUCT_ID,
   ADD_TOTAL,
-  MY_ADD_TOTAL
+  MY_ADD_TOTAL,
+  PRODUCT_TOTAL
 } from '../types';
 
 const initialState = {
@@ -22,6 +24,7 @@ const initialState = {
   startDateTime: new Date(),
   expireDateTime: new Date(),
   itemArray: [],
+  productArray: [],
   myItemArray: [],
   pagination: 25,
   page: 1,
@@ -42,10 +45,14 @@ export default (state = initialState, { type, payload }) => {
       return { ...state, data: payload};
     case ITEM_QUERY:
       return { ...state, itemArray: payload };
+    case PRODUCT_QUERY:
+      return { ...state, productArray: payload };
     case MY_ITEM_QUERY:
       return { ...state, myItemArray: payload };
 
     case ADD_TOTAL:
+      return { ...state, totalResults: payload.total, pages: payload.pages };
+    case PRODUCT_TOTAL:
       return { ...state, totalResults: payload.total, pages: payload.pages };
     case MY_ADD_TOTAL:
       return { ...state, totalResults: payload.total, pages: payload.pages };

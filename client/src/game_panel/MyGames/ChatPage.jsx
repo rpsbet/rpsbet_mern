@@ -416,9 +416,7 @@ class ChatPage extends Component {
             <Button
               className="btn-show-emoticon"
               onClick={() => {
-                this.setState({ showEmojiPanel: !showEmojiPanel }, () => {
-                  console.log('ss', this.state.showEmojiPanel);
-                });
+                this.setState({ showEmojiPanel: !showEmojiPanel });
               }}
             ></Button>
             <input

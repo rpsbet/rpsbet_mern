@@ -304,6 +304,7 @@ class RPS extends Component {
 
   handleKeyPress(event) {
     const { selected_roll } = this.state;
+    
     switch (event.key) {
       case 'r':
         this.onAddRun('R');

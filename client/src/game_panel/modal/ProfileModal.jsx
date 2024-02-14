@@ -94,7 +94,6 @@ class ProfileModal extends Component {
 
   async componentDidMount() {
     await this.fetchStatisticsData();
-    console.log(this.props.userInfo)
   }
 
   fetchStatisticsData = async () => {
@@ -280,8 +279,11 @@ class ProfileModal extends Component {
                 </div>
               )}
             </div>
+          
             {loading ? null : (
               <div className="user-statistics">
+
+
                 <StatisticsForm
                   onDropdownChange={this.handleDropdownChange}
                   username={username}

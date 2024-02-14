@@ -307,7 +307,7 @@ class MyHistoryTable extends Component {
               textShadow: '0 0 12px #0058b6'
             }}
           >
-            Returned to Bankrolls (RTBs)
+            / 10.00 (NEXT BIG GIVEAWAY EVENT)
           </span>
         </div>
         {/* <div className="game-type-container">

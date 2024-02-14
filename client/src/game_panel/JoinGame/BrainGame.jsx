@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setCurrentQuestionInfo } from '../../redux/Question/question.action';
 import axios from '../../util/Api';
-import BetArray from '../../components/BetArray';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
@@ -11,16 +10,14 @@ import loadingChart from '../LottieAnimations/loadingChart.json';
 
 import PlayerModal from '../modal/PlayerModal';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-// import { updateDigitToPoint2 } from '../../util/helper';
 import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import animationData from '../LottieAnimations/spinningIcon';
 import brain from '../LottieAnimations/brain.json';
-import { Button, Switch, FormControlLabel } from '@material-ui/core';
+import { Button } from '@material-ui/core';
 import {
   validateIsAuthenticated,
   validateCreatorId,
-  validateLocalStorageLength,
   validateBankroll
 } from '../modal/betValidations';
 import { deductBalanceWhenStartBrainGame } from '../../redux/Logic/logic.actions';
@@ -33,30 +30,16 @@ import history from '../../redux/history';
 import Share from '../../components/Share';
 
 import { convertToCurrency } from '../../util/conversion';
-import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
-
-const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: animationData,
-  rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
-};
 
 class BrainGame extends Component {
   constructor(props) {
     super(props);
-    this.settingsRef = React.createRef();
-
     this.state = {
       brain_game_type: this.props.brain_game_type,
       advanced_status: '',
-      betting: false,
       bgColorChanged: false,
       timer: null,
       timerValue: 2000,
-      is_anonymous: false,
       is_started: false,
       remaining_time: 60,
       score: 0,
@@ -72,7 +55,6 @@ class BrainGame extends Component {
       next_question: null,
       next_answers: [],
       isPasswordCorrect: this.props.isPasswordCorrect,
-      settings_panel_opened: false
     };
     this.panelRef = React.createRef();
   }
@@ -108,20 +90,8 @@ class BrainGame extends Component {
     }
   };
 
-  handleClickOutside = e => {
-    if (
-      this.settingsRef &&
-      this.settingsRef.current &&
-      !this.settingsRef.current.contains(e.target)
-    ) {
-      this.setState({ settings_panel_opened: false });
-    }
-  };
-
   componentDidMount() {
-
     this.getNextQuestion();
-    document.addEventListener('mousedown', this.handleClickOutside);
   }
 
   onShowButtonClicked = e => {
@@ -158,7 +128,6 @@ class BrainGame extends Component {
       this.props.join({
         bet_amount: this.props.bet_amount,
         brain_game_score: -2000,
-        is_anonymous: this.state.is_anonymous
       });
     }
     document.removeEventListener('mousedown', this.handleClickOutside);
@@ -382,33 +351,6 @@ class BrainGame extends Component {
     }
   };
 
-  handleSwitchChange = () => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-      balance
-    } = this.props;
-    const { betting, bet_amount, bankroll } = this.state;
-
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      return;
-    }
-
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      return;
-    }
-    if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
-      return;
-    }
-
-    if (!betting) {
-      this.startBetting();
-    } else {
-      this.stopBetting();
-    }
-  };
 
   toggleImageModal = () => {
     this.setState({
@@ -416,77 +358,6 @@ class BrainGame extends Component {
     });
   };
 
-  predictNext = score_array => {
-    if (score_array.length < 5) {
-      return Math.round(
-        score_array.reduce((total, item) => total + item.score, 0) /
-        score_array.length
-      );
-    }
-
-    const oldScores = score_array.slice(0, 5).map(item => item.score);
-    const newScores = score_array
-      .slice(score_array.length - 5)
-      .map(item => item.score);
-
-    const oldAvg =
-      oldScores.reduce((total, score) => total + score, 0) / oldScores.length;
-    const newAvg =
-      newScores.reduce((total, score) => total + score, 0) / newScores.length;
-
-    if (newAvg > oldAvg) {
-      let diff = newAvg - oldAvg;
-      return Math.round(score_array[score_array.length - 1].score + diff);
-    } else {
-      return Math.round(
-        score_array.reduce((total, item) => total + item.score, 0) /
-        score_array.length
-      );
-    }
-  };
-
-  startBetting = () => {
-    let stored_score_array;
-    stored_score_array =
-      JSON.parse(
-        localStorage.getItem(`score_array_${this.props.brain_game_type}`)
-      ) || [];
-
-    if (stored_score_array.length < 1) {
-      alertModal(this.props.isDarkMode, 'MORE TRAINING DATA NEEDED!');
-      return;
-    }
-
-    const intervalId = setInterval(() => {
-      const prediction = this.predictNext(stored_score_array);
-      const randomPrediction = this.getRandomPrediction(
-        prediction,
-        stored_score_array
-      );
-      const randomizeAgain = this.randomize(randomPrediction);
-      this.joinGame2(randomizeAgain, this.props.bet_amount);
-    }, 3500);
-    this.props.playSound('start');
-    this.setState({ intervalId, betting: true, is_started: true });
-  };
-
-  randomize = prediction => {
-    const randomOffset = Math.floor(Math.random() * 8) - 3;
-    return prediction + randomOffset;
-  };
-
-  getRandomPrediction = (prediction, score_array) => {
-    const random = Math.random();
-
-    if (score_array && score_array.length > 0 && random < 0.4) {
-      const randomIndex = Math.floor(Math.random() * score_array.length);
-      return score_array[randomIndex].score;
-    } else {
-      const offset = Math.floor(Math.random() * 2) + 1; // either 1 or 2
-      const sign = Math.random() < 0.5 ? -1 : 1; // either -1 or 1
-      return prediction + offset * sign;
-    }
-  };
 
   handleButtonRelease = () => {
     if (this.state.timer) {
@@ -495,45 +366,6 @@ class BrainGame extends Component {
     }
   };
 
-  stopBetting = () => {
-    this.props.playSound('stop');
-    clearInterval(this.state.intervalId);
-    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
-  };
-
-  joinGame2 = async (score, bet_amount) => {
-    const { betting, is_anonymous } = this.state;
-    const { refreshHistory, playSound } = this.props;
-
-    if (!betting) {
-      return;
-    }
-    const result = await this.props.join({
-      bet_amount: bet_amount,
-      brain_game_score: score,
-      is_anonymous: is_anonymous
-    });
-    this.props.deductBalanceWhenStartBrainGame({
-      bet_amount: bet_amount
-    });
-
-    if (result.status === 'success') {
-      let text = 'HAHAA, WHAT A LOSER!!';
-      this.changeBgColor(result.betResult);
-      playSound('lose');
-      if (result.betResult === 1) {
-        this.changeBgColor(result.betResult);
-        playSound('win');
-        text = 'NOT BAD, WINNER!';
-      } else if (result.betResult === 0) {
-        this.changeBgColor(result.betResult);
-        playSound('split');
-        text = 'DRAW, NO WINNER!';
-      }
-    }
-    this.setState({ is_started: false });
-    refreshHistory();
-  };
 
   render() {
     const {
@@ -541,9 +373,6 @@ class BrainGame extends Component {
       clicked,
       showAnimation,
       remaining_time,
-      isDisabled,
-      betting,
-      timerValue,
       bankroll,
       answers,
       score,
@@ -588,13 +417,7 @@ class BrainGame extends Component {
             productName={productName}
           />
         )}
-        {showPlayerModal && (
-          <PlayerModal
-            selectedCreator={selectedCreator}
-            modalIsOpen={showPlayerModal}
-            closeModal={handleClosePlayerModal}
-          />
-        )}
+
         <div className="game-contents">
           <div className="game-info-panel brain-game-play-panel">
             {renderLottieAvatarAnimation(this.props.gameBackground, isLowGraphics)}
@@ -612,6 +435,7 @@ class BrainGame extends Component {
               </div>
             </div>
             <div className="quiz-panel">
+              <div className="question-image"><img width="150px" src={this.state.question.image} /></div>
               <div className="question">{this.state.question.question}</div>
               <div className="answer-panel">
                 {answers.map((answer, index) => (
@@ -631,6 +455,13 @@ class BrainGame extends Component {
       </div>
     ) : (
       <div className="game-page">
+        {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={handleClosePlayerModal}
+          />
+        )}
         <div className="page-title">
           <h2>Play - Brain Game</h2>
         </div>
@@ -857,19 +688,7 @@ class BrainGame extends Component {
                 }}
               />
             </div>
-            {/* <div className="brainBg">
-              <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: brainBg
-                }}
-                style={{
-                  filter: 'hue-rotate(322deg)',
-                  opacity: 0.8
-                }}
-              />
-            </div> */}
+
             <h3 className="game-sub-title">Game Type:</h3>
             <p className="game-type">
               {this.props.brain_game_type.game_type_name}
@@ -889,32 +708,8 @@ class BrainGame extends Component {
               Start
             </Button>
 
-            <div>
-              <FormControlLabel
-                control={
-                  <Switch
-                    id="aiplay-switch"
-                    checked={betting}
-                    onChange={this.handleSwitchChange}
-                  />
-                }
-                label={betting ? 'AI ON' : 'AI OFF'}
-              />
-              {betting ? (
-                <div id="stop">
-                  {/* <span>Stop</span> */}
-                  <Lottie options={defaultOptions} width={22} />
-                </div>
-              ) : (
-                <div>
-                  {timerValue !== 2000 ? (
-                    <span>{(timerValue / 2000).toFixed(2)}s</span>
-                  ) : null}
-                </div>
-              )}
-            </div>
+
           </div>
-          {/* <BetArray arrayName={arrayName} label="score" /> */}
 
           <div className="action-panel">
             <div className="action-panel">

@@ -47,6 +47,10 @@ const UserSchema = new Schema({
     type: Number,
     default: 0
   },
+  dailyWithdrawals: {
+    type: Number,
+    default: 0
+  },
   accessory: {
     type: String,
     ref: 'Item',

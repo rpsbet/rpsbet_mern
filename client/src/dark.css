@@ -403,7 +403,7 @@ border-left: 1px solid rgba(40, 38, 55, 0.48);
 }
 .dark_mode .game-page .game-contents {
 	color: white;
-	background: linear-gradient(45deg, #120e0e, #151515, #070707);
+	background: radial-gradient(#343a40, #060607);
 }
 .dark_mode .game-page hr {
 	border-color: #36393f;

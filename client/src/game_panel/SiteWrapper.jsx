@@ -264,10 +264,14 @@ class SiteWrapper extends Component {
       }
     }
     const shouldUpdate =
-      prevProps.transactions !== transactions &&
-      transactions.length > 0 &&
-      loadMore === 0 &&
-      !tnxComplete;
+    transactions &&
+    transactions.length > 0 &&
+    transactions[0] &&
+    transactions[0].amount !== null &&
+    prevProps.transactions[0] &&
+    prevProps.transactions[0].amount !== transactions[0].amount &&
+    !tnxComplete;
+
 
     if (prevProps.remainingLoans !== remainingLoans) {
       this.setState({ remainingLoans: remainingLoans });
@@ -886,7 +890,7 @@ class SiteWrapper extends Component {
   handleLoadMore = async () => {
     const { loadMore, filterType, sortType, searchQuery } = this.state;
     const nextLoadMore = loadMore >= 10 ? loadMore + 10 : 10;
-console.log("nextLoadMore", nextLoadMore)
+// console.log("nextLoadMore", nextLoadMore)
     await this.props.getUser(
       false,
       true,
@@ -997,7 +1001,7 @@ console.log("nextLoadMore", nextLoadMore)
     this.secondsRemaining = Math.floor(timeRemaining / 1000);
     return (
       <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
-        {!isLive ? (
+        {isLive ? (
           <>
             <div className="coming-home-screen" style={{ textAlign: 'center', padding: '50px' }}>
               <img style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FaClipboard } from 'react-icons/fa';
 
 import {
   faSort,
@@ -51,6 +52,7 @@ class AllTransactionsModal extends Component {
 
     this.state = {
       showAllGameLogs: false,
+      copiedRowId: null
     };
   }
   handleScroll = event => {
@@ -62,6 +64,21 @@ class AllTransactionsModal extends Component {
         this.props.handleLoadMore();
     }
 };
+
+copyToClipboard = (rowId) => {
+  navigator.clipboard.writeText(rowId)
+    .then(() => {
+      this.setState({ copiedRowId: rowId });
+      setTimeout(() => {
+        this.setState({ copiedRowId: null });
+      }, 1500); // Reset the copied row after 1.5 seconds
+    })
+    .catch(err => {
+      console.error('Failed to copy: ', err);
+    });
+};
+
+
 
   render() {
     const {
@@ -281,6 +298,7 @@ class AllTransactionsModal extends Component {
                           <TableCell>FROM NOW</TableCell>
                           <TableCell>DESCRIPTION</TableCell>
                           <TableCell>LINK</TableCell>
+                          <TableCell>ID</TableCell>
                         </TableRow>
                       </TableHead>
                     </Table>
@@ -345,7 +363,18 @@ class AllTransactionsModal extends Component {
                                   ''
                                 )}
                               </TableCell>
+                              <TableCell>
+<a style={{padding: "2.5px", cursor: "pointer"}}>
+  
+                  <FaClipboard
+                    className="clipboard-icon"
+                    onClick={() => this.copyToClipboard(row._id)}
+                    />
+                  {this.state.copiedRowId === row._id && <span style={{ marginLeft: '5px' }}>Copied!</span>}
+                    </a>
+                </TableCell>
                             </TableRow>
+                            
                             )
                           ))
                         )}

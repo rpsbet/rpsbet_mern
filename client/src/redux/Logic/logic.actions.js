@@ -87,22 +87,6 @@ export const reCreateRoom = room_id => async dispatch => {
   }
 };
 
-export function updateSpleeshGuesses() {
-  return dispatch => {
-    fetch('/api/spleesh/guesses')
-      .then(res => res.json())
-      .then(data => {
-        dispatch({
-          type: SPLEESH_GUESSES,
-          payload: data
-        });
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  };
-}
-
 export function updateDropGuesses() {
   return dispatch => {
     fetch('/api/drop/guesses')
@@ -193,7 +177,7 @@ export const bet = bet_info => async dispatch => {
         history.push('/');
         return {
           status: 'failed',
-          message: 'THIS GAME HAS ENDED ALREADY'
+          message: 'THIS BATTLE HAS NOW ENDED'
         };
       } else if (res.data.betResult === -102) {
         return {
@@ -490,7 +474,6 @@ export const getMyGames = search_condition => async dispatch => {
     console.error("Error while fetching games:", err);
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   } finally {
-    console.log("Request completed.");
     dispatch({ type: END_LOADING });
   }
 };
@@ -652,6 +635,19 @@ export const getRollGuesses = roomId => async dispatch => {
     const res = await axios.get('/game/get_roll_guesses', { params: { roomId } });
     if (res.data.success) {
       dispatch({ type: END_LOADING });
+    } else {
+      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+    }
+
+  } catch (err) {
+    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+  }
+};
+export const getSpleeshGuesses = roomId => async dispatch => {
+  try {
+    const res = await axios.get('/game/get_spleesh_guesses', { params: { roomId } });
+    if (res.data.success) {
+      dispatch({ type: SPLEESH_GUESSES, payload: res.data.spleesh_guesses });
     } else {
       dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
     }

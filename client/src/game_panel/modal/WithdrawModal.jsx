@@ -18,7 +18,7 @@ import {
   Tooltip,
   Typography
 } from '@material-ui/core';
-import { Warning, Info, Link, FiberManualRecord , AccountBalanceWallet} from '@material-ui/icons';
+import { Warning, Info, Link, FiberManualRecord, AccountBalanceWallet } from '@material-ui/icons';
 
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
@@ -79,6 +79,13 @@ class WithdrawModal extends Component {
 
   send = async () => {
     try {
+      if (this.props.userInfo.dailyWithdrawals > 0.02) {
+        alertModal(
+          this.props.isDarkMode,
+          `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
+        );
+        return;
+      }
       if (this.state.amount <= 0) {
         alertModal(
           this.props.isDarkMode,
@@ -144,8 +151,8 @@ class WithdrawModal extends Component {
         >
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
-              <h2 className="modal-title">  <Icon component={ArrowForward} className="mr-2" /> {/* Withdraw icon */}
-WITHDRAW</h2>
+              <h2 className="modal-title">  <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Withdraw icon */}
+                WITHDRAW</h2>
               <Button className="btn-close" onClick={this.props.closeModal}>
                 ×
               </Button>
@@ -153,12 +160,19 @@ WITHDRAW</h2>
             <div className="modal-body edit-modal-body deposit-modal-body">
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
-                  {/* <div id='withdrawal-status'>
-                                        <h6>ELIGIBILILITY STATUS</h6>
-                                    <div><span className="eligible-label">WAGERED (MIN {convertToCurrency(25)})</span><span style={{color: this.state.totalWagered < 25 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.totalWagered)}</span></div>
+                  <div id='withdrawal-status' style={{ marginBottom: "30px" }}>
+                    <h6>ELIGIBILILITY STATUS</h6>
+                    <div><span className="withdrawal-usage">Daily Withdrawal Usage</span>
+                      <Tooltip title={"During Launch Phase only, for security purposes. Please note you will NOT be able to participate in any games or other transactional-related features upon exceeding limit."}>
+                        <IconButton>
+                          <Info />
+                        </IconButton>
+                      </Tooltip>  <span style={{ color: this.props.userInfo.dailyWithdrawals > 0.02 ? "red" : "rgb(87, 202, 34)" }}>{convertToCurrency(this.props.userInfo.dailyWithdrawals / 0.02 * 100)}%</span></div>
+                    {/* <div><span className="eligible-label">WAGERED (MIN {convertToCurrency(25)})</span><span style={{color: this.state.totalWagered < 25 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.totalWagered)}</span></div>
                                     <div><span className="eligible-label">DEPOSITS (MIN {convertToCurrency(5)})</span><span style={{color: this.state.deposit < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.deposit)}</span></div>
-                                        <div><span className="eligible-label">AMOUNT (MIN {convertToCurrency(5)})</span><span style={{color: this.state.amount < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.amount)}</span></div>
-                                        </div> */}
+                                        <div><span className="eligible-label">AMOUNT (MIN {convertToCurrency(5)})</span><span style={{color: this.state.amount < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.amount)}</span></div> */}
+                  </div>
+
                   <div className="account">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <Typography>Send To Address</Typography>
@@ -219,6 +233,7 @@ WITHDRAW</h2>
                       )}
                     </div>
                   </div>
+
                   <div className="input-amount">
                     <Typography>Withdrawal Amount</Typography>
                     <TextField

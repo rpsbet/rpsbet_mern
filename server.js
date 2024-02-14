@@ -51,12 +51,14 @@ const creditScoreCron = require('./helper/util/creditScoreCron.js');
 const rentCron = require('./helper/util/rentCron.js');
 const rollCron = require('./helper/util/rollCron.js');
 const bangCron = require('./helper/util/bangCron.js');
+const withdrawalCron = require('./helper/util/withdrawalCron.js');
 // Initialize the cron job to periodically check for confirmations
 creditScoreCron.checkOutstandingLoans(io);
 rentCron.checkRentalPayments(io);
 cronJob.checkConfirmations();
 rollCron.rollCron();
 bangCron.bangCron();
+withdrawalCron.resetWithdrawalLimits();
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

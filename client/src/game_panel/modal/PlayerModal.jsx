@@ -3,6 +3,8 @@ import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
+import styled from 'styled-components';
+import { renderLottieAnimation } from '../../util/LottieAnimations';
 
 import {
   setChatRoomInfo,
@@ -16,14 +18,15 @@ import {
   TableBody,
   TableCell,
   TableRow,
-  Typography
+  Typography,
+  LinearProgress
 } from '@material-ui/core';
 import { Warning } from '@material-ui/icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { convertToCurrency } from '../../util/conversion';
 
-import { faMoneyBill, faUser } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
+import { faMoneyBill, faUser, faEnvelope } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
 import { alertModal } from '../modal/ConfirmAlerts';
 import axios from '../../util/Api';
 
@@ -31,6 +34,9 @@ import {
   acGetCustomerInfo,
   getCustomerStatisticsData
 } from '../../redux/Customer/customer.action';
+import {
+  queryProducts
+} from '../../redux/Item/item.action';
 import Avatar from '../../components/Avatar';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 import './Modals.css';
@@ -52,6 +58,121 @@ const customStyles = {
     padding: 0
   }
 };
+const MarketplaceContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px
+`;
+
+const ProductGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 20px;
+  max-width: 100%;
+  margin: 20px 0;
+`;
+const ProductCard = styled.div`
+  position: relative;
+  background: linear-gradient(156deg, #303438, #ffb000);
+  border-radius: 20px;
+  padding: 10px;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  cursor: pointer;
+  -webkit-transition: -webkit-transform 0.2s;
+  -webkit-transition: transform 0.2s;
+  transition: transform 0.2s;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+
+  &:hover {
+    transform: scale(1.03);
+  }
+`;
+const ProductImage = styled.img`
+  max-width: 50%;
+  height: auto;
+  background: #fff;
+  border: 1px solid #f9f9;
+  box-shadow: 0 1px 17px #333;
+  border-radius: 10px;
+`;
+
+const ProductInfo = styled.div`
+  text-align: center;
+`;
+
+const ProductName = styled.h6`
+  padding: 4px;
+  font-size: 1rem;
+  margin-bottom: -5p;
+  font-weight: 400;
+  line-height: 1.75;
+  letter-spacing: 0.00938em;
+  background: linear-gradient(354deg, #ffdd0775, #494e54);
+  width: 100%;
+  border: 1px soli#9c0c0c;
+  border-radius: 23%;
+  text-shadow: 2px -2px 4px #f3b01b;
+  text-transform: uppercase;
+  box-shadow: inset 0px 1px 14px #28a74524, -1px 2px #dabf1475;
+  color: #fff;
+  margin-top: 10px;
+  border-bottom-right-radius: 21px;
+  border-top-left-radius: 30px;
+`;
+
+const LinearContainer = styled.div`
+  width: 80%;
+  max-width: 1200px;
+  margin: 20px 0;
+`;
+
+const CommissionPower = styled.span`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 30px;
+  background: #28a745;
+  border-radius: 10px;
+  box-shadow: inset 0px -1px 11px #005b15;
+  color: #fff;
+  font-weight: 500;
+  text-align: center;
+`;
+
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+`;
+
 
 class PlayerModal extends Component {
   constructor(props) {
@@ -70,6 +191,7 @@ class PlayerModal extends Component {
       message: '',
       gameType: 'All',
       timeType: '7',
+      productArray: [],
       isTipModalOpen: false,
       tipAmount: '',
       balance: props.balance,
@@ -138,6 +260,7 @@ class PlayerModal extends Component {
 
   async componentDidMount() {
     await this.fetchStatisticsData();
+    await this.props.queryProducts(1, 10, this.state._id);
   }
 
   fetchStatisticsData = async () => {
@@ -225,7 +348,7 @@ class PlayerModal extends Component {
 
   render() {
     const { isLoading } = this.state;
-    const { loading } = this.props;
+    const { loading, productArray, isLowGraphics} = this.props;
     return (
       <>
         {isLoading && (
@@ -255,7 +378,7 @@ class PlayerModal extends Component {
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className="modal-header">
                 <h2 className="modal-title">
-                <FontAwesomeIcon icon={faUser} className="mr-2" />
+                  <FontAwesomeIcon icon={faUser} className="mr-2" />
 
                   Player Card</h2>
                 <Button className="btn-close" onClick={this.handleCloseModal}>
@@ -268,16 +391,16 @@ class PlayerModal extends Component {
                     <div className="loading-spinner"></div>
                   ) : (
                     <div className='avatar-border'>
-                    <Avatar
-                      src={
-                        this.state.avatar
-                          ? this.state.avatar
-                          : '/img/profile-thumbnail.svg'
-                      }
-                      accessory={this.state.accessory}
-                      rank={this.state.rank}
-                      alt=""
-                    />
+                      <Avatar
+                        src={
+                          this.state.avatar
+                            ? this.state.avatar
+                            : '/img/profile-thumbnail.svg'
+                        }
+                        accessory={this.state.accessory}
+                        rank={this.state.rank}
+                        alt=""
+                      />
                     </div>
                   )}
                 </div>
@@ -313,6 +436,44 @@ class PlayerModal extends Component {
                     />
                   </div>
                 )}
+                
+<MarketplaceContainer>
+<h5>INVENTORY</h5>
+                {!loading ? (
+                  <ProductGrid>
+
+
+                    {productArray.map(row => (
+                      <ProductCard
+                        key={row._id}
+                      
+                      >
+                        {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                          renderLottieAnimation(row.image, isLowGraphics)
+                        ) : (
+                          <ProductImage src={row.image} alt={row.productName} />
+                        )}
+                        {row.item_type === '653ee81117c9f5ee2124564b' ? (
+                          <CommissionPower>{row.CP}</CommissionPower>
+                        ) : (
+                          ''
+                        )}
+
+                        <ProductInfo>
+                          <ProductName>{row.productName}</ProductName>
+                         
+                        </ProductInfo>
+
+
+                      </ProductCard>
+                    ))}
+                  </ProductGrid>
+                ) : (
+                  <LinearContainer>
+                    <LinearProgress color="secondary" />
+                  </LinearContainer>
+                )}
+                </MarketplaceContainer>
               </div>
               {this.props.userInfo._id !== this.state._id ? (
                 <div className="modal-footer">
@@ -321,7 +482,8 @@ class PlayerModal extends Component {
                     <FontAwesomeIcon icon={faMoneyBill} />
                   </Button>
                   <Button className="send-msg" onClick={this.handleOpenChat}>
-                    Send Message
+                    Message&nbsp;
+                    <FontAwesomeIcon icon={faEnvelope} />
                   </Button>
                 </div>
               ) : null}
@@ -333,14 +495,14 @@ class PlayerModal extends Component {
               contentLabel="Tip Modal"
             >
               <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-              <div className="modal-header">
-              <h2 className="modal-title">
-              <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
+                <div className="modal-header">
+                  <h2 className="modal-title">
+                    <FontAwesomeIcon icon={faMoneyBill} className="mr-2" />
 
-                ENTER TIP AMOUNT</h2>
-            <Button className="btn-close" onClick={this.handleCloseModal}>
-              ×
-            </Button>
+                    ENTER TIP AMOUNT</h2>
+                  <Button className="btn-close" onClick={this.handleCloseModal}>
+                    ×
+                  </Button>
                 </div>
                 <div className="modal-body">
                   <div className="modal-content-wrapper">
@@ -432,7 +594,10 @@ const mapStateToProps = state => ({
   myChat: state.logic.myChat,
   loading: state.logic.isActiveLoadingOverlay,
   userInfo: state.auth.user,
-  balance: state.auth.balance
+  balance: state.auth.balance,
+  productArray: state.itemReducer.productArray,
+  isLowGraphics: state.auth.isLowGraphics
+
 });
 
 const mapDispatchToProps = {
@@ -440,6 +605,7 @@ const mapDispatchToProps = {
   acGetCustomerInfo,
   setChatRoomInfo,
   setBalance,
+  queryProducts,
   addNewTransaction
 };
 

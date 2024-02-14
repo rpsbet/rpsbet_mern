@@ -107,7 +107,7 @@ class LoginModal extends Component {
             </Button>
           </div>
           <div className="modal-img">
-          <img style={{maxWidth: "100%"}} src="/img/giant-login.webp" alt="Login" />
+          <img style={{maxWidth: "95%", margin: "10px", overflow: "hidden"}} src="/img/giant-login.svg" alt="Login" />
           </div>
           <div className="modal-body">
 

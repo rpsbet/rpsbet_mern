@@ -46,7 +46,7 @@ class Leaderboards extends Component {
 
   componentDidMount() {
     const { actionList } = this.props;
-    console.log(actionList)
+    // console.log(actionList)
     this.setState({
       actionList: actionList
     });

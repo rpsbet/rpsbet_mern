@@ -3,7 +3,11 @@ import { convertToCurrency } from '../../util/conversion';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import Lottie from 'react-lottie';
+import cat_box from '../LottieAnimations/cat_box.json';
+// import empty_box from '../LottieAnimations/empty_box.json';
+import banana_box from '../LottieAnimations/banana_box.json';
+import eth_box from '../LottieAnimations/eth_box.json';
 import { Table, TableBody, TableCell, TableRow, Button, TextField, IconButton } from '@material-ui/core';
 import { connect } from 'react-redux';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -133,7 +137,7 @@ class MysteryBox extends Component {
           lowest_box_price: max_return['lowest_box_price'],
           public_bet_amount:
             max_return['lowest_box_price'] ===
-            max_return['highest_box_price'] ? (
+              max_return['highest_box_price'] ? (
               convertToCurrency(max_return['lowest_box_price'])
             ) : (
               <>
@@ -207,14 +211,14 @@ class MysteryBox extends Component {
     const updatedBoxList = this.props.box_list.filter((box, i) => i !== index);
     this.updateBoxList(updatedBoxList);
   };
-  
+
   onEmptyBoxes = e => {
     e.preventDefault();
     this.updateBoxList([]);
   };
 
 
-  
+
   // componentDidUpdate(prevProps) {
   //   if (prevProps.endgame_amount !== this.props.endgame_amount) {
   //     const winChance = this.calcWinChance(this.props.box_list, this.props.endgame_amount);
@@ -225,19 +229,19 @@ class MysteryBox extends Component {
   render() {
     const boxList = this.props.box_list;
     const uniquePrizes = [...new Set(boxList.map((row) => row.box_prize))];
-  
+
     const calculateProbability = (prize) => {
       const count = boxList.filter((row) => row.box_prize === prize).length;
       const totalBoxes = boxList.length;
       return count / totalBoxes * 100;
     };
-  
+
     // Sort unique prizes largest first
     uniquePrizes.sort((a, b) => b - a);
-  
+
     // Check if there are no prizes
     const noPrizes = uniquePrizes.length === 0;
-  
+
     // Map through the unique prizes and display the key
     const prizeKey = (
       <div className="prize-key">
@@ -257,7 +261,7 @@ class MysteryBox extends Component {
         </Table>
       </div>
     );
-  
+
     return (
       <div className="game-info-panel">
         {boxList.length === 0 ? <h3 className="game-sub-title">Add Some Boxes</h3> : prizeKey}
@@ -273,8 +277,9 @@ class MysteryBox extends Component {
                 {boxList.map((row, key) => (
                   <Draggable key={key} draggableId={`box-${key}`} index={key}>
                     {(provided) => (
+
                       <div
-                        className={`box ${row.box_prize > boxList[key].box_price ? 'lose-bg' : 'win-bg'}`}
+                        className={`box ${row.box_prize > boxList[key].box_price ? 'lose-box' : 'win-box'}`}
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
@@ -286,7 +291,25 @@ class MysteryBox extends Component {
                           {row.box_prize === 0.0 ? 'EMPTY' : convertToCurrency(row.box_prize)}{' '}
                           / {convertToCurrency(row.box_price)}
                         </span>
+                        <Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData:
+      boxList[key].box_prize > boxList[key].box_price
+        ? eth_box
+        : boxList[key].box_prize > 0 && boxList[key].box_price > boxList[key].box_prize
+        ? banana_box
+        : boxList[key].box_prize > 0 && boxList[key].box_price < boxList[key].box_prize
+        ? eth_box
+        : cat_box,
+                          }}
+                          height={100} // Set the height of the animation
+                          width={100}
+                          style={{ marginTop: "-30px" }}
+                        />
                       </div>
+
                     )}
                   </Draggable>
                 ))}
@@ -297,35 +320,33 @@ class MysteryBox extends Component {
         </DragDropContext>
         <hr />
         <div className="create-box-panel">
-          <div className="amounts-panel">
-            <div>
-              <div className="edit-amount-panel">
-                <TextField
-                  variant="outlined"
-                  type="text"
-                  inputProps={{
-                    pattern: '^\\d*\\.?\\d*$',
-                    maxLength: 9
-                  }}
-                  style={{ background: "#ffd602cc", borderRadius: "0.2em", marginRight: '15px' }}
-                  InputLabelProps={{
-                    shrink: true
-                  }}
-                  name="new_box_prize"
-                  id="new_box_prize"
-                  value={this.state.new_box_prize}
-                  onChange={this.onChangeNewBoxPrize}
-                  placeholder="PRIZE"
-                  InputProps={{
-                    endAdornment: 'ETH'
-                  }}
-                />
-              </div>
+          <div className="amounts-panel" style={{ marginBottom: "20px" }}>
+            <div className="edit-amount-panel">
+              <TextField
+                variant="outlined"
+                type="text"
+                inputProps={{
+                  pattern: '^\\d*\\.?\\d*$',
+                  maxLength: 9
+                }}
+                style={{ background: "#ffd602cc", borderRadius: "0.2em", marginRight: '15px' }}
+                InputLabelProps={{
+                  shrink: true
+                }}
+                name="new_box_prize"
+                id="new_box_prize"
+                value={this.state.new_box_prize}
+                onChange={this.onChangeNewBoxPrize}
+                placeholder="PRIZE"
+                InputProps={{
+                  endAdornment: 'ETH'
+                }}
+              />
             </div>
             <div>
               <div className="edit-amount-panel">
                 <TextField
-                style={{background: "#0fff00cc", borderRadius: "0.2em",}}
+                  style={{ background: "#0fff00cc", borderRadius: "0.2em", }}
                   type="text"
                   variant="outlined"
                   inputProps={{
@@ -356,12 +377,12 @@ class MysteryBox extends Component {
             </Button>
           </div>
 
-          <IconButton style={{background: "transparent"}} id="reset"
+          <IconButton style={{ background: "transparent" }} id="reset"
             href="/#"
             onClick={this.onEmptyBoxes}
             title="Empty all boxes?">
-          <FontAwesomeIcon style={{width: "15px"}} icon={faTrash} /> {/* Use the faRedo icon */}
-        </IconButton>
+            <FontAwesomeIcon style={{ width: "15px" }} icon={faTrash} /> {/* Use the faRedo icon */}
+          </IconButton>
         </div>
         <p className="tip">
           Boxes will be displayed to the public in the order you have added

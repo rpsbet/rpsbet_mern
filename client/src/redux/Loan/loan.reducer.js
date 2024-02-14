@@ -9,6 +9,7 @@ import {
   SET_CURRENT_LOAN_ID,
   ADD_TOTAL,
   MY_ADD_TOTAL,
+  PRODUCT_TOTAL,
   LOADING_REMAINING_LOANS,
   CALCULATE_REMAINING_LOANS,
   SET_USER_LOANS,
@@ -55,6 +56,8 @@ export default (state = initialState, { type, payload }) => {
     case ADD_TOTAL:
       return { ...state, totalResults: payload.total, pages: payload.pages };
     case MY_ADD_TOTAL:
+      return { ...state, totalResults: payload.total, pages: payload.pages };
+    case PRODUCT_TOTAL:
       return { ...state, totalResults: payload.total, pages: payload.pages };
     case PAGINATION_FOR_LOAN:
       return {

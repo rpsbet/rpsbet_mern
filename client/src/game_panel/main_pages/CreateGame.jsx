@@ -6,12 +6,15 @@ import Lottie from 'react-lottie';
 import Footer from './Footer';
 import Summary from '../CreateGame/Summary';
 import AdvancedSettings from '../CreateGame/AdvancedSettings';
+import JukeboxPanel from '../../components/JukeboxPanel.jsx';
+
 // import MyGamesTable from '../MyGames/MyGamesTable';
 import LoadingOverlay from 'react-loading-overlay';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import HistoryTable from '../LiveGames/HistoryTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import DrawerButton from './DrawerButton';
+import SupportButton from './SupportButton';
 import AiPanel from '../../components/AiPanel';
 import animationData from '../LottieAnimations/cat-place-bet.json';
 import RPS from '../CreateGame/RPS';
@@ -163,7 +166,6 @@ class CreateGame extends Component {
       lowest_box_price: 0,
       public_bet_amount: convertToCurrency(0),
       is_private: false,
-      is_anonymous: false,
       room_password: '',
       aveMultiplier: 0,
       score: 0,
@@ -209,111 +211,6 @@ class CreateGame extends Component {
     return null;
   }
 
-  handleUrlChange = event => {
-    this.setState({
-      youtubeUrl: event.target.value
-    });
-  };
-
-  handleSubmit = event => {
-    event.preventDefault();
-    const { youtubeUrl } = this.state;
-    const videoId = this.getVideoId(youtubeUrl);
-
-    this.setState({
-      videoId,
-      isPlaying: true
-    });
-  };
-
-  getVideoId = url => {
-    // Check if the URL uses the "youtube.com" format
-    if (url.includes('youtube.com')) {
-      const videoId = url.split('v=')[1];
-      const ampersandPosition = videoId.indexOf('&');
-      if (ampersandPosition !== -1) {
-        return videoId.substring(0, ampersandPosition);
-      }
-      return videoId;
-    }
-    // Check if the URL uses the "youtu.be" format
-    if (url.includes('youtu.be')) {
-      const videoId = url
-        .split('/')
-        .pop()
-        .split('?')[0];
-      return videoId;
-    }
-    return null; // Invalid URL format
-  };
-
-  onChangeState = async newState => {
-    await this.setState(newState);
-  };
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.step !== this.state.step) {
-      console.log("1step: ", this.state.step)
-      console.log("1child_step: ", this.state.child_step)
-    }
-    if (prevState.child_step !== this.state.child_step) {
-      console.log("2step: ", this.state.step)
-      console.log("2child_step: ", this.state.child_step)
-    }
-  }
-
-  toggleDrawer = () => {
-    this.props.toggleDrawer(!this.props.isDrawerOpen);
-  };
-
-  calculateEV(originalBet, maxSum, spleesh_bet_unit) {
-    const sum = 55 * spleesh_bet_unit - originalBet; // sum of all possible wrong guesses
-    const n = originalBet; // number of possible guesses
-    const p = 1 / n; // probability of guessing correctly
-    let expectedValue =
-      originalBet * (sum - maxSum) * p - (sum - maxSum) * (1 - p);
-
-    let scale = 1;
-    if (maxSum < originalBet) {
-      scale = (maxSum / originalBet) ** 2;
-    } else if (maxSum > sum) {
-      expectedValue *= -1;
-      scale = -1;
-    } else {
-      scale = 1 - (sum - maxSum) / (sum - originalBet);
-      scale = 1 - scale ** 2; // adjust scale based on quadratic function
-    }
-
-    expectedValue *= scale;
-    return expectedValue / p;
-  }
-
-  calcMysteryBoxEV(boxList, targetSum, max_return) {
-    const totalBoxes = boxList.length;
-    const probability = 1 / totalBoxes;
-    let expectedValue = 0;
-    const totalPrizes = boxList.reduce((acc, curr) => acc + curr.box_prize, 0);
-    const targetDiff = Math.abs(targetSum - totalPrizes);
-    const maxDiff = Math.abs(max_return - totalPrizes);
-
-    for (let i = 0; i < totalBoxes; i++) {
-      const boxPrice = boxList[i].box_price;
-      const boxPrize = boxList[i].box_prize;
-      const boxEV =
-        (boxPrice - boxPrize) * (1 - probability) - boxPrize * probability;
-      expectedValue += boxEV;
-    }
-
-    let scale = 1;
-    if (targetSum >= totalPrizes && targetSum <= max_return) {
-      scale = 1 - targetDiff / maxDiff;
-    } else if (targetSum > max_return) {
-      expectedValue *= -1;
-    }
-
-    expectedValue *= scale;
-    return expectedValue;
-  }
 
   async componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress);
@@ -321,11 +218,19 @@ class CreateGame extends Component {
     Object.values(this.state.sounds).forEach(sound => {
       sound.load();
     });
+
     this.IsAuthenticatedReroute();
     this.props.getHistory();
-    // this.props.getGameTypeList();
     const gameTypeName = this.props.match.params.game_type_name;
+    // this.props.getGameTypeList();
+    await this.props.setGameMode(gameTypeName);
+    const selectedGameType = this.props.gameTypeList.find(
+      gameType => gameType.game_type_name === gameTypeName
+    );
+    if (selectedGameType && selectedGameType.short_name) {
 
+      this.setState({ selectedGameType: selectedGameType.short_name })
+    }
     if (this.props.isAuthenticated) {
       this.props.getMyGames();
       this.props.getMyHistory();
@@ -381,7 +286,7 @@ class CreateGame extends Component {
         max_return: 2,
         bet_amount: 0.01,
         winChance: 0,
-        qs_nation: Math.floor(Math.random() * 5),
+        qs_nation: Math.floor(Math.random() * 4),
         endgame_amount: 0
       };
     } else if (gameTypeName === 'Mystery Box') {
@@ -436,16 +341,126 @@ class CreateGame extends Component {
     document.removeEventListener('keydown', this.handleKeyPress);
   }
 
-  
+  // componentDidUpdate(prevProps, prevState) {
+
+  //   if (prevState.step !== this.state.step) {
+  //     console.log("1step: ", this.state.step)
+  //     console.log("1child_step: ", this.state.child_step)
+  //   }
+  //   if (prevState.child_step !== this.state.child_step) {
+  //     console.log("2step: ", this.state.step)
+  //     console.log("2child_step: ", this.state.child_step)
+  //   }
+  // }
+
+  handleUrlChange = event => {
+    this.setState({
+      youtubeUrl: event.target.value
+    });
+  };
+
+  handleSubmit = event => {
+    event.preventDefault();
+    const { youtubeUrl } = this.state;
+    const videoId = this.getVideoId(youtubeUrl);
+
+    this.setState({
+      videoId,
+      isPlaying: true
+    });
+  };
+
+  getVideoId = url => {
+    // Check if the URL uses the "youtube.com" format
+    if (url.includes('youtube.com')) {
+      const videoId = url.split('v=')[1];
+      const ampersandPosition = videoId.indexOf('&');
+      if (ampersandPosition !== -1) {
+        return videoId.substring(0, ampersandPosition);
+      }
+      return videoId;
+    }
+    // Check if the URL uses the "youtu.be" format
+    if (url.includes('youtu.be')) {
+      const videoId = url
+        .split('/')
+        .pop()
+        .split('?')[0];
+      return videoId;
+    }
+    return null; // Invalid URL format
+  };
+
+  onChangeState = async newState => {
+    await this.setState(newState);
+  };
+
+
+
+  toggleDrawer = () => {
+    this.props.toggleDrawer(!this.props.isDrawerOpen);
+  };
+
+  calculateEV(originalBet, maxSum, spleesh_bet_unit) {
+    const sum = 55 * spleesh_bet_unit - originalBet; // sum of all possible wrong guesses
+    const n = originalBet; // number of possible guesses
+    const p = 1 / n; // probability of guessing correctly
+    let expectedValue =
+      originalBet * (sum - maxSum) * p - (sum - maxSum) * (1 - p);
+
+    let scale = 1;
+    if (maxSum < originalBet) {
+      scale = (maxSum / originalBet) ** 2;
+    } else if (maxSum > sum) {
+      expectedValue *= -1;
+      scale = -1;
+    } else {
+      scale = 1 - (sum - maxSum) / (sum - originalBet);
+      scale = 1 - scale ** 2; // adjust scale based on quadratic function
+    }
+
+    expectedValue *= scale;
+    return expectedValue / p;
+  }
+
+  calcMysteryBoxEV(boxList, targetSum, max_return) {
+    const totalBoxes = boxList.length;
+    const probability = 1 / totalBoxes;
+    let expectedValue = 0;
+    const totalPrizes = boxList.reduce((acc, curr) => acc + curr.box_prize, 0);
+    const targetDiff = Math.abs(targetSum - totalPrizes);
+    const maxDiff = Math.abs(max_return - totalPrizes);
+
+    for (let i = 0; i < totalBoxes; i++) {
+      const boxPrice = boxList[i].box_price;
+      const boxPrize = boxList[i].box_prize;
+      const boxEV =
+        (boxPrice - boxPrize) * (1 - probability) - boxPrize * probability;
+      expectedValue += boxEV;
+    }
+
+    let scale = 1;
+    if (targetSum >= totalPrizes && targetSum <= max_return) {
+      scale = 1 - targetDiff / maxDiff;
+    } else if (targetSum > max_return) {
+      expectedValue *= -1;
+    }
+
+    expectedValue *= scale;
+    return expectedValue;
+  }
+
+
+
   handleKeyPress(event) {
     const { selected_roll } = this.state;
     switch (event.key) {
-        case 'Escape':
-          this.onPrevButtonClicked();
-          break;
-        case 'Enter':
-          this.onNextButtonClicked();
-          break;
+      case 'Escape':
+        this.onPrevButtonClicked();
+        break;
+      case 'Enter':
+        this.onNextButtonClicked();
+        break;
 
       case 'Shift':
         this.onSkipButtonClicked();
@@ -463,24 +478,23 @@ class CreateGame extends Component {
 
   onSkipButtonClicked = () => {
     if ((this.state.step === 3) || this.state.step === 4) {
-    
-    if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
-      if (this.state.max_return > this.state.bet_amount * 4) {
-        alertModal(this.props.isDarkMode, `TOO PURRROFITABLE! GAME IS UNFAIR`);
-        return;
+
+      if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
+        if (this.state.max_return > this.state.bet_amount * 4) {
+          alertModal(this.props.isDarkMode, `TOO PURRROFITABLE! GAME IS UNFAIR`);
+          return;
+        }
       }
+      this.setState({
+        is_private: false,
+        youtubeUrl: '',
+        gameBackground: '',
+        endgame_type: false,
+        step: this.state.step + 1,
+        child_step: this.state.child_step + 1
+      });
     }
-    this.setState({
-      is_private: false,
-      youtubeUrl: '',
-      gameBackground: '',
-      is_anonymous: false,
-      endgame_type: false,
-      step: this.state.step + 1,
-      child_step: this.state.child_step + 1
-    });
-  }
-  return;
+    return;
   };
 
   onStartBrainGame = e => {
@@ -542,9 +556,15 @@ class CreateGame extends Component {
       step: this.state.step > 1 ? this.state.step - 1 : this.state.step
     });
 
-    if (this.state.child_step = 5) {
+    if (this.state.child_step === 5) {
       this.setState({
         child_step: this.state.child_step - 1
+      });
+    }
+
+    if (this.state.step === 2) {
+      this.setState({
+        child_step: 1
       });
     }
   };
@@ -580,122 +600,123 @@ class CreateGame extends Component {
       }
       return false;
     };
-if (step < 5) {
+    if (step < 5) {
 
-    if (step === 2) {
-      if (
-        (game_mode !== 'RPS' || (game_mode === 'RPS' && child_step === 1)) &&
-        (parseFloat(bet_amount) <= 0 || isNaN(parseFloat(bet_amount)))
-      ) {
-        alertAndReturn("YOU DIDN'T BET (CAT) SHIT!!!");
-        return;
-      }
+      if (step === 2) {
+        if (
+          (game_mode !== 'RPS' || (game_mode === 'RPS' && child_step === 1)) &&
+          (parseFloat(bet_amount) <= 0 || isNaN(parseFloat(bet_amount)))
+        ) {
+          alertAndReturn("YOU DIDN'T BET (CAT) SHIT!!!");
+          return;
+        }
 
-      if (bet_amount > balance) {
-        alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
-        return;
-      }
+        if (bet_amount > balance) {
+          alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
+          return;
+        }
 
-      if (
-        (game_mode === 'RPS' || game_mode === 'Quick Shoot') &&
-        child_step === 1 &&
-        (qs_list.length > 0 || rps_list.length > 0)
-      ) {
-        this.setState({
-          qs_list: [],
-          rps_list: [],
-          winChance: 0,
-          step: step > 1 ? step : step + 1
-        });
-        return;
-      }
+        if (
+          (game_mode === 'RPS' || game_mode === 'Quick Shoot') &&
+          child_step === 1 &&
+          (qs_list.length > 0 || rps_list.length > 0)
+        ) {
+          this.setState({
+            qs_list: [],
+            rps_list: [],
+            winChance: 0,
+            step: step > 1 ? step : step + 1
+          });
+          return;
+        }
 
-      let list;
-      if (game_mode === 'Quick Shoot') {
-        list = this.state.qs_list;
-      } else if (game_mode === 'Bang!') {
-        list = this.state.bang_list;
-      } else if (game_mode === 'Blackjack') {
-        list = this.state.bj_list;
-      } else if (game_mode === 'Drop Game') {
-        list = this.state.drop_list;
-      } else {
-        list = this.state[`${game_mode.toLowerCase()}_list`];
-      }
+        let list;
+        if (game_mode === 'Quick Shoot') {
+          list = this.state.qs_list;
+        } else if (game_mode === 'Bang!') {
+          list = this.state.bang_list;
+        } else if (game_mode === 'Blackjack') {
+          list = this.state.bj_list;
+        } else if (game_mode === 'Drop Game') {
+          list = this.state.drop_list;
+        } else {
+          list = this.state[`${game_mode.toLowerCase()}_list`];
+        }
 
-      if (
-        ((['Drop Game', 'Bang!', 'Roll', 'Blackjack'].includes(game_mode) &&
-          child_step === 2) ||
-          (((game_mode === 'RPS' && rps_game_type === 0) ||
-            game_mode === 'Quick Shoot') &&
-            child_step === 3)) &&
-        isMinimumRunsNeeded(3, list)
-      ) {
-        return;
-      }
+        if (
+          ((['Drop Game', 'Bang!', 'Roll', 'Blackjack'].includes(game_mode) &&
+            child_step === 2) ||
+            (((game_mode === 'RPS' && rps_game_type === 0) ||
+              game_mode === 'Quick Shoot') &&
+              child_step === 3)) &&
+          isMinimumRunsNeeded(3, list)
+        ) {
+          return;
+        }
 
-      if (
-        (game_mode === 'RPS' && child_step < 3) ||
-        (game_mode === 'Quick Shoot' && child_step < 3) ||
-        (game_mode !== 'Mystery Box' && child_step === 1)
-      ) {
+        if (
+          (game_mode === 'RPS' && child_step < 3) ||
+          (game_mode === 'Quick Shoot' && child_step < 3) ||
+          (game_mode !== 'Mystery Box' && child_step === 1)
+        ) {
+          this.setState({
+            child_step: child_step + 1
+          });
+          return;
+        } else {
+          // move to step 3
+          this.setState({
+            step: step + 1,
+            child_step: 1
+          });
+          return;
+        }
+      } else if (child_step === 2 && step !== 1) {
+        if (
+          game_mode === 'Spleesh!' &&
+          ((spleesh_bet_unit === 0.001 && endgame_amount < 0.04) ||
+            (spleesh_bet_unit === 0.01 && endgame_amount < 0.4) ||
+            (spleesh_bet_unit === 0.1 && endgame_amount < 4.0))
+        ) {
+          alertAndReturn(
+            `TOO PURRROFITABLE! MINIMUM PAYOUT IS ${40 * spleesh_bet_unit}`
+          );
+          return;
+        } else if (
+          game_mode === 'Mystery Box' &&
+          (max_return > bet_amount * 4 || endgame_amount < bet_amount)
+        ) {
+          if (max_return > bet_amount * 4) {
+            alertAndReturn('TOO PURRROFITABLE! GAME IS UNFAIR');
+          } else {
+            alertAndReturn('THIS GAME REQUIRES A PAYOUT MORE THAN BET AMOUNT');
+          }
+          return;
+        } else if (isNaN(endgame_amount)) {
+          alertAndReturn('IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
+          return;
+        }
         this.setState({
           child_step: child_step + 1
         });
-        return;
-      } else {
-        // move to step 3
-        this.setState({
-          step: step + 1,
-          child_step: 1
-        });
-        return;
-      }
-    } else if (child_step === 2) {
-      if (
-        game_mode === 'Spleesh!' &&
-        ((spleesh_bet_unit === 0.01 && endgame_amount < 0.4) ||
-          (spleesh_bet_unit === 0.1 && endgame_amount < 4.0))
-      ) {
-        alertAndReturn(
-          `TOO PURRROFITABLE! PAYOUT MUST BE AT LEAST ${40 * spleesh_bet_unit}`
-        );
-        return;
-      } else if (
-        game_mode === 'Mystery Box' &&
-        (max_return > bet_amount * 4 || endgame_amount < bet_amount)
-      ) {
-        if (max_return > bet_amount * 4) {
-          alertAndReturn('TOO PURRROFITABLE! GAME IS UNFAIR');
-        } else {
-          alertAndReturn('THIS GAME REQUIRES A PAYOUT MORE THAN BET AMOUNT');
+      } else if (child_step === 1 && step !== 1) {
+        if (is_private === true && room_password === '') {
+          alertAndReturn('SET THE PASSWORD TO JOIN YOUR GAME!');
+          return;
         }
-        return;
-      } else if (isNaN(endgame_amount)) {
-        alertAndReturn('IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
-        return;
+        if (endgame_amount === 0) {
+          this.setState({ endgame_type: false });
+        }
+        this.setState({
+          child_step: child_step + 1
+        });
       }
       this.setState({
-        child_step: child_step + 1
-      });
-    } else if (child_step === 1) {
-      if (is_private === true && room_password === '') {
-        alertAndReturn('SET THE PASSWORD TO JOIN YOUR GAME!');
-        return;
-      }
-      if (endgame_amount === 0) {
-        this.setState({ endgame_type: false });
-      }
-      this.setState({
-        child_step: child_step + 1
+        step: step > 3 && child_step < 4 ? step : step + 1,
+        child_step: step === 1 ? child_step : child_step + 1
       });
     }
-    this.setState({
-      step: step > 3 && child_step < 4 ? step : step + 1,
-      child_step: child_step + 1
-    });
-}
-return;
+    return;
   };
 
   playSound = sound => {
@@ -757,7 +778,8 @@ return;
       QS: 'quick-shoot',
       DG: 'drop-game',
       'B!': 'bang',
-      R: 'roll'
+      R: 'roll',
+      BJ: 'blackjack'
     };
 
     const { gameTypeList } = this.props;
@@ -812,7 +834,6 @@ return;
             bet_amount={this.state.bet_amount}
             winChance={this.state.winChance}
             is_private={this.state.is_private}
-            is_anonymous={this.state.is_anonymous}
             room_password={this.state.room_password}
             step={child_step}
             endgame_amount={this.state.endgame_amount}
@@ -830,7 +851,6 @@ return;
             bet_amount={this.state.bet_amount}
             spleesh_bet_unit={this.state.spleesh_bet_unit}
             is_private={this.state.is_private}
-            is_anonymous={this.state.is_anonymous}
             room_password={this.state.room_password}
             winChance={this.state.winChance}
             endgame_type={this.state.endgame_type}
@@ -880,7 +900,6 @@ return;
             qs_list={this.state.qs_list}
             bet_amount={this.state.bet_amount}
             is_private={this.state.is_private}
-            is_anonymous={this.state.is_anonymous}
             winChance={this.state.winChance}
             room_password={this.state.room_password}
             endgame_amount={this.state.endgame_amount}
@@ -901,7 +920,6 @@ return;
             bet_amount={this.state.bet_amount}
             winChance={this.state.winChance}
             is_private={this.state.is_private}
-            is_anonymous={this.state.is_anonymous}
             room_password={this.state.room_password}
             step={this.state.child_step}
             endgame_amount={this.state.endgame_amount}
@@ -919,7 +937,6 @@ return;
             winChance={this.state.winChance}
             aveMultiplier={this.state.aveMultiplier}
             is_private={this.state.is_private}
-            is_anonymous={this.state.is_anonymous}
             room_password={this.state.room_password}
             step={this.state.child_step}
             endgame_amount={this.state.endgame_amount}
@@ -954,7 +971,6 @@ return;
             bet_amount={this.state.bet_amount}
             winChance={this.state.winChance}
             is_private={this.state.is_private}
-            is_anonymous={this.state.is_anonymous}
             room_password={this.state.room_password}
             step={this.state.child_step}
             endgame_amount={this.state.endgame_amount}
@@ -1228,6 +1244,7 @@ return;
             </div>
           </div>
           <div className="sub-panel">
+
             {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
               <>
                 <h2 className="main-title desktop-only">HISTORY</h2>
@@ -1237,6 +1254,9 @@ return;
 
             {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
               <>
+                <h2 className="main-title desktop-only">JUKEBOX</h2>
+                <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} />
+
                 <h2 className="main-title desktop-only">AI PANEL</h2>
                 <AiPanel user_id={this.props.user_id} />
                 <h2 className="main-title desktop-only">YOUR HISTORY</h2>
@@ -1248,6 +1268,10 @@ return;
             <DrawerButton
               open={this.props.isDrawerOpen}
               toggleDrawer={this.toggleDrawer}
+            />
+            <SupportButton
+              open={this.props.isSupportOpen}
+            // toggleDrawer={this.toggleDrawer}
             />
           </div>
           {!this.state.is_mobile && (

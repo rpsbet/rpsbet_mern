@@ -114,7 +114,6 @@ class Bang extends Component {
       isPasswordCorrect: this.props.isPasswordCorrect,
       slippage: 100,
       listen: true,
-      betResults: props.betResults,
       settings_panel_opened: false,
       runs_panel_opened: false
     };
@@ -366,12 +365,7 @@ class Bang extends Component {
     if (result.status === 'success') {
       const currentUser = this.props.user;
       const currentRoom = this.props.room;
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
+      
     } else {
       if (result.message) {
         alertModal(this.props.isDarkMode, result.message);
@@ -639,12 +633,7 @@ class Bang extends Component {
     const currentRoom = this.props.room;
 
     if (result.status === 'success') {
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
+     
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
@@ -1452,7 +1441,6 @@ const mapStateToProps = state => ({
   accessory: state.logic.curRoomInfo.accessory,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
-  betResults: state.logic.betResults,
   isLowGraphics: state.auth.isLowGraphics,
   rank: state.logic.curRoomInfo.rank,
   isMusicEnabled: state.auth.isMusicEnabled

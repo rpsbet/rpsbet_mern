@@ -401,10 +401,10 @@ class StatisticsForm extends React.Component {
           <h5>BREAKDOWN</h5>
           <Table>
         <TableBody>
-          <TableRow>
+          {/* <TableRow>
             <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>LAST SEEN</b></TableCell>
             <TableCell style={{ color: "#ffb000",textAlign: 'center' }}>{lastSeenAgo}</TableCell>
-          </TableRow>
+          </TableRow> */}
         <TableRow>
             <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>JOINED</b></TableCell>
             <TableCell  style={{ color: "#ffb000", textAlign: 'center' }}>{joinedAgo}</TableCell>
@@ -547,7 +547,7 @@ class StatisticsForm extends React.Component {
             </div>
           </div>
         </div>
-
+        <h5>CHART</h5>
         <ChartEl
           options={options}
           series={series}

@@ -52,6 +52,10 @@ const RoomSchema = new Schema({
     type: Number,
     default: 2
   },
+  qs_nation: {
+    type: Number,
+    default: 0
+  },
   rps_game_type: {
     type: Number,
     default: 0

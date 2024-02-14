@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import BetArray from '../../components/BetArray';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import ReactApexChart from 'react-apexcharts';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
@@ -10,7 +9,7 @@ import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 
-import { Button, Switch, FormControlLabel } from '@material-ui/core';
+import { Button } from '@material-ui/core';
 import InlineSVG from 'react-inlinesvg';
 import busdSvg from '../JoinGame/busd.svg';
 
@@ -33,6 +32,7 @@ import {
 import history from '../../redux/history';
 import Share from '../../components/Share';
 import loadingChart from '../LottieAnimations/loadingChart.json';
+import catBowl from '../LottieAnimations/cat_bowl.json';
 
 import { convertToCurrency } from '../../util/conversion';
 
@@ -51,33 +51,6 @@ const styles = {
   }
 };
 
-const calcWinChance = prevStates => {
-  let total = prevStates.length;
-  let counts = {};
-  prevStates.forEach(state => {
-    if (counts[state.drop_amount]) {
-      counts[state.drop_amount]++;
-    } else {
-      counts[state.drop_amount] = 1;
-    }
-  });
-  let lowest = Infinity;
-  let highest = -Infinity;
-  Object.keys(counts).forEach(key => {
-    const chance = (counts[key] / total) * 100;
-    if (chance < lowest) {
-      lowest = chance;
-    }
-    if (chance > highest) {
-      highest = chance;
-    }
-  });
-  if (lowest === highest) {
-    return lowest.toFixed(2) + '%';
-  }
-  return lowest.toFixed(2) + '% - ' + highest.toFixed(2) + '%';
-};
-
 class DropGame extends Component {
   constructor(props) {
     super(props);
@@ -85,30 +58,22 @@ class DropGame extends Component {
     this.settingsRef = React.createRef();
     this.socket = this.props.socket;
     this.state = {
-      betting: false,
       timer: null,
       timerValue: 2000,
       intervalId: null,
       showImageModal: false,
       image: '',
-      showAnimation: false,
-      bgColorChanged: false,
       drop_guesses: [],
       advanced_status: '',
-      is_anonymous: false,
       productName: '',
       bet_amount: 0.001,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       drop_guesses1Received: false,
-      betResult: null,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
-      slippage: 100,
-      betResults: props.betResults,
-      settings_panel_opened: false
     };
     this.panelRef = React.createRef();
-
+    this.handleKeyPress = this.handleKeyPress.bind(this);
     this.onChangeState = this.onChangeState.bind(this);
   }
 
@@ -129,17 +94,6 @@ class DropGame extends Component {
     return previousBets;
   }
 
-  changeBgColor = async result => {
-    this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
-    this.setState({ bgColorChanged: false });
-  };
-
-  // handleClickOutside = e => {
-  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
-  // };
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance ||
@@ -174,8 +128,8 @@ class DropGame extends Component {
 
   componentDidMount = () => {
     const { socket, playSound } = this.props;
+    document.addEventListener('keydown', this.handleKeyPress);
     socket.on('CARD_PRIZE', data => {
-      console.log(data)
       if (data) {
         this.setState(
           {
@@ -201,75 +155,23 @@ class DropGame extends Component {
     socket.on('UPDATED_BANKROLL', data => {
       this.setState({ bankroll: data.bankroll });
     });
-
-    // document.addEventListener('mousedown', this.handleClickOutside);
   };
 
   componentWillUnmount = () => {
     clearInterval(this.state.intervalId);
-    // document.removeEventListener('mousedown', this.handleClickOutside);
+    document.removeEventListener('keydown', this.handleKeyPress);
   };
 
-  predictNext = dropAmounts => {
-    const sortedDrops = dropAmounts.map(drop => drop.drop).sort((a, b) => a - b);
-    const uniqueValues = [...new Set(sortedDrops)];
-
-    if (uniqueValues.length === 1) {
-      return uniqueValues[0];
-    } else {
-      let finalValue;
-
-      do {
-        const minDrop = Math.min(...sortedDrops);
-        const maxDrop = Math.max(...sortedDrops);
-        const difference = maxDrop - minDrop;
-        const segmentSize = difference / 20;
-
-        const segments = Array.from({ length: 20 }, (_, index) => {
-          const lowerBound = minDrop + index * segmentSize;
-          const upperBound = minDrop + (index + 1) * segmentSize;
-          const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
-
-          return {
-            segment: index + 1,
-            drops: dropsInSegment
-          };
-        });
-
-        const totalDropsCount = sortedDrops.length;
-        const weights = segments.map(segment => segment.drops.length / totalDropsCount);
-
-        const randomValue = Math.random();
-        let cumulativeWeight = 0;
-        let selectedSegment;
-
-        for (let i = 0; i < segments.length; i++) {
-          cumulativeWeight += weights[i];
-          if (randomValue <= cumulativeWeight) {
-            selectedSegment = segments[i];
-            break;
-          }
-        }
-
-        const switchChance = Math.random();
-
-        if (switchChance <= 0.4) {
-          const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
-          finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
-        } else if (switchChance <= 0.8) {
-          const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
-          finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
-        } else {
-          const randomAddition = Math.random() * segmentSize;
-          finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
-        }
-
-      } while (finalValue !== null && finalValue < 0.000001);
-
-      return finalValue;
+  handleKeyPress(event) {
+    switch (event.key) {
+      case ' ':
+        event.preventDefault();
+        this.onBtnBetClick(0);
+        break;
+      default:
+        break;
     }
-  };
-
+  }
 
   joinGame = async () => {
     const { playSound } = this.props;
@@ -277,72 +179,54 @@ class DropGame extends Component {
     this.setState({ bet_amount: this.state.bet_amount });
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
-      is_anonymous: this.state.is_anonymous,
       drop_bet_item_id: this.props.drop_bet_item_id
-      // slippage: this.state.slippage
     });
 
     let text = 'HAHAA, YOU LOST!!!';
-
-    if (result.betResult === 1) {
-      playSound('win');
-      text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
-      // this.changeBgColor(result.betResult);
-    } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUALLY SHIT!';
-      playSound('split');
-      // this.changeBgColor(result.betResult);
-    } else {
-      text = 'TROLLOLOLOL! LOSER!';
-      playSound('lose');
-      // this.changeBgColor(result.betResult);
-    }
-
-    let stored_drop_array =
-      JSON.parse(localStorage.getItem('drop_array')) || [];
-
-    while (stored_drop_array.length >= 20) {
-      stored_drop_array.shift();
-    }
-    stored_drop_array.push({ drop: this.state.bet_amount });
-    localStorage.setItem('drop_array', JSON.stringify(stored_drop_array));
-
-    gameResultModal(
-      this.props.isDarkMode,
-      text,
-      result.betResult,
-      'Okay',
-      null,
-      () => {
-        // history.push('/');
-      },
-      () => { }
-    );
-
     if (result.status === 'success') {
-      const currentUser = this.props.user;
-      const currentRoom = this.props.room;
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
+
+      if (result.betResult === 1) {
+        playSound('win');
+        text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
+      } else if (result.betResult === 0) {
+        text = 'SPLIT! EQUALLY SHIT!';
+        playSound('split');
+      } else {
+        text = 'TROLLOLOLOL! LOSER!';
+        playSound('lose');
+      }
+
+      let stored_drop_array =
+        JSON.parse(localStorage.getItem('drop_array')) || [];
+
+      while (stored_drop_array.length >= 20) {
+        stored_drop_array.shift();
+      }
+      stored_drop_array.push({ drop: this.state.bet_amount });
+      localStorage.setItem('drop_array', JSON.stringify(stored_drop_array));
+
+      gameResultModal(
+        this.props.isDarkMode,
+        text,
+        result.betResult,
+        'Okay',
+        null,
+        () => {
+          // history.push('/');
+        },
+        () => { }
+      );
+      this.props.refreshHistory();
     } else {
       if (result.message) {
         alertModal(this.props.isDarkMode, result.message);
       }
     }
-
-    this.props.refreshHistory();
   };
 
   onBtnBetClick = async () => {
     this.props.playSound('select');
-    this.setState({ showAnimation: true });
-    setTimeout(() => {
-      this.setState({ showAnimation: false });
-    }, 5000);
+    this.props.updateDropAnimation();
     const {
       openGamePasswordModal,
       isAuthenticated,
@@ -444,40 +328,6 @@ class DropGame extends Component {
     );
   };
 
-  handleSwitchChange = () => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-      balance
-    } = this.props;
-    const { betting, bet_amount } = this.state;
-
-    // Add the necessary validation checks here
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      // Display an error message or handle the case when authentication fails
-      return;
-    }
-
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      // Display an error message or handle the case when creator ID validation fails
-      return;
-    }
-
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      // Display an error message or handle the case when bet amount validation fails
-      return;
-    }
-
-    if (!betting) {
-      // User has turned on the switch
-      this.startBetting();
-    } else {
-      // User has turned off the switch
-      this.stopBetting();
-    }
-  };
 
   toggleImageModal = () => {
     this.setState({
@@ -485,124 +335,14 @@ class DropGame extends Component {
     });
   };
 
-  startBetting = () => {
-    const { isDarkMode, playSound, is_private, roomInfo } = this.props;
-
-    if (!validateLocalStorageLength('drop_array', isDarkMode)) {
-      return;
-    }
-    const stored_drop_array =
-      JSON.parse(localStorage.getItem('drop_array')) || [];
-
-    const intervalId = setInterval(() => {
-      const randomItem = this.predictNext(stored_drop_array);
-
-      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-      const passwordCorrect = rooms[roomInfo._id];
-      if (is_private === true && passwordCorrect !== true) {
-        openGamePasswordModal();
-      } else {
-        this.joinGame2(randomItem);
-      }
-    }, 3500);
-    playSound('start');
-
-    this.setState({ intervalId, betting: true });
-  };
-
   handleChange = event => {
     this.setState({ bet_amount: event.target.value });
   };
 
-  stopBetting = () => {
-    this.props.playSound('stop');
-    clearInterval(this.state.intervalId, this.state.timer);
-    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
-  };
-
-  joinGame2 = async randomItem => {
-    const {
-      drop_bet_item_id,
-      balance,
-      isDarkMode,
-      refreshHistory,
-      playSound
-    } = this.props;
-    const {
-      bet_amount,
-      bankroll,
-      slippage,
-      is_anonymous,
-      betting
-    } = this.state;
-
-    // Check if betting is true before continuing
-    if (!betting) {
-      return;
-    }
-
-    this.setState({ bet_amount: randomItem });
-
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
-
-    const result = await this.props.join({
-      bet_amount: parseFloat(bet_amount),
-      is_anonymous: is_anonymous,
-      drop_bet_item_id: drop_bet_item_id,
-      slippage: slippage
-    });
-
-    const currentUser = this.props.user;
-    const currentRoom = this.props.room;
-
-    if (result.status === 'success') {
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
-      let text = 'HAHAA, YOU LOST!!!';
-
-      if (result.betResult === 1) {
-        playSound('win');
-
-        text = 'NOT BAD, WINNER!';
-        // this.changeBgColor(result.betResult);
-      } else if (result.betResult === 0) {
-        playSound('split');
-
-        text = 'DRAW, NO WINNER!';
-        // this.changeBgColor(result.betResult);
-      } else {
-        // this.changeBgColor(result.betResult);
-        playSound('lose');
-      }
-
-      // gameResultModal(
-      //   this.props.isDarkMode,
-      //   text,
-      //   result.betResult,
-      //   'Okay',
-      //   null,
-      //   () => {
-      //     // history.push('/');
-      //   },
-      //   () => {}
-      // );
-
-      refreshHistory();
-    }
-  };
 
   render() {
     const {
-      showAnimation,
       bankroll,
-      betting,
-      timerValue,
       actionList,
       drop_guesses,
       bet_amount,
@@ -617,6 +357,7 @@ class DropGame extends Component {
       accessory,
       rank,
       creator_id,
+      showAnimation,
       roomInfo,
       youtubeUrl,
       handleOpenPlayerModal,
@@ -849,7 +590,7 @@ class DropGame extends Component {
           </div>
           <div
             className="game-info-panel"
-            style={{ position: 'relative', zIndex: 10 }}
+            style={{ position: 'relative', zIndex: 10, padding: "30px" }}
           >
             {renderLottieAvatarAnimation(gameBackground, isLowGraphics)}
 
@@ -916,6 +657,7 @@ class DropGame extends Component {
             <div
               className={`animation-container${showAnimation ? ' animate' : ''
                 }`}
+                style={{height: "200px", width: "300px"}}
             >
               <Lottie
                 options={{
@@ -923,15 +665,34 @@ class DropGame extends Component {
                   autoplay: true,
                   animationData: drop
                 }}
-                width={200}
-                height={200}
+                width={drop_guesses.length > 0 ? drop_guesses[drop_guesses.length - 1].bet_amount * 200000 : 100}
+        height={drop_guesses.length > 0 ? drop_guesses[drop_guesses.length - 1].bet_amount * 200000 : 100}
                 style={{
-                  filter: 'hue-rotate(95deg)'
+                  position: 'absolute',
+                  transform: 'translateY(-60px)',
+                  maxWidth: "300px",
+                  maxHeight: "300px"
+                }}
+              />
+              <Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: drop
+                }}
+                width={drop_guesses.length > 0 ? drop_guesses[drop_guesses.length - 1].host_drop * 200000 : 100}
+                height={drop_guesses.length > 0 ? drop_guesses[drop_guesses.length - 1].host_drop * 200000 : 100}
+                style={{
+                  position: 'absolute',
+                  transform: 'translateY(60px)',                  filter: 'hue-rotate(45deg)',
+
+                  maxWidth: "300px",
+                  maxHeight: "300px"
                 }}
               />
             </div>
             <div className="drop-amount">
-              <h3 className="game-sub-title">Highest Drop Wins!</h3>
+              <h3 className="game-sub-title">Biggest Drop Wins!</h3>
             </div>
             <BetAmountInput
               betAmount={bet_amount}
@@ -947,36 +708,18 @@ class DropGame extends Component {
               onClick={() => this.onBtnBetClick()}
               variant="contained"
             >
-              DROP AMOUNT
+              DROP AMOUNT&nbsp;<span className="roll-tag">[space]</span>
             </Button>
 
-
-            <div>
-              <FormControlLabel
-                control={
-                  <Switch
-                    id="aiplay-switch"
-                    checked={betting}
-                    onChange={this.handleSwitchChange}
-                  />
-                }
-                label={betting ? 'AI ON' : 'AI OFF'}
-              />
-              {betting ? (
-                <div id="stop">
-                  {/* <span>Stop</span> */}
-                  <Lottie options={defaultOptions} width={22} />
-                </div>
-              ) : (
-                <div>
-                  {timerValue !== 2000 ? (
-                    <span>{(timerValue / 2000).toFixed(2)}s</span>
-                  ) : null}
-                </div>
-              )}
-            </div>
+<Lottie
+                          options={{
+                            loop: true,
+                            autoplay: true,
+                            animationData: catBowl
+                          }}
+                          style={{width: "350px", position:"absolute", bottom: "-20px", zIndex: "-1", opacity: "0.5", filter: "drop-shadow(0px 0px 6px #ff0000)"}}
+                        />
           </div>
-          {/* <BetArray arrayName="drop_array" label="drop" /> */}
 
           <div className="action-panel">
             <Share roomInfo={this.props.roomInfo} />
@@ -997,7 +740,6 @@ const mapStateToProps = state => ({
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
   accessory: state.logic.curRoomInfo.accessory,
-  betResults: state.logic.betResults,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled
 });

@@ -22,7 +22,6 @@ export const acQueryMyLoan = (pagination, page, sortCriteria, loanType) => async
   dispatch,
   getState
 ) => {
-  console.log(pagination, page, sortCriteria, loanType)
   dispatch({ type: MY_LOAN_QUERY, payload: [] });
   dispatch({ type: LOADING_LOAN_TABLE, payload: true });
   let payload = {

@@ -13,7 +13,8 @@ import {
 
 import {acPaginationQuestion} from '../../../redux/Question/question.action';
 import IconButton from '@material-ui/core/IconButton';
-import VisibilityIcon from '@material-ui/icons/Visibility';
+import Edit from '@material-ui/icons/Edit';
+import Trash from '@material-ui/icons/Delete';
 import Tooltip from '@material-ui/core/Tooltip';
 import Pagination from 'material-ui-flat-pagination';
 import Typography from '@material-ui/core/Typography';
@@ -27,20 +28,22 @@ function QuestionTable({
   pages,
   page,
   total,
+  toggleQuestionEditModal,
+  remove,
   loading
 }) {
   return (
     <PaperEl elevation={3}>
       <TopTopHeaderEl>
         <AddAndTotal>
-					<AddButton
+					{/* <AddButton
             onClick={() => history.push('/admin/question/new')}
             variant="contained"
             color="primary"
           >
             <Icon>send</Icon>
             Add New
-          </AddButton>
+          </AddButton> */}
           <TotalDivEl>
             <Typography variant="subtitle2">Total</Typography>
             <Paper>{total}</Paper>
@@ -67,16 +70,23 @@ function QuestionTable({
           data.map((row, index) => (
             <BottomRowEl
               key={row._id}
-              onClick={() => history.push(`/admin/question/${row._id}`)}
+              // onClick={() => history.push(`/admin/question/${row._id}`)}
             >
               <ItemEl>{(page - 1) * 10 + index + 1}</ItemEl>
               <ItemEl style={{width: 400}}>{row.question}</ItemEl>
               <ItemEl style={{width: 300}}>{row.answers}</ItemEl>
               <ItemEl>{row.brain_game_type}</ItemEl>
               <ItemEl>
-                <Tooltip title="View">
-                  <IconButton>
-                    <VisibilityIcon />
+                <Tooltip title="Edit">
+                  <IconButton onClick={() => {toggleQuestionEditModal(row._id)}}>
+                    <Edit />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete">
+                  <IconButton onClick={() => {
+                    remove(row._id)
+                    }}>
+                    <Trash />
                   </IconButton>
                 </Tooltip>
               </ItemEl>
@@ -156,8 +166,8 @@ const HeaderRowEl = styled(RowEl)`
   background: linear-gradient(
     90deg,
     rgba(252, 251, 253, 0) 0%,
-    rgb(139, 138, 231, 0.404) 2%,
-    rgba(139, 138, 231, 0.404) 98%,
+    #f50057 2%,
+    #3f51b5 98%,
     rgba(255, 255, 255, 0) 100%
   );
 

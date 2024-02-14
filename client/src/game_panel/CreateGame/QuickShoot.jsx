@@ -26,36 +26,50 @@ class QuickShoot extends Component {
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleReset = this.handleReset.bind(this);
   }
-  async handlePositionSelection(selected_qs_position, buttonId) {
+  async handlePositionSelection(selected_qs_position) {
+    let buttonId;
+    const { qs_game_type } = this.props;
+    if (qs_game_type === 2) {
+      buttonId = selected_qs_position === 0 ? 'l' : 'r';
+    } else if (qs_game_type === 3) {
+      buttonId = selected_qs_position === 0 ? 'l' : selected_qs_position === 1 ? 'cc' : 'r';
+    } else if (qs_game_type === 4) {
+      buttonId = selected_qs_position === 0 ? 'tl' : selected_qs_position === 1 ? 'tr' : selected_qs_position === 2 ? 'bl' : 'br';
+    } else if (qs_game_type === 5) {
+      buttonId = selected_qs_position === 0 ? 'c' : selected_qs_position === 1 ? 'tl' : selected_qs_position === 2 ? 'tr' : selected_qs_position === 3 ? 'bl' : 'br';
+    }
     this.setState({ activeButtonId: buttonId }, async () => {
-      
+
       await this.props.onChangeState({
         selected_qs_position: selected_qs_position
       });
       this.onAddRun(selected_qs_position);
-      
+
       this.updateAnimation();
     });
 
   }
 
-  
-  handleKeyPress(event) {
-    const { selected_roll } = this.state;
-    switch (event.key) {
-      // case 'r':
-      //   this.onAddRun('R');
-      //   break;
-      // case 'p':
-      //   this.onAddRun('P');
-      //   break;
-      // case 's':
-      //   this.onAddRun('S');
-      //   break;
 
+  handleKeyPress(event) {
+    switch (event.key) {
+      case 'p':
+        this.handlePositionSelection(0);
+        break;
+      case 'q':
+        this.handlePositionSelection(1);
+        break;
+      case 'w':
+        this.handlePositionSelection(2);
+        break;
+      case 'e':
+        this.handlePositionSelection(3);
+        break;
+      case 'r':
+        this.handlePositionSelection(4);
+        break;
       case ' ':
-        event.preventDefault(); 
-        this.onAutoPlay();
+        event.preventDefault();
         break;
       default:
         break;
@@ -67,7 +81,7 @@ class QuickShoot extends Component {
       qs_list: [],
       winChance: 0
     });
-    this.setState({qs_list: []});
+    this.setState({ qs_list: [] });
   }
 
   updateAnimation = async () => {
@@ -81,8 +95,6 @@ class QuickShoot extends Component {
     } else if (this.props.qs_game_type === 4) {
       position_short_name = ['tl', 'tr', 'bl', 'br'];
     }
-
-
 
     const animationData = await getQsLottieAnimation(
       this.props.qs_nation,
@@ -312,62 +324,62 @@ class QuickShoot extends Component {
     if (qs_game_type === 2) {
       return (
         <div className="qs-buttons">
-          <IconButton id="l" onClick={() => { this.handlePositionSelection(0, 'l'); }} className={activeButtonId === 'l' ? 'active' : ''}>
-            {/* Left */}
+          <IconButton id="l" onClick={() => { this.handlePositionSelection(0); }} className={activeButtonId === 'l' ? 'active' : ''}>
+            {/* Left */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">P</span>
           </IconButton>
-          <IconButton id="r" onClick={() => { this.handlePositionSelection(1, 'r'); }} className={activeButtonId === 'r' ? 'active' : ''}>
-            {/* Right */}
+          <IconButton id="r" onClick={() => { this.handlePositionSelection(1); }} className={activeButtonId === 'r' ? 'active' : ''}>
+            {/* Right */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">Q</span>
           </IconButton>
         </div>
       );
     } else if (qs_game_type === 3) {
       return (
         <div className="qs-buttons">
-          <IconButton id="l" onClick={() => { this.handlePositionSelection(0, 'l'); }} className={activeButtonId === 'l' ? 'active' : ''}>
-            {/* Left */}
+          <IconButton id="l" onClick={() => { this.handlePositionSelection(0); }} className={activeButtonId === 'l' ? 'active' : ''}>
+            {/* Left */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">P</span>
           </IconButton>
-          <IconButton id="cc" onClick={() => { this.handlePositionSelection(1, 'cc'); }} className={activeButtonId === 'cc' ? 'active' : ''}>
-            {/* Center */}
+          <IconButton id="cc" onClick={() => { this.handlePositionSelection(1); }} className={activeButtonId === 'cc' ? 'active' : ''}>
+            {/* Center */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">Q</span>
           </IconButton>
-          <IconButton id="r" onClick={() => { this.handlePositionSelection(2, 'r'); }} className={activeButtonId === 'r' ? 'active' : ''}>
-            {/* Right */}
+          <IconButton id="r" onClick={() => { this.handlePositionSelection(2); }} className={activeButtonId === 'r' ? 'active' : ''}>
+            {/* Right */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">W</span>
           </IconButton>
         </div>
       );
     } else if (qs_game_type === 4) {
       return (
         <div className="qs-buttons">
-          <IconButton id="tl" onClick={() => { this.handlePositionSelection(0, 'tl'); }} className={activeButtonId === 'tl' ? 'active' : ''}>
-            {/* Top Left */}
+          <IconButton id="tl" onClick={() => { this.handlePositionSelection(0); }} className={activeButtonId === 'tl' ? 'active' : ''}>
+            {/* Top Left */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">P</span>
           </IconButton>
-          <IconButton id="tr" onClick={() => { this.handlePositionSelection(1, 'tr'); }} className={activeButtonId === 'tr' ? 'active' : ''}>
-            {/* Top Right */}
+          <IconButton id="tr" onClick={() => { this.handlePositionSelection(1); }} className={activeButtonId === 'tr' ? 'active' : ''}>
+            {/* Top Right */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">Q</span>
           </IconButton>
-          <IconButton id="bl" onClick={() => { this.handlePositionSelection(2, 'bl'); }} className={activeButtonId === 'bl' ? 'active' : ''}>
-            {/* Bottom Left */}
+          <IconButton id="bl" onClick={() => { this.handlePositionSelection(2); }} className={activeButtonId === 'bl' ? 'active' : ''}>
+            {/* Bottom Left */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">W</span>
           </IconButton>
-          <IconButton id="br" onClick={() => { this.handlePositionSelection(3, 'br'); }} className={activeButtonId === 'br' ? 'active' : ''}>
-            {/* Bottom Right */}
+          <IconButton id="br" onClick={() => { this.handlePositionSelection(3); }} className={activeButtonId === 'br' ? 'active' : ''}>
+            {/* Bottom Right */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">E</span>
           </IconButton>
         </div>
       );
     } else if (qs_game_type === 5) {
       return (
         <div className="qs-buttons">
-          <IconButton id="tl" onClick={() => { this.handlePositionSelection(1, 'tl'); }} className={activeButtonId === 'tl' ? 'active' : ''}>
-            {/* TL */}
+          <IconButton id="tl" onClick={() => { this.handlePositionSelection(1); }} className={activeButtonId === 'tl' ? 'active' : ''}>
+            {/* TL */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">Q</span>
           </IconButton>
-          <IconButton id="tr" onClick={() => { this.handlePositionSelection(2, 'tr'); }} className={activeButtonId === 'tr' ? 'active' : ''}>
-            {/* TR */}
+          <IconButton id="tr" onClick={() => { this.handlePositionSelection(2); }} className={activeButtonId === 'tr' ? 'active' : ''}>
+            {/* TR */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">W</span>
           </IconButton>
-          <IconButton id="bl" onClick={() => { this.handlePositionSelection(3, 'bl'); }} className={activeButtonId === 'bl' ? 'active' : ''}>
-            {/* BL */}
+          <IconButton id="bl" onClick={() => { this.handlePositionSelection(3); }} className={activeButtonId === 'bl' ? 'active' : ''}>
+            {/* BL */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">E</span>
           </IconButton>
-          <IconButton id="br" onClick={() => { this.handlePositionSelection(4, 'br'); }} className={activeButtonId === 'br' ? 'active' : ''}>
-            {/* BR */}
+          <IconButton id="br" onClick={() => { this.handlePositionSelection(4); }} className={activeButtonId === 'br' ? 'active' : ''}>
+            {/* BR */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">R</span>
           </IconButton>
-          <IconButton id="c" onClick={() => { this.handlePositionSelection(0, 'c'); }} className={activeButtonId === 'c' ? 'active' : ''}>
-            {/* C */}
+          <IconButton id="c" onClick={() => { this.handlePositionSelection(0); }} className={activeButtonId === 'c' ? 'active' : ''}>
+            {/* C */}<span style={{ transform: "scaleY(-1)" }} className="roll-tag">P</span>
           </IconButton>
         </div>
       );
@@ -375,50 +387,41 @@ class QuickShoot extends Component {
   }
 
   onAutoPlay = () => {
-    if (this.props.qs_list.length > 2) {
-      const prevStates = this.props.qs_list;
-      let nextQS = this.predictNext(prevStates, this.props.qs_game_type);
-      
-      // Get the button ID corresponding to the nextQS
-      let buttonId;
+    const { qs_list, isDarkMode, qs_game_type } = this.props;
+    if (qs_list.length > 2) {
+      const prevStates = qs_list;
+      let nextQS = this.predictNext(prevStates, qs_game_type);
+
       nextQS = parseInt(nextQS);
-      if (this.props.qs_game_type === 2) {
-        buttonId = nextQS === 0 ? 'l' : 'r';
-      } else if (this.props.qs_game_type === 3) {
-        buttonId = nextQS === 0 ? 'l' : nextQS === 1 ? 'cc' : 'r';
-      } else if (this.props.qs_game_type === 4) {
-        buttonId = nextQS === 0 ? 'tl' : nextQS === 1 ? 'tr' : nextQS === 2 ? 'bl' : 'br';
-      } else if (this.props.qs_game_type === 5) {
-        buttonId = nextQS === 0 ? 'c' : nextQS === 1 ? 'tl' : nextQS === 2 ? 'tr' : nextQS === 3 ? 'bl' : 'br';
-      }
-      this.handlePositionSelection(nextQS, buttonId);
+
+      this.handlePositionSelection(nextQS);
     } else {
       alertModal(
-        this.props.isDarkMode,
+        isDarkMode,
         'PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA!'
       );
       return;
     }
   };
 
-  
+
 
   render() {
-    let position_name = [
-      'Center',
-      'Top-Left',
-      'Top-Right',
-      'Bottom-Left',
-      'Bottom-Right'
-    ];
+    // let position_name = [
+    //   'Center',
+    //   'Top-Left',
+    //   'Top-Right',
+    //   'Bottom-Left',
+    //   'Bottom-Right'
+    // ];
 
-    if (this.props.qs_game_type === 2) {
-      position_name = ['Left', 'Right'];
-    } else if (this.props.qs_game_type === 3) {
-      position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
-    } else if (this.props.qs_game_type === 4) {
-      position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
-    }
+    // if (this.props.qs_game_type === 2) {
+    //   position_name = ['Left', 'Right'];
+    // } else if (this.props.qs_game_type === 3) {
+    //   position_name = ['Bottom-Left', 'Center', 'Bottom-Right'];
+    // } else if (this.props.qs_game_type === 4) {
+    //   position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
+    // }
 
     return (
       <>

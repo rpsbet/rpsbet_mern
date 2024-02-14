@@ -1,17 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import BetArray from '../../components/BetArray';
 import Share from '../../components/Share';
 import ReactApexChart from 'react-apexcharts';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
+import { getQsLottieAnimation } from '../../util/helper';
 import {
   IconButton,
-  Button,
-  Switch,
-  FormControlLabel
 } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
@@ -36,6 +33,7 @@ import {
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 import loadingChart from '../LottieAnimations/loadingChart.json';
+import football from '../LottieAnimations/football.json';
 
 const defaultOptions = {
   loop: true,
@@ -57,27 +55,28 @@ class QuickShoot extends Component {
       timer: null,
       timerValue: 2000,
       intervalId: null,
-      selected_qs_position: 0,
+      selected_qs_position: this.props.selected_qs_position,
       advanced_status: '',
       is_anonymous: false,
+      animation: <div />,
       bet_amount: 0.001,
-      bgColorChanged: false,
       potential_return: 1.25,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       balance: this.props.balance,
-      betResults: props.betResults,
       productName: '',
+      qs: '',
       image: '',
       showImageModal: false,
-      settings_panel_opened: false,
       isPasswordCorrect: this.props.isPasswordCorrect
     };
-    this.handlePositionSelection = this.handlePositionSelection.bind(this);
     this.onChangeState = this.onChangeState.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
     this.panelRef = React.createRef();
   }
   componentDidMount() {
     const { socket, playSound } = this.props;
+    document.addEventListener('keydown', this.handleKeyPress);
+
     socket.on('CARD_PRIZE', data => {
       if (data) {
         this.setState(
@@ -91,15 +90,39 @@ class QuickShoot extends Component {
       }
     });
     socket.on('UPDATED_BANKROLL_QS', data => {
-      this.setState({ bankroll: data.bankroll });
+      this.setState({ bankroll: data.bankroll, qs: data.qs }, () => {
+        this.updateAnimation();
+      });
     });
-    // document.addEventListener('mousedown', this.handleClickOutside);
   }
 
   componentWillUnmount() {
     clearInterval(this.state.intervalId);
-    // document.removeEventListener('mousedown', this.handleClickOutside);
+    document.removeEventListener('keydown', this.handleKeyPress);
   }
+
+  handleKeyPress(event) {
+    switch (event.key) {
+      case 'p':
+        this.onBtnBetClick(0);
+        break;
+      case 'q':
+        this.onBtnBetClick(1);
+        break;
+      case 'w':
+        this.onBtnBetClick(2);
+        break;
+      case 'e':
+        this.onBtnBetClick(3);
+        break;
+      case 'r':
+        this.onBtnBetClick(4);
+        break;
+      default:
+        break;
+    }
+  }
+
 
   static getDerivedStateFromProps(props, current_state) {
     const { isPasswordCorrect, balance } = props;
@@ -133,17 +156,39 @@ class QuickShoot extends Component {
     return previousBets;
   }
 
-  handlePositionSelection = position => {
-    this.setState({ selected_qs_position: position });
-    this.onBtnBetClick();
-  };
+  updateAnimation = async () => {
+    let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
 
-  // handleClickOutside = e => {
-  //   const { settingsRef } = this;
-  //   if (settingsRef && !settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
-  // };
+    if (this.props.qs_game_type === 2) {
+      position_short_name = ['bl', 'br'];
+
+    } else if (this.props.qs_game_type === 3) {
+      position_short_name = ['bl', 'center', 'br'];
+    } else if (this.props.qs_game_type === 4) {
+      position_short_name = ['tl', 'tr', 'bl', 'br'];
+    }
+
+    const animationData = await getQsLottieAnimation(
+      this.props.roomInfo.qs_nation,
+      position_short_name[this.state.qs]
+    );
+
+
+    this.setState({
+      animation: (
+        <div className="qs-image-panel">
+          <Lottie
+            options={{
+              loop: false,
+              autoplay: true,
+              animationData
+            }}
+            style={{ maxWidth: '100%', width: '600px', borderRadius: '10px' }}
+          />
+        </div>
+      )
+    });
+  };
 
   componentDidUpdate(prevProps, prevState) {
     const { roomInfo, actionList } = this.props;
@@ -177,30 +222,30 @@ class QuickShoot extends Component {
       isDarkMode,
       qs_game_type,
       refreshHistory,
-      playSound
+      playSound,
+      selected_qs_position,
+      changeBgColor,
     } = this.props;
-    const { bet_amount, selected_qs_position, is_anonymous } = this.state;
+    const { bet_amount } = this.state;
 
     const result = await this.props.join({
       bet_amount: parseFloat(bet_amount),
-
       selected_qs_position: selected_qs_position,
-      is_anonymous: is_anonymous,
       qs_bet_item_id: qs_bet_item_id
     });
 
     if (result.status === 'success') {
       let text = 'LOST, SAVED BY THE KEEPER!';
-      this.changeBgColor(result.betResult);
+      changeBgColor(result.betResult);
       playSound('lose');
       if (result.betResult === 1) {
-        this.changeBgColor(result.betResult);
         playSound('win');
         text = 'WIN, EXCELLENT SHOT!';
+        changeBgColor(result.betResult);
       } else if (result.betResult === 0) {
-        this.changeBgColor(result.betResult);
         playSound('split');
         text = 'Draw, No Winner!';
+        changeBgColor(result.betResult);
       }
 
       if (result.roomStatus === 'finished') {
@@ -213,7 +258,7 @@ class QuickShoot extends Component {
           () => {
             history.push('/');
           },
-          () => {}
+          () => { }
         );
       } else {
         gameResultModal(
@@ -263,15 +308,9 @@ class QuickShoot extends Component {
     } else if (qs_game_type === 5) {
       localStorage.setItem('qs_array_5', JSON.stringify(stored_qs_array));
     }
-
     refreshHistory();
   };
 
-  changeBgColor = async result => {
-    this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2500)); // Wait for 1 second
-    this.setState({ bgColorChanged: false });
-  };
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
@@ -306,45 +345,23 @@ class QuickShoot extends Component {
       );
     }
   };
-
   handleMaxButtonClick = () => {
     const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000;
 
     this.setState(
-      {
-        bet_amount: Math.min(
-          maxBetAmount,
-          this.state.bankroll * (this.props.qs_game_type - 1)
-        )
-      },
-      () => {
-        document.getElementById('betamount').focus();
-      }
+        {
+            bet_amount: Math.floor(Math.min(
+                maxBetAmount,
+                this.state.bankroll * (this.props.qs_game_type - 1)
+            ) * 100000) / 100000
+        },
+        () => {
+            document.getElementById('betamount').focus();
+        }
     );
-  };
+};
 
-  calcWinChance = (gametype, rounds) => {
-    let positionCounts = new Array(gametype + 1).fill(0);
-    for (let i = 0; i < rounds.length; i++) {
-      positionCounts[rounds[i].qs]++;
-    }
-    let entropy = 0;
-    for (let i = 0; i < gametype; i++) {
-      if (positionCounts[i] === 0) {
-        continue;
-      }
-      let probability = positionCounts[i] / rounds.length;
-      entropy -= probability * Math.log2(probability);
-    }
-    let winChanceMin = Math.max(
-      0,
-      (1 - entropy / Math.log2(gametype)) / gametype
-    );
-    let winChanceMax = Math.min(1, 1 - entropy / Math.log2(gametype));
-    winChanceMin *= 100;
-    winChanceMax *= 100;
-    return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
-  };
+
 
   updatePotentialReturn = () => {
     this.setState({
@@ -364,107 +381,7 @@ class QuickShoot extends Component {
     this.setState({ bet_amount: e.target.value }, this.updatePotentialReturn);
   }
 
-  calcWinChance = (gametype, rounds) => {
-    let positionCounts = new Array(gametype + 1).fill(0);
-    for (let i = 0; i < rounds.length; i++) {
-      positionCounts[rounds[i].qs]++;
-    }
-    let entropy = 0;
-    for (let i = 0; i < gametype; i++) {
-      if (positionCounts[i] === 0) {
-        continue;
-      }
-      let probability = positionCounts[i] / rounds.length;
-      entropy -= probability * Math.log2(probability);
-    }
-    let winChanceMin = Math.max(
-      0,
-      (1 - entropy / Math.log2(gametype)) / gametype
-    );
-    let winChanceMax = Math.min(1, 1 - entropy / Math.log2(gametype));
-    winChanceMin *= 100;
-    winChanceMax *= 100;
-    return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
-  };
-
-  predictNext = (qs_list, gameType) => {
-    const options = [...Array(gameType).keys()];
-    const transitionMatrix = {};
-    options.forEach(option1 => {
-      transitionMatrix[option1] = {};
-      options.forEach(option2 => {
-        transitionMatrix[option1][option2] = {};
-        options.forEach(option3 => {
-          transitionMatrix[option1][option2][option3] = {};
-          options.forEach(option4 => {
-            transitionMatrix[option1][option2][option3][option4] = 0;
-          });
-        });
-      });
-    });
-
-    for (let i = 0; i < qs_list.length - 3; i++) {
-      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
-        qs_list[i + 3].qs
-      ]++;
-    }
-
-    Object.keys(transitionMatrix).forEach(fromState1 => {
-      Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-          fromState3 => {
-            const totalTransitions = Object.values(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).reduce((a, b) => a + b);
-            Object.keys(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).forEach(toState => {
-              transitionMatrix[fromState1][fromState2][fromState3][
-                toState
-              ] /= totalTransitions;
-            });
-          }
-        );
-      });
-    });
-
-    const winChance = this.calcWinChance(this.props.qs_game_type, qs_list);
-    let deviation = 0;
-    if (winChance !== '33.33%') {
-      deviation = (1 - 1 / gameType) / 2;
-    }
-
-    let currentState1 = qs_list[qs_list.length - 3].qs;
-    let currentState2 = qs_list[qs_list.length - 2].qs;
-    let currentState3 = qs_list[qs_list.length - 1].qs;
-    let nextState = currentState3;
-    let maxProb = 0;
-    Object.keys(
-      transitionMatrix[currentState1][currentState2][currentState3]
-    ).forEach(state => {
-      if (
-        transitionMatrix[currentState1][currentState2][currentState3][state] >
-        maxProb
-      ) {
-        maxProb =
-          transitionMatrix[currentState1][currentState2][currentState3][state];
-        nextState = state;
-      }
-    });
-
-    let randomNum = Math.random();
-    if (randomNum < deviation) {
-      let randomState = '';
-      do {
-        randomNum = Math.random();
-        randomState = options[Math.floor(randomNum * gameType)];
-      } while (randomState === nextState);
-      nextState = randomState;
-    }
-
-    return nextState;
-  };
-  onBtnBetClick = () => {
+  onBtnBetClick = (position) => {
     const {
       isAuthenticated,
       isDarkMode,
@@ -474,7 +391,8 @@ class QuickShoot extends Component {
       qs_game_type,
       is_private,
       roomInfo,
-      openGamePasswordModal
+      openGamePasswordModal,
+      updateSelectedQs
     } = this.props;
     const { bet_amount, bankroll } = this.state;
 
@@ -493,8 +411,8 @@ class QuickShoot extends Component {
     if (
       !validateBankroll(
         bet_amount / (qs_game_type - 1) +
-          parseFloat(bet_amount) -
-          bankroll * (qs_game_type - 1),
+        parseFloat(bet_amount) -
+        bankroll * (qs_game_type - 1),
         bankroll,
         isDarkMode
       )
@@ -505,225 +423,78 @@ class QuickShoot extends Component {
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
 
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (is_private === true && passwordCorrect !== true) {
-        openGamePasswordModal();
-      } else {
-        this.joinGame();
-      }
-    } else {
-      confirmModalCreate(
-        isDarkMode,
-        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-        'Yes',
-        'Cancel',
-        async () => {
-          if (is_private === true && passwordCorrect !== true) {
-            openGamePasswordModal();
-          } else {
-            await this.joinGame();
-          }
+    updateSelectedQs(position, () => {
+
+
+      if (localStorage.getItem('hideConfirmModal') === 'true') {
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
+        } else {
+          this.joinGame();
         }
-      );
-    }
-  };
-
-  handleSwitchChange = () => {
-    const {
-      isAuthenticated,
-      isDarkMode,
-      creator_id,
-      user_id,
-      balance,
-      qs_game_type
-    } = this.props;
-    const { betting, bankroll, bet_amount } = this.state;
-
-    // Add the necessary validation checks here
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      // Display an error message or handle the case when authentication fails
-      return;
-    }
-
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      // Display an error message or handle the case when creator ID validation fails
-      return;
-    }
-
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      // Display an error message or handle the case when bet amount validation fails
-      return;
-    }
-
-    if (
-      !validateBankroll(
-        bet_amount / (qs_game_type - 1) +
-          parseFloat(bet_amount) -
-          bankroll * (qs_game_type - 1),
-        bankroll,
-        isDarkMode
-      )
-    ) {
-      // Display an error message or handle the case when bankroll validation fails
-      return;
-    }
-
-    if (!betting) {
-      // User has turned on the switch
-      this.startBetting();
-    } else {
-      // User has turned off the switch
-      this.stopBetting();
-    }
-  };
-
-  startBetting = () => {
-    let stored_qs_array;
-    const {
-      isDarkMode,
-      qs_game_type,
-      roomInfo,
-      is_private,
-      openGamePasswordModal,
-      playSound
-    } = this.props;
-
-    switch (qs_game_type) {
-      case 2:
-        stored_qs_array = JSON.parse(localStorage.getItem('qs_array_2')) || [];
-        break;
-      case 3:
-        stored_qs_array = JSON.parse(localStorage.getItem('qs_array_3')) || [];
-        break;
-      case 4:
-        stored_qs_array = JSON.parse(localStorage.getItem('qs_array_4')) || [];
-        break;
-      case 5:
-        stored_qs_array = JSON.parse(localStorage.getItem('qs_array_5')) || [];
-        break;
-      default:
-        return;
-    }
-
-    if (!validateLocalStorageLength(`qs_array_${qs_game_type}`, isDarkMode)) {
-      return;
-    }
-
-    const intervalId = setInterval(() => {
-      const randomItem = this.predictNext(stored_qs_array, qs_game_type);
-      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-      const passwordCorrect = rooms[roomInfo._id];
-
-      if (is_private === true && passwordCorrect !== true) {
-        openGamePasswordModal();
       } else {
-        this.joinGame2(randomItem);
+        confirmModalCreate(
+          isDarkMode,
+          'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+          'Yes',
+          'Cancel',
+          async () => {
+            if (is_private === true && passwordCorrect !== true) {
+              openGamePasswordModal();
+            } else {
+              await this.joinGame();
+            }
+          }
+        );
       }
-    }, 3500);
-
-    playSound('start');
-    this.setState({ intervalId, betting: true });
-  };
-
-  stopBetting = () => {
-    const { intervalId } = this.state;
-    this.props.playSound('stop');
-    clearInterval(intervalId);
-    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
-  };
-
-  joinGame2 = async randomItem => {
-    const {
-      isDarkMode,
-      qs_game_type,
-      qs_bet_item_id,
-      refreshHistory,
-      playSound
-    } = this.props;
-    const {
-      bet_amount,
-      bankroll,
-      is_anonymous,
-      selected_qs_position,
-      slippage,
-      betting
-    } = this.state;
-    this.setState({ selected_qs_position: randomItem });
-
-    if (!betting) {
-      return;
-    }
-
-    if (
-      !validateBankroll(
-        bet_amount / (qs_game_type - 1) +
-          parseFloat(bet_amount) -
-          bankroll * (qs_game_type - 1),
-        bankroll,
-        isDarkMode
-      )
-    ) {
-      return;
-    }
-
-    const result = await this.props.join({
-      bet_amount: parseFloat(bet_amount),
-      selected_qs_position: selected_qs_position,
-      is_anonymous: is_anonymous,
-      qs_bet_item_id: qs_bet_item_id,
-      slippage: slippage
     });
 
-    const currentUser = this.props.user;
-    const currentRoom = this.props.room;
-    if (result.status === 'success') {
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
-      let text = 'LOST, KEEPER SAVED IT!';
-
-      if (result.betResult === 1) {
-        this.changeBgColor(result.betResult);
-        playSound('win');
-        text = 'WIN, EXCELLENT SHOT!';
-      } else if (result.betResult === 0) {
-        this.changeBgColor(result.betResult);
-        playSound('split');
-        text = 'DRAW, NO WINNER!';
-      } else {
-        this.changeBgColor(result.betResult);
-        playSound('lose');
-      }
-
-      refreshHistory();
-    }
   };
 
-  renderButton(id, position) {
-    const { selected_qs_position, bgColorChanged, betResult } = this.state;
+  // Define a function to map position to letter
+ getPositionLetter = (position) => {
+  switch (position) {
+      case 0:
+          return 'P';
+      case 1:
+          return 'q';
+      case 2:
+          return 'w';
+      case 3:
+          return 'e';
+      case 4:
+          return 'r';
+      default:
+          return '';
+  }
+};
 
-    const classes = `${selected_qs_position === position ? 'active' : ''}${
-      bgColorChanged && betResult === -1 && selected_qs_position === position
-        ? ' lose-bg'
-        : ''
-    }${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${
-      betResult === 1 && selected_qs_position === position ? ' win-bg' : ''
+renderButton(id, position) {
+  const { betResult, selected_qs_position, bgColorChanged } = this.props;
+
+  const classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position
+    ? ' lose-bg'
+    : ''
+    }${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${betResult === 1 && selected_qs_position === position ? ' win-bg' : ''
     }`;
 
-    return (
+    const buttonStyle = {
+      opacity: 0.9
+  };
+
+  return (
       <IconButton
-        id={id}
-        onClick={() => {
-          this.handlePositionSelection(position);
-          this.props.playSound('select');
-        }}
-        className={classes}
-      />
-    );
-  }
+          id={id}
+          onClick={() => {
+              this.onBtnBetClick(position);
+              this.props.playSound('select');
+          }}
+          className={classes}
+          style={buttonStyle}
+      ><span className="roll-tag">{this.getPositionLetter(position)}</span></IconButton>
+  );
+}
+
 
   renderButtons() {
     const { qs_game_type } = this.props;
@@ -768,11 +539,8 @@ class QuickShoot extends Component {
   render() {
     const {
       bankroll,
-      betting,
-      timerValue,
       actionList,
       showImageModal,
-      selected_qs_position,
       bet_amount,
       image,
       productName
@@ -783,15 +551,18 @@ class QuickShoot extends Component {
       roomInfo,
       creator_id,
       qs_game_type,
-      rank,
-      accessory,
       youtubeUrl,
+      selected_qs_position,
+      accessory,
       creator_avatar,
+      rank,
       handleClosePlayerModal,
       handleOpenPlayerModal,
       isDarkMode,
       isLowGraphics,
-      isMusicEnabled
+      borderColor,
+      isMusicEnabled,
+      gameBackground
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
@@ -843,14 +614,14 @@ class QuickShoot extends Component {
             selectedCreator={selectedCreator}
             modalIsOpen={showPlayerModal}
             closeModal={handleClosePlayerModal}
-            // {...this.state.selectedRow}
+          // {...this.state.selectedRow}
           />
         )}
         <div className="game-contents">
           <div
             className="pre-summary-panel"
             ref={this.panelRef}
-            // onScroll={this.handleScroll}
+          // onScroll={this.handleScroll}
           >
             <div className="pre-summary-panel__inner">
               {[...Array(1)].map((_, i) => (
@@ -878,7 +649,7 @@ class QuickShoot extends Component {
                     <div className="value">
                       {convertToCurrency(
                         bet_amount / (qs_game_type - 1) +
-                          parseFloat(bet_amount) /* 0.95 */
+                        parseFloat(bet_amount) /* 0.95 */
                       )}
                     </div>
                   </div>
@@ -940,8 +711,8 @@ class QuickShoot extends Component {
                                       ? ['#00FF00']
                                       : actionList.hostNetProfit?.slice(-1)[0] <
                                         0
-                                      ? ['#FF0000']
-                                      : ['#808080'],
+                                        ? ['#FF0000']
+                                        : ['#808080'],
                                   shadeIntensity: 1,
                                   type: 'vertical',
                                   opacityFrom: 0.7,
@@ -1033,7 +804,7 @@ class QuickShoot extends Component {
                   </div>
                   {youtubeUrl && (
                     <div className="data-item">
-                      <YouTubeVideo url={youtubeUrl} isMusicEnabled={isMusicEnabled}/>
+                      <YouTubeVideo url={youtubeUrl} isMusicEnabled={isMusicEnabled} />
                     </div>
                   )}
                   <div className="data-item">
@@ -1053,7 +824,7 @@ class QuickShoot extends Component {
             style={{ position: 'relative', zIndex: 10 }}
           >
             {renderLottieAvatarAnimation(
-              this.props.gameBackground,
+              gameBackground,
               isLowGraphics
             )}
 
@@ -1070,9 +841,20 @@ class QuickShoot extends Component {
                 style={{
                   width: '600px',
                   maxWidth: '100%',
-                  borderRadius: '10px'
+                  borderRadius: '10px',
+                  border: `3px solid ${borderColor}`,
+                  boxShadow: `0 0 20px ${borderColor}`
+
                 }}
+                /><Lottie
+                options={{
+                  loop: true,
+                  autoplay: true,
+                  animationData: football
+                }}
+                style={{ transform: 'translate(15px, 60px)', width: '100px',  }}
               />
+                {this.state.animation}
               {this.renderButtons()}
             </div>
 
@@ -1084,8 +866,8 @@ class QuickShoot extends Component {
               onChangeState={this.onChangeState}
               isDarkMode={isDarkMode}
             />
-           
-            <div>
+
+            {/* <div>
               <FormControlLabel
                 control={
                   <Switch
@@ -1098,7 +880,6 @@ class QuickShoot extends Component {
               />
               {betting ? (
                 <div id="stop">
-                  {/* <span>Stop</span> */}
                   <Lottie options={defaultOptions} width={22} />
                 </div>
               ) : (
@@ -1108,7 +889,7 @@ class QuickShoot extends Component {
                   ) : null}
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
           {/* <BetArray arrayName={arrayName} label="qs" /> */}
 
@@ -1131,7 +912,6 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
-  betResults: state.logic.betResults,
   accessory: state.logic.curRoomInfo.accessory,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled

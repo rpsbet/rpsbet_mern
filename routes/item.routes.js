@@ -376,6 +376,60 @@ router.get('/my-items', auth, async (req, res) => {
   }
 });
 
+router.get('/products', auth, async (req, res) => {
+  const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
+  const page = req.query.page ? parseInt(req.query.page) : 1;
+  const userId = req.query.id;
+  // console.log(userId)
+  try {
+    let query = { 'owners.onSale': { $gt: 0 } };
+    
+    const items = await Item.find({ 'owners.user': userId, ...query })
+      .sort({ updated_at: 'desc' })
+      .skip(pagination * page - pagination)
+      .limit(pagination);
+
+    const count = await Item.countDocuments({ 'owners.user': userId });
+
+    let item_list = [];
+
+    for (const item of items) {
+      // Map the owners array to include only the owner matching the user ID
+      const owner = item.owners.find(owner => owner.user.equals(userId));
+
+      if (owner && owner.count > 0) {
+        item_list.push({
+          _id: item._id,
+          productName: item.productName,
+          rentOption: owner.rentOption,
+          price: owner ? owner.price : '',
+          total_count: owner.count,
+          onSale: owner.onSale,
+          image: item.image,
+          item_type: item.item_type,
+          CP: item.CP,
+          created_at: item.created_at,
+        });
+      }
+    }
+
+
+
+    res.json({
+      success: true,
+      query: req.query,
+      total: count,
+      items: item_list,
+      pages: Math.ceil(count / pagination),
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      err: err,
+    });
+  }
+});
+
 // List an item for sale or rent
 router.post('/list-for-sale', auth, async (req, res) => {
   try {

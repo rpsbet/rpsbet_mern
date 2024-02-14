@@ -5,11 +5,8 @@ import Paper from '@material-ui/core/Paper';
 import styled from 'styled-components';
 import { styleColor } from '../../../Styles/styleThem';
 import Grid from '@material-ui/core/Grid';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { connect } from 'react-redux';
-
+import Tooltip from '@material-ui/core/Tooltip';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
@@ -19,15 +16,16 @@ import Avatar from '@material-ui/core/Avatar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import DeleteIcon from '@material-ui/icons/Delete';
-import CommentIcon from '@material-ui/icons/Comment';
+import Check from '@material-ui/icons/Check';
+import Clear from '@material-ui/icons/Clear';
 import AddIcon from '@material-ui/icons/Add';
 import Divider from '@material-ui/core/Divider';
 
 function QuestionEditForm({
   _id,
   question,
+  image,
   brain_game_type,
-  new_brain_game_type,
   answers,
   new_answer,
   incorrect_answers,
@@ -35,80 +33,15 @@ function QuestionEditForm({
   onSubmitFrom,
   updateTextField,
   handleChange,
-  buttonDisable,
-  handelCancel,
-  onSaveForm,
-  setOnDelete,
-  game_type_list,
-  addBrainGameType,
-  removeBrainGameType
 }) {
   return (
     <PaperEl elevation={12}>
       <FormEl onSubmit={e => onSubmitFrom(e)}>
+
         <TopDiv>
           <Grid container spacing={1}>
-            <Grid item style={{ width:"100%" }}>
-              <Typography variant="h6">GAME TYPE</Typography>
-              <RadioGroup
-                aria-label="brain_game_type"
-                name="brain_game_type"
-                value={brain_game_type ? brain_game_type : ''}
-                onChange={e => handleChange(e.target.name, e.target.value)}
-              >
-                {game_type_list.map((game_type, index) => (
-                  <Grid item style={{ width:"100%" }} key={index}>
-                    <FormControlLabel
-                      value={game_type._id}
-                      control={<Radio color="primary" />}
-                      label={game_type.game_type_name}
-                      style={{ minWidth: 150 }}
-                    />
-                    <IconButtonEl1
-                      edge="end"
-                      aria-label="delete"
-                      onClick={e => {
-                        removeBrainGameType(game_type._id);
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButtonEl1>
-                  </Grid>
-                ))}
-              </RadioGroup>
-              <List>
-                <ListItem>
-                  <TextField
-                    label="e.g. Cat Quiz"
-                    variant="outlined"
-                    name="new_brain_game_type"
-                    margin="normal"
-                    fullWidth
-                    type="text"
-                    value={new_brain_game_type}
-                    onChange={e =>
-                      updateTextField(e.target.name, e.target.value, 255)
-                    }
-                  />&nbsp;&nbsp;&nbsp;&nbsp;
-                  <ListItemSecondaryAction>
-                    <IconButtonEl
-                      edge="end"
-                      aria-label="add"
-                      onClick={e => {
-                        if (new_brain_game_type !== '') {
-                          addBrainGameType(new_brain_game_type);
-                          handleChange('new_brain_game_type', '');
-                        }
-                      }}
-                    >
-                      <AddIcon />
-                    </IconButtonEl>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              </List>
-            </Grid>
-            <Grid item style={{ width:"100%" }}>
-              <Grid item style={{ width:"100%" }}>
+            <Grid item style={{ width: "100%" }}>
+              <Grid item style={{ width: "100%" }}>
                 <Typography variant="h6">QUESTION</Typography>
                 <TextField
                   autoFocus={true}
@@ -124,7 +57,7 @@ function QuestionEditForm({
                   }
                 />
               </Grid>
-              <Grid item style={{ width:"100%", marginTop: 50 }}>
+              <Grid item style={{ width: "100%", marginTop: 50 }}>
                 <Grid item xs={6}>
                   <Typography variant="h6">CORRECT ANSWERS</Typography>
                   <List>
@@ -132,9 +65,7 @@ function QuestionEditForm({
                       <React.Fragment key={index}>
                         <ListItem key={index}>
                           <ListItemAvatar>
-                            <Avatar>
-                              <CommentIcon />
-                            </Avatar>
+                              <Check />
                           </ListItemAvatar>
                           <ListItemText primary={row} />
                           <ListItemSecondaryAction>
@@ -184,16 +115,16 @@ function QuestionEditForm({
                     </ListItem>
                   </List>
                 </Grid>
-                <Grid item style={{ width:"100%" }}>
+                <Grid item style={{ width: "100%" }}>
                   <Typography variant="h6">INCORRECT ANSWERS</Typography>
                   <List>
                     {incorrect_answers.map((row, index) => (
                       <React.Fragment key={index}>
                         <ListItem key={index} >
                           <ListItemAvatar>
-                            <Avatar>
-                              <CommentIcon />
-                            </Avatar>
+
+                              <Clear />
+
                           </ListItemAvatar>
                           <ListItemText primary={row} />
                           <ListItemSecondaryAction>
@@ -253,44 +184,7 @@ function QuestionEditForm({
             </Grid>
           </Grid>
         </TopDiv>
-        {/* <ButtonDiv>
-          <ButtonEl
-            onClick={handelCancel}
-            variant="contained"
-            color="inherit"
-            cancel="true"
-          >
-            cancel
-          </ButtonEl>
-          {_id === '' || _id === undefined ? (
-            <ButtonEl
-              disabled={buttonDisable}
-              type="submit"
-              variant="contained"
-              color="secondary"
-            >
-              Submit
-            </ButtonEl>
-          ) : (
-            <EditColumn>
-              <DeleteButtonEl
-                color="primary"
-                onClick={setOnDelete}
-                variant="contained"
-              >
-                delete
-              </DeleteButtonEl>
-              <ButtonEl
-                disabled={buttonDisable}
-                onClick={onSaveForm}
-                variant="contained"
-                color="secondary"
-              >
-                Save
-              </ButtonEl>
-            </EditColumn>
-          )}
-        </ButtonDiv> */}
+
       </FormEl>
     </PaperEl>
   );
@@ -299,12 +193,12 @@ function QuestionEditForm({
 const mapStateToProps = state => ({
   _id: state.questionReducer._id,
   question: state.questionReducer.question,
+  image: state.questionReducer.image,
   brain_game_type: state.questionReducer.brain_game_type,
-  new_brain_game_type: state.questionReducer.new_brain_game_type,
   answers: state.questionReducer.answers,
-  new_answer: state.questionReducer.new_answer,
+  // new_answer: state.questionReducer.new_answer,
   incorrect_answers: state.questionReducer.incorrect_answers,
-  new_incorrect_answer: state.questionReducer.new_incorrect_answer,
+  // new_incorrect_answer: state.questionReducer.new_incorrect_answer,
   game_type_list: state.questionReducer.game_type_list
 });
 

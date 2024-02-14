@@ -7,8 +7,13 @@ import {
   createTheme,
   ThemeProvider,
   FormControlLabel,
-  Switch
+  Switch,
+  IconButton
 } from '@material-ui/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import TableChartOutlinedIcon from '@material-ui/icons/TableChartOutlined';
 import TuneOutlinedIcon from '@material-ui/icons/TuneOutlined';
@@ -166,12 +171,14 @@ function BetArray({
   label,
   betting,
   handleSwitchChange,
-  isDarkMode
+  isDarkMode,
+  game_type
 }) {
   const [settings_panel_opened, setSettingsPanelOpened] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
   const [timerValue, setTimerValue] = useState(2000);
   const stored_bet_array = JSON.parse(localStorage.getItem(arrayName)) || [];
+  const filteredArray = game_type === 'Quick Shoot' ? stored_bet_array.filter(item => item.qs !== undefined) : stored_bet_array;
   const settingsRef = useRef(null);
   const handleClearLocalStorage = () => {
     localStorage.removeItem(arrayName);
@@ -181,6 +188,24 @@ function BetArray({
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
   };
+
+  const getPositionLetter = (position) => {
+    switch (position) {
+      case 0:
+        return 'P';
+      case 1:
+        return 'q';
+      case 2:
+        return 'w';
+      case 3:
+        return 'e';
+      case 4:
+        return 'r';
+      default:
+        return '';
+    }
+  };
+
 
   const handleSettingsIconClick = () => {
     setSettingsPanelOpened(!settings_panel_opened);
@@ -206,6 +231,8 @@ function BetArray({
       />
     );
   }
+
+
   return (
     <ThemeProvider theme={theme}>
       <div style={{ position: 'relative' }}>
@@ -215,73 +242,91 @@ function BetArray({
           handleSettingsIconClick={handleSettingsIconClick}
         />
         <SideTabs selectedTab={selectedTab} handleTabChange={handleTabChange} />
-        {/* <SettingsOutlinedIcon
-          id="btn-rps-settings"
-          onClick={handleSettingsIconClick}
-        /> */}
         {selectedTab === 0 && (
           <div className="gamified-container">
-          <FormControlLabel
-            control={
-              <Switch
-                id="aiplay-switch"
-                checked={betting}
-                onChange={handleSwitchChange}
-              />
-            }
-            label={betting ? 'AI ON' : 'AI OFF'}
-          />
-          {betting ? (
-            <div id="stop">
-              <Lottie options={defaultOptions} width={32} />
-            </div>
-          ) : (
-            <div>
-              {timerValue !== 2000 ? (
-                <span>{(timerValue / 2000).toFixed(2)}s</span>
-              ) : null}
-            </div>
-          )}
-        </div>
-          
+            {( (game_type === 'Roll' || game_type === 'Blackjack' || game_type === 'Bang!') && 
+                           <div style={{height: "80px", display: "flex", justifyContent: "centrer", alignItems: "center", textAlign: "center"}} className="coming-soon-text"><h4>Coming soon!</h4></div>
+
+            )}
+            <FormControlLabel
+              control={
+                <Switch
+                  id="aiplay-switch"
+                  checked={betting}
+                  onChange={handleSwitchChange}
+                  disabled={game_type === 'Roll' || game_type === 'Blackjack' || game_type === 'Bang!'}
+
+                />
+              }
+              label={betting ? 'AI ON' : 'AI OFF'}
+            />
+            {betting ? (
+              <div id="stop">
+                <Lottie options={defaultOptions} width={32} />
+              </div>
+            ) : (
+              <div>
+                {timerValue !== 2000 ? (
+                  <span>{(timerValue / 2000).toFixed(2)}s</span>
+                ) : null}
+              </div>
+            )}
+          </div>
         )}
         {selectedTab === 1 && (
           <>
             <div className="gamified-container">
-            <Grid item xs={12} sm={6}>
-              <h2 className="gamified-heading">AI Prompt Box</h2>
-              <div className="gamified-content">
-                <div className="bet-array-grid">
-                  {stored_bet_array.map((item, index) => (
-                    <div key={index} className="array-item">
-                      {Object.keys(item).map((propertyName, propIndex) => (
-                        <div key={propIndex}>
-                          {`${
-                            !isNaN(parseFloat(item[propertyName]))
-                              ? parseFloat(item[propertyName]).toFixed(4)
-                              : item[propertyName]
-                          }`}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+              <Grid item xs={12} sm={6}>
+                {game_type === 'Roll' ? (
+                <div style={{height: "80px", display: "flex", justifyContent: "centrer", alignItems: "center", textAlign: "center"}} className="coming-soon-text"><h4>Coming soon!</h4></div>
+              ) : (
+                <>
+                <h2 className="gamified-heading">AI Prompt Box</h2>
+                <div className="gamified-content">
+                  <div className="bet-array-grid">
+                    {filteredArray.map((item, index) => (
+                      <div key={index} className="array-item">
+                        {game_type === 'Brain Game' ? (
+                          <div>
+                            {parseInt(item.score)}
+                          </div>
+                        ) : (
+                          <div>
+                            {game_type === 'Quick Shoot' && item.qs !== undefined ? (
+                              <div>{getPositionLetter(item.qs)}</div>
+                            ) : (
+                              Object.keys(item).map((propertyName, propIndex) => (
+                                <div key={propIndex}>
+                                  {`${!isNaN(parseFloat(item[propertyName]))
+                                    ? parseFloat(item[propertyName]).toFixed(4)
+                                    : item[propertyName]
+                                    }`}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                  </div>
                 </div>
-              </div>
-              {stored_bet_array.length > 0 && (
-                <div className="button-container">
-                  <Button
-                    className="clear-storage-btn"
-                    onClick={handleClearLocalStorage}
-                  >
-                    Reset
-                  </Button>
-                </div>
-              )}
-              {stored_bet_array.length === 0 && (
-                <div className="no-data-msg">Play normally to train the AI</div>
-              )}
-            </Grid>
-          </div>
+              
+                {filteredArray.length > 0 && (
+                  <div className="button-container">
+                    <IconButton className="clear-storage-btn"
+                      onClick={handleClearLocalStorage} style={{ padding: "0 5px", background: "transparent", boxShadow: "none", color: 'white' }}  >
+                      <FontAwesomeIcon style={{ width: "14px", height: "14px" }} icon={faTrash} /> {/* Use the faRedo icon */}
+                    </IconButton>
+                  </div>
+                )}
+                {filteredArray.length === 0 && (
+                  <div className="no-data-msg">Play normally to train the AI</div>
+                )}
+            </>
+            )}
+              </Grid>
+            </div>
           </>
         )}
       </div>

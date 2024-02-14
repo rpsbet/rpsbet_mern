@@ -6,10 +6,17 @@
   top: 0;
 }
 
+button#recentSearches {
+  height: 20px !important;
+}
 
 .rank-badge {
   position: relative;
   text-align: center;
+}
+
+.hover-translate {
+  transition: transform 0.3s ease;
 }
 
 .dial {
@@ -92,6 +99,12 @@ left: 22px;
 position: absolute;
 }
 
+
+.row-copy {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
 .sub-panel .lottie-container.crown div {
   top: 38px !important;
   }

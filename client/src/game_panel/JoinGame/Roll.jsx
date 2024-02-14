@@ -106,7 +106,6 @@ class Roll extends Component {
       image: '',
       showImageModal: false,
       selected_roll: '',
-      betResults: props.betResults,
       settings_panel_opened: false
     };
     this.panelRef = React.createRef();
@@ -142,11 +141,6 @@ class Roll extends Component {
     }
   };
 
-  // handleClickOutside = e => {
-  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
-  // };
   static getDerivedStateFromProps(props, current_state) {
     const { balance, isPasswordCorrect } = props;
     if (
@@ -440,10 +434,7 @@ class Roll extends Component {
       localStorage.setItem('roll_array', JSON.stringify(stored_roll_array));
 
       if (result.status === 'success') {
-        this.setState(prevState => ({
-          betResults: [...prevState.betResults, { ...result, user, room }]
-        }));
-
+      
         gameResultModal(
           isDarkMode,
           text,
@@ -726,12 +717,7 @@ class Roll extends Component {
     const currentRoom = this.props.room;
 
     if (result.status === 'success') {
-      this.setState(prevState => ({
-        betResults: [
-          ...prevState.betResults,
-          { ...result, user: currentUser, room: currentRoom }
-        ]
-      }));
+     
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
@@ -1568,7 +1554,6 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
-  betResults: state.logic.betResults,
   accessory: state.logic.curRoomInfo.accessory,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled

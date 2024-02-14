@@ -122,6 +122,23 @@ router.post('/deposit_successed', auth, async (req, res) => {
 router.post('/withdraw_request', auth, async (req, res) => {
   let tx;
   try {
+    const balance = req.user.balance;
+    const withdrawalLimit = req.user.dailyWithdrawals;
+    if (balance < req.body.amount) {
+      console.log("Insufficient funds");
+      return res.json({
+        success: false,
+        message: 'INSUFFICIENT FUNDS'
+      });
+    }
+    if (withdrawalLimit > 0.02) {
+      console.log("Exceeded Daily Withdrawal Limit", req.user);
+      return res.json({
+        success: false,
+        message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
+      });
+    }
+
     // Check if the "to" address is provided and starts with "0x"
     const toAddress = req.body.addressTo;
     if (!toAddress || !toAddress.startsWith('0x')) {
@@ -139,17 +156,9 @@ router.post('/withdraw_request', auth, async (req, res) => {
     });
     await receipt.save();
 
-    const balance = req.user.balance;
+   
     // console.log("User's balance:", req.user.balance);
     // console.log("Requested withdrawal amount:", req.body.amount);
-
-    if (balance < req.body.amount) {
-      console.log("Insufficient funds");
-      return res.json({
-        success: false,
-        message: 'INSUFFICIENT FUNDS'
-      });
-    }
 
     // console.log("Calculating gas fees...");
 
@@ -218,7 +227,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'Failed in sending transaction'
       });
     }
-    
     
     const newTransaction = new Transaction({
       user: req.user,

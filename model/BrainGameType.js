@@ -10,6 +10,14 @@ const BrainGameTypeSchema = new Schema({
         type: String,
         default: ''
     },
+    plays: {
+        type: Number,
+        default: 0
+    },
+    count: {
+        type: Number,
+        default: 0
+    },
     created_at: {
         type: Date,
         default: Date.now

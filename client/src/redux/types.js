@@ -72,6 +72,7 @@ export const SET_CHAT_ROOM_INFO = 'SET_CHAT_ROOM_INFO';
 
 // action item
 export const ITEM_QUERY_ONE = 'ITEM_QUERY_ONE';
+export const PRODUCT_QUERY = 'PRODUCT_QUERY';
 export const ITEM_QUERY = 'ITEM_QUERY';
 export const MY_ITEM_QUERY_ONE = 'ITEM_QUERY_ONE';
 export const MY_ITEM_QUERY = 'MY_ITEM_QUERYs';
@@ -100,6 +101,7 @@ export const LOADING_ITEM_TABLE = 'LOADING_ITEM_TABLE';
 
 export const ADD_TOTAL = 'ADD_TOTAL';
 export const MY_ADD_TOTAL = 'MY_ADD_TOTAL';
+export const PRODUCT_TOTAL = 'PRODUCT_TOTAL';
 
 export const SET_CURRENT_PRODUCT_INFO = 'SET_CURRENT_PRODUCT_INFO';
 export const SET_CURRENT_PRODUCT_ID = 'SET_CURRENT_PRODUCT_ID';

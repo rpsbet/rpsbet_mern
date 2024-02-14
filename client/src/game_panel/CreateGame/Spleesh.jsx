@@ -51,19 +51,19 @@ class Spleesh extends Component {
       <div className="game-info-panel">
         <h3 className="game-sub-title">Game Type</h3>
         <div id="select-buttons-panel">
-          {[0.1, 1, 10].map(item => (
+          {[0.001, 0.01, 0.1].map(item => (
             <Button
               className={this.props.spleesh_bet_unit === item ? 'active' : ''}
               onClick={() => {
                 this.props.onChangeState({
-                  spleesh_bet_unit: item / 100,
-                  bet_amount: item / 100,
-                  max_return: 54 * item / 100,
-                  endgame_amount: 54 * item / 100
+                  spleesh_bet_unit: item,
+                  bet_amount: item,
+                  max_return: 54 * item,
+                  endgame_amount: 54 * item
                 });
               }}
             >
-              {convertToCurrency(item / 100)} - {convertToCurrency(item * 10 / 100)}
+              {convertToCurrency(item)} - {convertToCurrency(item * 10)}
             </Button>
           ))}
 

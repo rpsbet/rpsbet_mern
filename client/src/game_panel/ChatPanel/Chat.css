@@ -26,12 +26,12 @@
 .special-message .chat-msg{
     margin-left: unset !important;
     text-transform: uppercase;
-    background: linear-gradient(#4c0048, #21005b) !important; /* You can customize this style as needed */
+    background: linear-gradient(#6f00f9, #6900a4) !important; /* You can customize this style as needed */
     font-weight: bold !important; /* Add any additional styles you want for special messages */
   }
 
   .special-message-rent .chat-msg{
-    background: linear-gradient(#4c3108, #540303) !important; 
+    background: linear-gradient(rgb(76 13 175), #ff1900) !important; 
   }
   
   .chat-wrapper .chat-panel .chat-line.special-message-rent .sender-name,
@@ -301,6 +301,46 @@ display: grid;
     text-align: center;
 
 }
+
+
+#support-btn {
+    position: fixed !important;
+    right: 3rem;
+    bottom: 8rem;
+    z-index: 90;
+    width: 56px;
+    height: 56px !important;
+    border-bottom: 3px solid #810059;
+    border-top: 3px solid #fd5e9b;
+    background-color: rgb(228 34 250);
+}
+
+#support-btn:active {
+    border-bottom: 0px solid #810059;
+    border-top: 1px solid #fa5091;
+    transform: translateY(2px);
+    background-color: rgb(215, 7, 238);
+}
+
+#support-btn:active svg{
+    transform: translateY(0px) !important;
+    filter: unset !important;
+
+}
+
+#support-btn:hover {
+    filter: brightness(1.2);
+    transition: filter 0.2s, box-shadow 0.2s;
+    box-shadow: 0 3px 5px -1px #0003, 0 18px 10px #00000024, 0 1px 18px #0000001f;
+}
+
+#support-btn:hover svg{
+    transform: translateY(-2px);
+    transition: filter .2s;
+    filter: drop-shadow(0px 4px 2px rgba(0, 0, 0, 0.74));
+    /* box-shadow: 0 3px 5px -1px #0003, 0 18px 10px #00000024, 0 1px 18px #0000001f; */
+}
+
 
 #drawer-btn {
     position: fixed !important;

@@ -213,7 +213,6 @@ div.table .table-row .table-cell button:last-child:before,
 }
 
 div.table .table-row .table-cell button:last-child,
-.boxes-panel.boxes-join .box,
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
 .game-page .game-contents .game-info-panel button.place-bet,
@@ -230,6 +229,10 @@ div.table .table-row .table-cell button:last-child,
     linear-gradient(0deg, #fc0000, #d81719) border-box;
   box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
     inset 0 2px #ff2525;
+}
+
+.boxes-panel.boxes-join .box {
+  background-color: #d81719;
 }
 
 .modal-content-panel .Mui-disabled {
@@ -908,17 +911,36 @@ div.table.my-open-game-table::-webkit-scrollbar {
   display: none !important;
 }
 
+.win-box {
+  border-color: #0cff00 !important;
+}
+.lose-box {
+  border-color: #ffd700 !important;
+}
+.win-box:hover {
+  box-shadow: 0 0 10px #0cff00 !important;
+}
+.lose-box:hover {
+  box-shadow: 0 0 10px #ffd700 !important;
+}
+
 .lose-bg,
+button.lose-bg,
 #roll .lose-bg.active {
+  background: #ffd700 !important;
   background-color: #ffd700 !important;
   filter: unset !important;
 }
 .draw-bg,
+button.draw-bg,
 #roll .draw-bg.active {
+  background: #777777 !important;
   background-color: #777777 !important;
 }
 .win-bg,
+button.win-bg,
 #roll .win-bg.active {
+  background: #0cff00 !important;
   background-color: #0cff00 !important;
   filter: unset !important;
 }
@@ -998,7 +1020,7 @@ div.table.my-open-game-table::-webkit-scrollbar {
 .bet-array-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(25px, 1fr));
-  gap: 0.1rem;
+  gap: 0.2rem 3em;
 }
 
 .array-item {
@@ -1147,13 +1169,13 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
 }
 .animation-container {
   opacity: 0;
-  transform: translateY(-100%);
+  transform: translate(-10px, -100%) rotate(90deg);
   transition: opacity 0.5s ease-in-out, transform 1s ease-in-out;
 }
 
 .animation-container.animate {
   opacity: 1;
-  transform: translateY(0%);
+  transform: translate(-10px, 20%) rotate(90deg);
 }
 
 .contents_wrapper .main-game .main-panel,
@@ -1374,6 +1396,7 @@ h2.room-history-title {
   color: #212529;
 }
 
+
 .page-title {
   margin-bottom: -30px;
   margin-top: 20px;
@@ -1427,6 +1450,13 @@ h2.room-history-title {
   border-top-right-radius: 6px;
   width: 100%;
   position: relative;
+}
+
+#intercom-container-body button,
+#intercom-container-body svg
+ {
+  background: #e322fa !important;
+  color : #e322fa !important;
 }
 
 .game-page .pre-summary-panel > div {
@@ -1643,7 +1673,7 @@ input {
   align-items: center;
   overflow: hidden;
   min-height: 150px;
-  padding: 0 10px;
+  padding: 30px 10px 60px;
 }
 
 #bj-radio {
@@ -1892,7 +1922,7 @@ transform-origin: center;
 }
 
 .box-btn-row {
-  margin-top: 15px;
+  margin-bottom: 20px;
   display: flex;
 }
 
@@ -2106,6 +2136,14 @@ table#runs td:last-child {
   filter: contrast(0.5);
   margin-top: -70px;
   z-index: -1;
+}
+.question-image {
+  margin: auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 .bow h3 {
   position: relative;
@@ -2399,6 +2437,10 @@ pointer-events: unset !important;
   cursor: not-allowed !important;
 pointer-events: unset !important;
 }
+
+#select-buttons-panel button{
+  margin-bottom: 15px !important;
+}
 .disabled {
   background: grey !important;
   box-shadow: none !important;
@@ -2463,13 +2505,19 @@ input {
 
 .create-game-panel .boxes-panel {
   grid-gap: 0.4rem;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .boxes-panel {
-  grid-gap: 0.6rem;
+  grid-gap: 0.4rem;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
+    max-height: 600px;
+    overflow: scroll;
+    border-radius: 9px;
+    /* box-shadow: 0 0 20px #ff0000;
+    border: 3px solid #ff0000; */
+    padding: 15px 10px 0 15px !important;
 }
 
 .boxes-panel .box i {
@@ -2526,17 +2574,16 @@ input {
 
 .create-game-panel .boxes-panel .box {
   /* background-image: url('../../../public/img/closeBoxMb.svg'); */
-  /* background-color: #ff0000aa; */
-  width: 74px;
+  background: radial-gradient(rgb(169 169 169 / 2%), #a0a0a057);
+  width: 147px;
   height: 72px;
   position: relative;
+  padding: 5px 0;
   border: 3px solid;
   margin-right: 9px;
   margin-bottom: 9px;
-  display: inline-flex;
-  align-items: self-end;
   text-align: center;
-  border-radius: 13px;
+  border-radius: 0.6em;
 }
 .join-game-panel .game-page .game-contents p {
   font-weight: 600;
@@ -2561,11 +2608,11 @@ input {
   filter: grayscale(1);
 }
 
-.game-modal.box-prizes {
+.mystery-box-result-contents .box-prizes {
   flex-direction: row !important;
 }
 
-.game-page .game-contents .game-info-panel .box-prizes {
+.mystery-box-result-contents .box-prizes {
   font-size: 16px;
   font-weight: 600;
   padding: 20px;
@@ -2574,18 +2621,20 @@ input {
   line-height: 28px;
 }
 
-.game-page .game-contents .game-info-panel .box-prizes span {
+.mystery-box-result-contents .box-prizes span {
   color: #6c757d;
   padding: 5px;
+  margin: 5px;
   border-radius: 3px;
   white-space: pre;
+  line-height: 45px;
   white-space: -webkit-nowrap;
 }
-.game-page .game-contents .game-info-panel .box-prizes span.opened {
+.mystery-box-result-contents .box-prizes span.opened {
   position: relative;
   background-color: #898a8d;
 }
-.game-page .game-contents .game-info-panel .box-prizes span.opened::before {
+.mystery-box-result-contents .box-prizes span.opened::before {
   content: '❌';
   position: absolute;
   font-size: 12px;
@@ -2633,14 +2682,13 @@ position: sticky !important;
 
   box-shadow: inset 0px 2px 0px #ff4a4a;
 }
-.game-page .game-contents.mystery-box-result-contents {
-  width: 550px;
+.mystery-box-result-contents {
   max-width: 100%;
   margin: 7px auto;
   text-align: center;
   /* background-color: #f9f9f9 !important; */
 }
-.game-page .game-contents.mystery-box-result-contents .mystery-box-result {
+.mystery-box-result-contents .mystery-box-result {
   /* background-image: url('../../../public/img/openBoxMb.svg');
   background-repeat: no-repeat;
   background-position: center;
@@ -2649,13 +2697,11 @@ position: sticky !important;
   font-size: 30px;
   font-weight: bold;
 }
-.game-page
-  .game-contents.mystery-box-result-contents
+.mystery-box-result-contents
   .mystery-box-result.failed {
   color: #ff0003;
 }
-.game-page
-  .game-contents.mystery-box-result-contents
+.mystery-box-result-contents
   .mystery-box-result.success {
   color: #2cff00;
 }
@@ -3520,11 +3566,7 @@ height: 50px !important;
     padding-right: 0 !important;
   }
 
-  .game-page .game-contents .game-info-panel .box-prizes span {
-    padding: 3px 5px;
-    margin: 0 3px;
-    font-size: small;
-  }
+  
   .game-page .pre-summary-panel > div.public-bet-amount {
     background-size: 26px;
   }
@@ -3538,14 +3580,7 @@ height: 50px !important;
   .rps-add-run-panel {
     flex-direction: column-reverse;
   }
-  .game-page
-    .game-contents
-    .game-info-panel
-    .create-box-panel
-    .box-btn-row
-    button:first-child {
-    margin-left: 15px;
-  }
+
 
   #reset {
     float: right;

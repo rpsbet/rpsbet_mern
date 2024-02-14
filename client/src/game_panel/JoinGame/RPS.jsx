@@ -141,20 +141,16 @@ class RPS extends Component {
       showImageModal: false,
       image: '',
       productName: '',
-      selected_rps: '',
+      selected_rps: this.props.selected_rps,
       modalOpen: false,
       startedPlaying: false,
       advanced_status: '',
       cardDealt: false,
-      is_anonymous: false,
       bet_amount: 0.001,
       bankroll: this.props.bet_amount,
       rps: [],
-      betResult: null,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
-      slippage: 100,
-      settings_panel_opened: false,
       animateCard: false
     };
     this.panelRef = React.createRef();
@@ -257,9 +253,8 @@ class RPS extends Component {
     document.removeEventListener('keydown', this.handleKeyPress);
   }
 
-  
+
   handleKeyPress(event) {
-    const { selected_roll } = this.state;
     switch (event.key) {
       case 'r':
         this.onBtnBetClick('R');
@@ -269,11 +264,6 @@ class RPS extends Component {
         break;
       case 's':
         this.onBtnBetClick('S');
-        break;
-
-      case ' ':
-        event.preventDefault(); 
-        this.onAutoPlay();
         break;
       default:
         break;
@@ -296,7 +286,7 @@ class RPS extends Component {
       document.addEventListener('DOMContentLoaded', this.dealCardLogic);
     }
   };
-  
+
   dealCardLogic = () => {
     const newCard = document.createElement('div');
     newCard.className = 'card-hidden upside-down animated-card';
@@ -304,16 +294,16 @@ class RPS extends Component {
     newCard.style.width = '130px';
     newCard.style.borderRadius = '1rem';
     newCard.style.marginRight = '10px';
-  
+
     // Add the new card to the card-container
     const cardContainer = document.querySelector('.card-container');
-  
+
     // Check if cardContainer exists before manipulating it
     if (cardContainer) {
       cardContainer.insertBefore(newCard, cardContainer.firstChild);
-  
+
       this.props.playSound('cards');
-  
+
       const firstCardDashed = cardContainer.querySelector('.card-hidden.dashed');
       if (firstCardDashed && firstCardDashed.style.display !== 'none') {
         firstCardDashed.style.display = 'none';
@@ -327,7 +317,7 @@ class RPS extends Component {
       this.setState({ cardDealt: true });
     }
   };
-  
+
 
   flipCard = () => {
     const rpsValueAtLastIndex = this.state.rps[this.state.rps.length - 1]?.rps;
@@ -385,7 +375,7 @@ class RPS extends Component {
     const backgroundImageURL = '/img/marketplace/blender.svg';
     const updatedBackgroundImageURL = backgroundImageURL.replace(
       'blender',
-      this.state.selected_rps
+      this.props.selected_rps
     );
     newCard.style.backgroundImage = `url('${updatedBackgroundImageURL}')`;
 
@@ -399,8 +389,8 @@ class RPS extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    const { roomInfo, actionList } = this.props;
-    const { isPasswordCorrect, selected_rps, rps } = this.state;
+    const { roomInfo, actionList, selected_rps } = this.props;
+    const { isPasswordCorrect, rps } = this.state;
 
     if (prevProps.actionList !== actionList) {
       this.setState({
@@ -445,17 +435,16 @@ class RPS extends Component {
       join,
       playSound,
       rps_game_type,
-      changeBgColor
+      changeBgColor,
+      selected_rps,
     } = this.props;
 
-    const { selected_rps, is_anonymous, slippage, bet_amount } = this.state;
-    // console.log('selected_rps', selected_rps);
+    const { bet_amount } = this.state;
+
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
-      is_anonymous: is_anonymous,
       rps_bet_item_id: rps_bet_item_id,
-      slippage: slippage
     });
 
     let text;
@@ -506,15 +495,19 @@ class RPS extends Component {
         stored_rps_array.shift();
       }
       stored_rps_array = stored_rps_array.filter(item => item && item.rps);
+
       if (rps_game_type === 0) {
         stored_rps_array.push({ rps: selected_rps });
         localStorage.setItem('rps_array', JSON.stringify(stored_rps_array));
       }
+
       refreshHistory();
       this.setState({ cardDealt: false });
     }
   };
 
+
+  // Child Component
   onBtnBetClick = async (selection) => {
     const {
       openGamePasswordModal,
@@ -524,52 +517,57 @@ class RPS extends Component {
       user_id,
       balance,
       is_private,
-      roomInfo
+      roomInfo,
+      updateSelectedRps
     } = this.props;
+
     const { bet_amount, bankroll } = this.state;
 
-    this.setState({ selected_rps: selection });
+    // Call the function passed from the parent to update selected_rps
+    updateSelectedRps(selection, async () => {
+      // Code to execute after the state has been updated
 
-    if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
-      return;
-    }
-
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
-      return;
-    }
-
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
-
-    if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
-      return;
-    }
-
-    const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-    const passwordCorrect = rooms[roomInfo._id];
-
-    if (localStorage.getItem('hideConfirmModal') === 'true') {
-      if (is_private === true && passwordCorrect !== true) {
-        openGamePasswordModal();
-      } else {
-        await this.joinGame();
+      if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
+        return;
       }
-    } else {
-      confirmModalCreate(
-        isDarkMode,
-        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
-        'Yes',
-        'Cancel',
-        async () => {
-          if (is_private === true && passwordCorrect !== true) {
-            openGamePasswordModal();
-          } else {
-            await this.joinGame();
-          }
+
+      if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+        return;
+      }
+
+      if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+        return;
+      }
+
+      if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
+        return;
+      }
+
+      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+      const passwordCorrect = rooms[roomInfo._id];
+
+      if (localStorage.getItem('hideConfirmModal') === 'true') {
+        if (is_private === true && passwordCorrect !== true) {
+          openGamePasswordModal();
+        } else {
+          await this.joinGame();
         }
-      );
-    }
+      } else {
+        confirmModalCreate(
+          isDarkMode,
+          'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+          'Yes',
+          'Cancel',
+          async () => {
+            if (is_private === true && passwordCorrect !== true) {
+              openGamePasswordModal();
+            } else {
+              await this.joinGame();
+            }
+          }
+        );
+      }
+    });
   };
 
   handleHalfXButtonClick = () => {
@@ -588,20 +586,23 @@ class RPS extends Component {
   handle2xButtonClick = () => {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
-    const limitedBetAmount = Math.min(
-      multipliedBetAmount,
-      maxBetAmount,
-      this.props.bet_amount
-    );
+    const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
     const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
-    this.setState(
-      {
-        bet_amount: roundedBetAmount
-      },
-      () => {
-        document.getElementById('betamount').focus();
-      }
-    );
+    if (roundedBetAmount < -2330223) {
+      alertModal(
+        this.props.isDarkMode,
+        "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?"
+      );
+    } else {
+      this.setState(
+        {
+          bet_amount: roundedBetAmount
+        },
+        () => {
+          document.getElementById('betamount').focus();
+        }
+      );
+    }
   };
 
   handleMaxButtonClick = () => {
@@ -622,9 +623,7 @@ class RPS extends Component {
       image,
       bankroll,
       startedPlaying,
-      betResult,
       rps,
-      selected_rps,
       productName,
       actionList
     } = this.state;
@@ -634,19 +633,19 @@ class RPS extends Component {
       accessory,
       rank,
       isDarkMode,
+      selected_rps,
       isLowGraphics,
       isMusicEnabled,
       handleClosePlayerModal,
       showPlayerModal,
       youtubeUrl,
+      betResult,
       roomInfo,
       handleOpenPlayerModal,
       creator_avatar,
       rps_game_type,
       gameBackground,
       playSound,
-      betting,
-      handleSwitchChange
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
@@ -941,7 +940,7 @@ class RPS extends Component {
                             <IconButton
                               className="btn-back"
                               onClick={() => {
-                                    this.onBtnBetClick(row.productName);
+                                this.onBtnBetClick(row.productName);
                               }}
                             >
                               Play
@@ -961,7 +960,7 @@ class RPS extends Component {
                   onChangeState={this.onChangeState}
                   isDarkMode={this.props.isDarkMode}
                 />
-              
+
               </div>
             )}
             {this.props.rps_game_type === 1 && (
@@ -1064,7 +1063,7 @@ class RPS extends Component {
                           : ''
                         }`}
                       onClick={() => {
-                          this.onBtnBetClick(selection);
+                        this.onBtnBetClick(selection);
 
                         playSound('select');
                       }}
@@ -1081,18 +1080,9 @@ class RPS extends Component {
                   isDarkMode={isDarkMode}
                 />
 
-                <div></div>
               </div>
             )}
           </div>
-          {rps_game_type === 0 && (
-            <BetArray
-              arrayName="rps_array"
-              label="rps"
-              betting={betting}
-              handleSwitchChange={handleSwitchChange}
-            />
-          )}
 
           <div className="action-panel">
             <Share roomInfo={roomInfo} />

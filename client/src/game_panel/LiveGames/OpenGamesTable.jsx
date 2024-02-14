@@ -336,7 +336,7 @@ class OpenGamesTable extends Component {
   };
 
   handleOpenPlayerModal = creator_id => {
-    console.log(creator_id)
+    // console.log(creator_id)
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
 
@@ -436,7 +436,7 @@ class OpenGamesTable extends Component {
     const bet_amount = e.currentTarget.getAttribute('data-betAmount');
 
     if (e.currentTarget.getAttribute('data-roomStatus') === 'finished') {
-      alertModal(this.props.isDarkMode, `THIS GAME HAS ENDED ALREADY`);
+      alertModal(this.props.isDarkMode, `THIS BATTLE HAS NOW ENDED`);
       return;
     }
 

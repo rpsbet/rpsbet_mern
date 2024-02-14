@@ -64,6 +64,7 @@ async function checkConfirmations() {
 
             // Update the user's balance accordingly
             user.balance -= transaction.amount;
+            user.dailyWithdrawals += transaction.amount;
             await user.save();
             console.log('Withdrawal transaction processed successfully.');
           }

@@ -40,7 +40,7 @@ class Summary extends Component {
     if (this.props.game_mode === 'Spleesh!') {
       public_bet_amount = (
         <>
-          {convertToCurrency(this.props.spleesh_bet_unit)} -{' '}
+          {convertToCurrency(this.props.spleesh_bet_unit)}{' '}-
           {convertToCurrency(this.props.spleesh_bet_unit * 10)}
         </>
       );

@@ -27,8 +27,10 @@ import {
   getMyGames,
   getMyHistory,
   getHistory,
-  getGameTypeList
+  getGameTypeList,
+  deductBalanceWhenStartBrainGame
 } from '../../redux/Logic/logic.actions';
+
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@material-ui/core';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -37,6 +39,7 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/live';
 import HistoryTable from '../LiveGames/HistoryTable';
 import DrawerButton from './DrawerButton';
+import SupportButton from './SupportButton';
 import Footer from './Footer';
 import {
   validateIsAuthenticated,
@@ -88,12 +91,19 @@ class JoinGame extends Component {
       selectedMobileTab: 'live_games',
       roomInfo: this.props.roomInfo,
       limit: 10,
+      spleesh_guesses: [],
+      selected_rps: '',
+      selected_qs_position: 0,
+      selected_id: '',
       image: '',
       bgColorChanged: false,
+      borderColor: '',
+      betResult: null,
       productName: '',
       bankroll: '',
       intervalId: null,
       history: this.props.history,
+      showAnimation: false,
       sounds: {
         win: new Audio('/sounds/win-sound.mp3'),
         split: new Audio('/sounds/split-sound.mp3'),
@@ -120,7 +130,7 @@ class JoinGame extends Component {
       current_state.history?.length === 0 ||
       (props.history &&
         current_state.history[0]['created_at'] !==
-          props.history[0]['created_at'])
+        props.history[0]['created_at'])
     ) {
       return {
         ...current_state,
@@ -136,6 +146,7 @@ class JoinGame extends Component {
 
     return null;
   }
+
   async componentDidMount() {
     const { id } = this.props.match.params;
     await this.initializeRoomData(id);
@@ -215,7 +226,7 @@ class JoinGame extends Component {
       game_type: this.props.roomInfo.game_type,
       ...betInfo
     });
-
+// console.log(result)
     return result;
   };
 
@@ -383,98 +394,424 @@ class JoinGame extends Component {
     return nextState;
   };
 
+
+  calcWinChanceQs = (gametype, rounds) => {
+    let positionCounts = new Array(gametype + 1).fill(0);
+    for (let i = 0; i < rounds.length; i++) {
+      positionCounts[rounds[i].qs]++;
+    }
+    let entropy = 0;
+    for (let i = 0; i < gametype; i++) {
+      if (positionCounts[i] === 0) {
+        continue;
+      }
+      let probability = positionCounts[i] / rounds.length;
+      entropy -= probability * Math.log2(probability);
+    }
+    let winChanceMin = Math.max(
+      0,
+      (1 - entropy / Math.log2(gametype)) / gametype
+    );
+    let winChanceMax = Math.min(1, 1 - entropy / Math.log2(gametype));
+    winChanceMin *= 100;
+    winChanceMax *= 100;
+    return winChanceMin.toFixed(2) + '% - ' + winChanceMax.toFixed(2) + '%';
+  };
+
+  predictNextQs = (qs_list, gameType) => {
+    const options = [...Array(gameType).keys()];
+    const transitionMatrix = {};
+    options.forEach(option1 => {
+      transitionMatrix[option1] = {};
+      options.forEach(option2 => {
+        transitionMatrix[option1][option2] = {};
+        options.forEach(option3 => {
+          transitionMatrix[option1][option2][option3] = {};
+          options.forEach(option4 => {
+            transitionMatrix[option1][option2][option3][option4] = 0;
+          });
+        });
+      });
+    });
+
+    for (let i = 0; i < qs_list.length - 3; i++) {
+      transitionMatrix[qs_list[i].qs][qs_list[i + 1].qs][qs_list[i + 2].qs][
+        qs_list[i + 3].qs
+      ]++;
+    }
+
+    Object.keys(transitionMatrix).forEach(fromState1 => {
+      Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
+        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
+          fromState3 => {
+            const totalTransitions = Object.values(
+              transitionMatrix[fromState1][fromState2][fromState3]
+            ).reduce((a, b) => a + b);
+            Object.keys(
+              transitionMatrix[fromState1][fromState2][fromState3]
+            ).forEach(toState => {
+              transitionMatrix[fromState1][fromState2][fromState3][
+                toState
+              ] /= totalTransitions;
+            });
+          }
+        );
+      });
+    });
+
+    const winChance = this.calcWinChanceQs(this.props.roomInfo.qs_game_type, qs_list);
+    let deviation = 0;
+    if (winChance !== '33.33%') {
+      deviation = (1 - 1 / gameType) / 2;
+    }
+
+    let currentState1 = qs_list[qs_list.length - 3].qs;
+    let currentState2 = qs_list[qs_list.length - 2].qs;
+    let currentState3 = qs_list[qs_list.length - 1].qs;
+    let nextState = currentState3;
+    let maxProb = 0;
+    Object.keys(
+      transitionMatrix[currentState1][currentState2][currentState3]
+    ).forEach(state => {
+      if (
+        transitionMatrix[currentState1][currentState2][currentState3][state] >
+        maxProb
+      ) {
+        maxProb =
+          transitionMatrix[currentState1][currentState2][currentState3][state];
+        nextState = state;
+      }
+    });
+
+    let randomNum = Math.random();
+    if (randomNum < deviation) {
+      let randomState = '';
+      do {
+        randomNum = Math.random();
+        randomState = options[Math.floor(randomNum * gameType)];
+      } while (randomState === nextState);
+      nextState = randomState;
+    }
+
+    return nextState;
+  };
+
   predictNextBetAmount(betArray, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
     if (betArray.length < 2) {
       // console.log("Insufficient data for prediction.");
       return null;
     }
-  
+
     const transitionMatrix = this.createTransitionMatrix(betArray, smoothingFactor);
     const lastBet = betArray[betArray.length - 1];
-  
-    // Attempt to get transition data for the current state
     const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
-  
     if (possibleNextStates.length === 0) {
-      // console.log("No transition data for the current state. Using a fallback mechanism.");
-  
-      // Implement a fallback mechanism - for example, choose a random state from all available states
+
       const allStates = Array.from(new Set(betArray)); // Get all unique states
       const fallbackState = allStates[Math.floor(Math.random() * allStates.length)];
-  
-      // console.log("Fallback prediction:", fallbackState);
-  
-      // Ensure the fallback prediction is within the threshold and less than roomInfo.bet_amount
       return Math.min(Math.max(fallbackState, threshold), this.props.roomInfo.bet_amount);
     }
-  
-    // Adjust probabilities with a randomness factor
+
     const adjustedProbabilities = possibleNextStates.map(
       (nextState) => transitionMatrix[lastBet][nextState] + Math.random() * randomnessFactor
     );
-  
-    // Choose the next state based on adjusted probabilities
+
     const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
     const nextState = possibleNextStates[nextStateIndex];
-  
     // console.log("Predicted next bet:", nextState);
-  
-    // Ensure the predicted next bet is within the threshold and less than roomInfo.bet_amount
     return Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
   }
-  
-  
+
+  predictNextDg = dropAmounts => {
+    const sortedDrops = dropAmounts.map(drop => drop.drop).sort((a, b) => a - b);
+    const uniqueValues = [...new Set(sortedDrops)];
+
+    if (uniqueValues.length === 1) {
+      return uniqueValues[0];
+    } else {
+      let finalValue;
+
+      do {
+        const minDrop = Math.min(...sortedDrops);
+        const maxDrop = Math.max(...sortedDrops);
+        const difference = maxDrop - minDrop;
+        const segmentSize = difference / 20;
+
+        const segments = Array.from({ length: 20 }, (_, index) => {
+          const lowerBound = minDrop + index * segmentSize;
+          const upperBound = minDrop + (index + 1) * segmentSize;
+          const dropsInSegment = sortedDrops.filter(drop => drop >= lowerBound && (drop < upperBound || (index === 19 && drop === upperBound)));
+
+          return {
+            segment: index + 1,
+            drops: dropsInSegment
+          };
+        });
+
+        const totalDropsCount = sortedDrops.length;
+        const weights = segments.map(segment => segment.drops.length / totalDropsCount);
+
+        const randomValue = Math.random();
+        let cumulativeWeight = 0;
+        let selectedSegment;
+
+        for (let i = 0; i < segments.length; i++) {
+          cumulativeWeight += weights[i];
+          if (randomValue <= cumulativeWeight) {
+            selectedSegment = segments[i];
+            break;
+          }
+        }
+
+        const switchChance = Math.random();
+
+        if (switchChance <= 0.4) {
+          const bottom5PercentIndex = Math.floor(0.25 * totalDropsCount);
+          finalValue = sortedDrops[Math.floor(Math.random() * bottom5PercentIndex)];
+        } else if (switchChance <= 0.8) {
+          const top30PercentIndex = Math.floor(0.6 * totalDropsCount);
+          finalValue = sortedDrops[Math.floor(top30PercentIndex + Math.random() * (totalDropsCount - top30PercentIndex))];
+        } else {
+          const randomAddition = Math.random() * segmentSize;
+          finalValue = selectedSegment ? selectedSegment.drops[0] + randomAddition : null;
+        }
+
+      } while (finalValue !== null && finalValue < 0.000001);
+      // console.log(finalValue)
+      return finalValue;
+    }
+  };
+
+  predictNextMb = (betAmountArray, boxList) => {
+    let transitions = {};
+    let probabilities = {};
+    let startProbabilities = {};
+    let distinctBoxes = [...new Set(boxList)];
+
+    for (let i = 0; i < boxList.length; i++) {
+      if (startProbabilities[boxList[i]]) {
+        startProbabilities[boxList[i]]++;
+      } else {
+        startProbabilities[boxList[i]] = 1;
+      }
+    }
+
+    let totalStartStates = Object.values(startProbabilities).reduce(
+      (a, b) => a + b
+    );
+
+    for (let box in startProbabilities) {
+      startProbabilities[box] /= totalStartStates;
+    }
+
+    for (let i = 0; i < boxList.length - 1; i++) {
+      let currentBox = boxList[i];
+      let nextBox = boxList[i + 1];
+
+      if (transitions[currentBox]) {
+        if (transitions[currentBox][nextBox]) {
+          transitions[currentBox][nextBox]++;
+        } else {
+          transitions[currentBox][nextBox] = 1;
+        }
+      } else {
+        transitions[currentBox] = {};
+        transitions[currentBox][nextBox] = 1;
+      }
+    }
+
+    for (let currentBox in transitions) {
+      let currentBoxTransitions = transitions[currentBox];
+      let totalCurrentBoxTransitions = Object.values(
+        currentBoxTransitions
+      ).reduce((a, b) => a + b);
+
+      probabilities[currentBox] = {};
+
+      for (let nextBox in currentBoxTransitions) {
+        probabilities[currentBox][nextBox] =
+          currentBoxTransitions[nextBox] / totalCurrentBoxTransitions;
+      }
+    }
+
+    // Make prediction
+    let prediction = null;
+    let maxProbability = -1;
+
+    const maxBetAmount = Math.max(...betAmountArray);
+    betAmountArray = [boxList[boxList.length - 1]];
+    for (let i = 0; i < distinctBoxes.length; i++) {
+      let currentBox = distinctBoxes[i];
+      if (currentBox > maxBetAmount) {
+        continue;
+      }
+      let currentBoxProbability =
+        startProbabilities[currentBox] *
+        probabilities[currentBox][betAmountArray[betAmountArray.length - 1]];
+
+      if (currentBoxProbability > maxProbability) {
+        maxProbability = currentBoxProbability;
+        prediction = currentBox;
+      }
+    }
+
+    return parseFloat(prediction.box_price);
+  };
+
+
+  predictNextS = (array1, array2) => {
+    const frequencyMap = {};
+    let maxValue = 0;
+    let maxKey = 0;
+
+    array1.forEach(item => {
+      if (!frequencyMap[item.spleesh]) {
+        frequencyMap[item.spleesh] = 0;
+      }
+      frequencyMap[item.spleesh] += 1;
+
+      if (frequencyMap[item.spleesh] > maxValue) {
+        maxValue = frequencyMap[item.spleesh];
+        maxKey = item.spleesh;
+      }
+    });
+
+    const spleeshValues = Object.keys(frequencyMap);
+
+    let prediction = maxKey;
+    let i = 0;
+    const maxAttempts = spleeshValues.length * 1;
+    let shouldStopBetting = false;
+    while (array2.some(item => item.bet_amount === prediction)) {
+      const randomIndex = Math.floor(Math.random() * spleeshValues.length);
+      prediction = Number(spleeshValues[randomIndex]);
+
+      i++;
+      if (i >= maxAttempts) {
+        alertModal(this.props.isDarkMode, `NO MORE AVAILABLE OPTIONS MTF!!`);
+        shouldStopBetting = true;
+        break;
+      }
+    }
+
+    return { prediction, shouldStopBetting };
+  };
+
+  predictNextBg = (score_array) => {
+    // if (score_array.length < 5) {
+    //   return Math.round(
+    //     score_array.reduce((total, item) => total + item.score, 0) /
+    //     score_array.length
+    //   );
+    // }
+
+    const oldScores = score_array.slice(0, 5).map(item => item.score);
+    const newScores = score_array
+      .slice(score_array.length - 5)
+      .map(item => item.score);
+
+    const oldAvg =
+      oldScores.reduce((total, score) => total + score, 0) / oldScores.length;
+    const newAvg =
+      newScores.reduce((total, score) => total + score, 0) / newScores.length;
+
+      let prediction;
+    if (newAvg > oldAvg) {
+      let diff = newAvg - oldAvg;
+      prediction =  Math.round(score_array[score_array.length - 1].score + diff);
+    } else {
+      prediction = Math.round(
+        score_array.reduce((total, item) => total + item.score, 0) /
+        score_array.length
+      );
+    }
+
+    const random = Math.random();
+
+    if (score_array && score_array.length > 0 && random < 0.4) {
+      const randomIndex = Math.floor(Math.random() * score_array.length);
+      prediction =  score_array[randomIndex].score;
+    } else {
+      const offset = Math.floor(Math.random() * 2) + 1; // either 1 or 2
+      const sign = Math.random() < 0.5 ? -1 : 1; // either -1 or 1
+      prediction = prediction + offset * sign;
+    }
+
+    // const randomOffset = Math.floor(Math.random() * 8) - 3;
+    return prediction;
+  };
+
+
+  updateSelectedRps = (selection, callback) => {
+    this.setState({ selected_rps: selection }, callback);
+  }
+  updateSelectedQs = (position, callback) => {
+    this.setState({ selected_qs_position: position }, callback);
+  }
+  updateSelectedMb = (_id, callback) => {
+    this.setState({ selected_id: _id }, callback);
+  }
+  updateDropAnimation = () => {
+    this.setState({ showAnimation: true });
+    setTimeout(() => {
+      this.setState({ showAnimation: false });
+    }, 2000);
+  }
+  updateSpleeshGuesses = (guesses) => {
+    this.setState({ spleesh_guesses: guesses });
+  }
+
+
   createTransitionMatrix(betArray, smoothingFactor = 0.01) {
     const transitionMatrix = {};
-  
-    // Populate the transition matrix with Laplace smoothing
+
     for (let i = 0; i < betArray.length - 1; i++) {
       const currentBet = betArray[i];
       const nextBet = betArray[i + 1];
-  
+
       if (!transitionMatrix[currentBet]) {
         transitionMatrix[currentBet] = {};
       }
-  
+
       if (!transitionMatrix[currentBet][nextBet]) {
         transitionMatrix[currentBet][nextBet] = smoothingFactor; // Add smoothing factor
       } else {
         transitionMatrix[currentBet][nextBet]++;
       }
     }
-  
+
     // Ensure all possible transitions have some default value
     const allStates = Array.from(new Set(betArray)); // Get all unique states
-  
+
     allStates.forEach((currentState) => {
       if (!transitionMatrix[currentState]) {
         transitionMatrix[currentState] = {};
       }
-  
+
       allStates.forEach((nextState) => {
         if (!transitionMatrix[currentState][nextState]) {
           transitionMatrix[currentState][nextState] = smoothingFactor;
         }
       });
     });
-  
+
     // Apply Laplace smoothing to all transitions
     Object.keys(transitionMatrix).forEach((currentState) => {
       const possibleNextStates = Object.keys(transitionMatrix[currentState]);
-  
+
       possibleNextStates.forEach((nextState) => {
         transitionMatrix[currentState][nextState] += smoothingFactor;
       });
     });
-  
+
     return transitionMatrix;
   }
-  
-  
+
+
   chooseRandomIndex(probabilities) {
     const totalProbability = probabilities.reduce((sum, prob) => sum + prob, 0);
     const randomValue = Math.random() * totalProbability;
-  
+
     let cumulativeProbability = 0;
     for (let i = 0; i < probabilities.length; i++) {
       cumulativeProbability += probabilities[i];
@@ -482,7 +819,7 @@ class JoinGame extends Component {
         return i;
       }
     }
-  
+
     // This should not happen, but just in case
     return probabilities.length - 1;
   }
@@ -504,15 +841,15 @@ class JoinGame extends Component {
     if (game_type === 'RPS') {
       gameType = '62a25d2a723b9f15709d1ae7';
     } else if (game_type === 'Spleesh!') {
-      gameType = '62a25d2a723b9f15709d1ae8'.$and.push({ description: /S!/i });
+      gameType = '62a25d2a723b9f15709d1ae8';
     } else if (game_type === 'Brain Game') {
-      gameType = '62a25d2a723b9f15709d1ae9'.$and.push({ description: /BG/i });
+      gameType = '62a25d2a723b9f15709d1ae9'
     } else if (game_type === 'Mystery Box') {
-      gameType = '62a25d2a723b9f15709d1aea'.$and.push({ description: /MB/i });
+      gameType = '62a25d2a723b9f15709d1aea';
     } else if (game_type === 'Quick Shoot') {
-      gameType = '62a25d2a723b9f15709d1aeb'.$and.push({ description: /QS/i });
+      gameType = '62a25d2a723b9f15709d1aeb';
     } else if (game_type === 'Drop Game') {
-      gameType = '63dac60ba1316a1e70a468ab'.$and.push({ description: /DG/i });
+      gameType = '63dac60ba1316a1e70a468ab';
     } else if (game_type === 'Bang!') {
       gameType = '6536a82933e70418b45fbe32'.$and.push({ description: /B!/i });
     } else if (game_type === 'Roll') {
@@ -551,29 +888,118 @@ class JoinGame extends Component {
 
   startBetting = betArray => {
     const { isDarkMode, openGamePasswordModal, roomInfo, balance } = this.props;
+    let storageName;
 
-    const storageName = 'rps_array';
-    if (!validateLocalStorageLength(storageName, isDarkMode)) {
+    if (roomInfo.status !== 'open') {
       return;
     }
 
-    const stored_rps_array =
+    switch (roomInfo.game_type) {
+      case 'Quick Shoot':
+        storageName = `qs_array_${roomInfo.qs_game_type}`;
+
+        // if (
+        //   !validateBankroll(
+        //     bet_amount / (qs_game_type - 1) +
+        //     parseFloat(bet_amount) -
+        //     bankroll * (qs_game_type - 1),
+        //     bankroll,
+        //     isDarkMode
+        //   )
+        // ) {
+        //   // Display an error message or handle the case when bankroll validation fails
+        //   return;
+        // }
+
+        break;
+      case 'Bang!':
+        storageName = 'bang_array';
+        break;
+      case 'Spleesh!':
+        if (this.props.spleesh_bet_unit === 0.1) {
+          storageName = 'spleesh_10_array';
+        } else if (this.props.spleesh_bet_unit === 0.01) {
+          storageName = 'spleesh_001_array';
+        } else {
+          storageName = 'spleesh_array';
+        }
+
+        
+        break;
+      case 'Mystery Box':
+        storageName = 'bet_array';
+       
+        break;
+      case 'Blackjack':
+        storageName = 'bj_array';
+        break;
+      case 'Brain Game':
+        storageName = `score_array_${roomInfo.brain_game_type}`;
+        break;
+      case 'Drop Game':
+        storageName = 'drop_array';
+       
+        break;
+      default:
+        storageName = `rps_array`;
+       
+    }
+    if (!validateLocalStorageLength(storageName, isDarkMode)) {
+      return;
+    }
+    const stored_array =
       JSON.parse(localStorage.getItem(storageName)) || [];
+
     const intervalId = setInterval(() => {
-      const randomItem = this.predictNext(stored_rps_array);
-      let predictedBetAmount = this.predictNextBetAmount(betArray,  0.01, 0.2);
-// console.log(randomItem, predictedBetAmount)
-      if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
-        return;
+      let randomItem;
+      let predictedBetAmount;
+      switch (roomInfo.game_type) {
+        case 'Quick Shoot':
+          randomItem = this.predictNextQs(stored_array, roomInfo.qs_game_type);
+          predictedBetAmount = this.predictNextBetAmount(betArray, 0.01, 0.2);
+          if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
+            return;
+          }
+          break;
+        case 'Spleesh!':
+          randomItem = this.predictNextS(stored_array, this.state.spleesh_guesses);
+          randomItem = randomItem.prediction;
+          if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+            return;
+          }
+          break;
+        case 'Mystery Box':
+          randomItem = this.predictNextMb(stored_array, roomInfo.box_list);
+          if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+            return;
+          }
+          break;
+        case 'Drop Game':
+          randomItem = this.predictNextDg(stored_array);
+          break;
+          case 'Brain Game':
+            randomItem = this.predictNextBg(stored_array);
+          predictedBetAmount = roomInfo.bet_amount;
+          
+          break;
+        default:
+          randomItem = this.predictNext(stored_array);
+          predictedBetAmount = this.predictNextBetAmount(betArray, 0.01, 0.2);
+          if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
+            return;
+          }
       }
+
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       const passwordCorrect = rooms[roomInfo._id];
       if (roomInfo.is_private === true && passwordCorrect !== 'true') {
         openGamePasswordModal();
       } else {
         this.joinGame2(randomItem, predictedBetAmount);
+        
       }
-    }, 4000);
+    }, 5000);
+
     this.playSound('start');
     this.setState({ intervalId, betting: true });
   };
@@ -584,65 +1010,186 @@ class JoinGame extends Component {
     this.setState({ intervalId: null, betting: false, timerValue: 2000 });
   };
 
-  joinGame2 = async (randomItem, predictedBetAmount) => {
-    const { rps_bet_item_id, balance, isDarkMode, roomInfo } = this.props;
-    const { selected_rps, betting } = this.state;
 
+  changeBgColor = async result => {
+    this.setState({ betResult: result, bgColorChanged: true }, async () => {
+      await new Promise(resolve => setTimeout(resolve, 4000)); // Wait for 1 second
+      this.setState({ bgColorChanged: false, betResult: null });
+    });
+  };
+
+  changeBgColorQs = async result => {
+    this.setState({ betResult: result, bgColorChanged: true }, async () => {
+      let borderColor = '';
+      let defaultColor = '';
+      if (this.props.roomInfo.game_type === 'Mystery Box') {
+        defaultColor = '#ffd000';
+      } else {
+        defaultColor = 'grey'; // Set default color to grey for other gametypes
+      }
+
+      switch (result) {
+        case 1:
+          borderColor = '#49ff08';
+          break;
+        case -1:
+          borderColor = '#ffd000';
+          break;
+        default:
+          borderColor = defaultColor;
+          break;
+      }
+
+      this.setState({ borderColor });
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      this.setState({ borderColor: '', bgColorChanged: false, betResult: null });
+
+    });
+
+  };
+
+  joinGame2 = async (randomItem, predictedBetAmount) => {
+    const { balance, isDarkMode, roomInfo, deductBalanceWhenStartBrainGame } = this.props;
+    let { betting, selected_qs_position, selected_rps, selected_id, bankroll } = this.state;
+    const gameType = roomInfo.game_type;
     if (!betting) {
       return;
     }
+    if (gameType !== 'Drop Game' && gameType !== 'Spleesh!' && gameType !== 'Mystery Box') {
+      if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
+        return;
+      }
 
-    await this.setState({ selected_rps: randomItem });
+      if (!validateBankroll(predictedBetAmount, roomInfo.bet_amount, isDarkMode)) {
+        return;
+      }
+    } else if (gameType === 'Mystery Box') {
 
-    if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
-      return;
-    }
-    if (!validateBankroll(predictedBetAmount, roomInfo.bet_amount, isDarkMode)) {
-      return;
-    }
 
-    if (selected_rps !== null) {
-      const result = await this.join({
-        bet_amount: parseFloat(predictedBetAmount),
-        selected_rps: selected_rps,
-        rps_bet_item_id: rps_bet_item_id
-      });
+      if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+        return;
+      }
 
-      if (result.status === 'success') {
-        let text = 'HAHAA, YOU LOST!!!';
+      if (!validateBankroll(randomItem, roomInfo.pr, isDarkMode)) {
+        return;
+      }
+    }  else if  (gameType === 'Spleesh!') {
+      if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+        return;
+      }
+      if (!validateBankroll(randomItem, roomInfo.bet_amount, isDarkMode)) {
+        return;
+      }
+    } else {
+      if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+        return;
+      }
 
-        if (result.betResult === 1) {
-          this.playSound('win');
-
-          text = 'NOT BAD, WINNER!';
-
-          setTimeout(() => {
-            this.changeBgColor(result.betResult);
-          }, 1000);
-        } else if (result.betResult === 0) {
-          this.playSound('split');
-
-          text = 'DRAW, NO WINNER!';
-          setTimeout(() => {
-            this.changeBgColor(result.betResult);
-          }, 1000);
-        } else {
-          setTimeout(() => {
-            this.changeBgColor(result.betResult);
-          }, 1000);
-          this.playSound('lose');
-        }
-
-        this.refreshHistory();
+      if (!validateBankroll(randomItem, roomInfo.bet_amount, isDarkMode)) {
+        return;
       }
     }
+
+
+    // Set randomItem based on gameType
+    if (gameType === 'RPS') {
+      selected_rps = randomItem;
+    } else if (gameType === 'Quick Shoot') {
+      selected_qs_position = parseInt(randomItem);
+    }
+
+    // Set state with a callback to ensure randomItem is properly set
+    this.setState({ selected_rps, selected_qs_position, selected_id }, async () => {
+      let result;
+
+      try {
+        if (gameType === 'RPS') {
+          result = await this.join({
+            bet_amount: parseFloat(predictedBetAmount),
+            selected_rps: selected_rps,
+            rps_bet_item_id: roomInfo.rps_bet_item_id
+          });
+        } else if (gameType === 'Quick Shoot') {
+          result = await this.join({
+            bet_amount: parseFloat(predictedBetAmount),
+            selected_qs_position: selected_qs_position,
+            qs_bet_item_id: roomInfo.qs_bet_item_id,
+          });
+        } else if (gameType === 'Drop Game') {
+          this.updateDropAnimation();
+          result = await this.join({
+            bet_amount: parseFloat(randomItem),
+            drop_bet_item_id: roomInfo.drop_bet_item_id,
+          });
+        } else if (gameType === 'Mystery Box') {
+          const availableBoxes = roomInfo.box_list.filter(
+            box => box.status === 'init' && box.box_price <= randomItem + 0.001
+          );
+          if (availableBoxes.length === 0) {
+            alertModal(
+              isDarkMode,
+              `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
+            );
+            return;
+          }
+
+          const randomIndex = Math.floor(Math.random() * availableBoxes.length);
+          const selectedBox = availableBoxes[randomIndex];
+
+          result = await this.join({
+            bet_amount: parseFloat(randomItem),
+            selected_id: selectedBox._id,
+          });
+        } else if (gameType === 'Spleesh!') {
+          result = await this.join({
+            bet_amount: parseFloat(randomItem),
+          });
+        } else if (gameType === 'Brain Game') {
+          result = await this.join({
+            brain_game_score: randomItem,
+            bet_amount: parseFloat(predictedBetAmount),
+          });
+          deductBalanceWhenStartBrainGame({
+            bet_amount: predictedBetAmount
+          });
+        } 
+       
+
+        if (result && result.status === 'success') {
+          let text = 'HAHAA, YOU LOST!!!';
+
+          if (result.betResult === 1) {
+            this.playSound('win');
+            text = 'NOT BAD, WINNER!';
+            if (gameType === 'Quick Shoot' || gameType === 'Mystery Box') {
+              this.changeBgColorQs(result.betResult);
+            } else {
+              this.changeBgColor(result.betResult);
+            }
+          } else if (result.betResult === 0) {
+            this.playSound('split');
+            text = 'DRAW, NO WINNER!';
+            if (gameType === 'Quick Shoot' || gameType === 'Mystery Box') {
+              this.changeBgColorQs(result.betResult);
+            } else {
+              this.changeBgColor(result.betResult);
+            }
+          } else {
+            if (gameType === 'Quick Shoot' || gameType === 'Mystery Box') {
+              this.changeBgColorQs(result.betResult);
+            } else {
+              this.changeBgColor(result.betResult);
+            }
+            this.playSound('lose');
+          }
+          this.refreshHistory();
+        }
+      } catch (error) {
+        console.error('Error in joinGame2:', error);
+      }
+    });
   };
 
-  changeBgColor = async result => {
-    this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Wait for 1 second
-    this.setState({ bgColorChanged: false });
-  };
 
   playSound = sound => {
     if (!this.props.isMuted) {
@@ -721,7 +1268,7 @@ class JoinGame extends Component {
 
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
-    (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
+      (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
       <div id="liveStakes">
         {this.props.roomCount} LIVE BATTLES
         <Lottie options={defaultOptions} width={40} />
@@ -741,7 +1288,13 @@ class JoinGame extends Component {
       selectedMobileTab,
       betting,
       betResult,
-      bgColorChanged
+      borderColor,
+      bgColorChanged,
+      selected_rps,
+      selected_qs_position,
+      spleesh_guesses,
+      selected_id,
+      showAnimation,
     } = this.state;
     const {
       open,
@@ -822,11 +1375,13 @@ class JoinGame extends Component {
                     <RPS
                       changeBgColor={this.changeBgColor}
                       bgColorChanged={bgColorChanged}
-                      handleSwitchChange={this.handleSwitchChange}
                       betting={betting}
+                      updateSelectedRps={this.updateSelectedRps}
+                      selected_rps={selected_rps}
                       refreshHistory={this.refreshHistory}
                       playSound={this.playSound}
                       join={this.join}
+                      betResult={betResult}
                       roomInfo={roomInfo}
                       rps_game_type={roomInfo.rps_game_type}
                       user_id={user_id}
@@ -836,7 +1391,7 @@ class JoinGame extends Component {
                       showPlayerModal={showPlayerModal}
                       creator_id={roomInfo.creator_id}
                       bet_amount={roomInfo.bet_amount}
-                      bankroll={bankroll}
+                      // bankroll={bankroll}
                       rps_bet_item_id={roomInfo.rps_bet_item_id}
                       is_private={roomInfo.is_private}
                       youtubeUrl={roomInfo.youtubeUrl}
@@ -852,10 +1407,17 @@ class JoinGame extends Component {
                       handleClosePlayerModal={this.handleClosePlayerModal}
                       selectedCreator={selectedCreator}
                       showPlayerModal={showPlayerModal}
+                      betResult={betResult}
                       join={this.join}
+                      bet_amount={roomInfo.bet_amount}
+                      bankroll={roomInfo.host_pr}
+                      spleesh_guesses={spleesh_guesses}
+                      updateSpleeshGuesses={this.updateSpleeshGuesses}
                       spleesh_bet_unit={roomInfo.spleesh_bet_unit}
                       game_log_list={roomInfo.game_log_list || []}
                       user_id={user_id}
+                      changeBgColor={this.changeBgColor}
+                      bgColorChanged={bgColorChanged}
                       creator_id={roomInfo.creator_id}
                       roomInfo={roomInfo}
                       endgame_amount={roomInfo.endgame_amount}
@@ -876,9 +1438,14 @@ class JoinGame extends Component {
                         showPlayerModal={showPlayerModal}
                         refreshHistory={this.refreshHistory}
                         join={this.join}
+                        borderColor={borderColor}
                         box_list={roomInfo.box_list}
                         box_price={roomInfo.box_price}
                         user_id={user_id}
+                        selected_id={selected_id}
+                        changeBgColor={this.changeBgColorQs}
+                        bgColorChanged={bgColorChanged}
+                        updateSelectedMb={this.updateSelectedMb}
                         creator_id={roomInfo.creator_id}
                         is_private={roomInfo.is_private}
                         roomInfo={roomInfo}
@@ -925,13 +1492,19 @@ class JoinGame extends Component {
                       showPlayerModal={showPlayerModal}
                       refreshHistory={this.refreshHistory}
                       join={this.join}
+                      borderColor={borderColor}
+                      bgColorChanged={bgColorChanged}
+                      changeBgColor={this.changeBgColorQs}
+                      updateSelectedQs={this.updateSelectedQs}
                       user_id={user_id}
+                      betResult={betResult}
                       creator_id={roomInfo.creator_id}
                       qs_game_type={roomInfo.qs_game_type}
                       bet_amount={roomInfo.bet_amount}
-                      bankroll={bankroll}
+                      // bankroll={bankroll}
                       qs_bet_item_id={roomInfo.qs_bet_item_id}
                       is_private={roomInfo.is_private}
+                      selected_qs_position={selected_qs_position}
                       roomInfo={roomInfo}
                       playSound={this.playSound}
                       youtubeUrl={roomInfo.youtubeUrl}
@@ -949,9 +1522,11 @@ class JoinGame extends Component {
                       refreshHistory={this.refreshHistory}
                       join={this.join}
                       user_id={user_id}
+                      showAnimation={showAnimation}
+                      updateDropAnimation={this.updateDropAnimation}
                       creator_id={roomInfo.creator_id}
                       bet_amount={roomInfo.bet_amount}
-                      bankroll={bankroll}
+                      // bankroll={bankroll}
                       drop_bet_item_id={roomInfo.drop_bet_item_id}
                       is_private={roomInfo.is_private}
                       roomInfo={roomInfo}
@@ -976,7 +1551,7 @@ class JoinGame extends Component {
                       bet_amount={roomInfo.bet_amount}
                       crashed={roomInfo.crashed}
                       cashoutAmount={roomInfo.cashoutAmount}
-                      bankroll={bankroll}
+                      // bankroll={bankroll}
                       bang_bet_item_id={roomInfo.bang_bet_item_id}
                       is_private={roomInfo.is_private}
                       roomInfo={roomInfo}
@@ -1052,8 +1627,8 @@ class JoinGame extends Component {
                   (is_mobile &&
                     selectedMobileTab === 'my_games' &&
                     show_open_game === 0)) && (
-                  <MyGamesTable gameTypeList={gameTypeList} />
-                )}
+                    <MyGamesTable gameTypeList={gameTypeList} />
+                  )}
                 {is_mobile &&
                   selectedMobileTab === 'live_games' &&
                   show_open_game === 1 && <HistoryTable />}
@@ -1070,6 +1645,9 @@ class JoinGame extends Component {
                     betting={betting}
                     handleSwitchChange={this.handleSwitchChange}
                     game_type={roomInfo.game_type}
+                    qs_game_type={roomInfo.qs_game_type}
+                    brain_game_type={roomInfo.brain_game_type}
+                    spleesh_bet_unit={roomInfo.spleesh_bet_unit}
                     user_id={this.props.user_id}
                   />
                 )}
@@ -1079,14 +1657,17 @@ class JoinGame extends Component {
                 open={isDrawerOpen}
                 toggleDrawer={this.toggleDrawer}
               />
+              <SupportButton
+                open={this.props.isSupportOpen}
+              // toggleDrawer={this.toggleDrawer}
+              />
               {!is_mobile && selectedMainTabIndex === 1 && <MyHistoryTable />}
             </div>
             {!is_mobile && (
               <div className="mobile-only main-page-nav-button-group">
                 <Button
-                  className={`mobile-tab-live ${
-                    selectedMobileTab === 'live_games' ? 'active' : ''
-                  }`}
+                  className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''
+                    }`}
                   onClick={e => {
                     this.setState({ selectedMobileTab: 'live_games' });
                   }}
@@ -1109,9 +1690,8 @@ class JoinGame extends Component {
                   {selectedMobileTab === 'live_games' && 'LIVE BATTLES'}
                 </Button>
                 <Button
-                  className={`mobile-tab-my ${
-                    selectedMobileTab === 'my_games' ? 'active' : ''
-                  }`}
+                  className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''
+                    }`}
                   onClick={e => {
                     this.setState({ selectedMobileTab: 'my_games' });
                   }}
@@ -1140,9 +1720,8 @@ class JoinGame extends Component {
                   {selectedMobileTab === 'my_games' && 'YOUR BATTLES'}
                 </Button>
                 <button
-                  className={`mobile-tab-marketplace ${
-                    selectedMobileTab === 'marketplace' ? 'active' : ''
-                  }`}
+                  className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''
+                    }`}
                   onClick={e => {
                     this.setState({ selectedMobileTab: 'marketplace' });
                   }}
@@ -1165,9 +1744,8 @@ class JoinGame extends Component {
                   {selectedMobileTab === 'marketplace' && 'MARKETPLACE'}
                 </button>
                 <Button
-                  className={`mobile-tab-chat ${
-                    selectedMobileTab === 'chat' ? 'active' : ''
-                  }`}
+                  className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''
+                    }`}
                   onClick={e => {
                     this.setState({ selectedMobileTab: 'chat' });
                   }}
@@ -1248,7 +1826,8 @@ const mapDispatchToProps = {
   toggleDrawer,
   getGameTypeList,
   openGamePasswordModal,
-  getCustomerStatisticsData
+  getCustomerStatisticsData,
+  deductBalanceWhenStartBrainGame
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(JoinGame);

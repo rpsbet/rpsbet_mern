@@ -4,6 +4,7 @@ import {
   MSG_SUCCESS,
   MSG_WARNING,
   ITEM_QUERY,
+  PRODUCT_QUERY,
   ITEM_QUERY_ONE,
   MY_ITEM_QUERY,
   MY_ITEM_QUERY_ONE,
@@ -12,6 +13,7 @@ import {
   SET_CURRENT_PRODUCT_INFO,
   SET_CURRENT_PRODUCT_ID,
   ADD_TOTAL,
+  PRODUCT_TOTAL,
   MY_ADD_TOTAL
 } from '../types';
 
@@ -36,6 +38,36 @@ export const acQueryMyItem = (pagination, page, sortCriteria, itemType) => async
     if (data.success) {
       dispatch({ type: MY_ITEM_QUERY, payload: data.items });
       dispatch({ type: MY_ADD_TOTAL, payload: data });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+    dispatch({ type: LOADING_ITEM_TABLE, payload: false });
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+export const queryProducts = (pagination, page, id) => async (
+  dispatch,
+  getState
+) => {
+  dispatch({ type: PRODUCT_QUERY, payload: [] });
+  dispatch({ type: LOADING_ITEM_TABLE, payload: true });
+  let payload = {
+    pagination,
+    page,
+    id
+  };
+  dispatch({ type: PAGINATION_FOR_ITEM, payload });
+  let body = {};
+  body.pagination = getState().itemReducer.pagination;
+  body.page = getState().itemReducer.page;
+  body.id = getState().itemReducer.id;
+  try {
+    const { data } = await api.get('/item/products', { params: payload });
+    if (data.success) {
+      dispatch({ type: PRODUCT_QUERY, payload: data.items });
+      dispatch({ type: PRODUCT_TOTAL, payload: data });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
