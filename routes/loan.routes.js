@@ -247,7 +247,8 @@ async function calculateRemainingLoans(currentUser) {
 }
 async function checkLoanEligibility(currentUser) {
   const creditScore = currentUser.credit_score;
-  const rank = currentUser.totalWagered;
+  const rank = parseFloat(currentUser.totalWagered);
+  
   const accountCreatedAt = new Date(currentUser.created_at);
   const currentDate = new Date();
   const accountAgeInMilliseconds = currentDate - accountCreatedAt;
@@ -282,7 +283,6 @@ async function checkLoanEligibility(currentUser) {
 }
 
 
-
 router.post('/lend', auth, async (req, res) => {
   try {
     const { loan_id, lender, responseText } = req.body;
@@ -299,7 +299,6 @@ router.post('/lend', auth, async (req, res) => {
       });
     }
 
-
     if (!loan.lender) {
       return res.json({
         success: false,
@@ -315,16 +314,19 @@ router.post('/lend', auth, async (req, res) => {
       });
     }
 
-    if (!checkLoanEligibility(currentUser)) {
+    // Check loan eligibility
+    const isEligible = await checkLoanEligibility(currentUser);
+
+    if (!isEligible) {
       return res.json({
         success: false,
-        message: 'This account is currently not eligible for loaning this amount. Try again another time.',
+        message: 'This account is currently not eligible for loaning this amount. Try again another time or another amount.',
       });
     }
 
+    // Continue processing the loan if the user is eligible
 
     const lender_username = await User.findOne({ _id: lender });
-
 
     const loanPeriodInDays = Math.floor((Date.now() - loan.created_at.getTime()) / (1000 * 60 * 60 * 24));
 

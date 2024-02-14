@@ -3,6 +3,7 @@ import "./AvatarDropzone.css";
 import Avatar from "../../../components/Avatar";
 import { alertModal } from "../ConfirmAlerts";
 import { Button, TextField } from '@material-ui/core';
+import Compressor from 'compressorjs';
 
 class Dropzone extends Component {
   constructor(props) {
@@ -36,23 +37,23 @@ class Dropzone extends Component {
   onFileAdded = (evt) => {
     if (this.props.disabled) return;
     const file = evt.target.files[0];
-
+  
     const image = new Image();
     const reader = new FileReader();
-
+  
     reader.onload = (e) => {
       image.src = e.target.result;
-
+  
       image.onload = () => {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-
+  
         const maxWidth = 800;
         const maxHeight = 800;
-
+  
         let width = image.width;
         let height = image.height;
-
+  
         if (width > height) {
           if (width > maxWidth) {
             height *= maxWidth / width;
@@ -64,30 +65,39 @@ class Dropzone extends Component {
             height = maxHeight;
           }
         }
-
+  
         canvas.width = width;
         canvas.height = height;
-
+  
+        // Draw the image on the canvas with the new dimensions
         context.drawImage(image, 0, 0, width, height);
-
+  
+        // Convert the canvas content to a blob
         canvas.toBlob((blob) => {
-
-          if (blob.size > 4194304) {
+          // Compressing the image by reducing the quality (adjust the value as needed)
+          const compressedBlob = blob;
+          const compressedFile = new File([compressedBlob], file.name, {
+            type: file.type,
+            lastModified: Date.now(),
+          });
+  
+          if (compressedFile.size > 4194304) {
             alertModal(this.props.darkMode, "THIS ONE IS NOT VERY PURR-TY, TRY ANOTHER");
             return;
           }
-
-          this.previewImage(blob);
-
+  
+          this.previewImage(compressedBlob);
+  
           if (this.props.onFileAdded) {
-            this.props.onFileAdded(blob);
+            this.props.onFileAdded(compressedFile);
           }
         }, file.type);
       };
     };
-
+  
     reader.readAsDataURL(file);
   }
+  
 
   onDragOver = (event) => {
     event.preventDefault();
