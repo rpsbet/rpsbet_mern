@@ -61,22 +61,22 @@ class AllTransactionsModal extends Component {
     // Check if the scroll is at the bottom of the modal
     const isAtBottom = target.scrollHeight - target.scrollTop === target.clientHeight;
     if (isAtBottom) {
-        this.props.handleLoadMore();
+      this.props.handleLoadMore();
     }
-};
+  };
 
-copyToClipboard = (rowId) => {
-  navigator.clipboard.writeText(rowId)
-    .then(() => {
-      this.setState({ copiedRowId: rowId });
-      setTimeout(() => {
-        this.setState({ copiedRowId: null });
-      }, 1500); // Reset the copied row after 1.5 seconds
-    })
-    .catch(err => {
-      console.error('Failed to copy: ', err);
-    });
-};
+  copyToClipboard = (rowId) => {
+    navigator.clipboard.writeText(rowId)
+      .then(() => {
+        this.setState({ copiedRowId: rowId });
+        setTimeout(() => {
+          this.setState({ copiedRowId: null });
+        }, 1500); // Reset the copied row after 1.5 seconds
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+  };
 
 
 
@@ -115,12 +115,12 @@ copyToClipboard = (rowId) => {
       >
         <div
           className={isDarkMode ? 'dark_mode' : ''}
-          
+
 
         >
           <div className="modal-header">
             <h2 className="modal-title">
-            <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
+              <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
 
               ALL TRANSACTIONS</h2>
             <Button className="btn-close" onClick={close}>
@@ -129,7 +129,7 @@ copyToClipboard = (rowId) => {
           </div>
           <div className="modal-body" style={{ padding: 0 }}>
             <div className="game-logs-modal-container">
-              {oneDayProfit !== null ? (
+              {oneDayProfit === null ? (
                 <>
                   <div className="overflowX">
                     <div className="summary">
@@ -243,7 +243,7 @@ copyToClipboard = (rowId) => {
                         </div>
                       </div>
 
-                      <div style={{ marginLeft: '45px' }}className="summary-flex">
+                      <div style={{ marginLeft: '45px' }} className="summary-flex">
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                           <span>1-DAY</span>
                           <span
@@ -303,8 +303,8 @@ copyToClipboard = (rowId) => {
                       </TableHead>
                     </Table>
                   </div>
-                  <div className="game-logs-container"  onScroll={this.handleScroll}
-          style={{ maxHeight: '280px', overflowY: 'scroll' }}>
+                  <div className="game-logs-container" onScroll={this.handleScroll}
+                    style={{ maxHeight: '280px', overflowY: 'scroll' }}>
                     <Table className="game-logs-table">
                       <TableBody>
                         {transactions.length === 0 ? (
@@ -315,77 +315,77 @@ copyToClipboard = (rowId) => {
                           transactions.map((row, key) => (
                             row.user === this.props.user && (
                               <TableRow key={key}>
-                              <TableCell
-                                className={
-                                  'amount ' + (row.amount > 0 ? 'green' : 'red')
-                                }
-                              >
-                                {row.amount > 0 ? (
-                                  <>
-                                    {'+ '}
-                                    {convertToCurrency(row.amount, true)}
-                                  </>
-                                ) : (
-                                  <>
-                                    {'- '}
-                                    {convertToCurrency(
-                                      Math.abs(row.amount),
-                                      true
-                                    )}
-                                  </>
-                                )}
-                              </TableCell>
-                              <TableCell className="fromNow">
-                                {row.from_now}
-                              </TableCell>
-                              <TableCell className="description">
-                                {row.description}
-                              </TableCell>
-                              <TableCell className="hash">
-                                {row.hash ? (
-                                  <a
-                                    href={`https://etherscan.io/tx/${row.hash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Link />
+                                <TableCell
+                                  className={
+                                    'amount ' + (row.amount > 0 ? 'green' : 'red')
+                                  }
+                                >
+                                  {row.amount > 0 ? (
+                                    <>
+                                      {'+ '}
+                                      {convertToCurrency(row.amount, true)}
+                                    </>
+                                  ) : (
+                                    <>
+                                      {'- '}
+                                      {convertToCurrency(
+                                        Math.abs(row.amount),
+                                        true
+                                      )}
+                                    </>
+                                  )}
+                                </TableCell>
+                                <TableCell className="fromNow">
+                                  {row.from_now}
+                                </TableCell>
+                                <TableCell className="description">
+                                  {row.description}
+                                </TableCell>
+                                <TableCell className="hash">
+                                  {row.hash ? (
+                                    <a
+                                      href={`https://etherscan.io/tx/${row.hash}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <Link />
+                                    </a>
+                                  ) : row.room ? (
+                                    <a
+                                      href={`/join/${row.room}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <Link />
+                                    </a>
+                                  ) : (
+                                    // If there's no room value, don't display a link
+                                    ''
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <a style={{ padding: "2.5px", cursor: "pointer" }}>
+
+                                    <FaClipboard
+                                      className="clipboard-icon"
+                                      onClick={() => this.copyToClipboard(row._id)}
+                                    />
+                                    {this.state.copiedRowId === row._id && <span style={{ marginLeft: '5px' }}>Copied!</span>}
                                   </a>
-                                ) : row.room ? (
-                                  <a
-                                    href={`/join/${row.room}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Link />
-                                  </a>
-                                ) : (
-                                  // If there's no room value, don't display a link
-                                  ''
-                                )}
-                              </TableCell>
-                              <TableCell>
-<a style={{padding: "2.5px", cursor: "pointer"}}>
-  
-                  <FaClipboard
-                    className="clipboard-icon"
-                    onClick={() => this.copyToClipboard(row._id)}
-                    />
-                  {this.state.copiedRowId === row._id && <span style={{ marginLeft: '5px' }}>Copied!</span>}
-                    </a>
-                </TableCell>
-                            </TableRow>
-                            
+                                </TableCell>
+                              </TableRow>
+
                             )
                           ))
                         )}
-                       {tnxComplete && (
-                      <TableRow>
-                        <TableCell colSpan={4}>
-                          <div className="loading-spinner"></div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                   
+                        {tnxComplete && (
+                          <TableRow>
+                            <TableCell colSpan={4}>
+                              <div className="loading-spinner"></div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+
                       </TableBody>
                     </Table>
                   </div>

@@ -303,7 +303,6 @@ router.post('/username', auth, async (req, res) => {
 router.post('/get-info', async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.body._id });
-    console.log(user.avatar)
     res.json({
       success: true,
       query: req.query,

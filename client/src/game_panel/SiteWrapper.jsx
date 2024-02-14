@@ -107,7 +107,7 @@ import {
   setGlobalChat,
   updateBetResult
 } from '../redux/Logic/logic.actions';
-
+import { alertModal } from './modal/ConfirmAlerts.jsx';
 import { convertToCurrency } from '../util/conversion';
 
 LoadingOverlay.propTypes = undefined;
@@ -258,7 +258,7 @@ class SiteWrapper extends Component {
     const { transactions, tnxComplete, remainingLoans } = this.props;
 
     if (prevProps.transactions[0] !== transactions[0] && transactions[0].amount > 0) {
-      // console.log("D", transactions[0].amount)
+      console.log("D", transactions)
       if (!this.props.isLowGraphics) {
         this.playCoinsAnimation();
       }
@@ -546,30 +546,42 @@ class SiteWrapper extends Component {
     this.props.setSocket(socket);
   }
 
-  loadWeb3 = async () => {
-    try {
-      // Check if there is a provider available
-      if (window.ethereum) {
-        const web3 = new Web3(window.ethereum);
-        // Set the provider explicitly
-        web3.setProvider(window.ethereum);
+ loadWeb3 = async () => {
+  const {isDarkMode} = this.props;
+  try {
+    // Check if there is a provider available
+    if (window.ethereum) {
+      const web3 = new Web3(window.ethereum);
 
-        // Request accounts using the new Ethereum provider
-        const accounts = await web3.eth.requestAccounts();
-        this.setState({ web3, web3account: accounts[0] });
-
+      // Request accounts using the new Ethereum provider
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      
+      // Check if accounts are available
+      if (accounts.length > 0) {
+        // alertModal(isDarkMode, 'CONNECTED ETHEREUM ACCOUNT: ' + accounts[0].toUpperCase());
+        
         // Get ETH balance of the account
         const ethBalance = await web3.eth.getBalance(accounts[0]);
         const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
-        this.setState({ web3balance: tokenAmount });
+        
+        // Update state with the connected account and balance
+        this.setState({ 
+          web3: web3,
+          web3account: accounts[0],
+          web3balance: tokenAmount 
+        });
       } else {
-        console.error("No Ethereum provider found. Please install MetaMask or enable Ethereum in your browser.");
+        alertModal(isDarkMode, 'NO ACCOUNTS AVAILABLE. PLEASE MAKE SURE YOU\'RE LOGGED INTO METAMASK.');
       }
-    } catch (e) {
-      console.error("Error loading Web3:", e);
+    } else {
+      alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
     }
-  };
+  } catch (e) {
+    alertModal(isDarkMode, 'ERROR LOADING WEB3: ' + e.toString().toUpperCase());
+  }
+};
 
+  
 
   async componentDidMount() {
     try {

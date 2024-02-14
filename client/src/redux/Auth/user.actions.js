@@ -47,11 +47,9 @@ export const getUser = (is_reload, viewAll, loadMore, filterType, sortType, sear
 
     if (res.data.success) {
       const { user, unread_message_count, transactions, sevenDayProfit, oneDayProfit, allTimeProfit, message } = res.data;
-
       dispatch({ type: USER_LOADED, payload: user });
       dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: unread_message_count });
       dispatch({ type: TRANSACTION_LOADED, payload: transactions });
-
       if (sevenDayProfit !== undefined) {
         dispatch({ type: SET_SEVEN_DAY_PROFIT, payload: sevenDayProfit });
       }

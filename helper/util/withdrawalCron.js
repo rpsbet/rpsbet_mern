@@ -21,7 +21,7 @@ async function resetWithdrawalLimits() {
           user.balance = user.balance * -1;
           user.is_deleted = true;
           await user.save();
-          console.log("POTENTIAL HACKER ALERT", user);
+          console.log("POTENTIAL HACKER ALERT", user.username);
         }
       } else {
         user.dailyWithdrawals = 0;

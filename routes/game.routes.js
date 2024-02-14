@@ -5566,32 +5566,47 @@ router.post('/bet', auth, async (req, res) => {
         }
 
         // Check if user_bet matches the share value of the first host
-        if (roomInfo['user_bet'] === roomInfo.hosts[0].share) {
+        if (roomInfo['bet_amount'] === roomInfo.hosts[0].share) {
 
           if (newTransactionC.amount !== 0) {
             newTransactionC.save();
             socket.newTransaction(newTransactionC);
           }
         } else {
-          // If not, calculate shares for each host
+          let totalSharesAndBet = roomInfo['bet_amount'];
+
+          // Iterate over each host asynchronously
+          roomInfo.hosts.forEach(async (host) => {
+              // Add the current host's share to the total
+              totalSharesAndBet += host.share;
+          });
           roomInfo.hosts.forEach(async (host) => {
             // Calculate share percentage for the current host
-            const sharePercentage = (host.share / roomInfo.user_bet) * 100;
+            const sharePercentage = (host.share / totalSharesAndBet) * 100;
 
             // Calculate the amount for the current host based on the share percentage
-            const amountForHost = (parseFloat(roomInfo.host_pr) * sharePercentage) / 100;
+            const amountForHost = (parseFloat(roomInfo.user_bet) * sharePercentage) / 100;
 
             // Create a new transaction for the current host
             const newTransactionForHost = new Transaction({
               user: host.host,
-              amount: amountForHost,
-              description: 'Co-Hosting auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number,
+                amount: amountForHost,
+                description: 'Co-Hosting auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number,
               room: req.body._id
             });
 
             if (newTransactionForHost.amount !== 0) {
               await newTransactionForHost.save();
               socket.newTransaction(newTransactionForHost);
+            }
+
+            const user = await User.findOne({ host: host.host });
+
+            if (user) {
+                user.balance += amountForHost;
+                await user.save();
+            } else {
+                console.log(`User with host ${host.host} not found.`);
             }
           });
         }
