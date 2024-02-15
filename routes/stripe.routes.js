@@ -48,6 +48,7 @@ router.post('/secret', auth, async (req, res) => {
 
 router.post('/deposit_successed', auth, async (req, res) => {
   try {
+    console.log("de")
     const { amount, txtHash } = req.body;
 
     // Validate the input

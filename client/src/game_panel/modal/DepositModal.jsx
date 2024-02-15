@@ -55,6 +55,7 @@ class DepositModal extends Component {
   }
 
   async componentDidMount() {
+    console.log(this.state.balance, this.state.account, this.state.web3, this.props.gasfee)
     const params = { addressTo: this.state.account };
     this.props.setGasfee(params);
   }
@@ -65,51 +66,52 @@ class DepositModal extends Component {
       amount: e.target.value
     });
   };
-
   send = async () => {
     if (this.state.amount <= 0) {
       alertModal(this.props.isDarkMode, `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`);
       return;
     }
-
+  
     if (this.state.amount > this.state.balance) {
       alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
       return;
     }
+  
     try {
-      const web3 = this.state.web3;
-      const amountInWei = web3.utils.toWei(this.state.amount, 'ether');
-
+      const { web3 } = this.props; // Access web3 from props
+      const { account, amount } = this.state;
+      const amountInWei = web3.utils.toWei(amount.toString(), 'ether');
+  
       this.setState({ isLoading: true });
-
+  
       // Transaction initiate
-      web3.eth
-        .sendTransaction({
-          from: this.state.account,
-          to: adminWallet, // Replace with the recipient address
-          value: amountInWei
-        })
-        .then(async tx => {
-          // Proceed with the rest of the logic.
-          const result = await axios.post('/stripe/deposit_successed/', {
-            amount: this.state.amount,
-            txtHash: tx.transactionHash
-          });
-
-          if (result.data.success) {
-            alertModal(this.props.isDarkMode, result.data.message);
-            this.props.setBalance(result.data.balance);
-            this.props.addNewTransaction(result.data.newTransaction);
-            this.setState({ isLoading: false });
-            this.props.closeModal();
-          } else {
-            this.setState({ isLoading: false });
-            alertModal(
-              this.props.isDarkMode,
-              `Something went wrong. Please try again later or contact support.`
-            );
-          }
-        });
+      const tx = await web3.eth.sendTransaction({
+        from: account,
+        to: adminWallet, // Replace with the recipient address
+        value: amountInWei,
+        gasPrice: web3.utils.toWei('10', 'gwei'), // Adjust gas price as needed
+      });
+      
+  
+      // Proceed with the rest of the logic.
+      const result = await axios.post('/stripe/deposit_successed/', {
+        amount: this.state.amount,
+        txtHash: tx.transactionHash
+      });
+  
+      if (result.data.success) {
+        alertModal(this.props.isDarkMode, result.data.message);
+        this.props.setBalance(result.data.balance);
+        this.props.addNewTransaction(result.data.newTransaction);
+        this.setState({ isLoading: false });
+        this.props.closeModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(
+          this.props.isDarkMode,
+          `Something went wrong. Please try again later or contact support.`
+        );
+      }
     } catch (e) {
       console.log(e);
       this.setState({ isLoading: false });
@@ -117,7 +119,7 @@ class DepositModal extends Component {
       return;
     }
   };
-
+  
   render() {
     const { account } = this.state;
     const isConnected = !!account;
@@ -146,7 +148,7 @@ class DepositModal extends Component {
             <div className="modal-header">
               <h2 className="modal-title">    <Icon component={AccountBalanceWallet} className="mr-2" /> {/* Use Material-UI Icon component */}
 
-DEPOSIT</h2>
+                DEPOSIT</h2>
               <Button className="btn-close" onClick={this.props.closeModal}>
                 ×
               </Button>
@@ -262,14 +264,14 @@ DEPOSIT</h2>
                       </TableBody>
                     </Table>
                     <div className="disclaimer">
-                    <Typography>Receive within 1 - 3 minutes</Typography>
-                  </div>
+                      <Typography>Receive within 1 - 3 minutes</Typography>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="modal-footer">
-              <Button className="btn-submit" onClick={this.send}>
+              <Button className="btn-submit" onClick={() => {this.props.sendTransaction(this.state.amount)}}>
                 Deposit
               </Button>
               <Button className="btn-back" onClick={this.props.closeModal}>
