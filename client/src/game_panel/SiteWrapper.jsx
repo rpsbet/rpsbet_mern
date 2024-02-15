@@ -16,7 +16,6 @@ import {
 import Footer from './main_pages/Footer';
 import { Info } from '@material-ui/icons';
 import Countdown from 'react-countdown';
-import { ethers } from 'ethers';
 
 import SettingsModal from './modal/SettingsModal.jsx';
 import { connect } from 'react-redux';
@@ -87,7 +86,6 @@ import Store from './icons/Store.js';
 import StoreHover from './icons/StoreHover';
 import Bank from './icons/Bank.js';
 import BankHover from './icons/BankHover';
-import { tokenAddr, adminWallet } from '../config/index.js';
 
 import {
   setSocket,
@@ -196,8 +194,6 @@ class SiteWrapper extends Component {
       showPlayerModal: false,
       showHowToPlayModal: false,
       showMarketplaceModal: false,
-      isConnected: false,
-
       showBankModal: false,
       showLeaderboardsModal: false,
       isPlaying: false,
@@ -234,8 +230,6 @@ class SiteWrapper extends Component {
     };
     this.state.notifications = this.props.notification || {};
     this.initSocket = this.initSocket.bind(this);
-    this.sendTransaction = this.sendTransaction.bind(this);
-
   }
   static getDerivedStateFromProps(props, currentState) {
     const { balance, betResult, userName, notifications } = props;
@@ -326,29 +320,6 @@ class SiteWrapper extends Component {
   handleMouseLeave = () => {
     this.setState({ hoverTabIndex: -1 });
   };
-
-  async sendTransaction(amount) {
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-
-
-        // Convert amount from ether to wei
-        const ethAmountInWei = ethers.utils.parseEther(amount.toString());
-
-        const transaction = await signer.sendTransaction({
-            to: adminWallet,
-            value: ethAmountInWei
-        });
-
-        await transaction.wait();
-        console.log('Transaction sent successfully!');
-        // You can perform additional actions after sending the transaction
-    } catch (error) {
-        console.error('Error sending transaction:', error);
-    }
-}
-
 
   handleMute = () => {
     const audioElements = [
@@ -573,27 +544,46 @@ class SiteWrapper extends Component {
     socket.on('SET_GLOBAL_CHAT', this.props.setGlobalChat);
     this.props.setSocket(socket);
   }
-  loadWeb3 = async () => {
-    try {
-      if (window.ethereum) {
-        const web3 = new Web3(window.ethereum);
-        this.setState({ web3 });
-  
-        const accounts = await web3.eth.requestAccounts();
-        this.setState({ web3account: accounts[0] });
-  
+
+ loadWeb3 = async () => {
+  const {isDarkMode} = this.props;
+  try {
+    // console.log("Loading Web3");
+
+    // Check if there is a provider available
+    if (window.ethereum) {
+      // console.log("dd")
+      const web3 = new Web3(window.ethereum);
+
+      // Request accounts using the new Ethereum provider
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      
+      // Check if accounts are available
+      if (accounts.length > 0) {
+        // alertModal(isDarkMode, 'CONNECTED ETHEREUM ACCOUNT: ' + accounts[0].toUpperCase());
+        
         // Get ETH balance of the account
         const ethBalance = await web3.eth.getBalance(accounts[0]);
         const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
-        this.setState({ web3balance: tokenAmount });
+        // console.log(tokenAmount)
+        // Update state with the connected account and balance
+        this.setState({ 
+          web3: web3,
+          web3account: accounts[0],
+          web3balance: tokenAmount 
+        });
       } else {
-        console.error('MetaMask or other Ethereum provider not detected.');
+        alertModal(isDarkMode, 'NO ACCOUNTS AVAILABLE. PLEASE MAKE SURE YOU\'RE LOGGED INTO METAMASK.');
       }
-    } catch (error) {
-      console.error('Error loading Web3:', error);
+    } else {
+      alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
     }
-  };
-  
+    // console.log("Web3 loaded successfully");
+
+  } catch (e) {
+    alertModal(isDarkMode, 'ERROR LOADING WEB3: ' + e.toString().toUpperCase());
+  }
+};
 
 async componentDidMount() {
   try {
@@ -620,17 +610,29 @@ async componentDidMount() {
     setInterval(() => this.fetchData(), 2000);
     this.interval = setInterval(this.updateReminderTime, 3000);
 
+    // Set up Ethereum event listeners
     if (window.ethereum) {
-      window.ethereum.on('chainChanged', () => this.loadWeb3());
-      window.ethereum.on('accountsChanged', () => this.loadWeb3());
-    }
+      window.ethereum.on('chainChanged', () => {
+        // console.log("Chain changed");
+        this.loadWeb3();
+      });
+      window.ethereum.on('accountsChanged', () => {
+        // console.log("Accounts changed");
+        this.loadWeb3();
+      });
 
-    // Load Web3
-    this.loadWeb3();
+      // Load Web3 only once when the component mounts
+      this.loadWeb3();
+    } else {
+      alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
+    }
   } catch (error) {
     console.error(error);
   }
 }
+
+
+
 
   initializeAudio() {
     try {
@@ -1840,7 +1842,6 @@ async componentDidMount() {
                   modalIsOpen={showDepositModal}
                   closeModal={this.handleCloseDepositModal}
                   web3={web3}
-                  sendTransaction={this.sendTransaction}
                   balance={web3balance}
                   account={web3account}
                 />

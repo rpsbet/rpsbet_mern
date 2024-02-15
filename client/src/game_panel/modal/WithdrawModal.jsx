@@ -113,7 +113,7 @@ class WithdrawModal extends Component {
       });
 
       if (result.data.success) {
-        alertModal(this.props.isDarkMode, result.data.message);
+        alertModal(this.props.isDarkMode, result.data.message, '-cat');
         this.props.setBalance(result.data.balance);
         this.props.addNewTransaction(result.data.newTransaction);
         this.setState({ isLoading: false });

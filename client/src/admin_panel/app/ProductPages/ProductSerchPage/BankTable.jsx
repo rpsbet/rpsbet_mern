@@ -441,7 +441,7 @@ class BankTable extends Component {
                         if (row.lender !== this.props.user) {
                           openConfirmLoanModal();
                         } else {
-                          console.log(row.lender,  this.props.user)
+                          // console.log(row.lender,  this.props.user)
                           alertModal(
                             this.props.isDarkMode,
                             'THIS IS LITTER-ALLY YOURS ALREADY!'

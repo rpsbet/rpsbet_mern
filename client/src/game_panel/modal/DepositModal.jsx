@@ -6,6 +6,7 @@ import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
+import { ethers } from 'ethers';
 
 import {
   Button,
@@ -55,7 +56,6 @@ class DepositModal extends Component {
   }
 
   async componentDidMount() {
-    console.log(this.state.balance, this.state.account, this.state.web3, this.props.gasfee)
     const params = { addressTo: this.state.account };
     this.props.setGasfee(params);
   }
@@ -66,60 +66,78 @@ class DepositModal extends Component {
       amount: e.target.value
     });
   };
-  send = async () => {
-    if (this.state.amount <= 0) {
+
+  
+  async sendTransaction(amount) {
+    try {
+      
+
+        // Convert amount from ether to wei
+        const ethAmountInWei = ethers.utils.parseEther(amount.toString());
+
+        const transaction = await signer.sendTransaction({
+            to: adminWallet,
+            value: ethAmountInWei
+        });
+
+        await transaction.wait();
+        console.log('Transaction sent successfully!');
+        // You can perform additional actions after sending the transaction
+    } catch (error) {
+        console.error('Error sending transaction:', error);
+    }
+}
+
+send = async () => {
+  if (this.state.amount <= 0) {
       alertModal(this.props.isDarkMode, `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`);
       return;
-    }
-  
-    if (this.state.amount > this.state.balance) {
+  }
+
+  if (this.state.amount > this.state.balance) {
       alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
       return;
-    }
-  
-    try {
-      const { web3 } = this.props; // Access web3 from props
-      const { account, amount } = this.state;
-      const amountInWei = web3.utils.toWei(amount.toString(), 'ether');
-  
+  }
+
+  try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const amountInWei = ethers.utils.parseEther(this.state.amount.toString());
+
       this.setState({ isLoading: true });
-  
-      // Transaction initiate
-      const tx = await web3.eth.sendTransaction({
-        from: account,
-        to: adminWallet, // Replace with the recipient address
-        value: amountInWei,
-        gasPrice: web3.utils.toWei('10', 'gwei'), // Adjust gas price as needed
+
+      // Send transaction
+      const transaction = await signer.sendTransaction({
+          to: adminWallet,
+          value: amountInWei
       });
-      
-  
-      // Proceed with the rest of the logic.
-      const result = await axios.post('/stripe/deposit_successed/', {
-        amount: this.state.amount,
-        txtHash: tx.transactionHash
-      });
-  
+await transaction.wait();
+
+const result = await axios.post('/stripe/deposit_successed/', {
+  amount: this.state.amount,
+  txtHash: transaction.hash
+});
+
       if (result.data.success) {
-        alertModal(this.props.isDarkMode, result.data.message);
-        this.props.setBalance(result.data.balance);
-        this.props.addNewTransaction(result.data.newTransaction);
-        this.setState({ isLoading: false });
-        this.props.closeModal();
+          alertModal(this.props.isDarkMode, result.data.message, '-cat' );
+          this.props.setBalance(result.data.balance);
+          this.props.addNewTransaction(result.data.newTransaction);
+          this.setState({ isLoading: false });
+          this.props.closeModal();
       } else {
-        this.setState({ isLoading: false });
-        alertModal(
-          this.props.isDarkMode,
-          `Something went wrong. Please try again later or contact support.`
-        );
+          this.setState({ isLoading: false });
+          alertModal(
+              this.props.isDarkMode,
+              `Something went wrong. Please try again later or contact support.`
+          );
       }
-    } catch (e) {
-      console.log(e);
+  } catch (e) {
+      console.error(e);
       this.setState({ isLoading: false });
       alertModal(this.props.isDarkMode, `Failed transaction.`);
-      return;
-    }
-  };
-  
+  }
+};
+
   render() {
     const { account } = this.state;
     const isConnected = !!account;
@@ -271,7 +289,7 @@ class DepositModal extends Component {
               </div>
             </div>
             <div className="modal-footer">
-              <Button className="btn-submit" onClick={() => {this.props.sendTransaction(this.state.amount)}}>
+              <Button className="btn-submit" onClick={this.send}>
                 Deposit
               </Button>
               <Button className="btn-back" onClick={this.props.closeModal}>

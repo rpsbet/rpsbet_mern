@@ -8,12 +8,12 @@ const Receipt = require('../model/Receipt');
 const Transaction = require('../model/Transaction');
 const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
-const ethers = require('ethers');
-const { JsonRpcProvider } = require('@ethersproject/providers');
+const { ethers } = require('ethers');
 // const ganacheEndpoint = 'http://localhost:7544';
 // const provider = new JsonRpcProvider(ganacheEndpoint); 
-const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/3f535fe3cae1467a92d14001d9754c09');
-const walletKey = process.env.WK;
+const { JsonRpcProvider } = require('@ethersproject/providers');
+const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/5fedb9ded8fd4b149026d0140baacf98');
+const walletKey = process.env.wk;
 
 async function getWalletBalance(signer) {
   const walletAddress = await signer.getAddress();
@@ -48,7 +48,6 @@ router.post('/secret', auth, async (req, res) => {
 
 router.post('/deposit_successed', auth, async (req, res) => {
   try {
-    console.log("de")
     const { amount, txtHash } = req.body;
 
     // Validate the input
@@ -126,7 +125,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
     const balance = req.user.balance;
     const withdrawalLimit = req.user.dailyWithdrawals;
     if (balance < req.body.amount) {
-      console.log("Insufficient funds");
       return res.json({
         success: false,
         message: 'INSUFFICIENT FUNDS'
@@ -170,7 +168,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     // console.log("Calculating gas fees...");
 
-    // console.log(req.body.addressTo, req.body.amount);
     const signer = new ethers.Wallet(walletKey, provider);
 
     try {
@@ -264,6 +261,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
 
 router.post('/get_gasfee', auth, async (req, res) => {
+  // console.log("Qd", process.env)
   const amount = req.body.amount ? req.body.amount : "0";
   const amountTransfer = ethers.utils.parseUnits(amount, 'ether');
 

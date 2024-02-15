@@ -259,9 +259,9 @@ async function checkLoanEligibility(currentUser) {
 
   // Threshold categories
   const categories = [
-    { creditScoreThreshold: 900, rankThreshold: 0.1, accountAgeThresholdInDays: 3, maxAllowance: 0.0006 },
-    { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 1, maxAllowance: 0.001 },
-    { creditScoreThreshold: 950, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.005 },
+    { creditScoreThreshold: 900, rankThreshold: 0.1, accountAgeThresholdInDays: 3, maxAllowance: 0.001 },
+    { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 1, maxAllowance: 0.002 },
+    { creditScoreThreshold: 950, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.006 },
     { creditScoreThreshold: 950, rankThreshold: 3, accountAgeThresholdInDays: 60, maxAllowance: 0.01 },
     { creditScoreThreshold: 950, rankThreshold: 4, accountAgeThresholdInDays: 90, maxAllowance: 0.1 },
     { creditScoreThreshold: 1150, rankThreshold: 5, accountAgeThresholdInDays: 365, maxAllowance: 1 }
