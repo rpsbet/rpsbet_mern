@@ -471,7 +471,9 @@ router.get('/get-leaderboards', auth, async (req, res) => {
       'OFFICIALRPSGAME',
       'PimpedPistols',
       'NO BROKIES',
+      'SUPPORT',
       'twat',
+      'SYSTEM',
       'SHIBA'
     ];
 

@@ -2935,7 +2935,7 @@ router.post('/reCreate', auth, async (req, res) => {
 
 
 router.post('/bet', auth, async (req, res) => {
-  try { 
+  try {
     const tax = await SystemSetting.findOne({ name: 'commission' });
     const rain = await SystemSetting.findOne({ name: 'rain' });
     const platform = await SystemSetting.findOne({ name: 'platform' });
@@ -4867,7 +4867,7 @@ router.post('/bet', auth, async (req, res) => {
 
           if (
             (roomInfo['endgame_type'] &&
-            (roomInfo['host_pr'] + roomInfo.pr)) >= roomInfo['endgame_amount']
+              (roomInfo['host_pr'] + roomInfo.pr)) >= roomInfo['endgame_amount']
           ) {
             // console.log("endgame exec", roomInfo['host_pr']);
 
@@ -5180,52 +5180,92 @@ router.post('/bet', auth, async (req, res) => {
         newGameLog.selected_box = selected_box;
       } else if (roomInfo['game_type']['game_type_name'] === 'Blackjack') {
 
-
+        console.log("****NEW BET******")
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         const score = parseInt(req.body.score);
         let score_host = parseInt(req.body.score_host);
-        // console.log("score: ", score);
-        // console.log("score_host: ", score_host);
+        console.log("score: ", score);
+        console.log("score_host: ", score_host);
+        let cardsArray = [];
+        if (score === 6198) {
+          const result = updateHostScore(score_host, score);
+          console.log("result: ", result);
+          score_host = result.newScoreHost;
+          console.log("currentScoreHost: ", score_host);
+          cardsArray.push({ card: result.card, score: score_host });
+          if (score === 6198 && score_host === 21) {
+            console.log("split", score, score_host)
 
-       if (score === 6198) {
-        newGameLog.game_result = 1;
+            newGameLog.game_result = 0;
 
+            newTransactionJ.amount += parseFloat(req.body.bet_amount);
+            message.message =
+              'Split ' +
+              convertToCurrency(req.body.bet_amount * 2) +
+              ' in ' +
+              roomInfo['game_type']['short_name'] +
+              '-' +
+              roomInfo['room_number'];
+            if (req.io.sockets) {
+              req.io.sockets.emit('CARDS_ARRAY', {
+                cardsArray: cardsArray
+              });
+            }
+          } else {
+            newGameLog.game_result = 1;
+            console.log("blackjack", score)
 
-        newTransactionJ.amount += ((parseFloat(req.body.bet_amount + (parseFloat(req.body.bet_amount) * 0.5)))* ((100 - commission) / 100));
-        message.message =
-          'Win ' +
-          convertToCurrency(parseFloat(req.body.bet_amount + (parseFloat(req.body.bet_amount) * 0.5))) +
-          ' in ' +
-          roomInfo['game_type']['short_name'] +
-          '-' +
-          roomInfo['room_number'];
+            newTransactionJ.amount += (((parseFloat(req.body.bet_amount * 2) + (parseFloat(req.body.bet_amount) * 0.5))) * ((100 - commission) / 100));
+            message.message =
+              'Win ' +
+              convertToCurrency(parseFloat(req.body.bet_amount + (parseFloat(req.body.bet_amount) * 0.5))) +
+              ' in ' +
+              roomInfo['game_type']['short_name'] +
+              '-' +
+              roomInfo['room_number'];
 
-         // update rain
-         rain.value =
-         parseFloat(rain.value) +
-         roomInfo['bet_amount'] * 2 * ((commission - 0.5) / 100);
+            roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - ((parseFloat(req.body.bet_amount) + (parseFloat(req.body.bet_amount) * 0.5)));
 
-       rain.save();
+            if (req.io.sockets) {
+              req.io.sockets.emit('UPDATED_BANKROLL', {
+                bankroll: roomInfo['user_bet']
+              });
+            }
 
-       // update platform stat (0.5%)
-       platform.value =
-         parseFloat(platform.value) +
-         roomInfo['bet_amount'] * 2 * (tax.value / 100);
-       platform.save();
+            // update rain
+            rain.value =
+              parseFloat(rain.value) +
+              roomInfo['bet_amount'] * 2 * ((commission - 0.5) / 100);
 
-       if (req.io.sockets) {
-         req.io.sockets.emit('UPDATE_RAIN', {
-           rain: rain.value
-         });
-       }
-       } else if (score <= 21) {
+            rain.save();
+
+            // update platform stat (0.5%)
+            platform.value =
+              parseFloat(platform.value) +
+              roomInfo['bet_amount'] * 2 * (tax.value / 100);
+            platform.save();
+
+            if (req.io.sockets) {
+              req.io.sockets.emit('UPDATE_RAIN', {
+                rain: rain.value
+              });
+            }
+            if (req.io.sockets) {
+              req.io.sockets.emit('CARDS_ARRAY', {
+                cardsArray: cardsArray
+              });
+            }
+
+          }
+        } else if (score <= 21) {
+
           const allBetItems = await BjBetItem.find({
             room: new ObjectId(req.body._id)
           });
           const host_bj = predictNextBj(allBetItems, score_host);
           if (host_bj === 'hit') {
             let currentScoreHost = score_host;
-            let cardsArray = [];
+
 
             // Loop to continue hitting until the host busts or stands
             while (currentScoreHost < 21 && predictNextBj(allBetItems, currentScoreHost) === 'hit') {
@@ -5235,13 +5275,15 @@ router.post('/bet', auth, async (req, res) => {
               cardsArray.push({ card: result.card, score: currentScoreHost });
               if (currentScoreHost >= score) {
                 break;
-            }
+              }
             }
 
             if ((score > currentScoreHost) || currentScoreHost > 21) {
               newGameLog.game_result = 1;
+              console.log("win", score, currentScoreHost)
 
-              newTransactionJ.amount += (parseFloat(req.body.bet_amount)* ((100 - commission) / 100));
+              newTransactionJ.amount += (parseFloat(req.body.bet_amount * 2) * ((100 - commission) / 100));
+              console.log("2")
               message.message =
                 'Win ' +
                 convertToCurrency(req.body.bet_amount * 2) +
@@ -5250,25 +5292,46 @@ router.post('/bet', auth, async (req, res) => {
                 '-' +
                 roomInfo['room_number'];
 
-                 // update rain
-          rain.value =
-          parseFloat(rain.value) +
-          roomInfo['bet_amount'] * 2 * ((commission - 0.5) / 100);
+              roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - parseFloat(req.body.bet_amount);
+              console.log("3")
 
-        rain.save();
+              if (req.io.sockets) {
+                req.io.sockets.emit('UPDATED_BANKROLL', {
+                  bankroll: roomInfo['user_bet']
+                });
+              }
 
-        // update platform stat (0.5%)
-        platform.value =
-          parseFloat(platform.value) +
-          roomInfo['bet_amount'] * 2 * (tax.value / 100);
-        platform.save();
+              console.log("4")
 
-        if (req.io.sockets) {
-          req.io.sockets.emit('UPDATE_RAIN', {
-            rain: rain.value
-          });
-        }
+              // update rain
+              rain.value =
+                parseFloat(rain.value) +
+                roomInfo['bet_amount'] * 2 * ((commission - 0.5) / 100);
+
+              rain.save();
+
+              // update platform stat (0.5%)
+              platform.value =
+                parseFloat(platform.value) +
+                roomInfo['bet_amount'] * 2 * (tax.value / 100);
+              platform.save();
+
+              if (req.io.sockets) {
+                req.io.sockets.emit('UPDATE_RAIN', {
+                  rain: rain.value
+                });
+              }
+
+              if (req.io.sockets) {
+                req.io.sockets.emit('CARDS_ARRAY', {
+                  cardsArray: cardsArray
+                });
+              }
+              console.log("5")
+
             } else if ((score === currentScoreHost)) {
+              console.log("split", score, currentScoreHost)
+
               newGameLog.game_result = 0;
 
               newTransactionJ.amount += parseFloat(req.body.bet_amount);
@@ -5279,29 +5342,75 @@ router.post('/bet', auth, async (req, res) => {
                 roomInfo['game_type']['short_name'] +
                 '-' +
                 roomInfo['room_number'];
+              if (req.io.sockets) {
+                req.io.sockets.emit('CARDS_ARRAY', {
+                  cardsArray: cardsArray
+                });
+              }
             } else {
-              newGameLog.game_result = -1;
+              console.log("loss on host win", score, currentScoreHost)
 
-              newTransactionJ.amount += parseFloat(req.body.bet_amount);
+              newGameLog.game_result = -1;
+              // lost bj
+              roomInfo.host_pr =
+                (parseFloat(roomInfo.host_pr) || 0) +
+                parseFloat(req.body.bet_amount);
+              roomInfo.user_bet =
+                (parseFloat(roomInfo.user_bet) || 0) +
+                parseFloat(req.body.bet_amount);
+
+              if (
+                roomInfo['endgame_type'] &&
+                roomInfo['user_bet'] >= roomInfo['endgame_amount']
+              ) {
+                console.log("payout", roomInfo['user_bet'])
+
+                newTransactionC.amount +=
+                  parseFloat(roomInfo['user_bet']) -
+                  parseFloat(roomInfo['endgame_amount']);
+
+                const newGameLogC = new GameLog({
+                  room: roomInfo,
+                  creator: roomInfo['creator'],
+                  joined_user: roomInfo['creator'],
+                  game_type: roomInfo['game_type'],
+                  bet_amount: roomInfo['host_pr'],
+                  user_bet: roomInfo['user_bet'],
+                  is_anonymous: roomInfo['is_anonymous'],
+                  game_result: 3
+                });
+                await newGameLogC.save();
+                roomInfo['user_bet'] = parseFloat(
+                  roomInfo['endgame_amount']
+                ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+              }
+
+              if (req.io.sockets) {
+                req.io.sockets.emit('UPDATED_BANKROLL', {
+                  bankroll: roomInfo['user_bet']
+                });
+              }
+
               message.message =
-                'loss ' +
-                convertToCurrency(req.body.bet_amount * 2) +
+                'Lost ' +
+                convertToCurrency(req.body.bet_amount) +
                 ' in ' +
                 roomInfo['game_type']['short_name'] +
                 '-' +
                 roomInfo['room_number'];
-            }
-
-            if (req.io.sockets) {
-              req.io.sockets.emit('CARDS_ARRAY', {
-                cardsArray: cardsArray
-              });
+              if (req.io.sockets) {
+                req.io.sockets.emit('CARDS_ARRAY', {
+                  cardsArray: cardsArray
+                });
+              }
             }
           }
 
         } else {
-          newGameLog.game_result = -1;
+          console.log("loss on self buss", score)
 
+          newGameLog.game_result = -1;
+          // lost bj
           roomInfo.host_pr =
             (parseFloat(roomInfo.host_pr) || 0) +
             parseFloat(req.body.bet_amount);
@@ -5346,6 +5455,12 @@ router.post('/bet', auth, async (req, res) => {
             roomInfo['game_type']['short_name'] +
             '-' +
             roomInfo['room_number'];
+
+          if (req.io.sockets) {
+            req.io.sockets.emit('CARDS_ARRAY', {
+              cardsArray: cardsArray
+            });
+          }
         }
 
         // bet_item.joiner = req.user;
@@ -5531,18 +5646,18 @@ router.post('/bet', auth, async (req, res) => {
 
       if (roomInfo['game_type']['game_type_name'] === 'Brain Game') {
         req.user['balance'] += roomInfo['bet_amount'];
-    
+
         const brain_game_type = await BrainGameType.findOne({ _id: roomInfo.brain_game_type });
-    
+
         if (brain_game_type) {
-            brain_game_type.plays++;
-            await brain_game_type.save(); // Save the changes to the document
+          brain_game_type.plays++;
+          await brain_game_type.save(); // Save the changes to the document
         }
-    }
-    
-    // Save the changes to the user document
-    await req.user.save();
-    
+      }
+
+      // Save the changes to the user document
+      await req.user.save();
+
       newGameLog.save();
       await roomInfo.save();
 
@@ -5577,8 +5692,8 @@ router.post('/bet', auth, async (req, res) => {
 
           // Iterate over each host asynchronously
           roomInfo.hosts.forEach(async (host) => {
-              // Add the current host's share to the total
-              totalSharesAndBet += host.share;
+            // Add the current host's share to the total
+            totalSharesAndBet += host.share;
           });
           roomInfo.hosts.forEach(async (host) => {
             // Calculate share percentage for the current host
@@ -5590,8 +5705,8 @@ router.post('/bet', auth, async (req, res) => {
             // Create a new transaction for the current host
             const newTransactionForHost = new Transaction({
               user: host.host,
-                amount: amountForHost,
-                description: 'Co-Hosting auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number,
+              amount: amountForHost,
+              description: 'Co-Hosting auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number,
               room: req.body._id
             });
 
@@ -5603,10 +5718,10 @@ router.post('/bet', auth, async (req, res) => {
             const user = await User.findOne({ host: host.host });
 
             if (user) {
-                user.balance += amountForHost;
-                await user.save();
+              user.balance += amountForHost;
+              await user.save();
             } else {
-                console.log(`User with host ${host.host} not found.`);
+              console.log(`User with host ${host.host} not found.`);
             }
           });
         }

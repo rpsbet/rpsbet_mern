@@ -6,6 +6,19 @@ const OwnerSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
+    avatar: {
+        type: String, // Assuming the avatar is a URL or file path
+        default: '' // Provide a default avatar URL if necessary
+    },
+    rank: {
+        type: Number, // Or you can use Number if rank is represented by a numerical value
+        default: '' // Default rank if necessary
+    },
+    accessory: {
+        type: String, // Assuming accessory is represented as a string
+        default: '' // Default accessory if necessary
+    },
+
     count: {
         type: Number,
         default: 0
