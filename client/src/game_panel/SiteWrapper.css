@@ -9,6 +9,13 @@
 button#recentSearches {
   height: 20px !important;
 }
+button#recentSearches span {
+  text-overflow: ellipsis;
+  max-width: 100px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+}
 
 .rank-badge {
   position: relative;

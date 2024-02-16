@@ -600,7 +600,6 @@ async componentDidMount() {
       this.fetchData(),
     ]);
     this.setState({ websiteLoading: false });
-
     // Set selectedMainTabIndex based on the current URL
     if (currentUrl.includes('create')) {
       this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });

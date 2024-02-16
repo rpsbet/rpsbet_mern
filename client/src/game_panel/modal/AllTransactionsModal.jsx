@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
-import { convertToCurrency } from '../../util/conversion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FaClipboard } from 'react-icons/fa';
-
+import { convertToCurrency } from '../../util/conversion';
 import {
   faSort,
   faSearch,
@@ -105,7 +104,6 @@ class AllTransactionsModal extends Component {
       handleFilterClick,
       handleFilterClose
     } = this.props;
-
     return (
       <Modal
         isOpen={modalIsOpen}
@@ -129,7 +127,7 @@ class AllTransactionsModal extends Component {
           </div>
           <div className="modal-body" style={{ padding: 0 }}>
             <div className="game-logs-modal-container">
-              {oneDayProfit === null ? (
+              {transactions !== null ? (
                 <>
                   <div className="overflowX">
                     <div className="summary">
@@ -309,84 +307,55 @@ class AllTransactionsModal extends Component {
                       <TableBody>
                         {transactions.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan="4">...</TableCell>
+                            <TableCell colSpan={5}>No transactions found.</TableCell>
                           </TableRow>
                         ) : (
-                          transactions.map((row, key) => (
-                            row.user === this.props.user && (
-                              <TableRow key={key}>
-                                <TableCell
-                                  className={
-                                    'amount ' + (row.amount > 0 ? 'green' : 'red')
-                                  }
-                                >
-                                  {row.amount > 0 ? (
-                                    <>
-                                      {'+ '}
-                                      {convertToCurrency(row.amount, true)}
-                                    </>
-                                  ) : (
-                                    <>
-                                      {'- '}
-                                      {convertToCurrency(
-                                        Math.abs(row.amount),
-                                        true
-                                      )}
-                                    </>
-                                  )}
-                                </TableCell>
-                                <TableCell className="fromNow">
-                                  {row.from_now}
-                                </TableCell>
-                                <TableCell className="description">
-                                  {row.description}
-                                </TableCell>
-                                <TableCell className="hash">
-                                  {row.hash ? (
-                                    <a
-                                      href={`https://etherscan.io/tx/${row.hash}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Link />
-                                    </a>
-                                  ) : row.room ? (
-                                    <a
-                                      href={`/join/${row.room}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Link />
-                                    </a>
-                                  ) : (
-                                    // If there's no room value, don't display a link
-                                    ''
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <a style={{ padding: "2.5px", cursor: "pointer" }}>
-
-                                    <FaClipboard
-                                      className="clipboard-icon"
-                                      onClick={() => this.copyToClipboard(row._id)}
-                                    />
-                                    {this.state.copiedRowId === row._id && <span style={{ marginLeft: '5px' }}>Copied!</span>}
+                          transactions.map((transaction, index) => (
+                            <TableRow key={transaction._id}>
+                              <TableCell className={'amount ' + (transaction.amount > 0 ? 'green' : 'red')}>
+                                {transaction.amount > 0 ? <> + {convertToCurrency(transaction.amount)}</> : <> + {convertToCurrency(Math.abs(transaction.amount))}</>}
+                              </TableCell>
+                              <TableCell className="fromNow">
+                                {transaction.from_now}
+                              </TableCell>
+                              <TableCell className="description">
+                                {transaction.description}
+                              </TableCell>
+                              <TableCell className="hash">
+                                {transaction.hash ? (
+                                  <a href={`https://etherscan.io/tx/${transaction.hash}`} target="_blank" rel="noopener noreferrer">
+                                    <Link />
                                   </a>
-                                </TableCell>
-                              </TableRow>
-
-                            )
+                                ) : transaction.room ? (
+                                  <a href={`/join/${transaction.room}`} target="_blank" rel="noopener noreferrer">
+                                    <Link />
+                                  </a>
+                                ) : (
+                                  // If there's no room value, don't display a link
+                                  ''
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <a style={{ padding: '2.5px', cursor: 'pointer' }}>
+                                  <FaClipboard
+                                    className="clipboard-icon"
+                                    onClick={() => this.copyToClipboard(transaction._id)}
+                                  />
+                                  {this.state.copiedRowId === transaction._id && <span style={{ marginLeft: '5px' }}>Copied!</span>}
+                                </a>
+                              </TableCell>
+                            </TableRow>
                           ))
                         )}
                         {tnxComplete && (
                           <TableRow>
-                            <TableCell colSpan={4}>
+                            <TableCell colSpan={5}>
                               <div className="loading-spinner"></div>
                             </TableCell>
                           </TableRow>
                         )}
-
                       </TableBody>
+
                     </Table>
                   </div>
                 </>

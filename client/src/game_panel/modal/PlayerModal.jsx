@@ -260,7 +260,7 @@ class PlayerModal extends Component {
 
   async componentDidMount() {
     await this.fetchStatisticsData();
-    await this.props.queryProducts(1, 10, this.state._id);
+    await this.props.queryProducts(127, 1, this.state._id);
   }
 
   fetchStatisticsData = async () => {
@@ -273,8 +273,8 @@ class PlayerModal extends Component {
     );
     const userData = await this.props.acGetCustomerInfo(
       this.props.selectedCreator
-      );
-      // console.log(userData)
+    );
+    // console.log(userData)
 
     this.setState({
       ...result,
@@ -349,7 +349,7 @@ class PlayerModal extends Component {
 
   render() {
     const { isLoading } = this.state;
-    const { loading, productArray, isLowGraphics} = this.props;
+    const { loading, productArray, isLowGraphics } = this.props;
     return (
       <>
         {isLoading && (
@@ -437,43 +437,43 @@ class PlayerModal extends Component {
                     />
                   </div>
                 )}
-                
-<MarketplaceContainer>
-<h5>INVENTORY</h5>
-                {!loading ? (
-                  <ProductGrid>
+
+                <MarketplaceContainer>
+                  <h5>INVENTORY</h5>
+                  {!loading ? (
+                    <ProductGrid>
 
 
-                    {productArray.map(row => (
-                      <ProductCard
-                        key={row._id}
-                      
-                      >
-                        {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
-                          renderLottieAnimation(row.image, isLowGraphics)
-                        ) : (
-                          <ProductImage src={row.image} alt={row.productName} />
-                        )}
-                        {row.item_type === '653ee81117c9f5ee2124564b' ? (
-                          <CommissionPower>{row.CP}</CommissionPower>
-                        ) : (
-                          ''
-                        )}
+                      {productArray.map(row => (
+                        <ProductCard
+                          key={row._id}
 
-                        <ProductInfo>
-                          <ProductName>{row.productName}</ProductName>
-                         
-                        </ProductInfo>
+                        >
+                          {row.image && renderLottieAnimation(row.image, isLowGraphics) ? (
+                            renderLottieAnimation(row.image, isLowGraphics)
+                          ) : (
+                            <ProductImage src={row.image} alt={row.productName} />
+                          )}
+                          {row.item_type === '653ee81117c9f5ee2124564b' ? (
+                            <CommissionPower>{row.CP}</CommissionPower>
+                          ) : (
+                            ''
+                          )}
+
+                          <ProductInfo>
+                            <ProductName>{row.productName}</ProductName>
+
+                          </ProductInfo>
 
 
-                      </ProductCard>
-                    ))}
-                  </ProductGrid>
-                ) : (
-                  <LinearContainer>
-                    <LinearProgress color="secondary" />
-                  </LinearContainer>
-                )}
+                        </ProductCard>
+                      ))}
+                    </ProductGrid>
+                  ) : (
+                    <LinearContainer>
+                      <LinearProgress color="secondary" />
+                    </LinearContainer>
+                  )}
                 </MarketplaceContainer>
               </div>
               {this.props.userInfo._id !== this.state._id ? (

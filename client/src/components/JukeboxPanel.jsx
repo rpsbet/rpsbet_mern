@@ -420,7 +420,7 @@ const JukeboxPanel = ({
           />
           <QueueList />
         </div>
-          <div style={{display: "block", width:"100%"}}>
+          <div style={{display: "block", width:"100%", overflow: "hidden"}}>
           {recentSearches.map((search, index) => (
             <Button id="recentSearches" style={{fontSize: "0.5em", borderRadius:"30px"}} key={index} onClick={() => handleRecentSearch(search)}>
               {search}

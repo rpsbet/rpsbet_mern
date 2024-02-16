@@ -336,44 +336,47 @@ class Blackjack extends Component {
         break;
     }
   }
-
   dealRemaining = (score) => {
-    // Assuming cards_host and cardsArray are state variables in your component
-    const updatedCardsHost = [...this.state.cards_host]; // Make a copy of the array
-    const cardsArray = this.state.cardsArray;
-
-    // Set the visibility of all indexes to true (remove 'card-hidden' class)
-    const updatedCardVisibility = Array(this.state.cards_host.length).fill(true);
-
-    if (score <= 21) {
-      updatedCardsHost[1] = cardsArray[0].card;
-
+    // Ensure cardsArray is properly initialized and contains data
+    const cardsArray = this.state.cardsArray || [];
+  
+    if (score <= 21 && cardsArray.length > 0) {
+      // Make a copy of cards_host and initialize visibility array
+      const updatedCardsHost = [...this.state.cards_host];
+      const updatedCardVisibility = Array(this.state.cards_host.length).fill(true);
+  
+      // Set the second card of the host
+      updatedCardsHost[1] = cardsArray[0]?.card;
+  
+      // Ensure visibility is true for index > 2
       updatedCardVisibility.forEach((visibility, index) => {
         if (index > 2) {
-          updatedCardVisibility[index] = true; // Ensure visibility is true for index > 2
+          updatedCardVisibility[index] = true;
         }
       });
-
-      // Update the state to trigger a re-render with the updated cards_host and visibility
+  
+      // Update state with score_host, cards_host, and cardVisibility
       this.setState({
-        score_host: cardsArray[cardsArray.length - 1].score,
+        score_host: cardsArray[cardsArray.length - 1]?.score,
         cards_host: updatedCardsHost,
         cardVisibility: updatedCardVisibility,
         disabledButtons: true
       });
-
+  
       // Introduce a delay between rendering each card
       const delay = 1000; // Adjust the delay as needed (in milliseconds)
       let cardIndex = 1;
-
+  
       const drawCardInterval = setInterval(() => {
         if (cardIndex < cardsArray.length) {
-          updatedCardsHost.push(cardsArray[cardIndex].card);
-
+          // Push the next card to the host's cards array
+          updatedCardsHost.push(cardsArray[cardIndex]?.card);
+  
+          // Update state with the new cards array
           this.setState({
             cards_host: updatedCardsHost,
           });
-
+  
           cardIndex++;
         } else {
           clearInterval(drawCardInterval); // Stop the interval when all cards are drawn
@@ -381,6 +384,7 @@ class Blackjack extends Component {
       }, delay);
     }
   };
+  
 
 
 
@@ -751,7 +755,8 @@ class Blackjack extends Component {
       score: 0,
       score_host: 0,
       is_started: false,
-      disabledButtons: true
+      disabledButtons: true,
+      blackjack: false
     });
   };
 
@@ -768,49 +773,75 @@ class Blackjack extends Component {
       deductBalanceWhenStartBlackjack
     } = this.props;
     const { bet_amount, bankroll, is_started, cards, cards_host } = this.state;
-
+  
     if (cards || cards_host !== null) {
       this.resetGame();
     }
-
+  
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-
+  
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-
+  
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-
+  
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
-
+  
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-    this.setState({ disabledButtons: false, });
-
-
-    if (
-      deductBalanceWhenStartBlackjack({
-        bet_amount: bet_amount
-      })
-    ) {
-      this.setState({
-        is_started: true
-      });
+  
+    if (localStorage.getItem('hideConfirmModal') === 'true') {
+      if (is_private === true && passwordCorrect !== true) {
+        openGamePasswordModal();
+      } else {
+        deductBalanceWhenStartBlackjack({
+          bet_amount: bet_amount
+        });
+        this.setState({
+          is_started: true,
+          disabledButtons: false
+        });
+        this.dealJoiner();
+        this.dealHost();
+      }
+    } else {
+      confirmModalCreate(
+        isDarkMode,
+        'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
+        'Yes',
+        'Cancel',
+        async () => {
+          if (is_private === true && passwordCorrect !== true) {
+            openGamePasswordModal();
+          } else {
+            deductBalanceWhenStartBlackjack({
+              bet_amount: bet_amount
+            });
+            this.setState({
+              is_started: true,
+              disabledButtons: false
+            });
+            this.dealJoiner();
+            this.dealHost();
+          }
+        }
+      );
     }
-    this.dealJoiner();
-    this.dealHost();
-
+  
+    
   };
+  
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
     this.setState(
       {
         bet_amount: roundedBetAmount
@@ -820,6 +851,7 @@ class Blackjack extends Component {
       }
     );
   };
+
 
   handleHit = () => {
     this.hit();
@@ -858,12 +890,11 @@ class Blackjack extends Component {
     }
   };
 
-
   handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.state.balance * 100) / 100; // Round down to two decimal places
+    const maxBetAmount = this.state.balance;
     this.setState(
       {
-        bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
+        bet_amount: maxBetAmount
       },
       () => {
         document.getElementById('betamount').focus();
@@ -1105,7 +1136,7 @@ class Blackjack extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(
-                        updateDigitToPoint2(bet_amount * 2 /* * 0.95 */)
+                        (bet_amount * 2) 
                       )}
                     </div>
                   </div>
@@ -1343,7 +1374,7 @@ class Blackjack extends Component {
               handle2xButtonClick={this.handle2xButtonClick}
               handleHalfXButtonClick={this.handleHalfXButtonClick}
               handleMaxButtonClick={this.handleMaxButtonClick}
-              onChange={this.handleChange}
+              onChangeState={this.onChangeState}
               isDarkMode={isDarkMode}
             />
             <div style={{ marginBottom: "60px" }}>

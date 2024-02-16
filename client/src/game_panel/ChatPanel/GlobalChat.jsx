@@ -256,9 +256,9 @@ class GlobalChat extends Component {
                 <div
                   key={key}
                   className={`chat-line ${selectedMessage === chat ? 'selected' : ''} ${
-                    chat.sender === 'SYSTEM ANNOUNCEMENT' ? 'special-message' : ''
+                    chat.sender === 'SYSTEM' ? 'special-message' : ''
                   } ${
-                    chat.sender === 'SYSTEM ANNOUNCEMENT' && chat.message.includes('rent') ? 'special-message-rent  ' : ''
+                    chat.sender === 'SYSTEM' && chat.message.includes('rent') ? 'special-message-rent  ' : ''
                   }`}
                   onClick={() => this.handleMessageClick(chat)}
                 >

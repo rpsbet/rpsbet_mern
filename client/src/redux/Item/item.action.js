@@ -52,7 +52,7 @@ export const queryProducts = (pagination, page, id) => async (
   getState
 ) => {
   dispatch({ type: PRODUCT_QUERY, payload: [] });
-  dispatch({ type: LOADING_ITEM_TABLE, payload: true });
+  // dispatch({ type: LOADING_ITEM_TABLE, payload: true });
   let payload = {
     pagination,
     page,
@@ -71,7 +71,7 @@ export const queryProducts = (pagination, page, id) => async (
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
-    dispatch({ type: LOADING_ITEM_TABLE, payload: false });
+    // dispatch({ type: LOADING_ITEM_TABLE, payload: false });
   } catch (error) {
     console.log('error***', error);
     dispatch({ type: MSG_WARNING, payload: error });
