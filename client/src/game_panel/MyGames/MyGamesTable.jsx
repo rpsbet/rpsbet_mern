@@ -796,7 +796,7 @@ class MyGamesTable extends Component {
               className="btn-create-room"
               onClick={this.handleCreateBtnClicked}
             >
-              CREATE BATTLE
+              CREATE
             </Button>
           </div>
         </div>
@@ -824,7 +824,7 @@ class MyGamesTable extends Component {
                 <Lottie options={defaultOptions} width={50} />
                 <span>
                   SELECT A GAME <br />
-                  AND CLICK "CREATE BATTLE"
+                  AND CLICK "CREATE"
                 </span>
               </div>
             ) : (

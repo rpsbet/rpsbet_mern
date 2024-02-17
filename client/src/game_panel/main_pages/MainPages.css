@@ -3195,6 +3195,22 @@ position: sticky !important;
 }
 @media (max-width: 1023px) {
 
+
+  .boxes-panel {
+    display: flex;
+    flex-wrap: nowrap; /* Prevent wrapping to keep items in a single row */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: hidden; /* Hide vertical overflow */
+    -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+    max-width: 100%; /* Ensure it takes up the available width */
+    padding: 10px; /* Adjust padding */
+    gap: 0.4rem; /* Set gap between items */
+  }
+
+  .boxes-panel > * {
+    flex: 0 0 auto; /* Let items shrink and grow as necessary */
+    min-width: calc(33.33% - 0.8rem); /* Ensure equal width for each item */
+  }
   .mobile-only a.user-link img {
     width: 16px;
     height: 16px;
@@ -3459,6 +3475,10 @@ position: sticky !important;
   .create-room-btn-panel {
     position: initial;
     text-align: right;
+    margin-top: 60px;
+  }
+  .game-type-panel {
+    width: 70%;
   }
 }
 @media (max-width: 400px) {
@@ -3726,12 +3746,6 @@ height: 50px !important;
   .create-game-panel .boxes-panel {
     grid-gap: 0.4rem;
     grid-template-columns: repeat(4, 1fr);
-  }
-
-  .boxes-panel {
-    display: grid;
-    grid-template-columns: repeat(3, 1.2fr);
-    grid-gap: 0.6rem;
   }
 
   .cell-action button {

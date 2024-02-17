@@ -195,17 +195,15 @@ class OpenGamesTable extends Component {
   };
   async componentDidMount() {
     const { roomList } = this.props;
-    this.setState({ roomList });
-    this._isMounted = true;
     const roomIds = roomList.map(room => room._id);
     await this.getRoomData(roomIds);
+
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.handleScroll);
   }
 
 
   componentWillUnmount() {
-    this._isMounted = false;
     window.removeEventListener('scroll', this.handleScroll);
     window.removeEventListener('load', this.handleLoad);
 
@@ -213,17 +211,14 @@ class OpenGamesTable extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     const { roomList } = this.props;
+    console.log(roomList)
     const roomIds = roomList.map(room => room._id);
     if (prevProps.roomList !== this.props.roomList) {
-      if (this._isMounted) {
         this.setState({ roomList, isLoading: false });
-        // this.getRoomData(roomIds);
-      }
+        this.getRoomData(roomIds);
     }
     if (prevState.selectedGameType !== this.state.selectedGameType) {
-      if (this._isMounted) {
         this.setState({ isLoading: true });
-      }
 
     }
   }

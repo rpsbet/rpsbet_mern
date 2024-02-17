@@ -76,6 +76,8 @@ router.post('/', (req, res) => {
 // Calculate profits without including transactions with 'withdraw' or 'deposit' in the description
 router.get('/user', auth, async (req, res) => {
   try {
+    const startTime = new Date(); // Start timer
+
     const { loadMore, viewAll, filterType, search, sortBy } = req.query;
     const queryLimit = parseInt(loadMore) ? 7 + parseInt(loadMore) : viewAll === 'true' ? 7 : 4;
 
@@ -88,17 +90,39 @@ router.get('/user', auth, async (req, res) => {
       query.description = { $regex: search, $options: 'i' };
     }
 
+    const transactionsStartTime = new Date(); // Start timer for transactions retrieval
     const transactions = await Transaction.find(query._id)
       .sort(sortBy === 'amount' ? { amount: -1 } : { created_at: -1 })
       .limit(queryLimit);
-    const allTransactions = await Transaction.find(query._id);
+    const transactionsEndTime = new Date(); // End timer for transactions retrieval
 
-    const profitData = viewAll === 'true' ? getProfitData(allTransactions) : {};
+    let allTransactions;
+    let profitData;
+    const allTransactionsStartTime = new Date(); // Start timer for all transactions retrieval
+    if (viewAll === 'true') {
+      allTransactions = await Transaction.find(query._id);
+      profitData = getProfitData(allTransactions);
+      
+    } else {
+      profitData = {}
+    }
+    const allTransactionsEndTime = new Date(); // End timer for all transactions retrieval
 
+  
+    const countStartTime = new Date(); // Start timer for unread message count retrieval
     const count = await Message.countDocuments({
       to: req.user,
       is_read: false,
     });
+    const countEndTime = new Date(); // End timer for unread message count retrieval
+
+    const endTime = new Date(); // End timer
+
+    // Log the durations
+    console.log('Time taken for transactions retrieval:', transactionsEndTime - transactionsStartTime, 'ms');
+    console.log('Time taken for all transactions retrieval:', allTransactionsEndTime - allTransactionsStartTime, 'ms');
+    console.log('Time taken for unread message count retrieval:', countEndTime - countStartTime, 'ms');
+    console.log('Total time taken:', endTime - startTime, 'ms');
 
     res.json({
       success: true,
@@ -117,6 +141,7 @@ const getProfitData = (transactions) => ({
   oneDayProfit: calculate1dayProfit(transactions),
   allTimeProfit: calculateAllTimeProfit(transactions),
 });
+  
 
 // Forgot Password
 router.post('/sendResetPasswordEmail', async (req, res) => {

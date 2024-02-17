@@ -738,23 +738,25 @@ const getRoomList = async (pageSize, game_type) => {
     search_condition.game_type = gameType._id;
   }
 
-  const totalCount = await Room.countDocuments(search_condition);
-
-  const preRooms = await Room.find(search_condition)
+  const totalCountPromise = Room.countDocuments(search_condition);
+  const preRoomsPromise = Room.find(search_condition)
     .sort({ created_at: 'desc' })
     .limit(pageSize);
 
+  const [totalCount, preRooms] = await Promise.all([totalCountPromise, preRoomsPromise]);
+
   const roomIds = preRooms.map(({ _id }) => _id);
-  const rooms = await Room.find({ _id: { $in: roomIds } })
+  const roomsPromise = Room.find({ _id: { $in: roomIds } })
     .populate({ path: 'creator', model: User })
     .populate({ path: 'game_type', model: GameType })
     .populate({ path: 'brain_game_type', model: BrainGameType });
 
+  const rooms = await roomsPromise;
+
   const result = await Promise.all(
     rooms.map(async (room) => {
-      const room_id = `${room.game_type.short_name}-${room.room_number}`;
       try {
-        const joinerData = await Promise.all(
+        const joinerDataPromise = Promise.all(
           room.joiners.map(async (joinedUser) => {
             const user = await User.findOne({ _id: joinedUser });
             return {
@@ -766,14 +768,14 @@ const getRoomList = async (pageSize, game_type) => {
           })
         );
 
+        const joinerData = await joinerDataPromise;
+
         const temp = {
           _id: room._id,
-          creator: room.is_anonymous
-            ? 'Anonymous'
-            : room.creator?.username || '',
+          // creator: room.is_anonymous ? 'Anonymous' : room.creator?.username || '',
           creator_id: room.creator ? room.creator._id : '',
-          aveMultiplier: room.aveMultiplier,
-          endgame_amount: room.endgame_amount,
+          // aveMultiplier: room.aveMultiplier,
+          // endgame_amount: room.endgame_amount,
           joiners: room.joiners,
           joiner_avatars: joinerData.map(joiner => ({
             avatar: joiner.avatar,
@@ -787,27 +789,27 @@ const getRoomList = async (pageSize, game_type) => {
           game_type: room.game_type,
           bet_amount: room.bet_amount,
           user_bet: room.user_bet,
-          new_host_pr: room.new_host_pr,
-          pr: room.pr,
-          rps_list: room.rps_list,
-          qs_list: room.qs_list,
-          drop_list: room.drop_list,
-          bang_list: room.bang_list,
-          roll_list: room.roll_list,
-          crashed: room.crashed,
-          multiplier: room.multiplier,
+          // new_host_pr: room.new_host_pr,
+          // pr: room.pr,
+          // rps_list: room.rps_list,
+          // qs_list: room.qs_list,
+          // drop_list: room.drop_list,
+          // bang_list: room.bang_list,
+          // roll_list: room.roll_list,
+          // crashed: room.crashed,
+          // multiplier: room.multiplier,
           winnings: '',
           spleesh_bet_unit: room.spleesh_bet_unit,
-          is_anonymous: room.is_anonymous,
+          // is_anonymous: room.is_anonymous,
           is_private: room.is_private,
-          youtubeUrl: room.youtubeUrl,
+          // youtubeUrl: room.youtubeUrl,
           gameBackground: room.gameBackground,
-          brain_game_type: room.brain_game_type,
+          // brain_game_type: room.brain_game_type,
           status: room.status,
           index: room.room_number,
           created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
           likes: room.likes,
-          dislikes: room.dislikes,
+          // dislikes: room.dislikes,
           views: room.views,
           hosts: room.hosts
         };
@@ -866,6 +868,7 @@ const getRoomList = async (pageSize, game_type) => {
     pageSize,
   };
 };
+
 
 
 router.get('/history', async (req, res) => {
@@ -2149,87 +2152,63 @@ router.get('/my_chat', auth, async (req, res) => {
     });
   }
 });
-
 router.get('/notifications', auth, async (req, res) => {
   try {
     const userId = req.user._id;
-    const messages1 = await Notification.find({ from: userId }).populate({
-      path: 'to',
-      model: User
-    });
-    const messages2 = await Notification.find({ to: userId }).populate({
-      path: 'from',
-      model: User
-    });
+    const messages = await Notification.find({
+      $or: [{ from: userId }, { to: userId }]
+    }).populate([
+      { path: 'from', model: User },
+      { path: 'to', model: User }
+    ]).sort({ created_at: -1 }).limit(20);
 
-    const notifications = {};
-    for (let message of messages1) {
+    const notifications = messages.reduce((acc, message) => {
+      const targetUser = message.from && message.from._id.equals(userId)
+        ? message.to
+        : message.from;
+
+      if (!targetUser) return acc;
+
       if (
-        message.to &&
-        (!notifications[message.to._id] ||
-          notifications[message.to._id].updated_at < message.updated_at)
+        !acc[targetUser._id] ||
+        acc[targetUser._id].updated_at < message.updated_at
       ) {
-        notifications[message.to._id] = {
-          ...notifications[message.to._id],
-          _id: message.to._id,
+        acc[targetUser._id] = {
+          _id: targetUser._id,
           message: message.message,
-          username: message.to.username,
-          avatar: message.to.avatar,
-          accessory: message.to.accessory,
-          room: message.to.room,
-          rank: message.to.totalWagered,
+          username: targetUser.username,
+          avatar: targetUser.avatar,
+          accessory: targetUser.accessory,
+          room: targetUser.room,
+          rank: targetUser.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),
           updated_at: message.updated_at,
           is_read: false
         };
       }
-    }
+      return acc;
+    }, {});
 
-    for (let message of messages2) {
-      if (message.from && message.from._id === message.to) {
-        continue;
-      }
-
-      if (
-        message.from &&
-        (!notifications[message.from._id] ||
-          notifications[message.from._id].updated_at < message.updated_at)
-      ) {
-        notifications[message.from._id] = {
-          ...notifications[message.from._id],
-          _id: message.from._id,
-          message: message.message,
-          username: message.from.username,
-          avatar: message.from.avatar,
-          room: message.from.room,
-          rank: message.from.totalWagered,
-          created_at: message.created_at,
-          created_at_str: moment(message.created_at).format('LLL'),
-          updated_at: message.updated_at,
-          is_read: false
-        };
-      }
-    }
     const sortedNotifications = Object.values(notifications).sort((a, b) => {
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
     const recentNotifications = sortedNotifications.slice(0, 10);
 
-
     res.json({
       success: true,
       notifications: recentNotifications
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.json({
       success: false,
-      message: err
+      message: err.message
     });
   }
 });
+
 
 const decrementUserBalance = async (userId, betAmount) => {
   const user = await User.findOne({ _id: userId });
