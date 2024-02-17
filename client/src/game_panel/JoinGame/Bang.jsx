@@ -1,23 +1,22 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import BetArray from '../../components/BetArray';
 import CountUp from 'react-countup';
 import Share from '../../components/Share';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
-import { updateDigitToPoint2 } from '../../util/helper';
 import { Button, TextField } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
 import Moment from 'moment';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import ImageResultModal from '../modal/ImageResultModal';
+import CustomCounter from '../../components/CustomCounter';
 import ReactApexChart from 'react-apexcharts';
 import PlayerModal from '../modal/PlayerModal';
 import {
   validateIsAuthenticated,
   validateCreatorId,
   validateBetAmount,
-  validateLocalStorageLength
 } from '../modal/betValidations';
 import Lottie from 'react-lottie';
 import { getBangGuesses } from '../../redux/Logic/logic.actions';
@@ -35,14 +34,6 @@ import {
 import history from '../../redux/history';
 import { convertToCurrency } from '../../util/conversion';
 
-const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: animationData,
-  rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
-};
 
 const styles = {
   focused: {
@@ -50,38 +41,11 @@ const styles = {
   }
 };
 
-const calcWinChance = prevStates => {
-  let total = prevStates.length;
-  let counts = {};
-  prevStates.forEach(state => {
-    if (counts[state.bang_amount]) {
-      counts[state.bang_amount]++;
-    } else {
-      counts[state.bang_amount] = 1;
-    }
-  });
-  let lowest = Infinity;
-  let highest = -Infinity;
-  Object.keys(counts).forEach(key => {
-    const chance = (counts[key] / total) * 100;
-    if (chance < lowest) {
-      lowest = chance;
-    }
-    if (chance > highest) {
-      highest = chance;
-    }
-  });
-  if (lowest === highest) {
-    return lowest.toFixed(2) + '%';
-  }
-  return lowest.toFixed(2) + '% - ' + highest.toFixed(2) + '%';
-};
 
 class Bang extends Component {
   constructor(props) {
     super(props);
 
-    this.settingsRef = React.createRef();
     this.runsRef = React.createRef();
     this.socket = this.props.socket;
     this.state = {
@@ -96,29 +60,25 @@ class Bang extends Component {
       executeBet: false,
       newRound: false,
       productName: '',
-      bgColorChanged: false,
+      image: '',
       countupValue: 0,
       buttonClicked: false,
       cashoutAmount: 1,
       bang_guesses: [],
       advanced_status: '',
       waiting: false,
-      is_anonymous: false,
       bet_amount: 0.001,
       bankroll: this.props.bet_amount,
       bang_guesses1Received: false,
-      multiplier: 1.01,
+      autoCashout: '',
       crashed: true,
       betResult: null,
       balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
-      slippage: 100,
       listen: true,
-      settings_panel_opened: false,
       runs_panel_opened: false
     };
     this.panelRef = React.createRef();
-
     this.onChangeState = this.onChangeState.bind(this);
   }
 
@@ -133,14 +93,6 @@ class Bang extends Component {
     this.setState({ bgColorChanged: false });
   };
 
-  // handleClickOutside = e => {
-  //   if (this.settingsRef && !this.settingsRef.current.contains(e.target)) {
-  //     this.setState({ settings_panel_opened: false });
-  //   }
-  //   if (this.runsRef && !this.runsRef.current.contains(e.target)) {
-  //     this.setState({ runs_panel_opened: false });
-  //   }
-  // };
   static getDerivedStateFromProps(props, current_state) {
     if (
       current_state.balance !== props.balance ||
@@ -210,7 +162,7 @@ class Bang extends Component {
   }
 
   componentDidMount = () => {
-    const { roomInfo, socket, getBangGuesses } = this.props;
+    const { roomInfo, socket, getBangGuesses, playSound } = this.props;
     const { _id: roomId } = roomInfo;
     const fetchBangGuesses = () => {
       const roomId = this.props.roomInfo._id;
@@ -264,68 +216,67 @@ class Bang extends Component {
       })
     }
 
-
-    // document.addEventListener('mousedown', this.handleClickOutside);
   };
 
   componentWillUnmount = () => {
     clearInterval(this.fetchInterval, this.state.intervalId);
-    // document.removeEventListener('mousedown', this.handleClickOutside);
-
   };
 
-  predictNext = bangAmounts => {
-    const uniqueValues = [...new Set(bangAmounts.map(bang => bang.bang))];
+  // predictNext = bangAmounts => {
+  //   const uniqueValues = [...new Set(bangAmounts.map(bang => bang.bang))];
 
-    if (uniqueValues.length === 1) {
-      return uniqueValues[0];
-    } else {
-      const minValue = Math.min(...uniqueValues);
-      const maxValue = Math.max(...uniqueValues);
-      const rangeSize = Math.ceil((maxValue - minValue) / 200);
+  //   if (uniqueValues.length === 1) {
+  //     return uniqueValues[0];
+  //   } else {
+  //     const minValue = Math.min(...uniqueValues);
+  //     const maxValue = Math.max(...uniqueValues);
+  //     const rangeSize = Math.ceil((maxValue - minValue) / 200);
 
-      const rangeCounts = {};
-      bangAmounts.forEach(bang => {
-        const range = Math.floor((bang.bang - minValue) / rangeSize);
-        rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
-      });
+  //     const rangeCounts = {};
+  //     bangAmounts.forEach(bang => {
+  //       const range = Math.floor((bang.bang - minValue) / rangeSize);
+  //       rangeCounts[range] = rangeCounts[range] ? rangeCounts[range] + 1 : 1;
+  //     });
 
-      const totalCounts = bangAmounts.length;
-      const rangeProbabilities = {};
-      Object.keys(rangeCounts).forEach(range => {
-        const rangeProbability = rangeCounts[range] / totalCounts;
-        rangeProbabilities[range] = rangeProbability;
-      });
+  //     const totalCounts = bangAmounts.length;
+  //     const rangeProbabilities = {};
+  //     Object.keys(rangeCounts).forEach(range => {
+  //       const rangeProbability = rangeCounts[range] / totalCounts;
+  //       rangeProbabilities[range] = rangeProbability;
+  //     });
 
-      let randomValue = Math.random();
-      let chosenRange = null;
-      Object.entries(rangeProbabilities).some(([range, probability]) => {
-        randomValue -= probability;
-        if (randomValue <= 0) {
-          chosenRange = range;
-          return true;
-        }
-        return false;
-      });
+  //     let randomValue = Math.random();
+  //     let chosenRange = null;
+  //     Object.entries(rangeProbabilities).some(([range, probability]) => {
+  //       randomValue -= probability;
+  //       if (randomValue <= 0) {
+  //         chosenRange = range;
+  //         return true;
+  //       }
+  //       return false;
+  //     });
 
-      const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
-      const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
+  //     const rangeMinValue = parseInt(chosenRange) * rangeSize + minValue;
+  //     const rangeMaxValue = Math.min(rangeMinValue + rangeSize, maxValue);
 
-      const getRandomNumberInRange = (min, max) => {
-        return Math.random() * (max - min) + min;
-      };
-      return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue));
-    }
-  };
+  //     const getRandomNumberInRange = (min, max) => {
+  //       return Math.random() * (max - min) + min;
+  //     };
+  //     return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue));
+  //   }
+  // };
 
   joinGame = async () => {
     const { playSound } = this.props;
+    console.log("bet_amount", this.state.bet_amount)
+    console.log("crashed", this.state.crashed)
+    console.log("autoCashout", this.state.autoCashout)
+    console.log("cashoutAmount", this.state.cashoutAmount)
+
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
       crashed: this.state.crashed,
-      multiplier: this.state.multiplier,
-      cashoutAmount: this.state.cashoutAmount
-      // slippage: this.state.slippage
+      multiplier: this.state.autoCashout,
     });
 
     let text = 'HAHAA, YOU LOST!!!';
@@ -365,7 +316,7 @@ class Bang extends Component {
     if (result.status === 'success') {
       const currentUser = this.props.user;
       const currentRoom = this.props.room;
-      
+
     } else {
       if (result.message) {
         alertModal(this.props.isDarkMode, result.message);
@@ -377,8 +328,11 @@ class Bang extends Component {
 
   onBtnBetClick = async () => {
     const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
-    const { buttonClicked, waiting, executeBet } = this.state;
-
+    const { buttonClicked, waiting, executeBet, cashoutAmount, showCountdown, newRound, showBang } = this.state;
+    console.log(showBang, showCountdown, waiting, newRound, executeBet)
+    if (!validateBetAmount(cashoutAmount, balance, isDarkMode)) {
+      return;
+    }
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
@@ -400,6 +354,13 @@ class Bang extends Component {
     }
   };
 
+  toggleImageModal = () => {
+    this.setState({
+      showImageModal: false
+    });
+  };
+
+
   pushBet = async () => {
     const {
       openGamePasswordModal,
@@ -408,10 +369,8 @@ class Bang extends Component {
       is_private,
       roomInfo
     } = this.props;
-    const { cashoutAmount } = this.state;
 
     cancelAnimationFrame(this.state.requestId);
-    await validateBetAmount(cashoutAmount, balance, isDarkMode);
 
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
@@ -449,7 +408,7 @@ class Bang extends Component {
   };
 
   startAutoCashout = () => {
-    const { bet_amount, multiplier } = this.state;
+    const { bet_amount, autoCashout } = this.state;
     let cashoutAmount = 1;
     const increment = 0.01;
     let previousTimestamp = null;
@@ -463,12 +422,15 @@ class Bang extends Component {
         this.setState({ cashoutAmount });
         previousTimestamp = timestamp;
       }
-      if (cashoutAmount >= multiplier) {
-        this.setState({ cashoutAmount: multiplier, crashed: false }, () => {
+      if (cashoutAmount >= autoCashout && autoCashout !== '') {
+        console.log("autocashout")
+        this.setState({ cashoutAmount: autoCashout, crashed: false }, () => {
           this.pushBet();
         });
         return;
       } else if (cashoutAmount >= this.state.nextBangInterval) {
+        console.log("crashed")
+
         this.setState({ crashed: true }, () => {
           this.pushBet();
         });
@@ -480,10 +442,9 @@ class Bang extends Component {
     const requestId = window.requestAnimationFrame(animate);
     this.setState({ buttonClicked: true, cashoutAmount, requestId });
   };
-
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
     this.setState(
       {
         bet_amount: roundedBetAmount
@@ -498,7 +459,7 @@ class Bang extends Component {
     const maxBetAmount = this.state.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
-    const roundedBetAmount = Math.floor(limitedBetAmount * 100) / 100;
+    const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
     if (roundedBetAmount < -2330223) {
       alertModal(
         this.props.isDarkMode,
@@ -564,113 +525,93 @@ class Bang extends Component {
       this.setState({ timerValue: 2000 });
     }
   };
-  startBetting = () => {
-    const { isDarkMode, playSound, is_private, roomInfo } = this.props;
+  // startBetting = () => {
+  //   const { isDarkMode, playSound, is_private, roomInfo } = this.props;
 
-    if (!validateLocalStorageLength('bang_array', isDarkMode)) {
-      return;
-    }
-    const stored_bang_array =
-      JSON.parse(localStorage.getItem('bang_array')) || [];
+  //   if (!validateLocalStorageLength('bang_array', isDarkMode)) {
+  //     return;
+  //   }
+  //   const stored_bang_array =
+  //     JSON.parse(localStorage.getItem('bang_array')) || [];
 
-    const intervalId = setInterval(() => {
-      const randomItem = this.predictNext(stored_bang_array);
+  //   const intervalId = setInterval(() => {
+  //     const randomItem = this.predictNext(stored_bang_array);
 
-      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-      const passwordCorrect = rooms[roomInfo._id];
-      if (is_private === true && passwordCorrect !== true) {
-        openGamePasswordModal();
-      } else {
-        this.joinGame2(randomItem);
-      }
-    }, 3500);
-    playSound('start');
+  //     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+  //     const passwordCorrect = rooms[roomInfo._id];
+  //     if (is_private === true && passwordCorrect !== true) {
+  //       openGamePasswordModal();
+  //     } else {
+  //       this.joinGame2(randomItem);
+  //     }
+  //   }, 3500);
+  //   playSound('start');
 
-    this.setState({ intervalId, betting: true });
-  };
+  //   this.setState({ intervalId, betting: true });
+  // };
 
-  stopBetting = () => {
-    this.props.playSound('stop');
-    clearInterval(this.state.intervalId, this.state.timer);
-    this.setState({ intervalId: null, betting: false, timerValue: 2000 });
-  };
+  // stopBetting = () => {
+  //   this.props.playSound('stop');
+  //   clearInterval(this.state.intervalId, this.state.timer);
+  //   this.setState({ intervalId: null, betting: false, timerValue: 2000 });
+  // };
 
-  joinGame2 = async randomItem => {
-    const {
-      bang_bet_item_id,
-      balance,
-      isDarkMode,
-      refreshHistory,
-      playSound
-    } = this.props;
-    const {
-      bet_amount,
-      bankroll,
-      slippage,
-      is_anonymous,
-      betting
-    } = this.state;
+  // joinGame2 = async randomItem => {
+  //   const {
+  //     bang_bet_item_id,
+  //     balance,
+  //     isDarkMode,
+  //     refreshHistory,
+  //     playSound
+  //   } = this.props;
+  //   const {
+  //     bet_amount,
+  //     bankroll,
+  //     slippage,
+  //     is_anonymous,
+  //     betting
+  //   } = this.state;
 
-    // Check if betting is true before continuing
-    if (!betting) {
-      return;
-    }
+  //   // Check if betting is true before continuing
+  //   if (!betting) {
+  //     return;
+  //   }
 
-    this.setState({ bet_amount: randomItem });
+  //   this.setState({ bet_amount: randomItem });
 
-    if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
-      return;
-    }
+  //   if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
+  //     return;
+  //   }
 
-    const result = await this.props.join({
-      bet_amount: parseFloat(bet_amount),
-      is_anonymous: is_anonymous,
-      bang_bet_item_id: bang_bet_item_id,
-      slippage: slippage
-    });
+  //   const result = await this.props.join({
+  //     bet_amount: parseFloat(bet_amount),
+  //     bang_bet_item_id: bang_bet_item_id,
+  //   });
 
-    const currentUser = this.props.user;
-    const currentRoom = this.props.room;
+  //   const currentUser = this.props.user;
+  //   const currentRoom = this.props.room;
 
-    if (result.status === 'success') {
-     
-      let text = 'HAHAA, YOU LOST!!!';
+  //   if (result.status === 'success') {
 
-      if (result.betResult === 1) {
-        playSound('win');
+  //     let text = 'HAHAA, YOU LOST!!!';
 
-        text = 'NOT BAD, WINNER!';
-        // this.changeBgColor(result.betResult);
-      } else if (result.betResult === 0) {
-        playSound('split');
+  //     if (result.betResult === 1) {
+  //       playSound('win');
 
-        text = 'DRAW, NO WINNER!';
-        // this.changeBgColor(result.betResult);
-      } else {
-        // this.changeBgColor(result.betResult);
-        playSound('lose');
-      }
+  //       text = 'NOT BAD, WINNER!';
+  //       // this.changeBgColor(result.betResult);
+  //     } else if (result.betResult === 0) {
+  //       playSound('split');
 
-      // gameResultModal(
-      //   this.props.isDarkMode,
-      //   text,
-      //   result.betResult,
-      //   'Okay',
-      //   null,
-      //   () => {
-      //     // history.push('/');
-      //   },
-      //   () => {}
-      // );
-
-      refreshHistory();
-    }
-  };
-
-  handleMultiplierChange = event => {
-    const multiplier = event.target.value;
-    this.setState({ multiplier });
-  };
+  //       text = 'DRAW, NO WINNER!';
+  //       // this.changeBgColor(result.betResult);
+  //     } else {
+  //       // this.changeBgColor(result.betResult);
+  //       playSound('lose');
+  //     }
+  //     refreshHistory();
+  //   }
+  // };
 
   render() {
     const {
@@ -682,7 +623,8 @@ class Bang extends Component {
       waiting,
       bankroll,
       runs_panel_opened,
-      newRound,
+      productName,
+      image,
       showImageModal,
       countdown,
       actionList
@@ -723,12 +665,12 @@ class Bang extends Component {
 
             <Lottie
               options={{
-                loop: isLowGraphics ? false : true,
-                autoplay: isLowGraphics ? false : true,
+                // loop: isLowGraphics ? false : true,
+                // autoplay: isLowGraphics ? false : true,
                 animationData: explosion
               }}
               style={{
-                filter: 'grayscale(100%)',
+                // filter: 'grayscale(100%)',
                 maxWidth: '100%',
                 width: '300px',
                 marginBottom: '-50px'
@@ -752,12 +694,12 @@ class Bang extends Component {
             {' '}
             <Lottie
               options={{
-                loop: isLowGraphics ? false : true,
-                autoplay: isLowGraphics ? false : true,
+                // loop: isLowGraphics ? false : true,
+                // autoplay: isLowGraphics ? false : true,
                 animationData: explosion
               }}
               style={{
-                filter: 'grayscale(100%)',
+                // filter: 'grayscale(100%)',
                 maxWidth: '100%',
                 width: '300px',
                 marginBottom: '-50px'
@@ -772,272 +714,90 @@ class Bang extends Component {
         );
       }
     } else if (showCountdown) {
+      // show countdown
       content = <span id="nextBangIn">Next Bang in...{countdown}</span>;
+
     } else {
+      // show bang
       let countupStart;
-      if (elapsedTime && elapsedTime / 1000 > nextBangInterval + 2) {
-        countupStart = nextBangInterval;
-        // console.log("p sherman");
-        const countdownStart = Math.ceil(
-          5 - (elapsedTime / 1000 - nextBangInterval - 2)
-        );
-        if (countdownStart > 0) {
-          setTimeout(() => {
-            this.setState({
-              showBang: false,
-              showCountdown: true,
-              countdown: countdownStart,
-              elapsedTime: ''
-            });
-            // console.log("DDd");
-            const countdownTimer = setInterval(() => {
-              const countdownValue = countdown - 1;
-              if (countdownValue <= 0) {
-                // Countdown is finished, restart everything
-                clearInterval(countdownTimer);
-                this.setState({
-                  showCountdown: false,
-                  countdown: null,
-                  elapsedTime: ''
-                });
-                if (waiting) {
-                  this.setState({ newRound: true });
-                }
-              } else {
-                this.setState({ countdown: countdownValue, elapsedTime: '' });
+      countupStart = elapsedTime ? elapsedTime / 1000 : 1;
+      content = (
+        <div>
+          <Lottie
+            id="bomb"
+            options={{
+              // loop: isLowGraphics ? false : true,
+              // autoplay: isLowGraphics ? false : true,
+              animationData: bomb
+            }}
+            style={{
+              // filter: 'grayscale(100%)',
+              maxWidth: '100%',
+              width: '200px',
+              // position: 'absolute',
+              marginLeft: '60px',
+              marginBottom: '30px',
+              transform: 'translateY(20px)'
+            }}
+          />
+          <p>
+            <div id="x">x</div>
+            <CustomCounter
+              start={countupStart}
+              end={nextBangInterval}
+              decimals={2}
+              duration={
+                elapsedTime
+                  ? nextBangInterval - elapsedTime / 1000
+                  : nextBangInterval
               }
-            }, 1000);
-          });
-        } else {
-          content = (
-            <div>
-              <p>
-                <div id="x">x</div>
-                <CountUp
-                  start={countupStart}
-                  end={nextBangInterval}
-                  decimals={2}
-                  duration={
-                    elapsedTime
-                      ? nextBangInterval - elapsedTime / 1000
-                      : nextBangInterval
-                  }
-                  useEasing={false}
-                  // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
-                  onEnd={() => {
-                    // Show the bang message for 2 seconds, then start the countdown
-                    this.setState({
-                      showBang: true
-                    });
-                    setTimeout(() => {
-                      this.setState({
-                        showBang: false,
-                        showCountdown: true,
-                        countdown: 5,
-                        elapsedTime: ''
-                      });
-                      // console.log("countdownTimer");
+              onEnd={() => {
+                // Show the bang message for 2 seconds, then start the countdown
+                this.setState({
+                  showBang: true,
+                }, () => {
 
-                      const countdownTimer = setInterval(() => {
-                        const countdownValue = countdown - 1;
-                        if (countdownValue <= 0) {
-                          // console.log("eee");
-
-                          clearInterval(countdownTimer);
-                          this.setState({
-                            showCountdown: false,
-                            countdown: null,
-                            elapsedTime: ''
-                          });
-                          if (waiting) {
-                            this.setState({ newRound: true });
-                          }
-                        } else {
-                          this.setState({ countdown: countdownValue, elapsedTime: '' });
-                        }
-                      }, 1000);
-                    }, 2000);
-                  }}
-                />
-              </p>
-            </div>
-          );
-          this.setState({ elapsedTime: '' });
-        }
-      } else if (elapsedTime && elapsedTime / 1000 > nextBangInterval) {
-        const bangStart = nextBangInterval;
-        const bangDuration =
-          2000 - (elapsedTime / 1000 - nextBangInterval) * 1000;
-        if (bangDuration > 0) {
-          content = (
-            <div>
-              <Lottie
-                options={{
-                  loop: isLowGraphics ? false : true,
-                  autoplay: isLowGraphics ? false : true,
-                  animationData: explosion
-                }}
-                style={{
-                  filter: 'grayscale(100%)',
-                  maxWidth: '100%',
-                  width: '300px',
-                  marginBottom: '-50px'
-                }}
-              />
-              <span id="bang-text">
-                {' '}
-                BANG
-                <br /> @ x{nextBangInterval}!
-              </span>
-            </div>
-          );
-        } else {
-          content = (
-            <div>
-              <Lottie
-                id="bomb"
-                options={{
-                  loop: isLowGraphics ? false : true,
-                  autoplay: isLowGraphics ? false : true,
-                  animationData: bomb
-                }}
-                style={{
-                  filter: 'grayscale(100%)',
-                  maxWidth: '100%',
-                  width: '250px',
-                  // position: 'absolute',
-                  marginRight: '-30px',
-                  marginBottom: '-30px',
-                  transform: 'translateY(20px)'
-                }}
-              />
-              <p>
-                <div id="x">x</div>
-                <CountUp
-                  start={countupStart}
-                  end={nextBangInterval}
-                  decimals={2}
-                  duration={
-                    elapsedTime
-                      ? nextBangInterval - elapsedTime / 1000
-                      : nextBangInterval
-                  }
-                  useEasing={false}
-                  // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
-                  onEnd={() => {
-                    this.setState({
-                      showBang: true
-                    });
-                    setTimeout(() => {
-                      this.setState({
-                        showBang: false,
-                        showCountdown: true,
-                        countdown: 5
-                      });
-                      // console.log("ggg");
-
-                      const countdownTimer = setInterval(() => {
-                        const countdown = countdown - 1;
-                        if (countdown <= 0) {
-                          // Countdown is finished, restart everything
-                          clearInterval(countdownTimer);
-                          this.setState({
-                            showCountdown: false,
-                            countdown: null
-                          });
-                          if (waiting) {
-                            this.setState({ newRound: true });
-                          }
-                        } else {
-                          this.setState({ countdown, elapsedTime: '' });
-                        }
-                      }, 10);
-                    }, 2000);
-                  }}
-                />
-              </p>
-            </div>
-          );
-          this.setState({ elapsedTime: '' });
-        }
-      } else {
-        countupStart = elapsedTime ? elapsedTime / 1000 : 1;
-        content = (
-          <div>
-            <Lottie
-              id="bomb"
-              options={{
-                loop: isLowGraphics ? false : true,
-                autoplay: isLowGraphics ? false : true,
-                animationData: bomb
-              }}
-              style={{
-                filter: 'grayscale(100%)',
-                maxWidth: '100%',
-                width: '300px',
-                // position: 'absolute',
-                marginLeft: '60px',
-                marginBottom: '30px',
-                transform: 'translateY(20px)'
-              }}
-            />
-            <p>
-              <div id="x">x</div>
-              <CountUp
-                start={countupStart}
-                end={nextBangInterval}
-                decimals={2}
-                duration={
-                  elapsedTime
-                    ? nextBangInterval - elapsedTime / 1000
-                    : nextBangInterval
-                }
-                useEasing={false}
-                // easingFn={(t, b, c, d) => c * (t / d) * (t / d) + b}
-                // Assuming countdown is initialized in the component's state as this.state.countdown
-
-                // ...
-
-                onEnd={() => {
-                  // Show the bang message for 2 seconds, then start the countdown
-                  this.setState({
-                    showBang: true
-                  });
                   setTimeout(() => {
                     this.setState({
                       showBang: false,
                       showCountdown: true,
-                      countdown: 5
+                      countdown: 5,
+                    }, () => {
+                      if (waiting) {
+                        this.setState({ newRound: true });
+                      }
                     });
 
-                    // console.log("oooo");
+                    console.log('oooo');
 
                     const countdownTimer = setInterval(() => {
                       const { countdown } = this.state; // Correct variable name
                       const countdownValue = countdown - 1;
 
                       if (countdownValue <= 0) {
+                        console.log('eww');
+
                         // Countdown is finished, restart everything
                         clearInterval(countdownTimer);
                         this.setState({
                           showCountdown: false,
-                          countdown: null
+                          countdown: null,
                         });
-                        if (waiting) {
-                          this.setState({ newRound: true });
-                        }
                       } else {
+                        console.log('qw');
+
                         this.setState({ countdown: countdownValue, elapsedTime: '' });
                       }
                     }, 1000);
                   }, 2000);
-                }}
+                });
+              }}
 
-              />
-            </p>
-          </div>
-        );
-      }
+            />
+
+          </p>
+        </div>
+      );
     }
 
     return (
@@ -1090,9 +850,8 @@ class Bang extends Component {
                       </div>
                     </div>
                     <div className="value">
-                      {convertToCurrency(
-                        updateDigitToPoint2(this.props.aveMultiplier)
-                      )}
+                      {convertToCurrency(this.props.aveMultiplier)
+                      }
                       x
                     </div>
                   </div>
@@ -1336,27 +1095,7 @@ class Bang extends Component {
                       <span id="no-guesses"></span>
                     )}
                   </div>
-                  {/* <div>
-                    {bang_guesses.length > 0 ? (
-                      bang_guesses.map((guess, index) => (
-                        <span
-                          key={index}
-                          style={{
-                            background:
-                              guess.host_bang > guess.bet_amount
-                                ? '#e3e103c2'
-                                : '#e30303c2',
-                            padding: '0.3em 0.9em'
-                          }}
-                        >
-                          <InlineSVG id="busd" src={require('./busd.svg')} />{' '}
-                          {guess.bet_amount.toFixed(2)}
-                        </span>
-                      ))
-                    ) : (
-                      <span id="no-guesses"></span>
-                    )}
-                  </div> */}
+
                 </p>
               </div>
             </div>
@@ -1374,19 +1113,19 @@ class Bang extends Component {
               handle2xButtonClick={this.handle2xButtonClick}
               handleHalfXButtonClick={this.handleHalfXButtonClick}
               handleMaxButtonClick={this.handleMaxButtonClick}
-              onChange={this.handleChange}
+              onChangeState={this.onChangeState}
               isDarkMode={this.props.isDarkMode}
             />
             <div className="your-multiplier">
               <TextField
                 type="text"
-                name="multiplier"
+                name="autoCashout"
                 variant="outlined"
                 id="betamount"
                 label="AUTO-CASHOUT"
-                value={this.state.multiplier}
+                value={this.state.autoCashout}
                 onChange={event =>
-                  this.setState({ multiplier: event.target.value })
+                  this.setState({ autoCashout: event.target.value })
                 }
                 inputProps={{
                   pattern: '[0-9]*',
@@ -1409,7 +1148,7 @@ class Bang extends Component {
 
             >
               {this.state.buttonClicked ? (
-                `Cash Out @ ${(this.state.cashoutAmount).toFixed(2)}`
+                <>Cash Out @ {convertToCurrency(this.state.cashoutAmount)}</>
               ) : waiting ? (
                 <span style={{ animation: 'blink 0.75s linear infinite' }}>
                   Joining Next Round
@@ -1418,10 +1157,7 @@ class Bang extends Component {
                 'BANG OUT'
               )}
             </Button>
-
-
           </div>
-          {/* <BetArray arrayName="bang_array" label="bang" /> */}
 
           <div className="action-panel">
             <Share roomInfo={roomInfo} />

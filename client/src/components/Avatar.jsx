@@ -138,6 +138,7 @@ class Avatar extends Component {
               left: 0,
               width: '100%',
               height: '100%',
+              zIndex: '-1',
               border: borderColor,
               boxShadow: `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
               boxSizing: 'border-box',

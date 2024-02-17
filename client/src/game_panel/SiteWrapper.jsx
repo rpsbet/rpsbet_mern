@@ -587,6 +587,9 @@ class SiteWrapper extends Component {
 
 async componentDidMount() {
   try {
+    const loadingTimeout = setTimeout(() => {
+      this.setState({ websiteLoading: false });
+    }, 5000); 
     this.setState({ websiteLoading: true });
 
     const currentUrl = window.location.pathname;
@@ -599,6 +602,7 @@ async componentDidMount() {
       this.initializeAudio(),
       this.fetchData(),
     ]);
+    clearTimeout(loadingTimeout);
     this.setState({ websiteLoading: false });
     // Set selectedMainTabIndex based on the current URL
     if (currentUrl.includes('create')) {
@@ -626,6 +630,8 @@ async componentDidMount() {
       alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
     }
   } catch (error) {
+    clearTimeout(loadingTimeout);
+
     console.error(error);
   }
 }

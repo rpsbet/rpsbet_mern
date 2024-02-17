@@ -217,12 +217,12 @@ button {
 } */
 
 button#l {
-  transform: translate(-123px, -12px);
+  transform: translate(-331px, -12px)
 }
 
 /* Right button */
 button#r {
-  transform: translate(80px, -12px);
+  transform: translate(-139px, -12px)
 }
 
 button#tr {

@@ -3194,6 +3194,11 @@ position: sticky !important;
   }
 }
 @media (max-width: 1023px) {
+
+  .mobile-only a.user-link img {
+    width: 16px;
+    height: 16px;
+  }
   .contents_wrapper .main-game {
     grid-template-columns: 100% !important;
     margin-bottom: 60px;

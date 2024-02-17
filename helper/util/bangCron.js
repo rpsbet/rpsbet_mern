@@ -53,13 +53,13 @@ const predictAndSave = async (roomBets, roomId) => {
     const allBangs = [];
 
     nextBangPrediction = await predictNextBang(roomBets);
-
+console.log(nextBangPrediction)
     const roomBetsCount = await BangBetItem.countDocuments({ room: roomId });
 
     // Check if the count exceeds the limit
     if (roomBetsCount >= 100) {
       // If the count exceeds 100, remove the oldest item
-      const oldestBet = await BangBetItem.findOneAndDelete({ room: roomId }, { sort: { created_at: 1 } });
+      await BangBetItem.findOneAndDelete({ room: roomId  });
     }
 
     const newBet = new BangBetItem({
@@ -118,15 +118,9 @@ const predictNextBang = bangAmounts => {
       return Math.random() * (max - min) + min;
     };
 
-    const randomChance = Math.random();
-    const newValue = parseFloat(getRandomNumberInRange(1, 1.06));
-    const isChanged = randomChance <= 0.51;
-
-    if (isChanged) {
-      return newValue;
-    } else {
+  
       return parseFloat(getRandomNumberInRange(rangeMinValue, rangeMaxValue));
-    }
+
   }
 
 };

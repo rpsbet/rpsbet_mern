@@ -60,6 +60,10 @@ const ProductCarousel = styled.div`
   max-width: 460px;
   height: 270px;
   padding: 0;
+  @media (max-width: 768px) {
+    /* Adjust the width for mobile devices */
+    max-width: 300px;
+  }
 `;
 
 const ProductCard = styled.div`
@@ -891,7 +895,7 @@ class RPS extends Component {
 
                 <div
                   className="card-container"
-                  style={{ margin: '30px auto 10px' }}
+                  style={{ margin: '-30px auto 10px' }}
                 >
                   <div
                     className="card-hidden dashed"

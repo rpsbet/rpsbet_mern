@@ -158,7 +158,10 @@ class TabbedContent extends Component {
                           {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)}
                           <div>
                             <div className="table-cell">
-                              <div className="room-id">{row.status}</div>
+                              <div className="room-id">{row.status}<div
+                              className="mobile-only"
+                              dangerouslySetInnerHTML={{ __html: row.history }}
+                            ></div></div>
                               <div
                                 className="desktop-only"
                                 dangerouslySetInnerHTML={{
@@ -169,10 +172,7 @@ class TabbedContent extends Component {
                             <div className="table-cell">
                               {Moment(row.created_at).fromNow()}{' '}
                             </div>
-                            <div
-                              className="mobile-only"
-                              dangerouslySetInnerHTML={{ __html: row.history }}
-                            ></div>
+                            
                           </div>
                           {key ===
                             roomInfo.room_history.length - 1 && (

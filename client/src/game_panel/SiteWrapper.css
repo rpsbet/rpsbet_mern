@@ -97,11 +97,18 @@ button#recentSearches span {
   height: auto !important;
 }
 
-.sub-panel .lottie-container div,
-.room-history-panel .lottie-container div{
+.sub-panel .lottie-container div{
   padding-left: 2px;
 width: 12px !important;
 top: 47.5px;
+left: 22px;
+position: absolute;
+}
+
+.room-history-panel .lottie-container div{
+  padding-left: 2px;
+width: 12px !important;
+top: 39px !important;
 left: 22px;
 position: absolute;
 }
