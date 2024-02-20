@@ -454,19 +454,21 @@ class CreateGame extends Component {
 
   handleKeyPress(event) {
     const { selected_roll } = this.state;
-    switch (event.key) {
-      case 'Escape':
-        this.onPrevButtonClicked();
-        break;
-      case 'Enter':
-        this.onNextButtonClicked();
-        break;
+    if (!isFocused) {
+      switch (event.key) {
+        case 'Escape':
+          this.onPrevButtonClicked();
+          break;
+        case 'Enter':
+          this.onNextButtonClicked();
+          break;
 
-      case 'Shift':
-        this.onSkipButtonClicked();
-        break;
-      default:
-        break;
+        case 'Shift':
+          this.onSkipButtonClicked();
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -674,12 +676,12 @@ class CreateGame extends Component {
       } else if (child_step === 2 && step !== 1) {
         if (
           game_mode === 'Spleesh!' &&
-          ((spleesh_bet_unit === 0.001 && endgame_amount < 0.04) ||
-            (spleesh_bet_unit === 0.01 && endgame_amount < 0.4) ||
-            (spleesh_bet_unit === 0.1 && endgame_amount < 4.0))
+          ((spleesh_bet_unit === 0.001 && endgame_amount < 0.044) ||
+            (spleesh_bet_unit === 0.01 && endgame_amount < 0.44) ||
+            (spleesh_bet_unit === 0.1 && endgame_amount < 4.4))
         ) {
           alertAndReturn(
-            `TOO PURRROFITABLE! MINIMUM PAYOUT IS ${40 * spleesh_bet_unit}`
+            `TOO PURRROFITABLE! MINIMUM PAYOUT IS ${44 * spleesh_bet_unit}`
           );
           return;
         } else if (
@@ -1453,7 +1455,8 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   brain_game_type: state.questionReducer.brain_game_type,
   isDarkMode: state.auth.isDarkMode,
-  isDrawerOpen: state.auth.isDrawerOpen
+  isDrawerOpen: state.auth.isDrawerOpen,
+  isFocused: state.auth.isFocused
 });
 
 const mapDispatchToProps = {

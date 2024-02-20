@@ -302,31 +302,33 @@ class Roll extends Component {
 
   handleKeyPress(event) {
     const { selected_roll } = this.state;
-    switch (event.key) {
-      case 'r':
-        this.onBtnBetClick('R');
-        break;
-      case 'p':
-        this.onBtnBetClick('P');
-        break;
-      case 's':
-        this.onBtnBetClick('S');
-        break;
-      case 'w':
-        this.onBtnBetClick('W');
-        break;
-      case 'b':
-        this.onBtnBetClick('B');
-        break;
-      case 'u':
-        this.onBtnBetClick('BU');
-        break;
-      case ' ':
-        event.preventDefault();
+    if (!isFocused) {
+      switch (event.key) {
+        case 'r':
+          this.onBtnBetClick('R');
+          break;
+        case 'p':
+          this.onBtnBetClick('P');
+          break;
+        case 's':
+          this.onBtnBetClick('S');
+          break;
+        case 'w':
+          this.onBtnBetClick('W');
+          break;
+        case 'b':
+          this.onBtnBetClick('B');
+          break;
+        case 'u':
+          this.onBtnBetClick('BU');
+          break;
+        case ' ':
+          event.preventDefault();
           this.onAutoPlay();
           break;
-      default:
-        break;
+        default:
+          break;
+      }
     }
   }
 
@@ -434,7 +436,7 @@ class Roll extends Component {
       localStorage.setItem('roll_array', JSON.stringify(stored_roll_array));
 
       if (result.status === 'success') {
-      
+
         gameResultModal(
           isDarkMode,
           text,
@@ -717,7 +719,7 @@ class Roll extends Component {
     const currentRoom = this.props.room;
 
     if (result.status === 'success') {
-     
+
       let text = 'HAHAA, YOU LOST!!!';
 
       if (result.betResult === 1) {
@@ -1346,7 +1348,7 @@ class Roll extends Component {
                     currentActive.style.animation = 'pulse 0.2s ease-in-out ';
                   }
 
-                 
+
                 }}
               >
                 <span>2x (4x)</span>&nbsp;
@@ -1556,7 +1558,9 @@ const mapStateToProps = state => ({
   rank: state.logic.curRoomInfo.rank,
   accessory: state.logic.curRoomInfo.accessory,
   isLowGraphics: state.auth.isLowGraphics,
-  isMusicEnabled: state.auth.isMusicEnabled
+  isMusicEnabled: state.auth.isMusicEnabled,
+  isFocused: state.auth.isFocused
+
 });
 
 const mapDispatchToProps = {

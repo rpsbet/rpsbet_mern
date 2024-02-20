@@ -163,13 +163,15 @@ class DropGame extends Component {
   };
 
   handleKeyPress(event) {
-    switch (event.key) {
-      case ' ':
-        event.preventDefault();
-        this.onBtnBetClick(0);
-        break;
-      default:
-        break;
+    if (!isFocused) {
+      switch (event.key) {
+        case ' ':
+          event.preventDefault();
+          this.onBtnBetClick(0);
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -657,7 +659,7 @@ class DropGame extends Component {
             <div
               className={`animation-container${showAnimation ? ' animate' : ''
                 }`}
-                style={{height: "200px", width: "300px"}}
+              style={{ height: "200px", width: "300px" }}
             >
               <Lottie
                 options={{
@@ -666,7 +668,7 @@ class DropGame extends Component {
                   animationData: drop
                 }}
                 width={drop_guesses.length > 0 ? drop_guesses[drop_guesses.length - 1].bet_amount * 200000 : 100}
-        height={drop_guesses.length > 0 ? drop_guesses[drop_guesses.length - 1].bet_amount * 200000 : 100}
+                height={drop_guesses.length > 0 ? drop_guesses[drop_guesses.length - 1].bet_amount * 200000 : 100}
                 style={{
                   position: 'absolute',
                   transform: 'translateY(-60px)',
@@ -684,7 +686,7 @@ class DropGame extends Component {
                 height={drop_guesses.length > 0 ? drop_guesses[drop_guesses.length - 1].host_drop * 200000 : 100}
                 style={{
                   position: 'absolute',
-                  transform: 'translateY(60px)',                  filter: 'hue-rotate(45deg)',
+                  transform: 'translateY(60px)', filter: 'hue-rotate(45deg)',
 
                   maxWidth: "300px",
                   maxHeight: "300px"
@@ -711,14 +713,14 @@ class DropGame extends Component {
               DROP AMOUNT&nbsp;<span className="roll-tag">[space]</span>
             </Button>
 
-<Lottie
-                          options={{
-                            loop: true,
-                            autoplay: true,
-                            animationData: catBowl
-                          }}
-                          style={{width: "350px", position:"absolute", bottom: "-20px", zIndex: "-1", opacity: "0.5", filter: "drop-shadow(0px 0px 6px #ff0000)"}}
-                        />
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: catBowl
+              }}
+              style={{ width: "350px", position: "absolute", bottom: "-20px", zIndex: "-1", opacity: "0.5", filter: "drop-shadow(0px 0px 6px #ff0000)" }}
+            />
           </div>
 
           <div className="action-panel">
@@ -741,7 +743,9 @@ const mapStateToProps = state => ({
   rank: state.logic.curRoomInfo.rank,
   accessory: state.logic.curRoomInfo.accessory,
   isLowGraphics: state.auth.isLowGraphics,
-  isMusicEnabled: state.auth.isMusicEnabled
+  isMusicEnabled: state.auth.isMusicEnabled,
+  isFocused: state.auth.isFocused
+
 });
 
 const mapDispatchToProps = {

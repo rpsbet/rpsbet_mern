@@ -2726,13 +2726,13 @@ router.post('/editPayout', auth, async (req, res) => {
       (topUpAmount > room.bet_amount * 4) ||
       (gameType.short_name === 'S!' &&
         room.spleesh_bet_unit === 0.01 &&
-        room.endgame_amount < 0.4) ||
+        room.endgame_amount < 0.44) ||
       (gameType.short_name === 'S!' &&
         room.spleesh_bet_unit === 0.1 &&
-        room.endgame_amount < 4.0) ||
+        room.endgame_amount < 4.4) ||
       (gameType.short_name === 'S!' &&
         room.spleesh_bet_unit === 0.001 &&
-        room.endgame_amount < 0.04)
+        room.endgame_amount < 0.044)
     ) {
       return res.json({
         success: false,

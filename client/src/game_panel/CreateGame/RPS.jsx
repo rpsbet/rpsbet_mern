@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { Button, IconButton } from '@material-ui/core';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import styled from 'styled-components';
-import { faTrash } from '@fortawesome/free-solid-svg-icons'; 
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
@@ -304,24 +304,25 @@ class RPS extends Component {
 
   handleKeyPress(event) {
     const { selected_roll } = this.state;
-    
-    switch (event.key) {
-      case 'r':
-        this.onAddRun('R');
-        break;
-      case 'p':
-        this.onAddRun('P');
-        break;
-      case 's':
-        this.onAddRun('S');
-        break;
+    if (!isFocused) {
+      switch (event.key) {
+        case 'r':
+          this.onAddRun('R');
+          break;
+        case 'p':
+          this.onAddRun('P');
+          break;
+        case 's':
+          this.onAddRun('S');
+          break;
 
-      case ' ':
-        event.preventDefault(); 
-        this.onAutoPlay();
-        break;
-      default:
-        break;
+        case ' ':
+          event.preventDefault();
+          this.onAutoPlay();
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -585,7 +586,7 @@ class RPS extends Component {
                   )}
                 </tbody>
               </table>
-             
+
             </div>
             <p className="tip">RRPS CARDS AVAILABLE VIA THE MARKETPLACE</p>
           </div>
@@ -679,9 +680,9 @@ class RPS extends Component {
                     )}
                   </tbody>
                 </table>
-                <IconButton style={{background: "transparent", boxShadow: "none"}} color="secondary" onClick={this.handleReset}>
-          <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
-        </IconButton>  
+                <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+                  <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+                </IconButton>
               </div>
             </div>
           </div>
@@ -694,7 +695,9 @@ class RPS extends Component {
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
-  data: state.itemReducer.myItemArray
+  data: state.itemReducer.myItemArray,
+  isFocused: state.auth.isFocused
+
 });
 
 const mapDispatchToProps = {

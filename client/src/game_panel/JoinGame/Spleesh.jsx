@@ -152,24 +152,26 @@ class Spleesh extends Component {
   };
 
   handleKeyPress(event) {
-    switch (event.key) {
-      case '1':
-        this.onBtnBetClick(0);
-        break;
-      case '2':
-        this.onBtnBetClick(1);
-        break;
-      case '3':
-        this.onBtnBetClick(2);
-        break;
-      case '4':
-        this.onBtnBetClick(3);
-        break;
-      case '5':
-        this.onBtnBetClick(4);
-        break;
-      default:
-        break;
+    if (!isFocused) {
+      switch (event.key) {
+        case '1':
+          this.onBtnBetClick(0);
+          break;
+        case '2':
+          this.onBtnBetClick(1);
+          break;
+        case '3':
+          this.onBtnBetClick(2);
+          break;
+        case '4':
+          this.onBtnBetClick(3);
+          break;
+        case '5':
+          this.onBtnBetClick(4);
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -872,6 +874,7 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
+  isFocused: state.auth.isFocused,
   accessory: state.logic.curRoomInfo.accessory,
   // spleesh_guesses:  state.logic.spleesh_guesses
 });

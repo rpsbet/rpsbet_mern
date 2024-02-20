@@ -198,21 +198,22 @@ class MysteryBox extends Component {
     }
   }
 
-  handleKeyPress(event) {
-    const { box_list } = this.state;
-    
-    // Iterate over box_list to handle key presses dynamically
-    for (let i = 0; i < box_list.length; i++) {
-      const key = `${i + 1}`; // Key will be the index + 1
-      if (event.key === key) {
-        if (box_list[i]) {
-          this.onBoxClicked(box_list[i]);
-        }
-        break; // Exit loop after handling key press
-      }
-    }
-  }
-  
+  // handleKeyPress(event) {
+  //   const { box_list } = this.state;
+  //   if (!isFocused) {
+  //     // Iterate over box_list to handle key presses dynamically
+  //     for (let i = 0; i < box_list.length; i++) {
+  //       const key = `${i + 1}`; // Key will be the index + 1
+  //       if (event.key === key) {
+  //         if (box_list[i]) {
+  //           this.onBoxClicked(box_list[i]);
+  //         }
+  //         break; // Exit loop after handling key press
+  //       }
+  //     }
+  //   }
+  // }
+
 
   toggleImageModal = () => {
     this.setState({
@@ -731,38 +732,40 @@ class MysteryBox extends Component {
                     index={index}
                     key={row._id}
                     onClick={this.onBoxClicked}
-                    // onMouseEnter={() => console.log(row)}
+                  // onMouseEnter={() => console.log(row)}
                   >
                     <CardContent>
-                    <Typography color="textSecondary">
+                      <Typography color="textSecondary">
                         {convertToCurrency(row.box_price)}
                       </Typography>
-                    <Lottie
-                      options={{
-                        loop: true,
-                        autoplay: true,
-                        animationData:
-                          row.status === "init"
-                            ? emptyBox
-                            : row.status === "opened"
-                              ? row.box_price > 0 && row.box_prize > 0 && row.box_price > row.box_prize
-                                ? bananaBox
-                                : row.box_price > 0 && row.box_price < row.box_prize
-                                  ? ethBox
-                                  : catBox
-                              : catBox,
-                      }}
-                      height={150} // Set the height of the animation
-                      width={150}
-                      style={{ marginTop: "-30px", marginBottom: "-60px",
-                      transition: "transform 0.3s ease",
-                      transform: this.state.hoveredIndex === index ? 'translateY(-4px)' : 'translateY(0)', }}
-                    />
-                    
-                    {/* <span  style={{ width: "35px", height: "20px", float: "right", marginBottom: "10px" , marginRight: "-5px" }} className="roll-tag">[{index + 1}]</span> */}
-                      
+                      <Lottie
+                        options={{
+                          loop: true,
+                          autoplay: true,
+                          animationData:
+                            row.status === "init"
+                              ? emptyBox
+                              : row.status === "opened"
+                                ? row.box_price > 0 && row.box_prize > 0 && row.box_price > row.box_prize
+                                  ? bananaBox
+                                  : row.box_price > 0 && row.box_price < row.box_prize
+                                    ? ethBox
+                                    : catBox
+                                : catBox,
+                        }}
+                        height={150} // Set the height of the animation
+                        width={150}
+                        style={{
+                          marginTop: "-30px", marginBottom: "-60px",
+                          transition: "transform 0.3s ease",
+                          transform: this.state.hoveredIndex === index ? 'translateY(-4px)' : 'translateY(0)',
+                        }}
+                      />
+
+                      {/* <span  style={{ width: "35px", height: "20px", float: "right", marginBottom: "10px" , marginRight: "-5px" }} className="roll-tag">[{index + 1}]</span> */}
+
                     </CardContent>
-                    
+
 
 
                   </Card>
@@ -839,7 +842,7 @@ class MysteryBox extends Component {
                 </span>
               ))}
             </p>
-            <div  style={{marginBottom: "30px"}}
+            <div style={{ marginBottom: "30px" }}
               className={`mystery-box-result ${betResult === 0 ? 'failed' : 'success'
                 }`}
             >
@@ -912,7 +915,9 @@ const mapStateToProps = state => ({
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
   isLowGraphics: state.auth.isLowGraphics,
-  isMusicEnabled: state.auth.isMusicEnabled
+  isMusicEnabled: state.auth.isMusicEnabled,
+  isFocused: state.auth.isFocused
+
 });
 
 const mapDispatchToProps = {

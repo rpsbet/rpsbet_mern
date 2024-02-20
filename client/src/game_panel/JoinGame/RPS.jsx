@@ -259,18 +259,20 @@ class RPS extends Component {
 
 
   handleKeyPress(event) {
-    switch (event.key) {
-      case 'r':
-        this.onBtnBetClick('R');
-        break;
-      case 'p':
-        this.onBtnBetClick('P');
-        break;
-      case 's':
-        this.onBtnBetClick('S');
-        break;
-      default:
-        break;
+    if (!isFocused) {
+      switch (event.key) {
+        case 'r':
+          this.onBtnBetClick('R');
+          break;
+        case 'p':
+          this.onBtnBetClick('P');
+          break;
+        case 's':
+          this.onBtnBetClick('S');
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -1108,7 +1110,9 @@ const mapStateToProps = state => ({
   data: state.itemReducer.myItemArray,
   rank: state.logic.curRoomInfo.rank,
   isLowGraphics: state.auth.isLowGraphics,
-  isMusicEnabled: state.auth.isMusicEnabled
+  isMusicEnabled: state.auth.isMusicEnabled,
+  isFocused: state.auth.isFocused
+
 });
 
 const mapDispatchToProps = {
