@@ -222,7 +222,7 @@ class Roll extends Component {
 
 
   onAddRun = (roll, face) => {
-    console.log(this.props.face)
+    // console.log(this.props.face)
     this.props.playSound('boop');
     this.setState({ selected_roll: face });
 

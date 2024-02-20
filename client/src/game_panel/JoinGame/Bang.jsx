@@ -61,7 +61,7 @@ class Bang extends Component {
       newRound: false,
       productName: '',
       image: '',
-      countupValue: 0,
+      count: 0,
       buttonClicked: false,
       cashoutAmount: 1,
       bang_guesses: [],
@@ -86,12 +86,10 @@ class Bang extends Component {
     this.setState({ bet_amount: e.target.value });
     this.setState({ potential_return: e.target.value * 2 });
   }
+  updateCountUp() {
+    this.setState({ bet_amount: e.target.value });
+  }
 
-  changeBgColor = async result => {
-    this.setState({ betResult: result, bgColorChanged: true });
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 1 second
-    this.setState({ bgColorChanged: false });
-  };
 
   static getDerivedStateFromProps(props, current_state) {
     if (
@@ -268,10 +266,10 @@ class Bang extends Component {
 
   joinGame = async () => {
     const { playSound } = this.props;
-    console.log("bet_amount", this.state.bet_amount)
-    console.log("crashed", this.state.crashed)
-    console.log("autoCashout", this.state.autoCashout)
-    console.log("cashoutAmount", this.state.cashoutAmount)
+    // console.log("bet_amount", this.state.bet_amount)
+    // console.log("crashed", this.state.crashed)
+    // console.log("autoCashout", this.state.autoCashout)
+    // console.log("cashoutAmount", this.state.cashoutAmount)
 
     const result = await this.props.join({
       bet_amount: parseFloat(this.state.bet_amount),
@@ -329,7 +327,7 @@ class Bang extends Component {
   onBtnBetClick = async () => {
     const { isAuthenticated, isDarkMode, creator_id, user_id } = this.props;
     const { buttonClicked, waiting, executeBet, cashoutAmount, showCountdown, newRound, showBang } = this.state;
-    console.log(showBang, showCountdown, waiting, newRound, executeBet)
+    // console.log(showBang, showCountdown, waiting, newRound, executeBet)
     if (!validateBetAmount(cashoutAmount, balance, isDarkMode)) {
       return;
     }
@@ -423,13 +421,13 @@ class Bang extends Component {
         previousTimestamp = timestamp;
       }
       if (cashoutAmount >= autoCashout && autoCashout !== '') {
-        console.log("autocashout")
+        // console.log("autocashout")
         this.setState({ cashoutAmount: autoCashout, crashed: false }, () => {
           this.pushBet();
         });
         return;
       } else if (cashoutAmount >= this.state.nextBangInterval) {
-        console.log("crashed")
+        // console.log("crashed")
 
         this.setState({ crashed: true }, () => {
           this.pushBet();
@@ -768,14 +766,14 @@ class Bang extends Component {
                       }
                     });
 
-                    console.log('oooo');
+                    // console.log('oooo');
 
                     const countdownTimer = setInterval(() => {
                       const { countdown } = this.state; // Correct variable name
                       const countdownValue = countdown - 1;
 
                       if (countdownValue <= 0) {
-                        console.log('eww');
+                        // console.log('eww');
 
                         // Countdown is finished, restart everything
                         clearInterval(countdownTimer);
@@ -784,7 +782,7 @@ class Bang extends Component {
                           countdown: null,
                         });
                       } else {
-                        console.log('qw');
+                        // console.log('qw');
 
                         this.setState({ countdown: countdownValue, elapsedTime: '' });
                       }

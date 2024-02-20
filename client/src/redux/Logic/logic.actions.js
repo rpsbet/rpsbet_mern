@@ -419,11 +419,9 @@ export const getRoomList = search_condition => async dispatch => {
 };
 
 export const getRoomCount = search_condition => async dispatch => {
-  console.log("d", search_condition)
   try {
     const res = await axios.get('/game/count', { params: search_condition });
     if (res.data.success) {
-      console.log("ds", res.data.roomCount)
       dispatch({ type: ROOMS_COUNT, payload: res.data.roomCount });
     }
   } catch (err) {

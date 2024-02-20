@@ -81,7 +81,7 @@ class DepositModal extends Component {
         });
 
         await transaction.wait();
-        console.log('Transaction sent successfully!');
+        // console.log('Transaction sent successfully!');
         // You can perform additional actions after sending the transaction
     } catch (error) {
         console.error('Error sending transaction:', error);

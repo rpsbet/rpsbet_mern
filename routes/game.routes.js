@@ -117,7 +117,6 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
 
 // /api/room/:id call
 router.get('/room/:id', async (req, res) => {
-  console.log("called")
   try {
     const room = await Room.findOne({ _id: req.params.id })
       .populate({ path: 'game_type', model: GameType })
@@ -5136,21 +5135,21 @@ router.post('/bet', auth, async (req, res) => {
         newGameLog.selected_box = selected_box;
       } else if (roomInfo['game_type']['game_type_name'] === 'Blackjack') {
 
-        console.log("****NEW BET******")
+        // console.log("****NEW BET******")
         newGameLog.bet_amount = parseFloat(req.body.bet_amount);
         const score = parseInt(req.body.score);
         let score_host = parseInt(req.body.score_host);
-        console.log("score: ", score);
-        console.log("score_host: ", score_host);
+        // console.log("score: ", score);
+        // console.log("score_host: ", score_host);
         let cardsArray = [];
         if (score === 6198) {
           const result = updateHostScore(score_host, score);
-          console.log("result: ", result);
+          // console.log("result: ", result);
           score_host = result.newScoreHost;
-          console.log("currentScoreHost: ", score_host);
+          // console.log("currentScoreHost: ", score_host);
           cardsArray.push({ card: result.card, score: score_host });
           if (score === 6198 && score_host === 21) {
-            console.log("split", score, score_host)
+            // console.log("split", score, score_host)
 
             newGameLog.game_result = 0;
 
@@ -5169,7 +5168,7 @@ router.post('/bet', auth, async (req, res) => {
             }
           } else {
             newGameLog.game_result = 1;
-            console.log("blackjack", score)
+            // console.log("blackjack", score)
 
             newTransactionJ.amount += (((parseFloat(req.body.bet_amount * 2) + (parseFloat(req.body.bet_amount) * 0.5))) * ((100 - commission) / 100));
             message.message =
@@ -5236,10 +5235,9 @@ router.post('/bet', auth, async (req, res) => {
 
             if ((score > currentScoreHost) || currentScoreHost > 21) {
               newGameLog.game_result = 1;
-              console.log("win", score, currentScoreHost)
+              // console.log("win", score, currentScoreHost)
 
               newTransactionJ.amount += (parseFloat(req.body.bet_amount * 2) * ((100 - commission) / 100));
-              console.log("2")
               message.message =
                 'Win ' +
                 convertToCurrency(req.body.bet_amount * 2) +
@@ -5249,7 +5247,6 @@ router.post('/bet', auth, async (req, res) => {
                 roomInfo['room_number'];
 
               roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - parseFloat(req.body.bet_amount);
-              console.log("3")
 
               if (req.io.sockets) {
                 req.io.sockets.emit('UPDATED_BANKROLL', {
@@ -5257,7 +5254,6 @@ router.post('/bet', auth, async (req, res) => {
                 });
               }
 
-              console.log("4")
 
               // update rain
               rain.value =
@@ -5283,10 +5279,8 @@ router.post('/bet', auth, async (req, res) => {
                   cardsArray: cardsArray
                 });
               }
-              console.log("5")
 
             } else if ((score === currentScoreHost)) {
-              console.log("split", score, currentScoreHost)
 
               newGameLog.game_result = 0;
 
@@ -5304,7 +5298,6 @@ router.post('/bet', auth, async (req, res) => {
                 });
               }
             } else {
-              console.log("loss on host win", score, currentScoreHost)
 
               newGameLog.game_result = -1;
               // lost bj
@@ -5319,7 +5312,6 @@ router.post('/bet', auth, async (req, res) => {
                 roomInfo['endgame_type'] &&
                 roomInfo['user_bet'] >= roomInfo['endgame_amount']
               ) {
-                console.log("payout", roomInfo['user_bet'])
 
                 newTransactionC.amount +=
                   parseFloat(roomInfo['user_bet']) -
@@ -5363,7 +5355,6 @@ router.post('/bet', auth, async (req, res) => {
           }
 
         } else {
-          console.log("loss on self buss", score)
 
           newGameLog.game_result = -1;
           // lost bj
