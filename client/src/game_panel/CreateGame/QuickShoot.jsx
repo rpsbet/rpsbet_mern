@@ -52,27 +52,30 @@ class QuickShoot extends Component {
 
 
   handleKeyPress(event) {
-    switch (event.key) {
-      case 'p':
-        this.handlePositionSelection(0);
-        break;
-      case 'q':
-        this.handlePositionSelection(1);
-        break;
-      case 'w':
-        this.handlePositionSelection(2);
-        break;
-      case 'e':
-        this.handlePositionSelection(3);
-        break;
-      case 'r':
-        this.handlePositionSelection(4);
-        break;
-      case ' ':
-        event.preventDefault();
-        break;
-      default:
-        break;
+    if (!this.props.isFocused) {
+
+      switch (event.key) {
+        case 'p':
+          this.handlePositionSelection(0);
+          break;
+        case 'q':
+          this.handlePositionSelection(1);
+          break;
+        case 'w':
+          this.handlePositionSelection(2);
+          break;
+        case 'e':
+          this.handlePositionSelection(3);
+          break;
+        case 'r':
+          this.handlePositionSelection(4);
+          break;
+        case ' ':
+          event.preventDefault();
+          break;
+        default:
+          break;
+      }
     }
   }
 

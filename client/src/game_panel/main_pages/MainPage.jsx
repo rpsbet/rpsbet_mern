@@ -4,6 +4,7 @@ import ProductPage from '../../admin_panel/app/ProductPages/ProductSerchPage/Pro
 import {
   getRoomList,
   getHistory,
+  getRoomCount,
   setCurRoomInfo,
   // startLoading,
   // endLoading,
@@ -60,15 +61,19 @@ class MainPage extends Component {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
       show_open_game: 0,
-      isDrawerOpen: true
+      selectedGameType: 'All',
+      isDrawerOpen: true,
+
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
   }
 
   async componentDidMount() {
-    const { id } = this.props.match.path;
+    const { id} = this.props.match.path;
+    const{ selectedGameType} = this.state;
     const {
       getRoomList,
+      getRoomCount,
       getHistory,
       getGameTypeList,
       isAuthenticated,
@@ -77,8 +82,8 @@ class MainPage extends Component {
       getMyChat
     } = this.props;
 
-    const promises = [getRoomList({pageSize: 7}), getHistory(), getGameTypeList()];
-
+    const promises = [getRoomList({pageSize: 7}), getRoomCount({game_type: selectedGameType}), getHistory(), getGameTypeList()];
+console.log(this.props.rooms_count)
     if (isAuthenticated) {
       promises.push(getMyGames());
       promises.push(getMyHistory());
@@ -88,11 +93,21 @@ class MainPage extends Component {
     await Promise.all(promises);
   }
 
+
   showOpenGameOrHistory = (e, newValue) => {
     e.preventDefault();
     this.setState({
       show_open_game: newValue
     });
+  };
+
+  onChangeGameType = async (newType, callback) => {
+    console.log("asd", newType)
+    console.log("this.po", this.props.rooms_count)
+    await this.props.getRoomCount({game_type: newType});
+    this.setState({
+      selectedGameType: newType,
+    }, callback);
   };
 
   toggleDrawer = () => {
@@ -103,7 +118,7 @@ class MainPage extends Component {
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
       <div id="liveStakes">
-         BATTLES
+         {this.props.rooms_count} BATTLES
         <Lottie options={defaultOptions} width={40} />
       </div>
     ) : (
@@ -210,11 +225,13 @@ class MainPage extends Component {
             <OpenGamesTable
               roomList={this.props.roomList}
               isAuthenticated={this.props.isAuthenticated}
-              roomCount={this.props.roomCount}
+              rooms_count={this.props.rooms_count}
               pageNumber={this.props.pageNumber}
               totalPage={this.props.totalPage}
               balance={this.props.balance}
+              onChangeGameType={this.onChangeGameType}
               isDarkMode={this.props.isDarkMode}
+              selectedGameType={this.state.selectedGameType}
               onlineUserList={this.props.onlineUserList}
               gameTypeList={this.props.gameTypeList}
             />
@@ -494,12 +511,14 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   onlineUserList: state.logic.onlineUserList,
   isDrawerOpen: state.auth.isDrawerOpen,
+  rooms_count: state.logic.rooms_count,
   gameTypeList: state.logic.gameTypeList,
   selectedMainTabIndex: state.logic.selectedMainTabIndex
 });
 
 const mapDispatchToProps = {
   getRoomList,
+  getRoomCount,
   getHistory,
   setCurRoomInfo,
   // startLoading,

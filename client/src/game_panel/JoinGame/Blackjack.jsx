@@ -271,7 +271,7 @@ class Blackjack extends Component {
 
 
   componentDidMount = () => {
-    const { socket, playSound} = this.props;
+    const { socket, playSound } = this.props;
     document.addEventListener('keydown', this.handleKeyPress);
 
     this.resetGame();
@@ -311,50 +311,54 @@ class Blackjack extends Component {
 
   handleKeyPress = (event) => {
     const { disabledButtons } = this.state;
-    switch (event.key) {
-      case 'h':
-        if (!disabledButtons) {
-          this.handleHit();
-        }
-        break;
-      case 's':
-        if (!disabledButtons) {
-          this.handleStand();
-        }
-        break;
-      case ' ':
-        event.preventDefault();
-        if (disabledButtons) {
-          this.setState({
-            disabledButtons: true
-          }, () => {
-            this.onBtnBetClick();
-          })
-        }
-        break;
-      default:
-        break;
+    const { isFocused } = this.props;
+    if (!isFocused) {
+      switch (event.key) {
+        case 'h':
+          if (!disabledButtons) {
+            this.handleHit();
+          }
+          break;
+        case 's':
+          if (!disabledButtons) {
+            this.handleStand();
+          }
+          break;
+        case ' ':
+          event.preventDefault();
+          if (disabledButtons) {
+            this.setState({
+              disabledButtons: true
+            }, () => {
+              this.onBtnBetClick();
+            })
+          }
+          break;
+        default:
+          break;
+      }
+
     }
   }
   dealRemaining = (score) => {
     // Ensure cardsArray is properly initialized and contains data
     const cardsArray = this.state.cardsArray || [];
-  
+
     if (score <= 21 && cardsArray.length > 0) {
       // Make a copy of cards_host and initialize visibility array
       const updatedCardsHost = [...this.state.cards_host];
       const updatedCardVisibility = Array(this.state.cards_host.length).fill(true);
-  
+
       // Set the second card of the host
       updatedCardsHost[1] = cardsArray[0]?.card;
-  
+
       // Ensure visibility is true for index > 2
       updatedCardVisibility.forEach((visibility, index) => {
         if (index > 2) {
           updatedCardVisibility[index] = true;
         }
       });
-  
+
       // Update state with score_host, cards_host, and cardVisibility
       this.setState({
         score_host: cardsArray[cardsArray.length - 1]?.score,
@@ -362,21 +366,21 @@ class Blackjack extends Component {
         cardVisibility: updatedCardVisibility,
         disabledButtons: true
       });
-  
+
       // Introduce a delay between rendering each card
       const delay = 1000; // Adjust the delay as needed (in milliseconds)
       let cardIndex = 1;
-  
+
       const drawCardInterval = setInterval(() => {
         if (cardIndex < cardsArray.length) {
           // Push the next card to the host's cards array
           updatedCardsHost.push(cardsArray[cardIndex]?.card);
-  
+
           // Update state with the new cards array
           this.setState({
             cards_host: updatedCardsHost,
           });
-  
+
           cardIndex++;
         } else {
           clearInterval(drawCardInterval); // Stop the interval when all cards are drawn
@@ -384,7 +388,7 @@ class Blackjack extends Component {
       }, delay);
     }
   };
-  
+
 
 
 
@@ -773,30 +777,30 @@ class Blackjack extends Component {
       deductBalanceWhenStartBlackjack
     } = this.props;
     const { bet_amount, bankroll, is_started, cards, cards_host } = this.state;
-  
+
     if (cards || cards_host !== null) {
       this.resetGame();
     }
-  
+
     if (!validateIsAuthenticated(isAuthenticated, isDarkMode)) {
       return;
     }
-  
+
     if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
       return;
     }
-  
+
     if (!validateBankroll(bet_amount, bankroll, isDarkMode)) {
       return;
     }
-  
+
     const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
     const passwordCorrect = rooms[roomInfo._id];
-  
+
     if (localStorage.getItem('hideConfirmModal') === 'true') {
       if (is_private === true && passwordCorrect !== true) {
         openGamePasswordModal();
@@ -834,10 +838,10 @@ class Blackjack extends Component {
         }
       );
     }
-  
-    
+
+
   };
-  
+
 
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
@@ -1136,7 +1140,7 @@ class Blackjack extends Component {
                     </div>
                     <div className="value">
                       {convertToCurrency(
-                        (bet_amount * 2) 
+                        (bet_amount * 2)
                       )}
                     </div>
                   </div>
@@ -1471,6 +1475,7 @@ const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   rank: state.logic.curRoomInfo.rank,
   isLowGraphics: state.auth.isLowGraphics,
+  isFocused: state.auth.isFocused,
   isMusicEnabled: state.auth.isMusicEnabled
 });
 

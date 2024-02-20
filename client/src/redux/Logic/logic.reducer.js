@@ -5,6 +5,7 @@ import {
   START_LOADING,
   END_LOADING,
   ROOMS_LOADED,
+  ROOMS_COUNT,
   BET_SUCCESS,
   MSG_CREATE_ROOM_FAIL,
   MSG_CREATE_ROOM_SUCCESS,
@@ -43,7 +44,7 @@ const initialState = {
   game_mode: "",
   roomList: [],
   history: [],
-  roomCount: 0,
+  rooms_count: 0,
   spleesh_guesses: [],
   drop_guesses: [],
   bangs: [],
@@ -227,6 +228,12 @@ export default function (state = initialState, action) {
           ...state.curRoomInfo,
           ...payload.roomInfo
         }
+      };
+    case ROOMS_COUNT:
+      // console.log(payload)
+      return {
+        ...state,
+        rooms_count: payload
       };
     case ROOMS_LOADED:
       const { roomList, pageSize, total } = payload;

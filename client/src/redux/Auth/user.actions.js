@@ -23,6 +23,7 @@ import {
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
+  SET_FOCUSED,
   TOGGLE_MUTE,
   TOGGLE_LOW_GRAPHICS,
   TOGGLE_DRAWER,
@@ -312,6 +313,9 @@ export const toggleDrawer = isDrawerOpen => dispatch => {
 
 export const setDarkMode = isDarkMode => dispatch => {
   dispatch({ type: SET_DARK_MODE, payload: isDarkMode });
+}
+export const setFocused = isFocused => dispatch => {
+  dispatch({ type: SET_FOCUSED, payload: isFocused });
 }
 
 // Change User Name

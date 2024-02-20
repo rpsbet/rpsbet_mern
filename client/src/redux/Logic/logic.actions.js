@@ -7,6 +7,7 @@ import {
   TNX_COMPLETE,
   TNX_INCOMPLETE,
   ROOMS_LOADED,
+  ROOMS_COUNT,
   UPDATE_BET_RESULT,
   UPDATE_BANKROLL,
   UPDATE_RAIN,
@@ -409,12 +410,24 @@ export const getRoomList = search_condition => async dispatch => {
   try {
     const res = await axios.get('/game/rooms', { params: search_condition });
     if (res.data.success) {
-      console.log(res.data)
       dispatch({ type: ROOMS_LOADED, payload: res.data });
     }
   } catch (err) {
   } finally {
     dispatch({ type: END_LOADING });
+  }
+};
+
+export const getRoomCount = search_condition => async dispatch => {
+  console.log("d", search_condition)
+  try {
+    const res = await axios.get('/game/count', { params: search_condition });
+    if (res.data.success) {
+      console.log("ds", res.data.roomCount)
+      dispatch({ type: ROOMS_COUNT, payload: res.data.roomCount });
+    }
+  } catch (err) {
+    console.log("error", err)
   }
 };
 

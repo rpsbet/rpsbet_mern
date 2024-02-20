@@ -67,7 +67,7 @@ class OpenGamesTable extends Component {
     super(props);
     this._isMounted = true;
     this.state = {
-      selectedGameType: '',
+      selectedGameType: this.props.selectedGameType,
       showPlayerModal: false,
       selectedCreator: '',
       mouseDown: false,
@@ -80,12 +80,13 @@ class OpenGamesTable extends Component {
       isCoHostModalOpen: false,
       isFocused: false,
       isLoading: true,
+
     };
 
   }
 
   generateGameTypePanel = () => {
-    const { isLowGraphics } = this.props;
+    const { isLowGraphics, selectedGameType } = this.props;
     const gameTypeStyleClass = {
       R: 'roll',
       RPS: 'rps',
@@ -117,14 +118,14 @@ class OpenGamesTable extends Component {
         </Box>
 
         <Button
-          className={`btn-game-type btn-icon all-games ${this.state.selectedGameType === 'All' ? 'active' : ''
+          className={`btn-game-type btn-icon all-games ${selectedGameType === 'All' ? 'active' : ''
             }`}
           key="open-game-all-game-button"
           onClick={() => {
             this.handleGameTypeButtonClicked('All');
           }}
         >
-          {this.state.selectedGameType === 'All' && (
+          {selectedGameType === 'All' && (
             <Lottie
               options={{
                 loop: false,
@@ -149,7 +150,7 @@ class OpenGamesTable extends Component {
         {this.props.gameTypeList.map((gameType, index) => (
           <Button
             className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]
-              } ${this.state.selectedGameType === gameType.short_name
+              } ${selectedGameType === gameType.short_name
                 ? 'active'
                 : ''
               }`}
@@ -158,7 +159,7 @@ class OpenGamesTable extends Component {
               this.handleGameTypeButtonClicked(gameType.short_name);
             }}
           >
-            {this.state.selectedGameType === gameType.short_name && (
+            {selectedGameType === gameType.short_name && (
               <Lottie
                 options={{
                   loop: false,
@@ -209,28 +210,28 @@ class OpenGamesTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { roomList, loading } = this.props;
+    const { roomList, rooms_count, selectedGameType } = this.props;
+
     const roomIds = roomList.map(room => room._id);
 
     if (prevProps.roomList !== this.props.roomList) {
 
-      console.log("fetchedRoomIds", this.state.fetchedRoomIds)
-      // Append new rooms to existing roomList and fetchedRoomIds
+      console.log(prevProps.roomList)
       this.setState(prevState => ({
         roomList: [...prevState.roomList, ...roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))],
         fetchedRoomIds: [...prevState.fetchedRoomIds, ...roomIds],
-        isLoading: false
+        isLoading: false,
+        loaded: true
       }), () => {
         if (roomIds) {
-          console.log("fetchedRoomIds", this.state.fetchedRoomIds)
           this.getRoomData(roomIds);
         }
       });
+    
+
     }
 
-
-
-    if (prevState.selectedGameType !== this.state.selectedGameType) {
+    if (prevProps.selectedGameType !== selectedGameType) {
       this.setState({ isLoading: true });
 
     }
@@ -242,19 +243,21 @@ class OpenGamesTable extends Component {
   };
 
   handleScroll = async () => {
-    const { loading } = this.props;
+    const { loading, selectedGameType, rooms_count } = this.props;
+    const { roomList, fetchedRoomIds } = this.state;
     const tableElement = document.querySelector('.table.main-game-table');
     if (tableElement) {
       const { bottom } = tableElement.getBoundingClientRect();
       const isTableAtBottom = bottom <= window.innerHeight;
 
-      if (!loading && isTableAtBottom) {
-        const { roomList, fetchedRoomIds } = this.state;
+      if (!loading && isTableAtBottom && rooms_count !== roomList.length) {
         await this.props.getRoomList({
           pageSize: roomList.length + 3,
-          game_type: this.state.selectedGameType,
+          game_type: selectedGameType,
           excludeIds: fetchedRoomIds, // Pass already fetched room IDs to exclude them
         });
+        // console.log("cscs", this.state.roomList)
+
       }
     }
   };
@@ -301,7 +304,7 @@ class OpenGamesTable extends Component {
         this.props.addNewTransaction(result.data.newTransaction);
         await this.props.getRoomList({
           pageSize: this.state.roomList.length,
-          game_type: this.state.selectedGameType
+          game_type: this.props.selectedGameType
         });
         // this.setState({ isLoading: false });
         this.handleCloseCoHostModal();
@@ -434,7 +437,7 @@ class OpenGamesTable extends Component {
         type,
         conditions: {
           page: pageNumber !== undefined ? pageNumber : 0,
-          game_type: this.state.selectedGameType
+          game_type: this.props.selectedGameType
         }
       });
     }
@@ -445,14 +448,14 @@ class OpenGamesTable extends Component {
   };
 
   handleViewAction = ({ roomId, type }) => {
-    const { user, pageNumber } = this.props;
+    const { user, pageNumber, selectedGameType } = this.props;
     if (user && user._id) {
       this.props.actionRoom({
         roomId,
         type,
         conditions: {
           page: pageNumber !== undefined ? pageNumber : 0,
-          game_type: this.state.selectedGameType
+          game_type: selectedGameType
         }
       });
     }
@@ -494,14 +497,14 @@ class OpenGamesTable extends Component {
   };
 
   handleGameTypeButtonClicked = async short_name => {
-    this.setState({ roomList: [], fetchedRoomIds: [], selectedGameType: short_name, }, async () => {
-      await this.props.getRoomList({
-        pageSize: 7,
-        game_type: short_name
+    await this.props.onChangeGameType(short_name, async() => {
+      this.setState({ roomList: [], fetchedRoomIds: []}, async () => {
+        await this.props.getRoomList({
+          pageSize: 7,
+          game_type: short_name
+        });
       });
     });
-
-
   };
 
   handleBtnLeftClicked = e => {
@@ -596,387 +599,61 @@ class OpenGamesTable extends Component {
           // {...this.state.selectedRow}
           />
         )}
-        {isLoading && loading ? (
+        {isLoading ? (
           <div className="loading-gif-container">
             <img src={randomGifUrl} id="isLoading" alt="loading" />
           </div>
         ) : (
           <div className="table main-game-table">
-            {this.props.roomList.length === 0 && !isLoading && !loading && (
-            <div className="dont-have-game-msg">
-              <div>NO LIVE BATTLES, GO TO 'MANAGE' TO CREATE ONE</div>
-            </div>
-            )}
-              {this.state.roomList.map(
-                (row, key) => (
-                  <div
-                    className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
-                    style={{ animationDelay: `${key * 0.1}s` }}
-                    key={row._id}
-                  >
-                    {' '}
-                    {renderLottieAvatarAnimation(
-                      row.gameBackground,
-                      isLowGraphics
-                    )}
-                    <div>
-                      <div className="table-cell cell-room-info">
-                        <img
-                          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-                          alt=""
-                          className="game-type-icon"
-                        />
-                        <div>
-                          {/* <div className="cell-game-type">
+            {(this.props.roomList.length === 0 && !isLoading && !loading) ? (
+              <div className="dont-have-game-msg">
+                <div>NO LIVE BATTLES, GO TO 'MANAGE' TO CREATE ONE</div>
+              </div>
+            ) : (
+              <>
+                {this.state.roomList.map(
+                  (row, key) => (
+                    <div
+                      className={`table-row ${key < 10 ? 'slide-in' : 'slide-in'}`}
+                      style={{ animationDelay: `${key * 0.1}s` }}
+                      key={row._id}
+                    >
+                      {' '}
+                      {renderLottieAvatarAnimation(
+                        row.gameBackground,
+                        isLowGraphics
+                      )}
+                      <div>
+                        <div className="table-cell cell-room-info">
+                          <img
+                            src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                            alt=""
+                            className="game-type-icon"
+                          />
+                          <div>
+                            {/* <div className="cell-game-type">
                         {row.game_type.game_type_name}
                       </div> */}
-                          <div className="cell-game-id">{'#' + row.index}</div>
-                        </div>
-                      </div>
-                      <div className="table-cell desktop-only cell-user-name">
-
-                        <a
-                          className="player"
-                          onClick={() =>
-                            this.handleOpenPlayerModal(row.creator_id)
-                          }
-                        >
-                          <Avatar
-                            className="avatar desktop-only"
-                            src={row.creator_avatar}
-                            accessory={row.accessory}
-                            rank={row.rank}
-                            alt=""
-                            darkMode={this.props.isDarkMode}
-                          />
-                        </a>
-                        <i
-                          className={`online-status${this.props.onlineUserList.filter(
-                            user => user === row.creator_id
-                          ).length > 0
-                            ? ' online'
-                            : ''
-                            }`}
-                        ></i>
-
-                        {row.hosts && row.hosts
-                          .slice(1, 2)
-                          .map((host, index) => (
-
-                            <div className="hosts" key={index}>
-                              <a
-                                className="player"
-                                onClick={() => this.handleOpenPlayerModal(host.host._id)}
-                              >
-                                <Avatar
-                                  className="avatar desktop-only"
-                                  src={host.avatar}
-                                  accessory={host.accessory}
-                                  rank={host.rank}
-                                  alt=""
-                                  darkMode={this.props.isDarkMode}
-                                />
-                              </a>
-                            </div>
-
-                          ))}
-                        {row.hosts.length > 2 && (
-                          <div className="hosts avatar-square">
-                            <div className="avatar-count">
-                              +{row.hosts.length - 2}
-                            </div>
+                            <div className="cell-game-id">{'#' + row.index}</div>
                           </div>
-                        )}
-
-                        {row.joiners && row.joiners.length > 0 ? (
-                          <div className="table-cell avatar desktop-only cell-joiners">
-                            <Battle />
-                            {row.joiner_avatars
-                              .slice(0, 2)
-                              .map((joiner, index) => (
-                                <a
-                                  className="player"
-                                  onClick={() =>
-                                    this.handleOpenPlayerModal(row.joiners)
-                                  }
-                                >
-                                  <Avatar
-                                    className="avatar desktop-only"
-                                    key={index}
-                                    accessory={joiner.accessory}
-                                    src={joiner.avatar}
-                                    rank={joiner.rank}
-                                    alt=""
-                                    darkMode={this.props.isDarkMode}
-                                  />
-                                </a>
-                              ))}
-                            {row.joiner_avatars.length > 2 && (
-                              <div className="avatar-square">
-                                <div className="avatar-count">
-                                  +{row.joiner_avatars.length - 2}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="table-cell cell-amount">
-                        {roomStatistics &&
-                          roomStatistics.hostBetsValue.length > 0 ? (
-                          <>
-
-                            <ReactApexChart
-                              className="bankroll-graph"
-                              options={{
-                                chart: {
-                                  animations: {
-                                    enabled: false
-                                  },
-                                  toolbar: {
-                                    show: false
-                                  },
-                                  events: {},
-                                  zoom: {
-                                    enabled: false
-                                  }
-                                },
-                                grid: {
-                                  show: false
-                                },
-                                tooltip: {
-                                  enabled: false
-                                },
-                                fill: {
-                                  type: 'gradient',
-                                  gradient: {
-                                    shade: 'light',
-                                    gradientToColors:
-                                      hostNetProfitList[key] > 0
-                                        ? ['#00FF00']
-                                        : hostNetProfitList[key] < 0
-                                          ? ['#FF0000']
-                                          : ['#808080'],
-                                    shadeIntensity: 1,
-                                    type: 'vertical',
-                                    opacityFrom: 0.7,
-                                    opacityTo: 0.9,
-                                    stops: [0, 100, 100]
-                                  }
-                                },
-
-                                stroke: {
-                                  curve: 'smooth'
-                                },
-                                xaxis: {
-                                  labels: {
-                                    show: false
-                                  },
-                                  axisTicks: {
-                                    show: false
-                                  },
-                                  axisBorder: {
-                                    show: false
-                                  }
-                                },
-                                yaxis: {
-                                  labels: {
-                                    show: false
-                                  },
-                                  axisTicks: {
-                                    show: false
-                                  },
-                                  axisBorder: {
-                                    show: false
-                                  }
-                                }
-                              }}
-                              type="line"
-                              width={120}
-                              height="100"
-                              series={[
-                                {
-                                  data:
-                                    roomStatistics.hostNetProfits[key] &&
-                                      roomStatistics.hostBetsValue[key]
-                                      ? roomStatistics.hostNetProfits[
-                                        key
-                                      ].map((value, index) => [
-                                        roomStatistics.hostBetsValue[key][
-                                        index
-                                        ],
-                                        value
-                                      ])
-                                      : []
-                                }
-                              ]}
-                            />
-                            <Tooltip title="Last 20 Games">
-
-                              <div
-
-                                style={{ display: 'flex', alignItems: 'center' }}
-                              >
-                                {/* {this.renderArrow(hostNetProfitList[key])} */}
-                                <span
-                                  style={{
-                                    color: this.calculateColor(
-                                      hostNetProfitList[key]
-                                    )
-                                  }}
-                                >
-                                  {convertToCurrency(hostNetProfitList[key])}
-                                </span>
-                              </div>
-                            </Tooltip>
-
-                            {/* {row.joiners && row.joiners.length > 0 ? (
-
-                            <div id="palmTree">
-
-                              <img className="palm-trees desktop-only" src={palmTree} />
-                            </div>
-                          ) : (null)
-                          } */}
-                          </>
-                        ) : (
-                          <Lottie
-                            options={{
-                              loop: true,
-                              autoplay: true,
-                              animationData: loadingChart
-                            }}
-                            style={{
-                              width: '32px'
-                            }}
-                          />
-                        )}
-                      </div>
-
-                      <div className="table-cell desktop-only cell-likes">
-                        <div id="view">
-                          <Visibility style={{ fontSize: '1rem' }} />
-                          <Typography variant="body1">
-                            {row.views?.length || 0}
-                          </Typography>
                         </div>
-
-                        <div>
-                          <IconButton onClick={() => this.handleLike(row)}>
-                            {row.likes?.includes(this.props.user._id) ? (
-                              <>
-                                {!row.likeAnimation && (
-                                  <ThumbUp
-                                    style={{ fontSize: '1rem', color: 'red' }}
-                                  />
-                                )}
-                                {row.likeAnimation && (
-                                  <Lottie
-                                    options={{
-                                      loop: false,
-                                      autoplay: true,
-                                      animationData: like
-                                    }}
-                                    style={{
-                                      width: '32px',
-                                      height: '38px',
-                                      margin: '-26px -8px -20px -8px'
-                                    }}
-                                  />
-                                )}
-                              </>
-                            ) : (
-                              <ThumbUpOutlined style={{ fontSize: '1rem' }} />
-                            )}
-                          </IconButton>
-                          <Typography variant="body1">
-                            {row.likes?.length || 0}
-                          </Typography>
-                        </div>
-                      </div>
-                      <div
-                        className="table-cell cell-action"
-                        onClick={() => this.handleView(row)}
-                      >
-                        {row.creator_id !== this.props.user._id && (
+                        <div className="table-cell desktop-only cell-user-name">
 
                           <a
-                            className="ml-1"
-                            onClick={() => this.handleCoHost(row)}
-                            style={{ color: "#28a745", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid #28a745", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
+                            className="player"
+                            onClick={() =>
+                              this.handleOpenPlayerModal(row.creator_id)
+                            }
                           >
-                            <AddBoxOutlined style={{ width: "25px" }} /><img style={{ width: "15px" }} src={busdSvg} />
-                          </a>
-                        )}
-                        <Button
-                          className="btn_join"
-                          onClick={event => {
-                            event.currentTarget.classList.add('active');
-                            this.joinRoom(event);
-                          }}
-                          data-id={row._id}
-                          // data-endgame-amount={row.endgame_amount}
-                          data-creator-id={row.creator_id}
-                          data-room-status={row.status}
-                          data-game-type={row.game_type.game_type_name}
-                          data-bet-amount={row.user_bet}
-                          data-spleesh-bet-unit={row.spleesh_bet_unit}
-                          data-box-price={row.box_price}
-                          data-brain-game-type-id={
-                            row.brain_game_type ? row.brain_game_type._id : ''
-                          }
-                          data-brain-game-type-name={
-                            row.brain_game_type
-                              ? row.brain_game_type.game_type_name
-                              : ''
-                          }
-                          data-brain-game-score={
-                            row.brain_game_score ? row.brain_game_score : 0
-                          }
-                        >
-                          {row.is_private && (
-                            <img
-                              src="/img/icon-lock.png"
+                            <Avatar
+                              className="avatar desktop-only"
+                              src={row.creator_avatar}
+                              accessory={row.accessory}
+                              rank={row.rank}
                               alt=""
-                              className="lock-icon"
+                              darkMode={this.props.isDarkMode}
                             />
-                          )}
-                          {row.game_type.game_type_name === 'Spleesh!' && (
-                            <>
-                              WIN {convertToCurrency(row.spleesh_bet_unit * 10)}
-                            </>
-                          )}
-                          {row.game_type.game_type_name === 'Mystery Box' && (
-                            <>WIN {convertToCurrency(row.pr)}</>
-                          )}
-                          {/* {row.game_type.game_type_name === 'Drop Game' && (
-                          <>WIN ?</>
-                        )} */}
-                          {row.game_type.game_type_name !== 'Spleesh!' &&
-                            // row.game_type.game_type_name !== 'Drop Game' &&
-                            row.game_type.game_type_name !== 'Mystery Box' && (
-                              <>WIN {convertToCurrency(row.user_bet)}</>
-                            )}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="mobile-only">
-                      <div className="table-cell cell-user-name">
-                        <a
-                          className="player"
-                          onClick={() =>
-                            this.handleOpenPlayerModal(row.creator_id)
-                          }
-                        >
-                          <Avatar
-                            className="avatar"
-                            src={row.creator_avatar}
-                            accessory={row.accessory}
-                            rank={row.rank}
-                            alt=""
-                            darkMode={this.props.isDarkMode}
-                          />
-                          {/* <span>{row.creator}</span> */}
+                          </a>
                           <i
                             className={`online-status${this.props.onlineUserList.filter(
                               user => user === row.creator_id
@@ -986,280 +663,611 @@ class OpenGamesTable extends Component {
                               }`}
                           ></i>
 
-                        </a>
-                        {row.joiners && row.joiners.length > 0 ? (
-                          <div className="table-cell mobile-only cell-joiners">
-                            <Battle />
-                            {row.joiner_avatars
-                              .slice(0, 5)
-                              .map((joiner_avatar, index) => (
-                                <Avatar
-                                  className="avatar"
-                                  key={index}
-                                  src={joiner_avatar.avatar}
-                                  rank={joiner_avatar.rank}
-                                  alt=""
-                                  accessory={joiner_avatar.accessory}
-                                  darkMode={this.props.isDarkMode}
-                                />
-                              ))}
-                            {row.joiner_avatars.length > 5 && (
-                              <div className="avatar-square">
-                                <div className="avatar-count">
-                                  +{row.joiner_avatars.length - 5}
-                                </div>
+                          {row.hosts && row.hosts
+                            .slice(1, 2)
+                            .map((host, index) => (
+
+                              <div className="hosts" key={index}>
+                                <a
+                                  className="player"
+                                  onClick={() => this.handleOpenPlayerModal(host.host._id)}
+                                >
+                                  <Avatar
+                                    className="avatar desktop-only"
+                                    src={host.avatar}
+                                    accessory={host.accessory}
+                                    rank={host.rank}
+                                    alt=""
+                                    darkMode={this.props.isDarkMode}
+                                  />
+                                </a>
                               </div>
-                            )}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="table-cell mobile-only cell-likes">
-                        <div id="view">
-                          <Visibility style={{ fontSize: '1rem' }} />
-                          <Typography variant="body1">
-                            {row.views?.length || 0}
-                          </Typography>
+
+                            ))}
+                          {row.hosts.length > 2 && (
+                            <div className="hosts avatar-square">
+                              <div className="avatar-count">
+                                +{row.hosts.length - 2}
+                              </div>
+                            </div>
+                          )}
+
+                          {row.joiners && row.joiners.length > 0 ? (
+                            <div className="table-cell avatar desktop-only cell-joiners">
+                              <Battle />
+                              {row.joiner_avatars
+                                .slice(0, 2)
+                                .map((joiner, index) => (
+                                  <a
+                                    className="player"
+                                    onClick={() =>
+                                      this.handleOpenPlayerModal(row.joiners)
+                                    }
+                                  >
+                                    <Avatar
+                                      className="avatar desktop-only"
+                                      key={index}
+                                      accessory={joiner.accessory}
+                                      src={joiner.avatar}
+                                      rank={joiner.rank}
+                                      alt=""
+                                      darkMode={this.props.isDarkMode}
+                                    />
+                                  </a>
+                                ))}
+                              {row.joiner_avatars.length > 2 && (
+                                <div className="avatar-square">
+                                  <div className="avatar-count">
+                                    +{row.joiner_avatars.length - 2}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="table-cell cell-amount">
+                          {roomStatistics &&
+                            roomStatistics.hostBetsValue.length > 0 ? (
+                            <>
+
+                              <ReactApexChart
+                                className="bankroll-graph"
+                                options={{
+                                  chart: {
+                                    animations: {
+                                      enabled: false
+                                    },
+                                    toolbar: {
+                                      show: false
+                                    },
+                                    events: {},
+                                    zoom: {
+                                      enabled: false
+                                    }
+                                  },
+                                  grid: {
+                                    show: false
+                                  },
+                                  tooltip: {
+                                    enabled: false
+                                  },
+                                  fill: {
+                                    type: 'gradient',
+                                    gradient: {
+                                      shade: 'light',
+                                      gradientToColors:
+                                        hostNetProfitList[key] > 0
+                                          ? ['#00FF00']
+                                          : hostNetProfitList[key] < 0
+                                            ? ['#FF0000']
+                                            : ['#808080'],
+                                      shadeIntensity: 1,
+                                      type: 'vertical',
+                                      opacityFrom: 0.7,
+                                      opacityTo: 0.9,
+                                      stops: [0, 100, 100]
+                                    }
+                                  },
+
+                                  stroke: {
+                                    curve: 'smooth'
+                                  },
+                                  xaxis: {
+                                    labels: {
+                                      show: false
+                                    },
+                                    axisTicks: {
+                                      show: false
+                                    },
+                                    axisBorder: {
+                                      show: false
+                                    }
+                                  },
+                                  yaxis: {
+                                    labels: {
+                                      show: false
+                                    },
+                                    axisTicks: {
+                                      show: false
+                                    },
+                                    axisBorder: {
+                                      show: false
+                                    }
+                                  }
+                                }}
+                                type="line"
+                                width={120}
+                                height="100"
+                                series={[
+                                  {
+                                    data:
+                                      roomStatistics.hostNetProfits[key] &&
+                                        roomStatistics.hostBetsValue[key]
+                                        ? roomStatistics.hostNetProfits[
+                                          key
+                                        ].map((value, index) => [
+                                          roomStatistics.hostBetsValue[key][
+                                          index
+                                          ],
+                                          value
+                                        ])
+                                        : []
+                                  }
+                                ]}
+                              />
+                              <Tooltip title="Last 20 Games">
+
+                                <div
+
+                                  style={{ display: 'flex', alignItems: 'center' }}
+                                >
+                                  {/* {this.renderArrow(hostNetProfitList[key])} */}
+                                  <span
+                                    style={{
+                                      color: this.calculateColor(
+                                        hostNetProfitList[key]
+                                      )
+                                    }}
+                                  >
+                                    {convertToCurrency(hostNetProfitList[key])}
+                                  </span>
+                                </div>
+                              </Tooltip>
+
+                              {/* {row.joiners && row.joiners.length > 0 ? (
+
+                            <div id="palmTree">
+
+                              <img className="palm-trees desktop-only" src={palmTree} />
+                            </div>
+                          ) : (null)
+                          } */}
+                            </>
+                          ) : (
+                            <Lottie
+                              options={{
+                                loop: true,
+                                autoplay: true,
+                                animationData: loadingChart
+                              }}
+                              style={{
+                                width: '32px'
+                              }}
+                            />
+                          )}
                         </div>
 
-                        <div>
-                          <IconButton onClick={() => this.handleLike(row)}>
-                            {row.likes?.includes(this.props.user._id) ? (
-                              <>
-                                {!row.likeAnimation && (
-                                  <ThumbUp
-                                    style={{ fontSize: '1rem', color: 'red' }}
-                                  />
-                                )}
-                                {row.likeAnimation && (
-                                  <Lottie
-                                    options={{
-                                      loop: false,
-                                      autoplay: true,
-                                      animationData: like
-                                    }}
-                                    style={{
-                                      width: '32px',
-                                      height: '38px',
-                                      margin: '-26px -8px -20px -8px'
-                                    }}
-                                  />
-                                )}
-                              </>
-                            ) : (
-                              <ThumbUpOutlined style={{ fontSize: '1rem' }} />
+                        <div className="table-cell desktop-only cell-likes">
+                          <div id="view">
+                            <Visibility style={{ fontSize: '1rem' }} />
+                            <Typography variant="body1">
+                              {row.views?.length || 0}
+                            </Typography>
+                          </div>
+
+                          <div>
+                            <IconButton onClick={() => this.handleLike(row)}>
+                              {row.likes?.includes(this.props.user._id) ? (
+                                <>
+                                  {!row.likeAnimation && (
+                                    <ThumbUp
+                                      style={{ fontSize: '1rem', color: 'red' }}
+                                    />
+                                  )}
+                                  {row.likeAnimation && (
+                                    <Lottie
+                                      options={{
+                                        loop: false,
+                                        autoplay: true,
+                                        animationData: like
+                                      }}
+                                      style={{
+                                        width: '32px',
+                                        height: '38px',
+                                        margin: '-26px -8px -20px -8px'
+                                      }}
+                                    />
+                                  )}
+                                </>
+                              ) : (
+                                <ThumbUpOutlined style={{ fontSize: '1rem' }} />
+                              )}
+                            </IconButton>
+                            <Typography variant="body1">
+                              {row.likes?.length || 0}
+                            </Typography>
+                          </div>
+                        </div>
+                        <div
+                          className="table-cell cell-action"
+                          onClick={() => this.handleView(row)}
+                        >
+                          {row.creator_id !== this.props.user._id && (
+
+                            <a
+                              className="ml-1"
+                              onClick={() => this.handleCoHost(row)}
+                              style={{ color: "#28a745", padding: "2.5px ", display: "flex", justifyContent: "center", alignItems: "center", background: "linear-gradient(45deg, #28a74544, #33e74533)", border: "2px solid #28a745", cursor: "pointer", borderRadius: "0.3em", display: "inline-flex", verticalAlign: "middle" }}
+                            >
+                              <AddBoxOutlined style={{ width: "25px" }} /><img style={{ width: "15px" }} src={busdSvg} />
+                            </a>
+                          )}
+                          <Button
+                            className="btn_join"
+                            onClick={event => {
+                              event.currentTarget.classList.add('active');
+                              this.joinRoom(event);
+                            }}
+                            data-id={row._id}
+                            // data-endgame-amount={row.endgame_amount}
+                            data-creator-id={row.creator_id}
+                            data-room-status={row.status}
+                            data-game-type={row.game_type.game_type_name}
+                            data-bet-amount={row.user_bet}
+                            data-spleesh-bet-unit={row.spleesh_bet_unit}
+                            data-box-price={row.box_price}
+                            data-brain-game-type-id={
+                              row.brain_game_type ? row.brain_game_type._id : ''
+                            }
+                            data-brain-game-type-name={
+                              row.brain_game_type
+                                ? row.brain_game_type.game_type_name
+                                : ''
+                            }
+                            data-brain-game-score={
+                              row.brain_game_score ? row.brain_game_score : 0
+                            }
+                          >
+                            {row.is_private && (
+                              <img
+                                src="/img/icon-lock.png"
+                                alt=""
+                                className="lock-icon"
+                              />
                             )}
-                          </IconButton>
-                          <Typography variant="body1">
-                            {row.likes?.length || 0}
-                          </Typography>
+                            {row.game_type.game_type_name === 'Spleesh!' && (
+                              <>
+                                WIN {convertToCurrency(row.spleesh_bet_unit * 10)}
+                              </>
+                            )}
+                            {row.game_type.game_type_name === 'Mystery Box' && (
+                              <>WIN {convertToCurrency(row.pr)}</>
+                            )}
+                            {/* {row.game_type.game_type_name === 'Drop Game' && (
+                          <>WIN ?</>
+                        )} */}
+                            {row.game_type.game_type_name !== 'Spleesh!' &&
+                              // row.game_type.game_type_name !== 'Drop Game' &&
+                              row.game_type.game_type_name !== 'Mystery Box' && (
+                                <>WIN {convertToCurrency(row.user_bet)}</>
+                              )}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mobile-only">
+                        <div className="table-cell cell-user-name">
+                          <a
+                            className="player"
+                            onClick={() =>
+                              this.handleOpenPlayerModal(row.creator_id)
+                            }
+                          >
+                            <Avatar
+                              className="avatar"
+                              src={row.creator_avatar}
+                              accessory={row.accessory}
+                              rank={row.rank}
+                              alt=""
+                              darkMode={this.props.isDarkMode}
+                            />
+                            {/* <span>{row.creator}</span> */}
+                            <i
+                              className={`online-status${this.props.onlineUserList.filter(
+                                user => user === row.creator_id
+                              ).length > 0
+                                ? ' online'
+                                : ''
+                                }`}
+                            ></i>
+
+                          </a>
+                          {row.joiners && row.joiners.length > 0 ? (
+                            <div className="table-cell mobile-only cell-joiners">
+                              <Battle />
+                              {row.joiner_avatars
+                                .slice(0, 3)
+                                .map((joiner_avatar, index) => (
+                                  <Avatar
+                                    className="avatar"
+                                    key={index}
+                                    src={joiner_avatar.avatar}
+                                    rank={joiner_avatar.rank}
+                                    alt=""
+                                    accessory={joiner_avatar.accessory}
+                                    darkMode={this.props.isDarkMode}
+                                  />
+                                ))}
+                              {row.joiner_avatars.length > 3 && (
+                                <div className="avatar-square">
+                                  <div className="avatar-count">
+                                    +{row.joiner_avatars.length - 3}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="table-cell mobile-only cell-likes">
+                          <div id="view">
+                            <Visibility style={{ fontSize: '1rem' }} />
+                            <Typography variant="body1">
+                              {row.views?.length || 0}
+                            </Typography>
+                          </div>
+
+                          <div>
+                            <IconButton onClick={() => this.handleLike(row)}>
+                              {row.likes?.includes(this.props.user._id) ? (
+                                <>
+                                  {!row.likeAnimation && (
+                                    <ThumbUp
+                                      style={{ fontSize: '1rem', color: 'red' }}
+                                    />
+                                  )}
+                                  {row.likeAnimation && (
+                                    <Lottie
+                                      options={{
+                                        loop: false,
+                                        autoplay: true,
+                                        animationData: like
+                                      }}
+                                      style={{
+                                        width: '32px',
+                                        height: '38px',
+                                        margin: '-26px -8px -20px -8px'
+                                      }}
+                                    />
+                                  )}
+                                </>
+                              ) : (
+                                <ThumbUpOutlined style={{ fontSize: '1rem' }} />
+                              )}
+                            </IconButton>
+                            <Typography variant="body1">
+                              {row.likes?.length || 0}
+                            </Typography>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ),
-                this
-              )}
-            </div>
+                  ),
+                  this
+                )}</>
+                )}
+              </div>
+              
         )}
 
-            {loading && (this.props.roomList.length !== this.props.roomCount) && (
+            {loading && (!isLoading) && (
               <div className='loading-spinner'></div>
             )}
-            <Modal
-              isOpen={this.state.isCoHostModalOpen}
-              onRequestClose={this.handleCloseCoHostModal}
-              style={customStyles}
-              contentLabel="CoHost Modal"
-            >
-              <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
-                <div className="modal-header">
+          
 
-                  <h2 className="modal-title">
-                    <FontAwesomeIcon icon={faUsers} className="mr-2" />
-                    CO-HOST
-                  </h2>
-                  <Button className="btn-close" onClick={this.handleCloseCoHostModal}>
-                    ×
-                  </Button>
-                </div>
-                <div className="modal-body">
-                  <div className="modal-content-wrapper">
-                    <div className="modal-content-panel">
-                      <div className="input-amount">
+        <Modal
+          isOpen={this.state.isCoHostModalOpen}
+          onRequestClose={this.handleCloseCoHostModal}
+          style={customStyles}
+          contentLabel="CoHost Modal"
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
 
-                        <TextField
-                          label="Amount"
-                          value={this.state.coHostAmount}
-                          onChange={this.handleCoHostAmountChange}
-                          pattern="^\\d*\\.?\\d*$"
-                          variant="outlined"
-                          autoComplete="off"
-                          id="payout"
+              <h2 className="modal-title">
+                <FontAwesomeIcon icon={faUsers} className="mr-2" />
+                CO-HOST
+              </h2>
+              <Button className="btn-close" onClick={this.handleCloseCoHostModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  <div className="input-amount">
 
-                          className="form-control"
-                          InputProps={{
-                            onFocus: this.handleFocus,
-                            endAdornment: !this.state.isFocused ? ' ETH ' : (
-                              <ButtonGroup
-                                className={isFocused ? 'fade-in' : 'fade-out'}
-                              >
-                                <Button
-                                  variant="contained"
-                                  color="secondary"
-                                  onClick={() => this.handleMaxButtonClick()}
-                                  style={{ marginRight: '-10px' }}
-                                >
-                                  Max
-                                </Button>
-                              </ButtonGroup>
-                            ),
-                          }}
-                        />
-                      </div>
-                      <Table>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>
-                              <span>IN-GAME BALANCE:</span>
-                            </TableCell>
-                            <TableCell>
-                              {convertToCurrency(this.props.balance)}
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <span>NEW BALANCE:</span>
-                            </TableCell>
-                            <TableCell>
-                              {convertToCurrency(
-                                (this.props.balance || 0) - (this.state.coHostAmount || 0)
-                              )}
-                              &nbsp;
-                              {((this.props.balance || 0) - (this.state.coHostAmount || 0)) < 0 && <Warning width="15pt" />}
-                            </TableCell>
+                    <TextField
+                      label="Amount"
+                      value={this.state.coHostAmount}
+                      onChange={this.handleCoHostAmountChange}
+                      pattern="^\\d*\\.?\\d*$"
+                      variant="outlined"
+                      autoComplete="off"
+                      id="payout"
 
-
-                          </TableRow>
-
-
-                          <TableRow>
-                            <TableCell>
-                              <span>CURRENT BANKROLL:</span>
-                            </TableCell>
-                            <TableCell style={{ color: "#ffb000" }}>
-                              {this.state.selectedRow ? (
-                                convertToCurrency(this.state.selectedRow.user_bet)
-                              ) : (
-                                null
-                              )}
-                            </TableCell>
-
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <span>NEW BANKROLL:</span>
-                            </TableCell>
-                            <TableCell style={{ color: "#ffb000" }}>
-                              {this.state.selectedRow ? (
-                                convertToCurrency(parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0))
-                              ) : (
-                                null
-                              )}
-                            </TableCell>
-                          </TableRow>
-
-                          <TableRow>
-                            <TableCell>
-                              <span>CURRENT STAKE:</span>
-                            </TableCell>
-                            {this.state.selectedRow ? (
-
-                              <TableCell style={{ color: 'red' }}>
-                                {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
-                                  <>
-                                    {convertToCurrency(`${this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share}`)} (
-                                    {`${(((this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share / parseFloat(this.state.selectedRow.user_bet))) * 100).toFixed(2)}%`}
-                                    )
-                                  </>
-                                ) : (
-                                  convertToCurrency('0')
-                                )}
-                              </TableCell>
-                            ) : (
-                              null
-                            )}
-
-                          </TableRow>
-
-
-                          <TableRow>
-                            <TableCell>
-                              <span>NEW STAKE:</span>
-                            </TableCell>
-                            {this.state.selectedRow ? (
-                              <TableCell style={{ color: 'red' }}>
-                                {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
-                                  // If user is a host
-                                  // Assuming selectedRow.hosts is an array of objects with a structure like { host: 'user_id', share: 'share_value' }
-                                  <>
-                                    {convertToCurrency(`${(parseFloat(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) + (parseFloat(this.state.coHostAmount) || 0))}`)} (
-                                    {((`${(parseFloat(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) + (parseFloat(this.state.coHostAmount) || 0))}` / (parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0))) * 100).toFixed(2)}
-                                    %)
-                                  </>
-                                ) : (
-                                  // If user is not a host, display an empty value or default text
-                                  convertToCurrency(`${this.state.coHostAmount || 0}`)
-
-                                )}
-                              </TableCell>
-
-                            ) : (
-                              null
-                            )}
-
-                          </TableRow>
-
-                        </TableBody>
-                      </Table>
-                    </div>
+                      className="form-control"
+                      InputProps={{
+                        onFocus: this.handleFocus,
+                        endAdornment: !this.state.isFocused ? ' ETH ' : (
+                          <ButtonGroup
+                            className={isFocused ? 'fade-in' : 'fade-out'}
+                          >
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              onClick={() => this.handleMaxButtonClick()}
+                              style={{ marginRight: '-10px' }}
+                            >
+                              Max
+                            </Button>
+                          </ButtonGroup>
+                        ),
+                      }}
+                    />
                   </div>
-                </div>
-                <div className="modal-footer">
-                  <Button className="btn-submit" onClick={this.handleSendCoHost}>
-                    CONTRIBUTE
-                  </Button>
-                  <Button
-                    className="btn-back"
-                    onClick={this.handleCloseCoHostModal}
-                  >
-                    Cancel
-                  </Button>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <span>IN-GAME BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(this.props.balance)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(
+                            (this.props.balance || 0) - (this.state.coHostAmount || 0)
+                          )}
+                          &nbsp;
+                          {((this.props.balance || 0) - (this.state.coHostAmount || 0)) < 0 && <Warning width="15pt" />}
+                        </TableCell>
+
+
+                      </TableRow>
+
+
+                      <TableRow>
+                        <TableCell>
+                          <span>CURRENT BANKROLL:</span>
+                        </TableCell>
+                        <TableCell style={{ color: "#ffb000" }}>
+                          {this.state.selectedRow ? (
+                            convertToCurrency(this.state.selectedRow.user_bet)
+                          ) : (
+                            null
+                          )}
+                        </TableCell>
+
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW BANKROLL:</span>
+                        </TableCell>
+                        <TableCell style={{ color: "#ffb000" }}>
+                          {this.state.selectedRow ? (
+                            convertToCurrency(parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0))
+                          ) : (
+                            null
+                          )}
+                        </TableCell>
+                      </TableRow>
+
+                      <TableRow>
+                        <TableCell>
+                          <span>CURRENT STAKE:</span>
+                        </TableCell>
+                        {this.state.selectedRow ? (
+
+                          <TableCell style={{ color: 'red' }}>
+                            {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
+                              <>
+                                {convertToCurrency(`${this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share}`)} (
+                                {`${(((this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share / parseFloat(this.state.selectedRow.user_bet))) * 100).toFixed(2)}%`}
+                                )
+                              </>
+                            ) : (
+                              convertToCurrency('0')
+                            )}
+                          </TableCell>
+                        ) : (
+                          null
+                        )}
+
+                      </TableRow>
+
+
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW STAKE:</span>
+                        </TableCell>
+                        {this.state.selectedRow ? (
+                          <TableCell style={{ color: 'red' }}>
+                            {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
+                              // If user is a host
+                              // Assuming selectedRow.hosts is an array of objects with a structure like { host: 'user_id', share: 'share_value' }
+                              <>
+                                {convertToCurrency(`${(parseFloat(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) + (parseFloat(this.state.coHostAmount) || 0))}`)} (
+                                {((`${(parseFloat(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) + (parseFloat(this.state.coHostAmount) || 0))}` / (parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0))) * 100).toFixed(2)}
+                                %)
+                              </>
+                            ) : (
+                              // If user is not a host, display an empty value or default text
+                              convertToCurrency(`${this.state.coHostAmount || 0}`)
+
+                            )}
+                          </TableCell>
+
+                        ) : (
+                          null
+                        )}
+
+                      </TableRow>
+
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
-            </Modal>
-          </>
+            </div>
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.handleSendCoHost}>
+                CONTRIBUTE
+              </Button>
+              <Button
+                className="btn-back"
+                onClick={this.handleCloseCoHostModal}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      </>
 
-        )
-        }
+    )
+  }
 }
 
 const mapStateToProps = state => ({
-          creator: state.logic.curRoomInfo.creator_name,
-        joiners: state.logic.curRoomInfo.joiners,
-        isAuthenticated: state.auth.isAuthenticated,
-        userName: state.auth.userName,
-        user: state.auth.user,
-        isLowGraphics: state.auth.isLowGraphics,
-        loading: state.logic.isActiveLoadingOverlay
+  creator: state.logic.curRoomInfo.creator_name,
+  joiners: state.logic.curRoomInfo.joiners,
+  isAuthenticated: state.auth.isAuthenticated,
+  userName: state.auth.userName,
+  user: state.auth.user,
+  isLowGraphics: state.auth.isLowGraphics,
+  loading: state.logic.isActiveLoadingOverlay
 });
 
-        const mapDispatchToProps = {
-          getRoomList,
-          setCurRoomInfo,
-          actionRoom,
-          getRoomStatisticsData,
-          setBalance,
-          addNewTransaction
-        };
+const mapDispatchToProps = {
+  getRoomList,
+  setCurRoomInfo,
+  actionRoom,
+  getRoomStatisticsData,
+  setBalance,
+  addNewTransaction
+};
 
-        export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);
+export default connect(mapStateToProps, mapDispatchToProps)(OpenGamesTable);

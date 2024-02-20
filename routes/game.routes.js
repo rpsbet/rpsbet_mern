@@ -905,6 +905,34 @@ router.get('/my_history', auth, async (req, res) => {
   }
 });
 
+router.get('/count', async (req, res) => {
+  
+  const game_type = req.query.game_type ? req.query.game_type : 'All';
+console.log(game_type)
+  try {
+    let search_condition = { status: 'open' };
+
+    if (game_type !== 'All') {
+      const gameType = await GameType.findOne({ short_name: game_type }).select('_id');
+      search_condition.game_type = gameType._id;
+    }
+
+    const roomCount = await Room.countDocuments(search_condition);
+
+    res.json({
+      success: true,
+      game_type: game_type,
+      roomCount: roomCount
+    });
+  } catch (err) {
+    res.json({
+      success: false,
+      error: err.toString()
+    });
+  }
+});
+
+
 // /api/rooms call
 router.get('/rooms', async (req, res) => {
   const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;

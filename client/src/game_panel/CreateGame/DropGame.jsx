@@ -252,6 +252,8 @@ class DropGame extends Component {
 
   handleKeyPress(event) {
     const { selected_roll } = this.state;
+    if (!this.props.isFocused) {
+
     switch (event.key) {
 
       case ' ':
@@ -261,6 +263,7 @@ class DropGame extends Component {
       default:
         break;
     }
+  }
   }
 
   handleReset() {
@@ -393,7 +396,7 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   auth: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
-
+isFocused: state.auth.isFocused
 });
 
 export default connect(mapStateToProps)(DropGame);

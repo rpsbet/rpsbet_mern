@@ -114,6 +114,14 @@ input,textarea { border-radius: 0 !important; }
   box-shadow: 0 0 20px #49ff08;
 }
 
+#cat-football {
+  position: absolute;
+
+}
+#quickShoot_lottie {
+  position: absolute;
+  margin: 0 !important;
+}
 .create-game-panel .qs-buttons {
   position: sticky !important;
   translate: 0 -130px;
@@ -217,12 +225,12 @@ button {
 } */
 
 button#l {
-  transform: translate(-331px, -12px)
+  transform: translate(-118px, -12px)
 }
 
 /* Right button */
 button#r {
-  transform: translate(-135px, -12px)
+  transform: translate(74px, -12px)
 }
 
 button#tr {
@@ -240,7 +248,7 @@ button#c {
 }
 
 button#cc {
-  transform: translate(-233px,-49px);
+  transform: translate(-20px,-49px);
 }
 
 button#br {
@@ -1048,7 +1056,10 @@ circle {
   
 }
 @media (max-width: 992px) {
-
+  #quickShoot_lottie div {
+    width: 331px !important;
+    border-radius: 40px !important;
+  }
   #runs {
     max-height: 25vh;
   }
@@ -1092,6 +1103,8 @@ circle {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
+
+  
 .outer-div {
   margin-top: 60px;
 }
@@ -1210,10 +1223,6 @@ circle {
 }
 
 
-.join-game-panel .qs-image-panel {
-  position: absolute;
-}
-  
   .qs-buttons button:hover,
   .qs-buttons button:focus{
     transform: scale(0.7);
@@ -1235,15 +1244,15 @@ circle {
   }
 
   button#l {
-    transform: translate(-152px, -15px);
+    transform: translate(-100px, -15px);
   }
   
   button#r {
-    transform: translate(6px, -15px);
+    transform: translate(56px, -15px);
   }
   
   button#cc {
-    transform: translate(-71px,-45px);
+    transform: translate(-23px,-45px);
   }
   
   button#br {

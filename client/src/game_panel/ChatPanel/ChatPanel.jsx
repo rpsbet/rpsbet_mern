@@ -18,6 +18,7 @@ import Chat from '../icons/Chat.js';
 import ChatHover from '../icons/ChatHover';
 import ChatRoom from '../icons/ChatRoom';
 import ChatRoomHover from '../icons/ChatRoomHover.js';
+import { setFocused } from '../../redux/Auth/user.actions.js' 
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -228,6 +229,13 @@ class ChatPanel extends Component {
     }));
   };
 
+  onFocusHandler = () => {
+    this.props.setFocused(true);
+  }
+  onBlurHandler = () => {
+    this.props.setFocused(false);
+  }
+
   toggleSearchPopup = () => {
     this.setState(prevState => ({
       showSearchPopup: !prevState.showSearchPopup
@@ -404,6 +412,8 @@ class ChatPanel extends Component {
               type="text"
               className="form-control"
               variant="outlined"
+              onFocus={this.onFocusHandler}
+              onBlur={this.onBlurHandler}
               onKeyDown={this.onTextAreaKeyDown}
               placeholder={isChatEnabled ? "Chat here..." : "NOT LOGGED IN"}
               onChange={this.onChangeText}
@@ -452,6 +462,8 @@ const mapStateToProps = state => ({
   onlineUserList: state.logic.onlineUserList
 });
 
-const mapDispatchToProps = {};
+const mapDispatchToProps = {
+  setFocused
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatPanel);

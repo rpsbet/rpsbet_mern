@@ -20,6 +20,7 @@ import {
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
+  SET_FOCUSED,
   SET_REFERRAL_CODE,
   TOGGLE_MUTE,
   TOGGLE_LOW_GRAPHICS,
@@ -45,6 +46,7 @@ const initialState = {
   balance: 0,
   gasfee: 0,
   isActivated: true,
+  isFocused: false,
   userName: '',
   liveUrl: null,
   transactions: [],
@@ -69,6 +71,11 @@ export default function(state = initialState, action) {
       return {
         ...state,
         isMuted: payload
+      };
+      case 'SET_FOCUSED': // Action type dispatched when chat is enabled
+      return {
+        ...state,
+        isFocused: payload, // Set isChatEnabled to the payload value
       };
     case TOGGLE_LOW_GRAPHICS:
       localStorage.setItem('isLowGraphics', payload);

@@ -176,22 +176,25 @@ class Blackjack extends Component {
   }
 
   handleKeyPress(event) {
-    switch (event.key) {
-      case 'h':
-        this.onAddRun(this.state.score, 'hit');
-                this.hit();
-        break;
-      case 's':
-        this.stand();
-        break;
+    if (!this.props.isFocused) {
+      switch (event.key) {
+        case 'h':
+          this.onAddRun(this.state.score, 'hit');
+          this.hit();
+          break;
+        case 's':
+          this.stand();
+          break;
 
-      case ' ':
-        event.preventDefault(); 
-        this.onAutoPlay();
-        break;
-      default:
-        break;
+        case ' ':
+          event.preventDefault();
+          this.onAutoPlay();
+          break;
+        default:
+          break;
+      }
     }
+
   }
 
   handleReset() {
@@ -351,7 +354,7 @@ class Blackjack extends Component {
     });
   };
 
-  
+
 
   onAutoPlay = () => {
     if (this.props.bj_list.length > 2) {
@@ -581,6 +584,7 @@ class Blackjack extends Component {
 
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
+  isFocused: state.auth.isFocused,
   isDarkMode: state.auth.isDarkMode
 });
 

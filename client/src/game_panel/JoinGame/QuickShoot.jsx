@@ -102,25 +102,28 @@ class QuickShoot extends Component {
   }
 
   handleKeyPress(event) {
-    switch (event.key) {
-      case 'p':
-        this.onBtnBetClick(0);
-        break;
-      case 'q':
-        this.onBtnBetClick(1);
-        break;
-      case 'w':
-        this.onBtnBetClick(2);
-        break;
-      case 'e':
-        this.onBtnBetClick(3);
-        break;
-      case 'r':
-        this.onBtnBetClick(4);
-        break;
-      default:
-        break;
+    if (!this.props.isFocused) {
+      switch (event.key) {
+        case 'p':
+          this.onBtnBetClick(0);
+          break;
+        case 'q':
+          this.onBtnBetClick(1);
+          break;
+        case 'w':
+          this.onBtnBetClick(2);
+          break;
+        case 'e':
+          this.onBtnBetClick(3);
+          break;
+        case 'r':
+          this.onBtnBetClick(4);
+          break;
+        default:
+          break;
+      }
     }
+
   }
 
 
@@ -176,7 +179,11 @@ class QuickShoot extends Component {
 
     this.setState({
       animation: (
-        <div className="qs-image-panel">
+        <div
+          className="qs-image-panel"
+          id="quickShoot_lottie"
+
+        >
           <Lottie
             options={{
               loop: false,
@@ -349,17 +356,17 @@ class QuickShoot extends Component {
     const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000;
 
     this.setState(
-        {
-            bet_amount: Math.floor(Math.min(
-                maxBetAmount,
-                this.state.bankroll * (this.props.qs_game_type - 1)
-            ) * 100000) / 100000
-        },
-        () => {
-            document.getElementById('betamount').focus();
-        }
+      {
+        bet_amount: Math.floor(Math.min(
+          maxBetAmount,
+          this.state.bankroll * (this.props.qs_game_type - 1)
+        ) * 100000) / 100000
+      },
+      () => {
+        document.getElementById('betamount').focus();
+      }
     );
-};
+  };
 
 
 
@@ -452,48 +459,48 @@ class QuickShoot extends Component {
   };
 
   // Define a function to map position to letter
- getPositionLetter = (position) => {
-  switch (position) {
+  getPositionLetter = (position) => {
+    switch (position) {
       case 0:
-          return 'P';
+        return 'P';
       case 1:
-          return 'q';
+        return 'q';
       case 2:
-          return 'w';
+        return 'w';
       case 3:
-          return 'e';
+        return 'e';
       case 4:
-          return 'r';
+        return 'r';
       default:
-          return '';
-  }
-};
+        return '';
+    }
+  };
 
-renderButton(id, position) {
-  const { betResult, selected_qs_position, bgColorChanged } = this.props;
+  renderButton(id, position) {
+    const { betResult, selected_qs_position, bgColorChanged } = this.props;
 
-  const classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position
-    ? ' lose-bg'
-    : ''
-    }${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${betResult === 1 && selected_qs_position === position ? ' win-bg' : ''
-    }`;
+    const classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position
+      ? ' lose-bg'
+      : ''
+      }${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${betResult === 1 && selected_qs_position === position ? ' win-bg' : ''
+      }`;
 
     const buttonStyle = {
       opacity: 0.9
-  };
+    };
 
-  return (
+    return (
       <IconButton
-          id={id}
-          onClick={() => {
-              this.onBtnBetClick(position);
-              this.props.playSound('select');
-          }}
-          className={classes}
-          style={buttonStyle}
+        id={id}
+        onClick={() => {
+          this.onBtnBetClick(position);
+          this.props.playSound('select');
+        }}
+        className={classes}
+        style={buttonStyle}
       ><span className="roll-tag">{this.getPositionLetter(position)}</span></IconButton>
-  );
-}
+    );
+  }
 
 
   renderButtons() {
@@ -846,22 +853,22 @@ renderButton(id, position) {
                   boxShadow: `0 0 20px ${borderColor}`
 
                 }}
-                />
-                <div 
+              />
+              <div
                 id="cat-football"
-                
-                >
+
+              >
 
                 <Lottie
-                options={{
-                  loop: true,
-                  autoplay: true,
-                  animationData: football
-                }}
-                style={{ transform: 'translate(15px, 60px)', width: '100px',  }}
+                  options={{
+                    loop: true,
+                    autoplay: true,
+                    animationData: football
+                  }}
+                  style={{ transform: 'translate(15px, 60px)', width: '100px', }}
                 />
-                </div>
-                {this.state.animation}
+              </div>
+              {this.state.animation}
               {this.renderButtons()}
             </div>
 
@@ -921,6 +928,7 @@ const mapStateToProps = state => ({
   rank: state.logic.curRoomInfo.rank,
   accessory: state.logic.curRoomInfo.accessory,
   isLowGraphics: state.auth.isLowGraphics,
+  isFocused: state.auth.isFocused,
   isMusicEnabled: state.auth.isMusicEnabled
 });
 

@@ -3,7 +3,7 @@ import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
 import { Button, IconButton } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons'; 
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import {
   alertModal
@@ -89,31 +89,34 @@ class Roll extends Component {
 
   handleKeyPress(event) {
     const { selected_roll } = this.state;
-    switch (event.key) {
-      case 'r':
-        this.onAddRun('2', 'R');
-        break;
-      case 'p':
-        this.onAddRun('2', 'P');
-        break;
-      case 's':
-        this.onAddRun('2', 'S');
-        break;
-      case 'w':
-        this.onAddRun('14', 'W');
-        break;
-      case 'b':
-        this.onAddRun('1.5', 'B');
-        break;
-      case 'u':
-        this.onAddRun('7', 'Bu');
-        break;
-      case ' ':
-        event.preventDefault();
+    if (!this.props.isFocused) {
+
+      switch (event.key) {
+        case 'r':
+          this.onAddRun('2', 'R');
+          break;
+        case 'p':
+          this.onAddRun('2', 'P');
+          break;
+        case 's':
+          this.onAddRun('2', 'S');
+          break;
+        case 'w':
+          this.onAddRun('14', 'W');
+          break;
+        case 'b':
+          this.onAddRun('1.5', 'B');
+          break;
+        case 'u':
+          this.onAddRun('7', 'Bu');
+          break;
+        case ' ':
+          event.preventDefault();
           this.onAutoPlay();
           break;
-      default:
-        break;
+        default:
+          break;
+      }
     }
   }
 
@@ -376,7 +379,7 @@ class Roll extends Component {
                   }
                 }}
               ><span>1.5x</span>&nbsp;
-              <span className="roll-tag">[B]</span>
+                <span className="roll-tag">[B]</span>
               </Button>
               <Button
                 className={
@@ -393,7 +396,7 @@ class Roll extends Component {
                   }
                 }}
               ><span>7x</span>&nbsp;
-              <span className="roll-tag">[U]</span>
+                <span className="roll-tag">[U]</span>
               </Button>
             </div>
 
@@ -425,11 +428,11 @@ class Roll extends Component {
                 )}
               </tbody>
             </table>
-          <IconButton style={{background: "transparent", boxShadow: "none"}} color="secondary" onClick={this.handleReset}>
-          <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
-        </IconButton>  
+            <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+              <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+            </IconButton>
           </div>
-             </div>
+        </div>
       </div>
     );
   }
@@ -439,6 +442,7 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   auth: state.auth.isAuthenticated,
   isDarkMode: state.auth.isDarkMode,
+  isFocused: state.auth.isFocused
 
 });
 
