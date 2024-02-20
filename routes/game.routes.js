@@ -117,6 +117,7 @@ router.patch('/room/:id/:type', auth, async (req, res) => {
 
 // /api/room/:id call
 router.get('/room/:id', async (req, res) => {
+  console.log("called")
   try {
     const room = await Room.findOne({ _id: req.params.id })
       .populate({ path: 'game_type', model: GameType })
@@ -451,7 +452,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         } else if (gameLog.game_result === 0) {
           temp.history = `${joined_user_link} split <span style='color: #b9bbbe;'>${convertToCurrency(
             gameLog['bet_amount'] * 2
-          )} (1.00X)</span> with ${creator_link} in ${room_name}`;
+          )} (1.00X)</span> in ${room_name}`;
         } else {
           temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
             gameLog['bet_amount']
@@ -730,52 +731,38 @@ const updateDigitToPoint2 = number => {
   }
   return number;
 };
-const getRoomList = async (pageSize, game_type) => {
-  const search_condition = { status: 'open', game_type: { $ne: null } };
+const getRoomList = async (pageSize, game_type, excludeIds = []) => {
+  const search_condition = { status: 'open', game_type: { $ne: null }, _id: { $nin: excludeIds } };
 
   if (game_type !== 'All') {
-    const gameType = await GameType.findOne({ short_name: game_type });
+    const gameType = await GameType.findOne({ short_name: game_type }).select('_id');
     search_condition.game_type = gameType._id;
   }
 
-  const totalCountPromise = Room.countDocuments(search_condition);
-  const preRoomsPromise = Room.find(search_condition)
-    .sort({ created_at: 'desc' })
-    .limit(pageSize);
+  try {
+    const preRooms = await Room.find(search_condition)
+      .select('_id creator joiners game_type spleesh_bet_unit bet_amount user_bet pr host_pr status room_number created_at likes views hosts')
+      .populate({ path: 'creator', model: User, select: 'avatar totalWagered accessory status' })
+      .populate({ path: 'game_type', model: GameType })
+      .limit(pageSize)
 
-  const [totalCount, preRooms] = await Promise.all([totalCountPromise, preRoomsPromise]);
+      // .populate({ path: 'brain_game_type', model: BrainGameType });
 
-  const roomIds = preRooms.map(({ _id }) => _id);
-  const roomsPromise = Room.find({ _id: { $in: roomIds } })
-    .populate({ path: 'creator', model: User })
-    .populate({ path: 'game_type', model: GameType })
-    .populate({ path: 'brain_game_type', model: BrainGameType });
-
-  const rooms = await roomsPromise;
-
-  const result = await Promise.all(
-    rooms.map(async (room) => {
+    const result = await Promise.all(preRooms.map(async (room) => {
       try {
-        const joinerDataPromise = Promise.all(
-          room.joiners.map(async (joinedUser) => {
-            const user = await User.findOne({ _id: joinedUser });
-            return {
-              avatar: user.avatar,
-              totalWagered: user.totalWagered,
-              accessory: user.accessory,
-              rank: user.totalWagered,
-            };
-          })
-        );
-
-        const joinerData = await joinerDataPromise;
+        const joinerData = await Promise.all(room.joiners.map(async (joinedUser) => {
+          const user = await User.findOne({ _id: joinedUser }).select('avatar totalWagered accessory status');
+          return {
+            avatar: user.avatar,
+            totalWagered: user.totalWagered,
+            accessory: user.accessory,
+            rank: user.totalWagered,
+          };
+        }));
 
         const temp = {
           _id: room._id,
-          // creator: room.is_anonymous ? 'Anonymous' : room.creator?.username || '',
           creator_id: room.creator ? room.creator._id : '',
-          // aveMultiplier: room.aveMultiplier,
-          // endgame_amount: room.endgame_amount,
           joiners: room.joiners,
           joiner_avatars: joinerData.map(joiner => ({
             avatar: joiner.avatar,
@@ -788,28 +775,16 @@ const getRoomList = async (pageSize, game_type) => {
           creator_status: room.creator?.status || '',
           game_type: room.game_type,
           bet_amount: room.bet_amount,
-          user_bet: room.user_bet,
-          // new_host_pr: room.new_host_pr,
-          // pr: room.pr,
-          // rps_list: room.rps_list,
-          // qs_list: room.qs_list,
-          // drop_list: room.drop_list,
-          // bang_list: room.bang_list,
-          // roll_list: room.roll_list,
-          // crashed: room.crashed,
-          // multiplier: room.multiplier,
+          pr: room.pr,
+          user_bet: parseFloat(room.user_bet),
           winnings: '',
           spleesh_bet_unit: room.spleesh_bet_unit,
-          // is_anonymous: room.is_anonymous,
           is_private: room.is_private,
-          // youtubeUrl: room.youtubeUrl,
           gameBackground: room.gameBackground,
-          // brain_game_type: room.brain_game_type,
           status: room.status,
           index: room.room_number,
           created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
           likes: room.likes,
-          // dislikes: room.dislikes,
           views: room.views,
           hosts: room.hosts
         };
@@ -819,9 +794,7 @@ const getRoomList = async (pageSize, game_type) => {
             temp.winnings = room.user_bet;
             break;
           case 2:
-            const gameLogList = await GameLog.find({ room }).sort({
-              bet_amount: 'desc',
-            });
+            const gameLogList = await GameLog.find({ room }).sort({ bet_amount: 'desc' });
             if (!gameLogList || gameLogList.length === 0) {
               temp.winnings = temp.spleesh_bet_unit + room.user_bet;
             } else {
@@ -857,16 +830,27 @@ const getRoomList = async (pageSize, game_type) => {
         console.error({ error: error.toString() });
         return null;
       }
-    })
-  );
+    }));
 
-  const filteredResults = result.filter((temp) => temp !== null);
+    const filteredResults = result.filter((temp) => temp !== null);
+    
+    // Sort by views array length
+    filteredResults.sort((a, b) => {
+      return b.views.length - a.views.length;
+    });
 
-  return {
-    rooms: filteredResults.sort((a, b) => (a.created_at > b.created_at ? -1 : 1)),
-    count: totalCount,
-    pageSize,
-  };
+    // Apply the limit after sorting
+    const limitedResults = filteredResults.slice(0, pageSize);
+
+    return {
+      rooms: limitedResults,
+    };
+  } catch (error) {
+    console.error('Error in getRoomList:', error);
+    return {
+      rooms: [],
+    };
+  }
 };
 
 
@@ -925,15 +909,15 @@ router.get('/my_history', auth, async (req, res) => {
 router.get('/rooms', async (req, res) => {
   const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
   const game_type = req.query.game_type ? req.query.game_type : 'All';
+  const excludeIds = req.query.excludeIds;
 
   try {
-    const rooms = await getRoomList(pageSize, game_type);
+    const rooms = await getRoomList(pageSize, game_type, excludeIds);
     res.json({
       pageSize: pageSize,
       success: true,
       query: req.query,
       total: rooms.count,
-
       roomList: rooms.rooms,
     });
   } catch (err) {
@@ -943,6 +927,8 @@ router.get('/rooms', async (req, res) => {
     });
   }
 });
+
+
 
 router.post('/rooms', auth, async (req, res) => {
   try {
@@ -1166,7 +1152,7 @@ router.post('/rooms', auth, async (req, res) => {
     await req.user.save();
     await newTransaction.save();
 
-    const rooms = await getRoomList(10, 'All');
+    const rooms = await getRoomList(7, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       pageSize: rooms.pageSize,
       roomList: rooms.rooms,
@@ -1729,7 +1715,7 @@ router.post('/end_game', auth, async (req, res) => {
       newTransaction
     });
 
-    const rooms = await getRoomList(10, 'All');
+    const rooms = await getRoomList(7, 'All');
 
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
@@ -1891,7 +1877,7 @@ router.post('/unstake', auth, async (req, res) => {
     });
 
     // Emit socket event to update room list for all users
-    const rooms = await getRoomList(10, 'All');
+    const rooms = await getRoomList(7, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
       roomList: rooms.rooms,
@@ -2054,7 +2040,7 @@ router.post('/end_game', auth, async (req, res) => {
       newTransaction
     });
 
-    const rooms = await getRoomList(10, 'All');
+    const rooms = await getRoomList(7, 'All');
 
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
@@ -4277,7 +4263,7 @@ router.post('/bet', auth, async (req, res) => {
               '-' +
               roomInfo['room_number'];
           } else {
-            console.log("win1 end")
+            // console.log("win1 end")
 
             newTransactionJ.amount +=
               parseFloat(roomInfo['user_bet']) * ((100 - commission) / 100);

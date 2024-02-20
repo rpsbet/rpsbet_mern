@@ -409,6 +409,7 @@ export const getRoomList = search_condition => async dispatch => {
   try {
     const res = await axios.get('/game/rooms', { params: search_condition });
     if (res.data.success) {
+      console.log(res.data)
       dispatch({ type: ROOMS_LOADED, payload: res.data });
     }
   } catch (err) {

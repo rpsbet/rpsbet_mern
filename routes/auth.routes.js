@@ -119,10 +119,10 @@ router.get('/user', auth, async (req, res) => {
     const endTime = new Date(); // End timer
 
     // Log the durations
-    console.log('Time taken for transactions retrieval:', transactionsEndTime - transactionsStartTime, 'ms');
-    console.log('Time taken for all transactions retrieval:', allTransactionsEndTime - allTransactionsStartTime, 'ms');
-    console.log('Time taken for unread message count retrieval:', countEndTime - countStartTime, 'ms');
-    console.log('Total time taken:', endTime - startTime, 'ms');
+    // console.log('Time taken for transactions retrieval:', transactionsEndTime - transactionsStartTime, 'ms');
+    // console.log('Time taken for all transactions retrieval:', allTransactionsEndTime - allTransactionsStartTime, 'ms');
+    // console.log('Time taken for unread message count retrieval:', countEndTime - countStartTime, 'ms');
+    // console.log('Total time taken:', endTime - startTime, 'ms');
 
     res.json({
       success: true,

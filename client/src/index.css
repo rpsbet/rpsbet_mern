@@ -222,7 +222,7 @@ button#l {
 
 /* Right button */
 button#r {
-  transform: translate(-139px, -12px)
+  transform: translate(-135px, -12px)
 }
 
 button#tr {
@@ -240,7 +240,7 @@ button#c {
 }
 
 button#cc {
-  transform: translate(-22px,-49px);
+  transform: translate(-233px,-49px);
 }
 
 button#br {
@@ -1210,7 +1210,9 @@ circle {
 }
 
 
-
+.join-game-panel .qs-image-panel {
+  position: absolute;
+}
   
   .qs-buttons button:hover,
   .qs-buttons button:focus{
@@ -1233,15 +1235,15 @@ circle {
   }
 
   button#l {
-    transform: translate(47px, -15px);
+    transform: translate(-152px, -15px);
   }
   
   button#r {
-    transform: translate(198px, -15px);
+    transform: translate(6px, -15px);
   }
   
   button#cc {
-    transform: translate(122px,-45px);
+    transform: translate(-71px,-45px);
   }
   
   button#br {

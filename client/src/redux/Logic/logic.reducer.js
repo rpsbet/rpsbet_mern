@@ -238,8 +238,8 @@ export default function (state = initialState, action) {
         roomList,
         accessories,
         // totalPage: pages,
-        roomCount: total,
-        pageSize: pageSize,
+        // roomCount: total,
+        // pageSize: pageSize,
       };
     case HISTORY_LOADED:
       return {

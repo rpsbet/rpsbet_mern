@@ -77,7 +77,7 @@ class MainPage extends Component {
       getMyChat
     } = this.props;
 
-    const promises = [getRoomList(), getHistory(), getGameTypeList()];
+    const promises = [getRoomList({pageSize: 7}), getHistory(), getGameTypeList()];
 
     if (isAuthenticated) {
       promises.push(getMyGames());
@@ -103,7 +103,7 @@ class MainPage extends Component {
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
     (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
       <div id="liveStakes">
-        {this.props.roomCount} BATTLES
+         BATTLES
         <Lottie options={defaultOptions} width={40} />
       </div>
     ) : (

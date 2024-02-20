@@ -846,14 +846,21 @@ renderButton(id, position) {
                   boxShadow: `0 0 20px ${borderColor}`
 
                 }}
-                /><Lottie
+                />
+                <div 
+                id="cat-football"
+                
+                >
+
+                <Lottie
                 options={{
                   loop: true,
                   autoplay: true,
                   animationData: football
                 }}
                 style={{ transform: 'translate(15px, 60px)', width: '100px',  }}
-              />
+                />
+                </div>
                 {this.state.animation}
               {this.renderButtons()}
             </div>

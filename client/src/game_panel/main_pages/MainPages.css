@@ -3359,12 +3359,12 @@ position: sticky !important;
     margin: 24px 0 14px;
   } */
 
-  .qs-image-panel div {
-    width: 288px !important;
-  }
-
   .bet-amount {
     width: unset;
+  }
+  
+  #cat-football {
+    transform: translateY(-10px) !important;
   }
 
   .rps-add-run-panel > div.rps-add-run-form,
@@ -3477,7 +3477,7 @@ position: sticky !important;
     text-align: right;
     margin-top: 60px;
   }
-  .game-type-panel {
+  .my-open-games .game-type-panel {
     width: 70%;
   }
 }

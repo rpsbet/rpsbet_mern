@@ -17,7 +17,6 @@ const RoomBoxPrize = require('../model/RoomBoxPrize');
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
 
-
     const { _id, actorType, gameType, timeType } = req.query;
     let transactionConditions = {};
     const gameLogsQuery = {
@@ -498,6 +497,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
 router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
@@ -507,18 +507,9 @@ router.get('/get-room-statistics', async (req, res) => {
       room: room_id
     })
       .sort({ created_at: 'asc' })
-      .limit(100); // Adjust the limit based on your requirements
+      .limit(20); // Adjust the limit based on your requirements
 
     const tax = await SystemSetting.findOne({ name: 'commission' });
-
-    // const userIds = gameLogs.map(log => log.creator);
-    // const usersPromises = userIds.map(async userId => {
-    //   const user = await User.findById(userId).select('accessory');
-    //   return { userId, user };
-    // });
-
-    // const usersResults = await Promise.all(usersPromises);
-    // const accessoryMap = new Map(usersResults.map(({ userId, user }) => [userId.toString(), user.accessory]));
 
     const playerStats = {};
 
@@ -604,6 +595,7 @@ router.get('/get-room-statistics', async (req, res) => {
     const hostBetsValue = calculateHostValues(room_info, 'bets_values', 1);
 
     const response = {
+      room_id,
       success: true,
       room_info,
       hostNetProfit,
