@@ -221,7 +221,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       // Update the user's balance accordingly
       req.user.balance -= parseFloat(req.body.amount);
       req.user.dailyWithdrawals += req.body.amount;
-      await user.save();
+      await req.user.save();
 
       console.log("Sending transaction...");
 
