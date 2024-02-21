@@ -223,7 +223,7 @@ async function calculateRemainingLoans(currentUser) {
       const currentDate = new Date();
       const daysSinceLoan = Math.floor((currentDate - loanerInfo.created_at) / (1000 * 60 * 60 * 24));
       const loanPeriod = loanerInfo.period - daysSinceLoan;
-      
+
       if (parseFloat(loanerInfo.amount) > 0.0000) {
         remainingAmount += (parseFloat(loanerInfo.amount));
       }
@@ -245,10 +245,10 @@ async function calculateRemainingLoans(currentUser) {
     throw new Error('An error occurred while calculating remaining loans');
   }
 }
-async function checkLoanEligibility(currentUser) {
+async function checkLoanEligibility(currentUser, loanAmount) {
   const creditScore = currentUser.credit_score;
   const rank = Math.floor(Math.log2(parseFloat(currentUser.totalWagered) + 1) / 1.2) + 1;;
-  
+
   const accountCreatedAt = new Date(currentUser.created_at);
   const currentDate = new Date();
   const accountAgeInMilliseconds = currentDate - accountCreatedAt;
@@ -270,14 +270,19 @@ async function checkLoanEligibility(currentUser) {
     { creditScoreThreshold: 950, rankThreshold: 9, accountAgeThresholdInDays: 120, maxAllowance: 1 },
     { creditScoreThreshold: 950, rankThreshold: 10, accountAgeThresholdInDays: 120, maxAllowance: 2 }
   ];
+  // Find the starting index based on the user's rank
+  const startingIndex = Math.min(rank - 1, categories.length - 1);
 
-  // Check eligibility against each category using remainingAmount
-  for (const category of categories) {
+  // Iterate from the starting index to the end of the categories array
+  for (let i = startingIndex; i < categories.length; i++) {
+    const category = categories[i];
+
+    // Check eligibility against each category using remainingAmount
     if (
       creditScore >= category.creditScoreThreshold &&
       rank >= category.rankThreshold &&
       accountAgeInDays >= category.accountAgeThresholdInDays &&
-      remainingAmount <= category.maxAllowance
+      (remainingAmount + parseFloat(loanAmount)) <= category.maxAllowance
     ) {
       return true; // Eligible for this category
     }
@@ -309,7 +314,7 @@ router.post('/lend', auth, async (req, res) => {
         message: 'Loaner not found or not available for loan',
       });
     }
-
+    // console.log(responseText)
     // exceeded loan_amount
     if (parseFloat(responseText) > parseFloat(loan.loan_amount)) {
       return res.json({
@@ -319,7 +324,7 @@ router.post('/lend', auth, async (req, res) => {
     }
 
     // Check loan eligibility
-    const isEligible = await checkLoanEligibility(currentUser);
+    const isEligible = await checkLoanEligibility(currentUser, responseText);
 
     if (!isEligible) {
       return res.json({
@@ -458,7 +463,7 @@ router.post('/withdraw-loan', auth, async (req, res) => {
 
     // Get the current user
     const currentUser = await User.findById(req.user._id);
-const amount = loan.loan_amount
+    const amount = loan.loan_amount
     // Add loan amount to user balance
     currentUser.balance += amount;
 

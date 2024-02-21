@@ -118,6 +118,27 @@ router.post('/deposit_successed', auth, async (req, res) => {
   }
 });
 
+async function calculateRemainingLoans(currentUser) {
+  try {
+    const matchingLoans = await Loan.find({ 'loaners.user': currentUser._id });
+    let remainingAmount = 0;
+
+    for (const loan of matchingLoans) {
+      const loanerInfo = loan.loaners.find(loaner => loaner.user.equals(currentUser._id));
+
+      if (parseFloat(loanerInfo.amount) > 0.0000) {
+        remainingAmount += parseFloat(loanerInfo.amount);
+      }
+    }
+
+    return remainingAmount;
+  } catch (err) {
+    console.error('Error:', err);
+    throw new Error('An error occurred while calculating remaining loans');
+  }
+}
+
+
 
 router.post('/withdraw_request', auth, async (req, res) => {
   let tx;
@@ -152,6 +173,14 @@ router.post('/withdraw_request', auth, async (req, res) => {
       return res.json({
         success: false,
         message: "No wallet connected / wrong network."
+      });
+    }
+
+    const remainingLoanAmount = await calculateRemainingLoans(req.user);
+    if (remainingLoanAmount > 0) {
+      return res.json({
+        success: false,
+        message: 'EXISTING LOANS, CANNOT WITHDRAW'
       });
     }
     const receipt = new Receipt({
