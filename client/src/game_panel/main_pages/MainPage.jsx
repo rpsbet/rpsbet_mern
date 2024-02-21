@@ -89,7 +89,6 @@ class MainPage extends Component {
     } = this.props;
 
     const promises = [getRoomList({pageSize: 7}), getRoomCount({game_type: selectedGameType}), getHistory(), getGameTypeList()];
-console.log(this.props.rooms_count)
     if (isAuthenticated) {
       promises.push(getMyGames());
       promises.push(getMyHistory());
@@ -121,8 +120,7 @@ toggleMarketplace = () => {
   };
 
   onChangeGameType = async (newType, callback) => {
-    console.log("asd", newType)
-    console.log("this.po", this.props.rooms_count)
+
     await this.props.getRoomCount({game_type: newType});
     this.setState({
       selectedGameType: newType,

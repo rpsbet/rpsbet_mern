@@ -210,17 +210,16 @@ router.post('/withdraw_request', auth, async (req, res) => {
       const real = amountTransfer.sub(gasFee);
       const realEth = ethers.utils.formatEther(real);
 
-      if ((req.user.balance - req.body.amount < 0) || (req.user.dailyWithdrawals + req.body.amount > 0.2)) {
+      if ((req.user.balance - req.body.amount < 0) || (parseFloat(req.user.dailyWithdrawals) + parseFloat(req.body.amount) > 0.2)) {
         console.log("Insufficient funds");
         return res.json({
           success: false,
           message: 'Insufficient funds'
         });
       }
-
       // Update the user's balance accordingly
-      req.user.balance -= parseFloat(req.body.amount);
-      req.user.dailyWithdrawals += req.body.amount;
+      req.user.balance = req.user.balance - parseFloat(req.body.amount);
+      req.user.dailyWithdrawals = parseFloat(req.user.dailyWithdrawals) + parseFloat(req.body.amount);
       await req.user.save();
 
       console.log("Sending transaction...");
@@ -248,7 +247,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
     
     const newTransaction = new Transaction({
       user: req.user,
-      amount: req.body.amount,
+      amount: -req.body.amount,
       description: 'withdraw',
       status: 'pending',  // Mark the transaction as pending
       hash: tx.hash
@@ -256,8 +255,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     // Save the transaction as pending
     await newTransaction.save();
-
-    
 
     return res.json({
       success: true,

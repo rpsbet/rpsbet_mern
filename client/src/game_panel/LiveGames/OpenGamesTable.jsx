@@ -216,7 +216,6 @@ class OpenGamesTable extends Component {
 
     if (prevProps.roomList !== this.props.roomList) {
 
-      console.log(prevProps.roomList)
       this.setState(prevState => ({
         roomList: [...prevState.roomList, ...roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))],
         fetchedRoomIds: [...prevState.fetchedRoomIds, ...roomIds],
@@ -379,8 +378,9 @@ class OpenGamesTable extends Component {
   handleLike = ({ _id }) => {
     const updatedRoomList = this.state.roomList.map(room => {
       if (room._id === _id) {
-        const likesIndex = room.likes.indexOf(this.props.user._id);
-        const dislikesIndex = room.dislikes.indexOf(this.props.user._id);
+        const likesIndex = room.likes ? room.likes.indexOf(this.props.user._id) : -1;
+    const dislikesIndex = room.dislikes ? room.dislikes.indexOf(this.props.user._id) : -1;
+
 
         if (likesIndex > -1) {
           room.likes.splice(likesIndex, 1);

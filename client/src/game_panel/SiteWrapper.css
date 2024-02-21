@@ -377,6 +377,11 @@ div[role='tablist'] {
   font-size: 0.8em;
 }
 
+#game_logs td {
+  text-wrap: nowrap;
+  width: 49%;
+  display: inline-block;
+}
 .game_header .main_header #btn_notifications.desktop-only,
 .game_header .main_header #btn_leaderboards.desktop-only, .game_header .main_header #btn_marketplace.desktop-only,
 .game_header .main_header #btn_bank.desktop-only
