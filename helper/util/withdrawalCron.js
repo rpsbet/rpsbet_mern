@@ -11,6 +11,11 @@ async function resetWithdrawalLimits() {
 
     // Iterate through all users and update credit scores
     for (const user of users) {
+
+      if (user.username === 'Tydrellinbg' || user.username === 'SUPPORT' || user.username === 'OFFICIALRPSGAME') {
+        continue;
+      }
+
       // Check if the user has the credit_score field
       if ('dailyWithdrawals' in user) {
         // Ensure credit score doesn't go below a certain threshold (e.g., 0)

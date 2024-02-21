@@ -247,7 +247,7 @@ async function calculateRemainingLoans(currentUser) {
 }
 async function checkLoanEligibility(currentUser) {
   const creditScore = currentUser.credit_score;
-  const rank = parseFloat(currentUser.totalWagered);
+  const rank = Math.floor(Math.log2(parseFloat(currentUser.totalWagered) + 1) / 1.2) + 1;;
   
   const accountCreatedAt = new Date(currentUser.created_at);
   const currentDate = new Date();
@@ -259,12 +259,16 @@ async function checkLoanEligibility(currentUser) {
 
   // Threshold categories
   const categories = [
-    { creditScoreThreshold: 900, rankThreshold: 0.1, accountAgeThresholdInDays: 3, maxAllowance: 0.001 },
-    { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 1, maxAllowance: 0.002 },
-    { creditScoreThreshold: 950, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.006 },
-    { creditScoreThreshold: 950, rankThreshold: 3, accountAgeThresholdInDays: 60, maxAllowance: 0.01 },
-    { creditScoreThreshold: 950, rankThreshold: 4, accountAgeThresholdInDays: 90, maxAllowance: 0.1 },
-    { creditScoreThreshold: 1150, rankThreshold: 5, accountAgeThresholdInDays: 365, maxAllowance: 1 }
+    { creditScoreThreshold: 1000, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.001 },
+    { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.005 },
+    { creditScoreThreshold: 1000, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.015 },
+    { creditScoreThreshold: 1000, rankThreshold: 4, accountAgeThresholdInDays: 60, maxAllowance: 0.025 },
+    { creditScoreThreshold: 1000, rankThreshold: 5, accountAgeThresholdInDays: 60, maxAllowance: 0.05 },
+    { creditScoreThreshold: 1000, rankThreshold: 6, accountAgeThresholdInDays: 90, maxAllowance: 0.1 },
+    { creditScoreThreshold: 950, rankThreshold: 7, accountAgeThresholdInDays: 90, maxAllowance: 0.25 },
+    { creditScoreThreshold: 950, rankThreshold: 8, accountAgeThresholdInDays: 120, maxAllowance: 0.5 },
+    { creditScoreThreshold: 950, rankThreshold: 9, accountAgeThresholdInDays: 120, maxAllowance: 1 },
+    { creditScoreThreshold: 950, rankThreshold: 10, accountAgeThresholdInDays: 120, maxAllowance: 2 }
   ];
 
   // Check eligibility against each category using remainingAmount

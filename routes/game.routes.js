@@ -907,7 +907,6 @@ router.get('/my_history', auth, async (req, res) => {
 router.get('/count', async (req, res) => {
   
   const game_type = req.query.game_type ? req.query.game_type : 'All';
-console.log(game_type)
   try {
     let search_condition = { status: 'open' };
 

@@ -184,8 +184,8 @@ class Dropzone extends Component {
         <Avatar className="AvatarPreviewPanel" alt="" rank={this.props.rank} accessory={this.props.accessory} src={this.props.imageUrl} darkMode={this.props.darkMode} />
         <div className="AvatarControlPanel">
           <div className="AvatarButtonPanel">
-            <Button style={{ marginRight: "5px" }} onClick={(e) => { this.props.setImageFilename("") }}>Remove Image</Button>
-            <Button onClick={this.openFileDialog}>Upload Image</Button>
+            <Button style={{ marginRight: "5px" }} onClick={(e) => { this.props.setImageFilename("") }}>Remove PFP</Button>
+            <Button onClick={this.openFileDialog}>Upload PFP</Button>
           </div>
           <p className="mt-1">OR GENERATE AN AI CAT</p>
           {this.state.showAIText ? (

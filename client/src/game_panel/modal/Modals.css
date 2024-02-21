@@ -673,6 +673,14 @@ box-shadow: unset !important;
 
 
 @media (max-width: 768px) {
+
+    .edit-avatar-panel .avatar {
+        width: 196px !important;
+        margin: 50px auto 20px !important;
+      }
+      .rank-badge h2 {
+        font-size: 1.6em;
+      }
     .accordion {
       margin-top: 15px;
     }
@@ -683,6 +691,12 @@ box-shadow: unset !important;
     .AvatarButtonPanel button:first-child {
         display: flex;
         align-items: center;
+    }
+
+    .statistics-panel table tr td:first-child {
+        max-width: 50px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
  
     .modal-body p.sm-text-center {

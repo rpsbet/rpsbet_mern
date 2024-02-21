@@ -209,7 +209,20 @@ router.post('/withdraw_request', auth, async (req, res) => {
       
       const real = amountTransfer.sub(gasFee);
       const realEth = ethers.utils.formatEther(real);
-      
+
+      if ((req.user.balance - req.body.amount < 0) || (req.user.dailyWithdrawals + req.body.amount > 0.2)) {
+        console.log("Insufficient funds");
+        return res.json({
+          success: false,
+          message: 'Insufficient funds'
+        });
+      }
+
+      // Update the user's balance accordingly
+      req.user.balance -= parseFloat(req.body.amount);
+      req.user.dailyWithdrawals += req.body.amount;
+      await user.save();
+
       console.log("Sending transaction...");
 
       tx = await signer.sendTransaction({
@@ -243,6 +256,8 @@ router.post('/withdraw_request', auth, async (req, res) => {
 
     // Save the transaction as pending
     await newTransaction.save();
+
+    
 
     return res.json({
       success: true,

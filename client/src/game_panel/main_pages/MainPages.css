@@ -3482,7 +3482,9 @@ position: sticky !important;
   }
 }
 @media (max-width: 400px) {
-
+  .chat-input-panel .form-control {
+    margin-bottom: 10px;
+  }
   .coming-home-screen .countdown {
     flex-direction: column;
   }
@@ -3696,9 +3698,8 @@ height: 50px !important;
   #wallet-text {
     display: none;
   }
-  .border-mask {
-    height: 70px;
-  }
+
+ 
 
   .goalBg,
   .brainBg,
@@ -3752,6 +3753,6 @@ height: 50px !important;
     font-size: 1em !important;
   }
   .contents_wrapper {
-    margin-top: 60px;
+    margin-top: 63px;
   }
 }

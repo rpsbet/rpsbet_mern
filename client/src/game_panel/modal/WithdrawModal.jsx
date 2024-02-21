@@ -3,7 +3,10 @@ import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faGasPump
+} from '@fortawesome/free-solid-svg-icons';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Modal from 'react-modal';
 import {
@@ -294,13 +297,13 @@ class WithdrawModal extends Component {
                     <TableBody>
                       <TableRow>
                         <TableCell>
-                          <span>GAS FEE:</span>
+                          <FontAwesomeIcon icon={faGasPump}/>&nbsp;&nbsp;<span>GAS FEE:</span>
                         </TableCell>
                         <TableCell>
                           {convertToCurrency(this.props.gasfee)}
                         </TableCell>
                         <Tooltip
-                          title="Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
+                          title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
                           arrow
                         >
                           <IconButton size="small">

@@ -10,7 +10,7 @@ const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/5fedb9ded8fd4
 // console.log('Infura API Key:', provider.apiKey);
 // console.log('Provider:', provider);
 
-const withdrawalConfirmationThreshold = 0;
+const withdrawalConfirmationThreshold = 2;
 const depositConfirmationThreshold = 6;
 
 async function checkConfirmations() {
@@ -62,10 +62,7 @@ async function checkConfirmations() {
             transaction.status = 'completed';
             await transaction.save();
 
-            // Update the user's balance accordingly
-            user.balance -= transaction.amount;
-            user.dailyWithdrawals += transaction.amount;
-            await user.save();
+          
             console.log('Withdrawal transaction processed successfully.');
           }
         }

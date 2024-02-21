@@ -9,7 +9,7 @@ import {
   faDollarSign,
   faSort,
   faFilter
-} from '@fortawesome/free-solid-svg-icons'; // Import the desired icons
+} from '@fortawesome/free-solid-svg-icons';
 import {
   acQueryMyItem,
   setCurrentProductId,

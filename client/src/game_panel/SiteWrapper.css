@@ -309,6 +309,13 @@ div[role='tablist'] {
   font-size: 14px;
   font-weight: 500 !important;
 }
+.grecaptcha-badge {
+  margin-top: -22000px;
+  position: absolute;
+  transform: translateY(-9999px) !important;
+  pointer-events: none !important;
+  visibility:  hidden !important;
+}
 .game_header .main_header #btn_leaderboards,
 .game_header .main_header #btn_marketplace,
 
@@ -606,6 +613,16 @@ div.table .table-row .table-cell img.avatar,
 }
 
 @media (max-width: 768px) {
+  .table-cell.mobile-only .lottie-container div {
+    width: 15px !important;
+    left: 16px;
+    transform: translateY(-32px);
+  }
+  .table-cell.mobile-only .lottie-container.crown div {
+    width: 15px !important;
+    left: 17px;
+    transform: translateY(3px);
+  }
   .game-logs-modal-container .summary {
     flex-direction: column;
   }

@@ -7,7 +7,10 @@ import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { ethers } from 'ethers';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faGasPump
+} from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   TextField,
@@ -265,7 +268,7 @@ const result = await axios.post('/stripe/deposit_successed/', {
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <span>GAS FEE:</span>
+                          <FontAwesomeIcon icon={faGasPump}/>&nbsp;&nbsp;<span>GAS FEE:</span>
                           </TableCell>
                           <TableCell>
                             {convertToCurrency(this.props.gasfee)}
