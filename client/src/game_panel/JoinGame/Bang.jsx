@@ -1118,7 +1118,7 @@ class Bang extends Component {
               <TextField
                 type="text"
                 name="autoCashout"
-                variant="outlined"
+                variant="filled"
                 id="betamount"
                 label="AUTO-CASHOUT"
                 value={this.state.autoCashout}

@@ -46,7 +46,7 @@ function QuestionEditForm({
                 <TextField
                   autoFocus={true}
                   label="e.g.  What do cats think?"
-                  variant="outlined"
+                  variant="filled"
                   name="question"
                   margin="normal"
                   fullWidth
@@ -89,7 +89,7 @@ function QuestionEditForm({
                         label="e.g. Yes"
                         name="new_answer"
                         margin="normal"
-                        variant="outlined"
+                        variant="filled"
                         fullWidth
                         type="text"
                         value={new_answer}
@@ -149,7 +149,7 @@ function QuestionEditForm({
                     <ListItem>
                       <TextField
                         label="e.g. No"
-                        variant="outlined"
+                        variant="filled"
                         name="new_incorrect_answer"
                         margin="normal"
                         fullWidth

@@ -1621,6 +1621,7 @@ class JoinGame extends Component {
                 roomInfo={roomInfo}
                 getRoomData={this.getRoomData}
                 isLowGraphics={this.props.isLowGraphics}
+                isDarkMode={this.props.isDarkMode}
               />
               <div>
                 {((!is_mobile && selectedMainTabIndex === 1) ||

@@ -174,6 +174,7 @@ class CreateGame extends Component {
       videoId: '',
       isPlaying: false,
       endgame_type: true,
+      description: '',
       box_list: [],
       brain_game_type: this.props.brain_game_type,
       rps_game_type: 0,
@@ -358,6 +359,11 @@ class CreateGame extends Component {
       youtubeUrl: event.target.value
     });
   };
+  handleDescriptionChange = event => {
+    this.setState({
+      description: event.target.value
+    });
+  };
 
   handleSubmit = event => {
     event.preventDefault();
@@ -454,6 +460,7 @@ class CreateGame extends Component {
 
   handleKeyPress(event) {
     const { selected_roll } = this.state;
+    const { isFocused } = this.props;
     if (!isFocused) {
       switch (event.key) {
         case 'Escape':
@@ -479,7 +486,7 @@ class CreateGame extends Component {
   };
 
   onSkipButtonClicked = () => {
-    if ((this.state.step === 3) || this.state.step === 4) {
+    if ((this.state.step === 3) || this.state.step === 4 || this.state.step === 5) {
 
       if (this.state.child_step === 2 && this.state.game_mode === 'Mystery Box') {
         if (this.state.max_return > this.state.bet_amount * 4) {
@@ -558,7 +565,7 @@ class CreateGame extends Component {
       step: this.state.step > 1 ? this.state.step - 1 : this.state.step
     });
 
-    if (this.state.child_step === 5) {
+    if (this.state.child_step === 6) {
       this.setState({
         child_step: this.state.child_step - 1
       });
@@ -714,7 +721,7 @@ class CreateGame extends Component {
         });
       }
       this.setState({
-        step: step > 3 && child_step < 4 ? step : step + 1,
+        step: step > 3 && child_step < 5 ? step : step + 1,
         child_step: step === 1 ? child_step : child_step + 1
       });
     }
@@ -1212,6 +1219,7 @@ class CreateGame extends Component {
                       room_password={this.state.room_password}
                       game_mode={this.state.game_mode}
                       endgame_type={this.state.endgame_type}
+                      description={this.state.description}
                       endgame_amount={this.state.endgame_amount}
                       is_anonymous={this.state.is_anonymous}
                       step={this.state.step}
@@ -1223,6 +1231,7 @@ class CreateGame extends Component {
                       isPlaying={this.state.isPlaying}
                       handleSubmit={this.handleSubmit}
                       handleUrlChange={this.handleUrlChange}
+                      handleDescriptionChange={this.handleDescriptionChange}
                     />
                   )}
                   {this.state.step === 5 &&

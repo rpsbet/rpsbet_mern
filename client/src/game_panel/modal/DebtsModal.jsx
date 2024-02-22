@@ -195,7 +195,7 @@ class DebtsModal extends Component {
                     </TableContainer>
                     <Button
                       fullWidth
-                      variant="outlined"
+                      variant="filled"
                       onClick={() => this.openPaybackModal(loan)}
                     >
                       CLEAR DEBT
@@ -247,7 +247,7 @@ class DebtsModal extends Component {
               ) : (
                 <TextField
                   label="Pay Back"
-                  variant="outlined"
+                  variant="filled"
                   fullWidth
                   id="payback"
                   value={this.state.paybackAmount}

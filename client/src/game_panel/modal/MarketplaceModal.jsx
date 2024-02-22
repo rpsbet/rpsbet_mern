@@ -47,14 +47,14 @@ class MarketplaceModal extends Component {
   handleCloseInventoryModal = () => {
     this.setState({ showInventoryModal: false });
   };
-  
+
   onSubmitFrom = () => {
     // e.preventDefault();
     // console.log(this.state);
     this.props.infoMsgBar(`New Item Listed!`);
     this.props.createItem(this.state);
     this.closeProductCreateModal();
-    };
+  };
 
   render() {
     return (
@@ -64,11 +64,11 @@ class MarketplaceModal extends Component {
         style={customStyles}
         contentLabel="Marketplace Modal"
       >
-        <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+        <div className={`${this.props.isDarkMode ? 'dark_mode' : ''} big-modal`}>
           <div className="modal-header">
             <h2 className="modal-title">
-            <FontAwesomeIcon icon={faStore} className="mr-2" />
-Marketplace</h2>
+              <FontAwesomeIcon icon={faStore} className="mr-2" />
+              Marketplace</h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>
@@ -76,7 +76,7 @@ Marketplace</h2>
           <div className="modal-body edit-modal-body marketplace-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <ProductPage itemType= 'this.state.itemType' sortCriteria= 'this.state.sortCriteria' />
+                <ProductPage itemType='this.state.itemType' sortCriteria='this.state.sortCriteria' />
               </div>
             </div>
           </div>
@@ -86,11 +86,11 @@ Marketplace</h2>
         </div>
 
         {this.state.showInventoryModal && (
-            <InventoryModal
-              modalIsOpen={this.state.showInventoryModal}
-              closeModal={this.handleCloseInventoryModal}
-            />
-          )}
+          <InventoryModal
+            modalIsOpen={this.state.showInventoryModal}
+            closeModal={this.handleCloseInventoryModal}
+          />
+        )}
       </Modal>
     );
   }
@@ -107,7 +107,7 @@ const mapDispatchToProps = {
   // setUrl,
   warningMsgBar,
   infoMsgBar,
- 
+
 };
 
 export default connect(

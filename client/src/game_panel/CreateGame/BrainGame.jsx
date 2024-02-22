@@ -97,7 +97,7 @@ class BrainGame extends Component {
 
                         <TextField
                             label="Search Game Type"
-                            variant="outlined"
+                            variant="filled"
                             value={searchTerm}
                             onChange={e => this.setState({ searchTerm: e.target.value })}
                             style={{ marginBottom: 10 }}

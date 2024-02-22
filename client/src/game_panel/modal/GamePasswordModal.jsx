@@ -69,7 +69,7 @@ class GamePasswordModal extends Component {
                     <TextField
                     // type="password"
                     id="game_password"
-                    variant="outlined"
+                    variant="filled"
                     value={this.state.password}
                     onChange={(e) => {this.setState({password: e.target.value})}}
                     className="form-control"

@@ -190,7 +190,7 @@ class WithdrawModal extends Component {
                       {isConnected ? (
                         <TextField
                           label="Account"
-                          variant="outlined"
+                          variant="filled"
                           value={account}
                           InputProps={{
                             readOnly: true
@@ -199,7 +199,7 @@ class WithdrawModal extends Component {
                       ) : (
                         <TextField
                           label="Account"
-                          variant="outlined"
+                          variant="filled"
                           value="Connect Wallet"
                           InputProps={{
                             readOnly: true
@@ -248,7 +248,7 @@ class WithdrawModal extends Component {
                     <Typography>Withdrawal Amount</Typography>
                     <TextField
                       pattern="^\\d*\\.?\\d*$"
-                      variant="outlined"
+                      variant="filled"
                       autoComplete="off"
                       value={this.state.amount}
                       onChange={this.handleAmountChange}

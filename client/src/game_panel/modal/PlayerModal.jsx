@@ -240,7 +240,7 @@ class PlayerModal extends Component {
       });
 
       if (result.data.success) {
-        alertModal(this.props.isDarkMode, result.data.message);
+        alertModal(this.props.isDarkMode, result.data.message, '-cat');
         this.props.setBalance(result.data.balance);
         this.props.addNewTransaction(result.data.newTransaction);
         this.setState({ isLoading: false });
@@ -514,7 +514,7 @@ class PlayerModal extends Component {
                           value={this.state.tipAmount}
                           onChange={this.handleTipAmountChange}
                           pattern="^\\d*\\.?\\d*$"
-                          variant="outlined"
+                          variant="filled"
                           autoComplete="off"
                           InputProps={{
                             endAdornment: 'ETH'
@@ -561,7 +561,7 @@ class PlayerModal extends Component {
                           label="Message"
                           value={this.state.message}
                           onChange={this.handleMessage}
-                          variant="outlined"
+                          variant="filled"
                           autoComplete="off"
                           className="form-control"
                           inputProps={{ maxLength: 8 }}

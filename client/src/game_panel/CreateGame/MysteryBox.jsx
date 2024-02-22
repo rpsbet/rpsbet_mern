@@ -323,7 +323,7 @@ class MysteryBox extends Component {
           <div className="amounts-panel" style={{ marginBottom: "20px" }}>
             <div className="edit-amount-panel">
               <TextField
-                variant="outlined"
+                variant="filled"
                 type="text"
                 inputProps={{
                   pattern: '^\\d*\\.?\\d*$',
@@ -348,7 +348,7 @@ class MysteryBox extends Component {
                 <TextField
                   style={{ background: "#0fff00cc", borderRadius: "0.2em", }}
                   type="text"
-                  variant="outlined"
+                  variant="filled"
                   inputProps={{
                     pattern: '^\\d*\\.?\\d*$',
                     maxLength: 9

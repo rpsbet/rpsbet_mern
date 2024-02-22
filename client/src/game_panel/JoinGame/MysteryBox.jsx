@@ -704,7 +704,7 @@ class MysteryBox extends Component {
                 >
 
                   <Card
-                    variant="outlined"
+                    variant="filled"
                     className={
                       'box box-' +
                       row.status +

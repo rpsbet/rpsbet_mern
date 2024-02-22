@@ -116,7 +116,7 @@ class LoginModal extends Component {
               <TextField
                 type="text"
                 className="form-control"
-                variant="outlined"
+                variant="filled"
                 label="Username"
                 id="email"
                 value={this.state.email}
@@ -129,7 +129,7 @@ class LoginModal extends Component {
                 id="password"
                 value={this.state.password}
                 label="Password"
-                variant="outlined"
+                variant="filled"
                 autoComplete="new-password"
                 onChange={this.onChangePassword}
                 onKeyDown={e => {

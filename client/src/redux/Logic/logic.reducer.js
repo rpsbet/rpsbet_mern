@@ -34,7 +34,13 @@ import {
   TNX_INCOMPLETE,
   SET_NOTIFICATIONS_ROOM_INFO,
   GLOBAL_CHAT_RECEIVED,
-  SET_GLOBAL_CHAT
+  SET_GLOBAL_CHAT,
+  COMMENT_CREATED,
+  COMMENT_CREATION_FAILED,
+  COMMENTS_LOADED,
+  COMMENTS_LOAD_FAILED,
+  COMMENT_DELETED,
+  COMMENT_DELETION_FAILED
 } from '../types';
 
 const initialState = {
@@ -49,6 +55,7 @@ const initialState = {
   drop_guesses: [],
   bangs: [],
   rolls: [],
+  comments: [],
   totalPage: 0,
   pageNumber: 1,
   historyTotalPage: 0,
@@ -80,9 +87,11 @@ const initialState = {
     spleesh_bet_unit: 1,
     box_price: 0,
     room_history: [],
+    posted: false,
     box_list: [],
     rps_game_type: 0,
     qs_game_type: 2,
+    description: '',
     qs_nation: 0,
     likes: 0,
     dislikes: 0,
@@ -185,7 +194,38 @@ export default function (state = initialState, action) {
         ...state,
         isActiveLoadingOverlay: false
       };
-
+      case COMMENT_CREATED:
+        return {
+          ...state,
+          posted: payload,
+        };
+      case COMMENT_CREATION_FAILED:
+        return {
+          ...state,
+          error: action.payload
+        };
+      case COMMENTS_LOADED:
+        return {
+          ...state,
+          comments: action.payload,
+          error: null
+        };
+      case COMMENTS_LOAD_FAILED:
+        return {
+          ...state,
+          error: action.payload
+        };
+      case COMMENT_DELETED:
+        return {
+          ...state,
+          comments: state.comments.filter(comment => comment._id !== action.payload),
+          error: null
+        };
+      case COMMENT_DELETION_FAILED:
+        return {
+          ...state,
+          error: action.payload
+        };
     case TNX_INCOMPLETE:
       return {
         ...state,

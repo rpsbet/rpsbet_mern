@@ -3,6 +3,7 @@ import {
   PAGINATION_FOR_CUSTOMER,
   PAGINATION_FOR_ACTIVITY,
   LOADING_CUSTOMER_TABLE,
+  ROOM_STATISTICS_LOADED,
   ADD_MAIN_INFO,
   ACTIVITY_QUERY,
   LOADING_LEADERBOARDS_TABLE,
@@ -18,6 +19,7 @@ const initialState = {
   lastQuery: null,
   pages: 1,
   loading: false,
+  roomStatsLoaded: false,
   locationInfo: null,
   activities: [],
   activity_pages: 1,
@@ -54,6 +56,8 @@ export default (state = initialState, { type, payload }) => {
       return { ...state, pagination: payload.pagination, activity_page: payload.page };
     case LOADING_CUSTOMER_TABLE:
       return { ...state, loading: payload };
+    case ROOM_STATISTICS_LOADED:
+      return { ...state, roomStatsLoaded: payload };
     case ADD_MAIN_INFO:
       return { ...state, locationInfo: payload };
     default:

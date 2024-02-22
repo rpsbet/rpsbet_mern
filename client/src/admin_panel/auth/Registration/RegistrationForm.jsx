@@ -67,7 +67,7 @@ export class RegistrationForm extends Component {
                 name="firstName"
                 value={firstName}
                 onChange={this.handleInputChange}
-                variant="outlined"
+                variant="filled"
                 required
                 fullWidth
                 id="firstName"
@@ -77,7 +77,7 @@ export class RegistrationForm extends Component {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                variant="outlined"
+                variant="filled"
                 required
                 fullWidth
                 id="lastName"
@@ -90,7 +90,7 @@ export class RegistrationForm extends Component {
             </Grid>
             <Grid item xs={12}>
               <TextField
-                variant="outlined"
+                variant="filled"
                 required
                 fullWidth
                 id="email"
@@ -103,7 +103,7 @@ export class RegistrationForm extends Component {
             </Grid>
             <Grid item xs={12}>
               <TextField
-                variant="outlined"
+                variant="filled"
                 required
                 fullWidth
                 name="password"

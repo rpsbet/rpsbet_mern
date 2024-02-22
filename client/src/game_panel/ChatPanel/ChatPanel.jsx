@@ -254,7 +254,7 @@ class ChatPanel extends Component {
               <TextField
                 type="text"
                 placeholder="Search GIFs..."
-                variant="outlined"
+                variant="filled"
                 onKeyDown={this.onTextAreaKeyDown}
                 onChange={this.handleSearchInputChange}
               />

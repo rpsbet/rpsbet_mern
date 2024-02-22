@@ -4,6 +4,7 @@ import history from '../redux/history';
 import { convertToCurrency } from '../util/conversion';
 import { withStyles } from '@material-ui/core/styles';
 import Avatar from './Avatar';
+import PlayerModal from '../game_panel/modal/PlayerModal';
 
 import ReactApexChart from 'react-apexcharts';
 import {
@@ -11,9 +12,9 @@ import {
   TableHead,
   TableRow,
   TableCell,
-  TableBody
+  TableBody,
+  LinearProgress
 } from '@material-ui/core';
-import PlayerModal from '../game_panel/modal/PlayerModal';
 // import Select from '@material-ui/core/Select';
 // import MenuItem from '@material-ui/core/MenuItem';
 // import LoopIcon from '@material-ui/icons/Loop';
@@ -90,54 +91,53 @@ class Leaderboards extends Component {
 
   render() {
     const { classes } = this.props;
-    const { actionList } = this.props;
+    const { actionList, roomStatsLoaded } = this.props;
     return (
       <div className="leaderboards-page">
         <div className="leaderboards-content">
-          <div className="leaderboards-panel">
-            <h2 className="room-history-title">Leaderboards</h2>
-
-            {actionList && actionList.hostBetsValue.length > 0 ? (
-              <Table className="table leaderboards-table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>#</TableCell>
-                    <TableCell className="player">Player</TableCell>
-                    <TableCell>Wagered</TableCell>
-                    <TableCell>Net Profit</TableCell>
-                    <TableCell>Plays</TableCell>
-                    <TableCell>Graph</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {this.state.showPlayerModal && (
-                    <PlayerModal
-                      selectedCreator={this.state.selectedCreator}
-                      modalIsOpen={this.state.showPlayerModal}
-                      closeModal={this.handleClosePlayerModal}
-                    />
-                  )}
-                  {actionList.room_info.map((playerData, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>
-                        <a
-                          className="player"
-                          onClick={() =>
-                            this.handleOpenPlayerModal(playerData._id)
-                          }
-                        >
-                          <Avatar
-                            className="avatar"
-                            src={playerData.avatar}
-                            rank={playerData.rank}
-                            accessory={playerData.accessory}
-                            alt=""
-                            darkMode={this.props.isDarkMode}
-                          />
-                          {/* <span>{playerData.actor}</span> */}
-                        </a>
-                        {/* <i
+          {roomStatsLoaded ? (
+            <>
+              {actionList && actionList.hostBetsValue.length > 0 ? (
+                <Table className="table leaderboards-table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>#</TableCell>
+                      <TableCell className="player">Player</TableCell>
+                      <TableCell>Wagered</TableCell>
+                      <TableCell>Net Profit</TableCell>
+                      <TableCell>Plays</TableCell>
+                      <TableCell>Graph</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {this.state.showPlayerModal && (
+                      <PlayerModal
+                        selectedCreator={this.state.selectedCreator}
+                        modalIsOpen={this.state.showPlayerModal}
+                        closeModal={this.handleClosePlayerModal}
+                      />
+                    )}
+                    {actionList.room_info.map((playerData, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          <a
+                            className="player"
+                            onClick={() =>
+                              this.handleOpenPlayerModal(playerData._id)
+                            }
+                          >
+                            <Avatar
+                              className="avatar"
+                              src={playerData.avatar}
+                              rank={playerData.rank}
+                              accessory={playerData.accessory}
+                              alt=""
+                              darkMode={this.props.isDarkMode}
+                            />
+                            {/* <span>{playerData.actor}</span> */}
+                          </a>
+                          {/* <i
                         className={`online-status${
                           this.props.onlineUserList.filter(
                             user => user === playerData._id
@@ -146,103 +146,106 @@ class Leaderboards extends Component {
                             : ''
                         }`}
                       ></i> */}
-                        {/* {playerData._id} */}
-                      </TableCell>
-                      <TableCell>
-                        {convertToCurrency(playerData.wagered)}
-                      </TableCell>
-                      <TableCell>
-                        {convertToCurrency(playerData.net_profit)}
-                      </TableCell>
-                      <TableCell>{playerData.bets}</TableCell>
-                      <TableCell>
-                        <ReactApexChart
-                          options={{
-                            chart: {
-                              animations: {
-                                enabled: false
+                          {/* {playerData._id} */}
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(playerData.wagered)}
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(playerData.net_profit)}
+                        </TableCell>
+                        <TableCell>{playerData.bets}</TableCell>
+                        <TableCell>
+                          <ReactApexChart
+                            options={{
+                              chart: {
+                                animations: {
+                                  enabled: false
+                                },
+                                toolbar: {
+                                  show: false
+                                },
+                                events: {},
+                                zoom: {
+                                  enabled: false
+                                }
                               },
-                              toolbar: {
+                              grid: {
                                 show: false
                               },
-                              events: {},
-                              zoom: {
+                              tooltip: {
                                 enabled: false
-                              }
-                            },
-                            grid: {
-                              show: false
-                            },
-                            tooltip: {
-                              enabled: false
-                            },
-                            fill: {
-                              type: 'gradient',
-                              gradient: {
-                                shade: 'light',
-                                gradientToColors:
-                                  playerData.net_profit > 0
-                                    ? ['#00FF00']
-                                    : playerData.net_profit < 0
-                                    ? ['#FF0000']
-                                    : ['#808080'],
-                                shadeIntensity: 1,
-                                type: 'vertical',
-                                opacityFrom: 0.7,
-                                opacityTo: 0.9,
-                                stops: [0, 100, 100]
-                              }
-                            },
+                              },
+                              fill: {
+                                type: 'gradient',
+                                gradient: {
+                                  shade: 'light',
+                                  gradientToColors:
+                                    playerData.net_profit > 0
+                                      ? ['#00FF00']
+                                      : playerData.net_profit < 0
+                                        ? ['#FF0000']
+                                        : ['#808080'],
+                                  shadeIntensity: 1,
+                                  type: 'vertical',
+                                  opacityFrom: 0.7,
+                                  opacityTo: 0.9,
+                                  stops: [0, 100, 100]
+                                }
+                              },
 
-                            stroke: {
-                              curve: 'smooth'
-                            },
-                            xaxis: {
-                              labels: {
-                                show: false
+                              stroke: {
+                                curve: 'smooth'
                               },
-                              axisTicks: {
-                                show: false
+                              xaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
                               },
-                              axisBorder: {
-                                show: false
+                              yaxis: {
+                                labels: {
+                                  show: false
+                                },
+                                axisTicks: {
+                                  show: false
+                                },
+                                axisBorder: {
+                                  show: false
+                                }
                               }
-                            },
-                            yaxis: {
-                              labels: {
-                                show: false
-                              },
-                              axisTicks: {
-                                show: false
-                              },
-                              axisBorder: {
-                                show: false
+                            }}
+                            type="line"
+                            width={120}
+                            height="100"
+                            series={[
+                              {
+                                data: playerData.net_profit_values.map(
+                                  (value, index) => [
+                                    playerData.bets_values[index],
+                                    value
+                                  ]
+                                )
                               }
-                            }
-                          }}
-                          type="line"
-                          width={120}
-                          height="100"
-                          series={[
-                            {
-                              data: playerData.net_profit_values.map(
-                                (value, index) => [
-                                  playerData.bets_values[index],
-                                  value
-                                ]
-                              )
-                            }
-                          ]}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p>No Winners Yet</p>
-            )}
-          </div>
+                            ]}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p>No Winners Yet</p>
+              )}
+            </>
+          ) : (
+            <LinearProgress color="secondary" />
+          )}
         </div>
       </div>
     );
@@ -252,7 +255,8 @@ class Leaderboards extends Component {
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   user_id: state.auth.user._id,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  roomStatsLoaded: state.customerReducer.roomStatsLoaded
 });
 
 const mapDispatchToProps = {};

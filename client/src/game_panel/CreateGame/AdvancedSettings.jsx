@@ -4,7 +4,9 @@ import { renderLottieAnimation } from '../../util/LottieAnimations';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import { Button, TextField } from '@material-ui/core';
 import styled from 'styled-components';
-
+import { setFocused } from '../../redux/Auth/user.actions.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenSquare } from '@fortawesome/free-solid-svg-icons'
 const ProductGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
@@ -60,13 +62,20 @@ class AdvancedSettings extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedBackgroundId: null // Initialize with no selected background
+      selectedBackgroundId: null,
     };
   }
 
   async componentDidMount() {
     const { acQueryMyItem } = this.props;
     await acQueryMyItem(100, 1, 'price', '653ee7df17c9f5ee2124564a');
+  }
+
+  onFocusHandler = () => {
+    this.props.setFocused(true);
+  }
+  onBlurHandler = () => {
+    this.props.setFocused(false);
   }
 
   render() {
@@ -108,7 +117,7 @@ class AdvancedSettings extends Component {
               <TextField
                 type="text"
                 id="betamount"
-                variant="outlined"
+                variant="filled"
                 InputLabelProps={{
                   shrink: true
                 }}
@@ -154,13 +163,12 @@ class AdvancedSettings extends Component {
                 Automatic
               </Button>
               <div
-                className={`edit-amount-panel ${
-                  this.props.endgame_type ? '' : 'hidden'
-                }`}
+                className={`edit-amount-panel ${this.props.endgame_type ? '' : 'hidden'
+                  }`}
               >
                 <TextField
                   type="text"
-                  variant="outlined"
+                  variant="filled"
                   name="endgame_amount"
                   id="endgame_amount"
                   value={this.props.endgame_amount}
@@ -217,11 +225,11 @@ class AdvancedSettings extends Component {
             >
               <TextField
                 label="YouTube URL"
-                variant="outlined"
+                variant="filled"
                 value={this.props.youtubeUrl}
                 onChange={this.props.handleUrlChange}
               />
-              <Button style={{marginLeft: "10px !important"}} type="submit" variant="contained" color="primary">
+              <Button style={{ marginLeft: "10px !important" }} type="submit" variant="contained" color="primary">
                 Play
               </Button>
             </form>
@@ -245,32 +253,57 @@ class AdvancedSettings extends Component {
             <ProductGrid>
               {this.props.data
                 .filter(row => row.item_type === "653ee7df17c9f5ee2124564a")
-              .map(row => (
-                <ProductCard
-                  key={row._id}
-                  onClick={() => {
-                    this.setState({ selectedBackgroundId: row._id });
-                    this.props.onChangeState({
-                      gameBackground: row.image
-                    });
-                  }}
-                  className={
-                    this.state.selectedBackgroundId === row._id
-                      ? 'selected'
-                      : ''
-                  }
-                >
-                  {row.image && renderLottieAnimation(row.image) ? (
-                    renderLottieAnimation(row.image)
-                  ) : (
-                    <img src={row.image} alt={row.productName} />
-                  )}
-                  <div>{row.productName}</div>
-                </ProductCard>
-              ))}
+                .map(row => (
+                  <ProductCard
+                    key={row._id}
+                    onClick={() => {
+                      this.setState({ selectedBackgroundId: row._id });
+                      this.props.onChangeState({
+                        gameBackground: row.image
+                      });
+                    }}
+                    className={
+                      this.state.selectedBackgroundId === row._id
+                        ? 'selected'
+                        : ''
+                    }
+                  >
+                    {row.image && renderLottieAnimation(row.image) ? (
+                      renderLottieAnimation(row.image)
+                    ) : (
+                      <img src={row.image} alt={row.productName} />
+                    )}
+                    <div>{row.productName}</div>
+                  </ProductCard>
+                ))}
             </ProductGrid>
             <p className="tip">
               GAME BACKGROUNDS AVAILABLE VIA THE MARKETPLACE
+            </p>
+          </div>
+        )}
+        {this.props.child_step === 5 && (
+          <div className="game-background-panel game-info-panel">
+            <h3 className="game-sub-title">Add Description?&nbsp;&nbsp;<FontAwesomeIcon icon={faPenSquare} /></h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <TextField
+                label="Description"
+                value={this.props.description}
+                placeholder='e.g. Play 50 Games and receive 0.002 ETH TIP!'
+                onChange={this.props.handleDescriptionChange}
+                fullWidth
+                multiline
+                onFocus={this.onFocusHandler}
+                onBlur={this.onBlurHandler}
+                rows={2}
+                variant="filled"
+                
+                
+              />
+           
+            </div>
+            <p className="tip">
+                Include a description to your game.
             </p>
           </div>
         )}
@@ -284,7 +317,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  acQueryMyItem
+  acQueryMyItem,
+  setFocused
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(AdvancedSettings);

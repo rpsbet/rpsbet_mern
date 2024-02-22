@@ -315,7 +315,7 @@ class ProfileModal extends Component {
               <div>
                 <TextField
                   className="form-control"
-                  variant="outlined"
+                  variant="filled"
                   label="REFERRAL CODE"
                   value={this.state.referralCode}
                   readOnly
@@ -325,7 +325,7 @@ class ProfileModal extends Component {
                 <TextField
                   value={this.props.userInfo.rewards}
                   className="form-control"
-                  variant="outlined"
+                  variant="filled"
                   label="REFERRAL REWARDS"
                   InputProps={{
                     endAdornment: 'ETH'
@@ -338,7 +338,7 @@ class ProfileModal extends Component {
                 <TextField
                   className="form-control"
                   value={this.state.username}
-                  variant="outlined"
+                  variant="filled"
                   label="USERNAME"
                   readOnly
                 />
@@ -346,7 +346,7 @@ class ProfileModal extends Component {
               <div>
                 <Button
                   className="form-control"
-                  variant="outlined"
+                  variant="filled"
                   onClick={this.handleNewUsername}
                 >
                   Change Username
@@ -360,7 +360,7 @@ class ProfileModal extends Component {
                   }}
                   className="form-control"
                   value={this.state.password}
-                  variant="outlined"
+                  variant="filled"
                   label="PASSWORD"
                   autoComplete="off"
                   onChange={this.handleChangePassword}
@@ -373,7 +373,7 @@ class ProfileModal extends Component {
                     shrink: true
                   }}
                   className="form-control"
-                  variant="outlined"
+                  variant="filled"
                   label="PASSWORD"
                   autoComplete="off"
                   value={this.state.passwordConfirmation}
@@ -409,7 +409,7 @@ class ProfileModal extends Component {
                       label="e.g. PUSSY_D3STROY3R"
                       value={this.state.newUsername}
                       onChange={this.handleChangeUsername}
-                      variant="outlined"
+                      variant="filled"
                       autoComplete="off"
                       className="form-control"
                       inputProps={{ maxLength: 12 }}

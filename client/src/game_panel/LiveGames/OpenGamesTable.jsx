@@ -8,10 +8,10 @@ import {
 import { Box, Button, Typography, IconButton, ButtonGroup, TextField, Table, TableBody, TableCell, TableRow, Tooltip } from '@material-ui/core';
 import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
 import ReactApexChart from 'react-apexcharts';
-import palmTree from '../icons/palm-tree.svg'
+import { Help } from '@material-ui/icons';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
-
 import {
   addNewTransaction
 } from '../../redux/Logic/logic.actions';
@@ -75,6 +75,7 @@ class OpenGamesTable extends Component {
       fetchedRoomIds: [],
       fetchedDataIds: [],
       hostNetProfitList: [],
+      showPopup: false,
       hostNetProfitLists: [],
       actionList: null,
       isCoHostModalOpen: false,
@@ -274,6 +275,10 @@ class OpenGamesTable extends Component {
     this.setState({ coHostAmount: event.target.value });
   };
 
+  togglePopup = () => {
+    this.setState({ showPopup: !this.state.showPopup });
+  };
+
   handleSendCoHost = async () => {
     try {
       if (this.state.coHostAmount < 0) {
@@ -320,14 +325,14 @@ class OpenGamesTable extends Component {
     }
   };
 
-  getRoomData = async roomIds => {
+  getRoomData = async (roomIds) => {
     try {
       // Filter out roomIds that are already fetched
       const newRoomIds = roomIds.filter(roomId => !this.state.fetchedDataIds.includes(roomId));
 
       // Call getRoomStatisticsData only for new roomIds
       const hostNetProfitListPromises = newRoomIds.map(roomId =>
-        this.props.getRoomStatisticsData(roomId)
+        this.props.getRoomStatisticsData(roomId, 20)
       );
 
       const newHostNetProfitLists = await Promise.all(hostNetProfitListPromises);
@@ -565,7 +570,7 @@ class OpenGamesTable extends Component {
       isFocused,
       isLoading
     } = this.state;
-    const { isLowGraphics, loading } = this.props;
+    const { isLowGraphics, loading, isDarkMode } = this.props;
     const roomStatistics = this.state.actionList || {
       hostNetProfits: [],
       hostBetsValue: []
@@ -1079,7 +1084,7 @@ class OpenGamesTable extends Component {
           style={customStyles}
           contentLabel="CoHost Modal"
         >
-          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+        <div className={`${this.props.isDarkMode ? 'dark_mode' : ''} big-modal`}>
             <div className="modal-header">
 
               <h2 className="modal-title">
@@ -1092,6 +1097,17 @@ class OpenGamesTable extends Component {
             </div>
             <div className="modal-body">
               <div className="modal-content-wrapper">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h1 className='modal-title'>BECOME A CO-HOST</h1>
+
+                <div style={{ width: '50%', textAlign: 'right', padding: '20px' }}>
+                  <span>HELP</span>&nbsp;
+                  <span>
+                    <Help style={{ width: '16', marginTop: '-3px', cursor: 'pointer' }} onClick={this.togglePopup} />
+                  </span>
+                </div>
+                
+              </div>
                 <div className="modal-content-panel">
                   <div className="input-amount">
 
@@ -1100,7 +1116,7 @@ class OpenGamesTable extends Component {
                       value={this.state.coHostAmount}
                       onChange={this.handleCoHostAmountChange}
                       pattern="^\\d*\\.?\\d*$"
-                      variant="outlined"
+                      variant="filled"
                       autoComplete="off"
                       id="payout"
 
@@ -1244,6 +1260,32 @@ class OpenGamesTable extends Component {
               </Button>
             </div>
           </div>
+          {this.state.showPopup && (
+          <div className={`${isDarkMode ? 'popup-overlay dark_mode' : 'popup-overlay'}`}>
+
+            <div className="popup">
+              <h2 className='modal-title' style={{ textAlign: 'center', marginBottom: "20px" }}>Co-Hosting Information</h2>
+              <div className="popup-content">
+              <img src={'../img/co-host.svg'} style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden' }}/>
+
+                <h3>Co-Hosting Overview</h3>
+                <p>Co-Hosting, allows you to invest in existing games and own a share of its profits.</p>
+                <p>Steps to become a co-host:</p>
+                <ol>
+                  <li>Go To 'Live Battles'</li>
+                  <li>Pick a game from the list (check the mini-charts for steady growth games).</li>
+                  <li>Click the green plus <span style={{color: 'green'}}>[+]</span> next to the 'WIN' button.</li>
+                  <li>In the Co-Hosting Popup, enter the amount you want to invest and click 'CONTRIBUTE'.</li>
+                  <li>Sit back and wait for automatic payouts (if Host has enabled) or your share value to increase as its bankroll increases.</li>
+                </ol>
+                  <i>PRO TIP: You can track your earnings by searching for 'co-host' in All Transactions by clicking your wallet then View-All.</i>
+               
+                <Button style={{ display: 'block', margin: 'auto' }} onClick={this.togglePopup}>OK, GOT IT!</Button>
+              </div>
+              <button className="popup-close" onClick={this.togglePopup}>&times;</button>
+            </div>
+          </div>
+        )}
         </Modal>
       </>
 

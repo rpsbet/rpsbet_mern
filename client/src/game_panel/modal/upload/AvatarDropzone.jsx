@@ -192,7 +192,7 @@ class Dropzone extends Component {
             <>
               <TextField
                 label="AI Text"
-                variant="outlined"
+                variant="filled"
                 fullWidth
                 value={this.state.aiText}
                 onChange={this.handleAITextChange}

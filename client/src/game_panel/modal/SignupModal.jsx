@@ -185,7 +185,7 @@ class SignupModal extends Component {
                     onChange={this.onChangeUserName}
                     fullWidth
                     className="form-control"
-                    variant="outlined"
+                    variant="filled"
                   />
 
                   <div className="avatar-method-selection">
@@ -216,7 +216,7 @@ class SignupModal extends Component {
                     onChange={this.onChangePassword}
                     fullWidth
                     className="form-control"
-                    variant="outlined"
+                    variant="filled"
                   />
                   <TextField
                     placeholder="V9FTGY"
@@ -225,7 +225,7 @@ class SignupModal extends Component {
                     onChange={this.onChangeReferralCode}
                     fullWidth
                     className="form-control"
-                    variant="outlined"
+                    variant="filled"
                   />
                   <FormControlLabel
                     control={

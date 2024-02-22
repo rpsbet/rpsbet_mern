@@ -1090,7 +1090,7 @@ class MyGamesTable extends Component {
                       value={this.state.topUpAmount}
                       onChange={this.handleTopUpAmountChange}
                       pattern="^\\d*\\.?\\d*$"
-                      variant="outlined"
+                      variant="filled"
                       autoComplete="off"
                       id="payout"
 
@@ -1247,7 +1247,7 @@ class MyGamesTable extends Component {
                         value={this.state.payoutAmount}
                         onChange={this.handlePayoutAmountChange}
                         pattern="^\\d*\\.?\\d*$"
-                        variant="outlined"
+                        variant="filled"
                         autoComplete="off"
                         InputProps={{
                           endAdornment: 'ETH'

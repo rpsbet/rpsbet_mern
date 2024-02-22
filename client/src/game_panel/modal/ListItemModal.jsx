@@ -123,7 +123,7 @@ class ListItemModal extends Component {
                 <TextField
                   type="text"
                   name="rentPrice"
-                  variant="outlined"
+                  variant="filled"
                   id="rentPrice"
                   label="Rent price"
                   value={price}
@@ -144,7 +144,7 @@ class ListItemModal extends Component {
                 <TextField
                   type="text"
                   name="price"
-                  variant="outlined"
+                  variant="filled"
                   id="price"
                   label="Set price"
                   value={price}

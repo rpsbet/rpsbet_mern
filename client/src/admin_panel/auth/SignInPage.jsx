@@ -99,7 +99,7 @@ function SignInSide(props) {
           </Typography>
           <form className={classes.form} onSubmit={handleSubmit}>
             <TextField
-              variant="outlined"
+              variant="filled"
               margin="normal"
               required
               fullWidth
@@ -112,7 +112,7 @@ function SignInSide(props) {
               onChange={e => setemail(e.target.value)}
             />
             <TextField
-              variant="outlined"
+              variant="filled"
               margin="normal"
               required
               fullWidth

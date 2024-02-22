@@ -93,7 +93,7 @@ function QuestionCreateForm({
                 <ListItem>
                   <TextField
                     label="e.g. Cat Quiz"
-                    variant="outlined"
+                    variant="filled"
                     name="new_brain_game_type"
                     margin="normal"
                     fullWidth
@@ -131,7 +131,7 @@ function QuestionCreateForm({
                 <TextField
                   autoFocus={true}
                   label="e.g.  What do cats think?"
-                  variant="outlined"
+                  variant="filled"
                   name="question"
                   margin="normal"
                   fullWidth
@@ -176,7 +176,7 @@ function QuestionCreateForm({
                         label="e.g. Yes"
                         name="new_answer"
                         margin="normal"
-                        variant="outlined"
+                        variant="filled"
                         fullWidth
                         type="text"
                         value={new_answer}
@@ -236,7 +236,7 @@ function QuestionCreateForm({
                     <ListItem>
                       <TextField
                         label="e.g. No"
-                        variant="outlined"
+                        variant="filled"
                         name="new_incorrect_answer"
                         margin="normal"
                         fullWidth

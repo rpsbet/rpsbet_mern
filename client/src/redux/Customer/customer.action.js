@@ -11,6 +11,7 @@ import {
   START_LOADING,
   END_LOADING,
   ACTIVITY_QUERY,
+  ROOM_STATISTICS_LOADED,
   LOAD_LEADERBOARDS,
   LOADING_LEADERBOARDS_TABLE
 } from '../types';
@@ -209,24 +210,25 @@ export const getCustomerStatisticsData = (
   }
 };
 
-export const getRoomStatisticsData = room_id => async dispatch => {
+export const getRoomStatisticsData = (room_id, limit) => async dispatch => {
   try {
     const { data } = await api.get('statistics/get-room-statistics', {
-      params: { room_id }
+      params: { room_id, limit } // Include the limit parameter here
     });
 
     if (data.success) {
+      dispatch({ type: ROOM_STATISTICS_LOADED, payload: true });
       return data;
-    } else {
 
+    } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
   } catch (error) {
-
     console.log('error***', error);
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
+
 
 // Update Customer
 export const updateCustomer = customer => async dispatch => {

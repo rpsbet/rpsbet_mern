@@ -355,7 +355,7 @@ const JukeboxPanel = ({
           >
             <TextField
               label="Search YouTube"
-              variant="outlined"
+              variant="filled"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleTextFieldKeyPress}

@@ -163,6 +163,7 @@ class DropGame extends Component {
   };
 
   handleKeyPress(event) {
+    const {isFocused} = this.props;
     if (!isFocused) {
       switch (event.key) {
         case ' ':

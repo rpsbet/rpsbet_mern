@@ -105,10 +105,10 @@ export default function BetAmountInput(props) {
         <TextField
           type="text"
           name="betamount"
-          variant="outlined"
+          variant="filled"
           id="betamount"
           disabled={disabledButtons || false}
-          label={bangGame ? "MULTIPLIER" : "BET AMOUNT"}
+          label={bangGame ? "MULTIPLIER" : ""}
           value={betAmount}
           onChange={onChangeState}
           placeholder={bangGame ? "1.29x" : "BET AMOUNT"}

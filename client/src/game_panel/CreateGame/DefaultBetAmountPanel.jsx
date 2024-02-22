@@ -209,7 +209,7 @@ class DefaultBetAmountPanel extends Component {
             type="text"
             name="betamount"
             id="betAmount"
-            variant="outlined"
+            variant="filled"
             value={bet_amount}
             inputProps={{
               pattern: '^\\d*\\.?\\d*$',

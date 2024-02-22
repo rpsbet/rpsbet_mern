@@ -48,7 +48,7 @@ function CreateProductForm({ updateTextField }) {
               <TableCell>
                 <TextField
                   autoFocus={true}
-                  variant="outlined"
+                  variant="filled"
                   label="Loan Amount"
                   name="loan_amount"
                   margin="normal"
@@ -72,7 +72,7 @@ function CreateProductForm({ updateTextField }) {
               <TableCell>
                 <TextField
                   label="Loan Period"
-                  variant="outlined"
+                  variant="filled"
                   name="loan_period"
                   margin="normal"
                   value={formValues.loan_period}
@@ -95,7 +95,7 @@ function CreateProductForm({ updateTextField }) {
                 <TextField
                   label="Interest Rate"
                   name="apy"
-                  variant="outlined"
+                  variant="filled"
                   margin="normal"
                   value={formValues.apy}
                   onChange={(e) => handleInputChange(e.target.name, e.target.value, 3)}

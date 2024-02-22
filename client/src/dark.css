@@ -14,7 +14,30 @@
 .dark_mode .modal-title {
 	color: #f9f9f9;
 }
+.dark_mode .popup {
+		background-color: #0c0c0c;
+		color: #f9f9f9;
+}
 
+.dark_mode .comment-container {
+	border: 1px solid #333;
+	background-color: #15151599;
+	color: #f9f9f9;
+  }
+  
+  
+  .dark_mode .comment-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between; /* Align items with space between */
+  }
+  
+  .dark_mode .comment-footer .delete-icon,
+  .dark_mode .comment-time {
+	color: #e5e5e5; /* Adjust color as needed */
+  }
+
+  
 .dark_mode .game-logs-table thead,
 .dark_mode .modal-img {
 	background-color: #101010;

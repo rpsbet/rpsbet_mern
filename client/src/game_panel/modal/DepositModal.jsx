@@ -185,7 +185,7 @@ const result = await axios.post('/stripe/deposit_successed/', {
                         {isConnected ? (
                           <TextField
                             label="Account"
-                            variant="outlined"
+                            variant="filled"
                             value={account}
                             InputProps={{
                               readOnly: true
@@ -194,7 +194,7 @@ const result = await axios.post('/stripe/deposit_successed/', {
                         ) : (
                           <TextField
                             label="Account"
-                            variant="outlined"
+                            variant="filled"
                             value="Connect Wallet"
                             InputProps={{
                               readOnly: true
@@ -245,7 +245,7 @@ const result = await axios.post('/stripe/deposit_successed/', {
                       <TextField
                         pattern="^\\d*\\.?\\d*$"
                         type="text"
-                        variant="outlined"
+                        variant="filled"
                         autoComplete="off"
                         value={this.state.amount}
                         onChange={this.handleAmountChange}

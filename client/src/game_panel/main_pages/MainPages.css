@@ -1260,6 +1260,50 @@ div.table.my-history-table .table-row .table-cell img.avatar {
   background-color: #f1f1f1;
   z-index: 2;
 }
+.comment-container {
+  position: relative; /* Make the container relative for absolute positioning of the time */
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f999;
+}
+
+.comment-content {
+  margin-bottom: 10px;
+}
+
+.comment-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Align items with space between */
+}
+
+.description-container {
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.description-text {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.comment-footer .delete-icon {
+  position: absolute;
+  bottom: 7.5px; /* Adjust top position as needed */
+  right: 5px;
+  margin-left: auto;
+  color: #999;
+}
+
+.comment-time {
+  position: absolute;
+  top: 7.5px; /* Adjust top position as needed */
+  right: 15px; /* Adjust right position as needed */
+  color: #999; /* Adjust color as needed */
+}
+
 
 .main_table_pagination button.btn_main_table_page_number {
   margin: 0 4px 0 0;
