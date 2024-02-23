@@ -501,13 +501,26 @@ router.get('/get-leaderboards', auth, async (req, res) => {
 router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
+    let limit = parseInt(req.query.limit); // Parse the limit parameter
 
-    const gameLogs = await GameLog.find({
+    // Check if limit is not provided or not a number, then set it to undefined
+    if (isNaN(limit) || limit <= 0) {
+      limit = undefined;
+    }
+
+    const query = {
       $and: [{ room: { $ne: null } }, { game_result: { $nin: [3, -100] } }],
       room: room_id
-    })
-      .sort({ created_at: 'asc' })
-      .limit(20); // Adjust the limit based on your requirements
+    };
+
+    const gameLogsQuery = GameLog.find(query)
+      .sort({ created_at: 'asc' });
+
+    if (limit !== undefined) {
+      gameLogsQuery.limit(limit);
+    }
+
+    const gameLogs = await gameLogsQuery;
 
     const tax = await SystemSetting.findOne({ name: 'commission' });
 

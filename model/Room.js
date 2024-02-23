@@ -109,6 +109,10 @@ const RoomSchema = new Schema({
     type: String,
     default: ''
   },
+  description: {
+    type: String,
+    default: ''
+  },
   likes: [{
     type: Schema.Types.ObjectId,
     ref: 'User',

@@ -9,6 +9,7 @@ const admin = require('../middleware/admin');
 
 const User = require('../model/User');
 const Room = require('../model/Room');
+const Comment = require('../model/Comment');
 
 const Item = require('../model/Item');
 const GameType = require('../model/GameType');
@@ -247,6 +248,7 @@ router.get('/room/:id', async (req, res) => {
         aveMultiplier: room['aveMultiplier'],
         creator_name: creator['username'],
         endgame_amount: room['endgame_amount'],
+        description: room['description'],
         joiners: joiners,
         game_type: room['game_type']['game_type_name'],
         bet_amount: parseFloat(room['user_bet']),
@@ -364,6 +366,89 @@ router.post('/answer', auth, async (req, res) => {
   }
 });
 
+// GET /api/comments/:room_id
+router.get('/comments/:room_id', async (req, res) => {
+  try {
+    const room_id = req.params.room_id;
+
+      // Find all comments for the specified room
+      const comments = await Comment.find({ room: room_id })
+      .populate({ path: 'user', model: User })
+      .select('_id accessory avatar totalWagered content created_at')
+      .sort({created_at: -1});
+      res.json({
+        success: true,
+        comments: comments
+      });
+    } catch (err) {
+
+      res.json({
+        success: false,
+        err: err
+      });
+    }
+  });
+  
+router.post('/comments', auth, async (req, res) => {
+  try {
+      const { room_id, content } = req.body;
+      console.log(room_id, content);
+      console.log(req.user._id);
+      console.log("totalWagered", req.user.totalWagered);
+
+
+      // Create the comment
+      const comment = new Comment({
+          user: req.user._id,
+          avatar: req.user.avatar,
+          accessory: req.user.accessory,
+          totalWagered: req.user.totalWagered,
+          room: room_id,
+          content: content
+      });
+
+      // Save the comment to the database
+      await comment.save();
+
+      res.json({
+        success: true,
+      });
+    } catch (err) {
+
+      res.json({
+        success: false,
+        err: err
+      });
+    }
+  });
+  
+
+  router.delete('/comments/:comment_id', async (req, res) => {
+    try {
+        const commentId = req.params.comment_id;
+
+        // Check if the comment exists
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        // Delete the comment
+        await Comment.findByIdAndDelete(commentId);
+
+     
+        res.json({
+          success: true,
+        });
+      } catch (err) {
+  
+        res.json({
+          success: false,
+          err: err
+        });
+      }
+    });
+    
 
 const convertGameLogToHistoryStyle = async gameLogList => {
   let result = [];
@@ -963,6 +1048,7 @@ router.post('/rooms', auth, async (req, res) => {
       game_type,
       aveMultiplier,
       endgame_amount,
+      description,
       is_anonymous,
       box_list,
       rps_list,
@@ -1068,7 +1154,8 @@ router.post('/rooms', auth, async (req, res) => {
       endgame_amount,
       host_pr,
       room_number: roomCount + 1,
-      status: 'open'
+      status: 'open',
+      description,
     });
     await newRoom.save();
 
@@ -2390,6 +2477,8 @@ router.post('/start_roll', auth, async (req, res) => {
   }
 });
 
+
+
 router.post('/get_notification_room_info', auth, async (req, res) => {
   try {
     const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
@@ -2406,7 +2495,7 @@ router.post('/get_notification_room_info', auth, async (req, res) => {
       }
     );
 
-    const notificationLogs = await Notification.find({
+    const notificationLocgs = await Notification.find({
       $or: [
         {
           from: new ObjectId(req.body.user_id),

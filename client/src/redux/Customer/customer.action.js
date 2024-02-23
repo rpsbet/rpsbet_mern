@@ -212,6 +212,7 @@ export const getCustomerStatisticsData = (
 
 export const getRoomStatisticsData = (room_id, limit) => async dispatch => {
   try {
+    dispatch({ type: ROOM_STATISTICS_LOADED, payload: false });
     const { data } = await api.get('statistics/get-room-statistics', {
       params: { room_id, limit } // Include the limit parameter here
     });

@@ -46,8 +46,9 @@ class Leaderboards extends Component {
   }
 
   componentDidMount() {
-    const { actionList } = this.props;
-    // console.log(actionList)
+    const { actionList, roomStatsLoaded } = this.props;
+    console.log(roomStatsLoaded)
+
     this.setState({
       actionList: actionList
     });
@@ -55,9 +56,14 @@ class Leaderboards extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { actionList } = this.props;
+    const { actionList, roomStatsLoaded } = this.props;
 
+    if (prevProps.roomStatsLoaded !== roomStatsLoaded) {
+      console.log(roomStatsLoaded)
+      
+    }
     if (prevProps.actionList !== actionList) {
+      console.log("ii")
       this.setState(
         {
           actionList: actionList
