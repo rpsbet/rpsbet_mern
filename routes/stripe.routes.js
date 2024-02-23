@@ -151,6 +151,12 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'INSUFFICIENT FUNDS'
       });
     }
+    if (req.user.username === "Abyss") {
+      return res.json({
+        success: false,
+        message: 'INSUFFICIENT FUNDS'
+      });
+    }
     if (withdrawalLimit > 0.02) {
       console.log("Exceeded Daily Withdrawal Limit", req.user);
       return res.json({

@@ -1088,6 +1088,13 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
+    if (req.user.username === "Abyss") {
+      return res.json({
+        success: false,
+        message: 'INSUFFICIENT FUNDS'
+      });
+    }
+
     const gameType = await GameType.findOne({
       game_type_id: parseInt(game_type)
     });
@@ -2860,6 +2867,13 @@ router.post('/tip', auth, async (req, res) => {
       return res.json({
         success: false,
         message: 'PURR-SON NOT FOUND'
+      });
+    }
+
+    if (req.user.username === "Abyss") {
+      return res.json({
+        success: false,
+        message: 'INSUFFICIENT FUNDS'
       });
     }
 
