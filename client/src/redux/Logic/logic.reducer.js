@@ -50,6 +50,7 @@ const initialState = {
   game_mode: "",
   roomList: [],
   history: [],
+  amount: 0,
   rooms_count: 0,
   spleesh_guesses: [],
   drop_guesses: [],
@@ -139,15 +140,16 @@ export default function (state = initialState, action) {
         betResult: payload.betResult,
         roomStatus: payload.roomStatus
       };
-    case UPDATE_BET_RESULT:
-      if (typeof payload === 'object') {
-        return {
-          ...state,
-          betResult: [...state.betResult, payload]
-        };
-      }
-      return state;
+      case UPDATE_BET_RESULT:
 
+        if (payload && typeof payload === 'object') {
+          return {
+            ...state,
+            betResult: payload.betResult, // Assuming betResult is a single value, not an array
+          };
+        }
+        return state;
+      
     case SPLEESH_GUESSES:
       return {
         ...state,

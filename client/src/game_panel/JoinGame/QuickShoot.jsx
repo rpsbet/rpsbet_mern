@@ -259,6 +259,7 @@ class QuickShoot extends Component {
         gameResultModal(
           isDarkMode,
           text,
+          result.amount,
           result.betResult,
           'Okay',
           null,
@@ -271,6 +272,7 @@ class QuickShoot extends Component {
         gameResultModal(
           isDarkMode,
           text,
+          result.amount,
           result.betResult,
           'Okay',
           null,

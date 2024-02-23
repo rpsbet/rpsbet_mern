@@ -713,9 +713,20 @@ class Blackjack extends Component {
       this.changeBgColor(result.betResult);
     }
 
+    let amount;
+
+    if (result.betResult === -1) {
+      amount = parseFloat(result.amount) - parseFloat(bet_amount);
+    } else if (result.betResult === 0) {
+      amount = parseFloat(result.amount) - parseFloat(bet_amount);
+    } else {
+      amount = result.amount;
+    }
+
     gameResultModal(
       isDarkMode,
       text,
+      amount,
       result.betResult,
       'Okay',
       null,

@@ -243,6 +243,7 @@ class Spleesh extends Component {
         gameResultModal(
           isDarkMode,
           text,
+          result.amount,
           result.betResult,
           'Okay',
           null,

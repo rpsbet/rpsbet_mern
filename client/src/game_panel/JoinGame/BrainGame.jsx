@@ -288,6 +288,7 @@ class BrainGame extends Component {
           gameResultModal(
             isDarkMode,
             text,
+            result.amount,
             result.betResult,
             'Okay',
             null,
@@ -300,6 +301,7 @@ class BrainGame extends Component {
           gameResultModal(
             isDarkMode,
             text,
+            result.amount,
             result.betResult,
             'Try again',
             'Close',

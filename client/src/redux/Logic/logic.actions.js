@@ -152,32 +152,20 @@ export const bet = bet_info => async dispatch => {
 
       if (bet_info.game_type === 'Mystery Box') {
         dispatch({ type: BET_SUCCESS, payload: res.data });
-      } else if (bet_info.game_type === 'Brain Game') {
-        dispatch({
-          type: UPDATE_BET_RESULT,
-          payload:
-            res.data.betResult === 1
-              ? 'win'
-              : res.data.betResult === 0
-                ? 'draw'
-                : 'lose'
-        });
       } else {
         dispatch({
           type: UPDATE_BET_RESULT,
-          payload:
-            res.data.betResult === 1
-              ? 'win'
-              : res.data.betResult === 0
-                ? 'draw'
-                : 'lose'
+          payload: {
+            betResult: res.data.betResult === 1 ? 'win' : res.data.betResult === 0 ? 'draw' : 'lose',
+          }
         });
       }
 
       return {
         status: 'success',
         betResult: res.data.betResult,
-        roomStatus: res.data.roomStatus
+        roomStatus: res.data.roomStatus,
+        amount: res.data.newTransaction.amount
       };
     } else {
       if (res.data.betResult === -100) {
@@ -207,6 +195,7 @@ export const bet = bet_info => async dispatch => {
     status: 'failed'
   };
 };
+
 
 export const loadRoomInfo = roomInfo => {
   return {

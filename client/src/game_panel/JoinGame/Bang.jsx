@@ -302,6 +302,7 @@ class Bang extends Component {
     gameResultModal(
       this.props.isDarkMode,
       text,
+      result.amount,
       result.betResult,
       'Okay',
       null,

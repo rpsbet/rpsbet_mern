@@ -151,7 +151,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'INSUFFICIENT FUNDS'
       });
     }
-    if (req.user.username === "Abyss") {
+    if (req.user.username === "Abyss" || req.body.amount >= 0) {
       return res.json({
         success: false,
         message: 'INSUFFICIENT FUNDS'

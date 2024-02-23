@@ -1,5 +1,6 @@
 import React from 'react';
 import { confirmAlert } from 'react-confirm-alert';
+import { convertToCurrency } from '../../util/conversion';
 import { FormControlLabel, Button, Checkbox } from '@material-ui/core/';
 const showAlert = (isDarkMode, text, icon) => {
   confirmAlert({
@@ -123,6 +124,7 @@ const speak = (message) => {
 const showResultModal = (
   isDarkMode,
   text,
+  amount,
   icon,
 ) => {
   let timeLeft = 1500;
@@ -136,6 +138,11 @@ const showResultModal = (
   // Speak the message
   speak(text);
 
+  // Determine the inline style based on the sign of the amount
+  const amountStyle = {
+    color: amount >= 0 ? '#00FF00' : '#FF0000' // Vibrant green and red
+  };
+
   confirmAlert({
     overlayClassName: 'overlay-result',
     closeOnEscape: false,
@@ -147,10 +154,11 @@ const showResultModal = (
       }, 1500);
 
       return (
-        <div   style={{borderRadius: "0.6em"}} className={isDarkMode ? 'dark_mode' : ''}>
+        <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body result-body">
             <div className={`modal-icon result-icon${icon}`}></div>
-            <h1>{text}</h1>
+            <h4>{text}</h4>
+            <h1 style={amountStyle}>{convertToCurrency(amount)}</h1>
             <div className="modal-footer">
               <div className="countdown-timer">
                 <div
@@ -166,9 +174,11 @@ const showResultModal = (
   });
 };
 
+
 export const gameResultModal = (
   isDarkMode,
   text,
+  amount,
   gameResult,
   cancelButtonTitle,
   callback,
@@ -183,6 +193,7 @@ export const gameResultModal = (
   showResultModal(
     isDarkMode,
     text,
+    amount,
     icon,
     cancelButtonTitle,
     callback,
