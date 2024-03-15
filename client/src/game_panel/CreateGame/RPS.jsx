@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button, IconButton } from '@material-ui/core';
+import { Button, IconButton, ButtonBase } from '@material-ui/core';
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import styled from 'styled-components';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import SettingsRef from '../../components/SettingsRef';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
 
@@ -229,7 +230,7 @@ const predictNext = rps_list => {
   const winChance = calcWinChance(rps_list);
   let deviation = 0;
   if (winChance !== '33.33%') {
-    deviation = (1 - 1 / 3) / 2;
+    deviation = 0.1;
   }
   // Use the transition matrix to predict the next state based on the current state
   let currentState1 = rps_list[rps_list.length - 3].rps;
@@ -278,6 +279,8 @@ class RPS extends Component {
       winChance: 33,
       card_list: {},
       rps_list: [],
+      selectedStrategy: this.props.selectedStrategy,
+      settings_panel_opened: false,
       transitionMatrix: {
         R: { R: 0, P: 0, S: 0 },
         P: { R: 0, P: 0, S: 0 },
@@ -287,12 +290,17 @@ class RPS extends Component {
     this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleReset = this.handleReset.bind(this);
+    this.settingsRef = React.createRef();
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.handleSettingsIconClick = this.handleSettingsIconClick.bind(this);
+
   }
 
   async componentDidMount() {
     const { acQueryMyItem } = this.props;
     await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
     document.addEventListener('keydown', this.handleKeyPress);
+    document.addEventListener('mousedown', this.handleClickOutside);
 
     this.setCardListState();
   }
@@ -300,10 +308,24 @@ class RPS extends Component {
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
+    document.removeEventListener('mousedown', this.handleClickOutside);
+
   }
 
+  
+  handleClickOutside = e => {
+    if (
+      this.settingsRef &&
+      this.settingsRef.current &&
+      !this.settingsRef.current.contains(e.target)
+    ) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
+  
   handleKeyPress(event) {
     const { selected_roll } = this.state;
+    const { isFocused } = this.props;
     if (!isFocused) {
       switch (event.key) {
         case 'r':
@@ -450,18 +472,30 @@ class RPS extends Component {
   //     autoplay: !prevState.autoplay
   //   }));
   // };
+
+
+
+  handleSettingsIconClick = () => {
+    this.setState({ settings_panel_opened: !this.state.settings_panel_opened });
+  }
+
   onChangeBetAmount = new_state => {
     this.setState({ bet_amount: new_state.selected_bet_amount });
   };
   render() {
     const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
-    const { selected_rps, card_list } = this.state;
+    const { selected_rps, card_list, settings_panel_opened } = this.state;
     const {
       rps_game_type,
       step,
       bet_amount,
       rps_list,
-      onChangeState
+      onChangeState,
+      strategies,
+      ai_mode,
+      user_id,
+      selectedStrategy,
+      setSelectedStrategy
     } = this.props;
     return (
       <>
@@ -475,7 +509,7 @@ class RPS extends Component {
             />
           </div>
         )}
-        {step === 2 && (
+        {/* {step === 2 && (
           <div className="game-info-panel">
             <h3 className="game-sub-title">Select Mode:</h3>
 
@@ -510,7 +544,7 @@ class RPS extends Component {
           </div>
         )}
 
-        {step === 3 && rps_game_type === 1 && (
+        {step === 2 && rps_game_type === 1 && (
           <div className="game-info-panel">
             <h3 className="game-sub-title">Select Cards</h3>
             <ProductGrid>
@@ -590,72 +624,100 @@ class RPS extends Component {
             </div>
             <p className="tip">RRPS CARDS AVAILABLE VIA THE MARKETPLACE</p>
           </div>
-        )}
-        {step === 3 && rps_game_type === 0 && (
+        )} */}
+        {step === 2 && rps_game_type === 0 && (
           <div className="game-info-panel">
+             <h3 className="game-sub-title">Strategy</h3>
+                <SettingsRef
+                  strategies={strategies}
+                  ai_mode={ai_mode}
+                  user_id={user_id}
+                  settings_panel_opened={settings_panel_opened}
+                  setSelectedStrategy={setSelectedStrategy}
+                  settingsRef={this.settingsRef}
+                  selectedStrategy={selectedStrategy}
+                />
+                <ButtonBase
+                  onClick={this.handleSettingsIconClick}
+                  style={{
+                    boxShadow: 'unset',
+                    borderRadius: '30px',
+                    background: 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
+                  <SettingsOutlinedIcon />
+                </ButtonBase>
+                {(selectedStrategy === 'Markov') ? (
+
+                  <>
             <div className="rps-add-run-panel">
               <div className="rps-add-run-form">
-                <h3 className="game-sub-title">Select: R - P - S! </h3>
-                <div id="rps-radio">
-                  <Button
-                    className={'rock' + (selected_rps === 'R' ? ' active' : '')}
-                    variant="contained"
-                    onClick={() => {
+                    <h3 className="game-sub-title">Select: R - P - S! </h3>
+                    <div id="rps-radio">
+                      <Button
+                        className={'rock' + (selected_rps === 'R' ? ' active' : '')}
+                        variant="contained"
+                        onClick={() => {
 
-                      this.onAddRun('R');
-                      const currentActive = document.querySelector('.active');
-                      if (currentActive) {
-                        currentActive.style.animation = 'none';
-                        void currentActive.offsetWidth;
-                        currentActive.style.animation =
-                          'pulse 0.2s ease-in-out ';
-                      }
-                    }}
-                  ><span className="roll-tag">[R]</span></Button>
-                  <Button
-                    className={
-                      'paper' + (selected_rps === 'P' ? ' active' : '')
-                    }
-                    variant="contained"
-                    onClick={() => {
+                          this.onAddRun('R');
+                          const currentActive = document.querySelector('.active');
+                          if (currentActive) {
+                            currentActive.style.animation = 'none';
+                            void currentActive.offsetWidth;
+                            currentActive.style.animation =
+                              'pulse 0.2s ease-in-out ';
+                          }
+                        }}
+                      ><span className="roll-tag">[R]</span></Button>
+                      <Button
+                        className={
+                          'paper' + (selected_rps === 'P' ? ' active' : '')
+                        }
+                        variant="contained"
+                        onClick={() => {
 
-                      this.onAddRun('P');
-                      const currentActive = document.querySelector('.active');
-                      if (currentActive) {
-                        currentActive.style.animation = 'none';
-                        void currentActive.offsetWidth;
-                        currentActive.style.animation =
-                          'pulse 0.2s ease-in-out ';
-                      }
-                    }}
-                  ><span className="roll-tag">[P]</span></Button>
-                  <Button
-                    className={
-                      'scissors' + (selected_rps === 'S' ? ' active' : '')
-                    }
-                    variant="contained"
-                    onClick={() => {
-                      this.onAddRun('S');
-                      const currentActive = document.querySelector('.active');
-                      if (currentActive) {
-                        currentActive.style.animation = 'none';
-                        void currentActive.offsetWidth;
-                        currentActive.style.animation =
-                          'pulse 0.2s ease-in-out ';
-                      }
-                    }}
-                  ><span className="roll-tag">[S]</span></Button>
-                </div>
+                          this.onAddRun('P');
+                          const currentActive = document.querySelector('.active');
+                          if (currentActive) {
+                            currentActive.style.animation = 'none';
+                            void currentActive.offsetWidth;
+                            currentActive.style.animation =
+                              'pulse 0.2s ease-in-out ';
+                          }
+                        }}
+                      ><span className="roll-tag">[P]</span></Button>
+                      <Button
+                        className={
+                          'scissors' + (selected_rps === 'S' ? ' active' : '')
+                        }
+                        variant="contained"
+                        onClick={() => {
+                          this.onAddRun('S');
+                          const currentActive = document.querySelector('.active');
+                          if (currentActive) {
+                            currentActive.style.animation = 'none';
+                            void currentActive.offsetWidth;
+                            currentActive.style.animation =
+                              'pulse 0.2s ease-in-out ';
+                          }
+                        }}
+                      ><span className="roll-tag">[S]</span></Button>
+                    </div>
+                  
                 <Button
                   id="aiplay"
                   variant="contained"
                   onClick={this.onAutoPlay}
                 >
-                  Test AI Play&nbsp;<span className="roll-tag">[space]</span>
+                  Test Autoplay&nbsp;<span className="roll-tag">[space]</span>
                 </Button>
               </div>
               <div className="rps-add-run-table">
-                <h3 className="game-sub-title">Training Data</h3>
+                <h3 className="game-sub-title">Pattern Table</h3>
                 <table id="runs">
                   <tbody>
                     {rps_list && rps_list.length > 0 ? (
@@ -674,7 +736,7 @@ class RPS extends Component {
                     ) : (
                       <tr>
                         <td id="add-run" colSpan="4">
-                          Provide the AI with example outputs
+                          Your pattern will be displayed here
                         </td>
                       </tr>
                     )}
@@ -685,6 +747,13 @@ class RPS extends Component {
                 </IconButton>
               </div>
             </div>
+            </>
+
+                ) : (
+                  <div style={{padding: "30px", fontSize: "0.6em"}}>
+                    (No Pattern Needed)
+                  </div>
+                )}
           </div>
         )}
       </>

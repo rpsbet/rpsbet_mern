@@ -136,7 +136,9 @@ class Summary extends Component {
       is_private,
       youtubeUrl,
       endgame_amount,
-      endgame_type
+      endgame_type,
+      selectedStrategy,
+      description
     } = this.props;
     let public_max_return = <> {convertToCurrency(max_prize)} </>;
     let spleesh_public_bet_amount = public_bet_amount
@@ -148,7 +150,7 @@ class Summary extends Component {
     let valueColor = 'default';
     let backgroundColor = 'default';
     let icon = <Info style={{width: "10pt", cursor: "pointer", marginLeft: "5px"}}/>;
-    let tooltipText = 'Zero-sum game (fair)';
+    let tooltipText = 'Zero (Neutral Fairness)';
 
     if (isNegative) {
       valueColor = '#ff0000';
@@ -193,6 +195,7 @@ class Summary extends Component {
               {convertToCurrency(bet_amount)}
             </div>
           </div>
+          
           {game_mode === 'RPS' && (
             <div className="summary-item">
               <div className="summary-item-name">Game Mode</div>
@@ -205,6 +208,7 @@ class Summary extends Component {
               </div>
             </div>
           )}
+           
 
           {game_mode === 'Quick Shoot' && (
             <div className="summary-item">
@@ -212,6 +216,12 @@ class Summary extends Component {
               <div className="summary-item-value">{qs_game_type}</div>
             </div>
           )}
+          <div className="summary-item">
+              <div className="summary-item-name">Autoplay Strategy</div>
+              <div className="summary-item-value">
+                {selectedStrategy}
+            </div>
+            </div>
           {(game_mode === 'Quick Shoot') && (
             <div className="summary-item">
               <div className="summary-item-name">Public Bet Amount</div>
@@ -241,6 +251,7 @@ class Summary extends Component {
                 <div className="summary-item-value">{aveMultiplier}x</div>
               </div>
             ))}
+            
           <div className="summary-item">
             <div className="summary-item-name">TARGET ROI</div>
             <div className="summary-item-value">
@@ -265,6 +276,12 @@ class Summary extends Component {
             <div className="summary-item-name">Background</div>
             <div className="summary-item-value">
               {gameBackground ? gameBackground : 'No Background'}
+            </div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-item-name">Description</div>
+            <div className="summary-item-value">
+              {description ? description : 'No Description'}
             </div>
           </div>
           <div className="summary-item">

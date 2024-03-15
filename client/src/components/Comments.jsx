@@ -33,6 +33,7 @@ class Comments extends Component {
         if (prevProps.comments !== this.props.comments) {
             this.setState({ comments: this.props.comments });
         }
+  
     }
 
 
@@ -126,7 +127,11 @@ class Comments extends Component {
 
 
                 {loading ? (
-                    <LinearProgress />
+                    <>
+                    <div style={{paddingTop: "30px"}}>
+                    <LinearProgress color='secondary'/>
+                        </div>
+                    </>
                 ) : (
                     <div>
                         {comments.map((comment) => (
@@ -173,7 +178,7 @@ class Comments extends Component {
 
 const mapStateToProps = (state) => ({
     comments: state.logic.comments,
-    loading: state.logic.loading,
+    loading: state.logic.isActiveLoadingOverlay,
     currentUserId: state.auth.user._id, // Assuming you have user authentication implemented
 });
 

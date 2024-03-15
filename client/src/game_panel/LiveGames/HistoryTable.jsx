@@ -267,7 +267,7 @@ class HistoryTable extends Component {
     
     return (
       <div className="overflowX">
-        <div className="outer-div">
+        {/* <div className="outer-div">
           <div className="border-mask" />
           
           <Lottie
@@ -286,23 +286,7 @@ class HistoryTable extends Component {
               maxWidth: '100%'
             }}
           />
-          {/* <Lottie
-            options={{
-              loop: true,
-              autoplay: true,
-              animationData: waves
-            }}
-            style={{
-              transform: 'translateY(-66px)',
-              width: '361px',
-              height: '100%',
-              overflow: 'hidden',
-              margin: '60px 0px -236px',
-              outline: 'none',
-              filter: 'hue-rotate(48deg)',
-              maxWidth: '100%'
-            }}
-          /> */}
+         
           <InlineSVG
             className="rain"
             id="busd"
@@ -342,7 +326,7 @@ class HistoryTable extends Component {
           >
             / 10.00 (NEXT BIG GIVEAWAY EVENT)
           </span>
-        </div>
+        </div> */}
         {/* <div className="game-type-container">
           <div
             className="game-type-panel"
@@ -367,7 +351,7 @@ class HistoryTable extends Component {
                 key={row._id}
               >
                 {' '}
-                {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)}
+                {/* {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)} */}
                 <div>
                   <div className="table-cell">
                     <div className="room-id">

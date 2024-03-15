@@ -313,19 +313,20 @@ router.post('/equip', auth, async (req, res) => {
 });
 
 
-
 router.get('/my-items', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const sort = 'owners.price';
-  const itemTypeFilter = req.query.itemType;
+  const itemTypeFilter = '653ee81117c9f5ee2124564b'; // specific item type
   const userId = req.user._id;
+  
   try {
-    let query = { 'owners.onSale': { $gt: 0 } };
+    let query = { 'owners.onSale': { $gt: 0 }, 'owners.user': userId }; // filter by user ID
     if (itemTypeFilter) {
       query['item_type'] = itemTypeFilter;
     }
-    const items = await Item.find({ 'owners.user': userId, ...query })
+
+    const items = await Item.find(query)
       .sort({ updated_at: 'desc' })
       .skip(pagination * page - pagination)
       .limit(pagination);
@@ -353,13 +354,6 @@ router.get('/my-items', auth, async (req, res) => {
         });
       }
     }
-
-    // if (sort === 'created_at') {
-    //   item_list.sort((a, b) => a.created_at - b.created_at);
-    // } else {
-    //   item_list.sort((a, b) => a.owners[0].price - b.owners[0].price);
-    // }
-
 
     res.json({
       success: true,
@@ -380,11 +374,11 @@ router.get('/products', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const userId = req.query.id;
-  // console.log(userId)
+  
   try {
-    let query = { 'owners.onSale': { $gt: 0 } };
+    let query = { 'owners.onSale': { $gt: 0 }, 'owners.user': userId }; // filter by user ID and onSale > 0
     
-    const items = await Item.find({ 'owners.user': userId, ...query })
+    const items = await Item.find(query)
       .sort({ updated_at: 'desc' })
       .skip(pagination * page - pagination)
       .limit(pagination);
@@ -413,8 +407,6 @@ router.get('/products', auth, async (req, res) => {
       }
     }
 
-
-
     res.json({
       success: true,
       query: req.query,
@@ -429,6 +421,7 @@ router.get('/products', auth, async (req, res) => {
     });
   }
 });
+
 
 // List an item for sale or rent
 router.post('/list-for-sale', auth, async (req, res) => {
@@ -576,21 +569,16 @@ router.get('/:id', async (req, res) => {
     });
   }
 });
-// /api/items call
 router.get('/', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
 
-  // const sort = req.query.sortBy === 'price' ? 'owners.price' : 'created_at';
   const sort = 'owners.price';
-
-  const itemTypeFilter = req.query.itemType;
+  const itemTypeFilter = '653ee81117c9f5ee2124564b'; // specific item type
 
   try {
-    let query = { 'owners.onSale': { $gt: 0 } };
-    if (itemTypeFilter) {
-      query['item_type'] = itemTypeFilter;
-    }
+    let query = { 'owners.onSale': { $gt: 0 }, 'item_type': itemTypeFilter }; // filter by itemType
+
     const items = await Item.find(query)
       .skip(pagination * page - pagination)
       .limit(pagination);
@@ -648,6 +636,7 @@ router.get('/', async (req, res) => {
     });
   }
 });
+
 
 
 module.exports = router;

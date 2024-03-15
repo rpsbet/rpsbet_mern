@@ -10,12 +10,15 @@
   background-color: #2b2b2b;
 }
 
-div[class*="makeStyles"] {
+/* div[class*="makeStyles"] {
   border-radius: 14px;
   background: linear-gradient(45deg, #c438ef, #f0b90b) !important;
-}
+} */
 div[class*="makeStyles-success"] {
   background: linear-gradient(45deg, #28a745, #ffb000) !important;
+}
+div[class*="makeStyles-warning"] {
+  background: linear-gradient(45deg, #ff0000, #ffb000) !important;
 }
 div[class*="makeStyles-info"] {
   background: linear-gradient(45deg, #3f00ee, #ffb000) !important;
@@ -878,7 +881,8 @@ a.player:hover {
   border-width: 10px;
 }
 
-.game-contents .game-info-panel .bet-amount button {
+.game-contents .game-info-panel .bet-amount button,
+.input-amount button{
   border: 1px solid;
   box-shadow: unset !important;
   background: #d8171954 !important;
@@ -1034,7 +1038,7 @@ circle {
 (orientation: portrait) and
 (-webkit-min-device-pixel-ratio: 1.5) {
   div.table.main-game-table .table-row .table-cell.cell-user-name {
-        width: 34%;
+        width: 30%;
         margin-left: 15px;
         margin-right: 0px;
   }

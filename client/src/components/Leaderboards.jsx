@@ -46,8 +46,7 @@ class Leaderboards extends Component {
   }
 
   componentDidMount() {
-    const { actionList, roomStatsLoaded } = this.props;
-    console.log(roomStatsLoaded)
+    const { actionList } = this.props;
 
     this.setState({
       actionList: actionList
@@ -56,14 +55,9 @@ class Leaderboards extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { actionList, roomStatsLoaded } = this.props;
+    const { actionList } = this.props;
 
-    if (prevProps.roomStatsLoaded !== roomStatsLoaded) {
-      console.log(roomStatsLoaded)
-      
-    }
     if (prevProps.actionList !== actionList) {
-      console.log("ii")
       this.setState(
         {
           actionList: actionList
@@ -155,12 +149,17 @@ class Leaderboards extends Component {
                           {/* {playerData._id} */}
                         </TableCell>
                         <TableCell>
-                          {convertToCurrency(playerData.wagered)}
-                        </TableCell>
+  {playerData.bets >= 10 ? <>{convertToCurrency(playerData.wagered) }+</>: convertToCurrency(playerData.wagered)}
+</TableCell>
+<TableCell>
+  {playerData.bets >= 10 ? <>{convertToCurrency(playerData.net_profit)}+</>: convertToCurrency(playerData.net_profit)}
+</TableCell>
+
+
                         <TableCell>
-                          {convertToCurrency(playerData.net_profit)}
-                        </TableCell>
-                        <TableCell>{playerData.bets}</TableCell>
+    {playerData.bets >= 10 ? '10+' : playerData.bets}
+</TableCell>
+
                         <TableCell>
                           <ReactApexChart
                             options={{

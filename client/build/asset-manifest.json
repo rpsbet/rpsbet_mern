@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.9ef65ae6.css",
-    "main.js": "/static/js/main.a1cc5b0e.js",
+    "main.css": "/static/css/main.211faa15.css",
+    "main.js": "/static/js/main.ff19f75d.js",
     "static/js/469.5d4d93cd.chunk.js": "/static/js/469.5d4d93cd.chunk.js",
     "static/js/857.01cd8b42.chunk.js": "/static/js/857.01cd8b42.chunk.js",
     "static/js/331.2aa29dd2.chunk.js": "/static/js/331.2aa29dd2.chunk.js",
@@ -39,7 +39,6 @@
     "static/js/48.970a14ac.chunk.js": "/static/js/48.970a14ac.chunk.js",
     "static/media/rock-weapon.gif": "/static/media/rock-weapon.46a971ad30a5f08cf592.gif",
     "static/media/scissors-weapon.gif": "/static/media/scissors-weapon.1c5e9a58de5e68e7d65a.gif",
-    "static/media/bgm.webp": "/static/media/bgm.81a8af68afee804121c0.webp",
     "static/media/created.svg": "/static/media/created.fb2628b78cf9e4aaae3c.svg",
     "static/media/room_name.svg": "/static/media/room_name.cf8802cd16cc5555b3d3.svg",
     "static/media/paper-weapon.gif": "/static/media/paper-weapon.fe7bb975668fdc53d5c7.gif",
@@ -116,11 +115,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.9ef65ae6.css.map": "/static/css/main.9ef65ae6.css.map",
-    "main.a1cc5b0e.js.map": "/static/js/main.a1cc5b0e.js.map"
+    "main.211faa15.css.map": "/static/css/main.211faa15.css.map",
+    "main.ff19f75d.js.map": "/static/js/main.ff19f75d.js.map"
   },
   "entrypoints": [
-    "static/css/main.9ef65ae6.css",
-    "static/js/main.a1cc5b0e.js"
+    "static/css/main.211faa15.css",
+    "static/js/main.ff19f75d.js"
   ]
 }

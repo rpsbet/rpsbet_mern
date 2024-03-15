@@ -1,9 +1,14 @@
 import {
+  RPSBETITEMS_LOADED,
+
   ACTION_ROOM,
   GAMETYPE_LOADED,
+  STRATEGIES_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
+  START_BET,
+  END_BET,
   ROOMS_LOADED,
   ROOMS_COUNT,
   BET_SUCCESS,
@@ -44,6 +49,8 @@ import {
 } from '../types';
 
 const initialState = {
+  rpsbetitems: [],
+
   isActiveLoadingOverlay: false,
   transactionComplete: false,
   socket: null,
@@ -55,22 +62,24 @@ const initialState = {
   spleesh_guesses: [],
   drop_guesses: [],
   bangs: [],
+  is_betting: false,
   rolls: [],
   comments: [],
+  strategies: [],
   totalPage: 0,
   pageNumber: 1,
   historyTotalPage: 0,
   historyPageNumber: 1,
   gameTypeList: [
     { game_type_id: 1, game_type_name: 'RPS', short_name: 'RPS', _id: '62a25d2a723b9f15709d1ae7', created_at: '2018-06-09T20:50:50.217Z' },
-    { game_type_id: 6, game_type_name: 'Drop Game', short_name: 'DG', _id: '63dac60ba1316a1e70a468ab', created_at: '2023-02-01T20:50:50.217Z', },
-    { game_type_id: 2, game_type_name: 'Spleesh!', short_name: 'S!', _id: '62a25d2a723b9f15709d1ae8', created_at: '2024-06-09T20:50:50.218Z'},
-    { game_type_id: 3, game_type_name: 'Brain Game', short_name: 'BG', _id: '62a25d2a723b9f15709d1ae9', created_at: '2029-06-09T20:50:50.219Z', },
-    {game_type_id: 4, game_type_name: 'Mystery Box', short_name: 'MB', _id: '62a25d2a723b9f15709d1aea', created_at: '2022-06-09T20:50:50.219Z',},
-    { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z',},
-    { game_type_id: 7, game_type_name: 'Bang!', short_name: 'B!', _id: '6536a82933e70418b45fbe32', created_at: '2019-12-02T11:04:10.217Z', },
-    { game_type_id: 8, game_type_name: 'Roll', short_name: 'R', _id: '6536946933e70418b45fbe2f', created_at: '2010-05-19T15:57:30.217Z' },
-    { game_type_id: 9, game_type_name: 'Blackjack', short_name: 'BJ', _id: '656cd55bb2c2d9dfb59a4bfa', created_at: '2034-03-08T14:40:50.217Z', }
+    // { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z',},
+    // { game_type_id: 6, game_type_name: 'Drop Game', short_name: 'DG', _id: '63dac60ba1316a1e70a468ab', created_at: '2023-02-01T20:50:50.217Z', },
+    // { game_type_id: 2, game_type_name: 'Spleesh!', short_name: 'S!', _id: '62a25d2a723b9f15709d1ae8', created_at: '2024-06-09T20:50:50.218Z'},
+    // { game_type_id: 3, game_type_name: 'Brain Game', short_name: 'BG', _id: '62a25d2a723b9f15709d1ae9', created_at: '2029-06-09T20:50:50.219Z', },
+    // {game_type_id: 4, game_type_name: 'Mystery Box', short_name: 'MB', _id: '62a25d2a723b9f15709d1aea', created_at: '2022-06-09T20:50:50.219Z',},
+    // { game_type_id: 7, game_type_name: 'Bang!', short_name: 'B!', _id: '6536a82933e70418b45fbe32', created_at: '2019-12-02T11:04:10.217Z', },
+    // { game_type_id: 8, game_type_name: 'Roll', short_name: 'R', _id: '6536946933e70418b45fbe2f', created_at: '2010-05-19T15:57:30.217Z' },
+    // { game_type_id: 9, game_type_name: 'Blackjack', short_name: 'BJ', _id: '656cd55bb2c2d9dfb59a4bfa', created_at: '2034-03-08T14:40:50.217Z', }
   ],
   curRoomInfo: {
     _id: 0,
@@ -79,6 +88,7 @@ const initialState = {
     rank: 0,
     accessory: '',
     aveMultiplier: '',
+    totalGameLogsCount: 0,
     joiners: {},
     game_type: '',
     hosts: {},
@@ -141,7 +151,6 @@ export default function (state = initialState, action) {
         roomStatus: payload.roomStatus
       };
       case UPDATE_BET_RESULT:
-
         if (payload && typeof payload === 'object') {
           return {
             ...state,
@@ -196,6 +205,16 @@ export default function (state = initialState, action) {
         ...state,
         isActiveLoadingOverlay: false
       };
+    case START_BET:
+      return {
+        ...state,
+        is_betting: true
+      };
+    case END_BET:
+      return {
+        ...state,
+        is_betting: false
+      };
       case COMMENT_CREATED:
         return {
           ...state,
@@ -210,6 +229,12 @@ export default function (state = initialState, action) {
         return {
           ...state,
           comments: action.payload,
+          error: null
+        };
+      case RPSBETITEMS_LOADED:
+        return {
+          ...state,
+          rpsbetitems: action.payload.data,
           error: null
         };
       case COMMENTS_LOAD_FAILED:
@@ -248,6 +273,11 @@ export default function (state = initialState, action) {
         ...state,
         curRoomInfo: payload
       };
+    case STRATEGIES_LOADED:
+      return {
+        ...state,
+        strategies: payload
+      };
     case SET_CHAT_ROOM_INFO:
       return {
         ...state,
@@ -268,7 +298,8 @@ export default function (state = initialState, action) {
         ...state,
         curRoomInfo: {
           ...state.curRoomInfo,
-          ...payload.roomInfo
+          ...payload.roomInfo,
+          totalGameLogsCount: payload.totalGameLogsCount
         }
       };
     case ROOMS_COUNT:

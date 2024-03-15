@@ -186,19 +186,21 @@ export const getCustomerStatisticsData = (
   _id,
   actorType,
   gameType,
-  timeType
+  timeType,
+  limit
 ) => async dispatch => {
   try {
-    dispatch({ type: START_LOADING });
+    // dispatch({ type: START_LOADING });
     const { data } = await api.get('statistics/get-customer-statistics', {
       params: {
         _id: _id,
         actorType: actorType,
         gameType: gameType,
-        timeType: timeType
+        timeType: timeType,
+        limit: limit
       }
     });
-    dispatch({ type: END_LOADING });
+    // dispatch({ type: END_LOADING });
     if (data.success) {
       return data.statistics;
     } else {

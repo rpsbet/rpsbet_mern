@@ -12,6 +12,7 @@ import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
+import { updateRoomBot } from '../../redux/Logic/logic.actions';
 
 import {
   Button,
@@ -26,6 +27,7 @@ import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import {
   validateIsAuthenticated,
   validateCreatorId,
+  callBot,
   validateBetAmount,
   validateBankroll
 } from '../modal/betValidations';
@@ -138,7 +140,6 @@ class RPS extends Component {
   constructor(props) {
     super(props);
 
-    this.settingsRef = React.createRef();
     this.socket = this.props.socket;
     this.state = {
       timer: null,
@@ -147,6 +148,7 @@ class RPS extends Component {
       productName: '',
       selected_rps: this.props.selected_rps,
       modalOpen: false,
+      players: [],
       startedPlaying: false,
       advanced_status: '',
       cardDealt: false,
@@ -160,6 +162,7 @@ class RPS extends Component {
     this.panelRef = React.createRef();
     this.onChangeState = this.onChangeState.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.handleClickOutside = this.handleClickOutside.bind(this);
 
   }
 
@@ -200,6 +203,7 @@ class RPS extends Component {
   async componentDidMount() {
     const { socket, rps_game_type, acQueryMyItem, playSound } = this.props;
     document.addEventListener('keydown', this.handleKeyPress);
+    document.addEventListener('mousedown', this.handleClickOutside);
 
     if (socket) {
       socket.on('CARD_PRIZE', data => {
@@ -216,12 +220,22 @@ class RPS extends Component {
       });
 
       socket.on('UPDATED_BANKROLL', data => {
-        this.setState({
-          bankroll: data.bankroll,
-          rps: data.rps,
-          startedPlaying: true
+        // console.log("l;ast r[s", data.rps[data.rps.length - 1])
+
+        this.setState(prevState => {
+          let updatedPlayers = [...prevState.players, data.user];
+          if (updatedPlayers.length > 5) {
+            updatedPlayers.shift(); // Remove the oldest player
+          }
+          return {
+            bankroll: data.bankroll,
+            rps: data.rps,
+            startedPlaying: true,
+            players: updatedPlayers
+          };
         });
       });
+
 
       socket.on('RPS_1', data => {
         if (data && data.length > 0) {
@@ -255,11 +269,22 @@ class RPS extends Component {
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
+    document.removeEventListener('mousedown', this.handleClickOutside);
+
   }
 
 
   handleKeyPress(event) {
-    if (!isFocused) {
+    const { isFocused } = this.props;
+  
+    // Check if the Ctrl key is pressed (for Windows/Linux) or the Cmd key is pressed (for macOS)
+    const ctrlKeyPressed = event.ctrlKey || event.metaKey;
+  
+    // Check if the key pressed is 'r'
+    const isRKeyPressed = event.key === 'r';
+  
+    // Check if both conditions are met: Ctrl (or Cmd) key is pressed AND 'r' key is pressed
+    if (!isFocused && !(ctrlKeyPressed && isRKeyPressed)) {
       switch (event.key) {
         case 'r':
           this.onBtnBetClick('R');
@@ -275,6 +300,7 @@ class RPS extends Component {
       }
     }
   }
+  
 
 
   toggleImageModal = () => {
@@ -396,7 +422,7 @@ class RPS extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     const { roomInfo, actionList, selected_rps } = this.props;
-    const { isPasswordCorrect, rps } = this.state;
+    const { isPasswordCorrect } = this.state;
 
     if (prevProps.actionList !== actionList) {
       this.setState({
@@ -437,7 +463,7 @@ class RPS extends Component {
     const {
       rps_bet_item_id,
       isDarkMode,
-      refreshHistory,
+      // refreshHistory,
       join,
       playSound,
       rps_game_type,
@@ -508,7 +534,7 @@ class RPS extends Component {
         localStorage.setItem('rps_array', JSON.stringify(stored_rps_array));
       }
 
-      refreshHistory();
+      // refreshHistory();
       this.setState({ cardDealt: false });
     }
   };
@@ -538,9 +564,13 @@ class RPS extends Component {
         return;
       }
 
-      if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+
+      if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+        callBot(creator_id, roomInfo._id, user_id, isDarkMode, this.props.updateRoomBot);
         return;
-      }
+      }     // if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+      //    return;
+      // }
 
       if (!validateBetAmount(bet_amount, balance, isDarkMode)) {
         return;
@@ -560,6 +590,7 @@ class RPS extends Component {
           await this.joinGame();
         }
       } else {
+
         confirmModalCreate(
           isDarkMode,
           'ARE YOU SURE YOU WANT TO PLACE THIS BET?',
@@ -632,7 +663,8 @@ class RPS extends Component {
       startedPlaying,
       rps,
       productName,
-      actionList
+      actionList,
+      players
     } = this.state;
     const {
       bgColorChanged,
@@ -661,6 +693,7 @@ class RPS extends Component {
       backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
     };
     const rpsValueAtLastIndex = rps[rps.length - 1]?.rps;
+    const joinerRpsValueAtLastIndex = rps[rps.length - 1]?.joiner_rps;
     return (
       <div className="game-page">
         <div className="page-title">
@@ -740,6 +773,8 @@ class RPS extends Component {
                           {convertToCurrency(
                             actionList.hostNetProfit?.slice(-1)[0]
                           )}
+                          <Tooltip title="Last 100 games">
+
                           <ReactApexChart
                             className="bankroll-graph"
                             options={{
@@ -820,6 +855,8 @@ class RPS extends Component {
                               }
                             ]}
                           />
+                          </Tooltip>
+
                         </>
                       ) : (
                         <Lottie
@@ -887,7 +924,7 @@ class RPS extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {renderLottieAvatarAnimation(gameBackground, isLowGraphics)}
+            {/* {renderLottieAvatarAnimation(gameBackground, isLowGraphics)} */}
             {this.props.rps_game_type === 1 && (
               <div className="game-background-panel game-info-panel">
                 <YouTubeModal
@@ -980,12 +1017,36 @@ class RPS extends Component {
               </div>
             )}
             <div className="guesses">
-              {rps
-                .slice()
-                .reverse()
-                .map((item, index) => (
-                  <p key={index}>{item.rps}</p>
-                ))}
+              <div>
+
+                {rps
+                  .slice()
+                  .map((item, index) => (
+                    <p key={index}>{item.rps}</p>
+                  ))}
+              </div>
+              <div>
+
+                {this.state.players.length !== 0 && (
+                  <>
+                    {this.state.players.slice(0, 5).map((player, index) => (
+                      <div key={index} style={{ opacity: "0.4", width: "30px" }}>
+                        <Avatar
+                          className="avatar"
+                          src={player.avatar}
+                          rank={player.totalWagered}
+                          accessory={player.accessory}
+                          alt=""
+                          darkMode={this.props.isDarkMode}
+                        />
+                      </div>
+                    ))}
+                  </>
+
+                )}
+              </div>
+
+
             </div>
             {rps_game_type === 0 && (
               <div className="game-info-panel">
@@ -1056,16 +1117,19 @@ class RPS extends Component {
                     <Button
                       variant="contained"
                       id={`rps-${classname}`}
-                      className={`rps-option ${classname}${selected_rps === selection ? ' active' : ''
+                      className={`rps-option ${classname}${ joinerRpsValueAtLastIndex === selection ? ' active' : ''
                         }${bgColorChanged &&
                           betResult === -1 &&
-                          selected_rps === selection
+                          joinerRpsValueAtLastIndex === selection
                           ? ' lose-bg'
                           : ''
-                        }${betResult === 0 && selected_rps === selection
+                        }${
+                          betResult === 0 &&
+                          joinerRpsValueAtLastIndex === selection
                           ? ' draw-bg'
                           : ''
-                        }${betResult === 1 && selected_rps === selection
+                        }${betResult === 1 &&
+                          joinerRpsValueAtLastIndex === selection
                           ? ' win-bg'
                           : ''
                         }`}
@@ -1076,6 +1140,7 @@ class RPS extends Component {
                       }}
                     >&nbsp;<span className="roll-tag">[{selection}]</span></Button>
                   ))}
+
                 </div>
 
                 <BetAmountInput
@@ -1118,7 +1183,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = {
   openGamePasswordModal,
-  acQueryMyItem
+  acQueryMyItem,
+  updateRoomBot
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

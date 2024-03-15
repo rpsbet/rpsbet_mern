@@ -77,7 +77,7 @@ class LoginModal extends Component {
       //     this.props.openVerificationModal();
       // } else {
       this.props.initSocket();
-      this.props.getMyGames();
+      // this.props.getMyGames();
       this.props.getNotifications();
       this.props.getMyHistory();
       this.props.getMyChat();

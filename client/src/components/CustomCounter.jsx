@@ -15,7 +15,6 @@ class CustomCounter extends Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.start !== this.props.start ) {
-        console.log('wwq');
         
       this.setState({ count: this.props.start, elapsedTime: 0 }, () => {
         this.startCount();

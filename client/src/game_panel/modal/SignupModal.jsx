@@ -218,7 +218,7 @@ class SignupModal extends Component {
                     className="form-control"
                     variant="filled"
                   />
-                  <TextField
+                  {/* <TextField
                     placeholder="V9FTGY"
                     label="Re-furr-al"
                     value={referralCode}
@@ -226,7 +226,7 @@ class SignupModal extends Component {
                     fullWidth
                     className="form-control"
                     variant="filled"
-                  />
+                  /> */}
                   <FormControlLabel
                     control={
                       <Checkbox

@@ -291,6 +291,16 @@ async function checkLoanEligibility(currentUser, loanAmount) {
   return false; // Not eligible for any category
 }
 
+function check_access_time(user_id) {
+  const check_result =
+    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 3000
+      ? false
+      : true;
+  user_access_log[user_id] = Date.now();
+  return check_result;
+}
+
+
 
 router.post('/lend', auth, async (req, res) => {
   try {

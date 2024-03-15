@@ -210,7 +210,6 @@ router.post('/resetPassword', async (req, res) => {
 // Change Password in EditAccountModal
 router.post('/changePasswordAndAvatar', auth, async (req, res) => {
   try {
-    console.log("req.user.ac", req.user.avatar)
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(req.body.new_password, salt, (err, hash) => {
         if (err) throw err;

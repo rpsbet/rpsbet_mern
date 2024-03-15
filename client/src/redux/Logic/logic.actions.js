@@ -1,9 +1,12 @@
 import {
   ACTION_ROOM,
   GAMETYPE_LOADED,
+  STRATEGIES_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
+  START_BET,
+  END_BET,
   TNX_COMPLETE,
   TNX_INCOMPLETE,
   COMMENT_CREATED,
@@ -12,6 +15,7 @@ import {
   COMMENTS_LOAD_FAILED,
   COMMENT_DELETED,
   COMMENT_DELETION_FAILED,
+  RPSBETITEMS_LOADED,
   ROOMS_LOADED,
   ROOMS_COUNT,
   UPDATE_BET_RESULT,
@@ -143,9 +147,9 @@ export function updateRollGuesses() {
 // join game
 export const bet = bet_info => async dispatch => {
   try {
-    dispatch({ type: START_LOADING });
+    dispatch({ type: START_BET });
     const res = await axios.post('/game/bet', bet_info);
-    dispatch({ type: END_LOADING });
+    dispatch({ type: END_BET });
 
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
@@ -206,13 +210,14 @@ export const loadRoomInfo = roomInfo => {
 // GetRoomInfo
 export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
   try {
+
     if (loading) {
       dispatch({ type: START_LOADING });
     }
-
     // Include the 'limit' parameter in the API request URL if provided
     const apiURL = limit ? `/game/room/${room_id}?limit=${limit}` : `/game/room/${room_id}`;
     const res = await axios.get(apiURL);
+
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
     } else {
@@ -230,15 +235,10 @@ export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
 // CreateComment
 export const createComment = (commentData) => async dispatch => {
   try {
-    // Dispatch start loading action if needed
-    // Dispatch START_LOADING action if loading flag is set
-    console.log("commentData", commentData)
-
+ 
     const res = await axios.post('/game/comments', commentData);
     if (res.data.success) {
-      console.log(res.data)
-      // Dispatch action to handle successful comment creation
-      // dispatch({ type: COMMENT_CREATED, payload: res.data.success });
+
     } else {
       // Dispatch action for failure if needed
       // dispatch({ type: COMMENT_CREATION_FAILED });
@@ -256,11 +256,10 @@ export const createComment = (commentData) => async dispatch => {
 export const getCommentsForRoom = (room_id) => async dispatch => {
   try {
     // Dispatch start loading action if needed
-
+    dispatch({ type: START_LOADING });
     const res = await axios.get(`/game/comments/${room_id}`);
 
     if (res.data.success) {
-      console.log(res.data)
       // Dispatch action to handle successful retrieval of comments
       dispatch({ type: COMMENTS_LOADED, payload: res.data.comments });
     } else {
@@ -271,7 +270,7 @@ export const getCommentsForRoom = (room_id) => async dispatch => {
     // Dispatch action for failure if needed, including error payload
     dispatch({ type: COMMENTS_LOAD_FAILED, payload: err });
   } finally {
-    // Dispatch end loading action if needed
+    dispatch({ type: END_LOADING });
   }
 };
 
@@ -482,11 +481,9 @@ export const getRoomList = search_condition => async dispatch => {
 };
 
 export const getRoomCount = search_condition => async dispatch => {
-  console.log("d", search_condition)
   try {
     const res = await axios.get('/game/count', { params: search_condition });
     if (res.data.success) {
-      console.log("ds", res.data.roomCount)
       dispatch({ type: ROOMS_COUNT, payload: res.data.roomCount });
     }
   } catch (err) {
@@ -508,6 +505,51 @@ export const getHistory = search_condition => async dispatch => {
   } catch (err) { }
 };
 
+export const getRpsBetItems = (room_id) => async dispatch => {
+  try {
+    const res = await axios.get(`/game/rpsbetitems/${room_id}`);
+    if (res.data.success) {
+      dispatch({ type: RPSBETITEMS_LOADED, payload: res.data });
+    } 
+    return res.data;
+  } catch (err) {
+  }
+};
+export const getStrategies = () => async dispatch => {
+  try {
+    const res = await axios.get('/game/strategies');
+    if (res.data.success) {
+      dispatch({ type: STRATEGIES_LOADED, payload: res.data.strategies });
+    } 
+  } catch (err) {
+  }
+};
+
+export const updateUserStrategy= (user_id, strategy) => async dispatch => {
+  try {
+    const res = await axios.patch(`/game/strategies/${user_id}`, { strategy });
+    if (res.data.success) {
+      
+      // Dispatch an action or handle success as needed
+    }
+  } catch (err) {
+    // Handle errors
+  }
+};
+
+export const updateRoomBot= (room_id) => async dispatch => {
+
+  try {
+    const res = await axios.patch(`/game/rooms/${room_id}`);
+
+    if (res.data.success) {
+      // Dispatch an action or handle success as needed
+
+    }
+  } catch (err) {
+    // Handle errors
+  }
+};
 export const getGameTypeList = () => async dispatch => {
   try {
     const res = await axios.get('/game/game_types');

@@ -302,6 +302,7 @@ class Roll extends Component {
 
   handleKeyPress(event) {
     const { selected_roll } = this.state;
+    const { isFocused } = this.props;
     if (!isFocused) {
       switch (event.key) {
         case 'r':

@@ -152,6 +152,7 @@ class Spleesh extends Component {
   };
 
   handleKeyPress(event) {
+    const {isFocused} = this.props;
     if (!isFocused) {
       switch (event.key) {
         case '1':

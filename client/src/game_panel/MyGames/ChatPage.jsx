@@ -12,12 +12,10 @@ import HistoryTable from '../LiveGames/HistoryTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import ChatPanel from '../ChatPanel/ChatPanel';
-import { getRoomStatisticsData } from '../../redux/Customer/customer.action';
 
 import {
   loadRoomInfo,
-  getRoomInfo,
-  getRoomList,
+  // getRoomList,
   setCurRoomInfo,
   getMyChat,
   getMyGames,
@@ -118,13 +116,12 @@ class ChatPage extends Component {
 
       await this.props.getGameTypeList();
       if (this.props.isAuthenticated) {
-        await this.props.getMyGames();
+        // await this.props.getMyGames();
         await this.props.getMyHistory();
 
         await this.props.getMyChat();
       }
 
-      await this.props.getRoomInfo(id, this.state.limit, true);
     } catch (error) {
       console.error('Error initializing room data:', error);
     }
@@ -615,10 +612,8 @@ const mapDispatchToProps = {
   getMyGames,
   getMyHistory,
   getGameTypeList,
-  getRoomStatisticsData,
   setCurRoomInfo,
   loadRoomInfo,
-  getRoomInfo,
   getMyChat,
   toggleDrawer
 };

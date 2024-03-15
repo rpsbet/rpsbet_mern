@@ -1,8 +1,9 @@
-import { alertModal } from '../modal/ConfirmAlerts';
+import { alertModal, callBotModal } from '../modal/ConfirmAlerts';
 
 
 export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
     if (!isAuthenticated) {
+      console.log("fd")
       alertModal(isDarkMode, `FURR-SST LOG IN!`);
       return false;
     }
@@ -14,6 +15,22 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
       alertModal(
         isDarkMode,
         `YOU'VE CAT TO BE KITTEN ME! DIS YOUR OWN GAME!`
+      );
+      return false;
+    }
+    return true;
+  }
+
+  export const callBot = async (creator_id, room_id, user_id, isDarkMode, updateRoomBot) => {
+    if (creator_id === user_id) {
+      callBotModal(
+        isDarkMode,
+        'CALL BOT ON YOUR GAME?',
+        'Call',
+        'Cancel',
+        async () => {
+          await updateRoomBot(room_id)
+        }
       );
       return false;
     }

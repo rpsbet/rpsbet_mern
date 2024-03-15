@@ -67,7 +67,6 @@ const customStyles = {
 class MyGamesTable extends Component {
   constructor(props) {
     super(props);
-    this._isMounted = true;
     this.state = {
       selectedGameType: 'All',
       holding: false,
@@ -80,7 +79,7 @@ class MyGamesTable extends Component {
       selectedSort: 'desc',
       creatingRoom: false,
       myGames: this.props.myGames,
-      loading: this.props.loading,
+      isLoading: true,
       isTopUpModalOpen: false,
       isPayoutModalOpen: false,
       selectedRow: null,
@@ -93,15 +92,8 @@ class MyGamesTable extends Component {
 
   async componentDidMount() {
     await this.fetchData();
-    this._isMounted = true;
   }
-  componentWillUnmount() {
-    this._isMounted = false;
-    // window.removeEventListener('scroll', this.handleScroll);
-    // window.removeEventListener('load', this.handleLoad);
-
-  }
-
+ 
   componentDidUpdate(prevProps, prevState) {
     if (
       this.state.selectedFilter !== prevState.selectedFilter ||
@@ -111,25 +103,14 @@ class MyGamesTable extends Component {
       this.fetchData();
     }
 
+   
     if (
       this.props.myGamesWithStats !== prevProps.myGamesWithStats) {
-      this.setState({ myGames: this.props.myGames, loading: false })
-    }
-    if ((this.props.loading !== prevProps.loading) && (prevProps.myGames !== this.props.myGames)) {
-      this.setState({ loading: this.props.loading })
+      this.setState({ myGames: this.props.myGames, isLoading: false })
     }
 
     if (prevProps.myGames !== this.props.myGames) {
-      if (this._isMounted) {
         this.setState({ myGames: this.props.myGames, isLoading: false });
-
-      }
-    }
-    if (prevState.selectedGameType !== this.state.selectedGameType) {
-      if (this._isMounted) {
-        this.setState({ isLoading: true });
-      }
-
     }
   }
 
@@ -699,13 +680,13 @@ class MyGamesTable extends Component {
 
   render() {
     const gameTypePanel = this.generateGameTypePanel();
-    const { row } = this.props;
-    const { isLoading, anchorEl, isFocused, selectedFilter, sortAnchorEl, selectedSort, loading } = this.state;
+    const { loading } = this.props;
+    const { isLoading, anchorEl, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
 
     return (
       <div className="my-open-games">
         <div className="filter-container overflowX">
-          <div className="game-type-container">
+          {/* <div className="game-type-container">
             <div
               className="game-type-panel"
               ref={elem => {
@@ -714,8 +695,8 @@ class MyGamesTable extends Component {
             >
               {gameTypePanel}
             </div>
-          </div>
-          <div className="filters">
+          </div> */}
+          {/* <div className="filters">
             <Button
               className="game-type-panel"
               onClick={this.handleFilterClick}
@@ -790,7 +771,7 @@ class MyGamesTable extends Component {
                 Plays (Low to High)
               </MenuItem>
             </Menu>
-          </div>
+          </div> */}
           <div className="create-room-btn-panel">
             <Button
               className="btn-create-room"
@@ -800,7 +781,7 @@ class MyGamesTable extends Component {
             </Button>
           </div>
         </div>
-        {isLoading || loading ? (
+        {isLoading && loading ? (
           <div className="loading-gif-container">
             <img src={randomGifUrl} id="isLoading" alt="loading" />
           </div>

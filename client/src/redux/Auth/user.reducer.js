@@ -45,6 +45,7 @@ const initialState = {
   unreadMessageCount: 0,
   balance: 0,
   gasfee: 0,
+  ai_mode: '',
   isActivated: true,
   isFocused: false,
   userName: '',

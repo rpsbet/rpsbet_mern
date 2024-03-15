@@ -361,7 +361,7 @@ class Bang extends Component {
                 ) : (
                   <tr>
                     <td id="add-run" colSpan="4">
-                      Provide the AI with example outputs
+                      Your pattern will be displayed here
                     </td>
                   </tr>
                 )}

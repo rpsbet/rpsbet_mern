@@ -18,6 +18,8 @@ import AiPanel from '../../components/AiPanel';
 import { openGamePasswordModal } from '../../redux/Notification/notification.actions';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Roll from '../JoinGame/Roll';
+import QuestionIcon from '@material-ui/icons/Info';
+import Tooltip from '@material-ui/core/Tooltip';
 import {
   bet,
   getRoomInfo,
@@ -25,12 +27,15 @@ import {
   loadRoomInfo,
   getMyChat,
   getMyGames,
-  getMyHistory,
+  // getMyHistory,
   getHistory,
   getGameTypeList,
+  updateUserStrategy,
+  getRpsBetItems,
+  getStrategies,
   deductBalanceWhenStartBrainGame
 } from '../../redux/Logic/logic.actions';
-
+import { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@material-ui/core';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -102,6 +107,7 @@ class JoinGame extends Component {
       productName: '',
       bankroll: '',
       intervalId: null,
+      predictedBetAmount: 0,
       history: this.props.history,
       showAnimation: false,
       sounds: {
@@ -117,7 +123,9 @@ class JoinGame extends Component {
         correct: new Audio('/sounds/correct.mp3'),
         bang: new Audio('/sounds/bang.mp3'),
         shine: new Audio('/sounds/shine.mp3'),
-        cards: new Audio('/sounds/card.mp3')
+        cards: new Audio('/sounds/card.mp3'),
+        grunt2: new Audio('/sounds/grunt2.mp3'),
+        grunt: new Audio('/sounds/grunt.mp3'),
       },
       currentSound: null
     };
@@ -151,18 +159,23 @@ class JoinGame extends Component {
     const { id } = this.props.match.params;
     await this.initializeRoomData(id);
     window.addEventListener('unload', this.handleUnload);
+
   }
 
   async initializeRoomData(id) {
     try {
       await Promise.all([
+        this.props.getRpsBetItems(id),
+
         this.getRoomData(id),
         this.loadSounds(),
         this.props.getHistory(),
+
         this.props.getGameTypeList(),
-        this.props.isAuthenticated && this.props.getMyGames(),
-        this.props.isAuthenticated && this.props.getMyHistory(),
-        this.props.isAuthenticated && this.props.getMyChat(),
+        this.props.getStrategies(),
+        // this.props.isAuthenticated && this.props.getMyGames(),
+        // this.props.isAuthenticated && this.props.getMyHistory(),
+        // this.props.isAuthenticated && this.props.getMyChat(),
         this.props.getRoomInfo(
           this.props.match.params.id,
           this.state.limit,
@@ -176,7 +189,7 @@ class JoinGame extends Component {
 
   async getRoomData(roomId) {
     try {
-      const actionList = await this.props.getRoomStatisticsData(roomId);
+      const actionList = await this.props.getRoomStatisticsData(roomId, 100);
       this.setState({
         actionList
       });
@@ -226,173 +239,10 @@ class JoinGame extends Component {
       game_type: this.props.roomInfo.game_type,
       ...betInfo
     });
-// console.log(result)
+    // console.log(result)
     return result;
   };
 
-  calcWinChance = prevStates => {
-    let total = prevStates.length;
-    let rock = 0;
-    let paper = 0;
-    let scissors = 0;
-    prevStates.map(el => {
-      if (el.rps === 'R') {
-        rock++;
-      } else if (el.rps === 'P') {
-        paper++;
-      } else if (el.rps === 'S') {
-        scissors++;
-      }
-    });
-    const rockWinChance = (rock / total) * 100;
-    const paperWinChance = (paper / total) * 100;
-    const scissorsWinChance = (scissors / total) * 100;
-    let lowest = rockWinChance;
-    let highest = rockWinChance;
-    if (paperWinChance < lowest) {
-      lowest = paperWinChance;
-    }
-    if (scissorsWinChance < lowest) {
-      lowest = scissorsWinChance;
-    }
-    if (paperWinChance > highest) {
-      highest = paperWinChance;
-    }
-    if (scissorsWinChance > highest) {
-      highest = scissorsWinChance;
-    }
-    if (lowest === highest) {
-      return lowest.toFixed(2) + '%';
-    }
-    return lowest.toFixed(2) + '% - ' + highest.toFixed(2) + '%';
-  };
-
-  predictNext = rps_list => {
-    // Create a transition matrix to store the probability of transitioning from one state to another
-    const transitionMatrix = {
-      R: {
-        R: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        },
-        P: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        },
-        S: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        }
-      },
-      P: {
-        R: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        },
-        P: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        },
-        S: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        }
-      },
-      S: {
-        R: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        },
-        P: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        },
-        S: {
-          R: { R: 0, P: 0, S: 0 },
-          P: { R: 0, P: 0, S: 0 },
-          S: { R: 0, P: 0, S: 0 }
-        }
-      }
-    };
-
-    // Iterate through the previous states to populate the transition matrix
-    for (let i = 0; i < rps_list.length - 3; i++) {
-      transitionMatrix[rps_list[i].rps][rps_list[i + 1].rps][
-        rps_list[i + 2].rps
-      ][rps_list[i + 3].rps]++;
-    }
-
-    // Normalize the transition matrix
-    Object.keys(transitionMatrix).forEach(fromState1 => {
-      Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-        Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-          fromState3 => {
-            const totalTransitions = Object.values(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).reduce((a, b) => a + b);
-            Object.keys(
-              transitionMatrix[fromState1][fromState2][fromState3]
-            ).forEach(toState => {
-              transitionMatrix[fromState1][fromState2][fromState3][
-                toState
-              ] /= totalTransitions;
-            });
-          }
-        );
-      });
-    });
-
-    // Check for consistency
-    const winChance = this.calcWinChance(rps_list);
-    let deviation = 0;
-    if (winChance !== '33.33%') {
-      deviation = (1 - 1 / 3) / 2;
-    }
-    // Use the transition matrix to predict the next state based on the current state
-    let currentState1 = rps_list[rps_list.length - 3].rps;
-    let currentState2 = rps_list[rps_list.length - 2].rps;
-    let currentState3 = rps_list[rps_list.length - 1].rps;
-    let nextState = currentState3;
-    let maxProb = 0;
-    Object.keys(
-      transitionMatrix[currentState1][currentState2][currentState3]
-    ).forEach(state => {
-      if (
-        transitionMatrix[currentState1][currentState2][currentState3][state] >
-        maxProb
-      ) {
-        maxProb =
-          transitionMatrix[currentState1][currentState2][currentState3][state];
-        nextState = state;
-      }
-    });
-
-    // Add randomness
-    let randomNum = Math.random();
-    if (randomNum < deviation) {
-      let randomState = '';
-      do {
-        randomNum = Math.random();
-        if (randomNum < 1 / 3) {
-          randomState = 'R';
-        } else if (randomNum < 2 / 3) {
-          randomState = 'P';
-        } else {
-          randomState = 'S';
-        }
-      } while (randomState === currentState3);
-      nextState = randomState;
-    }
-    return nextState;
-  };
 
 
   calcWinChanceQs = (gametype, rounds) => {
@@ -496,19 +346,101 @@ class JoinGame extends Component {
     return nextState;
   };
 
-  predictNextBetAmount(betArray, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
-    if (betArray.length < 2) {
-      // console.log("Insufficient data for prediction.");
-      return null;
+  
+  createTransitionMatrix(betArray, smoothingFactor = 0.01, decayFactor = 0.9) {
+    const transitionMatrix = {};
+    const betArrayLength = betArray.length;
+
+    for (let i = 0; i < betArrayLength - 1; i++) {
+        const currentBet = betArray[i];
+        const nextBet = betArray[i + 1];
+        const distance = betArrayLength - i; // Calculate distance from the most recent transition
+
+        if (!transitionMatrix[currentBet]) {
+            transitionMatrix[currentBet] = {};
+        }
+
+        if (!transitionMatrix[currentBet][nextBet]) {
+            transitionMatrix[currentBet][nextBet] = smoothingFactor * Math.pow(decayFactor, distance);
+        } else {
+            transitionMatrix[currentBet][nextBet] += smoothingFactor * Math.pow(decayFactor, distance);
+        }
     }
 
-    const transitionMatrix = this.createTransitionMatrix(betArray, smoothingFactor);
-    const lastBet = betArray[betArray.length - 1];
+    // Ensure all possible transitions have some default value
+    const allStates = Array.from(new Set(betArray)); // Get all unique states
+
+    allStates.forEach((currentState) => {
+        if (!transitionMatrix[currentState]) {
+            transitionMatrix[currentState] = {};
+        }
+
+        allStates.forEach((nextState) => {
+            if (!transitionMatrix[currentState][nextState]) {
+                transitionMatrix[currentState][nextState] = smoothingFactor;
+            }
+        });
+    });
+
+    // Apply Laplace smoothing to all transitions
+    Object.keys(transitionMatrix).forEach((currentState) => {
+        const possibleNextStates = Object.keys(transitionMatrix[currentState]);
+
+        possibleNextStates.forEach((nextState) => {
+            transitionMatrix[currentState][nextState] += smoothingFactor;
+        });
+    });
+
+    return transitionMatrix;
+}
+
+
+  chooseRandomIndex(probabilities) {
+    const totalProbability = probabilities.reduce((sum, prob) => sum + prob, 0);
+    const randomValue = Math.random() * totalProbability;
+
+    let cumulativeProbability = 0;
+    for (let i = 0; i < probabilities.length; i++) {
+      cumulativeProbability += probabilities[i];
+      if (randomValue <= cumulativeProbability) {
+        return i;
+      }
+    }
+
+    // This should not happen, but just in case
+    return probabilities.length - 1;
+  }
+
+  
+predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
+  if (betArray.length < 2) {
+    return null;
+  }
+
+  const allStates = Array.from(new Set(betArray)); // Get all unique states
+
+  if (penultimateSameAsLast !== 0) {
+      if (penultimateSameAsLast === 3) {
+          // Return the highest value from allStates without 50%
+          const maxState = Math.max(...allStates);
+          return maxState;
+      } else if (penultimateSameAsLast === 2) {
+          // Return the second highest value from allStates
+          const sortedStates = allStates.sort((a, b) => b - a);
+          return sortedStates[1];
+      } else if (penultimateSameAsLast === 1) {
+          // Return the lowest value from allStates
+          const minState = Math.min(...allStates);
+          return minState;
+      }
+  }
+  const transitionMatrix = this.createTransitionMatrix(betArray, smoothingFactor);
+  const lastBet = betArray[betArray.length - 1];
     const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
+
     if (possibleNextStates.length === 0) {
 
-      const allStates = Array.from(new Set(betArray)); // Get all unique states
-      const fallbackState = allStates[Math.floor(Math.random() * allStates.length)];
+      const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
       return Math.min(Math.max(fallbackState, threshold), this.props.roomInfo.bet_amount);
     }
 
@@ -518,9 +450,9 @@ class JoinGame extends Component {
 
     const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
     const nextState = possibleNextStates[nextStateIndex];
-    // console.log("Predicted next bet:", nextState);
     return Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
-  }
+}
+
 
   predictNextDg = dropAmounts => {
     const sortedDrops = dropAmounts.map(drop => drop.drop).sort((a, b) => a - b);
@@ -715,10 +647,10 @@ class JoinGame extends Component {
     const newAvg =
       newScores.reduce((total, score) => total + score, 0) / newScores.length;
 
-      let prediction;
+    let prediction;
     if (newAvg > oldAvg) {
       let diff = newAvg - oldAvg;
-      prediction =  Math.round(score_array[score_array.length - 1].score + diff);
+      prediction = Math.round(score_array[score_array.length - 1].score + diff);
     } else {
       prediction = Math.round(
         score_array.reduce((total, item) => total + item.score, 0) /
@@ -730,7 +662,7 @@ class JoinGame extends Component {
 
     if (score_array && score_array.length > 0 && random < 0.4) {
       const randomIndex = Math.floor(Math.random() * score_array.length);
-      prediction =  score_array[randomIndex].score;
+      prediction = score_array[randomIndex].score;
     } else {
       const offset = Math.floor(Math.random() * 2) + 1; // either 1 or 2
       const sign = Math.random() < 0.5 ? -1 : 1; // either -1 or 1
@@ -762,73 +694,10 @@ class JoinGame extends Component {
   }
 
 
-  createTransitionMatrix(betArray, smoothingFactor = 0.01) {
-    const transitionMatrix = {};
-
-    for (let i = 0; i < betArray.length - 1; i++) {
-      const currentBet = betArray[i];
-      const nextBet = betArray[i + 1];
-
-      if (!transitionMatrix[currentBet]) {
-        transitionMatrix[currentBet] = {};
-      }
-
-      if (!transitionMatrix[currentBet][nextBet]) {
-        transitionMatrix[currentBet][nextBet] = smoothingFactor; // Add smoothing factor
-      } else {
-        transitionMatrix[currentBet][nextBet]++;
-      }
-    }
-
-    // Ensure all possible transitions have some default value
-    const allStates = Array.from(new Set(betArray)); // Get all unique states
-
-    allStates.forEach((currentState) => {
-      if (!transitionMatrix[currentState]) {
-        transitionMatrix[currentState] = {};
-      }
-
-      allStates.forEach((nextState) => {
-        if (!transitionMatrix[currentState][nextState]) {
-          transitionMatrix[currentState][nextState] = smoothingFactor;
-        }
-      });
-    });
-
-    // Apply Laplace smoothing to all transitions
-    Object.keys(transitionMatrix).forEach((currentState) => {
-      const possibleNextStates = Object.keys(transitionMatrix[currentState]);
-
-      possibleNextStates.forEach((nextState) => {
-        transitionMatrix[currentState][nextState] += smoothingFactor;
-      });
-    });
-
-    return transitionMatrix;
-  }
-
-
-  chooseRandomIndex(probabilities) {
-    const totalProbability = probabilities.reduce((sum, prob) => sum + prob, 0);
-    const randomValue = Math.random() * totalProbability;
-
-    let cumulativeProbability = 0;
-    for (let i = 0; i < probabilities.length; i++) {
-      cumulativeProbability += probabilities[i];
-      if (randomValue <= cumulativeProbability) {
-        return i;
-      }
-    }
-
-    // This should not happen, but just in case
-    return probabilities.length - 1;
-  }
-
   handleSwitchChange = async () => {
     const {
       auth,
       isDarkMode,
-      creator_id,
       user_id,
       getCustomerStatisticsData,
       roomInfo
@@ -840,59 +709,61 @@ class JoinGame extends Component {
 
     if (game_type === 'RPS') {
       gameType = '62a25d2a723b9f15709d1ae7';
-    } else if (game_type === 'Spleesh!') {
-      gameType = '62a25d2a723b9f15709d1ae8';
-    } else if (game_type === 'Brain Game') {
-      gameType = '62a25d2a723b9f15709d1ae9'
-    } else if (game_type === 'Mystery Box') {
-      gameType = '62a25d2a723b9f15709d1aea';
     } else if (game_type === 'Quick Shoot') {
       gameType = '62a25d2a723b9f15709d1aeb';
-    } else if (game_type === 'Drop Game') {
-      gameType = '63dac60ba1316a1e70a468ab';
-    } else if (game_type === 'Bang!') {
-      gameType = '6536a82933e70418b45fbe32'.$and.push({ description: /B!/i });
-    } else if (game_type === 'Roll') {
-      gameType = '6536946933e70418b45fbe2f'.$and.push({ description: /R/i });
-    } else if (game_type === 'BlackJack') {
-      gameType = '656cd55bb2c2d9dfb59a4bfa'.$and.push({ description: /BJ/i });
+      // } else if (game_type === 'Spleesh!') {
+      //   gameType = '62a25d2a723b9f15709d1ae8';
+      // } else if (game_type === 'Brain Game') {
+      //   gameType = '62a25d2a723b9f15709d1ae9'
+      // } else if (game_type === 'Mystery Box') {
+      //   gameType = '62a25d2a723b9f15709d1aea';
+      // } else if (game_type === 'Drop Game') {
+      //   gameType = '63dac60ba1316a1e70a468ab';
+      // } else if (game_type === 'Bang!') {
+      //   gameType = '6536a82933e70418b45fbe32'.$and.push({ description: /B!/i });
+      // } else if (game_type === 'Roll') {
+      //   gameType = '6536946933e70418b45fbe2f'.$and.push({ description: /R/i });
+      // } else if (game_type === 'BlackJack') {
+      //   gameType = '656cd55bb2c2d9dfb59a4bfa'.$and.push({ description: /BJ/i });
     }
-
     if (!validateIsAuthenticated(auth, isDarkMode)) {
       return;
     }
-
-    if (!validateCreatorId(creator_id, user_id, isDarkMode)) {
+    if (!validateCreatorId(roomInfo.creator_id, user_id, isDarkMode)) {
       return;
     }
 
-    const result = await getCustomerStatisticsData(
-      user_id,
-      'As Player',
-      gameType,
-      'All'
-    );
 
-    let betArray = [];
 
-    if (result && result.gameLogList && result.gameLogList.length > 0) {
-      betArray = result.gameLogList.map(entry => entry.bet);
-    }
-
-    if (!betting) {
-      this.startBetting(betArray);
-    } else {
+    if (betting) {
       this.stopBetting();
+    } else {
+      
+      this.playSound('start');
+      this.setState({ betting: true });
+
+
+      const result = await getCustomerStatisticsData(
+        user_id,
+        'As Player',
+        gameType,
+        'All',
+        50
+      );
+
+      let betArray = [];
+
+      if (result && result.gameLogList && result.gameLogList.length > 0) {
+        betArray = result.gameLogList.map(entry => entry.bet);
+      }
+      this.startBetting(betArray);
+
     }
   };
 
-  startBetting = betArray => {
-    const { isDarkMode, openGamePasswordModal, roomInfo, balance } = this.props;
+  startBetting = async betArray => {
+    const { isDarkMode, openGamePasswordModal, roomInfo, balance, getRpsBetItems } = this.props;
     let storageName;
-
-    if (roomInfo.status !== 'open') {
-      return;
-    }
 
     switch (roomInfo.game_type) {
       case 'Quick Shoot':
@@ -912,96 +783,174 @@ class JoinGame extends Component {
         // }
 
         break;
-      case 'Bang!':
-        storageName = 'bang_array';
-        break;
-      case 'Spleesh!':
-        if (this.props.spleesh_bet_unit === 0.1) {
-          storageName = 'spleesh_10_array';
-        } else if (this.props.spleesh_bet_unit === 0.01) {
-          storageName = 'spleesh_001_array';
-        } else {
-          storageName = 'spleesh_array';
-        }
+      // case 'Bang!':
+      //   storageName = 'bang_array';
+      //   break;
+      // case 'Spleesh!':
+      //   if (this.props.spleesh_bet_unit === 0.1) {
+      //     storageName = 'spleesh_10_array';
+      //   } else if (this.props.spleesh_bet_unit === 0.01) {
+      //     storageName = 'spleesh_001_array';
+      //   } else {
+      //     storageName = 'spleesh_array';
+      //   }
 
-        
-        break;
-      case 'Mystery Box':
-        storageName = 'bet_array';
-       
-        break;
-      case 'Blackjack':
-        storageName = 'bj_array';
-        break;
-      case 'Brain Game':
-        storageName = `score_array_${roomInfo.brain_game_type}`;
-        break;
-      case 'Drop Game':
-        storageName = 'drop_array';
-       
-        break;
+
+      //   break;
+      // case 'Mystery Box':
+      //   storageName = 'bet_array';
+
+      //   break;
+      // case 'Blackjack':
+      //   storageName = 'bj_array';
+      //   break;
+      // case 'Brain Game':
+      //   storageName = `score_array_${roomInfo.brain_game_type}`;
+      //   break;
+      // case 'Drop Game':
+      //   storageName = 'drop_array';
+
+      //   break;
       default:
         storageName = `rps_array`;
-       
+
     }
+
     if (!validateLocalStorageLength(storageName, isDarkMode)) {
       return;
     }
     const stored_array =
       JSON.parse(localStorage.getItem(storageName)) || [];
-
-    const intervalId = setInterval(() => {
-      let randomItem;
-      let predictedBetAmount;
-      switch (roomInfo.game_type) {
-        case 'Quick Shoot':
-          randomItem = this.predictNextQs(stored_array, roomInfo.qs_game_type);
-          predictedBetAmount = this.predictNextBetAmount(betArray, 0.01, 0.2);
-          if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
-            return;
-          }
-          break;
-        case 'Spleesh!':
-          randomItem = this.predictNextS(stored_array, this.state.spleesh_guesses);
-          randomItem = randomItem.prediction;
-          if (!validateBetAmount(randomItem, balance, isDarkMode)) {
-            return;
-          }
-          break;
-        case 'Mystery Box':
-          randomItem = this.predictNextMb(stored_array, roomInfo.box_list);
-          if (!validateBetAmount(randomItem, balance, isDarkMode)) {
-            return;
-          }
-          break;
-        case 'Drop Game':
-          randomItem = this.predictNextDg(stored_array);
-          break;
-          case 'Brain Game':
-            randomItem = this.predictNextBg(stored_array);
-          predictedBetAmount = roomInfo.bet_amount;
-          
-          break;
-        default:
-          randomItem = this.predictNext(stored_array);
-          predictedBetAmount = this.predictNextBetAmount(betArray, 0.01, 0.2);
-          if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
-            return;
-          }
+    if (this.props.rpsbetitems.length === 0) {
+      // If rpsbetitems is not yet populated, fetch it
+      try {
+        await getRpsBetItems(roomInfo._id);
+      } catch (error) {
+        console.error('Error fetching rpsbetitems:', error);
+        return;
       }
+    }
 
-      const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
-      const passwordCorrect = rooms[roomInfo._id];
-      if (roomInfo.is_private === true && passwordCorrect !== 'true') {
-        openGamePasswordModal();
-      } else {
-        this.joinGame2(randomItem, predictedBetAmount);
-        
+    const intervalId = setInterval(async () => {
+
+      try {
+        let randomItem;
+        let predictedBetAmount;
+
+
+        await getRpsBetItems(roomInfo._id);
+        switch (roomInfo.game_type) {
+          case 'Quick Shoot':
+            randomItem = this.predictNextQs(stored_array, roomInfo.qs_game_type);
+            predictedBetAmount = this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+            if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
+              return;
+            }
+            break;
+          // case 'Spleesh!':
+          //   randomItem = this.predictNextS(stored_array, this.state.spleesh_guesses);
+          //   randomItem = randomItem.prediction;
+          //   if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+          //     return;
+          //   }
+          //   break;
+          // case 'Mystery Box':
+          //   randomItem = this.predictNextMb(stored_array, roomInfo.box_list);
+          //   if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+          //     return;
+          //   }
+          //   break;
+          // case 'Drop Game':
+          //   randomItem = this.predictNextDg(stored_array);
+          //   break;
+          //   case 'Brain Game':
+          //     randomItem = this.predictNextBg(stored_array);
+          //   predictedBetAmount = roomInfo.bet_amount;
+
+          //   break;
+          default:
+            // RPS
+
+            if (this.props.rpsbetitems && this.props.rpsbetitems.length > 0) {
+
+              if (this.props.ai_mode === 'Random') {
+                // Randomly select 'R', 'P', or 'S'
+                const randomIndex = Math.floor(Math.random() * 3);
+                const rpsOptions = ['R', 'P', 'S'];
+                randomItem = rpsOptions[randomIndex];
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+              } else if (this.props.ai_mode === 'Adam') {
+                randomItem = await reinforcementAI(this.props.rpsbetitems);
+                console.log("randomItem", randomItem)
+                predictedBetAmount = this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+              } else if (roomInfo['selectedStrategy'] === 'Herbert') {
+                randomItem = await patternBasedAI(this.props.rpsbetitems);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+              } else if (this.props.ai_mode === 'Feedback') {
+
+                randomItem = await counterSwitchAI(this.props.rpsbetitems);
+
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+              } else if (this.props.ai_mode === 'Skill-issue') {
+                const randomnessResult = await counterRandomness(this.props.rpsbetitems);
+                randomItem = randomnessResult.counterMove;
+                const penultimateSameAsLast = randomnessResult.risk;
+                predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+            } else if (this.props.ai_mode === 'NPC') {
+                randomItem = await NPC(this.props.rpsbetitems);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+              } else if (this.props.ai_mode === 'Trickster') {
+                randomItem = await generatePattern(this.props.rpsbetitems);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+              } else if (this.props.ai_mode === 'CopyCat') {
+                const copyCatBetItem = this.props.rpsbetitems[0];
+                if (copyCatBetItem) {
+                  randomItem = copyCatBetItem.rps;
+                } else {
+                  const randomIndex = Math.floor(Math.random() * 3); // Generate random index: 0, 1, or 2
+                  const rpsOptions = ['R', 'P', 'S'];
+                  randomItem = rpsOptions[randomIndex];
+                }
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+              } else if (this.props.ai_mode === 'Hidden Markov') {
+                if (this.props.rpsbetitems.length > 0) {
+                  const transformedItems = this.props.rpsbetitems.map(item => ({ rps: item.joiner_rps }));
+                  randomItem = await predictNext(transformedItems);
+                }
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+
+              } else if (this.props.ai_mode === 'Markov') {
+                randomItem = await predictNext(this.props.rpsbetitems, true);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+              }
+
+            }
+            if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
+              return;
+            }
+        }
+        const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
+        const passwordCorrect = rooms[roomInfo._id];
+        if (roomInfo.is_private === true && passwordCorrect !== 'true') {
+          openGamePasswordModal();
+        } else {
+          await this.joinGame2(randomItem, predictedBetAmount);
+        }
+      } catch (error) {
+        console.error('Error in interval function:', error);
       }
-    }, 5000);
+    }, 4000);
 
-    this.playSound('start');
-    this.setState({ intervalId, betting: true });
+
+    this.setState({ intervalId });
   };
 
   stopBetting = () => {
@@ -1013,7 +962,7 @@ class JoinGame extends Component {
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true }, async () => {
-      await new Promise(resolve => setTimeout(resolve, 4000)); // Wait for 1 second
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
       this.setState({ bgColorChanged: false, betResult: null });
     });
   };
@@ -1041,7 +990,7 @@ class JoinGame extends Component {
       }
 
       this.setState({ borderColor });
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       this.setState({ borderColor: '', bgColorChanged: false, betResult: null });
 
     });
@@ -1049,7 +998,7 @@ class JoinGame extends Component {
   };
 
   joinGame2 = async (randomItem, predictedBetAmount) => {
-    const { balance, isDarkMode, roomInfo, deductBalanceWhenStartBrainGame } = this.props;
+    const { balance, isDarkMode, roomInfo, deductBalanceWhenStartBrainGame, getRpsBetItems } = this.props;
     let { betting, selected_qs_position, selected_rps, selected_id, bankroll } = this.state;
     const gameType = roomInfo.game_type;
     if (!betting) {
@@ -1063,32 +1012,36 @@ class JoinGame extends Component {
       if (!validateBankroll(predictedBetAmount, roomInfo.bet_amount, isDarkMode)) {
         return;
       }
-    } else if (gameType === 'Mystery Box') {
-
-
-      if (!validateBetAmount(randomItem, balance, isDarkMode)) {
-        return;
-      }
-
-      if (!validateBankroll(randomItem, roomInfo.pr, isDarkMode)) {
-        return;
-      }
-    }  else if  (gameType === 'Spleesh!') {
-      if (!validateBetAmount(randomItem, balance, isDarkMode)) {
-        return;
-      }
-      if (!validateBankroll(randomItem, roomInfo.bet_amount, isDarkMode)) {
-        return;
-      }
-    } else {
-      if (!validateBetAmount(randomItem, balance, isDarkMode)) {
-        return;
-      }
-
-      if (!validateBankroll(randomItem, roomInfo.bet_amount, isDarkMode)) {
-        return;
-      }
     }
+    if (roomInfo.status !== 'open') {
+      return;
+    }
+    // else if (gameType === 'Mystery Box') {
+
+
+    //   if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+    //     return;
+    //   }
+
+    //   if (!validateBankroll(randomItem, roomInfo.pr, isDarkMode)) {
+    //     return;
+    //   }
+    // } else if (gameType === 'Spleesh!') {
+    //   if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+    //     return;
+    //   }
+    //   if (!validateBankroll(randomItem, roomInfo.bet_amount, isDarkMode)) {
+    //     return;
+    //   }
+    // } else {
+    //   if (!validateBetAmount(randomItem, balance, isDarkMode)) {
+    //     return;
+    //   }
+
+    //   if (!validateBankroll(randomItem, roomInfo.bet_amount, isDarkMode)) {
+    //     return;
+    //   }
+    // }
 
 
     // Set randomItem based on gameType
@@ -1099,9 +1052,8 @@ class JoinGame extends Component {
     }
 
     // Set state with a callback to ensure randomItem is properly set
-    this.setState({ selected_rps, selected_qs_position, selected_id }, async () => {
+    this.setState({ selected_rps, predictedBetAmount, selected_qs_position, selected_id }, async () => {
       let result;
-
       try {
         if (gameType === 'RPS') {
           result = await this.join({
@@ -1152,8 +1104,8 @@ class JoinGame extends Component {
           deductBalanceWhenStartBrainGame({
             bet_amount: predictedBetAmount
           });
-        } 
-       
+        }
+
 
         if (result && result.status === 'success') {
           let text = 'HAHAA, YOU LOST!!!';
@@ -1182,7 +1134,8 @@ class JoinGame extends Component {
             }
             this.playSound('lose');
           }
-          this.refreshHistory();
+          // this.refreshHistory();
+          await getRpsBetItems(roomInfo._id)
         }
       } catch (error) {
         console.error('Error in joinGame2:', error);
@@ -1256,7 +1209,7 @@ class JoinGame extends Component {
       this.state.limit,
       false
     ); // room call
-    await this.getRoomData(this.props.match.params.id); // room stats
+    // await this.getRoomData(this.props.match.params.id); // room stats
   };
 
   showOpenGameOrHistory = (e, newValue) => {
@@ -1285,6 +1238,7 @@ class JoinGame extends Component {
       bankroll,
       actionList,
       show_open_game,
+      predictedBetAmount,
       selectedMobileTab,
       betting,
       betResult,
@@ -1302,15 +1256,20 @@ class JoinGame extends Component {
       loading,
       gameTypeList,
       isDrawerOpen,
+      is_betting,
       user_id,
-      selectedMainTabIndex
+      user_balance,
+      strategies,
+      ai_mode,
+      selectedMainTabIndex,
+      rpsbetitems
     } = this.props;
 
     return (
       <>
         <LoadingOverlay
           className="custom-loading-overlay"
-          active={loading}
+          active={loading && roomInfo.room_history?.length === 0}
           spinner={
             <div className="rpsLoader">
               <img
@@ -1620,6 +1579,7 @@ class JoinGame extends Component {
                 actionList={actionList}
                 roomInfo={roomInfo}
                 getRoomData={this.getRoomData}
+                getRoomInfo={this.props.getRoomInfo}
                 isLowGraphics={this.props.isLowGraphics}
                 isDarkMode={this.props.isDarkMode}
               />
@@ -1639,17 +1599,27 @@ class JoinGame extends Component {
               </div>
             </div>
             <div className="sub-panel">
-              <h2 className="main-title desktop-only">AI PANEL</h2>
+              <h2 className="main-title desktop-only">AUTOPLAY PANEL <Tooltip title="Some strategies require you to train the bot by playing normally, in order to use certain bet amounts and patterns.">
+                    <QuestionIcon style={{width:"18px", float: "right", marginTop:"-1px" }}/>
+                </Tooltip></h2>
               {!this.state.is_mobile &&
                 this.props.selectedMainTabIndex === 0 && (
                   <AiPanel
+                    rpsbetitems={this.props.rpsbetitems}
+                    updateUserStrategy={this.props.updateUserStrategy}
+                    strategies={strategies}
                     betting={betting}
+                    is_betting={is_betting}
+                    predictedBetAmount={predictedBetAmount}
+                    roomId={roomInfo._id}
                     handleSwitchChange={this.handleSwitchChange}
                     game_type={roomInfo.game_type}
                     qs_game_type={roomInfo.qs_game_type}
                     brain_game_type={roomInfo.brain_game_type}
                     spleesh_bet_unit={roomInfo.spleesh_bet_unit}
-                    user_id={this.props.user_id}
+                    user_id={user_id}
+                    ai_mode={ai_mode}
+                    user_balance={user_balance}
                   />
                 )}
               <h2 className="main-title desktop-only">HISTORY</h2>
@@ -1804,28 +1774,36 @@ class JoinGame extends Component {
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   history: state.logic.history,
+  strategies: state.logic.strategies,
   roomInfo: state.logic.curRoomInfo,
+  rpsbetitems: state.logic.rpsbetitems,
   user_id: state.auth.user._id,
+  user_balance: state.auth.user.balance,
+  ai_mode: state.auth.user.ai_mode,
   isMuted: state.auth.isMuted,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
   isDrawerOpen: state.auth.isDrawerOpen,
   loading: state.logic.isActiveLoadingOverlay,
   isDarkMode: state.auth.isDarkMode,
-  isLowGraphics: state.auth.isLowGraphics
+  isLowGraphics: state.auth.isLowGraphics,
+  is_betting: state.logic.is_betting
 });
 
 const mapDispatchToProps = {
   getRoomInfo,
+  getStrategies,
   bet,
   setCurRoomInfo,
   loadRoomInfo,
-  getMyChat,
-  getMyGames,
-  getMyHistory,
+  // getMyChat,
+  // getMyGames,
+  updateUserStrategy,
+  // getMyHistory,
   getRoomStatisticsData,
   getHistory,
   toggleDrawer,
   getGameTypeList,
+  getRpsBetItems,
   openGamePasswordModal,
   getCustomerStatisticsData,
   deductBalanceWhenStartBrainGame

@@ -332,38 +332,38 @@ class HowToPlayModal extends Component {
                 </AccordionItemPanel>
               </AccordionItem>
                */}
-              <AccordionItem>
-  <AccordionItemHeading>
-    <AccordionItemButton>
-      <div className="modal-content-wrapper blackjack">
-        <h4>Blackjack</h4>
-      </div>
-    </AccordionItemButton>
-  </AccordionItemHeading>
-  <AccordionItemPanel>
-    <div className="modal-content-wrapper blackjack">
-      <div className="modal-content-panel">
-        <h5>Objective</h5>
-        <p>To achieve a hand total closer to 21 than the dealer's hand without exceeding 21.</p>
-      </div>
-      <div className="modal-content-panel">
-        <h5>Gameplay</h5>
-        <ol>
-          <li>Place a bet amount at the beginning of each round.</li>
-          <li>Receive two cards face up. The dealer also gets two cards, but one face down and one face up.</li>
-          <li>Decide whether to "hit" (receive another card) or "stand" (keep the current hand).</li>
-          <li>Try to get as close to 21 as possible without going over.</li>
-          <li>If your hand total exceeds 21, you bust and lose the round.</li>
-          <li>If you choose to stand, the dealer reveals their face-down card.</li>
-          <li>The dealer must hit until their hand total is 17 or higher.</li>
-          <li>If the dealer busts or your hand total is higher than the dealer's without busting, you win.</li>
-          <li>If the dealer's hand total is higher than yours without busting, you lose.</li>
-          <li>If both you and the dealer have the same hand total, it's a push (tie), and you keep your bet.</li>
-        </ol>
-      </div>
-    </div>
-  </AccordionItemPanel>
-</AccordionItem>
+              {/* <AccordionItem>
+                <AccordionItemHeading>
+                  <AccordionItemButton>
+                    <div className="modal-content-wrapper blackjack">
+                      <h4>Blackjack</h4>
+                    </div>
+                  </AccordionItemButton>
+                </AccordionItemHeading>
+                <AccordionItemPanel>
+                  <div className="modal-content-wrapper blackjack">
+                    <div className="modal-content-panel">
+                      <h5>Objective</h5>
+                      <p>To achieve a hand total closer to 21 than the dealer's hand without exceeding 21.</p>
+                    </div>
+                    <div className="modal-content-panel">
+                      <h5>Gameplay</h5>
+                      <ol>
+                        <li>Place a bet amount at the beginning of each round.</li>
+                        <li>Receive two cards face up. The dealer also gets two cards, but one face down and one face up.</li>
+                        <li>Decide whether to "hit" (receive another card) or "stand" (keep the current hand).</li>
+                        <li>Try to get as close to 21 as possible without going over.</li>
+                        <li>If your hand total exceeds 21, you bust and lose the round.</li>
+                        <li>If you choose to stand, the dealer reveals their face-down card.</li>
+                        <li>The dealer must hit until their hand total is 17 or higher.</li>
+                        <li>If the dealer busts or your hand total is higher than the dealer's without busting, you win.</li>
+                        <li>If the dealer's hand total is higher than yours without busting, you lose.</li>
+                        <li>If both you and the dealer have the same hand total, it's a push (tie), and you keep your bet.</li>
+                      </ol>
+                    </div>
+                  </div>
+                </AccordionItemPanel>
+              </AccordionItem>
 
               <AccordionItem>
                 <AccordionItemHeading>
@@ -448,7 +448,7 @@ class HowToPlayModal extends Component {
 
                   </div>
                 </AccordionItemPanel>
-              </AccordionItem>
+              </AccordionItem> */}
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
@@ -477,7 +477,7 @@ class HowToPlayModal extends Component {
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
-              <AccordionItem>
+              {/* <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper brain-game">
@@ -571,7 +571,7 @@ class HowToPlayModal extends Component {
 
                   </div>
                 </AccordionItemPanel>
-              </AccordionItem>
+              </AccordionItem> */}
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>

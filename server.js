@@ -48,16 +48,20 @@ const systemSetting = require('./routes/settings.routes');
 const helmet = require('helmet'); // for sec headers
 const cronJob = require('./helper/util/createCronJob.js');
 const creditScoreCron = require('./helper/util/creditScoreCron.js');
+const notificationCron = require('./helper/util/notificationCron.js');
 const rentCron = require('./helper/util/rentCron.js');
+const rpsCron = require('./helper/util/rpsCron.js');
 const rollCron = require('./helper/util/rollCron.js');
 const bangCron = require('./helper/util/bangCron.js');
 const withdrawalCron = require('./helper/util/withdrawalCron.js');
 // Initialize the cron job to periodically check for confirmations
 creditScoreCron.checkOutstandingLoans(io);
-rentCron.checkRentalPayments(io);
+// rentCron.checkRentalPayments(io);
+notificationCron.deleteNotifications();
 cronJob.checkConfirmations();
-rollCron.rollCron();
-bangCron.bangCron();
+rpsCron.callBotBet(io);
+// rollCron.rollCron();
+// bangCron.bangCron();
 withdrawalCron.resetWithdrawalLimits();
 
 app.use(helmet());

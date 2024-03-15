@@ -428,7 +428,7 @@ class QuickShoot extends Component {
 
     return (
       <>
-        {this.props.step === 1 && (
+        {this.props.step === 2 && (
           <div className="game-info-panel">
             <h3 className="game-sub-title">Choose a Game Type</h3>
             <div className="qs-game-type-panel">
@@ -453,7 +453,7 @@ class QuickShoot extends Component {
             <p className="tip">Your multiplier</p>
           </div>
         )}
-        {this.props.step === 2 && (
+        {this.props.step === 1 && (
           <DefaultBetAmountPanel
             game_type="Quick Shoot"
             qs_game_type={this.props.qs_game_type}
@@ -469,11 +469,11 @@ class QuickShoot extends Component {
                 {this.state.animation}
                 {this.renderButtons()}
                 <Button id="aiplay" onClick={this.onAutoPlay}>
-                  Test AI Play&nbsp;<span className="roll-tag">[space]</span>
+                  Test Autoplay&nbsp;<span className="roll-tag">[space]</span>
                 </Button>
               </div>
               <div className="qs-add-run-table">
-                <h3 className="game-sub-title">TRAINING DATA</h3>
+                <h3 className="game-sub-title">Pattern Table</h3>
 
                 <table id="runs">
                   <tbody>
@@ -492,7 +492,7 @@ class QuickShoot extends Component {
                     ) : (
                       <tr>
                         <td id="add-run" colSpan="3">
-                          Provide the AI with example outputs
+                        Your pattern will be displayed here
                         </td>
                       </tr>
                     )}

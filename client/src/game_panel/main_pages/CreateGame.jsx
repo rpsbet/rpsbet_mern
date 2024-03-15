@@ -37,7 +37,8 @@ import {
   getMyHistory,
   getHistory,
   getMyChat,
-  getGameTypeList
+  getGameTypeList,
+  getStrategies
 } from '../../redux/Logic/logic.actions';
 import { getBrainGameType } from '../../redux/Question/question.action';
 import { alertModal, confirmModalCreate } from '../modal/ConfirmAlerts';
@@ -149,13 +150,14 @@ class CreateGame extends Component {
       bj_list: [],
       roll_list: [],
       qs_list: [],
+      selectedStrategy: 'Random',
       qs_game_type: 2,
       qs_nation: 0,
       selected_rps: '',
       selected_drop: '',
       selected_bang: '',
       selected_qs_position: 0,
-      bet_amount: 0.01,
+      bet_amount: 0,
       endgame_amount: 0,
       spleesh_bet_unit: 0.01,
       max_return: 0,
@@ -233,7 +235,7 @@ class CreateGame extends Component {
       this.setState({ selectedGameType: selectedGameType.short_name })
     }
     if (this.props.isAuthenticated) {
-      this.props.getMyGames();
+      // this.props.getMyGames();
       this.props.getMyHistory();
       this.props.getMyChat();
     }
@@ -241,18 +243,18 @@ class CreateGame extends Component {
       this.props.getBrainGameType();
     }
     this.props.getBrainGameType();
+    this.props.getStrategies();
 
 
     let newState = {
       child_step: 1,
-      bet_amount: 0.01,
+      bet_amount: 0.001,
       endgame_amount: 0,
       max_return: 0,
       max_prize: 0,
       lowest_box_price: 0,
       public_bet_amount: convertToCurrency(1)
     };
-
     if (gameTypeName === 'Spleesh!') {
       newState = {
         ...newState,
@@ -266,7 +268,7 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 1,
-        bet_amount: 0.01,
+        bet_amount: 0.0,
         winChance: 0,
         max_return: 0,
         endgame_amount: 0
@@ -285,7 +287,7 @@ class CreateGame extends Component {
         game_type: 5,
         public_bet_amount: convertToCurrency(1),
         max_return: 2,
-        bet_amount: 0.01,
+        bet_amount: 0.001,
         winChance: 0,
         qs_nation: Math.floor(Math.random() * 4),
         endgame_amount: 0
@@ -304,7 +306,7 @@ class CreateGame extends Component {
         ...newState,
         game_type: 6,
         winChance: 0,
-        bet_amount: 0.01,
+        bet_amount: 0.001,
         endgame_amount: 0
       };
     } else if (gameTypeName === 'Bang!') {
@@ -312,7 +314,7 @@ class CreateGame extends Component {
         ...newState,
         game_type: 7,
         winChance: 0,
-        bet_amount: 0.01,
+        bet_amount: 0.001,
         endgame_amount: 0,
         aveMultiplier: 0
       };
@@ -321,7 +323,7 @@ class CreateGame extends Component {
         ...newState,
         game_type: 8,
         winChance: 0,
-        bet_amount: 0.01,
+        bet_amount: 0.001,
         endgame_amount: 0,
         aveMultiplier: 0
       };
@@ -329,7 +331,7 @@ class CreateGame extends Component {
       newState = {
         ...newState,
         game_type: 9,
-        bet_amount: 0.01,
+        bet_amount: 0.001,
         winChance: 0,
         max_return: 0,
         endgame_amount: 0
@@ -427,6 +429,10 @@ class CreateGame extends Component {
 
     expectedValue *= scale;
     return expectedValue / p;
+  }
+
+  setSelectedStrategy = (selectedStrategy) => {
+    this.setState({ selectedStrategy });
   }
 
   calcMysteryBoxEV(boxList, targetSum, max_return) {
@@ -592,7 +598,8 @@ class CreateGame extends Component {
       max_return,
       room_password,
       rps_game_type,
-      is_private
+      is_private,
+      selectedStrategy
     } = this.state;
 
     const { isDarkMode } = this.props;
@@ -613,7 +620,7 @@ class CreateGame extends Component {
 
       if (step === 2) {
         if (
-          (game_mode !== 'RPS' || (game_mode === 'RPS' && child_step === 1)) &&
+          (child_step === 1) &&
           (parseFloat(bet_amount) <= 0 || isNaN(parseFloat(bet_amount)))
         ) {
           alertAndReturn("YOU DIDN'T BET (CAT) SHIT!!!");
@@ -626,13 +633,13 @@ class CreateGame extends Component {
         }
 
         if (
-          (game_mode === 'RPS' || game_mode === 'Quick Shoot') &&
+          (game_mode === 'Quick Shoot') &&
           child_step === 1 &&
-          (qs_list.length > 0 || rps_list.length > 0)
+          (qs_list.length > 0)
         ) {
           this.setState({
             qs_list: [],
-            rps_list: [],
+            // rps_list: [],
             winChance: 0,
             step: step > 1 ? step : step + 1
           });
@@ -655,16 +662,17 @@ class CreateGame extends Component {
         if (
           ((['Drop Game', 'Bang!', 'Roll', 'Blackjack'].includes(game_mode) &&
             child_step === 2) ||
-            (((game_mode === 'RPS' && rps_game_type === 0) ||
-              game_mode === 'Quick Shoot') &&
+            (
+              ((game_mode === 'RPS' && rps_game_type === 0 && child_step === 2 && selectedStrategy === 'Markov') ||
+              (game_mode === 'Quick Shoot' &&
               child_step === 3)) &&
           isMinimumRunsNeeded(3, list)
-        ) {
+        ))) {
           return;
         }
 
         if (
-          (game_mode === 'RPS' && child_step < 3) ||
+          // (game_mode === 'RPS' && child_step < 3) ||
           (game_mode === 'Quick Shoot' && child_step < 3) ||
           (game_mode !== 'Mystery Box' && child_step === 1)
         ) {
@@ -811,6 +819,7 @@ class CreateGame extends Component {
                 />}
                 label={
                   <StyledProductCard
+                  id="rps-game-type-radio"
                     className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
                       }`}
                   >
@@ -831,13 +840,18 @@ class CreateGame extends Component {
   };
 
   step2 = () => {
-    const { game_mode, child_step } = this.state;
+    const { game_mode, child_step, selectedStrategy} = this.state;
 
     switch (game_mode) {
       case 'RPS':
         return (
           <RPS
+          setSelectedStrategy={this.setSelectedStrategy}
+          selectedStrategy={selectedStrategy}
+          ai_mode={this.props.user.ai_mode}
+          user_id={this.props.user._id}
             playSound={this.playSound}
+            strategies={this.props.strategies}
             onChangeState={this.onChangeState}
             rps_list={this.state.rps_list}
             bet_amount={this.state.bet_amount}
@@ -1086,6 +1100,7 @@ class CreateGame extends Component {
 
   render() {
     const { isDrawerOpen } = this.props;
+    const { selectedStrategy } = this.state;
     return (
       <LoadingOverlay
         className="custom-loading-overlay"
@@ -1170,9 +1185,12 @@ class CreateGame extends Component {
                       game_mode={this.state.game_mode}
                       max_prize={this.state.max_prize}
                       winChance={this.state.winChance}
+                      description={this.state.description}
                       public_bet_amount={this.state.public_bet_amount}
                       youtubeUrl={this.state.youtubeUrl}
                       gameBackground={this.state.gameBackground}
+                      selectedStrategy={selectedStrategy}
+
                     />
                   ) : (
                     <span>Click the manual icon at the top for help.</span>
@@ -1186,9 +1204,11 @@ class CreateGame extends Component {
                         bet_amount={this.state.bet_amount}
                         max_return={this.state.max_return}
                         endgame_type={this.state.endgame_type}
+                        selectedStrategy={selectedStrategy}
                         endgame_amount={this.state.endgame_amount}
                         is_private={this.state.is_private}
                         step={this.state.step}
+                        description={this.state.description}
                         aveMultiplier={this.state.aveMultiplier}
                         calcAveMultiplier={this.props.calcAveMultiplier}
                         child_step={this.state.child_step}
@@ -1265,10 +1285,10 @@ class CreateGame extends Component {
 
             {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
               <>
-                <h2 className="main-title desktop-only">JUKEBOX</h2>
-                <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} />
+                {/* <h2 className="main-title desktop-only">JUKEBOX</h2>
+                <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} /> */}
 
-                <h2 className="main-title desktop-only">AI PANEL</h2>
+                <h2 className="main-title desktop-only">AUTOPLAY PANEL</h2>
                 <AiPanel user_id={this.props.user_id} />
                 <h2 className="main-title desktop-only">YOUR HISTORY</h2>
 
@@ -1460,6 +1480,7 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   landingItemList: state.landingReducer.landingItemList,
   game_mode: state.logic.game_mode,
+  strategies: state.logic.strategies,
   socket: state.auth.socket,
   balance: state.auth.balance,
   brain_game_type: state.questionReducer.brain_game_type,
@@ -1474,6 +1495,7 @@ const mapDispatchToProps = {
   getBrainGameType,
   getHistory,
   getMyGames,
+  getStrategies,
   getMyHistory,
   getGameTypeList,
   getMyChat,

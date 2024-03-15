@@ -26,7 +26,7 @@ import { Warning } from '@material-ui/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { convertToCurrency } from '../../util/conversion';
 
-import { faMoneyBill, faUser, faEnvelope } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
+import { faMoneyBill, faUser, faEnvelope, faRobot } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
 import { alertModal } from '../modal/ConfirmAlerts';
 import axios from '../../util/Api';
 
@@ -350,6 +350,8 @@ class PlayerModal extends Component {
   render() {
     const { isLoading } = this.state;
     const { loading, productArray, isLowGraphics } = this.props;
+    const isBot = this.state.username.toUpperCase().includes('BOT');
+
     return (
       <>
         {isLoading && (
@@ -379,9 +381,13 @@ class PlayerModal extends Component {
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className="modal-header">
                 <h2 className="modal-title">
+                {isBot ? (
+                  <FontAwesomeIcon icon={faRobot} className="mr-2" style={{ color: 'red' }} />
+                ) : (
                   <FontAwesomeIcon icon={faUser} className="mr-2" />
-
-                  Player Card</h2>
+                )}
+                {isBot ? 'Bot Card' : 'Player Card'}
+              </h2>
                 <Button className="btn-close" onClick={this.handleCloseModal}>
                   ×
                 </Button>
@@ -454,11 +460,11 @@ class PlayerModal extends Component {
                           ) : (
                             <ProductImage src={row.image} alt={row.productName} />
                           )}
-                          {row.item_type === '653ee81117c9f5ee2124564b' ? (
+                          {/* {row.item_type === '653ee81117c9f5ee2124564b' ? (
                             <CommissionPower>{row.CP}</CommissionPower>
                           ) : (
                             ''
-                          )}
+                          )} */}
 
                           <ProductInfo>
                             <ProductName>{row.productName}</ProductName>

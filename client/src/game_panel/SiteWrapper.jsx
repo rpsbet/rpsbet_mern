@@ -20,7 +20,6 @@ import Countdown from 'react-countdown';
 import SettingsModal from './modal/SettingsModal.jsx';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
-import ReactApexChart from 'react-apexcharts';
 import CountUp from 'react-countup';
 import Lottie from 'react-lottie';
 import progress from './LottieAnimations/progress.json';
@@ -255,9 +254,9 @@ class SiteWrapper extends Component {
 
   async componentDidUpdate(prevProps, prevState) {
     const { loadMore } = this.state;
-    const { transactions, tnxComplete, remainingLoans } = this.props;
+    const { transactions, tnxComplete, remainingLoans, betResult } = this.props;
 
-    if (prevProps.transactions[0] !== transactions[0] && transactions[0].amount > 0) {
+    if (prevProps.betResult !== betResult && betResult === 'win') {
       if (!this.props.isLowGraphics) {
         this.playCoinsAnimation();
       }
@@ -265,10 +264,10 @@ class SiteWrapper extends Component {
     const shouldUpdate =
     transactions &&
     transactions.length > 0 &&
-    transactions[0] &&
-    transactions[0].amount !== null &&
+    // transactions[0] &&
+    // transactions[0].amount !== null &&
     prevProps.transactions[0] &&
-    prevProps.transactions[0].amount !== transactions[0].amount &&
+    prevProps.transactions[0] !== transactions[0] &&
     !tnxComplete;
 
 
@@ -278,7 +277,7 @@ class SiteWrapper extends Component {
     if (shouldUpdate) {
 
       try {
-        await this.props.getUser(true, false, 10);
+        await this.props.getUser(true, false, 5);
 
         await this.props.getHistory();
       } catch (error) {
@@ -307,6 +306,7 @@ class SiteWrapper extends Component {
 
   handleMainTabChange = (event, newValue) => {
     const { selectMainTab } = this.props;
+    
     if (window.location.pathname !== '/') {
       history.push('/');
     }
@@ -408,7 +408,7 @@ class SiteWrapper extends Component {
       //   this.state.sortType,
       //   this.state.searchQuery
       // );
-      await this.props.getMyGames(1);
+      // await this.props.getMyGames(1);
       await this.props.getMyHistory();
       await this.props.getHistory();
     });
@@ -597,7 +597,7 @@ async componentDidMount() {
     await Promise.all([
       this.props.getNotifications(),
       this.initSocket(),
-      this.props.getUser(true, false, 10, null, null, null),
+      this.props.getUser(true, false, 5, null, null, null),
       this.props.acCalculateRemainingLoans(),
       this.initializeAudio(),
       this.fetchData(),
@@ -682,35 +682,6 @@ async componentDidMount() {
       balance: currentBalance,
       oldBalance: this.state.balance,
       transactions: transactions,
-      options: {
-        chart: {
-          id: 'balance-chart',
-          toolbar: {
-            show: false
-          },
-          markers: {
-            size: 0
-          },
-          grid: {
-            show: false
-          },
-          tooltip: {
-            enabled: false
-          }
-        },
-        xaxis: {
-          categories
-        },
-        yaxis: {
-          opposite: true
-        },
-        interactions: []
-      },
-      series: [
-        {
-          data
-        }
-      ]
     });
   }
 
@@ -936,7 +907,7 @@ async componentDidMount() {
     this.props.getUser(
       param1,
       param2,
-      10,
+      4,
       this.state.filterType,
       this.state.sortType,
       this.state.searchQuery
@@ -1284,7 +1255,7 @@ async componentDidMount() {
                             separator=","
                             decimal="."
                             decimals={numDecimals}
-                            duration={1.5}
+                            duration={40.5}
                             redraw={true}
                             preserveValue={true}
                             onEnd={() => {
@@ -1409,70 +1380,6 @@ async componentDidMount() {
                             <ListItemText>PROFILE</ListItemText>
                           </MenuItem>
 
-                          <MenuItem onClick={this.playPause}>
-                            <ReactApexChart
-                              options={{
-                                chart: {
-                                  animations: {
-                                    enabled: false
-                                  },
-                                  toolbar: {
-                                    show: false
-                                  },
-                                  events: {},
-                                  zoom: {
-                                    enabled: false
-                                  }
-                                },
-                                grid: {
-                                  show: false
-                                },
-                                tooltip: {
-                                  enabled: false
-                                },
-                                fill: {
-                                  type: 'gradient',
-                                  gradient: {
-                                    shade: 'light',
-                                    gradientToColors: ['#8F7CC3'],
-                                    shadeIntensity: 1,
-                                    type: 'vertical',
-                                    opacityFrom: 0.7,
-                                    opacityTo: 0.9,
-                                    stops: [0, 100, 100]
-                                  }
-                                },
-                                stroke: {
-                                  curve: 'smooth'
-                                },
-                                xaxis: {
-                                  labels: {
-                                    show: false
-                                  },
-                                  axisTicks: {
-                                    show: false
-                                  },
-                                  axisBorder: {
-                                    show: false
-                                  }
-                                },
-                                yaxis: {
-                                  labels: {
-                                    show: false
-                                  },
-                                  axisTicks: {
-                                    show: false
-                                  },
-                                  axisBorder: {
-                                    show: false
-                                  }
-                                }
-                              }}
-                              series={series}
-                              type="line"
-                              height="80"
-                            />
-                          </MenuItem>
                           <Divider />
                           {/* <MenuItem
                         onClick={e => {

@@ -17,7 +17,7 @@ const RoomBoxPrize = require('../model/RoomBoxPrize');
 router.get('/get-customer-statistics', auth, async (req, res) => {
   try {
 
-    const { _id, actorType, gameType, timeType } = req.query;
+    const { _id, actorType, gameType, timeType, limit } = req.query;
     let transactionConditions = {};
     const gameLogsQuery = {
       $and: [
@@ -51,7 +51,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       transactionConditions.$and.push({ description: /B!/i });
     } else if (gameType === '6536946933e70418b45fbe2f') {
       transactionConditions.$and.push({ description: /R/i });
-    }else if (gameType === '656cd55bb2c2d9dfb59a4bfa') {
+    } else if (gameType === '656cd55bb2c2d9dfb59a4bfa') {
       transactionConditions.$and.push({ description: /BJ/i });
     }
 
@@ -91,17 +91,28 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       ...transactionConditions
     });
 
-    const gameLogs = await GameLog.find(gameLogsQuery)
+    // Define the base query
+    let query = GameLog.find(gameLogsQuery)
       .select(
         'creator joined_user selected_drop room game_type bet_amount created_at game_result'
       )
-      .sort({ created_at: 'asc' })
+      .sort({ created_at: -1 })
       .populate([
         { path: 'creator', model: User, select: '_id username' },
         { path: 'joined_user', model: User, select: '_id username' },
         { path: 'room', model: Room, select: 'room_number qs_game_type' },
         { path: 'game_type', model: GameType, select: 'short_name' }
       ]);
+
+    // Check if limit is defined
+    if (limit) {
+      // Apply the limit to the query
+      query = query.limit(parseInt(limit));
+    }
+
+    // Execute the query
+    const gameLogs = await query;
+
 
 
     let statistics = {
@@ -204,20 +215,20 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
           isHost && game_result === -1
             ? bet_amount * 2
             : isJoined && game_result === 1
-            ? bet_amount + bet_amount / (room.qs_game_type - 1)
-            : 0 - bet_amount / (room.qs_game_type - 1);
+              ? bet_amount + bet_amount / (room.qs_game_type - 1)
+              : 0 - bet_amount / (room.qs_game_type - 1);
         net_profit =
           isHost && game_result === -1
             ? bet_amount * 2
             : isJoined && game_result === 1
-            ? (bet_amount + bet_amount / (room.qs_game_type - 1)) *
-                ((100 - commission) / 100) -
+              ? (bet_amount + bet_amount / (room.qs_game_type - 1)) *
+              ((100 - commission) / 100) -
               bet_amount
-            : isJoined && game_result === -1
-            ? 0 - bet_amount
-            : 0 -
-              bet_amount / (room.qs_game_type - 1) +
-              (bet_amount + bet_amount / (room.qs_game_type - 1)) *
+              : isJoined && game_result === -1
+                ? 0 - bet_amount
+                : 0 -
+                bet_amount / (room.qs_game_type - 1) +
+                (bet_amount + bet_amount / (room.qs_game_type - 1)) *
                 ((commission - 0.5) / 100);
       } else if (game_type && game_type.short_name === 'DG') {
         if (game_result === 0) {
@@ -228,21 +239,21 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
             isHost && game_result === -1
               ? bet_amount + selected_drop
               : isJoined && game_result === 1
-              ? bet_amount + selected_drop
-              : isJoined && game_result === -1
-              ? 0 - bet_amount
-              : 0 - selected_drop;
+                ? bet_amount + selected_drop
+                : isJoined && game_result === -1
+                  ? 0 - bet_amount
+                  : 0 - selected_drop;
           net_profit =
             isHost && game_result === -1
               ? bet_amount + selected_drop
               : isJoined && game_result === 1
-              ? (bet_amount + selected_drop) * ((100 - commission) / 100) -
+                ? (bet_amount + selected_drop) * ((100 - commission) / 100) -
                 bet_amount
-              : isJoined && game_result === -1
-              ? 0 - bet_amount
-              : 0 -
-                selected_drop +
-                (selected_drop + bet_amount) * ((commission - 0.5) / 100);
+                : isJoined && game_result === -1
+                  ? 0 - bet_amount
+                  : 0 -
+                  selected_drop +
+                  (selected_drop + bet_amount) * ((commission - 0.5) / 100);
         }
       } else if (game_type && game_type.short_name === 'MB') {
         profit = isHost ? bet_amount - game_result : game_result - bet_amount;
@@ -261,16 +272,16 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
             isHost && game_result === -1
               ? bet_amount * 2
               : isJoined && game_result === 1
-              ? bet_amount * 2
-              : 0 - bet_amount;
+                ? bet_amount * 2
+                : 0 - bet_amount;
           net_profit =
             isHost && game_result === -1
               ? bet_amount * 2
               : isJoined && game_result === 1
-              ? bet_amount * 2 * ((100 - commission) / 100) - bet_amount
-              : isJoined && game_result === -1
-              ? 0 - bet_amount
-              : 0 - bet_amount + 2 * bet_amount * ((commission - 0.5) / 100);
+                ? bet_amount * 2 * ((100 - commission) / 100) - bet_amount
+                : isJoined && game_result === -1
+                  ? 0 - bet_amount
+                  : 0 - bet_amount + 2 * bet_amount * ((commission - 0.5) / 100);
         }
       }
       const roomId = room._id.toString();
@@ -497,25 +508,17 @@ router.get('/get-leaderboards', auth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
-
 router.get('/get-room-statistics', async (req, res) => {
   try {
     const room_id = req.query.room_id;
-    let limit = parseInt(req.query.limit); // Parse the limit parameter
-
-    // Check if limit is not provided or not a number, then set it to undefined
-    if (isNaN(limit) || limit <= 0) {
-      limit = undefined;
-    }
+    let limit = parseInt(req.query.limit) || undefined;
 
     const query = {
       $and: [{ room: { $ne: null } }, { game_result: { $nin: [3, -100] } }],
       room: room_id
     };
 
-    const gameLogsQuery = GameLog.find(query)
-      .sort({ created_at: 'asc' });
-
+    const gameLogsQuery = GameLog.find(query).sort({ created_at: '-1' });
     if (limit !== undefined) {
       gameLogsQuery.limit(limit);
     }
@@ -525,65 +528,45 @@ router.get('/get-room-statistics', async (req, res) => {
     const tax = await SystemSetting.findOne({ name: 'commission' });
 
     const playerStats = {};
+    const joinerCounts = {};
 
     for (const gameLog of gameLogs) {
-      const {
-        joined_user,
-        bet_amount,
-        game_type,
-        selected_drop,
-        game_result
-      } = gameLog;
+      const { joined_user, bet_amount, game_type, selected_drop, game_result } = gameLog;
+
+      // Check if the joiner has occurred more than 10 times
+      if (joinerCounts[joined_user] && joinerCounts[joined_user] >= 10) {
+        continue; // Skip processing this game log
+      }
+
       const joiner = await User.findOne({ _id: joined_user }).select('_id avatar accessory username totalWagered');
-      
+
       const { _id, avatar, accessory, username, totalWagered } = joiner;
 
       const commission = accessory ? (await Item.findOne({ image: accessory }).select('CP')).CP : tax.value;
 
-      let net_profit = 0;
+      let net_profit = calculateNetProfit(game_type?.short_name, bet_amount, game_result, selected_drop, commission);
 
-      switch (game_type?.short_name) {
-        case 'S!':
-          net_profit = 0 - bet_amount * commission;
-          break;
-        case 'QS':
-          net_profit = game_result === -1 ? 0 - bet_amount : (bet_amount + bet_amount / (gameLog.room.qs_game_type - 1)) * ((100 - commission) / 100) - bet_amount;
-          break;
-        case 'DG':
-          net_profit = game_result === -1 ? 0 - bet_amount : ((bet_amount + selected_drop) * (100 - commission)) / 100 - bet_amount;
-          break;
-        case 'MB':
-          net_profit = game_result - bet_amount;
-          break;
-        default:
-          net_profit = game_result === 0 ? 0 : game_result === 1 ? bet_amount * 2 * ((100 - commission) / 100) - bet_amount : 0 - bet_amount;
-      }
+      playerStats[username] = playerStats[username] || {
+        avatar,
+        accessory,
+        _id,
+        actor: username,
+        wagered: 0,
+        rank: totalWagered,
+        net_profit: 0,
+        bets: 0,
+        net_profit_values: [],
+        bets_values: []
+      };
 
-      if (playerStats[username]) {
-        playerStats[username].avatar = avatar;
-        playerStats[username].accessory = accessory;
-        playerStats[username].rank = totalWagered;
-        playerStats[username]._id = _id;
-        playerStats[username].wagered += bet_amount;
-        playerStats[username].net_profit += net_profit;
-        playerStats[username].bets += [0, -1, 1].includes(game_result) ? 1 : 0;
+      playerStats[username].wagered += bet_amount;
+      playerStats[username].net_profit += net_profit;
+      playerStats[username].bets += [0, -1, 1].includes(game_result) ? 1 : 0;
+      playerStats[username].net_profit_values.push(playerStats[username].net_profit);
+      playerStats[username].bets_values.push(playerStats[username].bets);
 
-        playerStats[username].net_profit_values.push(playerStats[username].net_profit);
-        playerStats[username].bets_values.push(playerStats[username].bets);
-      } else {
-        playerStats[username] = {
-          avatar,
-          accessory,
-          _id,
-          actor: username,
-          wagered: bet_amount,
-          rank: totalWagered,
-          net_profit,
-          bets: [0, -1, 1].includes(game_result) ? 1 : 0
-        };
-        playerStats[username].net_profit_values = [net_profit];
-        playerStats[username].bets_values = [playerStats[username].bets];
-      }
+      // Increment joiner count
+      joinerCounts[joined_user] = (joinerCounts[joined_user] || 0) + 1;
     }
 
     const room_info = Object.values(playerStats).map(player => ({
@@ -601,10 +584,7 @@ router.get('/get-room-statistics', async (req, res) => {
 
     room_info.sort((a, b) => b.net_profit - a.net_profit);
 
-    // Calculate hostNetProfit
     const hostNetProfit = calculateHostValues(room_info, 'net_profit_values', -1);
-
-    // Calculate hostBetsValue
     const hostBetsValue = calculateHostValues(room_info, 'bets_values', 1);
 
     const response = {
@@ -622,6 +602,21 @@ router.get('/get-room-statistics', async (req, res) => {
   }
 });
 
+function calculateNetProfit(game_type, bet_amount, game_result, selected_drop, commission) {
+  switch (game_type) {
+    case 'S!':
+      return 0 - bet_amount * commission;
+    case 'QS':
+      return game_result === -1 ? 0 - bet_amount : (bet_amount + bet_amount / (gameLog.room.qs_game_type - 1)) * ((100 - commission) / 100) - bet_amount;
+    case 'DG':
+      return game_result === -1 ? 0 - bet_amount : ((bet_amount + selected_drop) * (100 - commission)) / 100 - bet_amount;
+    case 'MB':
+      return game_result - bet_amount;
+    default:
+      return game_result === 0 ? 0 : game_result === 1 ? bet_amount * 2 * ((100 - commission) / 100) - bet_amount : 0 - bet_amount;
+  }
+}
+
 function calculateHostValues(room_info, property, multiplier) {
   const hostValues = [];
   for (const player of room_info) {
@@ -629,7 +624,6 @@ function calculateHostValues(room_info, property, multiplier) {
     while (hostValues.length < values.length) {
       hostValues.push(0);
     }
-
     for (let i = 0; i < values.length; i++) {
       hostValues[i] += multiplier * values[i];
     }

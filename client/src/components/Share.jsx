@@ -55,7 +55,7 @@ export default class Share extends Component {
       <div className="share-options">
         <TwitterShareButton
           url={twitterLink}
-          title={`Challenge my AI, p*ssy: ⚔`} // ${this.props.roomInfo.room_name}
+          title={`Guess my pattern, p*ssy: ⚔`} // ${this.props.roomInfo.room_name}
           className="Demo__some-network__share-button"
         >
           <TwitterIcon size={32} round />

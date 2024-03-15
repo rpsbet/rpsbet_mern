@@ -24,6 +24,10 @@ const RoomSchema = new Schema({
     ref: 'GameType',
     index: true
   },
+  selectedStrategy: {
+    type: String,
+    default: 'Random'
+  },
   selected_rps: {
     type: Number,
     default: 0

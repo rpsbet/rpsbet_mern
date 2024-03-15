@@ -26,12 +26,12 @@
 .special-message .chat-msg{
     margin-left: unset !important;
     text-transform: uppercase;
-    background: linear-gradient(#6f00f9, #6900a4) !important; /* You can customize this style as needed */
+    background: linear-gradient(#333, rgba(0,0,0,0.2)) !important;
     font-weight: bold !important; /* Add any additional styles you want for special messages */
   }
 
   .special-message-rent .chat-msg{
-    background: linear-gradient(rgb(76 13 175), #ff1900) !important; 
+    background: linear-gradient(#333, #212529) !important; 
   }
   
   .chat-wrapper .chat-panel .chat-line.special-message-rent .sender-name,

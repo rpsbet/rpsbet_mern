@@ -100,31 +100,39 @@ class QuickShoot extends Component {
     clearInterval(this.state.intervalId);
     document.removeEventListener('keydown', this.handleKeyPress);
   }
-
   handleKeyPress(event) {
     if (!this.props.isFocused) {
-      switch (event.key) {
-        case 'p':
-          this.onBtnBetClick(0);
-          break;
-        case 'q':
-          this.onBtnBetClick(1);
-          break;
-        case 'w':
-          this.onBtnBetClick(2);
-          break;
-        case 'e':
-          this.onBtnBetClick(3);
-          break;
-        case 'r':
-          this.onBtnBetClick(4);
-          break;
-        default:
-          break;
+      // Check if the Ctrl key is pressed (for Windows/Linux) or the Cmd key is pressed (for macOS)
+      const ctrlKeyPressed = event.ctrlKey || event.metaKey;
+  
+      // Check if the key pressed is 'r'
+      const isRKeyPressed = event.key === 'r';
+  
+      // Check if both conditions are met: Ctrl (or Cmd) key is pressed AND 'r' key is pressed
+      if (!(ctrlKeyPressed && isRKeyPressed)) {
+        switch (event.key) {
+          case 'p':
+            this.onBtnBetClick(0);
+            break;
+          case 'q':
+            this.onBtnBetClick(1);
+            break;
+          case 'w':
+            this.onBtnBetClick(2);
+            break;
+          case 'e':
+            this.onBtnBetClick(3);
+            break;
+          case 'r':
+            this.onBtnBetClick(4);
+            break;
+          default:
+            break;
+        }
       }
     }
-
   }
+  
 
 
   static getDerivedStateFromProps(props, current_state) {
@@ -161,7 +169,12 @@ class QuickShoot extends Component {
 
   updateAnimation = async () => {
     let position_short_name = ['center', 'tl', 'tr', 'bl', 'br'];
+    if (position_short_name[this.props.selected_qs_position] === 'center') {
+      this.props.playSound('grunt2');
 
+    } else {
+      this.props.playSound('grunt')
+    }
     if (this.props.qs_game_type === 2) {
       position_short_name = ['bl', 'br'];
 
@@ -479,18 +492,24 @@ class QuickShoot extends Component {
   };
 
   renderButton(id, position) {
-    const { betResult, selected_qs_position, bgColorChanged } = this.props;
-
-    const classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position
+    const { betResult, selected_qs_position, bgColorChanged, is_betting } = this.props;
+  
+    // Define the base classes
+    let classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position
       ? ' lose-bg'
       : ''
       }${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${betResult === 1 && selected_qs_position === position ? ' win-bg' : ''
       }`;
-
+  
+    // Add the 'disabled' class if is_betting is true
+    if (is_betting) {
+      classes += ' disabled';
+    }
+  
     const buttonStyle = {
       opacity: 0.9
     };
-
+  
     return (
       <IconButton
         id={id}
@@ -500,9 +519,13 @@ class QuickShoot extends Component {
         }}
         className={classes}
         style={buttonStyle}
-      ><span className="roll-tag">{this.getPositionLetter(position)}</span></IconButton>
+        disabled={is_betting} // Optionally disable the button directly
+      >
+        <span className="roll-tag">{this.getPositionLetter(position)}</span>
+      </IconButton>
     );
   }
+  
 
 
   renderButtons() {
@@ -832,10 +855,10 @@ class QuickShoot extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {renderLottieAvatarAnimation(
+            {/* {renderLottieAvatarAnimation(
               gameBackground,
               isLowGraphics
-            )}
+            )} */}
 
             <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
             <div
@@ -924,6 +947,7 @@ const mapStateToProps = state => ({
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   balance: state.auth.balance,
   isDarkMode: state.auth.isDarkMode,
+  is_betting: state.logic.is_betting,
   balance: state.auth.balance,
   creator: state.logic.curRoomInfo.creator_name,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,

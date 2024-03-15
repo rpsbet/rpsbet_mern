@@ -234,7 +234,7 @@ class MyHistoryTable extends Component {
     
     return (
       <div className="overflowX">
-        <div className="outer-div">
+        {/* <div className="outer-div">
           <div className="border-mask" />
           
           <Lottie
@@ -253,23 +253,7 @@ class MyHistoryTable extends Component {
               maxWidth: '100%'
             }}
           />
-          {/* <Lottie
-            options={{
-              loop: true,
-              autoplay: true,
-              animationData: waves
-            }}
-            style={{
-              transform: 'translateY(-66px)',
-              width: '361px',
-              height: '100%',
-              overflow: 'hidden',
-              margin: '60px 0px -236px',
-              outline: 'none',
-              filter: 'hue-rotate(48deg)',
-              maxWidth: '100%'
-            }}
-          /> */}
+         
           <InlineSVG
             className="rain"
             id="busd"
@@ -309,7 +293,7 @@ class MyHistoryTable extends Component {
           >
             / 10.00 (NEXT BIG GIVEAWAY EVENT)
           </span>
-        </div>
+        </div> */}
         {/* <div className="game-type-container">
           <div
             className="game-type-panel"
@@ -334,7 +318,7 @@ class MyHistoryTable extends Component {
                 key={row._id}
               >
                  {' '}
-                 {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)}
+                 {/* {renderLottieAvatarAnimation(row.gameBackground, isLowGraphics)} */}
                 <div>
                   <div className="table-cell">
                   {row.status}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}

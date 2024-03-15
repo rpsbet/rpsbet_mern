@@ -90,7 +90,7 @@ class MainPage extends Component {
 
     const promises = [getRoomList({pageSize: 7}), getRoomCount({game_type: selectedGameType}), getHistory(), getGameTypeList()];
     if (isAuthenticated) {
-      promises.push(getMyGames());
+      // promises.push(getMyGames());
       promises.push(getMyHistory());
       promises.push(getMyChat());
     }
@@ -290,17 +290,17 @@ toggleMarketplace = () => {
             this.state.show_open_game === 1 && <MyHistoryTable />}
         </div>
         <div className="sub-panel">
-        {!this.state.is_mobile && (
+        {/* {!this.state.is_mobile && (
             <>
               <h2 className="main-title desktop-only">JUKEBOX</h2>
               <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} />
             </>
-          )}
+          )} */}
 
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
-              <h2 className="main-title desktop-only">AI PANEL</h2>
-              <AiPanel user_id={this.props.user._id} />
+              <h2 className="main-title desktop-only">AUTOPLAY PANEL</h2>
+              <AiPanel user_id={this.props.user._id}/>
             </>
           )}
 
@@ -320,7 +320,7 @@ toggleMarketplace = () => {
           />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>
-              <h2 className="main-title desktop-only">AI PANEL</h2>
+              <h2 className="main-title desktop-only">AUTOPLAY PANEL</h2>
 
               <AiPanel user_id={this.props.user._id} />
             </>

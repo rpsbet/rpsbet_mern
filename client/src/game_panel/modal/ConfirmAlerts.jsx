@@ -2,11 +2,14 @@ import React from 'react';
 import { confirmAlert } from 'react-confirm-alert';
 import { convertToCurrency } from '../../util/conversion';
 import { FormControlLabel, Button, Checkbox } from '@material-ui/core/';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRobot, faPhone } from '@fortawesome/free-solid-svg-icons';
+
 const showAlert = (isDarkMode, text, icon) => {
   confirmAlert({
     customUI: ({ onClose }) => {
       return (
-        <div style={{borderRadius: "0.6em"}} className={isDarkMode ? 'dark_mode' : ''}>
+        <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body">
             <Button className="btn-close" onClick={onClose}>
               ×
@@ -35,7 +38,7 @@ const showConfirm = (
   confirmAlert({
     customUI: ({ onClose }) => {
       return (
-        <div  style={{borderRadius: "0.6em"}} className={isDarkMode ? 'dark_mode' : ''}>
+        <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-body alert-body confirm-body">
             <Button className="btn-close" onClick={onClose}>
               ×
@@ -79,6 +82,51 @@ const showConfirm = (
     }
   });
 };
+
+
+const showConfirmCall = (
+  isDarkMode,
+  text,
+  icon,
+  okayButtonTitle,
+  cancelButtonTitle,
+  callback
+) => {
+  confirmAlert({
+    customUI: ({ onClose }) => {
+      return (
+        <div style={{ borderRadius: "0.6em" }} className={isDarkMode ? 'dark_mode' : ''}>
+          <div className="modal-body alert-body confirm-body">
+            <h5 style={{margin: '30px auto'}}> {text}</h5>
+            <div
+              style={{ color: '#353b47', padding: '5px 10px', background: 'rgb(175 176 176)', filter: 'drop-shadow(2px 4px 6px black)', height: '75px', borderRadius: "0.6em", display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+            // className={`modal-icon alert-icon${icon}`}
+            ><FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;<span  style={{ fontSize: "1.4em" }}>Unknown Strategy</span></div>
+
+            <div className="modal-footer">
+              <Button
+                className="btn-submit"
+                onClick={() => {
+                  callback();
+                  onClose();
+                }}
+              >
+
+                {okayButtonTitle}<FontAwesomeIcon icon={faPhone} style={{ marginLeft: '5px', color: '#fff' }} />
+              </Button>
+              {cancelButtonTitle && (
+                <Button className="btn-back" onClick={onClose}>
+                  {cancelButtonTitle}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  });
+};
+
 export const confirmModalCreate = (
   isDarkMode,
   text,
@@ -87,6 +135,22 @@ export const confirmModalCreate = (
   callback
 ) => {
   showConfirm(
+    isDarkMode,
+    text,
+    '-create',
+    okayButtonTitle,
+    cancelButtonTitle,
+    callback
+  );
+};
+export const callBotModal = (
+  isDarkMode,
+  text,
+  okayButtonTitle,
+  cancelButtonTitle,
+  callback
+) => {
+  showConfirmCall(
     isDarkMode,
     text,
     '-create',
@@ -111,6 +175,7 @@ export const confirmModalClosed = (
     callback
   );
 };
+
 
 const speak = (message) => {
   if (window.speechSynthesis) {

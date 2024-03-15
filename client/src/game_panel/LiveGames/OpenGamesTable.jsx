@@ -199,19 +199,21 @@ class OpenGamesTable extends Component {
     return gameTypePanel;
   };
   async componentDidMount() {
+    this.props.getRoomList({pageSize: 7});
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.handleScroll);
   }
 
 
   componentWillUnmount() {
+
     window.removeEventListener('scroll', this.handleScroll);
     window.removeEventListener('load', this.handleLoad);
 
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { roomList, rooms_count, selectedGameType } = this.props;
+    const { roomList, loading, selectedGameType } = this.props;
 
     const roomIds = roomList.map(room => room._id);
 
@@ -227,9 +229,11 @@ class OpenGamesTable extends Component {
           this.getRoomData(roomIds);
         }
       });
-    
+
 
     }
+
+   
 
     if (prevProps.selectedGameType !== selectedGameType) {
       this.setState({ isLoading: true });
@@ -272,6 +276,7 @@ class OpenGamesTable extends Component {
   };
 
   handleCoHostAmountChange = event => {
+
     this.setState({ coHostAmount: event.target.value });
   };
 
@@ -384,7 +389,7 @@ class OpenGamesTable extends Component {
     const updatedRoomList = this.state.roomList.map(room => {
       if (room._id === _id) {
         const likesIndex = room.likes ? room.likes.indexOf(this.props.user._id) : -1;
-    const dislikesIndex = room.dislikes ? room.dislikes.indexOf(this.props.user._id) : -1;
+        const dislikesIndex = room.dislikes ? room.dislikes.indexOf(this.props.user._id) : -1;
 
 
         if (likesIndex > -1) {
@@ -502,8 +507,8 @@ class OpenGamesTable extends Component {
   };
 
   handleGameTypeButtonClicked = async short_name => {
-    await this.props.onChangeGameType(short_name, async() => {
-      this.setState({ roomList: [], fetchedRoomIds: []}, async () => {
+    await this.props.onChangeGameType(short_name, async () => {
+      this.setState({ roomList: [], fetchedRoomIds: [] }, async () => {
         await this.props.getRoomList({
           pageSize: 7,
           game_type: short_name
@@ -586,7 +591,7 @@ class OpenGamesTable extends Component {
                 this.game_type_panel = elem;
               }}
             >
-              {gameTypePanel}
+              {/* {gameTypePanel} */}
             </div>
           </div>
           {/* <div className="table-header">
@@ -624,10 +629,10 @@ class OpenGamesTable extends Component {
                       key={row._id}
                     >
                       {' '}
-                      {renderLottieAvatarAnimation(
+                      {/* {renderLottieAvatarAnimation(
                         row.gameBackground,
                         isLowGraphics
-                      )}
+                      )} */}
                       <div>
                         <div className="table-cell cell-room-info">
                           <img
@@ -1068,15 +1073,15 @@ class OpenGamesTable extends Component {
                   ),
                   this
                 )}</>
-                )}
-              </div>
-              
+            )}
+          </div>
+
         )}
 
-            {loading && (!isLoading) && (
-              <div className='loading-spinner'></div>
-            )}
-          
+        {loading && (!isLoading) && (
+          <div className='loading-spinner'></div>
+        )}
+
 
         <Modal
           isOpen={this.state.isCoHostModalOpen}
@@ -1084,7 +1089,7 @@ class OpenGamesTable extends Component {
           style={customStyles}
           contentLabel="CoHost Modal"
         >
-        <div className={`${this.props.isDarkMode ? 'dark_mode' : ''} big-modal`}>
+          <div className={`${this.props.isDarkMode ? 'dark_mode' : ''} big-modal`}>
             <div className="modal-header">
 
               <h2 className="modal-title">
@@ -1097,17 +1102,17 @@ class OpenGamesTable extends Component {
             </div>
             <div className="modal-body">
               <div className="modal-content-wrapper">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1 className='modal-title'>BECOME A CO-HOST</h1>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h1 className='modal-title'>BECOME A CO-HOST</h1>
 
-                <div style={{ width: '50%', textAlign: 'right', padding: '20px' }}>
-                  <span>HELP</span>&nbsp;
-                  <span>
-                    <Help style={{ width: '16', marginTop: '-3px', cursor: 'pointer' }} onClick={this.togglePopup} />
-                  </span>
+                  <div style={{ width: '50%', textAlign: 'right', padding: '20px' }}>
+                    <span>HELP</span>&nbsp;
+                    <span>
+                      <Help style={{ width: '16', marginTop: '-3px', cursor: 'pointer' }} onClick={this.togglePopup} />
+                    </span>
+                  </div>
+
                 </div>
-                
-              </div>
                 <div className="modal-content-panel">
                   <div className="input-amount">
 
@@ -1128,8 +1133,6 @@ class OpenGamesTable extends Component {
                             className={isFocused ? 'fade-in' : 'fade-out'}
                           >
                             <Button
-                              variant="contained"
-                              color="secondary"
                               onClick={() => this.handleMaxButtonClick()}
                               style={{ marginRight: '-10px' }}
                             >
@@ -1194,16 +1197,15 @@ class OpenGamesTable extends Component {
 
                       <TableRow>
                         <TableCell>
-                          <span>CURRENT STAKE:</span>
+                          <span>CURRENT SHARE:</span>
                         </TableCell>
                         {this.state.selectedRow ? (
 
                           <TableCell style={{ color: 'red' }}>
                             {this.state.selectedRow.hosts && this.state.selectedRow.hosts.some(host => host.host === this.props.user._id) ? (
                               <>
-                                {convertToCurrency(`${this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share}`)} (
-                                {`${(((this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share / parseFloat(this.state.selectedRow.user_bet))) * 100).toFixed(2)}%`}
-                                )
+                                {`${(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share).toFixed(2)}%`}
+
                               </>
                             ) : (
                               convertToCurrency('0')
@@ -1218,7 +1220,7 @@ class OpenGamesTable extends Component {
 
                       <TableRow>
                         <TableCell>
-                          <span>NEW STAKE:</span>
+                          <span>NEW SHARE:</span>
                         </TableCell>
                         {this.state.selectedRow ? (
                           <TableCell style={{ color: 'red' }}>
@@ -1226,13 +1228,17 @@ class OpenGamesTable extends Component {
                               // If user is a host
                               // Assuming selectedRow.hosts is an array of objects with a structure like { host: 'user_id', share: 'share_value' }
                               <>
-                                {convertToCurrency(`${(parseFloat(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) + (parseFloat(this.state.coHostAmount) || 0))}`)} (
-                                {((`${(parseFloat(this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) + (parseFloat(this.state.coHostAmount) || 0))}` / (parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0))) * 100).toFixed(2)}
-                                %)
+                                {(`
+                                ${(((((this.state.selectedRow.hosts.find(host => host.host === this.props.user._id).share) / 100 ) * 
+                                parseFloat(this.state.selectedRow.user_bet)) + parseFloat(this.state.coHostAmount || 0)) /(parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.coHostAmount || 0)) * 100).toFixed(2)}%
+                                `)}
                               </>
+
                             ) : (
-                              // If user is not a host, display an empty value or default text
-                              convertToCurrency(`${this.state.coHostAmount || 0}`)
+                              <>
+                                {(((parseFloat(this.state.coHostAmount || 0)) / (parseFloat(this.state.coHostAmount || 0) + parseFloat(this.state.selectedRow.user_bet))) * 100).toFixed(2)}%
+                              </>
+
 
                             )}
                           </TableCell>
@@ -1261,31 +1267,31 @@ class OpenGamesTable extends Component {
             </div>
           </div>
           {this.state.showPopup && (
-          <div className={`${isDarkMode ? 'popup-overlay dark_mode' : 'popup-overlay'}`}>
+            <div className={`${isDarkMode ? 'popup-overlay dark_mode' : 'popup-overlay'}`}>
 
-            <div className="popup">
-              <h2 className='modal-title' style={{ textAlign: 'center', marginBottom: "20px" }}>Co-Hosting Information</h2>
-              <div className="popup-content">
-              <img src={'../img/co-host.svg'} style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden' }}/>
+              <div className="popup">
+                <h2 className='modal-title' style={{ textAlign: 'center', marginBottom: "20px" }}>Co-Hosting Information</h2>
+                <div className="popup-content">
+                  <img src={'../img/co-host.svg'} style={{ borderRadius: '20px', border: '1px solid aaa9', overflow: 'hidden' }} />
 
-                <h3>Co-Hosting Overview</h3>
-                <p>Co-Hosting, allows you to invest in existing games and own a share of its profits.</p>
-                <p>Steps to become a co-host:</p>
-                <ol>
-                  <li>Go To 'Live Battles'</li>
-                  <li>Pick a game from the list (check the mini-charts for steady growth games).</li>
-                  <li>Click the green plus <span style={{color: 'green'}}>[+]</span> next to the 'WIN' button.</li>
-                  <li>In the Co-Hosting Popup, enter the amount you want to invest and click 'CONTRIBUTE'.</li>
-                  <li>Sit back and wait for automatic payouts (if Host has enabled) or your share value to increase as its bankroll increases.</li>
-                </ol>
+                  <h3>Co-Hosting Overview</h3>
+                  <p>Co-Hosting, allows you to invest in existing games and own a share of its profits.</p>
+                  <p>Steps to become a co-host:</p>
+                  <ol>
+                    <li>Go To 'Live Battles'</li>
+                    <li>Pick a game from the list (check the mini-charts for steady growth games).</li>
+                    <li>Click the green plus <span style={{ color: 'green' }}>[+]</span> next to the 'WIN' button.</li>
+                    <li>In the Co-Hosting Popup, enter the amount you want to invest and click 'CONTRIBUTE'.</li>
+                    <li>Sit back and wait for automatic payouts (if Host has enabled) or your share value to increase as its bankroll increases.</li>
+                  </ol>
                   <i>PRO TIP: You can track your earnings by searching for 'co-host' in All Transactions by clicking your wallet then View-All.</i>
-               
-                <Button style={{ display: 'block', margin: 'auto' }} onClick={this.togglePopup}>OK, GOT IT!</Button>
+
+                  <Button style={{ display: 'block', margin: 'auto' }} onClick={this.togglePopup}>OK, GOT IT!</Button>
+                </div>
+                <button className="popup-close" onClick={this.togglePopup}>&times;</button>
               </div>
-              <button className="popup-close" onClick={this.togglePopup}>&times;</button>
             </div>
-          </div>
-        )}
+          )}
         </Modal>
       </>
 

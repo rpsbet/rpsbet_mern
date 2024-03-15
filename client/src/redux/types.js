@@ -127,16 +127,21 @@ export const ADD_LANDING_TOTAL = 'ADD_LANDING_TOTAL';
 export const ACTION_ROOM = 'ACTION_ROOM';
 export const SET_SOCKET = 'SET_SOCKET';
 export const GAMETYPE_LOADED = 'GAMETYPE_LOADED';
+export const STRATEGIES_LOADED = 'STRATEGIES_LOADED';
 export const ROOMINFO_LOADED = 'ROOMINFO_LOADED';
 export const ROOMS_LOADED = 'ROOMS_LOADED';
 export const ROOMS_COUNT = 'ROOMS_COUNT';
 
 export const SET_GAME_MODE = 'SET_GAME_MODE';
+export const RPSBETITEMS_LOADED = 'RPSBETITEMS_LOADED';
+
 export const SET_CUR_ROOM_INFO = 'SET_CUR_ROOM_INFO';
 export const BET_SUCCESS = 'BET_SUCCESS';
 export const BET_FAIL = 'BET_FAIL';
 export const HISTORY_LOADED = 'HISTORY_LOADED';
 export const START_LOADING = 'START_LOADING';
+export const START_BET = 'START_BET';
+export const END_BET = 'END_BET';
 export const TNX_COMPLETE = 'TNX_COMPLETE';
 export const TNX_INCOMPLETE = 'TNX_INCOMPLETE';
 export const END_LOADING = 'END_LOADING';

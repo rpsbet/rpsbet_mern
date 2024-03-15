@@ -70,12 +70,3 @@ export const getQueue = () => async (dispatch) => {
 
   }
 };
-
-// export const updateProgress = (id, progress) => async (dispatch) => {
-//   try {
-//     const response = await axios.put(`/settings/update-progress/${id}`, { progress });
-//     dispatch({ type: UPDATE_PROGRESS, payload: response.data });
-//   } catch (error) {
-//     console.log('error***', error);
-//   }
-// };

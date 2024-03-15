@@ -136,7 +136,7 @@ a:hover {
   color: #e5e5e5;
 }
 div.table .table-row .table-cell button:last-child:before,
-.create-room-btn-panel button.btn-create-room:before,
+/* .create-room-btn-panel button.btn-create-room:before, */
 .game_header .main_header .header_action_panel button#btn-login:before,
 #wallet-btn::before {
   content: '';
@@ -177,6 +177,7 @@ div.table .table-row .table-cell button:last-child:before,
   opacity: 0.9;
   border: unset;
   transition: 0.3s;
+  margin-left: 5px !important;
   transform: translateY(20px) rotate(180deg) !important;
 }
 #rps-radio div {
@@ -225,8 +226,8 @@ div.table .table-row .table-cell button:last-child,
   font-size: 0.8em;
   overflow: hidden;
   font-weight: 600;
-  background: linear-gradient(0deg, #d81719, #e70000) padding-box,
-    linear-gradient(0deg, #fc0000, #d81719) border-box;
+  background: linear-gradient(0deg, #d81719, #810000) padding-box,
+    linear-gradient(0deg, #ff3b3b, #d81719) border-box;
   box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
     inset 0 2px #ff2525;
 }
@@ -370,7 +371,7 @@ div.table .table-cell button.btn_join img {
   justify-content: end;
   align-items: start;
   margin-top: 2.5px;
-  width: 25%;
+  width: 100%;
 }
 .create-room-btn-panel label {
   margin-right: 24px;
@@ -390,6 +391,7 @@ div.table .table-cell button.btn_join img {
   padding: 6px 12px !important;
   overflow: hidden;
   width: 100%;
+  height: 100px !important;
   /* box-shadow: 0 10px 27px #00ff0c1a, 0 -3px #00913c inset, 0 2px #35d87b inset !important; */
   font-size: 15px;
   border-radius: 0.25em;
@@ -485,6 +487,9 @@ z-index: 9;
   border-top-right-radius: 8px;
 }
 
+.tabs-container div div {
+  overflow-x: auto !important;
+}
 /*********************************/
 /********* MAIN LAYOUT ***********/
 /*********************************/
@@ -833,7 +838,8 @@ div.table .table-row .table-cell img.game-type-icon {
   height: 40px;
   border-radius: 0.3em;
   filter: brightness(0.5);
-  /* transform: scale(1.5); */
+  background: #747f8d;
+    margin-right: 15px;
 }
 
 .chat-line .avatar {
@@ -927,20 +933,20 @@ div.table.my-open-game-table::-webkit-scrollbar {
 .lose-bg,
 button.lose-bg,
 #roll .lose-bg.active {
-  background: #ffd700 !important;
+  background: linear-gradient(#ffd700, #e9b90a) !important;
   background-color: #ffd700 !important;
   filter: unset !important;
 }
 .draw-bg,
 button.draw-bg,
 #roll .draw-bg.active {
-  background: #777777 !important;
+  background: linear-gradient(#777777, #d4d4d4) !important;
   background-color: #777777 !important;
 }
 .win-bg,
 button.win-bg,
 #roll .win-bg.active {
-  background: #0cff00 !important;
+  background: linear-gradient(#0cff00, #0b6d00) !important;
   background-color: #0cff00 !important;
   filter: unset !important;
 }
@@ -1057,7 +1063,7 @@ div.table.main-game-table .table-row .table-cell.cell-room-info {
   line-height: 17px;
 }
 div.table.main-game-table .table-row .table-cell.cell-user-name {
-  width: 45%;
+  width: 40%;
   display: flex;
   justify-content: center;
   text-align: center;
@@ -1177,14 +1183,14 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
   opacity: 1;
   transform: translate(-10px, 20%) rotate(90deg);
 }
-
+/* 
 .contents_wrapper .main-game .main-panel,
 .contents_wrapper .main-game .sub-panel {
   background-image: linear-gradient(-135deg, transparent, #e9ecef 55%),
     url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec72434cb1c84_Dots%20Blue.svg) !important;
   background-position: top right;
   background-size: cover !important;
-}
+} */
 
 div.table.my-open-game-table {
   text-align: center;
@@ -1974,6 +1980,7 @@ transform-origin: center;
   /* width: 60%; */
   white-space: nowrap;
 }
+.input-amount span,
 .game-page .game-contents .game-info-panel .edit-amount-panel span {
   font-size: 16px;
   /* color: #060607; */
@@ -2068,8 +2075,20 @@ transform-origin: center;
   left: 10px;
   top: 5px;
 }
-.guesses p:first-child {
-  opacity: 1;
+.guesses .avatar div:nth-child(2),
+.guesses .avatar div:nth-child(3),
+.guesses .avatar .rank-icon
+ {
+  display: none !important;
+}
+.guesses div {
+  display: flex;
+  margin-right: 5px;
+  margin-left: 2.5px;
+}
+.guesses div:last-child,
+.guesses p:last-child {
+  opacity: 1 !important;
 }
 .guesses p {
   background-color: #ff000044;
@@ -2078,6 +2097,8 @@ transform-origin: center;
   border-radius: 0.3em;
   color: #ff0000 !important;
   opacity: 0.6;
+  margin-right: 5px;
+
 }
 
 #no-guesses {
@@ -2204,10 +2225,10 @@ svg#delete:hover {
   transition: 0.2s;
 }
 
-#rps-game-type-radio img {
+/* #rps-game-type-radio img {
 width: 32px !important;
 margin-right: 5px;
-}
+} */
 
 #rps-game-type-radio,
 #rps-radio {
@@ -2215,12 +2236,10 @@ margin-right: 5px;
   flex-direction: row;
   text-align: center;
 }
-#rps-game-type-radio button {
-  margin: 0 10px;
-  display: inline-block;
+#rps-game-type-radio  {
   /* width: 200px; */
-  height: 70px;
-  animation: pulse 0.2s;
+  /* height: 70px; */
+  animation: pulse 0.3s;
 }
 
 #rps-radio button,
@@ -2368,11 +2387,38 @@ button.btn-submit:active,
   border: 2px solid #e9ecef;
   box-shadow: 0 0 0px 7px #fdfeff inset;
 }
+.strategy-label {
+  font-weight: bold; /* Make the label text bold */
+  color: #777; /* Set the color of the label text */
+  margin-bottom: 5px; /* Add margin bottom for spacing */
+}
+.tiers table tr th {
+  width: 30%;
+}
 
+.tiers button {
+  margin-right: 10px !important;
+  margin-bottom: 10px !important;
+}
+.strategy-description {
+  margin-bottom: 10px; /* Add margin bottom for spacing */
+  font-weight: bold; /* Make the description text bold */
+  color: #333; /* Set the color of the description text */
+}
 .tiers table {
   border-collapse: collapse;
   margin: 5px auto 15px;
   font-size: 14px;
+}
+.tiers .active {
+  transform: translateY(-8px);
+  filter: brightness(1.5);
+}
+.tiers button:hover {
+  transition: 0.3s;
+  cursor: pointer;
+  transform: translateY(-4px);
+  filter: brightness(1.25);
 }
 
 .tiers td {
@@ -2440,7 +2486,7 @@ button.btn-submit:active,
 }
 #btn-rps-settings {
   position: relative;
-  transform: translate(0px, -30px);
+  margin-top: -15px;
   cursor: pointer;
   z-index: 2;
   float: right;
@@ -2491,10 +2537,19 @@ pointer-events: unset !important;
   cursor: not-allowed !important;
   filter: grayscale(1);
 }
+
+#ap-btn {
+  background: #e0e0e0;
+  box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
+  color: #333;
+  cursor: pointer;
+  border: none;
+}
 .transaction-settings {
   /* position: fixed; */
-  top: 30vh;
   left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
   color: #343a40;
   padding: 20px 20px !important;
   background: #a9a9a9;

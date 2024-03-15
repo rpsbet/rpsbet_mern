@@ -118,7 +118,7 @@ class ProfileModal extends Component {
   };
 
   containsBadLanguage = (username) => {
-    const explicitWords = ['nigger', 'nigg3r', 'n1gger', 'coon', 'c00n', 'paki', 'chink', 'n i g g e r'];
+    const explicitWords = ['nigger', 'nigga', 'nigg3r', 'n1gger', 'coon', 'c00n', 'paki', 'chink', 'n i g g e r', 'BOT', 'B0T', 'bot', 'BoT'];
     const lowercasedUsername = username.toLowerCase();
 
     return explicitWords.some((word) => lowercasedUsername.includes(word));
@@ -312,7 +312,7 @@ class ProfileModal extends Component {
               </div>
             )}
             <div className="modal-edit-panel">
-              <div>
+              {/* <div>
                 <TextField
                   className="form-control"
                   variant="filled"
@@ -332,7 +332,7 @@ class ProfileModal extends Component {
                   }}
                   readOnly
                 />
-              </div>
+              </div> */}
 
               <div>
                 <TextField
