@@ -663,7 +663,7 @@ class CreateGame extends Component {
           ((['Drop Game', 'Bang!', 'Roll', 'Blackjack'].includes(game_mode) &&
             child_step === 2) ||
             (
-              ((game_mode === 'RPS' && rps_game_type === 0 && child_step === 2 && selectedStrategy === 'Markov') ||
+              ((game_mode === 'RPS' && rps_game_type === 0 && child_step === 2 && selectedStrategy === 'Hidden Markov') ||
               (game_mode === 'Quick Shoot' &&
               child_step === 3)) &&
           isMinimumRunsNeeded(3, list)
