@@ -651,7 +651,7 @@ class RPS extends Component {
                   <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
                   <SettingsOutlinedIcon />
                 </ButtonBase>
-                {(selectedStrategy === 'Markov') ? (
+                {(selectedStrategy === 'Hidden Markov') ? (
 
                   <>
             <div className="rps-add-run-panel">
