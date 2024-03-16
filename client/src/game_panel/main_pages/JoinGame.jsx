@@ -35,7 +35,7 @@ import {
   getStrategies,
   deductBalanceWhenStartBrainGame
 } from '../../redux/Logic/logic.actions';
-import { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
+import { predictNext, reinforcementAI,martingaleStrategy,  patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@material-ui/core';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -882,13 +882,11 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
 
               } else if (this.props.ai_mode === 'Adam') {
                 randomItem = await reinforcementAI(this.props.rpsbetitems);
-                console.log("randomItem", randomItem)
                 predictedBetAmount = this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
 
-              } else if (roomInfo['selectedStrategy'] === 'Herbert') {
+              } else if (this.props.ai_mode === 'Herbert') {
                 randomItem = await patternBasedAI(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-
               } else if (this.props.ai_mode === 'Feedback') {
 
                 randomItem = await counterSwitchAI(this.props.rpsbetitems);
@@ -903,7 +901,7 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
                 randomItem = await NPC(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
 
-              } else if (this.props.ai_mode === 'Trickster') {
+              } else if (this.props.ai_mode === 'Tesla') {
                 randomItem = await generatePattern(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
 
@@ -929,6 +927,13 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
               } else if (this.props.ai_mode === 'Markov') {
                 randomItem = await predictNext(this.props.rpsbetitems, true);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+
+              } else if (this.props.ai_mode === 'Martingale') {
+                const outcome = await martingaleStrategy(this.props.rpsbetitems);
+                randomItem = outcome.move;
+                console.log(outcome.lastResult)
+                predictedBetAmount = outcome.lastResult === 'loss' ? this.props.rpsbetitems[0].bet_amount * 2 : Math.min(...betArray);
+
 
               }
 

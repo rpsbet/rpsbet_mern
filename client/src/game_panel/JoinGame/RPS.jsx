@@ -13,6 +13,8 @@ import PlayerModal from '../modal/PlayerModal';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import { updateRoomBot } from '../../redux/Logic/logic.actions';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRobot } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Button,
@@ -539,6 +541,13 @@ class RPS extends Component {
     }
   };
 
+  handleBotClick = () => {
+    const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } = this.props;
+
+    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+      callBot(creator_id, roomInfo._id, user_id, isDarkMode, updateRoomBot);
+    }
+  }
 
   // Child Component
   onBtnBetClick = async (selection) => {
@@ -684,6 +693,8 @@ class RPS extends Component {
       creator_avatar,
       rps_game_type,
       gameBackground,
+      creator_id,
+      user_id,
       playSound,
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
@@ -1142,19 +1153,26 @@ class RPS extends Component {
                   ))}
 
                 </div>
+{ creator_id && user_id && creator_id.toString() === user_id.toString() ? (
 
+  
+  <Button onClick={this.handleBotClick}  style={{ borderRadius: "9px", marginTop: "1.6em", background: "#ccc", boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px", color: "#3e4554" }}>
+          <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT?
+        </Button>
+  ) : (
                 <BetAmountInput
-                  betAmount={this.state.bet_amount}
-                  handle2xButtonClick={this.handle2xButtonClick}
-                  handleHalfXButtonClick={this.handleHalfXButtonClick}
-                  handleMaxButtonClick={this.handleMaxButtonClick}
-                  onChangeState={this.onChangeState}
-                  isDarkMode={isDarkMode}
+                betAmount={this.state.bet_amount}
+                handle2xButtonClick={this.handle2xButtonClick}
+                handleHalfXButtonClick={this.handleHalfXButtonClick}
+                handleMaxButtonClick={this.handleMaxButtonClick}
+                onChangeState={this.onChangeState}
+                isDarkMode={isDarkMode}
                 />
-
-              </div>
-            )}
-          </div>
+                
+                )}
+                </div>
+                )}
+                </div>
 
           <div className="action-panel">
             <Share roomInfo={roomInfo} />

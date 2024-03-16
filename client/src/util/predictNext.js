@@ -31,9 +31,9 @@ export const predictNext = (rps_list, hiddenMarkov = false) => {
     deviation = 0.03;
   }
 
-  let currentState1 = rps_list[rps_list.length - 3].rps;
-  let currentState2 = rps_list[rps_list.length - 2].rps;
-  let currentState3 = rps_list[rps_list.length - 1].rps;
+  let currentState1 = rps_list[2].rps;
+  let currentState2 = rps_list[1].rps;
+  let currentState3 = rps_list[0].rps;
   let nextState = currentState3;
   let maxProb = 0;
   Object.keys(transitionMatrix[currentState1][currentState2][currentState3]).forEach((state) => {
@@ -110,7 +110,6 @@ const calcWinChance = (rps_list) => {
 
 // Function to preprocess data and train the model
 async function trainModel(rpsNumeric, joinerRPSNumeric) {
-  // Convert data to TensorFlow tensors
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
   const joinerRPSTensor = tf.tensor1d(joinerRPSNumeric);
 
@@ -123,9 +122,9 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
 
   // Compile the model with Adam optimizer and sparse categorical crossentropy loss
   model.compile({
-      optimizer: 'adam',
-      loss: 'sparseCategoricalCrossentropy',
-      metrics: ['accuracy']
+    optimizer: 'adam',
+    loss: 'sparseCategoricalCrossentropy',
+    metrics: ['accuracy']
   });
 
   // Train the model
@@ -133,12 +132,11 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
 
   return model;
 }
-
 // Function to make predictions using the trained model
 async function predictNextMove(model, rpsNumeric) {
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
   const prediction = model.predict(rpsTensor);
-  const nextJoinerRPSNumeric = tf.argMax(prediction, axis=1).dataSync()[0];
+  const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0]; // Specify axis as 1
 
   let nextJoinerRPS;
   if (nextJoinerRPSNumeric === 0) nextJoinerRPS = 'R';
@@ -149,22 +147,61 @@ async function predictNextMove(model, rpsNumeric) {
 
   let bestCounterMove;
 
- // Introduce 33% chance of returning a random move
- if (Math.random() < 0.33) {
-  const randomMoveIndex = Math.floor(Math.random() * 3);
-  bestCounterMove = randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
-} else {
-  // Redefine bestCounterMove based on joiner_rps
-  if (nextJoinerRPS === 'R') bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
-  else if (nextJoinerRPS === 'P') bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
-  else bestCounterMove = Math.random() < 0.5 ? 'R' : 'S';
-}
+  // Introduce 33% chance of returning a random move
+  if (Math.random() < 0.33) {
+    const randomMoveIndex = Math.floor(Math.random() * 3);
+    bestCounterMove = randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
+  } else {
+    // Redefine bestCounterMove based on joiner_rps
+    if (nextJoinerRPS === 'R') bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
+    else if (nextJoinerRPS === 'P') bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
+    else bestCounterMove = Math.random() < 0.5 ? 'R' : 'S';
+  }
   return bestCounterMove;
+}
+
+export function martingaleStrategy(historicData) {
+  // If there's no historic data or it's the first round, play randomly
+  if (historicData.length === 0) {
+      const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+      return {
+          move: randomMove,
+          lastResult: null // No previous result
+      };
+  }
+
+  // Get the result of the previous game
+  const lastOpponentMove = historicData[0].joiner_rps;
+  const lastAIMove = historicData[0].rps;
+  const lastResult = getResult(lastAIMove, lastOpponentMove);
+
+  // Play randomly
+  const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+
+  // Return the random move along with the result of the previous game
+  return {
+      move: randomMove,
+      lastResult: lastResult // Return the result of the previous game
+  };
+}
+
+// Function to determine the result of the game based on AI's move and opponent's move
+function getResult(aiMove, opponentMove) {
+  if (aiMove === opponentMove) {
+      return 'draw';
+  } else if ((aiMove === 'R' && opponentMove === 'P') ||
+             (aiMove === 'P' && opponentMove === 'S') ||
+             (aiMove === 'S' && opponentMove === 'R')) {
+      return 'win';
+  } else {
+      return 'loss';
+  }
 }
 
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
 export async function reinforcementAI(data) {
   const historicData = data.reverse();
+
   // Convert historic data to numerical values
   const rpsNumeric = historicData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
   const joinerRPSNumeric = historicData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
@@ -178,69 +215,63 @@ export async function reinforcementAI(data) {
   // Check if recent games were wins, if not, adapt
   const recentGames = historicData.slice(-5); // Consider the last 5 games
   const recentWins = recentGames.filter(game => {
-      return (game.joiner_rps === 'R' && game.rps === 'S') ||
-             (game.joiner_rps === 'P' && game.rps === 'R') ||
-             (game.joiner_rps === 'S' && game.rps === 'P');
+    return (game.joiner_rps === 'R' && game.rps === 'S') ||
+      (game.joiner_rps === 'P' && game.rps === 'R') ||
+      (game.joiner_rps === 'S' && game.rps === 'P');
   });
 
-  if (recentWins.length !== 5) {
-      console.log("No recent wins, adapting...");
-      // Adapt the model based on recent losses
-      const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
-      const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
-      const newJoinerRPSNumeric = newData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
+  if (recentWins.length <= 1) {
+    console.log("No recent wins, adapting...");
+    // Adapt the model based on recent losses
+    const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
+    const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
+    const newJoinerRPSNumeric = newData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
 
-      // Retrain the model with the recent data
-      const updatedModel = await trainModel(newJoinerRPSNumeric, newRpsNumeric);
+    // Retrain the model with the recent data
+    const updatedModel = await trainModel(newJoinerRPSNumeric, newRpsNumeric);
 
-      // Predict the next rps again after adaptation
-      bestCounterMove = await predictNextMove(updatedModel, rpsNumeric);
+    // Predict the next rps again after adaptation
+    bestCounterMove = await predictNextMove(updatedModel, rpsNumeric);
   }
 
   return bestCounterMove;
 }
-
-
 export function patternBasedAI(historicData) {
-  // Count the number of losses
-  const totalGames = historicData.length;
-  const losses = historicData.filter(item => {
-      return (item.rps === 'R' && item.joiner_rps === 'S') || 
-             (item.rps === 'S' && item.joiner_rps === 'P') || 
-             (item.rps === 'P' && item.joiner_rps === 'R');
-  }).length;
-
-  // Check if the percentage of losses exceeds 50%
-  if (losses / totalGames > 0.5) {
-      // If the AI is losing more than 50% of the time, switch to a random move
-      const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-      return randomMove;
+  // If there's no historic data, start with a random move
+  if (historicData.length === 0) {
+    return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   }
 
-  // Analyze opponent's moves and identify patterns
+  // Analyze opponent's moves
   const opponentMoves = historicData.map(item => item.joiner_rps);
 
-  // Look for repeated patterns in the opponent's moves
-  const patternLength = 6; // Adjust the pattern length as needed
-  const uniquePatterns = new Set(opponentMoves.join('|'));
+  // Count occurrences of each move in opponent's recent moves
+  const moveCounts = {
+    'R': 0,
+    'P': 0,
+    'S': 0
+  };
 
-  let bestMove;
+  opponentMoves.slice(-10).forEach(move => {
+    moveCounts[move]++;
+  });
 
-  if (uniquePatterns.size === 1 && uniquePatterns.has('R')) {
-      // If the opponent always plays Rock, counter with Paper
-      bestMove = 'P';
-  } else if (uniquePatterns.size === 1 && uniquePatterns.has('P')) {
-      // If the opponent always plays Paper, counter with Scissors
-      bestMove = 'S';
-  } else if (uniquePatterns.size === 1 && uniquePatterns.has('S')) {
-      // If the opponent always plays Scissors, counter with Rock
-      bestMove = 'R';
-  } else {
-      // Otherwise, play a random move
-      bestMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+  // Determine the most frequent move by the opponent
+  const mostFrequentMove = Object.keys(moveCounts).reduce((a, b) => moveCounts[a] > moveCounts[b] ? a : b);
+
+  // Choose the move that beats the opponent's most frequent move
+  switch (mostFrequentMove) {
+    case 'R':
+      return 'P'; // Beat Rock with Paper
+    case 'P':
+      return 'S'; // Beat Paper with Scissors
+    case 'S':
+      return 'R'; // Beat Scissors with Rock
+    default:
+      // In case of unexpected input, play randomly
+      return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   }
 
-  return bestMove;
 }
 
 export function counterSwitchAI(historicData) {
@@ -284,8 +315,8 @@ export function counterSwitchAI(historicData) {
 
 export function counterRandomness(historicData) {
   if (historicData.length < 3) {
-      // If historicData has less than 3 moves, return false
-      return { counterMove: null, risk: 2 };
+    // If historicData has less than 3 moves, return false
+    return { counterMove: null, risk: 2 };
   }
 
   // Get the AI's most recent move
@@ -299,28 +330,28 @@ export function counterRandomness(historicData) {
   const penultimateSameAsLast = penultimateMove === lastMove;
   // Check if the third-to-last move is the same as the last move
   const thirdToLastSameAsLast = thirdToLastMove === penultimateMove && penultimateSameAsLast;
-  
+
   let counterMove;
   switch (lastMove) {
-      case 'R':
-          counterMove = 'S';
-          break;
-      case 'P':
-          counterMove = 'R';
-          break;
-      case 'S':
-          counterMove = 'P';
-          break;
-      default:
-          counterMove = getRandomMove(); // Handle unexpected cases
+    case 'R':
+      counterMove = 'S';
+      break;
+    case 'P':
+      counterMove = 'R';
+      break;
+    case 'S':
+      counterMove = 'P';
+      break;
+    default:
+      counterMove = getRandomMove(); // Handle unexpected cases
   }
 
   let risk;
 
   if (penultimateSameAsLast && !thirdToLastSameAsLast) {
-      risk = 2;
+    risk = 2;
   } else if (penultimateSameAsLast && thirdToLastSameAsLast) {
-      risk = 3;
+    risk = 3;
   } else {
     risk = 1;
   }
@@ -331,17 +362,17 @@ export function counterRandomness(historicData) {
 
 
 export function NPC(historicData) {
-    // Get the AI's most recent move
-    const lastMove = historicData[0].joiner_rps;
-    // Check if the penultimate move is the same as the last move
-  
+  // Get the AI's most recent move
+  const lastMove = historicData[0].joiner_rps;
+  // Check if the penultimate move is the same as the last move
+
   return lastMove;
 }
 
 // Utility function to get a random move (if needed)
 function getRandomMove() {
-    const moves = ['R', 'P', 'S'];
-    return moves[Math.floor(Math.random() * moves.length)];
+  const moves = ['R', 'P', 'S'];
+  return moves[Math.floor(Math.random() * moves.length)];
 }
 
 export function generatePattern(allBetItems) {
