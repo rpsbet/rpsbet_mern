@@ -35,7 +35,7 @@ import {
   getStrategies,
   deductBalanceWhenStartBrainGame
 } from '../../redux/Logic/logic.actions';
-import { predictNext, reinforcementAI,martingaleStrategy,  patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
+import { predictNext, reinforcementAI,martingaleStrategy, patternBasedAI, counterSwitchAI, generatePattern, counterRandomness, NPC } from '../../util/predictNext';
 import ChatPanel from '../ChatPanel/ChatPanel';
 import { Tabs, Tab } from '@material-ui/core';
 import MyGamesTable from '../MyGames/MyGamesTable';
@@ -420,7 +420,7 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
   const allStates = Array.from(new Set(betArray)); // Get all unique states
 
   if (penultimateSameAsLast !== 0) {
-      if (penultimateSameAsLast === 3) {
+      if (penultimateSameAsLast >= 3) {
           // Return the highest value from allStates without 50%
           const maxState = Math.max(...allStates);
           return maxState;
@@ -881,10 +881,16 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
 
               } else if (this.props.ai_mode === 'Adam') {
-                randomItem = await reinforcementAI(this.props.rpsbetitems);
-                predictedBetAmount = this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
+                const nextMove = await reinforcementAI(this.props.rpsbetitems);
+                randomItem = nextMove.move;
+                predictedBetAmount = this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
 
-              } else if (this.props.ai_mode === 'Herbert') {
+              } else if (this.props.ai_mode === 'Sniper') {
+                const nextMove = await reinforcementAI(this.props.rpsbetitems);
+                randomItem = nextMove.move;
+                predictedBetAmount = nextMove.risk === 4 ? (this.props.user_balance < parseFloat(roomInfo.user_bet) ? this.props.user_balance : parseFloat(roomInfo.user_bet)) : Math.min(...betArray);
+
+              } else if (this.props.ai_mode === 'Hertz') {
                 randomItem = await patternBasedAI(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
               } else if (this.props.ai_mode === 'Feedback') {
@@ -931,8 +937,7 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
               } else if (this.props.ai_mode === 'Martingale') {
                 const outcome = await martingaleStrategy(this.props.rpsbetitems);
                 randomItem = outcome.move;
-                console.log(outcome.lastResult)
-                predictedBetAmount = outcome.lastResult === 'loss' ? this.props.rpsbetitems[0].bet_amount * 2 : Math.min(...betArray);
+                predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 2 : Math.min(...betArray);
 
 
               }

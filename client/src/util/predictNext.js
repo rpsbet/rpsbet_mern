@@ -132,10 +132,12 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
 
   return model;
 }
+
 // Function to make predictions using the trained model
 async function predictNextMove(model, rpsNumeric) {
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
   const prediction = model.predict(rpsTensor);
+  const probabilities = prediction.dataSync(); // Get the array of probabilities
   const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0]; // Specify axis as 1
 
   let nextJoinerRPS;
@@ -143,7 +145,21 @@ async function predictNextMove(model, rpsNumeric) {
   else if (nextJoinerRPSNumeric === 1) nextJoinerRPS = 'P';
   else nextJoinerRPS = 'S';
 
-  console.log("Predicted next joiner_rps:", nextJoinerRPS);
+  // Log the chosen move and its probability
+  console.log("Predicted next rps:", nextJoinerRPS, "with probability:", probabilities[nextJoinerRPSNumeric]);
+
+  let risk;
+  
+  // Determine risk level based on probability
+  if (probabilities[nextJoinerRPSNumeric] > 0.9 && probabilities[nextJoinerRPSNumeric] <= 0.95) {
+    risk = 3;
+  } else if (probabilities[nextJoinerRPSNumeric] > 0.95) {
+    risk = 4;
+  } else if (probabilities[nextJoinerRPSNumeric] > 0.7) {
+    risk = 2;
+  } else {
+    risk = 1;
+  }
 
   let bestCounterMove;
 
@@ -157,47 +173,9 @@ async function predictNextMove(model, rpsNumeric) {
     else if (nextJoinerRPS === 'P') bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
     else bestCounterMove = Math.random() < 0.5 ? 'R' : 'S';
   }
-  return bestCounterMove;
+
+  return { move: bestCounterMove, risk: risk };
 }
-
-export function martingaleStrategy(historicData) {
-  // If there's no historic data or it's the first round, play randomly
-  if (historicData.length === 0) {
-      const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-      return {
-          move: randomMove,
-          lastResult: null // No previous result
-      };
-  }
-
-  // Get the result of the previous game
-  const lastOpponentMove = historicData[0].joiner_rps;
-  const lastAIMove = historicData[0].rps;
-  const lastResult = getResult(lastAIMove, lastOpponentMove);
-
-  // Play randomly
-  const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-
-  // Return the random move along with the result of the previous game
-  return {
-      move: randomMove,
-      lastResult: lastResult // Return the result of the previous game
-  };
-}
-
-// Function to determine the result of the game based on AI's move and opponent's move
-function getResult(aiMove, opponentMove) {
-  if (aiMove === opponentMove) {
-      return 'draw';
-  } else if ((aiMove === 'R' && opponentMove === 'P') ||
-             (aiMove === 'P' && opponentMove === 'S') ||
-             (aiMove === 'S' && opponentMove === 'R')) {
-      return 'win';
-  } else {
-      return 'loss';
-  }
-}
-
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
 export async function reinforcementAI(data) {
   const historicData = data.reverse();
@@ -209,8 +187,10 @@ export async function reinforcementAI(data) {
   // Train the model with the existing data
   const model = await trainModel(joinerRPSNumeric, rpsNumeric);
 
-  // Predict the rps
-  let bestCounterMove = await predictNextMove(model, rpsNumeric);
+  // Predict the rps and get the risk level
+  let prediction = await predictNextMove(model, rpsNumeric);
+  let bestCounterMove = prediction.move;
+  let risk = prediction.risk;
 
   // Check if recent games were wins, if not, adapt
   const recentGames = historicData.slice(-5); // Consider the last 5 games
@@ -231,11 +211,14 @@ export async function reinforcementAI(data) {
     const updatedModel = await trainModel(newJoinerRPSNumeric, newRpsNumeric);
 
     // Predict the next rps again after adaptation
-    bestCounterMove = await predictNextMove(updatedModel, rpsNumeric);
+    prediction = await predictNextMove(updatedModel, rpsNumeric);
+    bestCounterMove = prediction.move;
+    risk = prediction.risk;
   }
 
-  return bestCounterMove;
+  return { move: bestCounterMove, risk: risk };
 }
+
 export function patternBasedAI(historicData) {
   // If there's no historic data, start with a random move
   if (historicData.length === 0) {
@@ -429,5 +412,43 @@ export function generatePattern(allBetItems) {
     // If no matching pattern found, return a random move
     const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)]; // Generate a random move
     return randomMove;
+  }
+}
+
+export function martingaleStrategy(historicData) {
+  // If there's no historic data or it's the first round, play randomly
+  if (historicData.length === 0) {
+      const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+      return {
+          move: randomMove,
+          lastResult: null // No previous result
+      };
+  }
+
+  // Get the result of the previous game
+  const lastOpponentMove = historicData[0].joiner_rps;
+  const lastAIMove = historicData[0].rps;
+  const lastResult = getResult(lastAIMove, lastOpponentMove);
+
+  // Play randomly
+  const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+
+  // Return the random move along with the result of the previous game
+  return {
+      move: randomMove,
+      lastResult: lastResult // Return the result of the previous game
+  };
+}
+
+// Function to determine the result of the game based on AI's move and opponent's move
+function getResult(aiMove, opponentMove) {
+  if (aiMove === opponentMove) {
+      return 'draw';
+  } else if ((aiMove === 'R' && opponentMove === 'P') ||
+             (aiMove === 'P' && opponentMove === 'S') ||
+             (aiMove === 'S' && opponentMove === 'R')) {
+      return 'win';
+  } else {
+      return 'loss';
   }
 }

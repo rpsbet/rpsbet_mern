@@ -11,7 +11,7 @@ const GameLog = require('../../model/GameLog');
 const convertToCurrency = require('./conversion');
 const socket = require('../../socketController')
 const moment = require('moment');
-const { predictNext, reinforcementAI, martingaleStrategy, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
+const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
 
 let user_access_log = {};
 
@@ -536,7 +536,7 @@ const executeBet = async (req, bot = false) => {
                         case 'Adam':
                             nextItem = await reinforcementAI(allBetItems);
                             break;
-                        case 'Herbert':
+                        case 'Hertz':
                             nextItem = await patternBasedAI(allBetItems);
                             break;
                         case 'Feedback':
