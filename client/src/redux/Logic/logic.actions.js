@@ -530,7 +530,19 @@ export const updateUserStrategy= (user_id, strategy) => async dispatch => {
     const res = await axios.patch(`/game/strategies/${user_id}`, { strategy });
     if (res.data.success) {
       
-      // Dispatch an action or handle success as needed
+      dispatch({ type: MSG_SUCCESS, payload: "AUTOPLAY STRATEGY UPDATED" });
+    }
+  } catch (err) {
+    // Handle errors
+  }
+};
+
+export const updateRoomStrategy= (room_id, strategy) => async dispatch => {
+  try {
+    const res = await axios.patch(`/game/room/strategies/${room_id}`, { strategy });
+    if (res.data.success) {
+      
+      dispatch({ type: MSG_SUCCESS, payload: "ROOM STRATEGY UPDATED" });
     }
   } catch (err) {
     // Handle errors

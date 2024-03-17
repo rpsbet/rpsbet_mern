@@ -1,7 +1,9 @@
 const tf = require('@tensorflow/tfjs-node');
 
 const predictNext = (rps_list, markov = false) => {
-  // console.log("S")
+  if (rps_list.length === 0) {
+    return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+  }
   const transitionMatrix = {
     R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
     P: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
@@ -176,6 +178,9 @@ async function predictNextMove(model, rpsNumeric) {
 
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
 async function reinforcementAI(data) {
+  if (data.length === 0) {
+    return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+  }
   const historicData = data.reverse();
   // Convert historic data to numerical values
   const rpsNumeric = historicData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));

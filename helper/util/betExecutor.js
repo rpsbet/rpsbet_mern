@@ -585,10 +585,15 @@ const executeBet = async (req, bot = false) => {
                     }
 
                     async function getNextItemUsingMarkov(allBetItems) {
+                        if (allBetItems.length <= 3) {
+                            return getRandomItem();
+                        }
+                        
                         const transformedItems = allBetItems.map(item => ({ rps: item.joiner_rps }));
                         const nextItem = await predictNext(transformedItems, true);
                         return nextItem;
                     }
+                    
 
                 }
 

@@ -126,6 +126,31 @@ router.patch('/rooms/:room_id', async (req, res) => {
   }
 });
 
+router.patch('/room/strategies/:room_id', async (req, res) => {
+  const { room_id } = req.params;
+  const { strategy } = req.body;
+
+  try {
+    const room = await Room.findByIdAndUpdate(room_id, { selectedStrategy: strategy }, { new: true });
+
+    if (!room) {
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Room strategy updated successfully!',
+      room: room // Optionally, you might return the updated room object.
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message // Include error message for debugging
+    });
+  }
+});
+
 
 router.post('/checkGamePassword', async (req, res) => {
   try {
@@ -1712,6 +1737,7 @@ const getMyRooms = async (
         is_private: room.is_private,
         status: room.status,
         created_at: room.created_at,
+        selectedStrategy: room.selectedStrategy,
         // statistics: '',
         net_profit: '',
         bets: ''

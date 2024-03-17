@@ -4,12 +4,14 @@ import { setBalance } from '../../redux/Auth/user.actions';
 import Modal from 'react-modal';
 import axios from '../../util/Api';
 import { Warning, Link } from '@material-ui/icons';
-
+import SettingsRef from '../../components/SettingsRef';
 import {
   getMyGames,
   endGame,
   unstake,
-  addNewTransaction
+  addNewTransaction,
+  getStrategies,
+  updateRoomStrategy
 } from '../../redux/Logic/logic.actions';
 import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -22,6 +24,8 @@ import {
 } from '../../redux/Logic/logic.actions';
 import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
 // import Pagination from '../../components/Pagination';
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import AddCircleOutline from '@material-ui/icons/AddCircleOutline';
@@ -35,7 +39,7 @@ import pressHold from '../LottieAnimations/pressHold.json';
 import InlineSVG from 'react-inlinesvg';
 import busdSvg from '../JoinGame/busd.svg';
 
-import { Box, Button, ButtonGroup, Menu, MenuItem, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
+import { Box, Button, ButtonGroup, Menu, MenuItem, Tooltip, IconButton, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 
@@ -80,20 +84,32 @@ class MyGamesTable extends Component {
       creatingRoom: false,
       myGames: this.props.myGames,
       isLoading: true,
+      selectedStrategy: null,
       isTopUpModalOpen: false,
       isPayoutModalOpen: false,
       selectedRow: null,
       paymentMethod: 'manual',
       payoutAmount: 0,
-      isFocused: false
+      isFocused: false,
+      settings_panel_opened: false
     };
+    this.settingsRef = React.createRef();
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.handleSettingsIconClick = this.handleSettingsIconClick.bind(this);
   }
 
 
   async componentDidMount() {
     await this.fetchData();
+    document.addEventListener('mousedown', this.handleClickOutside);
+
   }
- 
+
+  componentWillUnmount() {
+    document.removeEventListener('mousedown', this.handleClickOutside);
+
+  }
+
   componentDidUpdate(prevProps, prevState) {
     if (
       this.state.selectedFilter !== prevState.selectedFilter ||
@@ -103,22 +119,29 @@ class MyGamesTable extends Component {
       this.fetchData();
     }
 
-   
+
     if (
       this.props.myGamesWithStats !== prevProps.myGamesWithStats) {
       this.setState({ myGames: this.props.myGames, isLoading: false })
     }
 
     if (prevProps.myGames !== this.props.myGames) {
-        this.setState({ myGames: this.props.myGames, isLoading: false });
+      this.setState({ myGames: this.props.myGames, isLoading: false });
     }
   }
+
+  handleSettingsIconClick = (row) => {
+    console.log(row)
+    this.setState({ settings_panel_opened: !this.state.settings_panel_opened, selectedRow: row });
+  };
 
   fetchData = () => {
     const { selectedFilter, selectedGameType, selectedSort } = this.state;
     this.setState({
       myGames: this.props.myGames,
     });
+    this.props.getStrategies();
+
     this.props.getMyGames({
       game_type: selectedGameType,
       status: selectedFilter === 'open' ? 'open' : 'finished',
@@ -275,7 +298,7 @@ class MyGamesTable extends Component {
 
   openRecreateModal = (row) => {
     alertModal(this.props.isDarkMode, `YOU DO NOT OWN A GAME RESTORER. GO TO MARKETPLACE TO PURCHASE`);
-      return;
+    return;
     // confirmModalCreate(
     //   this.props.isDarkMode,
     //   'CONFIRM RE-CREATE GAME?',
@@ -619,6 +642,16 @@ class MyGamesTable extends Component {
     });
   };
 
+  handleClickOutside = e => {
+    if (
+      this.settingsRef &&
+      this.settingsRef.current &&
+      !this.settingsRef.current.contains(e.target)
+    ) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
+
 
   handleMaxButtonClick = () => {
     // Check if there's a selectedLoan
@@ -642,6 +675,10 @@ class MyGamesTable extends Component {
     this.setState({ isFocused: true });
   };
 
+  setSelectedStrategy = (selectedStrategy) => {
+    this.setState({ selectedStrategy });
+  }
+
 
   handleCreateBtnClicked = e => {
     e.preventDefault();
@@ -651,7 +688,7 @@ class MyGamesTable extends Component {
     }
     const selectedGameType = this.props.gameTypeList.find(
       gameType => gameType.short_name === this.state.selectedGameType
-      );
+    );
     if (selectedGameType) {
       this.props.setGameMode(selectedGameType.game_type_name);
       history.push(`/create/${selectedGameType.game_type_name}`);
@@ -680,8 +717,8 @@ class MyGamesTable extends Component {
 
   render() {
     const gameTypePanel = this.generateGameTypePanel();
-    const { loading } = this.props;
-    const { isLoading, anchorEl, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
+    const { loading, strategies, user, updateRoomStrategy } = this.props;
+    const { isLoading, anchorEl, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
 
     return (
       <div className="my-open-games">
@@ -772,6 +809,19 @@ class MyGamesTable extends Component {
               </MenuItem>
             </Menu>
           </div> */}
+          {selectedRow && (
+
+            <SettingsRef
+              strategies={strategies}
+              ai_mode={selectedRow.selectedStrategy}
+              user_id={selectedRow._id}
+              settings_panel_opened={settings_panel_opened}
+              setSelectedStrategy={this.setSelectedStrategy}
+              settingsRef={this.settingsRef}
+              selectedStrategy={selectedStrategy}
+              updateUserStrategy={updateRoomStrategy}
+            />
+          )}
           <div className="create-room-btn-panel">
             <Button
               className="btn-create-room"
@@ -790,14 +840,15 @@ class MyGamesTable extends Component {
             {this.props.myGames.length > 0 && (
               <div className="table-header">
                 <div className="table-cell room-id">Room ID</div>
-                <div className="table-cell payout">
-                  BANKROLL
+                <div className="table-cell payout" style={{ paddingLeft: "100px", paddingRight: "20px" }}>
+                  STAKE
                 </div>
-                <div className="table-cell winnings">Payout</div>
-                <div className="table-cell bet-info">Net Profit</div>
+                <div className="table-cell winnings" style={{ paddingLeft: "40px" }}>Payout</div>
+                <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit</div>
                 <div className="table-cell winnings">Plays</div>
+                <div className="table-cell winnings">Strategy</div>
 
-                <div className="table-cell action desktop-only">Unstake / Re-Create</div>
+                <div className="table-cell action desktop-only">Action</div>
               </div>
             )}
             {this.state.myGames.length === 0 ? (
@@ -838,7 +889,7 @@ class MyGamesTable extends Component {
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
                           {/* Display the bet amount */}
-                          {convertToCurrency(row.bet_amount)}
+                          {convertToCurrency(row.winnings)}
 
                           {/* Add the Font Awesome edit icon with onClick functionality */}
                         </span>
@@ -909,10 +960,22 @@ class MyGamesTable extends Component {
                             &nbsp;
                             <span>{row.bets}</span>
                           </div>
+
                         </>
                       )}
+                      <div className="table-cell winnings">
 
+                        <Tooltip title="CHANGE AUTOPLAY STRATEGY">
+                          <a
+                            style={{ borderRadius: "200px", cursor: "pointer", padding: "1px", display: "flex", justifyContent: "center", alignItems: "center" }}
+                            onClick={() => this.handleSettingsIconClick(row)}
+                          >
 
+                            <SettingsOutlinedIcon
+                            />
+                          </a>
+                        </Tooltip>
+                      </div>
                       <div className="table-cell action desktop-only">
                         {row.status === 'finished' ? (
                           <Button
@@ -933,7 +996,7 @@ class MyGamesTable extends Component {
                                     onClick={() => this.unstake(row.winnings, row._id)}
 
                                   >
-                                    Unstake <span>{convertToCurrency(row.winnings)}</span>
+                                    Unstake
                                   </Button>
                                 ) : (
                                   <Button
@@ -964,9 +1027,7 @@ class MyGamesTable extends Component {
                                       </>
                                     ) : (
                                       <>
-                                        {' '}
-                                        RUG&nbsp;
-                                        <span>{convertToCurrency(row.winnings)}</span>
+                                        RUG
                                       </>
                                     )}
                                   </Button>
@@ -1014,9 +1075,7 @@ class MyGamesTable extends Component {
                             </>
                           ) : (
                             <>
-                              {' '}
-                              RUG&nbsp;
-                              <span>{convertToCurrency(row.winnings)}</span>
+                              RUG
                             </>
                           )}
                         </Button>
@@ -1053,10 +1112,10 @@ class MyGamesTable extends Component {
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
               <h2 className="modal-title">
-              <FontAwesomeIcon icon={faPiggyBank} className="mr-2" />
+                <FontAwesomeIcon icon={faPiggyBank} className="mr-2" />
 
-                BANKROLL
-                </h2>
+                STAKE
+              </h2>
               <Button className="btn-close" onClick={this.handleCloseTopUpModal}>
                 ×
               </Button>
@@ -1180,10 +1239,10 @@ class MyGamesTable extends Component {
           <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
             <div className="modal-header">
               <h2 className="modal-title">
-              <FontAwesomeIcon icon={faMoneyCheckAlt} className="mr-2" />
+                <FontAwesomeIcon icon={faMoneyCheckAlt} className="mr-2" />
 
                 AUTO-PAYOUT
-                </h2>
+              </h2>
               <Button className="btn-close" onClick={this.handleClosePayoutModal}>
                 ×
               </Button>
@@ -1272,6 +1331,8 @@ const mapStateToProps = state => ({
   socket: state.auth.socket,
   game_mode: state.logic.game_mode,
   balance: state.auth.balance,
+  user: state.auth.user,
+  strategies: state.logic.strategies,
   loading: state.logic.isActiveLoadingOverlay
 });
 
@@ -1280,8 +1341,10 @@ const mapDispatchToProps = {
   unstake,
   createRoom,
   getMyGames,
+  getStrategies,
   addNewTransaction,
   setGameMode,
+  updateRoomStrategy,
   setBalance,
   reCreateRoom
 };

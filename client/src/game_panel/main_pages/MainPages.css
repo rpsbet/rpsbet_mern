@@ -312,7 +312,7 @@ div.table .table-cell button.btn_join img {
 }
 
 .overflowX {
-  position: sticky;
+  /* position: sticky; */
     top: 0px;
     z-index: 2;
     background: #f9f9f9;
@@ -1198,7 +1198,6 @@ div.table.my-open-game-table {
 }
 
 .btn_end {
-  width: 155px;
   height: 32px;
   background: linear-gradient(0deg, rgb(87, 202, 34), #2d8105) padding-box !important;
   box-shadow: 0 2px 14px #47cc09, inset 0 -2px #2d8105, inset 0 2px #05c224 !important;
