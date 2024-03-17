@@ -157,7 +157,7 @@ async function predictNextMove(model, rpsNumeric) {
   else if (nextJoinerRPSNumeric === 1) nextJoinerRPS = 'P';
   else nextJoinerRPS = 'S';
 
-  console.log("Predicted next joiner_rps:", nextJoinerRPS);
+  // console.log("Predicted next joiner_rps:", nextJoinerRPS);
 
   let bestCounterMove;
 

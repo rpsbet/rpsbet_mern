@@ -189,6 +189,7 @@ class ChatPanel extends Component {
           sender: this.props.userName,
           senderId: this.props.user._id,
           message: JSON.stringify(message),
+          rank: this.props.user.totalWagered,
           avatar: this.props.user.avatar,
           accessory: this.props.user.accessory,
           messageType: 'gif'

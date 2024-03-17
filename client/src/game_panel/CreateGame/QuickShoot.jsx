@@ -401,7 +401,7 @@ class QuickShoot extends Component {
     } else {
       alertModal(
         isDarkMode,
-        'PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA!'
+        'PURR-HAPS YOU SHOULD BET MANUALLY FOR AT LEAST 3 TURNS TO TRAIN THE AUTOPLAY'
       );
       return;
     }

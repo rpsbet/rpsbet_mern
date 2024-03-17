@@ -380,7 +380,7 @@ class RPS extends Component {
     } else {
       alertModal(
         this.props.isDarkMode,
-        'PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA'
+        'PURR-HAPS YOU SHOULD CREATE AT LEAST 3 TURNS TO TRAIN THE AUTOPLAY'
       );
       return;
     }

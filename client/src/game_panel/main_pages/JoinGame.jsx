@@ -733,7 +733,9 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
       return;
     }
 
-
+    if (!validateLocalStorageLength(this.props.rpsbetitems, isDarkMode)) {
+      return;
+    }
 
     if (betting) {
       this.stopBetting();
@@ -763,64 +765,64 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
 
   startBetting = async betArray => {
     const { isDarkMode, openGamePasswordModal, roomInfo, balance, getRpsBetItems } = this.props;
-    let storageName;
+    // let storageName;
 
-    switch (roomInfo.game_type) {
-      case 'Quick Shoot':
-        storageName = `qs_array_${roomInfo.qs_game_type}`;
+    // switch (roomInfo.game_type) {
+    //   case 'Quick Shoot':
+    //     storageName = `qs_array_${roomInfo.qs_game_type}`;
 
-        // if (
-        //   !validateBankroll(
-        //     bet_amount / (qs_game_type - 1) +
-        //     parseFloat(bet_amount) -
-        //     bankroll * (qs_game_type - 1),
-        //     bankroll,
-        //     isDarkMode
-        //   )
-        // ) {
-        //   // Display an error message or handle the case when bankroll validation fails
-        //   return;
-        // }
+    //     if (
+    //       !validateBankroll(
+    //         bet_amount / (qs_game_type - 1) +
+    //         parseFloat(bet_amount) -
+    //         bankroll * (qs_game_type - 1),
+    //         bankroll,
+    //         isDarkMode
+    //       )
+    //     ) {
+    //       // Display an error message or handle the case when bankroll validation fails
+    //       return;
+    //     }
 
-        break;
-      // case 'Bang!':
-      //   storageName = 'bang_array';
-      //   break;
-      // case 'Spleesh!':
-      //   if (this.props.spleesh_bet_unit === 0.1) {
-      //     storageName = 'spleesh_10_array';
-      //   } else if (this.props.spleesh_bet_unit === 0.01) {
-      //     storageName = 'spleesh_001_array';
-      //   } else {
-      //     storageName = 'spleesh_array';
-      //   }
+    //     break;
+    //   case 'Bang!':
+    //     storageName = 'bang_array';
+    //     break;
+    //   case 'Spleesh!':
+    //     if (this.props.spleesh_bet_unit === 0.1) {
+    //       storageName = 'spleesh_10_array';
+    //     } else if (this.props.spleesh_bet_unit === 0.01) {
+    //       storageName = 'spleesh_001_array';
+    //     } else {
+    //       storageName = 'spleesh_array';
+    //     }
 
 
-      //   break;
-      // case 'Mystery Box':
-      //   storageName = 'bet_array';
+    //     break;
+    //   case 'Mystery Box':
+    //     storageName = 'bet_array';
 
-      //   break;
-      // case 'Blackjack':
-      //   storageName = 'bj_array';
-      //   break;
-      // case 'Brain Game':
-      //   storageName = `score_array_${roomInfo.brain_game_type}`;
-      //   break;
-      // case 'Drop Game':
-      //   storageName = 'drop_array';
+    //     break;
+    //   case 'Blackjack':
+    //     storageName = 'bj_array';
+    //     break;
+    //   case 'Brain Game':
+    //     storageName = `score_array_${roomInfo.brain_game_type}`;
+    //     break;
+    //   case 'Drop Game':
+    //     storageName = 'drop_array';
 
-      //   break;
-      default:
-        storageName = `rps_array`;
+    //     break;
+    //   default:
+    //     storageName = `rps_array`;
 
-    }
+    // }
 
-    if (!validateLocalStorageLength(storageName, isDarkMode)) {
-      return;
-    }
-    const stored_array =
-      JSON.parse(localStorage.getItem(storageName)) || [];
+    // if (!validateLocalStorageLength(storageName, isDarkMode)) {
+    //   return;
+    // }
+    // const stored_array =
+    //   JSON.parse(localStorage.getItem(storageName)) || [];
     if (this.props.rpsbetitems.length === 0) {
       // If rpsbetitems is not yet populated, fetch it
       try {
@@ -839,6 +841,7 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
 
 
         await getRpsBetItems(roomInfo._id);
+      
         switch (roomInfo.game_type) {
           case 'Quick Shoot':
             randomItem = this.predictNextQs(stored_array, roomInfo.qs_game_type);

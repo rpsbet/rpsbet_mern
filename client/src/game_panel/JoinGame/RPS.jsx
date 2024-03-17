@@ -653,10 +653,10 @@ class RPS extends Component {
   };
 
   handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000; // Round down to two decimal places
+    const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000;
     this.setState(
       {
-        bet_amount: Math.min(maxBetAmount, this.props.bet_amount)
+        bet_amount: Math.min(maxBetAmount, this.state.bankroll)
       },
       () => {
         document.getElementById('betamount').focus();
