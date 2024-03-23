@@ -523,7 +523,7 @@ class PlayerModal extends Component {
                           variant="filled"
                           autoComplete="off"
                           InputProps={{
-                            endAdornment: 'ETH'
+                            endAdornment: 'RPS'
                           }}
                           className="form-control"
                         />

@@ -4,7 +4,7 @@ import history from '../../redux/history';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXTwitter, faTelegram, faYoutube, faDiscord } from '@fortawesome/free-brands-svg-icons';
 import bscscan from '../icons/etherscan-logo.svg';
-import busd from '../icons/b-usd.png';
+import bnb from '../icons/bnb.png';
 import btc from '../icons/btc.png';
 import eth from '../icons/eth.png';
 import ltc from '../icons/ltc.png';
@@ -82,6 +82,8 @@ const styles = (theme) => ({
     availableCurrency: {
         width: '42px',
         filter: 'none',
+        marginRight: '10px',
+
     },
 });
 
@@ -174,10 +176,11 @@ class Footer extends Component {
                     </a> */}
                     </div>
                     <div className={classes.currencies}>
-                        <img className={classes.currency} src={busd} alt="BUSD" />
-                        <img className={classes.currency} src={btc} alt="BTC" />
+                        <img className={classes.availableCurrency} src={bnb} alt="BNB" />
+                        <img className={classes.availableCurrency} src={btc} alt="BTC" />
                         <img className={classes.availableCurrency} src={eth} alt="ETH" />
-                        <img className={classes.currency} src={ltc} alt="LTC" />
+                        <img className={classes.availableCurrency} src={ltc} alt="LTC" />
+<span>+ 50 MORE!</span>
                     </div>
                     <div className={classes.proof}>
                         {/* <p>Proof of Funds</p>

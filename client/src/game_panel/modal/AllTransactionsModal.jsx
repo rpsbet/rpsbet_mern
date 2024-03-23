@@ -323,9 +323,14 @@ class AllTransactionsModal extends Component {
                               </TableCell>
                               <TableCell className="hash">
                                 {transaction.hash ? (
-                                  <a href={`https://etherscan.io/tx/${transaction.hash}`} target="_blank" rel="noopener noreferrer">
-                                    <Link />
-                                  </a>
+                                  transaction.hash.startsWith('0x') ? (
+                                    <a href={`https://etherscan.io/tx/${transaction.hash}`} target="_blank" rel="noopener noreferrer">
+                                      <Link />
+                                    </a>
+                                  ) : (
+                                    // If the hash doesn't start with '0x', don't display any link
+                                    ''
+                                  )
                                 ) : transaction.room ? (
                                   <a href={`/join/${transaction.room}`} target="_blank" rel="noopener noreferrer">
                                     <Link />
@@ -335,15 +340,17 @@ class AllTransactionsModal extends Component {
                                   ''
                                 )}
                               </TableCell>
+
                               <TableCell>
                                 <a style={{ padding: '2.5px', cursor: 'pointer' }}>
                                   <FaClipboard
                                     className="clipboard-icon"
-                                    onClick={() => this.copyToClipboard(transaction._id)}
+                                    onClick={() => this.copyToClipboard(transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id)}
                                   />
-                                  {this.state.copiedRowId === transaction._id && <span style={{ marginLeft: '5px' }}>Copied!</span>}
+                                  {this.state.copiedRowId === (transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id) && <span style={{ marginLeft: '5px' }}>Copied!</span>}
                                 </a>
                               </TableCell>
+
                             </TableRow>
                           ))
                         )}

@@ -24,17 +24,18 @@ function check_access_time(user_id) {
     return check_result;
 }
 
-const executeBet = async (req, bot = false) => {
+const executeBet = async (req) => {
+
     try {
         const tax = await SystemSetting.findOne({ name: 'commission' });
         const rain = await SystemSetting.findOne({ name: 'rain' });
         const platform = await SystemSetting.findOne({ name: 'platform' });
         let responseData = {};
-        let user = req.user;
-        if (bot) {
+        const user = req.user;
 
-            user = await User.findOne({ username: { $regex: 'BOT', $options: 'i' } });
-        }
+        // if (bot) {
+        //     user = await User.findOne({ username: { $regex: 'BOT', $options: 'i' } });
+        // }
         // const RockType = ['Rock', 'MoonRock', 'QuickBall'];
         // const PaperType = [
         //   'Paper',
@@ -923,7 +924,7 @@ const executeBet = async (req, bot = false) => {
                     const reversedLastFiveBetItems = lastFiveBetItems.slice().reverse();
 
                     if (req.io.sockets && reversedLastFiveBetItems.length > 0) {
-                        req.io.sockets.emit('UPDATED_BANKROLL', {
+                        req.io.sockets.emit(`UPDATED_BANKROLL_${req.body._id}`, {
                             bankroll: roomInfo['user_bet'],
                             rps: reversedLastFiveBetItems,
                             user: user
@@ -937,7 +938,7 @@ const executeBet = async (req, bot = false) => {
                         .filter(item => item.joiner_rps !== '')
                         .slice(-5);
                     if (rps.length > 0 && req.io) {
-                        req.io.emit('UPDATED_BANKROLL', {
+                        req.io.emit(`UPDATED_BANKROLL_${req.body._id}`, {
                             bankroll: roomInfo['user_bet'],
                             rps: rps
                         });
@@ -2788,7 +2789,7 @@ const executeBet = async (req, bot = false) => {
 
             // Save the changes to the user document
             await user.save();
-
+        
             newGameLog.save();
             await roomInfo.save();
 

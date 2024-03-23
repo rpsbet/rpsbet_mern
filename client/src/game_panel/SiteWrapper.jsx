@@ -211,6 +211,7 @@ class SiteWrapper extends Component {
       isLive: false,
       showAllGameLogs: false,
       transactions: [],
+      isHovered: false,
       websiteLoading: true,
       anchorEl: null,
       sortAnchorEl: null,
@@ -921,6 +922,14 @@ async componentDidMount() {
     }));
   };
 
+  handleMouseEnter = () => {
+    this.setState({ isHovered: true });
+  };
+
+  handleMouseLeave = () => {
+    this.setState({ isHovered: false });
+  };
+
   disconnectWeb3 = async () => {
     this.setState({
       web3account: null,
@@ -940,6 +949,7 @@ async componentDidMount() {
       searchQuery,
       sortType,
       filterType,
+      isHovered,
       web3,
       oldBalance,
       web3account,
@@ -984,10 +994,8 @@ async componentDidMount() {
     } = this.props;
     const balanceString = balance.toString();
     const decimalIndex = balanceString.indexOf('.');
-    const numDecimals =
-      decimalIndex !== -1
-        ? Math.min(balanceString.length - decimalIndex - 1, 5)
-        : 0;
+    const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
+    
     const notificationsArray = updateFromNow(Object.values(notifications));
 
     const valentinesDay = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
@@ -1244,24 +1252,38 @@ async componentDidMount() {
                     {isAuthenticated ? (
                       <>
                         <div id="balance">
-                          <InlineSVG
+                          
+                        
+        <div style={{display: "inline"}}
+          onMouseEnter={this.handleMouseEnter}
+          onMouseLeave={this.handleMouseLeave}
+        >
+          {isHovered ? (
+            `$${(balance * 0.589).toFixed(numDecimals)}`
+          ) : (
+            <>
+            <InlineSVG
                             id="busd"
                             src={busdSvg}
                           />
-                          <CountUp
-                            start={oldBalance}
-                            end={balance}
-                            // prefix="$"
-                            separator=","
-                            decimal="."
-                            decimals={numDecimals}
-                            duration={40.5}
-                            redraw={true}
-                            preserveValue={true}
-                            onEnd={() => {
-                              this.setState({ oldBalance: balance }); // update oldBalance after animation completes
-                            }}
-                          />
+            <CountUp
+              start={oldBalance}
+              end={balance}
+              separator=","
+              decimal="."
+              decimals={numDecimals}
+              duration={40.5}
+              redraw={true}
+              preserveValue={true}
+              onEnd={() => {
+                this.setState({ oldBalance: balance });
+              }}
+            />
+            </>
+
+          )}
+        </div>
+
                           {(isCoinsAnimation && !isLowGraphics) &&
                             <Lottie
                               options={{

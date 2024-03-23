@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const Room = require('../../model/Room');
+const User = require('../../model/User');
 const RpsBetItem = require('../../model/RpsBetItem');
 const socketController = require('../../socketController.js');
 const executeBet = require('../../helper/util/betExecutor.js');
@@ -19,7 +20,7 @@ async function callBotBet(io) {
       status: 'open',
       user_bet: { $gt: 0 } // Match rooms with user_bet greater than 0
     });
-    const user = await Room.findOne({
+    const user = await User.findOne({
       _id: '62b9ef88a5409449f63f7ccb', // Match the specific user ID
       balance: { $gt: 0 } // Match rooms with user_bet greater than 0
     });
@@ -29,10 +30,6 @@ async function callBotBet(io) {
     // Call the route /bot_bet for each matching room
     for (const room of rooms) {
       const roomId = room._id;
-
-      
-
-
       const req = {
         params: {
           _id: roomId
@@ -42,13 +39,14 @@ async function callBotBet(io) {
         body: {
           _id: roomId,
           selected_rps: 'R', // Example values for selected_rps and bet_amount
-          bet_amount: 0.001
+          bet_amount: 1
           // Add other properties as needed
         }
       };
 
-      // Call the route /bot_bet
-      await executeBet(req, true); // Pass true for bot parameter
+      if (user.balance >= parseFloat(room.user_bet)) {
+        await executeBet(req, true); // Pass true for bot parameter
+      }
     }
   } catch (error) {
     console.error('Error finding rooms and calling /bot_bet:', error);

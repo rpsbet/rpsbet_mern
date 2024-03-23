@@ -75,14 +75,17 @@ const predictNext = (rps_list, markov = false) => {
 
 // Function to get the beating type
 const getBeatingType = (currentState) => {
+  const random = Math.random();
+  
   if (currentState === 'R') {
-    return 'P'; // Rock beats Scissors
+    return random < 0.5 ? 'P' : 'R'; // 50% chance to return P or R
   } else if (currentState === 'P') {
-    return 'S'; // Paper beats Rock
+    return random < 0.5 ? 'S' : 'P'; // 50% chance to return S or P
   } else {
-    return 'R'; // Scissors beats Paper
+    return random < 0.5 ? 'R' : 'S'; // 50% chance to return R or S
   }
 }
+
 
 const calcWinChance = (rps_list) => {
   let total = rps_list.length;
@@ -200,7 +203,7 @@ async function reinforcementAI(data) {
       (game.joiner_rps === 'S' && game.rps === 'R');
   });
 
-  if (recentWins.length <= 1) {
+  if (recentWins.length === 0) {
     console.log("No recent wins, adapting...");
     // Adapt the model based on recent losses
     const newData = historicData.slice(-1); // Consider the last 1 game for adaptation

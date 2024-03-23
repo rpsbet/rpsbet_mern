@@ -403,9 +403,7 @@ div.table .table-cell button.btn_join img {
 }
 .roll-tag {
   position: relative;
-  top: 0px; /* Adjust as needed */
-
-
+  top: 0px;
   background-color: #333a;
   color: #fff;
   padding: 4px 8px;
@@ -413,7 +411,32 @@ div.table .table-cell button.btn_join img {
   font-size: 10px;
   font-weight: bold;
 }
+.step-tag {
+  width: 100%;
+  position: relative;
+  top: 0px;
+  background: linear-gradient(45deg, #ff7300, #e8007b);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 60px !important;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
 
+.step-tag::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 6px solid #ff7300; /* Adjust color as needed */
+  bottom: -5px; /* Adjust vertical position */
+  left: 10%;
+  transform: translateX(-50%) rotate( 15deg); /* Adjust rotation angle */
+}
 .btn-game-type.active {
   border: 3px solid #ffd000 !important;
 }

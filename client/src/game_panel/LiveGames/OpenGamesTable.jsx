@@ -957,11 +957,11 @@ class OpenGamesTable extends Component {
                             )}
                             {row.game_type.game_type_name === 'Spleesh!' && (
                               <>
-                                WIN {convertToCurrency(row.spleesh_bet_unit * 10)}
+                                WIN&nbsp;{convertToCurrency(row.spleesh_bet_unit * 10)}
                               </>
                             )}
                             {row.game_type.game_type_name === 'Mystery Box' && (
-                              <>WIN {convertToCurrency(row.pr)}</>
+                              <>WIN&nbsp;{convertToCurrency(row.pr)}</>
                             )}
                             {/* {row.game_type.game_type_name === 'Drop Game' && (
                           <>WIN ?</>
@@ -969,7 +969,7 @@ class OpenGamesTable extends Component {
                             {row.game_type.game_type_name !== 'Spleesh!' &&
                               // row.game_type.game_type_name !== 'Drop Game' &&
                               row.game_type.game_type_name !== 'Mystery Box' && (
-                                <>WIN {convertToCurrency(row.user_bet)}</>
+                                <>WIN&nbsp;{convertToCurrency(row.user_bet)}</>
                               )}
                           </Button>
                         </div>
@@ -1128,7 +1128,7 @@ class OpenGamesTable extends Component {
                       className="form-control"
                       InputProps={{
                         onFocus: this.handleFocus,
-                        endAdornment: !this.state.isFocused ? ' ETH ' : (
+                        endAdornment: !this.state.isFocused ? ' RPS ' : (
                           <ButtonGroup
                             className={isFocused ? 'fade-in' : 'fade-out'}
                           >

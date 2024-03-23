@@ -328,7 +328,7 @@ class ProfileModal extends Component {
                   variant="filled"
                   label="REFERRAL REWARDS"
                   InputProps={{
-                    endAdornment: 'ETH'
+                    endAdornment: 'RPS'
                   }}
                   readOnly
                 />

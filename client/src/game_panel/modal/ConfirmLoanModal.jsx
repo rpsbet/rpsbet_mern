@@ -81,7 +81,7 @@ class ConfirmLoanModal extends Component {
       return; // Do not proceed further
     }
     if (parseFloat(responseText) < 0.0005) {
-      alertModal(isDarkMode, "Meownimum is 0.0005 ETH");
+      alertModal(isDarkMode, "Meownimum is 0.0005 RPS");
       return; // Do not proceed further
     }
     const response = await confirmLoan({
@@ -186,7 +186,7 @@ class ConfirmLoanModal extends Component {
                     onChange={this.handleResponseTextChange}
                     style={{ margin: "10px 0", width: "80%" }}
                     InputProps={{
-                      endAdornment: 'ETH'
+                      endAdornment: 'RPS'
                     }}
 
                   />

@@ -17,15 +17,97 @@ import {
   TableRow,
   TableCell,
   IconButton,
+  RadioGroup,
+  Radio,
+  FormControlLabel,
   Icon,
   Tooltip,
   Typography
 } from '@material-ui/core';
 import { Warning, Info, Link, FiberManualRecord, AccountBalanceWallet } from '@material-ui/icons';
-
+import QRCodeIcon from '@material-ui/icons/CropFreeOutlined';
+import WalletIcon from '@material-ui/icons/AccountBalanceWallet';
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import axios from '../../util/Api';
 import { alertModal } from '../modal/ConfirmAlerts';
+import { convertToEth } from '../../util/eth_conversion';
 import { convertToCurrency } from '../../util/conversion';
+import { withStyles } from '@material-ui/core/styles';
+
+
+const styles = theme => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: theme.spacing(2),
+    backgroundColor: '#f9f9f9',
+    borderRadius: '8px',
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+  },
+  paymentMethodContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: theme.spacing(2),
+  },
+  radioLabel: {
+    marginRight: theme.spacing(2),
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  radioGroup: {
+    flexDirection: 'row',
+  },
+  customButton: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    cursor: 'pointer',
+    height: '100% !important',
+    width: '100% !important',
+    borderRadius: '0.3em',
+    padding: '10px',
+    marginLeft: '-15px !important',
+    background: '#0076ff',
+    '&:hover': {
+      outline: '2px solid white', // Add a white solid outline on hover
+    },
+  },
+  description: {
+    marginTop: theme.spacing(2),
+    textAlign: 'center',
+    color: '#666',
+  },
+  price: {
+    margin: theme.spacing(0.5),
+    color: '#dfeeff',
+    background: '#2e3fa1',
+    padding: '2.5px 5px',
+    border: '2px solid #c2e0ff',
+    borderRadius: '30px',
+    whiteSpace: 'nowrap'
+  },
+  labelContainer: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  radioInputChecked: {
+    '&$radioInput': {
+      outline: '2px solid white', // Add a white solid outline when radio is checked
+    },
+  },
+  icon: {
+    marginRight: theme.spacing(1),
+  },
+  radioInput: {
+    display: 'none', // Hide the actual radio buttons
+  },
+  additionalText: {
+    color: '#f9f9f9',
+  },
+});
+
 Modal.setAppElement('#root');
 
 const customStyles = {
@@ -51,19 +133,32 @@ class WithdrawModal extends Component {
     this.state = {
       _id: this.props.userInfo._id,
       amount: 0,
+      web2Amount: 0,
+      web3Amount: 0,
       web3: props.web3,
       balance: props.balance,
       account: props.account,
       isLoading: false,
+      estimatedAmount: 0,
       totalWagered: 0,
       deposit: 0,
+      paymentMethod: 'web2',
+      extraId: '',
+      validAddress: true,
+      currencies: [],
+      currencyTo: 'ltc',
+      isValidCurrency: true,
+      sendAddress: '',
+      hoveredSuggestion: null,
+      suggestions: [],
       amount: 0,
-      balance: 0
+      balance: 0,
     };
   }
 
   async componentDidMount() {
     const result = await this.props.getCustomerStatisticsData(this.state._id);
+    await this.handleGetPaymentMethods();
     this.setState({
       ...result
     });
@@ -72,13 +167,182 @@ class WithdrawModal extends Component {
     this.props.setGasfee(params);
   }
 
+  handleSuggestionMouseEnter = suggestion => {
+    this.setState({
+      hoveredSuggestion: suggestion,
+    });
+  };
+  handleSendAddress = (event) => {
+
+    this.setState({
+      sendAddress: event.target.value
+    }, () => {
+      this.validateAddress();
+    });
+  };
+
+  validateAddress = async () => {
+    const { sendAddress, currencyTo } = this.state;
+
+    this.setState({ loading: true });
+
+    try {
+      const response = await axios.post('/stripe/validate_address', { sendAddress, currencyTo });
+
+      console.log('response:', response.status);
+
+      this.setState({
+        validAddress: response.status === 200 ? true : false,
+      });
+
+    } catch (error) {
+      this.setState({
+        validAddress: false,
+      });
+      console.error(error);
+      // Handle error
+    } finally {
+      // Reset loading state to false whether the request succeeds or fails
+      this.setState({ loading: false });
+    }
+  };
+
+
+  handleSuggestionMouseLeave = () => {
+    this.setState({
+      hoveredSuggestion: null,
+    });
+  };
+
+  handleSuggestionClick = suggestion => {
+    this.setState({
+      currencyTo: suggestion,
+      suggestions: [],
+      isValidCurrency: true
+    });
+  };
+
+  setCurrencyTo = event => {
+    const { sendAddress } = this.state;
+    const { value } = event.target;
+    const isValidCurrency = this.state.currencies.includes(value.toLowerCase());
+    const suggestions = this.state.currencies.filter(currency =>
+      currency.toLowerCase().startsWith(value.toLowerCase())
+    );
+    this.setState({
+      currencyTo: value,
+      isValidCurrency,
+      suggestions,
+      loading: true
+    }, () => {
+      if (isValidCurrency && sendAddress !== '') {
+        this.validateAddress();
+      }
+    });
+  };
+
+  handlePaymentMethodChange = event => {
+    const selectedPaymentMethod = event.target.value;
+    const isWeb3Payment = selectedPaymentMethod === "web3";
+  
+    // If the payment method is switching to Web3, set currencyTo state to 'eth'
+    if (isWeb3Payment) {
+      this.setState({
+        paymentMethod: selectedPaymentMethod,
+        currencyTo: 'eth'
+      });
+    } else {
+      // Otherwise, set only the paymentMethod state
+      this.setState({
+        paymentMethod: selectedPaymentMethod
+      });
+    }
+
+    this.handleEstimateAmount();
+  };
+  
+
   handleAmountChange = e => {
     e.preventDefault();
     const amount = e.target.value;
     this.setState({
-      amount: amount
+      amount: amount,
+      web2Amount: amount * 0.59,
+      web3Amount: amount * 0.5
+    }, () => {
+      this.handleEstimateAmount();
     });
   };
+
+  handleExtraId = e => {
+    e.preventDefault();
+    const _id = e.target.value;
+    this.setState({
+      extraId: _id,
+    });
+  };
+
+  handleGetPaymentMethods = async () => {
+    try {
+      const response = await axios.get('/stripe/get_currencies');
+      const currencies = response.data.currencies.map(currency => currency.currency.toLowerCase());
+      this.setState({ currencies });
+    } catch (error) {
+      console.error('Error in generating deposit address:', error);
+      // Handle error
+    }
+  };
+
+  handleEstimateAmount = async () => {
+    try {
+      const { paymentMethod, web2Amount, web3Amount, currencyTo } = this.state;
+      let amountToSend;
+  
+      // Determine which amount to use based on the payment method
+      if (paymentMethod === 'web2') {
+        amountToSend = web2Amount;
+      } else if (paymentMethod === 'web3') {
+        amountToSend = web3Amount - this.props.gasfee;
+      } else {
+        // Handle unexpected payment methods
+        throw new Error('Unsupported payment method');
+      }
+  
+      if (amountToSend === 0) {
+        return;
+      }
+      // Make GET request to estimate the amount
+      const response = await axios.get('/stripe/estimate_amount', {
+        params: {
+          web2Amount: amountToSend,
+          currencyTo: currencyTo,
+        },
+      });
+  
+      // Extract the estimated amount from the response data
+      const estimatedAmount = response.data.estimated_amount;
+  
+      // Update the component state with the estimated amount
+      this.setState({ estimatedAmount });
+    } catch (error) {
+      console.error('Error in estimating amount:', error);
+      // Handle error
+    }
+  };
+  
+  createPayoutAndClose = async () => {
+    const { amount, currencyTo, sendAddress, extraId} = this.state;
+    const { user_id } = this.props;
+    try {
+      const response = await axios.post('/stripe/create_payout', { amount, currency: currencyTo, address: sendAddress, extra_id: extraId });
+      alertModal(this.props.isDarkMode, response.data.message, "-cat");
+      this.props.closeModal();
+    } catch (error) {
+      console.error(error);
+      // Handle error
+    }
+  };
+
 
   send = async () => {
     try {
@@ -99,7 +363,7 @@ class WithdrawModal extends Component {
       if (this.state.amount >= 0.02) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER TRANSACTION IS 0.02 ETH DURING LAUNCH PHASE`
+          `MAXIMUM PER TRANSACTION IS 0.02 RPS DURING LAUNCH PHASE`
         );
         return;
       }
@@ -135,8 +399,24 @@ class WithdrawModal extends Component {
   };
 
   render() {
-    const { account } = this.state;
+    const { account, currencyTo, isValidCurrency, extraId, amount, validAddress, estimatedAmount, sendAddress, suggestions, hoveredSuggestion, paymentMethod } = this.state;
+    const { classes } = this.props;
     const isConnected = !!account;
+
+    let description = '';
+
+    switch (paymentMethod) {
+      case 'web2':
+        description = 'Via Manual Transfer (50+ Cryptocurrencies supported)';
+        break;
+      case 'web3':
+        description = 'Via Connect Wallet (Metamask recommended), ETH MAINNET only, lowest fees';
+        break;
+      default:
+        description = '';
+    }
+
+
     return (
       <>
         <LoadingOverlay
@@ -170,157 +450,325 @@ class WithdrawModal extends Component {
             <div className="modal-body edit-modal-body deposit-modal-body">
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
-                  <div id='withdrawal-status' style={{ marginBottom: "30px" }}>
-                    <h6>ELIGIBILILITY STATUS</h6>
-                    <div><span className="withdrawal-usage">Daily Withdrawal Usage</span>
-                      <Tooltip title={"During Launch Phase only, for security purposes. Please note you will NOT be able to participate in any games or other transactional-related features upon exceeding limit."}>
-                        <IconButton>
-                          <Info />
-                        </IconButton>
-                      </Tooltip>  <span style={{ color: this.props.userInfo.dailyWithdrawals > 0.02 ? "red" : "rgb(87, 202, 34)" }}>{convertToCurrency(this.props.userInfo.dailyWithdrawals / 0.02 * 100)}%</span></div>
-                    {/* <div><span className="eligible-label">WAGERED (MIN {convertToCurrency(25)})</span><span style={{color: this.state.totalWagered < 25 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.totalWagered)}</span></div>
-                                    <div><span className="eligible-label">DEPOSITS (MIN {convertToCurrency(5)})</span><span style={{color: this.state.deposit < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.deposit)}</span></div>
-                                        <div><span className="eligible-label">AMOUNT (MIN {convertToCurrency(5)})</span><span style={{color: this.state.amount < 5 ? "red" : "rgb(87, 202, 34)"}}>{convertToCurrency(this.state.amount)}</span></div> */}
-                  </div>
+                  <div className={classes.root}>
+                    <h4 className={classes.radioLabel}>Select Withdrawal Method:</h4>
+                    <div className={classes.paymentMethodContainer}>
 
-                  <div className="account">
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography>Send To Address</Typography>
+                      <RadioGroup
+                        aria-label="payment-method"
+                        name="payment-method"
+                        value={paymentMethod}
+                        onChange={this.handlePaymentMethodChange}
+                        className={classes.radioGroup}
+                      >
+                        <FormControlLabel
+                          value="web2"
+                          control={<Radio color="primary" />}
+                          label={
+                            <div className={classes.labelContainer}>
+                              <QRCodeIcon className={classes.icon} />
+                              <span>Web2</span>
+                            </div>
+                          }
+                          className={classes.radioLabel}
+                        />
+                        <FormControlLabel
+                          value="web3"
+                          control={<Radio color="primary" />}
+                          label={
+                            <div className={classes.labelContainer}>
+                              <WalletIcon className={classes.icon} />
+                              <span>Web3</span>
+                            </div>
+                          }
+                          className={classes.radioLabel}
+                        />
 
-                      {isConnected ? (
-                        <TextField
-                          label="Account"
-                          variant="filled"
-                          value={account}
-                          InputProps={{
-                            readOnly: true
-                          }}
-                        />
-                      ) : (
-                        <TextField
-                          label="Account"
-                          variant="filled"
-                          value="Connect Wallet"
-                          InputProps={{
-                            readOnly: true
-                          }}
-                        />
-                      )}
-                      {isConnected ? (
-                        <FiberManualRecord
-                          className="light"
-                          style={{ background: '#28a745', color: 'green' }}
-                        />
-                      ) : (
-                        <FiberManualRecord
-                          className="light"
-                          style={{ background: '#ff0000', color: 'red' }}
-                        />
-                      )}
-                      {isConnected ? (
-                        <Tooltip title="Connected account" arrow>
-                          <Info />
-                        </Tooltip>
-                      ) : (
-                        <Tooltip title="How do I connect?" arrow>
-                          <a
-                            href="your_connect_wallet_link_here"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              textDecoration: 'none'
-                            }}
-                          >
-                            <Info />
-                            <Link
-                              fontSize="small"
-                              style={{ marginLeft: '4px' }}
-                            />
-                          </a>
-                        </Tooltip>
-                      )}
+                      </RadioGroup>
                     </div>
+                    <Typography variant="body2" className={classes.description}>{description}</Typography>
                   </div>
+                  {paymentMethod === 'web3' ? (
+                    <>
+                    <p className='step-tag'>Step 1 out of 2</p>
+                      <div className="input-amount">
+                        <Typography>WITHDRAWAL AMOUNT</Typography>
+                        <TextField
+                          pattern="^\\d*\\.?\\d*$"
+                          variant="filled"
+                          autoComplete="off"
+                          value={amount}
+                          onChange={this.handleAmountChange}
+                          InputProps={{
+                            endAdornment: 'RPS'
+                          }}
+                          className="form-control"
+                        />
+                      </div>
+                      <div className="input-amount">
+                        <Typography>RECEIVE AMOUNT</Typography>
+                        <TextField
+                          pattern="^\\d*\\.?\\d*$"
+                          variant="outlined"
+                          value={estimatedAmount}
+                          InputProps={{
+                            readOnly: 'true',
+                            endAdornment: 'ETH'
+                          }}
+                          className="form-control"
+                        />
+                      </div>
+                      <div className="account">
+                        <p className='step-tag'>Step 2 out of 2</p> 
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
 
-                  <div className="input-amount">
-                    <Typography>Withdrawal Amount</Typography>
-                    <TextField
-                      pattern="^\\d*\\.?\\d*$"
-                      variant="filled"
-                      autoComplete="off"
-                      value={this.state.amount}
-                      onChange={this.handleAmountChange}
-                      InputProps={{
-                        endAdornment: 'ETH'
-                      }}
-                      className="form-control"
-                    />
-                  </div>
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>
-                          <span>IN-GAME BALANCE:</span>
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(this.props.balance)}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>WITHDRAWAL AMOUNT:</span>
-                        </TableCell>
-                        <TableCell style={{ color: 'red' }}>
-                          {convertToCurrency(this.state.amount * -1)}
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>
-                          <span>NEW BALANCE:</span>
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(
-                            this.props.balance - this.state.amount
+                          <Typography variant="body2">SEND TO ADDRESS</Typography>
+                          {isConnected ? (
+                            <TextField
+                              label="Account"
+                              variant="filled"
+                              style={{width:"100%"}}
+                              value={account}
+                              InputProps={{
+                                readOnly: true
+                              }}
+                              className="form-control"
+                            />
+                          ) : (
+                            <TextField
+                              label="Account"
+                              variant="filled"
+                              value="Connect Wallet"
+                              style={{width:"100%"}}
+                              InputProps={{
+                                readOnly: true
+                              }}
+                              className="form-control"
+                            />
                           )}
-                          &nbsp;
-                          {this.props.balance - this.state.amount < 0 && (
-                            <Warning width="15pt" />
+                          {isConnected ? (
+                            <FiberManualRecord
+                              className="light"
+                              style={{ background: '#28a745', color: 'green' }}
+                            />
+                          ) : (
+                            <FiberManualRecord
+                              className="light"
+                              style={{ background: '#ff0000', color: 'red' }}
+                            />
                           )}
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                          {isConnected ? (
+                            <Tooltip title="Connected account" arrow>
+                              <Info />
+                            </Tooltip>
+                          ) : (
+                            <Tooltip title="How do I connect?" arrow>
+                              <a
+                                href="your_connect_wallet_link_here"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                <Info />
+                                <Link
+                                  fontSize="small"
+                                  style={{ marginLeft: '4px' }}
+                                />
+                              </a>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <div>
+                          
+                        <p className='step-tag'>Step 1 out of 3</p>
+                        <div className="account" style={{ display: "flex", alignItems: "center" }}>
+                          <Typography style={{ whiteSpace: 'nowrap' }}>CURRENCY TYPE</Typography>
+                          <TextField
+                            type="text"
+                            variant="filled"
+                            autoComplete="off"
+                            value={currencyTo.toUpperCase()}
+                            onChange={this.setCurrencyTo}
+                            error={!isValidCurrency}
+                            helperText={!isValidCurrency ? 'Invalid currency' : ''}
+                            className="form-control"
+                          />
+                          <Tooltip title="Choose currency you want to receive in.">
+                            <IconButton size="small">
+                              <Info />
+                            </IconButton>
+                          </Tooltip>
+                        </div>
+                        {suggestions.length > 0 && (
+                          <ul style={suggestionsListStyle}>
+                            {suggestions.map(suggestion => (
+                              <a>
+
+                                <li onMouseEnter={() => this.handleSuggestionMouseEnter(suggestion)}
+                                  onMouseLeave={this.handleSuggestionMouseLeave}
+                                  style={{
+                                    ...suggestionStyle,
+                                    backgroundColor: hoveredSuggestion === suggestion ? '#f0f0f0' : 'transparent',
+                                    color: hoveredSuggestion === suggestion ? '#666' : 'inherit',
+                                  }} key={suggestion} onClick={() => this.handleSuggestionClick(suggestion)}>
+                                  <Typography>{suggestion.toUpperCase()}</Typography>
+                                </li></a>
+                            ))}
+                          </ul>
+                        )}
+                        
+
+                        <p className='step-tag'>Step 2 out of 3</p>
+                        <div className="input-amount">
+                          <Typography>WITHDRAWAL AMOUNT</Typography>
+                          <TextField
+                            pattern="^\\d*\\.?\\d*$"
+                            variant="filled"
+                            autoComplete="off"
+                            value={amount}
+                            onChange={this.handleAmountChange}
+                            InputProps={{
+                              endAdornment: 'RPS'
+                            }}
+                            className="form-control"
+                          />
+                        </div>
+                        <div className="input-amount">
+
+                          <Typography>RECEIVE AMOUNT</Typography>
+                          <TextField
+                            variant="outlined"
+                            value={estimatedAmount}
+                            InputProps={{
+                              readOnly: true,
+                              endAdornment: isValidCurrency && (
+                                <Typography variant="heading1">{currencyTo.toUpperCase()}</Typography>
+                              )
+                            }}
+                            className="form-control"
+                          />
+                        </div>
+                        <p className='step-tag'>Step 3 out of 3</p>
+
+                        <div style={{ marginTop: '20px' }}>
+                          <Typography variant="body2">SEND TO ADDRESS</Typography>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <TextField
+                              variant="filled"
+                              fullWidth
+                              error={!validAddress}
+                              onChange={this.handleSendAddress}
+                              value={sendAddress}
+                              helperText={sendAddress ? (!validAddress ? 'Invalid address' : <p style={{color:"#28a745"}}> Valid address!<CheckCircleOutlineIcon style={{width: '12px'}}/></p>) : ''}
+                              />
+
+
+
+                            <Tooltip title="Address to send to" arrow>
+
+                              <IconButton size="small">
+
+                                <Info />
+
+                              </IconButton>
+
+                            </Tooltip>
+                          </div>
+                              <><div style={{ marginTop: '20px' }}>
+                                <Typography variant="body2">MEMO / DESTINATION TAG ETC. (OPTIONAL)</Typography>
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                  <TextField
+                                    variant="filled"
+                                    fullWidth
+                                    value={extraId}
+                                    onChange={this.handleExtraId}
+
+                                  />
+                                </div>
+                              </div>
+                              </>
+                        </div>
+                      </div>
+
+
+                    </div>
+                  )}
                   <hr />
-                  <Table>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>
-                          <FontAwesomeIcon icon={faGasPump}/>&nbsp;&nbsp;<span>GAS FEE:</span>
-                        </TableCell>
-                        <TableCell>
-                          {convertToCurrency(this.props.gasfee)}
-                        </TableCell>
-                        <Tooltip
-                          title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
-                          arrow
-                        >
-                          <IconButton size="small">
-                            <Info />
-                          </IconButton>
-                        </Tooltip>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                      <Table>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>
+                              <span>IN-GAME BALANCE:</span>
+                            </TableCell>
+                            <TableCell>
+                              {convertToCurrency(this.props.balance)}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <span>WITHDRAWAL AMOUNT:</span>
+                            </TableCell>
+                            <TableCell style={{ color: 'red' }}>
+                              {convertToEth(this.state.amount * -1)}
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell>
+                              <span>NEW BALANCE:</span>
+                            </TableCell>
+                            <TableCell>
+                              {convertToCurrency(
+                                this.props.balance - this.state.amount
+                              )}
+                              &nbsp;
+                              {this.props.balance - this.state.amount < 0 && (
+                                <Warning width="15pt" />
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                      { paymentMethod === 'web3' && (
+
+                      <Table>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>
+                              <FontAwesomeIcon icon={faGasPump} />&nbsp;&nbsp;<span>GAS FEE:</span>
+                            </TableCell>
+                            <TableCell>
+                              {convertToEth(this.props.gasfee)}
+                            </TableCell>
+                            <Tooltip
+                              title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
+                              arrow
+                            >
+                              <IconButton size="small">
+                                <Info />
+                              </IconButton>
+                            </Tooltip>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                      )}
                   <div className="disclaimer">
                     <Typography>Receive within 1 - 3 minutes</Typography>
                   </div>
+
                 </div>
               </div>
             </div>
+
             <div className="modal-footer">
-              <Button className="btn-submit" onClick={this.send}>
+              <Button className="btn-submit" onClick={paymentMethod === 'web3' ? this.send : this.createPayoutAndClose}>
                 Withdraw
               </Button>
               <Button className="btn-back" onClick={this.props.closeModal}>
@@ -333,6 +781,27 @@ class WithdrawModal extends Component {
     );
   }
 }
+
+
+const suggestionsListStyle = {
+  listStyleType: 'none',
+  padding: '0',
+  margin: '4px 0',
+  border: '1px solid #ccc',
+  borderRadius: '4px',
+  backgroundColor: '#e5e5e5',
+  position: 'absolute',
+  maxHeight: '100px',
+  overflowY: 'auto',
+  zIndex: '1',
+  width: 'calc(80% - 2px)', // Adjusting width to match the text field
+};
+
+const suggestionStyle = {
+  padding: '8px 12px',
+  cursor: 'pointer',
+  borderBottom: '1px solid #ccc',
+};
 
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
@@ -347,4 +816,4 @@ const mapDispatchToProps = {
   getCustomerStatisticsData
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(WithdrawModal);
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(WithdrawModal));

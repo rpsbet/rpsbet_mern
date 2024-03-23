@@ -8,9 +8,20 @@ function getBorderByRank(rank) {
     6: 'saddlebrown',
     7: 'teal',
     8: 'maroon',
-    9: 'navy',
-    10: 'firebrick'
-  };
+    9: 'royalblue',
+    10: 'firebrick',
+    11: 'crimson',
+    12: 'goldenrod',
+    13: 'mediumaquamarine',
+    14: 'darkslateblue',
+    15: 'olivedrab',
+    16: 'mediumvioletred',
+    17: 'darkcyan',
+    18: 'orangered',
+    19: 'mediumspringgreen',
+    20: 'darkgoldenrod'
+};
+
 
   if (rank !== null) {
     rank = getRank(rank);

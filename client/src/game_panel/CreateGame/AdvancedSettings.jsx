@@ -180,7 +180,7 @@ class AdvancedSettings extends Component {
                     shrink: true
                   }}
                   InputProps={{
-                    endAdornment: 'ETH'
+                    endAdornment: 'RPS'
                   }}
                   onChange={e => {
                     if (this.props.game_mode === 'Mystery Box') {
@@ -289,7 +289,7 @@ class AdvancedSettings extends Component {
               <TextField
                 label="Description"
                 value={this.props.description}
-                placeholder='e.g. Play 50 Games and receive 0.002 ETH TIP!'
+                placeholder='e.g. Play 50 Games and receive 10 RPS TIP!'
                 onChange={this.props.handleDescriptionChange}
                 fullWidth
                 multiline

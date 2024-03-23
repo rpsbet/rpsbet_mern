@@ -60,7 +60,7 @@ export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
     }
 
     if (bet_amount < 0.0005) {
-      alertModal(isDarkMode, `MEOWNIMUM BET IS 0.0005 ETH`);
+      alertModal(isDarkMode, `MEOWNIMUM BET IS 0.0005 RPS`);
       return false;
     }
   

@@ -16,7 +16,12 @@ button#recentSearches span {
   white-space: nowrap;
   overflow: hidden;
 }
+#rps {
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 2px;
 
+}
 .rank-badge {
   position: relative;
   text-align: center;
@@ -80,7 +85,7 @@ button#recentSearches span {
 }
 
 .selected {
-  border: 2px solid #ffd000;
+  border: 2px solid #ffd000 !important;
   box-shadow: 0 0 5px #ffd00077;
   transition: all 0.3s;
 }

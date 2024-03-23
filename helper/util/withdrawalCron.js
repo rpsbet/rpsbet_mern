@@ -12,7 +12,8 @@ async function resetWithdrawalLimits() {
     // Iterate through all users and update credit scores
     for (const user of users) {
 
-      if (user.username === 'Tydrellinbg' || user.username === 'SUPPORT' || user.username === 'OFFICIALRPSGAME' || user.username === 'PimpedPistols') {
+      if (user.username === 'Tydrellinbg' || user.username === 'SUPPORT' || user.username === 'OFFICIALRPSGAME' || user.username === 'PimpedPistols' ||  user.username === '🔥 THE DON 🔥 (BOT #1'
+      ) {
         continue;
       }
 

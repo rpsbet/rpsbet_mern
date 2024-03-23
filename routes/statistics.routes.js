@@ -484,7 +484,8 @@ router.get('/get-leaderboards', auth, async (req, res) => {
       'SUPPORT',
       'twat',
       'SYSTEM',
-      'SHIBA'
+      'SHIBA',
+      '🔥 THE DON 🔥 (BOT #1)'
     ];
 
     const leaderboardData = await User.find({

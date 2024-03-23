@@ -137,7 +137,7 @@ class ListItemModal extends Component {
                     shrink: true,
                   }}
                   InputProps={{
-                    endAdornment: 'ETH / month',
+                    endAdornment: 'RPS / month',
                   }}
                 />
               ) : (
@@ -158,7 +158,7 @@ class ListItemModal extends Component {
                     shrink: true,
                   }}
                   InputProps={{
-                    endAdornment: 'ETH',
+                    endAdornment: 'RPS',
                   }}
                 />
               )}

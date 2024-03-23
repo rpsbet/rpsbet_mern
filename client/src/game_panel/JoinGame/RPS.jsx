@@ -154,7 +154,7 @@ class RPS extends Component {
       startedPlaying: false,
       advanced_status: '',
       cardDealt: false,
-      bet_amount: 0.001,
+      bet_amount: 1,
       bankroll: this.props.bet_amount,
       rps: [],
       balance: this.props.balance,
@@ -203,25 +203,25 @@ class RPS extends Component {
   };
 
   async componentDidMount() {
-    const { socket, rps_game_type, acQueryMyItem, playSound } = this.props;
+    const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo } = this.props;
     document.addEventListener('keydown', this.handleKeyPress);
     document.addEventListener('mousedown', this.handleClickOutside);
 
     if (socket) {
-      socket.on('CARD_PRIZE', data => {
-        if (data) {
-          this.setState(
-            {
-              image: data.image,
-              productName: data.productName,
-              showImageModal: true
-            },
-            () => playSound('')
-          );
-        }
-      });
+      // socket.on('CARD_PRIZE', data => {
+      //   if (data) {
+      //     this.setState(
+      //       {
+      //         image: data.image,
+      //         productName: data.productName,
+      //         showImageModal: true
+      //       },
+      //       () => playSound('')
+      //     );
+      //   }
+      // });
 
-      socket.on('UPDATED_BANKROLL', data => {
+      socket.on(`UPDATED_BANKROLL_${roomInfo._id}`, data => {
         // console.log("l;ast r[s", data.rps[data.rps.length - 1])
 
         this.setState(prevState => {
@@ -1123,36 +1123,22 @@ class RPS extends Component {
                     Select: R - P - S!
                   </h3>
                 )}
-                <div id="rps-radio" style={{ zIndex: 1 }}>
-                  {options.map(({ classname, selection }) => (
-                    <Button
-                      variant="contained"
-                      id={`rps-${classname}`}
-                      className={`rps-option ${classname}${ joinerRpsValueAtLastIndex === selection ? ' active' : ''
-                        }${bgColorChanged &&
-                          betResult === -1 &&
-                          joinerRpsValueAtLastIndex === selection
-                          ? ' lose-bg'
-                          : ''
-                        }${
-                          betResult === 0 &&
-                          joinerRpsValueAtLastIndex === selection
-                          ? ' draw-bg'
-                          : ''
-                        }${betResult === 1 &&
-                          joinerRpsValueAtLastIndex === selection
-                          ? ' win-bg'
-                          : ''
-                        }`}
-                      onClick={() => {
-                        this.onBtnBetClick(selection);
+               <div id="rps-radio" style={{ zIndex: 1 }}>
+  {options.map(({ classname, selection }) => (
+    <Button
+      variant="contained"
+      id={`rps-${classname}`}
+      className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''}${bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection ? ' lose-bg' : ''}${betResult === 0 && joinerRpsValueAtLastIndex === selection ? ' draw-bg' : ''}${betResult === 1 && joinerRpsValueAtLastIndex === selection ? ' win-bg' : ''}${this.props.is_betting ? ' disabled' : ''}`} // Add 'disabled' class when this.props.betting is true
+      onClick={() => {
+        if (!this.props.is_betting) { // Check if betting is not in progress
+          this.onBtnBetClick(selection);
+          playSound('select');
+        }
+      }}
+    >&nbsp;<span className="roll-tag">[{selection}]</span></Button>
+  ))}
+</div>
 
-                        playSound('select');
-                      }}
-                    >&nbsp;<span className="roll-tag">[{selection}]</span></Button>
-                  ))}
-
-                </div>
 { creator_id && user_id && creator_id.toString() === user_id.toString() ? (
 
   
@@ -1195,8 +1181,8 @@ const mapStateToProps = state => ({
   rank: state.logic.curRoomInfo.rank,
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled,
-  isFocused: state.auth.isFocused
-
+  isFocused: state.auth.isFocused,
+  is_betting: state.logic.is_betting,
 });
 
 const mapDispatchToProps = {

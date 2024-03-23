@@ -255,7 +255,7 @@ class DebtsModal extends Component {
                   InputProps={{
                     onFocus: this.handleFocus,
                     onBlur: this.handleBlur,
-                    endAdornment: this.state.paybackAmount ? ' ETH ' : (
+                    endAdornment: this.state.paybackAmount ? ' RPS ' : (
                       <ButtonGroup
                         className={isFocused ? 'fade-in' : 'fade-out'}
                       >

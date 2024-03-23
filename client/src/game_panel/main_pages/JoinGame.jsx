@@ -450,6 +450,7 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
 
     const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
     const nextState = possibleNextStates[nextStateIndex];
+    console.log("nextState: ", nextState)
     return Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
 }
 
@@ -758,6 +759,8 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
       if (result && result.gameLogList && result.gameLogList.length > 0) {
         betArray = result.gameLogList.map(entry => entry.bet);
       }
+
+
       this.startBetting(betArray);
 
     }
@@ -823,15 +826,7 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
     // }
     // const stored_array =
     //   JSON.parse(localStorage.getItem(storageName)) || [];
-    if (this.props.rpsbetitems.length === 0) {
-      // If rpsbetitems is not yet populated, fetch it
-      try {
-        await getRpsBetItems(roomInfo._id);
-      } catch (error) {
-        console.error('Error fetching rpsbetitems:', error);
-        return;
-      }
-    }
+
 
     const intervalId = setInterval(async () => {
 
@@ -886,7 +881,7 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
               } else if (this.props.ai_mode === 'Adam') {
                 const nextMove = await reinforcementAI(this.props.rpsbetitems);
                 randomItem = nextMove.move;
-                predictedBetAmount = this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
+                predictedBetAmount = await this.predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2);
 
               } else if (this.props.ai_mode === 'Sniper') {
                 const nextMove = await reinforcementAI(this.props.rpsbetitems);
@@ -960,7 +955,7 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
       } catch (error) {
         console.error('Error in interval function:', error);
       }
-    }, 4000);
+    }, 4200);
 
 
     this.setState({ intervalId });

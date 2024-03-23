@@ -77,17 +77,28 @@ class Avatar extends Component {
       shadedColor = chroma(rankColor).brighten(8).hex(); // Adjust as needed for dark mode shading
     }
     const rankColors = {
-      1: '#3498db',   // Royal Blue
-      2: '#2ecc71',   // Emerald Green
-      3: '#95a5a6',   // Silver
-      4: '#9b59b6',   // Amethyst
-      5: '#e67e22',   // Carrot Orange
-      6: '#d35400',   // Pumpkin
-      7: '#008080',   // Teal
-      8: '#c0392b',   // Red
-      9: '#001f3f',   // Navy
-      10: '#b22222'   // Fire Brick
-    };
+      1: 'steelblue',
+      2: 'forestgreen',
+      3: 'slategray',
+      4: 'indigo',
+      5: 'darkorange',
+      6: 'saddlebrown',
+      7: 'teal',
+      8: 'maroon',
+      9: 'royalblue', // replacing navy with royalblue
+      10: 'firebrick',
+      11: 'crimson',
+      12: 'goldenrod',
+      13: 'mediumaquamarine',
+      14: 'darkslateblue',
+      15: 'olivedrab',
+      16: 'mediumvioletred',
+      17: 'darkcyan',
+      18: 'orangered',
+      19: 'mediumspringgreen',
+      20: 'darkgoldenrod'
+  };
+  
 
 
     if (rank !== null) {

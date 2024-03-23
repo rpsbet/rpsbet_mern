@@ -133,11 +133,11 @@ class TabbedContent extends Component {
             icon={<DescriptionIcon />}
             label="Description"
           />
-            <Tab
-              classes={{ selected: classes.activeTab }}
-              icon={<CommentIcon />}
-              label="Comments"
-            />
+          <Tab
+            classes={{ selected: classes.activeTab }}
+            icon={<CommentIcon />}
+            label="Comments"
+          />
           <Tab
             classes={{ selected: classes.activeTab }}
             icon={<BarChartIcon />}
@@ -154,15 +154,15 @@ class TabbedContent extends Component {
             <div className="room-leaderboards-panel">
               <h2 className="room-history-title">Description</h2>
               <div className="description-container" style={{ background: this.props.isDarkMode ? '#101010' : '#f9f9f9' }}>
-      <p className="description-text"  style={{ color: this.props.isDarkMode ? '#f9f9f9' : '#010101' }}>
-        {this.props.roomInfo.description}
-      </p>
-    </div>
+                <p className="description-text" style={{ color: this.props.isDarkMode ? '#f9f9f9' : '#010101' }}>
+                  {this.props.roomInfo.description}
+                </p>
+              </div>
             </div>
           )}
 
           {selectedTab === 3 && (
-                      <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />
+            <RoomHistory roomId={roomInfo._id} getRoomInfo={this.props.getRoomInfo} roomInfo={roomInfo} isLowGraphics={isLowGraphics} />
           )}
           {selectedTab === 1 && (
             <div className="room-leaderboards-panel">

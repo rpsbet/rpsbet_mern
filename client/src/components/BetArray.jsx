@@ -373,12 +373,12 @@ function BetArray({
                       {predictedBetAmount > 0 ? (
                         <>
                           <FontAwesomeIcon icon={faCoins} style={{ marginRight: '5px' }} />
-                          TRIED {convertToCurrency(predictedBetAmount)}
+                          TRIED&nbsp;{convertToCurrency(predictedBetAmount)}
                         </>
                       ) : (
                         <>
                           <FontAwesomeIcon icon={faClock} style={{ marginRight: '5px' }} />
-                          DECIDING A BET
+                          ANALYSING LAST BETS
                         </>
                       )}
                     </>
@@ -493,7 +493,7 @@ function BetArray({
                 <h2 className="gamified-heading">Training Data</h2>
                 <div style={{ position: "absolute", zIndex: '2', top: '180px', right: '30px' }}>
                   {formatTag('Last 50 Games')} &nbsp;
-                  <Tooltip title={`${accumulativeProfit[accumulativeProfit.length - 1]} ETH`}>
+                  <Tooltip title={`${accumulativeProfit[accumulativeProfit.length - 1]} RPS`}>
                     {formatProfit(accumulativeProfit[accumulativeProfit.length - 1])}
                   </Tooltip>
                 </div>

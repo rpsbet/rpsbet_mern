@@ -474,8 +474,8 @@ router.post('/list-for-sale', auth, async (req, res) => {
       return res.json({
         success: true,
         message: rentOption
-          ? `Item '${item.productName}' listed for rent at ${price} ETH per month`
-          : `Item '${item.productName}' listed for sale at ${price} ETH`,
+          ? `Item '${item.productName}' listed for rent at ${price} RPS per month`
+          : `Item '${item.productName}' listed for sale at ${price} RPS`,
       });
     } else {
       return res.json({

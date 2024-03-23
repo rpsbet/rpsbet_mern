@@ -395,9 +395,16 @@ div[role="presentation"] div {
 }
 
 .disclaimer p {
-    margin: 10px auto 30px !important;
+    margin: 60px auto 30px !important;
 }
 
+.error-text {
+    color: red; /* or whatever color you want for error */
+}
+
+.valid-text {
+    color: green; /* or whatever color you want for valid */
+}
 
 .account p {
     padding-right: 10px;
@@ -682,9 +689,12 @@ div[role="presentation"] div {
   .AvatarPreviewPanel {
     width: 100% !important;
     height: 100% !important;
-  }
+}
+.modal-body.profile div.avatar {
+    width: 50%;
+    margin-top: 90px;
+}
   .modal-body.profile div.avatar div,
-  .modal-body.profile div.avatar,
   .modal-body.profile div.avatar img
    {
     border-radius: 2em !important;

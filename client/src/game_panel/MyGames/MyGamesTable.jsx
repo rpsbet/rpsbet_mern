@@ -1137,7 +1137,7 @@ class MyGamesTable extends Component {
                       className="form-control"
                       InputProps={{
                         onFocus: this.handleFocus,
-                        endAdornment: !this.state.isFocused ? ' ETH ' : (
+                        endAdornment: !this.state.isFocused ? ' RPS ' : (
                           <ButtonGroup
                             className={isFocused ? 'fade-in' : 'fade-out'}
                           >
@@ -1290,7 +1290,7 @@ class MyGamesTable extends Component {
                         variant="filled"
                         autoComplete="off"
                         InputProps={{
-                          endAdornment: 'ETH'
+                          endAdornment: 'RPS'
                         }}
                         className="form-control"
                         disabled={this.state.paymentMethod === "manual"}

@@ -57,13 +57,13 @@ function CreateProductForm({ updateTextField }) {
                   onChange={(e) => handleInputChange(e.target.name, e.target.value, 8)}
                   autoComplete="off"
                   InputProps={{
-                    endAdornment: 'ETH',
+                    endAdornment: 'RPS',
                   }}
                   className="form-control"
                 />
               </TableCell>
               <TableCell>
-                <Tooltip title="Enter the amount of loan you are lending in Ether (ETH)">
+                <Tooltip title="Enter the amount of loan you are lending in RPS">
                   <Info />
                 </Tooltip>
               </TableCell>
