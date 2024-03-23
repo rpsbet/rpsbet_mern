@@ -157,7 +157,6 @@ class RPS extends Component {
       bet_amount: 1,
       bankroll: this.props.bet_amount,
       rps: [],
-      balance: this.props.balance,
       isPasswordCorrect: this.props.isPasswordCorrect,
       animateCard: false
     };
@@ -560,10 +559,11 @@ class RPS extends Component {
       balance,
       is_private,
       roomInfo,
-      updateSelectedRps
+      updateSelectedRps,
+      bankroll
     } = this.props;
 
-    const { bet_amount, bankroll } = this.state;
+    const { bet_amount } = this.state;
 
     // Call the function passed from the parent to update selected_rps
     updateSelectedRps(selection, async () => {
@@ -631,7 +631,7 @@ class RPS extends Component {
   };
 
   handle2xButtonClick = () => {
-    const maxBetAmount = this.state.balance;
+    const maxBetAmount = this.props.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
     const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
@@ -653,7 +653,7 @@ class RPS extends Component {
   };
 
   handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.state.balance * 100000) / 100000;
+    const maxBetAmount = Math.floor(this.props.balance * 100000) / 100000;
     this.setState(
       {
         bet_amount: Math.min(maxBetAmount, this.state.bankroll)

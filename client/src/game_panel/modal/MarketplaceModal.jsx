@@ -37,7 +37,7 @@ class MarketplaceModal extends Component {
     this.state = {
       showInventoryModal: false,
       sortCriteria: 'updated_at',
-      itemType: '653ee7ac17c9f5ee21245649',
+      itemType: '653ee81117c9f5ee2124564b',
     };
   }
 

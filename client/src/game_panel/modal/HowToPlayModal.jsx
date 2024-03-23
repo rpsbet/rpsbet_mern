@@ -448,7 +448,7 @@ class HowToPlayModal extends Component {
 
                   </div>
                 </AccordionItemPanel>
-              </AccordionItem> */}
+              </AccordionItem> 
               <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
@@ -477,7 +477,7 @@ class HowToPlayModal extends Component {
                   </div>
                 </AccordionItemPanel>
               </AccordionItem>
-              {/* <AccordionItem>
+              <AccordionItem>
                 <AccordionItemHeading>
                   <AccordionItemButton>
                     <div className="modal-content-wrapper brain-game">

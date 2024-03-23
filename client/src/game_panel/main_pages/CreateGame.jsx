@@ -16,6 +16,7 @@ import ChatPanel from '../ChatPanel/ChatPanel';
 import DrawerButton from './DrawerButton';
 import SupportButton from './SupportButton';
 import AiPanel from '../../components/AiPanel';
+import { getRank } from '../../util/getRank.js';
 import animationData from '../LottieAnimations/cat-place-bet.json';
 import RPS from '../CreateGame/RPS';
 import Spleesh from '../CreateGame/Spleesh';
@@ -850,6 +851,7 @@ class CreateGame extends Component {
           selectedStrategy={selectedStrategy}
           ai_mode={this.props.user.ai_mode}
           user_id={this.props.user._id}
+          rank={getRank(this.props.user.totalWagered)}
             playSound={this.playSound}
             strategies={this.props.strategies}
             onChangeState={this.onChangeState}

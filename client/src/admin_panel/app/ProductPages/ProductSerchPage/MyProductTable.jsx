@@ -271,7 +271,7 @@ class MyProductTable extends Component {
       sortAnchorEl: null,
       sortCriteria: 'updated_at',
       _id: this.props.userInfo._id,
-      itemType: '653ee7ac17c9f5ee21245649'
+      itemType: '653ee81117c9f5ee2124564b'
     };
   }
 
@@ -445,14 +445,14 @@ class MyProductTable extends Component {
               open={Boolean(anchorEl)}
               onClose={() => this.handleFilterClose(null)}
             >
-              <MenuItem
+              {/* <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee7ac17c9f5ee21245649')
                 }
                 selected={itemType === '653ee7ac17c9f5ee21245649'}
               >
                 RRPS Card
-              </MenuItem>
+              </MenuItem> */}
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee7df17c9f5ee2124564a')
@@ -461,6 +461,7 @@ class MyProductTable extends Component {
               >
                 Game Background
               </MenuItem>
+     
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee81117c9f5ee2124564b')
@@ -470,7 +471,7 @@ class MyProductTable extends Component {
                 Accessory
               </MenuItem>
 
-              <MenuItem
+              {/* <MenuItem
                 onClick={() =>
                   this.handleFilterClose('654231df29446bc96d689d0f')
                 }
@@ -485,7 +486,7 @@ class MyProductTable extends Component {
                 selected={itemType === '6542321929446bc96d689d10'}
               >
                 Games
-              </MenuItem>
+              </MenuItem> */}
             </Menu>
           </div>
           <div className="filters">

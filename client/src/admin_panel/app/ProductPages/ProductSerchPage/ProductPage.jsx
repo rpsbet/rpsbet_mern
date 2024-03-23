@@ -10,7 +10,7 @@ export class ProductPage extends Component {
 
   componentDidMount() {
     // this.props.setUrl(this.props.match.path);
-    this.props.acQueryItem(30, 1, 'price', '653ee7ac17c9f5ee21245649');
+    this.props.acQueryItem(30, 1, 'price', '653ee81117c9f5ee2124564b');
     
   }
 

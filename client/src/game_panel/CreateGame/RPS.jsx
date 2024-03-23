@@ -298,7 +298,7 @@ class RPS extends Component {
 
   async componentDidMount() {
     const { acQueryMyItem } = this.props;
-    await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
+    await acQueryMyItem(100, 1, 'price', '653ee81117c9f5ee2124564b');
     document.addEventListener('keydown', this.handleKeyPress);
     document.addEventListener('mousedown', this.handleClickOutside);
 
@@ -483,7 +483,7 @@ class RPS extends Component {
     this.setState({ bet_amount: new_state.selected_bet_amount });
   };
   render() {
-    const defaultBetAmounts = [0.001, 0.002, 0.005, 0.01, 0.1];
+    const defaultBetAmounts = [10, 25, 50, 100, 250];
     const { selected_rps, card_list, settings_panel_opened } = this.state;
     const {
       rps_game_type,
@@ -493,6 +493,7 @@ class RPS extends Component {
       onChangeState,
       strategies,
       ai_mode,
+      rank,
       user_id,
       selectedStrategy,
       setSelectedStrategy
@@ -632,6 +633,7 @@ class RPS extends Component {
                   strategies={strategies}
                   ai_mode={ai_mode}
                   user_id={user_id}
+                  rank={rank}
                   settings_panel_opened={settings_panel_opened}
                   setSelectedStrategy={setSelectedStrategy}
                   settingsRef={this.settingsRef}

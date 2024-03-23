@@ -130,6 +130,7 @@ function BetArray({
   isDarkMode,
   ai_mode,
   user_balance,
+  rank,
   is_betting,
   user_id,
   room_id,
@@ -337,6 +338,7 @@ function BetArray({
           settings_panel_opened={settings_panel_opened}
           setSelectedStrategy={setSelectedStrategy}
           settingsRef={settingsRef}
+          rank={rank}
           selectedStrategy={selectedStrategy}
         />
 

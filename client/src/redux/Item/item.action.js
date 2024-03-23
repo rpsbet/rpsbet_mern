@@ -79,7 +79,7 @@ export const queryProducts = (pagination, page, id) => async (
 };
 
 
-export const acQueryItem = (pagination, page, sortCriteria, itemType = '653ee81117c9f5ee2124564b') => async (
+export const acQueryItem = (pagination, page, sortCriteria, itemType) => async (
   dispatch
 ) => {
   dispatch({ type: ITEM_QUERY, payload: [] });

@@ -2,7 +2,7 @@ import React from 'react';
 import BetArray from './BetArray';
 
 
-const AiPanel = ({ isDarkMode, is_betting,rpsbetitems, predictedBetAmount, roomId, ai_mode, user_balance, user_id, updateUserStrategy, strategies, game_type, brain_game_type, spleesh_bet_unit, qs_game_type, betting, handleSwitchChange }) => {
+const AiPanel = ({ isDarkMode, rank, is_betting,rpsbetitems, predictedBetAmount, roomId, ai_mode, user_balance, user_id, updateUserStrategy, strategies, game_type, brain_game_type, spleesh_bet_unit, qs_game_type, betting, handleSwitchChange }) => {
 
   // switch (game_type) {
   //   case 'Quick Shoot':
@@ -46,6 +46,7 @@ const AiPanel = ({ isDarkMode, is_betting,rpsbetitems, predictedBetAmount, roomI
         is_betting={is_betting}
         strategies={strategies}
         ai_mode={ai_mode}
+        rank={rank}
         betting={betting}
         predictedBetAmount={predictedBetAmount}
         room_id={roomId}

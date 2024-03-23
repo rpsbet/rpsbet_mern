@@ -317,7 +317,7 @@ router.get('/my-items', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const sort = 'owners.price';
-  const itemTypeFilter = '653ee81117c9f5ee2124564b'; // specific item type
+  const itemTypeFilter = req.query.item_type; // specific item type
   const userId = req.user._id;
   
   try {
@@ -572,9 +572,9 @@ router.get('/:id', async (req, res) => {
 router.get('/', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
-
+console.log( req.query.itemType)
   const sort = 'owners.price';
-  const itemTypeFilter = '653ee81117c9f5ee2124564b'; // specific item type
+  const itemTypeFilter = req.query.itemType; // specific item type
 
   try {
     let query = { 'owners.onSale': { $gt: 0 }, 'item_type': itemTypeFilter }; // filter by itemType

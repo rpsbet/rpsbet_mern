@@ -52,7 +52,7 @@ class ConfirmTradeModal extends Component {
       alertModal(isDarkMode, message, '-cat');
       setBalance(balance);
       addNewTransaction(newTransaction);
-      acQueryItem(30, 1, 'price', '653ee7ac17c9f5ee21245649');
+      acQueryItem(30, 1, 'price', '653ee81117c9f5ee2124564b');
     } else {
       closeConfirmTradeModal();
       alertModal(isDarkMode, response.message);

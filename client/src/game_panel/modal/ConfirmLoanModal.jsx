@@ -34,16 +34,26 @@ const customStyles = {
 };
 
 const categories = [
-  { creditScoreThreshold: 1000, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.001 },
-  { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.005 },
-  { creditScoreThreshold: 1000, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.015 },
-  { creditScoreThreshold: 1000, rankThreshold: 4, accountAgeThresholdInDays: 60, maxAllowance: 0.025 },
-  { creditScoreThreshold: 1000, rankThreshold: 5, accountAgeThresholdInDays: 60, maxAllowance: 0.05 },
-  { creditScoreThreshold: 1000, rankThreshold: 6, accountAgeThresholdInDays: 90, maxAllowance: 0.1 },
-  { creditScoreThreshold: 950, rankThreshold: 7, accountAgeThresholdInDays: 90, maxAllowance: 0.25 },
-  { creditScoreThreshold: 950, rankThreshold: 8, accountAgeThresholdInDays: 120, maxAllowance: 0.5 },
-  { creditScoreThreshold: 950, rankThreshold: 9, accountAgeThresholdInDays: 120, maxAllowance: 1 },
-  { creditScoreThreshold: 950, rankThreshold: 10, accountAgeThresholdInDays: 120, maxAllowance: 2 }
+  { creditScoreThreshold: 1000, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 1 },
+  { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 2 },
+  { creditScoreThreshold: 1000, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 5 },
+  { creditScoreThreshold: 1000, rankThreshold: 4, accountAgeThresholdInDays: 60, maxAllowance: 10 },
+  { creditScoreThreshold: 1000, rankThreshold: 5, accountAgeThresholdInDays: 60, maxAllowance: 25 },
+  { creditScoreThreshold: 1000, rankThreshold: 6, accountAgeThresholdInDays: 90, maxAllowance: 50 },
+  { creditScoreThreshold: 950, rankThreshold: 7, accountAgeThresholdInDays: 90, maxAllowance: 70 },
+  { creditScoreThreshold: 950, rankThreshold: 8, accountAgeThresholdInDays: 120, maxAllowance: 80 },
+  { creditScoreThreshold: 950, rankThreshold: 9, accountAgeThresholdInDays: 120, maxAllowance: 90 },
+  { creditScoreThreshold: 950, rankThreshold: 10, accountAgeThresholdInDays: 120, maxAllowance: 100 },
+  { creditScoreThreshold: 1000, rankThreshold: 11, accountAgeThresholdInDays: 120, maxAllowance: 150 },
+  { creditScoreThreshold: 1000, rankThreshold: 12, accountAgeThresholdInDays: 120, maxAllowance: 200 },
+  { creditScoreThreshold: 1000, rankThreshold: 13, accountAgeThresholdInDays: 120, maxAllowance: 250 },
+  { creditScoreThreshold: 1000, rankThreshold: 14, accountAgeThresholdInDays: 120, maxAllowance: 300 },
+  { creditScoreThreshold: 1000, rankThreshold: 15, accountAgeThresholdInDays: 120, maxAllowance: 350 },
+  { creditScoreThreshold: 1000, rankThreshold: 16, accountAgeThresholdInDays: 120, maxAllowance: 500 },
+  { creditScoreThreshold: 950, rankThreshold: 17, accountAgeThresholdInDays: 120, maxAllowance: 600 },
+  { creditScoreThreshold: 950, rankThreshold: 18, accountAgeThresholdInDays: 120, maxAllowance: 700 },
+  { creditScoreThreshold: 950, rankThreshold: 19, accountAgeThresholdInDays: 120, maxAllowance: 800 },
+  { creditScoreThreshold: 950, rankThreshold: 20, accountAgeThresholdInDays: 120, maxAllowance: 1000 }
 ];
 
 
@@ -132,7 +142,7 @@ class ConfirmLoanModal extends Component {
                   <TableHead style={{ textTransform: "uppercase", position: 'sticky', top: 0, zIndex: 1, backgroundColor: this.props.isDarkMode ? 'black' : 'white' }}>
                     <TableRow>
                       <TableCell style={{ textAlign: 'center' }}>Rank</TableCell>
-                      <TableCell style={{ textAlign: 'center' }}>Account Age (Days)</TableCell>
+                      {/* <TableCell style={{ textAlign: 'center' }}>Account Age (Days)</TableCell> */}
                       <TableCell style={{ textAlign: 'center' }}>Max Allowance</TableCell>
                     </TableRow>
                   </TableHead>
@@ -155,9 +165,9 @@ class ConfirmLoanModal extends Component {
                             }}
                           />&nbsp;<span style={{ transform: 'translateY(4px)' }}>{category.rankThreshold}</span>
                         </TableCell>
-                        <TableCell style={{ textAlign: 'center', padding: '0' }}>
+                        {/* <TableCell style={{ textAlign: 'center', padding: '0' }}>
                           <span>{category.accountAgeThresholdInDays}</span>
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell style={{ textAlign: 'center', padding: '0' }}>
                           <span>{convertToCurrency(category.maxAllowance)}</span>
                         </TableCell>

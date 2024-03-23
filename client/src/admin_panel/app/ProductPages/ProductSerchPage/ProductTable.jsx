@@ -42,6 +42,7 @@ const MarketplaceContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
 `;
 
 const FilterSortContainer = styled.div`
@@ -327,13 +328,16 @@ class ProductTable extends Component {
     const itemTypeMap = {
       '653ee7ac17c9f5ee21245649': 'RRPS Card',
       '653ee7df17c9f5ee2124564a': 'Game Background',
-      '653ee81117c9f5ee2124564b': 'Accessory',
+      '653ee81117c9f5ee2124564b': 'Accessories',
       '654231df29446bc96d689d0f': 'Tools',
       '6542321929446bc96d689d10': 'Games'
     };
     this.fetchCustomerInfo();
     return (
       <MarketplaceContainer>
+        {itemType === '653ee81117c9f5ee2124564b' && (
+          <img src={'/img/accessory-banner.svg'} />
+        )}
         <FilterSortContainer>
           <div className="filters">
             <Button onClick={this.handleFilterClick}>
@@ -352,7 +356,7 @@ class ProductTable extends Component {
                 selected={itemType === '653ee7ac17c9f5ee21245649'}
               >
                 RRPS Card
-              </MenuItem>
+              </MenuItem> */}
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee7df17c9f5ee2124564a')
@@ -360,14 +364,14 @@ class ProductTable extends Component {
                 selected={itemType === '653ee7df17c9f5ee2124564a'}
               >
                 Game Background
-              </MenuItem> */}
+              </MenuItem>
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee81117c9f5ee2124564b')
                 }
                 selected={itemType === '653ee81117c9f5ee2124564b'}
               >
-                Accessory
+                Accessories
               </MenuItem>
               {/* <MenuItem
                 onClick={() =>
@@ -432,11 +436,11 @@ class ProductTable extends Component {
                   history.push(`/product/${row._id}`);
                 }}
               >
-                {/* {row.item_type === '653ee81117c9f5ee2124564b' ? (
+                {row.item_type === '653ee81117c9f5ee2124564b' ? (
                   <CommissionPower>{row.CP}</CommissionPower>
                 ) : (
                   ''
-                )} */}
+                )}
 
                 {row.owners.map(owner => (
                   <ProductCreator key={owner.user}>

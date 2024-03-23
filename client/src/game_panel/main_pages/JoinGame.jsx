@@ -19,7 +19,9 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Roll from '../JoinGame/Roll';
 import QuestionIcon from '@material-ui/icons/Info';
+import { getRank } from '../../util/getRank';
 import Tooltip from '@material-ui/core/Tooltip';
+
 import {
   bet,
   getRoomInfo,
@@ -1270,7 +1272,8 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
       strategies,
       ai_mode,
       selectedMainTabIndex,
-      rpsbetitems
+      rpsbetitems,
+      total_wagered
     } = this.props;
 
     return (
@@ -1622,10 +1625,12 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
                     roomId={roomInfo._id}
                     handleSwitchChange={this.handleSwitchChange}
                     game_type={roomInfo.game_type}
+                    rank={getRank(total_wagered)}
                     qs_game_type={roomInfo.qs_game_type}
                     brain_game_type={roomInfo.brain_game_type}
                     spleesh_bet_unit={roomInfo.spleesh_bet_unit}
                     user_id={user_id}
+
                     ai_mode={ai_mode}
                     user_balance={user_balance}
                   />
@@ -1786,6 +1791,7 @@ const mapStateToProps = state => ({
   roomInfo: state.logic.curRoomInfo,
   rpsbetitems: state.logic.rpsbetitems,
   user_id: state.auth.user._id,
+  total_wagered: state.auth.user.totalWagered,
   user_balance: state.auth.user.balance,
   ai_mode: state.auth.user.ai_mode,
   isMuted: state.auth.isMuted,
