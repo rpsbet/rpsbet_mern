@@ -413,48 +413,52 @@ class JoinGame extends Component {
     return probabilities.length - 1;
   }
 
-  
-predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
-  if (betArray.length < 2) {
-    return null;
-  }
-
-  const allStates = Array.from(new Set(betArray)); // Get all unique states
-
-  if (penultimateSameAsLast !== 0) {
-      if (penultimateSameAsLast >= 3) {
-          // Return the highest value from allStates without 50%
-          const maxState = Math.max(...allStates);
-          return maxState;
-      } else if (penultimateSameAsLast === 2) {
-          // Return the second highest value from allStates
-          const sortedStates = allStates.sort((a, b) => b - a);
-          return sortedStates[1];
-      } else if (penultimateSameAsLast === 1) {
-          // Return the lowest value from allStates
-          const minState = Math.min(...allStates);
-          return minState;
-      }
-  }
-  const transitionMatrix = this.createTransitionMatrix(betArray, smoothingFactor);
-  const lastBet = betArray[betArray.length - 1];
-    const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
-
-    if (possibleNextStates.length === 0) {
-
-      const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
-      return Math.min(Math.max(fallbackState, threshold), this.props.roomInfo.bet_amount);
+  predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
+    if (betArray.length < 2) {
+      return null;
     }
-
+  
+    const allStates = Array.from(new Set(betArray)); // Get all unique states
+  
+    if (penultimateSameAsLast !== 0) {
+      if (penultimateSameAsLast >= 3) {
+        // Return the highest value from allStates without 50%
+        const maxState = Math.max(...allStates);
+        return Math.max(maxState, 0.05);
+      } else if (penultimateSameAsLast === 2) {
+        // Return the second highest value from allStates
+        const sortedStates = allStates.sort((a, b) => b - a);
+        const secondHighestState = sortedStates[1];
+        return Math.max(secondHighestState, 0.05);
+      } else if (penultimateSameAsLast === 1) {
+        // Return the lowest value from allStates
+        const minState = Math.min(...allStates);
+        return Math.max(minState, 0.05);
+      }
+    }
+  
+    const transitionMatrix = this.createTransitionMatrix(betArray, smoothingFactor);
+    const lastBet = betArray[betArray.length - 1];
+    const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
+  
+    if (possibleNextStates.length === 0) {
+      const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
+      return Math.max(Math.max(fallbackState, threshold), 0.05);
+    }
+  
     const adjustedProbabilities = possibleNextStates.map(
       (nextState) => transitionMatrix[lastBet][nextState] + Math.random() * randomnessFactor
     );
-
+  
     const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
     const nextState = possibleNextStates[nextStateIndex];
-    console.log("nextState: ", nextState)
-    return Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
-}
+  
+    // Ensure the return value is at least 0.05
+    const returnValue = Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
+    return Math.max(returnValue, 0.05);
+  }
+  
+  
 
 
   predictNextDg = dropAmounts => {
@@ -748,18 +752,19 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
       this.setState({ betting: true });
 
 
-      const result = await getCustomerStatisticsData(
-        user_id,
-        'As Player',
-        gameType,
-        'All',
-        50
-      );
+      // const result = await getCustomerStatisticsData(
+      //   user_id,
+      //   'As Player',
+      //   gameType,
+      //   'All',
+      //   50
+      // );
+      
 
       let betArray = [];
 
-      if (result && result.gameLogList && result.gameLogList.length > 0) {
-        betArray = result.gameLogList.map(entry => entry.bet);
+      if (this.props.rpsbetitems && this.props.rpsbetitems.length > 0) {
+        betArray = this.props.rpsbetitems.map(item => item.bet_amount);
       }
 
 
@@ -1519,7 +1524,6 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
                       creator_id={roomInfo.creator_id}
                       aveMultiplier={roomInfo.aveMultiplier}
                       bet_amount={roomInfo.bet_amount}
-                      crashed={roomInfo.crashed}
                       cashoutAmount={roomInfo.cashoutAmount}
                       // bankroll={bankroll}
                       bang_bet_item_id={roomInfo.bang_bet_item_id}
@@ -1546,7 +1550,6 @@ predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, ra
                       creator_id={roomInfo.creator_id}
                       aveMultiplier={roomInfo.aveMultiplier}
                       bet_amount={roomInfo.bet_amount}
-                      crashed={roomInfo.crashed}
                       cashoutAmount={roomInfo.cashoutAmount}
                       bankroll={bankroll}
                       roll_bet_item_id={roomInfo.roll_bet_item_id}

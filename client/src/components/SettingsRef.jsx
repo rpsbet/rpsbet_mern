@@ -98,7 +98,7 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
                     }}
                     disabled={rank < strategy.levelToUnlock}
                   >
-                    {rank <= strategy.levelToUnlock && (
+                    {rank < strategy.levelToUnlock && (
                       <LockIcon style={{ color: yellow[500] }} />
                     )}
                     {strategy.name} {rank === strategy.levelToUnlock + 1 && (

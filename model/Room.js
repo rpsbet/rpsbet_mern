@@ -2,10 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const RoomSchema = new Schema({
-  room_name: {
-    type: String,
-    default: ''
-  },
   room_number: {
     type: String,
     default: ''
@@ -27,26 +23,6 @@ const RoomSchema = new Schema({
   selectedStrategy: {
     type: String,
     default: 'Random'
-  },
-  selected_rps: {
-    type: Number,
-    default: 0
-  },
-  crashed: {
-    type: Boolean,
-    default: false
-  },
-  selected_qs_position: {
-    type: Number,
-    default: 0
-  },
-  selected_drop: {
-    type: Number,
-    default: 0
-  },
-  selected_roll: {
-    type: Number,
-    default: 0
   },
   aveMultiplier: {
     type: Number,

@@ -33,9 +33,7 @@ const executeBet = async (req) => {
         let responseData = {};
         const user = req.user;
 
-        // if (bot) {
-        //     user = await User.findOne({ username: { $regex: 'BOT', $options: 'i' } });
-        // }
+       
         // const RockType = ['Rock', 'MoonRock', 'QuickBall'];
         // const PaperType = [
         //   'Paper',
@@ -407,6 +405,18 @@ const executeBet = async (req) => {
                 return responseData;
             }
 
+            if (
+                parseFloat(req.body.bet_amount) < 0.05
+            ) {
+
+                responseData = {
+                    success: false,
+                    message: 'MEOWNIMUM BET IS 0.05 RPS'
+                }
+                // Return an error or some other response to the user, e.g.:
+                return responseData;
+            }
+
             roomInfo = await Room.findOne({ _id: req.body._id })
                 .populate({ path: 'creator', model: User })
                 .populate({ path: 'game_type', model: GameType });
@@ -443,13 +453,19 @@ const executeBet = async (req) => {
             }).select('accessory');
             const accessory = creatorUser.accessory;
             let item;
+            let commission;
 
             if (accessory) {
                 item = await Item.findOne({ image: accessory }).select('CP');
+                if (item) {
+                    commission = item.CP + tax.value;
+                } else {
+                    commission = tax.value; // If no item found, use tax.value directly
+                }
             } else {
-                item = { CP: tax.value };
+                commission = tax.value; // If no accessory, use tax.value directly
             }
-            const commission = item.CP;
+
 
             newGameLog = new GameLog({
                 room: roomInfo,
@@ -513,7 +529,7 @@ const executeBet = async (req) => {
                 const availableBetItem = await RpsBetItem.findOne({
                     room: req.body._id,
                     joiner_rps: ''
-                }); 
+                });
                 let bet_item = availableBetItem;
 
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
@@ -523,9 +539,9 @@ const executeBet = async (req) => {
                         room: new ObjectId(req.body._id),
                         joiner_rps: { $ne: null }
                     })
-                    .sort({ created_at: -1 })
-                    .limit(50);
-                    
+                        .sort({ created_at: -1 })
+                        .limit(50);
+
 
                     switch (roomInfo['selectedStrategy']) {
                         case 'Random':
@@ -589,12 +605,12 @@ const executeBet = async (req) => {
                         if (allBetItems.length <= 3) {
                             return getRandomItem();
                         }
-                        
+
                         const transformedItems = allBetItems.map(item => ({ rps: item.joiner_rps }));
                         const nextItem = await predictNext(transformedItems, true);
                         return nextItem;
                     }
-                    
+
 
                 }
 
@@ -613,12 +629,12 @@ const executeBet = async (req) => {
                             parseFloat(req.body.bet_amount) * 2 * ((100 - commission) / 100);
 
                         newGameLog.commission =
-                            parseFloat(req.body.bet_amount) * 2 * ((commission - 0.5) / 100);
+                            parseFloat(req.body.bet_amount) * 2 * ((commission - tax.value) / 100);
 
                         // update rain
                         rain.value =
                             parseFloat(rain.value) +
-                            parseFloat(req.body.bet_amount) * 2 * ((commission - 0.5) / 100);
+                            parseFloat(req.body.bet_amount) * 2 * ((commission - tax.value) / 100);
 
                         rain.save();
 
@@ -628,25 +644,17 @@ const executeBet = async (req) => {
                             parseFloat(req.body.bet_amount) * 2 * (tax.value / 100);
                         platform.save();
 
-                        if (req.io.sockets) {
-                            req.io.sockets.emit('UPDATE_RAIN', {
-                                rain: rain.value
-                            });
-                        }
+                        // if (req.io.sockets) {
+                        //     req.io.sockets.emit('UPDATE_RAIN', {
+                        //         rain: rain.value
+                        //     });
+                        // }
 
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
 
                         roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
                         roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
 
-                        // update bankroll
-                        if (roomInfo['user_bet'] != 0) {
-                            roomInfo['user_bet'] =
-                                parseFloat(roomInfo['user_bet']) +
-                                parseFloat(req.body.bet_amount) *
-                                2 *
-                                ((commission - 0.5) / 100);
-                        }
 
                         message.message =
                             'Won ' +
@@ -661,7 +669,9 @@ const executeBet = async (req) => {
 
                         newGameLog.game_result = 0;
 
-                        newTransactionJ.amount += parseFloat(req.body.bet_amount);
+                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (parseFloat(req.body.bet_amount) * (tax.value / 100));
+
+                        newTransactionJ.amount += (parseFloat(req.body.bet_amount) - parseFloat(req.body.bet_amount) * (tax.value / 100));
                         message.message =
                             'Split ' +
                             convertToCurrency(req.body.bet_amount * 2) +
@@ -669,6 +679,12 @@ const executeBet = async (req) => {
                             roomInfo['game_type']['short_name'] +
                             '-' +
                             roomInfo['room_number'];
+
+                        // update platform stat (0.5%)
+                        platform.value =
+                            parseFloat(platform.value) +
+                            parseFloat(req.body.bet_amount) * 2 * (tax.value / 100);
+                        platform.save();
                     } else {
                         // console.log('loss')
 
@@ -676,10 +692,15 @@ const executeBet = async (req) => {
 
                         roomInfo.host_pr =
                             (parseFloat(roomInfo.host_pr) || 0) +
-                            parseFloat(req.body.bet_amount);
+                            (parseFloat(req.body.bet_amount) * 2 * ((100 - tax.value) / 100)) - parseFloat(req.body.bet_amount);
                         roomInfo.user_bet =
                             (parseFloat(roomInfo.user_bet) || 0) +
-                            parseFloat(req.body.bet_amount);
+                            (parseFloat(req.body.bet_amount) * 2 * ((100 - tax.value) / 100)) - parseFloat(req.body.bet_amount);
+
+                        platform.value =
+                            parseFloat(platform.value) +
+                            parseFloat(req.body.bet_amount) * 2 * (tax.value / 100);
+                        platform.save();
 
                         if (
                             roomInfo['endgame_type'] &&
@@ -959,7 +980,7 @@ const executeBet = async (req) => {
                     await roomInfo.save();
                 }
 
-                if (roomInfo['user_bet'] <= 0.0005) {
+                if (roomInfo['user_bet'] <= 0.05) {
                     roomInfo.status = 'finished';
                     newGameLog.game_result = 1;
                     message.message =
@@ -2789,7 +2810,7 @@ const executeBet = async (req) => {
 
             // Save the changes to the user document
             await user.save();
-        
+
             newGameLog.save();
             await roomInfo.save();
 

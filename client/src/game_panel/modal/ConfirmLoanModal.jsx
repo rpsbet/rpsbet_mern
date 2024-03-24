@@ -90,8 +90,8 @@ class ConfirmLoanModal extends Component {
       alertModal(isDarkMode, "Entered loan amount exceeds the allowed amount.");
       return; // Do not proceed further
     }
-    if (parseFloat(responseText) < 0.0005) {
-      alertModal(isDarkMode, "Meownimum is 0.0005 RPS");
+    if (parseFloat(responseText) < 0.05) {
+      alertModal(isDarkMode, "MEOWNIMUM IS 0.05 RPS");
       return; // Do not proceed further
     }
     const response = await confirmLoan({
