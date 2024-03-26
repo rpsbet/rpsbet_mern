@@ -24,6 +24,7 @@ import {
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
   SET_FOCUSED,
+  SET_NOTIFICATIONS_ALLOWED,
   TOGGLE_MUTE,
   TOGGLE_LOW_GRAPHICS,
   TOGGLE_DRAWER,
@@ -162,9 +163,9 @@ export const userSignIn = body => async dispatch => {
 };
 
 // Edit Profile
-export const changePasswordAndAvatar = (new_password, new_avatar)  => async dispatch => {
+export const changePasswordAndAvatar = (new_password, new_avatar) => async dispatch => {
   try {
-    const { data } = await axios.post('/auth/changePasswordAndAvatar', {new_password, new_avatar});
+    const { data } = await axios.post('/auth/changePasswordAndAvatar', { new_password, new_avatar });
     if (data.success) {
       dispatch({ type: MSG_SUCCESS, payload: 'User infomation has been saved.' });
       return true;
@@ -215,7 +216,7 @@ export const userSignOut = clear_token => async dispatch => {
 
 export const verifyEmail = verification_code => async dispatch => {
   try {
-    const { data } = await axios.post('/auth/verify_email', {verification_code});
+    const { data } = await axios.post('/auth/verify_email', { verification_code });
     if (data.success) {
       dispatch({ type: VERIFICATION_SUCCESS, payload: true });
       dispatch({ type: MSG_INFO, payload: 'Your account has been successfully verified.' });
@@ -250,7 +251,7 @@ export const sendResetPasswordEmail = (email) => async dispatch => {
   try {
     const { data } = await axios.post('/auth/sendResetPasswordEmail', { email });
     if (data.success) {
-      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has been sent. Please check your mail box (including spam).'})
+      dispatch({ type: MSG_INFO, payload: 'Recover Password Email has been sent. Please check your mail box (including spam).' })
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error })
     }
@@ -263,7 +264,7 @@ export const resetPassword = (params) => async dispatch => {
   try {
     const { data } = await axios.post('/auth/resetPassword', params);
     if (data.success) {
-      dispatch({ type: MSG_INFO, payload: 'Password has been changed.'})
+      dispatch({ type: MSG_INFO, payload: 'Password has been changed.' })
       return true;
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error })
@@ -314,6 +315,28 @@ export const toggleDrawer = isDrawerOpen => dispatch => {
 export const setDarkMode = isDarkMode => dispatch => {
   dispatch({ type: SET_DARK_MODE, payload: isDarkMode });
 }
+
+export const setNotificationsAllowed = isNotificationsAllowed => dispatch => {
+  if (isNotificationsAllowed) {
+    // Request permission if notifications are allowed
+    if (Notification.permission !== 'granted') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          dispatch({ type: SET_NOTIFICATIONS_ALLOWED, payload: true });
+        }
+      });
+    } else {
+      dispatch({ type: SET_NOTIFICATIONS_ALLOWED, payload: true });
+    }
+  } else {
+    // Remove permission if notifications are not allowed
+    if (Notification.permission === 'granted') {
+      Notification.permission = 'denied';
+    }
+    dispatch({ type: SET_NOTIFICATIONS_ALLOWED, payload: false });
+  }
+};
+
 export const setFocused = isFocused => dispatch => {
   dispatch({ type: SET_FOCUSED, payload: isFocused });
 }
@@ -326,7 +349,7 @@ export const changeUserName = (newUsername) => async (dispatch) => {
     if (data.success) {
       // dispatch({ type: USER_LOADED, payload: data.user });
       dispatch({ type: MSG_SUCCESS, payload: 'Your username has been updated successfully' });
-      
+
       return data;
     } else {
       dispatch({ type: MSG_ERROR, payload: data.error });

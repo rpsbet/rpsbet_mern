@@ -120,6 +120,7 @@ module.exports.sendNotification = (to_user_id, data) => {
 module.exports.newTransaction = transaction => {
   send('NEW_TRANSACTION', transaction['user']['_id'], transaction);
 };
+
 module.exports.socketio = server => {
   const io = socket_io(server);
   
@@ -133,7 +134,7 @@ module.exports.socketio = server => {
       try {
         // Update last_seen for the user
         await User.updateOne({ _id: data.user_id }, { last_seen: new Date() });
-
+    
         sockets[data.user_id] = socket;
         // Emit the updated online status
         const onlineUsers = Object.keys(sockets);
@@ -144,7 +145,7 @@ module.exports.socketio = server => {
         console.error('Error updating user last_seen:', error);
       }
     });
-
+    
     socket.on('GLOBAL_CHAT_SEND', data => {
       globalChatSend(io, data);
     });

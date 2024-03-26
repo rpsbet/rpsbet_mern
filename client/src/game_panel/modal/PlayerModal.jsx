@@ -190,14 +190,11 @@ class PlayerModal extends Component {
       actorType: 'Both',
       message: '',
       gameType: 'All',
-      timeType: '7',
+      timeType: '24',
       productArray: [],
       isTipModalOpen: false,
       tipAmount: '',
       balance: props.balance,
-      actorType: 'Both',
-      gameType: 'All',
-      timeType: '7',
     };
   }
 
@@ -392,7 +389,7 @@ class PlayerModal extends Component {
                   ×
                 </Button>
               </div>
-              <div className="modal-body profile edit-modal-body">
+              <div className="modal-body player-modal edit-modal-body">
                 <div className="align-center">
                   {loading ? (
                     <div className="loading-spinner"></div>

@@ -84,6 +84,17 @@ button#recentSearches span {
   height: 52px !important;
 }
 
+.red-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #ff0000;
+  border-radius: 50%;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+
 .selected {
   border: 2px solid #ffd000 !important;
   box-shadow: 0 0 5px #ffd00077;
@@ -337,16 +348,11 @@ div[role='tablist'] {
   padding: 10px;
   overflow-y: scroll;
 }
-.notification-container a{
+.notification-container a:first-child{
   width: 30%;
   display: inline-block !important;
-  margin: auto;
 }
-.notification-container a div:first-child{
-  width: 60% !important;
-  height: 60% !important;
-  margin-bottom: 15px !important;
-}
+
 .notification-container .notification{
   width: 70%;
   display: inline-block;
@@ -357,6 +363,12 @@ div[role='tablist'] {
   justify-content: start;
   margin-bottom: 10px;
   border-bottom: 2px solid;
+  position: relative;
+  opacity: 1;
+}
+
+.notification-container.read {
+  opacity: 0.5;
 }
 
 .notification {

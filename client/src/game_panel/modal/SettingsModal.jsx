@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/core/styles';
 import {
   setDarkMode,
+  setNotificationsAllowed,
   toggleMute,
   toggleMusic,
   toggleLowGraphics
@@ -22,6 +23,8 @@ import {
   MusicOff,
   Brightness7,
   Brightness4,
+  NotificationsActive,
+  NotificationsOff,
   VolumeUp,
   VolumeOff,
   Eco,
@@ -60,17 +63,19 @@ const styles = (theme) => ({
 class SettingsModal extends Component {
   state = {};
 
-  componentDidMount() {}
+  componentDidMount() { }
 
   render() {
     const {
       isMuted,
       isLowGraphics,
       isDarkMode,
+      isNotificationsAllowed,
       toggleMute,
       toggleLowGraphics,
       setDarkMode,
       toggleMusic,
+      setNotificationsAllowed,
       isMusicEnabled,
       loading,
     } = this.props;
@@ -95,7 +100,7 @@ class SettingsModal extends Component {
               <div className="modal-content-panel">
                 <Table>
                   <TableBody>
-                  <TableRow>
+                    <TableRow>
                       <TableCell>
                         {isMusicEnabled ? (
                           <Button
@@ -159,13 +164,17 @@ class SettingsModal extends Component {
                     </TableRow>
                     <TableRow>
                       <TableCell>
-                      {isLowGraphics ? (
-                          <Button>
+                        {isLowGraphics ? (
+                          <Button onClick={e => {
+                            toggleLowGraphics(!isLowGraphics);
+                          }}>
                             <EcoOutlined />&nbsp;
                             LOW GRAPHICS
                           </Button>
                         ) : (
-                          <Button>
+                          <Button onClick={e => {
+                            toggleLowGraphics(!isLowGraphics);
+                          }}>
                             <Eco />&nbsp;
                             HIGH GRAPHICS
                           </Button>
@@ -205,26 +214,26 @@ class SettingsModal extends Component {
                     </TableRow>
                     <TableRow>
                       <TableCell>
-                        {isDarkMode ? (
+                        {isNotificationsAllowed ? (
                           <Button onClick={e => {
-                            setDarkMode(!isDarkMode);
+                            setNotificationsAllowed(!isNotificationsAllowed);
                           }}>
-                            <Brightness4 />&nbsp;
+                            <NotificationsActive />&nbsp;
                             ALLOW NOTIFICATIONS
                           </Button>
                         ) : (
                           <Button onClick={e => {
-                            setDarkMode(!isDarkMode);
+                            setNotificationsAllowed(!isNotificationsAllowed);
                           }}>
-                            <Brightness7 />&nbsp;
+                            <NotificationsOff />&nbsp;
                             DON'T ALLOW NOTIFICATIONS
                           </Button>
                         )}
                       </TableCell>
                       <TableCell>
                         <Checkbox
-                          checked={isDarkMode}
-                          onChange={() => setDarkMode(!isDarkMode)}
+                          checked={isNotificationsAllowed}
+                          onChange={() => setNotificationsAllowed(!isNotificationsAllowed)}
                         />
                       </TableCell>
                     </TableRow>
@@ -243,6 +252,7 @@ const mapStateToProps = (state) => ({
   auth: state.auth.isAuthenticated,
   user_id: state.auth.user._id,
   isDarkMode: state.auth.isDarkMode,
+  isNotificationsAllowed: state.auth.isNotificationsAllowed,
   isMuted: state.auth.isMuted,
   isMusicEnabled: state.auth.isMusicEnabled,
   isLowGraphics: state.auth.isLowGraphics,
@@ -254,6 +264,7 @@ const mapDispatchToProps = {
   toggleMusic,
   toggleLowGraphics,
   setDarkMode,
+  setNotificationsAllowed,
 };
 
 export default connect(

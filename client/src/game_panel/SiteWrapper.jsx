@@ -58,7 +58,7 @@ import BankModal from './modal/BankModal';
 import DebtsModal from './modal/DebtsModal';
 
 import LeaderboardsModal from './modal/LeaderboardsModal';
-import { getNotifications } from '../redux/Logic/logic.actions';
+
 import { acCalculateRemainingLoans } from '../redux/Loan/loan.action';
 import ConfirmTradeModal from './modal/ConfirmTradeModal';
 import ConfirmLoanModal from './modal/ConfirmLoanModal';
@@ -91,7 +91,8 @@ import {
   userSignOut,
   getUser,
   setUnreadMessageCount,
-  setDarkMode
+  setDarkMode,
+  setNotificationsAllowed
 } from '../redux/Auth/user.actions';
 import {
   setRoomList,
@@ -104,7 +105,9 @@ import {
   selectMainTab,
   globalChatReceived,
   setGlobalChat,
-  updateBetResult
+  updateBetResult,
+  getNotifications,
+  readNotifications
 } from '../redux/Logic/logic.actions';
 import { alertModal } from './modal/ConfirmAlerts.jsx';
 import { convertToCurrency } from '../util/conversion';
@@ -204,7 +207,7 @@ class SiteWrapper extends Component {
       showInventoryModal: false,
       showResetPasswordModal: false,
       showGameLog: false,
-      notifications: updateFromNow(this.props.notifications),
+      notifications: [],
       showNotifications: false,
       userParams: [false, true],
       loadMore: 10,
@@ -214,6 +217,7 @@ class SiteWrapper extends Component {
       isHovered: false,
       websiteLoading: true,
       anchorEl: null,
+      notificationss: [],
       sortAnchorEl: null,
       filterAnchorEl: null,
       sortType: 'date',
@@ -228,7 +232,7 @@ class SiteWrapper extends Component {
       remainingLoans: this.props.remainingLoans,
       web3balance: 0
     };
-    this.state.notifications = this.props.notification || {};
+    // this.state.notifications = this.props.notification || {};
     this.initSocket = this.initSocket.bind(this);
   }
   static getDerivedStateFromProps(props, currentState) {
@@ -237,13 +241,13 @@ class SiteWrapper extends Component {
     if (
       currentState.balance !== balance ||
       currentState.betResult !== betResult ||
-      currentState.userName !== userName ||
-      currentState.notifications !== notifications
+      currentState.userName !== userName
+      // currentState.notifications !== notifications
     ) {
       return {
         ...currentState,
         balance,
-        notifications: updateFromNow(props.notifications),
+        // notifications: updateFromNow(props.notifications),
         userName,
         transactions: updateFromNow(props.transactions),
         betResult
@@ -263,18 +267,30 @@ class SiteWrapper extends Component {
       }
     }
     const shouldUpdate =
-    transactions &&
-    transactions.length > 0 &&
-    // transactions[0] &&
-    // transactions[0].amount !== null &&
-    prevProps.transactions[0] &&
-    prevProps.transactions[0] !== transactions[0] &&
-    !tnxComplete;
+      transactions &&
+      transactions.length > 0 &&
+      // transactions[0] &&
+      // transactions[0].amount !== null &&
+      prevProps.transactions[0] &&
+      prevProps.transactions[0] !== transactions[0] &&
+      !tnxComplete;
 
 
     if (prevProps.remainingLoans !== remainingLoans) {
       this.setState({ remainingLoans: remainingLoans });
     }
+
+
+    if (prevState.showNotifications !== this.state.showNotifications && !this.state.showNotifications) {
+      this.props.readNotifications(); // Mark all notifications as read
+      const updatedNotifications = this.state.notifications.map(notification => ({
+        ...notification,
+        is_read: true
+      }));
+      this.setState({ notifications: updatedNotifications });
+    }
+    
+
     if (shouldUpdate) {
 
       try {
@@ -307,7 +323,7 @@ class SiteWrapper extends Component {
 
   handleMainTabChange = (event, newValue) => {
     const { selectMainTab } = this.props;
-    
+
     if (window.location.pathname !== '/') {
       history.push('/');
     }
@@ -392,250 +408,302 @@ class SiteWrapper extends Component {
   };
 
   async initSocket() {
-    const socket = socketIOClient(this.state.endpoint);
-    socket.on('CONNECTED', async data => {
-      socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
-      socket.emit('FETCH_GLOBAL_CHAT');
-    });
+    try {
 
-    socket.on('UPDATED_ROOM_LIST', async data => {
-      await this.props.setRoomList(data);
-
-      // await this.props.getUser(
-      //   true,
-      //   false,
-      //   4,
-      //   this.state.filterType,
-      //   this.state.sortType,
-      //   this.state.searchQuery
-      // );
-      // await this.props.getMyGames(1);
-      await this.props.getMyHistory();
-      await this.props.getHistory();
-    });
-
-    socket.on('PLAY_CORRECT_SOUND', socketId => {
-      if (socket.id === socketId && !this.props.isMuted) {
-        const audio = new Audio('/sounds/correct.mp3');
-        audio.play();
+      if (!this.props.user || !this.props.user._id) {
+        throw new Error('User ID is not available');
       }
-    });
 
-    socket.on('PLAY_WRONG_SOUND', socketId => {
-      if (socket.id === socketId && !this.props.isMuted) {
-        const audio = new Audio('/sounds/wrong.mp3');
-        audio.play();
-      }
-    });
+      let socket = socketIOClient(this.state.endpoint);
+      socket.on('CONNECTED', async data => {
 
-    socket.on('SEND_CHAT', data => {
-      try {
-        if (!this.props.isMuted) {
-          let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
+        socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
+        socket.emit('FETCH_GLOBAL_CHAT');
+      });
 
-          const message = data.message.toLowerCase();
-          if (message.includes('won')) {
-            let value;
-            if (message.match(/\d+\.\d{2}/)) {
-              value = message.match(/\d+\.\d{2}/)[0];
-            } else if (message.match(/\d+/)) {
-              value = message.match(/\d+/)[0];
-            }
-            if (value) {
-              const formattedValue = parseFloat(value).toFixed(6);
-              const spokenValue = formattedValue.endsWith('.00')
-                ? parseFloat(formattedValue).toString()
-                : formattedValue;
-              this.speak(`Lost, ${spokenValue}`);
-            }
-            if (value >= 0 && value <= 2) {
-              this.audioSplit.play();
-            } else if (value > 25 && value <= 100) {
-              this.audioLose.play();
-            } else if (value > 100) {
-              this.fatality.play();
-            }
-            winCounter = 0;
-          } else if (message.includes('split')) {
-            let value;
-            if (message.match(/\d+\.\d{2}/)) {
-              value = message.match(/\d+\.\d{2}/)[0];
-            } else if (message.match(/\d+/)) {
-              value = message.match(/\d+/)[0];
-            }
-            if (value) {
-              const formattedValue = parseFloat(value);
-              const spokenValue = formattedValue.endsWith('.00')
-                ? parseFloat(formattedValue).toString()
-                : formattedValue;
-              this.speak(`Split, ${spokenValue}`);
-            }
-            winCounter = 0;
-          } else if (message.includes('lost')) {
-            winCounter++;
-            if (winCounter === 3) {
-              this.oohBaby.play();
-              winCounter = 0;
-            }
-            let value;
-            if (message.match(/\d+\.\d{2}/)) {
-              value = message.match(/\d+\.\d{2}/)[0];
-            } else if (message.match(/\d+/)) {
-              value = message.match(/\d+/)[0];
-            }
-            if (value) {
-              const formattedValue = parseFloat(value);
-              const spokenValue = formattedValue.endsWith('.00')
-                ? parseFloat(formattedValue).toString()
-                : formattedValue;
-              this.speak(`Won, ${spokenValue}`);
-            }
-            if (value >= 0 && value <= 2) {
-              this.audioSplit.play();
-            } else if (value >= 15 && value <= 50) {
-              this.cashRegister.play();
-            } else if (value > 50 && value <= 250) {
-              this.audioWin.play();
-            } else if (value > 250 && value <= 1000) {
-              this.topG.play();
-            } else if (value > 1000) {
-              this.nyan.play();
-            }
-          }
+      socket.on('UPDATED_ROOM_LIST', async data => {
+        await this.props.setRoomList(data);
 
-          localStorage.setItem('winCounter', winCounter);
+        // await this.props.getUser(
+        //   true,
+        //   false,
+        //   4,
+        //   this.state.filterType,
+        //   this.state.sortType,
+        //   this.state.searchQuery
+        // );
+        // await this.props.getMyGames(1);
+        await this.props.getMyHistory();
+        await this.props.getHistory();
+      });
+
+      socket.on('PLAY_CORRECT_SOUND', socketId => {
+        if (socket.id === socketId && !this.props.isMuted) {
+          const audio = new Audio('/sounds/correct.mp3');
+          audio.play();
         }
-        this.props.addChatLog(data);
+      });
 
-        if (history.location.pathname.substr(0, 5) === '/chat') {
-          socket.emit('READ_MESSAGE', {
-            to: this.props.user._id,
-            from: data.from
+      socket.on('PLAY_WRONG_SOUND', socketId => {
+        if (socket.id === socketId && !this.props.isMuted) {
+          const audio = new Audio('/sounds/wrong.mp3');
+          audio.play();
+        }
+      });
+
+      socket.on('SEND_CHAT', data => {
+        try {
+          if (!this.props.isMuted) {
+            let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
+
+            const message = data.message.toLowerCase();
+            if (message.includes('won')) {
+              let value;
+              if (message.match(/\d+\.\d{2}/)) {
+                value = message.match(/\d+\.\d{2}/)[0];
+              } else if (message.match(/\d+/)) {
+                value = message.match(/\d+/)[0];
+              }
+              if (value) {
+                const formattedValue = parseFloat(value).toFixed(6);
+                const spokenValue = formattedValue.endsWith('.00')
+                  ? parseFloat(formattedValue).toString()
+                  : formattedValue;
+                this.speak(`Lost, ${spokenValue}`);
+              }
+              if (value >= 0 && value <= 2) {
+                this.audioSplit.play();
+              } else if (value > 25 && value <= 100) {
+                this.audioLose.play();
+              } else if (value > 100) {
+                this.fatality.play();
+              }
+              winCounter = 0;
+            } else if (message.includes('split')) {
+              let value;
+              if (message.match(/\d+\.\d{2}/)) {
+                value = message.match(/\d+\.\d{2}/)[0];
+              } else if (message.match(/\d+/)) {
+                value = message.match(/\d+/)[0];
+              }
+              if (value) {
+                const formattedValue = parseFloat(value);
+                const spokenValue = formattedValue.endsWith('.00')
+                  ? parseFloat(formattedValue).toString()
+                  : formattedValue;
+                this.speak(`Split, ${spokenValue}`);
+              }
+              winCounter = 0;
+            } else if (message.includes('lost')) {
+              winCounter++;
+              if (winCounter === 3) {
+                this.oohBaby.play();
+                winCounter = 0;
+              }
+              let value;
+              if (message.match(/\d+\.\d{2}/)) {
+                value = message.match(/\d+\.\d{2}/)[0];
+              } else if (message.match(/\d+/)) {
+                value = message.match(/\d+/)[0];
+              }
+              if (value) {
+                const formattedValue = parseFloat(value);
+                const spokenValue = formattedValue.endsWith('.00')
+                  ? parseFloat(formattedValue).toString()
+                  : formattedValue;
+                this.speak(`Won, ${spokenValue}`);
+              }
+              if (value >= 0 && value <= 2) {
+                this.audioSplit.play();
+              } else if (value >= 15 && value <= 50) {
+                this.cashRegister.play();
+              } else if (value > 50 && value <= 250) {
+                this.audioWin.play();
+              } else if (value > 250 && value <= 1000) {
+                this.topG.play();
+              } else if (value > 1000) {
+                this.nyan.play();
+              }
+            }
+
+            localStorage.setItem('winCounter', winCounter);
+          }
+          this.props.addChatLog(data);
+
+          if (history.location.pathname.substr(0, 5) === '/chat') {
+            socket.emit('READ_MESSAGE', {
+              to: this.props.user._id,
+              from: data.from
+            });
+          } else {
+            socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {
+              to: this.props.user._id
+            });
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      });
+
+      socket.on('UPDATE_BET_RESULT', data => {
+        this.props.updateBetResult(data);
+      });
+
+      socket.on('NEW_TRANSACTION', data => {
+        this.props.addNewTransaction(data);
+      });
+
+      socket.on('SEND_NOTIFICATION', data => {
+        this.notificationSound.play();
+        // Initialize notifications as an empty array if it's null or undefined
+        const currentNotifications = this.state.notifications || [];
+        // Prepend the new notification data to the beginning of the array
+        currentNotifications.unshift(data);
+        this.setState({
+          notifications: currentNotifications
+        });
+
+        if (this.props.isNotificationsAllowed && window.Notification) {
+          // Check if the Notification API is available
+
+          // Options for the notification
+          const options = {
+            body: data, // You can customize the notification body here
+            silent: false // Display notification even when the tab is inactive
+          };
+
+          if (Notification.permission === 'granted') {
+            // If permission is granted, create the notification
+            new Notification('New Notification', options);
+          } else if (Notification.permission !== 'denied') {
+            // If permission is not denied, request permission and create the notification if granted
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') {
+                // Call setNotificationsAllowed appropriately
+                this.props.setNotificationsAllowed(true);
+                // Create the notification
+                new Notification('New Notification', options);
+              }
+            });
+          }
+        }
+      });
+
+      socket.on('SET_UNREAD_MESSAGE_COUNT', data => {
+        this.props.setUnreadMessageCount(data);
+      });
+
+      socket.on('ONLINE_STATUS_UPDATED', data => {
+        this.props.updateOnlineUserList(data.user_list);
+      });
+
+      socket.on('GLOBAL_CHAT_RECEIVED', data => {
+        this.props.globalChatReceived(data);
+      });
+
+      socket.on('SET_GLOBAL_CHAT', this.props.setGlobalChat);
+      this.props.setSocket(socket);
+
+      this.socket = socket;
+    } catch (error) {
+      console.error('Socket initialization failed:', error);
+      // Retry socket initialization after a short delay
+      setTimeout(() => {
+        this.initSocket();
+      }, 3000); // Retry after 3 seconds
+    }
+
+  }
+
+  loadWeb3 = async () => {
+    const { isDarkMode } = this.props;
+    try {
+      // console.log("Loading Web3");
+
+      // Check if there is a provider available
+      if (window.ethereum) {
+        // console.log("dd")
+        const web3 = new Web3(window.ethereum);
+
+        // Request accounts using the new Ethereum provider
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        // Check if accounts are available
+        if (accounts.length > 0) {
+          // alertModal(isDarkMode, 'CONNECTED ETHEREUM ACCOUNT: ' + accounts[0].toUpperCase());
+
+          // Get ETH balance of the account
+          const ethBalance = await web3.eth.getBalance(accounts[0]);
+          const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
+          // console.log(tokenAmount)
+          // Update state with the connected account and balance
+          this.setState({
+            web3: web3,
+            web3account: accounts[0],
+            web3balance: tokenAmount
           });
         } else {
-          socket.emit('REQUEST_UNREAD_MESSAGE_COUNT', {
-            to: this.props.user._id
-          });
+          alertModal(isDarkMode, 'NO ACCOUNTS AVAILABLE. PLEASE MAKE SURE YOU\'RE LOGGED INTO METAMASK.');
         }
-      } catch (e) {
-        console.log(e);
-      }
-    });
-
-    socket.on('UPDATE_BET_RESULT', data => {
-      this.props.updateBetResult(data);
-    });
-
-    socket.on('NEW_TRANSACTION', data => {
-      this.props.addNewTransaction(data);
-    });
-
-    socket.on('SET_UNREAD_MESSAGE_COUNT', data => {
-      this.props.setUnreadMessageCount(data);
-    });
-
-    socket.on('ONLINE_STATUS_UPDATED', data => {
-      this.props.updateOnlineUserList(data.user_list);
-    });
-
-    socket.on('GLOBAL_CHAT_RECEIVED', data => {
-      this.props.globalChatReceived(data);
-    });
-
-    socket.on('SET_GLOBAL_CHAT', this.props.setGlobalChat);
-    this.props.setSocket(socket);
-  }
-
- loadWeb3 = async () => {
-  const {isDarkMode} = this.props;
-  try {
-    // console.log("Loading Web3");
-
-    // Check if there is a provider available
-    if (window.ethereum) {
-      // console.log("dd")
-      const web3 = new Web3(window.ethereum);
-
-      // Request accounts using the new Ethereum provider
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      
-      // Check if accounts are available
-      if (accounts.length > 0) {
-        // alertModal(isDarkMode, 'CONNECTED ETHEREUM ACCOUNT: ' + accounts[0].toUpperCase());
-        
-        // Get ETH balance of the account
-        const ethBalance = await web3.eth.getBalance(accounts[0]);
-        const tokenAmount = web3.utils.fromWei(ethBalance, 'ether');
-        // console.log(tokenAmount)
-        // Update state with the connected account and balance
-        this.setState({ 
-          web3: web3,
-          web3account: accounts[0],
-          web3balance: tokenAmount 
-        });
       } else {
-        alertModal(isDarkMode, 'NO ACCOUNTS AVAILABLE. PLEASE MAKE SURE YOU\'RE LOGGED INTO METAMASK.');
+        alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
       }
-    } else {
-      alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
+      // console.log("Web3 loaded successfully");
+
+    } catch (e) {
+      alertModal(isDarkMode, 'ERROR LOADING WEB3: ' + e.toString().toUpperCase());
     }
-    // console.log("Web3 loaded successfully");
+  };
 
-  } catch (e) {
-    alertModal(isDarkMode, 'ERROR LOADING WEB3: ' + e.toString().toUpperCase());
-  }
-};
+  async componentDidMount() {
+    try {
+      // const loadingTimeout = setTimeout(() => {
+      //   this.setState({ websiteLoading: false });
+      // }, 5000); 
+      this.setState({ websiteLoading: true });
 
-async componentDidMount() {
-  try {
-    // const loadingTimeout = setTimeout(() => {
-    //   this.setState({ websiteLoading: false });
-    // }, 5000); 
-    this.setState({ websiteLoading: true });
+      const currentUrl = window.location.pathname;
 
-    const currentUrl = window.location.pathname;
+      await Promise.all([
+        this.props.getNotifications(),
+        this.initSocket(),
+        this.props.getUser(true, false, 5, null, null, null),
+        this.props.acCalculateRemainingLoans(),
+        this.initializeAudio(),
+        this.fetchData(),
+      ]);
+      this.setState({ websiteLoading: false, notifications: this.props.notifications });
+      // Set selectedMainTabIndex based on the current URL
+      if (currentUrl.includes('create')) {
+        this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
+      }
 
-    await Promise.all([
-      this.props.getNotifications(),
-      this.initSocket(),
-      this.props.getUser(true, false, 5, null, null, null),
-      this.props.acCalculateRemainingLoans(),
-      this.initializeAudio(),
-      this.fetchData(),
-    ]);
-    // clearTimeout(loadingTimeout);
-    this.setState({ websiteLoading: false });
-    // Set selectedMainTabIndex based on the current URL
-    if (currentUrl.includes('create')) {
-      this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
-    }
+      // Set up intervals for fetchData and updateReminderTime
+      setInterval(() => this.fetchData(), 2000);
+      this.interval = setInterval(this.updateReminderTime, 3000);
 
-    // Set up intervals for fetchData and updateReminderTime
-    setInterval(() => this.fetchData(), 2000);
-    this.interval = setInterval(this.updateReminderTime, 3000);
+      // Set up Ethereum event listeners
+      if (window.ethereum) {
+        window.ethereum.on('chainChanged', () => {
+          // console.log("Chain changed");
+          this.loadWeb3();
+        });
+        window.ethereum.on('accountsChanged', () => {
+          // console.log("Accounts changed");
+          this.loadWeb3();
+        });
 
-    // Set up Ethereum event listeners
-    if (window.ethereum) {
-      window.ethereum.on('chainChanged', () => {
-        // console.log("Chain changed");
+        // Load Web3 only once when the component mounts
         this.loadWeb3();
-      });
-      window.ethereum.on('accountsChanged', () => {
-        // console.log("Accounts changed");
-        this.loadWeb3();
-      });
+      } else {
+        alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
+      }
+    } catch (error) {
+      // clearTimeout(loadingTimeout);
 
-      // Load Web3 only once when the component mounts
-      this.loadWeb3();
-    } else {
-      alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
+      console.error(error);
     }
-  } catch (error) {
-    // clearTimeout(loadingTimeout);
-
-    console.error(error);
   }
-}
 
 
 
@@ -648,6 +716,8 @@ async componentDidMount() {
       this.topG.load();
       this.oohBaby = new Audio('/sounds/ooh-baby.mp3');
       this.oohBaby.load();
+      this.notificationSound = new Audio('/sounds/notification.mp3');
+      this.notificationSound.load();
       this.cashRegister = new Audio('/sounds/cash-register.mp3');
       this.cashRegister.load();
       this.fatality = new Audio('/sounds/fatality.mp3');
@@ -821,7 +891,7 @@ async componentDidMount() {
     this.setState({ showGameLog: !this.state.showGameLog });
   };
 
-  handleNotificationsClick = () => {
+  handleNotificationsClick = async () => {
     this.setState({ showNotifications: !this.state.showNotifications });
   };
 
@@ -888,7 +958,7 @@ async componentDidMount() {
   handleLoadMore = async () => {
     const { loadMore, filterType, sortType, searchQuery } = this.state;
     const nextLoadMore = loadMore >= 10 ? loadMore + 10 : 10;
-// console.log("nextLoadMore", nextLoadMore)
+    // console.log("nextLoadMore", nextLoadMore)
     await this.props.getUser(
       false,
       true,
@@ -922,11 +992,11 @@ async componentDidMount() {
     }));
   };
 
-  handleMouseEnter = () => {
+  handleDollarEnter = () => {
     this.setState({ isHovered: true });
   };
 
-  handleMouseLeave = () => {
+  handleDollarLeave = () => {
     this.setState({ isHovered: false });
   };
 
@@ -977,12 +1047,12 @@ async componentDidMount() {
       isCoinsAnimation,
       showSettingsModal,
       isLive,
+      notifications,
     } = this.state;
     const {
       isMuted,
       tnxComplete,
       isDarkMode,
-      notifications,
       selectedMainTabIndex,
       isAuthenticated,
       children,
@@ -995,12 +1065,12 @@ async componentDidMount() {
     const balanceString = balance.toString();
     const decimalIndex = balanceString.indexOf('.');
     const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
-    
-    const notificationsArray = updateFromNow(Object.values(notifications));
 
+    const notificationsArray = updateFromNow(Object.values(notifications));
     const valentinesDay = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
     const currentDate = new Date();
     const timeRemaining = valentinesDay - currentDate;
+    const unreadNotificationsCount = notifications.filter(notification => !notification.is_read).length;
 
     // Convert the remaining time to seconds
     this.secondsRemaining = Math.floor(timeRemaining / 1000);
@@ -1042,7 +1112,7 @@ async componentDidMount() {
                         ) : null}
 
                         {!completed ? (
-                          <div  className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                          <div className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
                         ) : null}
 
                         {!completed ? (
@@ -1053,11 +1123,11 @@ async componentDidMount() {
                         ) : null}
 
                         {!completed ? (
-                          <div  className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
+                          <div className="desktop-only" style={{ margin: '0 20px', fontSize: '2em', fontWeight: 'bold' }}>:</div>
                         ) : null}
 
                         {!completed ? (
-                          <div  className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div className="desktop-only" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{seconds}</div>
                             <div style={{ fontSize: '1.2em', color: '#666' }}>seconds</div>
                           </div>
@@ -1243,6 +1313,9 @@ async componentDidMount() {
                       onMouseEnter={() => this.handleMouseEnter(3)}
                       onMouseLeave={this.handleMouseLeave}
                     >
+                      {unreadNotificationsCount > 0 && (
+                        <span className="unread_message_badge notifications">{unreadNotificationsCount}</span>
+                      )}
                       {hoverTabIndex === 3 ? (
                         <NotificationsHover width="18pt" />
                       ) : (
@@ -1252,37 +1325,37 @@ async componentDidMount() {
                     {isAuthenticated ? (
                       <>
                         <div id="balance">
-                          
-                        
-        <div style={{display: "inline"}}
-          onMouseEnter={this.handleMouseEnter}
-          onMouseLeave={this.handleMouseLeave}
-        >
-          {isHovered ? (
-            `$${(balance * 0.589).toFixed(numDecimals)}`
-          ) : (
-            <>
-            <InlineSVG
-                            id="busd"
-                            src={busdSvg}
-                          />
-            <CountUp
-              start={oldBalance}
-              end={balance}
-              separator=","
-              decimal="."
-              decimals={numDecimals}
-              duration={40.5}
-              redraw={true}
-              preserveValue={true}
-              onEnd={() => {
-                this.setState({ oldBalance: balance });
-              }}
-            />
-            </>
 
-          )}
-        </div>
+
+                          <div style={{ display: "inline" }}
+                            onMouseEnter={this.handleDollarEnter}
+                            onMouseLeave={this.handleDollarLeave}
+                          >
+                            {isHovered ? (
+                              `$${(balance * 0.589).toFixed(numDecimals)}`
+                            ) : (
+                              <>
+                                <InlineSVG
+                                  id="busd"
+                                  src={busdSvg}
+                                />
+                                <CountUp
+                                  start={oldBalance}
+                                  end={balance}
+                                  separator=","
+                                  decimal="."
+                                  decimals={numDecimals}
+                                  duration={40.5}
+                                  redraw={true}
+                                  preserveValue={true}
+                                  onEnd={() => {
+                                    this.setState({ oldBalance: balance });
+                                  }}
+                                />
+                              </>
+
+                            )}
+                          </div>
 
                           {(isCoinsAnimation && !isLowGraphics) &&
                             <Lottie
@@ -1403,23 +1476,6 @@ async componentDidMount() {
                           </MenuItem>
 
                           <Divider />
-                          {/* <MenuItem
-                        onClick={e => {
-                          this.props.setDarkMode(!this.props.isDarkMode);
-                        }}
-                      >
-                        <ListItem>
-                          {this.props.isDarkMode ? (
-                            <Android />
-                          ) : (
-                            <Person />
-                          )}
-                        </ListItem>
-                       
-                        <ListItemText>
-                          {this.props.isDarkMode ? 'MARKOV' : 'Q-BOT'}
-                        </ListItemText>
-                      </MenuItem> */}
                           <MenuItem onClick={this.handleOpenSettingsModal}>
                             <ListItemIcon>
                               <Settings />
@@ -1473,7 +1529,8 @@ async componentDidMount() {
                       <div className="notification-element">
                         {notificationsArray.length > 0 ? (
                           notificationsArray.map((notification, index) => (
-                            <div className="notification-container" key={index}>
+
+                            <div className={`notification-container ${notification.is_read ? 'read' : ''}`} key={index}>
                               <a
                                 className="player"
                                 onClick={() =>
@@ -1488,19 +1545,25 @@ async componentDidMount() {
                                   className="avatar"
                                 />
                               </a>
-                              <div className="notification">
+                              <a href={`/join/${notification.room}/`} style={{width: "100%"}}>
+
+                              {!notification.is_read && <div className="red-dot" />}
+                              <div className="notification" style={{width: "70%", display: 'inline-block'}}>
                                 <p
                                   dangerouslySetInnerHTML={{
                                     __html: notification.message
                                   }}
-                                />
+                                  />
                                 <p className="fromNow">{notification.from_now}</p>
                               </div>
+                                  </a>
                             </div>
                           ))
                         ) : (
                           <p>No notifications available.</p>
                         )}
+
+
                       </div>
                     }
                   </div>
@@ -1827,6 +1890,7 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   userName: state.auth.userName,
   isMuted: state.auth.isMuted,
+  isNotificationsAllowed: state.auth.isNotificationsAllowed,
   user: state.auth.user,
   unreadMessageCount: state.auth.unreadMessageCount,
   selectedMainTabIndex: state.logic.selectedMainTabIndex,
@@ -1856,8 +1920,10 @@ const mapDispatchToProps = {
   setUnreadMessageCount,
   addNewTransaction,
   getNotifications,
-  setDarkMode,
+  readNotifications,
   updateOnlineUserList,
+  setDarkMode,
+  setNotificationsAllowed,
   selectMainTab,
   acCalculateRemainingLoans,
   globalChatReceived,

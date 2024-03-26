@@ -690,20 +690,24 @@ div[role="presentation"] div {
     width: 100% !important;
     height: 100% !important;
 }
-.modal-body.profile div.avatar {
-    width: 50%;
-    margin-top: 90px;
+.modal-body.profile div.avatar,
+.modal-body.player-modal div.avatar
+ {
+    max-width: 300px;
+    margin-top: 60px;
+    margin: auto;
 }
   .modal-body.profile div.avatar div,
   .modal-body.profile div.avatar img
    {
-    border-radius: 2em !important;
     width: 100%;
   }
 
   .modal-body.profile div.avatar div .rank-icon,
+  .modal-body.player-modal div.avatar div .rank-icon,
+  .modal-body.player-modal div.avatar .rank-icon,
   .modal-body.profile div.avatar .rank-icon {
-    border-radius: 0.5em !important;
+    border-radius: 0.3em !important;
 
   }
 
@@ -720,7 +724,8 @@ box-shadow: unset !important;
     height: 50% !important;
 }
 
-  .profile.modal-body div.rank-icon
+  .profile.modal-body div.rank-icon,
+  .player-modal.modal-body div.rank-icon
    {
     border-radius: 0.8em !important;
     width: 20% !important;

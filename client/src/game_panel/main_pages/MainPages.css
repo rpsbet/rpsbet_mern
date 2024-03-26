@@ -722,8 +722,12 @@ div.table.my-chat-table
   .table-cell[title='Unread message']:hover:active {
   transform: translateX(2px) !important;
 }
+.unread_message_badge.notifications {
+  position: absolute;
+  transform: scale(0.6) translate(14px, 14px);
 
-div.table.my-chat-table .table-row .table-cell span.unread_message_badge {
+}
+.unread_message_badge {
   background: linear-gradient(45deg, #a50010, #c83328);
   color: white;
   border-radius: 50%;
@@ -1602,7 +1606,6 @@ h6.score {
 .pre-summary-panel .value {
   font-size: 1.25rem;
   font-weight: bold;
-  margin-left: -20px;
   white-space: nowrap;
 }
 

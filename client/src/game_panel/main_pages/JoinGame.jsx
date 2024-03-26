@@ -412,54 +412,60 @@ class JoinGame extends Component {
     // This should not happen, but just in case
     return probabilities.length - 1;
   }
-
   predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
     if (betArray.length < 2) {
-      return null;
+    console.log("dd")
+
+        return null;
     }
-  
+
     const allStates = Array.from(new Set(betArray)); // Get all unique states
-  
+
     if (penultimateSameAsLast !== 0) {
-      if (penultimateSameAsLast >= 3) {
-        // Return the highest value from allStates without 50%
-        const maxState = Math.max(...allStates);
-        return Math.max(maxState, 0.05);
-      } else if (penultimateSameAsLast === 2) {
-        // Return the second highest value from allStates
-        const sortedStates = allStates.sort((a, b) => b - a);
-        const secondHighestState = sortedStates[1];
-        return Math.max(secondHighestState, 0.05);
-      } else if (penultimateSameAsLast === 1) {
-        // Return the lowest value from allStates
-        const minState = Math.min(...allStates);
-        return Math.max(minState, 0.05);
-      }
+        if (penultimateSameAsLast >= 3) {
+            // Return the highest value from allStates without 50%
+            const maxState = Math.max(...allStates);
+            return Math.min(Math.max(maxState, 0.05), this.props.roomInfo.bet_amount);
+        } else if (penultimateSameAsLast === 2) {
+            // Return the second highest value from allStates
+            const sortedStates = allStates.sort((a, b) => b - a);
+
+            if (sortedStates.length >= 2) {
+                const secondHighestState = sortedStates[1];
+                return Math.min(Math.max(secondHighestState, 0.05), this.props.roomInfo.bet_amount);
+            } else {
+                // If there is no second state, return the first state from allStates
+                const firstState = sortedStates[0];
+                return Math.min(Math.max(firstState, 0.05), this.props.roomInfo.bet_amount);
+            }
+        } else if (penultimateSameAsLast === 1) {
+            // Return the lowest value from allStates
+            const minState = Math.min(...allStates);
+            return Math.min(Math.max(minState, 0.05), this.props.roomInfo.bet_amount);
+        }
     }
-  
+
     const transitionMatrix = this.createTransitionMatrix(betArray, smoothingFactor);
     const lastBet = betArray[betArray.length - 1];
     const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
-  
+
     if (possibleNextStates.length === 0) {
-      const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
-      return Math.max(Math.max(fallbackState, threshold), 0.05);
+        const fallbackState = allStates[Math.floor(Math.random() * betArray.length)];
+        const returnValue = Math.min(Math.max(fallbackState, threshold), this.props.roomInfo.bet_amount);
+        return Math.max(returnValue, 0.05);
     }
-  
+
     const adjustedProbabilities = possibleNextStates.map(
-      (nextState) => transitionMatrix[lastBet][nextState] + Math.random() * randomnessFactor
+        (nextState) => transitionMatrix[lastBet][nextState] + Math.random() * randomnessFactor
     );
-  
+
     const nextStateIndex = this.chooseRandomIndex(adjustedProbabilities);
     const nextState = possibleNextStates[nextStateIndex];
-  
+
     // Ensure the return value is at least 0.05
     const returnValue = Math.min(Math.max(nextState, threshold), this.props.roomInfo.bet_amount);
     return Math.max(returnValue, 0.05);
-  }
-  
-  
-
+}
 
   predictNextDg = dropAmounts => {
     const sortedDrops = dropAmounts.map(drop => drop.drop).sort((a, b) => a - b);
@@ -908,6 +914,7 @@ class JoinGame extends Component {
                 randomItem = randomnessResult.counterMove;
                 const penultimateSameAsLast = randomnessResult.risk;
                 predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+console.log(predictedBetAmount)
             } else if (this.props.ai_mode === 'NPC') {
                 randomItem = await NPC(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);

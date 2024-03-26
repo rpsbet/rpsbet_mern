@@ -268,12 +268,13 @@ class MyGamesTable extends Component {
 
   handlePaymentMethodChange = (event) => {
     const selectedMethod = event.target.value;
-
     // Update the payment method state
     this.setState({ paymentMethod: selectedMethod });
     // If "manual" is selected, set the payoutAmount to "0"
-    if (this.state.selectedMethod !== 'manual') {
+    if (selectedMethod !== 'manual') {
       this.setState({ payoutAmount: this.state.selectedRow.bet_amount });
+    } else {
+      this.setState({ payoutAmount: 0 });
     }
   };
 

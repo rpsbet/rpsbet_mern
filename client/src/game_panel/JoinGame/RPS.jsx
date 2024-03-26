@@ -202,12 +202,32 @@ class RPS extends Component {
   };
 
   async componentDidMount() {
-    const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo } = this.props;
     document.addEventListener('keydown', this.handleKeyPress);
-    document.addEventListener('mousedown', this.handleClickOutside);
+  
+    // Retry socket initialization after a short delay
+    const initializeSocket = async () => {
+      try {
+        const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo } = this.props;
+        const initializedSocket = socket || socketIOClient(this.state.endpoint);
+        this.setState({ socket: initializedSocket });
+  
+        if (initializedSocket) {
+          initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, data => {
+            this.setState(prevState => {
+              let updatedPlayers = [...prevState.players, data.user];
+              if (updatedPlayers.length > 5) {
+                updatedPlayers.shift(); // Remove the oldest player
+              }
+              return {
+                bankroll: data.bankroll,
+                rps: data.rps,
+                startedPlaying: true,
+                players: updatedPlayers
+              };
+            });
+          });
 
-    if (socket) {
-      // socket.on('CARD_PRIZE', data => {
+           // initializedSocket.on('CARD_PRIZE', data => {
       //   if (data) {
       //     this.setState(
       //       {
@@ -220,53 +240,45 @@ class RPS extends Component {
       //   }
       // });
 
-      socket.on(`UPDATED_BANKROLL_${roomInfo._id}`, data => {
-        // console.log("l;ast r[s", data.rps[data.rps.length - 1])
-
-        this.setState(prevState => {
-          let updatedPlayers = [...prevState.players, data.user];
-          if (updatedPlayers.length > 5) {
-            updatedPlayers.shift(); // Remove the oldest player
-          }
-          return {
-            bankroll: data.bankroll,
-            rps: data.rps,
-            startedPlaying: true,
-            players: updatedPlayers
-          };
-        });
-      });
-
-
-      socket.on('RPS_1', data => {
-        if (data && data.length > 0) {
-          this.setState({
-            rps: data,
-            startedPlaying: true
+  
+          initializedSocket.on('RPS_1', data => {
+            if (data && data.length > 0) {
+              this.setState({
+                rps: data,
+                startedPlaying: true
+              });
+            }
           });
+  
+          initializedSocket.emit('emitRps');
         }
-      });
-
-      socket.emit('emitRps');
-    }
-    // Add event listener conditionally based on rps_game_type
-    if (rps_game_type === 0) {
-      document.addEventListener('mousedown', this.handleClickOutside);
-    }
-
-    if (rps_game_type === 1) {
-      // Ensure acQueryMyItem is available
-      if (acQueryMyItem) {
-        await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
-        setTimeout(() => {
-
-          if (!this.state.cardDealt) {
-            this.dealCard();
+  
+        // Add event listener conditionally based on rps_game_type
+        if (rps_game_type === 0) {
+          document.addEventListener('mousedown', this.handleClickOutside);
+        }
+  
+        if (rps_game_type === 1) {
+          // Ensure acQueryMyItem is available
+          if (acQueryMyItem) {
+            await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
+            setTimeout(() => {
+              if (!this.state.cardDealt) {
+                this.dealCard();
+              }
+            }, 1500);
           }
-        }, 1500);
+        }
+      } catch (error) {
+        console.error('Socket initialization failed:', error);
+        // Retry socket initialization after a short delay
+        setTimeout(initializeSocket, 3000); // Retry after 3 seconds
       }
-    }
+    };
+  
+    initializeSocket();
   }
+  
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
@@ -700,7 +712,7 @@ class RPS extends Component {
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
     const barStyle = {
-      width: `${payoutPercentage + 10}%`,
+      width: `${payoutPercentage}%`,
       backgroundColor: payoutPercentage <= 50 ? 'yellow' : 'red'
     };
     const rpsValueAtLastIndex = rps[rps.length - 1]?.rps;

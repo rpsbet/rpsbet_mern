@@ -25,7 +25,8 @@ import {
   TOGGLE_MUTE,
   TOGGLE_LOW_GRAPHICS,
   TOGGLE_MUSIC_ENABLED,
-  TOGGLE_DRAWER
+  TOGGLE_DRAWER,
+  SET_NOTIFICATIONS_ALLOWED
 } from '../types';
 
 const initialState = {
@@ -33,6 +34,7 @@ const initialState = {
   token: localStorage.getItem('token'),
   isAuthenticated: localStorage.getItem('isAuthenticated'),
   isDarkMode: localStorage.getItem('darkMode') === 'false' ? false : true,
+  isNotificationsAllowed: localStorage.getItem('isNotificationsAllowed') === 'false' ? false : true,
   isAdmin: false,
   isMusicEnabled:
     localStorage.getItem('isMusicEnabled') === 'false' ? false : true,
@@ -72,6 +74,13 @@ export default function(state = initialState, action) {
       return {
         ...state,
         isMuted: payload
+      };
+    case SET_NOTIFICATIONS_ALLOWED:
+      localStorage.setItem('isNotificationsAllowed', payload);
+      console.log(payload)
+      return {
+        ...state,
+        isNotificationsAllowed: payload
       };
       case 'SET_FOCUSED': // Action type dispatched when chat is enabled
       return {

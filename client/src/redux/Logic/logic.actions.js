@@ -703,19 +703,28 @@ export const getNotifications = () => async dispatch => {
   }
 };
 
-
-export const getNotificationsRoomInfo = user_id => async dispatch => {
+export const readNotifications = () => async dispatch => {
   try {
-    const res = await axios.post('/game/get_notifications_room_info', { user_id });
-    if (res.data.success) {
-      dispatch({ type: SET_NOTIFICATIONS_ROOM_INFO, payload: res.data.notificationsRoomInfo });
-    } else {
-      dispatch({ type: MSG_GAMETYPE_LOAD_FAILED });
+    // First, mark notifications as read
+    const markReadResponse = await axios.patch('/game/read_notifications');
+
+    // Check if marking notifications as read was successful
+    if (markReadResponse.data.success) {
+
+      const fetchNotificationsResponse = await axios.get('/game/notifications');
+console.log(fetchNotificationsResponse)
+      // Dispatch a Redux action with the updated notifications payload
+      if (fetchNotificationsResponse.data.success) {
+        dispatch({ type: NOTIFICATIONS_LOADED, payload: fetchNotificationsResponse.data.notifications });
+      }
     }
   } catch (err) {
-    dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
+    // If there's an error during the request, log the error.
+    console.log(err);
   }
 };
+
+
 
 export const getChatRoomInfo = user_id => async dispatch => {
   try {

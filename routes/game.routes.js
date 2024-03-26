@@ -267,6 +267,7 @@ router.get('/room/:id', async (req, res) => {
     // }).sort({ _id: 'asc' });
 
     async function emitRps(req) {
+      console.log("hi")
       const rpsItems = await RpsBetItem.find({ room: room });
       const rps1 = rpsItems.filter(item => item.joiner_rps !== '').slice(-5);
       if (rps1.length > 0 && req.io) {
@@ -360,7 +361,6 @@ router.get('/room/:id', async (req, res) => {
         host_pr: room['host_pr'],
         pr: room['pr'],
         new_host_pr: room['new_host_pr'],
-        crashed: room['crashed'],
         user_bet: room['user_bet'],
         room_name: room['game_type']['short_name'] + '-' + room['room_number'],
         brain_game_score: room['brain_game_score'],
@@ -1326,51 +1326,52 @@ router.post('/rooms', auth, async (req, res) => {
           }
         }
       }
-    } else if (gameType.game_type_name === 'Quick Shoot') {
-      for (const qs of qs_list) {
-        const newQs = new QsBetItem({
-          room: newRoom,
-          qs: qs.qs
-        });
-        await newQs.save();
-      }
-    } else if (gameType.game_type_name === 'Drop Game') {
-      for (const drop of drop_list) {
-        const newDrop = new DropBetItem({
-          room: newRoom,
-          drop: drop.drop
-        });
-        await newDrop.save();
-      }
-    } else if (gameType.game_type_name === 'Bang!') {
-      // const roomId = newRoom.id;
-      // initializeRound(bang_list, newRoom, req.io.sockets, roomId);
-      for (const bang of bang_list) {
-        const newBang = new BangBetItem({
-          room: newRoom,
-          bang: bang.bang
-        });
-        await newBang.save();
-      }
-    } else if (gameType.game_type_name === 'Roll') {
-      for (const roll of roll_list) {
-        const newRoll = new RollBetItem({
-          room: newRoom,
-          roll: roll.roll,
-          face: roll.face
-        });
-        await newRoll.save();
-      }
-    } else if (gameType.game_type_name === 'Blackjack') {
-      for (const bj of bj_list) {
-        const newBj = new BjBetItem({
-          room: newRoom,
-          bj: bj.bj,
-          score: bj.score
-        });
-        await newBj.save();
-      }
     }
+    // else if (gameType.game_type_name === 'Quick Shoot') {
+    //   for (const qs of qs_list) {
+    //     const newQs = new QsBetItem({
+    //       room: newRoom,
+    //       qs: qs.qs
+    //     });
+    //     await newQs.save();
+    //   }
+    // } else if (gameType.game_type_name === 'Drop Game') {
+    //   for (const drop of drop_list) {
+    //     const newDrop = new DropBetItem({
+    //       room: newRoom,
+    //       drop: drop.drop
+    //     });
+    //     await newDrop.save();
+    //   }
+    // } else if (gameType.game_type_name === 'Bang!') {
+    //   // const roomId = newRoom.id;
+    //   // initializeRound(bang_list, newRoom, req.io.sockets, roomId);
+    //   for (const bang of bang_list) {
+    //     const newBang = new BangBetItem({
+    //       room: newRoom,
+    //       bang: bang.bang
+    //     });
+    //     await newBang.save();
+    //   }
+    // } else if (gameType.game_type_name === 'Roll') {
+    //   for (const roll of roll_list) {
+    //     const newRoll = new RollBetItem({
+    //       room: newRoom,
+    //       roll: roll.roll,
+    //       face: roll.face
+    //     });
+    //     await newRoll.save();
+    //   }
+    // } else if (gameType.game_type_name === 'Blackjack') {
+    //   for (const bj of bj_list) {
+    //     const newBj = new BjBetItem({
+    //       room: newRoom,
+    //       bj: bj.bj,
+    //       score: bj.score
+    //     });
+    //     await newBj.save();
+    //   }
+    // }
 
     const newTransaction = new Transaction({
       user: req.user,
@@ -1379,10 +1380,6 @@ router.post('/rooms', auth, async (req, res) => {
       room: newRoom._id
     });
 
-    if (is_anonymous === true) {
-      req.user.balance -= 10;
-      newTransaction.amount -= 10;
-    }
 
     req.user.balance -= bet_amount;
     newTransaction.amount -= bet_amount;
@@ -1441,7 +1438,7 @@ async function getRoomNetProfits(room_id) {
       if (accessory) {
         item = await Item.findOne({ image: accessory }).select('CP');
       } else {
-        item = { CP: tax.value };
+        item = { CP: parseFloat(tax.value) };
       }
 
       const commission = item.CP;
@@ -2386,53 +2383,33 @@ router.get('/my_chat', auth, async (req, res) => {
     });
   }
 });
+
 router.get('/notifications', auth, async (req, res) => {
   try {
     const userId = req.user._id;
-    const messages = await Notification.find({
-      $or: [{ from: userId }, { to: userId }]
-    }).populate([
-      { path: 'from', model: User },
-      { path: 'to', model: User }
-    ]).sort({ created_at: -1 }).limit(10);
-
-    const notifications = messages.reduce((acc, message) => {
-      const targetUser = message.from && message.from._id.equals(userId)
-        ? message.to
-        : message.from;
-
-      if (!targetUser) return acc;
-
-      if (
-        !acc[targetUser._id] ||
-        acc[targetUser._id].updated_at < message.updated_at
-      ) {
-        acc[targetUser._id] = {
-          _id: targetUser._id,
-          message: message.message,
-          username: targetUser.username,
-          avatar: targetUser.avatar,
-          accessory: targetUser.accessory,
-          room: targetUser.room,
-          rank: targetUser.totalWagered,
-          created_at: message.created_at,
-          created_at_str: moment(message.created_at).format('LLL'),
-          updated_at: message.updated_at,
-          is_read: false
-        };
-      }
-      return acc;
-    }, {});
-
-    const sortedNotifications = Object.values(notifications).sort((a, b) => {
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
-
-    const recentNotifications = sortedNotifications.slice(0, 10);
+    const notifications = await Notification.find({ to: userId })
+      .populate([
+        { path: 'from', model: User },
+        { path: 'to', model: User }
+      ])
+      .sort({ created_at: -1 })
+      .limit(10);
 
     res.json({
       success: true,
-      notifications: recentNotifications
+      notifications: notifications.map(notification => ({
+        _id: notification.from._id,
+        message: notification.message,
+        username: notification.from.username,
+        avatar: notification.from.avatar,
+        accessory: notification.from.accessory,
+        room: notification.room,
+        rank: notification.from.totalWagered,
+        created_at: notification.created_at,
+        created_at_str: moment(notification.created_at).format('LLL'),
+        updated_at: notification.updated_at,
+        is_read: notification.is_read
+      }))
     });
   } catch (err) {
     console.error(err);
@@ -2443,6 +2420,30 @@ router.get('/notifications', auth, async (req, res) => {
   }
 });
 
+router.patch('/read_notifications', auth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Find the most recent 10 notifications for the user
+    const notifications = await Notification.find({ to: userId })
+      .sort({ created_at: -1 })
+      .limit(10);
+
+    // Update the 'is_read' field of the most recent notifications for the user
+    const notificationIds = notifications.map(notification => notification._id);
+    await Notification.updateMany({ _id: { $in: notificationIds } }, { $set: { is_read: true } });
+    res.json({
+      success: true,
+      message: 'Most recent notifications marked as read successfully.'
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      message: err.message
+    });
+  }
+});
 
 const decrementUserBalance = async (userId, betAmount) => {
   const user = await User.findOne({ _id: userId });
@@ -2614,63 +2615,6 @@ router.post('/start_roll', auth, async (req, res) => {
 
 
 
-router.post('/get_notification_room_info', auth, async (req, res) => {
-  try {
-    const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
-
-    await Notification.updateMany(
-      {
-        is_read: false,
-        from: new ObjectId(req.body.user_id),
-        to: new ObjectId(req.user._id)
-      },
-      { $set: { is_read: true } },
-      (err, writeResult) => {
-        console.log('set messages as read (open chat room)', err);
-      }
-    );
-
-    const notificationLocgs = await Notification.find({
-      $or: [
-        {
-          from: new ObjectId(req.body.user_id),
-          to: new ObjectId(req.user._id)
-        },
-        { from: new ObjectId(req.user._id), to: new ObjectId(req.body.user_id) }
-      ]
-    }).sort({ created_at: 'asc' });
-
-    let messages = [];
-    for (const notificationLog of notificationLogs) {
-      const message = {
-        from: notificationLog.from,
-        to: notificationLog.to,
-        message: notificationLog.message,
-        // messageContent: chatLog.messageContent,
-        created_at: moment(notificationLog.created_at).format('LLL')
-      };
-      messages.push(message);
-    }
-
-    res.json({
-      success: true,
-      RoomInfo: {
-        user_id: user._id,
-        avatar: user.avatar,
-        rank: user.totalWagered,
-        accessory: user.accessory,
-        username: user.username,
-        notificationLog: messages
-      }
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      message: err
-    });
-  }
-});
-
 router.post('/get_chat_room_info', auth, async (req, res) => {
   try {
     const user = await User.findOne({ _id: new ObjectId(req.body.user_id) });
@@ -2806,30 +2750,57 @@ router.post('/coHost', auth, async (req, res) => {
     room.user_bet = parseFloat(room.user_bet) + coHostAmount;
     room.endgame_amount += coHostAmount;
     req.user.balance -= coHostAmount;
-
+    let newShare;
     // Check if the user is not already a host
     if (existingHostIndex === -1) {
-      const newShare = coHostAmount / parseFloat(room.user_bet) * 100;
+       newShare = coHostAmount / parseFloat(room.user_bet) * 100;
       room.hosts.push({ host: req.user._id, share: newShare, accessory: req.user.accessory, avatar: req.user.avatar, rank: req.user.totalWagered });
     } else {
       // Update existing host's share
-      const newShare = ((((room.hosts[existingHostIndex].share / 100) * oldValuation) + coHostAmount) / parseFloat(room.user_bet) * 100);
+       newShare = ((((room.hosts[existingHostIndex].share / 100) * oldValuation) + coHostAmount) / parseFloat(room.user_bet) * 100);
       room.hosts[existingHostIndex].share = newShare;
     }
 
     // Recalculate shares for all hosts
     room.hosts.forEach(host => {
       if (!host.host.equals(req.user._id)) {
-        console.log("host.share before update:", host.share);
+        // console.log("host.share before update:", host.share);
         host.share = ((host.share / 100) * oldValuation) / parseFloat(room.user_bet) * 100;
 
-        console.log("host.share after update:", host.share);
-      }
+        const message= `${req.user.username} now shares ${(newShare).toFixed(2)}% of ${gameType.short_name +
+          '-' +
+          room.room_number}`;
 
+        const temp = new Notification({
+          from: req.user._id,
+          to: host.host,
+          room: room._id,
+          message: message,
+          is_read: false
+        });
+        temp.save();
+
+        const notificationData = {
+          _id: req.user._id,
+          message: message,
+          username: req.user.username,
+          avatar: req.user.avatar,
+          accessory: req.user.accessory,
+          room: room._id,
+          rank: req.user.totalWagered,
+          created_at:  moment(new Date()).format('YYYY-MM-DD HH:mm'),
+          created_at_str: moment(new Date()).format('LLL'),
+          updated_at:  moment(new Date()).format('YYYY-MM-DD HH:mm'),
+          is_read: false
+      };
+
+        socket.sendNotification(host.host, notificationData);
+    
+  
+      }
     });
 
-
-
+ 
     const newTransaction = new Transaction({
       created_at: now,
       user: req.user._id,
@@ -2843,17 +2814,18 @@ router.post('/coHost', auth, async (req, res) => {
       newTransaction.save()
     ]);
 
+    
     return res.json({
       success: true,
       balance: req.user.balance,
       newTransaction,
-      message: 'You are now a Co-Host and share profits/losses with the Host.'
+      message: 'YOU ARE NOW A CO-HOST AND SHARE PROFITS/LOSSES WITH THE HOST.'
     });
   } catch (error) {
     console.log('ERROR in coHost:', error);
     return res.json({
       success: false,
-      message: 'Failed to initiate co-host arrangement.'
+      message: 'FAILED TO INITIATE CO-HOST ARRANGEMENT.'
     });
   }
 });
@@ -2985,13 +2957,13 @@ router.post('/editPayout', auth, async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Payout settings have been changed.!'
+      message: 'PAYOUT SETTINGS HAVE BEEN CHANGED.'
     });
   } catch (e) {
     console.log('ERROR in payout_request', e);
     return res.json({
       success: false,
-      message: 'Failed to initiate payout settings'
+      message: 'FAILED TO INITIATE PAYOUT SETTINGS'
     });
   }
 });

@@ -458,12 +458,12 @@ const executeBet = async (req) => {
             if (accessory) {
                 item = await Item.findOne({ image: accessory }).select('CP');
                 if (item) {
-                    commission = item.CP + tax.value;
+                    commission = item.CP + parseFloat(tax.value);
                 } else {
-                    commission = tax.value; // If no item found, use tax.value directly
+                    commission = parseFloat(tax.value); // If no item found, use tax.value directly
                 }
             } else {
-                commission = tax.value; // If no accessory, use tax.value directly
+                commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
 
 
@@ -629,19 +629,19 @@ const executeBet = async (req) => {
                             parseFloat(req.body.bet_amount) * 2 * ((100 - commission) / 100);
 
                         newGameLog.commission =
-                            parseFloat(req.body.bet_amount) * 2 * ((commission - tax.value) / 100);
+                            parseFloat(req.body.bet_amount) * 2 * ((commission - parseFloat(tax.value)) / 100);
 
                         // update rain
                         rain.value =
                             parseFloat(rain.value) +
-                            parseFloat(req.body.bet_amount) * 2 * ((commission - tax.value) / 100);
+                            parseFloat(req.body.bet_amount) * 2 * ((commission - parseFloat(tax.value)) / 100);
 
                         rain.save();
 
                         // update platform stat (0.5%)
                         platform.value =
                             parseFloat(platform.value) +
-                            parseFloat(req.body.bet_amount) * 2 * (tax.value / 100);
+                            parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
                         platform.save();
 
                         // if (req.io.sockets) {
@@ -669,9 +669,9 @@ const executeBet = async (req) => {
 
                         newGameLog.game_result = 0;
 
-                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (parseFloat(req.body.bet_amount) * (tax.value / 100));
+                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (parseFloat(req.body.bet_amount) * (parseFloat(tax.value) / 100));
 
-                        newTransactionJ.amount += (parseFloat(req.body.bet_amount) - parseFloat(req.body.bet_amount) * (tax.value / 100));
+                        newTransactionJ.amount += (parseFloat(req.body.bet_amount) - parseFloat(req.body.bet_amount) * (parseFloat(tax.value) / 100));
                         message.message =
                             'Split ' +
                             convertToCurrency(req.body.bet_amount * 2) +
@@ -683,7 +683,7 @@ const executeBet = async (req) => {
                         // update platform stat (0.5%)
                         platform.value =
                             parseFloat(platform.value) +
-                            parseFloat(req.body.bet_amount) * 2 * (tax.value / 100);
+                            parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
                         platform.save();
                     } else {
                         // console.log('loss')
@@ -692,14 +692,14 @@ const executeBet = async (req) => {
 
                         roomInfo.host_pr =
                             (parseFloat(roomInfo.host_pr) || 0) +
-                            (parseFloat(req.body.bet_amount) * 2 * ((100 - tax.value) / 100)) - parseFloat(req.body.bet_amount);
+                            (parseFloat(req.body.bet_amount) * 2 * ((100 - parseFloat(tax.value)) / 100)) - parseFloat(req.body.bet_amount);
                         roomInfo.user_bet =
                             (parseFloat(roomInfo.user_bet) || 0) +
-                            (parseFloat(req.body.bet_amount) * 2 * ((100 - tax.value) / 100)) - parseFloat(req.body.bet_amount);
+                            (parseFloat(req.body.bet_amount) * 2 * ((100 - parseFloat(tax.value)) / 100)) - parseFloat(req.body.bet_amount);
 
                         platform.value =
                             parseFloat(platform.value) +
-                            parseFloat(req.body.bet_amount) * 2 * (tax.value / 100);
+                            parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
                         platform.save();
 
                         if (
@@ -818,7 +818,7 @@ const executeBet = async (req) => {
 
                         // update platform stat (0.5%)
                         platform.value =
-                            parseFloat(platform.value) + winnings * (tax.value / 100);
+                            parseFloat(platform.value) + winnings * (parseFloat(tax.value) / 100);
                         platform.save();
 
                         if (req.io.sockets) {
@@ -1140,7 +1140,7 @@ const executeBet = async (req) => {
                         (parseFloat(req.body.bet_amount) +
                             parseFloat(req.body.bet_amount) /
                             (roomInfo['qs_game_type'] - 1)) *
-                        (tax.value / 100);
+                        (parseFloat(tax.value) / 100);
 
                     platform.save();
 
@@ -2866,15 +2866,24 @@ const executeBet = async (req) => {
                     });
                 }
 
+                const notificationData = {
+                    _id: user._id,
+                    message: message.message,
+                    username: user.username,
+                    avatar: user.avatar,
+                    accessory: user.accessory,
+                    room: req.body._id,
+                    rank: user.totalWagered,
+                    created_at:  moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    created_at_str: moment(new Date()).format('LLL'),
+                    updated_at:  moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    is_read: false
+                };
 
                 if (message.from._id !== message.to._id) {
                     message.save();
-                    socket.sendNotification(message.to._id, {
-                        from: message.from._id,
-                        to: message.to._id,
-                        message: message.message,
-                        created_at: moment(new Date()).format('LLL')
-                    });
+                    socket.sendNotification(message.to._id, notificationData);
+
 
                     // if (newGameLog.game_result === 1) {
 

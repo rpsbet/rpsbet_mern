@@ -176,7 +176,7 @@ router.get('/get-customer-statistics', auth, async (req, res) => {
       const accessory = creatorUser ? creatorUser.accessory : null;
       const item = accessory
         ? await Item.findOne({ image: accessory }).select('CP')
-        : { CP: tax.value };
+        : { CP: parseFloat(tax.value) };
       const commission = item.CP;
 
       if (!room) {
@@ -543,7 +543,7 @@ router.get('/get-room-statistics', async (req, res) => {
 
       const { _id, avatar, accessory, username, totalWagered } = joiner;
 
-      const commission = accessory ? (await Item.findOne({ image: accessory }).select('CP')).CP : tax.value;
+      const commission = accessory ? (await Item.findOne({ image: accessory }).select('CP')).CP : parseFloat(tax.value);
 
       let net_profit = calculateNetProfit(game_type?.short_name, bet_amount, game_result, selected_drop, commission);
 
