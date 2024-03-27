@@ -34,21 +34,7 @@ const calculate1dayProfit = transactions => {
 };
 
 const calculateAllTimeProfit = transactions => {
-  const sortedTransactions = transactions.slice().sort((a, b) => {
-    const dateA = new Date(a.created_at);
-    const dateB = new Date(b.created_at);
-    return dateA - dateB;
-  });
-
-  const oldestTransactionDate = new Date(sortedTransactions[0].created_at);
-  const today = new Date();
-
-  const allTimeProfitTransactions = sortedTransactions.filter(transaction => {
-    const transactionDate = new Date(transaction.created_at);
-    return transactionDate >= oldestTransactionDate && transactionDate <= today;
-  });
-
-  const allTimeProfit = allTimeProfitTransactions.reduce(
+  const allTimeProfit = transactions.reduce(
     (total, transaction) => {
       return total + transaction.amount;
     },
@@ -57,6 +43,7 @@ const calculateAllTimeProfit = transactions => {
 
   return allTimeProfit;
 };
+
 
 module.exports = {
   calculate7dayProfit,

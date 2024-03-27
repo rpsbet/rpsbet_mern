@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { FaClipboard } from 'react-icons/fa';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 import { convertToCurrency } from '../../util/conversion';
 import {
   faSort,
@@ -18,6 +18,8 @@ import {
   LinearProgress,
   TextField,
   TableBody,
+  IconButton,
+  Tooltip,
   TableHead,
   Table,
   TableCell,
@@ -86,11 +88,8 @@ class AllTransactionsModal extends Component {
       searchQuery,
       sortType,
       filterType,
-      oneDayProfit,
       handleSearchClose,
       onSearchQueryChange,
-      sevenDayProfit,
-      allTimeProfit,
       isDarkMode,
       tnxComplete,
       modalIsOpen,
@@ -246,50 +245,50 @@ class AllTransactionsModal extends Component {
                           <span>1-DAY</span>
                           <span
                             style={{
-                              color: oneDayProfit > 0 ? '#57ca22' : 'red'
+                              color: this.props.oneDayProfit > 0 ? '#57ca22' : 'red'
                             }}
                           >
-                            {oneDayProfit > 0 ? (
+                            {this.props.oneDayProfit > 0 ? (
                               <ArrowUpward />
                             ) : (
                               <ArrowDownward />
                             )}
-                            {convertToCurrency(oneDayProfit)}
+                            {convertToCurrency(this.props.oneDayProfit)}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                           <span>7-DAY</span>
                           <span
                             style={{
-                              color: sevenDayProfit > 0 ? '#57ca22' : 'red'
+                              color: this.props.sevenDayProfit > 0 ? '#57ca22' : 'red'
                             }}
                           >
-                            {sevenDayProfit > 0 ? (
+                            {this.props.sevenDayProfit > 0 ? (
                               <ArrowUpward />
                             ) : (
                               <ArrowDownward />
                             )}
-                            {convertToCurrency(sevenDayProfit)}
+                            {convertToCurrency(this.props.sevenDayProfit)}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}>
                           <span>ALL-TIME</span>
                           <span
                             style={{
-                              color: allTimeProfit > 0 ? '#57ca22' : 'red'
+                              color: this.props.allTimeProfit > 0 ? '#57ca22' : 'red'
                             }}
                           >
-                            {allTimeProfit > 0 ? (
+                            {this.props.allTimeProfit > 0 ? (
                               <ArrowUpward />
                             ) : (
                               <ArrowDownward />
                             )}
-                            {convertToCurrency(allTimeProfit)}
+                            {convertToCurrency(this.props.allTimeProfit)}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <Table style={{ width: '100%' }}>
+                    {/* <Table style={{ width: '100%' }}>
                       <TableHead>
                         <TableRow>
                           <TableCell>AMOUNT</TableCell>
@@ -299,10 +298,10 @@ class AllTransactionsModal extends Component {
                           <TableCell>ID</TableCell>
                         </TableRow>
                       </TableHead>
-                    </Table>
+                    </Table> */}
                   </div>
                   <div className="game-logs-container" onScroll={this.handleScroll}
-                    style={{ maxHeight: '280px', overflowY: 'scroll' }}>
+                    style={{ maxHeight: '380px', overflowY: 'scroll' }}>
                     <Table className="game-logs-table">
                       <TableBody>
                         {transactions.length === 0 ? (
@@ -342,13 +341,11 @@ class AllTransactionsModal extends Component {
                               </TableCell>
 
                               <TableCell>
-                                <a style={{ padding: '2.5px', cursor: 'pointer' }}>
-                                  <FaClipboard
-                                    className="clipboard-icon"
-                                    onClick={() => this.copyToClipboard(transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id)}
-                                  />
-                                  {this.state.copiedRowId === (transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id) && <span style={{ marginLeft: '5px' }}>Copied!</span>}
-                                </a>
+                                <Tooltip title={this.state.copiedRowId === (transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id) ? "Copied!" : "Copy ID"} placement="top">
+                                      <IconButton onClick={() => this.copyToClipboard(transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id)}>
+                                        <FileCopyIcon />
+                                      </IconButton>
+                                    </Tooltip>
                               </TableCell>
 
                             </TableRow>

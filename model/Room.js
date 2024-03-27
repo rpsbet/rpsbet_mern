@@ -8,7 +8,8 @@ const RoomSchema = new Schema({
   },
   creator: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    index: true // Index creator field
   },
   joiners: [{
     type: Schema.Types.ObjectId,
@@ -119,11 +120,13 @@ const RoomSchema = new Schema({
   },
   created_at: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   },
   updated_at: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   },
   hosts: [{
     host: {
@@ -148,5 +151,8 @@ const RoomSchema = new Schema({
     }
   }]
 });
+
+RoomSchema.index({ creator: 1, game_type: 1 });
+
 
 module.exports = Room = mongoose.model('rps_rooms', RoomSchema);

@@ -90,6 +90,7 @@ import {
   setSocket,
   userSignOut,
   getUser,
+  getProfitData,
   setUnreadMessageCount,
   setDarkMode,
   setNotificationsAllowed
@@ -209,7 +210,6 @@ class SiteWrapper extends Component {
       showGameLog: false,
       notifications: [],
       showNotifications: false,
-      userParams: [false, true],
       loadMore: 10,
       isLive: false,
       showAllGameLogs: false,
@@ -217,7 +217,6 @@ class SiteWrapper extends Component {
       isHovered: false,
       websiteLoading: true,
       anchorEl: null,
-      notificationss: [],
       sortAnchorEl: null,
       filterAnchorEl: null,
       sortType: 'date',
@@ -289,12 +288,12 @@ class SiteWrapper extends Component {
       }));
       this.setState({ notifications: updatedNotifications });
     }
-    
+
 
     if (shouldUpdate) {
 
       try {
-        await this.props.getUser(true, false, 5);
+        await this.props.getUser(true, 5);
 
         await this.props.getHistory();
       } catch (error) {
@@ -409,10 +408,6 @@ class SiteWrapper extends Component {
 
   async initSocket() {
     try {
-
-      if (!this.props.user || !this.props.user._id) {
-        throw new Error('User ID is not available');
-      }
 
       let socket = socketIOClient(this.state.endpoint);
       socket.on('CONNECTED', async data => {
@@ -666,13 +661,13 @@ class SiteWrapper extends Component {
 
       await Promise.all([
         this.props.getNotifications(),
+        this.props.getUser(),
         this.initSocket(),
-        this.props.getUser(true, false, 5, null, null, null),
         this.props.acCalculateRemainingLoans(),
         this.initializeAudio(),
         this.fetchData(),
       ]);
-      this.setState({ websiteLoading: false, notifications: this.props.notifications });
+      this.setState({ websiteLoading: false, notifications: this.props.notifications});
       // Set selectedMainTabIndex based on the current URL
       if (currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
@@ -905,7 +900,6 @@ class SiteWrapper extends Component {
       // Call the function to fetch data with the updated search query
       this.props.getUser(
         false,
-        true,
         this.state.loadMore,
         this.state.filterType,
         this.state.sortType,
@@ -928,7 +922,6 @@ class SiteWrapper extends Component {
       () => {
         this.props.getUser(
           false,
-          true,
           this.state.loadMore,
           event,
           this.state.sortType,
@@ -946,7 +939,6 @@ class SiteWrapper extends Component {
     this.setState({ sortType: event, sortAnchorEl: null }, () => {
       this.props.getUser(
         false,
-        true,
         this.state.loadMore,
         this.state.filterType,
         event,
@@ -959,39 +951,45 @@ class SiteWrapper extends Component {
     const { loadMore, filterType, sortType, searchQuery } = this.state;
     const nextLoadMore = loadMore >= 10 ? loadMore + 10 : 10;
     // console.log("nextLoadMore", nextLoadMore)
+    if (!this.props.tnxComplete) {
     await this.props.getUser(
       false,
-      true,
       nextLoadMore,
       filterType,
       sortType,
       searchQuery
     );
+  }
 
     this.setState({
       loadMore: nextLoadMore
     });
   };
-
   toggleAllTransactions = () => {
-    const [param1, param2] = this.state.userParams;
+    const param1 = this.state.showAllGameLogs ? 15 : 5;
+  
     this.props.getUser(
       param1,
-      param2,
-      4,
+      null,
       this.state.filterType,
       this.state.sortType,
       this.state.searchQuery
     );
-
-    const toggledParams = [param2, param1];
+  
     this.setState(prevState => ({
       showAllGameLogs: !prevState.showAllGameLogs,
-      userParams: toggledParams,
       loadMore: 0
-    }));
+    }), () => {
+      // This function is a callback executed after the state has been updated
+      if (this.state.showAllGameLogs) {
+        console.log("dv")
+        this.props.getProfitData();
+      }
+    });
   };
-
+  
+  
+  
   handleDollarEnter = () => {
     this.setState({ isHovered: true });
   };
@@ -1056,9 +1054,6 @@ class SiteWrapper extends Component {
       selectedMainTabIndex,
       isAuthenticated,
       children,
-      oneDayProfit,
-      sevenDayProfit,
-      allTimeProfit,
       user,
       isLowGraphics
     } = this.props;
@@ -1314,8 +1309,11 @@ class SiteWrapper extends Component {
                       onMouseLeave={this.handleMouseLeave}
                     >
                       {unreadNotificationsCount > 0 && (
-                        <span className="unread_message_badge notifications">{unreadNotificationsCount}</span>
+                        <span className="unread_message_badge notifications">
+                          {unreadNotificationsCount > 10 ? '9+' : unreadNotificationsCount}
+                        </span>
                       )}
+
                       {hoverTabIndex === 3 ? (
                         <NotificationsHover width="18pt" />
                       ) : (
@@ -1545,18 +1543,18 @@ class SiteWrapper extends Component {
                                   className="avatar"
                                 />
                               </a>
-                              <a href={`/join/${notification.room}/`} style={{width: "100%"}}>
+                              <a href={`/join/${notification.room}/`} style={{ width: "100%" }}>
 
-                              {!notification.is_read && <div className="red-dot" />}
-                              <div className="notification" style={{width: "70%", display: 'inline-block'}}>
-                                <p
-                                  dangerouslySetInnerHTML={{
-                                    __html: notification.message
-                                  }}
+                                {!notification.is_read && <div className="red-dot" />}
+                                <div className="notification" style={{ width: "70%", display: 'inline-block' }}>
+                                  <p
+                                    dangerouslySetInnerHTML={{
+                                      __html: notification.message
+                                    }}
                                   />
-                                <p className="fromNow">{notification.from_now}</p>
-                              </div>
-                                  </a>
+                                  <p className="fromNow">{notification.from_now}</p>
+                                </div>
+                              </a>
                             </div>
                           ))
                         ) : (
@@ -1590,9 +1588,9 @@ class SiteWrapper extends Component {
                     onSearchQueryChange={this.onSearchQueryChange}
                     handleSearchClick={this.handleSearchClick}
                     handleLoadMore={this.handleLoadMore}
-                    oneDayProfit={oneDayProfit}
-                    sevenDayProfit={sevenDayProfit}
-                    allTimeProfit={allTimeProfit}
+                    oneDayProfit={this.props.oneDayProfit}
+                    sevenDayProfit={this.props.sevenDayProfit}
+                    allTimeProfit={this.props.allTimeProfit}
                   />
                 )}
 
@@ -1628,12 +1626,12 @@ class SiteWrapper extends Component {
                       <div>
                         <table>
                           <tbody>
-                            {transactions.filter(row => row.user === this.props.user._id).length === 0 ? (
+                            {transactions.length === 0 ? (
                               <tr>
                                 <td>...</td>
                               </tr>
                             ) : (
-                              transactions.filter(row => row.user === this.props.user._id).slice(0, 5).map((row, key) => (
+                              transactions.slice(0, 5).map((row, key) => (
                                 <tr key={key}>
                                   {row.hash ? (
                                     <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
@@ -1928,7 +1926,8 @@ const mapDispatchToProps = {
   acCalculateRemainingLoans,
   globalChatReceived,
   setGlobalChat,
-  updateBetResult
+  updateBetResult,
+  getProfitData
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);

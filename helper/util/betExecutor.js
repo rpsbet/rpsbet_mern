@@ -32,7 +32,7 @@ const executeBet = async (req) => {
         const platform = await SystemSetting.findOne({ name: 'platform' });
         let responseData = {};
         const user = req.user;
-
+console.log("ED")
        
         // const RockType = ['Rock', 'MoonRock', 'QuickBall'];
         // const PaperType = [
@@ -418,9 +418,18 @@ const executeBet = async (req) => {
             }
 
             roomInfo = await Room.findOne({ _id: req.body._id })
-                .populate({ path: 'creator', model: User })
-                .populate({ path: 'game_type', model: GameType });
-            // console.log("asdfghj");
+            .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+            .populate({ 
+                path: 'creator', 
+                model: User,
+                select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance ' // Only select the 'username' field from the 'User' document
+            })
+            .populate({ 
+                path: 'game_type', 
+                model: GameType,
+                select: 'game_type_name short_name' // Only select the 'name' field from the 'GameType' document
+            })
+
             // console.log("spp        ", roomInfo['creator']._id, user._id);
 
             if (
@@ -616,6 +625,7 @@ const executeBet = async (req) => {
 
                 newGameLog.bet_amount = parseFloat(req.body.bet_amount);
                 newGameLog.selected_rps = req.body.selected_rps;
+
                 if (roomInfo['rps_game_type'] === 0) {
 
                     newTransactionJ.amount -= parseFloat(req.body.bet_amount);
@@ -717,7 +727,7 @@ const executeBet = async (req) => {
                                 game_type: roomInfo['game_type'],
                                 bet_amount: roomInfo['host_pr'],
                                 user_bet: roomInfo['user_bet'],
-                                is_anonymous: roomInfo['is_anonymous'],
+                                // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
                             await newGameLogC.save();
@@ -905,7 +915,7 @@ const executeBet = async (req) => {
                                 game_type: roomInfo['game_type'],
                                 bet_amount: roomInfo['host_pr'],
                                 user_bet: roomInfo['user_bet'],
-                                is_anonymous: roomInfo['is_anonymous'],
+                                // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
                             await newGameLogC.save();
@@ -922,8 +932,8 @@ const executeBet = async (req) => {
                             '-' +
                             roomInfo['room_number'];
                     }
-
                 }
+
                 if (roomInfo['rps_game_type'] === 0) {
                     winnings = parseFloat(req.body.bet_amount) * 2;
                 }
@@ -998,215 +1008,216 @@ const executeBet = async (req) => {
                         game_type: roomInfo['game_type'],
                         bet_amount: roomInfo['host_pr'],
                         user_bet: roomInfo['user_bet'],
-                        is_anonymous: roomInfo['is_anonymous'],
-                        game_result: -100
-                    });
-                    await newGameLogC.save();
-                }
-            } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
-
-                newGameLog.bet_amount = parseFloat(req.body.bet_amount);
-                if (
-                    parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
-                    parseFloat(req.body.bet_amount) -
-                    (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
-                    parseFloat(roomInfo['user_bet']) ||
-                    parseFloat(req.body.bet_amount) > parseFloat(user.balance)
-                ) {
-                    // Return an error or some other response to the user, e.g.:
-                    return res
-                        .status(400)
-                        .json({ error: 'Bet amount exceeds available balance.' });
-                }
-                const availableBetItem = await QsBetItem.findOne({
-                    _id: req.body.qs_bet_item_id,
-                    joiner_qs: ''
-                });
-
-                let bet_item = availableBetItem;
-                if (bet_item) {
-                    // Get next available item
-                    bet_item = await QsBetItem.findOne({
-                        room: new ObjectId(req.body._id),
-                        joiner_qs: ''
-                    }).sort({ _id: 'asc' });
-                } else {
-                    // Create new QsBetItem with predicted qs value
-                    const allBetItems = await QsBetItem.find({
-                        room: new ObjectId(req.body._id)
-                    });
-
-                    const nextItem = predictNextQs(allBetItems, roomInfo['qs_game_type']);
-                    bet_item = new QsBetItem({
-                        room: new ObjectId(req.body._id),
-                        qs: nextItem,
-                        bet_item: parseFloat(req.body.bet_amount),
-                    });
-
-                    await bet_item.save();
-                }
-                if (!roomInfo.joiners.includes(user)) {
-                    roomInfo.joiners.addToSet(user);
-                    await roomInfo.save();
-                }
-                newTransactionJ.amount -= parseFloat(req.body.bet_amount);
-
-                newGameLog.selected_qs_position = req.body.selected_qs_position;
-
-                if (Number(bet_item.qs) === req.body.selected_qs_position) {
-                    newGameLog.game_result = -1;
-
-                    roomInfo['user_bet'] =
-                        parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
-                    if (
-                        roomInfo['endgame_type'] &&
-                        roomInfo['user_bet'] >= roomInfo['endgame_amount']
-                    ) {
-                        newTransactionC.amount +=
-                            parseFloat(roomInfo['user_bet']) -
-                            parseFloat(roomInfo['endgame_amount']);
-
-                        const newGameLogC = new GameLog({
-                            room: roomInfo,
-                            creator: roomInfo['creator'],
-                            joined_user: roomInfo['creator'],
-                            game_type: roomInfo['game_type'],
-                            bet_amount: roomInfo['host_pr'],
-                            user_bet: roomInfo['user_bet'],
-                            is_anonymous: roomInfo['is_anonymous'],
-                            game_result: 3
-                        });
-                        await newGameLogC.save();
-                        roomInfo['user_bet'] = parseFloat(
-                            roomInfo['endgame_amount']
-                        );
-                    }
-
-                    if (req.io.sockets) {
-                        req.io.sockets.emit('UPDATED_BANKROLL_QS', {
-                            bankroll: roomInfo['user_bet'],
-                            qs: bet_item.qs
-                        });
-                    }
-
-                    bet_item.joiner = user;
-                    bet_item.joiner_qs = req.body.selected_qs;
-                    await bet_item.save();
-
-                    message.message =
-                        'Lost ' +
-                        convertToCurrency(req.body.bet_amount) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
-                } else {
-                    newGameLog.game_result = 1;
-                    newTransactionJ.amount +=
-                        (parseFloat(req.body.bet_amount) +
-                            parseFloat(req.body.bet_amount) /
-                            (roomInfo['qs_game_type'] - 1)) *
-                        ((100 - commission) / 100);
-                    roomInfo['host_pr'] -=
-                        parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
-                    roomInfo['user_bet'] -=
-                        parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
-
-                    // if (req.io.sockets) {
-                    //   req.io.sockets.emit('UPDATED_BANKROLL_QS', {
-                    //     bankroll: roomInfo['user_bet']
-                    //   });
-                    // }
-
-                    newGameLog.commission =
-                        (parseFloat(req.body.bet_amount) +
-                            parseFloat(req.body.bet_amount) /
-                            (roomInfo['qs_game_type'] - 1)) *
-                        ((commission - 0.5) / 100);
-
-                    // update rain
-                    rain.value =
-                        parseFloat(rain.value) +
-                        (parseFloat(req.body.bet_amount) +
-                            parseFloat(req.body.bet_amount) /
-                            (roomInfo['qs_game_type'] - 1)) *
-                        ((commission - 0.5) / 100);
-
-                    rain.save();
-
-                    // update platform stat (0.5%)
-                    platform.value =
-                        parseFloat(platform.value) +
-                        (parseFloat(req.body.bet_amount) +
-                            parseFloat(req.body.bet_amount) /
-                            (roomInfo['qs_game_type'] - 1)) *
-                        (parseFloat(tax.value) / 100);
-
-                    platform.save();
-
-                    if (req.io.sockets) {
-                        req.io.sockets.emit('UPDATE_RAIN', {
-                            rain: rain.value
-                        });
-                    }
-
-                    // update bankroll
-                    if (roomInfo['user_bet'] != 0) {
-                        roomInfo['user_bet'] =
-                            parseFloat(roomInfo['user_bet']) +
-                            (parseFloat(req.body.bet_amount) +
-                                parseFloat(req.body.bet_amount) /
-                                (roomInfo['qs_game_type'] - 1)) *
-                            ((commission - 0.5) / 100);
-
-                        if (req.io.sockets) {
-                            req.io.sockets.emit('UPDATED_BANKROLL_QS', {
-                                bankroll: roomInfo['user_bet'],
-                                qs: bet_item.qs
-                            });
-                        }
-                    }
-                    message.message =
-                        'Won ' +
-                        convertToCurrency(
-                            parseFloat(req.body.bet_amount) /
-                            parseFloat(roomInfo['qs_game_type'] - 1) +
-                            parseFloat(req.body.bet_amount)
-                        ) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
-                }
-
-                bet_item.joiner = user;
-                bet_item.joiner_qs = req.body.selected_qs_position;
-                await bet_item.save();
-
-                if (roomInfo['user_bet'] <= 0.0005) {
-                    roomInfo.status = 'finished';
-                    newGameLog.game_result = 1;
-                    message.message =
-                        'Won ' +
-                        convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
-                        ' in ' +
-                        roomInfo['game_type']['short_name'] +
-                        '-' +
-                        roomInfo['room_number'];
-
-                    const newGameLogC = new GameLog({
-                        room: roomInfo,
-                        creator: roomInfo['creator'],
-                        joined_user: roomInfo['creator'],
-                        game_type: roomInfo['game_type'],
-                        bet_amount: roomInfo['host_pr'],
-                        user_bet: roomInfo['user_bet'],
-                        is_anonymous: roomInfo['is_anonymous'],
+                        // is_anonymous: roomInfo['is_anonymous'],
                         game_result: -100
                     });
                     await newGameLogC.save();
                 }
             }
+            // else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
+
+            //     newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+            //     if (
+            //         parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
+            //         parseFloat(req.body.bet_amount) -
+            //         (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
+            //         parseFloat(roomInfo['user_bet']) ||
+            //         parseFloat(req.body.bet_amount) > parseFloat(user.balance)
+            //     ) {
+            //         // Return an error or some other response to the user, e.g.:
+            //         return res
+            //             .status(400)
+            //             .json({ error: 'Bet amount exceeds available balance.' });
+            //     }
+            //     const availableBetItem = await QsBetItem.findOne({
+            //         _id: req.body.qs_bet_item_id,
+            //         joiner_qs: ''
+            //     });
+
+            //     let bet_item = availableBetItem;
+            //     if (bet_item) {
+            //         // Get next available item
+            //         bet_item = await QsBetItem.findOne({
+            //             room: new ObjectId(req.body._id),
+            //             joiner_qs: ''
+            //         }).sort({ _id: 'asc' });
+            //     } else {
+            //         // Create new QsBetItem with predicted qs value
+            //         const allBetItems = await QsBetItem.find({
+            //             room: new ObjectId(req.body._id)
+            //         });
+
+            //         const nextItem = predictNextQs(allBetItems, roomInfo['qs_game_type']);
+            //         bet_item = new QsBetItem({
+            //             room: new ObjectId(req.body._id),
+            //             qs: nextItem,
+            //             bet_item: parseFloat(req.body.bet_amount),
+            //         });
+
+            //         await bet_item.save();
+            //     }
+            //     if (!roomInfo.joiners.includes(user)) {
+            //         roomInfo.joiners.addToSet(user);
+            //         await roomInfo.save();
+            //     }
+            //     newTransactionJ.amount -= parseFloat(req.body.bet_amount);
+
+            //     newGameLog.selected_qs_position = req.body.selected_qs_position;
+
+            //     if (Number(bet_item.qs) === req.body.selected_qs_position) {
+            //         newGameLog.game_result = -1;
+
+            //         roomInfo['user_bet'] =
+            //             parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
+            //         if (
+            //             roomInfo['endgame_type'] &&
+            //             roomInfo['user_bet'] >= roomInfo['endgame_amount']
+            //         ) {
+            //             newTransactionC.amount +=
+            //                 parseFloat(roomInfo['user_bet']) -
+            //                 parseFloat(roomInfo['endgame_amount']);
+
+            //             const newGameLogC = new GameLog({
+            //                 room: roomInfo,
+            //                 creator: roomInfo['creator'],
+            //                 joined_user: roomInfo['creator'],
+            //                 game_type: roomInfo['game_type'],
+            //                 bet_amount: roomInfo['host_pr'],
+            //                 user_bet: roomInfo['user_bet'],
+            //                 // is_anonymous: roomInfo['is_anonymous'],
+            //                 game_result: 3
+            //             });
+            //             await newGameLogC.save();
+            //             roomInfo['user_bet'] = parseFloat(
+            //                 roomInfo['endgame_amount']
+            //             );
+            //         }
+
+            //         if (req.io.sockets) {
+            //             req.io.sockets.emit('UPDATED_BANKROLL_QS', {
+            //                 bankroll: roomInfo['user_bet'],
+            //                 qs: bet_item.qs
+            //             });
+            //         }
+
+            //         bet_item.joiner = user;
+            //         bet_item.joiner_qs = req.body.selected_qs;
+            //         await bet_item.save();
+
+            //         message.message =
+            //             'Lost ' +
+            //             convertToCurrency(req.body.bet_amount) +
+            //             ' in ' +
+            //             roomInfo['game_type']['short_name'] +
+            //             '-' +
+            //             roomInfo['room_number'];
+            //     } else {
+            //         newGameLog.game_result = 1;
+            //         newTransactionJ.amount +=
+            //             (parseFloat(req.body.bet_amount) +
+            //                 parseFloat(req.body.bet_amount) /
+            //                 (roomInfo['qs_game_type'] - 1)) *
+            //             ((100 - commission) / 100);
+            //         roomInfo['host_pr'] -=
+            //             parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
+            //         roomInfo['user_bet'] -=
+            //             parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
+
+            //         // if (req.io.sockets) {
+            //         //   req.io.sockets.emit('UPDATED_BANKROLL_QS', {
+            //         //     bankroll: roomInfo['user_bet']
+            //         //   });
+            //         // }
+
+            //         newGameLog.commission =
+            //             (parseFloat(req.body.bet_amount) +
+            //                 parseFloat(req.body.bet_amount) /
+            //                 (roomInfo['qs_game_type'] - 1)) *
+            //             ((commission - 0.5) / 100);
+
+            //         // update rain
+            //         rain.value =
+            //             parseFloat(rain.value) +
+            //             (parseFloat(req.body.bet_amount) +
+            //                 parseFloat(req.body.bet_amount) /
+            //                 (roomInfo['qs_game_type'] - 1)) *
+            //             ((commission - 0.5) / 100);
+
+            //         rain.save();
+
+            //         // update platform stat (0.5%)
+            //         platform.value =
+            //             parseFloat(platform.value) +
+            //             (parseFloat(req.body.bet_amount) +
+            //                 parseFloat(req.body.bet_amount) /
+            //                 (roomInfo['qs_game_type'] - 1)) *
+            //             (parseFloat(tax.value) / 100);
+
+            //         platform.save();
+
+            //         if (req.io.sockets) {
+            //             req.io.sockets.emit('UPDATE_RAIN', {
+            //                 rain: rain.value
+            //             });
+            //         }
+
+            //         // update bankroll
+            //         if (roomInfo['user_bet'] != 0) {
+            //             roomInfo['user_bet'] =
+            //                 parseFloat(roomInfo['user_bet']) +
+            //                 (parseFloat(req.body.bet_amount) +
+            //                     parseFloat(req.body.bet_amount) /
+            //                     (roomInfo['qs_game_type'] - 1)) *
+            //                 ((commission - 0.5) / 100);
+
+            //             if (req.io.sockets) {
+            //                 req.io.sockets.emit('UPDATED_BANKROLL_QS', {
+            //                     bankroll: roomInfo['user_bet'],
+            //                     qs: bet_item.qs
+            //                 });
+            //             }
+            //         }
+            //         message.message =
+            //             'Won ' +
+            //             convertToCurrency(
+            //                 parseFloat(req.body.bet_amount) /
+            //                 parseFloat(roomInfo['qs_game_type'] - 1) +
+            //                 parseFloat(req.body.bet_amount)
+            //             ) +
+            //             ' in ' +
+            //             roomInfo['game_type']['short_name'] +
+            //             '-' +
+            //             roomInfo['room_number'];
+            //     }
+
+            //     bet_item.joiner = user;
+            //     bet_item.joiner_qs = req.body.selected_qs_position;
+            //     await bet_item.save();
+
+            //     if (roomInfo['user_bet'] <= 0.0005) {
+            //         roomInfo.status = 'finished';
+            //         newGameLog.game_result = 1;
+            //         message.message =
+            //             'Won ' +
+            //             convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
+            //             ' in ' +
+            //             roomInfo['game_type']['short_name'] +
+            //             '-' +
+            //             roomInfo['room_number'];
+
+            //         const newGameLogC = new GameLog({
+            //             room: roomInfo,
+            //             creator: roomInfo['creator'],
+            //             joined_user: roomInfo['creator'],
+            //             game_type: roomInfo['game_type'],
+            //             bet_amount: roomInfo['host_pr'],
+            //             user_bet: roomInfo['user_bet'],
+            //             // is_anonymous: roomInfo['is_anonymous'],
+            //             game_result: -100
+            //         });
+            //         await newGameLogC.save();
+            //     }
+            // }
             // else if (roomInfo['game_type']['game_type_name'] === 'Drop Game') {
             //   if (parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)) {
             //     return res
@@ -3092,6 +3103,8 @@ const executeBet = async (req) => {
                     //     }
                     //   }
                     // }
+                    console.log("hh")
+
                 }
             }, 0);
         }

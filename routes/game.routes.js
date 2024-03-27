@@ -267,7 +267,6 @@ router.get('/room/:id', async (req, res) => {
     // }).sort({ _id: 'asc' });
 
     async function emitRps(req) {
-      console.log("hi")
       const rpsItems = await RpsBetItem.find({ room: room });
       const rps1 = rpsItems.filter(item => item.joiner_rps !== '').slice(-5);
       if (rps1.length > 0 && req.io) {

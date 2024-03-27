@@ -38,32 +38,21 @@ import axios from '../../util/Api';
 import setAuthToken from '../../util/setAuthToken';
 import history from '../history';
 // Load User
-export const getUser = (is_reload, viewAll, loadMore, filterType, sortType, search) => async dispatch => {
+
+export const getUser = (is_reload, loadMore, filterType, sortType, search) => async dispatch => {
   try {
     if (localStorage.token) {
       localStorage.removeItem('isAdminAuthenticated');
       setAuthToken(localStorage.token);
     }
     dispatch({ type: TNX_COMPLETE });
-    const res = await axios.get(`/auth/user?viewAll=${viewAll}&loadMore=${loadMore}&filterType=${filterType}&sortBy=${sortType}&search=${search}`);
+    const res = await axios.get(`/auth/user?loadMore=${loadMore}&filterType=${filterType}&sortBy=${sortType}&search=${search}`);
 
     if (res.data.success) {
-      const { user, unread_message_count, transactions, sevenDayProfit, oneDayProfit, allTimeProfit, message } = res.data;
+      const { user, unread_message_count, transactions, message } = res.data;
       dispatch({ type: USER_LOADED, payload: user });
       dispatch({ type: SET_UNREAD_MESSAGE_COUNT, payload: unread_message_count });
       dispatch({ type: TRANSACTION_LOADED, payload: transactions });
-      if (sevenDayProfit !== undefined) {
-        dispatch({ type: SET_SEVEN_DAY_PROFIT, payload: sevenDayProfit });
-      }
-
-      if (oneDayProfit !== undefined) {
-        dispatch({ type: SET_ONE_DAY_PROFIT, payload: oneDayProfit });
-      }
-
-      if (allTimeProfit !== undefined) {
-        dispatch({ type: SET_ALL_TIME_PROFIT, payload: allTimeProfit });
-      }
-
       if (!is_reload && message) {
         dispatch({ type: MSG_INFO, payload: message });
       }
@@ -86,6 +75,37 @@ export const getUser = (is_reload, viewAll, loadMore, filterType, sortType, sear
   }
 };
 
+export const getProfitData = () => async dispatch => {
+  try {
+    const res = await axios.get('/auth/profit');
+console.log("WE")
+    if (res.data.success) {
+      const { sevenDayProfit, oneDayProfit, allTimeProfit } = res.data;
+      if (sevenDayProfit !== undefined) {
+        dispatch({ type: SET_SEVEN_DAY_PROFIT, payload: sevenDayProfit });
+      }
+
+      if (oneDayProfit !== undefined) {
+        dispatch({ type: SET_ONE_DAY_PROFIT, payload: oneDayProfit });
+      }
+
+      if (allTimeProfit !== undefined) {
+        dispatch({ type: SET_ALL_TIME_PROFIT, payload: allTimeProfit });
+      }
+
+      return {
+        status: 'success'
+      };
+    } else {
+      dispatch({ type: AUTH_ERROR });
+    }
+  } catch (err) {
+    console.error(err);
+    return {
+      status: 'failed'
+    };
+  }
+};
 
 // Register User
 export const userSignUp = ({

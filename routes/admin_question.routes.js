@@ -29,7 +29,6 @@ router.post('/delete', async (req, res) => {
 		await Answer.deleteMany({ question: _id });
 
 		// Retrieve all questions for the corresponding brain_game_type except for the deleted question
-		console.log("hi", brain_game_type)
 
 		await BrainGameType.updateOne(
 			{ _id: brain_game_type },

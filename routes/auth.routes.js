@@ -70,19 +70,43 @@ router.post('/', (req, res) => {
   });
 });
 
+// New endpoint for fetching profit data
+router.get('/profit', auth, async (req, res) => {
+  try {
+    const user = req.user._id;
+    const allTransactions = await Transaction.find({ user: user });
+
+    const profitData = getProfitData(allTransactions);
+console.log(profitData)
+    res.json({
+      success: true,
+      user: req.user,
+      profitData,
+    });
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
 // @route   GET api/auth/user
 // @desc    Get user data
 // @access  Private
 // Calculate profits without including transactions with 'withdraw' or 'deposit' in the description
 router.get('/user', auth, async (req, res) => {
   try {
-    const startTime = new Date(); // Start timer
+    const { loadMore, filterType, search, sortBy } = req.query;
+    const queryLimit = parseInt(loadMore) ? 10 + parseInt(loadMore) : 5;
+    const user = req.user._id;
 
-    const { loadMore, viewAll, filterType, search, sortBy } = req.query;
-    const queryLimit = parseInt(loadMore) ? 7 + parseInt(loadMore) : viewAll === 'true' ? 7 : 4;
+    const filterTypes = {
+      showWithdrawals: 'withdraw',
+      showDeposits: 'deposit',
+      showTrades: 'trade',
+      showLoans: 'loan',
+      showTips: 'tip',
+    };
 
-    const query = { user: req.user };
-    const filterTypes = { showWithdrawals: 'withdraw', showDeposits: 'deposit', showTrades: 'trade', showLoans: 'loan', showTips: 'tip', };
+    let query = { user: user };
 
     if (filterType && filterTypes[filterType]) {
       query.description = { $regex: filterTypes[filterType], $options: 'i' };
@@ -90,58 +114,32 @@ router.get('/user', auth, async (req, res) => {
       query.description = { $regex: search, $options: 'i' };
     }
 
-    const transactionsStartTime = new Date(); // Start timer for transactions retrieval
-    const transactions = await Transaction.find(query._id)
+    const transactions = await Transaction.find({ user: user })
       .sort(sortBy === 'amount' ? { amount: -1 } : { created_at: -1 })
       .limit(queryLimit);
-    const transactionsEndTime = new Date(); // End timer for transactions retrieval
-
-    let allTransactions;
-    let profitData;
-    const allTransactionsStartTime = new Date(); // Start timer for all transactions retrieval
-    if (viewAll === 'true') {
-      allTransactions = await Transaction.find(query._id);
-      profitData = getProfitData(allTransactions);
-      
-    } else {
-      profitData = {}
-    }
-    const allTransactionsEndTime = new Date(); // End timer for all transactions retrieval
-
-  
-    const countStartTime = new Date(); // Start timer for unread message count retrieval
-    const count = await Message.countDocuments({
-      to: req.user,
+    let unread_message_count = await Message.countDocuments({
+      to: req.user._id,
       is_read: false,
     });
-    const countEndTime = new Date(); // End timer for unread message count retrieval
-
-    const endTime = new Date(); // End timer
-
-    // Log the durations
-    // console.log('Time taken for transactions retrieval:', transactionsEndTime - transactionsStartTime, 'ms');
-    // console.log('Time taken for all transactions retrieval:', allTransactionsEndTime - allTransactionsStartTime, 'ms');
-    // console.log('Time taken for unread message count retrieval:', countEndTime - countStartTime, 'ms');
-    // console.log('Total time taken:', endTime - startTime, 'ms');
 
     res.json({
       success: true,
       user: req.user,
-      unread_message_count: count,
+      unread_message_count,
       transactions,
-      ...profitData,
     });
   } catch (error) {
     res.json({ success: false, error: error.message });
   }
 });
 
+
 const getProfitData = (transactions) => ({
   sevenDayProfit: calculate7dayProfit(transactions),
   oneDayProfit: calculate1dayProfit(transactions),
   allTimeProfit: calculateAllTimeProfit(transactions),
 });
-  
+
 
 // Forgot Password
 router.post('/sendResetPasswordEmail', async (req, res) => {
