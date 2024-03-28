@@ -1621,7 +1621,7 @@ console.log(predictedBetAmount)
             </div>
             <div className="sub-panel">
               <h2 className="main-title desktop-only">AUTOPLAY PANEL <Tooltip title="Some strategies require you to train the bot by playing normally, in order to use certain bet amounts and patterns.">
-                    <QuestionIcon style={{width:"18px", float: "right", marginTop:"-1px" }}/>
+                    <QuestionIcon style={{width:"18px", cursor: "pointer", float: "right", marginTop:"-1px" }}/>
                 </Tooltip></h2>
               {!this.state.is_mobile &&
                 this.props.selectedMainTabIndex === 0 && (

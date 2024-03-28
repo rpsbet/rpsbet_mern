@@ -78,7 +78,6 @@ export const getUser = (is_reload, loadMore, filterType, sortType, search) => as
 export const getProfitData = () => async dispatch => {
   try {
     const res = await axios.get('/auth/profit');
-console.log("WE")
     if (res.data.success) {
       const { sevenDayProfit, oneDayProfit, allTimeProfit } = res.data;
       if (sevenDayProfit !== undefined) {

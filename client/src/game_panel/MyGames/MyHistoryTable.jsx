@@ -1,14 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { getMyHistory } from '../../redux/Logic/logic.actions';
-import IconButton from '@material-ui/core/IconButton';
-import { Box, Button } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CountUp from 'react-countup';
 import { getSettings } from '../../redux/Setting/setting.action';
 import InlineSVG from 'react-inlinesvg';
 import busdSvg from '../JoinGame/busd.svg';
-
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+import {
+  Tooltip,
+  IconButton
+} from '@material-ui/core';
 import Moment from 'moment';
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
@@ -35,7 +37,8 @@ class MyHistoryTable extends Component {
     this.state = {
       myHistory: this.props.myHistory,
       selectedGameType: 'All',
-      showPlayerModal: false
+      showPlayerModal: false,
+      copiedRowId: null
     };
   }
 
@@ -112,6 +115,20 @@ class MyHistoryTable extends Component {
   componentWillUnmount() {
     clearInterval(this.interval);
   }
+
+  copyToClipboard = (rowId) => {
+    navigator.clipboard.writeText(rowId)
+      .then(() => {
+        this.setState({ copiedRowId: rowId });
+        setTimeout(() => {
+          this.setState({ copiedRowId: null });
+        }, 1500); // Reset the copied row after 1.5 seconds
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+  };
+
 
   // handleGameTypeButtonClicked = async short_name => {
   //   this.setState({ selectedGameType: short_name });
@@ -328,6 +345,15 @@ class MyHistoryTable extends Component {
                     ></div>
                   </div>
                   <div className="table-cell">{row.from_now}&nbsp;<FontAwesomeIcon icon={faStopwatch} /></div>
+                  <div className="table-cell row-copy">
+
+                    <Tooltip title={this.state.copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">
+                      <a style={{padding: "5px", cursor: "pointer"}} onClick={() => this.copyToClipboard(row._id)}>
+                        <FileCopyIcon style={{width: "12px"}}  />
+                      </a>
+                    </Tooltip>
+
+                  </div>
                 </div>
                 <div>
                   <div

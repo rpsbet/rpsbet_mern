@@ -667,7 +667,7 @@ class SiteWrapper extends Component {
         this.initializeAudio(),
         this.fetchData(),
       ]);
-      this.setState({ websiteLoading: false, notifications: this.props.notifications});
+      this.setState({ websiteLoading: false, notifications: this.props.notifications });
       // Set selectedMainTabIndex based on the current URL
       if (currentUrl.includes('create')) {
         this.setState({ selectedMainTabIndex: this.props.selectMainTab(1) });
@@ -952,14 +952,14 @@ class SiteWrapper extends Component {
     const nextLoadMore = loadMore >= 10 ? loadMore + 10 : 10;
     // console.log("nextLoadMore", nextLoadMore)
     if (!this.props.tnxComplete) {
-    await this.props.getUser(
-      false,
-      nextLoadMore,
-      filterType,
-      sortType,
-      searchQuery
-    );
-  }
+      await this.props.getUser(
+        false,
+        nextLoadMore,
+        filterType,
+        sortType,
+        searchQuery
+      );
+    }
 
     this.setState({
       loadMore: nextLoadMore
@@ -967,7 +967,7 @@ class SiteWrapper extends Component {
   };
   toggleAllTransactions = () => {
     const param1 = this.state.showAllGameLogs ? 15 : 5;
-  
+
     this.props.getUser(
       param1,
       null,
@@ -975,7 +975,7 @@ class SiteWrapper extends Component {
       this.state.sortType,
       this.state.searchQuery
     );
-  
+
     this.setState(prevState => ({
       showAllGameLogs: !prevState.showAllGameLogs,
       loadMore: 0
@@ -987,9 +987,9 @@ class SiteWrapper extends Component {
       }
     });
   };
-  
-  
-  
+
+
+
   handleDollarEnter = () => {
     this.setState({ isHovered: true });
   };
@@ -1601,25 +1601,40 @@ class SiteWrapper extends Component {
                 >
                   <div className="arrow-up"></div>
                   <div className="header_panel_contents">
-                    {<Tooltip
-                      style={{ position: "absolute", right: "20px" }}
-                      title={
-                        <>
-                          <strong>WHY DO MY WINNINGS APPEAR LESS?</strong>
-                          <br /><br />
-                          You see less as this is net profit (winnings - bet amount) and
-                          receive less due to RTB fees awarded to the Host (0% - 15%
-                          Returned to Bankroll dependent on their accessory) and 0.5%
-                          towards platform fees. For example, if you win {convertToCurrency(0.2)}&nbsp;
-                          but bet {convertToCurrency(0.1)}, then you might see:
-                          {convertToCurrency(0.2)} * 0.88 (12% RTB) - {convertToCurrency(0.1)} (net profit)
-                          = {convertToCurrency(0.076)} (Final Calculation)
-                        </>
-                      }
-                      placement="top"
-                    >
-                      <Info />
-                    </Tooltip>}
+                    {
+                      <Tooltip
+                        style={{ position: "absolute", right: "20px" }}
+                        title={
+                          <>
+                            <h6 style={{ marginBottom: "0.5rem" }}>WHY DO MY WINNINGS APPEAR LESS?</h6>
+                            <p style={{ marginBottom: "0.5rem" }}>
+                              You see less as this is net profit (
+                              <span style={{ fontWeight: "bold", color: "#28a745" }}>winning amount</span> -
+                              <span style={{ fontWeight: "bold", color: "#ff0000" }}> bet amount</span>)
+                              and receive less due to:
+                            </p>
+                            <ul style={{ paddingLeft: "1rem", marginBottom: "0.5rem" }}>
+                              <li>RTB fees awarded to the Host (0% - 15% returned to bankroll dependent on their accessory)</li>
+                              <li>1% towards platform fees</li>
+                            </ul>
+                            <p style={{ marginBottom: "0.5rem" }}>
+                              For example, if you win <strong>{convertToCurrency(0.2)}</strong> but bet <strong>{convertToCurrency(0.1)}</strong>,
+                              then you might see:
+                            </p>
+                            <p style={{ marginBottom: "0.5rem" }}>
+                              <strong>{convertToCurrency(0.2)} * 0.88 </strong>
+                              (12% RTB) - <strong>{convertToCurrency(0.1)}</strong> (net profit)
+                              = <strong>{convertToCurrency(0.076)}</strong> (final calculation).
+                            </p>
+                          </>
+                        }
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip>
+                    }
+
+
                     <h2>BALANCE HISTORY</h2>
 
                     {

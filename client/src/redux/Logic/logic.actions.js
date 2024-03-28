@@ -235,7 +235,7 @@ export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
 // CreateComment
 export const createComment = (commentData) => async dispatch => {
   try {
- 
+
     const res = await axios.post('/game/comments', commentData);
     if (res.data.success) {
 
@@ -510,7 +510,7 @@ export const getRpsBetItems = (room_id) => async dispatch => {
     const res = await axios.get(`/game/rpsbetitems/${room_id}`);
     if (res.data.success) {
       dispatch({ type: RPSBETITEMS_LOADED, payload: res.data });
-    } 
+    }
     return res.data;
   } catch (err) {
   }
@@ -520,16 +520,16 @@ export const getStrategies = () => async dispatch => {
     const res = await axios.get('/game/strategies');
     if (res.data.success) {
       dispatch({ type: STRATEGIES_LOADED, payload: res.data.strategies });
-    } 
+    }
   } catch (err) {
   }
 };
 
-export const updateUserStrategy= (user_id, strategy) => async dispatch => {
+export const updateUserStrategy = (user_id, strategy) => async dispatch => {
   try {
     const res = await axios.patch(`/game/strategies/${user_id}`, { strategy });
     if (res.data.success) {
-      
+
       dispatch({ type: MSG_SUCCESS, payload: "AUTOPLAY STRATEGY UPDATED" });
     }
   } catch (err) {
@@ -537,11 +537,11 @@ export const updateUserStrategy= (user_id, strategy) => async dispatch => {
   }
 };
 
-export const updateRoomStrategy= (room_id, strategy) => async dispatch => {
+export const updateRoomStrategy = (room_id, strategy) => async dispatch => {
   try {
     const res = await axios.patch(`/game/room/strategies/${room_id}`, { strategy });
     if (res.data.success) {
-      
+
       dispatch({ type: MSG_SUCCESS, payload: "ROOM STRATEGY UPDATED" });
     }
   } catch (err) {
@@ -549,7 +549,7 @@ export const updateRoomStrategy= (room_id, strategy) => async dispatch => {
   }
 };
 
-export const updateRoomBot= (room_id) => async dispatch => {
+export const updateRoomBot = (room_id) => async dispatch => {
 
   try {
     const res = await axios.patch(`/game/rooms/${room_id}`);
@@ -712,7 +712,6 @@ export const readNotifications = () => async dispatch => {
     if (markReadResponse.data.success) {
 
       const fetchNotificationsResponse = await axios.get('/game/notifications');
-console.log(fetchNotificationsResponse)
       // Dispatch a Redux action with the updated notifications payload
       if (fetchNotificationsResponse.data.success) {
         dispatch({ type: NOTIFICATIONS_LOADED, payload: fetchNotificationsResponse.data.notifications });

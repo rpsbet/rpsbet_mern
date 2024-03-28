@@ -12,10 +12,11 @@ import {
   getCustomerStatisticsData
 } from '../../redux/Customer/customer.action';
 import { alertModal } from './ConfirmAlerts';
-
-import { Button, TextField } from '@material-ui/core';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+import { Button, Tooltip, IconButton, TextField } from '@material-ui/core';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Info } from '@material-ui/icons';
 
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 
@@ -57,6 +58,7 @@ class ProfileModal extends Component {
       profitAllTimeHigh: this.props.userInfo.profitAllTimeHigh,
       profitAllTimeLow: this.props.userInfo.profitAllTimeLow,
       // email: this.props.userInfo.email,
+      copied: false,
       password: '',
       passwordConfirmation: '',
       avatar: this.props.userInfo.avatar,
@@ -178,6 +180,12 @@ class ProfileModal extends Component {
     );
   };
 
+  handleCopyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    this.setState({ copied: true });
+    setTimeout(() => this.setState({ copied: false }), 1500); // Reset copied state after 1.5 seconds
+  };
+
   handleAvatarLoaded = filename => {
     this.props.setUserInfo({ ...this.props.userInfo, avatar: filename });
   };
@@ -243,7 +251,8 @@ class ProfileModal extends Component {
       averageGamesPlayedPerRoom,
       averageProfit,
       dateJoined,
-      creditScore
+      creditScore,
+      copied
     } = this.state;
 
     return (
@@ -256,7 +265,7 @@ class ProfileModal extends Component {
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
             <h2 className="modal-title">
-            <FontAwesomeIcon icon={faUser} className="mr-2" />
+              <FontAwesomeIcon icon={faUser} className="mr-2" />
 
               Your Profile</h2>
             <Button className="btn-close" onClick={this.handleCloseModal}>
@@ -279,7 +288,7 @@ class ProfileModal extends Component {
                 </div>
               )}
             </div>
-          
+
             {loading ? null : (
               <div className="user-statistics">
 
@@ -312,27 +321,54 @@ class ProfileModal extends Component {
               </div>
             )}
             <div className="modal-edit-panel">
-              {/* <div>
+              <div>
                 <TextField
                   className="form-control"
                   variant="filled"
                   label="REFERRAL CODE"
                   value={this.state.referralCode}
-                  readOnly
+                  InputProps={{
+                    readOnly: true,
+                    endAdornment: (
+                      <Tooltip title={copied ? "Copied!" : "Copy to clipboard"} placement="top">
+                        <IconButton onClick={() => this.handleCopyToClipboard(sendAddress)}>
+                          <FileCopyIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }}
                 />
               </div>
-              <div className="input-wrapper">
+              <div className="input-wrapper" style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
                 <TextField
                   value={this.props.userInfo.rewards}
                   className="form-control"
                   variant="filled"
                   label="REFERRAL REWARDS"
                   InputProps={{
+                    readOnly: true,
                     endAdornment: 'RPS'
                   }}
-                  readOnly
                 />
-              </div> */}
+                <Tooltip
+                  title={
+                    <>
+                      <h6 style={{ marginBottom: "0.5rem" }}>HOW DO I EARN REFERRAL REWARDS?</h6>
+                      <p style={{ marginBottom: "0.5rem" }}>
+                        Referral earnings depend on your referrals' deposit activity and are calculated based on <span style={{ fontWeight: "bold", color: "#28a745" }}>5%</span> of the deposit amount of your referred users.
+                      </p>
+                      <p style={{ marginBottom: "0.5rem" }}>
+                        For example, if your referral deposits <strong>{convertToCurrency(100)}</strong> in total,
+                        you will earn 5% which is <strong>{convertToCurrency(5)}</strong>.
+                      </p>
+                    </>
+                  }
+                  placement="top"
+                >
+                  <Info style={{ cursor: "pointer", float: "right", paddingLeft: "5px" }} />
+                </Tooltip>
+
+              </div>
 
               <div>
                 <TextField

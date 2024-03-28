@@ -7,11 +7,16 @@ const { setBalance } = require('../../routes/user.routes');
 const axios = require('axios');
 const { ethers } = require('ethers');
 const walletKey = process.env.wk;
+const convertToCurrency = require('./conversion');
+
 const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/5fedb9ded8fd4b149026d0140baacf98');
 const API_KEY = 'ZBZK3XM-QNHM89H-MKXVFCD-TV6MW1N';
 
 const withdrawalConfirmationThreshold = 2;
 const depositConfirmationThreshold = 6;
+const socketController = require('../../socketController');
+
+let socketio = null;
 
 async function getWalletBalance(signer) {
   const walletAddress = await signer.getAddress();
@@ -23,15 +28,18 @@ async function getWalletBalance(signer) {
   return balanceInEther;
 }
 
-async function checkConfirmations() {
+async function checkConfirmations(io) {
   try {
     const currentBlock = await provider.getBlockNumber();
     const pendingTransactions = await Transaction.find({ status: 'pending' });
     const waitingTransactions = await Transaction.find({ status: 'waiting' });
-
+    
     let isDeposit = transaction.description === 'deposit';
     let isWithdrawal = transaction.description === 'withdraw';
-
+    let referralOwner = null;
+    if (io) {
+      socketio = io;
+    }
     // Process web3 transactions
     for (const transaction of pendingTransactions) {
       const tx = await provider.getTransaction(transaction.hash);
@@ -42,12 +50,40 @@ async function checkConfirmations() {
         if (isDeposit && confirmations >= depositConfirmationThreshold) {
           console.log('Processing deposit transaction...');
           const user = await User.findById(transaction.user);
+          const message = `Received ${convertToCurrency(transaction.amount)} in referral rewards from ${user.username}.`;
+
           if (user) {
             transaction.status = 'completed';
             await transaction.save();
             user.balance += transaction.amount;
             await user.save();
             console.log('Deposit transaction processed successfully.');
+
+            if (user.referralCode && user.referralCode.trim() !== "") {
+              referralOwner = await User.findOne({ referralCode: user.referralCode });
+            }
+            // If there is a referral owner, update their balance
+            if (referralOwner) {
+              referralOwner.balance += (transaction.amount * 0.05);
+              referralOwner.rewards += (transaction.amount * 0.05);
+              await referralOwner.save();
+            }
+
+            const notificationData = {
+              _id: user._id,
+              message: message,
+              username: user.username,
+              avatar: user.avatar,
+              accessory: user.accessory,
+              rank: user.totalWagered,
+              created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+              created_at_str: moment(new Date()).format('LLL'),
+              updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+              is_read: false
+            };
+
+            socketController.sendNotification(referralOwner._id, notificationData);
+
           }
         } else if (isWithdrawal && confirmations >= withdrawalConfirmationThreshold) {
           console.log('Processing withdrawal transaction...');
@@ -162,6 +198,31 @@ async function checkConfirmations() {
             user.balance += transaction.amount;
             await user.save();
             console.log('Deposit transaction processed successfully.');
+
+            if (user.referralCode && user.referralCode.trim() !== "") {
+              referralOwner = await User.findOne({ referralCode: user.referralCode });
+            }
+            // If there is a referral owner, update their balance
+            if (referralOwner) {
+              referralOwner.balance += (transaction.amount * 0.05);
+              referralOwner.rewards += (transaction.amount * 0.05);
+              await referralOwner.save();
+            }
+            const notificationData = {
+              _id: user._id,
+              message: message,
+              username: user.username,
+              avatar: user.avatar,
+              accessory: user.accessory,
+              rank: user.totalWagered,
+              created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+              created_at_str: moment(new Date()).format('LLL'),
+              updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+              is_read: false
+            };
+
+            socketController.sendNotification(referralOwner._id, notificationData);
+
           }
         }
       } else if (isWithdrawal) {

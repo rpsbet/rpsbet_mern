@@ -119,20 +119,24 @@ class MyGamesTable extends Component {
       this.fetchData();
     }
 
-
     if (
       this.props.myGamesWithStats !== prevProps.myGamesWithStats) {
+        console.log("this.props.myGamesWithStats", this.props.myGamesWithStats)
       this.setState({ myGames: this.props.myGames, isLoading: false })
     }
 
     if (prevProps.myGames !== this.props.myGames) {
+      console.log("wed", this.props.myGames)
       this.setState({ myGames: this.props.myGames, isLoading: false });
     }
   }
 
   handleSettingsIconClick = (row) => {
-    console.log(row)
-    this.setState({ settings_panel_opened: !this.state.settings_panel_opened, selectedRow: row });
+    if (!row.coHost) {
+      this.setState({ settings_panel_opened: !this.state.settings_panel_opened, selectedRow: row });
+    } else {
+      alertModal(this.props.isDarkMode, "YOU ARE NOT THE HOST, UNABLE TO CHANGE STRATEGY.");
+    }
   };
 
   fetchData = () => {
@@ -154,7 +158,6 @@ class MyGamesTable extends Component {
   };
 
   handleTopUp = (row) => {
-
     this.setState({ isTopUpModalOpen: true, selectedRow: row });
   };
 
@@ -294,9 +297,6 @@ class MyGamesTable extends Component {
     this.setState({ sortAnchorEl: null, selectedSort });
   };
 
-
-
-
   openRecreateModal = (row) => {
     alertModal(this.props.isDarkMode, `YOU DO NOT OWN A GAME RESTORER. GO TO MARKETPLACE TO PURCHASE`);
     return;
@@ -312,8 +312,6 @@ class MyGamesTable extends Component {
     //   }
     // );
   }
-
-
 
   onCreateRoom = async (row) => {
 
@@ -410,6 +408,7 @@ class MyGamesTable extends Component {
       [room_id]: { holding: false }
     });
   };
+
   endRoom = async (winnings, room_id) => {
 
     // Set the closing state to indicate the process
@@ -442,8 +441,8 @@ class MyGamesTable extends Component {
       }
     });
   };
-  unstake = async (winnings, room_id) => {
 
+  unstake = async (winnings, room_id) => {
     // Set the closing state to indicate the process
     this.setState(prevState => ({
       [room_id]: {
@@ -856,8 +855,7 @@ class MyGamesTable extends Component {
               <div className="dont-have-game-msg">
                 <Lottie options={defaultOptions} width={50} />
                 <span>
-                  SELECT A GAME <br />
-                  AND CLICK "CREATE"
+                 CLICK "CREATE"
                 </span>
               </div>
             ) : (
@@ -912,7 +910,6 @@ class MyGamesTable extends Component {
                         </span>
                         {(!row.coHost) &&
                           (selectedFilter === 'open') && (
-
                             <a
                               className="ml-1"
                               onClick={() => this.handlePayout(row)}
@@ -1278,8 +1275,8 @@ class MyGamesTable extends Component {
                       onChange={this.handlePaymentMethodChange}
                     >
                       <h4 style={{ textAlign: "center", padding: "0" }}>Change Auto-Payout</h4>
-                      <FormControlLabel value="manual" control={<Radio />} label="Manual" />
-                      <FormControlLabel value="automatic" control={<Radio />} label="Automatic" />
+                      <FormControlLabel value="manual" control={<Radio />} label="MANUAL" />
+                      <FormControlLabel value="automatic" control={<Radio />} label="AUTOMATIC" />
                     </RadioGroup>
 
                     <div className="input-amount">

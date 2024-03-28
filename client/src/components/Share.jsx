@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { TwitterShareButton, TwitterIcon } from 'react-share';
 import { FaClipboard } from 'react-icons/fa';
-
+import { Tooltip } from '@material-ui/core';
+import FileCopy from '@material-ui/icons/FileCopy';
 const styles = {
   focused: {
     borderColor: '#fa3fa0'
@@ -33,7 +34,7 @@ export default class Share extends Component {
       });
     }, 1000);
   };
- 
+
 
   copy() {
     const twitterLink = 'https://rps.game/join/' + this.props.roomInfo._id;
@@ -50,12 +51,12 @@ export default class Share extends Component {
     }
 
     const twitterLink = 'https://rps.game/join/' + this.props.roomInfo._id;
-    
+
     return (
       <div className="share-options">
         <TwitterShareButton
           url={twitterLink}
-          title={`Guess my pattern, p*ssy: ⚔`} // ${this.props.roomInfo.room_name}
+          title={`1v1 ME RPS, P*SSIES: ⚔`} // ${this.props.roomInfo.room_name}
           className="Demo__some-network__share-button"
         >
           <TwitterIcon size={32} round />
@@ -75,7 +76,10 @@ export default class Share extends Component {
               onClick={this.toggleBtnHandler}
             />
           ) : null}
-          <FaClipboard />
+          <Tooltip title={!this.state.clicked ? "COPIED LINK!" : "COPY LINK"} placement="top">
+          <FileCopy style={{ cursor: "pointer" }} />
+          
+          </Tooltip>
           &nbsp;{this.state.text}
         </a>
       </div>

@@ -7,7 +7,11 @@ import { convertToCurrency } from '../../util/conversion';
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faHeartBroken, faStopwatch} from '@fortawesome/free-solid-svg-icons';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+import {
+  Tooltip
+} from '@material-ui/core';
+import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import BetArray from '../../components/BetArray';
 import CountUp from 'react-countup';
 import InlineSVG from 'react-inlinesvg';
@@ -16,7 +20,6 @@ import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
 import rain from '../LottieAnimations/rain.json';
 import waves from '../LottieAnimations/waves.json';
-import { FaClipboard } from 'react-icons/fa';
 
 import hex from '../LottieAnimations/hex.json';
 
@@ -58,7 +61,7 @@ class HistoryTable extends Component {
           prevRain: prevState.rain
         }));
       });
-      
+
     } else {
       console.error('Socket is null or undefined');
     }
@@ -73,7 +76,7 @@ class HistoryTable extends Component {
       current_state.history?.length === 0 ||
       (props.history &&
         current_state.history[0]['created_at'] !==
-          props.history[0]['created_at'])
+        props.history[0]['created_at'])
     ) {
       return {
         ...current_state,
@@ -102,7 +105,7 @@ class HistoryTable extends Component {
     });
   };
   attachAccessories = () => {
-    const {isLowGraphics} = this.props;
+    const { isLowGraphics } = this.props;
     const userLinks = document.querySelectorAll('.user-link');
     userLinks.forEach(element => {
       const userId = element.getAttribute('data-userid'); // Get userId from the user-link element
@@ -111,15 +114,15 @@ class HistoryTable extends Component {
       const portalContainer = document.createElement('div');
       ReactDOM.render(lottieAnimation, portalContainer);
       element.parentNode.insertBefore(portalContainer, element);
-  
+
       // Attach click event listener to the accessory element
       portalContainer.addEventListener('click', () => {
         this.handleOpenPlayerModal(userId);
       });
-        portalContainer.style.cursor = 'pointer';
+      portalContainer.style.cursor = 'pointer';
     });
   };
-  
+
 
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -257,14 +260,14 @@ class HistoryTable extends Component {
   };
 
   render() {
-    const {isLowGraphics} = this.props;
+    const { isLowGraphics } = this.props;
     // const gameTypePanel = this.generateGameTypePanel();
     const HeartIcon = ({ isOpen }) => {
       const icon = isOpen ? faHeart : faHeartBroken;
-    
+
       return <FontAwesomeIcon icon={icon} />;
     };
-    
+
     return (
       <div className="overflowX">
         {/* <div className="outer-div">
@@ -356,7 +359,7 @@ class HistoryTable extends Component {
                   <div className="table-cell">
                     <div className="room-id">
                       {row.status}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
-                      </div>
+                    </div>
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}
@@ -364,15 +367,14 @@ class HistoryTable extends Component {
                   </div>
                   <div className="table-cell">{row.from_now}&nbsp;<FontAwesomeIcon icon={faStopwatch} /></div>
                   <div className="table-cell row-copy">
-<a style={{cursor:"pointer"}}>
 
-                  <FaClipboard
-                    className="clipboard-icon"
-                    onClick={() => this.copyToClipboard(row._id)}
-                    />
-                  {this.state.copiedRowId === row._id && <span style={{ marginLeft: '5px' }}>Copied ID!</span>}
-                    </a>
-                </div>
+                    <Tooltip title={this.state.copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">
+                      <a style={{padding: "5px", cursor: "pointer"}} onClick={() => this.copyToClipboard(row._id)}>
+                        <FileCopyIcon style={{width: "12px"}}  />
+                      </a>
+                    </Tooltip>
+
+                  </div>
                 </div>
                 <div>
                   <div
@@ -392,7 +394,7 @@ class HistoryTable extends Component {
             selectedCreator={this.state.selectedCreator}
           />
         )}
-        
+
       </div>
     );
   }
