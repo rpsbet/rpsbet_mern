@@ -40,6 +40,8 @@ const { predictNextDrop } = require('../helper/util/predictNextDrop');
 const avatarUtils = require('../helper/util/getRank');
 const convertToCurrency = require('../helper/util/conversion');
 const executeBet = require('../helper/util/betExecutor');
+const saveDocumentWithRetry = require('../helper/util/retrySave');
+
 
 let user_access_log = {};
 router.get('/game_types', async (req, res) => {
@@ -476,9 +478,9 @@ router.get('/rpsbetitems/:roomId', async (req, res) => {
   const { roomId } = req.params;
   try {
     // Find RpsBetItems filtered by room id and status equal to 'open'
-    const rpsBetItems = await RpsBetItem.find({ room: roomId, joiner_rps: { $ne: null }})
-    .sort({ created_at: -1 })
-    .limit(50);
+    const rpsBetItems = await RpsBetItem.find({ room: roomId, joiner_rps: { $ne: null } })
+      .sort({ created_at: -1 })
+      .limit(50);
     // Return the filtered RpsBetItems
     res.json({
       success: true,
@@ -533,7 +535,12 @@ router.post('/comments', auth, async (req, res) => {
     });
 
     // Save the comment to the database
-    await comment.save();
+    try {
+      await saveDocumentWithRetry(comment);
+    } catch (error) {
+      console.error("Error saving comment:", error);
+    }
+
 
     res.json({
       success: true,
@@ -1281,7 +1288,12 @@ router.post('/rooms', auth, async (req, res) => {
       status: 'open',
       description,
     });
-    await newRoom.save();
+    try {
+      await saveDocumentWithRetry(newRoom);
+    } catch (error) {
+      console.error("Error saving newRoom:", error);
+    }
+
 
     if (gameType.game_type_name === 'Mystery Box') {
       for (const box of box_list) {
@@ -1291,7 +1303,12 @@ router.post('/rooms', auth, async (req, res) => {
           box_price: box.box_price,
           status: 'init'
         });
-        await newBox.save();
+        try {
+          await saveDocumentWithRetry(newBox);
+        } catch (error) {
+          console.error("Error saving newBox:", error);
+        }
+
       }
     } else if (gameType.game_type_name === 'RPS') {
       for (const rps of rps_list) {
@@ -1299,7 +1316,11 @@ router.post('/rooms', auth, async (req, res) => {
           room: newRoom,
           rps: rps.rps
         });
-        await newRps.save();
+        try {
+          await saveDocumentWithRetry(newRps);
+        } catch (error) {
+          console.error("Error saving newRps:", error);
+        }
 
         if (rps_game_type === 1) {
 
@@ -1310,7 +1331,11 @@ router.post('/rooms', auth, async (req, res) => {
 
             if (owner && owner.count >= 1) {
               owner.count -= 1;
-              await item.save();
+              try {
+                await saveDocumentWithRetry(item);
+              } catch (error) {
+                console.error("Error saving item:", error);
+              }
             } else {
               return res.json({
                 success: false,
@@ -1381,11 +1406,14 @@ router.post('/rooms', auth, async (req, res) => {
 
 
     req.user.balance -= bet_amount;
-    newTransaction.amount -= bet_amount;
+    newTransaction.amount -= be
 
-    await req.user.save();
-    await newTransaction.save();
-
+    try {
+      await saveDocumentWithRetry(req.user);
+      await saveDocumentWithRetry(newTransaction);
+    } catch (error) {
+      console.error("Error saving:", error);
+    }
     const rooms = await getRoomList(7, 'All');
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       pageSize: rooms.pageSize,
@@ -1874,7 +1902,12 @@ router.post('/end_game', auth, async (req, res) => {
 
           if (owner) {
             owner.count += 1;
-            await creatorItem.save();
+            try {
+              await saveDocumentWithRetry(creatorItem);
+
+            } catch (error) {
+              console.error("Error saving creatorItem:", error);
+            }
           }
         }
       }
@@ -1926,13 +1959,24 @@ router.post('/end_game', auth, async (req, res) => {
         game_result: -100
       });
 
-      await newGameLog.save();
+      try {
+        await saveDocumentWithRetry(newGameLog);
+
+      } catch (error) {
+        console.error("Error saving newGameLog:", error);
+      }
     }
 
     roomInfo.creator.balance += newTransaction.amount;
-    await roomInfo.creator.save();
-    await roomInfo.save();
-    await newTransaction.save();
+
+    try {
+      await saveDocumentWithRetry(roomInfo.creator);
+      await saveDocumentWithRetry(roomInfo);
+      await saveDocumentWithRetry(newTransaction);
+
+    } catch (error) {
+      console.error("Error saving newGameLog:", error);
+    }
 
     sendEndedMessageToJoiners(
       roomId,
@@ -2106,7 +2150,15 @@ router.post('/unstake', auth, async (req, res) => {
       host.share = (host.share / totalShares) * 100;
     });
 
-    await Promise.all([roomInfo.save(), req.user.save(), newTransaction.save()]);
+    try {
+      await Promise.all([
+        saveDocumentWithRetry(roomInfo),
+        saveDocumentWithRetry(req.user),
+        saveDocumentWithRetry(newTransaction)
+      ]);
+    } catch (error) {
+      console.error("Error saving documents:", error);
+    }
 
     // Retrieve the user's updated room list
     const myRooms = await getMyRooms(userId);
@@ -2206,7 +2258,12 @@ router.post('/end_game', auth, async (req, res) => {
 
           if (owner) {
             owner.count += 1;
-            await creatorItem.save();
+            try {
+              await saveDocumentWithRetry(creatorItem);
+            } catch (error) {
+              console.error("Error saving creatorItem", error);
+            }
+
           }
         }
       }
@@ -2260,13 +2317,24 @@ router.post('/end_game', auth, async (req, res) => {
         game_result: -100
       });
 
-      await newGameLog.save();
+      try {
+        await saveDocumentWithRetry(newGameLog);
+      } catch (error) {
+        console.error("Error saving newGameLog:", error);
+      }
+
     }
 
     roomInfo.creator.balance += newTransaction.amount;
-    await roomInfo.creator.save();
-    await roomInfo.save();
-    await newTransaction.save();
+
+    try {
+      await saveDocumentWithRetry(roomInfo.creator);
+      await saveDocumentWithRetry(roomInfo);
+      await saveDocumentWithRetry(newTransaction);
+    } catch (error) {
+      console.error("Error saving", error);
+    }
+
 
     sendEndedMessageToJoiners(
       roomId,
@@ -2453,7 +2521,12 @@ const decrementUserBalance = async (userId, betAmount) => {
   }
 
   user.balance -= betAmount;
-  await user.save();
+  try {
+    await saveDocumentWithRetry(user);
+  } catch (error) {
+    console.error("Error saving user:", error);
+  }
+
   return user.balance;
 };
 
@@ -2596,8 +2669,11 @@ router.post('/start_roll', auth, async (req, res) => {
         room_number,
       room: roomId
     });
-    newTransaction.save();
-
+    try {
+      await saveDocumentWithRetry(newTransaction);
+    } catch (error) {
+      console.error("Error saving newTransaction:", error);
+    }
     res.json({
       success: true,
       balance,
@@ -2694,10 +2770,15 @@ async function sendEndedMessageToJoiners(roomId, from, message, is_anonymous) {
       from: new ObjectId(from),
       to: new ObjectId(log.joined_user),
       message: message,
-      is_anonymous: is_anonymous,
+      // is_anonymous: is_anonymous,
       is_read: false
     });
-    temp.save();
+    try {
+      saveDocumentWithRetry(temp);
+    } catch (error) {
+      console.error("Error saving temp:", error);
+    }
+
     socket.sendNotification(log.joined_user, {
       from: from,
       to: log.joined_user,
@@ -2752,11 +2833,11 @@ router.post('/coHost', auth, async (req, res) => {
     let newShare;
     // Check if the user is not already a host
     if (existingHostIndex === -1) {
-       newShare = coHostAmount / parseFloat(room.user_bet) * 100;
+      newShare = coHostAmount / parseFloat(room.user_bet) * 100;
       room.hosts.push({ host: req.user._id, share: newShare, accessory: req.user.accessory, avatar: req.user.avatar, rank: req.user.totalWagered });
     } else {
       // Update existing host's share
-       newShare = ((((room.hosts[existingHostIndex].share / 100) * oldValuation) + coHostAmount) / parseFloat(room.user_bet) * 100);
+      newShare = ((((room.hosts[existingHostIndex].share / 100) * oldValuation) + coHostAmount) / parseFloat(room.user_bet) * 100);
       room.hosts[existingHostIndex].share = newShare;
     }
 
@@ -2766,7 +2847,7 @@ router.post('/coHost', auth, async (req, res) => {
         // console.log("host.share before update:", host.share);
         host.share = ((host.share / 100) * oldValuation) / parseFloat(room.user_bet) * 100;
 
-        const message= `${req.user.username} now shares ${(newShare).toFixed(2)}% of ${gameType.short_name +
+        const message = `${req.user.username} now shares ${(newShare).toFixed(2)}% of ${gameType.short_name +
           '-' +
           room.room_number}`;
 
@@ -2777,7 +2858,11 @@ router.post('/coHost', auth, async (req, res) => {
           message: message,
           is_read: false
         });
-        temp.save();
+        try {
+          saveDocumentWithRetry(temp);
+        } catch (error) {
+          console.error("Error saving temp:", error);
+        }
 
         const notificationData = {
           _id: req.user._id,
@@ -2787,19 +2872,19 @@ router.post('/coHost', auth, async (req, res) => {
           accessory: req.user.accessory,
           room: room._id,
           rank: req.user.totalWagered,
-          created_at:  moment(new Date()).format('YYYY-MM-DD HH:mm'),
+          created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
           created_at_str: moment(new Date()).format('LLL'),
-          updated_at:  moment(new Date()).format('YYYY-MM-DD HH:mm'),
+          updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
           is_read: false
-      };
+        };
 
         socket.sendNotification(host.host, notificationData);
-    
-  
+
+
       }
     });
 
- 
+
     const newTransaction = new Transaction({
       created_at: now,
       user: req.user._id,
@@ -2807,13 +2892,18 @@ router.post('/coHost', auth, async (req, res) => {
       description
     });
 
-    await Promise.all([
-      room.save(),
-      req.user.save(),
-      newTransaction.save()
-    ]);
+    try {
+      await Promise.all([
+        saveDocumentWithRetry(room),
+        saveDocumentWithRetry(req.user),
+        saveDocumentWithRetry(newTransaction)
+      ]);
+    } catch (error) {
+      console.error("Error saving documents:", error);
+    }
 
-    
+
+
     return res.json({
       success: true,
       balance: req.user.balance,
@@ -2879,10 +2969,11 @@ router.post('/topUp', auth, async (req, res) => {
     req.user.balance -= topUpAmount;
 
     const savePromises = [
-      room.save(),
-      req.user.save(),
-      newTransactionJ.save()
+      saveDocumentWithRetry(room),
+      saveDocumentWithRetry(req.user),
+      saveDocumentWithRetry(newTransactionJ)
     ];
+
 
     await Promise.all(savePromises);
 
@@ -2946,12 +3037,14 @@ router.post('/editPayout', auth, async (req, res) => {
 
     room.endgame_amount = payoutAmount;
 
-    const savePromises = [
-      room.save(),
-      req.user.save()
-    ];
-
-    await Promise.all(savePromises);
+    try {
+      await Promise.all([
+        saveDocumentWithRetry(roomInfo),
+        saveDocumentWithRetry(req.user),
+      ]);
+    } catch (error) {
+      console.error("Error saving documents:", error);
+    }
 
 
     return res.json({
@@ -3039,14 +3132,18 @@ router.post('/tip', auth, async (req, res) => {
     userToTip.balance += tipAmount;
     req.user.balance -= tipAmount;
 
-    const savePromises = [
-      userToTip.save(),
-      req.user.save(),
-      newTransactionC.save(),
-      newTransactionJ.save()
-    ];
+    try {
+      await Promise.all([
+        saveDocumentWithRetry(userToTip),
+        saveDocumentWithRetry(req.user),
+        saveDocumentWithRetry(newTransactionC),
+        saveDocumentWithRetry(newTransactionJ)
+      ]);
+    } catch (error) {
+      console.error("Error saving documents:", error);
+    }
 
-    await Promise.all(savePromises);
+
 
     return res.json({
       success: true,
@@ -3109,13 +3206,16 @@ router.post('/reCreate', auth, async (req, res) => {
 
     req.user.balance -= tipAmount;
 
-    const savePromises = [
-      req.user.save(),
-      newTransactionJ.save(),
-      duplicatedRoom.save()
-    ];
+    try {
+      await Promise.all([
+        saveDocumentWithRetry(req.user),
+        saveDocumentWithRetry(duplicatedRoom),
+        saveDocumentWithRetry(newTransactionJ)
+      ]);
+    } catch (error) {
+      console.error("Error saving documents:", error);
+    }
 
-    await Promise.all(savePromises);
 
     return res.json({
       success: true,
@@ -3135,7 +3235,7 @@ router.post('/reCreate', auth, async (req, res) => {
 
 router.post('/bet', auth, async (req, res) => {
   try {
-      // Call the shared function with the req object
+    // Call the shared function with the req object
     const betResult = await executeBet(req);
     // Process the bet result as needed
     res.json({

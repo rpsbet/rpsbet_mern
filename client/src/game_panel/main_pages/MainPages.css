@@ -2100,6 +2100,12 @@ transform-origin: center;
   left: 10px;
   top: 5px;
 }
+.blueish-hue {
+  filter: hue-rotate(180deg); /* Adjust the hue rotation value as needed */
+  transition: filter 1.5s cubic-bezier(0.4, 0, 0.2, 1); /* Custom cubic bezier easing function */
+}
+
+
 .guesses .avatar div:nth-child(2),
 .guesses .avatar div:nth-child(3),
 .guesses .avatar .rank-icon

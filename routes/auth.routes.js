@@ -6,6 +6,8 @@ const {
   calculate1dayProfit,
   calculateAllTimeProfit
 } = require('../helper/util/profitCalculation');
+const saveDocumentWithRetry = require('../helper/util/retrySave');
+
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 // User Model
@@ -77,7 +79,7 @@ router.get('/profit', auth, async (req, res) => {
     const allTransactions = await Transaction.find({ user: user });
 
     const profitData = getProfitData(allTransactions);
-console.log(profitData)
+    console.log(profitData)
     res.json({
       success: true,
       user: req.user,
@@ -152,7 +154,12 @@ router.post('/sendResetPasswordEmail', async (req, res) => {
         });
 
       const request = new ChangePasswordRequest({ user: user });
-      await request.save();
+      try {
+        await saveDocumentWithRetry(request);
+      } catch (error) {
+        console.error("Error saving request:", error);
+      }
+
       resetPassword(
         user.email,
         user.username,
@@ -194,7 +201,11 @@ router.post('/resetPassword', async (req, res) => {
       bcrypt.hash(req.body.password, salt, (err, hash) => {
         if (err) throw err;
         request.user.password = hash;
-        request.user.save();
+        try {
+          saveDocumentWithRetry(request.user);
+        } catch (error) {
+          console.error("Error saving  request.user:", error);
+        }
         return res.json({
           success: true
         });
@@ -215,7 +226,11 @@ router.post('/changePasswordAndAvatar', auth, async (req, res) => {
           req.user.password = hash;
         }
         req.user.avatar = req.body.new_avatar;
-        req.user.save();
+        try {
+          saveDocumentWithRetry(req.user);
+        } catch (error) {
+          console.error("Error saving   req.user:", error);
+        }
         return res.json({
           success: true
         });
@@ -237,7 +252,12 @@ router.post('/deleteAccount', auth, async (req, res) => {
     }
 
     req.user.is_deleted = true;
-    req.user.save();
+    try {
+      await saveDocumentWithRetry(req.user);
+    } catch (error) {
+      console.error("Error saving req.user:", error);
+    }
+
 
     return res.json({
       success: true
@@ -253,7 +273,11 @@ router.post('/deleteAccount', auth, async (req, res) => {
 router.post('/logout', auth, async (req, res) => {
   try {
     req.user.status = 'off';
-    req.user.save();
+    try {
+      await saveDocumentWithRetry(req.user);
+    } catch (error) {
+      console.error("Error saving req.user:", error);
+    }
     res.json({
       success: true,
       message: 'LOGGED TF OUT!'
@@ -267,7 +291,13 @@ router.post('/resend_verification_email', auth, async (req, res) => {
   try {
     const verification_code = Math.floor(Math.random() * 8999) + 1000;
     req.user.verification_code = verification_code;
-    req.user.save();
+
+    try {
+      await saveDocumentWithRetry(req.user);
+    } catch (error) {
+      console.error("Error saving req.user:", error);
+    }
+
 
     sendgrid.sendWelcomeEmail(
       req.user.email,
@@ -290,7 +320,12 @@ router.post('/verify_email', auth, async (req, res) => {
   try {
     if (req.user.verification_code === req.body.verification_code) {
       req.user.is_activated = true;
-      req.user.save();
+      try {
+        await saveDocumentWithRetry(req.user);
+      } catch (error) {
+        console.error("Error saving req.user:", error);
+      }
+
 
       res.json({
         success: true,

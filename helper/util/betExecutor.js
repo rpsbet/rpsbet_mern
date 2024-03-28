@@ -12,6 +12,7 @@ const convertToCurrency = require('./conversion');
 const socket = require('../../socketController')
 const moment = require('moment');
 const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
+const saveDocumentWithRetry = require('./retrySave');
 
 let user_access_log = {};
 
@@ -32,8 +33,8 @@ const executeBet = async (req) => {
         const platform = await SystemSetting.findOne({ name: 'platform' });
         let responseData = {};
         const user = req.user;
-console.log("ED")
-       
+        console.log("ED")
+
         // const RockType = ['Rock', 'MoonRock', 'QuickBall'];
         // const PaperType = [
         //   'Paper',
@@ -418,17 +419,17 @@ console.log("ED")
             }
 
             roomInfo = await Room.findOne({ _id: req.body._id })
-            .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
-            .populate({ 
-                path: 'creator', 
-                model: User,
-                select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance ' // Only select the 'username' field from the 'User' document
-            })
-            .populate({ 
-                path: 'game_type', 
-                model: GameType,
-                select: 'game_type_name short_name' // Only select the 'name' field from the 'GameType' document
-            })
+                .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+                .populate({
+                    path: 'creator',
+                    model: User,
+                    select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance ' // Only select the 'username' field from the 'User' document
+                })
+                .populate({
+                    path: 'game_type',
+                    model: GameType,
+                    select: 'game_type_name short_name' // Only select the 'name' field from the 'GameType' document
+                })
 
             // console.log("spp        ", roomInfo['creator']._id, user._id);
 
@@ -597,7 +598,12 @@ console.log("ED")
                         bet_amount: parseFloat(req.body.bet_amount),
                     });
 
-                    await bet_item.save();
+                    try {
+                        await saveDocumentWithRetry(bet_item);
+                    } catch (error) {
+                        console.error("Error saving bet_item:", error);
+                    }
+
 
                     // Define helper functions
                     function getRandomItem() {
@@ -646,13 +652,21 @@ console.log("ED")
                             parseFloat(rain.value) +
                             parseFloat(req.body.bet_amount) * 2 * ((commission - parseFloat(tax.value)) / 100);
 
-                        rain.save();
+                        try {
+                            await saveDocumentWithRetry(rain);
+                        } catch (error) {
+                            console.error("Error saving rain:", error);
+                        }
 
                         // update platform stat (0.5%)
                         platform.value =
                             parseFloat(platform.value) +
                             parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
-                        platform.save();
+                        try {
+                            await saveDocumentWithRetry(platform);
+                        } catch (error) {
+                            console.error("Error saving platform:", error);
+                        }
 
                         // if (req.io.sockets) {
                         //     req.io.sockets.emit('UPDATE_RAIN', {
@@ -694,7 +708,11 @@ console.log("ED")
                         platform.value =
                             parseFloat(platform.value) +
                             parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
-                        platform.save();
+                        try {
+                            await saveDocumentWithRetry(platform);
+                        } catch (error) {
+                            console.error("Error saving platform:", error);
+                        }
                     } else {
                         // console.log('loss')
 
@@ -710,7 +728,11 @@ console.log("ED")
                         platform.value =
                             parseFloat(platform.value) +
                             parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
-                        platform.save();
+                        try {
+                            await saveDocumentWithRetry(platform);
+                        } catch (error) {
+                            console.error("Error saving platform:", error);
+                        }
 
                         if (
                             roomInfo['endgame_type'] &&
@@ -730,7 +752,12 @@ console.log("ED")
                                 // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
-                            await newGameLogC.save();
+
+                            try {
+                                await saveDocumentWithRetry(newGameLogC);
+                            } catch (error) {
+                                console.error("Error saving newGameLogC:", error);
+                            }
                             roomInfo['user_bet'] = parseFloat(
                                 roomInfo['endgame_amount']
                             ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
@@ -824,12 +851,22 @@ console.log("ED")
                         rain.value =
                             parseFloat(rain.value) + winnings * ((commission - 0.5) / 100);
 
-                        rain.save();
+                        try {
+                            await saveDocumentWithRetry(rain);
+                        } catch (error) {
+                            console.error("Error saving rain:", error);
+                        }
+
 
                         // update platform stat (0.5%)
                         platform.value =
                             parseFloat(platform.value) + winnings * (parseFloat(tax.value) / 100);
-                        platform.save();
+                        try {
+                            await saveDocumentWithRetry(platform);
+                        } catch (error) {
+                            console.error("Error saving platform:", error);
+                        }
+
 
                         if (req.io.sockets) {
                             req.io.sockets.emit('UPDATE_RAIN', {
@@ -918,7 +955,13 @@ console.log("ED")
                                 // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
-                            await newGameLogC.save();
+
+                            try {
+                                await saveDocumentWithRetry(newGameLogC);
+                            } catch (error) {
+                                console.error("Error saving newGameLogC:", error);
+                            }
+
                             roomInfo['user_bet'] = parseFloat(
                                 roomInfo['endgame_amount']
                             ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
@@ -943,7 +986,11 @@ console.log("ED")
                 bet_item.joiner = user;
                 bet_item.joiner_rps = req.body.selected_rps;
                 bet_item.bet_amount = parseFloat(req.body.bet_amount);
-                await bet_item.save();
+                try {
+                    await saveDocumentWithRetry(bet_item);
+                } catch (error) {
+                    console.error("Error saving bet_item:", error);
+                }
                 if (roomInfo['rps_game_type'] === 0) {
                     const lastFiveBetItems = await RpsBetItem.find({
                         room: req.body._id,
@@ -979,7 +1026,11 @@ console.log("ED")
                         joiner_rps: ''
                     });
                     if (nextItem) {
-                        await nextItem.save();
+                        try {
+                            await saveDocumentWithRetry(nextItem);
+                        } catch (error) {
+                            console.error("Error saving nextItem:", error);
+                        }
                     } else {
                         roomInfo.status = 'finished';
                     }
@@ -987,7 +1038,11 @@ console.log("ED")
 
                 if (!roomInfo.joiners.includes(user)) {
                     roomInfo.joiners.addToSet(user);
-                    await roomInfo.save();
+                    try {
+                        await saveDocumentWithRetry(roomInfo);
+                    } catch (error) {
+                        console.error("Error saving roomInfo:", error);
+                    }
                 }
 
                 if (roomInfo['user_bet'] <= 0.05) {
@@ -1011,7 +1066,11 @@ console.log("ED")
                         // is_anonymous: roomInfo['is_anonymous'],
                         game_result: -100
                     });
-                    await newGameLogC.save();
+                    try {
+                        await saveDocumentWithRetry(newGameLogC);
+                    } catch (error) {
+                        console.error("Error saving newGameLogC:", error);
+                    }
                 }
             }
             // else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
@@ -2794,7 +2853,11 @@ console.log("ED")
             if (roomInfo['creator']['profitAllTimeLow'] > newTransactionC.amount) {
                 roomInfo['creator']['profitAllTimeLow'] = newTransactionC.amount;
             }
-            roomInfo['creator'].save();
+            try {
+                await saveDocumentWithRetry(roomInfo['creator']);
+            } catch (error) {
+                console.error("Error saving roomInfo['creator']:", error);
+            }
 
             user['balance'] += newTransactionJ.amount;
             user['gamePlayed']++;
@@ -2820,14 +2883,21 @@ console.log("ED")
             // }
 
             // Save the changes to the user document
-            await user.save();
-
-            newGameLog.save();
-            await roomInfo.save();
+            try {
+                await saveDocumentWithRetry(user);
+                await saveDocumentWithRetry(newGameLog);
+                await saveDocumentWithRetry(roomInfo);
+            } catch (error) {
+                console.error("Error saving", error);
+            }
 
             if (!roomInfo.joiners.includes(user)) {
                 roomInfo.joiners.addToSet(user);
-                await roomInfo.save();
+                try {
+                    await saveDocumentWithRetry(roomInfo);
+                } catch (error) {
+                    console.error("Error saving roomInfo", error);
+                }
             }
             setTimeout(async () => {
                 // const rooms = await getRoomList(10, 'All');
@@ -2841,14 +2911,22 @@ console.log("ED")
                 // });
 
                 if (newTransactionJ.amount !== 0) {
-                    newTransactionJ.save();
+                    try {
+                        await saveDocumentWithRetry(newTransactionJ);
+                    } catch (error) {
+                        console.error("Error saving newTransactionJ", error);
+                    }
                 }
 
                 // Check if user_bet matches the share value of the first host
                 if (roomInfo.hosts[0].share === 100) {
 
                     if (newTransactionC.amount !== 0) {
-                        newTransactionC.save();
+                        try {
+                            await saveDocumentWithRetry(newTransactionC);
+                        } catch (error) {
+                            console.error("Error saving newTransactionC", error);
+                        }
                         socket.newTransaction(newTransactionC);
                     }
                 } else {
@@ -2863,17 +2941,26 @@ console.log("ED")
                             room: req.body._id
                         });
                         if (newTransactionForHost.amount !== 0) {
-                            await newTransactionForHost.save();
-                            socket.newTransaction(newTransactionForHost);
+                            try {
+                                await saveDocumentWithRetry(newTransactionForHost);
+                                socket.newTransaction(newTransactionForHost);
+                            } catch (error) {
+                                console.error("Error saving new transaction:", error);
+                            }
                         }
                         const coHost = await User.findOne({ _id: host.host });
 
                         if (coHost) {
                             coHost.balance += amountForHost;
-                            await user.save();
+                            try {
+                                await saveDocumentWithRetry(user);
+                            } catch (error) {
+                                console.error("Error saving user:", error);
+                            }
                         } else {
                             console.log(`User with host ${host.host} not found.`);
                         }
+
                     });
                 }
 
@@ -2885,15 +2972,20 @@ console.log("ED")
                     accessory: user.accessory,
                     room: req.body._id,
                     rank: user.totalWagered,
-                    created_at:  moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                     created_at_str: moment(new Date()).format('LLL'),
-                    updated_at:  moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                     is_read: false
                 };
 
                 if (message.from._id !== message.to._id) {
-                    message.save();
-                    socket.sendNotification(message.to._id, notificationData);
+                    try {
+                        await saveDocumentWithRetry(message);
+                        socket.sendNotification(message.to._id, notificationData);
+                    } catch (error) {
+                        console.error("Error saving message:", error);
+                    }
+
 
 
                     // if (newGameLog.game_result === 1) {

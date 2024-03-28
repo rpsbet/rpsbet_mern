@@ -203,14 +203,14 @@ class RPS extends Component {
 
   async componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress);
-  
+
     // Retry socket initialization after a short delay
     const initializeSocket = async () => {
       try {
         const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo } = this.props;
         const initializedSocket = socket || socketIOClient(this.state.endpoint);
         this.setState({ socket: initializedSocket });
-  
+
         if (initializedSocket) {
           initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, data => {
             this.setState(prevState => {
@@ -227,20 +227,20 @@ class RPS extends Component {
             });
           });
 
-           // initializedSocket.on('CARD_PRIZE', data => {
-      //   if (data) {
-      //     this.setState(
-      //       {
-      //         image: data.image,
-      //         productName: data.productName,
-      //         showImageModal: true
-      //       },
-      //       () => playSound('')
-      //     );
-      //   }
-      // });
+          // initializedSocket.on('CARD_PRIZE', data => {
+          //   if (data) {
+          //     this.setState(
+          //       {
+          //         image: data.image,
+          //         productName: data.productName,
+          //         showImageModal: true
+          //       },
+          //       () => playSound('')
+          //     );
+          //   }
+          // });
 
-  
+
           initializedSocket.on('RPS_1', data => {
             if (data && data.length > 0) {
               this.setState({
@@ -249,15 +249,15 @@ class RPS extends Component {
               });
             }
           });
-  
+
           initializedSocket.emit('emitRps');
         }
-  
+
         // Add event listener conditionally based on rps_game_type
         if (rps_game_type === 0) {
           document.addEventListener('mousedown', this.handleClickOutside);
         }
-  
+
         if (rps_game_type === 1) {
           // Ensure acQueryMyItem is available
           if (acQueryMyItem) {
@@ -275,10 +275,10 @@ class RPS extends Component {
         setTimeout(initializeSocket, 3000); // Retry after 3 seconds
       }
     };
-  
+
     initializeSocket();
   }
-  
+
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
@@ -289,13 +289,13 @@ class RPS extends Component {
 
   handleKeyPress(event) {
     const { isFocused } = this.props;
-  
+
     // Check if the Ctrl key is pressed (for Windows/Linux) or the Cmd key is pressed (for macOS)
     const ctrlKeyPressed = event.ctrlKey || event.metaKey;
-  
+
     // Check if the key pressed is 'r'
     const isRKeyPressed = event.key === 'r';
-  
+
     // Check if both conditions are met: Ctrl (or Cmd) key is pressed AND 'r' key is pressed
     if (!isFocused && !(ctrlKeyPressed && isRKeyPressed)) {
       switch (event.key) {
@@ -313,7 +313,7 @@ class RPS extends Component {
       }
     }
   }
-  
+
 
 
   toggleImageModal = () => {
@@ -471,6 +471,14 @@ class RPS extends Component {
       window.speechSynthesis.speak(utterance);
     }
   };
+
+ 
+  toggleBlueishHue() {
+    const elements = document.querySelectorAll('.rps-radio-host');
+    elements.forEach(element => {
+      element.classList.toggle('blueish-hue');
+    });
+  }
 
   joinGame = async () => {
     const {
@@ -717,6 +725,25 @@ class RPS extends Component {
     };
     const rpsValueAtLastIndex = rps[rps.length - 1]?.rps;
     const joinerRpsValueAtLastIndex = rps[rps.length - 1]?.joiner_rps;
+
+    if (this.props.is_betting) {
+      // Interval duration in milliseconds (adjust as needed)
+      const intervalDuration = 500; // 500ms for example
+      
+      // Start the interval to toggle the class
+      const intervalId = setInterval(this.toggleBlueishHue, intervalDuration);
+      
+      // Clear the interval after a certain duration (adjust as needed)
+      const flashingDuration = 2000; // 5000ms for example
+      setTimeout(() => {
+        clearInterval(intervalId);
+        // Ensure the class is removed when the flashing stops
+        document.querySelectorAll('.rps-radio-host').forEach(element => {
+          element.classList.remove('blueish-hue');
+        });
+      }, flashingDuration);
+    }
+
     return (
       <div className="game-page">
         <div className="page-title">
@@ -798,86 +825,86 @@ class RPS extends Component {
                           )}
                           <Tooltip title="Last 100 games">
 
-                          <ReactApexChart
-                            className="bankroll-graph"
-                            options={{
-                              chart: {
-                                animations: {
-                                  enabled: false
+                            <ReactApexChart
+                              className="bankroll-graph"
+                              options={{
+                                chart: {
+                                  animations: {
+                                    enabled: false
+                                  },
+                                  toolbar: {
+                                    show: false
+                                  },
+                                  events: {},
+                                  zoom: {
+                                    enabled: false
+                                  }
                                 },
-                                toolbar: {
+                                grid: {
                                   show: false
                                 },
-                                events: {},
-                                zoom: {
+                                tooltip: {
                                   enabled: false
-                                }
-                              },
-                              grid: {
-                                show: false
-                              },
-                              tooltip: {
-                                enabled: false
-                              },
-                              fill: {
-                                type: 'gradient',
-                                gradient: {
-                                  shade: 'light',
-                                  gradientToColors:
-                                    actionList.hostNetProfit?.slice(-1)[0] > 0
-                                      ? ['#00FF00']
-                                      : actionList.hostNetProfit?.slice(-1)[0] <
-                                        0
-                                        ? ['#FF0000']
-                                        : ['#808080'],
-                                  shadeIntensity: 1,
-                                  type: 'vertical',
-                                  opacityFrom: 0.7,
-                                  opacityTo: 0.9,
-                                  stops: [0, 100, 100]
-                                }
-                              },
+                                },
+                                fill: {
+                                  type: 'gradient',
+                                  gradient: {
+                                    shade: 'light',
+                                    gradientToColors:
+                                      actionList.hostNetProfit?.slice(-1)[0] > 0
+                                        ? ['#00FF00']
+                                        : actionList.hostNetProfit?.slice(-1)[0] <
+                                          0
+                                          ? ['#FF0000']
+                                          : ['#808080'],
+                                    shadeIntensity: 1,
+                                    type: 'vertical',
+                                    opacityFrom: 0.7,
+                                    opacityTo: 0.9,
+                                    stops: [0, 100, 100]
+                                  }
+                                },
 
-                              stroke: {
-                                curve: 'smooth'
-                              },
-                              xaxis: {
-                                labels: {
-                                  show: false
+                                stroke: {
+                                  curve: 'smooth'
                                 },
-                                axisTicks: {
-                                  show: false
+                                xaxis: {
+                                  labels: {
+                                    show: false
+                                  },
+                                  axisTicks: {
+                                    show: false
+                                  },
+                                  axisBorder: {
+                                    show: false
+                                  }
                                 },
-                                axisBorder: {
-                                  show: false
+                                yaxis: {
+                                  labels: {
+                                    show: false
+                                  },
+                                  axisTicks: {
+                                    show: false
+                                  },
+                                  axisBorder: {
+                                    show: false
+                                  }
                                 }
-                              },
-                              yaxis: {
-                                labels: {
-                                  show: false
-                                },
-                                axisTicks: {
-                                  show: false
-                                },
-                                axisBorder: {
-                                  show: false
+                              }}
+                              type="line"
+                              width={120}
+                              height="100"
+                              series={[
+                                {
+                                  data: actionList.hostNetProfit.map(
+                                    (value, index) => [
+                                      actionList.hostBetsValue[index],
+                                      value
+                                    ]
+                                  )
                                 }
-                              }
-                            }}
-                            type="line"
-                            width={120}
-                            height="100"
-                            series={[
-                              {
-                                data: actionList.hostNetProfit.map(
-                                  (value, index) => [
-                                    actionList.hostBetsValue[index],
-                                    value
-                                  ]
-                                )
-                              }
-                            ]}
-                          />
+                              ]}
+                            />
                           </Tooltip>
 
                         </>
@@ -1073,8 +1100,15 @@ class RPS extends Component {
             </div>
             {rps_game_type === 0 && (
               <div className="game-info-panel">
+                <div className={`rps-radio-host ${this.props.is_betting || this.props.betting ? 'blueish-hue' : ''}`} style={{top: "25px", right: "25px", boxShadow:"0px 0 5px 0px #ffc107", background: "radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)", position: "absolute", width: "12.5px", height: "12.5px", borderRadius: "50%"}}>
+
+                  </div>
                 {startedPlaying && (
-                  <div id="rps-radio" style={{ zIndex: 1 }} className="fade-in">
+                  <div
+                    id="rps-radio"
+                    style={{ zIndex: 1 }}
+                    className={`fade-in `}
+                  >
                     <div
                       className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'R'
                         ? 'rock'
@@ -1092,6 +1126,7 @@ class RPS extends Component {
                           : ''
                         }`}
                     ></div>
+
                     <div
                       className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'P'
                         ? 'paper'
@@ -1135,42 +1170,42 @@ class RPS extends Component {
                     Select: R - P - S!
                   </h3>
                 )}
-               <div id="rps-radio" style={{ zIndex: 1 }}>
-  {options.map(({ classname, selection }) => (
-    <Button
-      variant="contained"
-      id={`rps-${classname}`}
-      className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''}${bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection ? ' lose-bg' : ''}${betResult === 0 && joinerRpsValueAtLastIndex === selection ? ' draw-bg' : ''}${betResult === 1 && joinerRpsValueAtLastIndex === selection ? ' win-bg' : ''}${this.props.is_betting ? ' disabled' : ''}`} // Add 'disabled' class when this.props.betting is true
-      onClick={() => {
-        if (!this.props.is_betting) { // Check if betting is not in progress
-          this.onBtnBetClick(selection);
-          playSound('select');
-        }
-      }}
-    >&nbsp;<span className="roll-tag">[{selection}]</span></Button>
-  ))}
-</div>
-
-{ creator_id && user_id && creator_id.toString() === user_id.toString() ? (
-
-  
-  <Button onClick={this.handleBotClick}  style={{ borderRadius: "9px", marginTop: "1.6em", background: "#ccc", boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px", color: "#3e4554" }}>
-          <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT?
-        </Button>
-  ) : (
-                <BetAmountInput
-                betAmount={this.state.bet_amount}
-                handle2xButtonClick={this.handle2xButtonClick}
-                handleHalfXButtonClick={this.handleHalfXButtonClick}
-                handleMaxButtonClick={this.handleMaxButtonClick}
-                onChangeState={this.onChangeState}
-                isDarkMode={isDarkMode}
-                />
-                
-                )}
+                <div id="rps-radio" style={{ zIndex: 1 }}>
+                  {options.map(({ classname, selection }) => (
+                    <Button
+                      variant="contained"
+                      id={`rps-${classname}`}
+                      className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''}${bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection ? ' lose-bg' : ''}${betResult === 0 && joinerRpsValueAtLastIndex === selection ? ' draw-bg' : ''}${betResult === 1 && joinerRpsValueAtLastIndex === selection ? ' win-bg' : ''}${this.props.is_betting ? ' disabled' : ''}`} // Add 'disabled' class when this.props.betting is true
+                      onClick={() => {
+                        if (!this.props.is_betting) { // Check if betting is not in progress
+                          this.onBtnBetClick(selection);
+                          playSound('select');
+                        }
+                      }}
+                    >&nbsp;<span className="roll-tag">[{selection}]</span></Button>
+                  ))}
                 </div>
+
+                {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
+
+
+                  <Button onClick={this.handleBotClick} style={{ borderRadius: "9px", marginTop: "1.6em", background: "#ccc", boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px", color: "#3e4554" }}>
+                    <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT?
+                  </Button>
+                ) : (
+                  <BetAmountInput
+                    betAmount={this.state.bet_amount}
+                    handle2xButtonClick={this.handle2xButtonClick}
+                    handleHalfXButtonClick={this.handleHalfXButtonClick}
+                    handleMaxButtonClick={this.handleMaxButtonClick}
+                    onChangeState={this.onChangeState}
+                    isDarkMode={isDarkMode}
+                  />
+
                 )}
-                </div>
+              </div>
+            )}
+          </div>
 
           <div className="action-panel">
             <Share roomInfo={roomInfo} />

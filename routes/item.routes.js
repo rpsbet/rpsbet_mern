@@ -9,6 +9,7 @@ const router = express.Router();
 const Item = require('../model/Item');
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
+const saveDocumentWithRetry = require('../helper/util/retrySave');
 
 router.post('/delete', async (req, res) => {
   try {
@@ -48,7 +49,12 @@ router.post('/create', auth, async (req, res) => {
       itemObj.updated_at = Date.now();
     }
 
-    await itemObj.save();
+
+    try {
+      await saveDocumentWithRetry(itemObj);
+    } catch (error) {
+      console.error("Error saving itemObj:", error);
+    }
 
     res.json({
       success: true,
@@ -107,7 +113,12 @@ router.post('/return', auth, async (req, res) => {
     }
 
     // Save changes to the item
-    await item.save();
+    try {
+      await saveDocumentWithRetry(item);
+    } catch (error) {
+      console.error("Error saving item:", error);
+    }
+
 
     res.json({
       success: true,
@@ -126,7 +137,7 @@ router.post('/return', auth, async (req, res) => {
 
 router.post('/trade', auth, async (req, res) => {
   try {
-    const { item_id, owner} = req.body;
+    const { item_id, owner } = req.body;
 
     // Find the item using the new model
     const item = await Item.findOne({ _id: item_id });
@@ -177,17 +188,17 @@ router.post('/trade', auth, async (req, res) => {
     const newTransactionC = new Transaction({
       user: currentUser,
       amount: -parseFloat(item.owners[ownerIndex].price),
-      description:  rentOption
-      ? `Rented from ${itemCreator.username}`
-      : `Traded with ${itemCreator.username}`
+      description: rentOption
+        ? `Rented from ${itemCreator.username}`
+        : `Traded with ${itemCreator.username}`
     });
 
     const newTransactionJ = new Transaction({
       user: itemCreator,
       amount: parseFloat(item.owners[ownerIndex].price),
-      description:  rentOption
-      ? `Rented to ${currentUser.username}`
-      : `Traded with ${currentUser.username}`
+      description: rentOption
+        ? `Rented to ${currentUser.username}`
+        : `Traded with ${currentUser.username}`
     });
 
     // Update the item's owners array to increment count for the new owner
@@ -221,11 +232,11 @@ router.post('/trade', auth, async (req, res) => {
 
     // Save changes and transactions
     const savePromises = [
-      currentUser.save(),
-      itemCreator.save(),
-      item.save(),
-      newTransactionC.save(),
-      newTransactionJ.save(),
+      saveDocumentWithRetry(currentUser),
+      saveDocumentWithRetry(itemCreator),
+      saveDocumentWithRetry(item),
+      saveDocumentWithRetry(newTransactionC),
+      saveDocumentWithRetry(newTransactionJ)
     ];
 
     await Promise.all(savePromises);
@@ -289,14 +300,23 @@ router.post('/equip', auth, async (req, res) => {
 
     if (String(user.accessory) === String(item.image)) {
       user.accessory = null; // Remove the accessory
-      await user.save();
+      try {
+        await saveDocumentWithRetry(user);
+      } catch (error) {
+        console.error("Error saving user:", error);
+      }
+
       return res.json({
         success: true,
         message: 'Accessory unequipped',
       });
     } else {
       user.accessory = item.image;
-      await user.save();
+      try {
+        await saveDocumentWithRetry(user);
+      } catch (error) {
+        console.error("Error saving user:", error);
+      }
       return res.json({
         success: true,
         message: 'Item equipped successfully',
@@ -319,7 +339,7 @@ router.get('/my-items', auth, async (req, res) => {
   const sort = 'owners.price';
   const itemTypeFilter = req.query.item_type; // specific item type
   const userId = req.user._id;
-  
+
   try {
     let query = { 'owners.onSale': { $gt: 0 }, 'owners.user': userId }; // filter by user ID
     if (itemTypeFilter) {
@@ -374,10 +394,10 @@ router.get('/products', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const userId = req.query.id;
-  
+
   try {
     let query = { 'owners.onSale': { $gt: 0 }, 'owners.user': userId }; // filter by user ID and onSale > 0
-    
+
     const items = await Item.find(query)
       .sort({ updated_at: 'desc' })
       .skip(pagination * page - pagination)
@@ -469,7 +489,11 @@ router.post('/list-for-sale', auth, async (req, res) => {
       item.owners[ownerIndex].price = price;
 
       // Save changes to the item
-      await item.save();
+      try {
+        await saveDocumentWithRetry(item);
+      } catch (error) {
+        console.error("Error saving item:", error);
+      }
 
       return res.json({
         success: true,
@@ -526,7 +550,11 @@ router.post('/delist-from-sale', auth, async (req, res) => {
         item.owners[ownerIndex].rentOption = false;
       }
       // Save changes to the item
-      await item.save();
+      try {
+        await saveDocumentWithRetry(item);
+      } catch (error) {
+        console.error("Error saving item:", error);
+      }
 
       return res.json({
         success: true,
@@ -572,7 +600,6 @@ router.get('/:id', async (req, res) => {
 router.get('/', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
-console.log( req.query.itemType)
   const sort = 'owners.price';
   const itemTypeFilter = req.query.itemType; // specific item type
 
