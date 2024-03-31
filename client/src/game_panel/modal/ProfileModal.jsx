@@ -59,6 +59,7 @@ class ProfileModal extends Component {
       profitAllTimeLow: this.props.userInfo.profitAllTimeLow,
       // email: this.props.userInfo.email,
       copied: false,
+      loading: this.props.loading,
       password: '',
       passwordConfirmation: '',
       avatar: this.props.userInfo.avatar,
@@ -199,7 +200,7 @@ class ProfileModal extends Component {
     e.preventDefault();
     this.setState({ passwordConfirmation: e.target.value });
   };
-
+  
   saveUserInfo = async e => {
     e.preventDefault();
     if (this.state.password !== this.state.passwordConfirmation) {
@@ -209,15 +210,72 @@ class ProfileModal extends Component {
       );
       return;
     }
-
-    const is_success = await this.props.changePasswordAndAvatar(
-      this.state.password,
-      this.state.avatar
-    );
-    if (is_success) {
-      this.props.closeModal();
+  
+    try {
+      // Create a canvas element
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+  
+      // Create an image element to load the avatar
+      const img = new Image();
+      img.src = this.state.avatar;
+  
+      // Wait for the image to load
+      img.onload = () => {
+        // Set maximum dimensions for the canvas
+        const maxWidth = 600;
+        const maxHeight = 600;
+  
+        // Calculate new dimensions for the image
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+  
+        // Set canvas dimensions to match new image dimensions
+        canvas.width = width;
+        canvas.height = height;
+  
+        // Draw the resized image onto the canvas
+        ctx.drawImage(img, 0, 0, width, height);
+  
+        // Convert canvas content to a Blob (WebP format)
+        canvas.toBlob(async blob => {
+          // Read the Blob as a data URL
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = async () => {
+            // Get the base64 string from the FileReader result
+            const base64Avatar = reader.result;
+  
+            // Call the changePasswordAndAvatar function with the password and base64 avatar
+            const is_success = await this.props.changePasswordAndAvatar(
+              this.state.password,
+              base64Avatar
+            );
+  
+            if (is_success) {
+              this.props.closeModal();
+            }
+          };
+        }, 'image/webp', 0.5); // Adjust quality parameter as needed (e.g., 0.5 for 50% quality)
+      };
+    } catch (error) {
+      console.error('Error converting image to WebP:', error);
+      alertModal(this.props.isDarkMode, 'Failed to convert image. Please try again.');
+      // Handle error appropriately (e.g., display error message to the user)
     }
   };
+  
 
   handleCloseModal = () => {
     this.props.getUser(true);
@@ -225,7 +283,7 @@ class ProfileModal extends Component {
   };
 
   render() {
-    const { loading, modalIsOpen, isDarkMode } = this.props;
+    const { modalIsOpen, isDarkMode } = this.props;
 
     const {
       rank,
@@ -249,6 +307,7 @@ class ProfileModal extends Component {
       profitAllTimeLow,
       averageWager,
       averageGamesPlayedPerRoom,
+      loading,
       averageProfit,
       dateJoined,
       creditScore,

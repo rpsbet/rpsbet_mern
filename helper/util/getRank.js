@@ -19,7 +19,17 @@ function getBorderByRank(rank) {
     17: 'darkcyan',
     18: 'orangered',
     19: 'mediumspringgreen',
-    20: 'darkgoldenrod'
+    20: 'darkgoldenrod',
+    21: 'dodgerblue',
+    22: 'limegreen',
+    23: 'darkorchid',
+    24: 'chocolate',
+    25: 'navy',
+    26: 'sienna',
+    27: 'aquamarine',
+    28: 'slateblue',
+    29: 'peru',
+    30: 'darkslategray'
 };
 
 

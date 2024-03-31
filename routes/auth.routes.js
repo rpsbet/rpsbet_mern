@@ -27,25 +27,28 @@ const { resetPassword } = require('../helper/mailer');
 // eslint-disable-next-line consistent-return
 router.post('/', (req, res) => {
   const { email, password } = req.body;
-  //  Simple validation
+  // Simple validation
   if (!email || !password) {
     return res.json({
       success: false,
-      error: 'Please enter all fields'
+      error: 'PLEASE ENTER ALL FIELDS'
     });
   }
 
-  // Check for existing user
+  const lowerCaseEmail = email.toLowerCase(); // Convert email to lowercase
+
+  // Check for existing user (case-insensitive)
   User.findOne({
-    $and: [
-      { is_deleted: false },
-      { $or: [{ email: email }, { username: email }] }
+    is_deleted: false,
+    $or: [
+      { email: { $regex: new RegExp('^' + lowerCaseEmail, 'i') } },
+      { username: { $regex: new RegExp('^' + lowerCaseEmail, 'i') } }
     ]
   }).then(user => {
-    if (!user || user.is_deleted === true)
+    if (!user)
       return res.json({
         success: false,
-        error: 'User does not exist'
+        error: 'USER DOES NOT EXIST'
       });
 
     // Validate password
@@ -53,7 +56,7 @@ router.post('/', (req, res) => {
       if (!isMatch)
         return res.json({
           success: false,
-          error: 'Invalid credentials'
+          error: 'INVALID CREDENTIALS'
         });
       jwt.sign(
         { id: user._id, is_admin: 0 },
@@ -69,6 +72,9 @@ router.post('/', (req, res) => {
         }
       );
     });
+  }).catch(error => {
+    console.error('Error finding user:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   });
 });
 
@@ -218,6 +224,7 @@ router.post('/resetPassword', async (req, res) => {
 
 // Change Password in EditAccountModal
 router.post('/changePasswordAndAvatar', auth, async (req, res) => {
+  console.log('Request body:'); 
   try {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(req.body.new_password, salt, (err, hash) => {

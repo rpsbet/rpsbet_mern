@@ -390,7 +390,7 @@ router.get('/my-items', auth, async (req, res) => {
   }
 });
 
-router.get('/products', auth, async (req, res) => {
+router.get('/products', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const userId = req.query.id;

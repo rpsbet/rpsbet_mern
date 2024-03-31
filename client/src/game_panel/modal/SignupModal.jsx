@@ -5,11 +5,14 @@ import './Modals.css';
 import { userSignUp } from '../../redux/Auth/user.actions';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
-import { Button, TextField, Typography, ButtonBase, Checkbox, FormControlLabel } from '@material-ui/core';
+import { Button, TextField, Typography, ButtonBase, Checkbox, FormControlLabel, InputAdornment, IconButton, Tooltip } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import TermsModal from '../modal/TermsModal';
 import { alertModal } from './ConfirmAlerts';
+import Visibility from '@material-ui/icons/Visibility';
+import Info from '@material-ui/icons/Info';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
 
 Modal.setAppElement('#root')
 
@@ -42,6 +45,8 @@ class SignupModal extends Component {
       showTermsModal: false,
       avatarMethod: 'robohash',
       termsChecked: false,
+      password: '',
+      showPassword: false,
       recaptchaToken: '',
     }
   }
@@ -49,7 +54,7 @@ class SignupModal extends Component {
   handleRecaptchaToken = (token) => {
     this.setState({ recaptchaToken: token });
   };
-  
+
 
   handleCheckboxChange = () => {
     this.setState((prevState) => ({ termsChecked: !prevState.termsChecked }));
@@ -68,21 +73,32 @@ class SignupModal extends Component {
 
   onChangeUserName = (e) => {
     const username = e.target.value;
-  
+
     // Define a regular expression for allowed characters (e.g., alphanumeric and underscores)
     const allowedCharsRegex = /^[a-zA-Z0-9_]+$/;
-  
+
+    // Check if the input value is empty (deletion), allow it
+    if (username === '') {
+      this.setState({ userName: '' });
+      return;
+    }
+
     if (allowedCharsRegex.test(username)) {
       this.setState({ userName: username });
     } else {
-      alertModal(this.props.isDarkMode, 'Invalid characters in username. Only alphanumeric characters and underscores are meowed.');
+      alertModal(this.props.isDarkMode, 'Invalid characters in username. Only alphanumeric characters and underscores are allowed.');
     }
   }
-  
+
 
   onChangePassword = (e) => {
     this.setState({ password: e.target.value });
   }
+
+  togglePasswordVisibility = () => {
+    this.setState((prevState) => ({ showPassword: !prevState.showPassword }));
+  };
+
 
   onChangeReferralCode = (e) => {
     this.setState({ referralCode: e.target.value });
@@ -91,18 +107,18 @@ class SignupModal extends Component {
 
   onSubmitForm = async (e) => {
     e.preventDefault();
-  
+
     // Execute reCAPTCHA
     const recaptchaToken = await this.executeRecaptcha();
     // console.log('Submitted reCAPTCHA Token:', recaptchaToken);
     this.setState({ recaptchaToken });
-  
+
     // Check if reCAPTCHA token is available
     if (!recaptchaToken) {
       alertModal(this.props.isDarkMode, 'reCAPTCHA verification failed. Please try again.');
       return;
     }
-  
+
 
     if (!this.state.termsChecked) {
       alertModal(this.props.isDarkMode, 'Please agree to the Terms and Conditions.');
@@ -146,12 +162,12 @@ class SignupModal extends Component {
       });
     });
   };
-  
+
 
 
   render() {
     const { modalIsOpen, closeModal, openLoginModal, isDarkMode } = this.props;
-    const { userName, password, referralCode, avatarMethod, termsChecked } = this.state;
+    const { userName, password, referralCode, avatarMethod, termsChecked, showPassword } = this.state;
 
     return (
       <Modal
@@ -178,7 +194,7 @@ class SignupModal extends Component {
                 <h4>JOIN THE CAT (FIGHT) CLUB! 🥋</h4>
                 <form onSubmit={this.onSubmitForm} id="signupForm">
                   <TextField
-                    placeholder="CasE SeNsItIvE"
+                    placeholder="e.g. PU55YD35TROY3R"
                     label="Your Username"
                     required
                     value={userName}
@@ -210,15 +226,32 @@ class SignupModal extends Component {
                   <TextField
                     required
                     placeholder="●●●●●●"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     label="Your Password"
                     value={password}
                     onChange={this.onChangePassword}
                     fullWidth
                     className="form-control"
                     variant="filled"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={this.togglePasswordVisibility}
+                            edge="end"
+                          >
+                            {showPassword ? <Visibility /> : <VisibilityOff />}
+                          </IconButton>
+                          <IconButton>
+                          <Tooltip title="You will not be able to reset your password."><Info /></Tooltip>
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }}
                   />
-                  {/* <TextField
+                 
+                  <TextField
                     placeholder="V9FTGY"
                     label="Re-furr-al"
                     value={referralCode}
@@ -226,7 +259,7 @@ class SignupModal extends Component {
                     fullWidth
                     className="form-control"
                     variant="filled"
-                  /> */}
+                  />
                   <FormControlLabel
                     control={
                       <Checkbox
@@ -246,14 +279,14 @@ class SignupModal extends Component {
                       </span>
                     }
                   />
-                <input type="hidden" name="recaptchaToken" value={this.state.recaptchaToken} />
+                  <input type="hidden" name="recaptchaToken" value={this.state.recaptchaToken} />
 
                 </form>
 
               </div>
               <div style={{ borderBottomLeftRadius: "0" }} className="modal-footer">
                 <Button className="btn-submit" type="submit" form="signupForm">
-                  Register
+                  Register&nbsp;<span className='roll-tag'>[ ↵ ]</span>
                 </Button>
                 <p className="m-0 sm-text-center">
                   GOT ACCOUNT?{' '}

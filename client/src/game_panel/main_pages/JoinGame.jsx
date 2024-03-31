@@ -103,6 +103,7 @@ class JoinGame extends Component {
       selected_qs_position: 0,
       selected_id: '',
       image: '',
+      loading: this.props.loading,
       bgColorChanged: false,
       borderColor: '',
       betResult: null,
@@ -412,10 +413,9 @@ class JoinGame extends Component {
     // This should not happen, but just in case
     return probabilities.length - 1;
   }
-  predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
-    if (betArray.length < 2) {
-    console.log("dd")
 
+  async predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005) {
+    if (betArray.length < 2) {
         return null;
     }
 
@@ -445,7 +445,7 @@ class JoinGame extends Component {
         }
     }
 
-    const transitionMatrix = this.createTransitionMatrix(betArray, smoothingFactor);
+    const transitionMatrix = await this.createTransitionMatrix(betArray, smoothingFactor);
     const lastBet = betArray[betArray.length - 1];
     const possibleNextStates = transitionMatrix[lastBet] ? Object.keys(transitionMatrix[lastBet]) : [];
 
@@ -773,7 +773,6 @@ class JoinGame extends Component {
         betArray = this.props.rpsbetitems.map(item => item.bet_amount);
       }
 
-
       this.startBetting(betArray);
 
     }
@@ -914,7 +913,6 @@ class JoinGame extends Component {
                 randomItem = randomnessResult.counterMove;
                 const penultimateSameAsLast = randomnessResult.risk;
                 predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-console.log(predictedBetAmount)
             } else if (this.props.ai_mode === 'NPC') {
                 randomItem = await NPC(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
@@ -1271,11 +1269,11 @@ console.log(predictedBetAmount)
       spleesh_guesses,
       selected_id,
       showAnimation,
+      loading,
     } = this.state;
     const {
       open,
       roomInfo,
-      loading,
       gameTypeList,
       isDrawerOpen,
       is_betting,

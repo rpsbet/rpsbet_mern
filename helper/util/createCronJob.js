@@ -259,7 +259,7 @@ async function checkConfirmations(io) {
 }
 
 
-cron.schedule('*/5 * * * * *', checkConfirmations);
+// cron.schedule('*/5 * * * * *', checkConfirmations);
 
 // Export any necessary functions or variables for use in your application
 module.exports = {

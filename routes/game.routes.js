@@ -105,19 +105,44 @@ router.patch('/strategies/:user_id', async (req, res) => {
 
 router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
-  const bot_id = '62b9ef88a5409449f63f7ccb';
-
   try {
-    const room = await Room.findByIdAndUpdate(room_id, { $push: { joiners: bot_id } }, { new: true });
-
+    // Check if the room exists
+    const room = await Room.findById(room_id);
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
+    // Find users that are not already in the room's joiners subarray
+    const users = await User.aggregate([
+      {
+        $match: {
+          username: { $regex: /BOT/i },
+          balance: { $gt: 0 },
+          _id: { $nin: room.joiners }
+        }
+      },
+      { $sample: { size: 4 } }
+    ]);
+
+    // Check if any user is available
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, message: 'No available users' });
+    }
+
+    // Select the first available user
+    const bot_id = users[0]._id;
+
+    // Update the room with the new joiner
+    const updatedRoom = await Room.findByIdAndUpdate(
+      room_id,
+      { $push: { joiners: bot_id } },
+      { new: true }
+    );
+
     res.json({
       success: true,
       message: 'Bot joined the room successfully!',
-      room: room // Optionally, you might return the updated room object.
+      room: updatedRoom // Return the updated room object
     });
   } catch (err) {
     res.status(500).json({
@@ -127,6 +152,7 @@ router.patch('/rooms/:room_id', async (req, res) => {
     });
   }
 });
+
 
 router.patch('/room/strategies/:room_id', async (req, res) => {
   const { room_id } = req.params;

@@ -4,7 +4,9 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 
 // /api/item call
-router.post('/', async (req, res) => {
+router.post('/upload', auth, async (req, res) => {
+    console.log('Received POST request for /api/upload'); // Log the route
+
     if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
     }

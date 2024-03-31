@@ -24,6 +24,7 @@ import {
   UPDATE_BANKROLL_QS,
   BET_SUCCESS,
   MSG_SUCCESS,
+  MSG_ERROR,
   MSG_CREATE_ROOM_SUCCESS,
   MSG_ROOMS_LOAD_FAILED,
   MSG_GAMETYPE_LOAD_FAILED,
@@ -545,7 +546,8 @@ export const updateRoomStrategy = (room_id, strategy) => async dispatch => {
       dispatch({ type: MSG_SUCCESS, payload: "ROOM STRATEGY UPDATED" });
     }
   } catch (err) {
-    // Handle errors
+    dispatch({ type: MSG_ERROR, payload: 'UNABLE TO UPDATE ROOM STRATEGY' });
+
   }
 };
 
@@ -555,11 +557,12 @@ export const updateRoomBot = (room_id) => async dispatch => {
     const res = await axios.patch(`/game/rooms/${room_id}`);
 
     if (res.data.success) {
-      // Dispatch an action or handle success as needed
+      dispatch({ type: MSG_SUCCESS, payload: "BOT HAS BEEN ATTACHED TO YOUR ROOM" });
 
     }
   } catch (err) {
-    // Handle errors
+    dispatch({ type: MSG_ERROR, payload: 'TOO MUCH PUSSY IN THIS ROOM' });
+
   }
 };
 export const getGameTypeList = () => async dispatch => {
@@ -633,6 +636,8 @@ export const endGame = (room_id, callback) => async dispatch => {
     }
   } catch (err) {
     console.log(err);
+    dispatch({ type: MSG_ERROR, payload: 'SOMETHING WENT WRONG, TRY AGAIN LATER' });
+
   }
 };
 export const unstake = (room_id, callback) => async dispatch => {
@@ -657,6 +662,8 @@ export const unstake = (room_id, callback) => async dispatch => {
     }
   } catch (err) {
     console.log(err);
+    dispatch({ type: MSG_ERROR, payload: 'SOMETHING WENT WRONG, TRY AGAIN LATER' });
+
   }
 };
 
@@ -782,6 +789,7 @@ export const getRollGuesses = roomId => async dispatch => {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
+
 export const getSpleeshGuesses = roomId => async dispatch => {
   try {
     const res = await axios.get('/game/get_spleesh_guesses', { params: { roomId } });
@@ -795,6 +803,7 @@ export const getSpleeshGuesses = roomId => async dispatch => {
     dispatch({ type: MSG_GAMETYPE_LOAD_FAILED, payload: err });
   }
 };
+
 export const getBangGuesses = roomId => async dispatch => {
   try {
     dispatch({ type: START_LOADING });

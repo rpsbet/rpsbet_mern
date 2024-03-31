@@ -108,6 +108,7 @@ import {
   setGlobalChat,
   updateBetResult,
   getNotifications,
+  getRoomList,
   readNotifications
 } from '../redux/Logic/logic.actions';
 import { alertModal } from './modal/ConfirmAlerts.jsx';
@@ -656,6 +657,7 @@ class SiteWrapper extends Component {
       //   this.setState({ websiteLoading: false });
       // }, 5000); 
       this.setState({ websiteLoading: true });
+      this.historyInterval = setInterval(this.fetchHistory, 5000);
 
       const currentUrl = window.location.pathname;
 
@@ -701,7 +703,15 @@ class SiteWrapper extends Component {
   }
 
 
-
+  fetchHistory = async () => {
+    try {
+      await this.props.getRoomList({pageSize: 7});
+      await this.props.getHistory();
+    } catch (error) {
+      console.error("An error occurred during getHistory:", error);
+      // Handle the error appropriately, e.g., show an error message to the user
+    }
+  }
 
   initializeAudio() {
     try {
@@ -758,6 +768,8 @@ class SiteWrapper extends Component {
     }
     clearInterval(this.interval);
     clearInterval(this.timer);
+    clearInterval(this.historyInterval);
+
     this.isUnmounted = true;
   }
   handleLogout = clear_token => {
@@ -965,6 +977,7 @@ class SiteWrapper extends Component {
       loadMore: nextLoadMore
     });
   };
+
   toggleAllTransactions = () => {
     const param1 = this.state.showAllGameLogs ? 15 : 5;
 
@@ -982,7 +995,6 @@ class SiteWrapper extends Component {
     }), () => {
       // This function is a callback executed after the state has been updated
       if (this.state.showAllGameLogs) {
-        console.log("dv")
         this.props.getProfitData();
       }
     });
@@ -1936,6 +1948,7 @@ const mapDispatchToProps = {
   readNotifications,
   updateOnlineUserList,
   setDarkMode,
+  getRoomList,
   setNotificationsAllowed,
   selectMainTab,
   acCalculateRemainingLoans,

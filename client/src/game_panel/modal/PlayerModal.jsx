@@ -188,6 +188,7 @@ class PlayerModal extends Component {
       isLoading: false,
       myChat: [],
       actorType: 'Both',
+      loading: this.props.loading,
       message: '',
       gameType: 'All',
       timeType: '24',
@@ -345,8 +346,8 @@ class PlayerModal extends Component {
   }
 
   render() {
-    const { isLoading } = this.state;
-    const { loading, productArray, isLowGraphics } = this.props;
+    const { isLoading, loading} = this.state;
+    const { productArray, isLowGraphics } = this.props;
     const isBot = this.state.username.toUpperCase().includes('BOT');
 
     return (

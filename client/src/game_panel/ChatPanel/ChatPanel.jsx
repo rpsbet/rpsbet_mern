@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import Moment from 'moment';
-// import { alertModal } from '../modal/ConfirmAlerts';
+import { alertModal } from '../modal/ConfirmAlerts';
 import Avatar from '../../components/Avatar';
 import {
   Tabs,
@@ -177,14 +177,14 @@ class ChatPanel extends Component {
   };
 
   handleGifClick = gifUrl => {
-    if (this.props.socket) {
-      // Send the clicked GIF to the chat
-      const message = {
-        type: 'gif',
-        content: gifUrl
-      };
-      if (this.props.user) {
-
+    if (this.props.user !== null) {
+      if (this.props.socket) {
+        // Send the clicked GIF to the chat
+        const message = {
+          type: 'gif',
+          content: gifUrl
+        };
+        
         this.props.socket.emit('GLOBAL_CHAT_SEND', {
           sender: this.props.userName,
           senderId: this.props.user._id,
@@ -194,12 +194,15 @@ class ChatPanel extends Component {
           accessory: this.props.user.accessory,
           messageType: 'gif'
         });
-
+        
+        // Close the search popup and clear the search input
+        this.setState({ showSearchPopup: false, searchInput: '' });
       }
-      // Close the search popup and clear the search input
-      this.setState({ showSearchPopup: false, searchInput: '' });
+    } else {
+      alertModal(this.props.isDarkMode, "FURR-SST LOG IN!");
     }
   };
+  
 
   insertEmoji = emojiCommand => {
     const emoji = emojis.find(emoji => emoji.command === emojiCommand);

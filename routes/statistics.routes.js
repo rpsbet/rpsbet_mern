@@ -14,7 +14,7 @@ const GameType = require('../model/GameType');
 const SystemSetting = require('../model/SystemSetting');
 const RoomBoxPrize = require('../model/RoomBoxPrize');
 
-router.get('/get-customer-statistics', auth, async (req, res) => {
+router.get('/get-customer-statistics', async (req, res) => {
   try {
 
     const { _id, actorType, gameType, timeType, limit } = req.query;

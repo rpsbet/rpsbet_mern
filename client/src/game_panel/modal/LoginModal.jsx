@@ -148,7 +148,7 @@ class LoginModal extends Component {
           </div>
           <div className="modal-footer">
             <Button onClick={this.onSubmitForm} className="btn-submit">
-              Login
+              Login&nbsp;<span className='roll-tag'>[ ↵ ]</span>
             </Button>
             <p className="m-0 sm-text-center">
               NEWBIE?{' '}

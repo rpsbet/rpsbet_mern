@@ -38,7 +38,7 @@ router.post('/', (req, res) => {
       if (!isMatch)
         return res.json({
           success: false,
-          error: 'Invalid credentials'
+          error: 'INVALID CREDENTIALS'
         });
       jwt.sign(
         { id: user._id, is_admin: 1 },

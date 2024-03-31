@@ -77,28 +77,38 @@ class Avatar extends Component {
       shadedColor = chroma(rankColor).brighten(8).hex(); // Adjust as needed for dark mode shading
     }
     const rankColors = {
-      1: 'steelblue',
-      2: 'forestgreen',
-      3: 'slategray',
-      4: 'indigo',
-      5: 'darkorange',
-      6: 'saddlebrown',
-      7: 'teal',
-      8: 'maroon',
-      9: 'royalblue', // replacing navy with royalblue
-      10: 'firebrick',
-      11: 'crimson',
-      12: 'goldenrod',
-      13: 'mediumaquamarine',
-      14: 'darkslateblue',
-      15: 'olivedrab',
-      16: 'mediumvioletred',
-      17: 'darkcyan',
-      18: 'orangered',
-      19: 'mediumspringgreen',
-      20: 'darkgoldenrod'
+        1: 'steelblue',
+        2: 'forestgreen',
+        3: 'slategray',
+        4: 'indigo',
+        5: 'darkorange',
+        6: 'saddlebrown',
+        7: 'teal',
+        8: 'maroon',
+        9: 'royalblue',
+        10: 'firebrick',
+        11: 'crimson',
+        12: 'goldenrod',
+        13: 'mediumaquamarine',
+        14: 'darkslateblue',
+        15: 'olivedrab',
+        16: 'mediumvioletred',
+        17: 'darkcyan',
+        18: 'orangered',
+        19: 'mediumspringgreen',
+        20: 'darkgoldenrod',
+        21: 'dodgerblue',
+        22: 'limegreen',
+        23: 'darkorchid',
+        24: 'chocolate',
+        25: 'navy',
+        26: 'sienna',
+        27: 'aquamarine',
+        28: 'slateblue',
+        29: 'peru',
+        30: 'darkslategray'
   };
-  
+    
 
 
     if (rank !== null) {

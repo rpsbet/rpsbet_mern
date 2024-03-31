@@ -100,10 +100,26 @@ router.get('/activity', admin, async (req, res) => {
     });
   }
 });
+
 router.post('/', async (req, res) => {
   try {
     const { username, password, bio, avatar, referralCode, avatarMethod, recaptchaToken } = req.body;
 
+    // Check if username contains bad language
+    if (containsBadLanguage(username)) {
+      return res.json({
+        success: false,
+        error: 'SEND A PICTURE OF YOUR ID TO SUPPORT SO WE CAN VERIFY YOUR PASS FOR THESE WORDS'
+      });
+    }
+
+    if (containsBot(username)) {
+      return res.json({
+        success: false,
+        error: 'USERNAME CONTAINS RESERVED WORDS'
+      });
+    }
+    
     // Validate reCAPTCHA
     const secretKey = '6Lfto1EpAAAAAEOO1gb-uSsqMmkVDjcoJRHClm28';
     const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
@@ -126,12 +142,14 @@ router.post('/', async (req, res) => {
     if (!username || !password) {
       return res.json({
         success: false,
-        error: 'PLEASE FILL IN ALL THE FIELDS'
+        error: 'PLEASE ENTER ALL FIELDS'
       });
     }
 
-    // Check if username already exists
-    const existingUser = await User.findOne({ username });
+    const lowerCaseUsername = username.toLowerCase(); // Convert username to lowercase
+
+    // Check if username already exists (case-insensitive)
+    const existingUser = await User.findOne({ username: { $regex: new RegExp('^' + lowerCaseUsername, 'i') } });
     if (existingUser) {
       return res.json({
         success: false,
@@ -174,7 +192,7 @@ router.post('/', async (req, res) => {
         return `data:image/svg+xml,${encodedSvg}`;
       }
     }
-  
+
     const newUser = new User({
       username,
       password,
@@ -201,11 +219,24 @@ router.post('/', async (req, res) => {
         newUser.password = hash;
         await newUser.save();
 
-        // If there is a referral owner, update their balance
+        // If there is a referral owner, send notification to reffal owner
         if (referralOwner) {
-          referralOwner.balance += 0;
-          referralOwner.rewards += 1;
-          await referralOwner.save();
+          const notificationData = {
+            _id: req.user._id,
+            message: message,
+            username: req.user.username,
+            avatar: req.user.avatar,
+            accessory: req.user.accessory,
+            room: room._id,
+            rank: req.user.totalWagered,
+            created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+            created_at_str: moment(new Date()).format('LLL'),
+            updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+            is_read: false
+          };
+
+          socket.sendNotification(referralOwner, notificationData);
+
         }
 
         jwt.sign(
@@ -233,19 +264,33 @@ router.post('/', async (req, res) => {
 });
 
 
- verifyRecaptcha = async (token) => {
-    const secretKey = '6Lfto1EpAAAAAEOO1gb-uSsqMmkVDjcoJRHClm28';
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `secret=${secretKey}&response=${token}`,
-    });
-    const data = await response.json();
-    return data.success;
-  };
-  
+verifyRecaptcha = async (token) => {
+  const secretKey = '6Lfto1EpAAAAAEOO1gb-uSsqMmkVDjcoJRHClm28';
+  const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `secret=${secretKey}&response=${token}`,
+  });
+  const data = await response.json();
+  return data.success;
+};
+
+
+function containsBadLanguage(username) {
+  const explicitWords = ['nigger', 'nigga', 'nigg3r', 'n1gger', 'coon', 'c00n', 'paki', 'chink', 'ni99er'];
+  const lowercasedUsername = username.toLowerCase();
+
+  return explicitWords.some((word) => lowercasedUsername.includes(word));
+};
+
+function containsBot(username) {
+  const explicitWords = ['BOT', 'B0T', 'bot', 'BoT', 'Admin', 'support'];
+  const lowercasedUsername = username.toLowerCase();
+
+  return explicitWords.some((word) => lowercasedUsername.includes(word));
+};
 
 router.post('/username', auth, async (req, res) => {
   try {
@@ -256,9 +301,25 @@ router.post('/username', auth, async (req, res) => {
     if (!newUsername || newUsername.trim() === '') {
       return res.json({
         success: false,
-        error: 'New username cannot be blank.'
+        error: 'NEW USERNAME CANNOT BE BLANK.'
       });
     }
+
+    // Check if username contains bad language
+    if (containsBadLanguage(newUsername)) {
+      return res.json({
+        success: false,
+        error: 'SEND A PICTURE OF YOUR ID TO SUPPORT SO WE CAN VERIFY YOUR PASS FOR THESE WORDS'
+      });
+    }
+
+    if (containsBot(newUsername)) {
+      return res.json({
+        success: false,
+        error: 'USERNAME CONTAINS RESERVED WORDS'
+      });
+    }
+
 
     const existingUser = await User.findOne({ username: newUsername });
 

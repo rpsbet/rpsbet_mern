@@ -101,7 +101,7 @@ const showConfirmCall = (
             <div
               style={{ color: '#353b47', padding: '5px 10px', background: 'rgb(175 176 176)', filter: 'drop-shadow(2px 4px 6px black)', height: '75px', borderRadius: "0.6em", display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             // className={`modal-icon alert-icon${icon}`}
-            ><FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;<span  style={{ fontSize: "1.4em" }}>Unknown Strategy</span></div>
+            ><FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;<span  style={{ fontSize: "1.4em" }}>RANDOM BOT</span></div>
 
             <div className="modal-footer">
               <Button

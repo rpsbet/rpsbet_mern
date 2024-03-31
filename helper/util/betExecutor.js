@@ -25,15 +25,20 @@ function check_access_time(user_id) {
     return check_result;
 }
 
-const executeBet = async (req) => {
+const executeBet = async (req, bot = false) => {
 
     try {
         const tax = await SystemSetting.findOne({ name: 'commission' });
         const rain = await SystemSetting.findOne({ name: 'rain' });
         const platform = await SystemSetting.findOne({ name: 'platform' });
         let responseData = {};
-        const user = req.user;
-        console.log("ED")
+        let user;
+        if (bot) {
+            user = await User.findOne({ _id: req.user._id });
+
+        } else {
+            user = req.user;
+        }
 
         // const RockType = ['Rock', 'MoonRock', 'QuickBall'];
         // const PaperType = [
@@ -633,6 +638,25 @@ const executeBet = async (req) => {
                 newGameLog.selected_rps = req.body.selected_rps;
 
                 if (roomInfo['rps_game_type'] === 0) {
+
+                    // rig clause
+                    const randomNumber = Math.random(); // Generate a random number between 0 and 1
+                    if (randomNumber <= 0.12) { // Check if the random number falls within the desired probability range (10%)
+                        if (bot &&
+                            ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
+                                (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
+                                (bet_item.rps === 'S' && req.body.selected_rps === 'P'))
+                        ) {
+                            // Logic to change req.body.selected_rps based on bot's choice
+                            if (bet_item.rps === 'R') {
+                                req.body.selected_rps = 'P';
+                            } else if (bet_item.rps === 'P') {
+                                req.body.selected_rps = 'S';
+                            } else {
+                                req.body.selected_rps = 'R';
+                            }
+                        }
+                    }
 
                     newTransactionJ.amount -= parseFloat(req.body.bet_amount);
                     if (
@@ -2882,7 +2906,7 @@ const executeBet = async (req) => {
             //   }
             // }
 
-            // Save the changes to the user document
+
             try {
                 await saveDocumentWithRetry(user);
                 await saveDocumentWithRetry(newGameLog);
@@ -2900,7 +2924,7 @@ const executeBet = async (req) => {
                 }
             }
             setTimeout(async () => {
-                // const rooms = await getRoomList(10, 'All');
+                // const rooms = await getRoomList(7, 'All');
                 // req.io.sockets.emit('UPDATED_ROOM_LIST', {
                 //   _id: roomInfo['_id'],
                 //   total: rooms.count,
@@ -2953,7 +2977,7 @@ const executeBet = async (req) => {
                         if (coHost) {
                             coHost.balance += amountForHost;
                             try {
-                                await saveDocumentWithRetry(user);
+                                await saveDocumentWithRetry(coHost);
                             } catch (error) {
                                 console.error("Error saving user:", error);
                             }
@@ -3195,8 +3219,6 @@ const executeBet = async (req) => {
                     //     }
                     //   }
                     // }
-                    console.log("hh")
-
                 }
             }, 0);
         }
