@@ -26,6 +26,7 @@ function check_access_time(user_id) {
 }
 
 const executeBet = async (req, bot = false) => {
+    console.log("xsxs")
 
     try {
         const tax = await SystemSetting.findOne({ name: 'commission' });
@@ -462,6 +463,7 @@ const executeBet = async (req, bot = false) => {
 
                 return responseData;
             }
+            
 
             const creatorUser = await User.findOne({
                 _id: roomInfo['creator']._id
@@ -641,7 +643,7 @@ const executeBet = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random(); // Generate a random number between 0 and 1
-                    if (randomNumber <= 0.12) { // Check if the random number falls within the desired probability range (10%)
+                    if (randomNumber <= 0.14) { // Check if the random number falls within the desired probability range (10%)
                         if (bot &&
                             ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
                                 (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
@@ -1018,6 +1020,7 @@ const executeBet = async (req, bot = false) => {
                 if (roomInfo['rps_game_type'] === 0) {
                     const lastFiveBetItems = await RpsBetItem.find({
                         room: req.body._id,
+                        joiner: user,
                         joiner_rps: { $exists: true, $ne: '' }
                     })
                         .sort({ created_at: 'desc' })
@@ -3217,12 +3220,10 @@ const executeBet = async (req, bot = false) => {
                     //         productName: selectedItem.productName
                     //       });
                     //     }
-                    //   }
-                    // }
                 }
             }, 0);
         }
-
+        
         responseData = {
             success: true,
             message: 'successful bet',

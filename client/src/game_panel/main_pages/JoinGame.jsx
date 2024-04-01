@@ -239,6 +239,7 @@ class JoinGame extends Component {
   join = async betInfo => {
     const result = await this.props.bet({
       _id: this.state.roomInfo._id,
+      user: this.props.user_id,
       game_type: this.props.roomInfo.game_type,
       ...betInfo
     });

@@ -23,6 +23,7 @@ import {
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
+  SET_SPECTATE_MODE,
   SET_FOCUSED,
   SET_NOTIFICATIONS_ALLOWED,
   TOGGLE_MUTE,
@@ -333,6 +334,9 @@ export const toggleDrawer = isDrawerOpen => dispatch => {
 
 export const setDarkMode = isDarkMode => dispatch => {
   dispatch({ type: SET_DARK_MODE, payload: isDarkMode });
+}
+export const setSpectateMode = isWatching => dispatch => {
+  dispatch({ type: SET_SPECTATE_MODE, payload: isWatching });
 }
 
 export const setNotificationsAllowed = isNotificationsAllowed => dispatch => {

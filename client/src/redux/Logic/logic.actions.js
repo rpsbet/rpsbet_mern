@@ -150,10 +150,12 @@ export const bet = bet_info => async dispatch => {
   try {
     dispatch({ type: START_BET });
     const res = await axios.post('/game/bet', bet_info);
+
     dispatch({ type: END_BET });
 
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      console.log("dswd", res.data.newTransaction)
 
       if (bet_info.game_type === 'Mystery Box') {
         dispatch({ type: BET_SUCCESS, payload: res.data });
@@ -165,7 +167,6 @@ export const bet = bet_info => async dispatch => {
           }
         });
       }
-
       return {
         status: 'success',
         betResult: res.data.betResult,

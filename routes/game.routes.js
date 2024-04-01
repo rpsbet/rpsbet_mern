@@ -3294,8 +3294,9 @@ router.post('/reCreate', auth, async (req, res) => {
 });
 
 router.post('/bet', auth, async (req, res) => {
+  console.log("Dew")
   try {
-    // Call the shared function with the req object
+
     const betResult = await executeBet(req);
     // Process the bet result as needed
     res.json({

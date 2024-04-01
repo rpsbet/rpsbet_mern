@@ -2104,7 +2104,13 @@ transform-origin: center;
   filter: hue-rotate(180deg); /* Adjust the hue rotation value as needed */
   transition: filter 1.5s cubic-bezier(0.4, 0, 0.2, 1); /* Custom cubic bezier easing function */
 }
-
+.spectate {
+  background: unset !important;
+  box-shadow: unset !important;
+  border-radius: 0.6em !important;
+  position: absolute;
+  top: -15px;
+}
 
 .guesses .avatar div:nth-child(2),
 .guesses .avatar div:nth-child(3),

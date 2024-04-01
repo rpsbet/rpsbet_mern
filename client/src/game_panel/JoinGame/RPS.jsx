@@ -15,7 +15,8 @@ import { YouTubeVideo } from '../../components/YoutubeVideo';
 import { updateRoomBot } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot } from '@fortawesome/free-solid-svg-icons';
-
+import ViewIcon from '@material-ui/icons/Visibility';
+import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import {
   Button,
   Switch,
@@ -43,6 +44,7 @@ import {
 import styled from 'styled-components';
 import { convertToCurrency } from '../../util/conversion';
 import ImageResultModal from '../modal/ImageResultModal';
+import { setSpectateMode } from '../../redux/Auth/user.actions';
 
 const ProductImage = styled.img`
   width: 100px;
@@ -157,6 +159,7 @@ class RPS extends Component {
       bet_amount: 1,
       bankroll: this.props.bet_amount,
       rps: [],
+      prev_rps: [],
       isPasswordCorrect: this.props.isPasswordCorrect,
       animateCard: false
     };
@@ -201,16 +204,21 @@ class RPS extends Component {
     }
   };
 
+
+  handleSpectateMode = () => {
+    this.props.setSpectateMode(!this.props.isWatching);
+  };
+
   async componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress);
-
+  
     // Retry socket initialization after a short delay
     const initializeSocket = async () => {
       try {
-        const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo } = this.props;
+        const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo, user_id } = this.props;
         const initializedSocket = socket || socketIOClient(this.state.endpoint);
         this.setState({ socket: initializedSocket });
-
+  
         if (initializedSocket) {
           initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, data => {
             this.setState(prevState => {
@@ -220,13 +228,14 @@ class RPS extends Component {
               }
               return {
                 bankroll: data.bankroll,
-                rps: data.rps,
+                rps: this.props.isWatching ? data.rps.filter(game => game.joiner === user_id) : data.rps,
+                prev_rps: data.rps,
                 startedPlaying: true,
                 players: updatedPlayers
               };
             });
           });
-
+  
           // initializedSocket.on('CARD_PRIZE', data => {
           //   if (data) {
           //     this.setState(
@@ -239,25 +248,26 @@ class RPS extends Component {
           //     );
           //   }
           // });
-
-
+  
+  
           initializedSocket.on('RPS_1', data => {
             if (data && data.length > 0) {
               this.setState({
-                rps: data,
+                rps: this.props.isWatching ? data.filter(game => game.joiner === user_id) : data,
+                prev_rps: data,
                 startedPlaying: true
               });
             }
           });
-
+  
           initializedSocket.emit('emitRps');
         }
-
+  
         // Add event listener conditionally based on rps_game_type
         if (rps_game_type === 0) {
           document.addEventListener('mousedown', this.handleClickOutside);
         }
-
+  
         if (rps_game_type === 1) {
           // Ensure acQueryMyItem is available
           if (acQueryMyItem) {
@@ -275,9 +285,10 @@ class RPS extends Component {
         setTimeout(initializeSocket, 3000); // Retry after 3 seconds
       }
     };
-
+  
     initializeSocket();
   }
+  
 
 
   componentWillUnmount() {
@@ -472,7 +483,7 @@ class RPS extends Component {
     }
   };
 
- 
+
   toggleBlueishHue() {
     const elements = document.querySelectorAll('.rps-radio-host');
     elements.forEach(element => {
@@ -526,6 +537,7 @@ class RPS extends Component {
       (result.betResult !== -1 && rps_game_type === 1) ||
       rps_game_type === 0
     ) {
+      console.log(result)
       gameResultModal(
         isDarkMode,
         text,
@@ -693,7 +705,8 @@ class RPS extends Component {
       rps,
       productName,
       actionList,
-      players
+      players,
+      prev_rps
     } = this.state;
     const {
       bgColorChanged,
@@ -715,6 +728,7 @@ class RPS extends Component {
       gameBackground,
       creator_id,
       user_id,
+      isWatching,
       playSound,
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
@@ -729,10 +743,10 @@ class RPS extends Component {
     if (this.props.is_betting) {
       // Interval duration in milliseconds (adjust as needed)
       const intervalDuration = 500; // 500ms for example
-      
+
       // Start the interval to toggle the class
       const intervalId = setInterval(this.toggleBlueishHue, intervalDuration);
-      
+
       // Clear the interval after a certain duration (adjust as needed)
       const flashingDuration = 2000; // 5000ms for example
       setTimeout(() => {
@@ -1069,7 +1083,7 @@ class RPS extends Component {
             <div className="guesses">
               <div>
 
-                {rps
+                {prev_rps
                   .slice()
                   .map((item, index) => (
                     <p key={index}>{item.rps}</p>
@@ -1099,111 +1113,122 @@ class RPS extends Component {
 
             </div>
             {rps_game_type === 0 && (
-              <div className="game-info-panel">
-                <div className={`rps-radio-host ${this.props.is_betting || this.props.betting ? 'blueish-hue' : ''}`} style={{top: "25px", right: "25px", boxShadow:"0px 0 5px 0px #ffc107", background: "radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)", position: "absolute", width: "12.5px", height: "12.5px", borderRadius: "50%"}}>
+              <>
+                <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
+                  <IconButton className="spectate" onClick={this.handleSpectateMode}>
+                    {isWatching ? <>PLAY MODE&nbsp;<SwordsIcon /></> : <>SPECTATE MODE&nbsp;<ViewIcon /></>}
+
+                  </IconButton>
+                </Tooltip>
+                <div className="game-info-panel">
+                  <div className={`rps-radio-host ${this.props.is_betting || this.props.betting ? 'blueish-hue' : ''}`} style={{ top: "25px", right: "25px", boxShadow: "0px 0 5px 0px #ffc107", background: "radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)", position: "absolute", width: "12.5px", height: "12.5px", borderRadius: "50%" }}>
 
                   </div>
-                {startedPlaying && (
-                  <div
-                    id="rps-radio"
-                    style={{ zIndex: 1 }}
-                    className={`fade-in `}
-                  >
-                    <div
-                      className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'R'
-                        ? 'rock'
-                        : ''
-                        }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${bgColorChanged &&
-                          betResult === -1 &&
-                          rpsValueAtLastIndex === 'R'
-                          ? ' win-bg'
-                          : ''
-                        }${betResult === 0 && rpsValueAtLastIndex === 'R'
-                          ? ' draw-bg'
-                          : ''
-                        }${betResult === 1 && rpsValueAtLastIndex === 'R'
-                          ? ' lose-bg'
-                          : ''
-                        }`}
-                    ></div>
 
+                  {startedPlaying && (
                     <div
-                      className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'P'
-                        ? 'paper'
-                        : ''
-                        }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${bgColorChanged &&
-                          betResult === -1 &&
-                          rpsValueAtLastIndex === 'P'
-                          ? ' win-bg'
+                      id="rps-radio"
+                      style={{ zIndex: 1 }}
+                      className={`fade-in `}
+                    >
+                      <div
+                        className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'R'
+                          ? 'rock'
                           : ''
-                        }${betResult === 0 && rpsValueAtLastIndex === 'P'
-                          ? ' draw-bg'
+                          }${rpsValueAtLastIndex === 'R' ? ' active' : ''}${bgColorChanged &&
+                            betResult === -1 &&
+                            rpsValueAtLastIndex === 'R'
+                            ? ' win-bg'
+                            : ''
+                          }${betResult === 0 && rpsValueAtLastIndex === 'R'
+                            ? ' draw-bg'
+                            : ''
+                          }${betResult === 1 && rpsValueAtLastIndex === 'R'
+                            ? ' lose-bg'
+                            : ''
+                          }`}
+                      ></div>
+
+                      <div
+                        className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'P'
+                          ? 'paper'
                           : ''
-                        }${betResult === 1 && rpsValueAtLastIndex === 'P'
-                          ? ' lose-bg'
-                          : ''
-                        }`}
-                    ></div>
-                    <div
-                      className={`rps-option ${rps[rps.length - 1]?.rps === 'S' ? 'scissors' : ''
-                        }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${bgColorChanged &&
-                          betResult === -1 &&
-                          rpsValueAtLastIndex === 'S'
-                          ? ' win-bg'
-                          : ''
-                        }${betResult === 0 && rpsValueAtLastIndex === 'S'
-                          ? ' draw-bg'
-                          : ''
-                        }${betResult === 1 && rpsValueAtLastIndex === 'S'
-                          ? ' lose-bg'
-                          : ''
-                        }`}
-                    ></div>
+                          }${rpsValueAtLastIndex === 'P' ? ' active' : ''}${bgColorChanged &&
+                            betResult === -1 &&
+                            rpsValueAtLastIndex === 'P'
+                            ? ' win-bg'
+                            : ''
+                          }${betResult === 0 && rpsValueAtLastIndex === 'P'
+                            ? ' draw-bg'
+                            : ''
+                          }${betResult === 1 && rpsValueAtLastIndex === 'P'
+                            ? ' lose-bg'
+                            : ''
+                          }`}
+                      ></div>
+                      <div
+                        className={`rps-option ${rps[rps.length - 1]?.rps === 'S' ? 'scissors' : ''
+                          }${rpsValueAtLastIndex === 'S' ? ' active' : ''}${bgColorChanged &&
+                            betResult === -1 &&
+                            rpsValueAtLastIndex === 'S'
+                            ? ' win-bg'
+                            : ''
+                          }${betResult === 0 && rpsValueAtLastIndex === 'S'
+                            ? ' draw-bg'
+                            : ''
+                          }${betResult === 1 && rpsValueAtLastIndex === 'S'
+                            ? ' lose-bg'
+                            : ''
+                          }`}
+                      ></div>
+                    </div>
+                  )}
+                  {!startedPlaying ? (
+                    <h3 style={{ zIndex: 9 }} className="game-sub-title">
+                      Select: R - P - S!
+                    </h3>
+                  ) : (
+                    <h3 style={{ zIndex: 9 }} className="game-sub-title fade-out">
+                      Select: R - P - S!
+                    </h3>
+                  )}
+                  <div id="rps-radio" style={{ zIndex: 1 }}>
+                    {options.map(({ classname, selection }) => (
+                      <Button
+                        variant="contained"
+                        id={`rps-${classname}`}
+                        className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''}${bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection ? ' lose-bg' : ''}${betResult === 0 && joinerRpsValueAtLastIndex === selection ? ' draw-bg' : ''}${betResult === 1 && joinerRpsValueAtLastIndex === selection ? ' win-bg' : ''}${this.props.is_betting ? ' disabled' : ''}`} // Add 'disabled' class when this.props.betting is true
+                        onClick={() => {
+                          if (!this.props.is_betting) { // Check if betting is not in progress
+                            this.onBtnBetClick(selection);
+                            playSound('select');
+                          }
+                        }}
+                      >&nbsp;<span className="roll-tag">[{selection}]</span></Button>
+                    ))}
                   </div>
-                )}
-                {!startedPlaying ? (
-                  <h3 style={{ zIndex: 9 }} className="game-sub-title">
-                    Select: R - P - S!
-                  </h3>
-                ) : (
-                  <h3 style={{ zIndex: 9 }} className="game-sub-title fade-out">
-                    Select: R - P - S!
-                  </h3>
-                )}
-                <div id="rps-radio" style={{ zIndex: 1 }}>
-                  {options.map(({ classname, selection }) => (
-                    <Button
-                      variant="contained"
-                      id={`rps-${classname}`}
-                      className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''}${bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection ? ' lose-bg' : ''}${betResult === 0 && joinerRpsValueAtLastIndex === selection ? ' draw-bg' : ''}${betResult === 1 && joinerRpsValueAtLastIndex === selection ? ' win-bg' : ''}${this.props.is_betting ? ' disabled' : ''}`} // Add 'disabled' class when this.props.betting is true
-                      onClick={() => {
-                        if (!this.props.is_betting) { // Check if betting is not in progress
-                          this.onBtnBetClick(selection);
-                          playSound('select');
-                        }
-                      }}
-                    >&nbsp;<span className="roll-tag">[{selection}]</span></Button>
-                  ))}
+
+
+                  {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
+
+
+                    <Button onClick={this.handleBotClick} style={{ borderRadius: "9px", marginTop: "1.6em", background: "#ccc", boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px", color: "#3e4554" }}>
+                      <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT?
+                    </Button>
+                  ) : (
+                    <BetAmountInput
+                      betAmount={this.state.bet_amount}
+                      handle2xButtonClick={this.handle2xButtonClick}
+                      handleHalfXButtonClick={this.handleHalfXButtonClick}
+                      handleMaxButtonClick={this.handleMaxButtonClick}
+                      onChangeState={this.onChangeState}
+                      isDarkMode={isDarkMode}
+                    />
+
+                  )}
                 </div>
+              </>
 
-                {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
-
-
-                  <Button onClick={this.handleBotClick} style={{ borderRadius: "9px", marginTop: "1.6em", background: "#ccc", boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px", color: "#3e4554" }}>
-                    <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT?
-                  </Button>
-                ) : (
-                  <BetAmountInput
-                    betAmount={this.state.bet_amount}
-                    handle2xButtonClick={this.handle2xButtonClick}
-                    handleHalfXButtonClick={this.handleHalfXButtonClick}
-                    handleMaxButtonClick={this.handleMaxButtonClick}
-                    onChangeState={this.onChangeState}
-                    isDarkMode={isDarkMode}
-                  />
-
-                )}
-              </div>
             )}
           </div>
 
@@ -1221,6 +1246,7 @@ const mapStateToProps = state => ({
   isAuthenticated: state.auth.isAuthenticated,
   isPasswordCorrect: state.snackbar.isPasswordCorrect,
   isDarkMode: state.auth.isDarkMode,
+  isWatching: state.auth.isWatching,
   balance: state.auth.balance,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   accessory: state.logic.curRoomInfo.accessory,
@@ -1235,7 +1261,8 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   openGamePasswordModal,
   acQueryMyItem,
-  updateRoomBot
+  updateRoomBot,
+  setSpectateMode
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

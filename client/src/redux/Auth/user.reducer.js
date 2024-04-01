@@ -20,6 +20,7 @@ import {
   VERIFICATION_SUCCESS,
   SET_USERNAME_PASSWORD,
   SET_DARK_MODE,
+  SET_SPECTATE_MODE,
   SET_FOCUSED,
   SET_REFERRAL_CODE,
   TOGGLE_MUTE,
@@ -34,6 +35,7 @@ const initialState = {
   token: localStorage.getItem('token'),
   isAuthenticated: localStorage.getItem('isAuthenticated'),
   isDarkMode: localStorage.getItem('darkMode') === 'false' ? false : true,
+  isWatching: localStorage.getItem('isWatching') === 'false' ? false : true,
   isNotificationsAllowed: localStorage.getItem('isNotificationsAllowed') === 'false' ? false : true,
   isAdmin: false,
   isMusicEnabled:
@@ -68,6 +70,12 @@ export default function(state = initialState, action) {
       return {
         ...state,
         isDarkMode: payload
+      };
+    case SET_SPECTATE_MODE:
+      localStorage.setItem('isWatching', payload);
+      return {
+        ...state,
+        isWatching: payload
       };
     case TOGGLE_MUTE:
       localStorage.setItem('isMuted', payload);
