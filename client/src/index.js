@@ -31,10 +31,18 @@ const theme = createTheme({
   },
 });
 const playSound = () => {
-  const audio = new Audio(buttonHoverSound);
-  audio.volume = 0.15;
-  audio.play();
+  // Check if the document has been clicked
+  const isDocumentClicked = () => {
+    document.removeEventListener('click', isDocumentClicked);
+    // Create and play the audio
+    const audio = new Audio(buttonHoverSound);
+    audio.volume = 0.15;
+    audio.play();
+  };
+
+  document.addEventListener('click', isDocumentClicked);
 };
+
 const playSoundTyping = () => {
   const audio = new Audio(typingSound);
   audio.volume = 0.2;

@@ -155,7 +155,6 @@ export const bet = bet_info => async dispatch => {
 
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-      console.log("dswd", res.data.newTransaction)
 
       if (bet_info.game_type === 'Mystery Box') {
         dispatch({ type: BET_SUCCESS, payload: res.data });

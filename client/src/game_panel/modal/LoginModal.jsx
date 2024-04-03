@@ -5,6 +5,7 @@ import './Modals.css';
 import { Button, TextField } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignInAlt } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
+import { setFocused } from '../../redux/Auth/user.actions';
 
 import { userSignIn, getUser } from '../../redux/Auth/user.actions';
 import {
@@ -43,6 +44,13 @@ class LoginModal extends Component {
       password: props.password,
       showVerificationModal: false
     };
+  }
+
+  onFocusHandler = () => {
+    this.props.setFocused(true);
+  }
+  onBlurHandler = () => {
+    this.props.setFocused(false);
   }
 
   onChangeEmail = e => {
@@ -98,16 +106,16 @@ class LoginModal extends Component {
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
             <h2 className="modal-title">
-            <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
+              <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
 
               LOGIN
-              </h2>
+            </h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
           <div className="modal-img">
-          <img style={{maxWidth: "95%", margin: "10px", overflow: "hidden"}} src="/img/giant-login.svg" alt="Login" />
+            <img style={{ maxWidth: "95%", margin: "10px", overflow: "hidden" }} src="/img/giant-login.svg" alt="Login" />
           </div>
           <div className="modal-body">
 
@@ -118,6 +126,8 @@ class LoginModal extends Component {
                 className="form-control"
                 variant="filled"
                 label="Username"
+                onFocus={this.onFocusHandler}
+                onBlur={this.onBlurHandler}
                 id="email"
                 value={this.state.email}
                 onChange={this.onChangeEmail}
@@ -130,6 +140,8 @@ class LoginModal extends Component {
                 value={this.state.password}
                 label="Password"
                 variant="filled"
+                onFocus={this.onFocusHandler}
+                onBlur={this.onBlurHandler}
                 autoComplete="new-password"
                 onChange={this.onChangePassword}
                 onKeyDown={e => {
@@ -141,10 +153,10 @@ class LoginModal extends Component {
               />
 
               {/* <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>FORGOT PASSWORD?</span> */}
-              
-           
+
+
             </form>
-            
+
           </div>
           <div className="modal-footer">
             <Button onClick={this.onSubmitForm} className="btn-submit">
@@ -180,7 +192,8 @@ const mapDispatchToProps = {
   getMyGames,
   getMyHistory,
   getMyChat,
-  getNotifications
+  getNotifications,
+  setFocused
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LoginModal);

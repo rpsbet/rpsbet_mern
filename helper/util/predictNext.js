@@ -2,14 +2,14 @@ const tf = require('@tensorflow/tfjs-node');
 const fs = require('fs');
 const path = require('path');
 
-// Redirect stdout and stderr to /dev/null or NUL
-const devNull = process.platform === 'win32' ? 'NUL' : '/dev/null';
-const nullStream = fs.createWriteStream(devNull);
+// // Redirect stdout and stderr to /dev/null or NUL
+// const devNull = process.platform === 'win32' ? 'NUL' : '/dev/null';
+// const nullStream = fs.createWriteStream(devNull);
 
-process.stdout.write = process.stderr.write = nullStream.write.bind(nullStream);
+// process.stdout.write = process.stderr.write = nullStream.write.bind(nullStream);
 
-// Override console.log to suppress logging
-console.log = function() {};
+// // Override console.log to suppress logging
+// console.log = function() {};
 
 
 
@@ -80,7 +80,6 @@ const predictNext = (rps_list, markov = false) => {
     } while (randomState === currentState3);
     nextState = randomState;
   }
-  // console.log("Sxs")
 
   return nextState;
 

@@ -13,6 +13,7 @@ import { alertModal } from './ConfirmAlerts';
 import Visibility from '@material-ui/icons/Visibility';
 import Info from '@material-ui/icons/Info';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
+import { setFocused } from '../../redux/Auth/user.actions';
 
 Modal.setAppElement('#root')
 
@@ -90,6 +91,12 @@ class SignupModal extends Component {
     }
   }
 
+  onFocusHandler = () => {
+    this.props.setFocused(true);
+  }
+  onBlurHandler = () => {
+    this.props.setFocused(false);
+  }
 
   onChangePassword = (e) => {
     this.setState({ password: e.target.value });
@@ -229,6 +236,8 @@ class SignupModal extends Component {
                     type={showPassword ? 'text' : 'password'}
                     label="Your Password"
                     value={password}
+                    onFocus={this.onFocusHandler}
+                    onBlur={this.onBlurHandler}
                     onChange={this.onChangePassword}
                     fullWidth
                     className="form-control"
@@ -244,17 +253,19 @@ class SignupModal extends Component {
                             {showPassword ? <Visibility /> : <VisibilityOff />}
                           </IconButton>
                           <IconButton>
-                          <Tooltip title="You will not be able to reset your password."><Info /></Tooltip>
+                            <Tooltip title="You will not be able to reset your password."><Info /></Tooltip>
                           </IconButton>
                         </InputAdornment>
                       )
                     }}
                   />
-                 
+
                   <TextField
                     placeholder="V9FTGY"
                     label="Re-furr-al"
                     value={referralCode}
+                    onFocus={this.onFocusHandler}
+                    onBlur={this.onBlurHandler}
                     onChange={this.onChangeReferralCode}
                     fullWidth
                     className="form-control"
@@ -320,7 +331,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  userSignUp
+  userSignUp,
+  setFocused
 };
 
 export default connect(

@@ -121,12 +121,10 @@ class MyGamesTable extends Component {
 
     if (
       this.props.myGamesWithStats !== prevProps.myGamesWithStats) {
-        console.log("this.props.myGamesWithStats", this.props.myGamesWithStats)
       this.setState({ myGames: this.props.myGames, isLoading: false })
     }
 
     if (prevProps.myGames !== this.props.myGames) {
-      console.log("wed", this.props.myGames)
       this.setState({ myGames: this.props.myGames, isLoading: false });
     }
   }
@@ -706,8 +704,9 @@ class MyGamesTable extends Component {
       brain_game_score: this.state.score,
       bet_amount: this.props.bet_amount,
       is_private: this.props.is_private,
+      selectedStrategy: this.props.selectedStrategy,
       endgame_amount: this.props.endgame_amount,
-      is_anonymous: this.props.is_anonymous,
+      // is_anonymous: this.props.is_anonymous,
       room_password: this.props.room_password,
       youtubeUrl: this.props.youtubeUrl,
       gameBackground: this.props.gameBackground

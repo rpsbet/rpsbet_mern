@@ -266,6 +266,16 @@ class SiteWrapper extends Component {
         this.playCoinsAnimation();
       }
     }
+    
+    if (prevState.showNotifications !== this.state.showNotifications && !this.state.showNotifications) {
+      this.props.readNotifications(); // Mark all notifications as read
+      const updatedNotifications = this.state.notifications.map(notification => ({
+        ...notification,
+        is_read: true
+      }));
+      this.setState({ notifications: updatedNotifications });
+    }
+    
     const shouldUpdate =
       transactions &&
       transactions.length > 0 &&
@@ -275,21 +285,9 @@ class SiteWrapper extends Component {
       prevProps.transactions[0] !== transactions[0] &&
       !tnxComplete;
 
-
     if (prevProps.remainingLoans !== remainingLoans) {
       this.setState({ remainingLoans: remainingLoans });
     }
-
-
-    if (prevState.showNotifications !== this.state.showNotifications && !this.state.showNotifications) {
-      this.props.readNotifications(); // Mark all notifications as read
-      const updatedNotifications = this.state.notifications.map(notification => ({
-        ...notification,
-        is_read: true
-      }));
-      this.setState({ notifications: updatedNotifications });
-    }
-
 
     if (shouldUpdate) {
 
@@ -647,7 +645,7 @@ class SiteWrapper extends Component {
       // console.log("Web3 loaded successfully");
 
     } catch (e) {
-      alertModal(isDarkMode, 'ERROR LOADING WEB3: ' + e.toString().toUpperCase());
+      alertModal(isDarkMode, 'NO CONNECTED WALLET');
     }
   };
 

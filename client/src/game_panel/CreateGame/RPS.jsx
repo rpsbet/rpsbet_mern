@@ -10,7 +10,7 @@ import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import SettingsRef from '../../components/SettingsRef';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
-
+import { predictNext } from '../../util/predictNext';
 const ProductGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
@@ -143,132 +143,6 @@ const calcEV = (calcWinChance, wager, winPayout, lossPayout, tiePayout) => {
   return EV.toFixed(2);
 };
 
-const predictNext = rps_list => {
-  // Create a transition matrix to store the probability of transitioning from one state to another
-  const transitionMatrix = {
-    R: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
-    },
-    P: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
-    },
-    S: {
-      R: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      P: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      },
-      S: {
-        R: { R: 0, P: 0, S: 0 },
-        P: { R: 0, P: 0, S: 0 },
-        S: { R: 0, P: 0, S: 0 }
-      }
-    }
-  };
-
-  // Iterate through the previous states to populate the transition matrix
-  for (let i = 0; i < rps_list.length - 3; i++) {
-    transitionMatrix[rps_list[i].rps][rps_list[i + 1].rps][rps_list[i + 2].rps][
-      rps_list[i + 3].rps
-    ]++;
-  }
-
-  // Normalize the transition matrix
-  Object.keys(transitionMatrix).forEach(fromState1 => {
-    Object.keys(transitionMatrix[fromState1]).forEach(fromState2 => {
-      Object.keys(transitionMatrix[fromState1][fromState2]).forEach(
-        fromState3 => {
-          const totalTransitions = Object.values(
-            transitionMatrix[fromState1][fromState2][fromState3]
-          ).reduce((a, b) => a + b);
-          Object.keys(
-            transitionMatrix[fromState1][fromState2][fromState3]
-          ).forEach(toState => {
-            transitionMatrix[fromState1][fromState2][fromState3][
-              toState
-            ] /= totalTransitions;
-          });
-        }
-      );
-    });
-  });
-
-  // Check for consistency
-  const winChance = calcWinChance(rps_list);
-  let deviation = 0;
-  if (winChance !== '33.33%') {
-    deviation = 0.1;
-  }
-  // Use the transition matrix to predict the next state based on the current state
-  let currentState1 = rps_list[rps_list.length - 3].rps;
-  let currentState2 = rps_list[rps_list.length - 2].rps;
-  let currentState3 = rps_list[rps_list.length - 1].rps;
-  let nextState = currentState3;
-  let maxProb = 0;
-  Object.keys(
-    transitionMatrix[currentState1][currentState2][currentState3]
-  ).forEach(state => {
-    if (
-      transitionMatrix[currentState1][currentState2][currentState3][state] >
-      maxProb
-    ) {
-      maxProb =
-        transitionMatrix[currentState1][currentState2][currentState3][state];
-      nextState = state;
-    }
-  });
-
-  // Add randomness
-  let randomNum = Math.random();
-  if (randomNum < deviation) {
-    let randomState = '';
-    do {
-      randomNum = Math.random();
-      if (randomNum < 1 / 3) {
-        randomState = 'R';
-      } else if (randomNum < 2 / 3) {
-        randomState = 'P';
-      } else {
-        randomState = 'S';
-      }
-    } while (randomState === currentState3);
-    nextState = randomState;
-  }
-  return nextState;
-};
 
 class RPS extends Component {
   constructor(props) {

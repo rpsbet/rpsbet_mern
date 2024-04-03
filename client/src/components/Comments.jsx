@@ -8,7 +8,7 @@ import PlayerModal from '../game_panel/modal/PlayerModal';
 import Moment from 'moment';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenSquare } from '@fortawesome/free-solid-svg-icons'
-import { setFocused } from '../redux/Auth/user.actions.js' 
+import { setFocused } from '../redux/Auth/user.actions.js'
 
 class Comments extends Component {
     constructor(props) {
@@ -33,17 +33,14 @@ class Comments extends Component {
         if (prevProps.comments !== this.props.comments) {
             this.setState({ comments: this.props.comments });
         }
-  
     }
 
-
-  onFocusHandler = () => {
-    this.props.setFocused(true);
-  }
-  onBlurHandler = () => {
-    this.props.setFocused(false);
-  }
-
+    onFocusHandler = () => {
+        this.props.setFocused(true);
+    }
+    onBlurHandler = () => {
+        this.props.setFocused(false);
+    }
 
     handleOpenPlayerModal = creator_id => {
         this.setState({ showPlayerModal: true, selectedCreator: creator_id });
@@ -105,11 +102,11 @@ class Comments extends Component {
                         variant="filled"
                         onKeyDown={(event) => {
                             if (event.key === 'Enter') {
-                              event.preventDefault(); // Prevent default Enter behavior (line break)
-                              this.handleCommentSubmit();
+                                event.preventDefault(); // Prevent default Enter behavior (line break)
+                                this.handleCommentSubmit();
                             }
                         }
-                    }
+                        }
                     />
                     <Button
                         className="btn_recreate"
@@ -119,17 +116,15 @@ class Comments extends Component {
 
                         startIcon={<FontAwesomeIcon icon={faPenSquare} />} // Use the Font Awesome icon here
                     >
-                                            <span className='roll-tag'>[&#x23CE;]</span>
+                        <span className='roll-tag'>[&#x23CE;]</span>
 
                     </Button>
                 </div>
 
-
-
                 {loading ? (
                     <>
-                    <div style={{paddingTop: "30px"}}>
-                    <LinearProgress color='secondary'/>
+                        <div style={{ paddingTop: "30px" }}>
+                            <LinearProgress color='secondary' />
                         </div>
                     </>
                 ) : (

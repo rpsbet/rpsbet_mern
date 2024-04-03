@@ -95,6 +95,7 @@ const initialState = {
     pr: 0,
     endgame_amount: 0.54,
     bet_amount: 0,
+    selectedStrategy: '',
     spleesh_bet_unit: 1,
     box_price: 0,
     room_history: [],

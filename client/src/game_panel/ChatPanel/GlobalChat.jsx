@@ -48,6 +48,10 @@ class GlobalChat extends Component {
           newMessages:
             this.props.globalChatList.length - prevProps.globalChatList.length,
           showTooltip: true
+        }, () => {
+          if (this.props.globalChatList[this.props.globalChatList.length - 1].senderId === this.props.user._id) {
+            this.handleInitialScroll();
+          }
         });
     }
     if (
@@ -98,7 +102,6 @@ class GlobalChat extends Component {
   }
 
   handleOpenPlayerModal = senderId => {
-    // console.log('senderId', senderId)
     this.setState({ showPlayerModal: true, selectedCreator: senderId });
   };
 
@@ -139,7 +142,7 @@ class GlobalChat extends Component {
   };
 
   fetchAndUpdateId(username) {
-    // Check if the user is already in the state
+    // Check if the user is already in the stateƒ
     const mentionedUser = this.state.mentionedUsers[username];
 
     if (mentionedUser && mentionedUser._id) {
@@ -172,6 +175,8 @@ class GlobalChat extends Component {
     const { chat_list } = this.state;
     const { emojis, selectedMessage } = this.props;
     const offset = 50;
+    const uniqueMessages = new Set();
+
     return (
       <div className="chat-panel global-chat" ref={this.chatBoxRef} onScroll={this.handleScroll}>
         {this.state.showTooltip && (
@@ -198,7 +203,12 @@ class GlobalChat extends Component {
           <>
             {chat_list.map((chat, key) => {
               const message = chat.message;
-  
+              const messageTimePair = chat.message + chat.time;
+              if (uniqueMessages.has(messageTimePair)) {
+                return null;
+              }
+              uniqueMessages.add(messageTimePair);
+
               const wrappedMessage = message
                 .split(/(:\w+:)/g)
                 .map((part, index) => {

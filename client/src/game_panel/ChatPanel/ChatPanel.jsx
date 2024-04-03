@@ -18,7 +18,7 @@ import Chat from '../icons/Chat.js';
 import ChatHover from '../icons/ChatHover';
 import ChatRoom from '../icons/ChatRoom';
 import ChatRoomHover from '../icons/ChatRoomHover.js';
-import { setFocused } from '../../redux/Auth/user.actions.js' 
+import { setFocused } from '../../redux/Auth/user.actions.js'
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
@@ -126,31 +126,38 @@ class ChatPanel extends Component {
       }
     };
   }
+  
   onTextAreaKeyDown = e => {
+    e.stopPropagation();
     if (!this.props.socket) return;
+    if (this.props.user && this.props.user._id) {
+      
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        const text = this.state.text.trim();
 
-    if (e.keyCode === 13) {
-      e.preventDefault();
-      const text = this.state.text.trim();
+        if (text !== '') {
+          const { selectedMessage } = this.state;
+          this.props.socket.emit('GLOBAL_CHAT_SEND', {
+            sender: this.props.userName,
+            senderId: this.props.user._id,
+            message: text,
+            avatar: this.props.user.avatar,
+            accessory: this.props.user.accessory,
 
-      if (text !== '') {
-        const { selectedMessage } = this.state;
-        this.props.socket.emit('GLOBAL_CHAT_SEND', {
-          sender: this.props.userName,
-          senderId: this.props.user._id,
-          message: text,
-          avatar: this.props.user.avatar,
-          accessory: this.props.user.accessory,
-
-          replyTo: selectedMessage,
-          rank: this.props.user.totalWagered,
-          showEmojiPanel: false,
-          showSearchPopup: false
-        });
-        this.handleClearTooltip();
+            replyTo: selectedMessage,
+            rank: this.props.user.totalWagered,
+            showEmojiPanel: false,
+            showSearchPopup: false
+          });
+          this.handleClearTooltip();
+        }
       }
+    } else {
+      alertModal(this.props.isDarkMode, "FURR-SST LOG IN!");
+      return;
     }
-  };
+  }
 
   handleClearTooltip = () => {
     this.setState({
@@ -177,14 +184,14 @@ class ChatPanel extends Component {
   };
 
   handleGifClick = gifUrl => {
-    if (this.props.user !== null) {
+    if (this.props.user && this.props.user._id) {
       if (this.props.socket) {
         // Send the clicked GIF to the chat
         const message = {
           type: 'gif',
           content: gifUrl
         };
-        
+
         this.props.socket.emit('GLOBAL_CHAT_SEND', {
           sender: this.props.userName,
           senderId: this.props.user._id,
@@ -194,15 +201,16 @@ class ChatPanel extends Component {
           accessory: this.props.user.accessory,
           messageType: 'gif'
         });
-        
+
         // Close the search popup and clear the search input
         this.setState({ showSearchPopup: false, searchInput: '' });
       }
     } else {
       alertModal(this.props.isDarkMode, "FURR-SST LOG IN!");
+      return;
     }
   };
-  
+
 
   insertEmoji = emojiCommand => {
     const emoji = emojis.find(emoji => emoji.command === emojiCommand);
@@ -333,8 +341,8 @@ class ChatPanel extends Component {
         >
           <Tab
             className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-                ? 'fade-animation fade-in'
-                : 'fade-animation fade-out'
+              ? 'fade-animation fade-in'
+              : 'fade-animation fade-out'
               }`}
             label="Inbox"
             labelPlacement="left"
@@ -351,8 +359,8 @@ class ChatPanel extends Component {
           />
           <Tab
             className={`custom-tab ${hoverTabIndex === 0 || selectedMainTabIndex === 0
-                ? 'fade-animation fade-in'
-                : 'fade-animation fade-out'
+              ? 'fade-animation fade-in'
+              : 'fade-animation fade-out'
               }`}
             label="Chat"
             labelPlacement="left"

@@ -500,11 +500,15 @@ router.post('/answer', auth, async (req, res) => {
 
 
 // Define your route
-router.get('/rpsbetitems/:roomId', async (req, res) => {
+router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
   const { roomId } = req.params;
   try {
     // Find RpsBetItems filtered by room id and status equal to 'open'
-    const rpsBetItems = await RpsBetItem.find({ room: roomId, joiner_rps: { $ne: null } })
+    const rpsBetItems = await RpsBetItem.find({
+      room: roomId,
+      joiner: req.user._id,
+      joiner_rps: { $ne: null }
+    })
       .sort({ created_at: -1 })
       .limit(50);
     // Return the filtered RpsBetItems
@@ -1017,6 +1021,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           creator_status: room.creator?.status || '',
           game_type: room.game_type,
           bet_amount: room.bet_amount,
+          selectedStrategy: room.selectedStrategy,
           pr: room.pr,
           user_bet: parseFloat(room.user_bet),
           winnings: '',
@@ -1617,6 +1622,7 @@ const getMyRoomsWithStats = async (
         index: room.room_number,
         endgame_amount: room.endgame_amount,
         is_private: room.is_private,
+        selectedStrategy: room.selectedStrategy,
         status: room.status,
         created_at: room.created_at,
         coHost: false,
@@ -3294,10 +3300,12 @@ router.post('/reCreate', auth, async (req, res) => {
 });
 
 router.post('/bet', auth, async (req, res) => {
-  console.log("Dew")
   try {
 
+    console.log("req", req.user.username)
     const betResult = await executeBet(req);
+  console.log("betResult", betResult.newTransaction)
+
     // Process the bet result as needed
     res.json({
       success: betResult.success,
