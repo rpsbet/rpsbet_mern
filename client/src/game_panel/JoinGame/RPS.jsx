@@ -537,7 +537,6 @@ class RPS extends Component {
       (result.betResult !== -1 && rps_game_type === 1) ||
       rps_game_type === 0
     ) {
-      console.log(result)
       gameResultModal(
         isDarkMode,
         text,
