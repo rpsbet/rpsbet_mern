@@ -655,7 +655,7 @@ class SiteWrapper extends Component {
       //   this.setState({ websiteLoading: false });
       // }, 5000); 
       this.setState({ websiteLoading: true });
-      // this.historyInterval = setInterval(this.fetchHistory, 5000);
+      this.historyInterval = setInterval(this.fetchHistory, 5000);
 
       const currentUrl = window.location.pathname;
 
