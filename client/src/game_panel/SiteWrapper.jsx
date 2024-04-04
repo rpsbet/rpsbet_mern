@@ -703,7 +703,7 @@ class SiteWrapper extends Component {
 
   fetchHistory = async () => {
     try {
-      await this.props.getRoomList({pageSize: 7});
+      // await this.props.getRoomList({pageSize: 7});
       await this.props.getHistory();
     } catch (error) {
       console.error("An error occurred during getHistory:", error);
