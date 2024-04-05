@@ -306,8 +306,6 @@ class SiteWrapper extends Component {
     }
   }
 
-
-
   playCoinsAnimation() {
     // console.log("SD")
     this.setState({ isCoinsAnimation: true });
@@ -316,7 +314,7 @@ class SiteWrapper extends Component {
   stopCoinsAnimationAfterDelay() {
     setTimeout(() => {
       this.setState({ isCoinsAnimation: false });
-    }, 1500); // Adjust the delay based on your Lottie animation duration
+    }, 1500);
   }
 
   handleMainTabChange = (event, newValue) => {
@@ -417,16 +415,6 @@ class SiteWrapper extends Component {
 
       socket.on('UPDATED_ROOM_LIST', async data => {
         await this.props.setRoomList(data);
-
-        // await this.props.getUser(
-        //   true,
-        //   false,
-        //   4,
-        //   this.state.filterType,
-        //   this.state.sortType,
-        //   this.state.searchQuery
-        // );
-        // await this.props.getMyGames(1);
         await this.props.getMyHistory();
         await this.props.getHistory();
       });
@@ -680,11 +668,9 @@ class SiteWrapper extends Component {
       // Set up Ethereum event listeners
       if (window.ethereum) {
         window.ethereum.on('chainChanged', () => {
-          // console.log("Chain changed");
           this.loadWeb3();
         });
         window.ethereum.on('accountsChanged', () => {
-          // console.log("Accounts changed");
           this.loadWeb3();
         });
 
@@ -694,8 +680,6 @@ class SiteWrapper extends Component {
         alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
       }
     } catch (error) {
-      // clearTimeout(loadingTimeout);
-
       console.error(error);
     }
   }
@@ -768,8 +752,13 @@ class SiteWrapper extends Component {
     clearInterval(this.timer);
     clearInterval(this.historyInterval);
 
+    if (window.ethereum) {
+      window.ethereum.removeListener('chainChanged', this.loadWeb3);
+      window.ethereum.removeListener('accountsChanged', this.loadWeb3);
+    }
     this.isUnmounted = true;
   }
+
   handleLogout = clear_token => {
     this.setState({
       web3account: null,

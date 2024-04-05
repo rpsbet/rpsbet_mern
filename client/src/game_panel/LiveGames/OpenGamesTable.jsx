@@ -206,10 +206,8 @@ class OpenGamesTable extends Component {
 
 
   componentWillUnmount() {
-
     window.removeEventListener('scroll', this.handleScroll);
     window.removeEventListener('load', this.handleLoad);
-
   }
 
   componentDidUpdate(prevProps, prevState) {

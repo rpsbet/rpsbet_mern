@@ -153,6 +153,7 @@ class RPS extends Component {
       selected_rps: this.props.selected_rps,
       modalOpen: false,
       players: [],
+      intervalDuration: 500,
       startedPlaying: false,
       advanced_status: '',
       cardDealt: false,
@@ -211,7 +212,8 @@ class RPS extends Component {
 
   async componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress);
-  
+    this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
+
     // Retry socket initialization after a short delay
     const initializeSocket = async () => {
       try {
@@ -294,6 +296,7 @@ class RPS extends Component {
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
     document.removeEventListener('mousedown', this.handleClickOutside);
+    clearInterval(this.state.intervalId);
 
   }
 
@@ -705,7 +708,8 @@ class RPS extends Component {
       productName,
       actionList,
       players,
-      prev_rps
+      prev_rps,
+      intervalDuration
     } = this.state;
     const {
       bgColorChanged,
@@ -740,17 +744,10 @@ class RPS extends Component {
     const joinerRpsValueAtLastIndex = rps[rps.length - 1]?.joiner_rps;
 
     if (this.props.is_betting) {
-      // Interval duration in milliseconds (adjust as needed)
-      const intervalDuration = 500; // 500ms for example
-
-      // Start the interval to toggle the class
       const intervalId = setInterval(this.toggleBlueishHue, intervalDuration);
-
-      // Clear the interval after a certain duration (adjust as needed)
-      const flashingDuration = 2000; // 5000ms for example
+      const flashingDuration = 2000;
       setTimeout(() => {
         clearInterval(intervalId);
-        // Ensure the class is removed when the flashing stops
         document.querySelectorAll('.rps-radio-host').forEach(element => {
           element.classList.remove('blueish-hue');
         });

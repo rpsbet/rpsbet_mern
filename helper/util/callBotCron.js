@@ -8,7 +8,6 @@ const { botAI, botCounterRandomness } = require('./predictNext.js');
 
 let socketio = null;
 
-
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
   const allStates = Array.from(new Set(betArray)); // Get all unique states
 
@@ -42,35 +41,48 @@ async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFa
   }
 }
 
+async function callCronJobs(io) {
+  const cronJobs = [
+    { userId: '65eafc72aea25957ac8ea60d', betArray: [0.5, 0.5, 25, 1, 2, 1, 0.5, 205, 125, 0.5, 175, 0.99, 0.5, 0.5, 2, 33, 66, 0.5, 0.5, 2.5, 10, 25, 50, 180, 0.5], delay: 0 },
+    { userId: '65eafa5caea25957ac8ea60b', betArray: [175, 99, 9.5, 9.5, 2, 9.5, 9.5, 2.5, 200, 25, 50, 40, 9.5], delay: 1000 },
+    { userId: '62b9ef88a5409449f63f7ccb', betArray: [0.5, 0.5, 0.5, 1, 2, 1, 0.5, 0.5, 125, 0.5, 0.75, 0.99, 0.5, 0.5, 2, 33, 66, 0.5, 0.5, 2.5, 10, 25, 50, 100, 0.5], delay: 2000 },
+    { userId: '65eafb7daea25957ac8ea60c', betArray: [6.5, 6.5, 6.5, 16, 32, 13, 3.5, 9.5, 5, 65, 75, 19, 15, 15, 95, 25, 10, 25, 20, 10, 5], delay: 3000 }
+  ];
 
-
-async function callRocky(io) {
-  const betArray = [175, 99, 9.5, 9.5, 2, 9.5, 9.5, 2.5, 200, 25, 50, 40, 9.5];
-  let req = {};
   if (io) {
     socketio = io;
   }
 
   try {
-    const targetUserId = '65eafa5caea25957ac8ea60b';
-    const user = await User.findOne({ _id: targetUserId });
+    for (const cronJob of cronJobs) {
+      const user = await User.findOne({ _id: cronJob.userId });
+      await executeCronJob(user, cronJob.betArray);
+      await delay(cronJob.delay);
+    }
+  } catch (error) {
+    console.error('Error executing cron jobs:', error);
+  }
+}
 
-    // Find rooms matching the criteria
+async function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function executeCronJob(user, betArray) {
+  try {
     const rooms = await Room.find({
       'joiners': user._id,
       status: 'open',
     });
 
-    // Call the route /bot_bet for each matching room
     for (const room of rooms) {
       const roomId = room._id;
       let nextState;
+      let predictedBetAmount;
 
       const rpsBetItems = await RpsBetItem.find({
         joiner: user._id,
         room: roomId
       }).sort({ created_at: -1 });
-
 
       if (rpsBetItems && rpsBetItems.length > 0) {
         if (room.selectedStrategy === 'Random' || room.selectedStrategy === 'Martingale' || room.selectedStrategy === 'Adam' || room.selectedStrategy === 'Markov') {
@@ -93,36 +105,35 @@ async function callRocky(io) {
         predictedBetAmount = await predictNextBetAmount(betArray, 0, 0, 0.01, 0.2, room);
 
       }
-      req = {
+
+      const req = {
         params: {
           _id: roomId
         },
         user: user,
-        io: io,
+        io: socketio,
         body: {
           _id: roomId,
-          selected_rps: nextState, // Example values for selected_rps and bet_amount
+          selected_rps: nextState,
           bet_amount: predictedBetAmount
-          // Add other properties as needed
         }
       };
+
       if (parseFloat(room.user_bet) >= 0.05 && predictedBetAmount >= 0 && predictedBetAmount <= parseFloat(room.user_bet)) {
         await executeBet(req, true);
       }
     }
-
-
   } catch (error) {
-    console.error('Error finding rooms and calling /bot_bet:', error);
+    console.error('Error finding rooms and executing cron job:', error);
   }
 }
 
-// Schedule the cron job to run your task
-cron.schedule('*/6 * * * * *', async () => {
-  await callRocky(socketio);
+// Schedule the cron job to run every 6 seconds
+cron.schedule('*/9 * * * * *', async () => {
+  await callCronJobs(socketio);
 });
 
-// Export an object containing the function
+
 module.exports = {
-  callRocky,
+  callCronJobs,
 };

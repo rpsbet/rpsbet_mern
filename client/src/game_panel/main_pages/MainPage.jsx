@@ -75,7 +75,6 @@ class MainPage extends Component {
   }
 
   async componentDidMount() {
-    const { id} = this.props.match.path;
     const{ selectedGameType} = this.state;
     const {
       getRoomList,
@@ -83,14 +82,12 @@ class MainPage extends Component {
       getHistory,
       getGameTypeList,
       isAuthenticated,
-      getMyGames,
       getMyHistory,
       getMyChat
     } = this.props;
 
     const promises = [getRoomList({pageSize: 7}), getRoomCount({game_type: selectedGameType}), getHistory(), getGameTypeList()];
     if (isAuthenticated) {
-      // promises.push(getMyGames());
       promises.push(getMyHistory());
       promises.push(getMyChat());
     }

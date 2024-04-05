@@ -50,24 +50,14 @@ const cronJob = require('./helper/util/createCronJob.js');
 const creditScoreCron = require('./helper/util/creditScoreCron.js');
 const notificationCron = require('./helper/util/notificationCron.js');
 const rentCron = require('./helper/util/rentCron.js');
-const donCron = require('./helper/util/donCron.js');
-const papierCron = require('./helper/util/papierCron.js');
-const rockyCron = require('./helper/util/rockyCron.js');
-const caesarCron = require('./helper/util/caesarCron.js');
-const rollCron = require('./helper/util/rollCron.js');
-const bangCron = require('./helper/util/bangCron.js');
+const callBotCron = require('./helper/util/callBotCron.js');
 const withdrawalCron = require('./helper/util/withdrawalCron.js');
 // Initialize the cron job to periodically check for confirmations
 creditScoreCron.checkOutstandingLoans(io);
-// rentCron.checkRentalPayments(io);
+rentCron.checkRentalPayments(io);
 notificationCron.deleteNotifications();
-// cronJob.checkConfirmations(io);
-donCron.callDon(io);
-caesarCron.callCaesar(io);
-rockyCron.callRocky(io);
-papierCron.callPapier(io);
-// rollCron.rollCron();
-// bangCron.bangCron();
+cronJob.checkConfirmations(io);
+callBotCron.callCronJobs(io);
 withdrawalCron.resetWithdrawalLimits();
 
 app.use(helmet());
