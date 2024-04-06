@@ -1,16 +1,4 @@
 const tf = require('@tensorflow/tfjs-node');
-const fs = require('fs');
-const path = require('path');
-
-// Redirect stdout and stderr to /dev/null or NUL
-const devNull = process.platform === 'win32' ? 'NUL' : '/dev/null';
-const nullStream = fs.createWriteStream(devNull);
-
-process.stdout.write = process.stderr.write = nullStream.write.bind(nullStream);
-
-// Override console.log to suppress logging
-console.log = function() {};
-
 
 
 const predictNext = (rps_list, markov = false) => {
@@ -21,7 +9,7 @@ const predictNext = (rps_list, markov = false) => {
     R: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
     P: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
     S: { R: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, P: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } }, S: { R: { R: 0, P: 0, S: 0 }, P: { R: 0, P: 0, S: 0 }, S: { R: 0, P: 0, S: 0 } } },
-  };
+  };  
 
   for (let i = 0; i < rps_list.length - 3; i++) {
     const currentState1 = rps_list[i].rps;

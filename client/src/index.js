@@ -30,11 +30,10 @@ const theme = createTheme({
     error: { main: styleColor.error.main },
   },
 });
+
 const playSound = () => {
-  // Check if the document has been clicked
   const isDocumentClicked = () => {
     document.removeEventListener('click', isDocumentClicked);
-    // Create and play the audio
     const audio = new Audio(buttonHoverSound);
     audio.volume = 0.15;
     audio.play();

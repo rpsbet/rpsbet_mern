@@ -3302,9 +3302,9 @@ router.post('/reCreate', auth, async (req, res) => {
 router.post('/bet', auth, async (req, res) => {
   try {
 
-    console.log("req", req.user.username)
+    console.log("start")
     const betResult = await executeBet(req);
-  console.log("betResult", betResult.newTransaction)
+  console.log("end")
 
     // Process the bet result as needed
     res.json({
