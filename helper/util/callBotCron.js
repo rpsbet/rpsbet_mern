@@ -5,7 +5,7 @@ const RpsBetItem = require('../../model/RpsBetItem.js');
 const socketController = require('../../socketController.js');
 const executeBet = require('./betExecutor.js');
 const { botAI, botCounterRandomness } = require('./predictNext.js');
-
+const os = require('os');
 let socketio = null;
 
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
@@ -63,6 +63,12 @@ async function callCronJobs(io) {
     console.error('Error executing cron jobs:', error);
   }
 }
+
+function clearMemory() {
+  // Free memory by using the 'os' module
+  os.freemem();
+}
+
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -131,6 +137,8 @@ async function executeCronJob(user, betArray) {
 // Schedule the cron job to run every 6 seconds
 cron.schedule('*/9 * * * * *', async () => {
   await callCronJobs(socketio);
+  clearMemory();
+
 });
 
 
