@@ -723,7 +723,7 @@ const processQueue = async () => {
             setTimeout(() => {
                 requestQueue.shift();
                 processQueue();
-            }, 1000); // Adjust the delay time as needed
+            }, 500); // Adjust the delay time as needed
         }
     }
 };
