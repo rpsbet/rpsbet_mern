@@ -29,11 +29,9 @@ function check_access_time(user_id) {
 
 const addToQueue = async (req, bot = false) => {
     try {
-        const [tax, rain, platform] = await Promise.all([
-            SystemSetting.findOne({ name: 'commission' }),
-            SystemSetting.findOne({ name: 'rain' }),
-            SystemSetting.findOne({ name: 'platform' })
-        ]);
+        const tax = await SystemSetting.findOne({ name: 'commission' });
+        const rain = await SystemSetting.findOne({ name: 'rain' });
+        const platform = await SystemSetting.findOne({ name: 'platform' });
         let responseData = {};
         let user;
         if (bot) {
@@ -684,7 +682,6 @@ const addToQueue = async (req, bot = false) => {
             newTransaction: newTransactionJ,
             roomStatus: roomInfo.status
         };
-
         return responseData;
     } catch (err) {
         console.error(err);
@@ -707,26 +704,12 @@ const processQueue = async () => {
         try {
             const result = await addToQueue(req, bot);
             resolve(result);
-            // Check if there are more pending bets and process them immediately
-            if (requestQueue.length > 1) {
-                const nextRequest = requestQueue[1];
-                setTimeout(() => {
-                    requestQueue.shift();
-                    processQueue();
-                }, 0); // Process next bet immediately
-            } else {
-                requestQueue.shift(); // No more pending bets, shift the current bet
-            }
         } catch (error) {
             reject(error);
-            // If an error occurs, process the next bet after the delay
-            setTimeout(() => {
-                requestQueue.shift();
-                processQueue();
-            }, 1500); // Adjust the delay time as needed
         }
+        requestQueue.shift();
+        processQueue();
     }
 };
-
 
 module.exports = executeBet;

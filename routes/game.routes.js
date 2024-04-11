@@ -30,7 +30,7 @@ const BangGuess = require('../model/BangGuess');
 const RollGuess = require('../model/RollGuess');
 const RpsBetItem = require('../model/RpsBetItem');
 const BjBetItem = require('../model/BjBetItem');
-const QsBetItem = require('../model/QsBetItem');
+// const QsBetItem = require('../model/QsBetItem');
 const DropBetItem = require('../model/DropBetItem');
 const BangBetItem = require('../model/BangBetItem');
 const RollBetItem = require('../model/RollBetItem');
@@ -121,7 +121,7 @@ router.patch('/rooms/:room_id', async (req, res) => {
           _id: { $nin: room.joiners }
         }
       },
-      { $sample: { size: 4 } }
+      { $sample: { size: 2 } }
     ]);
 
     // Check if any user is available
@@ -258,25 +258,27 @@ router.get('/room/:id', async (req, res) => {
     if (req.query.limit) {
       const limit = parseInt(req.query.limit);
       gameLogQuery = gameLogQuery.limit(limit);
-    }
-    const totalGameLogsCount = await GameLog.countDocuments({ room: room });
+    } 
+
+    // const totalGameLogsCount = await GameLog.countDocuments({ room: room });
+    const totalGameLogsCount = 0;
 
     const gameLogList = await gameLogQuery;
 
     const creator = await User.findOne({ _id: room.creator });
     const joiners = await User.find({ _id: { $in: room.joiners } });
 
-    const boxPrizeList = await RoomBoxPrize.find({ room: room }).sort({
-      _id: 'asc'
-    });
+    // const boxPrizeList = await RoomBoxPrize.find({ room: room }).sort({
+    //   _id: 'asc'
+    // });
     const rpsBetItem = await RpsBetItem.findOne({
       room: room._id,
       joiner_rps: ''
     }).sort({ _id: 'asc' });
-    const qsBetItem = await QsBetItem.findOne({
-      room: room,
-      joiner_qs: ''
-    }).sort({ _id: 'asc' });
+        // const qsBetItem = await QsBetItem.findOne({
+        //   room: room,
+        //   joiner_qs: ''
+        // }).sort({ _id: 'asc' });
     // const bjBetItem = await BjBetItem.findOne({
     //   room: room,
     //   joiner_bj: ''
@@ -364,7 +366,7 @@ router.get('/room/:id', async (req, res) => {
     //   }
     // }
     // emitRollElapsedTime(req, room);
-
+    
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
     res.json({
       success: true,
@@ -406,7 +408,7 @@ router.get('/room/:id', async (req, res) => {
         // bang_bet_item_id: bangBetItem ? bangBetItem.id : null,
         // roll_bet_item_id: rollBetItem ? rollBetItem.id : null,
         // bj_bet_item_id: bjBetItem ? bjBetItem.id : null,
-        qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
+        // qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
         is_private: room['is_private'],
         youtubeUrl: room['youtubeUrl'],
         gameBackground: room['gameBackground'],
@@ -464,7 +466,7 @@ router.get('/question/:brain_game_type', async (req, res) => {
         answer: answer.answer
       }))
     ].sort(() => Math.random() - 0.5);
-
+    console.log("fffff")
     res.json({
       success: true,
       question: { _id: question._id, question: question.question, image: question.image },
@@ -511,6 +513,7 @@ router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
     })
       .sort({ created_at: -1 })
       .limit(50);
+
     // Return the filtered RpsBetItems
     res.json({
       success: true,
@@ -524,6 +527,71 @@ router.get('/rpsbetitems/:roomId', auth, async (req, res) => {
     });
   }
 });
+router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
+  const { itemId } = req.params;
+  const { updatedItem, cellindex } = req.body;
+
+  try {
+    // Find the RpsBetItem by ID
+    const rpsBetItem = await RpsBetItem.findById(itemId);
+
+    // Ensure the item exists
+    if (!rpsBetItem) {
+      console.log("RpsBetItem not found");
+      return res.status(404).json({
+        success: false,
+        message: 'RpsBetItem not found'
+      });
+    }
+
+    // Validate and set the updated item based on the cell index
+    if (cellindex === 'bet_amount') {
+      // Validate if the updated item is a float or integer
+      if (!isNaN(updatedItem)) {
+        rpsBetItem[cellindex] = parseFloat(updatedItem);
+      } else {
+        throw new Error('Invalid bet amount. Please provide a valid number.');
+      }
+    } else if (cellindex === 'rps' || cellindex === 'joiner_rps') {
+      // Validate if the updated item is either 'r', 'p', or 's' (case-insensitive)
+      const validRPSValues = ['r', 'p', 's'];
+      if (validRPSValues.includes(updatedItem.toLowerCase())) {
+        rpsBetItem[cellindex] = updatedItem.toUpperCase();
+      } else {
+        throw new Error('Invalid value for RPS. Please provide either "r", "p", or "s".');
+      }
+    } else {
+      throw new Error('Invalid cell index.');
+    }
+
+    // Save the updated RpsBetItem
+    await rpsBetItem.save();
+
+    const updatedRpsBetItems = await RpsBetItem.find({
+      room: rpsBetItem.room,
+      joiner: req.user._id,
+      joiner_rps: { $ne: null }
+    })
+      .sort({ created_at: -1 })
+      .limit(50);
+
+
+    res.json({
+      success: true,
+      message: 'RpsBetItem updated successfully',
+      data: updatedRpsBetItems
+    });
+  } catch (err) {
+    console.error("Error updating RpsBetItem:", err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update RpsBetItem',
+      error: err.message
+    });
+  }
+});
+
+
 
 // GET /api/comments/:room_id
 router.get('/comments/:room_id', async (req, res) => {

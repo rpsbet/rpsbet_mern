@@ -57,7 +57,7 @@ creditScoreCron.checkOutstandingLoans(io);
 rentCron.checkRentalPayments(io);
 notificationCron.deleteNotifications();
 // cronJob.checkConfirmations(io);
-callBotCron.callCronJobs(io);
+// callBotCron.callCronJobs(io);
 withdrawalCron.resetWithdrawalLimits();
 
 app.use(helmet());
