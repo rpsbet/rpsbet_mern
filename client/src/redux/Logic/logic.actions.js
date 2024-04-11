@@ -219,6 +219,7 @@ export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
     const apiURL = limit ? `/game/room/${room_id}?limit=${limit}` : `/game/room/${room_id}`;
     const res = await axios.get(apiURL);
 
+    console.log( res)
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });
     } else {
@@ -516,6 +517,24 @@ export const getRpsBetItems = (room_id) => async dispatch => {
   } catch (err) {
   }
 };
+
+export const updateRpsBetItems = (itemId, cellindex, updatedItem) => async dispatch => {
+  console.log("reewdededes", itemId, cellindex, updatedItem);
+  try {
+    const res = await axios.put(`/game/rpsbetitems/${itemId}`, {cellindex, updatedItem });
+    if (res.data.success) {
+      dispatch({ type: RPSBETITEMS_LOADED, payload: res.data });
+      dispatch({ type: MSG_SUCCESS, payload: "TRAINING DATA HAS BEEN UPDATED" });
+    }
+    return res.data;
+  } catch (err) {
+    dispatch({ type: MSG_ERROR, payload: 'TRAINING DATA FAILED TO UPDATE, CHECK VALUE IS CORRECT' });
+
+  }
+};
+
+
+
 export const getStrategies = () => async dispatch => {
   try {
     const res = await axios.get('/game/strategies');

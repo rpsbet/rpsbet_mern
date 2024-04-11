@@ -54,6 +54,9 @@ button#recentSearches span {
   stroke: #ff6961; /* Red color */
 }
 
+.red-text {
+  color: #ff0000;
+}
 .white {
   stroke: #ffffff; /* White color */
 }

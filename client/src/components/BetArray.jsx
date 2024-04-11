@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { getRpsBetItems } from '../redux/Logic/logic.actions';
+import { getRpsBetItems, updateRpsBetItems } from '../redux/Logic/logic.actions';
+import { setFocused } from '../redux/Auth/user.actions';
+import { useDispatch } from 'react-redux';
+
 import {
   Button,
   Tabs,
@@ -14,6 +17,8 @@ import {
   makeStyles,
   Typography,
   IconButton,
+  Modal,
+  TextField,  
   Slider,
   Table, TableHead, TableBody, TableRow, TableCell
 } from '@material-ui/core';
@@ -24,6 +29,7 @@ import ApexChart from "react-apexcharts";
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import TableChartOutlinedIcon from '@material-ui/icons/TableChartOutlined';
 import TuneOutlinedIcon from '@material-ui/icons/TuneOutlined';
+import EditIcon from '@material-ui/icons/Edit';
 import Lottie from 'react-lottie';
 import animationData from '../game_panel/LottieAnimations/spinningIcon.json';
 import { alertModal } from '../game_panel/modal/ConfirmAlerts';
@@ -123,6 +129,7 @@ function BetArray({
   label,
   rpsbetitems,
   getRpsBetItems,
+  updateRpsBetItems,
   predictedBetAmount,
   updateUserStrategy,
   betting,
@@ -137,11 +144,22 @@ function BetArray({
   strategies,
   game_type
 }) {
+  const dispatch = useDispatch();
+
   const [settings_panel_opened, setSettingsPanelOpened] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
   const [timerValue, setTimerValue] = useState(2000);
   const [budget, setBudget] = useState(0.001);
+  const [selectedCell, setSelectedCell] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [editedValue, setEditedValue] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+
+  const [selectedRow, setSelectedRow] = useState(null);
   const [selectedStrategy, setSelectedStrategy] = useState(ai_mode);
+  const [modalTitle, setModalTitle] = useState('');
+
   const classes = useStyles();
   const prevIsBettingRef = useRef(is_betting);
 
@@ -152,6 +170,7 @@ function BetArray({
       getRpsBetItems(room_id); // Assuming room_id is available here
     }
   
+    
     // Update previous value of is_betting
     prevIsBettingRef.current = is_betting;
   }, [is_betting, getRpsBetItems, room_id]);
@@ -252,12 +271,6 @@ function BetArray({
   };
 
 
-  const handleBudgetChange = (event, newValue) => {
-    setBudget(newValue);
-  };
-
-  // const stored_bet_array = JSON.parse(localStorage.getItem(arrayName)) || [];
-
 
   const filteredArray = game_type === 'Quick Shoot' ? rpsbetitems.filter(item => item.qs !== undefined) : rpsbetitems;
   const settingsRef = useRef(null);
@@ -286,6 +299,53 @@ function BetArray({
         return '';
     }
   };
+  const handleCellClick = (item, index, cell) => {
+    setSelectedCell(cell);
+    setEditedValue(item[cell]); // Directly accessing the property value
+    setSelectedIndex(index);
+    setSelectedRow(item);
+    // console.log("Clicked Cell Value:", item[cell]);
+    setOpenModal(true);
+    // setHoveredIndex(index);
+    dispatch(setFocused(true));
+    // Set modal title based on the clicked cell
+    switch (cell) {
+      case 'bet_amount':
+        setModalTitle('EDIT BET AMOUNT');
+        break;
+      case 'rps':
+        setModalTitle('EDIT HOST\'S CHOICE');
+        break;
+      case 'joiner_rps':
+        setModalTitle('EDIT YOUR CHOICE');
+        break;
+      default:
+        setModalTitle('');
+        break;
+    }
+  };
+
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    dispatch(setFocused(false));
+  };
+
+  // Function to handle updating cell data
+  // Example of calling the action
+const handleUpdateCellData = async () => {
+  try {
+    const res = await updateRpsBetItems(selectedRow._id, selectedCell, editedValue);
+    if (res.success) {
+      console.log('RpsBetItems updated successfully:', res.message);
+    }
+  } catch (err) {
+    console.error('Failed to update RpsBetItems:', err.message);
+  }
+
+  setOpenModal(false);
+};
+
 
   const formatProfit = (profit) => {
     if (profit > 0) {
@@ -304,9 +364,18 @@ function BetArray({
     setSettingsPanelOpened(!settings_panel_opened);
   };
 
-  const handleTimerValueChange = newValue => {
-    setTimerValue(newValue);
-  };
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setSettingsPanelOpened(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [settingsRef]);
 
   if (
     typeof betting === 'undefined' ||
@@ -509,38 +578,94 @@ function BetArray({
                 />
 
                 <div className="gamified-content">
-                  {filteredArray.length > 0 ? (
-                    <>
-                      <Table>
-                        <TableHead>
-                          <TableRow className={classes.tableHeader}>
-                            <TableCell>BET</TableCell>
-                            <TableCell>HOST</TableCell>
-                            <TableCell>YOU</TableCell>
-                          </TableRow>
-                        </TableHead>
-                      </Table>
-                      <div className={classes.tableContainer}>
-                        <Table className={classes.table}>
-                          <TableBody>
-                            {filteredArray.map((item, index) => (
-                              <TableRow key={index} className={classes.tableRow}>
-                                <TableCell>{convertToCurrency(item.bet_amount)}</TableCell>
-                                <TableCell>{item.rps}</TableCell>
-                                <TableCell>{item.joiner_rps}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                
+                {filteredArray.length > 0 ? (
+        <>
+          <Table>
+            <TableHead>
+              <TableRow className={classes.tableHeader}>
+                <TableCell>BET</TableCell>
+                <TableCell>HOST</TableCell>
+                <TableCell>YOU</TableCell>
+              </TableRow>
+            </TableHead>
+          </Table>
+          <div className={classes.tableContainer}>
+            <Table className={classes.table}>
+              <TableBody>
+                {filteredArray.map((item, index) => (
+                  <TableRow 
+                  key={index} 
+                  className={classes.tableRow} 
+                  onMouseEnter={() => setHoveredIndex(index)} 
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                    <TableCell 
+                      onClick={() => handleCellClick(item, index, 'bet_amount')} 
+                      className={classes.cell}>
+                      <div className={classes.cellContent}>
+                        {convertToCurrency(item.bet_amount)}
+                        {hoveredIndex === index && (
+                <IconButton className={classes.editIcon} size="small">
+                  <EditIcon />
+                </IconButton>
+              )}
                       </div>
-                    </>
-
-                  ) : (
-                    <Typography variant="body1" className={classes.noDataMsg}>
-                      Play normally to train the AP
-                    </Typography>
-
-                  )}
+                    </TableCell>
+                    <TableCell 
+                      onClick={() => handleCellClick(item, index, 'rps')} 
+                      className={classes.cell}>
+                      <div className={classes.cellContent}>
+                        {item.rps}
+                        {hoveredIndex === index && (
+                <IconButton className={classes.editIcon} size="small">
+                  <EditIcon />
+                </IconButton>
+              )}
+                      </div>
+                    </TableCell>
+                    <TableCell 
+                      onClick={() => handleCellClick(item, index, 'joiner_rps')} 
+                      className={classes.cell}>
+                      <div className={classes.cellContent}>
+                        {item.joiner_rps}
+                        {hoveredIndex === index && (
+                <IconButton className={classes.editIcon} size="small">
+                  <EditIcon />
+                </IconButton>
+              )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      ) : (
+        <Typography variant="body1" className={classes.noDataMsg}>
+          Play normally to train the AP
+        </Typography>
+      )}
+      
+      {/* Popup modal for editing cell data */}
+      <Modal open={openModal} onClose={handleCloseModal} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className={classes.modalContainer}>
+          <div className={classes.modal} style={{ background: '#f0f0f0', padding: '20px', borderRadius: '5px' }}>
+            <Typography variant="h6" gutterBottom>{modalTitle}</Typography>
+            {/* <Typography variant="body1" className={classes.placeholder}>
+              {selectedRow ? selectedRow[selectedCell] : ''}
+            </Typography> */}
+            <TextField
+              label="EDIT VALUE"
+              value={editedValue}
+              onChange={(e) => setEditedValue(e.target.value)}
+            />
+            <Button variant="contained" color="primary" onClick={handleUpdateCellData}>Update</Button>
+          </div>
+        </div>
+      </Modal>
                 </div>
               </Grid>
             </div>
@@ -558,6 +683,8 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   getRpsBetItems,
+  updateRpsBetItems,
+  setFocused
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(BetArray);

@@ -283,7 +283,7 @@ class Bang extends Component {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
     } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUALLY SHIT!';
+      text = 'SPLIT, SPLIT! EQUALLY SHIT!';
       playSound('split');
     } else {
       text = 'TROLLOLOLOL! LOSER!';

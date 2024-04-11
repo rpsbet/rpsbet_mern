@@ -16,6 +16,7 @@ import { updateRoomBot } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
+import InfoIcon from '@material-ui/icons/Warning';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import {
   Button,
@@ -520,7 +521,7 @@ class RPS extends Component {
       text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
       changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUALLY SHIT!';
+      text = 'SPLIT, SPLIT! EQUALLY SHIT!';
       playSound('split');
       changeBgColor(result.betResult);
     } else {
@@ -753,6 +754,7 @@ class RPS extends Component {
         });
       }, flashingDuration);
     }
+    const isLowBankroll = bankroll <= 1;
 
     return (
       <div className="game-page">
@@ -787,12 +789,16 @@ class RPS extends Component {
                     <div className="value">{roomInfo.status}</div>
                   </div>
                   <div className="data-item">
-                    <div>
-                      <div className="label your-bet-amount">Bankroll</div>
-                    </div>
-                    <div className="value">{convertToCurrency(bankroll)}</div>
-                  </div>
-
+      <div>
+        <div className="label your-bet-amount">Bankroll</div>
+      </div>
+      <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : ""}>
+        <div className={`value ${isLowBankroll ? 'red-text' : ''}`}>
+          {convertToCurrency(bankroll)}
+          {isLowBankroll && <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />}
+        </div>
+      </Tooltip>
+    </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">Your Return</div>

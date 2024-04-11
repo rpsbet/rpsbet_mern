@@ -704,7 +704,7 @@ class Blackjack extends Component {
       text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
       this.changeBgColor(result.betResult);
     } else if (result.betResult === 0) {
-      text = 'SPLIT! EQUALLY SHIT!';
+      text = 'SPLIT, SPLIT EQUALLY SHIT!';
       playSound('split');
       this.changeBgColor(result.betResult);
     } else {

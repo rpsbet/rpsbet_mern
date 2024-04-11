@@ -192,7 +192,7 @@ class DropGame extends Component {
         playSound('win');
         text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
       } else if (result.betResult === 0) {
-        text = 'SPLIT! EQUALLY SHIT!';
+        text = 'SPLIT, SPLIT SEQUALLY SHIT!';
         playSound('split');
       } else {
         text = 'TROLLOLOLOL! LOSER!';
