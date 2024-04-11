@@ -102,7 +102,6 @@ router.patch('/strategies/:user_id', async (req, res) => {
     });
   }
 });
-
 router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
   try {
@@ -110,6 +109,11 @@ router.patch('/rooms/:room_id', async (req, res) => {
     const room = await Room.findById(room_id);
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    // Check if the room already has two bots
+    if (room.joiners.filter(joiner => joiner.username.match(/BOT/i)).length === 2) {
+      return res.status(400).json({ success: false, message: 'Room already has two bots' });
     }
 
     // Find users that are not already in the room's joiners subarray
@@ -152,7 +156,6 @@ router.patch('/rooms/:room_id', async (req, res) => {
     });
   }
 });
-
 
 router.patch('/room/strategies/:room_id', async (req, res) => {
   const { room_id } = req.params;
