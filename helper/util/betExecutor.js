@@ -689,13 +689,22 @@ const addToQueue = async (req, bot = false) => {
     }
 };
 
-const executeBet = (req, bot = false) => {
-    return new Promise((resolve, reject) => {
-        requestQueue.push({ req, bot, resolve, reject });
-        if (requestQueue.length === 1) {
-            processQueue();
-        }
-    });
+// const executeBet = (req, bot = false) => {
+//     return new Promise((resolve, reject) => {
+//         requestQueue.push({ req, bot, resolve, reject });
+//         if (requestQueue.length === 1) {
+//             processQueue();
+//         }
+//     });
+// };
+
+const executeBet = async (req, bot = false) => {
+    try {
+        const result = await addToQueue(req, bot);
+        return result;
+    } catch (error) {
+        throw new Error('Error executing bet');
+    }
 };
 
 const processQueue = async () => {
