@@ -243,7 +243,6 @@ class JoinGame extends Component {
       game_type: this.props.roomInfo.game_type,
       ...betInfo
     });
-    // console.log(result)
     return result;
   };
 
@@ -1100,7 +1099,7 @@ class JoinGame extends Component {
           );
           if (availableBoxes.length === 0) {
             alertModal(
-              isDarkMode,
+              isDarkMode  ,
               `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
             );
             return;

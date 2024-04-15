@@ -258,7 +258,6 @@ class OpenGamesTable extends Component {
           game_type: selectedGameType,
           excludeIds: fetchedRoomIds, // Pass already fetched room IDs to exclude them
         });
-        // console.log("cscs", this.state.roomList)
 
       }
     }
@@ -578,7 +577,6 @@ class OpenGamesTable extends Component {
       hostNetProfits: [],
       hostBetsValue: []
     };
-    // console.log(roomStatistics)
     return (
       <>
         <div className="overflowX">

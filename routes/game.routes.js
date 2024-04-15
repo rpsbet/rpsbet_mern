@@ -102,6 +102,7 @@ router.patch('/strategies/:user_id', async (req, res) => {
     });
   }
 });
+
 router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
   try {
@@ -109,11 +110,6 @@ router.patch('/rooms/:room_id', async (req, res) => {
     const room = await Room.findById(room_id);
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
-    }
-
-    // Check if the room already has two bots
-    if (room.joiners.filter(joiner => joiner.username.match(/BOT/i)).length === 4) {
-      return res.status(400).json({ success: false, message: 'Room already has two bots' });
     }
 
     // Find users that are not already in the room's joiners subarray
@@ -125,27 +121,27 @@ router.patch('/rooms/:room_id', async (req, res) => {
           _id: { $nin: room.joiners }
         }
       },
-      { $sample: { size: 4 } }
+      { $sample: { size: 4 } } // Adjust the sample size to 4
     ]);
 
-    // Check if any user is available
-    if (users.length === 0) {
-      return res.status(404).json({ success: false, message: 'No available users' });
+    // Check if enough bots are available
+    if (users.length < 4) {
+      return res.status(404).json({ success: false, message: 'Not enough available bots' });
     }
 
-    // Select the first available user
-    const bot_id = users[0]._id;
+    // Extract the bot IDs
+    const botIds = users.map(user => user._id);
 
-    // Update the room with the new joiner
+    // Update the room with the new joiners
     const updatedRoom = await Room.findByIdAndUpdate(
       room_id,
-      { $push: { joiners: bot_id } },
+      { $push: { joiners: { $each: botIds } } }, // Use $each to push multiple IDs
       { new: true }
     );
 
     res.json({
       success: true,
-      message: 'Bot joined the room successfully!',
+      message: 'Bots joined the room successfully!',
       room: updatedRoom // Return the updated room object
     });
   } catch (err) {
@@ -156,6 +152,7 @@ router.patch('/rooms/:room_id', async (req, res) => {
     });
   }
 });
+
 
 router.patch('/room/strategies/:room_id', async (req, res) => {
   const { room_id } = req.params;
@@ -469,7 +466,6 @@ router.get('/question/:brain_game_type', async (req, res) => {
         answer: answer.answer
       }))
     ].sort(() => Math.random() - 0.5);
-    console.log("fffff")
     res.json({
       success: true,
       question: { _id: question._id, question: question.question, image: question.image },

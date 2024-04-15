@@ -336,7 +336,7 @@ class DepositModal extends Component {
 
     try {
       const response = await axios.post('/stripe/generate_address', { web2Amount, currencyTo });
-      console.log('response:', response.data);
+      // console.log('response:', response.data);
 
       this.setState({
         sendAmount: response.data.pay_amount,
@@ -652,8 +652,8 @@ class DepositModal extends Component {
                                 onMouseLeave={this.handleSuggestionMouseLeave}
                                 style={{
                                   ...suggestionStyle,
-                                  backgroundColor: hoveredSuggestion === suggestion ? '#f0f0f0' : 'transparent',
-                                  color: hoveredSuggestion === suggestion ? '#666' : 'inherit',
+                                  backgroundColor: hoveredSuggestion === suggestion ? '#ffc107' : 'transparent',
+                                  color: hoveredSuggestion === suggestion ? '#060607' : '#212529',
                                 }} key={suggestion} onClick={() => this.handleSuggestionClick(suggestion)}>
                                 <Typography>{suggestion.toUpperCase()}</Typography>
                               </li></a>

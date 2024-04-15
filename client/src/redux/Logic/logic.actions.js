@@ -519,7 +519,6 @@ export const getRpsBetItems = (room_id) => async dispatch => {
 };
 
 export const updateRpsBetItems = (itemId, cellindex, updatedItem) => async dispatch => {
-  console.log("reewdededes", itemId, cellindex, updatedItem);
   try {
     const res = await axios.put(`/game/rpsbetitems/${itemId}`, {cellindex, updatedItem });
     if (res.data.success) {

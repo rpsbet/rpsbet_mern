@@ -189,7 +189,6 @@ class WithdrawModal extends Component {
     try {
       const response = await axios.post('/stripe/validate_address', { sendAddress, currencyTo });
 
-      console.log('response:', response.status);
 
       this.setState({
         validAddress: response.status === 200 ? true : false,
@@ -616,8 +615,8 @@ class WithdrawModal extends Component {
                                   onMouseLeave={this.handleSuggestionMouseLeave}
                                   style={{
                                     ...suggestionStyle,
-                                    backgroundColor: hoveredSuggestion === suggestion ? '#f0f0f0' : 'transparent',
-                                    color: hoveredSuggestion === suggestion ? '#666' : 'inherit',
+                                    backgroundColor: hoveredSuggestion === suggestion ? '#ffc107' : 'transparent',
+                                    color: hoveredSuggestion === suggestion ? '#060607' : '#212529',
                                   }} key={suggestion} onClick={() => this.handleSuggestionClick(suggestion)}>
                                   <Typography>{suggestion.toUpperCase()}</Typography>
                                 </li></a>

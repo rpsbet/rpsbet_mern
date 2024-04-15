@@ -3,7 +3,6 @@ import { alertModal, callBotModal } from '../modal/ConfirmAlerts';
 
 export const validateIsAuthenticated = (isAuthenticated, isDarkMode) => {
     if (!isAuthenticated) {
-      console.log("fd")
       alertModal(isDarkMode, `FURR-SST LOG IN!`);
       return false;
     }

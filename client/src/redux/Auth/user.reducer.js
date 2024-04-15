@@ -85,7 +85,6 @@ export default function(state = initialState, action) {
       };
     case SET_NOTIFICATIONS_ALLOWED:
       localStorage.setItem('isNotificationsAllowed', payload);
-      console.log(payload)
       return {
         ...state,
         isNotificationsAllowed: payload

@@ -514,7 +514,6 @@ class RPS extends Component {
       selected_rps: selected_rps,
       rps_bet_item_id: rps_bet_item_id,
     });
-
     let text;
     if (result.betResult === 1) {
       playSound('win');
@@ -557,19 +556,7 @@ class RPS extends Component {
           alertModal(isDarkMode, result.message);
         }
       }
-
-      let stored_rps_array =
-        JSON.parse(localStorage.getItem('rps_array')) || [];
-      while (stored_rps_array.length >= 20) {
-        stored_rps_array.shift();
-      }
-      stored_rps_array = stored_rps_array.filter(item => item && item.rps);
-
-      if (rps_game_type === 0) {
-        stored_rps_array.push({ rps: selected_rps });
-        localStorage.setItem('rps_array', JSON.stringify(stored_rps_array));
-      }
-
+      
       // refreshHistory();
       this.setState({ cardDealt: false });
     }

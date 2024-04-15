@@ -307,7 +307,6 @@ class SiteWrapper extends Component {
   }
 
   playCoinsAnimation() {
-    // console.log("SD")
     this.setState({ isCoinsAnimation: true });
   }
 
@@ -604,7 +603,6 @@ class SiteWrapper extends Component {
 
       // Check if there is a provider available
       if (window.ethereum) {
-        // console.log("dd")
         const web3 = new Web3(window.ethereum);
 
         // Request accounts using the new Ethereum provider

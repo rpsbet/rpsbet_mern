@@ -689,23 +689,23 @@ const addToQueue = async (req, bot = false) => {
     }
 };
 
-// const executeBet = (req, bot = false) => {
-//     return new Promise((resolve, reject) => {
-//         requestQueue.push({ req, bot, resolve, reject });
-//         if (requestQueue.length === 1) {
-//             processQueue();
-//         }
-//     });
-// };
-
-const executeBet = async (req, bot = false) => {
-    try {
-        const result = await addToQueue(req, bot);
-        return result;
-    } catch (error) {
-        throw new Error('Error executing bet');
-    }
+const executeBet = (req, bot = false) => {
+    return new Promise((resolve, reject) => {
+        requestQueue.push({ req, bot, resolve, reject });
+        if (requestQueue.length === 1) {
+            processQueue();
+        }
+    });
 };
+
+// const executeBet = async (req, bot = false) => {
+//     try {
+//         const result = await addToQueue(req, bot);
+//         return result;
+//     } catch (error) {
+//         throw new Error('Error executing bet');
+//     }
+// };
 
 const processQueue = async () => {
     if (requestQueue.length > 0) {
@@ -716,9 +716,13 @@ const processQueue = async () => {
         } catch (error) {
             reject(error);
         }
-        requestQueue.shift();
-        processQueue();
+        // Wait for a very short duration before processing the next item
+        setTimeout(() => {
+            requestQueue.shift();
+            processQueue();
+        }, 10); // Adjust the delay here, for example, 10 milliseconds (1/100th of a second)
     }
 };
+
 
 module.exports = executeBet;
