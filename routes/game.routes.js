@@ -112,7 +112,7 @@ router.patch('/rooms/:room_id', async (req, res) => {
     }
 
     // Check if the room already has two bots
-    if (room.joiners.filter(joiner => joiner.username.match(/BOT/i)).length === 2) {
+    if (room.joiners.filter(joiner => joiner.username.match(/BOT/i)).length === 4) {
       return res.status(400).json({ success: false, message: 'Room already has two bots' });
     }
 
@@ -125,7 +125,7 @@ router.patch('/rooms/:room_id', async (req, res) => {
           _id: { $nin: room.joiners }
         }
       },
-      { $sample: { size: 2 } }
+      { $sample: { size: 4 } }
     ]);
 
     // Check if any user is available
