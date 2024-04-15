@@ -610,7 +610,7 @@ const addToQueue = async (req, bot = false) => {
 
                     if (newTransactionC.amount !== 0) {
                         try {
-                             await saveDocumentWithRetry(newTransactionC);
+                            await saveDocumentWithRetry(newTransactionC);
                         } catch (error) {
                             console.error("Error saving newTransactionC", error);
                         }
