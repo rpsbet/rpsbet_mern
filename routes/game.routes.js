@@ -3371,7 +3371,6 @@ router.post('/bet', auth, async (req, res) => {
 
     const betResult = await executeBet(req);
 
-    // Process the bet result as needed
     res.json({
       success: betResult.success,
       message: betResult.message,

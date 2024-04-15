@@ -499,58 +499,61 @@ class RPS extends Component {
     const {
       rps_bet_item_id,
       isDarkMode,
-      // refreshHistory,
       join,
       playSound,
       rps_game_type,
       changeBgColor,
       selected_rps,
     } = this.props;
-
+  
     const { bet_amount } = this.state;
-
+  
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
       rps_bet_item_id: rps_bet_item_id,
     });
+  
     let text;
+    let amount;
+    
     if (result.betResult === 1) {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
       changeBgColor(result.betResult);
+      amount = parseFloat(bet_amount) * 2;
     } else if (result.betResult === 0) {
       text = 'SPLIT, SPLIT! EQUALLY SHIT!';
       playSound('split');
       changeBgColor(result.betResult);
+      amount = 0;
     } else {
       text = 'TROLLOLOLOL! LOSER!';
       playSound('lose');
       changeBgColor(result.betResult);
+      amount = parseFloat(bet_amount) * -1;
       if (rps_game_type === 1) {
         this.handleOpenModal();
         this.speak(text);
       }
     }
+  
     if (this.props.rps_game_type === 1) {
       this.flipCard();
     }
-
-    if (
-      (result.betResult !== -1 && rps_game_type === 1) ||
-      rps_game_type === 0
-    ) {
+  
+    if ((result.betResult !== -1 && rps_game_type === 1) || rps_game_type === 0) {
       gameResultModal(
         isDarkMode,
         text,
-        result.amount,
+        amount,
         result.betResult,
         'Okay',
         null,
         () => { },
         () => { }
       );
-
+  
       if (result.status !== 'success') {
         if (result.message) {
           alertModal(isDarkMode, result.message);
@@ -561,6 +564,7 @@ class RPS extends Component {
       this.setState({ cardDealt: false });
     }
   };
+  
 
   handleBotClick = () => {
     const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } = this.props;
