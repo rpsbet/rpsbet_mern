@@ -253,34 +253,34 @@ class RPS extends Component {
           // });
   
   
-          initializedSocket.on('RPS_1', data => {
-            if (data && data.length > 0) {
-              this.setState({
-                rps: this.props.isWatching ? data.filter(game => game.joiner === user_id) : data,
-                prev_rps: data,
-                startedPlaying: true
-              });
-            }
-          });
+        //   initializedSocket.on('RPS_1', data => {
+        //     if (data && data.length > 0) {
+        //       this.setState({
+        //         rps: this.props.isWatching ? data.filter(game => game.joiner === user_id) : data,
+        //         prev_rps: data,
+        //         startedPlaying: true
+        //       });
+        //     }
+        //   });
   
-          initializedSocket.emit('emitRps');
-        }
+        //   initializedSocket.emit('emitRps');
+        // }
   
-        // Add event listener conditionally based on rps_game_type
-        if (rps_game_type === 0) {
-          document.addEventListener('mousedown', this.handleClickOutside);
-        }
+        // // Add event listener conditionally based on rps_game_type
+        // if (rps_game_type === 0) {
+        //   document.addEventListener('mousedown', this.handleClickOutside);
+        // }
   
-        if (rps_game_type === 1) {
-          // Ensure acQueryMyItem is available
-          if (acQueryMyItem) {
-            await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
-            setTimeout(() => {
-              if (!this.state.cardDealt) {
-                this.dealCard();
-              }
-            }, 1500);
-          }
+        // if (rps_game_type === 1) {
+        //   // Ensure acQueryMyItem is available
+        //   if (acQueryMyItem) {
+        //     await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
+        //     setTimeout(() => {
+        //       if (!this.state.cardDealt) {
+        //         this.dealCard();
+        //       }
+        //     }, 1500);
+        //   }
         }
       } catch (error) {
         console.error('Socket initialization failed:', error);
@@ -515,23 +515,23 @@ class RPS extends Component {
     });
   
     let text;
-    let amount;
+    // let amount;
     
     if (result.betResult === 1) {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
       changeBgColor(result.betResult);
-      amount = parseFloat(bet_amount) * 2;
+      // amount = parseFloat(bet_amount) * 2;
     } else if (result.betResult === 0) {
       text = 'SPLIT, SPLIT! EQUALLY SHIT!';
       playSound('split');
       changeBgColor(result.betResult);
-      amount = 0;
+      // amount = 0;
     } else {
       text = 'TROLLOLOLOL! LOSER!';
       playSound('lose');
       changeBgColor(result.betResult);
-      amount = parseFloat(bet_amount) * -1;
+      // amount = parseFloat(bet_amount) * -1;
       if (rps_game_type === 1) {
         this.handleOpenModal();
         this.speak(text);
@@ -546,7 +546,7 @@ class RPS extends Component {
       gameResultModal(
         isDarkMode,
         text,
-        amount,
+        result.amount,
         result.betResult,
         'Okay',
         null,

@@ -114,7 +114,7 @@ class ChatPage extends Component {
 
       await this.props.getHistory();
 
-      await this.props.getGameTypeList();
+      // await this.props.getGameTypeList();
       if (this.props.isAuthenticated) {
         // await this.props.getMyGames();
         await this.props.getMyHistory();

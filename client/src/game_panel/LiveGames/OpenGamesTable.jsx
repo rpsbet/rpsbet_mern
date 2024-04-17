@@ -74,13 +74,12 @@ class OpenGamesTable extends Component {
       roomList: [],
       fetchedRoomIds: [],
       fetchedDataIds: [],
-      hostNetProfitList: [],
       showPopup: false,
-      hostNetProfitLists: [],
+      // hostNetProfitLists: [],
       actionList: null,
       isCoHostModalOpen: false,
       isFocused: false,
-      isLoading: true,
+      isLoading: false,
 
     };
 
@@ -212,33 +211,26 @@ class OpenGamesTable extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     const { roomList, loading, selectedGameType } = this.props;
-
     const roomIds = roomList.map(room => room._id);
 
     if (prevProps.roomList !== this.props.roomList) {
-
       this.setState(prevState => ({
         roomList: [...prevState.roomList, ...roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))],
         fetchedRoomIds: [...prevState.fetchedRoomIds, ...roomIds],
         isLoading: false,
         loaded: true
       }), () => {
-        if (roomIds) {
-          this.getRoomData(roomIds);
-        }
+        // if (roomIds) {
+        //   this.getRoomData(roomIds);
+        // }
       });
-
-
     }
-
-   
 
     if (prevProps.selectedGameType !== selectedGameType) {
       this.setState({ isLoading: true });
 
     }
   }
-
 
   handleLoad = () => {
     this.setState({ loaded: true, selectedGameType: 'All' });
@@ -327,50 +319,44 @@ class OpenGamesTable extends Component {
     }
   };
 
-  getRoomData = async (roomIds) => {
-    try {
-      // Filter out roomIds that are already fetched
-      const newRoomIds = roomIds.filter(roomId => !this.state.fetchedDataIds.includes(roomId));
+  // getRoomData = async (roomIds) => {
+  //   try {
+  //     const newRoomIds = roomIds.filter(roomId => !this.state.fetchedDataIds.includes(roomId));
+  //     const hostNetProfitListPromises = newRoomIds.map(roomId =>
+  //       this.props.getRoomStatisticsData(roomId, 20)
+  //     );
 
-      // Call getRoomStatisticsData only for new roomIds
-      const hostNetProfitListPromises = newRoomIds.map(roomId =>
-        this.props.getRoomStatisticsData(roomId, 20)
-      );
+  //     const newHostNetProfitLists = await Promise.all(hostNetProfitListPromises);
 
-      const newHostNetProfitLists = await Promise.all(hostNetProfitListPromises);
+  //     this.setState(prevState => {
+  //       const updatedHostNetProfitLists = [...prevState.hostNetProfitLists, ...newHostNetProfitLists];
+  //       const uniqueRoomIds = new Set([...prevState.fetchedDataIds, ...newRoomIds]);
+  //       const updatedFetchedDataIds = Array.from(uniqueRoomIds);
 
-      this.setState(prevState => {
-        const updatedHostNetProfitLists = [...prevState.hostNetProfitLists, ...newHostNetProfitLists];
-        // Create a set to store unique IDs
-        const uniqueRoomIds = new Set([...prevState.fetchedDataIds, ...newRoomIds]);
+  //       const netProfitsByRoom = updatedHostNetProfitLists.map(hostNetProfitList => {
+  //         const hostNetProfit = hostNetProfitList.hostNetProfit;
+  //         const lastIndexNetProfit = hostNetProfit[hostNetProfit.length - 1];
+  //         return lastIndexNetProfit;
+  //       });
 
-        // Convert the set back to an array
-        const updatedFetchedDataIds = Array.from(uniqueRoomIds);
+  //       const hostNetProfits = updatedHostNetProfitLists.map(item => item.hostNetProfit);
+  //       const hostBetsValue = updatedHostNetProfitLists.map(item => item.hostBetsValue);
 
-        const netProfitsByRoom = updatedHostNetProfitLists.map(hostNetProfitList => {
-          const hostNetProfit = hostNetProfitList.hostNetProfit;
-          const lastIndexNetProfit = hostNetProfit[hostNetProfit.length - 1];
-          return lastIndexNetProfit;
-        });
+  //       return {
+  //         hostNetProfitLists: updatedHostNetProfitLists,
+  //         fetchedDataIds: updatedFetchedDataIds,
+  //         hostNetProfitList: netProfitsByRoom,
+  //         actionList: {
+  //           hostNetProfits,
+  //           hostBetsValue
+  //         }
+  //       };
+  //     });
 
-        const hostNetProfits = updatedHostNetProfitLists.map(item => item.hostNetProfit);
-        const hostBetsValue = updatedHostNetProfitLists.map(item => item.hostBetsValue);
-
-        return {
-          hostNetProfitLists: updatedHostNetProfitLists,
-          fetchedDataIds: updatedFetchedDataIds,
-          hostNetProfitList: netProfitsByRoom,
-          actionList: {
-            hostNetProfits,
-            hostBetsValue
-          }
-        };
-      });
-
-    } catch (error) {
-      console.error('Error fetching room data:', error);
-    }
-  };
+  //   } catch (error) {
+  //     console.error('Error fetching room data:', error);
+  //   }
+  // };
 
 
 
@@ -566,17 +552,14 @@ class OpenGamesTable extends Component {
   render() {
     const gameTypePanel = this.generateGameTypePanel();
     const {
-      hostNetProfitList,
+      // hostNetProfitList,
       showPlayerModal,
       selectedCreator,
       isFocused,
       isLoading
     } = this.state;
     const { isLowGraphics, loading, isDarkMode } = this.props;
-    const roomStatistics = this.state.actionList || {
-      hostNetProfits: [],
-      hostBetsValue: []
-    };
+   
     return (
       <>
         <div className="overflowX">
@@ -605,11 +588,7 @@ class OpenGamesTable extends Component {
           // {...this.state.selectedRow}
           />
         )}
-        {isLoading ? (
-          <div className="loading-gif-container">
-            <img src={randomGifUrl} id="isLoading" alt="loading" />
-          </div>
-        ) : (
+      
           <div className="table main-game-table">
             {(this.props.roomList.length === 0 && !isLoading && !loading) ? (
               <div className="dont-have-game-msg">
@@ -942,10 +921,17 @@ class OpenGamesTable extends Component {
             )}
           </div>
 
-        )}
 
         {loading && (!isLoading) && (
-          <div className='loading-spinner'></div>
+          <>
+         <span style={{position:"relative", display: "flex", justifyContent: "center", alignItems:"center"}}>Fetching Rooms&nbsp;</span>
+
+          <div className="loading-gif-container">
+            <img src={randomGifUrl} id="isLoading" alt="loading" />
+          </div>
+
+         
+          </>
         )}
 
 

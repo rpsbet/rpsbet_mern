@@ -121,11 +121,11 @@ router.patch('/rooms/:room_id', async (req, res) => {
           _id: { $nin: room.joiners }
         }
       },
-      { $sample: { size: 4 } } // Adjust the sample size to 4
+      { $sample: { size: 1 } } // Adjust the sample size to 4
     ]);
 
     // Check if enough bots are available
-    if (users.length < 4) {
+    if (users.length === 0) {
       return res.status(404).json({ success: false, message: 'Not enough available bots' });
     }
 
@@ -296,15 +296,15 @@ router.get('/room/:id', async (req, res) => {
     //   joiner_roll: ''
     // }).sort({ _id: 'asc' });
 
-    async function emitRps(req) {
-      const rpsItems = await RpsBetItem.find({ room: room });
-      const rps1 = rpsItems.filter(item => item.joiner_rps !== '').slice(-5);
-      if (rps1.length > 0 && req.io) {
-        req.io.emit('RPS_1', rps1);
-      }
-    }
+    // async function emitRps(req) {
+    //   const rpsItems = await RpsBetItem.find({ room: room });
+    //   const rps1 = rpsItems.filter(item => item.joiner_rps !== '').slice(-5);
+    //   if (rps1.length > 0 && req.io) {
+    //     req.io.emit('RPS_1', rps1);
+    //   }
+    // }
 
-    await emitRps(req);
+    // await emitRps(req);
 
     // let hasEmitted = false;
 
@@ -2119,74 +2119,55 @@ router.post('/end_game', auth, async (req, res) => {
     });
   }
 });
-
 router.get('/my_chat', auth, async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const messages1 = await Message.find({ from: userId }).populate({
-      path: 'to',
-      model: User
-    });
-    const messages2 = await Message.find({ to: userId }).populate({
-      path: 'from',
-      model: User
-    });
+    // Find the 50 most recent messages sent by the user
+    const sentMessages = await Message.find({ from: userId })
+      .populate({
+        path: 'to',
+        model: User
+      })
+      .sort({ updated_at: -1 }) // Sort by updated_at in descending order
+      .limit(40);
+
+    const receivedMessages = await Message.find({ to: userId })
+      .populate({
+        path: 'from',
+        model: User
+      })
+      .sort({ updated_at: -1 }) // Sort by updated_at in descending order
+      .limit(40);
 
     const myChat = {};
 
-    for (let message of messages1) {
+    // Combine sent and received messages
+    const allMessages = [...sentMessages, ...receivedMessages];
+
+    for (let message of allMessages) {
+      const otherUserId = message.from ? message.from._id : message.to._id;
+      
       if (
-        message.to &&
-        (!myChat[message.to._id] ||
-          myChat[message.to._id].updated_at < message.updated_at)
+        !myChat[otherUserId] ||
+        myChat[otherUserId].updated_at < message.updated_at
       ) {
-        myChat[message.to._id] = {
-          ...myChat[message.to._id],
-          _id: message.to._id,
+        myChat[otherUserId] = {
+          _id: otherUserId,
           message: message.message,
-          username: message.to.username,
-          avatar: message.to.avatar,
-          accessory: message.to.accessory,
-          rank: message.to.totalWagered,
+          username: message.from ? message.from.username : message.to.username,
+          avatar: message.from ? message.from.avatar : message.to.avatar,
+          accessory: message.from ? message.from.accessory : message.to.accessory,
+          rank: message.from ? message.from.totalWagered : message.to.totalWagered,
           created_at: message.created_at,
           created_at_str: moment(message.created_at).format('LLL'),
           updated_at: message.updated_at,
           unread_message_count: 0
         };
       }
-    }
 
-    for (let message of messages2) {
-      if (message.from && message.from._id === message.to) {
-        continue;
-      }
-
-      if (
-        message.from &&
-        (!myChat[message.from._id] ||
-          myChat[message.from._id].updated_at < message.updated_at)
-      ) {
-        myChat[message.from._id] = {
-          ...myChat[message.from._id],
-          _id: message.from._id,
-          message: message.message,
-          username: message.from.username,
-          avatar: message.from.avatar,
-          accessory: message.from.accessory,
-          rank: message.from.totalWagered,
-          created_at: message.created_at,
-          created_at_str: moment(message.created_at).format('LLL'),
-          updated_at: message.updated_at
-        };
-      }
-
-      if (message.from && !myChat[message.from._id].unread_message_count) {
-        myChat[message.from._id].unread_message_count = 0;
-      }
-
-      if (message.from && !message.is_read) {
-        myChat[message.from._id].unread_message_count++;
+      if (!message.is_read) {
+        myChat[otherUserId].unread_message_count++;
       }
     }
 
@@ -2202,6 +2183,8 @@ router.get('/my_chat', auth, async (req, res) => {
     });
   }
 });
+
+
 router.post('/unstake', auth, async (req, res) => {
   try {
     const userId = req.user._id;

@@ -149,16 +149,16 @@ class Leaderboards extends Component {
                           {/* {playerData._id} */}
                         </TableCell>
                         <TableCell>
-  {playerData.bets >= 10 ? <>{convertToCurrency(playerData.wagered) }+</>: convertToCurrency(playerData.wagered)}
-</TableCell>
-<TableCell>
-  {playerData.bets >= 10 ? <>{convertToCurrency(playerData.net_profit)}+</>: convertToCurrency(playerData.net_profit)}
-</TableCell>
+                          {playerData.bets >= 10 ? <>{convertToCurrency(playerData.wagered)}+</> : convertToCurrency(playerData.wagered)}
+                        </TableCell>
+                        <TableCell>
+                          {playerData.bets >= 10 ? <>{convertToCurrency(playerData.net_profit)}+</> : convertToCurrency(playerData.net_profit)}
+                        </TableCell>
 
 
                         <TableCell>
-    {playerData.bets >= 10 ? '10+' : playerData.bets}
-</TableCell>
+                          {playerData.bets >= 10 ? '10+' : playerData.bets}
+                        </TableCell>
 
                         <TableCell>
                           <ReactApexChart

@@ -14,13 +14,14 @@ const moment = require('moment');
 const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
 const saveDocumentWithRetry = require('./retrySave');
 const requestQueue = [];
+let isNonBotRequestProcessing = false;
 
 
 let user_access_log = {};
 
 function check_access_time(user_id) {
     const check_result =
-        user_access_log[user_id] && Date.now() - user_access_log[user_id] < 1000
+        user_access_log[user_id] && Date.now() - user_access_log[user_id] < 800
             ? false
             : true;
     user_access_log[user_id] = Date.now();
@@ -73,6 +74,8 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
+            let betAmount = parseFloat(req.body.bet_amount);
+
             roomInfo = await Room.findOne({ _id: req.body._id })
                 .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
                 .populate({
@@ -85,7 +88,6 @@ const addToQueue = async (req, bot = false) => {
                     model: GameType,
                     select: 'game_type_name short_name'
                 })
-
             if (
                 roomInfo['creator'] &&
                 roomInfo['creator']._id &&
@@ -171,17 +173,23 @@ const addToQueue = async (req, bot = false) => {
 
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
                 if (
-                    parseFloat(req.body.bet_amount) > parseFloat(roomInfo['user_bet']) ||
-                    parseFloat(req.body.bet_amount) > parseFloat(user.balance)
+                    betAmount > parseFloat(roomInfo['user_bet']) ||
+                    betAmount > parseFloat(user.balance)
                 ) {
-                    responseData = {
-                        success: false,
-                        message: 'Bet amount exceeds available balance.'
+
+                    if (bot) {
+                        betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : parseFloat(user.balance);
+                    } else {
+
+                        responseData = {
+                            success: false,
+                            message: 'Bet amount exceeds available balance.'
+                        }
+                        return responseData;
                     }
-                    return responseData;
                 }
 
-                newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+                newGameLog.bet_amount = betAmount;
 
                 // get next unused item
                 const availableBetItem = await RpsBetItem.findOne({
@@ -196,7 +204,7 @@ const addToQueue = async (req, bot = false) => {
                     let nextItem;
 
                     const allBetItems = await RpsBetItem.find({
-                        room: new ObjectId(req.body._id),
+                            room: new ObjectId(req.body._id),
                         joiner: user._id,
                         joiner_rps: { $ne: null }
                     })
@@ -205,13 +213,10 @@ const addToQueue = async (req, bot = false) => {
 
                     switch (roomInfo['selectedStrategy']) {
                         case 'Random':
-                            nextItem = getRandomItem();
+                            nextItem = await getRandomItem();
                             break;
                         case 'Martingale':
-                            nextItem = getRandomItem();
-                            break;
-                        case 'Adam':
-                            nextItem = await reinforcementAI(allBetItems);
+                            nextItem = await getRandomItem();
                             break;
                         case 'Hertz':
                             nextItem = await patternBasedAI(allBetItems);
@@ -229,7 +234,7 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await generatePattern(allBetItems);
                             break;
                         case 'CopyCat':
-                            nextItem = getCopyCatItem(allBetItems);
+                            nextItem = await getCopyCatItem(allBetItems);
                             break;
                         case 'Markov':
                             nextItem = await getNextItemUsingMarkov(allBetItems);
@@ -237,23 +242,24 @@ const addToQueue = async (req, bot = false) => {
                         case 'Hidden Markov':
                             nextItem = await predictNext(allBetItems);
                             break;
+
                         default:
-                            // no unknown strategies
+                            const move = await reinforcementAI(allBetItems);
+                            nextItem = move.move;
                             break;
                     }
-
                     // save the new item
                     bet_item = new RpsBetItem({
                         room: new ObjectId(req.body._id),
                         rps: nextItem,
-                        bet_amount: parseFloat(req.body.bet_amount),
+                        bet_amount: betAmount,
                     });
 
-                    try {
-                        await saveDocumentWithRetry(bet_item);
-                    } catch (error) {
-                        console.error("Error saving bet_item:", error);
-                    }
+                    // try {
+                    //     await saveDocumentWithRetry(bet_item);
+                    // } catch (error) {
+                    //     console.error("Error saving bet_item:", error);
+                    // }
 
                     // Define helper functions
                     function getRandomItem() {
@@ -277,7 +283,7 @@ const addToQueue = async (req, bot = false) => {
                     }
                 }
 
-                newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+                newGameLog.bet_amount = betAmount;
                 newGameLog.selected_rps = req.body.selected_rps;
 
                 if (roomInfo['rps_game_type'] === 0) {
@@ -302,7 +308,7 @@ const addToQueue = async (req, bot = false) => {
                     }
 
                     // deduct the joiner's bet
-                    newTransactionJ.amount -= parseFloat(req.body.bet_amount);
+                    newTransactionJ.amount -= betAmount;
 
                     // if win
                     if (
@@ -312,15 +318,15 @@ const addToQueue = async (req, bot = false) => {
                     ) {
                         newGameLog.game_result = 1;
                         newTransactionJ.amount +=
-                            parseFloat(req.body.bet_amount) * 2 * ((100 - commission) / 100);
+                            betAmount * 2 * ((100 - commission) / 100);
 
                         newGameLog.commission =
-                            parseFloat(req.body.bet_amount) * 2 * ((commission - parseFloat(tax.value)) / 100);
+                            betAmount * 2 * ((commission - parseFloat(tax.value)) / 100);
 
                         // update rtb count
                         rain.value =
                             parseFloat(rain.value) +
-                            parseFloat(req.body.bet_amount) * 2 * ((commission - parseFloat(tax.value)) / 100);
+                            betAmount * 2 * ((commission - parseFloat(tax.value)) / 100);
 
                         try {
                             await saveDocumentWithRetry(rain);
@@ -331,7 +337,7 @@ const addToQueue = async (req, bot = false) => {
                         // update platform earnings (0.5%)
                         platform.value =
                             parseFloat(platform.value) +
-                            parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
+                            betAmount * 2 * (parseFloat(tax.value) / 100);
                         try {
                             await saveDocumentWithRetry(platform);
                         } catch (error) {
@@ -341,8 +347,8 @@ const addToQueue = async (req, bot = false) => {
                         // update bankroll
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
 
-                        roomInfo['host_pr'] -= parseFloat(req.body.bet_amount);
-                        roomInfo['user_bet'] -= parseFloat(req.body.bet_amount);
+                        roomInfo['host_pr'] -= betAmount;
+                        roomInfo['user_bet'] -= betAmount;
 
 
                         // send notification
@@ -360,9 +366,9 @@ const addToQueue = async (req, bot = false) => {
 
                         newGameLog.game_result = 0;
 
-                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (parseFloat(req.body.bet_amount) * (parseFloat(tax.value) / 100));
+                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (betAmount * (parseFloat(tax.value) / 100));
 
-                        newTransactionJ.amount += (parseFloat(req.body.bet_amount) - parseFloat(req.body.bet_amount) * (parseFloat(tax.value) / 100));
+                        newTransactionJ.amount += (betAmount - betAmount * (parseFloat(tax.value) / 100));
 
                         message.message =
                             'Split ' +
@@ -375,7 +381,7 @@ const addToQueue = async (req, bot = false) => {
                         // update platform stat (0.5%)
                         platform.value =
                             parseFloat(platform.value) +
-                            parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
+                            betAmount * 2 * (parseFloat(tax.value) / 100);
                         try {
                             await saveDocumentWithRetry(platform);
                         } catch (error) {
@@ -390,21 +396,21 @@ const addToQueue = async (req, bot = false) => {
                         // update bankroll & other
                         roomInfo.host_pr =
                             (parseFloat(roomInfo.host_pr) || 0) +
-                            (parseFloat(req.body.bet_amount) * 2 * ((100 - parseFloat(tax.value)) / 100)) - parseFloat(req.body.bet_amount);
+                            (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
                         roomInfo.user_bet =
                             (parseFloat(roomInfo.user_bet) || 0) +
-                            (parseFloat(req.body.bet_amount) * 2 * ((100 - parseFloat(tax.value)) / 100)) - parseFloat(req.body.bet_amount);
+                            (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
 
                         platform.value =
                             parseFloat(platform.value) +
-                            parseFloat(req.body.bet_amount) * 2 * (parseFloat(tax.value) / 100);
+                            betAmount * 2 * (parseFloat(tax.value) / 100);
                         try {
                             await saveDocumentWithRetry(platform);
                         } catch (error) {
                             console.error("Error saving platform:", error);
                         }
 
-                        // if autopayout settings have been satisfied, payout host
+                        // autopayout host
                         if (
                             roomInfo['endgame_type'] &&
                             roomInfo['user_bet'] >= roomInfo['endgame_amount']
@@ -413,22 +419,23 @@ const addToQueue = async (req, bot = false) => {
                                 parseFloat(roomInfo['user_bet']) -
                                 parseFloat(roomInfo['endgame_amount']);
 
-                            const newGameLogC = new GameLog({
-                                room: roomInfo,
-                                creator: roomInfo['creator'],
-                                joined_user: roomInfo['creator'],
-                                game_type: roomInfo['game_type'],
-                                bet_amount: roomInfo['host_pr'],
-                                user_bet: roomInfo['user_bet'],
-                                // is_anonymous: roomInfo['is_anonymous'],
-                                game_result: 3
-                            });
-
-                            try {
-                                await saveDocumentWithRetry(newGameLogC);
-                            } catch (error) {
-                                console.error("Error saving newGameLogC:", error);
-                            }
+                                const newGameLogC = new GameLog({
+                                    room: roomInfo,
+                                    creator: roomInfo['creator'],
+                                    joined_user: roomInfo['creator'],
+                                    game_type: roomInfo['game_type'],
+                                    bet_amount: roomInfo['host_pr'],
+                                    user_bet: roomInfo['user_bet'],
+                                    // is_anonymous: roomInfo['is_anonymous'],
+                                    game_result: 3
+                                });
+    
+                                try {
+                                    await saveDocumentWithRetry(newGameLogC);
+                                } catch (error) {
+                                    console.error("Error saving newGameLogC:", error);
+                                }
+                          
                             roomInfo['user_bet'] = parseFloat(
                                 roomInfo['endgame_amount']
                             );
@@ -447,14 +454,14 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 if (roomInfo['rps_game_type'] === 0) {
-                    winnings = parseFloat(req.body.bet_amount) * 2;
+                    winnings = betAmount * 2;
                 }
 
                 // update bet item with joiner's data
                 newGameLog.winnings = winnings;
                 bet_item.joiner = user;
                 bet_item.joiner_rps = req.body.selected_rps;
-                bet_item.bet_amount = parseFloat(req.body.bet_amount);
+                bet_item.bet_amount = betAmount;
                 try {
                     await saveDocumentWithRetry(bet_item);
                 } catch (error) {
@@ -464,7 +471,7 @@ const addToQueue = async (req, bot = false) => {
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
                     const lastFiveBetItems = await RpsBetItem.find({
-                        room: req.body._id,
+                        room: roomInfo._id,
                         joiner: user,
                         joiner_rps: { $exists: true, $ne: '' }
                     })
@@ -474,50 +481,50 @@ const addToQueue = async (req, bot = false) => {
                     const reversedLastFiveBetItems = lastFiveBetItems.slice().reverse();
 
                     if (req.io.sockets && reversedLastFiveBetItems.length > 0) {
-                        req.io.sockets.emit(`UPDATED_BANKROLL_${req.body._id}`, {
+                        req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
                             bankroll: roomInfo['user_bet'],
                             rps: reversedLastFiveBetItems,
                             user: user
                         });
                     }
-                } else {
-                    // if not spectating, show only current user
-                    const lastFiveBetItems = await RpsBetItem.find({
-                        room: req.body._id
-                    });
-                    const rps = lastFiveBetItems
-                        .filter(item => item.joiner_rps !== '')
-                        .slice(-5);
-                    if (rps.length > 0 && req.io) {
-                        req.io.emit(`UPDATED_BANKROLL_${req.body._id}`, {
-                            bankroll: roomInfo['user_bet'],
-                            rps: rps
-                        });
-                    }
-                    const nextItem = await RpsBetItem.findOne({
-                        room: req.body._id,
-                        joiner_rps: ''
-                    });
-                    if (nextItem) {
-                        try {
-                            await saveDocumentWithRetry(nextItem);
-                        } catch (error) {
-                            console.error("Error saving nextItem:", error);
-                        }
-                    } else {
-                        roomInfo.status = 'finished';
-                    }
                 }
+                //  else {
+                //     const lastFiveBetItems = await RpsBetItem.find({
+                //         room: req.body._id
+                //     });
+                //     const rps = lastFiveBetItems
+                //         .filter(item => item.joiner_rps !== '')
+                //         .slice(-5);
+                //     if (rps.length > 0 && req.io) {
+                //         req.io.emit(`UPDATED_BANKROLL_${req.body._id}`, {
+                //             bankroll: roomInfo['user_bet'],
+                //             rps: rps
+                //         });
+                //     }
+                //     const nextItem = await RpsBetItem.findOne({
+                //         room: req.body._id,
+                //         joiner_rps: ''
+                //     });
+                //     if (nextItem) {
+                //         try {
+                //             await saveDocumentWithRetry(nextItem);
+                //         } catch (error) {
+                //             console.error("Error saving nextItem:", error);
+                //         }
+                //     } else {
+                //         roomInfo.status = 'finished';
+                //     }
+                // }
 
                 // if not already added to joiners, add to joiners
-                if (!roomInfo.joiners.includes(user)) {
-                    roomInfo.joiners.addToSet(user);
-                    try {
-                        await saveDocumentWithRetry(roomInfo);
-                    } catch (error) {
-                        console.error("Error saving roomInfo:", error);
-                    }
-                }
+                // if (!roomInfo.joiners.includes(user)) {
+                //     roomInfo.joiners.addToSet(user);
+                //     try {
+                //         await saveDocumentWithRetry(roomInfo);
+                //     } catch (error) {
+                //         console.error("Error saving roomInfo:", error);
+                //     }
+                // }
 
                 // rug game if bankroll too low
                 if (roomInfo['user_bet'] <= 0.05) {
@@ -561,11 +568,7 @@ const addToQueue = async (req, bot = false) => {
             if (roomInfo['creator']['profitAllTimeLow'] > newTransactionC.amount) {
                 roomInfo['creator']['profitAllTimeLow'] = newTransactionC.amount;
             }
-            try {
-                await saveDocumentWithRetry(roomInfo['creator']);
-            } catch (error) {
-                console.error("Error saving roomInfo['creator']:", error);
-            }
+         
 
             user['balance'] += newTransactionJ.amount;
             user['gamePlayed']++;
@@ -582,21 +585,20 @@ const addToQueue = async (req, bot = false) => {
             try {
                 await saveDocumentWithRetry(user);
                 await saveDocumentWithRetry(newGameLog);
-                await saveDocumentWithRetry(roomInfo);
             } catch (error) {
                 console.error("Error saving", error);
             }
 
-            if (!roomInfo.joiners.includes(user)) {
-                roomInfo.joiners.addToSet(user);
-                try {
-                    await saveDocumentWithRetry(roomInfo);
-                } catch (error) {
-                    console.error("Error saving roomInfo", error);
-                }
-            }
-            setTimeout(async () => {
+            // if (!roomInfo.joiners.includes(user)) {
+            //     roomInfo.joiners.addToSet(user);
+            //     try {
+            //         await saveDocumentWithRetry(roomInfo);
+            //     } catch (error) {
+            //         console.error("Error saving roomInfo", error);
+            //     }
+            // }
 
+            // setTimeout(async () => {
                 if (newTransactionJ.amount !== 0) {
                     try {
                         await saveDocumentWithRetry(newTransactionJ);
@@ -673,7 +675,7 @@ const addToQueue = async (req, bot = false) => {
                         console.error("Error saving message:", error);
                     }
                 }
-            }, 0);
+            // }, 0);
         }
         responseData = {
             success: true,
@@ -689,6 +691,7 @@ const addToQueue = async (req, bot = false) => {
     }
 };
 
+
 // const executeBet = (req, bot = false) => {
 //     return new Promise((resolve, reject) => {
 //         requestQueue.push({ req, bot, resolve, reject });
@@ -700,25 +703,52 @@ const addToQueue = async (req, bot = false) => {
 
 const executeBet = async (req, bot = false) => {
     try {
-        const result = await addToQueue(req, bot);
+        console.log("**************************req.body************************", req.user.username);
+        const reqCopy = { ...req }; // Create a shallow copy of the req object
+        let result;
+
+        if (!bot) {
+            // If the request is not from a bot, prioritize it
+            console.log("Prioritizing non-bot request");
+            if (isNonBotRequestProcessing) {
+                // Queue the request if a non-bot request is already processing
+                console.log("Queuing the non-bot request");
+                requestQueue.push(() => addToQueue(reqCopy, bot));
+            } else {
+                // Process the non-bot request immediately
+                isNonBotRequestProcessing = true;
+                result = await addToQueue(reqCopy, bot);
+                isNonBotRequestProcessing = false;
+
+                // Process any queued requests
+                while (requestQueue.length > 0) {
+                    const queuedRequest = requestQueue.shift();
+                    await queuedRequest();
+                }
+            }
+        } else {
+            // For bot requests, proceed as usual
+            result = await addToQueue(reqCopy, bot);
+        }
+
+        console.log("***************************result***********************", result);
         return result;
     } catch (error) {
         throw new Error('Error executing bet');
     }
 };
 
-const processQueue = async () => {
-    if (requestQueue.length > 0) {
-        const { req, bot, resolve, reject } = requestQueue[0];
-        try {
-            const result = await addToQueue(req, bot);
-            resolve(result);
-        } catch (error) {
-            reject(error);
-        }
-        requestQueue.shift();
-        processQueue();
-    }
-};
-
+// const processQueue = async () => {
+//     if (requestQueue.length > 0) {
+//         const { req, bot, resolve, reject } = requestQueue[0];
+//         try {
+//             const result = await addToQueue(req, bot);
+//             resolve(result);
+//         } catch (error) {
+//             reject(error);
+//         }
+//         requestQueue.shift();
+//         processQueue();
+//     }
+// };
 module.exports = executeBet;

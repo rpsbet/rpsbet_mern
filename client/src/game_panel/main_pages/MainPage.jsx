@@ -80,13 +80,13 @@ class MainPage extends Component {
       getRoomList,
       getRoomCount,
       getHistory,
-      getGameTypeList,
+      // getGameTypeList,
       isAuthenticated,
       getMyHistory,
       getMyChat
     } = this.props;
 
-    const promises = [getRoomList({pageSize: 7}), getRoomCount({game_type: selectedGameType}), getHistory(), getGameTypeList()];
+    const promises = [getRoomList({pageSize: 7}), getRoomCount({game_type: selectedGameType}), getHistory()];  // getGameTypeList()];
     if (isAuthenticated) {
       promises.push(getMyHistory());
       promises.push(getMyChat());

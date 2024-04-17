@@ -1,22 +1,34 @@
+const documentLocks = new Map();
 
-const { ParallelSaveError } = require('mongoose');
+async function saveDocumentWithRetry(document, retryCount = 6, delayMs = 1000) {
+    const documentId = document._id.toString(); // Assuming _id is an ObjectId
 
-async function saveDocumentWithRetry(document, retryCount = 3, delayMs = 1000) {
-    while (retryCount > 0) {
-        try {
-            await document.save();
-            return; // Save successful, exit loop
-        } catch (error) {
-            if (error instanceof ParallelSaveError) {
-                console.log("Document is already being saved, retrying...");
-                await new Promise(resolve => setTimeout(resolve, delayMs)); // Wait before retrying
-                retryCount--; // Decrement retry count
-            } else {
-                throw error; // Re-throw error if it's not ParallelSaveError
+    if (documentLocks.has(documentId)) {
+        return await updateDocumentWithRetry(document, retryCount, delayMs);
+    }
+
+    documentLocks.set(documentId, true);
+
+    try {
+        while (retryCount > 0) {
+            try {
+                await document.save();
+                documentLocks.delete(documentId);
+                return;
+            } catch (error) {
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+                retryCount--;
             }
         }
+        throw new Error("Exceeded maximum retry count. Unable to save document.");
+    } finally {
+        documentLocks.delete(documentId);
     }
-    throw new Error("Exceeded maximum retry count. Unable to save document.");
+}
+
+async function updateDocumentWithRetry(document, retryCount, delayMs) {
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+    return await saveDocumentWithRetry(document, retryCount, delayMs);
 }
 
 module.exports = saveDocumentWithRetry;

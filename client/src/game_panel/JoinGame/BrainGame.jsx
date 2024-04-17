@@ -13,7 +13,7 @@ import { openGamePasswordModal } from '../../redux/Notification/notification.act
 import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import animationData from '../LottieAnimations/spinningIcon';
-import brain from '../LottieAnimations/brain.json';
+// import brain from '../LottieAnimations/brain.json';
 import { Button } from '@material-ui/core';
 import {
   validateIsAuthenticated,
@@ -676,7 +676,7 @@ class BrainGame extends Component {
                 // transform: 'translate: (50%, 50%)'
               }}
             >
-              <Lottie
+              {/* <Lottie
                 options={{
                   loop: true,
                   autoplay: true,
@@ -688,7 +688,7 @@ class BrainGame extends Component {
                   margin: '-30px auto -300px',
                   opacity: 0.9
                 }}
-              />
+              /> */}
             </div>
 
             <h3 className="game-sub-title">Game Type:</h3>
