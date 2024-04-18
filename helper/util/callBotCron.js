@@ -64,11 +64,6 @@ async function callCronJobs(io) {
   }
 }
 
-function clearMemory() {
-  // Free memory by using the 'os' module
-  os.freemem();
-}
-
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -136,8 +131,6 @@ async function executeCronJob(user, betArray) {
 
 cron.schedule('*/12 * * * * *', async () => {
   await callCronJobs(socketio);
-  clearMemory();
-
 });
 
 

@@ -53,15 +53,15 @@ const addToQueue = async (req, bot = false) => {
 
                 return responseData;
             }
-            if (!check_access_time(user._id)) {
-                responseData = {
-                    success: false,
-                    message: 'illregular action',
-                    betResult: -1000
-                }
+            // if (!check_access_time(user._id)) {
+            //     responseData = {
+            //         success: false,
+            //         message: 'illregular action',
+            //         betResult: -1000
+            //     }
 
-                return responseData;
-            }
+            //     return responseData;
+            // }
 
             if (
                 parseFloat(req.body.bet_amount) < 0.05
@@ -703,7 +703,7 @@ const addToQueue = async (req, bot = false) => {
 
 const executeBet = async (req, bot = false) => {
     try {
-        console.log("**************************req.body************************", req.user.username);
+        // console.log("**************************req.body************************", req.user.username);
         const reqCopy = { ...req }; // Create a shallow copy of the req object
         let result;
 
@@ -731,7 +731,7 @@ const executeBet = async (req, bot = false) => {
             result = await addToQueue(reqCopy, bot);
         }
 
-        console.log("***************************result***********************", result);
+        // console.log("***************************result***********************", result);
         return result;
     } catch (error) {
         throw new Error('Error executing bet');

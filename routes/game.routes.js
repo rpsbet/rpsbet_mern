@@ -106,52 +106,70 @@ router.patch('/strategies/:user_id', async (req, res) => {
 router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
   try {
+    console.log(`Updating room with ID: ${room_id}`);
+
     // Check if the room exists
     const room = await Room.findById(room_id);
     if (!room) {
+      console.log('Room not found');
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
-    // Find users that are not already in the room's joiners subarray
-    const users = await User.aggregate([
-      {
-        $match: {
-          username: { $regex: /BOT/i },
-          balance: { $gt: 0 },
-          _id: { $nin: room.joiners }
+    // Function to find a random bot
+    const findRandomBot = async () => {
+      let botFound = false;
+      let attempts = 0;
+      while (!botFound && attempts < 6) {
+        console.log(`Attempt ${attempts + 1} to find a random bot`);
+        const randomBot = await User.aggregate([
+          { $match: { username: { $regex: /BOT/i } } },
+          { $sample: { size: 1 } }
+        ]);
+        const botId = randomBot[0]._id;
+        console.log(`Randomly chosen bot ID: ${botId}`);
+
+        const existingRooms = await Room.find({ joiners: botId, status: 'open' });
+        if (existingRooms.length === 0) {
+          botFound = true;
+          console.log('Bot not found in any existing rooms');
+          return botId;
         }
-      },
-      { $sample: { size: 1 } } // Adjust the sample size to 4
-    ]);
+        console.log(`Bot found in existing rooms: ${existingRooms.map(room => room._id)}`);
+        console.log('Trying again...');
+        attempts++;
+      }
+      throw new Error('No available bots found');
+    };
 
-    // Check if enough bots are available
-    if (users.length === 0) {
-      return res.status(404).json({ success: false, message: 'Not enough available bots' });
-    }
+    // Find and attach a bot to the room
+    console.log('Searching for a random bot...');
+    const botId = await findRandomBot();
+    console.log(`Found a bot to attach: ${botId}`);
 
-    // Extract the bot IDs
-    const botIds = users.map(user => user._id);
-
-    // Update the room with the new joiners
     const updatedRoom = await Room.findByIdAndUpdate(
       room_id,
-      { $push: { joiners: { $each: botIds } } }, // Use $each to push multiple IDs
+      { $push: { joiners: botId } },
       { new: true }
     );
 
+    console.log('Room updated successfully');
     res.json({
       success: true,
-      message: 'Bots joined the room successfully!',
-      room: updatedRoom // Return the updated room object
+      message: 'Bot joined the room successfully!',
+      room: updatedRoom
     });
   } catch (err) {
+    console.error('Error updating room:', err.message);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: err.message // Include error message for debugging
+      error: err.message
     });
   }
 });
+
+
+
 
 
 router.patch('/room/strategies/:room_id', async (req, res) => {
@@ -2865,7 +2883,7 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
 
 function check_access_time(user_id) {
   const check_result =
-    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 1500
+    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 1000
       ? false
       : true;
   user_access_log[user_id] = Date.now();
@@ -3351,6 +3369,16 @@ router.post('/reCreate', auth, async (req, res) => {
 
 router.post('/bet', auth, async (req, res) => {
   try {
+
+       if (!check_access_time(req.user._id)) {
+                responseData = {
+                    success: false,
+                    message: 'illregular action',
+                    betResult: -1000
+                }
+
+                return responseData;
+            }
 
     const betResult = await executeBet(req);
 

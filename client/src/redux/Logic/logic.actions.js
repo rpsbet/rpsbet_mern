@@ -567,21 +567,30 @@ export const updateRoomStrategy = (room_id, strategy) => async dispatch => {
 
   }
 };
-
 export const updateRoomBot = (room_id) => async dispatch => {
-
   try {
-    const res = await axios.patch(`/game/rooms/${room_id}`);
+    let botAttached = false;
+    let loopCount = 0;
+    
+    while (!botAttached && loopCount < 6) {
+      const res = await axios.patch(`/game/rooms/${room_id}`);
 
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "BOT HAS BEEN ATTACHED TO YOUR ROOM" });
+      if (res.data.success) {
+        dispatch({ type: MSG_SUCCESS, payload: "BOT HAS BEEN ATTACHED TO YOUR ROOM" });
+        botAttached = true;
+      }
+      
+      loopCount++;
+    }
 
+    if (!botAttached) {
+      throw new Error('Could not attach bot to the room after 6 attempts');
     }
   } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'TOO MUCH PUSSY IN THIS ROOM' });
-
+    dispatch({ type: MSG_ERROR, payload: 'NO BOTS AVAILABLE' });
   }
 };
+
 export const getGameTypeList = () => async dispatch => {
   try {
     const res = await axios.get('/game/game_types');
