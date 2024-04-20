@@ -226,10 +226,18 @@ div.table .table-row .table-cell button:last-child,
   font-size: 0.8em;
   overflow: hidden;
   font-weight: 600;
-  background: linear-gradient(0deg, #d81719, #810000) padding-box,
+  background: linear-gradient(0deg, #d81719, #f50057) padding-box,
     linear-gradient(0deg, #ff3b3b, #d81719) border-box;
   box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
     inset 0 2px #ff2525;
+}
+
+.strategy-btn {
+  color: #333 !important;
+  border-color: #333 !important;
+}
+.strategy-btn:hover {
+  border-color: #333 !important;
 }
 
 .boxes-panel.boxes-join .box {
@@ -3416,6 +3424,9 @@ position: sticky !important;
     width: 100%;
   }
 
+  div.table.main-game-table .table-row .table-cell.cell-user-name {
+    justify-content: unset;
+  }
   div.table div.table-row div.table-cell {
     justify-content: flex-start;
     font-size: 12px;
@@ -3427,15 +3438,12 @@ position: sticky !important;
   div.table.main-game-table .table-row .table-cell.cell-user-name .avatar {
     width: 40px !important;
     height: 40px !important;
+    margin-left: 0;
   }
   .desktop-only {
     display: none !important;
   }
 
-  div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
-    margin-left: unset !important;
-    transform: unset !important;
-  }
 
   div.table .table-row .table-cell img.avatar {
     margin-left: 2px;
@@ -3639,13 +3647,23 @@ position: sticky !important;
   .create-room-btn-panel {
     position: initial;
     text-align: right;
-    margin-top: 60px;
   }
   .my-open-games .game-type-panel {
     width: 70%;
   }
 }
 @media (max-width: 400px) {
+  div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
+    width: 11px;
+    height: 11px;
+    border-radius: 4px;
+    transform: translate(14px, 28px);
+  }
+
+  .refresh-main {
+    right: 18px;
+    top: 32px;
+  }
   .chat-input-panel .form-control {
     margin-bottom: 10px;
   }
@@ -3739,7 +3757,7 @@ height: 50px !important;
 
   .mobile-only.cell-joiners svg {
     margin-left: 3px;
-    margin-right: 6px;
+    margin-right: -6px;
   }
 
   .game-page .pre-summary-panel {

@@ -277,6 +277,7 @@ position: absolute;
 
 div[role='tablist'] {
   min-height: unset !important;
+  overflow-x: auto;
 }
 
 .countdown-bar {

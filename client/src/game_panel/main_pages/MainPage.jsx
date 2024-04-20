@@ -91,6 +91,12 @@ class MainPage extends Component {
     await Promise.all(promises);
   }
 
+//   componentDidUpdate(prevState) {
+// if (prevState.selectedMobileTab !== this.state.selectedMobileTab) {
+//   console.log("WDf",this.state.selectedMobileTab )
+// }
+//   }
+
   toggleP2PLending = () => {
     this.setState({
       showP2PLending: !this.state.showP2PLending,
@@ -129,26 +135,32 @@ class MainPage extends Component {
     this.props.toggleDrawer(!this.props.isDrawerOpen);
   };
 
-  getActiveTabText = () =>
-    (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
+  getActiveTabText = () => {
+    if (this.state.selectedMobileTab === 'marketplace') {
+      return null; // Render nothing if selectedMobileTab is not 'marketplace'
+    }
+  
+    return (
+      (this.state.is_mobile && this.state.selectedMobileTab === 'live_games' && this.state.show_open_game !== 1) ||
       (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
-      <>
-        <div id="liveStakes">
-          {this.props.rooms_count} BATTLES
-          <Lottie options={defaultOptions} width={40} />
-        </div>
-
-
-        <div className="refresh-main">
-          <IconButton color="primary" onClick={this.handleRefresh}>
-            <RefreshIcon />
-          </IconButton>
-        </div>
-      </>
-
-    ) : (
-      'Your Battles'
+        <>
+          <div id="liveStakes">
+            {this.props.rooms_count} BATTLES
+            <Lottie options={defaultOptions} width={40} />
+          </div>
+  
+          <div className="refresh-main">
+            <IconButton color="primary" onClick={this.handleRefresh}>
+              <RefreshIcon />
+            </IconButton>
+          </div>
+        </>
+      ) : (
+        'Your Battles'
+      )
     );
+  };
+  
 
   render() {
     const { isDrawerOpen } = this.props;
@@ -265,7 +277,7 @@ class MainPage extends Component {
             </Tabs>
           )}
         <div className="main-panel">
-          <h2 className="main-title desktop-only">{this.getActiveTabText()}</h2>
+          <h2 className="main-title">{this.getActiveTabText()}</h2>
           {((!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ||
             (this.state.is_mobile &&
               this.state.selectedMobileTab === 'live_games' &&

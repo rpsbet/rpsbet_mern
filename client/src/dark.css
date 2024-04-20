@@ -274,6 +274,27 @@ border-top: 2px solid #36393f;
 } */
 
 
+.dark_mode  div.table .table-row .table-cell button:last-child,
+.dark_mode .game_header .main_header .header_action_panel button#btn-login,
+.dark_mode #balance button,
+.dark_mode  .game-page .game-contents .game-info-panel button.place-bet,
+.dark_mode  .game-contents .game-info-panel button,
+.dark_mode #rps-radio div.active {
+  background: linear-gradient(0deg, #d81719, #810000) padding-box,
+    linear-gradient(0deg, #ff3b3b, #d81719) border-box;
+  box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
+    inset 0 2px #ff2525;
+}
+
+.dark_mode .strategy-btn {
+	color: #f9f9f9 !important;
+	border-color: #f9f9f9 !important;
+  }
+  .dark_mode  .strategy-btn:hover {
+	border-color: #f9f9f9 !important;
+  }
+
+
 .dark-mode ul[role=menu] {
     background-color: #2f3136;
 }
@@ -666,6 +687,11 @@ color: #fff;
 	color: #b9bbbe;
 }
 @media (max-width: 768px) {
+	.dark_mode .chat-wrapper .chat-input-panel {
+		background-color: #212529;
+		border-top: 1px solid #343a40;
+	}
+
 	.dark_mode .game-logs-modal-container {
 		background: #101010;
 	  }

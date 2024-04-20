@@ -218,7 +218,6 @@ class OpenGamesTable extends Component {
           roomList: this.props.roomList
         })
       }
-      console.log("EWDFWD", this.props.roomList.length)
       this.setState(prevState => ({
         roomList: [...prevState.roomList, ...this.props.roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))],
         fetchedRoomIds: [...prevState.fetchedRoomIds, ...roomIds],
@@ -554,16 +553,16 @@ class OpenGamesTable extends Component {
     return (
       <>
         <div className="overflowX">
-          <div className="game-type-container">
+          {/* <div className="game-type-container">
             <div
               className="game-type-panel"
               ref={elem => {
                 this.game_type_panel = elem;
               }}
             >
-              {/* {gameTypePanel} */}
+              {gameTypePanel}
             </div>
-          </div>
+          </div> */}
           {/* <div className="table-header">
             <div className="table-cell room-id">Room ID</div>
             <div className="table-cell bet-info">host / PLAYER</div>
@@ -809,7 +808,7 @@ class OpenGamesTable extends Component {
                             </Button>
                           </div>
                         </div>
-                        <div className="mobile-only">
+                        <div className="mobile-only" style={{marginTop: '7.5px', marginBottom: '-5px'}}>
                           <div className="table-cell cell-user-name">
                             <a
                               className="player"

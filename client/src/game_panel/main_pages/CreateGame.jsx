@@ -48,7 +48,10 @@ import { convertToCurrency } from '../../util/conversion';
 
 const StyledProductCard = styled.a`
   position: relative;
-  background: linear-gradient(156deg, #303438, #cf0c0e);
+  background: ${({ isDarkMode }) =>
+  isDarkMode
+    ? 'linear-gradient(156deg, #303438, #cf0c0e)'
+    : 'linear-gradient(156deg, #dee2e6, #cf0c0e)'};
   border-radius: 0.3em;
   width: 150px;
   justify-content: center;
@@ -661,10 +664,10 @@ class CreateGame extends Component {
             child_step === 2) ||
             (
               ((game_mode === 'RPS' && rps_game_type === 0 && child_step === 2 && selectedStrategy === 'Hidden Markov') ||
-              (game_mode === 'Quick Shoot' &&
-              child_step === 3)) &&
-          isMinimumRunsNeeded(3, list)
-        ))) {
+                (game_mode === 'Quick Shoot' &&
+                  child_step === 3)) &&
+              isMinimumRunsNeeded(3, list)
+            ))) {
           return;
         }
 
@@ -816,7 +819,9 @@ class CreateGame extends Component {
                 />}
                 label={
                   <StyledProductCard
-                  id="rps-game-type-radio"
+                    id="rps-game-type-radio"
+                    isDarkMode={this.props.isDarkMode}
+
                     className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]} ${selectedGameType === gameType.short_name ? 'active' : ''
                       }`}
                   >
@@ -837,17 +842,17 @@ class CreateGame extends Component {
   };
 
   step2 = () => {
-    const { game_mode, child_step, selectedStrategy} = this.state;
+    const { game_mode, child_step, selectedStrategy } = this.state;
 
     switch (game_mode) {
       case 'RPS':
         return (
           <RPS
-          setSelectedStrategy={this.setSelectedStrategy}
-          selectedStrategy={selectedStrategy}
-          ai_mode={this.props.user.ai_mode}
-          user_id={this.props.user._id}
-          rank={getRank(this.props.user.totalWagered)}
+            setSelectedStrategy={this.setSelectedStrategy}
+            selectedStrategy={selectedStrategy}
+            ai_mode={this.props.user.ai_mode}
+            user_id={this.props.user._id}
+            rank={getRank(this.props.user.totalWagered)}
             playSound={this.playSound}
             strategies={this.props.strategies}
             onChangeState={this.onChangeState}

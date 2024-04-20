@@ -1107,8 +1107,15 @@ circle {
 */
 
 @media (min-width: 320px) and (max-width: 480px) {
-
+  .btn_join:hover, .btn-create-room:hover, .btn_end:hover, #btn_next:hover, #btn_prev:hover, a:hover, button:hover, .btn-back:hover {
+    border: unset !important;
+    box-shadow: unset !important;
+  }
   
+
+  a.player {
+    display: flex;
+  }
 .outer-div {
   margin-top: 60px;
 }
@@ -1123,15 +1130,7 @@ circle {
   }
 
   .chat-wrapper .chat-panel {
-    padding: 70px 6px 0px 16px !important;
-}
-
-
-  .main-game-page-tabs {
-    position: fixed;
-    width: 100%;
-    background: #ffffff;
-    z-index: 999;
+    padding: 15px 6px 70px 16px !important
 }
 
   .mat-chat .chat-wrapper {

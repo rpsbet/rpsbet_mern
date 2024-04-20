@@ -392,14 +392,13 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 .mat-chat .chat-wrapper{
     background: linear-gradient(45deg, #f8f9fa, #e9ecef);
     border-right: 1px solid rgba(236, 236, 236, 0.48);
-
     padding-top: 73px;
     overflow: hidden;
     padding-bottom: 30px;
     width: 270px;
     height: 100%;
-    
 }
+
 .chat-input-panel .form-control {
     margin-top: 0 !important;
 }
@@ -424,6 +423,11 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 }
 
 @media (max-width: 480px) {
+    
+.mat-chat .chat-wrapper{
+    padding-top: 60px;
+}
+
     .chat-wrapper .chat-input-panel {
         border-top: 1px solid #111;
     }
@@ -434,7 +438,6 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 
     .chat {
         width: 100vw;
-        top: 70px;
         height: calc(100% - 120px) !important;
     }
     .chat-wrapper .chat-input-panel .emoticon-panel.active {

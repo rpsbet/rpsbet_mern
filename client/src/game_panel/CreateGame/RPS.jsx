@@ -186,7 +186,7 @@ class RPS extends Component {
 
   }
 
-  
+
   handleClickOutside = e => {
     if (
       this.settingsRef &&
@@ -196,7 +196,7 @@ class RPS extends Component {
       this.setState({ settings_panel_opened: false });
     }
   };
-  
+
   handleKeyPress(event) {
     const { selected_roll } = this.state;
     const { isFocused } = this.props;
@@ -502,36 +502,37 @@ class RPS extends Component {
         )} */}
         {step === 2 && rps_game_type === 0 && (
           <div className="game-info-panel">
-             <h3 className="game-sub-title">Strategy</h3>
-                <SettingsRef
-                  strategies={strategies}
-                  ai_mode={ai_mode}
-                  user_id={user_id}
-                  rank={rank}
-                  settings_panel_opened={settings_panel_opened}
-                  setSelectedStrategy={setSelectedStrategy}
-                  settingsRef={this.settingsRef}
-                  selectedStrategy={selectedStrategy}
-                />
-                <ButtonBase
-                  onClick={this.handleSettingsIconClick}
-                  style={{
-                    boxShadow: 'unset',
-                    borderRadius: '30px',
-                    background: 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
-                  <SettingsOutlinedIcon />
-                </ButtonBase>
-                {(selectedStrategy === 'Hidden Markov') ? (
+            <h3 className="game-sub-title">Strategy</h3>
+            <SettingsRef
+              strategies={strategies}
+              ai_mode={ai_mode}
+              user_id={user_id}
+              rank={rank}
+              settings_panel_opened={settings_panel_opened}
+              setSelectedStrategy={setSelectedStrategy}
+              settingsRef={this.settingsRef}
+              selectedStrategy={selectedStrategy}
+            />
+            <ButtonBase
+              onClick={this.handleSettingsIconClick}
+              className="strategy-btn"
+              style={{
+                boxShadow: 'unset',
+                borderRadius: '30px',
+                background: 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
+              <SettingsOutlinedIcon />
+            </ButtonBase>
+            {(selectedStrategy === 'Hidden Markov') ? (
 
-                  <>
-            <div className="rps-add-run-panel">
-              <div className="rps-add-run-form">
+              <>
+                <div className="rps-add-run-panel">
+                  <div className="rps-add-run-form">
                     <h3 className="game-sub-title">Select: R - P - S! </h3>
                     <div id="rps-radio">
                       <Button
@@ -583,53 +584,53 @@ class RPS extends Component {
                         }}
                       ><span className="roll-tag">[S]</span></Button>
                     </div>
-                  
-                <Button
-                  id="aiplay"
-                  variant="contained"
-                  onClick={this.onAutoPlay}
-                >
-                  Test Autoplay&nbsp;<span className="roll-tag">[space]</span>
-                </Button>
-              </div>
-              <div className="rps-add-run-table">
-                <h3 className="game-sub-title">Pattern Table</h3>
-                <table id="runs">
-                  <tbody>
-                    {rps_list && rps_list.length > 0 ? (
-                      rps_list.map((rps, index) => (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{rps.rps}</td>
-                          <td>
-                            <HighlightOffIcon
-                              id="delete"
-                              onClick={() => this.onRemoveItem(index)}
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td id="add-run" colSpan="4">
-                          Your pattern will be displayed here
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
-                  <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
-                </IconButton>
-              </div>
-            </div>
-            </>
 
-                ) : (
-                  <div style={{padding: "30px", fontSize: "0.6em"}}>
-                    (No Pattern Needed)
+                    <Button
+                      id="aiplay"
+                      variant="contained"
+                      onClick={this.onAutoPlay}
+                    >
+                      Test Autoplay&nbsp;<span className="roll-tag">[space]</span>
+                    </Button>
                   </div>
-                )}
+                  <div className="rps-add-run-table">
+                    <h3 className="game-sub-title">Pattern Table</h3>
+                    <table id="runs">
+                      <tbody>
+                        {rps_list && rps_list.length > 0 ? (
+                          rps_list.map((rps, index) => (
+                            <tr key={index}>
+                              <td>{index + 1}</td>
+                              <td>{rps.rps}</td>
+                              <td>
+                                <HighlightOffIcon
+                                  id="delete"
+                                  onClick={() => this.onRemoveItem(index)}
+                                />
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td id="add-run" colSpan="4">
+                              Your pattern will be displayed here
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+                      <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+                    </IconButton>
+                  </div>
+                </div>
+              </>
+
+            ) : (
+              <div style={{ padding: "30px", fontSize: "0.6em" }}>
+                (No Pattern Needed)
+              </div>
+            )}
           </div>
         )}
       </>
