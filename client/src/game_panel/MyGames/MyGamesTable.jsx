@@ -611,34 +611,34 @@ class MyGamesTable extends Component {
     return gameTypePanel;
   };
 
-  handlePageNumberClicked = page => {
-    this.props.getMyGames({
-      page: page,
-      game_type: this.state.selectedGameType,
-      status: this.state.selectedFilter,
-      sort: this.state.selectedSort
-    });
-  };
+  // handlePageNumberClicked = page => {
+  //   this.props.getMyGames({
+  //     page: page,
+  //     game_type: this.state.selectedGameType,
+  //     status: this.state.selectedFilter,
+  //     sort: this.state.selectedSort
+  //   });
+  // };
 
-  handlePrevPageClicked = () => {
-    if (this.props.pageNumber === 1) return;
-    this.props.getMyGames({
-      page: this.props.pageNumber - 1,
-      game_type: this.state.selectedGameType,
-      status: this.state.selectedFilter,
-      sort: this.state.selectedSort
-    });
-  };
+  // handlePrevPageClicked = () => {
+  //   if (this.props.pageNumber === 1) return;
+  //   this.props.getMyGames({
+  //     page: this.props.pageNumber - 1,
+  //     game_type: this.state.selectedGameType,
+  //     status: this.state.selectedFilter,
+  //     sort: this.state.selectedSort
+  //   });
+  // };
 
-  handleNextPageClicked = () => {
-    if (this.props.pageNumber === this.props.totalPage) return;
-    this.props.getMyGames({
-      page: this.props.pageNumber + 1,
-      game_type: this.state.selectedGameType,
-      status: this.state.selectedFilter,
-      sort: this.state.selectedSort
-    });
-  };
+  // handleNextPageClicked = () => {
+  //   if (this.props.pageNumber === this.props.totalPage) return;
+  //   this.props.getMyGames({
+  //     page: this.props.pageNumber + 1,
+  //     game_type: this.state.selectedGameType,
+  //     status: this.state.selectedFilter,
+  //     sort: this.state.selectedSort
+  //   });
+  // };
 
   handleClickOutside = e => {
     if (
@@ -1323,7 +1323,6 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   myGames: state.logic.myGames,
   myGamesWithStats: state.logic.myGamesWithStats,
-  totalPage: state.logic.myGamesTotalPage,
   pageNumber: state.logic.myGamesPageNumber,
   socket: state.auth.socket,
   game_mode: state.logic.game_mode,

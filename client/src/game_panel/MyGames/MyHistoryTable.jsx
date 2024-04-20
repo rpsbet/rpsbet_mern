@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { getMyHistory } from '../../redux/Logic/logic.actions';
+import { getMyHistory, getMyGames } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CountUp from 'react-countup';
 import { getSettings } from '../../redux/Setting/setting.action';
@@ -15,10 +15,6 @@ import Moment from 'moment';
 import ReactDOM from 'react-dom';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import PlayerModal from '../modal/PlayerModal';
-import Lottie from 'react-lottie';
-import rain from '../LottieAnimations/rain.json';
-import waves from '../LottieAnimations/waves.json';
-import hex from '../LottieAnimations/hex.json';
 import { faHeart, faHeartBroken, faStopwatch} from '@fortawesome/free-solid-svg-icons';
 
 function updateFromNow(history = []) {
@@ -65,6 +61,18 @@ class MyHistoryTable extends Component {
   };
 
   async componentDidMount() {
+    const {
+      getMyHistory,
+      isAuthenticated
+    } = this.props;
+
+    const promises = [];
+    if (isAuthenticated) {
+      promises.push(getMyHistory());
+    }
+
+    await Promise.all(promises);
+
     this.updateReminderTime();
     this.attachUserLinkListeners();
     this.attachAccessories();
@@ -218,29 +226,7 @@ class MyHistoryTable extends Component {
 
   //   };
 
-  handlePageNumberClicked = page => {
-    this.props.getMyHistory({
-      page: page
-      // game_type: this.state.selectedGameType
-    });
-  };
-
-  handlePrevPageClicked = () => {
-    if (this.props.pageNumber === 1) return;
-    this.props.getMyHistory({
-      page: this.props.pageNumber - 1,
-      game_type: this.state.selectedGameType
-    });
-  };
-
-  handleNextPageClicked = () => {
-    if (this.props.pageNumber === this.props.totalPage) return;
-    this.props.getMyHistory({
-      page: this.props.pageNumber + 1,
-      game_type: this.state.selectedGameType
-    });
-  };
-
+ 
   render() {
     const {isLowGraphics} = this.props;
     const HeartIcon = ({ isOpen }) => {
@@ -376,16 +362,7 @@ class MyHistoryTable extends Component {
             // avatar={this.props.user.avatar}
           />
         )}
-        {/* {this.state.myHistory?.length > 0 && (
-          <Pagination
-            handlePageNumberClicked={this.handlePageNumberClicked}
-            handlePrevPageClicked={this.handlePrevPageClicked}
-            handleNextPageClicked={this.handleNextPageClicked}
-            pageNumber={this.props.pageNumber}
-            totalPage={this.props.totalPage}
-            prefix="MyHistory"
-          />
-        )} */}
+      
       </div>
     );
   }
@@ -398,13 +375,13 @@ const mapStateToProps = state => ({
 
   myHistory: state.logic.myHistory,
   pageNumber: state.logic.myHistoryPageNumber,
-  totalPage: state.logic.myHistoryTotalPage
   // gameTypeList: state.logic.gameTypeList
 });
 
 const mapDispatchToProps = {
   getMyHistory,
-  getSettings
+  getSettings,
+  getMyGames,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MyHistoryTable);

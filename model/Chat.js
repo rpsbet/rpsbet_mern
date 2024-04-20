@@ -63,4 +63,8 @@ const ChatSchema = new Schema({
   ]
 });
 
+ChatSchema.index({ created_at: -1 }); // Index on created_at for sorting
+ChatSchema.index({ sender: 1 }); // Index on sender for populating
+ChatSchema.index({ 'replyTo.sender': 1 })
+
 module.exports = Chat = mongoose.model('rps_chat', ChatSchema);

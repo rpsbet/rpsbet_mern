@@ -191,7 +191,7 @@ class PlayerModal extends Component {
       loading: this.props.loading,
       message: '',
       gameType: 'All',
-      timeType: '24',
+      timeType: '1',
       productArray: [],
       isTipModalOpen: false,
       tipAmount: '',

@@ -43,9 +43,9 @@ async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFa
 
 async function callCronJobs(io) {
   const cronJobs = [
-    { userId: '65eafc72aea25957ac8ea60d', betArray: [0.5, 0.5, 25, 1, 2, 1, 0.5, 205, 125, 0.5, 175, 0.99, 0.5, 0.5, 2, 33, 66, 0.5, 0.5, 2.5, 10, 25, 50, 180, 0.5], delay: 0 },
+    { userId: '65eafc72aea25957ac8ea60d', betArray: [1.5, 1, 25, 1, 2, 1, 1, 205, 125, 1, 175, 1, 1, 1, 2, 33, 66, 1, 1, 2.5, 10, 25, 50, 180, 1], delay: 0 },
     { userId: '65eafa5caea25957ac8ea60b', betArray: [175, 99, 9.5, 9.5, 2, 9.5, 9.5, 2.5, 200, 25, 50, 40, 9.5], delay: 2000 },
-    { userId: '62b9ef88a5409449f63f7ccb', betArray: [0.5, 0.5, 0.5, 1, 2, 1, 0.5, 0.5, 125, 0.5, 0.75, 0.99, 0.5, 0.5, 2, 33, 66, 0.5, 0.5, 2.5, 10, 25, 50, 100, 0.5], delay: 4000 },
+    { userId: '62b9ef88a5409449f63f7ccb', betArray: [1.5, 1, 1, 1, 2, 1, 1, 1, 125, 1, 0.75, 1, 1,1, 2, 33, 66, 1, 1, 2.5, 10, 25, 50, 100,1], delay: 4000 },
     { userId: '65eafb7daea25957ac8ea60c', betArray: [6.5, 6.5, 6.5, 16, 32, 13, 3.5, 9.5, 5, 65, 75, 19, 15, 15, 95, 25, 10, 25, 20, 10, 5], delay: 6000 }
   ];
 

@@ -231,7 +231,7 @@ router.post('/generate_address', auth, async (req, res) => {
 
     // Extract payment details from request body
     const { web2Amount, currencyTo } = req.body;
-    console.log("generate_address: ", web2Amount, currencyTo )
+    // console.log("generate_address: ", web2Amount, currencyTo )
 
     const payload = {
       price_amount: web2Amount,

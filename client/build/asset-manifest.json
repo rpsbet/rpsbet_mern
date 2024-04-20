@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.35e56fc1.css",
-    "main.js": "/static/js/main.8d18b06e.js",
+    "main.css": "/static/css/main.c4abc211.css",
+    "main.js": "/static/js/main.c9750fa1.js",
     "static/js/469.5d4d93cd.chunk.js": "/static/js/469.5d4d93cd.chunk.js",
     "static/js/857.01cd8b42.chunk.js": "/static/js/857.01cd8b42.chunk.js",
     "static/js/331.2aa29dd2.chunk.js": "/static/js/331.2aa29dd2.chunk.js",
@@ -40,7 +40,9 @@
     "static/js/48.970a14ac.chunk.js": "/static/js/48.970a14ac.chunk.js",
     "static/media/rock-weapon.gif": "/static/media/rock-weapon.46a971ad30a5f08cf592.gif",
     "static/media/scissors-weapon.gif": "/static/media/scissors-weapon.1c5e9a58de5e68e7d65a.gif",
+    "static/media/bgm.webp": "/static/media/bgm.81a8af68afee804121c0.webp",
     "static/media/created.svg": "/static/media/created.fb2628b78cf9e4aaae3c.svg",
+    "static/media/bgl.webp": "/static/media/bgl.8df37d3ccdcc3710d62b.webp",
     "static/media/room_name.svg": "/static/media/room_name.cf8802cd16cc5555b3d3.svg",
     "static/media/paper-weapon.gif": "/static/media/paper-weapon.fe7bb975668fdc53d5c7.gif",
     "static/media/ltc.png": "/static/media/ltc.60dc61ace8dba0c8f84a.png",
@@ -74,8 +76,8 @@
     "static/media/result-icon-trade.svg": "/static/media/result-icon-trade.5f3c041bfb8998c3bbb8.svg",
     "static/media/dark-alert-icon-closed.svg": "/static/media/dark-alert-icon-closed.88de6042735f8226336e.svg",
     "static/media/alert-icon-closed.svg": "/static/media/alert-icon-closed.d994586bfd25e48a656e.svg",
-    "static/media/game-logo.svg": "/static/media/game-logo.c91e41dbcdf58cee252b.svg",
     "static/media/dark-game-logo.svg": "/static/media/dark-game-logo.d33bf29aa913ee647dbb.svg",
+    "static/media/game-logo.svg": "/static/media/game-logo.3ce99356dbd16efa0121.svg",
     "static/media/modal-house-edge-dark-mode.svg": "/static/media/modal-house-edge-dark-mode.859177f656628dd863b0.svg",
     "static/media/game-logo-mobile.svg": "/static/media/game-logo-mobile.5069dd69209a4e934ad9.svg",
     "static/media/result-icon-draw.svg": "/static/media/result-icon-draw.0cc3e012d870bef72575.svg",
@@ -116,11 +118,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.35e56fc1.css.map": "/static/css/main.35e56fc1.css.map",
-    "main.8d18b06e.js.map": "/static/js/main.8d18b06e.js.map"
+    "main.c4abc211.css.map": "/static/css/main.c4abc211.css.map",
+    "main.c9750fa1.js.map": "/static/js/main.c9750fa1.js.map"
   },
   "entrypoints": [
-    "static/css/main.35e56fc1.css",
-    "static/js/main.8d18b06e.js"
+    "static/css/main.c4abc211.css",
+    "static/js/main.c9750fa1.js"
   ]
 }

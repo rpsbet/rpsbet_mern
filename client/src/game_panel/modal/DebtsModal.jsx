@@ -57,7 +57,7 @@ class DebtsModal extends Component {
   paybackLoan = async () => {
     const { paybackAmount, selectedLoan } = this.state;
     const { paybackLoan, acCalculateRemainingLoans, setBalance, addNewTransaction, isDarkMode } = this.props;
-  
+
     // Check if there's a selectedLoan
     if (!selectedLoan) {
       console.error('No selected loan to pay back.');
@@ -67,23 +67,23 @@ class DebtsModal extends Component {
     if (parseFloat(paybackAmount) < 0) {
       alertModal(isDarkMode, 'PAYBACK AMEOWNT CANNOT BE NEGATIVE, DUMFUQ');
       return;
-    }    
-  
+    }
+
     // Check if paybackAmount is a real number
     if (isNaN(parseFloat(paybackAmount))) {
       alertModal(isDarkMode, 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
       return;
     }
-  
+
     // Check if paybackAmount is more than the selectedLoan.amount
     if (parseFloat(paybackAmount) > selectedLoan.amount) {
       alertModal(isDarkMode, 'PAYBACK AMOUNT CANNOT EXCEED THE LOAN AMEOWNT!');
       return;
     }
-  
+
     const loanId = selectedLoan._id;
     const response = await paybackLoan(loanId, paybackAmount);
-  
+
     if (response.success) {
       const { balance, newTransaction, message } = response;
       this.closePaybackModal();
@@ -96,7 +96,7 @@ class DebtsModal extends Component {
       alertModal(isDarkMode, response.message);
     }
   };
-  
+
 
 
   handleMaxButtonClick = () => {
@@ -146,13 +146,13 @@ class DebtsModal extends Component {
           <div className="modal-body edit-modal-body Debts-modal-body">
             <Grid container spacing={2}>
               {!this.props.userLoans && this.props.userLoans.length === 0 ? (
-                                  <Grid item xs={12} sm={12} md={8} lg={12} key={loan._id}>
+                <Grid item xs={12} sm={12} md={8} lg={12} key={loan._id}>
 
-                <Typography variant="h6" style={{ textAlign: 'center', marginTop: '20px', color: 'gray' }}>
-      NO DEBTS!
-    </Typography>
-      </Grid>
-                  ) : (
+                  <Typography variant="h6" style={{ textAlign: 'center', marginTop: '20px', color: 'gray' }}>
+                    NO DEBTS!
+                  </Typography>
+                </Grid>
+              ) : (
                 this.props.userLoans.map((loan) => (
                   <Grid item xs={12} sm={12} md={8} lg={12} key={loan._id}>
                     <TableContainer >

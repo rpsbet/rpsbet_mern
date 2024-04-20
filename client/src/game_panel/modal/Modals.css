@@ -249,6 +249,9 @@
     margin-left: 5px;
 }
 
+.modal-body .btn-back {
+    color: #f9f9f9;
+}
 .modal-body.edit-modal-body.question-modal-body div[class*='MuiGrid-grid'] {
     max-width: 100%;
 }

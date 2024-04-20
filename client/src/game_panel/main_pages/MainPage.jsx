@@ -6,17 +6,15 @@ import {
   getRoomList,
   getHistory,
   getRoomCount,
+  clearRoomListCache,
   setCurRoomInfo,
-  // startLoading,
-  // endLoading,
-  getMyGames,
-  getMyHistory,
   getMyChat,
   getGameTypeList
 } from '../../redux/Logic/logic.actions';
 import { toggleDrawer } from '../../redux/Auth/user.actions';
 import MyGamesTable from '../MyGames/MyGamesTable';
 import MyHistoryTable from '../MyGames/MyHistoryTable';
+import RefreshIcon from '@material-ui/icons/Refresh';
 import ShowHistory from '../icons/ShowHistory.js';
 import ShowHistoryHover from '../icons/ShowHistoryHover';
 import Battle from '../icons/Battle.js';
@@ -28,7 +26,7 @@ import animationData from '../LottieAnimations/live';
 import { Button } from '@material-ui/core';
 import AiPanel from '../../components/AiPanel';
 import JukeboxPanel from '../../components/JukeboxPanel.jsx';
-import { Tabs, Tab, Drawer } from '@material-ui/core';
+import { Tabs, Tab, Drawer, IconButton } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { faCoins, faStore } from '@fortawesome/free-solid-svg-icons';
@@ -75,20 +73,18 @@ class MainPage extends Component {
   }
 
   async componentDidMount() {
-    const{ selectedGameType} = this.state;
+    const { selectedGameType } = this.state;
     const {
       getRoomList,
       getRoomCount,
       getHistory,
       // getGameTypeList,
       isAuthenticated,
-      getMyHistory,
       getMyChat
     } = this.props;
 
-    const promises = [getRoomList({pageSize: 7}), getRoomCount({game_type: selectedGameType}), getHistory()];  // getGameTypeList()];
+    const promises = [getRoomList({ pageSize: 7 }), getRoomCount({ game_type: selectedGameType }), getHistory()];  // getGameTypeList()];
     if (isAuthenticated) {
-      promises.push(getMyHistory());
       promises.push(getMyChat());
     }
 
@@ -97,17 +93,17 @@ class MainPage extends Component {
 
   toggleP2PLending = () => {
     this.setState({
-        showP2PLending: !this.state.showP2PLending,
-        showMarketplace: false // Ensure only one component is visible at a time
+      showP2PLending: !this.state.showP2PLending,
+      showMarketplace: false // Ensure only one component is visible at a time
     });
-};
+  };
 
-toggleMarketplace = () => {
+  toggleMarketplace = () => {
     this.setState({
-        showMarketplace: !this.state.showMarketplace,
-        showP2PLending: false // Ensure only one component is visible at a time
+      showMarketplace: !this.state.showMarketplace,
+      showP2PLending: false // Ensure only one component is visible at a time
     });
-};
+  };
 
   showOpenGameOrHistory = (e, newValue) => {
     e.preventDefault();
@@ -116,9 +112,14 @@ toggleMarketplace = () => {
     });
   };
 
-  onChangeGameType = async (newType, callback) => {
+  handleRefresh = async () => {
+    await this.props.clearRoomListCache();
+    await this.props.getRoomCount();
+    await this.props.getRoomList({ pageSize: 7 });
+  };
 
-    await this.props.getRoomCount({game_type: newType});
+  onChangeGameType = async (newType, callback) => {
+    await this.props.getRoomCount({ game_type: newType });
     this.setState({
       selectedGameType: newType,
     }, callback);
@@ -130,11 +131,21 @@ toggleMarketplace = () => {
 
   getActiveTabText = () =>
     (this.state.is_mobile && this.state.selectedMobileTab === 'live_games') ||
-    (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
-      <div id="liveStakes">
-         {this.props.rooms_count} BATTLES
-        <Lottie options={defaultOptions} width={40} />
-      </div>
+      (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
+      <>
+        <div id="liveStakes">
+          {this.props.rooms_count} BATTLES
+          <Lottie options={defaultOptions} width={40} />
+        </div>
+
+
+        <div className="refresh-main">
+          <IconButton color="primary" onClick={this.handleRefresh}>
+            <RefreshIcon />
+          </IconButton>
+        </div>
+      </>
+
     ) : (
       'Your Battles'
     );
@@ -153,16 +164,16 @@ toggleMarketplace = () => {
       >
         {((this.state.is_mobile && this.state.selectedMobileTab === 'chat') ||
           !this.state.is_mobile) && (
-          <Drawer
-            className="mat-chat"
-            style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
-            variant="persistent"
-            anchor="left"
-            open={isDrawerOpen}
-          >
-            <ChatPanel />
-          </Drawer>
-        )}
+            <Drawer
+              className="mat-chat"
+              style={{ display: this.props.isDrawerOpen ? 'flex' : 'none' }}
+              variant="persistent"
+              anchor="left"
+              open={isDrawerOpen}
+            >
+              <ChatPanel />
+            </Drawer>
+          )}
         {this.state.is_mobile &&
           this.state.selectedMobileTab === 'marketplace' && (
             // <Drawer
@@ -173,28 +184,28 @@ toggleMarketplace = () => {
             //   open={isDrawerOpen}
             // >
             <>
-            <div style={{ padding: '30px' }}>
+              <div style={{ padding: '30px' }}>
                 <div style={{ textAlign: "center" }}>
-                    
-                    <Button style={{width:"100%", padding: "60px"}} onClick={this.toggleP2PLending}>
-                        {this.state.showP2PLending ? '-' : '+'} <h2 className="modal-title">
-                        <FontAwesomeIcon icon={faCoins} className="mr-2" />
-                        P2P Lending
+
+                  <Button style={{ width: "100%", padding: "60px" }} onClick={this.toggleP2PLending}>
+                    {this.state.showP2PLending ? '-' : '+'} <h2 className="modal-title">
+                      <FontAwesomeIcon icon={faCoins} className="mr-2" />
+                      P2P Lending
                     </h2>
-                    </Button>
-                    {this.state.showP2PLending && <BankPage />}
+                  </Button>
+                  {this.state.showP2PLending && <BankPage />}
                 </div>
                 <div style={{ textAlign: "center" }}>
-                    
-                    <Button  style={{width:"100%", padding: "60px"}} onClick={this.toggleMarketplace}>
-                        {this.state.showMarketplace ? '-' : '+'}<h2 className="modal-title">
-                        <FontAwesomeIcon icon={faStore} className="mr-2" />
-                        Marketplace
+
+                  <Button style={{ width: "100%", padding: "60px" }} onClick={this.toggleMarketplace}>
+                    {this.state.showMarketplace ? '-' : '+'}<h2 className="modal-title">
+                      <FontAwesomeIcon icon={faStore} className="mr-2" />
+                      Marketplace
                     </h2>
-                    </Button>
-                    {this.state.showMarketplace && <ProductPage />}
+                  </Button>
+                  {this.state.showMarketplace && <ProductPage />}
                 </div>
-            </div>
+              </div>
             </>
             // </Drawer>
           )}
@@ -210,18 +221,18 @@ toggleMarketplace = () => {
               <Tab
                 label={
                   this.state.show_open_game === 0 &&
-                  this.state.selectedMobileTab === 'live_games'
+                    this.state.selectedMobileTab === 'live_games'
                     ? 'PVP'
                     : this.state.show_open_game === 0 &&
                       this.state.selectedMobileTab === 'my_games'
-                    ? 'MANAGE'
-                    : this.state.selectedMobileTab === 'live_games'
-                    ? 'PVP'
-                    : 'MANAGE'
+                      ? 'MANAGE'
+                      : this.state.selectedMobileTab === 'live_games'
+                        ? 'PVP'
+                        : 'MANAGE'
                 }
                 icon={
                   this.state.show_open_game === 0 &&
-                  this.state.selectedMobileTab === 'live_games' ? (
+                    this.state.selectedMobileTab === 'live_games' ? (
                     <BattleHover />
                   ) : this.state.show_open_game === 0 &&
                     this.state.selectedMobileTab === 'my_games' ? (
@@ -259,26 +270,25 @@ toggleMarketplace = () => {
             (this.state.is_mobile &&
               this.state.selectedMobileTab === 'live_games' &&
               this.state.show_open_game === 0)) && (
-            <OpenGamesTable
-              roomList={this.props.roomList}
-              isAuthenticated={this.props.isAuthenticated}
-              rooms_count={this.props.rooms_count}
-              pageNumber={this.props.pageNumber}
-              totalPage={this.props.totalPage}
-              balance={this.props.balance}
-              onChangeGameType={this.onChangeGameType}
-              isDarkMode={this.props.isDarkMode}
-              selectedGameType={this.state.selectedGameType}
-              onlineUserList={this.props.onlineUserList}
-              gameTypeList={this.props.gameTypeList}
-            />
-          )}
+              <OpenGamesTable
+                roomList={this.props.roomList}
+                isAuthenticated={this.props.isAuthenticated}
+                rooms_count={this.props.rooms_count}
+                pageNumber={this.props.pageNumber}
+                balance={this.props.balance}
+                onChangeGameType={this.onChangeGameType}
+                isDarkMode={this.props.isDarkMode}
+                selectedGameType={this.state.selectedGameType}
+                onlineUserList={this.props.onlineUserList}
+                gameTypeList={this.props.gameTypeList}
+              />
+            )}
           {((!this.state.is_mobile && this.props.selectedMainTabIndex === 1) ||
             (this.state.is_mobile &&
               this.state.selectedMobileTab === 'my_games' &&
               this.state.show_open_game === 0)) && (
-            <MyGamesTable gameTypeList={this.props.gameTypeList} />
-          )}
+              <MyGamesTable gameTypeList={this.props.gameTypeList} />
+            )}
           {this.state.is_mobile &&
             this.state.selectedMobileTab === 'live_games' &&
             this.state.show_open_game === 1 && <HistoryTable />}
@@ -287,7 +297,7 @@ toggleMarketplace = () => {
             this.state.show_open_game === 1 && <MyHistoryTable />}
         </div>
         <div className="sub-panel">
-        {/* {!this.state.is_mobile && (
+          {/* {!this.state.is_mobile && (
             <>
               <h2 className="main-title desktop-only">JUKEBOX</h2>
               <JukeboxPanel isMusicEnabled={this.props.isMusicEnabled} />
@@ -297,7 +307,7 @@ toggleMarketplace = () => {
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
               <h2 className="main-title desktop-only">AUTOPLAY PANEL</h2>
-              <AiPanel user_id={this.props.user._id}/>
+              <AiPanel user_id={this.props.user._id} />
             </>
           )}
 
@@ -313,7 +323,7 @@ toggleMarketplace = () => {
           />
           <SupportButton
             open={this.props.isSupportOpen}
-            // toggleDrawer={this.toggleDrawer}
+          // toggleDrawer={this.toggleDrawer}
           />
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
             <>
@@ -333,9 +343,8 @@ toggleMarketplace = () => {
         {this.state.is_mobile && (
           <div className="mobile-only main-page-nav-button-group">
             <Button
-              className={`mobile-tab-live ${
-                this.state.selectedMobileTab === 'live_games' ? 'active' : ''
-              }`}
+              className={`mobile-tab-live ${this.state.selectedMobileTab === 'live_games' ? 'active' : ''
+                }`}
               onClick={e => {
                 this.setState({ selectedMobileTab: 'live_games' });
               }}
@@ -360,9 +369,8 @@ toggleMarketplace = () => {
               {this.state.selectedMobileTab === 'live_games' && 'LIVE BATTLES'}&nbsp;
             </Button>
             <Button
-              className={`mobile-tab-my ${
-                this.state.selectedMobileTab === 'my_games' ? 'active' : ''
-              }`}
+              className={`mobile-tab-my ${this.state.selectedMobileTab === 'my_games' ? 'active' : ''
+                }`}
               onClick={e => {
                 this.setState({ selectedMobileTab: 'my_games' });
               }}
@@ -395,9 +403,8 @@ toggleMarketplace = () => {
               {this.state.selectedMobileTab === 'my_games' && 'YOUR BATTLES'}&nbsp;
             </Button>
             <button
-              className={`mobile-tab-marketplace ${
-                this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
-              }`}
+              className={`mobile-tab-marketplace ${this.state.selectedMobileTab === 'marketplace' ? 'active' : ''
+                }`}
               onClick={e => {
                 this.setState({ selectedMobileTab: 'marketplace' });
               }}
@@ -472,9 +479,8 @@ toggleMarketplace = () => {
               {this.state.selectedMobileTab === 'marketplace' && 'ASSETS'}&nbsp;
             </button>
             <Button
-              className={`mobile-tab-chat ${
-                this.state.selectedMobileTab === 'chat' ? 'active' : ''
-              }`}
+              className={`mobile-tab-chat ${this.state.selectedMobileTab === 'chat' ? 'active' : ''
+                }`}
               onClick={e => {
                 this.setState({ selectedMobileTab: 'chat' });
               }}
@@ -541,7 +547,6 @@ const mapStateToProps = state => ({
   history: state.logic.history,
   roomCount: state.logic.roomCount,
   pageNumber: state.logic.pageNumber,
-  totalPage: state.logic.totalPage,
   balance: state.auth.balance,
   user: state.auth.user,
   isMusicEnabled: state.auth.isMusicEnabled,
@@ -558,11 +563,8 @@ const mapDispatchToProps = {
   getRoomCount,
   getHistory,
   setCurRoomInfo,
-  // startLoading,
-  // endLoading,
-  getMyGames,
-  getMyHistory,
   getGameTypeList,
+  clearRoomListCache,
   getMyChat,
   toggleDrawer
 };

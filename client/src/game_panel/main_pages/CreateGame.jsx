@@ -1469,7 +1469,6 @@ const mapStateToProps = state => ({
   isAuthenticated: state.auth.isAuthenticated,
   history: state.logic.history,
   pageNumber: state.logic.pageNumber,
-  totalPage: state.logic.totalPage,
   balance: state.auth.balance,
   user: state.auth.user,
   gameTypeList: state.logic.gameTypeList,

@@ -160,6 +160,7 @@ module.exports.socketio = server => {
           model: 'Chat',
           populate: { path: 'sender', model: User, select: 'username avatar accessory totalWagered' }
         })
+        .lean()
         .then(results => {
           const transformedResults = results.map(
             ({

@@ -15,7 +15,6 @@ import ChatPanel from '../ChatPanel/ChatPanel';
 
 import {
   loadRoomInfo,
-  // getRoomList,
   setCurRoomInfo,
   getMyChat,
   getMyGames,
@@ -602,7 +601,6 @@ const mapStateToProps = state => ({
   history: state.logic.history,
   loading: state.logic.isActiveLoadingOverlay,
   pageNumber: state.logic.pageNumber,
-  totalPage: state.logic.totalPage
 });
 
 const mapDispatchToProps = {

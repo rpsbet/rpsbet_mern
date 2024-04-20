@@ -108,7 +108,6 @@ import {
   setGlobalChat,
   updateBetResult,
   getNotifications,
-  getRoomList,
   readNotifications
 } from '../redux/Logic/logic.actions';
 import { alertModal } from './modal/ConfirmAlerts.jsx';
@@ -685,7 +684,6 @@ class SiteWrapper extends Component {
 
   fetchHistory = async () => {
     try {
-      // await this.props.getRoomList({pageSize: 7});
       await this.props.getHistory();
     } catch (error) {
       console.error("An error occurred during getHistory:", error);
@@ -1933,7 +1931,6 @@ const mapDispatchToProps = {
   readNotifications,
   updateOnlineUserList,
   setDarkMode,
-  getRoomList,
   setNotificationsAllowed,
   selectMainTab,
   acCalculateRemainingLoans,

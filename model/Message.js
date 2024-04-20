@@ -4,21 +4,18 @@ const Schema = mongoose.Schema;
 const MessageSchema = new Schema({
   from: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    index: true // Indexing the 'from' field
   },
   to: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    index: true // Indexing the 'to' field
   },
   message: {
     type: String,
     required: true
   },
-  // messageType: {
-  //   type: String,
-  //   enum: ['text', 'gif'],
-  //   default: 'text'
-  // },
   is_read: {
     type: Boolean,
     default: false
@@ -29,7 +26,8 @@ const MessageSchema = new Schema({
   },
   updated_at: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true // Indexing the 'updated_at' field
   }
 });
 

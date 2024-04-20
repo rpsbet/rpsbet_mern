@@ -747,7 +747,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         if (gameLog.game_result === 1) {
           temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
             gameLog['winnings']
-          )} (${gameLog['winnings'] / gameLog['bet_amount']}X)</span> (${convertToCurrency(
+          )} (${(gameLog['winnings'] / gameLog['bet_amount']).toFixed(2)}X)</span> (${convertToCurrency(
             gameLog['commission']
           )} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
@@ -1062,6 +1062,7 @@ const updateDigitToPoint2 = number => {
   }
   return number;
 };
+
 const getRoomList = async (pageSize, game_type, excludeIds = []) => {
   const search_condition = { status: 'open', game_type: { $ne: null }, _id: { $nin: excludeIds } };
 
@@ -1185,11 +1186,9 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
   }
 };
 
-
-
 router.get('/history', async (req, res) => {
   try {
-    const { pageSize = 5, game_type = 'All' } = req.query;
+    const { pageSize = 6, game_type = 'All' } = req.query;
 
     const history = await getHistory(
       parseInt(pageSize),
@@ -1199,7 +1198,7 @@ router.get('/history', async (req, res) => {
     res.json({
       success: true,
       pageSize: parseInt(pageSize),
-      total: history.count,
+      // total: history.count,
       history: history.history
     });
   } catch (err) {
@@ -1224,8 +1223,6 @@ router.get('/my_history', auth, async (req, res) => {
       success: true,
       pageSize: parseInt(pageSize),
       history: history.history,
-      total: history.count,
-
     });
   } catch (err) {
     res.json({
@@ -2137,70 +2134,70 @@ router.post('/end_game', auth, async (req, res) => {
     });
   }
 });
-router.get('/my_chat', auth, async (req, res) => {
-  try {
-    const userId = req.user._id;
+// router.get('/my_chat', auth, async (req, res) => {
+//   try {
+//     const userId = req.user._id;
 
-    // Find the 50 most recent messages sent by the user
-    const sentMessages = await Message.find({ from: userId })
-      .populate({
-        path: 'to',
-        model: User
-      })
-      .sort({ updated_at: -1 }) // Sort by updated_at in descending order
-      .limit(40);
+//     // Find the 50 most recent messages sent by the user
+//     const sentMessages = await Message.find({ from: userId })
+//       .populate({
+//         path: 'to',
+//         model: User
+//       })
+//       .sort({ updated_at: -1 }) // Sort by updated_at in descending order
+//       .limit(40);
 
-    const receivedMessages = await Message.find({ to: userId })
-      .populate({
-        path: 'from',
-        model: User
-      })
-      .sort({ updated_at: -1 }) // Sort by updated_at in descending order
-      .limit(40);
+//     const receivedMessages = await Message.find({ to: userId })
+//       .populate({
+//         path: 'from',
+//         model: User
+//       })
+//       .sort({ updated_at: -1 }) // Sort by updated_at in descending order
+//       .limit(40);
 
-    const myChat = {};
+//     const myChat = {};
 
-    // Combine sent and received messages
-    const allMessages = [...sentMessages, ...receivedMessages];
+//     // Combine sent and received messages
+//     const allMessages = [...sentMessages, ...receivedMessages];
 
-    for (let message of allMessages) {
-      const otherUserId = message.from ? message.from._id : message.to._id;
+//     for (let message of allMessages) {
+//       const otherUserId = message.from ? message.from._id : message.to._id;
       
-      if (
-        !myChat[otherUserId] ||
-        myChat[otherUserId].updated_at < message.updated_at
-      ) {
-        myChat[otherUserId] = {
-          _id: otherUserId,
-          message: message.message,
-          username: message.from ? message.from.username : message.to.username,
-          avatar: message.from ? message.from.avatar : message.to.avatar,
-          accessory: message.from ? message.from.accessory : message.to.accessory,
-          rank: message.from ? message.from.totalWagered : message.to.totalWagered,
-          created_at: message.created_at,
-          created_at_str: moment(message.created_at).format('LLL'),
-          updated_at: message.updated_at,
-          unread_message_count: 0
-        };
-      }
+//       if (
+//         !myChat[otherUserId] ||
+//         myChat[otherUserId].updated_at < message.updated_at
+//       ) {
+//         myChat[otherUserId] = {
+//           _id: otherUserId,
+//           message: message.message,
+//           username: message.from ? message.from.username : message.to.username,
+//           avatar: message.from ? message.from.avatar : message.to.avatar,
+//           accessory: message.from ? message.from.accessory : message.to.accessory,
+//           rank: message.from ? message.from.totalWagered : message.to.totalWagered,
+//           created_at: message.created_at,
+//           created_at_str: moment(message.created_at).format('LLL'),
+//           updated_at: message.updated_at,
+//           unread_message_count: 0
+//         };
+//       }
 
-      if (!message.is_read) {
-        myChat[otherUserId].unread_message_count++;
-      }
-    }
+//       if (!message.is_read) {
+//         myChat[otherUserId].unread_message_count++;
+//       }
+//     }
 
-    res.json({
-      success: true,
-      myChat
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({
-      success: false,
-      message: err
-    });
-  }
-});
+//     res.json({
+//       success: true,
+//       myChat
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.json({
+//       success: false,
+//       message: err
+//     });
+//   }
+// });
 
 
 router.post('/unstake', auth, async (req, res) => {
@@ -2590,11 +2587,11 @@ router.get('/notifications', auth, async (req, res) => {
     const userId = req.user._id;
     const notifications = await Notification.find({ to: userId })
       .populate([
-        { path: 'from', model: User },
-        { path: 'to', model: User }
+        { path: 'from', model: User, select: 'username avatar accessory totalWagered' }
       ])
       .sort({ created_at: -1 })
-      .limit(10);
+      .limit(10)
+      .lean();
 
     res.json({
       success: true,

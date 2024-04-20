@@ -11,6 +11,8 @@ const Loan = require('../model/Loan');
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
 
+let user_access_log = {};
+
 router.post('/create', auth, async (req, res) => {
   try {
     const { _id, loan_amount, loan_period, apy } = req.body;
@@ -239,12 +241,13 @@ async function calculateRemainingLoans(currentUser) {
       });
     }
 
-    return { remainingAmount, userLoans }; // Return both remainingAmount and userLoans
+    return { remainingAmount, userLoans };
   } catch (err) {
     console.error('Error:', err);
     throw new Error('An error occurred while calculating remaining loans');
   }
 }
+
 async function checkLoanEligibility(currentUser, loanAmount) {
   const creditScore = currentUser.credit_score;
   const rank = Math.floor(Math.log2(parseFloat(currentUser.totalWagered) + 1) / 1.2) + 1;;
@@ -259,16 +262,26 @@ async function checkLoanEligibility(currentUser, loanAmount) {
 
   // Threshold categories
   const categories = [
-    { creditScoreThreshold: 1000, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 0.001 },
-    { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 0.005 },
-    { creditScoreThreshold: 1000, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 0.015 },
-    { creditScoreThreshold: 1000, rankThreshold: 4, accountAgeThresholdInDays: 60, maxAllowance: 0.025 },
-    { creditScoreThreshold: 1000, rankThreshold: 5, accountAgeThresholdInDays: 60, maxAllowance: 0.05 },
-    { creditScoreThreshold: 1000, rankThreshold: 6, accountAgeThresholdInDays: 90, maxAllowance: 0.1 },
-    { creditScoreThreshold: 950, rankThreshold: 7, accountAgeThresholdInDays: 90, maxAllowance: 0.25 },
-    { creditScoreThreshold: 950, rankThreshold: 8, accountAgeThresholdInDays: 120, maxAllowance: 0.5 },
-    { creditScoreThreshold: 950, rankThreshold: 9, accountAgeThresholdInDays: 120, maxAllowance: 1 },
-    { creditScoreThreshold: 950, rankThreshold: 10, accountAgeThresholdInDays: 120, maxAllowance: 2 }
+    { creditScoreThreshold: 1000, rankThreshold: 1, accountAgeThresholdInDays: 30, maxAllowance: 1 },
+    { creditScoreThreshold: 1000, rankThreshold: 2, accountAgeThresholdInDays: 30, maxAllowance: 2 },
+    { creditScoreThreshold: 1000, rankThreshold: 3, accountAgeThresholdInDays: 30, maxAllowance: 5 },
+    { creditScoreThreshold: 1000, rankThreshold: 4, accountAgeThresholdInDays: 60, maxAllowance: 10 },
+    { creditScoreThreshold: 1000, rankThreshold: 5, accountAgeThresholdInDays: 60, maxAllowance: 25 },
+    { creditScoreThreshold: 1000, rankThreshold: 6, accountAgeThresholdInDays: 90, maxAllowance: 50 },
+    { creditScoreThreshold: 950, rankThreshold: 7, accountAgeThresholdInDays: 90, maxAllowance: 70 },
+    { creditScoreThreshold: 950, rankThreshold: 8, accountAgeThresholdInDays: 120, maxAllowance: 80 },
+    { creditScoreThreshold: 950, rankThreshold: 9, accountAgeThresholdInDays: 120, maxAllowance: 90 },
+    { creditScoreThreshold: 950, rankThreshold: 10, accountAgeThresholdInDays: 120, maxAllowance: 100 },
+    { creditScoreThreshold: 1000, rankThreshold: 11, accountAgeThresholdInDays: 120, maxAllowance: 150 },
+    { creditScoreThreshold: 1000, rankThreshold: 12, accountAgeThresholdInDays: 120, maxAllowance: 200 },
+    { creditScoreThreshold: 1000, rankThreshold: 13, accountAgeThresholdInDays: 120, maxAllowance: 250 },
+    { creditScoreThreshold: 1000, rankThreshold: 14, accountAgeThresholdInDays: 120, maxAllowance: 300 },
+    { creditScoreThreshold: 1000, rankThreshold: 15, accountAgeThresholdInDays: 120, maxAllowance: 350 },
+    { creditScoreThreshold: 1000, rankThreshold: 16, accountAgeThresholdInDays: 120, maxAllowance: 500 },
+    { creditScoreThreshold: 950, rankThreshold: 17, accountAgeThresholdInDays: 120, maxAllowance: 600 },
+    { creditScoreThreshold: 950, rankThreshold: 18, accountAgeThresholdInDays: 120, maxAllowance: 700 },
+    { creditScoreThreshold: 950, rankThreshold: 19, accountAgeThresholdInDays: 120, maxAllowance: 800 },
+    { creditScoreThreshold: 950, rankThreshold: 20, accountAgeThresholdInDays: 120, maxAllowance: 1000 }
   ];
   // Find the starting index based on the user's rank
   const startingIndex = Math.min(rank - 1, categories.length - 1);
@@ -309,7 +322,15 @@ router.post('/lend', auth, async (req, res) => {
     const loan = await Loan.findOne({ _id: loan_id });
     const currentUser = await User.findById(req.user._id);
 
-    const loans = await Loan.find();
+    if (!check_access_time(req.user._id)) {
+      responseData = {
+        success: false,
+        message: 'illregular action',
+        betResult: -1000
+      }
+
+      return responseData;
+    }
 
     if (!loan) {
       return res.json({
@@ -347,8 +368,6 @@ router.post('/lend', auth, async (req, res) => {
 
     const lender_username = await User.findOne({ _id: lender });
 
-    const loanPeriodInDays = Math.floor((Date.now() - loan.created_at.getTime()) / (1000 * 60 * 60 * 24));
-
     const newTransaction = new Transaction({
       user: currentUser,
       amount: parseFloat(responseText),
@@ -372,7 +391,7 @@ router.post('/lend', auth, async (req, res) => {
     const newLoanerIndex = loan.loaners.findIndex((loanerObj) => loanerObj.user.equals(currentUser._id));
     if (newLoanerIndex !== -1) {
       loan.loaners[newLoanerIndex].period += (loan.loan_period - loan.loaners[newLoanerIndex].period) + loan.loan_period;
-      loan.loaners[newLoanerIndex].amount += parseFloat(responseText);
+      loan.loaners[newLoanerIndex].amount += (parseFloat(responseText)) * loan.apy + parseFloat(responseText);
       loan.loaners[newLoanerIndex].created_at = Date.now();
       loan.loaners[newLoanerIndex].updated_at = Date.now();
 

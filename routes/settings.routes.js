@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
     console.error(err);
     res.json({
       success: false,
-      err: message
+      err: err
     });
   }
 });

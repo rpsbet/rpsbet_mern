@@ -114,12 +114,12 @@
   }
   
   .chat-msg {
-    background: #e8e8e8;
-      padding: 1.75rem 0.4rem 0.75rem 1rem;
-      border-radius: 7px;
-      margin-bottom: 20px;
-      border-top: 2px solid #c5c5c54f;
-      border-bottom: 2px solid #e1e1e1;
+    background: linear-gradient(179deg, #ce0000, #f50057);
+    padding: 1.75rem 0.4rem 0.75rem 1rem;
+    border-radius: 7px;
+    margin-bottom: 20px;
+    border-top: 2px solid #c5c5c54f;
+    border-bottom: 2px solid #e1e1e1;
   }
 
 
@@ -184,7 +184,7 @@
     justify-items: center;
 }
 .chat-wrapper .chat-panel .chat-line .sender-name {
-    color: #747f8d;
+    color: #c0c3c7;
     position: absolute;
     font-size: 1em;
     margin-left: 20px !important;
@@ -203,7 +203,7 @@
     flex-direction: column;
 }
 .chat-wrapper .chat-panel .chat-line .chat-msg .chat-text {
-    color: #717171;
+    color: #f8f9fa;
     margin-left: 20px;
     font-weight: 400;
 }
@@ -390,7 +390,7 @@ div.table.my-chat-table .table-row .table-cell:last-child {
 
 
 .mat-chat .chat-wrapper{
-    background-color: #f9f9f9;
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
     border-right: 1px solid rgba(236, 236, 236, 0.48);
 
     padding-top: 73px;

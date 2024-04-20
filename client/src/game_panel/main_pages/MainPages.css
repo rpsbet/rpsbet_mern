@@ -315,9 +315,7 @@ div.table .table-cell button.btn_join img {
   /* position: sticky; */
     top: 0px;
     z-index: 2;
-    background: #f9f9f9;
     margin-bottom: 10px;
-    box-shadow: 0px 4px 4px #e5e5e5;
 }
 
 .game-type-panel .btn-game-type {
@@ -468,6 +466,31 @@ z-index: 9;
   font-size: 1.1em;
 }
 
+.refresh-button {
+  display: inline-flex;
+  position: relative !important;
+  float: right;
+  top: 0 !important;
+  right: 0 !important;
+  margin-top: -30px;
+}
+.refresh-main {
+  display: inline-flex;
+  position: absolute;
+  right: 5px;
+  top: 10px;
+}
+.refresh-main button {
+  padding: 2px !important;
+  height: 30px !important;
+}
+.refresh-main button span {
+  color: #b9bbbe !important;
+}
+.refresh-main button span svg {
+  font-size: 20px !important;
+}
+
 .copy-btn {
   width: 100%;
   cursor: pointer;
@@ -510,9 +533,9 @@ z-index: 9;
   border-top-right-radius: 8px;
 }
 
-.tabs-container div div {
+/* .tabs-container div div {
   overflow-x: auto !important;
-}
+} */
 /*********************************/
 /********* MAIN LAYOUT ***********/
 /*********************************/
@@ -649,9 +672,9 @@ transform: translateY(-2) !important;
 div.table .table-row,
 .table-header {
   border-radius: 6px;
-  border-top: 2px solid #f8f9fa;
+  border-top: 2px solid #b9bbbe;
   border-bottom: 2px solid #e1e1e1;
-  background: #fff;
+  background: linear-gradient(109deg, #d1d1d154, #6d6b6b63);
   padding: 0.9em;
   margin-bottom: 10px;
   color: #86868b;
@@ -863,7 +886,6 @@ div.table .table-row .table-cell img.game-type-icon {
   width: 40px;
   height: 40px;
   border-radius: 0.3em;
-  filter: brightness(0.5);
   background: #747f8d;
     margin-right: 15px;
 }
@@ -1209,14 +1231,16 @@ div.table.main-game-table .table-row .table-cell.cell-amount-info {
   opacity: 1;
   transform: translate(-10px, 20%) rotate(90deg);
 }
-/* 
+
 .contents_wrapper .main-game .main-panel,
 .contents_wrapper .main-game .sub-panel {
-  background-image: linear-gradient(-135deg, transparent, #e9ecef 55%),
-    url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec72434cb1c84_Dots%20Blue.svg) !important;
+  /* background-image: linear-gradient(-135deg, transparent, #e9ecef 55%),
+    url(https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6097a2499efec72434cb1c84_Dots%20Blue.svg) !important; */
+    background-image: linear-gradient(-135deg, transparent, #e9ecef 95%), url(../../../public/img/bgl.webp) !important;
+
   background-position: top right;
   background-size: cover !important;
-} */
+}
 
 div.table.my-open-game-table {
   text-align: center;
@@ -1504,7 +1528,7 @@ h2.room-history-title {
 }
 
 .game-page .game-contents {
-  background: linear-gradient(45deg, #e5e5e5, #f9f9f9, #e5e5e5);
+  background: radial-gradient(#ffffff47, #d7d7d79e);
   border-radius: 6px;
   margin-top: 40px;
 }
@@ -2103,12 +2127,17 @@ transform-origin: center;
   filter: hue-rotate(180deg); /* Adjust the hue rotation value as needed */
   transition: filter 1.5s cubic-bezier(0.4, 0, 0.2, 1); /* Custom cubic bezier easing function */
 }
+.spectate:hover {
+  border-color: #343a40 !important;
+}
 .spectate {
   background: unset !important;
   box-shadow: unset !important;
   border-radius: 0.6em !important;
   position: absolute;
   top: -15px;
+  border-color: #343a40 !important;
+  color: #343a40 !important;
 }
 
 .guesses .avatar div:nth-child(2),
@@ -2287,7 +2316,7 @@ margin-right: 5px;
   margin: 0 4px;
   height: 120px !important;
   cursor: pointer;
-  background-color: #c20017;
+  background-color: #f50000;
   transition: all 0.1s ease-in-out;
   border-radius: 0.25em !important;
 }
@@ -3080,7 +3109,7 @@ position: sticky !important;
   left: 16px;
 }
 .chat-page .chat-log-panel {
-  padding: 75px 20px;
+  padding: 90px 20px;
   height: calc(100vh - 140px);
   overflow-y: auto;
 }

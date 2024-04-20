@@ -37,23 +37,24 @@ router.get('/get-customer-statistics', async (req, res) => {
 
     if (gameType === '62a25d2a723b9f15709d1ae7') {
       transactionConditions.$and.push({ description: /RPS/i });
-    } else if (gameType === '62a25d2a723b9f15709d1ae8') {
-      transactionConditions.$and.push({ description: /S!/i });
-    } else if (gameType === '62a25d2a723b9f15709d1ae9') {
-      transactionConditions.$and.push({ description: /BG/i });
-    } else if (gameType === '62a25d2a723b9f15709d1aea') {
-      transactionConditions.$and.push({ description: /MB/i });
-    } else if (gameType === '62a25d2a723b9f15709d1aeb') {
-      transactionConditions.$and.push({ description: /QS/i });
-    } else if (gameType === '63dac60ba1316a1e70a468ab') {
-      transactionConditions.$and.push({ description: /DG/i });
-    } else if (gameType === '6536a82933e70418b45fbe32') {
-      transactionConditions.$and.push({ description: /B!/i });
-    } else if (gameType === '6536946933e70418b45fbe2f') {
-      transactionConditions.$and.push({ description: /R/i });
-    } else if (gameType === '656cd55bb2c2d9dfb59a4bfa') {
-      transactionConditions.$and.push({ description: /BJ/i });
     }
+    //  else if (gameType === '62a25d2a723b9f15709d1ae8') {
+    //   transactionConditions.$and.push({ description: /S!/i });
+    // } else if (gameType === '62a25d2a723b9f15709d1ae9') {
+    //   transactionConditions.$and.push({ description: /BG/i });
+    // } else if (gameType === '62a25d2a723b9f15709d1aea') {
+    //   transactionConditions.$and.push({ description: /MB/i });
+    // } else if (gameType === '62a25d2a723b9f15709d1aeb') {
+    //   transactionConditions.$and.push({ description: /QS/i });
+    // } else if (gameType === '63dac60ba1316a1e70a468ab') {
+    //   transactionConditions.$and.push({ description: /DG/i });
+    // } else if (gameType === '6536a82933e70418b45fbe32') {
+    //   transactionConditions.$and.push({ description: /B!/i });
+    // } else if (gameType === '6536946933e70418b45fbe2f') {
+    //   transactionConditions.$and.push({ description: /R/i });
+    // } else if (gameType === '656cd55bb2c2d9dfb59a4bfa') {
+    //   transactionConditions.$and.push({ description: /BJ/i });
+    // }
 
     if (actorType === 'As Host') {
       gameLogsQuery.$and.push({ joined_user: { $ne: _id } });
@@ -486,7 +487,7 @@ router.get('/get-leaderboards', auth, async (req, res) => {
       'SYSTEM',
       'SHIBA',
       '🔥 THE DON 🔥 (BOT #1)',
-      '🪨 ROCKY 🪨 (BOT #2)',
+      '🪨 ROCKY 🪨 (BOT #2)', 
       '✂️ CAESAR ✂️ (BOT #4)',
       '📃 PAPIÉR 📃 (BOT #3)' 
     ];

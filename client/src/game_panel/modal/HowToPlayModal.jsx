@@ -664,9 +664,10 @@ class HowToPlayModal extends Component {
                   <div className="modal-content-wrapper spleesh">
                     <div className="modal-content-panel">
                       <p>You can simply use the Live Chat panel (find button in the bottom right), or you can reach out to us via one of these:</p>
-                      <Button><a href="https://twitter.com/officialrpsgame">Twitter</a></Button>
-                      <Button><a href="https://t.me/rps_finance">Telegram</a></Button>
-                      <Button><a href="https://discord.gg/anMJntW4AD">Discord</a></Button>
+                      <Button onClick={() => window.open("https://twitter.com/officialrpsgame", '_blank')}>Twitter</Button>
+                      <Button onClick={() => window.open("https://t.me/rpsfinance", '_blank')}>Telegram</Button>
+                      <Button onClick={() => window.open("https://discord.gg/anMJntW4AD", '_blank')}>Discord</Button>
+
                       {/* <Button><a href="mailto:lenny@rps.finance">Email</a></Button> */}
                     </div>
                   </div>

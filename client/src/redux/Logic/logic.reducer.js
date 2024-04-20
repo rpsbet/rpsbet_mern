@@ -55,6 +55,7 @@ const initialState = {
   transactionComplete: false,
   socket: null,
   game_mode: "",
+  error: null,
   roomList: [],
   history: [],
   amount: 0,
@@ -66,7 +67,6 @@ const initialState = {
   rolls: [],
   comments: [],
   strategies: [],
-  totalPage: 0,
   pageNumber: 1,
   historyTotalPage: 0,
   historyPageNumber: 1,
@@ -118,7 +118,6 @@ const initialState = {
   myGamesTotalPage: 0,
   myGamesPageNumber: 1,
   myHistory: [],
-  myHistoryTotalPage: 0,
   myHistoryPageNumber: 1,
   myChat: [],
   notifications: [],
@@ -310,17 +309,14 @@ export default function (state = initialState, action) {
         rooms_count: payload
       };
     case ROOMS_LOADED:
-      const { roomList, pageSize, total } = payload;
-
+      const { roomList } = payload;
       const accessories = roomList.map(room => room.accessory);
 
       return {
         ...state,
         roomList,
         accessories,
-        // totalPage: pages,
-        // roomCount: total,
-        // pageSize: pageSize,
+
       };
     case HISTORY_LOADED:
       return {
@@ -333,7 +329,7 @@ export default function (state = initialState, action) {
       return {
         ...state,
         myGames: payload.myGames,
-        myGamesTotalPage: payload.pages,
+        // myGamesTotalPage: payload.pages,
         myGamesPageNumber: payload.page
       };
 
@@ -351,7 +347,6 @@ export default function (state = initialState, action) {
       return {
         ...state,
         myHistory: payload.history,
-        myHistoryTotalPage: payload.pages,
         myHistoryPageNumber: payload.page
       };
     case MY_CHAT_LOADED:

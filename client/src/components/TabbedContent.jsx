@@ -29,7 +29,7 @@ function updateFromNow(history) {
 
 const styles = theme => ({
   activeTab: {
-    color: props => props.isdarkmode ? '#101010' : '#f9f9f9', // Red color for the tab label
+    color: props => props.isDarkMode ? '#f9f9f9' : '#ff0000', // Red color for the tab label
     '& .MuiTab-wrapper': {
       color: '#ff0000',
 
@@ -153,7 +153,7 @@ class TabbedContent extends Component {
           {selectedTab === 0 && (
             <div className="room-leaderboards-panel">
               <h2 className="room-history-title">Description</h2>
-              <div className="description-container" style={{ background: this.props.isDarkMode ? '#101010' : '#f9f9f9' }}>
+              <div className="description-container" style={{ background: this.props.isDarkMode ? '#dc3545' : '#ff0000' }}>
                 <p className="description-text" style={{ color: this.props.isDarkMode ? '#f9f9f9' : '#010101' }}>
                   {this.props.roomInfo.description}
                 </p>
