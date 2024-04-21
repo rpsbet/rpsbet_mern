@@ -692,63 +692,63 @@ const addToQueue = async (req, bot = false) => {
 };
 
 
-// const executeBet = (req, bot = false) => {
-//     return new Promise((resolve, reject) => {
-//         requestQueue.push({ req, bot, resolve, reject });
-//         if (requestQueue.length === 1) {
-//             processQueue();
-//         }
-//     });
-// };
-
-const executeBet = async (req, bot = false) => {
-    try {
-        // console.log("**************************req.body************************", req.user.username);
-        const reqCopy = { ...req }; // Create a shallow copy of the req object
-        let result;
-
-        if (!bot) {
-            // If the request is not from a bot, prioritize it
-            console.log("Prioritizing non-bot request");
-            if (isNonBotRequestProcessing) {
-                // Queue the request if a non-bot request is already processing
-                console.log("Queuing the non-bot request");
-                requestQueue.push(() => addToQueue(reqCopy, bot));
-            } else {
-                // Process the non-bot request immediately
-                isNonBotRequestProcessing = true;
-                result = await addToQueue(reqCopy, bot);
-                isNonBotRequestProcessing = false;
-
-                // Process any queued requests
-                while (requestQueue.length > 0) {
-                    const queuedRequest = requestQueue.shift();
-                    await queuedRequest();
-                }
-            }
-        } else {
-            // For bot requests, proceed as usual
-            result = await addToQueue(reqCopy, bot);
+const executeBet = (req, bot = false) => {
+    return new Promise((resolve, reject) => {
+        requestQueue.push({ req, bot, resolve, reject });
+        if (requestQueue.length === 1) {
+            processQueue();
         }
-
-        // console.log("***************************result***********************", result);
-        return result;
-    } catch (error) {
-        throw new Error('Error executing bet');
-    }
+    });
 };
 
-// const processQueue = async () => {
-//     if (requestQueue.length > 0) {
-//         const { req, bot, resolve, reject } = requestQueue[0];
-//         try {
-//             const result = await addToQueue(req, bot);
-//             resolve(result);
-//         } catch (error) {
-//             reject(error);
+// const executeBet = async (req, bot = false) => {
+//     try {
+//         // console.log("**************************req.body************************", req.user.username);
+//         const reqCopy = { ...req }; // Create a shallow copy of the req object
+//         let result;
+
+//         if (!bot) {
+//             // If the request is not from a bot, prioritize it
+//             console.log("Prioritizing non-bot request");
+//             if (isNonBotRequestProcessing) {
+//                 // Queue the request if a non-bot request is already processing
+//                 console.log("Queuing the non-bot request");
+//                 requestQueue.push(() => addToQueue(reqCopy, bot));
+//             } else {
+//                 // Process the non-bot request immediately
+//                 isNonBotRequestProcessing = true;
+//                 result = await addToQueue(reqCopy, bot);
+//                 isNonBotRequestProcessing = false;
+
+//                 // Process any queued requests
+//                 while (requestQueue.length > 0) {
+//                     const queuedRequest = requestQueue.shift();
+//                     await queuedRequest();
+//                 }
+//             }
+//         } else {
+//             // For bot requests, proceed as usual
+//             result = await addToQueue(reqCopy, bot);
 //         }
-//         requestQueue.shift();
-//         processQueue();
+
+//         // console.log("***************************result***********************", result);
+//         return result;
+//     } catch (error) {
+//         throw new Error('Error executing bet');
 //     }
 // };
+
+const processQueue = async () => {
+    if (requestQueue.length > 0) {
+        const { req, bot, resolve, reject } = requestQueue[0];
+        try {
+            const result = await addToQueue(req, bot);
+            resolve(result);
+        } catch (error) {
+            reject(error);
+        }
+        requestQueue.shift();
+        processQueue();
+    }
+};
 module.exports = executeBet;
