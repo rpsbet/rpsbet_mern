@@ -106,7 +106,6 @@ async function executeCronJob(user, betArray) {
         predictedBetAmount = await predictNextBetAmount(betArray, 0, 0, 0.01, 0.2, room);
 
       }
-
       const req = {
         params: {
           _id: roomId

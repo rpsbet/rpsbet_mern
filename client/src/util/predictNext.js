@@ -108,8 +108,6 @@ const calcWinChance = (rps_list) => {
   }
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 }
-
-
 // Function to preprocess data and train the model
 async function trainModel(rpsNumeric, joinerRPSNumeric) {
   const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
@@ -132,6 +130,10 @@ async function trainModel(rpsNumeric, joinerRPSNumeric) {
   // Train the model
   await model.fit(rpsTensor, joinerRPSTensor, { epochs: 50, batch_size: 32 });
 
+  // Dispose of tensors
+  rpsTensor.dispose();
+  joinerRPSTensor.dispose();
+
   return model;
 }
 
@@ -142,16 +144,16 @@ async function predictNextMove(model, rpsNumeric) {
   const probabilities = prediction.dataSync(); // Get the array of probabilities
   const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0]; // Specify axis as 1
 
+  // Dispose of tensors
+  rpsTensor.dispose();
+
   let nextJoinerRPS;
   if (nextJoinerRPSNumeric === 0) nextJoinerRPS = 'R';
   else if (nextJoinerRPSNumeric === 1) nextJoinerRPS = 'P';
   else nextJoinerRPS = 'S';
 
-  // Log the chosen move and its probability
-  // console.log("Predicted next rps:", nextJoinerRPS, "with probability:", probabilities[nextJoinerRPSNumeric]);
-
   let risk;
-  
+
   // Determine risk level based on probability
   if (probabilities[nextJoinerRPSNumeric] > 0.9 && probabilities[nextJoinerRPSNumeric] <= 0.95) {
     risk = 3;
@@ -178,6 +180,7 @@ async function predictNextMove(model, rpsNumeric) {
 
   return { move: bestCounterMove, risk: risk };
 }
+
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
 export async function reinforcementAI(data) {
   const historicData = data.reverse();
@@ -186,39 +189,48 @@ export async function reinforcementAI(data) {
   const rpsNumeric = historicData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
   const joinerRPSNumeric = historicData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
 
-  // Train the model with the existing data
-  const model = await trainModel(joinerRPSNumeric, rpsNumeric);
+  let model;
+  try {
+    // Train the model with the existing data
+    model = await trainModel(joinerRPSNumeric, rpsNumeric);
 
-  // Predict the rps and get the risk level
-  let prediction = await predictNextMove(model, rpsNumeric);
-  let bestCounterMove = prediction.move;
-  let risk = prediction.risk;
+    // Predict the next joiner_rps
+    let bestCounterMove = await predictNextMove(model, rpsNumeric);
 
-  // Check if recent games were wins, if not, adapt
-  const recentGames = historicData.slice(-5); // Consider the last 5 games
-  const recentWins = recentGames.filter(game => {
-    return (game.joiner_rps === 'R' && game.rps === 'S') ||
-      (game.joiner_rps === 'P' && game.rps === 'R') ||
-      (game.joiner_rps === 'S' && game.rps === 'P');
-  });
+    // Check if recent games were wins, if not, adapt
+    const recentGames = historicData.slice(-5); // Consider the last 5 games
+    const recentWins = recentGames.filter(game => {
+      return (game.joiner_rps === 'R' && game.rps === 'P') ||
+        (game.joiner_rps === 'P' && game.rps === 'S') ||
+        (game.joiner_rps === 'S' && game.rps === 'R');
+    });
 
-  if (recentWins.length === 0) {
-    console.log("No recent wins, adapting...", recentWins);
-    // Adapt the model based on recent losses
-    const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
-    const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
-    const newJoinerRPSNumeric = newData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
+    if (recentWins.length === 0) {
+      console.log("No recent wins, adapting...");
+      // Adapt the model based on recent losses
+      const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
+      const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
+      const newJoinerRPSNumeric = newData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
 
-    // Retrain the model with the recent data
-    const updatedModel = await trainModel(newJoinerRPSNumeric, newRpsNumeric);
+      // Retrain the model with the recent data
+      const updatedModel = await trainModel(newJoinerRPSNumeric, newRpsNumeric);
 
-    // Predict the next rps again after adaptation
-    prediction = await predictNextMove(updatedModel, rpsNumeric);
-    bestCounterMove = prediction.move;
-    risk = prediction.risk;
+      try {
+        // Predict the next joiner_rps again after adaptation
+        bestCounterMove = await predictNextMove(updatedModel, rpsNumeric);
+      } finally {
+        // Dispose of the updated model
+        updatedModel.dispose();
+      }
+    }
+
+    return bestCounterMove;
+  } finally {
+    // Dispose of the model
+    if (model) {
+      model.dispose();
+    }
   }
-
-  return { move: bestCounterMove, risk: risk };
 }
 
 export function patternBasedAI(historicData) {

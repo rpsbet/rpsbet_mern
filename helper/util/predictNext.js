@@ -1,5 +1,5 @@
 const tf = require('@tensorflow/tfjs-node');
-
+const { trainModel, predictNextMove } = require('./modelUtils');
 
 const predictNext = (rps_list, markov = false) => {
   if (rps_list.length === 0) {
@@ -124,141 +124,60 @@ const calcWinChance = (rps_list) => {
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 }
 
-// Function to preprocess data and train the model
-async function trainModel(rpsNumeric, joinerRPSNumeric) {
-  // Convert data to TensorFlow tensors
-  const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
-  const joinerRPSTensor = tf.tensor1d(joinerRPSNumeric);
-
-  // Define the neural network model
-  const model = tf.sequential();
-  model.add(tf.layers.dense({ units: 128, inputShape: [1], activation: 'relu' }));
-  model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
-  model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
-  model.add(tf.layers.dense({ units: 3, activation: 'softmax' }));
-
-  // Compile the model with Adam optimizer and sparse categorical crossentropy loss
-  model.compile({
-    optimizer: 'adam',
-    loss: 'sparseCategoricalCrossentropy',
-    metrics: ['accuracy']
-  });
-
-  // Train the model
-  await model.fit(rpsTensor, joinerRPSTensor, { epochs: 50, batch_size: 32 });
-
-  return model;
-}
-// Function to make predictions using the trained model
-async function predictNextMove(model, rpsNumeric) {
-  const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
-  const prediction = model.predict(rpsTensor);
-  const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0]; // Specify axis as 1
-
-  let nextJoinerRPS;
-  if (nextJoinerRPSNumeric === 0) nextJoinerRPS = 'R';
-  else if (nextJoinerRPSNumeric === 1) nextJoinerRPS = 'P';
-  else nextJoinerRPS = 'S';
-
-  // console.log("Predicted next joiner_rps:", nextJoinerRPS);
-
-  let bestCounterMove;
-
-  // Introduce 33% chance of returning a random move
-  if (Math.random() < 0.33) {
-    const randomMoveIndex = Math.floor(Math.random() * 3);
-    bestCounterMove = randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
-  } else {
-    // Redefine bestCounterMove based on joiner_rps
-    if (nextJoinerRPS === 'R') bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
-    else if (nextJoinerRPS === 'P') bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
-    else bestCounterMove = Math.random() < 0.5 ? 'R' : 'S';
-  }
-  return bestCounterMove;
-}
-
-async function predictNextMove(model, rpsNumeric) {
-  const rpsTensor = tf.tensor2d(rpsNumeric, [rpsNumeric.length, 1]);
-  const prediction = model.predict(rpsTensor);
-  const probabilities = prediction.dataSync(); // Get the array of probabilities
-  const nextJoinerRPSNumeric = tf.argMax(prediction, 1).dataSync()[0]; // Specify axis as 1
-
-  let nextJoinerRPS;
-  if (nextJoinerRPSNumeric === 0) nextJoinerRPS = 'R';
-  else if (nextJoinerRPSNumeric === 1) nextJoinerRPS = 'P';
-  else nextJoinerRPS = 'S';
-
-  let risk;
-
-  // Determine risk level based on probability
-  if (probabilities[nextJoinerRPSNumeric] > 0.9 && probabilities[nextJoinerRPSNumeric] <= 0.95) {
-    risk = 3;
-  } else if (probabilities[nextJoinerRPSNumeric] > 0.95) {
-    risk = 4;
-  } else if (probabilities[nextJoinerRPSNumeric] > 0.7) {
-    risk = 2;
-  } else {
-    risk = 1;
-  }
-
-  let bestCounterMove;
-
-  // Introduce 33% chance of returning a random move
-  if (Math.random() < 0.33) {
-    const randomMoveIndex = Math.floor(Math.random() * 3);
-    bestCounterMove = randomMoveIndex === 0 ? 'R' : randomMoveIndex === 1 ? 'P' : 'S';
-  } else {
-    // Redefine bestCounterMove based on joiner_rps
-    if (nextJoinerRPS === 'R') bestCounterMove = Math.random() < 0.5 ? 'P' : 'R';
-    else if (nextJoinerRPS === 'P') bestCounterMove = Math.random() < 0.5 ? 'P' : 'S';
-    else bestCounterMove = Math.random() < 0.5 ? 'R' : 'S';
-  }
-
-  return { move: bestCounterMove, risk: risk };
-}
-
 
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
 async function reinforcementAI(data) {
   if (data.length === 0) {
     return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   }
+
   const historicData = data.reverse();
-  // Convert historic data to numerical values
   const rpsNumeric = historicData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
   const joinerRPSNumeric = historicData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
 
-  // Train the model with the existing data
-  const model = await trainModel(rpsNumeric, joinerRPSNumeric);
+  let model;
+  try {
+    // Train the model with the existing data
+    model = await trainModel(rpsNumeric, joinerRPSNumeric);
 
-  // Predict the next joiner_rps
-  let bestCounterMove = await predictNextMove(model, joinerRPSNumeric);
+    // Predict the next joiner_rps
+    let bestCounterMove = await predictNextMove(model, joinerRPSNumeric);
 
-  // Check if recent games were wins, if not, adapt
-  const recentGames = historicData.slice(-5); // Consider the last 5 games
-  const recentWins = recentGames.filter(game => {
-    return (game.joiner_rps === 'R' && game.rps === 'P') ||
-      (game.joiner_rps === 'P' && game.rps === 'S') ||
-      (game.joiner_rps === 'S' && game.rps === 'R');
-  });
+    // Check if recent games were wins, if not, adapt
+    const recentGames = historicData.slice(-5); // Consider the last 5 games
+    const recentWins = recentGames.filter(game => {
+      return (game.joiner_rps === 'R' && game.rps === 'P') ||
+        (game.joiner_rps === 'P' && game.rps === 'S') ||
+        (game.joiner_rps === 'S' && game.rps === 'R');
+    });
 
-  if (recentWins.length === 0) {
-    console.log("No recent wins, adapting...");
-    // Adapt the model based on recent losses
-    const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
-    const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
-    const newJoinerRPSNumeric = newData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
+    if (recentWins.length === 0) {
+      console.log("No recent wins, adapting...");
+      // Adapt the model based on recent losses
+      const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
+      const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
+      const newJoinerRPSNumeric = newData.map(entry => (entry.joiner_rps === 'R' ? 0 : entry.joiner_rps === 'P' ? 1 : 2));
 
-    // Retrain the model with the recent data
-    const updatedModel = await trainModel(newRpsNumeric, newJoinerRPSNumeric);
+      // Retrain the model with the recent data
+      const updatedModel = await trainModel(newRpsNumeric, newJoinerRPSNumeric);
 
-    // Predict the next joiner_rps again after adaptation
-    bestCounterMove = await predictNextMove(updatedModel, joinerRPSNumeric);
+      try {
+        // Predict the next joiner_rps again after adaptation
+        bestCounterMove = await predictNextMove(updatedModel, joinerRPSNumeric);
+      } finally {
+        // Dispose of the updated model
+        updatedModel.dispose();
+      }
+    }
+
+    return bestCounterMove;
+  } finally {
+    // Dispose of the model
+    if (model) {
+      model.dispose();
+    }
   }
-
-  return bestCounterMove;
 }
-
 
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
 async function botAI(data) {
@@ -294,11 +213,19 @@ async function botAI(data) {
     // Retrain the model with the recent data
     const updatedModel = await trainModel(newJoinerRPSNumeric, newRpsNumeric);
 
-    // Predict the next rps again after adaptation
-    prediction = await predictNextMove(updatedModel, rpsNumeric);
-    bestCounterMove = prediction.move;
-    risk = prediction.risk;
+    try {
+      // Predict the next rps again after adaptation
+      prediction = await predictNextMove(updatedModel, rpsNumeric);
+      bestCounterMove = prediction.move;
+      risk = prediction.risk;
+    } finally {
+      // Dispose of updated model
+      updatedModel.dispose();
+    }
   }
+
+  // Dispose of the original model
+  model.dispose();
 
   return { move: bestCounterMove, risk: risk };
 }
