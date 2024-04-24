@@ -15,10 +15,6 @@ const RpsBetItemSchema = new Schema({
         type: String,
         default: 'R',
     },
-    rps_list: {
-        type: [String],
-        default: []
-    },
     bet_amount: {
         type: Number,
         default: 0

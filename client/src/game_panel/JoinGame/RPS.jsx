@@ -19,6 +19,9 @@ import ViewIcon from '@material-ui/icons/Visibility';
 import InfoIcon from '@material-ui/icons/Warning';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import {
+  getRpsBetItems,
+} from '../../redux/Logic/logic.actions';
+import {
   Button,
   Switch,
   IconButton,
@@ -214,8 +217,13 @@ class RPS extends Component {
   async componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress);
     this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
+    this.setupSocket();
+  }
 
-    // Retry socket initialization after a short delay
+  setupSocket() {
+    document.addEventListener('keydown', this.handleKeyPress);
+    this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
+  
     const initializeSocket = async () => {
       try {
         const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo, user_id } = this.props;
@@ -223,23 +231,15 @@ class RPS extends Component {
         this.setState({ socket: initializedSocket });
   
         if (initializedSocket) {
-          initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, data => {
-            this.setState(prevState => {
-              let updatedPlayers = [...prevState.players, data.user];
-              if (updatedPlayers.length > 5) {
-                updatedPlayers.shift(); // Remove the oldest player
-              }
-              return {
-                bankroll: data.bankroll,
-                rps: this.props.isWatching ? data.rps.filter(game => game.joiner === user_id) : data.rps,
-                prev_rps: data.rps,
-                startedPlaying: true,
-                players: updatedPlayers
-              };
-            });
-          });
-  
-          // initializedSocket.on('CARD_PRIZE', data => {
+          initializedSocket.on(`UPDATED_BANKROLL3_${roomInfo._id}`, this.handleSocketData);
+          
+          // Add event listener conditionally based on isWatching prop
+          if (!this.props.isWatching) {
+            initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
+          }
+        }
+
+         // initializedSocket.on('CARD_PRIZE', data => {
           //   if (data) {
           //     this.setState(
           //       {
@@ -251,40 +251,38 @@ class RPS extends Component {
           //     );
           //   }
           // });
-  
-  
-        //   initializedSocket.on('RPS_1', data => {
-        //     if (data && data.length > 0) {
-        //       this.setState({
-        //         rps: this.props.isWatching ? data.filter(game => game.joiner === user_id) : data,
-        //         prev_rps: data,
-        //         startedPlaying: true
-        //       });
-        //     }
-        //   });
-  
-        //   initializedSocket.emit('emitRps');
-        // }
-  
-        // // Add event listener conditionally based on rps_game_type
-        // if (rps_game_type === 0) {
-        //   document.addEventListener('mousedown', this.handleClickOutside);
-        // }
-  
-        // if (rps_game_type === 1) {
-        //   // Ensure acQueryMyItem is available
-        //   if (acQueryMyItem) {
-        //     await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
-        //     setTimeout(() => {
-        //       if (!this.state.cardDealt) {
-        //         this.dealCard();
-        //       }
-        //     }, 1500);
-        //   }
-        }
+
+
+          //   initializedSocket.on('RPS_1', data => {
+          //     if (data && data.length > 0) {
+          //       this.setState({
+          //         rps: this.props.isWatching ? data.filter(game => game.joiner === user_id) : data,
+          //         prev_rps: data,
+          //         startedPlaying: true
+          //       });
+          //     }
+          //   });
+
+          //   initializedSocket.emit('emitRps');
+          // }
+
+          // // Add event listener conditionally based on rps_game_type
+          // if (rps_game_type === 0) {
+          //   document.addEventListener('mousedown', this.handleClickOutside);
+          // }
+
+          // if (rps_game_type === 1) {
+          //   // Ensure acQueryMyItem is available
+          //   if (acQueryMyItem) {
+          //     await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
+          //     setTimeout(() => {
+          //       if (!this.state.cardDealt) {
+          //         this.dealCard();
+          //       }
+          //     }, 1500);
+          //   }
       } catch (error) {
         console.error('Socket initialization failed:', error);
-        // Retry socket initialization after a short delay
         setTimeout(initializeSocket, 3000); // Retry after 3 seconds
       }
     };
@@ -292,13 +290,35 @@ class RPS extends Component {
     initializeSocket();
   }
   
-
+  removeSocketListeners() {
+    const { socket, roomInfo } = this.props;
+    if (socket) {
+      socket.off(`UPDATED_BANKROLL3_${roomInfo._id}`, this.handleSocketData);
+      socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
+    }
+  }
+  
+  handleSocketData = (data) => {
+    this.setState(prevState => {
+      let updatedPlayers = [...prevState.players, data.user];
+      if (updatedPlayers.length > 5) {
+        updatedPlayers.shift(); // Remove the oldest player
+      }
+      return {
+        bankroll: data.bankroll,
+        rps: this.props.isWatching ? data.rps.filter(game => game.joiner === this.props.user_id) : data.rps,
+        prev_rps: data.rps,
+        startedPlaying: true,
+        players: updatedPlayers
+      };
+    });
+  };
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
     document.removeEventListener('mousedown', this.handleClickOutside);
     clearInterval(this.state.intervalId);
-
+    this.removeSocketListeners();
   }
 
 
@@ -448,15 +468,37 @@ class RPS extends Component {
     this.props.playSound('cards');
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { roomInfo, actionList, selected_rps } = this.props;
-    const { isPasswordCorrect } = this.state;
+  async componentDidUpdate(prevProps, prevState) {
+    const { roomInfo, actionList, selected_rps, is_betting } = this.props;
+    const { isPasswordCorrect, rps } = this.state;
+
+    if (prevProps.isWatching !== this.props.isWatching) {
+      this.removeSocketListeners();
+      this.setupSocket();
+    }
 
     if (prevProps.actionList !== actionList) {
       this.setState({
         actionList: actionList
       });
     }
+
+    if (prevProps.is_betting !== is_betting && !is_betting) {
+      const prevLastItemId = this.props.rpsbetitems.slice(0, 5).reverse()[4]._id; // Get _id of the last item in previous props
+      const currentLastItemId = rps.length > 0 ? rps[4]._id : null; // Get _id of the last item in current props
+
+      
+      if (prevLastItemId === currentLastItemId) {
+        console.log("before",  this.props.rpsbetitems.slice(0, 5).reverse());
+        await this.props.getRpsBetItems(roomInfo._id);
+        console.log("Updating",  this.props.rpsbetitems.slice(0, 5).reverse());
+        this.setState({
+          rps: this.props.rpsbetitems.slice(0, 5).reverse(),
+          prev_rps: this.props.rpsbetitems.slice(0, 5).reverse()
+         });
+      }
+    }
+
 
     if (prevProps.roomInfo && roomInfo) {
       if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
@@ -505,18 +547,18 @@ class RPS extends Component {
       changeBgColor,
       selected_rps,
     } = this.props;
-  
+
     const { bet_amount } = this.state;
-  
+
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
       rps_bet_item_id: rps_bet_item_id,
     });
-  
+
     let text;
     // let amount;
-    
+
     if (result.betResult === 1) {
       playSound('win');
       text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
@@ -537,11 +579,11 @@ class RPS extends Component {
         this.speak(text);
       }
     }
-  
+
     if (this.props.rps_game_type === 1) {
       this.flipCard();
     }
-  
+
     if ((result.betResult !== -1 && rps_game_type === 1) || rps_game_type === 0) {
       gameResultModal(
         isDarkMode,
@@ -553,18 +595,18 @@ class RPS extends Component {
         () => { },
         () => { }
       );
-  
+
       if (result.status !== 'success') {
         if (result.message) {
           alertModal(isDarkMode, result.message);
         }
       }
-      
+
       // refreshHistory();
       this.setState({ cardDealt: false });
     }
   };
-  
+
 
   handleBotClick = () => {
     const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } = this.props;
@@ -780,16 +822,16 @@ class RPS extends Component {
                     <div className="value">{roomInfo.status}</div>
                   </div>
                   <div className="data-item">
-      <div>
-        <div className="label your-bet-amount">Bankroll</div>
-      </div>
-      <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : ""}>
-        <div className={`value ${isLowBankroll ? 'red-text' : ''}`}>
-          {convertToCurrency(bankroll)}
-          {isLowBankroll && <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />}
-        </div>
-      </Tooltip>
-    </div>
+                    <div>
+                      <div className="label your-bet-amount">Bankroll</div>
+                    </div>
+                    <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : ""}>
+                      <div className={`value ${isLowBankroll ? 'red-text' : ''}`}>
+                        {convertToCurrency(bankroll)}
+                        {isLowBankroll && <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />}
+                      </div>
+                    </Tooltip>
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">Your Return</div>
@@ -1241,6 +1283,7 @@ const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
   isWatching: state.auth.isWatching,
   balance: state.auth.balance,
+  rpsbetitems: state.logic.rpsbetitems,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   accessory: state.logic.curRoomInfo.accessory,
   data: state.itemReducer.myItemArray,
@@ -1255,7 +1298,8 @@ const mapDispatchToProps = {
   openGamePasswordModal,
   acQueryMyItem,
   updateRoomBot,
-  setSpectateMode
+  setSpectateMode,
+  getRpsBetItems
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

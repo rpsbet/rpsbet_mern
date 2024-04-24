@@ -14,7 +14,11 @@ async function resetWithdrawalLimits() {
 
       if (
         user.username === 'Tydrellinbg' || 
+        user.username === 'SYSTEM' || 
+        user.username === 'WHALE WATCHERS' || 
+        user.username === 'NO BROKIES' || 
         user.username === 'SUPPORT' || 
+        user.username === 'malcho' || 
         user.username === 'OFFICIALRPSGAME' || 
         user.username === 'PimpedPistols' ||  
         user.username === '🔥 THE DON 🔥 (BOT #1)' ||

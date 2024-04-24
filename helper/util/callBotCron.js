@@ -128,9 +128,9 @@ async function executeCronJob(user, betArray) {
   }
 }
 
-cron.schedule('*/12 * * * * *', async () => {
-  await callCronJobs(socketio);
-});
+    cron.schedule('*/12 * * * * *', async () => {
+      await callCronJobs(socketio);
+    });
 
 
 module.exports = {

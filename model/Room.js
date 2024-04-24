@@ -1,158 +1,158 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+  const mongoose = require('mongoose');
+  const Schema = mongoose.Schema;
 
-const RoomSchema = new Schema({
-  room_number: {
-    type: String,
-    default: ''
-  },
-  creator: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    index: true // Index creator field
-  },
-  joiners: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    default: []
-  }],
-  game_type: {
-    type: Schema.Types.ObjectId,
-    ref: 'GameType',
-    index: true
-  },
-  selectedStrategy: {
-    type: String,
-    default: 'Random'
-  },
-  aveMultiplier: {
-    type: Number,
-    default: 1
-  },
-  qs_game_type: {
-    type: Number,
-    default: 2
-  },
-  qs_nation: {
-    type: Number,
-    default: 0
-  },
-  rps_game_type: {
-    type: Number,
-    default: 0
-  },
-  brain_game_type: {
-    type: Schema.Types.ObjectId,
-    ref: 'BrainGameType',
-    default: null
-  },
-  brain_game_score: {
-    type: Number,
-    default: 0
-  },
-  bet_amount: {
-    type: Number,
-    default: 0
-  },
-  user_bet: {
-    type: String,
-    default: ''
-  },
-  spleesh_bet_unit: {
-    type: Number,
-    default: 1
-  },
-  pr: {
-    type: Number,
-    default: 0
-  },
-  host_pr: {
-    type: Number,
-    default: 0
-  },
-  is_anonymous: {
-    type: Boolean,
-    default: false
-  },
-  endgame_type: {
-    type: Boolean,
-    default: false
-  },
-  endgame_amount: {
-    type: Number,
-    default: 0
-  },
-  is_private: {
-    type: Boolean,
-    default: false
-  },
-  room_password: {
-    type: String,
-    default: ''
-  },
-  description: {
-    type: String,
-    default: ''
-  },
-  likes: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    default: []
-  }],
-  dislikes: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    default: []
-  }],
-  views: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    default: []
-  }],
-  status: { type: String, index: true },
-  youtubeUrl: {
-    type: String,
-    default: ''
-  },
-  gameBackground: {
-    type: String,
-    default: ''
-  },
-  created_at: {
-    type: Date,
-    default: Date.now,
-    index: true
-  },
-  updated_at: {
-    type: Date,
-    default: Date.now,
-    index: true
-  },
-  hosts: [{
-    host: {
+  const RoomSchema = new Schema({
+    room_number: {
+      type: String,
+      default: ''
+    },
+    creator: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      index: true // Index creator field
     },
-    rank: {
+    joiners: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: []
+    }],
+    game_type: {
+      type: Schema.Types.ObjectId,
+      ref: 'GameType',
+      index: true
+    },
+    selectedStrategy: {
+      type: String,
+      default: 'Random'
+    },
+    aveMultiplier: {
+      type: Number,
+      default: 1
+    },
+    // qs_game_type: {
+    //   type: Number,
+    //   default: 2
+    // },
+    // qs_nation: {
+    //   type: Number,
+    //   default: 0
+    // },
+    rps_game_type: {
       type: Number,
       default: 0
     },
-    avatar: {
-      type: String,
-      default: ''
-    },
-    accessory: {
-      type: String,
-      default: ''
-    },
-    share: {
+    // brain_game_type: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: 'BrainGameType',
+    //   default: null
+    // },
+    // brain_game_score: {
+    //   type: Number,
+    //   default: 0
+    // },
+    bet_amount: {
       type: Number,
       default: 0
-    }
-  }]
-});
+    },
+    user_bet: {
+      type: String,
+      default: ''
+    },
+    // spleesh_bet_unit: {
+    //   type: Number,
+    //   default: 1
+    // },
+    pr: {
+      type: Number,
+      default: 0
+    },
+    host_pr: {
+      type: Number,
+      default: 0
+    },
+    // is_anonymous: {
+    //   type: Boolean,
+    //   default: false
+    // },
+    endgame_type: {
+      type: Boolean,
+      default: false
+    },
+    endgame_amount: {
+      type: Number,
+      default: 0
+    },
+    is_private: {
+      type: Boolean,
+      default: false
+    },
+    room_password: {
+      type: String,
+      default: ''
+    },
+    description: {
+      type: String,
+      default: ''
+    },
+    likes: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: []
+    }],
+    dislikes: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: []
+    }],
+    views: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: []
+    }],
+    status: { type: String, index: true },
+    youtubeUrl: {
+      type: String,
+      default: ''
+    },
+    gameBackground: {
+      type: String,
+      default: ''
+    },
+    created_at: {
+      type: Date,
+      default: Date.now,
+      index: true
+    },
+    updated_at: {
+      type: Date,
+      default: Date.now,
+      index: true
+    },
+    hosts: [{
+      host: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      rank: {
+        type: Number,
+        default: 0
+      },
+      avatar: {
+        type: String,
+        default: ''
+      },
+      accessory: {
+        type: String,
+        default: ''
+      },
+      share: {
+        type: Number,
+        default: 0
+      }
+    }]
+  });
 
-RoomSchema.index({ creator: 1, game_type: 1 });
+  RoomSchema.index({ creator: 1, game_type: 1 });
 
 
-module.exports = Room = mongoose.model('rps_rooms', RoomSchema);
+  module.exports = Room = mongoose.model('rps_rooms', RoomSchema);

@@ -14,27 +14,32 @@ const moment = require('moment');
 const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
 const saveDocumentWithRetry = require('./retrySave');
 const requestQueue = [];
-let isNonBotRequestProcessing = false;
+// let user_access_log = {};
 
-
-let user_access_log = {};
-
-function check_access_time(user_id) {
-    const check_result =
-        user_access_log[user_id] && Date.now() - user_access_log[user_id] < 800
-            ? false
-            : true;
-    user_access_log[user_id] = Date.now();
-    return check_result;
-}
+// function check_access_time(user_id) {
+//     const check_result =
+//         user_access_log[user_id] && Date.now() - user_access_log[user_id] < 800
+//             ? false
+//             : true;
+//     user_access_log[user_id] = Date.now();
+//     return check_result;
+// }
 
 const addToQueue = async (req, bot = false) => {
     try {
-        const tax = await SystemSetting.findOne({ name: 'commission' });
-        const rain = await SystemSetting.findOne({ name: 'rain' });
-        const platform = await SystemSetting.findOne({ name: 'platform' });
+        const taxPromise = SystemSetting.findOne({ name: 'commission' });
+        const rainPromise = SystemSetting.findOne({ name: 'rain' });
+        const platformPromise = SystemSetting.findOne({ name: 'platform' });
+        const [
+            tax,
+            rain,
+            platform
+        ] = await Promise.all([taxPromise, rainPromise, platformPromise]);
+
         let responseData = {};
         let user;
+        let game_result;
+
         if (bot) {
             user = await User.findOne({ _id: req.user._id });
 
@@ -42,8 +47,9 @@ const addToQueue = async (req, bot = false) => {
             user = req.user;
         }
 
-        const start = new Date();
+
         if (req.body._id) {
+
             if (user.dailyWithdrawals > 0.02) {
                 responseData = {
                     success: false,
@@ -53,15 +59,6 @@ const addToQueue = async (req, bot = false) => {
 
                 return responseData;
             }
-            // if (!check_access_time(user._id)) {
-            //     responseData = {
-            //         success: false,
-            //         message: 'illregular action',
-            //         betResult: -1000
-            //     }
-
-            //     return responseData;
-            // }
 
             if (
                 parseFloat(req.body.bet_amount) < 0.05
@@ -77,17 +74,18 @@ const addToQueue = async (req, bot = false) => {
             let betAmount = parseFloat(req.body.bet_amount);
 
             roomInfo = await Room.findOne({ _id: req.body._id })
-                .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
-                .populate({
-                    path: 'creator',
-                    model: User,
-                    select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance ' // Only select the 'username' field from the 'User' document
-                })
-                .populate({
-                    path: 'game_type',
-                    model: GameType,
-                    select: 'game_type_name short_name'
-                })
+        .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+        .populate({
+            path: 'creator',
+            model: User,
+            select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance'
+        })
+        .populate({
+            path: 'game_type',
+            model: GameType,
+            select: 'game_type_name short_name'
+        })
+        .exec();
             if (
                 roomInfo['creator'] &&
                 roomInfo['creator']._id &&
@@ -102,6 +100,7 @@ const addToQueue = async (req, bot = false) => {
                 };
                 return responseData;
             }
+            
 
             if (roomInfo['status'] === 'finished') {
                 responseData = {
@@ -116,7 +115,7 @@ const addToQueue = async (req, bot = false) => {
             const creatorUser = await User.findOne({
                 _id: roomInfo['creator']._id
             }).select('accessory');
-
+          
             const accessory = creatorUser.accessory;
             let item;
             let commission;
@@ -171,6 +170,14 @@ const addToQueue = async (req, bot = false) => {
                 is_read: false
             });
 
+            // get next unused item
+            const availableBetItem = await RpsBetItem.findOne({
+                room: req.body._id,
+                // joiner: user._id,
+                joiner_rps: ''
+            });
+            let bet_item = availableBetItem;
+
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
                 if (
                     betAmount > parseFloat(roomInfo['user_bet']) ||
@@ -191,20 +198,12 @@ const addToQueue = async (req, bot = false) => {
 
                 newGameLog.bet_amount = betAmount;
 
-                // get next unused item
-                const availableBetItem = await RpsBetItem.findOne({
-                    room: req.body._id,
-                    // joiner: user._id,
-                    joiner_rps: ''
-                });
-                let bet_item = availableBetItem;
-
                 // if no more items, create a new one
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
 
                     const allBetItems = await RpsBetItem.find({
-                            room: new ObjectId(req.body._id),
+                        room: new ObjectId(req.body._id),
                         joiner: user._id,
                         joiner_rps: { $ne: null }
                     })
@@ -254,12 +253,6 @@ const addToQueue = async (req, bot = false) => {
                         rps: nextItem,
                         bet_amount: betAmount,
                     });
-
-                    // try {
-                    //     await saveDocumentWithRetry(bet_item);
-                    // } catch (error) {
-                    //     console.error("Error saving bet_item:", error);
-                    // }
 
                     // Define helper functions
                     function getRandomItem() {
@@ -316,7 +309,7 @@ const addToQueue = async (req, bot = false) => {
                         (bet_item.rps === 'P' && req.body.selected_rps == 'S') ||
                         (bet_item.rps === 'S' && req.body.selected_rps == 'R')
                     ) {
-                        newGameLog.game_result = 1;
+                        game_result = 1;
                         newTransactionJ.amount +=
                             betAmount * 2 * ((100 - commission) / 100);
 
@@ -328,21 +321,13 @@ const addToQueue = async (req, bot = false) => {
                             parseFloat(rain.value) +
                             betAmount * 2 * ((commission - parseFloat(tax.value)) / 100);
 
-                        try {
-                            await saveDocumentWithRetry(rain);
-                        } catch (error) {
-                            console.error("Error saving rain:", error);
-                        }
+
 
                         // update platform earnings (0.5%)
                         platform.value =
                             parseFloat(platform.value) +
                             betAmount * 2 * (parseFloat(tax.value) / 100);
-                        try {
-                            await saveDocumentWithRetry(platform);
-                        } catch (error) {
-                            console.error("Error saving platform:", error);
-                        }
+
 
                         // update bankroll
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
@@ -364,7 +349,7 @@ const addToQueue = async (req, bot = false) => {
                         // if draw
                     } else if (bet_item.rps === req.body.selected_rps) {
 
-                        newGameLog.game_result = 0;
+                        game_result = 0;
 
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (betAmount * (parseFloat(tax.value) / 100));
 
@@ -382,16 +367,11 @@ const addToQueue = async (req, bot = false) => {
                         platform.value =
                             parseFloat(platform.value) +
                             betAmount * 2 * (parseFloat(tax.value) / 100);
-                        try {
-                            await saveDocumentWithRetry(platform);
-                        } catch (error) {
-                            console.error("Error saving platform:", error);
-                        }
 
                         // if loss
                     } else {
 
-                        newGameLog.game_result = -1;
+                        game_result = -1;
 
                         // update bankroll & other
                         roomInfo.host_pr =
@@ -404,11 +384,6 @@ const addToQueue = async (req, bot = false) => {
                         platform.value =
                             parseFloat(platform.value) +
                             betAmount * 2 * (parseFloat(tax.value) / 100);
-                        try {
-                            await saveDocumentWithRetry(platform);
-                        } catch (error) {
-                            console.error("Error saving platform:", error);
-                        }
 
                         // autopayout host
                         if (
@@ -419,26 +394,22 @@ const addToQueue = async (req, bot = false) => {
                                 parseFloat(roomInfo['user_bet']) -
                                 parseFloat(roomInfo['endgame_amount']);
 
-                                const newGameLogC = new GameLog({
-                                    room: roomInfo,
-                                    creator: roomInfo['creator'],
-                                    joined_user: roomInfo['creator'],
-                                    game_type: roomInfo['game_type'],
-                                    bet_amount: roomInfo['host_pr'],
-                                    user_bet: roomInfo['user_bet'],
-                                    // is_anonymous: roomInfo['is_anonymous'],
-                                    game_result: 3
-                                });
-    
-                                try {
-                                    await saveDocumentWithRetry(newGameLogC);
-                                } catch (error) {
-                                    console.error("Error saving newGameLogC:", error);
-                                }
-                          
-                            roomInfo['user_bet'] = parseFloat(
-                                roomInfo['endgame_amount']
-                            );
+                            const newGameLogC = new GameLog({
+                                room: roomInfo,
+                                creator: roomInfo['creator'],
+                                joined_user: roomInfo['creator'],
+                                game_type: roomInfo['game_type'],
+                                bet_amount: roomInfo['host_pr'],
+                                user_bet: roomInfo['user_bet'],
+                                // is_anonymous: roomInfo['is_anonymous'],
+                                game_result: 3
+                            });
+
+                            saveDocumentWithRetry(newGameLogC),
+
+                                roomInfo['user_bet'] = parseFloat(
+                                    roomInfo['endgame_amount']
+                                );
                         }
 
                         // send notification
@@ -459,14 +430,10 @@ const addToQueue = async (req, bot = false) => {
 
                 // update bet item with joiner's data
                 newGameLog.winnings = winnings;
+                newGameLog.game_result = game_result;
                 bet_item.joiner = user;
                 bet_item.joiner_rps = req.body.selected_rps;
                 bet_item.bet_amount = betAmount;
-                try {
-                    await saveDocumentWithRetry(bet_item);
-                } catch (error) {
-                    console.error("Error saving bet_item:", error);
-                }
 
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
@@ -488,48 +455,12 @@ const addToQueue = async (req, bot = false) => {
                         });
                     }
                 }
-                //  else {
-                //     const lastFiveBetItems = await RpsBetItem.find({
-                //         room: req.body._id
-                //     });
-                //     const rps = lastFiveBetItems
-                //         .filter(item => item.joiner_rps !== '')
-                //         .slice(-5);
-                //     if (rps.length > 0 && req.io) {
-                //         req.io.emit(`UPDATED_BANKROLL_${req.body._id}`, {
-                //             bankroll: roomInfo['user_bet'],
-                //             rps: rps
-                //         });
-                //     }
-                //     const nextItem = await RpsBetItem.findOne({
-                //         room: req.body._id,
-                //         joiner_rps: ''
-                //     });
-                //     if (nextItem) {
-                //         try {
-                //             await saveDocumentWithRetry(nextItem);
-                //         } catch (error) {
-                //             console.error("Error saving nextItem:", error);
-                //         }
-                //     } else {
-                //         roomInfo.status = 'finished';
-                //     }
-                // }
-
-                // if not already added to joiners, add to joiners
-                // if (!roomInfo.joiners.includes(user)) {
-                //     roomInfo.joiners.addToSet(user);
-                //     try {
-                //         await saveDocumentWithRetry(roomInfo);
-                //     } catch (error) {
-                //         console.error("Error saving roomInfo:", error);
-                //     }
-                // }
+                await saveDocumentWithRetry(bet_item);
 
                 // rug game if bankroll too low
                 if (roomInfo['user_bet'] <= 0.05) {
                     roomInfo.status = 'finished';
-                    newGameLog.game_result = 1;
+                    game_result = 1;
                     message.message =
                         'Won ' +
                         convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
@@ -538,7 +469,7 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
 
-                    const newGameLogC = new GameLog({
+                    newGameLogC = new GameLog({
                         room: roomInfo,
                         creator: roomInfo['creator'],
                         joined_user: roomInfo['creator'],
@@ -548,13 +479,11 @@ const addToQueue = async (req, bot = false) => {
                         // is_anonymous: roomInfo['is_anonymous'],
                         game_result: -100
                     });
-                    try {
-                        await saveDocumentWithRetry(newGameLogC);
-                    } catch (error) {
-                        console.error("Error saving newGameLogC:", error);
-                    }
+
                 }
             }
+
+            await saveDocumentWithRetry(newGameLog);
 
             roomInfo['creator']['balance'] += newTransactionC.amount;
             roomInfo['creator']['gamePlayed']++;
@@ -568,7 +497,7 @@ const addToQueue = async (req, bot = false) => {
             if (roomInfo['creator']['profitAllTimeLow'] > newTransactionC.amount) {
                 roomInfo['creator']['profitAllTimeLow'] = newTransactionC.amount;
             }
-         
+
 
             user['balance'] += newTransactionJ.amount;
             user['gamePlayed']++;
@@ -583,104 +512,105 @@ const addToQueue = async (req, bot = false) => {
             }
 
             try {
-                await saveDocumentWithRetry(user);
-                await saveDocumentWithRetry(newGameLog);
+                 Promise.all([
+                    saveDocumentWithRetry(platform),
+                    saveDocumentWithRetry(user),
+                    saveDocumentWithRetry(rain),
+                await saveDocumentWithRetry(newGameLog)
+
+                ]);
             } catch (error) {
                 console.error("Error saving", error);
             }
 
-            // if (!roomInfo.joiners.includes(user)) {
-            //     roomInfo.joiners.addToSet(user);
-            //     try {
-            //         await saveDocumentWithRetry(roomInfo);
-            //     } catch (error) {
-            //         console.error("Error saving roomInfo", error);
-            //     }
-            // }
 
             // setTimeout(async () => {
-                if (newTransactionJ.amount !== 0) {
-                    try {
-                        await saveDocumentWithRetry(newTransactionJ);
-                    } catch (error) {
-                        console.error("Error saving newTransactionJ", error);
-                    }
+            if (newTransactionJ.amount !== 0) {
+                try {
+                     saveDocumentWithRetry(newTransactionJ);
+                } catch (error) {
+                    console.error("Error saving newTransactionJ", error);
                 }
+            }
 
-                // Check if user_bet matches the share value of the first host
-                if (roomInfo.hosts[0].share === 100) {
+            // Check if user_bet matches the share value of the first host
+            if (roomInfo.hosts[0].share === 100) {
 
-                    if (newTransactionC.amount !== 0) {
-                        try {
-                            await saveDocumentWithRetry(newTransactionC);
-                        } catch (error) {
-                            console.error("Error saving newTransactionC", error);
-                        }
-                        socket.newTransaction(newTransactionC);
+                if (newTransactionC.amount !== 0) {
+                    try {
+                         saveDocumentWithRetry(newTransactionC);
+                    } catch (error) {
+                        console.error("Error saving newTransactionC", error);
                     }
-                } else {
+                    socket.newTransaction(newTransactionC);
+                }
+            } else {
 
-                    // Iterate over each host asynchronously
-                    roomInfo.hosts.forEach(async (host) => {
-                        const amountForHost = ((host.share / 100) * newTransactionC.amount);
-                        const newTransactionForHost = new Transaction({
-                            user: host.host,
-                            amount: amountForHost,
-                            description: 'Co-Hosting auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number,
-                            room: req.body._id
-                        });
-                        if (newTransactionForHost.amount !== 0) {
-                            try {
-                                await saveDocumentWithRetry(newTransactionForHost);
-                                socket.newTransaction(newTransactionForHost);
-                            } catch (error) {
-                                console.error("Error saving new transaction:", error);
-                            }
-                        }
-                        const coHost = await User.findOne({ _id: host.host });
-
-                        if (coHost) {
-                            coHost.balance += amountForHost;
-                            try {
-                                await saveDocumentWithRetry(coHost);
-                            } catch (error) {
-                                console.error("Error saving user:", error);
-                            }
-                        } else {
-                            console.log(`User with host ${host.host} not found.`);
-                        }
-
+                // Iterate over each host asynchronously
+                roomInfo.hosts.forEach(async (host) => {
+                    const amountForHost = ((host.share / 100) * newTransactionC.amount);
+                    const newTransactionForHost = new Transaction({
+                        user: host.host,
+                        amount: amountForHost,
+                        description: 'Co-Hosting auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number,
+                        room: req.body._id
                     });
-                }
-
-                const notificationData = {
-                    _id: user._id,
-                    message: message.message,
-                    username: user.username,
-                    avatar: user.avatar,
-                    accessory: user.accessory,
-                    room: req.body._id,
-                    rank: user.totalWagered,
-                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                    created_at_str: moment(new Date()).format('LLL'),
-                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                    is_read: false
-                };
-
-                if (message.from._id !== message.to._id) {
-                    try {
-                        await saveDocumentWithRetry(message);
-                        socket.sendNotification(message.to._id, notificationData);
-                    } catch (error) {
-                        console.error("Error saving message:", error);
+                    if (newTransactionForHost.amount !== 0) {
+                        try {
+                             saveDocumentWithRetry(newTransactionForHost);
+                            socket.newTransaction(newTransactionForHost);
+                        } catch (error) {
+                            console.error("Error saving new transaction:", error);
+                        }
                     }
+                    const coHost = await User.findOne({ _id: host.host });
+
+                    if (coHost) {
+                        coHost.balance += amountForHost;
+                        try {
+                             saveDocumentWithRetry(coHost);
+                        } catch (error) {
+                            console.error("Error saving user:", error);
+                        }
+                    } else {
+                        console.log(`User with host ${host.host} not found.`);
+                    }
+
+                });
+            }
+
+            const notificationData = {
+                _id: user._id,
+                message: message.message,
+                username: user.username,
+                avatar: user.avatar,
+                accessory: user.accessory,
+                room: req.body._id,
+                rank: user.totalWagered,
+                created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                created_at_str: moment(new Date()).format('LLL'),
+                updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                is_read: false
+            };
+
+            if (message.from._id !== message.to._id) {
+                try {
+                     saveDocumentWithRetry(message);
+                    socket.sendNotification(message.to._id, notificationData);
+                } catch (error) {
+                    console.error("Error saving message:", error);
                 }
+            }
+            user = null;
+            bet_item = null;
             // }, 0);
+
         }
+        
         responseData = {
             success: true,
             message: 'successful bet',
-            betResult: newGameLog.game_result,
+            betResult: game_result,
             newTransaction: newTransactionJ,
             roomStatus: roomInfo.status
         };
@@ -691,15 +621,6 @@ const addToQueue = async (req, bot = false) => {
     }
 };
 
-
-const executeBet = (req, bot = false) => {
-    return new Promise((resolve, reject) => {
-        requestQueue.push({ req, bot, resolve, reject });
-        if (requestQueue.length === 1) {
-            processQueue();
-        }
-    });
-};
 
 // const executeBet = async (req, bot = false) => {
 //     try {
@@ -737,6 +658,43 @@ const executeBet = (req, bot = false) => {
 //         throw new Error('Error executing bet');
 //     }
 // };
+// const executeBet = (req, bot = false) => {
+//     const startTime = new Date(); // Record the start time
+//     return new Promise(async (resolve, reject) => {
+//         try {
+//             const result = await addToQueue(req, bot);
+//             req = null;
+
+//             const endTime = new Date(); // Record the end time
+//             const executionTime = endTime - startTime; // Calculate the execution time in milliseconds
+//             const humanReadableTime = millisecondsToHumanReadable(executionTime); // Convert to human-readable format
+//             console.log(`Bet execution time: ${humanReadableTime}`);
+//             resolve(result);
+//         } catch (error) {
+//             reject(error);
+//         }
+//     });
+// };
+
+
+// // Function to convert milliseconds to human-readable format
+// const millisecondsToHumanReadable = (milliseconds) => {
+//     const seconds = Math.floor(milliseconds / 1000);
+//     const minutes = Math.floor(seconds / 60);
+//     const remainingSeconds = seconds % 60;
+//     return `${minutes} minutes and ${remainingSeconds} seconds`;
+// };
+
+
+
+const executeBet = (req, bot = false) => {
+    return new Promise((resolve, reject) => {
+        requestQueue.push({ req, bot, resolve, reject });
+        if (requestQueue.length === 1) {
+            processQueue();
+        }
+    });
+};
 
 const processQueue = async () => {
     if (requestQueue.length > 0) {

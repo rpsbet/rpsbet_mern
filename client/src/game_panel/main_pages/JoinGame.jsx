@@ -24,6 +24,8 @@ import Tooltip from '@material-ui/core/Tooltip';
 
 import {
   bet,
+  bet2,
+  bet3,
   getRoomInfo,
   setCurRoomInfo,
   loadRoomInfo,
@@ -236,8 +238,9 @@ class JoinGame extends Component {
     this.setState({ history: updateFromNow(this.state.history) });
   };
 
+  // manual bet
   join = async betInfo => {
-    const result = await this.props.bet({
+    const result = await this.props.bet3({
       _id: this.state.roomInfo._id,
       user: this.props.user_id,
       game_type: this.props.roomInfo.game_type,
@@ -247,6 +250,16 @@ class JoinGame extends Component {
   };
 
 
+  // auto bet
+  join2 = async betInfo => {
+    const result = await this.props.bet2({
+      _id: this.state.roomInfo._id,
+      user: this.props.user_id,
+      game_type: this.props.roomInfo.game_type,
+      ...betInfo
+    });
+    return result;
+  };
 
   calcWinChanceQs = (gametype, rounds) => {
     let positionCounts = new Array(gametype + 1).fill(0);
@@ -1076,55 +1089,56 @@ class JoinGame extends Component {
       let result;
       try {
         if (gameType === 'RPS') {
-          result = await this.join({
+          result = await this.join2({
             bet_amount: parseFloat(predictedBetAmount),
             selected_rps: selected_rps,
             rps_bet_item_id: roomInfo.rps_bet_item_id
           });
-        } else if (gameType === 'Quick Shoot') {
-          result = await this.join({
-            bet_amount: parseFloat(predictedBetAmount),
-            selected_qs_position: selected_qs_position,
-            qs_bet_item_id: roomInfo.qs_bet_item_id,
-          });
-        } else if (gameType === 'Drop Game') {
-          this.updateDropAnimation();
-          result = await this.join({
-            bet_amount: parseFloat(randomItem),
-            drop_bet_item_id: roomInfo.drop_bet_item_id,
-          });
-        } else if (gameType === 'Mystery Box') {
-          const availableBoxes = roomInfo.box_list.filter(
-            box => box.status === 'init' && box.box_price <= randomItem + 0.001
-          );
-          if (availableBoxes.length === 0) {
-            alertModal(
-              isDarkMode  ,
-              `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
-            );
-            return;
-          }
-
-          const randomIndex = Math.floor(Math.random() * availableBoxes.length);
-          const selectedBox = availableBoxes[randomIndex];
-
-          result = await this.join({
-            bet_amount: parseFloat(randomItem),
-            selected_id: selectedBox._id,
-          });
-        } else if (gameType === 'Spleesh!') {
-          result = await this.join({
-            bet_amount: parseFloat(randomItem),
-          });
-        } else if (gameType === 'Brain Game') {
-          result = await this.join({
-            brain_game_score: randomItem,
-            bet_amount: parseFloat(predictedBetAmount),
-          });
-          deductBalanceWhenStartBrainGame({
-            bet_amount: predictedBetAmount
-          });
         }
+        // else if (gameType === 'Quick Shoot') {
+        //   result = await this.join({
+        //     bet_amount: parseFloat(predictedBetAmount),
+        //     selected_qs_position: selected_qs_position,
+        //     qs_bet_item_id: roomInfo.qs_bet_item_id,
+        //   });
+        // } else if (gameType === 'Drop Game') {
+        //   this.updateDropAnimation();
+        //   result = await this.join({
+        //     bet_amount: parseFloat(randomItem),
+        //     drop_bet_item_id: roomInfo.drop_bet_item_id,
+        //   });
+        // } else if (gameType === 'Mystery Box') {
+        //   const availableBoxes = roomInfo.box_list.filter(
+        //     box => box.status === 'init' && box.box_price <= randomItem + 0.001
+        //   );
+        //   if (availableBoxes.length === 0) {
+        //     alertModal(
+        //       isDarkMode  ,
+        //       `NO MORE AVAILABLE BOXES THAT FIT THE TRAINING DATA`
+        //     );
+        //     return;
+        //   }
+
+        //   const randomIndex = Math.floor(Math.random() * availableBoxes.length);
+        //   const selectedBox = availableBoxes[randomIndex];
+
+        //   result = await this.join({
+        //     bet_amount: parseFloat(randomItem),
+        //     selected_id: selectedBox._id,
+        //   });
+        // } else if (gameType === 'Spleesh!') {
+        //   result = await this.join({
+        //     bet_amount: parseFloat(randomItem),
+        //   });
+        // } else if (gameType === 'Brain Game') {
+        //   result = await this.join({
+        //     brain_game_score: randomItem,
+        //     bet_amount: parseFloat(predictedBetAmount),
+        //   });
+        //   deductBalanceWhenStartBrainGame({
+        //     bet_amount: predictedBetAmount
+        //   });
+        // }
 
 
         if (result && result.status === 'success') {
@@ -1815,6 +1829,8 @@ const mapDispatchToProps = {
   getRoomInfo,
   getStrategies,
   bet,
+  bet2,
+  bet3,
   setCurRoomInfo,
   loadRoomInfo,
   // getMyChat,

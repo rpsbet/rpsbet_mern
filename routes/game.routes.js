@@ -2,7 +2,8 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
 const socket = require('../socketController.js');
 const router = express.Router();
-
+const cluster = require('cluster');
+const numCPUs = require('os').cpus().length;
 const moment = require('moment');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
@@ -40,6 +41,8 @@ const { predictNextDrop } = require('../helper/util/predictNextDrop');
 const avatarUtils = require('../helper/util/getRank');
 const convertToCurrency = require('../helper/util/conversion');
 const executeBet = require('../helper/util/betExecutor');
+const executeBet2 = require('../helper/util/betExecutor2');
+const executeBet3 = require('../helper/util/betExecutor3');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 
 
@@ -3392,5 +3395,59 @@ router.post('/bet', auth, async (req, res) => {
   }
 });
 
+router.post('/bet2', auth, async (req, res) => {
+  try {
+
+       if (!check_access_time(req.user._id)) {
+                responseData = {
+                    success: false,
+                    message: 'illregular action',
+                    betResult: -1000
+                }
+
+                return responseData;
+            }
+
+    const betResult = await executeBet2(req);
+
+    res.json({
+      success: betResult.success,
+      message: betResult.message,
+      betResult: betResult.betResult,
+      newTransaction: betResult.newTransaction,
+      roomStatus: betResult.roomStatus
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+router.post('/bet3', auth, async (req, res) => {
+  try {
+
+       if (!check_access_time(req.user._id)) {
+                responseData = {
+                    success: false,
+                    message: 'illregular action',
+                    betResult: -1000
+                }
+
+                return responseData;
+            }
+
+    const betResult = await executeBet3(req);
+
+    res.json({
+      success: betResult.success,
+      message: betResult.message,
+      betResult: betResult.betResult,
+      newTransaction: betResult.newTransaction,
+      roomStatus: betResult.roomStatus
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
 
 module.exports = router;

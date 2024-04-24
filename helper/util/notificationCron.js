@@ -3,6 +3,7 @@
 const cron = require('node-cron');
 const Notification = require('../../model/Notification');
 const Chat = require('../../model/Chat');
+const RpsBetItem = require('../../model/RpsBetItem');
 
 
 async function deleteChat() {
@@ -35,6 +36,34 @@ async function deleteChat() {
   }
 }
 
+async function deleteRpsBetItems() {
+  try {
+    // Retrieve the total count of RpsBetItems
+    const totalItems = await RpsBetItem.countDocuments();
+
+    // Determine the number of items to be deleted
+    const itemsToDelete = totalItems - 1000;
+
+    // Ensure there are items to delete
+    if (itemsToDelete > 0) {
+      // Retrieve the IDs of the items to be deleted
+      const itemsToDeleteIds = await RpsBetItem.find({})
+        .sort({ created_at: 1 }) // Sort by createdAt in ascending order (oldest first)
+        .limit(itemsToDelete) // Limit to the excess items
+        .select('_id');
+
+      // Extract the IDs from the found items
+      const itemIds = itemsToDeleteIds.map(item => item._id);
+
+      // Delete the excess items
+      const deletedItems = await RpsBetItem.deleteMany({ _id: { $in: itemIds } });
+
+      console.log(`${deletedItems.deletedCount} RpsBetItems deleted.`);
+    }
+  } catch (error) {
+    console.error('Error deleting RpsBetItems:', error);
+  }
+}
 
 async function deleteNotifications() {
   try {
@@ -42,7 +71,7 @@ async function deleteNotifications() {
     const totalNotifications = await Notification.countDocuments();
 
     // Determine the number of notifications to be deleted
-    const notificationsToDelete = totalNotifications - 50;
+    const notificationsToDelete = totalNotifications - 500;
 
     // Ensure there are notifications to delete
     if (notificationsToDelete > 0) {
@@ -72,11 +101,13 @@ async function deleteNotifications() {
 cron.schedule('0 0 * * *', async () => {
   await deleteNotifications();
   await deleteChat();
+  await deleteRpsBetItems();
 });
 
 // Export an object containing the function
 module.exports = {
   deleteNotifications,
-  deleteChat
+  deleteChat,
+  deleteRpsBetItems
 
 };

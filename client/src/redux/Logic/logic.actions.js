@@ -202,6 +202,119 @@ export const bet = bet_info => async dispatch => {
 };
 
 
+// auto join game
+export const bet2 = bet_info => async dispatch => {
+  try {
+    dispatch({ type: START_BET });
+    const res = await axios.post('/game/bet2', bet_info);
+
+    dispatch({ type: END_BET });
+
+    if (res.data.success) {
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+
+      if (bet_info.game_type === 'Mystery Box') {
+        dispatch({ type: BET_SUCCESS, payload: res.data });
+      } else {
+        dispatch({
+          type: UPDATE_BET_RESULT,
+          payload: {
+            betResult: res.data.betResult === 1 ? 'win' : res.data.betResult === 0 ? 'draw' : 'lose',
+          }
+        });
+      }
+      return {
+        status: 'success',
+        betResult: res.data.betResult,
+        roomStatus: res.data.roomStatus,
+        amount: res.data.newTransaction.amount
+      };
+    } else {
+      if (res.data.betResult === -100) {
+        history.push('/');
+        return {
+          status: 'failed',
+          message: 'THIS BATTLE HAS NOW ENDED'
+        };
+      } else if (res.data.betResult === -102) {
+        return {
+          status: 'failed',
+          message: res.data.message
+        };
+      } else {
+        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G' });
+        return {
+          status: 'failed',
+          message: 'SLOW DOWN BLUD!'
+        };
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
+  return {
+    status: 'failed'
+  };
+};
+
+// manual
+export const bet3 = bet_info => async dispatch => {
+  try {
+    dispatch({ type: START_BET });
+    const res = await axios.post('/game/bet3', bet_info);
+    dispatch({ type: END_BET });
+
+    if (res.data.success) {
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+
+      // if (bet_info.game_type === 'Mystery Box') {
+      //   dispatch({ type: BET_SUCCESS, payload: res.data });
+      // } else {
+      //   dispatch({
+      //     type: UPDATE_BET_RESULT,
+      //     payload: {
+      //       betResult: res.data.betResult === 1 ? 'win' : res.data.betResult === 0 ? 'draw' : 'lose',
+      //     }
+      //   });
+      // }
+      return {
+        status: 'success',
+        betResult: res.data.betResult,
+        roomStatus: res.data.roomStatus,
+        amount: res.data.newTransaction.amount
+      };
+    } else {
+      if (res.data.betResult === -100) {
+        history.push('/');
+        return {
+          status: 'failed',
+          message: 'THIS BATTLE HAS NOW ENDED'
+        };
+      } else if (res.data.betResult === -102) {
+        return {
+          status: 'failed',
+          message: res.data.message
+        };
+      } else {
+        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G' });
+        return {
+          status: 'failed',
+          message: 'SLOW DOWN BLUD!'
+        };
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
+  return {
+    status: 'failed'
+  };
+
+};
+
+
 export const loadRoomInfo = roomInfo => {
   return {
     type: ROOMINFO_LOADED,
@@ -539,9 +652,6 @@ export const clearRoomListCache = () => dispatch => {
   try {
     // Clear local storage
     localStorage.removeItem('roomList');
-    // Log local storage after clearing
-    console.log('Local storage after clearing:', localStorage.getItem('roomList')); // This will log 'null' if 'roomList' has been successfully removed
-
   } catch (err) {
     console.error('Error clearing room list cache:', err);
   }
@@ -586,7 +696,7 @@ export const getRpsBetItems = (room_id) => async dispatch => {
 
 export const updateRpsBetItems = (itemId, cellindex, updatedItem) => async dispatch => {
   try {
-    const res = await axios.put(`/game/rpsbetitems/${itemId}`, {cellindex, updatedItem });
+    const res = await axios.put(`/game/rpsbetitems/${itemId}`, { cellindex, updatedItem });
     if (res.data.success) {
       dispatch({ type: RPSBETITEMS_LOADED, payload: res.data });
       dispatch({ type: MSG_SUCCESS, payload: "TRAINING DATA HAS BEEN UPDATED" });
@@ -638,7 +748,7 @@ export const updateRoomBot = (room_id) => async dispatch => {
   try {
     let botAttached = false;
     let loopCount = 0;
-    
+
     while (!botAttached && loopCount < 6) {
       const res = await axios.patch(`/game/rooms/${room_id}`);
 
@@ -646,7 +756,7 @@ export const updateRoomBot = (room_id) => async dispatch => {
         dispatch({ type: MSG_SUCCESS, payload: "BOT HAS BEEN ATTACHED TO YOUR ROOM" });
         botAttached = true;
       }
-      
+
       loopCount++;
     }
 

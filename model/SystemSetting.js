@@ -20,4 +20,6 @@ const SystemSettingSchema = new Schema({
     }
 });
 
+SystemSettingSchema.index({ name: 1 }); // Index on the 'name' field
+
 module.exports = SystemSetting = mongoose.model('rps_system_setting', SystemSettingSchema);
