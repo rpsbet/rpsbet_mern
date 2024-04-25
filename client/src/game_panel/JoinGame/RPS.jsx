@@ -162,7 +162,7 @@ class RPS extends Component {
       advanced_status: '',
       cardDealt: false,
       bet_amount: 1,
-      bankroll: this.props.bet_amount,
+      bankroll: this.props.user_bet,
       rps: [],
       prev_rps: [],
       isPasswordCorrect: this.props.isPasswordCorrect,
@@ -223,73 +223,73 @@ class RPS extends Component {
   setupSocket() {
     document.addEventListener('keydown', this.handleKeyPress);
     this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
-  
+
     const initializeSocket = async () => {
       try {
         const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo, user_id } = this.props;
         const initializedSocket = socket || socketIOClient(this.state.endpoint);
         this.setState({ socket: initializedSocket });
-  
+
         if (initializedSocket) {
           initializedSocket.on(`UPDATED_BANKROLL3_${roomInfo._id}`, this.handleSocketData);
-          
+
           // Add event listener conditionally based on isWatching prop
           if (!this.props.isWatching) {
             initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
           }
         }
 
-         // initializedSocket.on('CARD_PRIZE', data => {
-          //   if (data) {
-          //     this.setState(
-          //       {
-          //         image: data.image,
-          //         productName: data.productName,
-          //         showImageModal: true
-          //       },
-          //       () => playSound('')
-          //     );
-          //   }
-          // });
+        // initializedSocket.on('CARD_PRIZE', data => {
+        //   if (data) {
+        //     this.setState(
+        //       {
+        //         image: data.image,
+        //         productName: data.productName,
+        //         showImageModal: true
+        //       },
+        //       () => playSound('')
+        //     );
+        //   }
+        // });
 
 
-          //   initializedSocket.on('RPS_1', data => {
-          //     if (data && data.length > 0) {
-          //       this.setState({
-          //         rps: this.props.isWatching ? data.filter(game => game.joiner === user_id) : data,
-          //         prev_rps: data,
-          //         startedPlaying: true
-          //       });
-          //     }
-          //   });
+        //   initializedSocket.on('RPS_1', data => {
+        //     if (data && data.length > 0) {
+        //       this.setState({
+        //         rps: this.props.isWatching ? data.filter(game => game.joiner === user_id) : data,
+        //         prev_rps: data,
+        //         startedPlaying: true
+        //       });
+        //     }
+        //   });
 
-          //   initializedSocket.emit('emitRps');
-          // }
+        //   initializedSocket.emit('emitRps');
+        // }
 
-          // // Add event listener conditionally based on rps_game_type
-          // if (rps_game_type === 0) {
-          //   document.addEventListener('mousedown', this.handleClickOutside);
-          // }
+        // // Add event listener conditionally based on rps_game_type
+        // if (rps_game_type === 0) {
+        //   document.addEventListener('mousedown', this.handleClickOutside);
+        // }
 
-          // if (rps_game_type === 1) {
-          //   // Ensure acQueryMyItem is available
-          //   if (acQueryMyItem) {
-          //     await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
-          //     setTimeout(() => {
-          //       if (!this.state.cardDealt) {
-          //         this.dealCard();
-          //       }
-          //     }, 1500);
-          //   }
+        // if (rps_game_type === 1) {
+        //   // Ensure acQueryMyItem is available
+        //   if (acQueryMyItem) {
+        //     await acQueryMyItem(100, 1, 'price', '653ee7ac17c9f5ee21245649');
+        //     setTimeout(() => {
+        //       if (!this.state.cardDealt) {
+        //         this.dealCard();
+        //       }
+        //     }, 1500);
+        //   }
       } catch (error) {
         console.error('Socket initialization failed:', error);
         setTimeout(initializeSocket, 3000); // Retry after 3 seconds
       }
     };
-  
+
     initializeSocket();
   }
-  
+
   removeSocketListeners() {
     const { socket, roomInfo } = this.props;
     if (socket) {
@@ -297,7 +297,7 @@ class RPS extends Component {
       socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
     }
   }
-  
+
   handleSocketData = (data) => {
     this.setState(prevState => {
       let updatedPlayers = [...prevState.players, data.user];
@@ -484,18 +484,18 @@ class RPS extends Component {
     }
 
     if (prevProps.is_betting !== is_betting && !is_betting) {
-      const prevLastItemId = this.props.rpsbetitems.slice(0, 5).reverse()[4]._id; // Get _id of the last item in previous props
-      const currentLastItemId = rps.length > 0 ? rps[4]._id : null; // Get _id of the last item in current props
+      const prevLastItemId = this.props.rpsbetitems.length > 4 ? this.props.rpsbetitems.slice(0, 5).reverse()[4]._id : null; // Get _id of the last item in previous props
+      const currentLastItemId = rps.length > 4 ? rps[4]._id : null; // Get _id of the last item in current props
 
-      
+
       if (prevLastItemId === currentLastItemId) {
-        console.log("before",  this.props.rpsbetitems.slice(0, 5).reverse());
+        console.log("before", this.props.rpsbetitems.slice(0, 5).reverse());
         await this.props.getRpsBetItems(roomInfo._id);
-        console.log("Updating",  this.props.rpsbetitems.slice(0, 5).reverse());
+        console.log("Updating", this.props.rpsbetitems.slice(0, 5).reverse());
         this.setState({
           rps: this.props.rpsbetitems.slice(0, 5).reverse(),
           prev_rps: this.props.rpsbetitems.slice(0, 5).reverse()
-         });
+        });
       }
     }
 
@@ -847,9 +847,9 @@ class RPS extends Component {
                   {this.props.rps_game_type === 0 && (
                     <div className="data-item">
                       <div>
-                        <div className="label win-chance">Win Chance</div>
+                        <div className="label win-chance">Commission</div>
                       </div>
-                      <div className="value">33%</div>
+                      <div className="value">{this.props.cp}% </div>
                     </div>
                   )}
                   {roomInfo.endgame_amount > 0 && (
@@ -867,7 +867,7 @@ class RPS extends Component {
                       <div className="label net-profit">Host Profit</div>
                     </div>
                     <div className="value bankroll">
-                      {actionList && actionList.hostBetsValue.length > 0 ? (
+                      {/* {actionList && actionList.hostBetsValue.length > 0 ? (
                         <>
                           {convertToCurrency(
                             actionList.hostNetProfit?.slice(-1)[0]
@@ -968,7 +968,10 @@ class RPS extends Component {
                             width: '32px'
                           }}
                         />
-                      )}
+                      )} */}
+                      <div className="value" style={{ color: (roomInfo.host_pr - roomInfo.bet_amount) > 0 ? 'rgb(87, 202, 34)' : (roomInfo.host_pr - roomInfo.bet_amount) < 0 ? '#ff0000' : 'inherit' }}>
+                        {convertToCurrency(roomInfo.host_pr - roomInfo.bet_amount)}
+                      </div>
                     </div>
                   </div>
                   <div className="data-item">

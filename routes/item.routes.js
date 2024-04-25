@@ -268,9 +268,22 @@ router.post('/accessory', auth, async (req, res) => {
         message: 'User not found',
       });
     }
+    
+    // Populate the CP value for the accessory
+    const accessoryItem = await Item.findOne({ image: user.accessory }).select('CP');
+    if (!accessoryItem) {
+      return res.json({
+        success: false,
+        message: 'Accessory not found in items collection',
+      });
+    }
+
     res.json({
       success: true,
-      accessory: user.accessory,
+      accessory: {
+        name: user.accessory,
+        CP: accessoryItem.CP // Include CP value in the response
+      },
     });
   } catch (err) {
     console.error('Error:', err);
@@ -281,6 +294,7 @@ router.post('/accessory', auth, async (req, res) => {
     });
   }
 });
+
 
 // Update accessory
 router.post('/equip', auth, async (req, res) => {
@@ -308,7 +322,7 @@ router.post('/equip', auth, async (req, res) => {
 
       return res.json({
         success: true,
-        message: 'Accessory unequipped',
+        message: 'ACCESSORY UNEQUIPPED',
       });
     } else {
       user.accessory = item.image;
@@ -319,7 +333,7 @@ router.post('/equip', auth, async (req, res) => {
       }
       return res.json({
         success: true,
-        message: 'Item equipped successfully',
+        message: 'ACCESSORY EQUIPPED',
       });
     }
   } catch (err) {

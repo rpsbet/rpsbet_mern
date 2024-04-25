@@ -3881,7 +3881,9 @@ height: 50px !important;
     display: none;
   }
 
- 
+ .spectate {
+  top: 30px !important
+ }
 
   .goalBg,
   .brainBg,

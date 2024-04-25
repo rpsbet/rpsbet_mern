@@ -2,53 +2,66 @@
 
 const cron = require('node-cron');
 const User = require('../../model/User');
+const SystemSetting = require('../../model/SystemSetting');
 
 async function resetWithdrawalLimits() {
 
   try {
-    // Get all users from the database
-    const users = await User.find();
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    if (systemSetting) {
+      const lastUpdated = systemSetting.last_updated;
+      // Check if last_updated is 24 hours ago or more
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    // Iterate through all users and update credit scores
-    for (const user of users) {
+      if (lastUpdated <= twentyFourHoursAgo) {
+        // Get all users from the database
+        const users = await User.find();
 
-      if (
-        user.username === 'Tydrellinbg' || 
-        user.username === 'SYSTEM' || 
-        user.username === 'WHALE WATCHERS' || 
-        user.username === 'NO BROKIES' || 
-        user.username === 'SUPPORT' || 
-        user.username === 'malcho' || 
-        user.username === 'OFFICIALRPSGAME' || 
-        user.username === 'PimpedPistols' ||  
-        user.username === '🔥 THE DON 🔥 (BOT #1)' ||
-        user.username === '🪨 ROCKY 🪨 (BOT #2)' ||
-        user.username === '✂️ CAESAR ✂️ (BOT #4)' ||
-        user.username === '📃 PAPIÉR 📃 (BOT #3)' 
-      ) {
-        continue;
-      }
+        // Iterate through all users and update credit scores
+        for (const user of users) {
+          if (
+            user.username === 'Tydrellinbg' ||
+            user.username === 'SYSTEM' ||
+            user.username === 'WHALE WATCHERS' ||
+            user.username === 'NO BROKIES' ||
+            user.username === 'SUPPORT' ||
+            user.username === 'malcho' ||
+            user.username === 'OFFICIALRPSGAME' ||
+            user.username === 'PimpedPistols' ||
+            user.username === '🔥 THE DON 🔥 (BOT #1)' ||
+            user.username === '🪨 ROCKY 🪨 (BOT #2)' ||
+            user.username === '✂️ CAESAR ✂️ (BOT #4)' ||
+            user.username === '📃 PAPIÉR 📃 (BOT #3)'
+          ) {
+            continue;
+          }
 
-      // Check if the user has the credit_score field
-      if ('dailyWithdrawals' in user) {
-        // Ensure credit score doesn't go below a certain threshold (e.g., 0)
-        if (user.balance < 0.5) {
-          user.dailyWithdrawals = 0;
-          await user.save();
-        } else {
-          user.balance = user.balance * -1;
-          user.is_deleted = true;
-          await user.save();
-          console.log("POTENTIAL HACKER ALERT", user.username);
+          // Check if the user has the credit_score field
+          if ('dailyWithdrawals' in user) {
+            // Ensure credit score doesn't go below a certain threshold (e.g., 0)
+            if (user.balance < 0.5) {
+              user.dailyWithdrawals = 0;
+              await user.save();
+            } else {
+              user.balance = user.balance * -1;
+              user.is_deleted = true;
+              await user.save();
+              console.log("POTENTIAL HACKER ALERT", user.username);
+            }
+          } else {
+            user.dailyWithdrawals = 0;
+            await user.save();
+          }
         }
+        systemSetting.last_updated = new Date();
+        await systemSetting.save();
       } else {
-        user.dailyWithdrawals = 0;
-        await user.save();
+        console.log("Last wd check was less than 24 hours ago. Skipping.");
       }
+    } else {
+      console.log("System setting for last updated not found.");
     }
-    console.log("SYSTEM SAFE");
-
-
   } catch (error) {
     console.error('Error updating withdrawal limits:', error);
   }

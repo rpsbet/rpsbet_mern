@@ -29,8 +29,7 @@ import {
   getRoomInfo,
   setCurRoomInfo,
   loadRoomInfo,
-  getMyChat,
-  getMyGames,
+  fetchAccessory,
   // getMyHistory,
   getHistory,
   getGameTypeList,
@@ -100,6 +99,7 @@ class JoinGame extends Component {
       selectedMobileTab: 'live_games',
       roomInfo: this.props.roomInfo,
       limit: 10,
+      cp: 0,
       spleesh_guesses: [],
       selected_rps: '',
       selected_qs_position: 0,
@@ -171,37 +171,29 @@ class JoinGame extends Component {
     try {
       await Promise.all([
         this.props.getRpsBetItems(id),
-
-        this.getRoomData(id),
+        // this.getRoomData(id),
         this.loadSounds(),
         this.props.getHistory(),
-
         // this.props.getGameTypeList(),
         this.props.getStrategies(),
-        // this.props.isAuthenticated && this.props.getMyGames(),
-        // this.props.isAuthenticated && this.props.getMyHistory(),
-        // this.props.isAuthenticated && this.props.getMyChat(),
-        this.props.getRoomInfo(
-          this.props.match.params.id,
-          this.state.limit,
-          true
-        )
-      ]);
+        this.props.getRoomInfo(this.props.match.params.id, this.state.limit, true)
+        .then(() => this.fetchAccessory()) // Invoke fetchAccessory after getRoomInfo
+    ]);
     } catch (error) {
       console.error('Error initializing room data:', error);
     }
   }
 
-  async getRoomData(roomId) {
-    try {
-      const actionList = await this.props.getRoomStatisticsData(roomId, 30);
-      this.setState({
-        actionList
-      });
-    } catch (error) {
-      console.error('Error fetching room data:', error);
-    }
-  }
+  // async getRoomData(roomId) {
+  //   try {
+  //     const actionList = await this.props.getRoomStatisticsData(roomId, 30);
+  //     this.setState({
+  //       actionList
+  //     });
+  //   } catch (error) {
+  //     console.error('Error fetching room data:', error);
+  //   }
+  // }
 
   async loadSounds() {
     await Promise.all(
@@ -249,6 +241,22 @@ class JoinGame extends Component {
     return result;
   };
 
+ async fetchAccessory() {
+  try {
+    const creatorId = this.props.roomInfo.creator_id;
+    if (!creatorId) {
+      console.error("Creator ID is empty or undefined");
+      return;
+    }
+    const _id = creatorId.toString(); // Convert _id to string
+    const accessory = await this.props.fetchAccessory({ _id });
+    if (accessory.accessory.CP !== undefined) {
+      this.setState({ cp: accessory.accessory.CP });
+    }
+  } catch (error) {
+    console.error('Error fetching accessory:', error);
+  }
+} 
 
   // auto bet
   join2 = async betInfo => {
@@ -1370,6 +1378,8 @@ class JoinGame extends Component {
                       changeBgColor={this.changeBgColor}
                       bgColorChanged={bgColorChanged}
                       betting={betting}
+                      cp={this.state.cp}
+                      rpsbetitems={this.props.rpsbetitems}
                       updateSelectedRps={this.updateSelectedRps}
                       selected_rps={selected_rps}
                       refreshHistory={this.refreshHistory}
@@ -1385,6 +1395,7 @@ class JoinGame extends Component {
                       showPlayerModal={showPlayerModal}
                       creator_id={roomInfo.creator_id}
                       bet_amount={roomInfo.bet_amount}
+                      user_bet={roomInfo.user_bet}
                       // bankroll={bankroll}
                       rps_bet_item_id={roomInfo.rps_bet_item_id}
                       is_private={roomInfo.is_private}
@@ -1844,7 +1855,8 @@ const mapDispatchToProps = {
   getRpsBetItems,
   openGamePasswordModal,
   getCustomerStatisticsData,
-  deductBalanceWhenStartBrainGame
+  deductBalanceWhenStartBrainGame,
+  fetchAccessory
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(JoinGame);

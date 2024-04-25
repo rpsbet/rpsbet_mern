@@ -283,38 +283,22 @@ class MyProductTable extends Component {
   async fetchAccessory(_id) {
     try {
       const accessory = await this.props.fetchAccessory({ _id });
-      this.setState({ accessory });
+      this.setState({ accessory: accessory.accessory.name });
     } catch (error) {
       // Handle the error, e.g., show an error message or log the error
       console.error('Error fetching accessory:', error);
     }
   }
 
-
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      this.state.itemType !== prevState.itemType ||
-      this.props.tnxComplete !== prevProps.tnxComplete
-    ) {
-      // The itemType or showConfirmTradeModal prop has changed to false, re-fetch data
-      this.fetchItems();
-    }
-  }
-
-  handleFilterChange = event => {
-    this.setState({ itemType: event.target.value, anchorEl: null });
-    this.fetchItems();
-  };
-
-  // handleSortChange = event => {
+   // handleSortChange = event => {
   //   this.setState({ sortCriteria: event.target.value });
   //   this.fetchItems();
   // }
 
-  fetchItems() {
-    const { acQueryMyItem, page } = this.props;
+  async fetchItems() {
+  const { acQueryMyItem, page } = this.props;
     const { sortCriteria, itemType } = this.state;
-    acQueryMyItem(30, page, sortCriteria, itemType);
+    await acQueryMyItem(30, page, sortCriteria, itemType);
   }
 
   handleFilterClick = event => {
@@ -322,9 +306,11 @@ class MyProductTable extends Component {
   };
 
   handleFilterClose = filter => {
-    this.setState({ anchorEl: null, itemType: filter });
+    this.setState({ anchorEl: null, itemType: filter }, () => {
+      this.fetchItems();
+    });
   };
-
+  
   handleSortClick = event => {
     this.setState({ sortAnchorEl: event.currentTarget });
   };
@@ -353,7 +339,7 @@ class MyProductTable extends Component {
         this.props.getRoomList({ game_type: 'All' });
 
         const { message } = response;
-        alertModal(isDarkMode, message);
+        alertModal(isDarkMode, message, '-cat');
       } else {
         alertModal(isDarkMode, 'Unable to Equip item, contact Support.');
       }
@@ -445,14 +431,7 @@ class MyProductTable extends Component {
               open={Boolean(anchorEl)}
               onClose={() => this.handleFilterClose(null)}
             >
-              {/* <MenuItem
-                onClick={() =>
-                  this.handleFilterClose('653ee7ac17c9f5ee21245649')
-                }
-                selected={itemType === '653ee7ac17c9f5ee21245649'}
-              >
-                RRPS Card
-              </MenuItem> */}
+            
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee7df17c9f5ee2124564a')
@@ -470,6 +449,14 @@ class MyProductTable extends Component {
               >
                 Accessory
               </MenuItem>
+                {/* <MenuItem
+                onClick={() =>
+                  this.handleFilterClose('653ee7ac17c9f5ee21245649')
+                }
+                selected={itemType === '653ee7ac17c9f5ee21245649'}
+              >
+                RRPS Card
+              </MenuItem> */}
 
               {/* <MenuItem
                 onClick={() =>
@@ -614,7 +601,7 @@ class MyProductTable extends Component {
                   {row.item_type !== '653ee81117c9f5ee2124564b' ? null : (
                     <Tooltip
                       title={
-                        accessory && accessory.accessory === row.image
+                        accessory && accessory === row.image
                           ? 'Unequip Item'
                           : 'Equip Item'
                       }
@@ -625,7 +612,7 @@ class MyProductTable extends Component {
                           this.equipItem(row._id);
                         }}
                       >
-                        {accessory && accessory.accessory === row.image
+                        {accessory && accessory === row.image
                           ? 'UNEQUIP'
                           : 'EQUIP'}{' '}
                         <SwapHoriz />

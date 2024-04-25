@@ -8,7 +8,7 @@ const SystemSettingSchema = new Schema({
     },
     value: {
         type: String,
-        defalut: ''
+        default: ''
     },
     created_at: {
         type: Date,
@@ -17,9 +17,13 @@ const SystemSettingSchema = new Schema({
     updated_at: {
         type: Date,
         default: Date.now
+    },
+    last_updated: {
+        type: Date,
+        default: Date.now
     }
 });
 
-SystemSettingSchema.index({ name: 1 }); // Index on the 'name' field
+SystemSettingSchema.index({ name: 1 });
 
 module.exports = SystemSetting = mongoose.model('rps_system_setting', SystemSettingSchema);

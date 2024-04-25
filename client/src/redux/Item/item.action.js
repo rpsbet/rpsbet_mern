@@ -23,18 +23,18 @@ export const acQueryMyItem = (pagination, page, sortCriteria, itemType) => async
 ) => {
   dispatch({ type: MY_ITEM_QUERY, payload: [] });
   dispatch({ type: LOADING_ITEM_TABLE, payload: true });
-  let payload = {
+  
+  let params = { // Construct params object instead of payload
     pagination,
     page,
     sortCriteria,   
-    itemType, 
+    item_type: itemType, // Use 'item_type' instead of 'itemType'
   };
-  dispatch({ type: PAGINATION_FOR_ITEM, payload });
-  let body = {};
-  body.pagination = getState().itemReducer.pagination;
-  body.page = getState().itemReducer.page;
+  
+  dispatch({ type: PAGINATION_FOR_ITEM, payload: params });
+  
   try {
-    const { data } = await api.get('/item/my-items', { params: payload });
+    const { data } = await api.get('/item/my-items', { params }); // Pass params directly
     if (data.success) {
       dispatch({ type: MY_ITEM_QUERY, payload: data.items });
       dispatch({ type: MY_ADD_TOTAL, payload: data });
@@ -47,6 +47,8 @@ export const acQueryMyItem = (pagination, page, sortCriteria, itemType) => async
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
+
+
 export const queryProducts = (pagination, page, id) => async (
   dispatch,
   getState

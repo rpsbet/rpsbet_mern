@@ -224,8 +224,6 @@ const addToQueue = async (req, bot = false) => {
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
 
-
-
                     switch (roomInfo['selectedStrategy']) {
                         case 'Random':
                             nextItem = await getRandomItem();
@@ -299,7 +297,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.12) {
+                    if (randomNumber <= 0.16) {
                         if (bot &&
                             ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
                                 (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
@@ -318,6 +316,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
+
                     // if win
                     if (
                         (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
@@ -336,20 +335,18 @@ const addToQueue = async (req, bot = false) => {
                             parseFloat(rain.value) +
                             betAmount * 2 * ((commission - parseFloat(tax.value)) / 100);
 
-
-
                         // update platform earnings (0.5%)
                         platform.value =
                             parseFloat(platform.value) +
                             betAmount * 2 * (parseFloat(tax.value) / 100);
-
 
                         // update bankroll
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']);
 
                         roomInfo['host_pr'] -= betAmount;
                         roomInfo['user_bet'] -= betAmount;
-
+                        roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) + (betAmount * 2 * ((commission - parseFloat(tax.value)) / 100));
+                        roomInfo['host_pr'] = parseFloat(roomInfo['host_pr']) + (betAmount * 2 * ((commission - parseFloat(tax.value)) / 100));
 
                         // send notification
                         message.message =
@@ -366,6 +363,7 @@ const addToQueue = async (req, bot = false) => {
                         game_result = 0;
 
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (betAmount * (parseFloat(tax.value) / 100));
+                        roomInfo['host_pr'] = parseFloat(roomInfo['host_pr']) - (betAmount * (parseFloat(tax.value) / 100));
 
                         newTransactionAmount += (betAmount - betAmount * (parseFloat(tax.value) / 100));
 
@@ -493,23 +491,15 @@ const addToQueue = async (req, bot = false) => {
                 }
             }
 
-            roomInfo['creator']['balance'] += newTransactionC.amount;
-            roomInfo['creator']['gamePlayed']++;
-            roomInfo['creator']['totalProfit'] += Math.abs(newTransactionC.amount);
-            roomInfo['creator']['totalWagered'] += Math.abs(newTransactionAmount);
-
-
-            if (roomInfo['creator']['profitAllTimeHigh'] < newTransactionC.amount) {
-                roomInfo['creator']['profitAllTimeHigh'] = newTransactionC.amount;
-            }
-            if (roomInfo['creator']['profitAllTimeLow'] > newTransactionC.amount) {
-                roomInfo['creator']['profitAllTimeLow'] = newTransactionC.amount;
+            // if not already added to joiners, add to joiners
+            if (!roomInfo.joiners.includes(user._id)) {
+                roomInfo.joiners.addToSet(user._id);
             }
 
             user['balance'] += newTransactionAmount;
             user['gamePlayed']++;
-            user['totalProfit'] += Math.abs(newTransactionAmount);
-            user['totalWagered'] += Math.abs(newTransactionAmount);
+            user['totalProfit'] += newTransactionAmount;
+            user['totalWagered'] += Math.abs(bet_item.bet_amount);
 
             if (user['profitAllTimeHigh'] < newTransactionAmount) {
                 user['profitAllTimeHigh'] = newTransactionAmount;
@@ -517,24 +507,39 @@ const addToQueue = async (req, bot = false) => {
             if (user['profitAllTimeLow'] > newTransactionAmount) {
                 user['profitAllTimeLow'] = newTransactionAmount;
             }
-            try {
-                Promise.all([
-                    saveDocumentWithRetry(platform),
-                    await saveDocumentWithRetry(user),
-                    saveDocumentWithRetry(rain),
-                    await saveDocumentWithRetry(newGameLog)
-                ]);
-            } catch (error) {
-                console.error("Error saving", error);
-            }
-            // setTimeout(async () => {
 
+            // setTimeout(async () => {
+            const host = await User.findOne({ _id: roomInfo['creator'] });
+            if (host) {
+                host.gamePlayed++;
+                host.totalProfit += newTransactionAmount * -1;
+                host.totalWagered += Math.abs(bet_item.bet_amount);
+
+                if (host.profitAllTimeHigh < newTransactionAmount * -1) {
+                    host.profitAllTimeHigh = newTransactionAmount * -1;
+                }
+                if (host.profitAllTimeLow > newTransactionAmount * -1) {
+                    host.profitAllTimeLow = newTransactionAmount * -1;
+                }
+            } else {
+                console.log(`Host not found.`);
+            }
             // Check if user_bet matches the share value of the first host
             if (roomInfo.hosts[0].share === 100) {
 
                 if (newTransactionC.amount !== 0) {
                     try {
-                        await saveDocumentWithRetry(newTransactionC);
+                        saveDocumentWithRetry(newTransactionC);
+                        if (host) {
+                            try {
+                                host.balance += newTransactionC.amount;
+                                host.totalProfit += newTransactionC.amount;
+                            } catch (error) {
+                                console.error("Error saving host:", error);
+                            }
+                        } else {
+                            console.log(`Host not found.`);
+                        }
                     } catch (error) {
                         console.error("Error saving newTransactionC", error);
                     }
@@ -573,6 +578,19 @@ const addToQueue = async (req, bot = false) => {
                     }
 
                 });
+            }
+
+            try {
+                Promise.all([
+                    saveDocumentWithRetry(platform),
+                    await saveDocumentWithRetry(user),
+                    await saveDocumentWithRetry(roomInfo),
+                    saveDocumentWithRetry(rain),
+                    saveDocumentWithRetry(host),
+                    await saveDocumentWithRetry(newGameLog)
+                ]);
+            } catch (error) {
+                console.error("Error saving", error);
             }
 
             const notificationData = {

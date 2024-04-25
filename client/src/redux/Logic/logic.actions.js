@@ -572,10 +572,11 @@ export const equipItem = data => async dispatch => {
 
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-
       return res.data;
     }
   } catch (err) {
+    dispatch({ type: MSG_ERROR, payload: 'FAILED TO EQUIP ACCESSORY' });
+
   } finally {
     dispatch({ type: END_LOADING });
   }

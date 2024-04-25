@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import { getRank } from '../util/getRank';
 import { connect } from 'react-redux';
-import { fetchAccessory } from '../redux/Logic/logic.actions';
 import chroma from 'chroma-js';
 
 class Avatar extends Component {
@@ -204,7 +203,6 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  fetchAccessory
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Avatar);

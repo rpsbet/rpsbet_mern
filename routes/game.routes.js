@@ -405,21 +405,22 @@ router.get('/room/:id', async (req, res) => {
         description: room['description'],
         joiners: joiners,
         game_type: room['game_type']['game_type_name'],
-        bet_amount: parseFloat(room['user_bet']),
+        bet_amount: parseFloat(room['bet_amount']),
+        user_bet: parseFloat(room['user_bet']),
         // spleesh_bet_unit: room['spleesh_bet_unit'],
         // brain_game_type: room['brain_game_type'],
         host_pr: room['host_pr'],
         pr: room['pr'],
-        new_host_pr: room['new_host_pr'],
+        // new_host_pr: room['new_host_pr'],
         user_bet: room['user_bet'],
         room_name: room['game_type']['short_name'] + '-' + room['room_number'],
-        brain_game_score: room['brain_game_score'],
+        // brain_game_score: room['brain_game_score'],
         // selected_drop: room['selected_drop'],
-        selected_bj: room['selected_bj'],
-        multiplier: room['multiplier'],
-        qs_game_type: room['qs_game_type'],
+        // selected_bj: room['selected_bj'],
+        // multiplier: room['multiplier'],
+        // qs_game_type: room['qs_game_type'],
         selectedStrategy: room['selectedStrategy'],
-        qs_nation: room['qs_nation'],
+        // qs_nation: room['qs_nation'],
         rps_game_type: room['rps_game_type'],
         room_history: roomHistory,
         // box_list: boxPrizeList,
@@ -2414,32 +2415,34 @@ router.post('/end_game', auth, async (req, res) => {
 
 
       if (
-        gameTypeName === 'RPS' ||
-        gameTypeName === 'Spleesh!' ||
-        gameTypeName === 'Blackjack' ||
-        gameTypeName === 'Quick Shoot' ||
-        gameTypeName === 'Drop Game' ||
-        gameTypeName === 'Bang!' ||
-        gameTypeName === 'Roll'
+        gameTypeName === 'RPS'
+        // ||
+        // gameTypeName === 'Spleesh!' ||
+        // gameTypeName === 'Blackjack' ||
+        // gameTypeName === 'Quick Shoot' ||
+        // gameTypeName === 'Drop Game' ||
+        // gameTypeName === 'Bang!' ||
+        // gameTypeName === 'Roll'
       ) {
         newTransaction.amount += roomInfo.user_bet;
         message.message =
           `Earned ${convertToCurrency(roomInfo.user_bet)} from ending ` +
           `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
-      } else if (gameTypeName === 'Mystery Box') {
-        newTransaction.amount +=
-          roomInfo.host_pr + parseFloat(roomInfo.user_bet);
-        message.message =
-          `Earned ${convertToCurrency(
-            roomInfo.host_pr + parseFloat(roomInfo.user_bet)
-          )} from ending ` +
-          `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
-      } else if (gameTypeName === 'Brain Game') {
-        newTransaction.amount += roomInfo.host_pr;
-        message.message =
-          `Earned ${convertToCurrency(roomInfo.host_pr)} from ending ` +
-          `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
       }
+      //  else if (gameTypeName === 'Mystery Box') {
+      //   newTransaction.amount +=
+      //     roomInfo.host_pr + parseFloat(roomInfo.user_bet);
+      //   message.message =
+      //     `Earned ${convertToCurrency(
+      //       roomInfo.host_pr + parseFloat(roomInfo.user_bet)
+      //     )} from ending ` +
+      //     `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
+      // } else if (gameTypeName === 'Brain Game') {
+      //   newTransaction.amount += roomInfo.host_pr;
+      //   message.message =
+      //     `Earned ${convertToCurrency(roomInfo.host_pr)} from ending ` +
+      //     `${roomInfo.game_type.short_name}-${roomInfo.room_number}`;
+      // }
 
       newGameLog = new GameLog({
         room: roomInfo,

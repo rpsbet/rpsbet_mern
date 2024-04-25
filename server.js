@@ -56,9 +56,9 @@ const withdrawalCron = require('./helper/util/withdrawalCron.js');
 creditScoreCron.checkOutstandingLoans(io);
 rentCron.checkRentalPayments(io);
 notificationCron.deleteNotifications();
-// cronJob.checkConfirmations(io);
 callBotCron.callCronJobs(io);
 withdrawalCron.resetWithdrawalLimits();
+// cronJob.checkConfirmations(io);
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

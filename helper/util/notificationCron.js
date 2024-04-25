@@ -4,32 +4,36 @@ const cron = require('node-cron');
 const Notification = require('../../model/Notification');
 const Chat = require('../../model/Chat');
 const RpsBetItem = require('../../model/RpsBetItem');
-
+const SystemSetting = require('../../model/SystemSetting');
 
 async function deleteChat() {
   try {
-    // Retrieve the total count of chat messages
-    const totalMessages = await Chat.countDocuments();
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    if (systemSetting) {
+      const lastUpdated = systemSetting.last_updated;
+      // Check if last_updated is 24 hours ago or more
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    // Determine the number of messages to be deleted
-    const messagesToDelete = totalMessages - 50;
+      if (lastUpdated <= twentyFourHoursAgo) {
+        const totalMessages = await Chat.countDocuments();
+        const messagesToDelete = totalMessages - 50;
+        if (messagesToDelete > 0) {
+          const messagesToDeleteIds = await Chat.find({})
+            .sort({ created_at: 1 })
+            .limit(messagesToDelete)
+            .select('_id');
 
-    // Ensure there are messages to delete
-    if (messagesToDelete > 0) {
-      // Retrieve the IDs of the messages to be deleted
-      const messagesToDeleteIds = await Chat.find({})
-        .sort({ created_at: 1 }) // Sort by createdAt in ascending order (oldest first)
-        .limit(messagesToDelete) // Limit to the excess messages
-        .select('_id');
+          const messageIds = messagesToDeleteIds.map(message => message._id);
+          const deletedMessages = await Chat.deleteMany({ _id: { $in: messageIds } });
+          console.log(`${deletedMessages.deletedCount} messages deleted.`);
 
-      // Extract the IDs from the found messages
-      const messageIds = messagesToDeleteIds.map(message => message._id);
-
-      // Delete the excess messages
-      const deletedMessages = await Chat.deleteMany({ _id: { $in: messageIds } });
-
-      console.log(`${deletedMessages.deletedCount} messages deleted.`);
-      
+        }
+      } else {
+        console.log("Last chat deletion was less than 24 hours ago. Skipping deletion.");
+      }
+    } else {
+      console.log("System setting for chat last updated not found.");
     }
   } catch (error) {
     console.error('Error deleting chat messages:', error);
@@ -38,27 +42,32 @@ async function deleteChat() {
 
 async function deleteRpsBetItems() {
   try {
-    // Retrieve the total count of RpsBetItems
-    const totalItems = await RpsBetItem.countDocuments();
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    if (systemSetting) {
+      const lastUpdated = systemSetting.last_updated;
+      // Check if last_updated is 24 hours ago or more
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    // Determine the number of items to be deleted
-    const itemsToDelete = totalItems - 1000;
+      if (lastUpdated <= twentyFourHoursAgo) {
+        const totalItems = await RpsBetItem.countDocuments();
+        const itemsToDelete = totalItems - 1000;
+        if (itemsToDelete > 0) {
+          const itemsToDeleteIds = await RpsBetItem.find({})
+            .sort({ created_at: 1 })
+            .limit(itemsToDelete)
+            .select('_id');
 
-    // Ensure there are items to delete
-    if (itemsToDelete > 0) {
-      // Retrieve the IDs of the items to be deleted
-      const itemsToDeleteIds = await RpsBetItem.find({})
-        .sort({ created_at: 1 }) // Sort by createdAt in ascending order (oldest first)
-        .limit(itemsToDelete) // Limit to the excess items
-        .select('_id');
+          const itemIds = itemsToDeleteIds.map(item => item._id);
+          const deletedItems = await RpsBetItem.deleteMany({ _id: { $in: itemIds } });
 
-      // Extract the IDs from the found items
-      const itemIds = itemsToDeleteIds.map(item => item._id);
-
-      // Delete the excess items
-      const deletedItems = await RpsBetItem.deleteMany({ _id: { $in: itemIds } });
-
-      console.log(`${deletedItems.deletedCount} RpsBetItems deleted.`);
+          console.log(`${deletedItems.deletedCount} RpsBetItems deleted.`);
+        }
+      } else {
+        console.log("Last rpsBetItem deletion was less than 24 hours ago. Skipping deletion.");
+      }
+    } else {
+      console.log("System setting for last updated not found.");
     }
   } catch (error) {
     console.error('Error deleting RpsBetItems:', error);
@@ -67,29 +76,35 @@ async function deleteRpsBetItems() {
 
 async function deleteNotifications() {
   try {
-    // Retrieve the total count of notifications
-    const totalNotifications = await Notification.countDocuments();
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    if (systemSetting) {
+      const lastUpdated = systemSetting.last_updated;
+      // Check if last_updated is 24 hours ago or more
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    // Determine the number of notifications to be deleted
-    const notificationsToDelete = totalNotifications - 500;
+      if (lastUpdated <= twentyFourHoursAgo) {
+        const totalNotifications = await Notification.countDocuments();
+        const notificationsToDelete = totalNotifications - 500;
+        if (notificationsToDelete > 0) {
+          const notificationsToDeleteIds = await Notification.find({})
+            .sort({ created_at: 1 })
+            .limit(notificationsToDelete)
+            .select('_id');
 
-    // Ensure there are notifications to delete
-    if (notificationsToDelete > 0) {
-      // Retrieve the IDs of the notifications to be deleted
-      const notificationsToDeleteIds = await Notification.find({})
-        .sort({ created_at: 1 }) // Sort by createdAt in ascending order (oldest first)
-        .limit(notificationsToDelete) // Limit to the excess notifications
-        .select('_id');
+          const notificationIds = notificationsToDeleteIds.map(notification => notification._id);
 
-      // Extract the IDs from the found notifications
-      const notificationIds = notificationsToDeleteIds.map(notification => notification._id);
+          const deletedNotifications = await Notification.deleteMany({ _id: { $in: notificationIds } });
 
-      // Delete the excess notifications
-      const deletedNotifications = await Notification.deleteMany({ _id: { $in: notificationIds } });
-
-      console.log(`${deletedNotifications.deletedCount} notifications deleted.`);
-      
-    
+          console.log(`${deletedNotifications.deletedCount} notifications deleted.`);
+        }
+        systemSetting.last_updated = new Date();
+        await systemSetting.save();
+      } else {
+        console.log("Last notification deletion was less than 24 hours ago. Skipping deletion.");
+      }
+    } else {
+      console.log("System setting for last updated not found.");
     }
   } catch (error) {
     console.error('Error deleting notifications:', error);

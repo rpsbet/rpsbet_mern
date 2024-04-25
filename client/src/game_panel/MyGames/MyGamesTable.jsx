@@ -918,9 +918,12 @@ class MyGamesTable extends Component {
                             </a>
                           )}
                       </div>
+                      <div className="table-cell winnings">
+                            <span>{convertToCurrency(row.pr - row.bet_amount)}</span>
+                          </div>
                       {!this.props.myGamesWithStats ? (
                         <>
-                          <div className="table-cell winnings">
+                          {/* <div className="table-cell winnings">
                             <Lottie
                               options={{
                                 loop: true,
@@ -931,7 +934,7 @@ class MyGamesTable extends Component {
                                 width: '32px'
                               }}
                             />
-                          </div>
+                          </div> */}
                           <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
                             <Battle width="24px" />
                             &nbsp;
@@ -949,9 +952,7 @@ class MyGamesTable extends Component {
                         </>
                       ) : (
                         <>
-                          <div className="table-cell winnings">
-                            <span>{convertToCurrency(row.net_profit)}</span>
-                          </div>
+                          
                           <div className="table-cell bets">
                             <Battle width="24px" />
                             &nbsp;
