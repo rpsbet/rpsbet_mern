@@ -42,7 +42,7 @@ const initialState = {
     localStorage.getItem('isMusicEnabled') === 'false' ? false : true,
   isLowGraphics:
     localStorage.getItem('isLowGraphics') === 'false' ? false : true,
-  isMuted: localStorage.getItem('isMuted') === 'false' ? false : true,
+  isMuted: localStorage.getItem('isMuted') === 'true' ? true : false,
   isDrawerOpen: localStorage.getItem('isDrawerOpen') === 'false' ? false : true,
   loading: true,
   user: { _id: null, password: '' },

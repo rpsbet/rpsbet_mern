@@ -25,10 +25,10 @@
       type: String,
       default: 'Random'
     },
-    aveMultiplier: {
-      type: Number,
-      default: 1
-    },
+    // aveMultiplier: {
+    //   type: Number,
+    //   default: 1
+    // },
     // qs_game_type: {
     //   type: Number,
     //   default: 2

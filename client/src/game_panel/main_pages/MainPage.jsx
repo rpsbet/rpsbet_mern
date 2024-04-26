@@ -67,7 +67,8 @@ class MainPage extends Component {
       selectedGameType: 'All',
       isDrawerOpen: true,
       showP2PLending: false,
-      showMarketplace: false
+      showMarketplace: false,
+      refreshing: false,
     };
     this.toggleDrawer = this.toggleDrawer.bind(this);
   }
@@ -91,11 +92,11 @@ class MainPage extends Component {
     await Promise.all(promises);
   }
 
-//   componentDidUpdate(prevState) {
-// if (prevState.selectedMobileTab !== this.state.selectedMobileTab) {
-//   console.log("WDf",this.state.selectedMobileTab )
-// }
-//   }
+  //   componentDidUpdate(prevState) {
+  // if (prevState.selectedMobileTab !== this.state.selectedMobileTab) {
+  //   console.log("WDf",this.state.selectedMobileTab )
+  // }
+  //   }
 
   toggleP2PLending = () => {
     this.setState({
@@ -119,9 +120,14 @@ class MainPage extends Component {
   };
 
   handleRefresh = async () => {
-    await this.props.clearRoomListCache();
-    await this.props.getRoomCount();
-    await this.props.getRoomList({ pageSize: 7 });
+    this.setState({ refreshing: true }, async () => {
+      console.log(this.state.refreshing);
+      await this.props.clearRoomListCache();
+      await this.props.getRoomCount();
+      await this.props.getRoomList({ pageSize: 7 });
+      this.setState({refreshing: false});
+      console.log(this.state.refreshing);
+    })
   };
 
   onChangeGameType = async (newType, callback) => {
@@ -139,16 +145,16 @@ class MainPage extends Component {
     if (this.state.selectedMobileTab === 'marketplace') {
       return null; // Render nothing if selectedMobileTab is not 'marketplace'
     }
-  
+
     return (
       (this.state.is_mobile && this.state.selectedMobileTab === 'live_games' && this.state.show_open_game !== 1) ||
-      (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
+        (!this.state.is_mobile && this.props.selectedMainTabIndex === 0) ? (
         <>
           <div id="liveStakes">
             {this.props.rooms_count} BATTLES
             <Lottie options={defaultOptions} width={40} />
           </div>
-  
+
           <div className="refresh-main">
             <IconButton color="primary" onClick={this.handleRefresh}>
               <RefreshIcon />
@@ -160,7 +166,7 @@ class MainPage extends Component {
       )
     );
   };
-  
+
 
   render() {
     const { isDrawerOpen } = this.props;
@@ -283,6 +289,7 @@ class MainPage extends Component {
               this.state.selectedMobileTab === 'live_games' &&
               this.state.show_open_game === 0)) && (
               <OpenGamesTable
+                refreshing={this.state.refreshing}
                 roomList={this.props.roomList}
                 isAuthenticated={this.props.isAuthenticated}
                 rooms_count={this.props.rooms_count}

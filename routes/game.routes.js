@@ -1077,7 +1077,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
   try {
     const preRooms = await Room.find(search_condition)
-      .select('_id creator joiners game_type spleesh_bet_unit bet_amount user_bet pr host_pr status room_number created_at likes views hosts')
+      .select('_id creator joiners game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at likes views hosts')
       .populate({ path: 'creator', model: User, select: 'avatar totalWagered accessory status' })
       .populate({ path: 'game_type', model: GameType })
       .limit(pageSize)
@@ -1115,7 +1115,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           pr: room.pr,
           user_bet: parseFloat(room.user_bet),
           winnings: '',
-          spleesh_bet_unit: room.spleesh_bet_unit,
+          // spleesh_bet_unit: room.spleesh_bet_unit,
           is_private: room.is_private,
           gameBackground: room.gameBackground,
           status: room.status,

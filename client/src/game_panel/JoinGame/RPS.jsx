@@ -215,6 +215,7 @@ class RPS extends Component {
   };
 
   async componentDidMount() {
+    console.log(this.props.gameBackground)
     document.addEventListener('keydown', this.handleKeyPress);
     this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
     this.setupSocket();
@@ -489,9 +490,7 @@ class RPS extends Component {
 
 
       if (prevLastItemId === currentLastItemId) {
-        console.log("before", this.props.rpsbetitems.slice(0, 5).reverse());
         await this.props.getRpsBetItems(roomInfo._id);
-        console.log("Updating", this.props.rpsbetitems.slice(0, 5).reverse());
         this.setState({
           rps: this.props.rpsbetitems.slice(0, 5).reverse(),
           prev_rps: this.props.rpsbetitems.slice(0, 5).reverse()
@@ -610,7 +609,6 @@ class RPS extends Component {
 
   handleBotClick = () => {
     const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } = this.props;
-
     if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
       callBot(creator_id, roomInfo._id, user_id, isDarkMode, updateRoomBot);
     }
@@ -1026,7 +1024,7 @@ class RPS extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {/* {renderLottieAvatarAnimation(gameBackground, isLowGraphics)} */}
+            {renderLottieAvatarAnimation(gameBackground, isLowGraphics)}
             {this.props.rps_game_type === 1 && (
               <div className="game-background-panel game-info-panel">
                 <YouTubeModal

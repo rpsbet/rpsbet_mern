@@ -213,21 +213,26 @@ class OpenGamesTable extends Component {
     const roomIds = this.props.roomList.map(room => room._id);
 
     if (prevProps.roomList !== this.props.roomList) {
-      if (prevProps.roomList.length > this.props.roomList.length) {
-        this.setState({
-          roomList: this.props.roomList
-        })
-      }
+      console.log( this.props.roomList)
+      
       this.setState(prevState => ({
         roomList: [...prevState.roomList, ...this.props.roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))],
         fetchedRoomIds: [...prevState.fetchedRoomIds, ...roomIds],
         isLoading: false,
         loaded: true
-      }), () => {
-        // if (roomIds) {
-        //   this.getRoomData(roomIds);
-        // }
-      });
+      }));
+      this.setState({
+        roomList: this.props.roomList
+      })
+    }
+
+    if (prevProps.refreshing !== this.props.refreshing) {
+      if (this.props.refreshing) {
+       console.log("WEdwe")
+        this.setState({
+          roomList:[]
+        })
+      }
     }
 
     if (prevProps.selectedGameType !== this.props.selectedGameType) {
@@ -779,19 +784,19 @@ class OpenGamesTable extends Component {
                               data-room-status={row.status}
                               data-game-type={row.game_type.game_type_name}
                               data-bet-amount={row.user_bet}
-                              data-spleesh-bet-unit={row.spleesh_bet_unit}
-                              data-box-price={row.box_price}
-                              data-brain-game-type-id={
-                                row.brain_game_type ? row.brain_game_type._id : ''
-                              }
-                              data-brain-game-type-name={
-                                row.brain_game_type
-                                  ? row.brain_game_type.game_type_name
-                                  : ''
-                              }
-                              data-brain-game-score={
-                                row.brain_game_score ? row.brain_game_score : 0
-                              }
+                              // data-spleesh-bet-unit={row.spleesh_bet_unit}
+                              // data-box-price={row.box_price}
+                              // data-brain-game-type-id={
+                              //   row.brain_game_type ? row.brain_game_type._id : ''
+                              // }
+                              // data-brain-game-type-name={
+                              //   row.brain_game_type
+                              //     ? row.brain_game_type.game_type_name
+                              //     : ''
+                              // }
+                              // data-brain-game-score={
+                              //   row.brain_game_score ? row.brain_game_score : 0
+                              // }
                             >
                               {row.is_private && (
                                 <img
@@ -1140,6 +1145,7 @@ class OpenGamesTable extends Component {
 const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   joiners: state.logic.curRoomInfo.joiners,
+  is_private: state.logic.curRoomInfo.is_private,
   isAuthenticated: state.auth.isAuthenticated,
   userName: state.auth.userName,
   user: state.auth.user,
