@@ -273,69 +273,69 @@ class CreateGame extends Component {
         max_return: 0,
         endgame_amount: 0
       };
-    } else if (gameTypeName === 'Brain Game') {
-      newState = {
-        ...newState,
-        game_type: 3,
-        winChance: 0,
-        max_return: '∞',
-        endgame_amount: 0
-      };
-    } else if (gameTypeName === 'Quick Shoot') {
-      newState = {
-        ...newState,
-        game_type: 5,
-        public_bet_amount: convertToCurrency(1),
-        max_return: 2,
-        bet_amount: 0.001,
-        winChance: 0,
-        qs_nation: Math.floor(Math.random() * 4),
-        endgame_amount: 0
-      };
-    } else if (gameTypeName === 'Mystery Box') {
-      newState = {
-        ...newState,
-        game_type: 4,
-        winChance: 0,
-        bet_amount: 0,
-        public_bet_amount: 0,
-        endgame_amount: 0
-      };
-    } else if (gameTypeName === 'Drop Game') {
-      newState = {
-        ...newState,
-        game_type: 6,
-        winChance: 0,
-        bet_amount: 0.001,
-        endgame_amount: 0
-      };
-    } else if (gameTypeName === 'Bang!') {
-      newState = {
-        ...newState,
-        game_type: 7,
-        winChance: 0,
-        bet_amount: 0.001,
-        endgame_amount: 0,
-        aveMultiplier: 0
-      };
-    } else if (gameTypeName === 'Roll') {
-      newState = {
-        ...newState,
-        game_type: 8,
-        winChance: 0,
-        bet_amount: 0.001,
-        endgame_amount: 0,
-        aveMultiplier: 0
-      };
-    } else if (gameTypeName === 'Blackjack') {
-      newState = {
-        ...newState,
-        game_type: 9,
-        bet_amount: 0.001,
-        winChance: 0,
-        max_return: 0,
-        endgame_amount: 0
-      };
+    // } else if (gameTypeName === 'Brain Game') {
+    //   newState = {
+    //     ...newState,
+    //     game_type: 3,
+    //     winChance: 0,
+    //     max_return: '∞',
+    //     endgame_amount: 0
+    //   };
+    // } else if (gameTypeName === 'Quick Shoot') {
+    //   newState = {
+    //     ...newState,
+    //     game_type: 5,
+    //     public_bet_amount: convertToCurrency(1),
+    //     max_return: 2,
+    //     bet_amount: 0.001,
+    //     winChance: 0,
+    //     qs_nation: Math.floor(Math.random() * 4),
+    //     endgame_amount: 0
+    //   };
+    // } else if (gameTypeName === 'Mystery Box') {
+    //   newState = {
+    //     ...newState,
+    //     game_type: 4,
+    //     winChance: 0,
+    //     bet_amount: 0,
+    //     public_bet_amount: 0,
+    //     endgame_amount: 0
+    //   };
+    // } else if (gameTypeName === 'Drop Game') {
+    //   newState = {
+    //     ...newState,
+    //     game_type: 6,
+    //     winChance: 0,
+    //     bet_amount: 0.001,
+    //     endgame_amount: 0
+    //   };
+    // } else if (gameTypeName === 'Bang!') {
+    //   newState = {
+    //     ...newState,
+    //     game_type: 7,
+    //     winChance: 0,
+    //     bet_amount: 0.001,
+    //     endgame_amount: 0,
+    //     aveMultiplier: 0
+    //   };
+    // } else if (gameTypeName === 'Roll') {
+    //   newState = {
+    //     ...newState,
+    //     game_type: 8,
+    //     winChance: 0,
+    //     bet_amount: 0.001,
+    //     endgame_amount: 0,
+    //     aveMultiplier: 0
+    //   };
+    // } else if (gameTypeName === 'Blackjack') {
+    //   newState = {
+    //     ...newState,
+    //     game_type: 9,
+    //     bet_amount: 0.001,
+    //     winChance: 0,
+    //     max_return: 0,
+    //     endgame_amount: 0
+    //   };
     }
 
     this.setState(newState);
@@ -571,7 +571,7 @@ class CreateGame extends Component {
       step: this.state.step > 1 ? this.state.step - 1 : this.state.step
     });
 
-    if (this.state.child_step === 6) {
+    if (this.state.child_step === 4) {
       this.setState({
         child_step: this.state.child_step - 1
       });
@@ -729,7 +729,7 @@ class CreateGame extends Component {
         });
       }
       this.setState({
-        step: step > 3 && child_step < 5 ? step : step + 1,
+        step: step > 3 && child_step < 3 ? step : step + 1,
         child_step: step === 1 ? child_step : child_step + 1
       });
     }

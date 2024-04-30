@@ -13,6 +13,7 @@ import {
   getStrategies,
   updateRoomStrategy
 } from '../../redux/Logic/logic.actions';
+import { getRank } from '../../util/getRank';
 import { faFilter, faSort, faEdit, faPiggyBank, faMoneyCheckAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Battle from '../icons/Battle';
@@ -814,6 +815,7 @@ class MyGamesTable extends Component {
               strategies={strategies}
               ai_mode={selectedRow.selectedStrategy}
               user_id={selectedRow._id}
+              rank={getRank(this.props.user.totalWagered)}
               settings_panel_opened={settings_panel_opened}
               setSelectedStrategy={this.setSelectedStrategy}
               settingsRef={this.settingsRef}

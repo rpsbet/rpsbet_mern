@@ -181,6 +181,7 @@ div.table .table-row .table-cell button:last-child:before,
   transform: translateY(20px) rotate(180deg) !important;
 }
 #rps-radio div {
+  transform:rotate(180deg) !important;
   margin-top: -60px;
   opacity: 0.5;
   pointer-events: none;
@@ -1796,7 +1797,7 @@ input {
   transform: rotate(180deg) !important;
 } */
 .animated-card {
-  animation: drawCardAnimation 1s forwards; /* Adjust the duration as needed */
+  animation: drawCardAnimation 1s forwards;
 }
 
 @keyframes drawCardAnimation {
@@ -1941,7 +1942,7 @@ transform-origin: center;
   justify-content: center;
   align-items: center;
   box-shadow: 2px 2px 0px 1px #929393;
-  transform: rotateY(180deg); /* Initially flipped */
+  transform: rotateY(180deg);
 }
 
 .rps-logo img {
@@ -2913,6 +2914,13 @@ position: sticky !important;
 .brain-game-play-panel .play-panel-header .timer .timer-footer {
   font-size: 14px;
   font-weight: 500;
+}
+
+.result {
+  white-space: nowrap;
+  position: absolute;
+  top: -7px;
+  right: 22px;
 }
 .brain-game-play-panel .play-panel-header .timer .timer-footer2 {
   font-size: 14px;

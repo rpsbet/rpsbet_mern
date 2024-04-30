@@ -273,8 +273,11 @@ router.post('/accessory', auth, async (req, res) => {
     const accessoryItem = await Item.findOne({ image: user.accessory }).select('CP');
     if (!accessoryItem) {
       return res.json({
-        success: false,
-        message: 'Accessory not found in items collection',
+        success: true,
+      accessory: {
+        name: '',
+        CP: 0
+      },
       });
     }
 

@@ -213,8 +213,6 @@ class OpenGamesTable extends Component {
     const roomIds = this.props.roomList.map(room => room._id);
 
     if (prevProps.roomList !== this.props.roomList) {
-      console.log( this.props.roomList)
-      
       this.setState(prevState => ({
         roomList: [...prevState.roomList, ...this.props.roomList.filter(room => !prevState.fetchedRoomIds.includes(room._id))],
         fetchedRoomIds: [...prevState.fetchedRoomIds, ...roomIds],
@@ -228,7 +226,6 @@ class OpenGamesTable extends Component {
 
     if (prevProps.refreshing !== this.props.refreshing) {
       if (this.props.refreshing) {
-       console.log("WEdwe")
         this.setState({
           roomList:[]
         })
@@ -1145,7 +1142,6 @@ class OpenGamesTable extends Component {
 const mapStateToProps = state => ({
   creator: state.logic.curRoomInfo.creator_name,
   joiners: state.logic.curRoomInfo.joiners,
-  is_private: state.logic.curRoomInfo.is_private,
   isAuthenticated: state.auth.isAuthenticated,
   userName: state.auth.userName,
   user: state.auth.user,

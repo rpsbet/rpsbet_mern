@@ -34,10 +34,10 @@
 
   }
   
-  .react-confirm-alert .modal-body.alert-body.result-body{
+  /* .react-confirm-alert .modal-body.alert-body.result-body{
     animation: pulse 1s ease-in-out infinite;
   min-width: unset !important;
-}
+} */
 
 .react-confirm-alert .modal-footer {
     border-top: unset;

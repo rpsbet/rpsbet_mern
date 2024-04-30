@@ -69,16 +69,27 @@ app.use(express.json({ extended: false }));
 app.use(fileUpload());
 
 // Connect Database
-mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-    useCreateIndex: true,
-    poolSize: 10,
-  })
-  .then(() => console.log(`***mongodb connected`))
-  .catch(err => console.log(err));
+const connectWithRetry = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+      useCreateIndex: true,
+      poolSize: 10,
+    });
+    console.log('*** MongoDB connected');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    // Retry connection after a delay
+    console.log('Retrying MongoDB connection in 5 seconds...');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Retry connecting
+    await connectWithRetry();
+  }
+};
+
+connectWithRetry();
 
 app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/auth', authRoutes);

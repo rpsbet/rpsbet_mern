@@ -14,22 +14,22 @@ class Summary extends Component {
     };
     if (this.props.game_mode === 'RPS') {
       this.state.winChance = 33;
-    } else if (this.props.game_mode === 'Spleesh!') {
-      this.state.winChance = 69;
-    } else if (this.props.game_mode === 'Mystery Box') {
-      this.state.winChance = 10;
-    } else if (this.props.game_mode === 'Quick Shoot') {
-      this.state.winChance = 15;
-    } else if (this.props.game_mode === 'Brain Game') {
-      this.state.winChance = '0 - 100';
-    } else if (this.props.game_mode === 'Drop Game') {
-      this.state.winChance = 42;
-    } else if (this.props.game_mode === 'Bang!') {
-      this.state.winChance = 42;
-    } else if (this.props.game_mode === 'Roll') {
-      this.state.winChance = 42;
-    } else if (this.props.game_mode === 'Blackjack') {
-      this.state.winChance = 42;
+    // } else if (this.props.game_mode === 'Spleesh!') {
+    //   this.state.winChance = 69;
+    // } else if (this.props.game_mode === 'Mystery Box') {
+    //   this.state.winChance = 10;
+    // } else if (this.props.game_mode === 'Quick Shoot') {
+    //   this.state.winChance = 15;
+    // } else if (this.props.game_mode === 'Brain Game') {
+    //   this.state.winChance = '0 - 100';
+    // } else if (this.props.game_mode === 'Drop Game') {
+    //   this.state.winChance = 42;
+    // } else if (this.props.game_mode === 'Bang!') {
+    //   this.state.winChance = 42;
+    // } else if (this.props.game_mode === 'Roll') {
+    //   this.state.winChance = 42;
+    // } else if (this.props.game_mode === 'Blackjack') {
+    //   this.state.winChance = 42;
     }
   }
   pre_summery() {
@@ -196,7 +196,7 @@ class Summary extends Component {
             </div>
           </div>
           
-          {game_mode === 'RPS' && (
+          {/* {game_mode === 'RPS' && (
             <div className="summary-item">
               <div className="summary-item-name">Game Mode</div>
               <div className="summary-item-value">
@@ -207,7 +207,7 @@ class Summary extends Component {
                     : 'Other'}
               </div>
             </div>
-          )}
+          )} */}
            
 
           {game_mode === 'Quick Shoot' && (
@@ -266,7 +266,7 @@ class Summary extends Component {
               </div>
             </div>
           )}
-          <div className="summary-item">
+          {/* <div className="summary-item">
             <div className="summary-item-name">Music</div>
             <div className="summary-item-value">
               {youtubeUrl ? youtubeUrl : 'No Music'}
@@ -277,7 +277,7 @@ class Summary extends Component {
             <div className="summary-item-value">
               {gameBackground ? gameBackground : 'No Background'}
             </div>
-          </div>
+          </div> */}
           <div className="summary-item">
             <div className="summary-item-name">Description</div>
             <div className="summary-item-value">

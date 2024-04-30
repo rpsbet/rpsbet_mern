@@ -216,7 +216,7 @@ class AdvancedSettings extends Component {
           </div>
         )}
 
-        {this.props.child_step === 3 && (
+        {/* {this.props.child_step === 3 && (
           <div className="game-music-panel game-info-panel">
             <h3 className="game-sub-title">Add music?</h3>
             <form
@@ -281,8 +281,8 @@ class AdvancedSettings extends Component {
               GAME BACKGROUNDS AVAILABLE VIA THE MARKETPLACE
             </p>
           </div>
-        )}
-        {this.props.child_step === 5 && (
+        )} */}
+        {this.props.child_step === 3 && (
           <div className="game-background-panel game-info-panel">
             <h3 className="game-sub-title">Add Description?&nbsp;&nbsp;<FontAwesomeIcon icon={faPenSquare} /></h3>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>

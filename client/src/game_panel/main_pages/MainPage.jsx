@@ -121,12 +121,10 @@ class MainPage extends Component {
 
   handleRefresh = async () => {
     this.setState({ refreshing: true }, async () => {
-      console.log(this.state.refreshing);
       await this.props.clearRoomListCache();
       await this.props.getRoomCount();
       await this.props.getRoomList({ pageSize: 7 });
       this.setState({refreshing: false});
-      console.log(this.state.refreshing);
     })
   };
 

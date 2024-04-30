@@ -279,7 +279,7 @@ router.get('/room/:id', async (req, res) => {
     if (req.query.limit) {
       const limit = parseInt(req.query.limit);
       gameLogQuery = gameLogQuery.limit(limit);
-    } 
+    }
 
     // const totalGameLogsCount = await GameLog.countDocuments({ room: room });
     const totalGameLogsCount = 0;
@@ -296,98 +296,12 @@ router.get('/room/:id', async (req, res) => {
       room: room._id,
       joiner_rps: ''
     }).sort({ _id: 'asc' });
-        // const qsBetItem = await QsBetItem.findOne({
-        //   room: room,
-        //   joiner_qs: ''
-        // }).sort({ _id: 'asc' });
-    // const bjBetItem = await BjBetItem.findOne({
+    // const qsBetItem = await QsBetItem.findOne({
     //   room: room,
-    //   joiner_bj: ''
-    // }).sort({ _id: 'asc' });
-    // const dropBetItem = await DropBetItem.findOne({
-    //   room: room,
-    //   joiner_drop: ''
-    // }).sort({ _id: 'asc' });
-    // const bangBetItem = await BangBetItem.findOne({
-    //   room: room,
-    //   joiner_bang: ''
-    // }).sort({ _id: 'asc' });
-    // const rollBetItem = await RollBetItem.findOne({
-    //   room: room,
-    //   joiner_roll: ''
+    //   joiner_qs: ''
     // }).sort({ _id: 'asc' });
 
-    // async function emitRps(req) {
-    //   const rpsItems = await RpsBetItem.find({ room: room });
-    //   const rps1 = rpsItems.filter(item => item.joiner_rps !== '').slice(-5);
-    //   if (rps1.length > 0 && req.io) {
-    //     req.io.emit('RPS_1', rps1);
-    //   }
-    // }
 
-    // await emitRps(req);
-
-    // let hasEmitted = false;
-
-
-    // let hasDropEmitted = false;
-
-    // async function emitDropGuesses(req) {
-    //   if (!hasDropEmitted) {
-    //     const drop_guesses = await DropGuess.find({ room: room });
-    //     if (req.io.sockets) {
-    //       req.io.sockets.emit('DROP_GUESSES1', drop_guesses);
-    //     }
-    //     hasDropEmitted = true;
-    //   }
-    // }
-    // emitDropGuesses(req);
-
-    // let hasBangEmitted = false;
-
-    // async function emitBangElapsedTime(req, room) {
-    //   if (!hasBangEmitted && room.status === 'open') {
-    //     const bang_guesses = await BangBetItem.find({ room: room });
-    //     const bangs = bang_guesses.map(guess => guess.bang);
-    //     const currentTime = await getCurrentTime();
-    //     const lastBangTime =
-    //       bang_guesses.length > 0
-    //         ? bang_guesses[bang_guesses.length - 1].created_at
-    //         : currentTime;
-    //     const elapsedTime = currentTime - lastBangTime;
-    //     const roomId = room._id;
-    //     const socketName = `BANG_GUESSES1_${roomId}`;
-    //     if (req.io.sockets) {
-    //       req.io.sockets.emit(socketName, { bangs, elapsedTime });
-    //     }
-    //     hasBangEmitted = true;
-    //   }
-    // }
-    // emitBangElapsedTime(req, room);
-
-    // let hasRollEmitted = false;
-
-    // async function emitRollElapsedTime(req, room) {
-    //   if (!hasRollEmitted && room.status === 'open') {
-    //     const roll_guesses = await RollBetItem.find({ room: room });
-    //     const rolls = roll_guesses.map(guess => guess.roll);
-    //     const faces = roll_guesses.map(guess => guess.face);
-    //     const currentTime = await getCurrentRollTime();
-    //     const lastRollTime =
-    //       roll_guesses.length > 0
-    //         ? roll_guesses[roll_guesses.length - 1].created_at
-    //         : currentTime;
-    //     const elapsedTime = currentTime - lastRollTime;
-    //     const roomId = room._id;
-    //     const socketName = `ROLL_GUESSES1_${roomId}`;
-    //     if (req.io.sockets) {
-    //       req.io.sockets.emit(socketName, { rolls, faces, elapsedTime });
-    //     }
-    //     hasRollEmitted = true;
-    //   }
-    // }
-    // emitRollElapsedTime(req, room);
-    
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
     res.json({
       success: true,
@@ -641,8 +555,20 @@ router.post('/comments', auth, async (req, res) => {
   try {
     const { room_id, content } = req.body;
 
+    room = await Room.findOne({ _id: room_id });
 
+    let message = new Notification({
+      from: req.user._id,
+      to: room.creator,
+      room: room_id,
+      message: '',
+      // is_anonymous: req.body.is_anonymous,
+      is_read: false
+    });
 
+    const truncatedContent = content.length > 10 ? content.substring(0, 10) + '...' : content;
+    message.message = `${req.user.username} left a comment ${truncatedContent}`;
+    
     // Create the comment
     const comment = new Comment({
       user: req.user._id,
@@ -660,6 +586,24 @@ router.post('/comments', auth, async (req, res) => {
       console.error("Error saving comment:", error);
     }
 
+    const notificationData = {
+      message: message.message,
+      username: user.username,
+      avatar: req.user.avatar,
+      accessory: req.user.accessory,
+      room: room_id,
+      rank: req.user.totalWagered,
+      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment(new Date()).format('LLL'),
+      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      is_read: false
+    };
+    try {
+      await saveDocumentWithRetry(message);
+      socket.sendNotification(message.to, notificationData);
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
 
     res.json({
       success: true,
@@ -1348,7 +1292,7 @@ router.post('/rooms', auth, async (req, res) => {
       host_pr = parseFloat(bet_amount);
       user_bet = parseFloat(bet_amount);
       pr = user_bet * 2;
-    } 
+    }
     // else if (game_type == '2') {
     //   // Spleesh!
     //   host_pr = 0;
@@ -2166,7 +2110,7 @@ router.post('/end_game', auth, async (req, res) => {
 
 //     for (let message of allMessages) {
 //       const otherUserId = message.from ? message.from._id : message.to._id;
-      
+
 //       if (
 //         !myChat[otherUserId] ||
 //         myChat[otherUserId].updated_at < message.updated_at
@@ -2208,7 +2152,7 @@ router.post('/unstake', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
-    
+
     if (!check_access_time(userId)) {
       return res.json({
         success: false,
@@ -2260,9 +2204,9 @@ router.post('/unstake', auth, async (req, res) => {
 
     // Recalculate shares for other hosts
     const totalShares = roomInfo.hosts.reduce((total, host) => total + host.share, 0);
-    roomInfo.hosts.forEach(host => {      
+    roomInfo.hosts.forEach(host => {
       host.share = (host.share / totalShares) * 100;
-      
+
       const message = `${req.user.username} is no longer a Co-Host of ${gameType.short_name +
         '-' +
         roomInfo.room_number}, your new Share is ${(host.share).toFixed(2)}%`;
@@ -2280,9 +2224,9 @@ router.post('/unstake', auth, async (req, res) => {
         updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
         is_read: false
       };
-  
+
       socket.sendNotification(host.host, notificationData);
-  
+
     });
 
     try {
@@ -3373,15 +3317,15 @@ router.post('/reCreate', auth, async (req, res) => {
 router.post('/bet', auth, async (req, res) => {
   try {
 
-       if (!check_access_time(req.user._id)) {
-                responseData = {
-                    success: false,
-                    message: 'illregular action',
-                    betResult: -1000
-                }
+    if (!check_access_time(req.user._id)) {
+      responseData = {
+        success: false,
+        message: 'illregular action',
+        betResult: -1000
+      }
 
-                return responseData;
-            }
+      return responseData;
+    }
 
     const betResult = await executeBet(req);
 
@@ -3401,15 +3345,15 @@ router.post('/bet', auth, async (req, res) => {
 router.post('/bet2', auth, async (req, res) => {
   try {
 
-       if (!check_access_time(req.user._id)) {
-                responseData = {
-                    success: false,
-                    message: 'illregular action',
-                    betResult: -1000
-                }
+    if (!check_access_time(req.user._id)) {
+      responseData = {
+        success: false,
+        message: 'illregular action',
+        betResult: -1000
+      }
 
-                return responseData;
-            }
+      return responseData;
+    }
 
     const betResult = await executeBet2(req);
 
@@ -3428,15 +3372,15 @@ router.post('/bet2', auth, async (req, res) => {
 router.post('/bet3', auth, async (req, res) => {
   try {
 
-       if (!check_access_time(req.user._id)) {
-                responseData = {
-                    success: false,
-                    message: 'illregular action',
-                    betResult: -1000
-                }
+    if (!check_access_time(req.user._id)) {
+      responseData = {
+        success: false,
+        message: 'illregular action',
+        betResult: -1000
+      }
 
-                return responseData;
-            }
+      return responseData;
+    }
 
     const betResult = await executeBet3(req);
 

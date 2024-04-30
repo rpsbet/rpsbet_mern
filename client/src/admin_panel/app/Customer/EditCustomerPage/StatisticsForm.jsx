@@ -83,22 +83,6 @@ class StatisticsForm extends React.Component {
   }
   getRank(totalWagered) {
     const level = Math.floor(Math.log2(totalWagered + 1) / 1.2) + 1;
-    // console.log("totalWagered: ", totalWagered);
-    // console.log("level: ", level);
-
-    // const stars = Array.from({ length: level }, (_, index) => (
-    //   <Lottie
-    //     key={index}
-    //     options={{
-    //       loop: true,
-    //       autoplay: true,
-    //       animationData: rankIcon,
-    //     }}
-    //     style={{
-    //       width: '32px',
-    //     }}
-    //   />
-    // ));
 
     const nextLevelWager = Math.pow(2, 1.2 * (level)) - 1;
     const progress = totalWagered / nextLevelWager;

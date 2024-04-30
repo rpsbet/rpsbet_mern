@@ -1,6 +1,6 @@
 const documentLocks = new Map();
 
-async function saveDocumentWithRetry(document, retryCount = 6, delayMs = 1000) {
+async function saveDocumentWithRetry(document, retryCount = 30, delayMs = 800) {
     const documentId = document._id.toString(); // Assuming _id is an ObjectId
 
     if (documentLocks.has(documentId)) {
@@ -17,10 +17,13 @@ async function saveDocumentWithRetry(document, retryCount = 6, delayMs = 1000) {
                 return;
             } catch (error) {
                 await new Promise(resolve => setTimeout(resolve, delayMs));
-                retryCount--;
+                console.log("Retrying... Retry count:", retryCount);
+                retryCount--; // Decrement retryCount here
+                console.log("After decrementing, Retry count:", retryCount);
             }
         }
-        throw new Error("Exceeded maximum retry count. Unable to save document.");
+        console.log("retryCount", retryCount)
+        throw new Error(`Exceeded maximum retry count. Unable to save document with ID: ${document}`);
     } finally {
         documentLocks.delete(documentId);
     }

@@ -215,7 +215,6 @@ class RPS extends Component {
   };
 
   async componentDidMount() {
-    console.log(this.props.gameBackground)
     document.addEventListener('keydown', this.handleKeyPress);
     this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
     this.setupSocket();
@@ -545,10 +544,11 @@ class RPS extends Component {
       rps_game_type,
       changeBgColor,
       selected_rps,
+      onChangeState
     } = this.props;
 
     const { bet_amount } = this.state;
-
+    onChangeState({ result: '' });
     const result = await join({
       bet_amount: parseFloat(bet_amount),
       selected_rps: selected_rps,
@@ -556,54 +556,38 @@ class RPS extends Component {
     });
 
     let text;
-    // let amount;
+    let color;
 
     if (result.betResult === 1) {
       playSound('win');
-      text = 'WINNER, WINNER, VEGAN FUCKING DINNER!';
+      text = '+';
+      color = '#7ed321';
       changeBgColor(result.betResult);
-      // amount = parseFloat(bet_amount) * 2;
     } else if (result.betResult === 0) {
-      text = 'SPLIT, SPLIT! EQUALLY SHIT!';
+      text = '-';
+      color = 'grey';
       playSound('split');
       changeBgColor(result.betResult);
-      // amount = 0;
     } else {
-      text = 'TROLLOLOLOL! LOSER!';
+      text = '-';
+      color = '#f50000';
       playSound('lose');
       changeBgColor(result.betResult);
-      // amount = parseFloat(bet_amount) * -1;
-      if (rps_game_type === 1) {
-        this.handleOpenModal();
-        this.speak(text);
-      }
     }
 
-    if (this.props.rps_game_type === 1) {
-      this.flipCard();
-    }
+    const currencyElement = convertToCurrency(Math.abs(result.amount));
 
-    if ((result.betResult !== -1 && rps_game_type === 1) || rps_game_type === 0) {
-      gameResultModal(
-        isDarkMode,
-        text,
-        result.amount,
-        result.betResult,
-        'Okay',
-        null,
-        () => { },
-        () => { }
-      );
+    const fragmentStyle = {
+      color: color,
+    };
 
-      if (result.status !== 'success') {
-        if (result.message) {
-          alertModal(isDarkMode, result.message);
-        }
-      }
-
-      // refreshHistory();
-      this.setState({ cardDealt: false });
-    }
+    onChangeState({
+      result: (
+        <React.Fragment>
+          <span style={fragmentStyle}> {text} {currencyElement}</span>
+        </React.Fragment>
+      ),
+    });
   };
 
 
@@ -657,7 +641,6 @@ class RPS extends Component {
 
       const rooms = JSON.parse(localStorage.getItem('rooms')) || {};
       const passwordCorrect = rooms[roomInfo._id];
-
       if (localStorage.getItem('hideConfirmModal') === 'true') {
         if (is_private === true && passwordCorrect !== true) {
           openGamePasswordModal();
@@ -1000,14 +983,14 @@ class RPS extends Component {
                     </div>
                     <div className="value">{roomInfo.room_name}</div>
                   </div>
-                  {youtubeUrl && (
+                  {/* {youtubeUrl && (
                     <div className="data-item">
                       <YouTubeVideo
                         url={youtubeUrl}
                         isMusicEnabled={isMusicEnabled}
                       />
                     </div>
-                  )}
+                  )} */}
                   <div className="data-item">
                     <div>
                       <div className="label public-max-return">Created</div>
@@ -1024,7 +1007,7 @@ class RPS extends Component {
             className="game-info-panel"
             style={{ position: 'relative', zIndex: 10 }}
           >
-            {renderLottieAvatarAnimation(gameBackground, isLowGraphics)}
+            {/* {renderLottieAvatarAnimation(gameBackground, isLowGraphics)} */}
             {this.props.rps_game_type === 1 && (
               <div className="game-background-panel game-info-panel">
                 <YouTubeModal
@@ -1158,7 +1141,7 @@ class RPS extends Component {
                 </Tooltip>
                 <div className="game-info-panel">
                   <div className={`rps-radio-host ${this.props.is_betting || this.props.betting ? 'blueish-hue' : ''}`} style={{ top: "25px", right: "25px", boxShadow: "0px 0 5px 0px #ffc107", background: "radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)", position: "absolute", width: "12.5px", height: "12.5px", borderRadius: "50%" }}>
-
+                    <span className='result'>{this.props.result !== '' ? this.props.result : 'thinking...'}</span>
                   </div>
 
                   {startedPlaying && (

@@ -403,10 +403,11 @@ class SiteWrapper extends Component {
 
   async initSocket() {
     try {
-
+      const delay = 3000;
+      await new Promise(resolve => setTimeout(resolve, delay));
       let socket = socketIOClient(this.state.endpoint);
-      socket.on('CONNECTED', async data => {
 
+      socket.on('CONNECTED', async data => {
         socket.emit('STORE_CLIENT_USER_ID', { user_id: this.props.user._id });
         socket.emit('FETCH_GLOBAL_CHAT');
       });
@@ -433,81 +434,6 @@ class SiteWrapper extends Component {
 
       socket.on('SEND_CHAT', data => {
         try {
-          if (!this.props.isMuted) {
-            let winCounter = parseInt(localStorage.getItem('winCounter')) || 0;
-
-            const message = data.message.toLowerCase();
-            if (message.includes('won')) {
-              let value;
-              if (message.match(/\d+\.\d{2}/)) {
-                value = message.match(/\d+\.\d{2}/)[0];
-              } else if (message.match(/\d+/)) {
-                value = message.match(/\d+/)[0];
-              }
-              if (value) {
-                const formattedValue = parseFloat(value).toFixed(6);
-                const spokenValue = formattedValue.endsWith('.00')
-                  ? parseFloat(formattedValue).toString()
-                  : formattedValue;
-                this.speak(`Lost, ${spokenValue}`);
-              }
-              if (value >= 0 && value <= 2) {
-                this.audioSplit.play();
-              } else if (value > 25 && value <= 100) {
-                this.audioLose.play();
-              } else if (value > 100) {
-                this.fatality.play();
-              }
-              winCounter = 0;
-            } else if (message.includes('split')) {
-              let value;
-              if (message.match(/\d+\.\d{2}/)) {
-                value = message.match(/\d+\.\d{2}/)[0];
-              } else if (message.match(/\d+/)) {
-                value = message.match(/\d+/)[0];
-              }
-              if (value) {
-                const formattedValue = parseFloat(value);
-                const spokenValue = formattedValue.endsWith('.00')
-                  ? parseFloat(formattedValue).toString()
-                  : formattedValue;
-                this.speak(`Split, ${spokenValue}`);
-              }
-              winCounter = 0;
-            } else if (message.includes('lost')) {
-              winCounter++;
-              if (winCounter === 3) {
-                this.oohBaby.play();
-                winCounter = 0;
-              }
-              let value;
-              if (message.match(/\d+\.\d{2}/)) {
-                value = message.match(/\d+\.\d{2}/)[0];
-              } else if (message.match(/\d+/)) {
-                value = message.match(/\d+/)[0];
-              }
-              if (value) {
-                const formattedValue = parseFloat(value);
-                const spokenValue = formattedValue.endsWith('.00')
-                  ? parseFloat(formattedValue).toString()
-                  : formattedValue;
-                this.speak(`Won, ${spokenValue}`);
-              }
-              if (value >= 0 && value <= 2) {
-                this.audioSplit.play();
-              } else if (value >= 15 && value <= 50) {
-                this.cashRegister.play();
-              } else if (value > 50 && value <= 250) {
-                this.audioWin.play();
-              } else if (value > 250 && value <= 1000) {
-                this.topG.play();
-              } else if (value > 1000) {
-                this.nyan.play();
-              }
-            }
-
-            localStorage.setItem('winCounter', winCounter);
-          }
           this.props.addChatLog(data);
 
           if (history.location.pathname.substr(0, 5) === '/chat') {
@@ -532,9 +458,11 @@ class SiteWrapper extends Component {
       socket.on('NEW_TRANSACTION', data => {
         this.props.addNewTransaction(data);
       });
-
+      
       socket.on('SEND_NOTIFICATION', data => {
-        this.notificationSound.play();
+        if (!this.props.isMuted) {
+          this.notificationSound.play();
+        }
         // Initialize notifications as an empty array if it's null or undefined
         const currentNotifications = this.state.notifications || [];
         // Prepend the new notification data to the beginning of the array
@@ -590,7 +518,7 @@ class SiteWrapper extends Component {
       // Retry socket initialization after a short delay
       setTimeout(() => {
         this.initSocket();
-      }, 3000); // Retry after 3 seconds
+      }, 3000);
     }
 
   }

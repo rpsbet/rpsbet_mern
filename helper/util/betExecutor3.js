@@ -207,7 +207,8 @@ const addToQueue = async (req, bot = false) => {
                 ) {
 
                     if (bot) {
-                        betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : parseFloat(user.balance);
+                        betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : betAmount;
+                        betAmount = betAmount > parseFloat(user.balance) ? parseFloat(user.balance) : betAmount;
                     } else {
 
                         responseData = {
@@ -297,7 +298,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.16) {
+                    if (randomNumber <= 0.33 && betAmount > 10) {
                         if (bot &&
                             ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
                                 (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
@@ -607,9 +608,9 @@ const addToQueue = async (req, bot = false) => {
                 is_read: false
             };
 
-            if (message.from._id !== message.to._id) {
+            if (message.message !== '' && message.from._id !== message.to._id) {
                 try {
-                    saveDocumentWithRetry(message);
+                    await saveDocumentWithRetry(message);
                     socket.sendNotification(message.to._id, notificationData);
                 } catch (error) {
                     console.error("Error saving message:", error);

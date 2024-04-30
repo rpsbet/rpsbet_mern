@@ -67,7 +67,7 @@ const addToQueue = async (req, bot = false) => {
             }
 
             if (
-                parseFloat(req.body.bet_amount) < 0.05
+                req.body.bet_amount < 0.05
             ) {
 
                 responseData = {
@@ -77,7 +77,7 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
-            let betAmount = parseFloat(req.body.bet_amount);
+            let betAmount = req.body.bet_amount;
 
             roomInfo = await Room.findOne({ _id: req.body._id })
                 .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
@@ -207,7 +207,8 @@ const addToQueue = async (req, bot = false) => {
                 ) {
 
                     if (bot) {
-                        betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : parseFloat(user.balance);
+                        betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : betAmount;
+                        betAmount = betAmount > parseFloat(user.balance) ? parseFloat(user.balance) : betAmount;
                     } else {
 
                         responseData = {
@@ -216,10 +217,10 @@ const addToQueue = async (req, bot = false) => {
                         }
                         return responseData;
                     }
+                    
                 }
 
                 newGameLog.bet_amount = betAmount;
-
                 // if no more items, create a new one
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
@@ -292,17 +293,18 @@ const addToQueue = async (req, bot = false) => {
 
                 newGameLog.bet_amount = betAmount;
                 newGameLog.selected_rps = req.body.selected_rps;
-
+                
                 if (roomInfo['rps_game_type'] === 0) {
-
+                    
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.16) {
+                    if (randomNumber <= 0.33 && betAmount > 10) {
                         if (bot &&
                             ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
                                 (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P'))
                         ) {
+
                             // Logic to change req.body.selected_rps based on bot's choice
                             if (bet_item.rps === 'R') {
                                 req.body.selected_rps = 'P';
@@ -351,7 +353,7 @@ const addToQueue = async (req, bot = false) => {
                         // send notification
                         message.message =
                             'Won ' +
-                            convertToCurrency(req.body.bet_amount * 2) +
+                            convertToCurrency(betAmount * 2) +
                             ' in ' +
                             roomInfo['game_type']['short_name'] +
                             '-' +
@@ -360,6 +362,7 @@ const addToQueue = async (req, bot = false) => {
 
                         // if draw
                     } else if (bet_item.rps === req.body.selected_rps) {
+
                         game_result = 0;
 
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (betAmount * (parseFloat(tax.value) / 100));
@@ -369,7 +372,7 @@ const addToQueue = async (req, bot = false) => {
 
                         message.message =
                             'Split ' +
-                            convertToCurrency(req.body.bet_amount * 2) +
+                            convertToCurrency(betAmount * 2) +
                             ' in ' +
                             roomInfo['game_type']['short_name'] +
                             '-' +
@@ -426,13 +429,12 @@ const addToQueue = async (req, bot = false) => {
                         // send notification
                         message.message =
                             'Lost ' +
-                            convertToCurrency(req.body.bet_amount) +
+                            convertToCurrency(betAmount) +
                             ' in ' +
                             roomInfo['game_type']['short_name'] +
                             '-' +
                             roomInfo['room_number'];
                     }
-                    newGameLog.winnings = convertToCurrency(req.body.bet_amount) * 2;
                 }
                 if (roomInfo['rps_game_type'] === 0) {
                     winnings = betAmount * 2;
@@ -606,10 +608,9 @@ const addToQueue = async (req, bot = false) => {
                 updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                 is_read: false
             };
-
-            if (message.from._id !== message.to._id) {
+            if (message.message !== '' && message.from._id !== message.to._id) {
                 try {
-                    saveDocumentWithRetry(message);
+                    await saveDocumentWithRetry(message);
                     socket.sendNotification(message.to._id, notificationData);
                 } catch (error) {
                     console.error("Error saving message:", error);
