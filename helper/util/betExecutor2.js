@@ -298,7 +298,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.33 && betAmount > 10) {
+                    if (randomNumber <= 0.47 && betAmount > 10) {
                         if (bot &&
                             ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
                                 (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
@@ -450,7 +450,7 @@ const addToQueue = async (req, bot = false) => {
                     mostRecentItems.reverse();
                     mostRecentItems.push(bet_item);
                     if (mostRecentItems.length > 0) {
-                        req.io.sockets.emit(`UPDATED_BANKROLL3_${roomInfo._id}`, {
+                        req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
                             bankroll: roomInfo['user_bet'],
                             rps: mostRecentItems,
                             user: user

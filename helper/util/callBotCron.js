@@ -4,6 +4,7 @@ const User = require('../../model/User.js');
 const RpsBetItem = require('../../model/RpsBetItem.js');
 const socketController = require('../../socketController.js');
 const executeBet = require('./betExecutor.js');
+const executeBet4 = require('./betExecutor4.js');
 const { botAI, botCounterRandomness } = require('./predictNext.js');
 const os = require('os');
 let socketio = null;
@@ -68,9 +69,7 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-
 async function executeCronJob(user, betArray) {
-
   if (!user.username.includes('BOT')) {
     console.log('User is not a bot. Skipping execution.');
     return;
@@ -81,6 +80,8 @@ async function executeCronJob(user, betArray) {
       'joiners': user._id,
       status: 'open',
     });
+
+    let useBetFunction = true; // Flag to alternate between bet functions
 
     for (const room of rooms) {
       const roomId = room._id;
@@ -111,8 +112,8 @@ async function executeCronJob(user, betArray) {
         const rpsOptions = ['R', 'P', 'S'];
         nextState = rpsOptions[randomIndex];
         predictedBetAmount = await predictNextBetAmount(betArray, 0, 0, 0.01, 0.2, room);
-
       }
+
       const req = {
         params: {
           _id: roomId
@@ -127,7 +128,12 @@ async function executeCronJob(user, betArray) {
       };
 
       if (parseFloat(room.user_bet) >= 0.05 && predictedBetAmount >= 0 && predictedBetAmount <= parseFloat(room.user_bet)) {
-        await executeBet(req, true);
+        if (useBetFunction) {
+          await executeBet(req, true);
+        } else {
+          await executeBet4(req, true);
+        }
+        useBetFunction = !useBetFunction; // Toggle between bet functions
       }
     }
   } catch (error) {
@@ -135,9 +141,10 @@ async function executeCronJob(user, betArray) {
   }
 }
 
-    cron.schedule('*/12 * * * * *', async () => {
-      await callCronJobs(socketio);
-    });
+
+cron.schedule('*/12 * * * * *', async () => {
+  await callCronJobs(socketio);
+});
 
 
 module.exports = {

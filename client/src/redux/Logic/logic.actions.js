@@ -267,17 +267,6 @@ export const bet3 = bet_info => async dispatch => {
 
     if (res.data.success) {
       dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-
-      // if (bet_info.game_type === 'Mystery Box') {
-      //   dispatch({ type: BET_SUCCESS, payload: res.data });
-      // } else {
-      //   dispatch({
-      //     type: UPDATE_BET_RESULT,
-      //     payload: {
-      //       betResult: res.data.betResult === 1 ? 'win' : res.data.betResult === 0 ? 'draw' : 'lose',
-      //     }
-      //   });
-      // }
       return {
         status: 'success',
         betResult: res.data.betResult,
@@ -311,7 +300,49 @@ export const bet3 = bet_info => async dispatch => {
   return {
     status: 'failed'
   };
+};
+// bot
+export const bet4 = bet_info => async dispatch => {
+  try {
+    dispatch({ type: START_BET });
+    const res = await axios.post('/game/bet4', bet_info);
+    dispatch({ type: END_BET });
 
+    if (res.data.success) {
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      return {
+        status: 'success',
+        betResult: res.data.betResult,
+        roomStatus: res.data.roomStatus,
+        amount: res.data.newTransaction.amount
+      };
+    } else {
+      if (res.data.betResult === -100) {
+        history.push('/');
+        return {
+          status: 'failed',
+          message: 'THIS BATTLE HAS NOW ENDED'
+        };
+      } else if (res.data.betResult === -102) {
+        return {
+          status: 'failed',
+          message: res.data.message
+        };
+      } else {
+        dispatch({ type: MSG_WARNING, payload: 'ONE SEC, G' });
+        return {
+          status: 'failed',
+          message: 'SLOW DOWN BLUD!'
+        };
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
+  return {
+    status: 'failed'
+  };
 };
 
 

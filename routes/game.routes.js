@@ -43,6 +43,7 @@ const convertToCurrency = require('../helper/util/conversion');
 const executeBet = require('../helper/util/betExecutor');
 const executeBet2 = require('../helper/util/betExecutor2');
 const executeBet3 = require('../helper/util/betExecutor3');
+const executeBet4 = require('../helper/util/betExecutor4');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 
 
@@ -568,7 +569,7 @@ router.post('/comments', auth, async (req, res) => {
 
     const truncatedContent = content.length > 10 ? content.substring(0, 10) + '...' : content;
     message.message = `${req.user.username} left a comment ${truncatedContent}`;
-    
+
     // Create the comment
     const comment = new Comment({
       user: req.user._id,
@@ -3383,6 +3384,33 @@ router.post('/bet3', auth, async (req, res) => {
     }
 
     const betResult = await executeBet3(req);
+
+    res.json({
+      success: betResult.success,
+      message: betResult.message,
+      betResult: betResult.betResult,
+      newTransaction: betResult.newTransaction,
+      roomStatus: betResult.roomStatus
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+router.post('/bet4', auth, async (req, res) => {
+  try {
+
+    if (!check_access_time(req.user._id)) {
+      responseData = {
+        success: false,
+        message: 'illregular action',
+        betResult: -1000
+      }
+
+      return responseData;
+    }
+
+    const betResult = await executeBet4(req);
 
     res.json({
       success: betResult.success,
