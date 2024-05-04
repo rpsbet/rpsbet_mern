@@ -231,13 +231,10 @@ class RPS extends Component {
         this.setState({ socket: initializedSocket });
 
         if (initializedSocket) {
-          initializedSocket.on(`UPDATED_BANKROLL3_${roomInfo._id}`, this.handleSocketData);
 
-          // Add event listener conditionally based on isWatching prop
-          if (!this.props.isWatching) {
-            initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
-          }
+          initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
         }
+
 
         // initializedSocket.on('CARD_PRIZE', data => {
         //   if (data) {
@@ -293,7 +290,6 @@ class RPS extends Component {
   removeSocketListeners() {
     const { socket, roomInfo } = this.props;
     if (socket) {
-      socket.off(`UPDATED_BANKROLL3_${roomInfo._id}`, this.handleSocketData);
       socket.off(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
     }
   }

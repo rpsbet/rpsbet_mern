@@ -1,4 +1,4 @@
-// betExecutor.js
+// betExecutor2.js
 const ObjectId = require('mongoose').Types.ObjectId;
 const SystemSetting = require('../../model/SystemSetting');
 const User = require('../../model/User');
@@ -642,75 +642,6 @@ const addToQueue = async (req, bot = false) => {
         throw new Error('Error executing bet');
     }
 };
-
-
-
-
-
-// const executeBet = async (req, bot = false) => {
-//     try {
-//         // console.log("**************************req.body************************", req.user.username);
-//         const reqCopy = { ...req }; // Create a shallow copy of the req object
-//         let result;
-
-//         if (!bot) {
-//             // If the request is not from a bot, prioritize it
-//             console.log("Prioritizing non-bot request");
-//             if (isNonBotRequestProcessing) {
-//                 // Queue the request if a non-bot request is already processing
-//                 console.log("Queuing the non-bot request");
-//                 requestQueue.push(() => addToQueue(reqCopy, bot));
-//             } else {
-//                 // Process the non-bot request immediately
-//                 isNonBotRequestProcessing = true;
-//                 result = await addToQueue(reqCopy, bot);
-//                 isNonBotRequestProcessing = false;
-
-//                 // Process any queued requests
-//                 while (requestQueue.length > 0) {
-//                     const queuedRequest = requestQueue.shift();
-//                     await queuedRequest();
-//                 }
-//             }
-//         } else {
-//             // For bot requests, proceed as usual
-//             result = await addToQueue(reqCopy, bot);
-//         }
-
-//         // console.log("***************************result***********************", result);
-//         return result;
-//     } catch (error) {
-//         throw new Error('Error executing bet');
-//     }
-// };
-// const executeBet = (req, bot = false) => {
-//     const startTime = new Date(); // Record the start time
-//     return new Promise(async (resolve, reject) => {
-//         try {
-//             const result = await addToQueue(req, bot);
-//             req = null;
-
-//             const endTime = new Date(); // Record the end time
-//             const executionTime = endTime - startTime; // Calculate the execution time in milliseconds
-//             const humanReadableTime = millisecondsToHumanReadable(executionTime); // Convert to human-readable format
-//             console.log(`Bet execution time: ${humanReadableTime}`);
-//             resolve(result);
-//         } catch (error) {
-//             reject(error);
-//         }
-//     });
-// };
-
-
-// // Function to convert milliseconds to human-readable format
-// const millisecondsToHumanReadable = (milliseconds) => {
-//     const seconds = Math.floor(milliseconds / 1000);
-//     const minutes = Math.floor(seconds / 60);
-//     const remainingSeconds = seconds % 60;
-//     return `${minutes} minutes and ${remainingSeconds} seconds`;
-// };
-
-
 
 const executeBet2 = (req, bot = false) => {
     return new Promise((resolve, reject) => {

@@ -451,7 +451,7 @@ const addToQueue = async (req, bot = false) => {
                     mostRecentItems.reverse();
                     mostRecentItems.push(bet_item);
                     if (mostRecentItems.length > 0) {
-                        req.io.sockets.emit(`UPDATED_BANKROLL3_${roomInfo._id}`, {
+                        req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
                             bankroll: roomInfo['user_bet'],
                             rps: mostRecentItems,
                             user: user

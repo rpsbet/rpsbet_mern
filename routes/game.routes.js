@@ -7,6 +7,7 @@ const numCPUs = require('os').cpus().length;
 const moment = require('moment');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
+const { v4: uuidv4 } = require('uuid');
 
 const User = require('../model/User');
 const Room = require('../model/Room');
@@ -45,7 +46,10 @@ const executeBet2 = require('../helper/util/betExecutor2');
 const executeBet3 = require('../helper/util/betExecutor3');
 const executeBet4 = require('../helper/util/betExecutor4');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
-
+let semaphore = 1;
+let semaphore2 = 1;
+let semaphore3 = 1;
+let semaphore4 = 1;
 
 let user_access_log = {};
 router.get('/game_types', async (req, res) => {
@@ -3317,112 +3321,178 @@ router.post('/reCreate', auth, async (req, res) => {
 
 router.post('/bet', auth, async (req, res) => {
   try {
+    const requestId = uuidv4();
 
-    if (!check_access_time(req.user._id)) {
-      responseData = {
-        success: false,
-        message: 'illregular action',
-        betResult: -1000
-      }
-
-      return responseData;
+    // Acquire the semaphore
+    if (semaphore === 0) {
+      // If semaphore is already acquired, return a busy response
+      return res.status(503).json({ success: false, message: 'Service Unavailable' });
     }
+    semaphore = 0; // Set semaphore to indicate it's acquired
 
-    const betResult = await executeBet(req);
+    const [accessAllowed, betResult] = await Promise.all([
+      check_access_time(req.user._id),
+      executeBet(req)
+    ]);
+
+    // Release the semaphore
+    semaphore = 1;
+
+    if (!accessAllowed) {
+      const responseData = {
+        success: false,
+        message: 'irregular action',
+        betResult: -1000,
+        requestId: requestId
+      };
+
+      return res.json(responseData);
+    }
 
     res.json({
       success: betResult.success,
       message: betResult.message,
       betResult: betResult.betResult,
       newTransaction: betResult.newTransaction,
-      roomStatus: betResult.roomStatus
+      roomStatus: betResult.roomStatus,
+      requestId: requestId
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
+
 
 router.post('/bet2', auth, async (req, res) => {
   try {
+    const requestId = uuidv4();
 
-    if (!check_access_time(req.user._id)) {
-      responseData = {
-        success: false,
-        message: 'illregular action',
-        betResult: -1000
-      }
-
-      return responseData;
+    // Acquire the semaphore
+    if (semaphore2 === 0) {
+      // If semaphore is already acquired, return a busy response
+      return res.status(503).json({ success: false, message: 'Service Unavailable' });
     }
+    semaphore2 = 0; // Set semaphore to indicate it's acquired
 
-    const betResult = await executeBet2(req);
+    const [accessAllowed, betResult] = await Promise.all([
+      check_access_time(req.user._id),
+      executeBet2(req)
+    ]);
+
+    // Release the semaphore
+    semaphore2 = 1;
+
+    if (!accessAllowed) {
+      const responseData = {
+        success: false,
+        message: 'irregular action',
+        betResult: -1000,
+        requestId: requestId
+      };
+
+      return res.json(responseData);
+    }
 
     res.json({
       success: betResult.success,
       message: betResult.message,
       betResult: betResult.betResult,
       newTransaction: betResult.newTransaction,
-      roomStatus: betResult.roomStatus
+      roomStatus: betResult.roomStatus,
+      requestId: requestId
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
+
 router.post('/bet3', auth, async (req, res) => {
   try {
+    const requestId = uuidv4();
 
-    if (!check_access_time(req.user._id)) {
-      responseData = {
-        success: false,
-        message: 'illregular action',
-        betResult: -1000
-      }
-
-      return responseData;
+    // Acquire the semaphore
+    if (semaphore3 === 0) {
+      // If semaphore is already acquired, return a busy response
+      return res.status(503).json({ success: false, message: 'Service Unavailable' });
     }
+    semaphore3 = 0; // Set semaphore to indicate it's acquired
 
-    const betResult = await executeBet3(req);
+    const [accessAllowed, betResult] = await Promise.all([
+      check_access_time(req.user._id),
+      executeBet3(req)
+    ]);
+
+    // Release the semaphore
+    semaphore3 = 1;
+
+    if (!accessAllowed) {
+      const responseData = {
+        success: false,
+        message: 'irregular action',
+        betResult: -1000,
+        requestId: requestId
+      };
+
+      return res.json(responseData);
+    }
 
     res.json({
       success: betResult.success,
       message: betResult.message,
       betResult: betResult.betResult,
       newTransaction: betResult.newTransaction,
-      roomStatus: betResult.roomStatus
+      roomStatus: betResult.roomStatus,
+      requestId: requestId
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
+
 router.post('/bet4', auth, async (req, res) => {
   try {
+    const requestId = uuidv4();
 
-    if (!check_access_time(req.user._id)) {
-      responseData = {
-        success: false,
-        message: 'illregular action',
-        betResult: -1000
-      }
-
-      return responseData;
+    // Acquire the semaphore
+    if (semaphore4 === 0) {
+      // If semaphore is already acquired, return a busy response
+      return res.status(503).json({ success: false, message: 'Service Unavailable' });
     }
+    semaphore4 = 0; // Set semaphore to indicate it's acquired
 
-    const betResult = await executeBet4(req);
+    const [accessAllowed, betResult] = await Promise.all([
+      check_access_time(req.user._id),
+      executeBet4(req)
+    ]);
+
+    // Release the semaphore
+    semaphore4 = 1;
+
+    if (!accessAllowed) {
+      const responseData = {
+        success: false,
+        message: 'irregular action',
+        betResult: -1000,
+        requestId: requestId
+      };
+
+      return res.json(responseData);
+    }
 
     res.json({
       success: betResult.success,
       message: betResult.message,
       betResult: betResult.betResult,
       newTransaction: betResult.newTransaction,
-      roomStatus: betResult.roomStatus
+      roomStatus: betResult.roomStatus,
+      requestId: requestId
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
-
 module.exports = router;
