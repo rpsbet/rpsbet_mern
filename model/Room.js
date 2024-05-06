@@ -148,6 +148,10 @@
       share: {
         type: Number,
         default: 0
+      },
+      stake: {
+        type: Number,
+        default: 0
       }
     }]
   });

@@ -17,10 +17,6 @@ const SystemSettingSchema = new Schema({
     updated_at: {
         type: Date,
         default: Date.now
-    },
-    last_updated: {
-        type: Date,
-        default: Date.now
     }
 });
 

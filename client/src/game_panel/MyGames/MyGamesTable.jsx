@@ -103,7 +103,6 @@ class MyGamesTable extends Component {
   async componentDidMount() {
     await this.fetchData();
     document.addEventListener('mousedown', this.handleClickOutside);
-
   }
 
   componentWillUnmount() {
@@ -212,7 +211,7 @@ class MyGamesTable extends Component {
     let paymentMethod = 'automatic';
     let payoutAmount = row.endgame_amount;
 
-    if (row.endgame_amount === 0) {
+    if (!row.endgame_type) {
       paymentMethod = 'manual';
     }
 
@@ -274,7 +273,7 @@ class MyGamesTable extends Component {
     this.setState({ paymentMethod: selectedMethod });
     // If "manual" is selected, set the payoutAmount to "0"
     if (selectedMethod !== 'manual') {
-      this.setState({ payoutAmount: this.state.selectedRow.bet_amount });
+      this.setState({ payoutAmount: this.state.selectedRow.endgame_amount });
     } else {
       this.setState({ payoutAmount: 0 });
     }
@@ -370,35 +369,50 @@ class MyGamesTable extends Component {
   // };
 
   handleButtonClick = (winnings, room_id) => {
-
-    let startTime = 700;
+    const startTime = 400;
     const updateInterval = 10; // Interval in milliseconds
-    const updatesPerInterval = 1; // Update the display every interval
-
-    this.setState({
+  
+    // Calculate the total number of updates needed
+    const totalUpdates = Math.ceil(startTime / updateInterval);
+  
+    // Initialize the countdown timer
+    let countdown = startTime;
+  
+    // Update the countdown in intervals
+    const timer = setInterval(() => {
+      countdown -= updateInterval;
+  
+      if (countdown <= 0) {
+        clearInterval(timer);
+        this.endRoom(winnings, room_id);
+        this.setState(prevState => ({
+          [room_id]: {
+            ...prevState[room_id],
+            holding: false,
+            timeLeft: 0
+          }
+        }));
+      } else {
+        this.setState(prevState => ({
+          [room_id]: {
+            ...prevState[room_id],
+            timeLeft: countdown
+          }
+        }));
+      }
+    }, updateInterval);
+  
+    // Set the timer and initial state
+    this.setState(prevState => ({
       [room_id]: {
+        ...prevState[room_id],
         holding: true,
         timeLeft: startTime,
-        timer: setInterval(() => {
-          this.setState(prevState => {
-            let timeLeft = prevState[room_id].timeLeft - updateInterval * updatesPerInterval;
-            if (timeLeft <= 0) {
-              clearInterval(prevState[room_id].timer);
-              timeLeft = 0;
-              this.endRoom(winnings, room_id);
-            }
-            return {
-              [room_id]: {
-                ...prevState[room_id],
-                timeLeft
-              }
-            };
-          });
-        }, updateInterval)
+        timer: timer
       }
-    });
+    }));
   };
-
+  
   handleButtonRelease = room_id => {
     if (this.state[room_id] && this.state[room_id].timer) {
       clearTimeout(this.state[room_id].timer);
@@ -486,131 +500,130 @@ class MyGamesTable extends Component {
 
   };
 
-  handleBtnLeftClicked = e => {
-    const scrollAmount = 200; // Change this value to adjust the scroll amount
-    this.game_type_panel.scrollLeft -= scrollAmount;
-  };
+  // handleBtnLeftClicked = e => {
+  //   const scrollAmount = 200;
+  //   this.game_type_panel.scrollLeft -= scrollAmount;
+  // };
 
-  handleBtnRightClicked = e => {
-    const scrollAmount = 200; // Change this value to adjust the scroll amount
-    this.game_type_panel.scrollLeft += scrollAmount;
-  };
+  // handleBtnRightClicked = e => {
+  //   const scrollAmount = 200;
+  //   this.game_type_panel.scrollLeft += scrollAmount;
+  // };
 
-  generateGameTypePanel = () => {
-    const gameTypeStyleClass = {
-      R: 'roll',
-      RPS: 'rps',
-      'S!': 'spleesh',
-      MB: 'mystery-box',
-      BG: 'brain-game',
-      QS: 'quick-shoot',
-      DG: 'drop-game',
-      'B!': 'bang',
-      BJ: 'blackjack',
-      CR: 'craps'
-    };
+  // generateGameTypePanel = () => {
+  //   const gameTypeStyleClass = {
+  //     R: 'roll',
+  //     RPS: 'rps',
+  //     'S!': 'spleesh',
+  //     MB: 'mystery-box',
+  //     BG: 'brain-game',
+  //     QS: 'quick-shoot',
+  //     DG: 'drop-game',
+  //     'B!': 'bang',
+  //     BJ: 'blackjack',
+  //     CR: 'craps'
+  //   };
 
-    const gameTypePanel = (
-      <Box
-        display="flex"
-        justifyContent="space-evenly"
-        flexWrap="nowrap"
-        gap="15px"
-        ref={ref => (this.game_type_panel = ref)}
-      >
-        <Box item key="open-game-left-button">
-          <Button
-            className="btn-arrow-left"
-            onClick={this.handleBtnLeftClicked}
-          >
-            <ChevronLeftIcon />
-          </Button>
-        </Box>
+  //   const gameTypePanel = (
+  //     <Box
+  //       display="flex"
+  //       justifyContent="space-evenly"
+  //       flexWrap="nowrap"
+  //       gap="15px"
+  //       ref={ref => (this.game_type_panel = ref)}
+  //     >
+  //       <Box item key="open-game-left-button">
+  //         <Button
+  //           className="btn-arrow-left"
+  //           onClick={this.handleBtnLeftClicked}
+  //         >
+  //           <ChevronLeftIcon />
+  //         </Button>
+  //       </Box>
 
-        <Button
-          className={`btn-game-type btn-icon all-games ${this.state.selectedGameType === 'All' ? 'active' : ''
-            }`}
-          key="open-game-all-game-button"
-          onClick={() => {
-            this.handleGameTypeButtonClicked('All');
-          }}
-        >
-          {this.state.selectedGameType === 'All' && (
-            <Lottie
-              options={{
-                loop: false,
-                autoplay: false,
-                animationData: blob
-              }}
-              style={{
-                width: '100px',
-                position: 'absolute',
-                filter: 'hue-rotate(222deg)',
-                opacity: '0.4',
-                margin: '0px -18px 0 auto',
-                zIndex: '0'
-              }}
-            />
-          )}
-          <div className="icon" style={{
-            zIndex: '1'
-          }}>
-            <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
-            <span>All Games</span>
-          </div>
-        </Button>
-        {this.props.gameTypeList.map((gameType, index) => (
-          <Button
-            className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]
-              } ${this.state.selectedGameType === gameType.short_name
-                ? 'active'
-                : ''
-              }`}
-            key={index}
-            onClick={() => {
-              this.handleGameTypeButtonClicked(gameType.short_name);
-            }}
-          >
-            {this.state.selectedGameType === gameType.short_name && (
-              <Lottie
-                options={{
-                  loop: false,
-                  autoplay: false,
-                  animationData: blob
-                }}
-                style={{
-                  width: '100px',
-                  position: 'absolute',
-                  // filter: 'hue-rotate(222deg)',
-                  opacity: '0.4',
-                  margin: '0px -18px 0 auto',
-                  zIndex: '0'
-                }}
-              />
-            )}
-            <div className="icon" style={{
-              zIndex: '1'
-            }}>
-              <img
-                src={`/img/gametype/icons/${gameType.short_name}.svg`}
-                alt={gameType.game_type_name}
-              />
-              <span>{gameType.game_type_name}</span>
-            </div>
-          </Button>
-        ))}
-        <Button
-          className="btn-arrow-right"
-          key="open-game-right-button"
-          onClick={this.handleBtnRightClicked}
-        >
-          <ChevronRightIcon />
-        </Button>
-      </Box>
-    );
-
-    return gameTypePanel;
-  };
+  //       <Button
+  //         className={`btn-game-type btn-icon all-games ${this.state.selectedGameType === 'All' ? 'active' : ''
+  //           }`}
+  //         key="open-game-all-game-button"
+  //         onClick={() => {
+  //           this.handleGameTypeButtonClicked('All');
+  //         }}
+  //       >
+  //         {this.state.selectedGameType === 'All' && (
+  //           <Lottie
+  //             options={{
+  //               loop: false,
+  //               autoplay: false,
+  //               animationData: blob
+  //             }}
+  //             style={{
+  //               width: '100px',
+  //               position: 'absolute',
+  //               filter: 'hue-rotate(222deg)',
+  //               opacity: '0.4',
+  //               margin: '0px -18px 0 auto',
+  //               zIndex: '0'
+  //             }}
+  //           />
+  //         )}
+  //         <div className="icon" style={{
+  //           zIndex: '1'
+  //         }}>
+  //           <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
+  //           <span>All Games</span>
+  //         </div>
+  //       </Button>
+  //       {this.props.gameTypeList.map((gameType, index) => (
+  //         <Button
+  //           className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]
+  //             } ${this.state.selectedGameType === gameType.short_name
+  //               ? 'active'
+  //               : ''
+  //             }`}
+  //           key={index}
+  //           onClick={() => {
+  //             this.handleGameTypeButtonClicked(gameType.short_name);
+  //           }}
+  //         >
+  //           {this.state.selectedGameType === gameType.short_name && (
+  //             <Lottie
+  //               options={{
+  //                 loop: false,
+  //                 autoplay: false,
+  //                 animationData: blob
+  //               }}
+  //               style={{
+  //                 width: '100px',
+  //                 position: 'absolute',
+  //                 // filter: 'hue-rotate(222deg)',
+  //                 opacity: '0.4',
+  //                 margin: '0px -18px 0 auto',
+  //                 zIndex: '0'
+  //               }}
+  //             />
+  //           )}
+  //           <div className="icon" style={{
+  //             zIndex: '1'
+  //           }}>
+  //             <img
+  //               src={`/img/gametype/icons/${gameType.short_name}.svg`}
+  //               alt={gameType.game_type_name}
+  //             />
+  //             <span>{gameType.game_type_name}</span>
+  //           </div>
+  //         </Button>
+  //       ))}
+  //       <Button
+  //         className="btn-arrow-right"
+  //         key="open-game-right-button"
+  //         onClick={this.handleBtnRightClicked}
+  //       >
+  //         <ChevronRightIcon />
+  //       </Button>
+  //     </Box>
+  //   );
+  //   return gameTypePanel;
+  // };
 
   // handlePageNumberClicked = page => {
   //   this.props.getMyGames({
@@ -716,7 +729,7 @@ class MyGamesTable extends Component {
   }
 
   render() {
-    const gameTypePanel = this.generateGameTypePanel();
+    // const gameTypePanel = this.generateGameTypePanel();
     const { loading, strategies, user, updateRoomStrategy } = this.props;
     const { isLoading, anchorEl, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
 
@@ -856,7 +869,7 @@ class MyGamesTable extends Component {
               <div className="dont-have-game-msg">
                 <Lottie options={defaultOptions} width={50} />
                 <span>
-                 CLICK "CREATE"
+                  CLICK "CREATE"
                 </span>
               </div>
             ) : (
@@ -888,11 +901,10 @@ class MyGamesTable extends Component {
                       </div>
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
-                          {/* Display the bet amount */}
                           {convertToCurrency(row.winnings)}
-
-                          {/* Add the Font Awesome edit icon with onClick functionality */}
+                          <span style={{ fontSize: '10px' }}> ({(row.share)}%)</span>
                         </span>
+
                         {selectedFilter === 'open' && (
 
                           <a
@@ -907,7 +919,7 @@ class MyGamesTable extends Component {
 
                       <div className="table-cell endgame">
                         <span className="end-amount">
-                          {row.endgame_amount === 0 ? "M" : convertToCurrency(row.endgame_amount)}
+                          {!row.endgame_type ? "M" : convertToCurrency(row.endgame_amount)}
                         </span>
                         {(!row.coHost) &&
                           (selectedFilter === 'open') && (
@@ -921,8 +933,8 @@ class MyGamesTable extends Component {
                           )}
                       </div>
                       <div className="table-cell winnings">
-                            <span>{convertToCurrency(row.pr - row.bet_amount)}</span>
-                          </div>
+                        <span>{convertToCurrency((row.winnings - row.stake))}</span>
+                      </div>
                       {!this.props.myGamesWithStats ? (
                         <>
                           {/* <div className="table-cell winnings">
@@ -954,7 +966,7 @@ class MyGamesTable extends Component {
                         </>
                       ) : (
                         <>
-                          
+
                           <div className="table-cell bets">
                             <Battle width="24px" />
                             &nbsp;
@@ -1259,7 +1271,7 @@ class MyGamesTable extends Component {
                             <span>CURRENT PAYOUT:</span>
                           </TableCell>
                           <TableCell style={{ color: "#ffb000" }}>
-                            {this.state.selectedRow && this.state.selectedRow.endgame_amount !== 0 ? (
+                            {this.state.selectedRow && this.state.selectedRow.endgame_type ? (
                               convertToCurrency(this.state.selectedRow.endgame_amount)
                             ) : (
                               <span>MANUAL</span>

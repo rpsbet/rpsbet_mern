@@ -54,7 +54,6 @@ const addToQueue = async (req, bot = false) => {
             user = req.user;
         }
 
-
         if (req.body._id) {
             if (user.dailyWithdrawals > 0.02) {
                 responseData = {
@@ -62,7 +61,6 @@ const addToQueue = async (req, bot = false) => {
                     message: 'illregular action',
                     betResult: -1000
                 }
-
                 return responseData;
             }
 
@@ -153,7 +151,6 @@ const addToQueue = async (req, bot = false) => {
                 game_type: roomInfo['game_type'],
                 bet_amount: roomInfo['bet_amount'],
                 game_result: 0
-                // is_anonymous: req.body.is_anonymous
             });
 
             let newTransactionC = new Transaction({
@@ -179,7 +176,6 @@ const addToQueue = async (req, bot = false) => {
                 to: roomInfo['creator'],
                 room: req.body._id,
                 message: '',
-                // is_anonymous: req.body.is_anonymous,
                 is_read: false
             });
 
@@ -415,6 +411,7 @@ const addToQueue = async (req, bot = false) => {
                                 game_type: roomInfo['game_type'],
                                 bet_amount: roomInfo['host_pr'],
                                 user_bet: roomInfo['user_bet'],
+                                hosts: roomInfo.hosts,
                                 // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
@@ -453,6 +450,7 @@ const addToQueue = async (req, bot = false) => {
                     if (mostRecentItems.length > 0) {
                         req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
                             bankroll: roomInfo['user_bet'],
+                            host_pr: roomInfo['host_pr'],
                             rps: mostRecentItems,
                             user: user
                         });
@@ -528,6 +526,42 @@ const addToQueue = async (req, bot = false) => {
             }
             // Check if user_bet matches the share value of the first host
             if (roomInfo.hosts[0].share === 100) {
+                let notification = new Notification({
+                    from: user._id,
+                    to: roomInfo['creator'],
+                    room: req.body._id,
+                    message: '',
+                    // is_anonymous: req.body.is_anonymous,
+                    is_read: false
+                });
+
+                notification.from = roomInfo['creator']._id;
+                notification.to = roomInfo['creator']._id;
+                notification.message = 'Hosting ' + convertToCurrency(newTransactionC.amount) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
+
+                const notificationData = {
+                    _id: roomInfo['creator']._id,
+                    message: notification.message,
+                    username: roomInfo['creator'].username,
+                    avatar: roomInfo['creator'].avatar,
+                    accessory: roomInfo['creator'].accessory,
+                    room: req.body._id,
+                    rank: roomInfo['creator'].totalWagered,
+                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    created_at_str: moment(new Date()).format('LLL'),
+                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    is_read: false
+                };
+
+                if (notification.message !== '' && newTransactionC.amount !== 0) {
+
+                    try {
+                        await saveDocumentWithRetry(notification);
+                        socket.sendNotification(roomInfo['creator']._id, notificationData);
+                    } catch (error) {
+                        console.error("Error saving notification:", error);
+                    }
+                }
 
                 if (newTransactionC.amount !== 0) {
                     try {
@@ -547,10 +581,20 @@ const addToQueue = async (req, bot = false) => {
                     }
                     socket.newTransaction(newTransactionC);
                 }
-            } else {
 
+               
+            } else {
                 // Iterate over each host asynchronously
                 roomInfo.hosts.forEach(async (host) => {
+                    let notification = new Notification({
+                        from: user._id,
+                        to: roomInfo['creator'],
+                        room: req.body._id,
+                        message: '',
+                        // is_anonymous: req.body.is_anonymous,
+                        is_read: false
+                    });
+
                     const amountForHost = ((host.share / 100) * newTransactionC.amount);
                     const newTransactionForHost = new Transaction({
                         user: host.host,
@@ -579,6 +623,34 @@ const addToQueue = async (req, bot = false) => {
                         console.log(`User with host ${host.host} not found.`);
                     }
 
+                    notification.from = roomInfo['creator'];
+                    notification.to = host.host;
+                    notification.message = 'Co-Hosting ' + convertToCurrency(amountForHost) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
+
+                    const notificationData = {
+                        _id: roomInfo['creator']._id,
+                        message: notification.message,
+                        username: roomInfo['creator'].username,
+                        avatar: roomInfo['creator'].avatar,
+                        accessory: roomInfo['creator'].accessory,
+                        room: req.body._id,
+                        rank: roomInfo['creator'].totalWagered,
+                        created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                        created_at_str: moment(new Date()).format('LLL'),
+                        updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                        is_read: false
+                    };
+
+                    if (notification.message !== '' && amountForHost !== 0) {
+
+                        try {
+                            await saveDocumentWithRetry(notification);
+                            socket.sendNotification(host.host, notificationData);
+                        } catch (error) {
+                            console.error("Error saving notification:", error);
+                        }
+                    }
+
                 });
             }
 
@@ -595,27 +667,7 @@ const addToQueue = async (req, bot = false) => {
                 console.error("Error saving", error);
             }
 
-            const notificationData = {
-                _id: user._id,
-                message: message.message,
-                username: user.username,
-                avatar: user.avatar,
-                accessory: user.accessory,
-                room: req.body._id,
-                rank: user.totalWagered,
-                created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                created_at_str: moment(new Date()).format('LLL'),
-                updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-                is_read: false
-            };
-            if (message.message !== '' && message.from._id !== message.to._id) {
-                try {
-                    await saveDocumentWithRetry(message);
-                    socket.sendNotification(message.to._id, notificationData);
-                } catch (error) {
-                    console.error("Error saving message:", error);
-                }
-            }
+           
             user = null;
             bet_item = null;
             // }, 0);
@@ -642,73 +694,6 @@ const addToQueue = async (req, bot = false) => {
         throw new Error('Error executing bet');
     }
 };
-
-
-
-// const executeBet = async (req, bot = false) => {
-//     try {
-//         // console.log("**************************req.body************************", req.user.username);
-//         const reqCopy = { ...req }; // Create a shallow copy of the req object
-//         let result;
-
-//         if (!bot) {
-//             // If the request is not from a bot, prioritize it
-//             console.log("Prioritizing non-bot request");
-//             if (isNonBotRequestProcessing) {
-//                 // Queue the request if a non-bot request is already processing
-//                 console.log("Queuing the non-bot request");
-//                 requestQueue.push(() => addToQueue(reqCopy, bot));
-//             } else {
-//                 // Process the non-bot request immediately
-//                 isNonBotRequestProcessing = true;
-//                 result = await addToQueue(reqCopy, bot);
-//                 isNonBotRequestProcessing = false;
-
-//                 // Process any queued requests
-//                 while (requestQueue.length > 0) {
-//                     const queuedRequest = requestQueue.shift();
-//                     await queuedRequest();
-//                 }
-//             }
-//         } else {
-//             // For bot requests, proceed as usual
-//             result = await addToQueue(reqCopy, bot);
-//         }
-
-//         // console.log("***************************result***********************", result);
-//         return result;
-//     } catch (error) {
-//         throw new Error('Error executing bet');
-//     }
-// };
-// const executeBet = (req, bot = false) => {
-//     const startTime = new Date(); // Record the start time
-//     return new Promise(async (resolve, reject) => {
-//         try {
-//             const result = await addToQueue(req, bot);
-//             req = null;
-
-//             const endTime = new Date(); // Record the end time
-//             const executionTime = endTime - startTime; // Calculate the execution time in milliseconds
-//             const humanReadableTime = millisecondsToHumanReadable(executionTime); // Convert to human-readable format
-//             console.log(`Bet execution time: ${humanReadableTime}`);
-//             resolve(result);
-//         } catch (error) {
-//             reject(error);
-//         }
-//     });
-// };
-
-
-// // Function to convert milliseconds to human-readable format
-// const millisecondsToHumanReadable = (milliseconds) => {
-//     const seconds = Math.floor(milliseconds / 1000);
-//     const minutes = Math.floor(seconds / 60);
-//     const remainingSeconds = seconds % 60;
-//     return `${minutes} minutes and ${remainingSeconds} seconds`;
-// };
-
-
 
 const executeBet = (req, bot = false) => {
     return new Promise((resolve, reject) => {

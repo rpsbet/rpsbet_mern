@@ -14,9 +14,9 @@ async function checkOutstandingLoans(io) {
   }
 
   try {
-    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated_loans' });
     if (systemSetting) {
-      const lastUpdated = systemSetting.last_updated;
+      const lastUpdated = systemSetting.updated_at;
       // Check if last_updated is 24 hours ago or more
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -85,7 +85,7 @@ async function checkOutstandingLoans(io) {
 
         // await processingMessage.save();
         socketController.globalChatSend(socketio, data);
-        systemSetting.last_updated = new Date();
+        systemSetting.updated_at = new Date();
         await systemSetting.save();
       } else {
         console.log("Last credit score scheck was less than 24 hours ago. Skipping.");

@@ -413,6 +413,7 @@ const addToQueue = async (req, bot = false) => {
                                 game_type: roomInfo['game_type'],
                                 bet_amount: roomInfo['host_pr'],
                                 user_bet: roomInfo['user_bet'],
+                                hosts: roomInfo.hosts,
                                 // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });
@@ -452,6 +453,7 @@ const addToQueue = async (req, bot = false) => {
                     if (mostRecentItems.length > 0) {
                         req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
                             bankroll: roomInfo['user_bet'],
+                            host_pr: roomInfo['host_pr'],
                             rps: mostRecentItems,
                             user: user
                         });
@@ -527,6 +529,42 @@ const addToQueue = async (req, bot = false) => {
             }
             // Check if user_bet matches the share value of the first host
             if (roomInfo.hosts[0].share === 100) {
+                let notification = new Notification({
+                    from: user._id,
+                    to: roomInfo['creator'],
+                    room: req.body._id,
+                    message: '',
+                    // is_anonymous: req.body.is_anonymous,
+                    is_read: false
+                });
+
+                notification.from = roomInfo['creator']._id;
+                notification.to = roomInfo['creator']._id;
+                notification.message = 'Hosting ' + convertToCurrency(newTransactionC.amount) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
+
+                const notificationData = {
+                    _id: roomInfo['creator']._id,
+                    message: notification.message,
+                    username: roomInfo['creator'].username,
+                    avatar: roomInfo['creator'].avatar,
+                    accessory: roomInfo['creator'].accessory,
+                    room: req.body._id,
+                    rank: roomInfo['creator'].totalWagered,
+                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    created_at_str: moment(new Date()).format('LLL'),
+                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    is_read: false
+                };
+
+                if (notification.message !== '' && newTransactionC.amount !== 0) {
+
+                    try {
+                        await saveDocumentWithRetry(notification);
+                        socket.sendNotification(roomInfo['creator']._id, notificationData);
+                    } catch (error) {
+                        console.error("Error saving notification:", error);
+                    }
+                }
 
                 if (newTransactionC.amount !== 0) {
                     try {
@@ -546,10 +584,19 @@ const addToQueue = async (req, bot = false) => {
                     }
                     socket.newTransaction(newTransactionC);
                 }
-            } else {
 
+            } else {
                 // Iterate over each host asynchronously
                 roomInfo.hosts.forEach(async (host) => {
+                    let notification = new Notification({
+                        from: user._id,
+                        to: roomInfo['creator'],
+                        room: req.body._id,
+                        message: '',
+                        // is_anonymous: req.body.is_anonymous,
+                        is_read: false
+                    });
+
                     const amountForHost = ((host.share / 100) * newTransactionC.amount);
                     const newTransactionForHost = new Transaction({
                         user: host.host,
@@ -576,6 +623,34 @@ const addToQueue = async (req, bot = false) => {
                         }
                     } else {
                         console.log(`User with host ${host.host} not found.`);
+                    }
+
+                    notification.from = roomInfo['creator'];
+                    notification.to = host.host;
+                    notification.message = 'Co-Hosting ' + convertToCurrency(amountForHost) + ' auto-payout in ' + roomInfo.game_type.short_name + '-' + roomInfo.room_number;
+
+                    const notificationData = {
+                        _id: roomInfo['creator']._id,
+                        message: notification.message,
+                        username: roomInfo['creator'].username,
+                        avatar: roomInfo['creator'].avatar,
+                        accessory: roomInfo['creator'].accessory,
+                        room: req.body._id,
+                        rank: roomInfo['creator'].totalWagered,
+                        created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                        created_at_str: moment(new Date()).format('LLL'),
+                        updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                        is_read: false
+                    };
+
+                    if (notification.message !== '' && amountForHost !== 0) {
+
+                        try {
+                            await saveDocumentWithRetry(notification);
+                            socket.sendNotification(host.host, notificationData);
+                        } catch (error) {
+                            console.error("Error saving notification:", error);
+                        }
                     }
 
                 });
@@ -608,7 +683,7 @@ const addToQueue = async (req, bot = false) => {
                 is_read: false
             };
 
-            if (message.message !== '' && message.from._id !== message.to._id) {
+            if (message.message !== '') {
                 try {
                     await saveDocumentWithRetry(message);
                     socket.sendNotification(message.to._id, notificationData);

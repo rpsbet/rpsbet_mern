@@ -12,9 +12,9 @@ async function checkRentalPayments(io) {
     if (io) {
       socketio = io;
     }
-    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated_rent' });
     if (systemSetting) {
-      const lastUpdated = systemSetting.last_updated;
+      const lastUpdated = systemSetting.updated_at;
       // Check if last_updated is 24 hours ago or more
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -39,7 +39,6 @@ async function checkRentalPayments(io) {
               oneMonthAgo.setMonth(currentDate.getMonth() - 1);
 
               // Check if it's been more than 1 month since the last payment
-              console.log("check")
               if (lastPaymentDate <= oneMonthAgo) {
                 // Find the current user
                 const currentUser = await User.findOne({ _id: owner.user });
@@ -141,7 +140,7 @@ async function checkRentalPayments(io) {
 
         // Emit the GLOBAL_CHAT_SEND event
         socketController.globalChatSend(socketio, data);
-        systemSetting.last_updated = new Date();
+        systemSetting.updated_at = new Date();
         await systemSetting.save();
       } else {
         console.log("Last wd check was less than 24 hours ago. Skipping.");

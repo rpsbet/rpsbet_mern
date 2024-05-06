@@ -163,6 +163,7 @@ class RPS extends Component {
       cardDealt: false,
       bet_amount: 1,
       bankroll: this.props.user_bet,
+      host_pr: this.props.roomInfo.host_pr,
       rps: [],
       prev_rps: [],
       isPasswordCorrect: this.props.isPasswordCorrect,
@@ -302,6 +303,7 @@ class RPS extends Component {
       }
       return {
         bankroll: data.bankroll,
+        host_pr: data.host_pr,
         rps: this.props.isWatching ? data.rps.filter(game => game.joiner === this.props.user_id) : data.rps,
         prev_rps: data.rps,
         startedPlaying: true,
@@ -498,6 +500,13 @@ class RPS extends Component {
       if (prevProps.roomInfo.bet_amount !== roomInfo.bet_amount) {
         this.setState({
           bankroll: parseFloat(roomInfo.bet_amount)
+        });
+      }
+    }
+    if (prevProps.roomInfo && roomInfo) {
+      if (prevProps.roomInfo.host_pr !== roomInfo.host_pr) {
+        this.setState({
+          host_pr: parseFloat(roomInfo.host_pr)
         });
       }
     }
@@ -720,6 +729,7 @@ class RPS extends Component {
       actionList,
       players,
       prev_rps,
+      host_pr,
       intervalDuration
     } = this.state;
     const {
@@ -802,7 +812,7 @@ class RPS extends Component {
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
-                    <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : ""}>
+                    <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
                       <div className={`value ${isLowBankroll ? 'red-text' : ''}`}>
                         {convertToCurrency(bankroll)}
                         {isLowBankroll && <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />}
@@ -813,6 +823,8 @@ class RPS extends Component {
                     <div>
                       <div className="label your-max-return">Your Return</div>
                     </div>
+                    <Tooltip title="Bet Amount x 2 (does not include fees)">
+
                     <div className="value">
                       {convertToCurrency(
                         // updateDigitToPoint2(
@@ -820,13 +832,17 @@ class RPS extends Component {
                         // )
                       )}
                     </div>
+                    </Tooltip>
                   </div>
                   {this.props.rps_game_type === 0 && (
                     <div className="data-item">
                       <div>
                         <div className="label win-chance">Commission</div>
                       </div>
+                      <Tooltip title="Determined by the Host's equipped accessory">
+
                       <div className="value">{this.props.cp}% </div>
+                      </Tooltip>
                     </div>
                   )}
                   {roomInfo.endgame_amount > 0 && (
@@ -834,14 +850,16 @@ class RPS extends Component {
                       <div>
                         <div className="label created">Auto-Payout</div>
                       </div>
+                      <Tooltip title="Automatic dividends paid out to Hosts & CoHosts upon meeting the set payout threshold">
                       <div className="payout-bar">
                         <div className="value" style={barStyle}></div>
                       </div>
+                      </Tooltip>
                     </div>
                   )}
                   <div className="data-item">
                     <div>
-                      <div className="label net-profit">Host Profit</div>
+                      <div className="label net-profit">Room Profit</div>
                     </div>
                     <div className="value bankroll">
                       {/* {actionList && actionList.hostBetsValue.length > 0 ? (
@@ -849,7 +867,7 @@ class RPS extends Component {
                           {convertToCurrency(
                             actionList.hostNetProfit?.slice(-1)[0]
                           )}
-                          <Tooltip title="Last 100 games">
+                         
 
                             <ReactApexChart
                               className="bankroll-graph"
@@ -931,7 +949,6 @@ class RPS extends Component {
                                 }
                               ]}
                             />
-                          </Tooltip>
 
                         </>
                       ) : (
@@ -946,14 +963,17 @@ class RPS extends Component {
                           }}
                         />
                       )} */}
-                      <div className="value" style={{ color: (roomInfo.host_pr - roomInfo.bet_amount) > 0 ? 'rgb(87, 202, 34)' : (roomInfo.host_pr - roomInfo.bet_amount) < 0 ? '#ff0000' : 'inherit' }}>
-                        {convertToCurrency(roomInfo.host_pr - roomInfo.bet_amount)}
+                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
+                      <div className="value" style={{ color: (host_pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (host_pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
+                        {convertToCurrency(host_pr - roomInfo.total_stakes)}
                       </div>
+                      </Tooltip>
+
                     </div>
                   </div>
                   <div className="data-item">
                     <div>
-                      <div className="label host-display-name">Host</div>
+                      <div className="label host-display-name">Creator</div>
                     </div>
                     <div className="value host">
                       <a

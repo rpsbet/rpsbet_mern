@@ -83,6 +83,7 @@ class MainPage extends Component {
       isAuthenticated,
       getMyChat
     } = this.props;
+    this.gamesListInterval = setInterval(this.handleRefresh, 100000);
 
     const promises = [getRoomList({ pageSize: 7 }), getRoomCount({ game_type: selectedGameType }), getHistory()];  // getGameTypeList()];
     if (isAuthenticated) {
@@ -288,6 +289,7 @@ class MainPage extends Component {
               this.state.show_open_game === 0)) && (
               <OpenGamesTable
                 refreshing={this.state.refreshing}
+                handleRefresh={this.handleRefresh}
                 roomList={this.props.roomList}
                 isAuthenticated={this.props.isAuthenticated}
                 rooms_count={this.props.rooms_count}

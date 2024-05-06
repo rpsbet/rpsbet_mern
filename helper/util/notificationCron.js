@@ -10,7 +10,7 @@ async function deleteChat() {
   try {
     let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
     if (systemSetting) {
-      const lastUpdated = systemSetting.last_updated;
+      const lastUpdated = systemSetting.updated_at;
       // Check if last_updated is 24 hours ago or more
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -44,7 +44,7 @@ async function deleteRpsBetItems() {
   try {
     let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
     if (systemSetting) {
-      const lastUpdated = systemSetting.last_updated;
+      const lastUpdated = systemSetting.updated_at;
       // Check if last_updated is 24 hours ago or more
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -76,9 +76,9 @@ async function deleteRpsBetItems() {
 
 async function deleteNotifications() {
   try {
-    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated_notifications' });
     if (systemSetting) {
-      const lastUpdated = systemSetting.last_updated;
+      const lastUpdated = systemSetting.updated_at;
       // Check if last_updated is 24 hours ago or more
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -98,7 +98,7 @@ async function deleteNotifications() {
 
           console.log(`${deletedNotifications.deletedCount} notifications deleted.`);
         }
-        systemSetting.last_updated = new Date();
+        systemSetting.updated_at = new Date();
         await systemSetting.save();
       } else {
         console.log("Last notification deletion was less than 24 hours ago. Skipping deletion.");

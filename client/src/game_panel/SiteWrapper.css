@@ -36,6 +36,13 @@ button#recentSearches span {
  
 }
 
+.host-container {
+  display: inline-flex;
+}
+.host-container a{
+  margin-left: -3px;
+}
+
 .label {
   font-size: x-small;
   color: #555555; /* Dark gray color for the label */

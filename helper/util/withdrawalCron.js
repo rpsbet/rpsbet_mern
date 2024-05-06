@@ -7,9 +7,9 @@ const SystemSetting = require('../../model/SystemSetting');
 async function resetWithdrawalLimits() {
 
   try {
-    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated_withdrawals' });
     if (systemSetting) {
-      const lastUpdated = systemSetting.last_updated;
+      const lastUpdated = systemSetting.updated_at;
       // Check if last_updated is 24 hours ago or more
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -54,7 +54,7 @@ async function resetWithdrawalLimits() {
             await user.save();
           }
         }
-        systemSetting.last_updated = new Date();
+        systemSetting.updated_at = new Date();
         await systemSetting.save();
       } else {
         console.log("Last wd check was less than 24 hours ago. Skipping.");

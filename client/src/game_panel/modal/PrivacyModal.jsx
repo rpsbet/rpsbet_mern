@@ -52,7 +52,7 @@ class PrivacyModal extends Component {
                     <div>
                         <h2>Privacy Policy</h2>
                         <br/>
-                        <h5>Last updated: 2nd March 2023</h5>
+                        <h5>Last updated: 2nd March 2024</h5>
                         <br/>
                         “RPS GAME,” ("us", "we", or "our") operates https://rps.game (the "Site"). This page informs you of our policies regarding the collection, use and disclosure of Personal Information we receive from users of the Site. We use your Personal Information only for providing and improving the Site. By using the Site, you agree to the collection and use of information in accordance with this policy. If you do not want RPS Game to collect, store, use, or share your information in the ways described in this Privacy Policy, you may not play RPS Game games or use RPS Game’s other Services. For purposes of data protection laws, RPS Game is the “data controller” of your personal information.
                         <br/><br/>

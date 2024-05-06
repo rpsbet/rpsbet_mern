@@ -50,6 +50,7 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0
     },
+    
     // selected_box: {
     //     type: Schema.Types.ObjectId,
     //     ref: 'RoomBoxPrize',
@@ -98,7 +99,29 @@ const GameLogSchema = new Schema({
     updated_at: {
         type: Date,
         default: Date.now
-    }
+    },
+    hosts: [{
+        host: {
+          type: Schema.Types.ObjectId,
+          ref: 'User'
+        },
+        rank: {
+          type: Number,
+          default: 0
+        },
+        avatar: {
+          type: String,
+          default: ''
+        },
+        accessory: {
+          type: String,
+          default: ''
+        },
+        share: {
+          type: Number,
+          default: 0
+        }
+      }],
 });
 
 module.exports = GameLog = mongoose.model('rps_game_logs', GameLogSchema);
