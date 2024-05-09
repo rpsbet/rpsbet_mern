@@ -301,6 +301,9 @@ class RPS extends Component {
       if (updatedPlayers.length > 5) {
         updatedPlayers.shift(); // Remove the oldest player
       }
+      if (!this.props.isMuted) {
+        this.props.playSound('blip');
+      }
       return {
         bankroll: data.bankroll,
         host_pr: data.host_pr,
@@ -1291,6 +1294,7 @@ const mapStateToProps = state => ({
   isLowGraphics: state.auth.isLowGraphics,
   isMusicEnabled: state.auth.isMusicEnabled,
   isFocused: state.auth.isFocused,
+  isMuted: state.auth.isMuted,
   is_betting: state.logic.is_betting,
 });
 

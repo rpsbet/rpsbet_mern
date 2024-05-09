@@ -9,56 +9,41 @@ const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const { v4: uuidv4 } = require('uuid');
 
-const User = require('../model/User');
-const Room = require('../model/Room');
 const Comment = require('../model/Comment');
 
 const Item = require('../model/Item');
+const User = require('../model/User');
+const Room = require('../model/Room');
 const GameType = require('../model/GameType');
 const Strategy = require('../model/Strategy');
 const GameLog = require('../model/GameLog');
-const RoomBoxPrize = require('../model/RoomBoxPrize');
-const Question = require('../model/Question');
-const Answer = require('../model/Answer');
-const BrainGameType = require('../model/BrainGameType');
+// const RoomBoxPrize = require('../model/RoomBoxPrize');
+// const Question = require('../model/Question');
+// const Answer = require('../model/Answer');
+// const BrainGameType = require('../model/BrainGameType');
 const Message = require('../model/Message');
 const Notification = require('../model/Notification');
 
 const Transaction = require('../model/Transaction');
 const SystemSetting = require('../model/SystemSetting');
 const SpleeshGuess = require('../model/SpleeshGuess');
-const DropGuess = require('../model/DropGuess');
-const BangGuess = require('../model/BangGuess');
-const RollGuess = require('../model/RollGuess');
+// const DropGuess = require('../model/DropGuess');
+// const BangGuess = require('../model/BangGuess');
+// const RollGuess = require('../model/RollGuess');
 const RpsBetItem = require('../model/RpsBetItem');
-const BjBetItem = require('../model/BjBetItem');
+// const BjBetItem = require('../model/BjBetItem');
 // const QsBetItem = require('../model/QsBetItem');
-const DropBetItem = require('../model/DropBetItem');
+// const DropBetItem = require('../model/DropBetItem');
 const BangBetItem = require('../model/BangBetItem');
 const RollBetItem = require('../model/RollBetItem');
-const { predictNextBj } = require('../helper/util/predictNextBj');
-const { predictNextQs } = require('../helper/util/predictNextQs');
-const { predictNextDrop } = require('../helper/util/predictNextDrop');
+const { convertGameLogToHistoryStyle } = require('../helper/util/convertGameLogToHistoryStyle');
 const avatarUtils = require('../helper/util/getRank');
 const convertToCurrency = require('../helper/util/conversion');
-const executeBet = require('../helper/util/betExecutor');
 const executeBet2 = require('../helper/util/betExecutor2');
 const executeBet3 = require('../helper/util/betExecutor3');
-const executeBet4 = require('../helper/util/betExecutor4');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
-let semaphore = 1;
 let semaphore2 = 1;
 let semaphore3 = 1;
-let semaphore4 = 1;
-
-const executeBetFunctions = [
-  executeBet,
-  executeBet2,
-  executeBet3,
-  executeBet4
-];
-
-let currentExecuteBetIndex = 0;
 
 let user_access_log = {};
 router.get('/game_types', async (req, res) => {
@@ -123,8 +108,6 @@ router.patch('/strategies/:user_id', async (req, res) => {
 router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
   try {
-    console.log(`Updating room with ID: ${room_id}`);
-
     // Check if the room exists
     const room = await Room.findById(room_id);
     if (!room) {
@@ -137,31 +120,23 @@ router.patch('/rooms/:room_id', async (req, res) => {
       let botFound = false;
       let attempts = 0;
       while (!botFound && attempts < 6) {
-        console.log(`Attempt ${attempts + 1} to find a random bot`);
         const randomBot = await User.aggregate([
           { $match: { username: { $regex: /BOT/i } } },
           { $sample: { size: 1 } }
         ]);
         const botId = randomBot[0]._id;
-        console.log(`Randomly chosen bot ID: ${botId}`);
 
         const existingRooms = await Room.find({ joiners: botId, status: 'open' });
         if (existingRooms.length === 0) {
           botFound = true;
-          console.log('Bot not found in any existing rooms');
           return botId;
         }
-        console.log(`Bot found in existing rooms: ${existingRooms.map(room => room._id)}`);
-        console.log('Trying again...');
         attempts++;
       }
       throw new Error('No available bots found');
     };
-
     // Find and attach a bot to the room
-    console.log('Searching for a random bot...');
     const botId = await findRandomBot();
-    console.log(`Found a bot to attach: ${botId}`);
 
     const updatedRoom = await Room.findByIdAndUpdate(
       room_id,
@@ -169,7 +144,6 @@ router.patch('/rooms/:room_id', async (req, res) => {
       { new: true }
     );
 
-    console.log('Room updated successfully');
     res.json({
       success: true,
       message: 'Bot joined the room successfully!',
@@ -284,10 +258,10 @@ router.get('/room/:id', async (req, res) => {
 
     let gameLogQuery = GameLog.find({ room: room })
       .sort({ created_at: 'desc' })
-      .populate({ path: 'room', model: Room })
-      .populate({ path: 'game_type', model: GameType })
-      .populate({ path: 'creator', model: User })
-      .populate({ path: 'joined_user', model: User });
+      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status hosts room_number game_type bet_amount user_bet host_pr created_at'  })
+      .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
+      .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
+      .populate({ path: 'joined_user', model: User, select: '_id avatar accessory totalWagered' });
 
     // Check if the limit parameter is provided
     if (req.query.limit) {
@@ -327,8 +301,8 @@ router.get('/room/:id', async (req, res) => {
         creator_avatar: creator['avatar'],
         rank: creator['totalWagered'],
         accessory: creator['accessory'],
-        aveMultiplier: room['aveMultiplier'],
-        creator_name: creator['username'],
+        // aveMultiplier: room['aveMultiplier'],
+        // creator_name: creator['username'],
         endgame_amount: room['endgame_amount'],
         description: room['description'],
         joiners: joiners,
@@ -659,344 +633,6 @@ router.delete('/comments/:comment_id', async (req, res) => {
   }
 });
 
-
-const convertGameLogToHistoryStyle = async gameLogList => {
-  let result = [];
-
-  gameLogList.forEach(gameLog => {
-    try {
-      let temp = {
-        _id: gameLog._id,
-        room_name:
-          gameLog['game_type']['short_name'] +
-          '-' +
-          gameLog['room']['room_number'],
-        history: '',
-        gameBackground: gameLog['room']['gameBackground'],
-        created_at: gameLog['created_at'],
-        status: gameLog['room']['status']
-      };
-
-      const joined_user_avatar = `<img class='avatar' data-userid="${gameLog['joined_user']['_id']
-        }" src='${gameLog['joined_user']['avatar']
-        }'  alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(
-          gameLog['joined_user']['totalWagered']
-        )}" />`;
-
-      const maxHostsToShow = 3; // Maximum number of hosts to show before displaying "[number of others] others"
-
-      let host_links = gameLog.hosts.slice(0, maxHostsToShow).map((host, index) => {
-        const host_avatar = `<img class='avatar' data-userid="${host._id}" src="${host.avatar}" alt="" onerror="this.src='/img/profile-thumbnail.svg'" style="border: ${avatarUtils.getBorderByRank(host.totalWagered)}" />`;
-        const host_link = `<a href="javascript:void(0)" class="user-link" accessory="${host.accessory}" rank="${host.totalWagered}" data-userid="${host._id}">${host_avatar}</a>`;
-        return host_link;
-      }).join('');
-
-      if (gameLog.hosts.length > maxHostsToShow) {
-        const numOthers = gameLog.hosts.length - maxHostsToShow;
-        host_links += `<span>${numOthers} others</span>`;
-      }
-
-      // Wrap host links inside a container element
-      const hostContainer = `<div class="host-container">${host_links}</div>`;
-
-      const creator_avatar = `<img class='avatar' data-userid="${gameLog['creator']['_id']
-        }" src='${gameLog['creator']['avatar']
-        }'  alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(
-          gameLog['creator']['totalWagered']
-        )}" />`;
-      const creator_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['creator']['accessory']}' rank='${gameLog['creator']['totalWagered']}' data-userid="${gameLog['creator']['_id']}">${creator_avatar}</a>`;
-
-      const joined_user_link = `<a href="javascript:void(0)" class="user-link" accessory='${gameLog['joined_user']['accessory']}' rank='${gameLog['joined_user']['totalWagered']}' data-userid="${gameLog['joined_user']['_id']}">${joined_user_avatar}</a>`;
-      const betAmount = parseFloat(gameLog['room']['bet_amount']);
-
-      const userBet = parseFloat(gameLog['room']['user_bet']);
-      const multiplier =
-        parseFloat(gameLog['room']['user_bet']) /
-        parseFloat(gameLog['room']['bet_amount']);
-
-      const multiplierDisplay = multiplier.toFixed(2);
-      const color = multiplier < 1 ? '#ffdd15' : '#ff0a28'; // yellow : red
-
-      let room_name = `<a style='color: #b9bbbe;' href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
-
-      if (gameLog['room']['status'] === 'open') {
-        room_name = `<a style='color: #b9bbbe;'  href="/join/${gameLog['room']['_id']}">${gameLog['game_type']['short_name']}-${gameLog['room']['room_number']}</a>`;
-      }
-      // history logs
-      if (gameLog['game_type']['game_type_name'] === 'RPS') {
-        if (gameLog.game_result === 1) {
-          temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['winnings']
-          )} (${(gameLog['winnings'] / gameLog['bet_amount']).toFixed(2)}X)</span> (${convertToCurrency(
-            gameLog['commission']
-          )} RTB) in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${hostContainer} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['user_bet'] - gameLog['room']['endgame_amount']
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
-            userBet
-          )} (${multiplierDisplay}x)</span> in ${room_name}`;
-        } else if (gameLog.game_result === 0) {
-          temp.history = `${joined_user_link} split <span style='color: #b9bbbe;'>${convertToCurrency(
-            gameLog['bet_amount'] * 2
-          )} (1.00X)</span> in ${room_name}`;
-        } else {
-          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
-            gameLog['bet_amount']
-          )} (0.00X)</span> in ${room_name}`;
-        }
-      } else if (gameLog['game_type']['game_type_name'] === 'Blackjack') {
-        if (gameLog.game_result === 1) {
-          temp.history = `${joined_user_link} won <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['bet_amount'] * 2
-          )} (2.00X)</span> in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['user_bet'] - gameLog['room']['endgame_amount']
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
-            userBet
-          )} (${multiplierDisplay}x)</span> in ${room_name}`;
-        } else if (gameLog.game_result === 0) {
-          temp.history = `${joined_user_link} split <span style='color: #b9bbbe;'>${convertToCurrency(
-            gameLog['bet_amount'] * 2
-          )} (1.00X)</span> in ${room_name}`;
-        } else {
-          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
-            gameLog['bet_amount']
-          )} (0.00X)</span> in ${room_name}`;
-        }
-      } else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
-        if (gameLog.game_result === 1) {
-          const winnings =
-            gameLog['bet_amount'] / (gameLog['room']['qs_game_type'] - 1) +
-            gameLog['bet_amount'];
-          const winningsDisplay = convertToCurrency(winnings);
-          const multiplierDisplay = (winnings / gameLog['bet_amount']).toFixed(
-            2
-          );
-
-          temp.history = `
-            ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span>
-            (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['user_bet'] - gameLog['room']['endgame_amount']
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
-            userBet
-          )} (${multiplierDisplay}x)</span> in ${room_name}`;
-        } else {
-          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
-            gameLog['bet_amount']
-          )} (0.00X)</span> in ${room_name}`;
-        }
-      } else if (gameLog['game_type']['game_type_name'] === 'Drop Game') {
-        if (gameLog.game_result === 1) {
-          const winnings = parseFloat(
-            gameLog['bet_amount'] + gameLog['selected_drop']
-          );
-          const winningsDisplay = convertToCurrency(winnings);
-          const multiplierDisplay = (
-            (gameLog['bet_amount'] + gameLog['selected_drop']) /
-            gameLog['bet_amount']
-          ).toFixed(2);
-
-          temp.history = `
-            ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> 
-            (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
-            gameLog['room']['host_pr']
-          )} (${multiplierDisplay}x)</span> in ${room_name}`;
-        } else {
-          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
-            gameLog['bet_amount']
-          )} (0.00X)</span> in ${room_name}`;
-        }
-      } else if (gameLog['game_type']['game_type_name'] === 'Bang!') {
-        if (gameLog.game_result === 1) {
-          const winnings = parseFloat(
-            gameLog['cashoutAmount']
-          );
-          const winningsDisplay = convertToCurrency(winnings);
-          const multiplierDisplay = (
-            (gameLog['cashoutAmount']) /
-            gameLog['bet_amount']
-          ).toFixed(2);
-          temp.history = `
-            ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
-            gameLog['room']['host_pr']
-          )} (${multiplierDisplay}x)</span> in ${room_name}`;
-        } else {
-          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
-            gameLog['bet_amount']
-          )} (0.00X)</span> in ${room_name}`;
-        }
-      } else if (gameLog['game_type']['game_type_name'] === 'Roll') {
-        if (gameLog.game_result === 1) {
-          const winnings = parseFloat(
-            gameLog['bet_amount'] * gameLog['multiplier']
-          );
-          const winningsDisplay = convertToCurrency(winnings);
-          const multiplierDisplay = (
-            (gameLog['bet_amount'] * gameLog['multiplier']) /
-            gameLog['bet_amount']
-          ).toFixed(2);
-
-          temp.history = `
-            ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
-            gameLog['room']['host_pr']
-          )} (${multiplierDisplay}x)</span> in ${room_name}`;
-        } else {
-          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
-            gameLog['bet_amount']
-          )} (0.00X)</span> in ${room_name}`;
-        }
-      } else if (gameLog['game_type']['game_type_name'] === 'Spleesh!') {
-        if (gameLog.game_result === 1) {
-          const winnings =
-            (gameLog['host_pr'] + gameLog['bet_amount']);
-          const winningsDisplay = convertToCurrency(winnings);
-          const multiplierDisplay = (
-            (parseFloat(gameLog['host_pr']) + gameLog['bet_amount']) /
-            parseFloat(gameLog['bet_amount'])
-          ).toFixed(2);
-
-          temp.history = `${joined_user_link} won 
-          <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span> 
-          (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['bet_amount']
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          const userBet = parseFloat(gameLog['user_bet']);
-          const roomBetAmount = gameLog['room']['bet_amount'];
-          const unstakedDisplay = convertToCurrency(userBet);
-          const multiplierDisplay = (
-            (userBet) /
-            roomBetAmount
-          ).toFixed(2);
-
-          const color = multiplierDisplay < 1 ? '#ffdd15' : '#ff0a28';
-
-          temp.history = `${creator_link} unstaked 
-      <span style='color: ${color};'>${unstakedDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
-        } else {
-          temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
-            gameLog['bet_amount']
-          )} (0.00X)</span> in ${room_name}`;
-        }
-      } else if (gameLog['game_type']['game_type_name'] === 'Mystery Box') {
-        if (gameLog.game_result === 0) {
-          const betAmount = parseFloat(gameLog['bet_amount']);
-          const openingMessage = `${joined_user_link} opened a box <span style='color: #ffdd15;'>${convertToCurrency(
-            betAmount
-          )}</span>`;
-          const resultMessage = `and didn't get <span style='color: #ffdd15;'>shit (0.00X)</span>`;
-
-          temp.history = `${openingMessage} ${resultMessage} in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['bet_amount'] - gameLog['room']['endgame_amount']
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          const roomPr = parseFloat(gameLog['room']['pr']);
-          const roomUserBet = parseFloat(gameLog['room']['user_bet']);
-          const roomBetAmount = parseFloat(gameLog['room']['bet_amount']);
-
-          const unstakedAmount = roomPr + roomUserBet;
-          const unstakedDisplay = convertToCurrency(unstakedAmount);
-          const multiplierDisplay = (
-            (roomPr + roomUserBet) /
-            roomBetAmount
-          ).toFixed(2);
-
-          const color = multiplierDisplay < 1 ? '#ffdd15' : '#ff0a28';
-
-          temp.history = `${creator_link} unstaked 
-      <span style='color: ${color};'>${unstakedDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
-        } else {
-          const gameResult = parseFloat(gameLog['game_result']);
-          const betAmount = parseFloat(gameLog['bet_amount']);
-          const color =
-            gameResult / gameLog['room']['bet_amount'] < 1
-              ? '#ffdd15'
-              : '#ff0a28';
-          const winningsDisplay = convertToCurrency(gameResult);
-          const multiplierDisplay = (gameResult / betAmount).toFixed(2);
-
-          temp.history = `${joined_user_link} opened a box and won 
-          <span style="color: ${color}">${winningsDisplay} (${multiplierDisplay}X)</span>
-          (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
-        }
-      } else if (gameLog['game_type']['game_type_name'] === 'Brain Game') {
-        const betAmount = parseFloat(gameLog['bet_amount']);
-        const roomPr = parseFloat(gameLog['room']['pr']);
-        const roomUserBet = parseFloat(gameLog['room']['user_bet']);
-        const roomBetAmount = parseFloat(gameLog['room']['bet_amount']);
-
-        if (gameLog.game_result === 0) {
-          temp.history = `${joined_user_link}, scored ${gameLog['brain_game_score']
-            } and split <span style='color: #b9bbbe;'>${convertToCurrency(
-              betAmount * 2
-            )}</span> in ${room_name}`;
-        } else if (gameLog.game_result === 1) {
-          const winnings = betAmount * 2;
-          temp.history = `${joined_user_link} scored ${gameLog['brain_game_score']
-            } and won <span style='color: #ff0a28;'>${convertToCurrency(
-              winnings
-            )} (2.00X)</span> (${convertToCurrency(
-              gameLog['commission']
-            )} RTB) in ${room_name}`;
-        } else if (gameLog.game_result === 3) {
-          temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            betAmount
-          )}</span> Auto-Payout in ${room_name}`;
-        } else if (gameLog.game_result === -100) {
-          const unstakedAmount = roomPr;
-          const unstakedDisplay = convertToCurrency(unstakedAmount);
-          const multiplierDisplay = (unstakedAmount / roomBetAmount).toFixed(2);
-          const color = multiplierDisplay < 1 ? '#ffdd15' : '#ff0a28';
-
-          temp.history = `${creator_link} unstaked 
-      <span style='color: ${color};'>${unstakedDisplay} (${multiplierDisplay}X)</span> in ${room_name}`;
-        } else {
-          temp.history = `${joined_user_link} scored ${gameLog['brain_game_score']
-            } and lost <span style='color: ##ffdd15;'>${convertToCurrency(
-              betAmount
-            )} (0.00X)</span> in ${room_name}`;
-        }
-      }
-      result.push(temp);
-    } catch (e) {
-      return;
-    }
-  });
-  return result;
-};
-
 const getHistory = async (pageSize, my_id, game_type) => {
   try {
     const id_condition = {};
@@ -1016,10 +652,10 @@ const getHistory = async (pageSize, my_id, game_type) => {
     const gameLogQuery = GameLog.find(search_condition)
       .sort({ created_at: 'desc' })
       .limit(pageSize)
-      .populate({ path: 'room', model: Room })
-      .populate({ path: 'game_type', model: GameType })
-      .populate({ path: 'creator', model: User })
-      .populate({ path: 'joined_user', model: User });
+      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status hosts room_number game_type bet_amount user_bet host_pr created_at'  })
+      .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
+      .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
+      .populate({ path: 'joined_user', model: User, select: '_id avatar accessory totalWagered' });
 
     const countQuery = GameLog.countDocuments(search_condition);
 
@@ -1034,13 +670,6 @@ const getHistory = async (pageSize, my_id, game_type) => {
   } catch (err) {
     return false;
   }
-};
-
-const updateDigitToPoint2 = number => {
-  if (parseFloat(number) - parseInt(number) > 0) {
-    return parseFloat(number).toFixed(2);
-  }
-  return number;
 };
 
 const getRoomList = async (pageSize, game_type, excludeIds = []) => {
@@ -3049,49 +2678,6 @@ router.post('/reCreate', auth, async (req, res) => {
   }
 });
 
-router.post('/bet', auth, async (req, res) => {
-  try {
-    const requestId = uuidv4();
-
-    // Acquire the semaphore
-    if (semaphore === 0) {
-      // If semaphore is already acquired, return a busy response
-      return res.status(503).json({ success: false, message: 'Service Unavailable' });
-    }
-    semaphore = 0; // Set semaphore to indicate it's acquired
-
-    const [accessAllowed, betResult] = await Promise.all([
-      check_access_time(req.user._id),
-      executeBet(req)
-    ]);
-
-    // Release the semaphore
-    semaphore = 1;
-
-    if (!accessAllowed) {
-      const responseData = {
-        success: false,
-        message: 'irregular action',
-        betResult: -1000,
-        requestId: requestId
-      };
-
-      return res.json(responseData);
-    }
-
-    res.json({
-      success: betResult.success,
-      message: betResult.message,
-      betResult: betResult.betResult,
-      newTransaction: betResult.newTransaction,
-      roomStatus: betResult.roomStatus,
-      requestId: requestId
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
-  }
-});
 
 
 router.post('/bet2', auth, async (req, res) => {
@@ -3182,47 +2768,5 @@ router.post('/bet3', auth, async (req, res) => {
   }
 });
 
-router.post('/bet4', auth, async (req, res) => {
-  try {
-    const requestId = uuidv4();
-
-    // Acquire the semaphore
-    if (semaphore4 === 0) {
-      // If semaphore is already acquired, return a busy response
-      return res.status(503).json({ success: false, message: 'Service Unavailable' });
-    }
-    semaphore4 = 0; // Set semaphore to indicate it's acquired
-
-    const [accessAllowed, betResult] = await Promise.all([
-      check_access_time(req.user._id),
-      executeBet4(req)
-    ]);
-
-    // Release the semaphore
-    semaphore4 = 1;
-
-    if (!accessAllowed) {
-      const responseData = {
-        success: false,
-        message: 'irregular action',
-        betResult: -1000,
-        requestId: requestId
-      };
-
-      return res.json(responseData);
-    }
-
-    res.json({
-      success: betResult.success,
-      message: betResult.message,
-      betResult: betResult.betResult,
-      newTransaction: betResult.newTransaction,
-      roomStatus: betResult.roomStatus,
-      requestId: requestId
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
-  }
-});
+ 
 module.exports = router;

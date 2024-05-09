@@ -46,50 +46,85 @@ class HistoryTable extends Component {
   }
 
   async componentDidMount() {
-    this.updateReminderTime();
+    // this.updateReminderTime(); 
     this.attachUserLinkListeners();
     this.attachAccessories();
-    this.interval = setInterval(this.updateReminderTime(), 3000);
+    // this.interval = setInterval(this.updateReminderTime(), 3000);
     const settings = await this.props.getSettings();
     this.setState({ ...settings });
+    await this.props.getHistory();
+    this.setupSocketConnection();
 
-    const { socket } = this.props;
-    if (socket) {
-      socket.on('UPDATE_RAIN', data => {
-        this.setState(prevState => ({
-          rain: data.rain,
-          prevRain: prevState.rain
-        }));
-      });
 
-    } else {
-      console.error('Socket is null or undefined');
-    }
   }
 
   componentWillUnmount() {
     clearInterval(this.interval);
-  }
+    this.disconnectSocket();
 
-  static getDerivedStateFromProps(props, current_state) {
-    if (
-      current_state.history?.length === 0 ||
-      (props.history &&
-        current_state.history[0]['created_at'] !==
-        props.history[0]['created_at'])
-    ) {
-      return {
-        ...current_state,
-        history: updateFromNow(props.history)
-      };
+  }
+  setupSocketConnection = () => {
+    const { socket } = this.props;
+    if (socket) {
+      socket.on('NEW_LOG', this.handleNewLog);
+    } else {
+      console.error('Socket is null or undefined. Retrying in 5 seconds...');
+      this.retrySocketConnection();
     }
-    return null;
   }
 
-  componentDidUpdate(prevProps) {
+  disconnectSocket = () => {
+    const { socket } = this.props;
+    if (socket) {
+      socket.off('NEW_LOG', this.handleNewLog);
+    }
+  }
+
+  handleNewLog = data => {
+    const newLog = data.newLog[0];
+    
+    this.setState(prevState => {
+      const updatedHistory = [newLog, ...prevState.history.slice(0, 49)]; // Prepend newLog and then slice
+      const finalHistory = updatedHistory.slice(0, 50); // Ensure only latest 3 logs
+      return {
+        history: finalHistory
+      };
+    });
+  };
+  
+  
+retrySocketConnection = () => {
+  setTimeout(() => {
+    const { socket } = this.props;
+    if (socket) {
+      socket.on('NEW_LOG', this.handleNewLog);
+    } else {
+      this.retrySocketConnection(); // Retry again if socket is still null
+    }
+  }, 1000); // Retry after  seconds
+}
+
+  // static getDerivedStateFromProps(props, current_state) {
+  //   if (
+  //     current_state.history?.length === 0 ||
+  //     (props.history &&
+  //       current_state.history[0]['created_at'] !==
+  //       props.history[0]['created_at'])
+  //   ) {
+  //     return {
+  //       ...current_state,
+  //       history: updateFromNow(props.history)
+  //     };
+  //   }
+  //   return null;
+  // }
+
+  componentDidUpdate(prevProps, prevState) {
+
     if (prevProps.history !== this.props.history) {
-      this.attachUserLinkListeners();
-      this.attachAccessories();
+      // console.log(prevState.history , this.state.history)
+      // this.attachUserLinkListeners();
+      // this.attachAccessories();
 
       this.setState({ history: updateFromNow(this.props.history) });
     }
@@ -267,6 +302,11 @@ class HistoryTable extends Component {
 
       return <FontAwesomeIcon icon={icon} />;
     };
+    const uniqueHistory = this.state.history.filter((row, index, self) =>
+      index === self.findIndex((t) => (
+        t._id === row._id
+      ))
+    );
 
     return (
       <div className="overflowX">
@@ -346,10 +386,10 @@ class HistoryTable extends Component {
               <div>NO HISTORY YET</div>
             </div>
           )}
-          {this.state.history?.map(
+          {uniqueHistory.map(
             (row, key) => (
               <div
-                className={`table-row ${key < 10 ? 'slide-in' : ''}`}
+                className={`table-row ${key < 50 ? 'slide-in' : ''}`}
                 style={{ animationDelay: `${key * 0.1}s` }}
                 key={row._id}
               >
@@ -369,13 +409,14 @@ class HistoryTable extends Component {
                   <div className="table-cell row-copy">
 
                     <Tooltip title={this.state.copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">
-                      <a style={{padding: "5px", cursor: "pointer"}} onClick={() => this.copyToClipboard(row._id)}>
-                        <FileCopyIcon style={{width: "12px"}}  />
+                      <a style={{ padding: "5px", cursor: "pointer" }} onClick={() => this.copyToClipboard(row._id)}>
+                        <FileCopyIcon style={{ width: "12px" }} />
                       </a>
                     </Tooltip>
 
                   </div>
                 </div>
+
                 <div>
                   <div
                     className="table-cell mobile-only"
@@ -386,6 +427,9 @@ class HistoryTable extends Component {
             ),
             this
           )}
+          <div
+            className="table-gradient"
+          ></div>
         </div>
         {this.state.showPlayerModal && (
           <PlayerModal

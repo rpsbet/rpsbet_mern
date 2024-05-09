@@ -83,9 +83,9 @@ class MainPage extends Component {
       isAuthenticated,
       getMyChat
     } = this.props;
-    this.gamesListInterval = setInterval(this.handleRefresh, 100000);
+    // this.gamesListInterval = setInterval(this.handleRefresh, 100000);
 
-    const promises = [getRoomList({ pageSize: 7 }), getRoomCount({ game_type: selectedGameType }), getHistory()];  // getGameTypeList()];
+    const promises = [getRoomList({ pageSize: 7 }), getRoomCount({ game_type: selectedGameType })];  // getGameTypeList()];
     if (isAuthenticated) {
       promises.push(getMyChat());
     }

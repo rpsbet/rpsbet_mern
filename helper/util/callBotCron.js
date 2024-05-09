@@ -11,7 +11,6 @@ let socketio = null;
 
 async function predictNextBetAmount(betArray, penultimateSameAsLast, smoothingFactor = 0.01, randomnessFactor = 0.2, threshold = 0.0005, room) {
   const allStates = Array.from(new Set(betArray)); // Get all unique states
-
   if (penultimateSameAsLast !== 0) {
     if (penultimateSameAsLast >= 3) {
       // Return the highest value from allStates without 50%
@@ -68,7 +67,7 @@ async function callCronJobs(io) {
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
+let useFirstBetFunction = true; 
 async function executeCronJob(user, betArray) {
   if (!user.username.includes('BOT')) {
     console.log('User is not a bot. Skipping execution.');
@@ -81,8 +80,6 @@ async function executeCronJob(user, betArray) {
       status: 'open',
     });
 
-    let useBetFunction = true; // Flag to alternate between bet functions
-
     for (const room of rooms) {
       const roomId = room._id;
       let nextState;
@@ -94,20 +91,29 @@ async function executeCronJob(user, betArray) {
       }).sort({ created_at: -1 });
 
       if (rpsBetItems && rpsBetItems.length > 0) {
+        // Determine nextState and predictedBetAmount based on strategy
         if (room.selectedStrategy === 'Random' || room.selectedStrategy === 'Martingale' || room.selectedStrategy === 'Adam' || room.selectedStrategy === 'Markov') {
-          // Skill-issue
+          // Skill-issue strategy
           const randomnessResult = await botCounterRandomness(rpsBetItems);
           nextState = randomnessResult.counterMove;
           const penultimateSameAsLast = randomnessResult.risk;
           predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
         } else {
-          // Hidden Markov, Feedback, Hertz, NPC, Tesla, Copycat
+          // Other strategies
           const nextMove = await botAI(rpsBetItems);
           nextState = nextMove.move;
-          predictedBetAmount = await predictNextBetAmount(betArray, nextMove.risk, 0, 0.01, 0.2, room);
+          let penultimateSameAsLast;
+          if (nextMove.risk >= 0.9) {
+            penultimateSameAsLast = 3
+          } else if (nextMove.risk >= 0.5) {
+            penultimateSameAsLast = 2
+          } else {
+            penultimateSameAsLast = 1
+          }
+          predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
         }
-
       } else {
+        // No previous moves, choose randomly
         const randomIndex = Math.floor(Math.random() * 3);
         const rpsOptions = ['R', 'P', 'S'];
         nextState = rpsOptions[randomIndex];
@@ -128,19 +134,19 @@ async function executeCronJob(user, betArray) {
       };
 
       if (parseFloat(room.user_bet) >= 0.05 && predictedBetAmount >= 0 && predictedBetAmount <= parseFloat(room.user_bet)) {
-        if (useBetFunction) {
+
+        if (useFirstBetFunction) {
           await executeBet(req, true);
         } else {
           await executeBet4(req, true);
         }
-        useBetFunction = !useBetFunction; // Toggle between bet functions
+        useFirstBetFunction = !useFirstBetFunction; // Toggle between bet functions
       }
     }
   } catch (error) {
     console.error('Error finding rooms and executing cron job:', error);
   }
 }
-
 
 cron.schedule('*/12 * * * * *', async () => {
   await callCronJobs(socketio);

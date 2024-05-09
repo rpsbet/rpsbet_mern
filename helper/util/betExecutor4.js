@@ -10,6 +10,8 @@ const Transaction = require('../../model/Transaction');
 const GameLog = require('../../model/GameLog');
 const convertToCurrency = require('./conversion');
 const socket = require('../../socketController')
+const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
+
 const moment = require('moment');
 const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
 const saveDocumentWithRetry = require('./retrySave');
@@ -38,6 +40,7 @@ const addToQueue = async (req, bot = false) => {
         ] = await Promise.all([taxPromise, rainPromise, platformPromise]);
 
         let responseData = {};
+        let gameLogArray = [];
         let user;
         let game_result;
         let newTransactionAmount = 0;
@@ -199,7 +202,6 @@ const addToQueue = async (req, bot = false) => {
                 .sort({ created_at: -1 })
                 .limit(50);
             const mostRecentItems = allBetItems.slice(0, 4);
-
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
                 if (
                     betAmount > parseFloat(roomInfo['user_bet']) ||
@@ -293,12 +295,11 @@ const addToQueue = async (req, bot = false) => {
 
                 newGameLog.bet_amount = betAmount;
                 newGameLog.selected_rps = req.body.selected_rps;
-
                 if (roomInfo['rps_game_type'] === 0) {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.47 && betAmount > 10) {
+                    if (randomNumber <= 0.5 && betAmount > 10) {
                         if (bot &&
                             ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
                                 (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
@@ -418,11 +419,11 @@ const addToQueue = async (req, bot = false) => {
                                 game_result: 3
                             });
 
-                            saveDocumentWithRetry(newGameLogC),
+                            saveDocumentWithRetry(newGameLogC);
 
-                                roomInfo['user_bet'] = parseFloat(
-                                    roomInfo['endgame_amount']
-                                );
+                            roomInfo['user_bet'] = parseFloat(
+                                roomInfo['endgame_amount']
+                            );
                         }
 
                         // send notification
@@ -439,13 +440,57 @@ const addToQueue = async (req, bot = false) => {
                 if (roomInfo['rps_game_type'] === 0) {
                     winnings = betAmount * 2;
                 }
-                // update bet item with joiner's data
                 newGameLog.winnings = winnings;
                 newGameLog.game_result = game_result;
                 bet_item.joiner = user._id;
                 bet_item.joiner_rps = req.body.selected_rps;
                 bet_item.bet_amount = betAmount;
                 await saveDocumentWithRetry(bet_item);
+                gameLogArray.push(newGameLog);
+
+
+                const updatedGameLogArray = await Promise.all(gameLogArray.map(async (gameLog) => {
+                    // Populate room
+                    const room = await Room.findById(gameLog.room).exec();
+                    const populatedRoom = room ? room.toObject() : null;
+
+                    // Populate creator
+                    const creator = await User.findById(gameLog.creator).exec();
+                    const populatedCreator = creator ? creator.toObject() : null;
+
+                    // Populate joined_user
+                    const joinedUser = await User.findById(gameLog.joined_user).exec();
+                    const populatedJoinedUser = joinedUser ? joinedUser.toObject() : null;
+
+                    // Populate game_type
+                    const gameType = await GameType.findById(gameLog.game_type).exec();
+                    const populatedGameType = gameType ? gameType.toObject() : null;
+
+                    // Merge original fields with populated sub-documents
+                    const mergedObject = {
+                        bet_amount: gameLog.bet_amount,
+                        commission: gameLog.commission,
+                        game_result: gameLog.game_result,
+                        winnings: gameLog.winnings,
+                        host_pr: gameLog.host_pr,
+                        user_bet: gameLog.user_bet,
+                        _id: gameLog._id,
+                        room: populatedRoom,
+                        creator: populatedCreator,
+                        joined_user: populatedJoinedUser,
+                        game_type: populatedGameType,
+                        created_at: gameLog.created_at,
+                        updated_at: gameLog.updated_at,
+                        hosts: gameLog.hosts
+                    };
+
+                    return mergedObject;
+                }));
+
+                // Now the updatedGameLogArray should have the original fields along with the populated sub-documents
+
+                const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
+
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
                     mostRecentItems.reverse();
@@ -455,7 +500,11 @@ const addToQueue = async (req, bot = false) => {
                             bankroll: roomInfo['user_bet'],
                             host_pr: roomInfo['host_pr'],
                             rps: mostRecentItems,
+                            newLog: newLog,
                             user: user
+                        });
+                        req.io.sockets.emit('NEW_LOG', {
+                            newLog: newLog
                         });
                     } else {
                         responseData = {
@@ -466,6 +515,7 @@ const addToQueue = async (req, bot = false) => {
                         return responseData;
                     }
                 }
+
 
                 // rug game if bankroll too low
                 if (roomInfo['user_bet'] <= 0.05) {
@@ -668,7 +718,6 @@ const addToQueue = async (req, bot = false) => {
             } catch (error) {
                 console.error("Error saving", error);
             }
-
             const notificationData = {
                 _id: user._id,
                 message: message.message,
@@ -717,72 +766,6 @@ const addToQueue = async (req, bot = false) => {
         throw new Error('Error executing bet');
     }
 };
-
-
-// const executeBet = async (req, bot = false) => {
-//     try {
-//         // console.log("**************************req.body************************", req.user.username);
-//         const reqCopy = { ...req }; // Create a shallow copy of the req object
-//         let result;
-
-//         if (!bot) {
-//             // If the request is not from a bot, prioritize it
-//             console.log("Prioritizing non-bot request");
-//             if (isNonBotRequestProcessing) {
-//                 // Queue the request if a non-bot request is already processing
-//                 console.log("Queuing the non-bot request");
-//                 requestQueue.push(() => addToQueue(reqCopy, bot));
-//             } else {
-//                 // Process the non-bot request immediately
-//                 isNonBotRequestProcessing = true;
-//                 result = await addToQueue(reqCopy, bot);
-//                 isNonBotRequestProcessing = false;
-
-//                 // Process any queued requests
-//                 while (requestQueue.length > 0) {
-//                     const queuedRequest = requestQueue.shift();
-//                     await queuedRequest();
-//                 }
-//             }
-//         } else {
-//             // For bot requests, proceed as usual
-//             result = await addToQueue(reqCopy, bot);
-//         }
-
-//         // console.log("***************************result***********************", result);
-//         return result;
-//     } catch (error) {
-//         throw new Error('Error executing bet');
-//     }
-// };
-// const executeBet = (req, bot = false) => {
-//     const startTime = new Date(); // Record the start time
-//     return new Promise(async (resolve, reject) => {
-//         try {
-//             const result = await addToQueue(req, bot);
-//             req = null;
-
-//             const endTime = new Date(); // Record the end time
-//             const executionTime = endTime - startTime; // Calculate the execution time in milliseconds
-//             const humanReadableTime = millisecondsToHumanReadable(executionTime); // Convert to human-readable format
-//             console.log(`Bet execution time: ${humanReadableTime}`);
-//             resolve(result);
-//         } catch (error) {
-//             reject(error);
-//         }
-//     });
-// };
-
-
-// // Function to convert milliseconds to human-readable format
-// const millisecondsToHumanReadable = (milliseconds) => {
-//     const seconds = Math.floor(milliseconds / 1000);
-//     const minutes = Math.floor(seconds / 60);
-//     const remainingSeconds = seconds % 60;
-//     return `${minutes} minutes and ${remainingSeconds} seconds`;
-// };
-
-
 
 const executeBet4 = (req, bot = false) => {
     return new Promise((resolve, reject) => {

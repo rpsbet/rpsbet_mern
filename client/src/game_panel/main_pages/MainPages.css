@@ -569,6 +569,7 @@ z-index: 9;
   background-color: rgba(235, 237, 239, 0.5);
 }
 .main-game .sub-panel h2.main-title, .sub-panel .overflowX {
+  position: relative;
   background: unset;
 }
 .main-game h2.main-title {
@@ -1097,14 +1098,25 @@ div.table.main-game-table,
 div.table.main-history-table,
 div.table.my-open-game-table {
   overflow-y: auto;
+  max-height: calc(100vh - 264px);
+
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
-/* div.table.main-game-table,
-div.table.my-open-game-table {
-  height: calc(100vh - 264px);
-} */
 
+div.table.main-game-table,
+div.table.my-open-game-table {
+  position: relative;
+
+}
+.table-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px; /* Adjust height as needed */
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(33 31 40) 100%);
+}
 div.table.main-game-table .table-row .table-cell.cell-room-info {
   width: 10%;
   display: flex;

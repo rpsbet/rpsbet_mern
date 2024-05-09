@@ -8,7 +8,7 @@ const SystemSetting = require('../../model/SystemSetting');
 
 async function deleteChat() {
   try {
-    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated_chat' });
     if (systemSetting) {
       const lastUpdated = systemSetting.updated_at;
       // Check if last_updated is 24 hours ago or more
@@ -42,7 +42,7 @@ async function deleteChat() {
 
 async function deleteRpsBetItems() {
   try {
-    let systemSetting = await SystemSetting.findOne({ name: 'last_updated' });
+    let systemSetting = await SystemSetting.findOne({ name: 'last_updated_rpsbetitem' });
     if (systemSetting) {
       const lastUpdated = systemSetting.updated_at;
       // Check if last_updated is 24 hours ago or more
@@ -67,7 +67,7 @@ async function deleteRpsBetItems() {
         console.log("Last rpsBetItem deletion was less than 24 hours ago. Skipping deletion.");
       }
     } else {
-      console.log("System setting for last updated not found.");
+      console.log("System setting for rpsbetitem last updated not found.");
     }
   } catch (error) {
     console.error('Error deleting RpsBetItems:', error);

@@ -118,6 +118,7 @@ class JoinGame extends Component {
         countDown: new Audio('/sounds/countDown.mp3'),
         stop: new Audio('/sounds/stop.mp3'),
         sweep: new Audio('/sounds/sweep.mp3'),
+        blip: new Audio('/sounds/blip.mp3'),
         select: new Audio('/sounds/select.mp3'),
         wrong: new Audio('/sounds/wrong.mp3'),
         correct: new Audio('/sounds/correct.mp3'),

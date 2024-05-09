@@ -13,6 +13,7 @@ const socket = require('../../socketController')
 const moment = require('moment');
 const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
 const saveDocumentWithRetry = require('./retrySave');
+const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
 const requestQueue = [];
 let user_access_log = {};
 
@@ -38,6 +39,8 @@ const addToQueue = async (req, bot = false) => {
         ] = await Promise.all([taxPromise, rainPromise, platformPromise]);
 
         let responseData = {};
+        let gameLogArray = [];
+
         let user;
         let game_result;
         let newTransactionAmount = 0;
@@ -213,7 +216,7 @@ const addToQueue = async (req, bot = false) => {
                         }
                         return responseData;
                     }
-                    
+
                 }
 
                 newGameLog.bet_amount = betAmount;
@@ -289,12 +292,12 @@ const addToQueue = async (req, bot = false) => {
 
                 newGameLog.bet_amount = betAmount;
                 newGameLog.selected_rps = req.body.selected_rps;
-                
+
                 if (roomInfo['rps_game_type'] === 0) {
-                    
+
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.47 && betAmount > 10) {
+                    if (randomNumber <= 0.5 && betAmount > 10) {
                         if (bot &&
                             ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
                                 (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
@@ -314,7 +317,6 @@ const addToQueue = async (req, bot = false) => {
 
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
-
                     // if win
                     if (
                         (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
@@ -416,11 +418,12 @@ const addToQueue = async (req, bot = false) => {
                                 game_result: 3
                             });
 
-                            saveDocumentWithRetry(newGameLogC),
 
-                                roomInfo['user_bet'] = parseFloat(
-                                    roomInfo['endgame_amount']
-                                );
+                            saveDocumentWithRetry(newGameLogC);
+                            gameLogArray.push(newGameLogC);
+                            roomInfo['user_bet'] = parseFloat(
+                                roomInfo['endgame_amount']
+                            );
                         }
 
                         // send notification
@@ -443,6 +446,51 @@ const addToQueue = async (req, bot = false) => {
                 bet_item.joiner_rps = req.body.selected_rps;
                 bet_item.bet_amount = betAmount;
                 await saveDocumentWithRetry(bet_item);
+                gameLogArray.push(newGameLog);
+
+
+                const updatedGameLogArray = await Promise.all(gameLogArray.map(async (gameLog) => {
+                    // Populate room
+                    const room = await Room.findById(gameLog.room).exec();
+                    const populatedRoom = room ? room.toObject() : null;
+
+                    // Populate creator
+                    const creator = await User.findById(gameLog.creator).exec();
+                    const populatedCreator = creator ? creator.toObject() : null;
+
+                    // Populate joined_user
+                    const joinedUser = await User.findById(gameLog.joined_user).exec();
+                    const populatedJoinedUser = joinedUser ? joinedUser.toObject() : null;
+
+                    // Populate game_type
+                    const gameType = await GameType.findById(gameLog.game_type).exec();
+                    const populatedGameType = gameType ? gameType.toObject() : null;
+
+                    // Merge original fields with populated sub-documents
+                    const mergedObject = {
+                        bet_amount: gameLog.bet_amount,
+                        commission: gameLog.commission,
+                        game_result: gameLog.game_result,
+                        winnings: gameLog.winnings,
+                        host_pr: gameLog.host_pr,
+                        user_bet: gameLog.user_bet,
+                        _id: gameLog._id,
+                        room: populatedRoom,
+                        creator: populatedCreator,
+                        joined_user: populatedJoinedUser,
+                        game_type: populatedGameType,
+                        created_at: gameLog.created_at,
+                        updated_at: gameLog.updated_at,
+                        hosts: gameLog.hosts
+                    };
+
+                    return mergedObject;
+                }));
+
+                // Now the updatedGameLogArray should have the original fields along with the populated sub-documents
+
+                const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
+
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
                     mostRecentItems.reverse();
@@ -452,7 +500,11 @@ const addToQueue = async (req, bot = false) => {
                             bankroll: roomInfo['user_bet'],
                             host_pr: roomInfo['host_pr'],
                             rps: mostRecentItems,
+                            newLog: newLog,
                             user: user
+                        });
+                        req.io.sockets.emit('NEW_LOG', {
+                            newLog: newLog
                         });
                     } else {
                         responseData = {
@@ -582,7 +634,7 @@ const addToQueue = async (req, bot = false) => {
                     socket.newTransaction(newTransactionC);
                 }
 
-               
+
             } else {
                 // Iterate over each host asynchronously
                 roomInfo.hosts.forEach(async (host) => {
@@ -653,7 +705,6 @@ const addToQueue = async (req, bot = false) => {
 
                 });
             }
-
             try {
                 Promise.all([
                     saveDocumentWithRetry(platform),
@@ -667,7 +718,7 @@ const addToQueue = async (req, bot = false) => {
                 console.error("Error saving", error);
             }
 
-           
+
             user = null;
             bet_item = null;
             // }, 0);

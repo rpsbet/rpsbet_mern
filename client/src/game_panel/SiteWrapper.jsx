@@ -293,7 +293,7 @@ class SiteWrapper extends Component {
       try {
         await this.props.getUser(true, 5);
 
-        await this.props.getHistory();
+        // await this.props.getHistory();
       } catch (error) {
         console.error("An error occurred during asynchronous operations:", error);
         // Handle the error appropriately, e.g., show an error message to the user
@@ -568,7 +568,7 @@ class SiteWrapper extends Component {
       //   this.setState({ websiteLoading: false });
       // }, 5000); 
       this.setState({ websiteLoading: true });
-      this.historyInterval = setInterval(this.fetchHistory, 15000);
+      // this.historyInterval = setInterval(this.fetchHistory, 15000);
 
       const currentUrl = window.location.pathname;
 
