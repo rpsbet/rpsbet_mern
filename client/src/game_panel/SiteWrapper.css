@@ -9,6 +9,7 @@
 button#recentSearches {
   height: 20px !important;
 }
+
 button#recentSearches span {
   text-overflow: ellipsis;
   max-width: 100px;
@@ -16,12 +17,14 @@ button#recentSearches span {
   white-space: nowrap;
   overflow: hidden;
 }
+
 #rps {
   width: 0.8em;
   height: 0.8em;
   margin-right: 2px;
 
 }
+
 .rank-badge {
   position: relative;
   text-align: center;
@@ -33,43 +36,51 @@ button#recentSearches span {
 
 .dial {
   position: relative;
- 
+
 }
 
 .host-container {
   display: inline-flex;
 }
-.host-container a{
+
+.host-container a {
   margin-left: -3px;
 }
 
 .label {
   font-size: x-small;
-  color: #555555; /* Dark gray color for the label */
+  color: #555555;
+  /* Dark gray color for the label */
 }
 
 .progress-hexagon {
   fill: transparent;
   stroke-width: 2;
   stroke-linecap: round;
-  stroke-dasharray: 390; /* Dash array for a complete hexagon */
-  stroke-dashoffset: 390; /* Offset to hide the hexagon initially */
+  stroke-dasharray: 390;
+  /* Dash array for a complete hexagon */
+  stroke-dashoffset: 390;
+  /* Offset to hide the hexagon initially */
   transition: stroke-dashoffset 0.5s ease-in-out;
 }
 
 .red {
-  stroke: #ff6961; /* Red color */
+  stroke: #ff6961;
+  /* Red color */
 }
 
 .red-text {
   color: #ff0000;
 }
+
 .white {
-  stroke: #ffffff; /* White color */
+  stroke: #ffffff;
+  /* White color */
 }
 
 .green {
-  stroke: #77dd77; /* Green color */
+  stroke: #77dd77;
+  /* Green color */
 }
 
 .creditScore {
@@ -81,6 +92,7 @@ button#recentSearches span {
   font-size: small;
   fill: white;
 }
+
 .creditScoreTitle {
   font-size: xx-small;
   fill: white;
@@ -110,9 +122,11 @@ button#recentSearches span {
   box-shadow: 0 0 5px #ffd00077;
   transition: all 0.3s;
 }
+
 .main-game-page-tabs button span {
   display: inline-block !important;
 }
+
 .main-game-page-tabs button:hover,
 .main-game-page-tabs button[aria-selected='true'] {
   color: #101010 !important;
@@ -123,20 +137,20 @@ button#recentSearches span {
   height: auto !important;
 }
 
-.sub-panel .lottie-container div{
+.sub-panel .lottie-container div {
   padding-left: 2px;
-width: 12px !important;
-top: 47.5px;
-left: 22px;
-position: absolute;
+  width: 12px !important;
+  top: 47.5px;
+  left: 22px;
+  position: absolute;
 }
 
-.room-history-panel .lottie-container div{
+.room-history-panel .lottie-container div {
   padding-left: 2px;
-width: 12px !important;
-top: 39px !important;
-left: 22px;
-position: absolute;
+  width: 12px !important;
+  top: 39px !important;
+  left: 22px;
+  position: absolute;
 }
 
 
@@ -145,47 +159,52 @@ position: absolute;
   bottom: 5px;
   right: 5px;
 }
+
 .sub-panel .lottie-container.crown div {
   top: 38px !important;
-  }
+}
 
-  .sub-panel .lottie-container.cat div    {
-    top: 4px !important;
-    left: 12px !important;
-    }
+.sub-panel .lottie-container.cat div {
+  top: 4px !important;
+  left: 12px !important;
+}
 
-    .sub-panel .lottie-container.glee div{
-      top: 49%  !important;
-     left: 18px !important;
-     }
-     
+.sub-panel .lottie-container.glee div {
+  top: 49% !important;
+  left: 18px !important;
+}
 
-  .sub-panel .lottie-container.dragon div{
-     top: 3px !important;
-    left: 24px !important;
-    }
 
-    .sub-panel .lottie-container.penguin div {
-      width: 32px !important;
-      left: 30px !important;
-      }
-      .sub-panel .lottie-container.shark div {
-        margin-top: 4px !important;
-        }
+.sub-panel .lottie-container.dragon div {
+  top: 3px !important;
+  left: 24px !important;
+}
 
-      .sub-panel .lottie-container.ufo div {
-        margin-top: -12px !important;
-        }
-        .sub-panel .lottie-container.shark2 div {
-          margin-top: 5px !important;
-          }
+.sub-panel .lottie-container.penguin div {
+  width: 32px !important;
+  left: 30px !important;
+}
 
-   .cell-joiners .lottie-container.penguin div {
-      left: 22px !important;
-      }
-      .cell-joiners .lottie-container.halo svg {
-        width: 10px !important;
-        }
+.sub-panel .lottie-container.shark div {
+  margin-top: 4px !important;
+}
+
+.sub-panel .lottie-container.ufo div {
+  margin-top: -12px !important;
+}
+
+.sub-panel .lottie-container.shark2 div {
+  margin-top: 5px !important;
+}
+
+.cell-joiners .lottie-container.penguin div {
+  left: 22px !important;
+}
+
+.cell-joiners .lottie-container.halo svg {
+  width: 10px !important;
+}
+
 .lottie-container div {
   width: 30px;
   height: 30px;
@@ -195,6 +214,7 @@ position: absolute;
   transform: translate(-50%, -50%);
   z-index: 0;
 }
+
 .avatar img {
   border-radius: 6px;
 }
@@ -207,18 +227,19 @@ position: absolute;
 
 .avatar-square {
   background: #b9bbbe;
-    border: 3px solid #dee2e6;
-    color: #f8f9fa;
-    width: 40px;
-    margin-left: 100px;
-    display: flex;
-    position: absolute;
-    justify-content: center;
-    align-items: center;
-    height: 40px;
-    border-radius: 0.3em;
-    z-index: 2;
+  border: 3px solid #dee2e6;
+  color: #f8f9fa;
+  width: 40px;
+  margin-left: 100px;
+  display: flex;
+  position: absolute;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  border-radius: 0.3em;
+  z-index: 2;
 }
+
 .fade-animation {
   transition: opacity 0.3s ease-in-out;
 }
@@ -238,6 +259,7 @@ position: absolute;
 .input-wrapper {
   position: relative;
 }
+
 .input-suffix {
   position: absolute;
   top: 60%;
@@ -270,10 +292,12 @@ position: absolute;
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(calc(-100% - 10px));
   }
 }
+
 .countdown-timer {
   width: 100%;
   height: 10px;
@@ -297,6 +321,7 @@ div[role='tablist'] {
   0% {
     width: 100%;
   }
+
   100% {
     width: 0%;
   }
@@ -308,6 +333,7 @@ div[role='tablist'] {
   justify-content: space-between;
   align-items: center;
 }
+
 /* 
 .game_header .main_header {
   box-shadow: 0px 1px 2px #f0f0f0;
@@ -322,6 +348,7 @@ div[role='tablist'] {
   background-repeat: no-repeat;
   background-position: center center;
 }
+
 .game-type-panel .btn-game-type img {
   width: 160px !important;
   border-radius: 7px;
@@ -330,24 +357,26 @@ div[role='tablist'] {
 .game-type-panel .btn-game-type span {
   padding-right: 5px;
 }
+
 .game-type-panel .btn-game-type div.icon {
   width: 100%;
   align-items: center;
   font-size: 14px;
   font-weight: 500 !important;
 }
+
 .grecaptcha-badge {
   margin-top: -22000px;
   position: absolute;
   transform: translateY(-9999px) !important;
   pointer-events: none !important;
-  visibility:  hidden !important;
+  visibility: hidden !important;
 }
+
 .game_header .main_header #btn_leaderboards,
 .game_header .main_header #btn_marketplace,
 
-.game_header .main_header #btn_notifications
-{
+.game_header .main_header #btn_notifications {
   display: flex;
   max-height: 50px;
   overflow: hidden;
@@ -359,12 +388,13 @@ div[role='tablist'] {
   padding: 10px;
   overflow-y: scroll;
 }
-.notification-container a:first-child{
+
+.notification-container a:first-child {
   width: 30%;
   display: inline-block !important;
 }
 
-.notification-container .notification{
+.notification-container .notification {
   width: 70%;
   display: inline-block;
 }
@@ -385,18 +415,21 @@ div[role='tablist'] {
 .notification {
   display: flex;
   align-content: normal;
-  
+
 }
+
 .notification p {
   font-weight: 600;
   margin-bottom: 10px;
   font-size: 0.6em !important;
 }
+
 .notification p:first-child {
   color: #444;
   font-size: 0.8em !important;
   margin-bottom: 0;
 }
+
 .notification-container:last-child {
   border-bottom: unset;
 }
@@ -410,14 +443,15 @@ div[role='tablist'] {
   width: 49%;
   display: inline-block;
 }
+
 .game_header .main_header #btn_notifications.desktop-only,
-.game_header .main_header #btn_leaderboards.desktop-only, .game_header .main_header #btn_marketplace.desktop-only,
-.game_header .main_header #btn_bank.desktop-only
-{
+.game_header .main_header #btn_leaderboards.desktop-only,
+.game_header .main_header #btn_marketplace.desktop-only,
+.game_header .main_header #btn_bank.desktop-only {
   margin-right: 10px;
 }
-.game_header .main_header #btn_notifications.mobile-only
-{
+
+.game_header .main_header #btn_notifications.mobile-only {
   margin-right: -10px;
 
   margin-left: 15px;
@@ -426,9 +460,10 @@ div[role='tablist'] {
 .game_header .main_header #btn_leaderboards svg,
 .game_header .main_header #btn_marketplace svg,
 
-.game_header .main_header #btn_notifications svg{
+.game_header .main_header #btn_notifications svg {
   width: 20pt !important;
 }
+
 .table.main-game-table .table-row:hover {
   transform: scale(0.99);
   filter: brightness(1.09);
@@ -441,6 +476,7 @@ div[role='tablist'] {
   margin-top: -1px;
   border-radius: 0 0 0.2em !important;
 }
+
 #wallet-btn:hover {
   transform: unset !important;
 }
@@ -453,26 +489,26 @@ div[role='tablist'] {
 }
 
 .game-logs-modal-container .summary {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .summary-flex {
-    width: 50%;
-    display: inline-flex;
-    justify-content: space-between;
-    flex-direction: row;
+  width: 50%;
+  display: inline-flex;
+  justify-content: space-between;
+  flex-direction: row;
 }
 
 .summary-flex div {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    padding: 5px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  padding: 5px 10px;
 }
 
-.summary-flex div span{
-white-space: nowrap;
+.summary-flex div span {
+  white-space: nowrap;
 }
 
 #balance {
@@ -488,6 +524,7 @@ white-space: nowrap;
   border: 1px solid #d81719;
   border-radius: 0.25em;
 }
+
 #balance svg {
   color: #fff;
 }
@@ -512,7 +549,8 @@ white-space: nowrap;
   bottom: 0;
   left: 50%;
   width: 0;
-  height: 2px; /* Adjust the border height as needed */
+  height: 2px;
+  /* Adjust the border height as needed */
   /* background-color: #ff0003; */
   transition: width 0.3s ease-in-out, left 0.3s ease-in-out;
   transform: translateX(-50%);
@@ -537,9 +575,10 @@ white-space: nowrap;
   margin-right: 6px;
 }
 
-.game-page .pre-summary-panel > div.host-display-name {
+.game-page .pre-summary-panel>div.host-display-name {
   background-size: 2em;
 }
+
 /* .game-page .pre-summary-panel > div.room-name {
 background-size: 1.2em;
 } */
@@ -619,9 +658,11 @@ div.table .table-row .table-cell img.avatar,
 .btn-send-message:hover {
   height: 40px;
 }
+
 .btn-send-message:hover {
   height: 31px !important;
 }
+
 .dark_mode_toggle:hover {
   /* border-radius: 20px !important; */
   box-shadow: unset !important;
@@ -641,6 +682,7 @@ div.table .table-row .table-cell img.avatar,
 .hidden {
   display: none !important;
 }
+
 .cell-likes div {
   margin-left: -5px;
   margin-right: -5px;
@@ -652,38 +694,47 @@ div.table .table-row .table-cell img.avatar,
     left: 16px;
     transform: translateY(-32px);
   }
+
   .table-cell.mobile-only .lottie-container.crown div {
     width: 15px !important;
     left: 17px;
     transform: translateY(3px);
   }
+
   .game-logs-modal-container .summary {
     flex-direction: column;
   }
+
   .game-logs-modal-container {
     background: #f9f9f9;
   }
+
   .cell-likes div {
     margin-left: unset;
   }
+
   div.table .dont-have-game-msg div {
     font-size: 0.75em;
     font-weight: 600;
   }
+
   .game_header {
     height: 62px;
   }
+
   .game_header .main_header {
     padding: 8px 16px;
   }
+
   div.table .table-row,
-.table-header {
+  .table-header {
     margin-right: unset;
   }
 
   div.table div.table-row div.table-cell button {
     margin-bottom: -5px;
   }
+
   .game_header .main_header a.game_logo {
     width: 84px;
     height: 34px;
@@ -692,18 +743,22 @@ div.table .table-row .table-cell img.avatar,
   }
 
   .game_header .main_header .header_action_panel button span.username
-    /* ,.game_header .main_header .header_action_panel button svg  */
- {
+
+  /* ,.game_header .main_header .header_action_panel button svg  */
+    {
     display: none;
   }
+
   .contents_wrapper {
     height: initial;
   }
 }
+
 .atag {
   text-decoration: underline !important;
   color: aqua !important;
 }
+
 .availabletag {
   float: right;
   font-size: 12px;
@@ -711,6 +766,7 @@ div.table .table-row .table-cell img.avatar,
   margin-right: 5px;
   color: #444;
 }
+
 .availabletag span {
   text-decoration: underline !important;
   color: aqua !important;

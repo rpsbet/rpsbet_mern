@@ -29,7 +29,6 @@ function check_access_time(user_id) {
 
 const addToQueue = async (req, bot = false) => {
     try {
-
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const rainPromise = SystemSetting.findOne({ name: 'rain' });
         const platformPromise = SystemSetting.findOne({ name: 'platform' });

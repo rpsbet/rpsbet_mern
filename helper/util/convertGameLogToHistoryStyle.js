@@ -13,11 +13,12 @@ const convertGameLogToHistoryStyle = async gameLogList => {
             '-' +
             gameLog['room']['room_number'],
             history: '',
+            creator: gameLog['creator']['_id'],
+            joined_user: gameLog['joined_user']['_id'],
             //   gameBackground: gameLog['room']['gameBackground'],
             created_at: gameLog['created_at'],
             status: gameLog['room']['status']
         };
-
         const joined_user_avatar = `<img class='avatar' data-userid="${gameLog['joined_user']['_id']
     }" src='${gameLog['joined_user']['avatar']
 }'  alt='' onerror='this.src="/img/profile-thumbnail.svg"' style="border: ${avatarUtils.getBorderByRank(

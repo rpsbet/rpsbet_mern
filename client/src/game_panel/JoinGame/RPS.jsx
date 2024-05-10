@@ -9,7 +9,10 @@ import { acQueryMyItem } from '../../redux/Item/item.action';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ReactApexChart from 'react-apexcharts';
 import Avatar from '../../components/Avatar';
+import progress from '../LottieAnimations/progress.json';
 import PlayerModal from '../modal/PlayerModal';
+import pressHold from '../LottieAnimations/pressHold.json';
+
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import { updateRoomBot } from '../../redux/Logic/logic.actions';
@@ -162,6 +165,7 @@ class RPS extends Component {
       advanced_status: '',
       cardDealt: false,
       bet_amount: 1,
+      betResult: 0,
       bankroll: this.props.user_bet,
       host_pr: this.props.roomInfo.host_pr,
       rps: [],
@@ -304,16 +308,22 @@ class RPS extends Component {
       if (!this.props.isMuted) {
         this.props.playSound('blip');
       }
+
+      // Check if the filtered result is empty
+      let filteredRPS = data.rps.filter(game => game.joiner === this.props.user_id);
+      let rpsState = filteredRPS.length > 0 ? filteredRPS : prevState.rps;
+
       return {
         bankroll: data.bankroll,
         host_pr: data.host_pr,
-        rps: this.props.isWatching ? data.rps.filter(game => game.joiner === this.props.user_id) : data.rps,
+        rps: this.props.isWatching ? rpsState : data.rps,
         prev_rps: data.rps,
         startedPlaying: true,
         players: updatedPlayers
       };
     });
   };
+
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
@@ -563,6 +573,7 @@ class RPS extends Component {
       rps_bet_item_id: rps_bet_item_id,
     });
 
+
     let text;
     let color;
 
@@ -594,7 +605,7 @@ class RPS extends Component {
         <React.Fragment>
           <span style={fragmentStyle}> {text} {currencyElement}</span>
         </React.Fragment>
-      ),
+      ), gameResult: result.betResult
     });
   };
 
@@ -828,13 +839,13 @@ class RPS extends Component {
                     </div>
                     <Tooltip title="Bet Amount x 2 (does not include fees)">
 
-                    <div className="value">
-                      {convertToCurrency(
-                        // updateDigitToPoint2(
-                        this.state.bet_amount * 2 /* * 0.95 */
-                        // )
-                      )}
-                    </div>
+                      <div className="value">
+                        {convertToCurrency(
+                          // updateDigitToPoint2(
+                          this.state.bet_amount * 2 /* * 0.95 */
+                          // )
+                        )}
+                      </div>
                     </Tooltip>
                   </div>
                   {this.props.rps_game_type === 0 && (
@@ -844,7 +855,7 @@ class RPS extends Component {
                       </div>
                       <Tooltip title="Determined by the Host's equipped accessory">
 
-                      <div className="value">{this.props.cp}% </div>
+                        <div className="value">{this.props.cp}% </div>
                       </Tooltip>
                     </div>
                   )}
@@ -854,9 +865,9 @@ class RPS extends Component {
                         <div className="label created">Auto-Payout</div>
                       </div>
                       <Tooltip title="Automatic dividends paid out to Hosts & CoHosts upon meeting the set payout threshold">
-                      <div className="payout-bar">
-                        <div className="value" style={barStyle}></div>
-                      </div>
+                        <div className="payout-bar">
+                          <div className="value" style={barStyle}></div>
+                        </div>
                       </Tooltip>
                     </div>
                   )}
@@ -966,10 +977,10 @@ class RPS extends Component {
                           }}
                         />
                       )} */}
-                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-                      <div className="value" style={{ color: (host_pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (host_pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
-                        {convertToCurrency(host_pr - roomInfo.total_stakes)}
-                      </div>
+                      <Tooltip title="Current bankroll + Payouts - Initial bankroll">
+                        <div className="value" style={{ color: (host_pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (host_pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
+                          {convertToCurrency(host_pr - roomInfo.total_stakes)}
+                        </div>
                       </Tooltip>
 
                     </div>
@@ -1154,14 +1165,56 @@ class RPS extends Component {
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
                   <IconButton className="spectate" onClick={this.handleSpectateMode}>
-                    {isWatching ? <>PLAY MODE&nbsp;<SwordsIcon /></> : <>SPECTATE MODE&nbsp;<ViewIcon /></>}
+                    {isWatching ? <>PLAY&nbsp;<SwordsIcon /></> : <>SPECTATE&nbsp;<ViewIcon /></>}
 
                   </IconButton>
                 </Tooltip>
                 <div className="game-info-panel">
                   <div className={`rps-radio-host ${this.props.is_betting || this.props.betting ? 'blueish-hue' : ''}`} style={{ top: "25px", right: "25px", boxShadow: "0px 0 5px 0px #ffc107", background: "radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)", position: "absolute", width: "12.5px", height: "12.5px", borderRadius: "50%" }}>
-                    <span className='result'>{this.props.result !== '' ? this.props.result : 'thinking...'}</span>
+                    <span className='result' style={{ display: (!startedPlaying) ? 'none' : 'flex'}}>
+                      {this.props.result !== '' ? (
+                        <>
+                          {this.props.result}
+                          {/* Second Lottie Animation */}
+                          { this.props.betting && (
+
+                            <div className='lottie-pressHold'>
+                          <Lottie
+                            options={{
+                              loop: true,
+                              autoplay: true,
+                              animationData: pressHold
+                            }}
+                            style={{
+                              position: 'relative',
+                              filter: `hue-rotate(${this.props.gameResult === -1 ? 0 : (this.props.gameResult === 0 ? 195 : (this.props.gameResult === 1 ? 80 : 20))}deg)`
+                            }}
+                            />
+                          </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <span>thinking...</span>
+                          {/* First Lottie Animation */}
+                          <div className='lottie-progress'>
+                            <Lottie
+                              options={{
+                                loop: false,
+                                autoplay: true,
+                                animationData: progress
+                              }}
+                              style={{
+                                position: 'relative'
+                              }}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </span>
                   </div>
+
+
 
                   {startedPlaying && (
                     <div

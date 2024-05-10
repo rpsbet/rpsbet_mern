@@ -20,13 +20,35 @@ import PlayerModal from '../modal/PlayerModal';
 import Lottie from 'react-lottie';
 import rain from '../LottieAnimations/rain.json';
 import waves from '../LottieAnimations/waves.json';
-
 import hex from '../LottieAnimations/hex.json';
+
+Moment.relativeTimeThreshold('s', 10); // seconds
+Moment.relativeTimeThreshold('m', 60); // minutes
+Moment.relativeTimeThreshold('h', 24); // hours
+Moment.relativeTimeThreshold('d', 30); // days
+Moment.relativeTimeThreshold('M', 12); // months
+
+
+// Define a custom function to format the time duration
+function customFromNow(date) {
+  const now = Moment();
+  const duration = Moment.duration(now.diff(date));
+
+  if (duration.asSeconds() < 60) {
+    return `${Math.round(duration.asSeconds())}s ago`;
+  } else if (duration.asMinutes() < 60) {
+    return `${Math.round(duration.asMinutes())}m ago`;
+  } else if (duration.asHours() < 24) {
+    return `${Math.round(duration.asHours())}h ago`;
+  } else {
+    return `${Math.round(duration.asDays())}d ago`;
+  }
+}
 
 function updateFromNow(history) {
   const result = JSON.parse(JSON.stringify(history));
   for (let i = 0; i < result.length; i++) {
-    result[i]['from_now'] = Moment(result[i]['created_at']).fromNow();
+    result[i]['from_now'] = customFromNow(Moment(result[i]['created_at']));
   }
   return result;
 }
@@ -45,6 +67,7 @@ class HistoryTable extends Component {
     };
   }
 
+
   async componentDidMount() {
     // this.updateReminderTime(); 
     this.attachUserLinkListeners();
@@ -55,7 +78,7 @@ class HistoryTable extends Component {
     await this.props.getHistory();
     this.setupSocketConnection();
 
-
+console.log(this.props.history)
   }
 
   componentWillUnmount() {
@@ -82,27 +105,27 @@ class HistoryTable extends Component {
 
   handleNewLog = data => {
     const newLog = data.newLog[0];
-    
+
     this.setState(prevState => {
       const updatedHistory = [newLog, ...prevState.history.slice(0, 49)]; // Prepend newLog and then slice
-      const finalHistory = updatedHistory.slice(0, 50); // Ensure only latest 3 logs
+      const finalHistory = updateFromNow(updatedHistory.slice(0, 50));
       return {
         history: finalHistory
       };
     });
   };
-  
-  
-retrySocketConnection = () => {
-  setTimeout(() => {
-    const { socket } = this.props;
-    if (socket) {
-      socket.on('NEW_LOG', this.handleNewLog);
-    } else {
-      this.retrySocketConnection(); // Retry again if socket is still null
-    }
-  }, 1000); // Retry after  seconds
-}
+
+
+  retrySocketConnection = () => {
+    setTimeout(() => {
+      const { socket } = this.props;
+      if (socket) {
+        socket.on('NEW_LOG', this.handleNewLog);
+      } else {
+        this.retrySocketConnection(); // Retry again if socket is still null
+      }
+    }, 1000); // Retry after  seconds
+  }
 
   // static getDerivedStateFromProps(props, current_state) {
   //   if (
@@ -389,8 +412,8 @@ retrySocketConnection = () => {
           {uniqueHistory.map(
             (row, key) => (
               <div
-                className={`table-row ${key < 50 ? 'slide-in' : ''}`}
-                style={{ animationDelay: `${key * 0.1}s` }}
+              className={`table-row ${(row.creator?._id === this.props.userId || row.joined_user === this.props.userId ) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
+              style={{ animationDelay: `${key * 0.1}s` }}
                 key={row._id}
               >
                 {' '}
@@ -405,7 +428,12 @@ retrySocketConnection = () => {
                       dangerouslySetInnerHTML={{ __html: row.history }}
                     ></div>
                   </div>
-                  <div className="table-cell">{row.from_now}&nbsp;<FontAwesomeIcon icon={faStopwatch} /></div>
+                  <div className="table-cell">
+                    {row.from_now && row.from_now.split('').map((char, index) => (
+                      <span key={index} style={{ fontSize: isNaN(char) ? '0.5em' : '0.8em' }}>{char}</span>
+                    ))}
+                    &nbsp;<FontAwesomeIcon icon={faStopwatch} />
+                  </div>
                   <div className="table-cell row-copy">
 
                     <Tooltip title={this.state.copiedRowId === row._id ? "COPIED ID!" : "COPY BET ID"} placement="top">

@@ -2933,7 +2933,54 @@ position: sticky !important;
   position: absolute;
   top: -7px;
   right: 22px;
+  display: flex;
+  width: 120px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
+.result span {
+  color: #777; /* Initial color */
+  animation: pulse 1.5s; /* Animation */
+}
+
+.history-background {
+  background: linear-gradient(#07ffee46, #0020f14c) !important;
+}
+
+.result .lottie-progress,
+.result .lottie-pressHold {
+  animation: pulse 1.5s;
+ filter: grayscale(1);
+ margin-left: 10px;
+ display: inline;
+}
+
+.result .lottie-pressHold {
+  filter: unset !important;
+  margin-top: -10px;
+  margin-bottom: -10px;
+  margin-right: -45px;
+  margin-left: -10px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1); /* Initial scale */
+  }
+  50% {
+    transform: scale(1.04); /* Slightly larger scale */
+  }
+  100% {
+    transform: scale(1); /* Back to initial scale */
+  }
+}
+
+
+.result .lottie-progress.hide {
+ display: none;
+}
+
 .brain-game-play-panel .play-panel-header .timer .timer-footer2 {
   font-size: 14px;
   font-weight: 500;

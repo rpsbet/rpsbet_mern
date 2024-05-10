@@ -88,6 +88,10 @@ async function executeCronJob(user, betArray) {
       const rpsBetItems = await RpsBetItem.find({
         joiner: user._id,
         room: roomId
+      }).sort({ created_at: -1 }).limit(3);
+      const rpsBetItems2 = await RpsBetItem.find({
+        joiner: user._id,
+        room: roomId
       }).sort({ created_at: -1 });
 
       if (rpsBetItems && rpsBetItems.length > 0) {
@@ -100,7 +104,7 @@ async function executeCronJob(user, betArray) {
           predictedBetAmount = await predictNextBetAmount(betArray, penultimateSameAsLast, 0, 0.01, 0.2, room);
         } else {
           // Other strategies
-          const nextMove = await botAI(rpsBetItems);
+          const nextMove = await botAI(rpsBetItems2);
           nextState = nextMove.move;
           let penultimateSameAsLast;
           if (nextMove.risk >= 0.9) {

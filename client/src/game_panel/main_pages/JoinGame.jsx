@@ -102,6 +102,7 @@ class JoinGame extends Component {
       loading: this.props.loading,
       bgColorChanged: false,
       borderColor: '',
+      gameResult: -100,
       betResult: null,
       result: 0,
       productName: '',
@@ -804,49 +805,6 @@ class JoinGame extends Component {
     // switch (roomInfo.game_type) {
     //   case 'Quick Shoot':
     //     storageName = `qs_array_${roomInfo.qs_game_type}`;
-
-    //     if (
-    //       !validateBankroll(
-    //         bet_amount / (qs_game_type - 1) +
-    //         parseFloat(bet_amount) -
-    //         bankroll * (qs_game_type - 1),
-    //         bankroll,
-    //         isDarkMode
-    //       )
-    //     ) {
-    //       // Display an error message or handle the case when bankroll validation fails
-    //       return;
-    //     }
-
-    //     break;
-    //   case 'Bang!':
-    //     storageName = 'bang_array';
-    //     break;
-    //   case 'Spleesh!':
-    //     if (this.props.spleesh_bet_unit === 0.1) {
-    //       storageName = 'spleesh_10_array';
-    //     } else if (this.props.spleesh_bet_unit === 0.01) {
-    //       storageName = 'spleesh_001_array';
-    //     } else {
-    //       storageName = 'spleesh_array';
-    //     }
-
-
-    //     break;
-    //   case 'Mystery Box':
-    //     storageName = 'bet_array';
-
-    //     break;
-    //   case 'Blackjack':
-    //     storageName = 'bj_array';
-    //     break;
-    //   case 'Brain Game':
-    //     storageName = `score_array_${roomInfo.brain_game_type}`;
-    //     break;
-    //   case 'Drop Game':
-    //     storageName = 'drop_array';
-
-    //     break;
     //   default:
     //     storageName = `rps_array`;
 
@@ -857,8 +815,7 @@ class JoinGame extends Component {
     // }
     // const stored_array =
     //   JSON.parse(localStorage.getItem(storageName)) || [];
-
-
+    const interval = this.props.ai_mode !== 'Adam' || this.props.ai_mode !== 'Sniper' ? 2200 : 4200;
     const intervalId = setInterval(async () => {
 
       try {
@@ -876,26 +833,6 @@ class JoinGame extends Component {
               return;
             }
             break;
-          // case 'Spleesh!':
-          //   randomItem = this.predictNextS(stored_array, this.state.spleesh_guesses);
-          //   randomItem = randomItem.prediction;
-          //   if (!validateBetAmount(randomItem, balance, isDarkMode)) {
-          //     return;
-          //   }
-          //   break;
-          // case 'Mystery Box':
-          //   randomItem = this.predictNextMb(stored_array, roomInfo.box_list);
-          //   if (!validateBetAmount(randomItem, balance, isDarkMode)) {
-          //     return;
-          //   }
-          //   break;
-          // case 'Drop Game':
-          //   randomItem = this.predictNextDg(stored_array);
-          //   break;
-          //   case 'Brain Game':
-          //     randomItem = this.predictNextBg(stored_array);
-          //   predictedBetAmount = roomInfo.bet_amount;
-
           //   break;
           default:
             // RPS
@@ -986,7 +923,7 @@ class JoinGame extends Component {
       } catch (error) {
         console.error('Error in interval function:', error);
       }
-    }, 4200);
+    }, interval);
 
 
     this.setState({ intervalId });
@@ -1122,7 +1059,7 @@ class JoinGame extends Component {
               <React.Fragment>
                 <span style={fragmentStyle}> {text} {currencyElement}</span>
               </React.Fragment>
-            ),
+            ), gameResult: result.betResult
           });
           // this.refreshHistory();
           await getRpsBetItems(roomInfo._id)
@@ -1311,6 +1248,7 @@ class JoinGame extends Component {
                     result={result}
                     onChangeState={this.onChangeState}
                     cp={this.state.cp}
+                    gameResult={this.state.gameResult}
                     rpsbetitems={this.props.rpsbetitems}
                     updateSelectedRps={this.updateSelectedRps}
                     selected_rps={selected_rps}
@@ -1568,7 +1506,7 @@ class JoinGame extends Component {
                 )}
               {is_mobile &&
                 selectedMobileTab === 'live_games' &&
-                show_open_game === 1 && <HistoryTable />}
+                show_open_game === 1 && <HistoryTable userId={user_id} />}
               {is_mobile &&
                 selectedMobileTab === 'my_games' &&
                 show_open_game === 1 && <MyHistoryTable />}
@@ -1600,7 +1538,7 @@ class JoinGame extends Component {
                 />
               )}
             <h2 className="main-title desktop-only">HISTORY</h2>
-            {!is_mobile && selectedMainTabIndex === 0 && <HistoryTable />}
+            {!is_mobile && selectedMainTabIndex === 0 && <HistoryTable userId={user_id} />}
             <DrawerButton
               open={isDrawerOpen}
               toggleDrawer={this.toggleDrawer}
