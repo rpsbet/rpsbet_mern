@@ -66,8 +66,8 @@ class TabbedContent extends Component {
 
   async componentDidMount() {
     // this.updateReminderTime();
-    // this.attachUserLinkListeners();
-    // this.attachAccessories();
+    this.attachUserLinkListeners();
+    this.attachAccessories();
   }
 
   attachUserLinkListeners = () => {

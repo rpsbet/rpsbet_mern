@@ -215,6 +215,11 @@ button#recentSearches span {
   z-index: 0;
 }
 
+.edit-avatar-panel .lottie-container.ak47 div[role="button"],
+.player-modal .lottie-container.ak47 div[role="button"] {
+left: 300px !important;
+}
+
 .avatar img {
   border-radius: 6px;
 }

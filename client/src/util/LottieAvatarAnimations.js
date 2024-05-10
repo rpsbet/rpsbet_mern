@@ -167,7 +167,7 @@ const animationMap = {
   cat: {
     animationData: cat,
     className: 'lottie-container cat',
-    styles: { transform: 'scaleX(-1)', left: '-10px', top: '8px' }
+    styles: { transform: 'scaleX(-1)', left: '50px', top: '70px' }
   },
   bunny: {
     animationData: bunny,

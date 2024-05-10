@@ -4,12 +4,14 @@ var ObjectId = require('mongoose').Types.ObjectId;
 const express = require('express');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
-
+const socket = require('../socketController.js');
 const router = express.Router();
 const Item = require('../model/Item');
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
+const moment = require('moment');
+const Notification = require('../model/Notification');
 
 router.post('/delete', async (req, res) => {
   try {
@@ -71,7 +73,6 @@ router.post('/create', auth, async (req, res) => {
 router.post('/return', auth, async (req, res) => {
   try {
     const { item_id } = req.body;
-
     // Find the item using the new model
     const item = await Item.findOne({ _id: item_id });
 
@@ -95,7 +96,7 @@ router.post('/return', auth, async (req, res) => {
     // Decrement the count for the current user
     item.owners[currentUserIndex].count -= 1;
     item.owners[currentUserIndex].rentOption = false;
-    item.owners[currentUserIndex].originalOwner = '';
+    // item.owners[currentUserIndex].originalOwner = '';
 
     // Find the index of the original owner in the owners array
     const originalOwnerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(item.owners[currentUserIndex].originalOwner));
@@ -112,13 +113,33 @@ router.post('/return', auth, async (req, res) => {
       });
     }
 
+    let notification = new Notification({
+      from: req.user._id,
+      to: item.owners[currentUserIndex].originalOwner,
+      room: '',
+      message: `Received back ${item.productName}`,
+      is_read: false
+    })
+
+    const notificationData = {
+      message: notification.message,
+      username: req.user.username,
+      avatar: req.user.avatar,
+      accessory: req.user.accessory,
+      rank: req.user.totalWagered,
+      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment(new Date()).format('LLL'),
+      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+    };
+
     // Save changes to the item
     try {
       await saveDocumentWithRetry(item);
+      await saveDocumentWithRetry(notification);
+      socket.sendNotification(item.owners[currentUserIndex].originalOwner, notificationData);
     } catch (error) {
       console.error("Error saving item:", error);
     }
-
 
     res.json({
       success: true,
@@ -268,16 +289,16 @@ router.post('/accessory', auth, async (req, res) => {
         message: 'User not found',
       });
     }
-    
+
     // Populate the CP value for the accessory
     const accessoryItem = await Item.findOne({ image: user.accessory }).select('CP');
     if (!accessoryItem) {
       return res.json({
         success: true,
-      accessory: {
-        name: '',
-        CP: 0
-      },
+        accessory: {
+          name: '',
+          CP: 0
+        },
       });
     }
 

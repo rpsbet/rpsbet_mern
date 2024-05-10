@@ -97,15 +97,15 @@ class StatisticsForm extends React.Component {
 
     return (
       <div>
-        
+
         <div className="progress-bar-outer" style={{ width: `${progressBarWidth}px`, position: 'relative' }}>
-        
+
           <div className="progress-bar-filled" style={{ width: `${roundedProgress}%` }}>
             <div className="progress-label progress-label-left">{`${roundedProgress}%`}</div>
-            
+
           </div>
           <div className="progress-bar-remaining" style={{ width: `${remainingProgress}%` }}>
-            
+
             <div className="progress-label progress-label-right">{`${remainingProgress}%`}</div>
           </div>
           {/* <div className="stars">{stars}</div> */}
@@ -376,45 +376,45 @@ class StatisticsForm extends React.Component {
       <ChartDivEl>
         <div className="rank-badge">
           <h2>{this.props.username}</h2>
-         <br />
+          <br />
           <h5>BREAKDOWN</h5>
           <Table>
-        <TableBody>
-          {/* <TableRow>
+            <TableBody>
+              {/* <TableRow>
             <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>LAST SEEN</b></TableCell>
             <TableCell style={{ color: "#ffb000",textAlign: 'center' }}>{lastSeenAgo}</TableCell>
           </TableRow> */}
-        <TableRow>
-            <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>JOINED</b></TableCell>
-            <TableCell  style={{ color: "#ffb000", textAlign: 'center' }}>{joinedAgo}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>RANK</b></TableCell>
-            <TableCell> <div className="stars" style={{display:"flex", justifyContent: "center"}}>{this.getRank(this.props.rank)}</div></TableCell>
-          </TableRow>
-        <TableRow>
-          <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>CREDIT SCORE</b></TableCell>
-          <TableCell>
-          <div className="creditScore">
-          <svg className="dial" width="120" height="120">
-  {this.renderProgressHexagon(this.props.creditScore)}
-  <text x="50%" y="40%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreStatus" style={{ fill: '#ffb000' }}>
-    {roundedCreditScore >= 1000 && roundedCreditScore <= 1500 && 'OK'}
-    {roundedCreditScore > 1500 && roundedCreditScore <= 2000 && 'HIGH'}
-    {roundedCreditScore < 1000 && 'BAD'}
-  </text>
-  <text x="50%" y="60%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreValue" style={{ fill: '#ffb000' }}>
-    {roundedCreditScore} / 2000
-  </text>
-</svg>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>JOINED</b></TableCell>
+                <TableCell style={{ color: "#ffb000", textAlign: 'center' }}>{joinedAgo}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>RANK</b></TableCell>
+                <TableCell> <div className="stars" style={{ display: "flex", justifyContent: "center" }}>{this.getRank(this.props.rank)}</div></TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>CREDIT SCORE</b></TableCell>
+                <TableCell>
+                  <div className="creditScore">
+                    <svg className="dial" width="120" height="120">
+                      {this.renderProgressHexagon(this.props.creditScore)}
+                      <text x="50%" y="40%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreStatus" style={{ fill: '#ffb000' }}>
+                        {roundedCreditScore >= 1000 && roundedCreditScore <= 1500 && 'OK'}
+                        {roundedCreditScore > 1500 && roundedCreditScore <= 2000 && 'HIGH'}
+                        {roundedCreditScore < 1000 && 'BAD'}
+                      </text>
+                      <text x="50%" y="60%" textAnchor="middle" alignmentBaseline="middle" className="creditScoreValue" style={{ fill: '#ffb000' }}>
+                        {roundedCreditScore} / 2000
+                      </text>
+                    </svg>
 
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
-        </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-        </div>
-        
+
 
         <div className="statistics-container">
           <div>
@@ -467,61 +467,61 @@ class StatisticsForm extends React.Component {
                 <div className="loading">LOADING...</div>
               ) : (
                 <Table>
-        <TableBody>
-          <TableRow>
-            <TableCell className="label">Games Played</TableCell>
-            <TableCell className="value" align="center">
-              <span>{gamePlayed}</span>
-              <span className="bar">
-                <div
-                  className="vs-bar host"
-                  style={{
-                    width: `${(gameHosted / gamePlayed) * 100}%`
-                  }}
-                  title={`As Host: ${gameHosted}`}
-                ></div>
-                <div
-                  className="vs-bar player"
-                  style={{
-                    width: `${(gameJoined / gamePlayed) * 100}%`
-                  }}
-                  title={`As Player: ${gameJoined}`}
-                ></div>
-              </span>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="label">Total Wagered</TableCell>
-            <TableCell className="value" align="center">
-              {convertToCurrency(totalWagered)}
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="label">Net Profit</TableCell>
-            <TableCell className="value" align="center">{convertToCurrency(gameProfit)}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="label">Ave. Wager</TableCell>
-            <TableCell className="value" align="center">{convertToCurrency(averageWager)}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="label">Ave. Games Played Per Room</TableCell>
-            <TableCell className="value" align="center">{updateDigitToPoint2(averageGamesPlayedPerRoom)}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="label">Ave. Profit Per Game</TableCell>
-            <TableCell className="value" align="center">{convertToCurrency(averageProfit)}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="label">Profit ATH</TableCell>
-            <TableCell className="value" align="center">{convertToCurrency(profitAllTimeHigh)}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="label">Profit ATL</TableCell>
-            <TableCell className="value" align="center">{convertToCurrency(profitAllTimeLow)}</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="label">Games Played</TableCell>
+                      <TableCell className="value" align="center">
+                        <span>{gamePlayed}</span>
+                        <span className="bar">
+                          <div
+                            className="vs-bar host"
+                            style={{
+                              width: `${(gameHosted / gamePlayed) * 100}%`
+                            }}
+                            title={`As Host: ${gameHosted}`}
+                          ></div>
+                          <div
+                            className="vs-bar player"
+                            style={{
+                              width: `${(gameJoined / gamePlayed) * 100}%`
+                            }}
+                            title={`As Player: ${gameJoined}`}
+                          ></div>
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Total Wagered</TableCell>
+                      <TableCell className="value" align="center">
+                        {convertToCurrency(totalWagered)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Net Profit</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(gameProfit)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Ave. Wager</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(averageWager)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Ave. Games Played Per Room</TableCell>
+                      <TableCell className="value" align="center">{updateDigitToPoint2(averageGamesPlayedPerRoom)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Ave. Profit Per Game</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(averageProfit)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Profit ATH</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(profitAllTimeHigh)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="label">Profit ATL</TableCell>
+                      <TableCell className="value" align="center">{convertToCurrency(profitAllTimeLow)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               )}
             </div>
           </div>

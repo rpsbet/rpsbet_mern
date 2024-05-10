@@ -333,7 +333,7 @@ class MainPage extends Component {
           {!this.state.is_mobile && this.props.selectedMainTabIndex === 0 && (
             <>
               <h2 className="main-title desktop-only">HISTORY</h2>
-              <HistoryTable />
+              <HistoryTable  userId={this.props.user._id}/>
             </>
           )}
           <DrawerButton

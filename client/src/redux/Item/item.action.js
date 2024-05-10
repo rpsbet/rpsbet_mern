@@ -14,7 +14,8 @@ import {
   SET_CURRENT_PRODUCT_ID,
   ADD_TOTAL,
   PRODUCT_TOTAL,
-  MY_ADD_TOTAL
+  MY_ADD_TOTAL,
+  END_LOADING
 } from '../types';
 
 export const acQueryMyItem = (pagination, page, sortCriteria, itemType) => async (
@@ -110,23 +111,21 @@ export const acQueryItem = (pagination, page, sortCriteria, itemType) => async (
 };
 
 
-export const returnItem = data => async dispatch => {
+export const returnItem = item_id => async dispatch => {
   try {
-    dispatch({ type: START_LOADING });
-    const res = await axios.post('/item/return/', data);
-
+    console.log("darta", item_id);
+    const res = await api.post('/item/return/', {item_id});
+    console.log(res.data);
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-
-      return res.data;
-    } else {
       return res.data;
     }
   } catch (err) {
-  } finally {
-    dispatch({ type: END_LOADING });
-  }
-  return false;
+    console.log('error***', err);
+    dispatch({ type: MSG_ERROR, payload: "UNABLE TO RETURN, CONTACT SUPPORT" });
+
+  } 
+ 
 };
 
 

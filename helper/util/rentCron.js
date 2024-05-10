@@ -4,6 +4,10 @@ const User = require('../../model/User');
 const Transaction = require('../../model/Transaction');
 const socketController = require('../../socketController');
 const SystemSetting = require('../../model/SystemSetting');
+const moment = require('moment');
+const Notification = require('../../model/Notification');
+const saveDocumentWithRetry = require('./retrySave');
+const convertToCurrency = require('./conversion');
 
 let socketio = null;
 
@@ -20,6 +24,7 @@ async function checkRentalPayments(io) {
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
       if (lastUpdated <= twentyFourHoursAgo) {
+
         const items = await Item.find();
 
         // Iterate through each item
@@ -40,23 +45,21 @@ async function checkRentalPayments(io) {
 
               // Check if it's been more than 1 month since the last payment
               if (lastPaymentDate <= oneMonthAgo) {
-                // Find the current user
+                
                 const currentUser = await User.findOne({ _id: owner.user });
 
                 // Calculate the amount to deduct (minimum of the balance or the price)
-                let amountToDeduct = Math.min(parseFloat(owner.price), currentUser.balance);
+                let amountToDeduct = parseFloat(owner.price);
 
                 // Check if deducting the amount will result in a negative balance
                 if (amountToDeduct > currentUser.balance) {
-                  // If so, deduct enough to make the balance 0
-                  amountToDeduct = currentUser.balance;
 
-                  // Check if the original owner already exists in the owners array
                   const originalOwnerIndex = item.owners.findIndex((ownerObj) => ownerObj.user.equals(owner.originalOwner));
 
                   if (originalOwnerIndex !== -1) {
                     // If the original owner already exists, increment their count
                     item.owners[originalOwnerIndex].count += 1;
+                    item.owners[originalOwnerIndex].rentOption = true;
                   } else {
                     // If the original owner doesn't exist, add them to the owners array
                     item.owners.push({
@@ -68,47 +71,137 @@ async function checkRentalPayments(io) {
                   }
 
                   // Set the count to 0 for the current owner
-                  owner.count = 0;
+                  owner.count -= 1;
                   owner.rentOption = false;
+
+                  let notification = new Notification({
+                    from: currentUser,
+                    to:  owner.originalOwner ,
+                    room: '',
+                    message: `Received back ${item.productName}.`,
+                    is_read: false
+                  })
+
+                  const notificationData = {
+                    message: notification.message,
+                    username: currentUser.username,
+                    avatar: currentUser.avatar,
+                    accessory: currentUser.accessory,
+                    rank: currentUser.totalWagered,
+                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    created_at_str: moment(new Date()).format('LLL'),
+                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  };
+
+                  let notificationJ = new Notification({
+                    from: currentUser,
+                    to: currentUser,
+                    room: '',
+                    message: `No more funds. Returned ${item.productName}`,
+                    is_read: false
+                  })
+
+                  const notificationDataJ = {
+                    message: notificationJ.message,
+                    username: currentUser.username,
+                    avatar: currentUser.avatar,
+                    accessory: currentUser.accessory,
+                    rank: currentUser.totalWagered,
+                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    created_at_str: moment(new Date()).format('LLL'),
+                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  };
+
+                  try {
+                    await saveDocumentWithRetry(notification);
+                    await saveDocumentWithRetry(notificationJ);
+                    socketController.sendNotification(currentUser, notificationDataJ);
+                    socketController.sendNotification( owner.originalOwner , notificationData);
+                  } catch (error) {
+                    console.error("Error saving notification:", error);
+                  }
+
+                } else {
+
+                  // Deduct the amount from the user's balance
+                  currentUser.balance -= amountToDeduct;
+
+                  // Find the original owner
+                  const originalOwner = await User.findOne({ _id: owner.originalOwner });
+
+                  // Increase the balance for the original owner
+                  originalOwner.balance += amountToDeduct;
+
+                  // Create new transaction records
+                  const newTransactionC = new Transaction({
+                    user: currentUser,
+                    amount: -amountToDeduct,
+                    description: `Rental payment for ${item.productName}`,
+                  });
+
+                  const newTransactionJ = new Transaction({
+                    user: originalOwner,
+                    amount: amountToDeduct,
+                    description: `Rental income from ${item.productName}`,
+                  });
+
+                  let notification = new Notification({
+                    from: currentUser,
+                    to: originalOwner,
+                    room: '',
+                    message: `Received ${convertToCurrency(amountToDeduct)} Rental Payment from ${item.productName}`,
+                    is_read: false
+                  })
+
+                  const notificationData = {
+                    message: notification.message,
+                    username: currentUser.username,
+                    avatar: currentUser.avatar,
+                    accessory: currentUser.accessory,
+                    rank: currentUser.totalWagered,
+                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    created_at_str: moment(new Date()).format('LLL'),
+                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  };
+
+                  let notificationJ = new Notification({
+                    from: currentUser,
+                    to: currentUser,
+                    room: '',
+                    message: `Paid ${convertToCurrency(amountToDeduct)} Rental Payment for ${item.productName}`,
+                    is_read: false
+                  })
+
+                  const notificationDataJ = {
+                    message: notificationJ.message,
+                    username: currentUser.username,
+                    avatar: currentUser.avatar,
+                    accessory: currentUser.accessory,
+                    rank: currentUser.totalWagered,
+                    created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                    created_at_str: moment(new Date()).format('LLL'),
+                    updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  };
+
+                  try {
+                    await saveDocumentWithRetry(notification);
+                    await saveDocumentWithRetry(notificationJ);
+                    socketController.sendNotification(currentUser, notificationDataJ);
+                    socketController.sendNotification(originalOwner, notificationData);
+                  } catch (error) {
+                    console.error("Error saving notification:", error);
+                  }
+
+                  // Save changes and transactions
+                  await Promise.all([
+                    currentUser.save(),
+                    originalOwner.save(),
+                    newTransactionC.save(),
+                    newTransactionJ.save(),
+                  ]);
                 }
-
-                // Deduct the amount from the user's balance
-                currentUser.balance -= amountToDeduct;
-
-                // Find the original owner
-                const originalOwner = await User.findOne({ _id: owner.originalOwner });
-
-                // Increase the balance for the original owner
-                originalOwner.balance += amountToDeduct;
-
-                // Create new transaction records
-                const newTransactionC = new Transaction({
-                  user: currentUser,
-                  amount: -amountToDeduct,
-                  description: `Rental payment for item ${item.productName}`,
-                });
-
-                const newTransactionJ = new Transaction({
-                  user: originalOwner,
-                  amount: amountToDeduct,
-                  description: `Rental income from item ${item.productName}`,
-                });
-
-                // Update the lastPayment for the item owner
-                owner.lastPayment = currentDate;
-
-                // Save changes and transactions
-                await Promise.all([
-                  currentUser.save(),
-                  originalOwner.save(),
-                  newTransactionC.save(),
-                  newTransactionJ.save(),
-                  item.save(),
-                ]);
-
-
-
-                // console.log(`Rental payment processed for item ${item.productName}`);
+                await item.save();
+                console.log(`Rental payment processed for item ${item.productName}`);
               }
             }
           }
@@ -143,7 +236,7 @@ async function checkRentalPayments(io) {
         systemSetting.updated_at = new Date();
         await systemSetting.save();
       } else {
-        console.log("Last wd check was less than 24 hours ago. Skipping.");
+        console.log("Last rental check was less than 24 hours ago. Skipping.");
       }
     } else {
       console.log("System setting for last updated not found.");
@@ -153,7 +246,6 @@ async function checkRentalPayments(io) {
   }
 }
 
-// Schedule the cron job to run every day at midnight (00:00)
 cron.schedule('0 0 * * *', async () => {
   await checkRentalPayments();
 });

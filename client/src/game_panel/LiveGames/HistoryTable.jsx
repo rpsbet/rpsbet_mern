@@ -78,7 +78,6 @@ class HistoryTable extends Component {
     await this.props.getHistory();
     this.setupSocketConnection();
 
-console.log(this.props.history)
   }
 
   componentWillUnmount() {
@@ -107,11 +106,14 @@ console.log(this.props.history)
     const newLog = data.newLog[0];
 
     this.setState(prevState => {
-      const updatedHistory = [newLog, ...prevState.history.slice(0, 49)]; // Prepend newLog and then slice
-      const finalHistory = updateFromNow(updatedHistory.slice(0, 50));
+      const updatedHistory = [newLog, ...prevState.history.slice(0, 29)]; // Prepend newLog and then slice
+      const finalHistory = updateFromNow(updatedHistory.slice(0, 30));
       return {
         history: finalHistory
       };
+    }, () => {
+      this.attachUserLinkListeners();
+      this.attachAccessories();
     });
   };
 
@@ -145,13 +147,11 @@ console.log(this.props.history)
   componentDidUpdate(prevProps, prevState) {
 
     if (prevProps.history !== this.props.history) {
-      // console.log(prevState.history , this.state.history)
-      // this.attachUserLinkListeners();
-      // this.attachAccessories();
-
       this.setState({ history: updateFromNow(this.props.history) });
     }
   }
+
+  
 
   attachUserLinkListeners = () => {
     const userLinks = document.querySelectorAll('.user-link');
@@ -165,22 +165,28 @@ console.log(this.props.history)
   attachAccessories = () => {
     const { isLowGraphics } = this.props;
     const userLinks = document.querySelectorAll('.user-link');
+    let counter = 0; // Counter variable to track the number of items processed
     userLinks.forEach(element => {
-      const userId = element.getAttribute('data-userid'); // Get userId from the user-link element
-      const accessory = element.getAttribute('accessory');
-      const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
-      const portalContainer = document.createElement('div');
-      ReactDOM.render(lottieAnimation, portalContainer);
-      element.parentNode.insertBefore(portalContainer, element);
-
-      // Attach click event listener to the accessory element
-      portalContainer.addEventListener('click', () => {
-        this.handleOpenPlayerModal(userId);
-      });
-      portalContainer.style.cursor = 'pointer';
+      if (counter < 3) { // Process only the first 3 items
+        const userId = element.getAttribute('data-userid'); // Get userId from the user-link element
+        const accessory = element.getAttribute('accessory');
+        const lottieAnimation = renderLottieAvatarAnimation(accessory, isLowGraphics);
+        const portalContainer = document.createElement('div');
+        ReactDOM.render(lottieAnimation, portalContainer);
+        element.parentNode.insertBefore(portalContainer, element);
+  
+        // Attach click event listener to the accessory element
+        portalContainer.addEventListener('click', () => {
+          this.handleOpenPlayerModal(userId);
+        });
+        portalContainer.style.cursor = 'pointer';
+        counter++; // Increment the counter
+      } else {
+        return; // Exit the loop once the first 5 items are processed
+      }
     });
   };
-
+  
 
   handleOpenPlayerModal = creator_id => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });

@@ -92,8 +92,8 @@ class MyHistoryTable extends Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.history !== this.props.history) {
-      // this.attachUserLinkListeners();
-      // this.attachAccessories();
+      this.attachUserLinkListeners();
+      this.attachAccessories();
 
       this.setState({ history: updateFromNow(this.props.history) });
     }

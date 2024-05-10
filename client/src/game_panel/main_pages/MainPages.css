@@ -712,6 +712,11 @@ div.table.main-history-table .table-row .table-cell img.avatar {
   height: 16px;
   border-radius: 6px;
 }
+
+.player-modal .avatar .lottie-container div[role="button"],
+.edit-avatar-panel  .avatar .lottie-container div[role="button"] {
+width: 350px !important;
+}
 div.table.my-chat-table {
   padding: 10px;
 }

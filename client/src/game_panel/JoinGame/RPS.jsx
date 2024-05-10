@@ -859,7 +859,7 @@ class RPS extends Component {
                       </Tooltip>
                     </div>
                   )}
-                  {roomInfo.endgame_amount > 0 && (
+                  {this.props.endgame_type && (
                     <div className="data-item">
                       <div>
                         <div className="label created">Auto-Payout</div>

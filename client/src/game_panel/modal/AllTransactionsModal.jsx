@@ -240,7 +240,7 @@ class AllTransactionsModal extends Component {
                         </div>
                       </div>
 
-                      <div style={{ marginLeft: '45px' }} className="summary-flex">
+                      {/* <div style={{ marginLeft: '45px' }} className="summary-flex">
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                           <span>1-DAY</span>
                           <span
@@ -286,7 +286,7 @@ class AllTransactionsModal extends Component {
                             {convertToCurrency(this.props.allTimeProfit)}
                           </span>
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                     {/* <Table style={{ width: '100%' }}>
                       <TableHead>

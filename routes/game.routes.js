@@ -304,6 +304,7 @@ router.get('/room/:id', async (req, res) => {
         // aveMultiplier: room['aveMultiplier'],
         // creator_name: creator['username'],
         endgame_amount: room['endgame_amount'],
+        endgame_type: room['endgame_type'],
         description: room['description'],
         joiners: joiners,
         game_type: room['game_type']['game_type_name'],
@@ -2573,6 +2574,32 @@ router.post('/tip', auth, async (req, res) => {
       description
     });
 
+    let notification = new Notification({
+      from: req.user._id,
+      to: userToTip,
+      room: '',
+      message: `Tipped ${convertToCurrency(tipAmount)} ${req.body.message}`,
+      is_read: false
+    })
+
+    const notificationData = {
+      message: notification.message,
+      username: req.user.username,
+      avatar: req.user.avatar,
+      accessory: req.user.accessory,
+      rank: req.user.totalWagered,
+      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment(new Date()).format('LLL'),
+      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+    };
+
+    try {
+      await saveDocumentWithRetry(notification);
+      socket.sendNotification(userToTip, notificationData);
+    } catch (error) {
+      console.error("Error saving tip notification:", error);
+    }
+
     // Update balances and save transactions
     userToTip.balance += tipAmount;
     req.user.balance -= tipAmount;
@@ -2604,6 +2631,7 @@ router.post('/tip', auth, async (req, res) => {
     });
   }
 });
+
 router.post('/reCreate', auth, async (req, res) => {
   try {
     const {

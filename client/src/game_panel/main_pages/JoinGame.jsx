@@ -815,7 +815,7 @@ class JoinGame extends Component {
     // }
     // const stored_array =
     //   JSON.parse(localStorage.getItem(storageName)) || [];
-    const interval = this.props.ai_mode !== 'Adam' || this.props.ai_mode !== 'Sniper' ? 2200 : 4200;
+    const interval = this.props.ai_mode !== 'Adam' || this.props.ai_mode !== 'Sniper' ? 3000 : 4200;
     const intervalId = setInterval(async () => {
 
       try {
@@ -1271,6 +1271,7 @@ class JoinGame extends Component {
                     is_private={roomInfo.is_private}
                     youtubeUrl={roomInfo.youtubeUrl}
                     gameBackground={roomInfo.gameBackground}
+                    endgame_type={roomInfo.endgame_type}
                     actionList={actionList}
                     getRoomData={this.getRoomData}
                   />

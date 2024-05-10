@@ -357,14 +357,14 @@ class ProductTable extends Component {
               >
                 RRPS Card
               </MenuItem> */}
-              <MenuItem
+              {/* <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee7df17c9f5ee2124564a')
                 }
                 selected={itemType === '653ee7df17c9f5ee2124564a'}
               >
                 Game Background
-              </MenuItem>
+              </MenuItem> */}
               <MenuItem
                 onClick={() =>
                   this.handleFilterClose('653ee81117c9f5ee2124564b')
