@@ -1120,7 +1120,7 @@ div.table.my-open-game-table {
   left: 0;
   width: 100%;
   height: 100px; /* Adjust height as needed */
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(33 31 40) 100%);
+  background: linear-gradient(to bottom, rgb(236 221 221 / 0%) 0%, rgb(211 211 211) 100%);
 }
 div.table.main-game-table .table-row .table-cell.cell-room-info {
   width: 10%;
@@ -1507,6 +1507,32 @@ table td.amount.red {
   margin-top: 40px;
 }
 
+.recently-closed {
+  display: flex;
+  overflow-x: scroll;
+}
+.recently-closed .carousel-content .table-cell {
+  margin-bottom: 10px;
+  padding: 2.5px;
+}
+h2.main-title.recently-closed-title {
+  font-family: 'Mitr', sans-serif !important;
+}
+.recently-closed .carousel-content {
+  display: inline-table;
+  width: 295px;
+  flex-direction: row;
+  position: relative;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+.recently-closed .cell {
+  font-size: 0.7em;
+}
+.recently-closed a {
+  display: flex;
+  justify-content: flex-end;
+}
 .input-amount {
   display: flex;
   width: 100%;
@@ -1901,7 +1927,8 @@ transform-origin: center;
   border: none;
   background-color: red;
   border: 3px solid white;
-  box-shadow: 0px 0px 4px #323232;
+
+  box-shadow: 3px solid #f6f6f6;
   background-image: url('../../../public/img/rps-logo-white.svg');
   background-repeat: no-repeat;
   background-position: center;
@@ -3364,13 +3391,13 @@ position: sticky !important;
 }
 
 .payout-bar {
-  background: black;
+  background: #e5e5e5;
   height: 15px;
   width: 100px;
   overflow: hidden;
   border-radius: 20px;
   margin: 8px 0;
-  border: 2px solid #212529;
+  border: 2px solid #f9f9f9;
 }
 
 .payout-bar .value {

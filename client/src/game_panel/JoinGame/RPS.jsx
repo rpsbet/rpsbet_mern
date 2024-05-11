@@ -15,9 +15,9 @@ import pressHold from '../LottieAnimations/pressHold.json';
 
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-import { updateRoomBot } from '../../redux/Logic/logic.actions';
+import { updateRoomBot, endGame } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRobot } from '@fortawesome/free-solid-svg-icons';
+import { faRobot, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
 import InfoIcon from '@material-ui/icons/Warning';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
@@ -616,6 +616,17 @@ class RPS extends Component {
       callBot(creator_id, roomInfo._id, user_id, isDarkMode, updateRoomBot);
     }
   }
+  handleEndClick = () => {
+    const { roomInfo, } = this.props;
+    if (roomInfo.status !== 'finished') {
+      this.props.endGame(roomInfo._id)
+    } else {
+      alertModal(
+        this.props.isDarkMode,
+        "THIS GAME HAS ALREADY ENDED."
+      );
+    }
+  }
 
   // Child Component
   onBtnBetClick = async (selection) => {
@@ -1171,26 +1182,26 @@ class RPS extends Component {
                 </Tooltip>
                 <div className="game-info-panel">
                   <div className={`rps-radio-host ${this.props.is_betting || this.props.betting ? 'blueish-hue' : ''}`} style={{ top: "25px", right: "25px", boxShadow: "0px 0 5px 0px #ffc107", background: "radial-gradient(#ffd000, rgb(255, 0, 0, 0.2)", position: "absolute", width: "12.5px", height: "12.5px", borderRadius: "50%" }}>
-                    <span className='result' style={{ display: (!startedPlaying) ? 'none' : 'flex'}}>
+                    <span className='result' style={{ display: (!startedPlaying) ? 'none' : 'flex' }}>
                       {this.props.result !== '' ? (
                         <>
                           {this.props.result}
                           {/* Second Lottie Animation */}
-                          { this.props.betting && (
+                          {this.props.betting && (
 
                             <div className='lottie-pressHold'>
-                          <Lottie
-                            options={{
-                              loop: true,
-                              autoplay: true,
-                              animationData: pressHold
-                            }}
-                            style={{
-                              position: 'relative',
-                              filter: `hue-rotate(${this.props.gameResult === -1 ? 0 : (this.props.gameResult === 0 ? 195 : (this.props.gameResult === 1 ? 80 : 20))}deg)`
-                            }}
-                            />
-                          </div>
+                              <Lottie
+                                options={{
+                                  loop: true,
+                                  autoplay: true,
+                                  animationData: pressHold
+                                }}
+                                style={{
+                                  position: 'relative',
+                                  filter: `hue-rotate(${this.props.gameResult === -1 ? 0 : (this.props.gameResult === 0 ? 195 : (this.props.gameResult === 1 ? 80 : 20))}deg)`
+                                }}
+                              />
+                            </div>
                           )}
                         </>
                       ) : (
@@ -1301,11 +1312,33 @@ class RPS extends Component {
 
 
                   {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
+                      <div style={{ display: "flex", flexDirection: "row" }}>
+                        <Button
+                          onClick={this.handleBotClick}
+                          style={{
+                            borderRadius: "9px",
+                            marginTop: "1.6em",
+                            background: "#ccc",
+                            boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px",
+                            color: "#3e4554"
+                          }}
+                        >
+                          <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT?
+                        </Button>
+                        <Button
+                          onClick={this.handleEndClick} 
+                          style={{
+                            borderRadius: "9px",
+                            marginTop: "1.6em",
+                            background: "linear-gradient(45deg, #d81719, #950002)",
+                            boxShadow: "#d81719 0px 0px 4px inset",
+                            color: "#e9ecef"
+                          }}
+                        >
+                          <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faMoneyBillWave} />&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}
+                        </Button>
+                      </div>
 
-
-                    <Button onClick={this.handleBotClick} style={{ borderRadius: "9px", marginTop: "1.6em", background: "#ccc", boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px", color: "#3e4554" }}>
-                      <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT?
-                    </Button>
                   ) : (
                     <BetAmountInput
                       betAmount={this.state.bet_amount}
@@ -1356,6 +1389,7 @@ const mapDispatchToProps = {
   acQueryMyItem,
   updateRoomBot,
   setSpectateMode,
+  endGame,
   getRpsBetItems
 };
 

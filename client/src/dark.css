@@ -19,6 +19,10 @@
 		color: #f9f9f9;
 }
 
+.dark_mode .card-hidden,.dark_mode #rps-radio div {
+	box-shadow: 0px 0px 4px #323232;
+}
+
 .dark_mode  .spectate:hover {
 	border-color: #f9f9f9 !important;
   }
@@ -44,8 +48,13 @@
   .dark_mode .comment-time {
 	color: #e5e5e5; /* Adjust color as needed */
   }
-
-  
+  .dark_mode .payout-bar {
+background: #101010;
+border: 2px solid #212529;
+  }
+  .dark_mode .table-gradient {
+    background: linear-gradient(to bottom, rgba(202, 202, 202, 0) 0%, rgb(33 31 40) 100%);
+  }
 .dark_mode .game-logs-table thead,
 .dark_mode .modal-img {
 	background-color: #101010;

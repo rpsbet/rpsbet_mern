@@ -222,7 +222,6 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 newGameLog.bet_amount = betAmount;
-
                 // if no more items, create a new one
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
@@ -293,17 +292,16 @@ const addToQueue = async (req, bot = false) => {
                     }
                 }
 
-                newGameLog.bet_amount = betAmount;
                 newGameLog.selected_rps = req.body.selected_rps;
                 if (roomInfo['rps_game_type'] === 0) {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.5 && betAmount > 10) {
+                    if (randomNumber <= 0.7 && betAmount > 3) {
                         if (bot &&
-                            ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
-                                (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
-                                (bet_item.rps === 'S' && req.body.selected_rps === 'P'))
+                            ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
+                                (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
+                                (bet_item.rps === 'R' && req.body.selected_rps === 'S'))
                         ) {
                             // Logic to change req.body.selected_rps based on bot's choice
                             if (bet_item.rps === 'R') {
@@ -315,7 +313,7 @@ const addToQueue = async (req, bot = false) => {
                             }
                         }
                     }
-
+                    
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
 
@@ -366,7 +364,6 @@ const addToQueue = async (req, bot = false) => {
 
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (betAmount * (parseFloat(tax.value) / 100));
                         roomInfo['host_pr'] = parseFloat(roomInfo['host_pr']) - (betAmount * (parseFloat(tax.value) / 100));
-
                         newTransactionAmount += (betAmount - betAmount * (parseFloat(tax.value) / 100));
 
                         message.message =
@@ -435,8 +432,8 @@ const addToQueue = async (req, bot = false) => {
                             '-' +
                             roomInfo['room_number'];
                     }
-                    newGameLog.winnings = convertToCurrency(req.body.bet_amount) * 2;
                 }
+
                 if (roomInfo['rps_game_type'] === 0) {
                     winnings = betAmount * 2;
                 }

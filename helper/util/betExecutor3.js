@@ -296,31 +296,12 @@ const addToQueue = async (req, bot = false) => {
                     }
                 }
 
-                newGameLog.bet_amount = betAmount;
                 newGameLog.selected_rps = req.body.selected_rps;
                 // console.time('databaseQueries');
 
                 if (roomInfo['rps_game_type'] === 0) {
 
-                    // rig clause
-                    const randomNumber = Math.random();
-                    if (randomNumber <= 0.5 && betAmount > 10) {
-                        if (bot &&
-                            ((bet_item.rps === 'R' && req.body.selected_rps === 'S') ||
-                                (bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
-                                (bet_item.rps === 'S' && req.body.selected_rps === 'P'))
-                        ) {
-                            // Logic to change req.body.selected_rps based on bot's choice
-                            if (bet_item.rps === 'R') {
-                                req.body.selected_rps = 'P';
-                            } else if (bet_item.rps === 'P') {
-                                req.body.selected_rps = 'S';
-                            } else {
-                                req.body.selected_rps = 'R';
-                            }
-                        }
-                    }
-
+               
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
 

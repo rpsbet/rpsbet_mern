@@ -80,6 +80,35 @@ router.get('/strategies', async (req, res) => {
   }
 });
 
+router.get('/recently-closed', async (req, res) => {
+  try {
+    const rooms = await Room.find({ status: 'finished' })
+      .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
+      .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
+      .sort({ created_at: -1 })
+      .limit(9);
+
+    if (rooms.length > 0) {
+      res.json({
+        success: true,
+        rooms: rooms
+      });
+    } else {
+      res.json({
+        success: true,
+        message: 'No recently closed rooms found.'
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message // Include the error message for debugging purposes.
+    });
+  }
+});
+
+
+
 // Route to update a strategy's description
 router.patch('/strategies/:user_id', async (req, res) => {
   const { user_id } = req.params;
@@ -258,7 +287,7 @@ router.get('/room/:id', async (req, res) => {
 
     let gameLogQuery = GameLog.find({ room: room })
       .sort({ created_at: 'desc' })
-      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status hosts room_number game_type bet_amount user_bet host_pr created_at'  })
+      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
       .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
       .populate({ path: 'joined_user', model: User, select: '_id avatar accessory totalWagered' });
@@ -653,7 +682,7 @@ const getHistory = async (pageSize, my_id, game_type) => {
     const gameLogQuery = GameLog.find(search_condition)
       .sort({ created_at: 'desc' })
       .limit(pageSize)
-      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status hosts room_number game_type bet_amount user_bet host_pr created_at'  })
+      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
       .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
       .populate({ path: 'joined_user', model: User, select: '_id avatar accessory totalWagered' });
@@ -2796,5 +2825,5 @@ router.post('/bet3', auth, async (req, res) => {
   }
 });
 
- 
+
 module.exports = router;

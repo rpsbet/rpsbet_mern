@@ -69,8 +69,9 @@ button#recentSearches span {
   /* Red color */
 }
 
-.red-text {
-  color: #ff0000;
+.red-text,
+.cell .red {
+  color: #ff0000 !important;
 }
 
 .white {
@@ -83,6 +84,9 @@ button#recentSearches span {
   /* Green color */
 }
 
+.cell .green {
+  color:  #77dd77 !important;
+}
 .creditScore {
   display: flex;
   justify-content: center;
@@ -164,9 +168,13 @@ button#recentSearches span {
   top: 38px !important;
 }
 
-.sub-panel .lottie-container.cat div {
-  top: 4px !important;
+.chat-player .lottie-container.cat div {
+  top: 10px !important;
   left: 12px !important;
+}
+.tooltip-avatar .lottie-container.cat div {
+  top: 4px !important;
+  left: 2px !important;
 }
 
 .sub-panel .lottie-container.glee div {

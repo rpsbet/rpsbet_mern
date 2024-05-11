@@ -4,6 +4,7 @@ import {
   ACTION_ROOM,
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
+  RECENTLY_CLOSED_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
@@ -280,6 +281,11 @@ export default function (state = initialState, action) {
       return {
         ...state,
         strategies: payload
+      };
+    case RECENTLY_CLOSED_LOADED:
+      return {
+        ...state,
+        recentlyClosed: payload
       };
     case SET_CHAT_ROOM_INFO:
       return {

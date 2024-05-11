@@ -4,12 +4,16 @@ import {
   actionRoom,
   getRoomList,
   setCurRoomInfo,
-  fetchMoreRooms
+  fetchMoreRooms,
+  getRecentlyClosed
 } from '../../redux/Logic/logic.actions';
 import { Box, Button, Typography, IconButton, ButtonGroup, TextField, Table, TableBody, TableCell, TableRow, Tooltip } from '@material-ui/core';
 import { Warning, Add, Remove, Visibility } from '@material-ui/icons';
 // import ReactApexChart from 'react-apexcharts';
 import { Help } from '@material-ui/icons';
+import Moment from 'moment';
+import { faHeart, faHeartBroken, faStopwatch } from '@fortawesome/free-solid-svg-icons';
+import animationData from '../LottieAnimations/live';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
@@ -62,6 +66,16 @@ const customStyles = {
     padding: 0
   }
 };
+
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: 'xMidYMid slice'
+  }
+};
+
 
 class OpenGamesTable extends Component {
   constructor(props) {
@@ -199,6 +213,7 @@ class OpenGamesTable extends Component {
 
   async componentDidMount() {
     this.props.getRoomList({ pageSize: 7 });
+    await this.props.getRecentlyClosed();
     window.addEventListener('load', this.handleLoad);
     window.addEventListener('scroll', this.handleScroll);
   }
@@ -231,7 +246,7 @@ class OpenGamesTable extends Component {
     if (prevProps.refreshing !== this.props.refreshing) {
       if (this.props.refreshing) {
         this.setState({
-          roomList:[]
+          roomList: []
         })
       }
     }
@@ -252,7 +267,7 @@ class OpenGamesTable extends Component {
     if (tableElement) {
       const { bottom } = tableElement.getBoundingClientRect();
       const isTableAtBottom = bottom <= window.innerHeight;
-  
+
       if (!loading && isTableAtBottom && rooms_count !== roomList.length) {
         await this.props.fetchMoreRooms({
           pageSize: roomList.length + 3,
@@ -262,7 +277,7 @@ class OpenGamesTable extends Component {
       }
     }
   };
-  
+
 
   handleCoHost = (row) => {
     this.setState({ isCoHostModalOpen: true, selectedRow: row });
@@ -324,6 +339,29 @@ class OpenGamesTable extends Component {
       }
     }
   };
+
+  customFromNow(date) {
+    const now = Moment();
+    const duration = Moment.duration(now.diff(date));
+
+    if (duration.asSeconds() < 60) {
+      return `${Math.round(duration.asSeconds())}s ago`;
+    } else if (duration.asMinutes() < 60) {
+      return `${Math.round(duration.asMinutes())}m ago`;
+    } else if (duration.asHours() < 24) {
+      return `${Math.round(duration.asHours())}h ago`;
+    } else {
+      return `${Math.round(duration.asDays())}d ago`;
+    }
+  }
+
+  updateFromNow(history) {
+    const result = JSON.parse(JSON.stringify(history));
+    for (let i = 0; i < result.length; i++) {
+      result[i]['from_now'] = this.customFromNow(Moment(result[i]['updated_at']));
+    }
+    return result;
+  }
 
   // getRoomData = async (roomIds) => {
   //   try {
@@ -513,6 +551,17 @@ class OpenGamesTable extends Component {
   //   this.game_type_panel.scrollLeft += scrollAmount;
   // };
 
+  getColorClass = (value) => {
+    if (value > 0) {
+      return 'green';
+    } else if (value === 0) {
+      return 'grey';
+    } else {
+      return 'red';
+    }
+  };
+
+
   renderArrow = value => {
     return value >= 0 ? (
       <Add style={{ color: '#57ca22' }} />
@@ -554,8 +603,9 @@ class OpenGamesTable extends Component {
       selectedCreator,
       isFocused,
     } = this.state;
-    const { isLowGraphics, isDarkMode } = this.props;
-
+    const { isLowGraphics, isDarkMode, recentlyClosed } = this.props;
+    let recent = recentlyClosed ? this.updateFromNow(recentlyClosed) : [];
+    
     return (
       <>
         <div className="overflowX">
@@ -785,19 +835,19 @@ class OpenGamesTable extends Component {
                               data-room-status={row.status}
                               data-game-type={row.game_type.game_type_name}
                               data-bet-amount={row.user_bet}
-                              // data-spleesh-bet-unit={row.spleesh_bet_unit}
-                              // data-box-price={row.box_price}
-                              // data-brain-game-type-id={
-                              //   row.brain_game_type ? row.brain_game_type._id : ''
-                              // }
-                              // data-brain-game-type-name={
-                              //   row.brain_game_type
-                              //     ? row.brain_game_type.game_type_name
-                              //     : ''
-                              // }
-                              // data-brain-game-score={
-                              //   row.brain_game_score ? row.brain_game_score : 0
-                              // }
+                            // data-spleesh-bet-unit={row.spleesh_bet_unit}
+                            // data-box-price={row.box_price}
+                            // data-brain-game-type-id={
+                            //   row.brain_game_type ? row.brain_game_type._id : ''
+                            // }
+                            // data-brain-game-type-name={
+                            //   row.brain_game_type
+                            //     ? row.brain_game_type.game_type_name
+                            //     : ''
+                            // }
+                            // data-brain-game-score={
+                            //   row.brain_game_score ? row.brain_game_score : 0
+                            // }
                             >
                               {row.is_private && (
                                 <img
@@ -814,7 +864,7 @@ class OpenGamesTable extends Component {
                             </Button>
                           </div>
                         </div>
-                        <div className="mobile-only" style={{marginTop: '7.5px', marginBottom: '-5px'}}>
+                        <div className="mobile-only" style={{ marginTop: '7.5px', marginBottom: '-5px' }}>
                           <div className="table-cell cell-user-name">
                             <a
                               className="player"
@@ -914,6 +964,54 @@ class OpenGamesTable extends Component {
                     this
                   )}</>
               )}
+                 <div style={{display: "inline-flex", justifyContent:"center", alignItems:"center"}}>
+
+<h2 class="main-title recently-closed-title" style={{paddingTop: "5px"}}>RECENTLY ENDED</h2> <Lottie style={{filter: 'grayscale(1)'}} options={defaultOptions} width={40} />
+</div>
+<div className='recently-closed'>
+  {recent?.map((row) => (
+    <div key={row._id} className="carousel-content table-row slide-in">
+      <a href={`/join/${row._id}`} className="table-cell">
+        <img
+          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+          alt=""
+          className="game-type-icon"
+        />
+        <div className="cell">
+          {row.game_type.game_type_name}
+        </div>
+        <div className="cell">{'-' + row.room_number}</div>
+      </a>
+      <div className="cell">
+        {row.status}&nbsp;{<FontAwesomeIcon icon={faHeartBroken} />}
+      </div>
+      <div className="cell">{row.from_now}&nbsp;{<FontAwesomeIcon icon={faStopwatch} />}</div>
+      <div className={"cell"}>
+        <span className={`${this.getColorClass(row.host_pr - row.bet_amount)}`}>{convertToCurrency(row.host_pr - row.bet_amount)}</span>
+      </div>
+      <a
+        href="#"
+        className="player"
+        onClick={() => this.handleOpenPlayerModal(row.creator._id)}
+      >
+        <Avatar
+          className="avatar"
+          src={row.creator.avatar}
+          accessory={row.creator.accessory}
+          rank={row.creator.totalWagered}
+          alt=""
+          darkMode={this.props.isDarkMode}
+        />
+        <i
+          className={`online-status${this.props.onlineUserList.filter((user) => user === row.creator._id).length > 0
+            ? ' online'
+            : ''
+            }`}
+        ></i>
+      </a>
+    </div>
+  ))}
+</div>
             </>
 
           )}
@@ -926,6 +1024,7 @@ class OpenGamesTable extends Component {
 
             </>
           )}
+       
 
         </div>
 
@@ -1148,6 +1247,7 @@ const mapStateToProps = state => ({
   joiners: state.logic.curRoomInfo.joiners,
   isAuthenticated: state.auth.isAuthenticated,
   userName: state.auth.userName,
+  recentlyClosed: state.logic.recentlyClosed,
   user: state.auth.user,
   isLowGraphics: state.auth.isLowGraphics,
   loading: state.logic.isActiveLoadingOverlay
@@ -1158,6 +1258,7 @@ const mapDispatchToProps = {
   setCurRoomInfo,
   actionRoom,
   getRoomStatisticsData,
+  getRecentlyClosed,
   setBalance,
   fetchMoreRooms,
   addNewTransaction

@@ -2,6 +2,7 @@ import {
   ACTION_ROOM,
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
+  RECENTLY_CLOSED_LOADED,
   ROOMINFO_LOADED,
   START_LOADING,
   END_LOADING,
@@ -742,6 +743,15 @@ export const updateRpsBetItems = (itemId, cellindex, updatedItem) => async dispa
 
 
 
+export const getRecentlyClosed = () => async dispatch => {
+  try {
+    const res = await axios.get('/game/recently-closed');
+    if (res.data.success) {
+      dispatch({ type: RECENTLY_CLOSED_LOADED, payload: res.data.rooms });
+    }
+  } catch (err) {
+  }
+};
 export const getStrategies = () => async dispatch => {
   try {
     const res = await axios.get('/game/strategies');

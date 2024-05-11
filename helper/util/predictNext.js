@@ -124,7 +124,6 @@ const calcWinChance = (rps_list) => {
   return lowest.toFixed(2) + "% - " + highest.toFixed(2) + "%";
 }
 
-
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
 async function reinforcementAI(data) {
   if (data.length === 0) {
@@ -311,10 +310,12 @@ function counterSwitchAI(historicData) {
 
 
 function botCounterRandomness(historicData) {
-  // If historicData is empty or undefined, default to 'R'
   if (historicData.length < 3) {
+    const randomIndex = Math.floor(Math.random() * 3);
+    const rpsOptions = ['R', 'P', 'S'];
+    nextState = rpsOptions[randomIndex];
     // If historicData has less than 3 moves, return false
-    return { counterMove: null, risk: 2 };
+    return { counterMove: nextState, risk: 1 };
   }
 
   // Get the AI's most recent move
