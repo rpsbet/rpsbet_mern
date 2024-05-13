@@ -3,10 +3,10 @@ import React, { Component } from 'react';
 import { convertToCurrency } from '../../util/conversion';
 // import { updateDigitToPoint2 } from '../../util/helper';
 import { connect } from 'react-redux';
-import { Button, TextField } from '@material-ui/core';
+import { Button, Tooltip, TextField } from '@material-ui/core';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import { createTheme, ThemeProvider } from '@material-ui/core/styles';
-
+import { Info } from '@material-ui/icons';
 class DefaultBetAmountPanel extends Component {
   constructor(props) {
     super(props);
@@ -154,7 +154,13 @@ class DefaultBetAmountPanel extends Component {
     const formattedBetAmount = this.formatBetAmount(bet_amount);
     return (
       <div className="default-bet-amount-panel game-info-panel">
-        <h3 className="game-sub-title">BANKROLL</h3>
+        <h3 className="game-sub-title">BANKROLL&nbsp;<Tooltip
+                        style={{ position: "absolute", right: "20px" }}
+                        title={'Liquidity / pot / pool of money for the game'}
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip></h3>
         <div className="bet-amounts">
           {defaultBetAmounts.map((amount, index) => (
             <Button
@@ -277,11 +283,7 @@ class DefaultBetAmountPanel extends Component {
            </div>
            
         </div>
-        {this.props.game_type === 'RPS' ? (
-          <p className="tip">SET THE INITIAL 'POT' FOR THIS GAME</p>
-        ) : (
-          <p className="tip">The cost to play this game</p>
-        )}
+        
       </div>
     );
   }

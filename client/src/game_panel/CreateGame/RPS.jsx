@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { connect } from 'react-redux';
-import { Button, IconButton, ButtonBase } from '@material-ui/core';
+import { Button, Tooltip, IconButton, ButtonBase } from '@material-ui/core';
+import { Info } from '@material-ui/icons';
+
 import { acQueryMyItem } from '../../redux/Item/item.action';
 import styled from 'styled-components';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -502,7 +504,13 @@ class RPS extends Component {
         )} */}
         {step === 2 && rps_game_type === 0 && (
           <div className="game-info-panel">
-            <h3 className="game-sub-title">Strategy</h3>
+            <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
+                        style={{ position: "absolute", right: "20px" }}
+                        title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip></h3>
             <SettingsRef
               strategies={strategies}
               ai_mode={ai_mode}

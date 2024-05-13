@@ -791,7 +791,7 @@ export const updateRoomBot = (room_id) => async dispatch => {
     let botAttached = false;
     let loopCount = 0;
 
-    while (!botAttached && loopCount < 6) {
+    while (!botAttached && loopCount < 4) {
       const res = await axios.patch(`/game/rooms/${room_id}`);
 
       if (res.data.success) {
@@ -803,12 +803,34 @@ export const updateRoomBot = (room_id) => async dispatch => {
     }
 
     if (!botAttached) {
-      throw new Error('Could not attach bot to the room after 6 attempts');
+      throw new Error('Could not attach bot to the room after 4 attempts');
+      dispatch({ type: MSG_ERROR, payload: 'NO BOTS AVAILABLE' });
     }
+
+    return true; // Bot successfully attached
   } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'NO BOTS AVAILABLE' });
+    dispatch({ type: MSG_ERROR, payload: 'NO MORE BOTS OR ROOM HAS ENDED'});
+    return false; // Bot attachment failed
   }
 };
+
+export const getRoomBotCount = (room_id) => async (dispatch) => {
+  try {
+    const res = await axios.get(`/game/rooms/${room_id}/bots-count`);
+
+    if (res.data.success) {
+      const botCount = res.data.botCount;
+      // You can dispatch an action here to handle the bot count
+      // For example:
+      // dispatch({ type: SET_BOT_COUNT, payload: botCount });
+      return botCount;
+    }
+  } catch (err) {
+    console.error('Error fetching bot count:', err.message);
+    dispatch({ type: MSG_ERROR, payload: 'Error fetching bot count' });
+  }
+};
+
 
 export const getGameTypeList = () => async dispatch => {
   try {
@@ -861,6 +883,7 @@ export const getMyGames = search_condition => async dispatch => {
 
 export const endGame = (room_id, callback) => async dispatch => {
   try {
+    dispatch({ type: START_LOADING });
     const res = await axios.post('/game/end_game', { room_id });
     if (res.data.success) {
       dispatch({
@@ -871,20 +894,19 @@ export const endGame = (room_id, callback) => async dispatch => {
           pageNumber: 1
         }
       });
-      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
 
-    } else {
-      if (res.data.already_finished) {
-        // dispatch({ type: OPEN_ALERT_MODAL, payload: {alert_type: 'warning', title: 'Warning!', message: res.data.message} });
-      }
+      dispatch({ type: NEW_TRANSACTION, payload: res.data.newTransaction });
+      dispatch({ type: MSG_SUCCESS, payload: "GAME HAS NOW ENDED" });
     }
   } catch (err) {
     console.log(err);
     dispatch({ type: MSG_ERROR, payload: 'SOMETHING WENT WRONG, TRY AGAIN LATER' });
 
+  } finally {
+    dispatch({ type: END_LOADING });
   }
 };
+
 export const unstake = (room_id, callback) => async dispatch => {
   try {
     const res = await axios.post('/game/unstake', { room_id });

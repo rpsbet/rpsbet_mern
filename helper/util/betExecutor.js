@@ -295,7 +295,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.7 && betAmount > 3) {
+                    if (randomNumber <= 0.62 && betAmount > 3) {
                         if (bot &&
                             ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
@@ -528,18 +528,7 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
 
-                    newGameLogC = new GameLog({
-                        room: roomInfo,
-                        creator: roomInfo['creator'],
-                        joined_user: roomInfo['creator'],
-                        game_type: roomInfo['game_type'],
-                        bet_amount: roomInfo['host_pr'],
-                        user_bet: roomInfo['user_bet'],
-                        // is_anonymous: roomInfo['is_anonymous'],
-                        game_result: -100
-                    });
-
-                    saveDocumentWithRetry(newGameLogC);
+                  
                 }
             }
 

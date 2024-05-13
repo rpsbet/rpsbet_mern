@@ -169,10 +169,6 @@ div.table .table-row .table-cell button:last-child:before,
   margin: 10px 4px 8px;
 }
 
-.tip {
-  text-align: center;
-}
-
 #rps-radio div.active {
   opacity: 0.9;
   border: unset;
@@ -218,13 +214,14 @@ div.table .table-row .table-cell button:last-child,
 .game_header .main_header .header_action_panel button#btn-login,
 #balance button,
 .game-page .game-contents .game-info-panel button.place-bet,
-.game-contents .game-info-panel button,
+.create-game-panel .game-page .game-contents .game-info-panel button,
+.spectate,
 #rps-radio div.active {
   padding: 0 10px;
   margin-left: 15px;
   border-radius: 0.25em;
   color: #fff;
-  font-size: 0.8em;
+  font-size: 0.8em !important;
   overflow: hidden;
   font-weight: 600;
   background: linear-gradient(0deg, #d81719, #f50057) padding-box,
@@ -2038,20 +2035,27 @@ transform-origin: center;
     margin: 0px 5px 5px 0!important;
   }
 
-.game-page .game-contents .game-info-panel button.active {
+.create-game-panel .game-page .game-contents .game-info-panel button.active,
+.bet-amount button.active,
+.game-page .game-contents .game-info-panel #rps-radio button.active {
   color: #e5e5e5;
   background-image: linear-gradient(to top, #dc3545, #f50000);
   box-shadow: none !important;
   border: 3px solid #ffd000;
 }
-.game-page .game-contents .game-info-panel button:hover {
+.create-game-panel .game-page .game-contents .game-info-panel button:hover,
+.bet-amount button:hover,
+.game-page .game-contents .game-info-panel #rps-radio button:hover {
   transition: 0.1s;
   transform: translateY(-2px);
   filter: brightness(1.2);
 }
 
-.game-page .game-contents .game-info-panel button:focus,
-.game-page .game-contents .game-info-panel button:active {
+.game-page .game-contents .game-info-panel #rps-radio button:focus,
+.create-game-panel .game-page .game-contents .game-info-panel button:focus,
+.bet-amount button:focus,
+.spectate:focus,
+.game-page .game-contents .game-info-panel #rps-radio button:active {
   transform: translateY(0px);
   background-image: linear-gradient(to top, #ff0000, #db0000);
   box-shadow: none !important;
@@ -2370,6 +2374,8 @@ margin-right: 5px;
   height: 120px !important;
   cursor: pointer;
   background-color: #f50000;
+  box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
+  inset 0 2px #ff2525;
   transition: all 0.1s ease-in-out;
   border-radius: 0.25em !important;
 }
@@ -2703,6 +2709,14 @@ pointer-events: unset !important;
   z-index: 1;
   position: absolute;
 }
+.host-controls {
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+
 input {
   border-radius: 0.3em !important;
   outline: 0;
@@ -2802,9 +2816,11 @@ input {
   text-align: center;
   border-radius: 0.6em;
 }
+
+
 .join-game-panel .game-page .game-contents p {
   font-weight: 600;
-  color: #f9f9f9;
+  /* color: #f9f9f9; */
 }
 .create-game-panel .boxes-panel .box p {
   background: #7a7a7a4a;
@@ -3466,7 +3482,9 @@ position: sticky !important;
 }
 @media (max-width: 1023px) {
 
-
+.roll-tag {
+  display: none;
+}
   .boxes-panel {
     display: flex;
     flex-wrap: nowrap; /* Prevent wrapping to keep items in a single row */
@@ -3493,6 +3511,10 @@ position: sticky !important;
   .gamified-container {
     padding: 20px;
     margin: 20px;
+    color: #3e4554 !important;
+  }
+  .gamified-container span{
+    color: #3e4554 !important;
   }
   .bottom-footer {
     margin-left: 0 !important;
@@ -3653,11 +3675,12 @@ position: sticky !important;
   #rps-radio button:last-child {
     margin-right: 0px !important;
   }
-  .game-page .game-contents .game-info-panel button {
+  .game-page .game-contents .game-info-panel #rps-radio button {
     margin: 4px 4px 6px;
   }
-  .join-game-panel .game-page .game-contents .game-info-panel button {
-    margin-top: 10px;
+  .spectate{
+    margin-top: 40px !important;
+    margin-bottom: 20px !important;
   }
   .card-back {
     left: 260px;
@@ -3752,13 +3775,69 @@ position: sticky !important;
   }
 }
 @media (max-width: 400px) {
+  .host-controls {
+    flex-direction: column;
+  }
+  .pre-summary-panel .data-item {
+    min-width: 120px !important;
+  }
+  .modal-body .avatar-border {
+    padding: 0 !important;
+  }
+
+  .input-amount span, .game-page .game-contents .game-info-panel .edit-amount-panel span {
+    font-size: 8px;
+  }
+
+  .transaction-settings.active {
+    min-width: 90vw;
+  }
+  #ap-btn {
+    padding: 0 16px !important;
+    height: 30px !important;
+    margin-bottom: 5px !important;
+    margin-right: 5px !important;
+  }
+  .strategy-description,
+  .tiers table tr,
+  #ap-btn {
+    font-size: 0.7em !important;
+    vertical-align: sub;
+  }
+  .tiers table th {
+    padding-right: 15px !important;
+  }
+
+  div.table.my-open-game-table .table-row .table-cell,
+  div.table.my-open-game-table .table-row .table-cell.room-id a {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .my-open-game-table .table-cell {
+    padding: 0 !important;
+    font-size: 0.7em;
+  }
+  .player-modal .avatar .lottie-container.dragon div[role="button"],
+  .edit-avatar-panel  .avatar .lottie-container.dragon div[role="button"]{
+    left: -40px !important;
+  }
+
+  #marketplace-banner {
+    width: 700px;
+  }
+  .host-controls button:last-child {
+    margin-top: 10px !important;
+   }
   div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
     width: 11px;
     height: 11px;
     border-radius: 4px;
     transform: translate(14px, 28px);
   }
-
+  .transaction-settings {
+    padding: 10px !important;
+  }
   .refresh-main {
     right: 18px;
     top: 32px;
@@ -3843,9 +3922,6 @@ height: 50px !important;
     margin-bottom: 5px;
   }
 
-  .transaction-settings {
-    transform: translate(0%, 10vh);
-  }
   .runs-modal {
     transform: translate(0%, 10vh);
   }
@@ -3887,6 +3963,10 @@ height: 50px !important;
   
   .game-page .pre-summary-panel > div.public-bet-amount {
     background-size: 26px;
+  }
+
+  .game-page .game-contents .game-info-panel {
+    padding: 20px;
   }
   .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {
     display: flex;
@@ -3978,6 +4058,12 @@ height: 50px !important;
 @media (max-width: 480px) {
   #wallet-text {
     display: none;
+  }
+.result {
+  right: 2px;
+}
+  .lottie-progress {
+    width: 20px;
   }
 
  .spectate {

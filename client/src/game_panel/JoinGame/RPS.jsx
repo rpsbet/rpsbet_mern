@@ -12,17 +12,18 @@ import Avatar from '../../components/Avatar';
 import progress from '../LottieAnimations/progress.json';
 import PlayerModal from '../modal/PlayerModal';
 import pressHold from '../LottieAnimations/pressHold.json';
-
+import AiPanel from '../../components/AiPanel';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import { updateRoomBot, endGame } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRobot, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
+import { faRobot, faMoneyBillWave, faBrain } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
 import InfoIcon from '@material-ui/icons/Warning';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import {
   getRpsBetItems,
+  getRoomBotCount,
 } from '../../redux/Logic/logic.actions';
 import {
   Button,
@@ -160,9 +161,12 @@ class RPS extends Component {
       selected_rps: this.props.selected_rps,
       modalOpen: false,
       players: [],
+      botsCount: 0,
       intervalDuration: 500,
+      roomsCount: 0,
       startedPlaying: false,
       advanced_status: '',
+      status: this.props.roomInfo.status,
       cardDealt: false,
       bet_amount: 1,
       betResult: 0,
@@ -223,6 +227,9 @@ class RPS extends Component {
     document.addEventListener('keydown', this.handleKeyPress);
     this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
     this.setupSocket();
+
+    const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
+    this.setState({ botsCount: botsCount });
   }
 
   setupSocket() {
@@ -609,17 +616,26 @@ class RPS extends Component {
     });
   };
 
-
   handleBotClick = () => {
     const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } = this.props;
     if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
-      callBot(creator_id, roomInfo._id, user_id, isDarkMode, updateRoomBot);
+      callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
+        const botAttached = await updateRoomBot(roomInfo._id);
+        if (botAttached) {
+          this.setState(prevState => ({
+            botsCount: prevState.botsCount + 1
+          }));
+        }
+      });
     }
   }
-  handleEndClick = () => {
-    const { roomInfo, } = this.props;
+
+
+  handleEndClick = async () => {
+    const { roomInfo } = this.props;
     if (roomInfo.status !== 'finished') {
-      this.props.endGame(roomInfo._id)
+      await this.props.endGame(roomInfo._id);
+      this.setState({ status: 'finished' });
     } else {
       alertModal(
         this.props.isDarkMode,
@@ -752,9 +768,11 @@ class RPS extends Component {
       rps,
       productName,
       actionList,
+      botsCount,
       players,
       prev_rps,
       host_pr,
+      status,
       intervalDuration
     } = this.state;
     const {
@@ -768,13 +786,17 @@ class RPS extends Component {
       isMusicEnabled,
       handleClosePlayerModal,
       showPlayerModal,
-      youtubeUrl,
+      ai_mode,
+      balance,
+      betting,
+      is_betting,
+      predictedBetAmount,
       betResult,
       roomInfo,
       handleOpenPlayerModal,
       creator_avatar,
       rps_game_type,
-      gameBackground,
+      strategies,
       creator_id,
       user_id,
       isWatching,
@@ -831,7 +853,7 @@ class RPS extends Component {
                     <div>
                       <div className="label room-id">STATUS</div>
                     </div>
-                    <div className="value">{roomInfo.status}</div>
+                    <div className="value">{status}</div>
                   </div>
                   <div className="data-item">
                     <div>
@@ -848,40 +870,19 @@ class RPS extends Component {
                     <div>
                       <div className="label your-max-return">Your Return</div>
                     </div>
-                    <Tooltip title="Bet Amount x 2 (does not include fees)">
-
+                    <Tooltip title={<div>
+                      <span>EXPLANATION: </span>
+                      <p>2x your Bet Amount, then deduct Host(s)'s(') commission, if any, (which is Returned to Bankroll or RTB) and finally deduct 1% platform tax.</p>
+                      <span>CALCULATION: </span>
+                      <div>{convertToCurrency(this.state.bet_amount)} x 2  = {convertToCurrency(this.state.bet_amount * 2)}</div>
+                      <div>-({this.props.cp} + 1)% = {convertToCurrency(this.state.bet_amount * 2 * ((100 - (this.props.cp + 1)) / 100))}</div>
+                    </div>}>
                       <div className="value">
-                        {convertToCurrency(
-                          // updateDigitToPoint2(
-                          this.state.bet_amount * 2 /* * 0.95 */
-                          // )
-                        )}
+                        {convertToCurrency(this.state.bet_amount * 2 * ((100 - (this.props.cp + 1)) / 100))}
                       </div>
                     </Tooltip>
-                  </div>
-                  {this.props.rps_game_type === 0 && (
-                    <div className="data-item">
-                      <div>
-                        <div className="label win-chance">Commission</div>
-                      </div>
-                      <Tooltip title="Determined by the Host's equipped accessory">
 
-                        <div className="value">{this.props.cp}% </div>
-                      </Tooltip>
-                    </div>
-                  )}
-                  {this.props.endgame_type && (
-                    <div className="data-item">
-                      <div>
-                        <div className="label created">Auto-Payout</div>
-                      </div>
-                      <Tooltip title="Automatic dividends paid out to Hosts & CoHosts upon meeting the set payout threshold">
-                        <div className="payout-bar">
-                          <div className="value" style={barStyle}></div>
-                        </div>
-                      </Tooltip>
-                    </div>
-                  )}
+                  </div>
                   <div className="data-item">
                     <div>
                       <div className="label net-profit">Room Profit</div>
@@ -892,8 +893,6 @@ class RPS extends Component {
                           {convertToCurrency(
                             actionList.hostNetProfit?.slice(-1)[0]
                           )}
-                         
-
                             <ReactApexChart
                               className="bankroll-graph"
                               options={{
@@ -996,6 +995,30 @@ class RPS extends Component {
 
                     </div>
                   </div>
+                  {this.props.rps_game_type === 0 && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label win-chance">Commission</div>
+                      </div>
+                      <Tooltip title="Determined by the Host's equipped accessory">
+
+                        <div className="value">{this.props.cp}% </div>
+                      </Tooltip>
+                    </div>
+                  )}
+                  {this.props.endgame_type && (
+                    <div className="data-item">
+                      <div>
+                        <div className="label created">Auto-Payout</div>
+                      </div>
+                      <Tooltip title="Automatic dividends paid out to Hosts & CoHosts upon meeting the set payout threshold">
+                        <div className="payout-bar">
+                          <div className="value" style={barStyle}></div>
+                        </div>
+                      </Tooltip>
+                    </div>
+                  )}
+
                   <div className="data-item">
                     <div>
                       <div className="label host-display-name">Creator</div>
@@ -1126,7 +1149,7 @@ class RPS extends Component {
                   handleHalfXButtonClick={this.handleHalfXButtonClick}
                   handleMaxButtonClick={this.handleMaxButtonClick}
                   onChangeState={this.onChangeState}
-                  isDarkMode={this.props.isDarkMode}
+                  isDarkMode={isDarkMode}
                 />
 
               </div>
@@ -1172,7 +1195,7 @@ class RPS extends Component {
 
 
             </div>
-            {rps_game_type === 0 && (
+            {status === 'open' && rps_game_type === 0 ? (
               <>
                 <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
                   <IconButton className="spectate" onClick={this.handleSpectateMode}>
@@ -1206,7 +1229,7 @@ class RPS extends Component {
                         </>
                       ) : (
                         <>
-                          <span>thinking...</span>
+                          <span><FontAwesomeIcon icon={faBrain} />&nbsp;<span className='desktop-only'>thinking...</span></span>
                           {/* First Lottie Animation */}
                           <div className='lottie-progress'>
                             <Lottie
@@ -1216,7 +1239,7 @@ class RPS extends Component {
                                 animationData: progress
                               }}
                               style={{
-                                position: 'relative'
+                                position: 'relative',
                               }}
                             />
                           </div>
@@ -1312,47 +1335,70 @@ class RPS extends Component {
 
 
                   {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
-                      <div style={{ display: "flex", flexDirection: "row" }}>
-                        <Button
-                          onClick={this.handleBotClick}
-                          style={{
-                            borderRadius: "9px",
-                            marginTop: "1.6em",
-                            background: "#ccc",
-                            boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px",
-                            color: "#3e4554"
-                          }}
-                        >
-                          <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT?
-                        </Button>
-                        <Button
-                          onClick={this.handleEndClick} 
-                          style={{
-                            borderRadius: "9px",
-                            marginTop: "1.6em",
-                            background: "linear-gradient(45deg, #d81719, #950002)",
-                            boxShadow: "#d81719 0px 0px 4px inset",
-                            color: "#e9ecef"
-                          }}
-                        >
-                          <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faMoneyBillWave} />&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}
-                        </Button>
-                      </div>
+                    <div className='host-controls'>
+                      <Button
+                        onClick={this.handleBotClick}
+                        style={{
+                          borderRadius: "9px",
+                          marginTop: "1.6em",
+                          background: "#ccc",
+                          boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px",
+                          color: "#3e4554"
+                        }}
+                      >
+                        <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT? [{botsCount}]
+                      </Button>
+                      <Button
+                        onClick={this.handleEndClick}
+                        style={{
+                          borderRadius: "9px",
+                          marginTop: "1.6em",
+                          background: "linear-gradient(45deg, #d81719, #950002)",
+                          boxShadow: "#d81719 0px 0px 4px inset",
+                          color: "#e9ecef"
+                        }}
+                      >
+                        <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faMoneyBillWave} />&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}
+                      </Button>
+                    </div>
 
                   ) : (
-                    <BetAmountInput
-                      betAmount={this.state.bet_amount}
-                      handle2xButtonClick={this.handle2xButtonClick}
-                      handleHalfXButtonClick={this.handleHalfXButtonClick}
-                      handleMaxButtonClick={this.handleMaxButtonClick}
-                      onChangeState={this.onChangeState}
-                      isDarkMode={isDarkMode}
-                    />
+                    <>
+                      <BetAmountInput
+                        betAmount={this.state.bet_amount}
+                        handle2xButtonClick={this.handle2xButtonClick}
+                        handleHalfXButtonClick={this.handleHalfXButtonClick}
+                        handleMaxButtonClick={this.handleMaxButtonClick}
+                        onChangeState={this.onChangeState}
+                        isDarkMode={isDarkMode}
+                        balance={this.state.balance}
+                        bankroll={this.state.bankroll}
+                      />
+                      {this.props.is_mobile && (
+                        <AiPanel
+                          rpsbetitems={this.props.rpsbetitems}
+                          updateUserStrategy={this.props.updateUserStrategy}
+                          strategies={strategies}
+                          betting={betting}
+                          is_betting={is_betting}
+                          predictedBetAmount={predictedBetAmount}
+                          roomId={roomInfo._id}
+                          handleSwitchChange={this.props.handleSwitchChange}
+                          game_type={roomInfo.game_type}
+                          rank={this.props.rank}
+                          user_id={user_id}
+                          ai_mode={ai_mode}
+                          user_balance={balance}
+                        />
+                      )}
+                    </>
 
                   )}
                 </div>
               </>
 
+            ) : (
+              <span style={{ color: "#ff0000" }}>THIS GAME HAS ENDED</span>
             )}
           </div>
 
@@ -1390,7 +1436,8 @@ const mapDispatchToProps = {
   updateRoomBot,
   setSpectateMode,
   endGame,
-  getRpsBetItems
+  getRpsBetItems,
+  getRoomBotCount
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

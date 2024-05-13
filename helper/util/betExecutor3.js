@@ -514,18 +514,6 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
 
-                    newGameLogC = new GameLog({
-                        room: roomInfo,
-                        creator: roomInfo['creator'],
-                        joined_user: roomInfo['creator'],
-                        game_type: roomInfo['game_type'],
-                        bet_amount: roomInfo['host_pr'],
-                        user_bet: roomInfo['user_bet'],
-                        // is_anonymous: roomInfo['is_anonymous'],
-                        game_result: -100
-                    });
-
-                    saveDocumentWithRetry(newGameLogC);
                 }
             }
             // console.timeEnd('databaseQueries');

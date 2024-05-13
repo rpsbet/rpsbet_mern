@@ -336,7 +336,7 @@ class ProductTable extends Component {
     return (
       <MarketplaceContainer>
         {itemType === '653ee81117c9f5ee2124564b' && (
-          <img src={'/img/accessory-banner.svg'} />
+          <img id="marketplace-banner" src={'/img/accessory-banner.svg'} />
         )}
         <FilterSortContainer>
           <div className="filters">

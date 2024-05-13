@@ -860,9 +860,9 @@ class MyGamesTable extends Component {
                 <div className="table-cell winnings" style={{ paddingLeft: "40px" }}>Payout</div>
                 <div className="table-cell bet-info" style={{ paddingLeft: "10px" }}>Net Profit</div>
                 <div className="table-cell winnings">Plays</div>
-                <div className="table-cell winnings">Strategy</div>
+                <div className="table-cell winnings desktop-only">Strategy</div>
 
-                <div className="table-cell action desktop-only">Action</div>
+                <div className="table-cell action">Action</div>
               </div>
             )}
             {this.state.myGames.length === 0 ? (
@@ -902,7 +902,7 @@ class MyGamesTable extends Component {
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
                           {convertToCurrency(row.winnings)}
-                          <span style={{ fontSize: '10px' }}> ({(row.share)}%)</span>
+                          <span className='desktop-only' style={{ fontSize: '10px' }}> ({(row.share)}%)</span>
                         </span>
 
                         {selectedFilter === 'open' && (

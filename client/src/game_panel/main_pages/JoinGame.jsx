@@ -1245,9 +1245,12 @@ class JoinGame extends Component {
                     changeBgColor={this.changeBgColor}
                     bgColorChanged={bgColorChanged}
                     betting={betting}
+                    strategies={strategies}
                     result={result}
+                    ai_mode={ai_mode}
                     onChangeState={this.onChangeState}
                     cp={this.state.cp}
+                    is_mobile={this.state.is_mobile}
                     gameResult={this.state.gameResult}
                     rpsbetitems={this.props.rpsbetitems}
                     updateSelectedRps={this.updateSelectedRps}
@@ -1255,10 +1258,12 @@ class JoinGame extends Component {
                     refreshHistory={this.refreshHistory}
                     playSound={this.playSound}
                     join={this.join}
+                    handleSwitchChange={this.handleSwitchChange}
                     betResult={betResult}
                     roomInfo={roomInfo}
                     rps_game_type={roomInfo.rps_game_type}
                     user_id={user_id}
+                    rank={getRank(total_wagered)}
                     handleOpenPlayerModal={this.handleOpenPlayerModal}
                     handleClosePlayerModal={this.handleClosePlayerModal}
                     selectedCreator={selectedCreator}
@@ -1266,7 +1271,7 @@ class JoinGame extends Component {
                     creator_id={roomInfo.creator_id}
                     bet_amount={roomInfo.bet_amount}
                     user_bet={roomInfo.user_bet}
-                    // bankroll={bankroll}
+                    predictedBetAmount={predictedBetAmount}
                     rps_bet_item_id={roomInfo.rps_bet_item_id}
                     is_private={roomInfo.is_private}
                     youtubeUrl={roomInfo.youtubeUrl}
@@ -1486,7 +1491,9 @@ class JoinGame extends Component {
                     getRoomData={this.getRoomData}
                   />
                 )}
+                
               </div>
+              
             ) : (
               <LinearProgress color="secondary" />
             )}

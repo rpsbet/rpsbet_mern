@@ -44,6 +44,7 @@ const executeBet3 = require('../helper/util/betExecutor3');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
 let semaphore2 = 1;
 let semaphore3 = 1;
+const roomLocks = {};
 
 let user_access_log = {};
 router.get('/game_types', async (req, res) => {
@@ -136,42 +137,73 @@ router.patch('/strategies/:user_id', async (req, res) => {
 
 router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
+
   try {
+    
+    // Check if the room is locked by another request
+    if (roomLocks[room_id]) {
+      return res.status(409).json({ success: false, message: 'Room is currently being updated' });
+    }
+
+    // Lock the room
+    roomLocks[room_id] = true;
+
     // Check if the room exists
     const room = await Room.findById(room_id);
     if (!room) {
       console.log('Room not found');
+      delete roomLocks[room_id]; // Release the lock
       return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
+    if (room.status === 'finished') {
+      return res.json({
+        success: false,
+        already_finished: true,
+        message: 'THIS BATTLE HAS ENDED ALREADY'
+      });
+    }
     // Function to find a random bot
     const findRandomBot = async () => {
-      let botFound = false;
       let attempts = 0;
-      while (!botFound && attempts < 6) {
+      while (attempts < 6) { // Maximum number of attempts
         const randomBot = await User.aggregate([
           { $match: { username: { $regex: /BOT/i } } },
           { $sample: { size: 1 } }
         ]);
         const botId = randomBot[0]._id;
 
-        const existingRooms = await Room.find({ joiners: botId, status: 'open' });
-        if (existingRooms.length === 0) {
-          botFound = true;
+        if (!room.joiners.includes(botId)) {
+          // Bot is not already in the room
           return botId;
         }
         attempts++;
       }
       throw new Error('No available bots found');
     };
+
     // Find and attach a bot to the room
     const botId = await findRandomBot();
 
+    // Check if the bot is already in the room
+    if (room.joiners.includes(botId)) {
+      // Release the lock
+      delete roomLocks[room_id];
+      return res.status(400).json({
+        success: false,
+        message: 'Bot is already in the room'
+      });
+    }
+
+    // Update the room
     const updatedRoom = await Room.findByIdAndUpdate(
       room_id,
       { $push: { joiners: botId } },
       { new: true }
     );
+
+    // Release the lock
+    delete roomLocks[room_id];
 
     res.json({
       success: true,
@@ -180,6 +212,8 @@ router.patch('/rooms/:room_id', async (req, res) => {
     });
   } catch (err) {
     console.error('Error updating room:', err.message);
+    // Release the lock in case of error
+    delete roomLocks[room_id];
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -189,6 +223,48 @@ router.patch('/rooms/:room_id', async (req, res) => {
 });
 
 
+router.get('/rooms/:room_id/bots-count', async (req, res) => {
+  const { room_id } = req.params;
+  try {
+    // Check if the room exists
+    const room = await Room.findById(room_id);
+    if (!room) {
+      console.log('Room not found');
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    // Function to find the bots
+    const findBots = async () => {
+      const bots = await User.aggregate([
+        { $match: { username: { $regex: /BOT/i } } },
+        { $project: { _id: { $toString: '$_id' } } } // Convert _id to string
+      ]);
+      return bots.map(bot => bot._id); // Extracting only the _id of bots
+    };
+
+    // Find the bots and count them in the room
+    const botIds = await findBots();
+    const joinerIds = room.joiners.map(joiner => joiner.toString()); // Convert joiner _ids to strings
+    const botCount = joinerIds.reduce((count, joinerId) => {
+      if (botIds.includes(joinerId)) {
+        count++;
+      }
+      return count;
+    }, 0);
+
+    res.json({
+      success: true,
+      botCount
+    });
+  } catch (err) {
+    console.error('Error retrieving bot count:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message
+    });
+  }
+});
 
 
 
@@ -1440,8 +1516,8 @@ router.get('/my_games', auth, async (req, res) => {
 
 const getMyRooms = async (
   user_id,
-  pageSize,
-  game_type,
+  pageSize = 10,
+  game_type = 'All',
   status = 'open',
   sort = 'desc',
 ) => {
@@ -1451,7 +1527,6 @@ const getMyRooms = async (
       { 'hosts.host': user_id }
     ]
   };
-
 
   if (status) {
     search_condition.status = status;
@@ -1707,19 +1782,20 @@ router.post('/end_game', auth, async (req, res) => {
       room: roomId
     });
 
-    res.json({
-      success: true,
-      myGames: myRooms.rooms,
-      pageSize: myRooms.pageSize,
-      newTransaction: newTransactionC
-    });
-
     const rooms = await getRoomList(7, 'All');
 
     req.io.sockets.emit('UPDATED_ROOM_LIST', {
       total: rooms.count,
       roomList: rooms.rooms,
       pageSize: rooms.pageSize
+    });
+    console.log("5")
+
+    res.json({
+      success: true,
+      myGames: myRooms.rooms,
+      pageSize: myRooms.pageSize,
+      newTransaction: newTransactionC
     });
   } catch (err) {
     res.json({

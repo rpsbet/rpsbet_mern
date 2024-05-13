@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { renderLottieAnimation } from '../../util/LottieAnimations';
 import { acQueryMyItem } from '../../redux/Item/item.action';
-import { Button, TextField } from '@material-ui/core';
+import { Button, TextField, Tooltip } from '@material-ui/core';
+import { Info } from '@material-ui/icons';
 import styled from 'styled-components';
 import { setFocused } from '../../redux/Auth/user.actions.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -83,7 +84,13 @@ class AdvancedSettings extends Component {
       <div id="advanced_panel">
         {this.props.child_step === 1 && (
           <div className="game-privacy-panel game-info-panel">
-            <h3 className="game-sub-title">Privacy</h3>
+            <h3 className="game-sub-title">Privacy&nbsp;<Tooltip
+                        style={{ position: "absolute", right: "20px" }}
+                        title={'Set private to require players enter a password to play'}
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip></h3>
             <div className="radio-button-group bet-amounts">
               <Button
                 className={!this.props.is_private ? ' active' : ''}
@@ -128,13 +135,18 @@ class AdvancedSettings extends Component {
                 className={this.props.is_private === true ? '' : ' hidden'}
               />
             </div>
-            <p>Set to 'Private' to require a password to Join</p>
           </div>
         )}
 
         {this.props.child_step === 2 && (
           <div className="game-info-panel payout-info-panel">
-            <h3 className="game-sub-title">Payout</h3>
+            <h3 className="game-sub-title">Payout&nbsp;<Tooltip
+                        style={{ position: "absolute", right: "20px" }}
+                        title={'Choose Automatic to be paid into your balance each time the set threshold has been reached'}
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip></h3>
             <div className="select-buttons-panel bet-amounts">
               <Button
                 className={!this.props.endgame_type ? ' active' : ''}
@@ -212,7 +224,6 @@ class AdvancedSettings extends Component {
                 />
               </div>
             </div>
-            <p className="tip">AUTOMATIC PAYOUTS WHEN BANKROLL HITS VALUE</p>
           </div>
         )}
 
@@ -284,7 +295,13 @@ class AdvancedSettings extends Component {
         )} */}
         {this.props.child_step === 3 && (
           <div className="game-background-panel game-info-panel">
-            <h3 className="game-sub-title">Add Description?&nbsp;&nbsp;<FontAwesomeIcon icon={faPenSquare} /></h3>
+            <h3 className="game-sub-title">Add Description?&nbsp;<Tooltip
+                        style={{ position: "absolute", right: "20px" }}
+                        title={'Include a description to your game.'}
+                        placement="top"
+                      >
+                        <Info style={{ cursor: "pointer", float: "right" }} />
+                      </Tooltip></h3>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <TextField
                 label="Description"
@@ -299,12 +316,9 @@ class AdvancedSettings extends Component {
                 variant="filled"
                 
                 
-              />
+              />&nbsp;<FontAwesomeIcon icon={faPenSquare} />
            
             </div>
-            <p className="tip">
-                Include a description to your game.
-            </p>
           </div>
         )}
       </div>

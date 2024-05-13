@@ -168,7 +168,11 @@ button#recentSearches span {
   top: 38px !important;
 }
 
-.chat-player .lottie-container.cat div {
+.chat-player .lottie-container.cat div,
+.chat .lottie-container.cat div,
+.modal-body table .lottie-container.cat div,
+.chat-page .lottie-container.cat div,
+.notification-element .lottie-container.cat div {
   top: 10px !important;
   left: 12px !important;
 }
@@ -708,6 +712,10 @@ div.table .table-row .table-cell img.avatar,
     transform: translateY(-32px);
   }
 
+  .action-panel button span {
+    font-size: 0.75em;
+  }
+
   .table-cell.mobile-only .lottie-container.crown div {
     width: 15px !important;
     left: 17px;
@@ -737,11 +745,6 @@ div.table .table-row .table-cell img.avatar,
 
   .game_header .main_header {
     padding: 8px 16px;
-  }
-
-  div.table .table-row,
-  .table-header {
-    margin-right: unset;
   }
 
   div.table div.table-row div.table-cell button {

@@ -286,19 +286,20 @@ border-top: 2px solid #36393f;
 .dark_mode  div.table .table-row .table-cell button:last-child,
 .dark_mode .game_header .main_header .header_action_panel button#btn-login,
 .dark_mode #balance button,
-.dark_mode  .game-page .game-contents .game-info-panel button.place-bet,
-.dark_mode  .game-contents .game-info-panel button{
+.dark_mode  .game-page .game-contents .game-info-panel button.place-bet{
   background: linear-gradient(0deg, #d81719, #810000) padding-box,
     linear-gradient(0deg, #ff3b3b, #d81719) border-box;
   box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
     inset 0 2px #ff2525;
 }
 
-.dark_mode .strategy-btn {
+.dark_mode .strategy-btn,
+.dark_mode .spectate {
 	color: #f9f9f9 !important;
 	border-color: #f9f9f9 !important;
   }
-  .dark_mode  .strategy-btn:hover {
+  .dark_mode  .strategy-btn:hover,
+  .dark_mode .spectate:hover {
 	border-color: #f9f9f9 !important;
   }
 
@@ -670,10 +671,10 @@ color: #fff;
 	white-space: nowrap;
 }
 .dark_mode .chat-page {
-	background-color: #060607;
+	background: linear-gradient(45deg, #231526, transparent);
 }
 .dark_mode .chat-page .chat-header {
-	background-color: #060607;
+	background: linear-gradient(45deg, #19121f, transparent);
 	color: white;
 }
 .dark_mode .chat-page .chat-header button.btn-back {
@@ -681,11 +682,11 @@ color: #fff;
 	background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20.5 24L11.5 15.5L20.5 7' stroke='white' stroke-width='1.5' stroke-linecap='square'/%3E%3C/svg%3E%0A");
 }
 .dark_mode .chat-page .chat-input-panel {
-	background-color: #060607;
+	background-color: #343a40;
     border-top: 1px solid #111;
 }
 .dark_mode .chat-page .chat-input-panel .emoticon-panel {
-	background-color: #060607;
+	background-color: #2a2a2a;
 	box-shadow: 2px -2px #111;
 }
 .dark_mode .chat-page .chat-input-panel button.btn-show-emoticon {
