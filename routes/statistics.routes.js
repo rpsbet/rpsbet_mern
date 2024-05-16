@@ -587,6 +587,8 @@ router.get('/get-room-statistics', async (req, res) => {
       bets_values: player.bets_values
     }));
 
+    console.log(room_info)
+
     room_info.sort((a, b) => b.net_profit - a.net_profit);
 
     const hostNetProfit = calculateHostValues(room_info, 'net_profit_values', -1);

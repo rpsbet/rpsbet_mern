@@ -202,7 +202,7 @@ class MyGamesTable extends Component {
     } catch (e) {
       this.setState({ isLoading: false });
       if (this.state.amount <= 0) {
-        alertModal(this.props.isDarkMode, `Failed transaction.`);
+        alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
         return;
       }
     }
@@ -902,7 +902,7 @@ class MyGamesTable extends Component {
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
                           {convertToCurrency(row.winnings)}
-                          <span className='desktop-only' style={{ fontSize: '10px' }}> ({(row.share)}%)</span>
+                          <span className='desktop-only' style={{ fontSize: '10px' }}> ({((row.share).toFixed(2))}%)</span>
                         </span>
 
                         {selectedFilter === 'open' && (

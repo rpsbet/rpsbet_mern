@@ -334,7 +334,7 @@ class OpenGamesTable extends Component {
     } catch (e) {
       // this.setState({ isLoading: false });
       if (this.state.amount <= 0) {
-        alertModal(this.props.isDarkMode, `Failed transaction.`);
+        alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
         return;
       }
     }
@@ -605,7 +605,7 @@ class OpenGamesTable extends Component {
     } = this.state;
     const { isLowGraphics, isDarkMode, recentlyClosed } = this.props;
     let recent = recentlyClosed ? this.updateFromNow(recentlyClosed) : [];
-    
+
     return (
       <>
         <div className="overflowX">
@@ -964,54 +964,54 @@ class OpenGamesTable extends Component {
                     this
                   )}</>
               )}
-                 <div style={{display: "inline-flex", justifyContent:"center", alignItems:"center"}}>
+              <div style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
 
-<h2 class="main-title recently-closed-title" style={{paddingTop: "5px"}}>RECENTLY ENDED</h2> <Lottie style={{filter: 'grayscale(1)'}} options={defaultOptions} width={40} />
-</div>
-<div className='recently-closed'>
-  {recent?.map((row) => (
-    <div key={row._id} className="carousel-content table-row slide-in">
-      <a href={`/join/${row._id}`} className="table-cell">
-        <img
-          src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
-          alt=""
-          className="game-type-icon"
-        />
-        <div className="cell">
-          {row.game_type.game_type_name}
-        </div>
-        <div className="cell">{'-' + row.room_number}</div>
-      </a>
-      <div className="cell">
-        {row.status}&nbsp;{<FontAwesomeIcon icon={faHeartBroken} />}
-      </div>
-      <div className="cell">{row.from_now}&nbsp;{<FontAwesomeIcon icon={faStopwatch} />}</div>
-      <div className={"cell"}>
-        <span className={`${this.getColorClass(row.host_pr - row.bet_amount)}`}>{convertToCurrency(row.host_pr - row.bet_amount)}</span>
-      </div>
-      <a
-        href="#"
-        className="player"
-        onClick={() => this.handleOpenPlayerModal(row.creator._id)}
-      >
-        <Avatar
-          className="avatar"
-          src={row.creator.avatar}
-          accessory={row.creator.accessory}
-          rank={row.creator.totalWagered}
-          alt=""
-          darkMode={this.props.isDarkMode}
-        />
-        <i
-          className={`online-status${this.props.onlineUserList.filter((user) => user === row.creator._id).length > 0
-            ? ' online'
-            : ''
-            }`}
-        ></i>
-      </a>
-    </div>
-  ))}
-</div>
+                <h2 class="main-title recently-closed-title" style={{ paddingTop: "5px" }}>RECENTLY ENDED</h2> <Lottie style={{ filter: 'grayscale(1)' }} options={defaultOptions} width={40} />
+              </div>
+              <div className='recently-closed'>
+                {recent?.map((row) => (
+                  <div key={row._id} className="carousel-content table-row slide-in">
+                    <a href={`/join/${row._id}`} className="table-cell">
+                      <img
+                        src={`/img/gametype/icons/${row.game_type.short_name}.svg`}
+                        alt=""
+                        className="game-type-icon"
+                      />
+                      <div className="cell">
+                        {row.game_type.game_type_name}
+                      </div>
+                      <div className="cell">{'-' + row.room_number}</div>
+                    </a>
+                    <div className="cell">
+                      {row.status}&nbsp;{<FontAwesomeIcon icon={faHeartBroken} />}
+                    </div>
+                    <div className="cell">{row.from_now}&nbsp;{<FontAwesomeIcon icon={faStopwatch} />}</div>
+                    <div className={"cell"}>
+                      <span className={`${this.getColorClass(row.host_pr - row.bet_amount)}`}>{convertToCurrency(row.host_pr - row.bet_amount)}</span>
+                    </div>
+                    <a
+                      href="#"
+                      className="player"
+                      onClick={() => this.handleOpenPlayerModal(row.creator._id)}
+                    >
+                      <Avatar
+                        className="avatar"
+                        src={row.creator.avatar}
+                        accessory={row.creator.accessory}
+                        rank={row.creator.totalWagered}
+                        alt=""
+                        darkMode={this.props.isDarkMode}
+                      />
+                      <i
+                        className={`online-status${this.props.onlineUserList.filter((user) => user === row.creator._id).length > 0
+                          ? ' online'
+                          : ''
+                          }`}
+                      ></i>
+                    </a>
+                  </div>
+                ))}
+              </div>
             </>
 
           )}
@@ -1024,7 +1024,7 @@ class OpenGamesTable extends Component {
 
             </>
           )}
-       
+
 
         </div>
 

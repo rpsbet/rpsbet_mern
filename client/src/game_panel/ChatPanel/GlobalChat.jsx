@@ -9,7 +9,6 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 import Avatar from '../../components/Avatar';
 import {
   fetchId,
-  acGetCustomerInfo
 } from '../../redux/Customer/customer.action';
 
 class GlobalChat extends Component {
@@ -361,7 +360,6 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  acGetCustomerInfo,
   fetchId
 };
 

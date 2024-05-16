@@ -1789,7 +1789,6 @@ router.post('/end_game', auth, async (req, res) => {
       roomList: rooms.rooms,
       pageSize: rooms.pageSize
     });
-    console.log("5")
 
     res.json({
       success: true,
@@ -2175,7 +2174,6 @@ router.get('/get_spleesh_guesses', async (req, res) => {
 });
 
 router.get('/get_bang_guess', async (req, res) => {
-  // console.log("called ")
   try {
     const room = req.query.roomId;
     const recentBangs = await BangBetItem.find({ room: room.roomId })

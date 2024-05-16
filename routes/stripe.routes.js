@@ -14,7 +14,15 @@ const { JsonRpcProvider } = require('@ethersproject/providers');
 const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/5fedb9ded8fd4b149026d0140baacf98');
 const walletKey = process.env.wk;
 const API_KEY = 'ZBZK3XM-QNHM89H-MKXVFCD-TV6MW1N';
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzMTk0OTk5MTUiLCJzZXNzaW9uSWQiOiI2NzMyNDAiLCJpYXQiOjE3MTU2OTU4ODksImV4cCI6MTcxNTczOTA4OX0.faHXOAp9gmuaWnkHrTMfwGPTvLyQgmL8D24je4tpe_4'
 
+
+async function getWalletBalance(signer) {
+  const walletAddress = await signer.getAddress();
+  const balance = await signer.provider.getBalance(walletAddress);
+  const balanceInEther = ethers.utils.formatEther(balance);
+  return balanceInEther;
+}
 
 // **************************************** //
 // ************ GLOBAL FUNCTIONS ********** //
@@ -42,34 +50,17 @@ async function calculateRemainingLoans(currentUser) {
 
 router.get('/estimate_amount', auth, async (req, res) => {
   try {
-    // Extract payment details from query parameters
     const { web2Amount, currencyTo } = req.query;
-    // Make GET request to NowPayments API to estimate amount
-    const response = await axios.get(`https://api.nowpayments.io/v1/estimate`, {
-      params: {
-        amount: web2Amount,
-        currency_from: 'usd',
-        currency_to: currencyTo,
-      },
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    // Extract estimated amount from response
-    const estimatedAmount = response.data;
-
-    // Send estimated amount as JSON response
+    const estimatedAmount = await estimateAmount(web2Amount, currencyTo);
     res.json(estimatedAmount);
   } catch (error) {
-    console.error('Error estimating amount: ', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to estimate amount.',
+      message: error.message,
     });
   }
 });
+
 
 
 router.post('/validate_address', auth, async (req, res) => {
@@ -162,7 +153,6 @@ router.get('/get_currencies', async (req, res) => {
 // DEPOSIT
 router.post('/create_payment', auth, async (req, res) => {
   try {
-
     // Extract payment details from request body
     const { price_amount, payment_id, user_id } = req.body;
     if (payment_id !== null) {
@@ -170,7 +160,7 @@ router.post('/create_payment', auth, async (req, res) => {
       const usedTransactions = await Transaction.find({
         hash: payment_id,
       });
-      
+
       if (usedTransactions.length > 0) {
         return res.status(400).send('Transaction has already been used');
       }
@@ -187,15 +177,6 @@ router.post('/create_payment', auth, async (req, res) => {
 
     await newTransaction.save();
 
-    const receipt = new Receipt({
-      user_id: user_id,
-      payment_method: 'Web2',
-      payment_type: 'Deposit',
-      amount: calculateAmount(price_amount),
-    });
-
-    await receipt.save();
-
     res.json({
       success: true,
       message: `Please wait for confirmations.<br /> You can view the status in your 'All Transactions' history.`,
@@ -210,17 +191,20 @@ router.post('/create_payment', auth, async (req, res) => {
 });
 
 function calculateAmount(price_amount) {
+  return price_amount / 0.59523;
+}
+function calculateAmountWeb3(price_amount) {
   switch (price_amount) {
     case 10:
-      return 14.28;
+      return price_amount / 0.59523 + 0.589;
     case 25:
-      return 42.71;
+      return price_amount / 0.59523 + (2 * 0.589);
     case 50:
-      return 85.42;
+      return price_amount / 0.59523 + (3 * 0.589);
     case 100:
-      return 163.85;
+      return price_amount / 0.59523 + (4 * 0.589);
     case 250:
-      return 385.14;
+      return price_amount / 0.59523 + (5 * 0.589);
     default:
       return 0; // Or handle invalid price_amount accordingly
   }
@@ -260,33 +244,61 @@ router.post('/generate_address', auth, async (req, res) => {
   }
 });
 
-// WITHDRAWAL
-router.post('/create_payout', auth, async (req, res) => {
+router.post('/get_price', auth, async (req, res) => {
   try {
     // Extract payment details from request body
-    const { address, currency, amount, extra_id, user_id } = req.body;
+    const { web2Amount, currencyTo } = req.body;
+
+    // Make GET request to NowPayments API to get estimated price
+    const response = await axios.get(`https://api.nowpayments.io/v1/estimate?amount=${web2Amount}&currency_from=usd&currency_to=${currencyTo}`, {
+      headers: {
+        'x-api-key': API_KEY,
+      },
+    });
+
+    // Extract estimated price data from response
+    const estimatedPriceData = response.data;
+
+    res.json(estimatedPriceData);
+  } catch (error) {
+    console.error('Error getting estimated price:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while getting estimated price',
+    });
+  }
+});
+
+// WITHDRAWAL WEB2
+router.post('/create_payout', auth, async (req, res) => {
+  try {
+    const { amount, currency, address, extra_id } = req.body;
     const balance = req.user.balance;
     const withdrawalLimit = req.user.dailyWithdrawals;
-    if (balance < req.body.amount) {
+
+    if (balance < amount) {
       return res.json({
         success: false,
         message: 'INSUFFICIENT FUNDS'
       });
     }
-    if (withdrawalLimit > 0.02) {
+
+    if (withdrawalLimit >= 100) {
       console.log("Exceeded Daily Withdrawal Limit", req.user);
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
-    if (req.body.amount > 0.02) {
+
+    if (amount > 100) {
       console.log("Large amount", req.user);
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 0.02 Eth per transaction'
+        message: 'Maximum Withdrawal Amount is 100 RPS per DAY during Launch'
       });
     }
+
     const remainingLoanAmount = await calculateRemainingLoans(req.user);
     if (remainingLoanAmount > 0) {
       return res.json({
@@ -296,28 +308,65 @@ router.post('/create_payout', auth, async (req, res) => {
     }
 
     const newTransaction = new Transaction({
-      user: user_id,
+      user: req.user._id,
       address: address,
       amount: amount,
-      description: 'withdrawal',
-      currency: currency,
-      hash: id,
-      extra_id: extra_id
+      description: 'withdraw',
+      status: 'completed',
+      hash: '',
     });
 
-    // Mark the transaction as pending (to be confirmed by the cron job)
-    newTransaction.status = 'waiting';
-
-    await newTransaction.save();
-
     const receipt = new Receipt({
-      user_id: user_id,
+      user_id: req.user._id,
       payment_method: 'Web2',
       payment_type: 'Withdrawal',
       amount: amount,
     });
 
+    req.user.balance -= amount;
+
+    try {
+      await req.user.save();
+    } catch (saveError) {
+      console.error('Failed to save user balance:', saveError);
+      return res.json({
+        success: false,
+        message: 'Failed to save user balance'
+      });
+    }
+    console.log("address", address)
+    const payload = {
+      ipn_callback_url: 'https://nowpayments.io', // You may adjust this as needed
+      withdrawals: [
+        {
+          address: address,
+          currency: currency,
+          amount: parseFloat((amount * 0.58).toFixed(4)),
+          ipn_callback_url: 'https://nowpayments.io' // You may adjust this as needed
+        }
+      ]
+    };
+
+
+    const response = await axios.post('https://api.nowpayments.io/v1/payout', payload, {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'x-api-key': API_KEY,
+        'Content-Type': 'application/json',
+      },
+    });
+    const paymentStatus = response.data.payment_status;
+    console.log("paymentStatus", paymentStatus)
+    if (paymentStatus === 'WAITING') {
+
+      const transaction = await Transaction.findById(newTransaction._id);
+      transaction.status = 'completed';
+      transaction.hash = response.data.payment_id;
+
+      console.log('Withdrawal transaction processed successfully.');
+    }
     await receipt.save();
+    await transaction.save();
 
     res.json({
       success: true,
@@ -340,7 +389,7 @@ router.post('/create_payout', auth, async (req, res) => {
 
 router.post('/deposit_successed', auth, async (req, res) => {
   try {
-    const { amount, txtHash } = req.body;
+    const { amount, price_amount, txtHash } = req.body;
 
     // Validate the input
     if (!amount || !txtHash) {
@@ -363,20 +412,23 @@ router.post('/deposit_successed', auth, async (req, res) => {
     if (!tx || !tx.blockNumber) {
       return res.status(404).send('Transaction not found or not confirmed');
     }
+    console.log("tx", tx);
 
     // Check if the transaction matches with the amount and the addresses
     const signer = new ethers.Wallet(walletKey, provider);
-    const wamount = ethers.utils.parseUnits(amount, 'ether');
+    const wamount = ethers.utils.parseUnits(amount.toString(), 'ether');
+    console.log("signer", signer);
 
     if (Number(tx.value) != Number(wamount) || tx.to !== signer.address) {
       return res.status(400).send('Transaction does not match with input');
     }
-
+    console.log("wamount", wamount);
+    const rpsAmount = calculateAmountWeb3(price_amount)
     // The cron job will periodically check for confirmations and update the balance
     // No need to update the balance here
     const newTransaction = new Transaction({
       user: req.user._id,
-      amount: req.body.amount,
+      amount: rpsAmount,
       description: 'deposit',
       hash: txtHash,
     });
@@ -390,14 +442,14 @@ router.post('/deposit_successed', auth, async (req, res) => {
       user_id: req.user._id,
       payment_method: 'Web3',
       payment_type: 'Deposit',
-      amount: req.body.amount,
+      amount: rpsAmount,
     });
 
     await receipt.save();
 
     res.json({
       success: true,
-      balance: req.user.balance + req.body.amount,
+      balance: req.user.balance + rpsAmount,
       newTransaction,
       message: `Deposit received! Please wait for confirmations.<br />View transaction details <a href="https://etherscan.io/tx/${txtHash}" target="_blank">here</a>.`,
     });
@@ -421,28 +473,18 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'INSUFFICIENT FUNDS'
       });
     }
-    if (withdrawalLimit > 0.02) {
+    if (withdrawalLimit > 100) {
       console.log("Exceeded Daily Withdrawal Limit", req.user);
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
       });
     }
-    if (req.body.amount > 0.02) {
+    if (req.body.amount > 100) {
       console.log("Large amount", req.user);
       return res.json({
         success: false,
-        message: 'Maximum Withdrawal Amount is 0.02 Eth per transaction'
-      });
-    }
-
-    // Check if the "to" address is provided and starts with "0x"
-    const toAddress = req.body.addressTo;
-    if (!toAddress || !toAddress.startsWith('0x')) {
-      console.log("Invalid 'to' address");
-      return res.json({
-        success: false,
-        message: "No wallet connected / wrong network."
+        message: 'Maximum Withdrawal Amount is 100 RPS per DAY during Launch'
       });
     }
 
@@ -453,45 +495,140 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'EXISTING LOANS, CANNOT WITHDRAW'
       });
     }
+
+    const toAddress = req.body.addressTo;
+    if (!toAddress || !toAddress.startsWith('0x')) {
+      console.log("Invalid 'to' address");
+      return res.json({
+        success: false,
+        message: "No wallet connected / wrong network."
+      });
+    }
+
+    const signer = new ethers.Wallet(walletKey, provider);
+    try {
+      const estimatedAmount = await estimateAmount((req.body.amount * 0.589), 'eth');
+      const amountTransfer = ethers.utils.parseUnits(String(estimatedAmount.estimated_amount), 'ether');
+      console.log("amountTransfer", amountTransfer)
+      const block = await provider.getBlock('latest');
+      const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei');
+      const priorityFeeGwei = '2.5';
+      const gasLimit = await provider.estimateGas({
+        to: req.body.addressTo,
+        value: amountTransfer
+      });
+
+      // Calculate gas fee in wei
+      const gasPrice = ethers.utils.parseUnits(baseFeeGwei, 'gwei')
+        .add(ethers.utils.parseUnits(priorityFeeGwei, 'gwei'));
+      const gasFee = gasPrice.mul(gasLimit);
+      const balanceInEther = await getWalletBalance(signer);
+      const balanceWei = ethers.utils.parseEther(balanceInEther);
+      // Subtract gas fee from balance in wei
+      const differenceWei = balanceWei.sub(gasFee);
+      // console.log("Balance in Wei:", balanceWei.toString());
+      // console.log("Gas Fee in Wei:", gasFee.toString());
+      // console.log("Difference in Wei:", differenceWei.toString());
+      if (differenceWei.lt(0)) {
+        console.log("Insufficient funds to cover gas fee");
+        return res.json({
+          success: false,
+          message: 'Insufficient funds to cover gas fee'
+        });
+      }
+
+      const real = amountTransfer.sub(gasFee);
+      const realEth = ethers.utils.formatEther(real);
+
+      console.log("Sending transaction...", real);
+
+      req.user.balance = req.user.balance - req.body.amount;
+
+      try {
+        await req.user.save();
+      } catch (saveError) {
+        console.error('Failed to save user balance:', saveError);
+        return res.json({
+          success: false,
+          message: 'Failed to save user balance'
+        });
+      }
+
+      tx = await signer.sendTransaction({
+        to: req.body.addressTo,
+        value: real,
+        gasLimit: ethers.utils.hexlify(gasLimit),
+        gasPrice: ethers.utils.hexlify(gasPrice)
+      });
+
+      console.log("Transaction hash:", tx.hash);
+
+      const receipt = await tx.wait();
+
+      console.log("Transaction mined in block:", receipt.blockNumber);
+
+    } catch (e) {
+      console.log(e);
+      return res.json({
+        success: false,
+        message: 'Failed in sending transaction'
+      });
+    }
+
     const receipt = new Receipt({
       user_id: req.user._id,
       payment_method: 'Web3',
       payment_type: 'Withdraw',
       amount: req.body.amount,
     });
+
     await receipt.save();
-
-
-    // console.log("User's balance:", req.user.balance);
-    // console.log("Requested withdrawal amount:", req.body.amount);
-
-    // console.log("Calculating gas fees...");
-
     const newTransaction = new Transaction({
       user: req.user,
       amount: -req.body.amount,
       description: 'withdraw',
-      status: 'pending',  // Mark the transaction as pending
+      status: 'completed',
       hash: tx.hash
     });
 
-    // Save the transaction as pending
-    await newTransaction.save();
+    // req.user.balance = await getWalletBalance(signer);
 
+    await newTransaction.save();
     return res.json({
       success: true,
-      balance: req.user.balance - req.body.amount,
+      balance: req.user.balance,
       newTransaction,
       message: `Withdrawal request received and is pending confirmation. 🤑 Much Wow.<br /> View the transaction details on the blockchain using this <a href="https://etherscan.io/tx/${tx.hash}" target="_blank">transaction link</a>.`
     });
   } catch (e) {
-    console.log('ERROR in withdraw_request', e);
+    console.log('ERROR in withdraw send transaction', e);
     return res.json({
       success: false,
       message: 'Failed to initiate withdrawal'
     });
   }
 });
+
+async function estimateAmount(web2Amount, currencyTo) {
+  try {
+    const response = await axios.get(`https://api.nowpayments.io/v1/estimate`, {
+      params: {
+        amount: web2Amount,
+        currency_from: 'usd',
+        currency_to: currencyTo,
+      },
+      headers: {
+        'x-api-key': API_KEY,
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error estimating amount: ', error);
+    throw new Error('Failed to estimate amount.');
+  }
+}
+
 
 router.post('/get_gasfee', auth, async (req, res) => {
   // console.log("Qd", process.env)

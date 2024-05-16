@@ -281,8 +281,9 @@ router.post('/trade', auth, async (req, res) => {
 // /api/accessory
 router.post('/accessory', auth, async (req, res) => {
   try {
-    const { _id } = req.body;
+    const _id = req.body._id;
     const user = await User.findOne({ _id: _id }).select('accessory');
+
     if (!user) {
       return res.json({
         success: false,

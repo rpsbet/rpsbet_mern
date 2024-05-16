@@ -11,6 +11,7 @@ const moment = require('moment');
 const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
 const admin = require('../middleware/admin');
+const socket = require('../socketController');
 
 // User Model
 const User = require('../model/User');
@@ -119,7 +120,7 @@ router.post('/', async (req, res) => {
         error: 'USERNAME CONTAINS RESERVED WORDS'
       });
     }
-    
+
     // Validate reCAPTCHA
     const secretKey = '6Lfto1EpAAAAAEOO1gb-uSsqMmkVDjcoJRHClm28';
     const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
@@ -199,7 +200,7 @@ router.post('/', async (req, res) => {
       bio,
       totalWagered: 0,
       balance: 0,
-      rewards: 0,
+      rewards: [],
       credit_score: 1000,
       ai_mode: 'Markov',
       status: 'off',
@@ -221,21 +222,24 @@ router.post('/', async (req, res) => {
 
         // If there is a referral owner, send notification to reffal owner
         if (referralOwner) {
+          referralOwner.rewards.push({ user: newUser._id, amount: 0 });
+          await referralOwner.save();
+
           const notificationData = {
-            _id: req.user._id,
-            message: message,
-            username: req.user.username,
-            avatar: req.user.avatar,
-            accessory: req.user.accessory,
-            room: room._id,
-            rank: req.user.totalWagered,
+            _id: newUser._id,
+            message: `Thanks for referring me! You will now receive 5% from my deposits.`,
+            username: newUser.username,
+            avatar: newUser.avatar,
+            accessory: '',
+            room: '',
+            rank: 0,
             created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
             created_at_str: moment(new Date()).format('LLL'),
             updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
             is_read: false
           };
 
-          socket.sendNotification(referralOwner, notificationData);
+          socket.sendNotification(referralOwner._id, notificationData);
 
         }
 
@@ -364,6 +368,7 @@ router.post('/username', auth, async (req, res) => {
 router.post('/get-info', async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.body._id });
+    console.log(user)
     res.json({
       success: true,
       query: req.query,

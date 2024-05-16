@@ -181,16 +181,6 @@ class JoinGame extends Component {
     }
   }
 
-  // async getRoomData(roomId) {
-  //   try {
-  //     const actionList = await this.props.getRoomStatisticsData(roomId, 30);
-  //     this.setState({
-  //       actionList
-  //     });
-  //   } catch (error) {
-  //     console.error('Error fetching room data:', error);
-  //   }
-  // }
 
   async loadSounds() {
     await Promise.all(

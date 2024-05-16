@@ -18,6 +18,7 @@ const initialState = {
   totalResults: 0,
   lastQuery: null,
   pages: 1,
+  actionList: [],
   loading: false,
   roomStatsLoaded: false,
   locationInfo: null,
@@ -36,13 +37,13 @@ export default (state = initialState, { type, payload }) => {
         totalResults: payload.total,
         pages: payload.pages
       };
-      case LOADING_LEADERBOARDS_TABLE:
+    case LOADING_LEADERBOARDS_TABLE:
       return { ...state, loading: payload };
-      case LOAD_LEADERBOARDS:
-        return {
-          ...state,
-          leaderboards: payload.leaderboards
-        };
+    case LOAD_LEADERBOARDS:
+      return {
+        ...state,
+        leaderboards: payload.leaderboards
+      };
     case ACTIVITY_QUERY:
       return {
         ...state,
@@ -57,7 +58,10 @@ export default (state = initialState, { type, payload }) => {
     case LOADING_CUSTOMER_TABLE:
       return { ...state, loading: payload };
     case ROOM_STATISTICS_LOADED:
-      return { ...state, roomStatsLoaded: payload };
+      return {
+        ...state, actionList: payload,
+        roomStatsLoaded: true
+      };
     case ADD_MAIN_INFO:
       return { ...state, locationInfo: payload };
     default:

@@ -177,8 +177,7 @@ class TabbedContent extends Component {
             <div className="room-leaderboards-panel">
               <h2 className="room-history-title">Leaderboards</h2>
 
-              <Leaderboards
-                actionList={this.props.actionList}
+              <Leaderboards roomId={roomInfo._id}
               />
             </div>
           )}

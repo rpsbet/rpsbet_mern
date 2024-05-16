@@ -18,13 +18,13 @@ import {
   Typography,
   IconButton,
   Modal,
-  TextField,  
+  TextField,
   Slider,
   Table, TableHead, TableBody, TableRow, TableCell
 } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { convertToCurrency } from '../util/conversion';
 import { faTrash, faToggleOn, faBrain, faBan, faClock, faRobot, faCoins, faToggleOff } from '@fortawesome/free-solid-svg-icons';
+import { convertToCurrency } from '../util/conversion';
 import ApexChart from "react-apexcharts";
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import TableChartOutlinedIcon from '@material-ui/icons/TableChartOutlined';
@@ -169,8 +169,8 @@ function BetArray({
       // Trigger action when is_betting changes from true to false
       getRpsBetItems(room_id); // Assuming room_id is available here
     }
-  
-    
+
+
     // Update previous value of is_betting
     prevIsBettingRef.current = is_betting;
   }, [is_betting, getRpsBetItems, room_id]);
@@ -333,18 +333,15 @@ function BetArray({
 
   // Function to handle updating cell data
   // Example of calling the action
-const handleUpdateCellData = async () => {
-  try {
-    const res = await updateRpsBetItems(selectedRow._id, selectedCell, editedValue);
-    if (res.success) {
-      console.log('RpsBetItems updated successfully:', res.message);
+  const handleUpdateCellData = async () => {
+    try {
+      await updateRpsBetItems(selectedRow._id, selectedCell, editedValue);
+    } catch (err) {
+      console.error('Failed to update RpsBetItems:', err.message);
     }
-  } catch (err) {
-    console.error('Failed to update RpsBetItems:', err.message);
-  }
 
-  setOpenModal(false);
-};
+    setOpenModal(false);
+  };
 
 
   const formatProfit = (profit) => {
@@ -578,94 +575,94 @@ const handleUpdateCellData = async () => {
                 />
 
                 <div className="gamified-content">
-                
-                {filteredArray.length > 0 ? (
-        <>
-          <Table>
-            <TableHead>
-              <TableRow className={classes.tableHeader}>
-                <TableCell>BET</TableCell>
-                <TableCell>HOST</TableCell>
-                <TableCell>YOU</TableCell>
-              </TableRow>
-            </TableHead>
-          </Table>
-          <div className={classes.tableContainer}>
-            <Table className={classes.table}>
-              <TableBody>
-                {filteredArray.map((item, index) => (
-                  <TableRow 
-                  key={index} 
-                  className={classes.tableRow} 
-                  onMouseEnter={() => setHoveredIndex(index)} 
-                  onMouseLeave={() => setHoveredIndex(null)}
-                >
-                    <TableCell 
-                      onClick={() => handleCellClick(item, index, 'bet_amount')} 
-                      className={classes.cell}>
-                      <div className={classes.cellContent}>
-                        {convertToCurrency(item.bet_amount)}
-                        {hoveredIndex === index && (
-                <IconButton className={classes.editIcon} size="small">
-                  <EditIcon />
-                </IconButton>
-              )}
+
+                  {filteredArray.length > 0 ? (
+                    <>
+                      <Table>
+                        <TableHead>
+                          <TableRow className={classes.tableHeader}>
+                            <TableCell>BET</TableCell>
+                            <TableCell>HOST</TableCell>
+                            <TableCell>YOU</TableCell>
+                          </TableRow>
+                        </TableHead>
+                      </Table>
+                      <div className={classes.tableContainer}>
+                        <Table className={classes.table}>
+                          <TableBody>
+                            {filteredArray.map((item, index) => (
+                              <TableRow
+                                key={index}
+                                className={classes.tableRow}
+                                onMouseEnter={() => setHoveredIndex(index)}
+                                onMouseLeave={() => setHoveredIndex(null)}
+                              >
+                                <TableCell
+                                  onClick={() => handleCellClick(item, index, 'bet_amount')}
+                                  className={classes.cell}>
+                                  <div className={classes.cellContent}>
+                                    {convertToCurrency(item.bet_amount)}
+                                    {hoveredIndex === index && (
+                                      <IconButton className={classes.editIcon} size="small">
+                                        <EditIcon />
+                                      </IconButton>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell
+                                  onClick={() => handleCellClick(item, index, 'rps')}
+                                  className={classes.cell}>
+                                  <div className={classes.cellContent}>
+                                    {item.rps}
+                                    {hoveredIndex === index && (
+                                      <IconButton className={classes.editIcon} size="small">
+                                        <EditIcon />
+                                      </IconButton>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell
+                                  onClick={() => handleCellClick(item, index, 'joiner_rps')}
+                                  className={classes.cell}>
+                                  <div className={classes.cellContent}>
+                                    {item.joiner_rps}
+                                    {hoveredIndex === index && (
+                                      <IconButton className={classes.editIcon} size="small">
+                                        <EditIcon />
+                                      </IconButton>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
-                    </TableCell>
-                    <TableCell 
-                      onClick={() => handleCellClick(item, index, 'rps')} 
-                      className={classes.cell}>
-                      <div className={classes.cellContent}>
-                        {item.rps}
-                        {hoveredIndex === index && (
-                <IconButton className={classes.editIcon} size="small">
-                  <EditIcon />
-                </IconButton>
-              )}
-                      </div>
-                    </TableCell>
-                    <TableCell 
-                      onClick={() => handleCellClick(item, index, 'joiner_rps')} 
-                      className={classes.cell}>
-                      <div className={classes.cellContent}>
-                        {item.joiner_rps}
-                        {hoveredIndex === index && (
-                <IconButton className={classes.editIcon} size="small">
-                  <EditIcon />
-                </IconButton>
-              )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </>
-      ) : (
-        <Typography variant="body1" className={classes.noDataMsg}>
-          Play normally to train the AP
-        </Typography>
-      )}
-      
-      {/* Popup modal for editing cell data */}
-      <Modal open={openModal} onClose={handleCloseModal} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className={classes.modalContainer}>
-          <div className={classes.modal} style={{ background: '#f0f0f0', padding: '20px', borderRadius: '5px' }}>
-            <Typography variant="h6" gutterBottom>{modalTitle}</Typography>
-            {/* <Typography variant="body1" className={classes.placeholder}>
+                    </>
+                  ) : (
+                    <Typography variant="body1" className={classes.noDataMsg}>
+                      Play normally to train the AP
+                    </Typography>
+                  )}
+
+                  {/* Popup modal for editing cell data */}
+                  <Modal open={openModal} onClose={handleCloseModal} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className={classes.modalContainer}>
+                      <div className={classes.modal} style={{ background: '#f0f0f0', padding: '20px', borderRadius: '5px' }}>
+                        <Typography variant="h6" gutterBottom>{modalTitle}</Typography>
+                        {/* <Typography variant="body1" className={classes.placeholder}>
               {selectedRow ? selectedRow[selectedCell] : ''}
             </Typography> */}
-            <TextField
-              label="EDIT VALUE"
-              value={editedValue}
-              onChange={(e) => setEditedValue(e.target.value)}
-            />
-            <Button variant="contained" color="primary" onClick={handleUpdateCellData}>Update</Button>
-          </div>
-        </div>
-      </Modal>
+                        <TextField
+                          label="EDIT VALUE"
+                          value={editedValue}
+                          onChange={(e) => setEditedValue(e.target.value)}
+                        />
+                        <Button variant="contained" color="primary" onClick={handleUpdateCellData}>Update</Button>
+                      </div>
+                    </div>
+                  </Modal>
                 </div>
               </Grid>
             </div>

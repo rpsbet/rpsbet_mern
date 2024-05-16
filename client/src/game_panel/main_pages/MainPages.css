@@ -2982,7 +2982,7 @@ position: sticky !important;
   top: -7px;
   right: 22px;
   display: flex;
-  width: 120px;
+  width: 130px;
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -3022,11 +3022,6 @@ position: sticky !important;
   100% {
     transform: scale(1); /* Back to initial scale */
   }
-}
-
-
-.result .lottie-progress.hide {
- display: none;
 }
 
 .brain-game-play-panel .play-panel-header .timer .timer-footer2 {
@@ -3775,6 +3770,7 @@ position: sticky !important;
   }
 }
 @media (max-width: 400px) {
+  
   .host-controls {
     flex-direction: column;
   }
@@ -4060,7 +4056,7 @@ height: 50px !important;
     display: none;
   }
 .result {
-  right: 2px;
+  right: 0px;
 }
   .lottie-progress {
     width: 20px;

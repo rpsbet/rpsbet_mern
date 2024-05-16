@@ -583,6 +583,7 @@ export const confirmLoan = data => async dispatch => {
 export const fetchAccessory = data => async dispatch => {
   try {
     dispatch({ type: START_LOADING });
+    console.log("calede", data)
     const res = await axios.post('/item/accessory', data);
     if (res.data.success) {
       // dispatch({ type: FETCH_ACCESSORY_SUCCESS, payload: res.data });

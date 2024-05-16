@@ -985,7 +985,7 @@ class SiteWrapper extends Component {
     const numDecimals = decimalIndex !== -1 ? Math.min(2, balanceString.length - decimalIndex - 1) : 0;
 
     const notificationsArray = updateFromNow(Object.values(notifications));
-    const valentinesDay = new Date(`${new Date().getFullYear()}-02-14T00:00:00`);
+    const valentinesDay = new Date(`${new Date().getFullYear()}-05-19T00:00:00`);
     const currentDate = new Date();
     const timeRemaining = valentinesDay - currentDate;
     const unreadNotificationsCount = notifications.filter(notification => !notification.is_read).length;
@@ -994,7 +994,7 @@ class SiteWrapper extends Component {
     this.secondsRemaining = Math.floor(timeRemaining / 1000);
     return (
       <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
-        {isLive ? (
+        {!isLive ? (
           <>
             <div className="coming-home-screen" style={{ textAlign: 'center', padding: '50px' }}>
               <img style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
@@ -1055,14 +1055,14 @@ class SiteWrapper extends Component {
                   />
                 </div>
                 <div className="youtube-side" style={{ padding: '50px', height: '400px', width: '50%' }}>
-                  <h5 style={{ color: '#fff', marginBottom: '10px' }}>WATCH TRAILER #2</h5>
+                  <h5 style={{ color: '#fff', marginBottom: '10px' }}>WATCH TRAILER & USER GUIDE</h5>
                   <hr style={{ borderColor: '#fff' }} />
 
                   <div >
                     <iframe
                       width="460"
                       height="215"
-                      src="https://www.youtube.com/embed/G1cUiW0ZXm8?si=zvwvvG_aiHItaOva"
+                      src="https://www.youtube.com/embed/fJ-Yv3AMdiE"
                       title="YouTube video player"
                       frameborder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

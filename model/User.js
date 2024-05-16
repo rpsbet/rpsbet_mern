@@ -15,10 +15,6 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
-  rewards: {
-    type: Number,
-    default: 0
-  },
   credit_score: {
     type: Number,
     default: 0
@@ -43,10 +39,16 @@ const UserSchema = new Schema({
     ref: 'User',
     default: null
   },
-  rewards: {
-    type: Number,
-    default: 0
-  },
+  rewards: [{
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    amount: {
+      type: Number,
+      default: 0
+    }
+  }],
   dailyWithdrawals: {
     type: Number,
     default: 0

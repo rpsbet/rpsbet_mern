@@ -250,7 +250,7 @@ class PlayerModal extends Component {
     } catch (e) {
       this.setState({ isLoading: false });
       if (this.state.amount <= 0) {
-        alertModal(this.props.isDarkMode, `Failed transaction.`);
+        alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
         return;
       }
     }

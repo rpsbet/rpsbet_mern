@@ -9,7 +9,8 @@ import {
   changeUserName
 } from '../../redux/Auth/user.actions';
 import {
-  getCustomerStatisticsData
+  getCustomerStatisticsData,
+  acGetCustomerInfo
 } from '../../redux/Customer/customer.action';
 import { alertModal } from './ConfirmAlerts';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
@@ -57,8 +58,9 @@ class ProfileModal extends Component {
       username: this.props.userInfo.username,
       profitAllTimeHigh: this.props.userInfo.profitAllTimeHigh,
       profitAllTimeLow: this.props.userInfo.profitAllTimeLow,
-      // email: this.props.userInfo.email,
+      customerInfo: {},
       copied: false,
+      isReferralsModalOpen: false,
       loading: this.props.loading,
       password: '',
       passwordConfirmation: '',
@@ -76,9 +78,6 @@ class ProfileModal extends Component {
       current_state.avatar !== props.avatar ||
       current_state.accessory !== props.accessory ||
       current_state.username !== props.username ||
-      // current_state.email !== props.email ||
-      current_state.totalWagered !== props.totalWagered ||
-      current_state.totalWagered !== props.totalWagered ||
       current_state.rewards !== props.rewards
     ) {
       return {
@@ -86,8 +85,6 @@ class ProfileModal extends Component {
         avatar: props.userInfo.avatar,
         accessory: props.userInfo.accessory,
         username: props.userInfo.username,
-        // email: props.userInfo.email,
-        totalWagered: props.userInfo.totalWagered,
         referralCode: props.userInfo.referralCode,
         rewards: props.userInfo.rewards
       };
@@ -96,6 +93,23 @@ class ProfileModal extends Component {
   }
 
   async componentDidMount() {
+    const { userInfo } = this.props;
+    const { rewards } = userInfo;
+
+    // Fetch customer info for each reward user
+    rewards.forEach(async reward => {
+      const info = await this.props.acGetCustomerInfo(reward.user);
+      if (info) {
+        this.setState(prevState => ({
+          customerInfo: {
+            ...prevState.customerInfo,
+            [reward.user]: info
+          }
+        }));
+      }
+    });
+
+
     await this.fetchStatisticsData();
   }
 
@@ -118,6 +132,9 @@ class ProfileModal extends Component {
 
   handleNewUsername = () => {
     this.setState({ isNewUsernameModalOpen: true });
+  };
+  handleReferrals = () => {
+    this.setState({ isReferralsModalOpen: true });
   };
 
   containsBadLanguage = (username) => {
@@ -169,6 +186,9 @@ class ProfileModal extends Component {
   handleCloseNewUsernameModal = () => {
     this.setState({ isNewUsernameModalOpen: false });
   };
+  handleCloseReferralsModal = () => {
+    this.setState({ isReferralsModalOpen: false });
+  };
 
   handleDropdownChange = (dropdownName, selectedValue) => {
     this.setState(
@@ -200,7 +220,7 @@ class ProfileModal extends Component {
     e.preventDefault();
     this.setState({ passwordConfirmation: e.target.value });
   };
-  
+
   saveUserInfo = async e => {
     e.preventDefault();
     if (this.state.password !== this.state.passwordConfirmation) {
@@ -210,22 +230,22 @@ class ProfileModal extends Component {
       );
       return;
     }
-  
+
     try {
       // Create a canvas element
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-  
+
       // Create an image element to load the avatar
       const img = new Image();
       img.src = this.state.avatar;
-  
+
       // Wait for the image to load
       img.onload = () => {
         // Set maximum dimensions for the canvas
         const maxWidth = 600;
         const maxHeight = 600;
-  
+
         // Calculate new dimensions for the image
         let width = img.width;
         let height = img.height;
@@ -240,14 +260,14 @@ class ProfileModal extends Component {
             height = maxHeight;
           }
         }
-  
+
         // Set canvas dimensions to match new image dimensions
         canvas.width = width;
         canvas.height = height;
-  
+
         // Draw the resized image onto the canvas
         ctx.drawImage(img, 0, 0, width, height);
-  
+
         // Convert canvas content to a Blob (WebP format)
         canvas.toBlob(async blob => {
           // Read the Blob as a data URL
@@ -256,13 +276,13 @@ class ProfileModal extends Component {
           reader.onloadend = async () => {
             // Get the base64 string from the FileReader result
             const base64Avatar = reader.result;
-  
+
             // Call the changePasswordAndAvatar function with the password and base64 avatar
             const is_success = await this.props.changePasswordAndAvatar(
               this.state.password,
               base64Avatar
             );
-  
+
             if (is_success) {
               this.props.closeModal();
             }
@@ -275,7 +295,7 @@ class ProfileModal extends Component {
       // Handle error appropriately (e.g., display error message to the user)
     }
   };
-  
+
 
   handleCloseModal = () => {
     this.props.getUser(true);
@@ -283,8 +303,8 @@ class ProfileModal extends Component {
   };
 
   render() {
-    const { modalIsOpen, isDarkMode } = this.props;
-
+    const { modalIsOpen, isDarkMode, userInfo } = this.props;
+    const { rewards } = userInfo;
     const {
       rank,
       accessory,
@@ -294,6 +314,7 @@ class ProfileModal extends Component {
       avatar,
       username,
       gameLogList,
+      customerInfo,
       deposit,
       withdraw,
       gameProfit,
@@ -390,7 +411,7 @@ class ProfileModal extends Component {
                     readOnly: true,
                     endAdornment: (
                       <Tooltip title={copied ? "Copied!" : "Copy to clipboard"} placement="top">
-                        <IconButton onClick={() => this.handleCopyToClipboard(sendAddress)}>
+                        <IconButton onClick={() => this.handleCopyToClipboard(this.state.referralCode)}>
                           <FileCopyIcon />
                         </IconButton>
                       </Tooltip>
@@ -398,17 +419,15 @@ class ProfileModal extends Component {
                   }}
                 />
               </div>
-              <div className="input-wrapper" style={{display: "flex", justifyContent: "center", alignItems: "center"}}>
-                <TextField
-                  value={this.props.userInfo.rewards}
+              <div className="input-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <Button
                   className="form-control"
                   variant="filled"
-                  label="REFERRAL REWARDS"
-                  InputProps={{
-                    readOnly: true,
-                    endAdornment: 'RPS'
-                  }}
-                />
+                  onClick={this.handleReferrals}
+                >
+                  See All Referrals
+                </Button>
+
                 <Tooltip
                   title={
                     <>
@@ -526,6 +545,48 @@ class ProfileModal extends Component {
             </div>
           </div>
         </Modal>
+        <Modal
+          isOpen={this.state.isReferralsModalOpen}
+          onRequestClose={this.handleCloseReferralsModal}
+          style={customStyles}
+          contentLabel="Referrals Modal"
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
+              <h2 className="modal-title">ALL REFERRALS</h2>
+              <Button className="btn-close" onClick={this.handleCloseModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  <ul>
+                    {rewards.map((reward, index) => (
+                      <li key={index}>
+                        {customerInfo[reward.user] && (
+                          <div>
+                            <img src={customerInfo[reward.user].avatar} alt="User Avatar" />
+                            <p>Accessory: {customerInfo[reward.user].accessory}</p>
+                          </div>
+                        )}
+                        Amount: {reward.amount}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button
+                className="btn-back"
+                onClick={this.handleCloseReferralsModal}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </Modal>
     );
   }
@@ -542,7 +603,8 @@ const mapDispatchToProps = {
   changePasswordAndAvatar,
   getUser,
   changeUserName,
-  getCustomerStatisticsData
+  getCustomerStatisticsData,
+  acGetCustomerInfo
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ProfileModal);

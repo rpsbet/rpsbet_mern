@@ -58,7 +58,7 @@ rentCron.checkRentalPayments(io);
 notificationCron.deleteNotifications();
 callBotCron.callCronJobs(io);
 withdrawalCron.resetWithdrawalLimits();
-// cronJob.checkConfirmations(io);
+cronJob.checkConfirmations(io);
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

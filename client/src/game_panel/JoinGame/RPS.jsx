@@ -167,6 +167,7 @@ class RPS extends Component {
       startedPlaying: false,
       advanced_status: '',
       status: this.props.roomInfo.status,
+      isMax: false,
       cardDealt: false,
       bet_amount: 1,
       betResult: 0,
@@ -494,11 +495,17 @@ class RPS extends Component {
       this.removeSocketListeners();
       this.setupSocket();
     }
-
+    if (prevProps.balance !== this.props.balance && this.props.gameResult !== -1 && this.state.isMax) {
+      this.handleMaxButtonClick();
+    }
     if (prevProps.actionList !== actionList) {
       this.setState({
         actionList: actionList
       });
+    }
+
+    if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.05) {
+     this.state.status = 'finished';
     }
 
     if (prevProps.is_betting !== is_betting && !is_betting) {
@@ -614,6 +621,7 @@ class RPS extends Component {
         </React.Fragment>
       ), gameResult: result.betResult
     });
+    
   };
 
   handleBotClick = () => {
@@ -712,51 +720,39 @@ class RPS extends Component {
     });
   };
 
+  // Function to round down to 2 decimal places
+  roundDownToTwoDecimalPlaces = (number) => {
+    return Math.floor(number * 100) / 100;
+  };
+
   handleHalfXButtonClick = () => {
     const multipliedBetAmount = this.state.bet_amount * 0.5;
-    const roundedBetAmount = Math.floor(multipliedBetAmount * 100000) / 100000;
-    this.setState(
-      {
-        bet_amount: roundedBetAmount
-      },
-      () => {
-        document.getElementById('betamount').focus();
-      }
-    );
+    const roundedBetAmount = this.roundDownToTwoDecimalPlaces(multipliedBetAmount);
+    this.setState({ bet_amount: roundedBetAmount, isMax: false }, () => {
+      document.getElementById('betamount').focus();
+    });
   };
 
   handle2xButtonClick = () => {
     const maxBetAmount = this.props.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
-    const roundedBetAmount = Math.floor(limitedBetAmount * 100000) / 100000;
+    const roundedBetAmount = this.roundDownToTwoDecimalPlaces(limitedBetAmount);
     if (roundedBetAmount < -2330223) {
-      alertModal(
-        this.props.isDarkMode,
-        "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?"
-      );
+      alertModal(this.props.isDarkMode, "NOW, THAT'S GETTING A BIT CRAZY NOW ISN'T IT?");
     } else {
-      this.setState(
-        {
-          bet_amount: roundedBetAmount
-        },
-        () => {
-          document.getElementById('betamount').focus();
-        }
-      );
+      this.setState({ bet_amount: roundedBetAmount, isMax: false }, () => {
+        document.getElementById('betamount').focus();
+      });
     }
   };
 
   handleMaxButtonClick = () => {
-    const maxBetAmount = Math.floor(this.props.balance * 100000) / 100000;
-    this.setState(
-      {
-        bet_amount: Math.min(maxBetAmount, this.state.bankroll)
-      },
-      () => {
-        document.getElementById('betamount').focus();
-      }
-    );
+    const maxBetAmount = Math.min(this.props.balance, this.state.bankroll);
+    const roundedMaxBetAmount = this.roundDownToTwoDecimalPlaces(maxBetAmount);
+    this.setState({ bet_amount: roundedMaxBetAmount, isMax: true }, () => {
+      document.getElementById('betamount').focus();
+    });
   };
 
   render() {

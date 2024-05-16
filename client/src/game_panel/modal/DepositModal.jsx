@@ -154,7 +154,7 @@ class DepositModal extends Component {
       payinExtraId: '',
       loading: true,
       hoveredSuggestion: null,
-      currencyValue: 0.7,
+      currencyValue: 0.59523,
       copied: false,
       paymentId: ''
     };
@@ -186,7 +186,13 @@ class DepositModal extends Component {
   };
 
   handlePaymentMethodChange = event => {
-    this.setState({ paymentMethod: event.target.value });
+    this.setState({ paymentMethod: event.target.value }, () => {
+      if (this.state.paymentMethod === 'web2') {
+        this.getAddress();
+      } else {
+        this.getPrice();
+      }
+    });
   };
 
   handleCopyToClipboard = (text) => {
@@ -219,9 +225,14 @@ class DepositModal extends Component {
       web2Amount: this.options[index],
       sendAddress: ''
     }, () => {
-      this.getAddress();
+      if (this.state.paymentMethod === 'web2') {
+        this.getAddress();
+      } else {
+        this.getPrice();
+      }
     });
   };
+  
 
 
   async sendTransaction(amount) {
@@ -245,12 +256,8 @@ class DepositModal extends Component {
   }
 
   send = async () => {
-    if (this.state.amount <= 0) {
-      alertModal(this.props.isDarkMode, `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`);
-      return;
-    }
 
-    if (this.state.amount > this.state.balance) {
+    if (this.state.amount > this.props.balance) {
       alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
       return;
     }
@@ -271,9 +278,10 @@ class DepositModal extends Component {
 
       const result = await axios.post('/stripe/deposit_successed/', {
         amount: this.state.amount,
+        price_amount: this.state.web2Amount,
         txtHash: transaction.hash
       });
-
+      
       if (result.data.success) {
         alertModal(this.props.isDarkMode, result.data.message, '-cat');
         this.props.setBalance(result.data.balance);
@@ -290,7 +298,7 @@ class DepositModal extends Component {
     } catch (e) {
       console.error(e);
       this.setState({ isLoading: false });
-      alertModal(this.props.isDarkMode, `Failed transaction.`);
+      alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
     }
   };
 
@@ -354,6 +362,27 @@ class DepositModal extends Component {
     }
   };
 
+  getPrice = async () => {
+    const { web2Amount } = this.state;
+    // Set loading state to true
+    this.setState({ loading: true });
+    try {
+      const response = await axios.post('/stripe/get_price', { web2Amount, currencyTo: 'eth' });
+
+      this.setState({
+        amount: response.data.estimated_amount
+      });
+
+    } catch (error) {
+      console.error(error);
+      // Handle error
+    } finally {
+      // Reset loading state to false whether the request succeeds or fails
+      this.setState({ loading: false });
+    }
+  };
+
+
   createPaymentAndClose = async () => {
     const { web2Amount, paymentId } = this.state;
     const { user_id } = this.props;
@@ -366,7 +395,6 @@ class DepositModal extends Component {
       // Handle error
     }
   };
-
 
   render() {
     const { account, paymentMethod, paymentId, payinExtraId, amount, sendAddress, sendAmount, copied, currencyTo, isValidCurrency, suggestions, hoveredSuggestion, selectedOption, currencyValue } = this.state;
@@ -477,7 +505,7 @@ class DepositModal extends Component {
                           <img style={{ width: '50px', display: 'block', margin: 'auto' }} src={this.images[index]} alt={`option-${index}`} />
                           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignContent: 'center', flexDirection: 'row' }} >
 
-                            <Typography variant="heading2" className={classes.price}>{convertToCurrency((price / currencyValue) + (7 * index))}&nbsp;</Typography>
+                            <Typography variant="heading2" className={classes.price}>{paymentMethod === 'web2' ? convertToCurrency((price / currencyValue)) : convertToCurrency((price / currencyValue) + (0.589 * (index + 1)))}&nbsp;</Typography>
                             <Typography variant="heading2" className={classes.price}>{`($${price})`}</Typography>
                           </div>
                         </ButtonBase>

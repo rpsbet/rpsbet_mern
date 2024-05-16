@@ -5,6 +5,7 @@ import { convertToCurrency } from '../util/conversion';
 import { withStyles } from '@material-ui/core/styles';
 import Avatar from './Avatar';
 import PlayerModal from '../game_panel/modal/PlayerModal';
+import { getRoomStatisticsData } from '../redux/Customer/customer.action';
 
 import ReactApexChart from 'react-apexcharts';
 import {
@@ -35,7 +36,6 @@ class Leaderboards extends Component {
     this.state = {
       // period: 'all time',
       // data: []
-      actionList: [],
       showPlayerModal: false,
       selectedCreator: ''
     };
@@ -45,26 +45,24 @@ class Leaderboards extends Component {
     return null;
   }
 
-  componentDidMount() {
-    const { actionList } = this.props;
-
-    this.setState({
-      actionList: actionList
-    });
+  
+  async componentDidMount() {
+  await this.props.getRoomStatisticsData(this.props.roomId, 30);
+  console.log(this.props.actionList);
     this.IsAuthenticatedReroute();
   }
 
-  componentDidUpdate(prevProps) {
-    const { actionList } = this.props;
+  // componentDidUpdate(prevProps) {
+  //   const { actionList } = this.props;
 
-    if (prevProps.actionList !== actionList) {
-      this.setState(
-        {
-          actionList: actionList
-        }
-      );
-    }
-  }
+  //   if (prevProps.actionList !== actionList) {
+  //     this.setState(
+  //       {
+  //         actionList: actionList
+  //       }
+  //     );
+  //   }
+  // }
 
   IsAuthenticatedReroute = async () => {
     if (!this.props.auth) {
@@ -90,8 +88,7 @@ class Leaderboards extends Component {
   // };
 
   render() {
-    const { classes } = this.props;
-    const { actionList, roomStatsLoaded } = this.props;
+    const { roomStatsLoaded, actionList } = this.props;
     return (
       <div className="leaderboards-page">
         <div className="leaderboards-content">
@@ -261,10 +258,11 @@ const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
   user_id: state.auth.user._id,
   isDarkMode: state.auth.isDarkMode,
+  actionList: state.customerReducer.actionList,
   roomStatsLoaded: state.customerReducer.roomStatsLoaded
 });
 
-const mapDispatchToProps = {};
+const mapDispatchToProps = {getRoomStatisticsData};
 
 export default connect(
   mapStateToProps,

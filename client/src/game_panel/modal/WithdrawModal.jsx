@@ -167,6 +167,12 @@ class WithdrawModal extends Component {
     this.props.setGasfee(params);
   }
 
+  componentDidUpdate(prevState) {
+    if (prevState.paymentMethod !== this.state.paymentMethod) {
+      this.handleEstimateAmount();
+    }
+
+  }
   handleSuggestionMouseEnter = suggestion => {
     this.setState({
       hoveredSuggestion: suggestion,
@@ -256,8 +262,6 @@ class WithdrawModal extends Component {
         paymentMethod: selectedPaymentMethod
       });
     }
-
-    this.handleEstimateAmount();
   };
   
 
@@ -266,8 +270,8 @@ class WithdrawModal extends Component {
     const amount = e.target.value;
     this.setState({
       amount: amount,
-      web2Amount: amount * 0.59,
-      web3Amount: amount * 0.5
+      web2Amount: amount * 0.58,
+      web3Amount: amount * 0.589
     }, () => {
       this.handleEstimateAmount();
     });
@@ -301,7 +305,7 @@ class WithdrawModal extends Component {
       if (paymentMethod === 'web2') {
         amountToSend = web2Amount;
       } else if (paymentMethod === 'web3') {
-        amountToSend = web3Amount - this.props.gasfee;
+        amountToSend = web3Amount
       } else {
         // Handle unexpected payment methods
         throw new Error('Unsupported payment method');
@@ -319,7 +323,7 @@ class WithdrawModal extends Component {
       });
   
       // Extract the estimated amount from the response data
-      const estimatedAmount = response.data.estimated_amount;
+      const estimatedAmount = response.data.estimated_amount - this.props.gasfee;
   
       // Update the component state with the estimated amount
       this.setState({ estimatedAmount });
@@ -331,21 +335,8 @@ class WithdrawModal extends Component {
   
   createPayoutAndClose = async () => {
     const { amount, currencyTo, sendAddress, extraId} = this.state;
-    const { user_id } = this.props;
     try {
-      const response = await axios.post('/stripe/create_payout', { amount, currency: currencyTo, address: sendAddress, extra_id: extraId });
-      alertModal(this.props.isDarkMode, response.data.message, "-cat");
-      this.props.closeModal();
-    } catch (error) {
-      console.error(error);
-      // Handle error
-    }
-  };
-
-
-  send = async () => {
-    try {
-      if (this.props.userInfo.dailyWithdrawals > 0.02) {
+      if (this.props.userInfo.dailyWithdrawals > 100) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -359,10 +350,58 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 0.02) {
+      if (this.state.amount >= 100) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER TRANSACTION IS 0.02 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 100 RPS DURING LAUNCH PHASE`
+        );
+        return;
+      }
+
+      if (this.state.amount > this.props.balance) {
+        alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+        return;
+      }
+
+      this.setState({ isLoading: true });
+      const response = await axios.post('/stripe/create_payout', { amount, currency: currencyTo, address: sendAddress, extra_id: extraId });
+      if (response.data.success) {
+        alertModal(this.props.isDarkMode, response.data.message, '-cat');
+        this.props.setBalance(result.data.balance);
+        this.props.addNewTransaction(result.data.newTransaction);
+        this.setState({ isLoading: false });
+        this.props.closeModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(this.props.isDarkMode, result.data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      // Handle error
+    }
+  };
+
+
+  send = async () => {
+    try {
+      if (this.props.userInfo.dailyWithdrawals > 100) {
+        alertModal(
+          this.props.isDarkMode,
+          `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
+        );
+        return;
+      }
+      if (this.state.amount <= 0) {
+        alertModal(
+          this.props.isDarkMode,
+          `IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!`
+        );
+        return;
+      }
+      if (this.state.amount >= 100) {
+        alertModal(
+          this.props.isDarkMode,
+          `MAXIMUM PER DAY IS 100 RPS DURING LAUNCH PHASE`
         );
         return;
       }
@@ -391,7 +430,7 @@ class WithdrawModal extends Component {
     } catch (e) {
       this.setState({ isLoading: false });
       if (this.state.amount <= 0) {
-        alertModal(this.props.isDarkMode, `Failed transaction.`);
+        alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
         return;
       }
     }
