@@ -304,7 +304,6 @@ function BetArray({
     setEditedValue(item[cell]); // Directly accessing the property value
     setSelectedIndex(index);
     setSelectedRow(item);
-    // console.log("Clicked Cell Value:", item[cell]);
     setOpenModal(true);
     // setHoveredIndex(index);
     dispatch(setFocused(true));

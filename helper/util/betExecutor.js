@@ -11,7 +11,7 @@ const GameLog = require('../../model/GameLog');
 const convertToCurrency = require('./conversion');
 const socket = require('../../socketController')
 const moment = require('moment');
-const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
+const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, counterRandomness2, NPC, generatePattern } = require('./predictNext');
 const saveDocumentWithRetry = require('./retrySave');
 const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
 const requestQueue = [];
@@ -237,6 +237,9 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await counterSwitchAI(allBetItems);
                             break;
                         case 'Skill-issue':
+                            nextItem = await counterRandomness(allBetItems);
+                            break;
+                        case 'Skill-issue-2':
                             nextItem = await counterRandomness(allBetItems);
                             break;
                         case 'NPC':
@@ -528,7 +531,7 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
 
-                  
+
                 }
             }
 

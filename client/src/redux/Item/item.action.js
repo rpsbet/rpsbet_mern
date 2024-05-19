@@ -113,9 +113,8 @@ export const acQueryItem = (pagination, page, sortCriteria, itemType) => async (
 
 export const returnItem = item_id => async dispatch => {
   try {
-    console.log("darta", item_id);
     const res = await api.post('/item/return/', {item_id});
-    console.log(res.data);
+    // console.log(res.data);
     if (res.data.success) {
       dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
       return res.data;

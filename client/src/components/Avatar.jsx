@@ -71,7 +71,7 @@ class Avatar extends Component {
     let borderColor = '3px solid transparent';
     let rankColor = '#3498db';
     let shadedColor = chroma(rankColor).darken(4).hex();
-    if (!darkMode) {
+    if (!isDarkMode) {
       rankColor = '#2c3e50'; // Change to your dark mode color
       shadedColor = chroma(rankColor).brighten(8).hex(); // Adjust as needed for dark mode shading
     }

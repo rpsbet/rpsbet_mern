@@ -792,8 +792,9 @@ box-shadow: unset !important;
         padding: 0 16px 0 50px;
         background-position: 8px center;
     }
+    .modal-body .modal-content-wrapper div.modal-content-panel td,
     .modal-body .modal-content-wrapper div.modal-content-panel {
-        padding: 16px 16px;
+        padding: 0;
     }
     .modal-body.how-to-play-modal-body .modal-content-wrapper div.modal-content-panel ol {
         margin-left: 20px;

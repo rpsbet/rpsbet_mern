@@ -14,12 +14,13 @@ import {
 } from '../../redux/Customer/customer.action';
 import { alertModal } from './ConfirmAlerts';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import { Button, Tooltip, IconButton, TextField } from '@material-ui/core';
+import { Button, Tooltip, IconButton, TextField, Grid, Typography } from '@material-ui/core';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Info } from '@material-ui/icons';
-
+import PlayerModal from './PlayerModal';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
+import Avatar from '../../components/Avatar';
 
 import moment from 'moment';
 import './Modals.css';
@@ -64,6 +65,8 @@ class ProfileModal extends Component {
       loading: this.props.loading,
       password: '',
       passwordConfirmation: '',
+      showPlayerModal: false,
+      selectedCreator: '',
       avatar: this.props.userInfo.avatar,
       rank: this.props.userInfo.totalWagered,
       dateJoined: this.props.userInfo.created_at,
@@ -180,6 +183,15 @@ class ProfileModal extends Component {
         return;
       }
     }
+  };
+
+  handleOpenPlayerModal = creator_id => {
+    // console.log(creator_id)
+    this.setState({ showPlayerModal: true, selectedCreator: creator_id });
+  };
+
+  handleClosePlayerModal = () => {
+    this.setState({ showPlayerModal: false });
   };
 
 
@@ -322,6 +334,8 @@ class ProfileModal extends Component {
       gamePlayed,
       gameHosted,
       gameJoined,
+      showPlayerModal,
+      selectedCreator,
       totalWagered,
       netProfit,
       profitAllTimeHigh,
@@ -334,7 +348,6 @@ class ProfileModal extends Component {
       creditScore,
       copied
     } = this.state;
-
     return (
       <Modal
         isOpen={modalIsOpen}
@@ -558,22 +571,49 @@ class ProfileModal extends Component {
                 ×
               </Button>
             </div>
+            {showPlayerModal && (
+          <PlayerModal
+            selectedCreator={selectedCreator}
+            modalIsOpen={showPlayerModal}
+            closeModal={this.handleClosePlayerModal}
+          />
+        )}
             <div className="modal-body">
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
-                  <ul>
+                  <Grid container spacing={2}>
                     {rewards.map((reward, index) => (
-                      <li key={index}>
+                      <Grid item xs={12} sm={6} md={4} key={index}>
                         {customerInfo[reward.user] && (
-                          <div>
-                            <img src={customerInfo[reward.user].avatar} alt="User Avatar" />
-                            <p>Accessory: {customerInfo[reward.user].accessory}</p>
-                          </div>
+                          <Grid container direction="column" alignItems="center">
+                            <Grid item>
+                              <a
+                                className="player"
+                                onClick={() =>
+                                  this.handleOpenPlayerModal(customerInfo[reward.user]._id)
+                                }
+                              >
+                                <Avatar src={customerInfo[reward.user].avatar} alt="User Avatar"
+                                  rank={customerInfo[reward.user].totalWagered}
+                                  accessory={customerInfo[reward.user].accessory}
+                                />
+                              </a>
+                            </Grid>
+                            <Grid item>
+                              <Typography variant="body1">
+                                {customerInfo[reward.user].username}
+                              </Typography>
+                            </Grid>
+                          </Grid>
                         )}
-                        Amount: {reward.amount}
-                      </li>
+                        <div  style={{border:"2px solid rgb(40, 167, 69)" , borderRadius:"0.3em", padding:"2px"}}>
+                        <Typography style={{margin: "auto", textAlign: 'center', color:"rgb(40, 167, 69)"}}  variant="body2">
+                          + {convertToCurrency(reward.amount)}
+                        </Typography>
+                        </div>
+                      </Grid>
                     ))}
-                  </ul>
+                  </Grid>
                 </div>
               </div>
             </div>

@@ -5,7 +5,9 @@ import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faGasPump
+  faGasPump,
+  faTachometerAlt,
+  faClock
 } from '@fortawesome/free-solid-svg-icons';
 import { getCustomerStatisticsData } from '../../redux/Customer/customer.action';
 import Modal from 'react-modal';
@@ -132,9 +134,8 @@ class WithdrawModal extends Component {
 
     this.state = {
       _id: this.props.userInfo._id,
-      amount: 0,
-      web2Amount: 0,
-      web3Amount: 0,
+      web2Amount: props.balance,
+      web3Amount: props.balance,
       web3: props.web3,
       balance: props.balance,
       account: props.account,
@@ -151,7 +152,7 @@ class WithdrawModal extends Component {
       sendAddress: '',
       hoveredSuggestion: null,
       suggestions: [],
-      amount: 0,
+      amount: props.balance || 0,
       balance: 0,
     };
   }
@@ -159,6 +160,8 @@ class WithdrawModal extends Component {
   async componentDidMount() {
     const result = await this.props.getCustomerStatisticsData(this.state._id);
     await this.handleGetPaymentMethods();
+
+    await this.handleEstimateAmount();
     this.setState({
       ...result
     });
@@ -249,7 +252,7 @@ class WithdrawModal extends Component {
   handlePaymentMethodChange = event => {
     const selectedPaymentMethod = event.target.value;
     const isWeb3Payment = selectedPaymentMethod === "web3";
-  
+
     // If the payment method is switching to Web3, set currencyTo state to 'eth'
     if (isWeb3Payment) {
       this.setState({
@@ -263,15 +266,15 @@ class WithdrawModal extends Component {
       });
     }
   };
-  
+
 
   handleAmountChange = e => {
     e.preventDefault();
     const amount = e.target.value;
     this.setState({
       amount: amount,
-      web2Amount: amount * 0.58,
-      web3Amount: amount * 0.589
+      web2Amount: amount * 0.568,
+      web3Amount: amount * 0.578
     }, () => {
       this.handleEstimateAmount();
     });
@@ -300,7 +303,7 @@ class WithdrawModal extends Component {
     try {
       const { paymentMethod, web2Amount, web3Amount, currencyTo } = this.state;
       let amountToSend;
-  
+
       // Determine which amount to use based on the payment method
       if (paymentMethod === 'web2') {
         amountToSend = web2Amount;
@@ -310,7 +313,7 @@ class WithdrawModal extends Component {
         // Handle unexpected payment methods
         throw new Error('Unsupported payment method');
       }
-  
+
       if (amountToSend === 0) {
         return;
       }
@@ -321,20 +324,20 @@ class WithdrawModal extends Component {
           currencyTo: currencyTo,
         },
       });
-  
+
       // Extract the estimated amount from the response data
       const estimatedAmount = response.data.estimated_amount - this.props.gasfee;
-  
+
       // Update the component state with the estimated amount
       this.setState({ estimatedAmount });
     } catch (error) {
-      console.error('Error in estimating amount:', error);
+      // console.error('Error in estimating amount:', error);
       // Handle error
     }
   };
-  
+
   createPayoutAndClose = async () => {
-    const { amount, currencyTo, sendAddress, extraId} = this.state;
+    const { amount, currencyTo, sendAddress, extraId } = this.state;
     try {
       if (this.props.userInfo.dailyWithdrawals > 100) {
         alertModal(
@@ -366,16 +369,20 @@ class WithdrawModal extends Component {
       this.setState({ isLoading: true });
       const response = await axios.post('/stripe/create_payout', { amount, currency: currencyTo, address: sendAddress, extra_id: extraId });
       if (response.data.success) {
-        alertModal(this.props.isDarkMode, response.data.message, '-cat');
-        this.props.setBalance(result.data.balance);
-        this.props.addNewTransaction(result.data.newTransaction);
+        this.props.setBalance(response.data.balance);
+        this.props.addNewTransaction(response.data.newTransaction);
         this.setState({ isLoading: false });
+        
         this.props.closeModal();
+        alertModal(this.props.isDarkMode, response.data.message, '-cat');
+
       } else {
         this.setState({ isLoading: false });
         alertModal(this.props.isDarkMode, result.data.message);
       }
     } catch (error) {
+      this.setState({ isLoading: false });
+
       console.error(error);
       // Handle error
     }
@@ -422,7 +429,7 @@ class WithdrawModal extends Component {
         this.props.setBalance(result.data.balance);
         this.props.addNewTransaction(result.data.newTransaction);
         this.setState({ isLoading: false });
-        this.props.closeModal();
+        // this.props.closeModal();
       } else {
         this.setState({ isLoading: false });
         alertModal(this.props.isDarkMode, result.data.message);
@@ -454,7 +461,19 @@ class WithdrawModal extends Component {
         description = '';
     }
 
+    const disclaimerClass = paymentMethod === 'web2' ? 'disclaimer-web2' : 'disclaimer-web3';
 
+
+    let icon;
+
+ 
+    if (paymentMethod === 'web2') {
+      // Icon for 12 hours
+      icon = <FontAwesomeIcon icon={faClock} />;
+    } else {
+      // Icon for 5 minutes
+      icon = <FontAwesomeIcon icon={faTachometerAlt} />;
+    }
     return (
       <>
         <LoadingOverlay
@@ -528,7 +547,7 @@ class WithdrawModal extends Component {
                   </div>
                   {paymentMethod === 'web3' ? (
                     <>
-                    <p className='step-tag'>Step 1 out of 2</p>
+                      <p className='step-tag'>Step 1 out of 2</p>
                       <div className="input-amount">
                         <Typography>WITHDRAWAL AMOUNT</Typography>
                         <TextField
@@ -557,7 +576,7 @@ class WithdrawModal extends Component {
                         />
                       </div>
                       <div className="account">
-                        <p className='step-tag'>Step 2 out of 2</p> 
+                        <p className='step-tag'>Step 2 out of 2</p>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
 
                           <Typography variant="body2">SEND TO ADDRESS</Typography>
@@ -565,7 +584,7 @@ class WithdrawModal extends Component {
                             <TextField
                               label="Account"
                               variant="filled"
-                              style={{width:"100%"}}
+                              style={{ width: "100%" }}
                               value={account}
                               InputProps={{
                                 readOnly: true
@@ -577,7 +596,7 @@ class WithdrawModal extends Component {
                               label="Account"
                               variant="filled"
                               value="Connect Wallet"
-                              style={{width:"100%"}}
+                              style={{ width: "100%" }}
                               InputProps={{
                                 readOnly: true
                               }}
@@ -625,7 +644,7 @@ class WithdrawModal extends Component {
                   ) : (
                     <div>
                       <div>
-                          
+
                         <p className='step-tag'>Step 1 out of 3</p>
                         <div className="account" style={{ display: "flex", alignItems: "center" }}>
                           <Typography style={{ whiteSpace: 'nowrap' }}>CURRENCY TYPE</Typography>
@@ -662,7 +681,7 @@ class WithdrawModal extends Component {
                             ))}
                           </ul>
                         )}
-                        
+
 
                         <p className='step-tag'>Step 2 out of 3</p>
                         <div className="input-amount">
@@ -705,8 +724,8 @@ class WithdrawModal extends Component {
                               error={!validAddress}
                               onChange={this.handleSendAddress}
                               value={sendAddress}
-                              helperText={sendAddress ? (!validAddress ? 'Invalid address' : <p style={{color:"#28a745"}}> Valid address!<CheckCircleOutlineIcon style={{width: '12px'}}/></p>) : ''}
-                              />
+                              helperText={sendAddress ? (!validAddress ? 'Invalid address' : <p style={{ color: "#28a745" }}> Valid address!<CheckCircleOutlineIcon style={{ width: '12px' }} /></p>) : ''}
+                            />
 
 
 
@@ -720,19 +739,19 @@ class WithdrawModal extends Component {
 
                             </Tooltip>
                           </div>
-                              <><div style={{ marginTop: '20px' }}>
-                                <Typography variant="body2">MEMO / DESTINATION TAG ETC. (OPTIONAL)</Typography>
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                  <TextField
-                                    variant="filled"
-                                    fullWidth
-                                    value={extraId}
-                                    onChange={this.handleExtraId}
+                          <><div style={{ marginTop: '20px' }}>
+                            <Typography variant="body2">MEMO / DESTINATION TAG ETC. (OPTIONAL)</Typography>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <TextField
+                                variant="filled"
+                                fullWidth
+                                value={extraId}
+                                onChange={this.handleExtraId}
 
-                                  />
-                                </div>
-                              </div>
-                              </>
+                              />
+                            </div>
+                          </div>
+                          </>
                         </div>
                       </div>
 
@@ -740,66 +759,70 @@ class WithdrawModal extends Component {
                     </div>
                   )}
                   <hr />
-                      <Table>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>
-                              <span>IN-GAME BALANCE:</span>
-                            </TableCell>
-                            <TableCell>
-                              {convertToCurrency(this.props.balance)}
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <span>WITHDRAWAL AMOUNT:</span>
-                            </TableCell>
-                            <TableCell style={{ color: 'red' }}>
-                              {convertToEth(this.state.amount * -1)}
-                            </TableCell>
-                          </TableRow>
-                          <TableRow>
-                            <TableCell>
-                              <span>NEW BALANCE:</span>
-                            </TableCell>
-                            <TableCell>
-                              {convertToCurrency(
-                                this.props.balance - this.state.amount
-                              )}
-                              &nbsp;
-                              {this.props.balance - this.state.amount < 0 && (
-                                <Warning width="15pt" />
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                      { paymentMethod === 'web3' && (
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>
+                          <span>IN-GAME BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(this.props.balance)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>WITHDRAWAL AMOUNT:</span>
+                        </TableCell>
+                        <TableCell style={{ color: 'red' }}>
+                          {convertToEth(this.state.amount * -1)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>
+                          <span>NEW BALANCE:</span>
+                        </TableCell>
+                        <TableCell>
+                          {convertToCurrency(
+                            this.props.balance - this.state.amount
+                          )}
+                          &nbsp;
+                          {this.props.balance - this.state.amount < 0 && (
+                            <Warning width="15pt" />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                  {paymentMethod === 'web3' && (
 
-                      <Table>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>
-                              <FontAwesomeIcon icon={faGasPump} />&nbsp;&nbsp;<span>GAS FEE:</span>
-                            </TableCell>
-                            <TableCell>
-                              {convertToEth(this.props.gasfee)}
-                            </TableCell>
-                            <Tooltip
-                              title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
-                              arrow
-                            >
-                              <IconButton size="small">
-                                <Info />
-                              </IconButton>
-                            </Tooltip>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                      )}
-                  <div className="disclaimer">
-                    <Typography>Receive within 1 - 3 minutes</Typography>
-                  </div>
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>
+                            <FontAwesomeIcon icon={faGasPump} />&nbsp;&nbsp;<span>GAS FEE:</span>
+                          </TableCell>
+                          <TableCell>
+                            {convertToEth(this.props.gasfee)}
+                          </TableCell>
+                          <Tooltip
+                            title="Real-time Gas fee is the cost associated with performing a transaction. It covers network processing and validation."
+                            arrow
+                          >
+                            <IconButton size="small">
+                              <Info />
+                            </IconButton>
+                          </Tooltip>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  )}
+                  <div className={'disclaimer'}>
+        {paymentMethod === 'web2' ? (
+          <Typography className={disclaimerClass}>Receive within <i style={{fontWeight: 800}}>12</i> hours&nbsp; {icon}</Typography>
+        ) : (
+          <Typography className={disclaimerClass}>Receive within <i style={{fontWeight: 800}}>5</i> minutes&nbsp; {icon}</Typography>
+        )}
+      </div>
 
                 </div>
               </div>

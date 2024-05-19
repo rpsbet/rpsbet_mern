@@ -243,6 +243,9 @@ const addToQueue = async (req, bot = false) => {
                         case 'Skill-issue':
                             nextItem = await counterRandomness(allBetItems);
                             break;
+                        case 'Skill-issue-2':
+                            nextItem = await counterRandomness(allBetItems);
+                            break;
                         case 'NPC':
                             nextItem = await NPC(allBetItems);
                             break;
@@ -297,7 +300,7 @@ const addToQueue = async (req, bot = false) => {
 
                 if (roomInfo['rps_game_type'] === 0) {
 
-                  
+
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
 
@@ -511,7 +514,7 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
 
-                 
+
                 }
             }
 
@@ -606,7 +609,7 @@ const addToQueue = async (req, bot = false) => {
                     socket.newTransaction(newTransactionC);
                 }
 
-            
+
             } else {
                 // Iterate over each host asynchronously
                 roomInfo.hosts.forEach(async (host) => {
@@ -705,7 +708,7 @@ const addToQueue = async (req, bot = false) => {
                 is_read: false
             };
 
-            if (message.message !== ''  && message.from._id !== message.to._id) {
+            if (message.message !== '' && message.from._id !== message.to._id) {
                 try {
                     await saveDocumentWithRetry(message);
                     socket.sendNotification(message.to._id, notificationData);

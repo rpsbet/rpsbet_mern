@@ -265,7 +265,7 @@ class SiteWrapper extends Component {
         this.playCoinsAnimation();
       }
     }
-    
+
     if (prevState.showNotifications !== this.state.showNotifications && !this.state.showNotifications) {
       this.props.readNotifications(); // Mark all notifications as read
       const updatedNotifications = this.state.notifications.map(notification => ({
@@ -274,7 +274,7 @@ class SiteWrapper extends Component {
       }));
       this.setState({ notifications: updatedNotifications });
     }
-    
+
     const shouldUpdate =
       transactions &&
       transactions.length > 0 &&
@@ -458,7 +458,7 @@ class SiteWrapper extends Component {
       socket.on('NEW_TRANSACTION', data => {
         this.props.addNewTransaction(data);
       });
-      
+
       socket.on('SEND_NOTIFICATION', data => {
         if (!this.props.isMuted) {
           this.notificationSound.play();
@@ -994,7 +994,7 @@ class SiteWrapper extends Component {
     this.secondsRemaining = Math.floor(timeRemaining / 1000);
     return (
       <MuiThemeProvider theme={isDarkMode ? darkTheme : mainTheme}>
-        {!isLive ? (
+        {isLive ? (
           <>
             <div className="coming-home-screen" style={{ textAlign: 'center', padding: '50px' }}>
               <img style={{ maxWidth: "150px", marginBottom: '60px' }} src="../img/dark-game-logo.svg" />
@@ -1573,7 +1573,7 @@ class SiteWrapper extends Component {
                                 <tr key={key}>
                                   {row.hash ? (
                                     <a href={`https://etherscan.io/tx/${row.hash}`} rel="noopener noreferrer">
-                                      <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
+                                      <td className={`amount ${row.status === "waiting" || row.status === "pending" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
                                         {row.amount > 0 ? (
                                           <>
                                             {'+ '}
@@ -1590,7 +1590,7 @@ class SiteWrapper extends Component {
                                     </a>
                                   ) : (
                                     <>
-                                      <td className={'amount ' + (row.amount > 0 ? 'green' : 'red')}>
+                                      <td className={`amount ${row.status === "waiting" || row.status === "pending" ? 'grey' : (row.amount > 0 ? 'green' : 'red')}`}>
                                         {row.amount > 0 ? (
                                           <>
                                             {'+ '}
@@ -1611,7 +1611,7 @@ class SiteWrapper extends Component {
                             )}
                           </tbody>
                         </table>
-                        <Button onClick={this.toggleAllTransactions}>View All</Button>
+                        <Button onClick={this.toggleAllTransactions}>ALL TRANSACTIONS</Button>
                       </div>
                     }
 

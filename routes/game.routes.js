@@ -1019,6 +1019,14 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
+    if (req.user.username.includes('BOT')) {
+      return res.json({
+        success: false,
+        message: 'DO NOT HAVE PURRMISSION'
+      });
+    }
+
+
     if (bet_amount > req.user.bankroll) {
       return res.json({
         success: false,
@@ -2630,6 +2638,13 @@ router.post('/tip', auth, async (req, res) => {
 
     const now = moment().format('LLL');
     const userBalance = req.user.balance;
+    if (username.includes('BOT')) {
+      return res.json({
+        success: false,
+        message: 'DO NOT HAVE PURRMISSION'
+      });
+    }
+
     const tipAmount = parseFloat(req.body.amount); // Parse amount as a float
 
     if (isNaN(tipAmount) || tipAmount <= 0) {

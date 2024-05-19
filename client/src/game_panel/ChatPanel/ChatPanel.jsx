@@ -29,11 +29,12 @@ function updateFromNow(history) {
 }
 
 const emojis = [
-  { command: ':brokenbot:', url: '/img/emotes/brokenbot.webp', alt: 'broken bot' },
+  { command: ':bot:', url: '/img/emotes/brokenbot.webp', alt: 'broken bot' },
   { command: ':dance:', url: '/img/emotes/dance.webp', alt: 'dance' },
   { command: ':goofy:', url: '/img/emotes/goofy.webp', alt: 'goofy' },
   { command: ':cook:', url: '/img/emotes/cook.webp', alt: 'cook' },
   { command: ':catcute:', url: '/img/emotes/catcute.webp', alt: 'cat cute' },
+  { command: ':gang:', url: '/img/emotes/gangSigns.webp', alt: 'gang signs' },
   { command: ':happy:', url: '/img/emotes/happy.webp', alt: 'happy' },
   { command: ':sus:', url: '/img/emotes/sus.webp', alt: 'sus' },
   { command: ':flatearth:', url: '/img/emotes/flatearth.webp', alt: 'flat earth' },
@@ -82,6 +83,7 @@ const emojis = [
   { command: ':pogger:', url: '/img/emotes/pogger.webp', alt: 'pogger' },
   { command: ':pleasecat:', url: '/img/emotes/pleasecat.webp', alt: 'please cat' },
   { command: ':nocap:', url: '/img/emotes/nocap.webp', alt: 'nocap' },
+  { command: ':mexican:', url: '/img/emotes/mexican.webp', alt: 'cat' },
   { command: ':mike:', url: '/img/emotes/mike.webp', alt: 'mike' },
   { command: ':kekw:', url: '/img/emotes/kekw.webp', alt: 'kekw' },
   { command: ':butwhy:', url: '/img/emotes/butwhy.webp', alt: 'butwhy' },
@@ -105,9 +107,7 @@ const emojis = [
   { command: ':simp:', url: '/img/emotes/simp.webp', alt: 'simp' },
   { command: ':1x:', url: '/img/emotes/1x.webp', alt: '1x' },
   { command: ':fortnite:', url: '/img/emotes/fortnite.webp', alt: 'fortnite' },
-  { command: ':pepenou:', url: '/img/emotes/pepenou.webp', alt: 'pepenou' },
   { command: ':kodak:', url: '/img/emotes/kodak.webp', alt: 'kodak' },
-  { command: ':pickle:', url: '/img/emotes/pickle.webp', alt: 'pickle' },
   { command: ':ain:', url: '/img/emotes/ain.webp', alt: 'ain' },
   { command: ':troll:', url: '/img/emotes/troll.webp', alt: 'troll' },
   {
@@ -152,7 +152,9 @@ class ChatPanel extends Component {
       }
     };
   }
+
   
+ 
   onTextAreaKeyDown = e => {
     e.stopPropagation();
     if (!this.props.socket) return;
@@ -406,7 +408,7 @@ class ChatPanel extends Component {
           <span>[{this.props.onlineUserList.length}] users online</span>
         </div>
         {selected_tab_index === 0 ? (
-          <MyChat />
+          <MyChat is_mobile={this.props.is_mobile} toggleDrawer={this.props.toggleDrawer}/>
         ) : (
           <GlobalChat
             emojis={emojis}

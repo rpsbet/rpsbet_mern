@@ -43,6 +43,8 @@ class ChatPage extends Component {
     };
   }
 
+
+
   insertEmoji = e => {
     this.setState({ text: this.state.text + e.target.innerHTML });
     this.textarea.focus();
@@ -132,7 +134,9 @@ class ChatPage extends Component {
       await this.props.getChatRoomInfo(id);
     }
 
-    this.chat_log_panel.scrollTop = this.chat_log_panel.scrollHeight;
+    if (this.chat_log_panel) {
+      this.chat_log_panel.scrollTop = this.chat_log_panel.scrollHeight;
+    }
   }
 
   handleOpenPlayerModal = creator_id => {
@@ -217,7 +221,7 @@ class ChatPage extends Component {
             anchor="left"
             open={isDrawerOpen}
           >
-            <ChatPanel />
+            <ChatPanel is_mobile={is_mobile} toggleDrawer={this.toggleDrawer} />
           </Drawer>
         )}
         {!is_mobile &&
@@ -260,7 +264,7 @@ class ChatPage extends Component {
             <a
               className="player"
               onClick={() => this.handleOpenPlayerModal(user_id)}
-              style={{ display: 'flex', flexDirection: 'row' }}
+              style={{ display: 'flex', flexDirection: 'row' , marginLeft:"45px"}}
             >
               <Avatar
                 src={avatar}
@@ -268,8 +272,8 @@ class ChatPage extends Component {
                 accessory={accessory}
                 className="avatar"
               />
-                
-              <span style={{marginLeft: "10px", display: "flex", alignItems: "center"}}>{username}</span>
+
+              <span style={{ marginLeft: "10px", display: "flex", alignItems: "center" }}>{username}</span>
             </a>
           </div>
 
@@ -292,15 +296,15 @@ class ChatPage extends Component {
                     <div className="message-header">
                       {row.from !== my_info._id && (
                         <div
-                        onClick={() => this.handleOpenPlayerModal(user_id)}
-                        style={{ cursor: "pointer", position: "relative" }}
+                          onClick={() => this.handleOpenPlayerModal(user_id)}
+                          style={{ cursor: "pointer", position: "relative" }}
                         >
-                        <Avatar
-                          src={avatar}
-                          rank={rank}
-                          accessory={accessory}
-                          className="avatar"
-                        />
+                          <Avatar
+                            src={avatar}
+                            rank={rank}
+                            accessory={accessory}
+                            className="avatar"
+                          />
                         </div>
                       )}
                       <div>
@@ -313,15 +317,15 @@ class ChatPage extends Component {
                       </div>
                       {row.from === my_info._id && (
                         <div
-                        onClick={() => this.handleOpenPlayerModal(my_info._id)}
-                        style={{ cursor: "pointer", position: "relative" }}
+                          onClick={() => this.handleOpenPlayerModal(my_info._id)}
+                          style={{ cursor: "pointer", position: "relative" }}
                         >
-                        <Avatar
-                          src={my_info.avatar}
-                          rank={my_info.totalWagered}
-                          accessory={my_info.accessory}
-                          className="avatar"
-                        />
+                          <Avatar
+                            src={my_info.avatar}
+                            rank={my_info.totalWagered}
+                            accessory={my_info.accessory}
+                            className="avatar"
+                          />
                         </div>
                       )}
                     </div>
@@ -434,8 +438,8 @@ class ChatPage extends Component {
             (is_mobile &&
               selectedMobileTab === 'my_games' &&
               show_open_game === 0)) && (
-            <MyGamesTable gameTypeList={gameTypeList} />
-          )}
+              <MyGamesTable gameTypeList={gameTypeList} />
+            )}
           {is_mobile &&
             selectedMobileTab === 'live_games' &&
             show_open_game === 1 && <HistoryTable />}
@@ -452,9 +456,8 @@ class ChatPage extends Component {
         {!is_mobile && (
           <div className="mobile-only main-page-nav-button-group">
             <Button
-              className={`mobile-tab-live ${
-                selectedMobileTab === 'live_games' ? 'active' : ''
-              }`}
+              className={`mobile-tab-live ${selectedMobileTab === 'live_games' ? 'active' : ''
+                }`}
               onClick={e => {
                 this.setState({ selectedMobileTab: 'live_games' });
               }}
@@ -477,9 +480,8 @@ class ChatPage extends Component {
               {selectedMobileTab === 'live_games' && 'LIVE BATTLES'}
             </Button>
             <Button
-              className={`mobile-tab-my ${
-                selectedMobileTab === 'my_games' ? 'active' : ''
-              }`}
+              className={`mobile-tab-my ${selectedMobileTab === 'my_games' ? 'active' : ''
+                }`}
               onClick={e => {
                 this.setState({ selectedMobileTab: 'my_games' });
               }}
@@ -504,9 +506,8 @@ class ChatPage extends Component {
               {selectedMobileTab === 'my_games' && 'YOUR BATTLES'}
             </Button>
             <button
-              className={`mobile-tab-marketplace ${
-                selectedMobileTab === 'marketplace' ? 'active' : ''
-              }`}
+              className={`mobile-tab-marketplace ${selectedMobileTab === 'marketplace' ? 'active' : ''
+                }`}
               onClick={e => {
                 this.setState({ selectedMobileTab: 'marketplace' });
               }}
@@ -529,9 +530,8 @@ class ChatPage extends Component {
               {selectedMobileTab === 'marketplace' && 'MARKETPLACE'}
             </button>
             <Button
-              className={`mobile-tab-chat ${
-                selectedMobileTab === 'chat' ? 'active' : ''
-              }`}
+              className={`mobile-tab-chat ${selectedMobileTab === 'chat' ? 'active' : ''
+                }`}
               onClick={e => {
                 this.setState({ selectedMobileTab: 'chat' });
               }}

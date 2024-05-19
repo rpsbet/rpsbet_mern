@@ -293,7 +293,6 @@ class Blackjack extends Component {
       });
       socket.on('CARDS_ARRAY', data => {
         this.setState({ cardsArray: data.cardsArray }, () => {
-          // console.log("cardsArray: ", data.cardsArray)
           if (data.cardsArray === null) [
             this.resetGame()
           ]

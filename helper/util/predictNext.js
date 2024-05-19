@@ -151,7 +151,7 @@ async function reinforcementAI(data) {
     });
 
     if (recentWins.length === 0) {
-      console.log("No recent wins, adapting...");
+      // console.log("No recent wins, adapting...");
       // Adapt the model based on recent losses
       const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
       const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
@@ -203,7 +203,7 @@ async function botAI(data) {
   });
 
   if (recentWins.length === 0) {
-    console.log("No recent wins, adapting...", recentWins);
+    // console.log("No recent wins, adapting...", recentWins);
     // Adapt the model based on recent losses
     const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
     const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
@@ -359,15 +359,14 @@ function botCounterRandomness(historicData) {
 function counterRandomness(historicData) {
   // If historicData is empty or undefined, default to 'R'
   if (!historicData || historicData.length === 0) {
-    return 'R';
+    return getRandomMove();
   }
 
   // Get the last move from the historic data
   const lastOpponentMove = historicData[0].joiner_rps || 'R'; // Default to 'R' if no last move
   // console.log(lastOpponentMove)
 
-
-  return lastOpponentMove;
+  return getRandomMove();
 
 }
 

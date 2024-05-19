@@ -48,7 +48,6 @@ class Leaderboards extends Component {
   
   async componentDidMount() {
   await this.props.getRoomStatisticsData(this.props.roomId, 30);
-  console.log(this.props.actionList);
     this.IsAuthenticatedReroute();
   }
 

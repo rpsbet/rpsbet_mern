@@ -345,7 +345,6 @@ router.post('/lend', auth, async (req, res) => {
         message: 'Loaner not found or not available for loan',
       });
     }
-    // console.log(responseText)
     // exceeded loan_amount
     if (parseFloat(responseText) > parseFloat(loan.loan_amount)) {
       return res.json({

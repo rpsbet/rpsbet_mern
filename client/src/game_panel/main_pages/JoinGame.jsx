@@ -532,7 +532,6 @@ class JoinGame extends Component {
         }
 
       } while (finalValue !== null && finalValue < 0.000001);
-      // console.log(finalValue)
       return finalValue;
     }
   };
@@ -805,7 +804,11 @@ class JoinGame extends Component {
     // }
     // const stored_array =
     //   JSON.parse(localStorage.getItem(storageName)) || [];
-    const interval = this.props.ai_mode !== 'Adam' || this.props.ai_mode !== 'Sniper' ? 3000 : 4200;
+    const interval =
+      this.props.ai_mode === 'Adam' || this.props.ai_mode === 'Sniper' ? 4200 :
+        this.props.ai_mode === 'Skill-issue-2' ? 1500 :
+          3000;
+
     const intervalId = setInterval(async () => {
 
       try {
@@ -854,8 +857,8 @@ class JoinGame extends Component {
                 randomItem = await counterSwitchAI(this.props.rpsbetitems);
 
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-              } else if (this.props.ai_mode === 'Skill-issue') {
-                const randomnessResult = await counterRandomness(this.props.rpsbetitems);
+              } else if (this.props.ai_mode === 'Skill-issue' || this.props.ai_mode === 'Skill-issue-2') {
+                const randomnessResult = await counterRandomness(this.props.rpsbetitems, 1);
                 randomItem = randomnessResult.counterMove;
                 const penultimateSameAsLast = randomnessResult.risk;
                 predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
@@ -928,7 +931,7 @@ class JoinGame extends Component {
 
   changeBgColor = async result => {
     this.setState({ betResult: result, bgColorChanged: true }, async () => {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
+      await new Promise(resolve => setTimeout(resolve, this.props.ai_mode !== "Skill-issue" ? 1000 : 500)); // Wait for 1 second
       this.setState({ bgColorChanged: false, betResult: null });
     });
   };
@@ -1481,9 +1484,9 @@ class JoinGame extends Component {
                     getRoomData={this.getRoomData}
                   />
                 )}
-                
+
               </div>
-              
+
             ) : (
               <LinearProgress color="secondary" />
             )}

@@ -41,7 +41,7 @@ class Upload extends Component {
         console.log((event.loaded / event.total) * 100, '%');
       });
       req.upload.addEventListener("load", event => {
-        console.log('Done. 100%', this.props);
+        // console.log('Done. 100%', this.props);
         this.props.setImageFilename('/img/uploads/' + filename);
       });
       req.upload.addEventListener("error", event => {
@@ -50,7 +50,7 @@ class Upload extends Component {
       const formData = new FormData();
   
       formData.append("file", file, filename);
-      console.log(formData);
+      // console.log(formData);
       req.open("POST", "/api/upload/");
       // req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       req.send(formData);

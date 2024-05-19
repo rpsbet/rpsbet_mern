@@ -306,13 +306,17 @@ class AllTransactionsModal extends Component {
                       <TableBody>
                         {transactions.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={5}>No transactions found.</TableCell>
+                            <TableCell colSpan={5}>NO TRANSACTIONS FOUND</TableCell>
                           </TableRow>
                         ) : (
                           transactions.map((transaction, index) => (
                             <TableRow key={transaction._id}>
-                              <TableCell className={'amount ' + (transaction.amount > 0 ? 'green' : 'red')}>
-                                {transaction.amount > 0 ? <> + {convertToCurrency(transaction.amount)}</> : <> + {convertToCurrency(Math.abs(transaction.amount))}</>}
+                              <TableCell className={`amount ${transaction.status === "waiting" || transaction.status === "pending" ? 'grey' : (transaction.amount > 0 ? 'green' : 'red')}`}>
+                                {transaction.amount > 0 ? (
+                                  <> + {convertToCurrency(transaction.amount)}</>
+                                ) : (
+                                  <> - {convertToCurrency(Math.abs(transaction.amount))}</>
+                                )}
                               </TableCell>
                               <TableCell className="fromNow">
                                 {transaction.from_now}
@@ -320,6 +324,14 @@ class AllTransactionsModal extends Component {
                               <TableCell className="description">
                                 {transaction.description}
                               </TableCell>
+                                <TableCell className="description">
+                              {transaction.status && (
+                                <>
+                                  {transaction.status}
+                                </>
+                                )}
+                                </TableCell>
+
                               <TableCell className="hash">
                                 {transaction.hash ? (
                                   transaction.hash.startsWith('0x') ? (
@@ -342,10 +354,10 @@ class AllTransactionsModal extends Component {
 
                               <TableCell>
                                 <Tooltip title={this.state.copiedRowId === (transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id) ? "Copied!" : "Copy ID"} placement="top">
-                                      <IconButton onClick={() => this.copyToClipboard(transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id)}>
-                                        <FileCopyIcon />
-                                      </IconButton>
-                                    </Tooltip>
+                                  <IconButton onClick={() => this.copyToClipboard(transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id)}>
+                                    <FileCopyIcon />
+                                  </IconButton>
+                                </Tooltip>
                               </TableCell>
 
                             </TableRow>

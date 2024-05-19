@@ -37,23 +37,24 @@ async function checkConfirmations(io) {
         const confirmations = currentBlock - tx.blockNumber;
 
         if (isDeposit && confirmations >= depositConfirmationThreshold) {
-          console.log('Processing deposit transaction...');
+          // console.log('Processing deposit transaction...');
           const user = await User.findById(transaction.user);
 
           if (user) {
             transaction.status = 'completed';
             user.balance += transaction.amount;
-
+            // console.log("user.referralId", user.referralId);
             console.log('Deposit transaction processed successfully.');
 
-            if (user.referralId && user.referralId.trim() !== "") {
-              referralOwner = await User.findOne({ referralCode: user.referralId });
+            if (user.referralId && user.referralId !== "") {
+              referralOwner = await User.findOne({ _id: user.referralId });
             }
-
+// console.log("referralOwner", referralOwner);
             // If there is a referral owner, update their balance and rewards
             if (referralOwner) {
               // Find the index of the user's _id in the referral owner's rewards array
               const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
+              console.log("index", index);
 
               // If the user's _id is found in the rewards array, update the amount
               if (index !== -1) {
@@ -77,7 +78,7 @@ async function checkConfirmations(io) {
                 from: user._id,
                 to: referralOwner._id,
                 room: '',
-                message: `Received ${convertToCurrency(transaction.amount)} in referral rewards.`
+                message: `Received ${convertToCurrency(transaction.amount * 0.05)} in referral rewards.`
               });
 
               const notificationDataJ = {
@@ -145,6 +146,7 @@ async function checkConfirmations(io) {
     for (const transaction of waitingTransactions) {
 
       let isDeposit = transaction.description === 'deposit';
+      let isWithdraw = transaction.description === 'withdraw';
 
       const paymentId = transaction.hash;
       if (isDeposit && paymentId) {
@@ -155,34 +157,39 @@ async function checkConfirmations(io) {
             'Content-Type': 'application/json',
           },
         });
-
         const paymentStatus = response.data.payment_status;
         if (paymentStatus === 'finished') {
           const user = await User.findById(transaction.user);
+          const referralId = user.referralId;
           if (user) {
             transaction.status = 'completed';
             user.balance += transaction.amount;
+            // console.log("referralId", referralId)
 
-            if (user.referralId && user.referralId.trim() !== "") {
-              referralOwner = await User.findOne({ referralCode: user.referralId });
-            }
-
+            // Check if referralId exists and is a string before trimming
+            // Check if referralId exists before querying
+            if (referralId) {
+                referralOwner = await User.findOne({ referralId });
+              }
+            
+            
             // If there is a referral owner, update their balance and rewards
             if (referralOwner) {
               // Find the index of the user's _id in the referral owner's rewards array
               const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
-
+              
               // If the user's _id is found in the rewards array, update the amount
               if (index !== -1) {
                 referralOwner.rewards[index].amount += transaction.amount * 0.05;
               } else {
                 // If the user's _id is not found, add a new entry to the rewards array
-                referralOwner.rewards.push({ user: newUser._id, amount: transaction.amount * 0.05 });
+                referralOwner.rewards.push({ user: user._id, amount: transaction.amount * 0.05 });
+            // console.log("rewards send referralOwner", referralOwner)
+
               }
 
               // Update referral owner's balance
               referralOwner.balance += transaction.amount * 0.05;
-
               const newTransaction = new Transaction({
                 user: referralOwner._id,
                 amount: transaction.amount * 0.05,
@@ -197,7 +204,7 @@ async function checkConfirmations(io) {
                 room: '',
                 message: `Received ${convertToCurrency(transaction.amount)} in referral rewards.`
               });
-              
+
               const notificationDataJ = {
                 message: notificationJ.message,
                 username: user.username,
@@ -210,6 +217,7 @@ async function checkConfirmations(io) {
                 is_read: false
               };
 
+              // console.log(referralOwner.balance)
               try {
                 await saveDocumentWithRetry(referralOwner);
                 await saveDocumentWithRetry(newTransaction);
@@ -254,7 +262,26 @@ async function checkConfirmations(io) {
 
           }
         }
-      } 
+      } else if (isWithdraw && paymentId) {
+
+        const response = await axios.get(`https://api.nowpayments.io/v1/payout/${paymentId}`, {
+          headers: {
+            'x-api-key': API_KEY,
+            'Content-Type': 'application/json',
+          },
+        });
+        // console.log("reposnsdsd", response.data)
+        const paymentStatus = response.data.status;
+        if (paymentStatus === 'finished') {
+
+          transaction.status === 'complete';
+          try {
+            await saveDocumentWithRetry(transaction);
+          } catch (error) {
+            console.error("Error saving notification:", error);
+          }
+        }
+      }
     }
 
   } catch (error) {

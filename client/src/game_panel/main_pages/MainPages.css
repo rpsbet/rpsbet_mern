@@ -551,7 +551,7 @@ z-index: 9;
   position: relative;
 }
 
-.contents_wrapper .main-game .main-panel {
+.contents_wrapper .main-game .main-panel,.contents_wrapper {
   padding: 0 6px 8px 16px;
   background-color: rgba(235, 237, 239, 0.5);
   position: relative;
@@ -1601,8 +1601,11 @@ h2.room-history-title {
 }
 
 #intercom-container-body button,
-#intercom-container-body svg
+#intercom-container-body svg,
+[class^="intercom-launcher"],
+.intercom-launcher
  {
+  display: none !important;
   background: #e322fa !important;
   color : #e322fa !important;
 }
@@ -3476,7 +3479,9 @@ position: sticky !important;
   }
 }
 @media (max-width: 1023px) {
-
+.chat-header {
+  width: 100% !important;
+}
 .roll-tag {
   display: none;
 }

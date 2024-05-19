@@ -246,6 +246,9 @@ const addToQueue = async (req, bot = false) => {
                         case 'Skill-issue':
                             nextItem = await counterRandomness(allBetItems);
                             break;
+                        case 'Skill-issue-2':
+                            nextItem = await counterRandomness(allBetItems);
+                            break;
                         case 'NPC':
                             nextItem = await NPC(allBetItems);
                             break;
@@ -301,7 +304,7 @@ const addToQueue = async (req, bot = false) => {
 
                 if (roomInfo['rps_game_type'] === 0) {
 
-               
+
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
 
@@ -442,13 +445,13 @@ const addToQueue = async (req, bot = false) => {
                         const creatorPromise = User.findById(gameLog.creator).lean().exec();
                         const joinedUserPromise = User.findById(gameLog.joined_user).lean().exec();
                         const gameTypePromise = GameType.findById(gameLog.game_type).lean().exec();
-                    
+
                         const [room, creator, joinedUser, gameType] = await Promise.all([roomPromise, creatorPromise, joinedUserPromise, gameTypePromise]);
-                    
+
                         if (!room || !creator || !joinedUser || !gameType) {
                             return null;
                         }
-                    
+
                         return {
                             bet_amount: gameLog.bet_amount,
                             commission: gameLog.commission,
@@ -466,10 +469,10 @@ const addToQueue = async (req, bot = false) => {
                             hosts: gameLog.hosts
                         };
                     };
-                    
+
                     // Usage
                     const mergedObject = await populateGameLog(gameLog);
-                    
+
                     return mergedObject;
                 }));
 

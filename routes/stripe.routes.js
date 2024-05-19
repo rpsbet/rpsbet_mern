@@ -9,12 +9,13 @@ const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
 const { ethers } = require('ethers');
 // const ganacheEndpoint = 'http://localhost:7544';
+const jwt = require('jsonwebtoken');
 // const provider = new JsonRpcProvider(ganacheEndpoint); 
 const { JsonRpcProvider } = require('@ethersproject/providers');
-const provider = new JsonRpcProvider('https://mainnet.infura.io/v3/5fedb9ded8fd4b149026d0140baacf98');
+const { getAddress } = require('ethers/lib/utils');
+const provider = new JsonRpcProvider(process.env.PROVIDER_URL);
 const walletKey = process.env.wk;
-const API_KEY = 'ZBZK3XM-QNHM89H-MKXVFCD-TV6MW1N';
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzMTk0OTk5MTUiLCJzZXNzaW9uSWQiOiI2NzMyNDAiLCJpYXQiOjE3MTU2OTU4ODksImV4cCI6MTcxNTczOTA4OX0.faHXOAp9gmuaWnkHrTMfwGPTvLyQgmL8D24je4tpe_4'
+const API_KEY = process.env.API_KEY;
 
 
 async function getWalletBalance(signer) {
@@ -62,38 +63,50 @@ router.get('/estimate_amount', auth, async (req, res) => {
 });
 
 
+const validatePayoutAddress = async (sendAddress, currencyTo, apiKey) => {
+  const payload = {
+    address: sendAddress,
+    currency: currencyTo,
+  };
 
-router.post('/validate_address', auth, async (req, res) => {
+
   try {
-    // Extract payment details from request body
-    const { sendAddress, currencyTo } = req.body;
-
-    const payload = {
-      address: sendAddress,
-      currency: currencyTo,
-    };
-
     const response = await axios.post('https://api.nowpayments.io/v1/payout/validate-address', payload, {
       headers: {
-        'x-api-key': API_KEY,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
     });
 
     // Extract status from response data
-    const { status } = response.data;
-
+    const { status } = response.status;
     // Return true if status is "OK", otherwise return false
-    res.json(status === 200);
+    return response.status === 200;
   } catch (error) {
     console.error('Invalid payout_address: ', error);
+    throw new Error('Invalid payout address, please ensure the network is correct.');
+  }
+};
+
+// Define the endpoint
+router.post('/validate_address', auth, async (req, res) => {
+  try {
+    // Extract payment details from request body
+    const { sendAddress, currencyTo } = req.body;
+
+    // Call the validation function
+    const isValid = await validatePayoutAddress(sendAddress, currencyTo, API_KEY);
+
+    // Return the validation result
+    res.json({ success: isValid });
+  } catch (error) {
+    console.error('Error during address validation: ', error);
     res.status(500).json({
       success: false,
-      message: 'Invalid payout address, please ensure the network is correct.',
+      message: error.message,
     });
   }
 });
-
 // **************************************** //
 // ************* FIAT ********************* //
 // **************************************** //
@@ -215,7 +228,6 @@ router.post('/generate_address', auth, async (req, res) => {
 
     // Extract payment details from request body
     const { web2Amount, currencyTo } = req.body;
-    // console.log("generate_address: ", web2Amount, currencyTo )
 
     const payload = {
       price_amount: web2Amount,
@@ -270,11 +282,21 @@ router.post('/get_price', auth, async (req, res) => {
 });
 
 // WITHDRAWAL WEB2
+
 router.post('/create_payout', auth, async (req, res) => {
   try {
     const { amount, currency, address, extra_id } = req.body;
     const balance = req.user.balance;
     const withdrawalLimit = req.user.dailyWithdrawals;
+
+    const username = req.user.username;
+
+    if (username.includes('BOT')) {
+      return res.json({
+        success: false,
+        message: 'DO NOT HAVE PURRMISSION'
+      });
+    }
 
     if (balance < amount) {
       return res.json({
@@ -284,7 +306,6 @@ router.post('/create_payout', auth, async (req, res) => {
     }
 
     if (withdrawalLimit >= 100) {
-      console.log("Exceeded Daily Withdrawal Limit", req.user);
       return res.json({
         success: false,
         message: 'EXCEEDED DAILY WITHDRAWAL LIMIT (DURING LAUNCH PHASE ONLY!)'
@@ -292,7 +313,6 @@ router.post('/create_payout', auth, async (req, res) => {
     }
 
     if (amount > 100) {
-      console.log("Large amount", req.user);
       return res.json({
         success: false,
         message: 'Maximum Withdrawal Amount is 100 RPS per DAY during Launch'
@@ -306,81 +326,117 @@ router.post('/create_payout', auth, async (req, res) => {
         message: 'EXISTING LOANS, CANNOT WITHDRAW'
       });
     }
+    const email = 'lennybeadle@gmail.com';
+    const password = 'Utrecht2156$';
+    // Extract JWT token from authorization header
+    const token = await getJWTToken(email, password);
+    let newAmount;
+    const retryLimit = 3;
+    let attempt = 0;
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+    while (attempt < retryLimit) {
+      try {
+        // Attempt to estimate the new amount
+        newAmount = await estimateAmount((req.body.amount * 0.579), 'eth');
+        break; // Break out of loop if estimation is successful
+      } catch (error) {
+        attempt++;
+        console.error(`Estimation failed, attempt ${attempt} of ${retryLimit}:`, error.message);
+        if (attempt < retryLimit) {
+          await delay(1000 * attempt); // Exponential backoff
+        } else {
+          return res.status(500).json({
+            success: false,
+            message: 'Failed to estimate amount after multiple attempts'
+          });
+        }
+      }
+    }
+
+    // Construct payload for NowPayments API
+    const payload = {
+      ipn_callback_url: 'https://nowpayments.io', // You may adjust this as needed
+      withdrawals: [
+        {
+          address: address.toString(),
+          currency: currency,
+          amount: newAmount.estimated_amount,
+          ipn_callback_url: 'https://nowpayments.io',
+          extra_id: extra_id ? extra_id : null
+        }
+      ]
+    };
+
+    // Make request to NowPayments API with token from the authorization header
+    const response = await axios.post('https://api.nowpayments.io/v1/payout', payload, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-api-key': API_KEY, // Replace with your actual API key
+        'Content-Type': 'application/json',
+      }
+    });
+
+    // Save transaction and receipt after successful withdrawal
     const newTransaction = new Transaction({
       user: req.user._id,
       address: address,
-      amount: amount,
+      amount: -amount,
       description: 'withdraw',
-      status: 'completed',
-      hash: '',
+      status: 'waiting',
+      hash: response.data.id,
     });
 
     const receipt = new Receipt({
       user_id: req.user._id,
       payment_method: 'Web2',
       payment_type: 'Withdrawal',
-      amount: amount,
+      amount: -amount,
     });
 
     req.user.balance -= amount;
+    if (response.data.withdrawals[0].status === 'CREATING') {
+      try {
+        await req.user.save();
+        await receipt.save();
+        await newTransaction.save();
+      } catch (error) {
+        console.error('Error saving transaction or receipt:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to save transaction or receipt'
+        });
+      }
 
-    try {
-      await req.user.save();
-    } catch (saveError) {
-      console.error('Failed to save user balance:', saveError);
       return res.json({
-        success: false,
-        message: 'Failed to save user balance'
+        success: true,
+        balance: req.user.balance,
+        newTransaction,
+        message: `Withdrawal request received and is pending confirmation. 🤑 Much Wow.`
       });
     }
-    console.log("address", address)
-    const payload = {
-      ipn_callback_url: 'https://nowpayments.io', // You may adjust this as needed
-      withdrawals: [
-        {
-          address: address,
-          currency: currency,
-          amount: parseFloat((amount * 0.58).toFixed(4)),
-          ipn_callback_url: 'https://nowpayments.io' // You may adjust this as needed
-        }
-      ]
-    };
-
-
-    const response = await axios.post('https://api.nowpayments.io/v1/payout', payload, {
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
-    });
-    const paymentStatus = response.data.payment_status;
-    console.log("paymentStatus", paymentStatus)
-    if (paymentStatus === 'WAITING') {
-
-      const transaction = await Transaction.findById(newTransaction._id);
-      transaction.status = 'completed';
-      transaction.hash = response.data.payment_id;
-
-      console.log('Withdrawal transaction processed successfully.');
-    }
-    await receipt.save();
-    await transaction.save();
-
-    res.json({
-      success: true,
-      message: `Please wait for confirmations.<br /> You can view the status in your 'All Transactions' history.`,
-    });
 
   } catch (error) {
-    console.error('Invalid payout_address: ', error);
+    console.error('Error processing withdrawal request: ', error);
     res.status(500).json({
       success: false,
-      message: 'Invalid payout address, please ensure the network is correct.',
+      message: 'An unexpected error occurred'
     });
   }
 });
+
+// Function to get the JWT token from NOWPayments
+const getJWTToken = async (email, password) => {
+  try {
+    const response = await axios.post('https://api.nowpayments.io/v1/auth', {
+      email,
+      password
+    });
+    return response.data.token;
+  } catch (error) {
+    throw new Error('Error obtaining JWT token: ' + (error.response ? error.response.data : error.message));
+  }
+};
 
 
 // **************************************** //
@@ -412,17 +468,15 @@ router.post('/deposit_successed', auth, async (req, res) => {
     if (!tx || !tx.blockNumber) {
       return res.status(404).send('Transaction not found or not confirmed');
     }
-    console.log("tx", tx);
 
     // Check if the transaction matches with the amount and the addresses
     const signer = new ethers.Wallet(walletKey, provider);
     const wamount = ethers.utils.parseUnits(amount.toString(), 'ether');
-    console.log("signer", signer);
 
     if (Number(tx.value) != Number(wamount) || tx.to !== signer.address) {
       return res.status(400).send('Transaction does not match with input');
     }
-    console.log("wamount", wamount);
+    // console.log("wamount", wamount);
     const rpsAmount = calculateAmountWeb3(price_amount)
     // The cron job will periodically check for confirmations and update the balance
     // No need to update the balance here
@@ -463,16 +517,24 @@ router.post('/deposit_successed', auth, async (req, res) => {
 });
 
 router.post('/withdraw_request', auth, async (req, res) => {
+
   let tx;
   try {
-    const balance = req.user.balance;
-    const withdrawalLimit = req.user.dailyWithdrawals;
-    if (balance < req.body.amount) {
+    const username = req.user.username;
+
+    if (username.includes('BOT')) {
       return res.json({
         success: false,
-        message: 'INSUFFICIENT FUNDS'
+        message: 'DO NOT HAVE PERMISSION'
       });
     }
+    const balance = req.user.balance;
+    const withdrawalLimit = req.user.dailyWithdrawals;
+
+    if (balance < req.body.amount) {
+    
+    }
+
     if (withdrawalLimit > 100) {
       console.log("Exceeded Daily Withdrawal Limit", req.user);
       return res.json({
@@ -481,7 +543,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
       });
     }
     if (req.body.amount > 100) {
-      console.log("Large amount", req.user);
       return res.json({
         success: false,
         message: 'Maximum Withdrawal Amount is 100 RPS per DAY during Launch'
@@ -509,7 +570,6 @@ router.post('/withdraw_request', auth, async (req, res) => {
     try {
       const estimatedAmount = await estimateAmount((req.body.amount * 0.589), 'eth');
       const amountTransfer = ethers.utils.parseUnits(String(estimatedAmount.estimated_amount), 'ether');
-      console.log("amountTransfer", amountTransfer)
       const block = await provider.getBlock('latest');
       const baseFeeGwei = ethers.utils.formatUnits(block.baseFeePerGas, 'gwei');
       const priorityFeeGwei = '2.5';
@@ -526,6 +586,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       const balanceWei = ethers.utils.parseEther(balanceInEther);
       // Subtract gas fee from balance in wei
       const differenceWei = balanceWei.sub(gasFee);
+
       // console.log("Balance in Wei:", balanceWei.toString());
       // console.log("Gas Fee in Wei:", gasFee.toString());
       // console.log("Difference in Wei:", differenceWei.toString());
@@ -540,7 +601,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
       const real = amountTransfer.sub(gasFee);
       const realEth = ethers.utils.formatEther(real);
 
-      console.log("Sending transaction...", real);
+      // console.log("Sending transaction...", real);
 
       req.user.balance = req.user.balance - req.body.amount;
 
@@ -624,7 +685,7 @@ async function estimateAmount(web2Amount, currencyTo) {
     });
     return response.data;
   } catch (error) {
-    console.error('Error estimating amount: ', error);
+    console.error('Error estimating amount: ', web2Amount, currencyTo);
     throw new Error('Failed to estimate amount.');
   }
 }

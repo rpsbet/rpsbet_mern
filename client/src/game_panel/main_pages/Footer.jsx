@@ -102,11 +102,6 @@ class Footer extends Component {
         return null;
     }
 
-    // componentDidMount() {
-    //     console.log(this.props.isDarkMode)
-    //     // this.IsAuthenticatedReroute();
-    // }
-
     handleOpenLeaderboardsModal = () => {
         this.setState({ showLeaderboardsModal: true });
     };
@@ -184,7 +179,7 @@ class Footer extends Component {
                     </div>
                     <div className={classes.proof}>
                         {/* <p>Proof of Funds</p>
-                        <a target="_blank" href="https://etherscan.com/address/0xD291Db607053cFcdcFFdADCcfE8A3a8bA8Cd8c6B">
+                        <a target="_blank" href="https://etherscan.com/address/0x12b2b3f570E14bd2247A34B999255DD70f88f426">
 
                             <img className={classes.bscscan} src={bscscan} alt="etherscan" />
                         </a> */}

@@ -53,7 +53,6 @@ const predictAndSave = async (roomBets, roomId) => {
     const allBangs = [];
 
     nextBangPrediction = await predictNextBang(roomBets);
-console.log(nextBangPrediction)
     const roomBetsCount = await BangBetItem.countDocuments({ room: roomId });
 
     // Check if the count exceeds the limit

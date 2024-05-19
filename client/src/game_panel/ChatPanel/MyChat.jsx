@@ -4,40 +4,42 @@ import history from '../../redux/history';
 import { setChatRoomInfo, getMyChat } from '../../redux/Logic/logic.actions';
 import Avatar from "../../components/Avatar";
 import Moment from 'moment';
-import {Button} from '@material-ui/core';
+import { Button } from '@material-ui/core';
 
 class MyChat extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			myChat: this.props.myChat
+			myChat: this.props.myChat,
+			chatOpenMobile: false,
+			is_mobile: window.innerWidth < 1024 ? true : false
 		};
-		this.state.myChat = this.props.myChat || {};
 
 	}
 
-	
+
 	// async componentDidUpdate(prevProps) {
 	// 	if (prevProps.myChat !== this.props.myChat) {
-	// 	  console.log('j');
 	// 	}
 	// 	this.chat_log_panel.scrollTop = this.chat_log_panel.scrollHeight;
-	//   }
+	// }
 
 	openChat = (e) => {
 		const { avatar, username, rank } = e.currentTarget.dataset;
 		const chatRoomId = e.currentTarget.dataset.id;
-
+		if (this.state.is_mobile) {
+			this.props.toggleDrawer();
+		}
 		this.props.setChatRoomInfo({
-		  avatar,
-		  rank,
-		  username,
-		  chatLogs: []
+			avatar,
+			rank,
+			username,
+			chatLogs: []
 		});
-	  
+
 		history.push('/chat/' + chatRoomId);
-	  }
-	  
+	}
+
 
 	static getDerivedStateFromProps(props, current_state) {
 		return {
@@ -52,18 +54,19 @@ class MyChat extends Component {
 	}
 
 	render() {
-		const {loading} = this.props;
-		const history_keys = Object.keys(this.state.myChat).sort((a, b) => { 
+		const { loading } = this.props;
+		const history_keys = Object.keys(this.state.myChat).sort((a, b) => {
 			return this.state.myChat[a].updated_at < this.state.myChat[b].updated_at ? 1 : -1;
 		});
 
 		return (
+
 			<div className="chat">
 				<div className="table my-chat-table">
 					{
-						this.state.myChat.length === 0 && loading ? 
+						this.state.myChat.length === 0 && loading ?
 							<div className='loading-spinner'></div>
-							: 
+							:
 							history_keys.map((row, key) => (
 								<div className="table-row" key={key}>
 									<div>
@@ -81,15 +84,15 @@ class MyChat extends Component {
 										<div className="table-cell">
 										</div>
 										<div className="table-cell">
-										<Button 
-											className="btn btn_join" 
-											onClick={this.openChat}
-											data-id={this.state.myChat[row]._id} 
-											data-avatar={this.state.myChat[row].avatar} 
-											data-rank={this.state.myChat[row].totalWagered} 
-											data-username={this.state.myChat[row].username} 
+											<Button
+												className="btn btn_join"
+												onClick={this.openChat}
+												data-id={this.state.myChat[row]._id}
+												data-avatar={this.state.myChat[row].avatar}
+												data-rank={this.state.myChat[row].totalWagered}
+												data-username={this.state.myChat[row].username}
 											>
-											Open
+												Open
 											</Button>
 
 										</div>
@@ -99,6 +102,7 @@ class MyChat extends Component {
 					}
 				</div>
 			</div>
+
 		);
 	}
 }
@@ -116,6 +120,6 @@ const mapDispatchToProps = {
 };
 
 export default connect(
-  mapStateToProps,
-  mapDispatchToProps
+	mapStateToProps,
+	mapDispatchToProps
 )(MyChat);

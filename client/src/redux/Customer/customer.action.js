@@ -219,7 +219,7 @@ export const getRoomStatisticsData = (room_id, limit) => async dispatch => {
     });
 
     if (data.success) {
-      console.log(data)
+      // console.log(data)
       dispatch({ type: ROOM_STATISTICS_LOADED, payload: data });
 
     } else {

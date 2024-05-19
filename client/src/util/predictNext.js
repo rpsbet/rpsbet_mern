@@ -61,7 +61,7 @@ export const predictNext = (rps_list, hiddenMarkov = false) => {
 // Function to get the beating type
 const getBeatingType = (currentState) => {
   const random = Math.random();
-  
+
   if (currentState === 'R') {
     return random < 0.5 ? 'P' : 'R'; // 50% chance to return P or R
   } else if (currentState === 'P') {
@@ -206,7 +206,7 @@ export async function reinforcementAI(data) {
     });
 
     if (recentWins.length === 0) {
-      console.log("No recent wins, adapting...");
+      // console.log("No recent wins, adapting...");
       // Adapt the model based on recent losses
       const newData = historicData.slice(-1); // Consider the last 1 game for adaptation
       const newRpsNumeric = newData.map(entry => (entry.rps === 'R' ? 0 : entry.rps === 'P' ? 1 : 2));
@@ -310,23 +310,14 @@ export function counterSwitchAI(historicData) {
   return moves[randomIndex];
 }
 
-export function counterRandomness(historicData) {
+export function counterRandomness(historicData, type) {
   if (historicData.length < 3) {
     // If historicData has less than 3 moves, return false
-    return { counterMove: null, risk: 2 };
+    return { counterMove: getRandomMove(), risk: 1 };
   }
 
-  // Get the AI's most recent move
+  // Check if the last 5 moves are the same as counterMove
   const lastMove = historicData[0].rps;
-  // Get the penultimate move
-  const penultimateMove = historicData[1].rps;
-  // Get the third-to-last move
-  const thirdToLastMove = historicData[2].rps;
-
-  // Check if the penultimate move is the same as the last move
-  const penultimateSameAsLast = penultimateMove === lastMove;
-  // Check if the third-to-last move is the same as the last move
-  const thirdToLastSameAsLast = thirdToLastMove === penultimateMove && penultimateSameAsLast;
 
   let counterMove;
   switch (lastMove) {
@@ -343,15 +334,31 @@ export function counterRandomness(historicData) {
       counterMove = getRandomMove(); // Handle unexpected cases
   }
 
+  const lastFiveSameAsCounterMove = historicData.slice(0, 3).every(move => move.rps === lastMove);
+
+  const penultimateMove = historicData[1].rps;
+  const thirdToLastMove = historicData[2].rps;
+
+  const penultimateSameAsLast = penultimateMove === lastMove;
+  const thirdToLastSameAsLast = thirdToLastMove === penultimateMove && penultimateSameAsLast;
+
   let risk;
 
-  if (penultimateSameAsLast && !thirdToLastSameAsLast) {
-    risk = 2;
-  } else if (penultimateSameAsLast && thirdToLastSameAsLast) {
-    risk = 3;
+  if (penultimateSameAsLast) {
+    risk = thirdToLastSameAsLast ? 3 : 2;
+    if ((type === 1 && lastFiveSameAsCounterMove) || type === 0) {
+      risk = 3;
+    } else if (thirdToLastSameAsLast && type === 0) {
+      risk = 2;
+    } else {
+      risk = 1;
+    }
+
   } else {
     risk = 1;
   }
+
+ 
 
   return { counterMove, risk };
 }
@@ -373,7 +380,6 @@ function getRandomMove() {
 }
 
 export function generatePattern(allBetItems) {
-  console.log("Received allBetItems:", allBetItems);
 
   const patterns = [
     ['R', 'P'],
@@ -432,11 +438,11 @@ export function generatePattern(allBetItems) {
 export function martingaleStrategy(historicData) {
   // If there's no historic data or it's the first round, play randomly
   if (historicData.length === 0) {
-      const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
-      return {
-          move: randomMove,
-          lastResult: null // No previous result
-      };
+    const randomMove = ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
+    return {
+      move: randomMove,
+      lastResult: null // No previous result
+    };
   }
 
   // Get the result of the previous game
@@ -449,20 +455,20 @@ export function martingaleStrategy(historicData) {
 
   // Return the random move along with the result of the previous game
   return {
-      move: randomMove,
-      lastResult: lastResult // Return the result of the previous game
+    move: randomMove,
+    lastResult: lastResult // Return the result of the previous game
   };
 }
 
 // Function to determine the result of the game based on AI's move and opponent's move
 function getResult(aiMove, opponentMove) {
   if (aiMove === opponentMove) {
-      return 'draw';
+    return 'draw';
   } else if ((aiMove === 'R' && opponentMove === 'P') ||
-             (aiMove === 'P' && opponentMove === 'S') ||
-             (aiMove === 'S' && opponentMove === 'R')) {
-      return 'win';
+    (aiMove === 'P' && opponentMove === 'S') ||
+    (aiMove === 'S' && opponentMove === 'R')) {
+    return 'win';
   } else {
-      return 'loss';
+    return 'loss';
   }
 }

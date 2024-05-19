@@ -242,6 +242,9 @@ const addToQueue = async (req, bot = false) => {
                         case 'Skill-issue':
                             nextItem = await counterRandomness(allBetItems);
                             break;
+                        case 'Skill-issue-2':
+                            nextItem = await counterRandomness(allBetItems);
+                            break;
                         case 'NPC':
                             nextItem = await NPC(allBetItems);
                             break;
@@ -313,7 +316,7 @@ const addToQueue = async (req, bot = false) => {
                             }
                         }
                     }
-                    
+
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
 

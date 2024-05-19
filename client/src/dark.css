@@ -358,6 +358,8 @@ border-top: 2px solid #36393f;
 .dark_mode .contents_wrapper .main-game .sub-panel {
 border-left: 1px solid rgba(40, 38, 55, 0.48);
 }
+
+.dark_mode .contents_wrapper,
 .dark_mode .contents_wrapper .main-game .main-panel,
 .dark_mode .contents_wrapper .main-game .sub-panel {
 	background-color: #0c0c0c;

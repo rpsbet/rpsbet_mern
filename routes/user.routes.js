@@ -368,7 +368,6 @@ router.post('/username', auth, async (req, res) => {
 router.post('/get-info', async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.body._id });
-    console.log(user)
     res.json({
       success: true,
       query: req.query,
@@ -385,7 +384,6 @@ router.post('/get-info', async (req, res) => {
 router.post('/getId', admin, async (req, res) => {
   try {
     const userId = await User.findOne({ username: req.body.username }, { _id: 1 });
-    // console.log("userId", userId);
     if (!userId) {
       return res.json({
         success: true,

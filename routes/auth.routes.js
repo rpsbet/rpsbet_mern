@@ -85,7 +85,6 @@ router.get('/profit', auth, async (req, res) => {
     const allTransactions = await Transaction.find({ user: user });
 
     const profitData = getProfitData(allTransactions);
-    console.log(profitData)
     res.json({
       success: true,
       user: req.user,
@@ -224,7 +223,6 @@ router.post('/resetPassword', async (req, res) => {
 
 // Change Password in EditAccountModal
 router.post('/changePasswordAndAvatar', auth, async (req, res) => {
-  console.log('Request body:'); 
   try {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(req.body.new_password, salt, (err, hash) => {

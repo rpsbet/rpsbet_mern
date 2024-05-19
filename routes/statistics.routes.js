@@ -339,8 +339,6 @@ router.get('/get-customer-statistics', async (req, res) => {
     }
 
 
-    // console.log(statistics.gameLogList)
-
     const response = {
       success: true,
       statistics
@@ -587,7 +585,6 @@ router.get('/get-room-statistics', async (req, res) => {
       bets_values: player.bets_values
     }));
 
-    console.log(room_info)
 
     room_info.sort((a, b) => b.net_profit - a.net_profit);
 

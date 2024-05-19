@@ -698,16 +698,17 @@ class MyGamesTable extends Component {
       alertModal(this.props.isDarkMode, `SELECT A GAME FURR-ST!!!`);
       return;
     }
-    const selectedGameType = this.props.gameTypeList.find(
-      gameType => gameType.short_name === this.state.selectedGameType
-    );
-    if (selectedGameType) {
-      this.props.setGameMode(selectedGameType.game_type_name);
-      history.push(`/create/${selectedGameType.game_type_name}`);
-    } else {
-      this.props.setGameMode('');
-      history.push(`/create/`);
-    }
+    this.props.setGameMode('');
+    history.push(`/create/`);
+    // const selectedGameType = this.props.gameTypeList.find(
+    //   gameType => gameType.short_name === this.state.selectedGameType
+    // );
+    // if (selectedGameType) {
+    //   this.props.setGameMode(selectedGameType.game_type_name);
+    //   history.push(`/create/${selectedGameType.game_type_name}`);
+    // } else {
+     
+    // }
   };
 
 

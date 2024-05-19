@@ -1248,10 +1248,11 @@ class RPS extends Component {
 
                   {startedPlaying && (
                     <div
-                      id="rps-radio"
-                      style={{ zIndex: 1 }}
-                      className={`fade-in `}
-                    >
+                    id="rps-radio"
+                    style={{ zIndex: 1 }}
+                    className={this.props.ai_mode !== 'Skill-issue-2' ? '' : ''}
+                  >
+                  
                       <div
                         className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'R'
                           ? 'rock'

@@ -427,7 +427,6 @@ class Blackjack extends Component {
       bj_list: newArray
       // winChance: winChanceEV
     });
-    // console.log(this.props.bj_list);
     // this.onChangeWinChance(winChance);
     // this.setState({ winChance: winChanceEV });
   };
