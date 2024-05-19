@@ -270,11 +270,10 @@ async function checkConfirmations(io) {
             'Content-Type': 'application/json',
           },
         });
-        // console.log("reposnsdsd", response.data)
-        const paymentStatus = response.data.status;
+        const paymentStatus = response.data.withdrawals[0].status;
         if (paymentStatus === 'FINISHED') {
 
-          transaction.status === 'complete';
+          transaction.status ='complete';
           try {
             await saveDocumentWithRetry(transaction);
           } catch (error) {
