@@ -32,7 +32,7 @@ async function resetWithdrawalLimits() {
             user.username === '🔥 THE DON 🔥 (BOT #1)' ||
             user.username === '🪨 ROCKY 🪨 (BOT #2)' ||
             user.username === '✂️ CAESAR ✂️ (BOT #4)' ||
-            user.username === '📃 PAPIÉR 📃 (BOT #3)'
+            user.username === '📃 PAPÎER 📃 (BOT #3)'
           ) {
             continue;
           }

@@ -272,7 +272,7 @@ async function checkConfirmations(io) {
         });
         // console.log("reposnsdsd", response.data)
         const paymentStatus = response.data.status;
-        if (paymentStatus === 'finished') {
+        if (paymentStatus === 'FINISHED') {
 
           transaction.status === 'complete';
           try {
