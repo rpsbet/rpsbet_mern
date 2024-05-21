@@ -313,7 +313,7 @@ class MainPage extends Component {
               )}
             {this.state.is_mobile &&
               this.state.selectedMobileTab === 'live_games' &&
-              this.state.show_open_game === 1 && <HistoryTable />}
+              this.state.show_open_game === 1 && <HistoryTable  userId={this.props.user._id} />}
             {this.state.is_mobile &&
               this.state.selectedMobileTab === 'my_games' &&
               this.state.show_open_game === 1 && <MyHistoryTable />}
@@ -357,7 +357,6 @@ class MainPage extends Component {
             {!this.state.is_mobile && this.props.selectedMainTabIndex === 1 && (
               <>
                 <h2 className="main-title desktop-only">YOUR HISTORY</h2>
-
                 <MyHistoryTable />
               </>
             )}
