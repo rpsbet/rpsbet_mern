@@ -4,9 +4,6 @@ import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import { createTheme, ThemeProvider } from '@material-ui/core/styles';
 
-
-
-
 export default function BetAmountInput(props) {
   const {
     betAmount,
@@ -92,13 +89,6 @@ export default function BetAmountInput(props) {
     setIsFocused(false);
   };
 
-  // const formatBetAmount = (amount) => {
-  //   const roundedAmount = Math.floor(amount * 100000) / 100000;
-  //   return roundedAmount;
-  // };
-  
-  // const formattedBetAmount = formatBetAmount(betAmount);
-
   return (
     <div className="bet-amount">
       <ThemeProvider theme={theme}>
@@ -125,7 +115,7 @@ export default function BetAmountInput(props) {
             endAdornment: (
               <ButtonGroup
                 className={isButtonGroupVisible ? 'fade-in' : 'fade-out'}
-                style={{ visibility: isButtonGroupVisible ? 'visible' : 'hidden' }}
+                // style={{ visibility: isButtonGroupVisible ? 'visible' : 'hidden' }}
               >
                 <Button
                   variant="contained"

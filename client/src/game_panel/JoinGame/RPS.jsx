@@ -734,6 +734,7 @@ class RPS extends Component {
   };
 
   handle2xButtonClick = () => {
+    
     const maxBetAmount = this.props.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
