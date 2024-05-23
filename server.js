@@ -13,8 +13,8 @@ const socketContoller = require('./socketController.js');
 const app = express();
 
 
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
+const server = app.listen(process.env.PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${process.env.PORT}`);
 });
 
 const io = socketContoller.socketio(server, { origins: '*:*' });
