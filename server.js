@@ -12,9 +12,10 @@ const socketContoller = require('./socketController.js');
 
 const app = express();
 
-const server = app.listen(process.env.PORT, () =>
-  console.log(`server running on port ${process.env.PORT}`)
-);
+
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on port ${port}`);
+});
 
 const io = socketContoller.socketio(server, { origins: '*:*' });
 app.use(function(req, res, next) {
@@ -53,12 +54,12 @@ const rentCron = require('./helper/util/rentCron.js');
 const callBotCron = require('./helper/util/callBotCron.js');
 const withdrawalCron = require('./helper/util/withdrawalCron.js');
 // Initialize the cron job to periodically check for confirmations
-// creditScoreCron.checkOutstandingLoans(io);
-// rentCron.checkRentalPayments(io);
-// notificationCron.deleteNotifications();
-// callBotCron.callCronJobs(io);
-// withdrawalCron.resetWithdrawalLimits();
-// cronJob.checkConfirmations(io);
+creditScoreCron.checkOutstandingLoans(io);
+rentCron.checkRentalPayments(io);
+notificationCron.deleteNotifications();
+callBotCron.callCronJobs(io);
+withdrawalCron.resetWithdrawalLimits();
+cronJob.checkConfirmations(io);
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
