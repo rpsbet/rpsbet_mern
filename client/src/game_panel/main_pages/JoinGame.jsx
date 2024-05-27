@@ -97,6 +97,7 @@ class JoinGame extends Component {
       spleesh_guesses: [],
       selected_rps: '',
       selected_qs_position: 0,
+      index: 0,
       selected_id: '',
       image: '',
       loading: this.props.loading,
@@ -441,7 +442,8 @@ class JoinGame extends Component {
         const sortedStates = allStates.sort((a, b) => b - a);
 
         if (sortedStates.length >= 2) {
-          const secondHighestState = sortedStates[1];
+          const secondHighestState = sortedStates[this.state.index] || sortedStates[0];
+          this.setState({ index: this.state.index + 1 });
           return Math.min(Math.max(secondHighestState, 0.05), this.props.roomInfo.bet_amount);
         } else {
           // If there is no second state, return the first state from allStates
@@ -449,6 +451,8 @@ class JoinGame extends Component {
           return Math.min(Math.max(firstState, 0.05), this.props.roomInfo.bet_amount);
         }
       } else if (penultimateSameAsLast === 1) {
+        this.setState({ index: 0 });
+
         // Return the lowest value from allStates
         const minState = Math.min(...allStates);
         return Math.min(Math.max(minState, 0.05), this.props.roomInfo.bet_amount);
@@ -1536,6 +1540,7 @@ class JoinGame extends Component {
                   user_id={user_id}
                   ai_mode={ai_mode}
                   user_balance={user_balance}
+                  isDarkMode={this.props.isDarkMode}
                 />
               )}
             <h2 className="main-title desktop-only">HISTORY</h2>

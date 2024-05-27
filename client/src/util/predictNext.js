@@ -316,7 +316,6 @@ export function counterRandomness(historicData, type) {
     return { counterMove: getRandomMove(), risk: 1 };
   }
 
-  // Check if the last 5 moves are the same as counterMove
   const lastMove = historicData[0].rps;
 
   let counterMove;
@@ -334,8 +333,7 @@ export function counterRandomness(historicData, type) {
       counterMove = getRandomMove(); // Handle unexpected cases
   }
 
-  const lastFiveSameAsCounterMove = historicData.slice(0, 3).every(move => move.rps === lastMove);
-
+  const lastFiveSameAsCounterMove = historicData.slice(0, 8).every(move => move.rps === lastMove);
   const penultimateMove = historicData[1].rps;
   const thirdToLastMove = historicData[2].rps;
 
@@ -353,13 +351,35 @@ export function counterRandomness(historicData, type) {
     } else {
       risk = 1;
     }
-
   } else {
     risk = 1;
   }
 
- 
+  // Check for missing value in the historic data
+  const movesSet = new Set(historicData.slice(0, 4).map(move => move.rps));
+  let missingValue = null;
+  if (!movesSet.has('R')) {
+    missingValue = 'R';
+  } else if (!movesSet.has('P')) {
+    missingValue = 'P';
+  } else if (!movesSet.has('S')) {
+    missingValue = 'S';
+  }
 
+  if (missingValue) {
+    switch (missingValue) {
+      case 'R':
+        counterMove = 'P';
+        break;
+      case 'P':
+        counterMove = 'S';
+        break;
+      case 'S':
+        counterMove = 'R';
+        break;
+    }
+    risk = 2;
+  }
   return { counterMove, risk };
 }
 

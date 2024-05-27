@@ -332,15 +332,24 @@ function BetArray({
 
   // Function to handle updating cell data
   // Example of calling the action
-  const handleUpdateCellData = async () => {
+  const handleUpdateCellData = async (isDarkMode) => {
+    // Check if editedValue is a number greater than 0.05
+    if (isNaN(editedValue) || Number(editedValue) <= 0.05) {
+      alertModal(
+        isDarkMode,
+        'TRY A DIFFERENT NUM-PURR!'
+      );
+        return;
+    }
+
     try {
-      await updateRpsBetItems(selectedRow._id, selectedCell, editedValue);
+        await updateRpsBetItems(selectedRow._id, selectedCell, editedValue);
     } catch (err) {
-      console.error('Failed to update RpsBetItems:', err.message);
+        console.error('Failed to update RpsBetItems:', err.message);
     }
 
     setOpenModal(false);
-  };
+};
 
 
   const formatProfit = (profit) => {
@@ -658,7 +667,7 @@ function BetArray({
                           value={editedValue}
                           onChange={(e) => setEditedValue(e.target.value)}
                         />
-                        <Button variant="contained" color="primary" onClick={handleUpdateCellData}>Update</Button>
+                        <Button variant="contained" color="primary" onClick={() => {handleUpdateCellData(isDarkMode)}}>Update</Button>
                       </div>
                     </div>
                   </Modal>
