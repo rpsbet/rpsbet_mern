@@ -2311,7 +2311,7 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
 
 function check_access_time(user_id) {
   const check_result =
-    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 200
+    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 3000
       ? false
       : true;
   user_access_log[user_id] = Date.now();
