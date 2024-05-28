@@ -28,13 +28,10 @@ function check_access_time(user_id) {
 }
 
 const addToQueue = async (req, bot = false) => {
-    // console.time('addToQueue');
-
     try {
-
-        const taxPromise = SystemSetting.findOne({ name: 'commission' }).exec();
-        const rainPromise = SystemSetting.findOne({ name: 'rain' }).exec();
-        const platformPromise = SystemSetting.findOne({ name: 'platform' }).exec();
+        const taxPromise = SystemSetting.findOne({ name: 'commission' });
+        const rainPromise = SystemSetting.findOne({ name: 'rain' });
+        const platformPromise = SystemSetting.findOne({ name: 'platform' });
         const [
             tax,
             rain,
@@ -53,7 +50,7 @@ const addToQueue = async (req, bot = false) => {
             room: req.body._id
         });
         if (bot) {
-            user = await User.findOne({ _id: req.user._id }).exec();
+            user = await User.findOne({ _id: req.user._id });
 
         } else {
             user = req.user;
@@ -134,14 +131,14 @@ const addToQueue = async (req, bot = false) => {
 
             const creatorUser = await User.findOne({
                 _id: roomInfo['creator']._id
-            }).select('accessory').exec();
+            }).select('accessory');
 
             const accessory = creatorUser.accessory;
             let item;
             let commission;
 
             if (accessory) {
-                item = await Item.findOne({ image: accessory }).select('CP').exec();
+                item = await Item.findOne({ image: accessory }).select('CP');
                 if (item) {
                     commission = item.CP + parseFloat(tax.value);
                 } else {
@@ -193,7 +190,7 @@ const addToQueue = async (req, bot = false) => {
                 room: req.body._id,
                 // joiner: user._id,
                 joiner_rps: ''
-            }).exec();
+            });
             let bet_item = availableBetItem;
 
             const allBetItems = await RpsBetItem.find({
@@ -202,7 +199,7 @@ const addToQueue = async (req, bot = false) => {
                 joiner_rps: { $ne: null }
             })
                 .sort({ created_at: -1 })
-                .limit(50).exec();
+                .limit(50);
             const mostRecentItems = allBetItems.slice(0, 4);
 
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
@@ -284,7 +281,7 @@ const addToQueue = async (req, bot = false) => {
                     }
 
                     function getCopyCatItem(allBetItems) {
-                        const copyCatBetItem = allBetItems.find(item => item.joiner_rps).exec();
+                        const copyCatBetItem = allBetItems.find(item => item.joiner_rps);
                         return copyCatBetItem ? copyCatBetItem.joiner_rps : getRandomItem();
                     }
 
@@ -300,7 +297,6 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 newGameLog.selected_rps = req.body.selected_rps;
-                // console.time('databaseQueries');
 
                 if (roomInfo['rps_game_type'] === 0) {
 
@@ -408,11 +404,11 @@ const addToQueue = async (req, bot = false) => {
                                 game_result: 3
                             });
 
-                            saveDocumentWithRetry(newGameLogC);
+                            saveDocumentWithRetry(newGameLogC),
 
-                            roomInfo['user_bet'] = parseFloat(
-                                roomInfo['endgame_amount']
-                            );
+                                roomInfo['user_bet'] = parseFloat(
+                                    roomInfo['endgame_amount']
+                                );
                         }
 
                         // send notification
@@ -429,8 +425,11 @@ const addToQueue = async (req, bot = false) => {
                 if (roomInfo['rps_game_type'] === 0) {
                     winnings = betAmount * 2;
                 }
+                // update bet item with joiner's data
                 newGameLog.winnings = winnings;
                 newGameLog.game_result = game_result;
+                newGameLog.endgame_amount = roomInfo['endgame_amount'];
+
                 bet_item.joiner = user._id;
                 bet_item.joiner_rps = req.body.selected_rps;
                 bet_item.bet_amount = betAmount;
@@ -440,44 +439,43 @@ const addToQueue = async (req, bot = false) => {
 
                 const updatedGameLogArray = await Promise.all(gameLogArray.map(async (gameLog) => {
                     // Populate room
-                    const populateGameLog = async (gameLog) => {
-                        const roomPromise = Room.findById(gameLog.room).lean().exec();
-                        const creatorPromise = User.findById(gameLog.creator).lean().exec();
-                        const joinedUserPromise = User.findById(gameLog.joined_user).lean().exec();
-                        const gameTypePromise = GameType.findById(gameLog.game_type).lean().exec();
+                    const room = await Room.findById(gameLog.room).exec();
+                    const populatedRoom = room ? room.toObject() : null;
 
-                        const [room, creator, joinedUser, gameType] = await Promise.all([roomPromise, creatorPromise, joinedUserPromise, gameTypePromise]);
+                    // Populate creator
+                    const creator = await User.findById(gameLog.creator).exec();
+                    const populatedCreator = creator ? creator.toObject() : null;
 
-                        if (!room || !creator || !joinedUser || !gameType) {
-                            return null;
-                        }
+                    // Populate joined_user
+                    const joinedUser = await User.findById(gameLog.joined_user).exec();
+                    const populatedJoinedUser = joinedUser ? joinedUser.toObject() : null;
 
-                        return {
-                            bet_amount: gameLog.bet_amount,
-                            commission: gameLog.commission,
-                            game_result: gameLog.game_result,
-                            winnings: gameLog.winnings,
-                            host_pr: gameLog.host_pr,
-                            user_bet: gameLog.user_bet,
-                            _id: gameLog._id,
-                            room,
-                            creator,
-                            joined_user: joinedUser,
-                            game_type: gameType,
-                            created_at: gameLog.created_at,
-                            updated_at: gameLog.updated_at,
-                            hosts: gameLog.hosts
-                        };
+                    // Populate game_type
+                    const gameType = await GameType.findById(gameLog.game_type).exec();
+                    const populatedGameType = gameType ? gameType.toObject() : null;
+
+                    // Merge original fields with populated sub-documents
+                    const mergedObject = {
+                        bet_amount: gameLog.bet_amount,
+                        commission: gameLog.commission,
+                        game_result: gameLog.game_result,
+                        winnings: gameLog.winnings,
+                        host_pr: gameLog.host_pr,
+                        user_bet: gameLog.user_bet,
+                        _id: gameLog._id,
+                        room: populatedRoom,
+                        creator: populatedCreator,
+                        joined_user: populatedJoinedUser,
+                        game_type: populatedGameType,
+                        created_at: gameLog.created_at,
+                        updated_at: gameLog.updated_at,
+                        hosts: gameLog.hosts
                     };
-
-                    // Usage
-                    const mergedObject = await populateGameLog(gameLog);
 
                     return mergedObject;
                 }));
 
                 // Now the updatedGameLogArray should have the original fields along with the populated sub-documents
-
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
 
                 // socket for last 5 items
@@ -505,6 +503,7 @@ const addToQueue = async (req, bot = false) => {
                     }
                 }
 
+
                 // rug game if bankroll too low
                 if (roomInfo['user_bet'] <= 0.05) {
                     roomInfo.status = 'finished';
@@ -517,11 +516,10 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
 
+
                 }
             }
-            // console.timeEnd('databaseQueries');
 
-            // console.time('mainLogic');
             // if not already added to joiners, add to joiners
             if (!roomInfo.joiners.includes(user._id)) {
                 roomInfo.joiners.addToSet(user._id);
@@ -540,7 +538,7 @@ const addToQueue = async (req, bot = false) => {
             }
 
             // setTimeout(async () => {
-            const host = await User.findOne({ _id: roomInfo['creator'] }).exec();
+            const host = await User.findOne({ _id: roomInfo['creator'] });
             if (host) {
                 host.gamePlayed++;
                 host.totalProfit += newTransactionAmount * -1;
@@ -555,7 +553,6 @@ const addToQueue = async (req, bot = false) => {
             } else {
                 console.log(`Host not found.`);
             }
-
             // Check if user_bet matches the share value of the first host
             if (roomInfo.hosts[0].share === 100) {
                 let notification = new Notification({
@@ -614,6 +611,7 @@ const addToQueue = async (req, bot = false) => {
                     socket.newTransaction(newTransactionC);
                 }
 
+
             } else {
                 // Iterate over each host asynchronously
                 roomInfo.hosts.forEach(async (host) => {
@@ -641,7 +639,7 @@ const addToQueue = async (req, bot = false) => {
                             console.error("Error saving new transaction:", error);
                         }
                     }
-                    const coHost = await User.findOne({ _id: host.host }).exec();
+                    const coHost = await User.findOne({ _id: host.host });
 
                     if (coHost) {
                         coHost.balance += amountForHost;
@@ -684,7 +682,6 @@ const addToQueue = async (req, bot = false) => {
 
                 });
             }
-            // console.timeEnd('mainLogic');
 
             try {
                 Promise.all([
@@ -713,7 +710,7 @@ const addToQueue = async (req, bot = false) => {
                 is_read: false
             };
 
-            if (message.message !== '') {
+            if (message.message !== '' && message.from._id !== message.to._id) {
                 try {
                     await saveDocumentWithRetry(message);
                     socket.sendNotification(message.to._id, notificationData);
@@ -741,14 +738,12 @@ const addToQueue = async (req, bot = false) => {
             newTransaction: newTransactionJ,
             roomStatus: roomInfo.status
         };
-        // console.timeEnd('addToQueue');
         return responseData;
     } catch (err) {
         console.error(err);
         throw new Error('Error executing bet');
     }
 };
-
 
 const executeBet3 = (req, bot = false) => {
     return new Promise((resolve, reject) => {

@@ -444,6 +444,7 @@ const addToQueue = async (req, bot = false) => {
                 }
                 // update bet item with joiner's data
                 newGameLog.winnings = winnings;
+                newGameLog.endgame_amount = roomInfo['endgame_amount'];
                 newGameLog.game_result = game_result;
                 bet_item.joiner = user._id;
                 bet_item.joiner_rps = req.body.selected_rps;
@@ -541,6 +542,7 @@ const addToQueue = async (req, bot = false) => {
             }
 
             user['balance'] += newTransactionAmount;
+            
             user['gamePlayed']++;
             user['totalProfit'] += newTransactionAmount;
             user['totalWagered'] += Math.abs(bet_item.bet_amount);

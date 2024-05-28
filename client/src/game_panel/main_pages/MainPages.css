@@ -3297,7 +3297,8 @@ position: sticky !important;
   bottom: 0px;
   width: 100%;
 }
-.header_action_panel .lottie-container.cat div:first-child {
+.header_action_panel .lottie-container.cat div:first-child,
+.leaderboards-page .lottie-container.cat div:first-child {
   top: 8px !important;
   left: 10px !important;
 }

@@ -50,6 +50,11 @@ const GameLogSchema = new Schema({
         type: Number,
         default: 0
     },
+
+    endgame_amount: {
+        type: Number,
+        default: 0
+    },
     
     // selected_box: {
     //     type: Schema.Types.ObjectId,
