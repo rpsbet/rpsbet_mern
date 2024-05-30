@@ -150,6 +150,8 @@ async function checkConfirmations(io) {
 
       const paymentId = transaction.hash;
       if (isDeposit && paymentId) {
+        transaction.status = 'processing';
+        await saveDocumentWithRetry(transaction);
 
         const response = await axios.get(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
           headers: {

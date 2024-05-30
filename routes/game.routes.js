@@ -1072,7 +1072,7 @@ router.post('/rooms', auth, async (req, res) => {
       game_type: gameType,
       user_bet,
       pr,
-      endgame_amount: parseFloat(bet_amount),
+      endgame_amount: endgame_type ? endgame_amount : parseFloat(bet_amount),
       endgame_type,
       host_pr,
       room_number: roomCount + 1,
