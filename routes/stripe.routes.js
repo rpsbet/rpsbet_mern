@@ -338,7 +338,9 @@ router.post('/create_payout', auth, async (req, res) => {
     while (attempt < retryLimit) {
       try {
         // Attempt to estimate the new amount
-        newAmount = await estimateAmount((req.body.amount * 0.579), 'eth');
+        newAmount = await estimateAmount((req.body.amount * 0.579), currency);
+ console.log("newAmount", newAmount)
+
         break; // Break out of loop if estimation is successful
       } catch (error) {
         attempt++;
@@ -683,13 +685,13 @@ async function estimateAmount(web2Amount, currencyTo) {
         'Content-Type': 'application/json',
       },
     });
+console.log("WEdw",response.data )
     return response.data;
   } catch (error) {
     console.error('Error estimating amount: ', web2Amount, currencyTo);
     throw new Error('Failed to estimate amount.');
   }
 }
-
 
 router.post('/get_gasfee', auth, async (req, res) => {
   // console.log("Qd", process.env)

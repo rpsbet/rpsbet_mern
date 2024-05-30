@@ -152,7 +152,7 @@ class WithdrawModal extends Component {
       sendAddress: '',
       hoveredSuggestion: null,
       suggestions: [],
-      amount: props.balance || 0,
+      amount:  Math.floor(props.balance * 100) / 100|| 0,
       balance: 0,
     };
   }
@@ -270,7 +270,7 @@ class WithdrawModal extends Component {
 
   handleAmountChange = e => {
     e.preventDefault();
-    const amount = e.target.value;
+    const amount =  Math.floor(e.target.value * 100) / 100;
     this.setState({
       amount: amount,
       web2Amount: amount * 0.568,
@@ -382,6 +382,7 @@ class WithdrawModal extends Component {
       }
     } catch (error) {
       this.setState({ isLoading: false });
+      alertModal(this.props.isDarkMode, "Something went wrong, try again later.");
 
       console.error(error);
       // Handle error
