@@ -288,6 +288,7 @@ router.post('/create_payout', auth, async (req, res) => {
     const { amount, currency, address, extra_id } = req.body;
     const balance = req.user.balance;
     const withdrawalLimit = req.user.dailyWithdrawals;
+    const totalWagered = req.user.totalWagered;
 
     const username = req.user.username;
 
@@ -302,6 +303,12 @@ router.post('/create_payout', auth, async (req, res) => {
       return res.json({
         success: false,
         message: 'INSUFFICIENT FUNDS'
+      });
+    }
+    if (totalWagered === 0) {
+      return res.json({
+        success: false,
+        message: 'ACCOUNT TOO NEW'
       });
     }
 
@@ -523,6 +530,7 @@ router.post('/withdraw_request', auth, async (req, res) => {
   let tx;
   try {
     const username = req.user.username;
+    const totalWagered = req.user.totalWagered;
 
     if (username.includes('BOT')) {
       return res.json({
@@ -530,6 +538,13 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'DO NOT HAVE PERMISSION'
       });
     }
+    if (totalWagered === 0) {
+      return res.json({
+        success: false,
+        message: 'ACCOUNT TOO NEW'
+      });
+    }
+    
     const balance = req.user.balance;
     const withdrawalLimit = req.user.dailyWithdrawals;
 
