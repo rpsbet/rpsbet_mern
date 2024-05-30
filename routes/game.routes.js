@@ -2638,7 +2638,7 @@ router.post('/tip', auth, async (req, res) => {
 
     const now = moment().format('LLL');
     const userBalance = req.user.balance;
-    if (username.includes('BOT')) {
+    if (req.user.username.includes('BOT')) {
       return res.json({
         success: false,
         message: 'DO NOT HAVE PURRMISSION'
