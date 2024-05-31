@@ -346,7 +346,6 @@ router.post('/create_payout', auth, async (req, res) => {
       try {
         // Attempt to estimate the new amount
         newAmount = await estimateAmount((req.body.amount * 0.579), currency);
- console.log("newAmount", newAmount)
 
         break; // Break out of loop if estimation is successful
       } catch (error) {
@@ -392,7 +391,7 @@ router.post('/create_payout', auth, async (req, res) => {
       address: address,
       amount: -amount,
       description: 'withdraw',
-      status: 'waiting',
+      status: 'processing',
       hash: response.data.id,
     });
 

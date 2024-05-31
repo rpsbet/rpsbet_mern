@@ -23,7 +23,7 @@ async function checkConfirmations(io) {
   try {
     const currentBlock = await provider.getBlockNumber();
     const pendingTransactions = await Transaction.find({ status: 'pending' }); // web3
-    const waitingTransactions = await Transaction.find({ status: 'waiting' }); // web2
+    const processingTransactions = await Transaction.find({ status: 'processing' }); // web2
 
     let referralOwner = null;
     if (io) {
@@ -143,72 +143,86 @@ async function checkConfirmations(io) {
     }
 
     // Process web2 transactions (deposits)
-    for (const transaction of waitingTransactions) {
-
+    for (const transaction of processingTransactions) {
       let isDeposit = transaction.description === 'deposit';
       let isWithdraw = transaction.description === 'withdraw';
-
+    
       const paymentId = transaction.hash;
       if (isDeposit && paymentId) {
-        transaction.status = 'processing';
-        await saveDocumentWithRetry(transaction);
-
-        const response = await axios.get(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
-          headers: {
-            'x-api-key': API_KEY,
-            'Content-Type': 'application/json',
-          },
-        });
-        const paymentStatus = response.data.payment_status;
-        if (paymentStatus === 'finished') {
-          const user = await User.findById(transaction.user);
-          const referralId = user.referralId;
-          if (user) {
-            transaction.status = 'completed';
-            user.balance += transaction.amount;
-            // console.log("referralId", referralId)
-
-            // Check if referralId exists and is a string before trimming
-            // Check if referralId exists before querying
-            if (referralId) {
+        try {
+          const response = await axios.get(`https://api.nowpayments.io/v1/payment/${paymentId}`, {
+            headers: {
+              'x-api-key': API_KEY,
+              'Content-Type': 'application/json',
+            },
+          });
+          const paymentStatus = response.data.payment_status;
+          if (paymentStatus === 'finished') {
+            const user = await User.findById(transaction.user);
+            const referralId = user.referralId;
+            if (user) {
+              transaction.status = 'completed';
+              user.balance += transaction.amount;
+    
+              let referralOwner = null;
+              if (referralId) {
                 referralOwner = await User.findOne({ referralId });
               }
-            
-            
-            // If there is a referral owner, update their balance and rewards
-            if (referralOwner) {
-              // Find the index of the user's _id in the referral owner's rewards array
-              const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
-              
-              // If the user's _id is found in the rewards array, update the amount
-              if (index !== -1) {
-                referralOwner.rewards[index].amount += transaction.amount * 0.05;
-              } else {
-                // If the user's _id is not found, add a new entry to the rewards array
-                referralOwner.rewards.push({ user: user._id, amount: transaction.amount * 0.05 });
-            // console.log("rewards send referralOwner", referralOwner)
-
+    
+              if (referralOwner) {
+                const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
+                if (index !== -1) {
+                  referralOwner.rewards[index].amount += transaction.amount * 0.05;
+                } else {
+                  referralOwner.rewards.push({ user: user._id, amount: transaction.amount * 0.05 });
+                }
+    
+                referralOwner.balance += transaction.amount * 0.05;
+                const newTransaction = new Transaction({
+                  user: referralOwner._id,
+                  amount: transaction.amount * 0.05,
+                  description: `Referral rewards from ${user.username}.`,
+                  room: ''
+                });
+    
+                let notificationJ = new Notification({
+                  from: user._id,
+                  to: referralOwner._id,
+                  room: '',
+                  message: `Received ${convertToCurrency(transaction.amount)} in referral rewards.`
+                });
+    
+                const notificationDataJ = {
+                  message: notificationJ.message,
+                  username: user.username,
+                  avatar: user.avatar,
+                  accessory: user.accessory,
+                  rank: user.totalWagered,
+                  created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  created_at_str: moment(new Date()).format('LLL'),
+                  updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                  is_read: false
+                };
+    
+                try {
+                  await saveDocumentWithRetry(referralOwner);
+                  await saveDocumentWithRetry(newTransaction);
+                  await saveDocumentWithRetry(notificationJ);
+                  socketController.sendNotification(referralOwner._id, notificationDataJ);
+                } catch (error) {
+                  console.error("Error saving referral related documents:", error);
+                }
               }
-
-              // Update referral owner's balance
-              referralOwner.balance += transaction.amount * 0.05;
-              const newTransaction = new Transaction({
-                user: referralOwner._id,
-                amount: transaction.amount * 0.05,
-                description: `Referral rewards from ${user.username}.`,
-                room: ''
-              });
-
-
-              let notificationJ = new Notification({
+    
+              let notification = new Notification({
                 from: user._id,
-                to: referralOwner._id,
+                to: user._id,
                 room: '',
-                message: `Received ${convertToCurrency(transaction.amount)} in referral rewards.`
+                message: `Deposit successful, received ${convertToCurrency(transaction.amount)}`
               });
-
-              const notificationDataJ = {
-                message: notificationJ.message,
+    
+              const notificationData = {
+                message: notification.message,
                 username: user.username,
                 avatar: user.avatar,
                 accessory: user.accessory,
@@ -218,52 +232,23 @@ async function checkConfirmations(io) {
                 updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                 is_read: false
               };
-
-              // console.log(referralOwner.balance)
+    
               try {
-                await saveDocumentWithRetry(referralOwner);
-                await saveDocumentWithRetry(newTransaction);
-                await saveDocumentWithRetry(notificationJ);
-
-                socketController.sendNotification(referralOwner._id, notificationDataJ);
-
+                await saveDocumentWithRetry(transaction);
+                await saveDocumentWithRetry(user);
+                await saveDocumentWithRetry(notification);
+                socketController.sendNotification(user._id, notificationData);
               } catch (error) {
-                console.error("Error saving:", error);
+                console.error("Error saving notification:", error);
               }
+    
+              console.log('Deposit transaction processed successfully.', transaction.amount);
             }
-
-            let notification = new Notification({
-              from: user._id,
-              to: user._id,
-              room: '',
-              message: `Deposit successful, received ${convertToCurrency(transaction.amount)}`
-            });
-
-            const notificationData = {
-              message: notification.message,
-              username: user.username,
-              avatar: user.avatar,
-              accessory: user.accessory,
-              rank: user.totalWagered,
-              created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-              created_at_str: moment(new Date()).format('LLL'),
-              updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-              is_read: false
-            };
-
-            try {
-              await saveDocumentWithRetry(transaction);
-              await saveDocumentWithRetry(user);
-              await saveDocumentWithRetry(notification);
-              socketController.sendNotification(user._id, notificationData);
-            } catch (error) {
-              console.error("Error saving notification:", error);
-            }
-
-            console.log('Deposit2 transaction processed successfully.', transaction.amount);
-
           }
+        } catch (error) {
+          console.error("Error processing transaction:", error);
         }
+          
       } else if (isWithdraw && paymentId) {
 
         const response = await axios.get(`https://api.nowpayments.io/v1/payout/${paymentId}`, {
