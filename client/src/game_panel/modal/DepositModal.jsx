@@ -765,7 +765,7 @@ class DepositModal extends Component {
 
                             <p className='step-tag'>Step 4 out of 4</p>
                             <div className="account" style={{ display: 'flex', flexDirection: 'column', width: '100%', marginTop: '20px' }}>
-                              <Typography>CLICK 'CONFIRM' ONCE YOU HAVE SENT PAYMENT.</Typography>
+                              <Typography>CLICK 'I HAVE PAID' ONCE YOU HAVE SENT PAYMENT.</Typography>
                               <div style={{ marginTop: '20px' }}>
                                 <Typography variant="body2">PAYMENT ID (FOR YOUR REFERENCE ONLY)</Typography>
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -810,7 +810,7 @@ class DepositModal extends Component {
             </div>
             <div className="modal-footer">
               <Button className="btn-submit" onClick={paymentMethod === 'web3' ? this.send : this.createPaymentAndClose}>
-                {paymentMethod === 'web3' ? 'Deposit' : 'Confirm'}
+                {paymentMethod === 'web3' ? 'Deposit' : 'I have paid'}
               </Button>
 
 

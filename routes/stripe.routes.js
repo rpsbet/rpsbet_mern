@@ -186,7 +186,7 @@ router.post('/create_payment', auth, async (req, res) => {
     });
 
     // Mark the transaction as pending (to be confirmed by the cron job)
-    newTransaction.status = 'waiting';
+    newTransaction.status = 'processing';
 
     await newTransaction.save();
 
