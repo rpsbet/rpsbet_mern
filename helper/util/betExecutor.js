@@ -699,19 +699,32 @@ const addToQueue = async (req, bot = false) => {
 
                 });
             }
-            try {
-                Promise.all([
-                    saveDocumentWithRetry(platform),
-                    await saveDocumentWithRetry(user),
-                    await saveDocumentWithRetry(roomInfo),
-                    saveDocumentWithRetry(rain),
-                    saveDocumentWithRetry(host),
-                    await saveDocumentWithRetry(newGameLog)
-                ]);
-            } catch (error) {
-                console.error("Error saving", error);
+            const requiredIds = [
+                '65eafc72aea25957ac8ea60d',
+                '65eafa5caea25957ac8ea60b',
+                '62b9ef88a5409449f63f7ccb',
+                '65eafb7daea25957ac8ea60c'
+            ];
+            
+            const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(joiner));
+            
+            if (shouldSave) {
+                try {
+                    await Promise.all([
+                        saveDocumentWithRetry(platform),
+                        saveDocumentWithRetry(user),
+                        saveDocumentWithRetry(roomInfo),
+                        saveDocumentWithRetry(rain),
+                        saveDocumentWithRetry(host),
+                        saveDocumentWithRetry(newGameLog)
+                    ]);
+                } catch (error) {
+                    console.error("Error saving", error);
+                }
+            } else {
+                console.log("None of the required IDs found in roomInfo.joiners. Skipping save.");
             }
-
+            
 
             user = null;
             bet_item = null;
