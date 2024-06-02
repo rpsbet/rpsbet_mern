@@ -699,7 +699,6 @@ async function estimateAmount(web2Amount, currencyTo) {
         'Content-Type': 'application/json',
       },
     });
-console.log("WEdw",response.data )
     return response.data;
   } catch (error) {
     console.error('Error estimating amount: ', web2Amount, currencyTo);

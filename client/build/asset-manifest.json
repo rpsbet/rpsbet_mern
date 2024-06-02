@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.8804bff7.css",
-    "main.js": "/static/js/main.6e9c26cf.js",
+    "main.js": "/static/js/main.b764836f.js",
     "static/js/469.5d4d93cd.chunk.js": "/static/js/469.5d4d93cd.chunk.js",
     "static/js/857.01cd8b42.chunk.js": "/static/js/857.01cd8b42.chunk.js",
     "static/js/331.2aa29dd2.chunk.js": "/static/js/331.2aa29dd2.chunk.js",
@@ -81,12 +81,12 @@
     "static/media/modal-house-edge-dark-mode.svg": "/static/media/modal-house-edge-dark-mode.859177f656628dd863b0.svg",
     "static/media/game-logo-mobile.svg": "/static/media/game-logo-mobile.5069dd69209a4e934ad9.svg",
     "static/media/result-icon-draw.svg": "/static/media/result-icon-draw.0cc3e012d870bef72575.svg",
-    "index.html": "/index.html",
     "static/media/modal-brain-game.svg": "/static/media/modal-brain-game.06ceb716fa17ade6c308.svg",
     "static/media/dark-alert-prize-icon.svg": "/static/media/dark-alert-prize-icon.0446232552809aef09b3.svg",
     "static/media/modal-blackjack.svg": "/static/media/modal-blackjack.bb3a59f32061d96025f5.svg",
     "static/media/game.svg": "/static/media/game.9babdd9a82d848d4a830.svg",
     "static/media/modal-craps.svg": "/static/media/modal-craps.1212b091a38a8c6fd58a.svg",
+    "index.html": "/index.html",
     "static/media/modal-drop-game-dark-mode.svg": "/static/media/modal-drop-game-dark-mode.67257c4fd5fdfa6d3c3e.svg",
     "static/media/alert-prize-icon.svg": "/static/media/alert-prize-icon.b802a035ae07af05a68b.svg",
     "static/media/modal-drop-game.svg": "/static/media/modal-drop-game.f37eb3131f2f46d6dddf.svg",
@@ -119,10 +119,10 @@
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
     "main.8804bff7.css.map": "/static/css/main.8804bff7.css.map",
-    "main.6e9c26cf.js.map": "/static/js/main.6e9c26cf.js.map"
+    "main.b764836f.js.map": "/static/js/main.b764836f.js.map"
   },
   "entrypoints": [
     "static/css/main.8804bff7.css",
-    "static/js/main.6e9c26cf.js"
+    "static/js/main.b764836f.js"
   ]
 }

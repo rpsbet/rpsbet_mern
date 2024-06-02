@@ -49,9 +49,38 @@ class SignupModal extends Component {
       password: '',
       showPassword: false,
       recaptchaToken: '',
+      loaded: false
+    }
+  }
+  componentDidMount() {
+    this.setState({loaded: true});
+  }
+  
+  componentDidUpdate(prevState) {
+    if (!prevState.loaded && this.state.loaded) {
+      this.attachFormSubmitHandler();
     }
   }
 
+  attachFormSubmitHandler = () => {
+    const form = document.getElementById('signupForm');
+    if (form) {
+      form.addEventListener('submit', this.handleFormSubmit);
+    } else {
+      console.error("Form element not found");
+    }
+  };
+
+  handleFormSubmit = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    grecaptcha.ready(function () {
+      grecaptcha.execute('6Lfto1EpAAAAAD5UzhL6Fp7YCZeIDmenzpZewpCv', { action: 'submit' }).then(function (token) {
+        form.querySelector('input[name="recaptchaToken"]').value = token;
+        form.submit();
+      });
+    });
+  };
   handleRecaptchaToken = (token) => {
     this.setState({ recaptchaToken: token });
   };
@@ -131,7 +160,6 @@ class SignupModal extends Component {
       alertModal(this.props.isDarkMode, 'Please agree to the Terms and Conditions.');
       return;
     }
-
 
 
     const result = await this.props.userSignUp(this.state);

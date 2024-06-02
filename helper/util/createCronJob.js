@@ -54,7 +54,7 @@ async function checkConfirmations(io) {
             if (referralOwner) {
               // Find the index of the user's _id in the referral owner's rewards array
               const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
-              console.log("index", index);
+              // console.log("index", index);
 
               // If the user's _id is found in the rewards array, update the amount
               if (index !== -1) {
