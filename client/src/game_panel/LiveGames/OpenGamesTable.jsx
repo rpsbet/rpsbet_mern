@@ -239,9 +239,9 @@ class OpenGamesTable extends Component {
       })
     }
 
-    if (this.props.rooms_count !== prevProps.roomList.length) {
-      this.props.handleRefresh();
-    }
+    // if (this.props.rooms_count !== prevProps.roomList.length) {
+    //   this.props.handleRefresh();
+    // }
 
     if (prevProps.refreshing !== this.props.refreshing) {
       if (this.props.refreshing) {
