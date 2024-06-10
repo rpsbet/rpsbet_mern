@@ -308,7 +308,6 @@ class RPS extends Component {
   }
 
   handleSocketData = (data) => {
-    console.log("wwed",data )
     this.setState(prevState => {
       let updatedPlayers = [...prevState.players, data.user];
       if (updatedPlayers.length > 5) {

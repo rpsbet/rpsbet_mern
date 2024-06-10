@@ -2309,14 +2309,28 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
   }
 });
 
-function check_access_time(user_id) {
+function check_access_time(user_id, retryCount = 0) {
+  
   const check_result =
     user_access_log[user_id] && Date.now() - user_access_log[user_id] < 3000
       ? false
       : true;
+  
   user_access_log[user_id] = Date.now();
+  
+  if (!check_result && retryCount < MAX_RETRIES) {
+    // Retry after a delay (you can adjust the delay time if needed)
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(check_access_time(user_id, retryCount + 1));
+      }, 3000);
+    });
+  }
+  
+  
   return check_result;
 }
+
 
 router.post('/coHost', auth, async (req, res) => {
   try {
@@ -2870,47 +2884,71 @@ router.post('/bet2', auth, async (req, res) => {
   }
 });
 
+const MAX_RETRIES = 3; // Maximum number of retries
+
 router.post('/bet3', auth, async (req, res) => {
-  try {
-    const requestId = uuidv4();
+  let retryCount = 0;
 
-    // Acquire the semaphore
-    if (semaphore3 === 0) {
-      // If semaphore is already acquired, return a busy response
-      return res.status(503).json({ success: false, message: 'Service Unavailable' });
-    }
-    semaphore3 = 0; // Set semaphore to indicate it's acquired
+  while (retryCount < MAX_RETRIES) {
+    try {
+      const requestId = uuidv4();
 
-    const [accessAllowed, betResult] = await Promise.all([
-      check_access_time(req.user._id),
-      executeBet3(req)
-    ]);
+      // Acquire the semaphore
+      if (semaphore3 === 0) {
+        // If semaphore is already acquired, return a busy response
+        return res.status(503).json({ success: false, message: 'Service Unavailable' });
+      }
+      semaphore3 = 0; // Set semaphore to indicate it's acquired
 
-    // Release the semaphore
-    semaphore3 = 1;
+      let accessAllowed, betResult;
 
-    if (!accessAllowed) {
-      const responseData = {
-        success: false,
-        message: 'irregular action',
-        betResult: -1000,
+      try {
+        [accessAllowed, betResult] = await Promise.all([
+          check_access_time(req.user._id),
+          executeBet3(req)
+        ]);
+      } catch (error) {
+        console.error('Error occurred during execution:', error);
+        throw error; // rethrowing the error to handle retry logic
+      }
+
+      // Release the semaphore
+      semaphore3 = 1;
+
+      if (!accessAllowed) {
+        const responseData = {
+          success: false,
+          message: 'irregular action',
+          betResult: -1000,
+          requestId: requestId
+        };
+
+        return res.json(responseData);
+      }
+
+      res.json({
+        success: betResult.success,
+        message: betResult.message,
+        betResult: betResult.betResult,
+        newTransaction: betResult.newTransaction,
+        roomStatus: betResult.roomStatus,
         requestId: requestId
-      };
+      });
+      
+      return; // Exit the function after successful response
 
-      return res.json(responseData);
+    } catch (err) {
+      console.error(`Error occurred on attempt ${retryCount + 1}:`, err);
+      retryCount++; // Increment retry count
+      if (retryCount === MAX_RETRIES) {
+        // If reached max retries, return internal server error
+        console.error('Max retry limit reached');
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+      }
+      // Retry after a delay (you can adjust the delay time if needed)
+      console.log(`Retrying after a delay...`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-
-    res.json({
-      success: betResult.success,
-      message: betResult.message,
-      betResult: betResult.betResult,
-      newTransaction: betResult.newTransaction,
-      roomStatus: betResult.roomStatus,
-      requestId: requestId
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
 

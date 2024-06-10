@@ -53,7 +53,7 @@ const categories = [
   { creditScoreThreshold: 950, rankThreshold: 17, accountAgeThresholdInDays: 120, maxAllowance: 600 },
   { creditScoreThreshold: 950, rankThreshold: 18, accountAgeThresholdInDays: 120, maxAllowance: 700 },
   { creditScoreThreshold: 950, rankThreshold: 19, accountAgeThresholdInDays: 120, maxAllowance: 800 },
-  { creditScoreThreshold: 950, rankThreshold: 20, accountAgeThresholdInDays: 120, maxAllowance: 1000 }
+  { creditScoreThreshold: 950, rankThreshold: 50, accountAgeThresholdInDays: 120, maxAllowance: 1000 }
 ];
 
 

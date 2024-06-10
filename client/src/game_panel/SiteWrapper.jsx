@@ -553,7 +553,7 @@ class SiteWrapper extends Component {
           alertModal(isDarkMode, 'NO ACCOUNTS AVAILABLE. PLEASE MAKE SURE YOU\'RE LOGGED INTO METAMASK.');
         }
       } else {
-        alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
+        alertModal(isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
       }
       // console.log("Web3 loaded successfully");
 
@@ -602,7 +602,7 @@ class SiteWrapper extends Component {
         // Load Web3 only once when the component mounts
         this.loadWeb3();
       } else {
-        alertModal(isDarkMode, 'NO ETHEREUM PROVIDER FOUND. PLEASE INSTALL METAMASK OR ENABLE ETHEREUM IN YOUR BROWSER.');
+        alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
       }
     } catch (error) {
       console.error(error);
