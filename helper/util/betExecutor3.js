@@ -400,6 +400,7 @@ const addToQueue = async (req, bot = false) => {
                                 bet_amount: roomInfo['host_pr'],
                                 user_bet: roomInfo['user_bet'],
                                 hosts: roomInfo.hosts,
+                                endgame_amount: roomInfo['endgame_amount'],
                                 // is_anonymous: roomInfo['is_anonymous'],
                                 game_result: 3
                             });

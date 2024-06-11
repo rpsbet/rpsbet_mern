@@ -13,6 +13,7 @@ export default function BetAmountInput(props) {
     onChangeState,
     isDarkMode,
     bangGame,
+    betAmountRef,
     disabledButtons
   } = props;
 
@@ -97,6 +98,7 @@ export default function BetAmountInput(props) {
           name="betamount"
           variant="filled"
           id="betamount"
+          ref={betAmountRef}
           disabled={disabledButtons || false}
           label={bangGame ? "MULTIPLIER" : ""}
           value={betAmount}

@@ -310,61 +310,27 @@ export function counterSwitchAI(historicData) {
   return moves[randomIndex];
 }
 
-export function counterRandomness(historicData, type) {
+export function counterRandomness(historicData) {
   if (historicData.length < 3) {
-    // If historicData has less than 3 moves, return false
+    // If historicData has less than 3 moves, return a random move and risk 1
     return { counterMove: getRandomMove(), risk: 1 };
   }
 
-  const lastMove = historicData[0].rps;
-
-  let counterMove;
-  switch (lastMove) {
-    case 'R':
-      counterMove = 'S';
-      break;
-    case 'P':
-      counterMove = 'R';
-      break;
-    case 'S':
-      counterMove = 'P';
-      break;
-    default:
-      counterMove = getRandomMove(); // Handle unexpected cases
-  }
-
-  const lastFiveSameAsCounterMove = historicData.slice(0, 8).every(move => move.rps === lastMove);
-  const penultimateMove = historicData[1].rps;
-  const thirdToLastMove = historicData[2].rps;
-
-  const penultimateSameAsLast = penultimateMove === lastMove;
-  const thirdToLastSameAsLast = thirdToLastMove === penultimateMove && penultimateSameAsLast;
-
-  let risk;
-
-  if (penultimateSameAsLast) {
-    risk = thirdToLastSameAsLast ? 3 : 2;
-    if ((type === 1 && lastFiveSameAsCounterMove) || type === 0) {
-      risk = 3;
-    } else if (thirdToLastSameAsLast && type === 0) {
-      risk = 2;
-    } else {
-      risk = 1;
-    }
-  } else {
-    risk = 1;
-  }
-
-  // Check for missing value in the historic data
-  const movesSet = new Set(historicData.slice(0, 4).map(move => move.rps));
+  // Check for missing value in the last 5 moves
+  const lastFiveMoves = historicData.slice(0, 5).map(move => move.rps);
+  const movesSetLastFive = new Set(lastFiveMoves);
   let missingValue = null;
-  if (!movesSet.has('R')) {
+
+  if (!movesSetLastFive.has('R')) {
     missingValue = 'R';
-  } else if (!movesSet.has('P')) {
+  } else if (!movesSetLastFive.has('P')) {
     missingValue = 'P';
-  } else if (!movesSet.has('S')) {
+  } else if (!movesSetLastFive.has('S')) {
     missingValue = 'S';
   }
+
+  let counterMove;
+  let risk;
 
   if (missingValue) {
     switch (missingValue) {
@@ -378,10 +344,44 @@ export function counterRandomness(historicData, type) {
         counterMove = 'R';
         break;
     }
-    risk = 2;
+    risk = 3;
+  } else {
+    // Check for missing value in the last 4 moves
+    const lastFourMoves = historicData.slice(0, 4).map(move => move.rps);
+    const movesSetLastFour = new Set(lastFourMoves);
+
+    if (!movesSetLastFour.has('R')) {
+      missingValue = 'R';
+    } else if (!movesSetLastFour.has('P')) {
+      missingValue = 'P';
+    } else if (!movesSetLastFour.has('S')) {
+      missingValue = 'S';
+    }
+
+    if (missingValue) {
+      // console.log("missingValue", missingValue);
+      switch (missingValue) {
+        case 'R':
+          counterMove = 'P';
+          break;
+        case 'P':
+          counterMove = 'S';
+          break;
+        case 'S':
+          counterMove = 'R';
+          break;
+      }
+      risk = 2;
+    } else {
+      counterMove = getRandomMove();
+      risk = 1;
+    }
   }
+  // console.log("counterMove and risk", counterMove, risk);
+
   return { counterMove, risk };
 }
+
 
 
 

@@ -792,7 +792,7 @@ class JoinGame extends Component {
   };
 
   startBetting = async betArray => {
-    const { isDarkMode, openGamePasswordModal, roomInfo, balance, getRpsBetItems } = this.props;
+    const { isDarkMode, openGamePasswordModal, roomInfo, user_balance, getRpsBetItems } = this.props;
     // let storageName;
 
     // switch (roomInfo.game_type) {
@@ -826,7 +826,7 @@ class JoinGame extends Component {
           case 'Quick Shoot':
             randomItem = this.predictNextQs(stored_array, roomInfo.qs_game_type);
             predictedBetAmount = this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
-            if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
+            if (!validateBetAmount(predictedBetAmount, user_balance, isDarkMode)) {
               return;
             }
             break;
@@ -865,7 +865,22 @@ class JoinGame extends Component {
                 const randomnessResult = await counterRandomness(this.props.rpsbetitems, 1);
                 randomItem = randomnessResult.counterMove;
                 const penultimateSameAsLast = randomnessResult.risk;
-                predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+            
+                if (this.props.ai_mode === 'Skill-issue') {
+                    predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                } else if (this.props.ai_mode === 'Skill-issue-2') {
+                    const outcome = await martingaleStrategy(this.props.rpsbetitems);
+
+                    if (penultimateSameAsLast === 3) {
+                      predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 1.4 : Math.min(...betArray);
+                    } else {
+                      predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                    }
+
+                    if (predictedBetAmount > this.props.user_balance / 2) {
+                      predictedBetAmount = this.props.user_balance / 4;
+                    }
+                }
               } else if (this.props.ai_mode === 'NPC') {
                 randomItem = await NPC(this.props.rpsbetitems);
                 predictedBetAmount = await this.predictNextBetAmount(betArray, 0, 0.01, 0.2);
@@ -901,7 +916,6 @@ class JoinGame extends Component {
                 const outcome = await martingaleStrategy(this.props.rpsbetitems);
                 randomItem = outcome.move;
                 predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 2 : Math.min(...betArray);
-
 
               }
 
@@ -977,15 +991,7 @@ class JoinGame extends Component {
     if (!betting) {
       return;
     }
-    if (gameType !== 'Drop Game' && gameType !== 'Spleesh!' && gameType !== 'Mystery Box') {
-      if (!validateBetAmount(predictedBetAmount, balance, isDarkMode)) {
-        return;
-      }
 
-      if (!validateBankroll(predictedBetAmount, roomInfo.bet_amount, isDarkMode)) {
-        return;
-      }
-    }
     if (roomInfo.status !== 'open') {
       return;
     }

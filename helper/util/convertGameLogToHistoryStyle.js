@@ -74,7 +74,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           )} RTB) in ${room_name}`;
         } else if (gameLog.game_result === 3) {
           temp.history = `${hostContainer} received a <span style='color: #ff0a28;'>${convertToCurrency(
-            gameLog['user_bet'] - gameLog['room']['endgame_amount']
+            gameLog['user_bet'] - gameLog.endgame_amount
           )}</span> Auto-Payout in ${room_name}`;
         } else if (gameLog.game_result === -100) {
           temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
