@@ -18,6 +18,8 @@ const depositConfirmationThreshold = 6;
 const socketController = require('../../socketController');
 
 let socketio = null;
+let isProcessing = false;
+
 
 async function checkConfirmations(io) {
   try {
@@ -29,6 +31,13 @@ async function checkConfirmations(io) {
     if (io) {
       socketio = io;
     }
+    if (isProcessing) {
+      console.log('Processing is already in progress');
+      return;
+    }
+
+    isProcessing = true;
+
     // Process web3 transactions
     for (const transaction of pendingTransactions) {
       let isDeposit = transaction.description === 'deposit';
@@ -49,7 +58,7 @@ async function checkConfirmations(io) {
             if (user.referralId && user.referralId !== "") {
               referralOwner = await User.findOne({ _id: user.referralId });
             }
-// console.log("referralOwner", referralOwner);
+            // console.log("referralOwner", referralOwner);
             // If there is a referral owner, update their balance and rewards
             if (referralOwner) {
               // Find the index of the user's _id in the referral owner's rewards array
@@ -146,7 +155,7 @@ async function checkConfirmations(io) {
     for (const transaction of processingTransactions) {
       let isDeposit = transaction.description === 'deposit';
       let isWithdraw = transaction.description === 'withdraw';
-    
+
       const paymentId = transaction.hash;
       if (isDeposit && paymentId) {
         try {
@@ -163,12 +172,12 @@ async function checkConfirmations(io) {
             if (user) {
               transaction.status = 'completed';
               user.balance += transaction.amount;
-    
+
               let referralOwner = null;
               if (referralId) {
                 referralOwner = await User.findOne({ referralId });
               }
-    
+
               if (referralOwner) {
                 const index = referralOwner.rewards.findIndex(reward => reward.user.equals(user._id));
                 if (index !== -1) {
@@ -176,7 +185,7 @@ async function checkConfirmations(io) {
                 } else {
                   referralOwner.rewards.push({ user: user._id, amount: transaction.amount * 0.05 });
                 }
-    
+
                 referralOwner.balance += transaction.amount * 0.05;
                 const newTransaction = new Transaction({
                   user: referralOwner._id,
@@ -184,14 +193,14 @@ async function checkConfirmations(io) {
                   description: `Referral rewards from ${user.username}.`,
                   room: ''
                 });
-    
+
                 let notificationJ = new Notification({
                   from: user._id,
                   to: referralOwner._id,
                   room: '',
                   message: `Received ${convertToCurrency(transaction.amount)} in referral rewards.`
                 });
-    
+
                 const notificationDataJ = {
                   message: notificationJ.message,
                   username: user.username,
@@ -203,7 +212,7 @@ async function checkConfirmations(io) {
                   updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                   is_read: false
                 };
-    
+
                 try {
                   await saveDocumentWithRetry(referralOwner);
                   await saveDocumentWithRetry(newTransaction);
@@ -213,14 +222,14 @@ async function checkConfirmations(io) {
                   console.error("Error saving referral related documents:", error);
                 }
               }
-    
+
               let notification = new Notification({
                 from: user._id,
                 to: user._id,
                 room: '',
                 message: `Deposit successful, received ${convertToCurrency(transaction.amount)}`
               });
-    
+
               const notificationData = {
                 message: notification.message,
                 username: user.username,
@@ -232,7 +241,7 @@ async function checkConfirmations(io) {
                 updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
                 is_read: false
               };
-    
+
               try {
                 await saveDocumentWithRetry(transaction);
                 await saveDocumentWithRetry(user);
@@ -241,14 +250,14 @@ async function checkConfirmations(io) {
               } catch (error) {
                 console.error("Error saving notification:", error);
               }
-    
+
               console.log('Deposit transaction processed successfully.', transaction.amount);
             }
           }
         } catch (error) {
           console.error("Error processing transaction:", error);
         }
-          
+
       } else if (isWithdraw && paymentId) {
 
         const response = await axios.get(`https://api.nowpayments.io/v1/payout/${paymentId}`, {
@@ -260,7 +269,7 @@ async function checkConfirmations(io) {
         const paymentStatus = response.data.withdrawals[0].status;
         if (paymentStatus === 'FINISHED') {
 
-          transaction.status ='complete';
+          transaction.status = 'complete';
           try {
             await saveDocumentWithRetry(transaction);
           } catch (error) {
@@ -272,6 +281,8 @@ async function checkConfirmations(io) {
 
   } catch (error) {
     console.error('Error checking confirmations:', error);
+  } finally {
+    isProcessing = false;
   }
 }
 
