@@ -18,6 +18,7 @@ import { Info } from '@material-ui/icons';
 import Countdown from 'react-countdown';
 
 import SettingsModal from './modal/SettingsModal.jsx';
+import BonusModal from './modal/BonusModal.jsx';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
 import CountUp from 'react-countup';
@@ -225,6 +226,7 @@ class SiteWrapper extends Component {
       searchQuery: '',
       isCoinsAnimation: false,
       showSettingsModal: false,
+      showBonusModal: false,
       showDeposits: false,
       web3: null,
       web3account: '',
@@ -304,6 +306,16 @@ class SiteWrapper extends Component {
       }
     }
   }
+
+  checkBonusTime() {
+    const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
+    const now = new Date();
+    // Check if last_bonus is within the last 24 hours or if last_bonus is null
+    if (!lastBonus || now - lastBonus > 24 * 60 * 60 * 1000) {
+      this.setState({ showBonusModal: true });
+    }
+  }
+
 
   playCoinsAnimation() {
     this.setState({ isCoinsAnimation: true });
@@ -513,6 +525,7 @@ class SiteWrapper extends Component {
       this.props.setSocket(socket);
 
       this.socket = socket;
+
     } catch (error) {
       console.error('Socket initialization failed:', error);
       // Retry socket initialization after a short delay
@@ -564,9 +577,6 @@ class SiteWrapper extends Component {
 
   async componentDidMount() {
     try {
-      // const loadingTimeout = setTimeout(() => {
-      //   this.setState({ websiteLoading: false });
-      // }, 5000); 
       this.setState({ websiteLoading: true });
       // this.historyInterval = setInterval(this.fetchHistory, 15000);
 
@@ -604,6 +614,9 @@ class SiteWrapper extends Component {
       } else {
         alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
       }
+
+      this.checkBonusTime();
+
     } catch (error) {
       console.error(error);
     }
@@ -703,6 +716,9 @@ class SiteWrapper extends Component {
   };
   handleCloseSettingsModal = () => {
     this.setState({ showSettingsModal: false });
+  };
+  handleCloseBonusModal = () => {
+    this.setState({ showBonusModal: false });
   };
 
   handleOpenLoginModal = () => {
@@ -967,6 +983,7 @@ class SiteWrapper extends Component {
       anchorEl,
       isCoinsAnimation,
       showSettingsModal,
+      showBonusModal,
       isLive,
       notifications,
     } = this.state;
@@ -1700,6 +1717,14 @@ class SiteWrapper extends Component {
                 <SettingsModal
                   modalIsOpen={showSettingsModal}
                   closeModal={this.handleCloseSettingsModal}
+                  handleMute={this.handleMute}
+                  handleUnmute={this.handleUnmute}
+                />
+              )}
+              {showBonusModal && (
+                <BonusModal
+                  modalIsOpen={showBonusModal}
+                  closeModal={this.handleCloseBonusModal}
                   handleMute={this.handleMute}
                   handleUnmute={this.handleUnmute}
                 />

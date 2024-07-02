@@ -129,7 +129,6 @@ module.exports.socketio = server => {
       console.error('Socket connection error:', error);
     });
     socket.emit('CONNECTED', {});
-
     socket.on('STORE_CLIENT_USER_ID', async data => {
       try {
         // Update last_seen for the user

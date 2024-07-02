@@ -187,6 +187,7 @@ class PlayerModal extends Component {
       rank: '',
       isLoading: false,
       myChat: [],
+      lastSeen: '',
       actorType: 'Both',
       loading: this.props.loading,
       message: '',
@@ -278,6 +279,7 @@ class PlayerModal extends Component {
       ...result,
       username: userData.username,
       avatar: userData.avatar,
+      lastSeen: userData.last_seen,
       accessory: userData.accessory,
       rank: userData.totalWagered,
       dateJoined: userData.created_at,
@@ -418,7 +420,7 @@ class PlayerModal extends Component {
                       gameType={this.state.gameType}
                       timeType={this.state.timeType}
                       dateJoined={this.state.dateJoined}
-                      last_seen={this.state.last_seen}
+                      last_seen={this.state.lastSeen}
                       creditScore={this.state.creditScore}
                       gameLogList={this.state.gameLogList}
                       deposit={this.state.deposit}

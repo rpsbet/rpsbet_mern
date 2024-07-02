@@ -367,7 +367,7 @@ class StatisticsForm extends React.Component {
     };
 
     const date_joined = moment(dateJoined);
-    const lastSeen = moment(last_seen);
+    const lastSeen = moment(this.props.last_seen);
     const joinedAgo = date_joined.fromNow();
     const lastSeenAgo = lastSeen.fromNow();
     const roundedCreditScore = Math.ceil(this.props.creditScore);
@@ -380,10 +380,10 @@ class StatisticsForm extends React.Component {
           <h5>BREAKDOWN</h5>
           <Table>
             <TableBody>
-              {/* <TableRow>
+              <TableRow>
             <TableCell><b style={{opacity: "0.6",  fontSize: '0.9em', fontWeight: '500' }}>LAST SEEN</b></TableCell>
             <TableCell style={{ color: "#ffb000",textAlign: 'center' }}>{lastSeenAgo}</TableCell>
-          </TableRow> */}
+          </TableRow>
               <TableRow>
                 <TableCell><b style={{ opacity: "0.6", fontSize: '0.9em', fontWeight: '500' }}>JOINED</b></TableCell>
                 <TableCell style={{ color: "#ffb000", textAlign: 'center' }}>{joinedAgo}</TableCell>

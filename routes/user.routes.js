@@ -12,10 +12,13 @@ const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
 const admin = require('../middleware/admin');
 const socket = require('../socketController');
+const saveDocumentWithRetry = require('../helper/util/retrySave');
+const convertToCurrency = require('../helper/util/conversion');
 
 // User Model
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
+const Notification = require('../model/Notification');
 const GameLog = require('../model/GameLog');
 const Room = require('../model/Room');
 
@@ -406,7 +409,74 @@ router.post('/getId', admin, async (req, res) => {
   }
 });
 
+router.post('/add-bonus', auth, async (req, res) => {
+  try {
+    const { number } = req.body;
+    const user = req.user;
+    // Check if last_bonus is within the last 24 hours
+    const lastBonus = user.last_bonus ? new Date(user.last_bonus) : null;
+    const now = new Date();
 
+    if (!lastBonus || now - lastBonus <= 24 * 60 * 60 * 1000) {
+      return res.status(400).json({ message: 'Bonus can only be claimed once every 24 hours.' });
+    }
+
+    // Check if totalWagered is more than 50
+    if (user.totalWagered <= 50) {
+      return res.status(400).json({ message: 'Total wagered must be more than 50 to claim bonus.' });
+    }
+
+    // Add the number to the user's balance and update last_bonus
+    user.balance += number;
+    user.last_bonus = Date.now();
+
+    // Create a new transaction
+    const newTransaction = new Transaction({
+      user: user._id,
+      amount: number,
+      description: `Bonus added: ${number}`,
+      room: ''
+    });
+
+    // Create a new notification
+    let notificationJ = new Notification({
+      from: user._id,
+      to: user._id,
+      room: '',
+      message: `You received a bonus of ${convertToCurrency(number)}`
+    });
+
+    const notificationData = {
+      message: `You received a bonus of ${convertToCurrency(number)}`,
+      username: user.username,
+      avatar: user.avatar,
+      accessory: user.accessory,
+      rank: user.totalWagered,
+      created_at: new Date(),
+      created_at_str: new Date().toISOString(),
+      updated_at: new Date(),
+      is_read: false
+    };
+
+    // Save the user, transaction, and notification
+    await saveDocumentWithRetry(user);
+    await saveDocumentWithRetry(newTransaction);
+    await saveDocumentWithRetry(notificationJ);
+
+    // Send notification
+    socket.sendNotification(user._id, notificationData);
+
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
 
 router.post('/updateCustomer', auth, async (req, res) => {
   try {

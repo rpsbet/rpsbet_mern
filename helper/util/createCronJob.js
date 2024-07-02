@@ -280,6 +280,7 @@ async function checkConfirmations(io) {
     }
 
   } catch (error) {
+    isProcessing = false;
     console.error('Error checking confirmations:', error);
   } finally {
     isProcessing = false;

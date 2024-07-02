@@ -76,6 +76,22 @@ export const getUser = (is_reload, loadMore, filterType, sortType, search) => as
   }
 };
 
+export const addBonus = (number) => async (dispatch) => {
+  try {
+    const { data } = await axios.post('/user/add-bonus', { number });
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: 'Bonus has been added successfully.' });
+      return true;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: 'An error occurred while adding the bonus.' });
+  }
+  return false;
+};
+
 export const getProfitData = () => async dispatch => {
   try {
     const res = await axios.get('/auth/profit');

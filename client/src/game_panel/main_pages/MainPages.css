@@ -3315,6 +3315,7 @@ position: sticky !important;
 .chat-page .chat-input-panel .emoticon-panel.active {
   display: block;
 }
+
 .chat-page .chat-input-panel .emoticon-panel > span {
   cursor: pointer;
     border: 1px solid transparent;
