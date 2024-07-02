@@ -515,6 +515,9 @@ class SiteWrapper extends Component {
 
       socket.on('ONLINE_STATUS_UPDATED', data => {
         this.props.updateOnlineUserList(data.user_list);
+        if (this.props.isAuthenticated) {
+          this.checkBonusTime();
+        }
       });
 
       socket.on('GLOBAL_CHAT_RECEIVED', data => {
@@ -615,7 +618,6 @@ class SiteWrapper extends Component {
         alertModal(this.props.isDarkMode, 'NO WEB3 WALLET FOUND IN YOUR BROWSER.');
       }
 
-      this.checkBonusTime();
 
     } catch (error) {
       console.error(error);
