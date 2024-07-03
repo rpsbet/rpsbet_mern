@@ -2,6 +2,14 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/core/styles';
+import Moment from 'moment';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faStar,
+  faClock,
+  faSyncAlt
+} from '@fortawesome/free-solid-svg-icons';
+      
 import {
  addBonus,
  getUser
@@ -70,16 +78,18 @@ class BonusModal extends Component {
     };
     this.spinWheel = this.spinWheel.bind(this);
   }
-  componentDidMount() { }
+  componentDidMount() {
+  }
 
   checkBonusTime() {
     const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
     const now = new Date();
 
     // Check if last_bonus is within the last 24 hours or if last_bonus is null
-    if (!lastBonus || now - lastBonus < 24 * 60 * 60 * 1000) {
+    if (!lastBonus || now - lastBonus < 6 * 60 * 60 * 1000) {
       this.setState({ showBonusModal: true });
     }
+    
   }
 
    async spinWheel() {
@@ -106,7 +116,7 @@ class BonusModal extends Component {
   }
 
   calculateLandedNumber(rotation) {
-    const numbers = [1.25, 0.20, 0.10, 0.4, 2.50, 1, 0.50, 1.5, 20, 2];
+    const numbers = [1.25, 0.20, 0.10, 0.4, 2.50, 1, 0.50, 1.5, 5, 2];
     const degreesPerSegment = 413.2 / numbers.length;
     const normalizedRotation = rotation % 360;
     const segmentIndex = Math.floor(normalizedRotation / degreesPerSegment);
@@ -128,11 +138,25 @@ class BonusModal extends Component {
       isMusicEnabled,
       loading,
     } = this.props;
-    const numbers = [1.25, 0.20, 0.10, 0.4, 2.50, 1, 0.50, 1.5, 20, 2];
+    const numbers = [1.25, 0.20, 0.10, 0.4, 2.50, 1, 0.50, 1.5, 5, 2];
     const markerStyle = {
       transform: `rotate(180deg)`,
     };
-
+    const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
+    const now = new Date();
+    let remainingTime = null;
+    
+    if (lastBonus) {
+      const elapsedTime = Moment(now).diff(Moment(lastBonus), 'milliseconds');
+      const sixHoursInMilliseconds = 6 * 60 * 60 * 1000;
+      const remainingMilliseconds = sixHoursInMilliseconds - elapsedTime;
+    
+      if (remainingMilliseconds > 0) {
+        remainingTime = Moment.duration(remainingMilliseconds, 'milliseconds').humanize(true);
+      } else {
+        remainingTime = "READY NOW!";
+      }
+    }
     return (
       <Modal
         isOpen={this.props.modalIsOpen}
@@ -142,7 +166,7 @@ class BonusModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">DAILY BONUS</h2>
+            <h2 className="modal-title"> <FontAwesomeIcon icon={faStar} />&nbsp;RPS BONUS WHEEL</h2>       
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>
@@ -151,6 +175,11 @@ class BonusModal extends Component {
           <div className="modal-body edit-modal-body" style={{background: 'radial-gradient(#001339, #5dabf0)', overflow: 'hidden'}}>
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
+                <div style={{textAlign: 'center', padding: '5px', border: '3px solid #28a745', borderRadius: '4px', background: 'linear-gradient(0deg, #28a745, #cab98d73)', margin: '0 0 20px', }}>
+
+                <span style={{color:'#dee2e6'}}><FontAwesomeIcon icon={faClock} />&nbsp;Next Bonus Arrives...</span>
+                <h2 style={{color:"#212529"}}>{remainingTime}</h2>
+                </div>
                 <div className="wheel" style={{ transform: `rotate(${this.state.rotation}deg)` }}>
                   {numbers.map((number, index) => (
                     <div
@@ -177,12 +206,17 @@ class BonusModal extends Component {
               </div>
             ) : (
               <Button
-                className="spin-button"
-                onClick={this.spinWheel}
-                disabled={this.state.spinning || totalWagered < 50}
-              >
-                {totalWagered < 50 ? 'RANK TOO LOW' : 'SPIN!'}
-              </Button>
+              className="spin-button"
+              onClick={this.spinWheel}
+              disabled={this.state.spinning || totalWagered < 50}
+            >
+              {totalWagered < 50 ? 'RANK TOO LOW' : (
+                <>
+                  SPIN!&nbsp;<FontAwesomeIcon icon={faSyncAlt} />
+                </>
+              )}
+            </Button>
+            
             )}
           </div>
         </div>

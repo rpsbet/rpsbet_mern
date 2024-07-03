@@ -43,7 +43,8 @@ import {
   ExitToApp,
   PersonOutline,
   Help,
-  Settings
+  Settings,
+  Star
 } from '@material-ui/icons';
 import history from '../redux/history';
 import socketIOClient from 'socket.io-client';
@@ -715,6 +716,9 @@ class SiteWrapper extends Component {
 
   handleOpenSettingsModal = () => {
     this.setState({ showSettingsModal: true });
+  };
+  handleBonusModal = () => {
+    this.setState({ showBonusModal: true });
   };
   handleCloseSettingsModal = () => {
     this.setState({ showSettingsModal: false });
@@ -1422,6 +1426,12 @@ class SiteWrapper extends Component {
                             </ListItemIcon>
                             <ListItemText>SETTINGS</ListItemText>
                           </MenuItem>
+                          <MenuItem onClick={this.handleBonusModal}>
+                            <ListItemIcon>
+                              <Star />
+                            </ListItemIcon>
+                            <ListItemText>RPS BONUS</ListItemText>
+                          </MenuItem>
 
                           <MenuItem onClick={this.handleOpenHowToPlayModal}>
                             <ListItemIcon>
@@ -1729,6 +1739,7 @@ class SiteWrapper extends Component {
                   closeModal={this.handleCloseBonusModal}
                   handleMute={this.handleMute}
                   handleUnmute={this.handleUnmute}
+                  user={this.props.user}
                 />
               )}
               {showLeaderboardsModal && (

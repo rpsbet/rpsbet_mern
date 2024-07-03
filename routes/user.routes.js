@@ -417,7 +417,7 @@ router.post('/add-bonus', auth, async (req, res) => {
     const lastBonus = user.last_bonus ? new Date(user.last_bonus) : null;
     const now = new Date();
 
-    if (!lastBonus || now - lastBonus <= 24 * 60 * 60 * 1000) {
+    if (!lastBonus || now - lastBonus <= 6 * 60 * 60 * 1000) {
       return res.status(400).json({ message: 'Bonus can only be claimed once every 24 hours.' });
     }
 
