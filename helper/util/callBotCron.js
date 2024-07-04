@@ -6,6 +6,7 @@ const socketController = require('../../socketController.js');
 const executeBet = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
 const { botAI, botCounterRandomness } = require('./predictNext.js');
+const saveDocumentWithRetry = require('./retrySave');
 const os = require('os');
 let socketio = null;
 
@@ -79,11 +80,15 @@ async function executeCronJob(user, betArray) {
       'joiners': user._id,
       status: 'open',
     });
-
+    const bonusRooms = await Room.find({
+      status: 'open',
+    });
     for (const room of rooms) {
       const roomId = room._id;
+    
       let nextState;
       let predictedBetAmount;
+      
 
       const rpsBetItems = await RpsBetItem.find({
         joiner: user._id,
@@ -147,6 +152,27 @@ async function executeCronJob(user, betArray) {
         useFirstBetFunction = !useFirstBetFunction; // Toggle between bet functions
       }
     }
+    for (const bonusRoom of bonusRooms) {
+      const req = {
+        params: {
+          _id: bonusRoom._id
+        },
+        user: user,
+        io: socketio,
+        body: {
+          _id: bonusRoom._id,
+          user_bet: bonusRoom.user_bet,
+        }
+      };
+      let userBet = parseFloat(bonusRoom.user_bet); // Changed to let
+      const interest = userBet * 0.000001;
+      userBet = (userBet + interest).toString();
+      bonusRoom.user_bet = userBet;
+      await saveDocumentWithRetry(bonusRoom);
+      req.io.sockets.emit(`UPDATED_BANKROLL2_${bonusRoom._id}`, {
+        bankroll: bonusRoom.user_bet,
+    });
+  }
   } catch (error) {
     console.error('Error finding rooms and executing cron job:', error);
   }

@@ -246,6 +246,7 @@ class RPS extends Component {
         if (initializedSocket) {
 
           initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
+          initializedSocket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, this.handleSocketData2);
         }
 
 
@@ -331,7 +332,11 @@ class RPS extends Component {
       };
     });
   };
-
+  handleSocketData2 = (data) => {
+    this.setState({ bankroll: data.bankroll });
+  };
+  
+  
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
@@ -720,6 +725,15 @@ class RPS extends Component {
     });
   };
 
+  calculateInterest = (createdAt) => {
+    const createdAtMoment = Moment(createdAt);
+    const now = Moment();
+    const secondsPassed = now.diff(createdAtMoment, 'seconds');
+    const twelveSecondIntervals = Math.floor(secondsPassed / 12);
+    const interestReceived = twelveSecondIntervals * this.props.bet_amount * 0.000001;
+    return interestReceived.toFixed(6); // toFixed(6) to format it to 6 decimal places
+  };
+
   // Function to round down to 2 decimal places
   roundDownToTwoDecimalPlaces = (number) => {
     return Math.floor(number * 100) / 100;
@@ -1015,6 +1029,14 @@ class RPS extends Component {
                       </Tooltip>
                     </div>
                   )}
+                   <div className="data-item">
+                    <div>
+                      <div className="label public-interest">Interest Received</div>
+                    </div>
+                    <div className="value" style={{color: "#00fff5"}}>
+                    {convertToCurrency(this.calculateInterest(roomInfo.created_at))}
+                    </div>
+                  </div>
 
                   <div className="data-item">
                     <div>
@@ -1060,6 +1082,7 @@ class RPS extends Component {
                       {Moment(roomInfo.created_at).fromNow()}
                     </div>
                   </div>
+                 
                 </React.Fragment>
               ))}
             </div>
