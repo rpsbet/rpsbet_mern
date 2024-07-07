@@ -7,6 +7,7 @@ import {
   LOADING_LOAN_TABLE,
   SET_CURRENT_LOAN_INFO,
   SET_CURRENT_LOAN_ID,
+  SET_OFFER_TARGET_INFO,
   ADD_TOTAL,
   MY_ADD_TOTAL,
   PRODUCT_TOTAL,
@@ -18,6 +19,7 @@ import {
 
 const initialState = {
   _id: '',
+  offerInfo: '',
   loadingPaybackLoan: false,
   loan_amount: 0,
   lender: '',
@@ -47,12 +49,13 @@ export default (state = initialState, { type, payload }) => {
     case LOAN_QUERY_ONE:
     case MY_LOAN_QUERY_ONE:
     case SET_CURRENT_LOAN_INFO:
-      return { ...state, data: payload};
+      return { ...state, data: payload };
     case LOAN_QUERY:
       return { ...state, loanArray: payload };
     case MY_LOAN_QUERY:
       return { ...state, myLoanArray: payload };
-
+    case SET_OFFER_TARGET_INFO:
+      return { ...state, offerInfo: payload };
     case ADD_TOTAL:
       return { ...state, totalResults: payload.total, pages: payload.pages };
     case MY_ADD_TOTAL:
@@ -65,14 +68,14 @@ export default (state = initialState, { type, payload }) => {
         pagination: payload.pagination,
         page: payload.page
       };
-      case LOADING_PAYBACK_LOAN: // Add this case
+    case LOADING_PAYBACK_LOAN: // Add this case
       return { ...state, loadingPaybackLoan: payload };
-      case CALCULATE_REMAINING_LOANS:
-        return { ...state, remainingLoans: payload };
-      case SET_USER_LOANS: // Add this case
-        return { ...state, userLoans: payload };
-      case LOADING_REMAINING_LOANS:
-        return { ...state, loadingRemainingLoans: payload };
+    case CALCULATE_REMAINING_LOANS:
+      return { ...state, remainingLoans: payload };
+    case SET_USER_LOANS: // Add this case
+      return { ...state, userLoans: payload };
+    case LOADING_REMAINING_LOANS:
+      return { ...state, loadingRemainingLoans: payload };
     case LOADING_LOAN_TABLE:
       return { ...state, loading: payload };
     case SET_CURRENT_LOAN_ID:

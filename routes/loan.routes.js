@@ -212,6 +212,53 @@ router.get('/calculate-remaining-loans', auth, async (req, res) => {
   }
 });
 
+router.post('/offer-loan', auth, async (req, res) => {
+  try {
+    const { _id, lender, avatar, totalWagered, accessory, username } = req.body;
+    req.io.sockets.emit(`RECEIVED_LOAN_OFFER_${_id}`, {
+      lender,
+      avatar,
+      accessory,
+      username,
+      totalWagered
+    });
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: 'An error occurred while calculating remaining loans',
+      error: err.message,
+    });
+  }
+});
+router.post('/cancel-offer', auth, async (req, res) => {
+  try {
+    const { _id, lender, avatar, totalWagered, accessory, username } = req.body;
+    console.log("dss", _id)
+    req.io.sockets.emit(`CANCEL_OFFER_${_id}`, {
+      lender,
+      avatar,
+      accessory,
+      username,
+      totalWagered
+    });
+    console.log("emitted", username)
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: 'An error occurred while calculating remaining loans',
+      error: err.message,
+    });
+  }
+});
+
 async function calculateRemainingLoans(currentUser) {
   try {
     const matchingLoans = await Loan.find({ 'loaners.user': currentUser._id });

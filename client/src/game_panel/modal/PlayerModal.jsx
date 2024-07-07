@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import LoadingOverlay from 'react-loading-overlay';
-import { setBalance, setGasfee } from '../../redux/Auth/user.actions';
+import { setBalance } from '../../redux/Auth/user.actions';
+import { setCurrentOfferTargetInfo } from '../../redux/Loan/loan.action';
 import styled from 'styled-components';
 import { renderLottieAnimation } from '../../util/LottieAnimations';
+import { openOfferLoanModal } from '../../redux/Notification/notification.actions';
 
 import {
   setChatRoomInfo,
@@ -26,7 +28,7 @@ import { Warning } from '@material-ui/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { convertToCurrency } from '../../util/conversion';
 
-import { faMoneyBill, faUser, faEnvelope, faRobot } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
+import { faMoneyBill, faUser, faEnvelope, faCoins, faRobot } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
 import { alertModal } from '../modal/ConfirmAlerts';
 import axios from '../../util/Api';
 
@@ -196,6 +198,8 @@ class PlayerModal extends Component {
       productArray: [],
       isTipModalOpen: false,
       tipAmount: '',
+      isLendModalOpen: false,
+      lendAmount: '',
       balance: props.balance,
     };
   }
@@ -211,6 +215,8 @@ class PlayerModal extends Component {
   handleCloseTipModal = () => {
     this.setState({ isTipModalOpen: false });
   };
+
+
 
   handleTipAmountChange = event => {
     this.setState({ tipAmount: event.target.value });
@@ -234,6 +240,47 @@ class PlayerModal extends Component {
       this.setState({ isLoading: true });
       const result = await axios.post('/game/tip/', {
         amount: this.state.tipAmount,
+        addressTo: this.state._id,
+        message: this.state.message
+      });
+
+      if (result.data.success) {
+        alertModal(this.props.isDarkMode, result.data.message, '-cat');
+        this.props.setBalance(result.data.balance);
+        this.props.addNewTransaction(result.data.newTransaction);
+        this.setState({ isLoading: false });
+        this.props.closeModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(this.props.isDarkMode, result.data.message);
+      }
+    } catch (e) {
+      this.setState({ isLoading: false });
+      if (this.state.amount <= 0) {
+        alertModal(this.props.isDarkMode, `FAILED TRANSACTION`);
+        return;
+      }
+    }
+  };
+
+  handleSendOffer = async () => {
+    try {
+      if (this.state.lendAmount < 0) {
+        alertModal(
+          this.props.isDarkMode,
+          `R U FURR-REAL? LEND AMOUNT MUST BE MORE THAN 0!`
+        );
+        return;
+      }
+
+      if (this.state.lendAmount > this.props.balance) {
+        alertModal(this.props.isDarkMode, `NOT ENUFF FUNDS AT THIS MEOWMENT`);
+        return;
+      }
+
+      this.setState({ isLoading: true });
+      const result = await axios.post('/game/lend/', {
+        amount: this.state.lendAmount,
         addressTo: this.state._id,
         message: this.state.message
       });
@@ -287,6 +334,17 @@ class PlayerModal extends Component {
       actorType: actorType,
       gameType: gameType,
       timeType: timeType,
+    }, () => {
+      this.props.setCurrentOfferTargetInfo({
+        avatar: userData.avatar,
+        _id: this.props.selectedCreator,
+        username: userData.username,
+        accessory: userData.accessory,
+        totalWagered: userData.totalWagered,
+        isLender: true
+      });
+
+
     });
   };
 
@@ -337,6 +395,11 @@ class PlayerModal extends Component {
   handleCloseModal = () => {
     this.props.closeModal();
   };
+  handleOpenOfferModal = () => {
+    const { openOfferLoanModal, closeModal } = this.props;
+    openOfferLoanModal();
+    closeModal();
+  };
 
   componentWillReceiveProps(nextProps) {
     if (nextProps._id !== this.props._id) {
@@ -348,7 +411,7 @@ class PlayerModal extends Component {
   }
 
   render() {
-    const { isLoading, loading} = this.state;
+    const { isLoading, loading } = this.state;
     const { productArray, isLowGraphics } = this.props;
     const isBot = this.state.username.toUpperCase().includes('BOT');
 
@@ -381,13 +444,13 @@ class PlayerModal extends Component {
             <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
               <div className="modal-header">
                 <h2 className="modal-title">
-                {isBot ? (
-                  <FontAwesomeIcon icon={faRobot} className="mr-2" style={{ color: 'red' }} />
-                ) : (
-                  <FontAwesomeIcon icon={faUser} className="mr-2" />
-                )}
-                {isBot ? 'Bot Card' : 'Player Card'}
-              </h2>
+                  {isBot ? (
+                    <FontAwesomeIcon icon={faRobot} className="mr-2" style={{ color: 'red' }} />
+                  ) : (
+                    <FontAwesomeIcon icon={faUser} className="mr-2" />
+                  )}
+                  {isBot ? 'Bot Card' : 'Player Card'}
+                </h2>
                 <Button className="btn-close" onClick={this.handleCloseModal}>
                   ×
                 </Button>
@@ -397,18 +460,33 @@ class PlayerModal extends Component {
                   {loading ? (
                     <div className="loading-spinner"></div>
                   ) : (
-                    <div className='avatar-border'>
-                      <Avatar
-                        src={
-                          this.state.avatar
-                            ? this.state.avatar
-                            : '/img/profile-thumbnail.svg'
-                        }
-                        accessory={this.state.accessory}
-                        rank={this.state.rank}
-                        alt=""
-                      />
-                    </div>
+                    <>
+                      <div style={{ margin: '30px auto -10px', padding: '10px', borderRadius: '4px', maxWidth: '150px', background: '#6c757d26', position: 'fixed', left: '15px', top: '65px', zIndex: '9' }}><span>online</span>&nbsp;
+                        <i
+                          style={{ margin: 'unset', transform: 'unset' }}
+                          className={`online-status${this.props.onlineUserList.filter(
+                            user => user === this.props.selectedCreator
+                          ).length > 0
+                            ? ' online'
+                            : ''
+                            }`}
+                        ></i>
+                      </div>
+                      <div className='avatar-border'>
+                        <Avatar
+                          src={
+                            this.state.avatar
+                              ? this.state.avatar
+                              : '/img/profile-thumbnail.svg'
+                          }
+                          accessory={this.state.accessory}
+                          rank={this.state.rank}
+                          alt=""
+                        />
+
+                      </div>
+                    </>
+
                   )}
                 </div>
                 {loading ? null : (
@@ -468,10 +546,7 @@ class PlayerModal extends Component {
 
                           <ProductInfo>
                             <ProductName>{row.productName}</ProductName>
-
                           </ProductInfo>
-
-
                         </ProductCard>
                       ))}
                     </ProductGrid>
@@ -484,12 +559,20 @@ class PlayerModal extends Component {
               </div>
               {this.props.userInfo._id !== this.state._id ? (
                 <div className="modal-footer">
+                  {this.props.onlineUserList.filter(
+                    user => user === this.props.selectedCreator
+                  ).length > 0 && (
+                    <Button className="tip-button" onClick={this.handleOpenOfferModal} disabled>
+                    Coming Soon&nbsp;
+                    <FontAwesomeIcon icon={faCoins} />
+                  </Button>
+                    )}
                   <Button className="tip-button" onClick={this.handleTip}>
                     Tip&nbsp;
                     <FontAwesomeIcon icon={faMoneyBill} />
                   </Button>
                   <Button className="send-msg" onClick={this.handleOpenChat}>
-                    Message&nbsp;
+                    DM&nbsp;
                     <FontAwesomeIcon icon={faEnvelope} />
                   </Button>
                 </div>
@@ -603,7 +686,8 @@ const mapStateToProps = state => ({
   userInfo: state.auth.user,
   balance: state.auth.balance,
   productArray: state.itemReducer.productArray,
-  isLowGraphics: state.auth.isLowGraphics
+  isLowGraphics: state.auth.isLowGraphics,
+  onlineUserList: state.logic.onlineUserList,
 
 });
 
@@ -613,7 +697,9 @@ const mapDispatchToProps = {
   setChatRoomInfo,
   setBalance,
   queryProducts,
-  addNewTransaction
+  addNewTransaction,
+  openOfferLoanModal,
+  setCurrentOfferTargetInfo
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(PlayerModal);

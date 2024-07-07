@@ -172,7 +172,7 @@ class BonusModal extends Component {
             </Button>
           </div>
 
-          <div className="modal-body edit-modal-body" style={{background: 'radial-gradient(#001339, #5dabf0)', overflow: 'hidden'}}>
+          <div className="modal-body edit-modal-body" style={{background: 'radial-gradient(#001339, #5dabf0)', overflowY: 'scroll', overflowX: 'hidden'}}>
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
                 <div style={{textAlign: 'center', padding: '5px', border: '3px solid #28a745', borderRadius: '4px', background: 'linear-gradient(0deg, #28a745, #cab98d73)', margin: '0 0 20px', }}>
@@ -180,7 +180,7 @@ class BonusModal extends Component {
                 <span style={{color:'#dee2e6'}}><FontAwesomeIcon icon={faClock} />&nbsp;Next Bonus Arrives...</span>
                 <h2 style={{color:"#212529"}}>{remainingTime}</h2>
                 </div>
-                <div className="wheel" style={{ transform: `rotate(${this.state.rotation}deg)` }}>
+                <div className="wheel" style={{ transform: `rotate(${this.state.rotation}deg)`, overflow: 'hidden'}}>
                   {numbers.map((number, index) => (
                     <div
                       key={index}

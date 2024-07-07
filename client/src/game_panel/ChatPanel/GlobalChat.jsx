@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import './Chat.css';
 import PlayerModal from '../modal/PlayerModal';
+import Avatar from '../../components/Avatar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHandPointDown } from '@fortawesome/free-solid-svg-icons';
 import ButtonBase from '@material-ui/core/ButtonBase';
 
-import Avatar from '../../components/Avatar';
 import {
   fetchId,
 } from '../../redux/Customer/customer.action';
@@ -288,7 +288,16 @@ class GlobalChat extends Component {
                           accessory={chat.replyTo.accessory}
                           darkMode={this.props.isDarkMode}
                         />
+                           <i
+                                className={`online-status${this.props.onlineUserList.filter(
+                                  user => user === chat.senderId
+                                ).length > 0
+                                  ? ' online'
+                                  : ''
+                                  }`}
+                              ></i>
                       </a>
+                      
                       <span className="reply-sender sender-name">
                         {chat.replyTo.sender}
                       </span>
@@ -318,8 +327,15 @@ class GlobalChat extends Component {
                         rank={chat.rank}
                         darkMode={this.props.isDarkMode}
                       />
+                    <i
+                                className={`online-status${this.props.onlineUserList.filter(
+                                  user => user === chat.senderId
+                                ).length > 0
+                                  ? ' online'
+                                  : ''
+                                  }`}
+                              ></i>
                     </a>
-  
                     <div className="chat-msg">
                       <span className="sender-name">{chat.sender}</span>
   

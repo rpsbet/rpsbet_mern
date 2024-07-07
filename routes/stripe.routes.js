@@ -4,6 +4,7 @@ const axios = require('axios');
 const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
 const Receipt = require('../model/Receipt');
+const GameLog = require('../model/GameLog');
 const Transaction = require('../model/Transaction');
 const { newTransaction } = require('../socketController');
 const stripe = require('stripe')('sk_live_B8xrL7Gp2elKyanYJ0Zi5IqS00EKxOnhjP');
@@ -415,15 +416,42 @@ router.post('/create_payout', auth, async (req, res) => {
           message: 'Failed to save transaction or receipt'
         });
       }
+      // Create and save a new game log
+      const newGameLog = new GameLog({
+        room: null, // Assign appropriate value
+        creator: req.user._id,
+        joined_user: null, // Assign appropriate value
+        game_type: null, // Assign appropriate value
+        bet_amount: amount,
+        selected_rps: '', // Assign appropriate value
+        commission: 0, // Adjust as necessary
+        game_result: 0, // Adjust as necessary
+        winnings: 0, // Adjust as necessary
+        endgame_amount: 0, // Adjust as necessary
+        host_pr: 0, // Adjust as necessary
+        user_bet: 0, // Adjust as necessary
+        status: 'pending', // Adjust as necessary
+        hosts: [] // Assign appropriate value
+      });
+
+      try {
+        await newGameLog.save();
+      } catch (error) {
+        console.error('Error saving game log:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to save game log'
+        });
+      }
 
       return res.json({
         success: true,
         balance: req.user.balance,
         newTransaction,
+        newGameLog, // Include the new game log in the response
         message: `Withdrawal request received and is pending confirmation. 🤑 Much Wow.`
       });
     }
-
   } catch (error) {
     console.error('Error processing withdrawal request: ', error);
     res.status(500).json({
@@ -543,12 +571,12 @@ router.post('/withdraw_request', auth, async (req, res) => {
         message: 'ACCOUNT TOO NEW'
       });
     }
-    
+
     const balance = req.user.balance;
     const withdrawalLimit = req.user.dailyWithdrawals;
 
     if (balance < req.body.amount) {
-    
+
     }
 
     if (withdrawalLimit > 100) {

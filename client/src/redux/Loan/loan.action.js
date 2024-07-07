@@ -8,6 +8,7 @@ import {
   LOAN_QUERY_ONE,
   MY_LOAN_QUERY,
   MY_LOAN_QUERY_ONE,
+  SET_OFFER_TARGET_INFO,
   LOADING_LOAN_TABLE,
   PAGINATION_FOR_LOAN,
   SET_CURRENT_LOAN_INFO,
@@ -49,6 +50,10 @@ export const acQueryMyLoan = (pagination, page, sortCriteria, loanType) => async
   }
 };
 
+
+export const setCurrentOfferTargetInfo = _id => dispatch => {
+  dispatch({ type: SET_OFFER_TARGET_INFO, payload: _id });
+};
 
 export const acQueryLoan = (pagination, page, sortCriteria, loanType) => async (
   dispatch
@@ -175,6 +180,34 @@ export const deleteLoan = _id => async dispatch => {
   body._id = _id;
   try {
     const { data } = await api.post('loan/delete', body);
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: data.message });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+
+export const emitLoanOffer = payload => async dispatch => {
+
+  try {
+    const { data } = await api.post('loan/offer-loan', payload);
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: data.message });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+export const cancelledOffer = payload => async dispatch => {
+  try {
+    const { data } = await api.post('loan/cancel-offer', payload);
     if (data.success) {
       dispatch({ type: MSG_SUCCESS, payload: data.message });
     } else {

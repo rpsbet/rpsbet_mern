@@ -188,6 +188,9 @@ button#recentSearches span {
 .chat-player .lottie-container.cat div,
 .chat .lottie-container.cat div,
 .modal-body table .lottie-container.cat div,
+.modal-content-panel .player .avatar .lottie-container.cat div,
+.chat-page .lottie-container.cat div,
+.table.main-game-table .lottie-container.cat div,
 .chat-page .lottie-container.cat div,
 .notification-element .lottie-container.cat div {
   top: 10px !important;

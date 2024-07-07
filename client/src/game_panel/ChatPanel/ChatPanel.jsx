@@ -414,6 +414,7 @@ class ChatPanel extends Component {
             emojis={emojis}
             setSelectedMessage={this.setSelectedMessage}
             selectedMessage={selectedMessage}
+            onlineUserList={this.props.onlineUserList}
           />
         )}
         {selected_tab_index === 1 && (
@@ -429,6 +430,7 @@ class ChatPanel extends Component {
                       src={selectedMessage.avatar}
                       alt="Avatar"
                     />
+                    
                   </div>
                   {selectedMessage.sender}
                   <Button className="tooltip-cross">

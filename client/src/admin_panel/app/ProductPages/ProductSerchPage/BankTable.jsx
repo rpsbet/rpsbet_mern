@@ -482,7 +482,6 @@ const mapStateToProps = state => ({
   page: state.loanReducer.page,
   loading: state.loanReducer.loading,
   total: state.loanReducer.totalResults,
-  showConfirmLoanModal: state.snackbar.showConfirmLoanModal,
   isDarkMode: state.auth.isDarkMode,
   user: state.auth.user._id,
   isLowGraphics: state.auth.isLowGraphics

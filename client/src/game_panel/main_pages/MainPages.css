@@ -1143,9 +1143,7 @@ div.table.main-game-table .table-row .table-cell.cell-user-name {
 div.table.main-game-table .table-row .table-cell.cell-user-name .avatar{
   margin-left: 10px;
 }
-div.table.main-game-table
-  .table-row
-  .table-cell.cell-user-name
+
   i.online-status {
     display: inline-block;
     width: 15px;
@@ -1153,12 +1151,21 @@ div.table.main-game-table
     background-color: #b9bbbe;
     border-radius: 5px;
     margin-left: -20px;
-    transform: translate(5px, 24px);
+    transform: translate(10px, 24px);
+}
+.chat-panel.global-chat .reply-to i.online-status {
+  transform: translate(25px, -22px);
+
 }
 
-div.table.main-game-table
-  .table-row
-  .table-cell.cell-user-name
+.chat-panel.global-chat i.online-status {
+  margin-left: 0px;
+  position: absolute;
+  z-index: 0;
+  transform: translate(40px, -22px);
+}
+
+
   i.online-status.online {
   background-color: rgb(87, 202, 34);
 }
@@ -3840,11 +3847,15 @@ position: sticky !important;
   .host-controls button:last-child {
     margin-top: 10px !important;
    }
-  div.table.main-game-table .table-row .table-cell.cell-user-name i.online-status {
+ i.online-status {
     width: 11px;
     height: 11px;
     border-radius: 4px;
     transform: translate(14px, 28px);
+  }
+
+  .chat-panel.global-chat i.online-status {
+    transform: translate(40px, -17px);
   }
   .transaction-settings {
     padding: 10px !important;

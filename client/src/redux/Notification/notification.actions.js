@@ -11,6 +11,8 @@ import {
   CLOSE_CONFIRM_TRADE_MODAL,
   OPEN_CONFIRM_LOAN_MODAL,
   CLOSE_CONFIRM_LOAN_MODAL,
+  OPEN_OFFER_LOAN_MODAL,
+  CLOSE_OFFER_LOAN_MODAL,
   OPEN_LIST_ITEM_MODAL,
   CLOSE_LIST_ITEM_MODAL,
   OPEN_DELIST_ITEM_MODAL,
@@ -47,6 +49,8 @@ export const openGamePasswordModal = () => dispatch => { dispatch({ type: OPEN_G
 export const closeGamePasswordModal = () => dispatch => { dispatch({ type: CLOSE_GAME_PASSWORD_MODAL }); };
 export const openConfirmLoanModal = () => dispatch => { dispatch({ type: OPEN_CONFIRM_LOAN_MODAL }); };
 export const closeConfirmLoanModal = () => dispatch => { dispatch({ type: CLOSE_CONFIRM_LOAN_MODAL }); };
+export const openOfferLoanModal = () => dispatch => { dispatch({ type: OPEN_OFFER_LOAN_MODAL }); };
+export const closeOfferLoanModal = () => dispatch => { dispatch({ type: CLOSE_OFFER_LOAN_MODAL }); };
 export const openConfirmTradeModal = () => dispatch => { dispatch({ type: OPEN_CONFIRM_TRADE_MODAL }); };
 export const closeConfirmTradeModal = () => dispatch => { dispatch({ type: CLOSE_CONFIRM_TRADE_MODAL }); };
 export const openListItemModal = () => dispatch => { dispatch({ type: OPEN_LIST_ITEM_MODAL }); };

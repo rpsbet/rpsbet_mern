@@ -325,6 +325,7 @@
     max-height: 55vh;
     min-width: 340px;
     overflow-y: scroll;
+    overflow-x: hidden;
     position: relative;
 }
 

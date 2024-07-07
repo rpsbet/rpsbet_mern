@@ -61,9 +61,10 @@ import DebtsModal from './modal/DebtsModal';
 
 import LeaderboardsModal from './modal/LeaderboardsModal';
 
-import { acCalculateRemainingLoans } from '../redux/Loan/loan.action';
+import { acCalculateRemainingLoans, setCurrentOfferTargetInfo } from '../redux/Loan/loan.action';
 import ConfirmTradeModal from './modal/ConfirmTradeModal';
 import ConfirmLoanModal from './modal/ConfirmLoanModal';
+import OfferLoanModal from './modal/OfferLoanModal';
 import ListItemModal from './modal/ListItemModal';
 import DeListItemModal from './modal/DeListItemModal';
 import DeListLoanModal from './modal/DeListLoanModal';
@@ -97,6 +98,7 @@ import {
   setDarkMode,
   setNotificationsAllowed
 } from '../redux/Auth/user.actions';
+import { openOfferLoanModal } from '../redux/Notification/notification.actions';
 import {
   setRoomList,
   addChatLog,
@@ -230,6 +232,7 @@ class SiteWrapper extends Component {
       showBonusModal: false,
       showDeposits: false,
       web3: null,
+      bonusCheck: false,
       web3account: '',
       remainingLoans: this.props.remainingLoans,
       web3balance: 0
@@ -444,6 +447,18 @@ class SiteWrapper extends Component {
           audio.play();
         }
       });
+      socket.on(`RECEIVED_LOAN_OFFER_${this.props.user._id}`, ({ lender, avatar, accessory, username, totalWagered }) => {
+        this.props.openOfferLoanModal();
+        this.props.setCurrentOfferTargetInfo({
+          _id: this.props.user._id,
+          lender,
+          avatar,
+          accessory,
+          username,
+          totalWagered
+        });
+      });
+     
 
       socket.on('SEND_CHAT', data => {
         try {
@@ -516,10 +531,13 @@ class SiteWrapper extends Component {
 
       socket.on('ONLINE_STATUS_UPDATED', data => {
         this.props.updateOnlineUserList(data.user_list);
-        if (this.props.isAuthenticated) {
-          this.checkBonusTime();
+        if (this.props.isAuthenticated && !this.state.bonusCheck) {
+          this.setState({ bonusCheck: true }, () => {
+            this.checkBonusTime();
+          });
         }
       });
+      
 
       socket.on('GLOBAL_CHAT_RECEIVED', data => {
         this.props.globalChatReceived(data);
@@ -1844,6 +1862,7 @@ class SiteWrapper extends Component {
               <ConfirmTradeModal />
               <DeListLoanModal />
               <ConfirmLoanModal />
+              <OfferLoanModal socket={this.props.socket} />
               <GamePasswordModal />
             </div>
           </>
@@ -1903,7 +1922,9 @@ const mapDispatchToProps = {
   globalChatReceived,
   setGlobalChat,
   updateBetResult,
-  getProfitData
+  getProfitData,
+  openOfferLoanModal,
+  setCurrentOfferTargetInfo
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);

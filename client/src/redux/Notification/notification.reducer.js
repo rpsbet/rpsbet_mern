@@ -11,6 +11,8 @@ import {
   CLOSE_CONFIRM_TRADE_MODAL,
   OPEN_CONFIRM_LOAN_MODAL,
   CLOSE_CONFIRM_LOAN_MODAL,
+  OPEN_OFFER_LOAN_MODAL,
+  CLOSE_OFFER_LOAN_MODAL,
   OPEN_LIST_ITEM_MODAL,
   CLOSE_LIST_ITEM_MODAL,
   OPEN_DELIST_ITEM_MODAL,
@@ -43,7 +45,7 @@ const initialState = {
   isPasswordCorrect: false
 };
 
-export default function(state = initialState, action) {
+export default function (state = initialState, action) {
   const { type, payload } = action;
 
   switch (type) {
@@ -114,27 +116,27 @@ export default function(state = initialState, action) {
         ...state,
         showConfirmTradeModal: false
       };
-      case OPEN_LIST_ITEM_MODAL:
-        return {
-          ...state,
-          showListItemModal: true
-        };
-      case CLOSE_LIST_ITEM_MODAL:
-        return {
-          ...state,
-          showListItemModal: false
-        };
-      case OPEN_DELIST_ITEM_MODAL:
-        return {
-          ...state,
-          showDeListItemModal: true
-        };
-      case CLOSE_DELIST_ITEM_MODAL:
-        return {
-          ...state,
-          showDeListItemModal: false
-        };
-        case OPEN_CONFIRM_LOAN_MODAL:
+    case OPEN_LIST_ITEM_MODAL:
+      return {
+        ...state,
+        showListItemModal: true
+      };
+    case CLOSE_LIST_ITEM_MODAL:
+      return {
+        ...state,
+        showListItemModal: false
+      };
+    case OPEN_DELIST_ITEM_MODAL:
+      return {
+        ...state,
+        showDeListItemModal: true
+      };
+    case CLOSE_DELIST_ITEM_MODAL:
+      return {
+        ...state,
+        showDeListItemModal: false
+      };
+    case OPEN_CONFIRM_LOAN_MODAL:
       return {
         ...state,
         showConfirmLoanModal: true
@@ -144,26 +146,36 @@ export default function(state = initialState, action) {
         ...state,
         showConfirmLoanModal: false
       };
-        case OPEN_LIST_LOAN_MODAL:
-        return {
-          ...state,
-          showListLoanModal: true
-        };
-      case CLOSE_LIST_LOAN_MODAL:
-        return {
-          ...state,
-          showListLoanModal: false
-        };
-      case OPEN_DELIST_LOAN_MODAL:
-        return {
-          ...state,
-          showDeListLoanModal: true
-        };
-      case CLOSE_DELIST_LOAN_MODAL:
-        return {
-          ...state,
-          showDeListLoanModal: false
-        };
+    case OPEN_OFFER_LOAN_MODAL:
+      return {
+        ...state,
+        showOfferLoanModal: true
+      };
+    case CLOSE_OFFER_LOAN_MODAL:
+      return {
+        ...state,
+        showOfferLoanModal: false
+      };
+    case OPEN_LIST_LOAN_MODAL:
+      return {
+        ...state,
+        showListLoanModal: true
+      };
+    case CLOSE_LIST_LOAN_MODAL:
+      return {
+        ...state,
+        showListLoanModal: false
+      };
+    case OPEN_DELIST_LOAN_MODAL:
+      return {
+        ...state,
+        showDeListLoanModal: true
+      };
+    case CLOSE_DELIST_LOAN_MODAL:
+      return {
+        ...state,
+        showDeListLoanModal: false
+      };
     default:
       return state;
   }
