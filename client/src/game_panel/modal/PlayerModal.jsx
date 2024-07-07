@@ -562,10 +562,10 @@ class PlayerModal extends Component {
                   {this.props.onlineUserList.filter(
                     user => user === this.props.selectedCreator
                   ).length > 0 && (
-                    <Button className="tip-button" onClick={this.handleOpenOfferModal} disabled>
-                    Coming Soon&nbsp;
-                    <FontAwesomeIcon icon={faCoins} />
-                  </Button>
+                      <Button className="tip-button" disabled onClick={this.handleOpenOfferModal}>
+                        Coming Soon!&nbsp;
+                        <FontAwesomeIcon icon={faCoins} />
+                      </Button>
                     )}
                   <Button className="tip-button" onClick={this.handleTip}>
                     Tip&nbsp;

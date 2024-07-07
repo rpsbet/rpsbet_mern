@@ -2670,11 +2670,23 @@ pointer-events: unset !important;
 #select-buttons-panel button{
   margin-bottom: 15px !important;
 }
+.disabled:hover {
+  box-shadow:unset !important;
+}
 .disabled {
   background: grey !important;
   box-shadow: none !important;
   cursor: not-allowed !important;
   filter: grayscale(1);
+}
+.isWaiting:hover {
+  box-shadow:unset !important;
+}
+.isWaiting {
+  background: rgb(181, 97, 255) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  filter: hue-rotate(30);
 }
 
 #ap-btn {

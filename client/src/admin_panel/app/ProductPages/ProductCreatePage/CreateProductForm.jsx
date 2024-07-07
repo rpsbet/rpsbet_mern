@@ -127,7 +127,7 @@ function CreateProductForm({ updateTextField }) {
         </Table>
       </TableContainer>
       <h6 style={{ marginTop: '30px', marginBottom: '10px' }}>
-        By clicking 'accept', you agree to the following{' '}
+        By clicking 'ACCEPT', you agree to the following{' '}
         <span
           onClick={toggleExpand}
           style={{ color: '#ff0000', textDecoration: 'underline', cursor: 'pointer' }}
@@ -170,7 +170,7 @@ function CreateProductForm({ updateTextField }) {
                     </tr>
                     <tr>
                       <td className="list-number">8.</td>
-                      <td>Clicking 'accept' confirms your understanding and agreement to these terms.</td>
+                      <td>Clicking 'ACCEPT' confirms your understanding and agreement to these terms.</td>
                     </tr>
                     <tr>
                       <td className="list-number">9.</td>

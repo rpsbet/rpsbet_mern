@@ -449,6 +449,9 @@ class SiteWrapper extends Component {
       });
       socket.on(`RECEIVED_LOAN_OFFER_${this.props.user._id}`, ({ lender, avatar, accessory, username, totalWagered }) => {
         this.props.openOfferLoanModal();
+        if (!this.props.isMuted) {
+          this.needALoan.play();
+        }
         this.props.setCurrentOfferTargetInfo({
           _id: this.props.user._id,
           lender,
@@ -458,7 +461,6 @@ class SiteWrapper extends Component {
           totalWagered
         });
       });
-     
 
       socket.on('SEND_CHAT', data => {
         try {
@@ -537,7 +539,7 @@ class SiteWrapper extends Component {
           });
         }
       });
-      
+
 
       socket.on('GLOBAL_CHAT_RECEIVED', data => {
         this.props.globalChatReceived(data);
@@ -662,6 +664,8 @@ class SiteWrapper extends Component {
       this.oohBaby = new Audio('/sounds/ooh-baby.mp3');
       this.oohBaby.load();
       this.notificationSound = new Audio('/sounds/notification.mp3');
+      this.needALoan = new Audio('/sounds/need_a_loan.mp3');
+      this.needALoan.load();
       this.notificationSound.load();
       this.cashRegister = new Audio('/sounds/cash-register.mp3');
       this.cashRegister.load();

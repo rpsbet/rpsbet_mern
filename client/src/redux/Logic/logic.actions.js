@@ -580,23 +580,6 @@ export const confirmLoan = data => async dispatch => {
   return false;
 };
 
-export const offerLoan = data => async dispatch => {
-  try {
-    dispatch({ type: TNX_INCOMPLETE });
-    const res = await axios.post('/loan/lend/', data);
-    if (res.data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
-
-      return res.data;
-    } else {
-      return res.data;
-    }
-  } catch (err) {
-  } finally {
-    dispatch({ type: TNX_COMPLETE });
-  }
-  return false;
-};
 
 export const fetchAccessory = data => async dispatch => {
   try {

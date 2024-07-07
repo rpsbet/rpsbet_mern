@@ -212,7 +212,7 @@ router.get('/calculate-remaining-loans', auth, async (req, res) => {
   }
 });
 
-router.post('/offer-loan', auth, async (req, res) => {
+router.post('/emit-offer-loan', auth, async (req, res) => {
   try {
     const { _id, lender, avatar, totalWagered, accessory, username } = req.body;
     req.io.sockets.emit(`RECEIVED_LOAN_OFFER_${_id}`, {
@@ -236,16 +236,28 @@ router.post('/offer-loan', auth, async (req, res) => {
 });
 router.post('/cancel-offer', auth, async (req, res) => {
   try {
-    const { _id, lender, avatar, totalWagered, accessory, username } = req.body;
-    console.log("dss", _id)
+    const { _id, username } = req.body;
     req.io.sockets.emit(`CANCEL_OFFER_${_id}`, {
-      lender,
-      avatar,
-      accessory,
-      username,
-      totalWagered
+      cancelled: true
     });
-    console.log("emitted", username)
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: 'An error occurred while calculating remaining loans',
+      error: err.message,
+    });
+  }
+});
+router.post('/reconsider-offer', auth, async (req, res) => {
+  try {
+    const { _id, username } = req.body;
+    req.io.sockets.emit(`CANCEL_OFFER_${_id}`, {
+      cancelled: false
+    });
     res.json({
       success: true,
     });
@@ -470,6 +482,30 @@ router.post('/lend', auth, async (req, res) => {
     });
   }
 });
+router.post('/offer-loan', auth, async (req, res) => {
+  try {
+    const { loanAmount, loanPeriod, lender, interestRate } = req.body;
+    // Find the loan using the new model
+    req.io.sockets.emit(`OFFER_LOAN_${lender}`, {
+      loanAmount,
+      loanPeriod,
+      interestRate,
+      lender
+    });
+
+    res.json({
+      success: true,
+      message: "waiting",
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: "An error occurred during the loan",
+      error: err.message,
+    });
+  }
+});
 
 
 router.get('/my-loans', auth, async (req, res) => {
@@ -655,5 +691,121 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.post('/create-and-lend', auth, async (req, res) => {
+  try {
+    const { loan_amount, loan_period, apy, lender } = req.body;
+    console.log(loan_amount, loan_period, apy, lender );
+    const currentUser = req.user;
+
+    // Check if all required fields are provided
+    if (!loan_amount || !loan_period || !apy || !lender) {
+      return res.json({
+        success: false,
+        error: 'Please enter all fields'
+      });
+    }
+
+    // Validate loan amount, loan period, and APY
+    if (isNaN(parseFloat(loan_amount)) || parseFloat(loan_amount) <= 0 ||
+        isNaN(parseFloat(loan_period)) || parseFloat(loan_period) <= 0 ||
+        isNaN(parseFloat(apy)) || parseFloat(apy) <= 0) {
+      return res.json({
+        success: false,
+        message: 'Loan amount, loan period, and APY must be valid positive numbers',
+      });
+    }
+
+    // Check if the user has sufficient funds for the loan
+    if (currentUser.balance < parseFloat(loan_amount)) {
+      return res.json({
+        success: false,
+        message: 'Insufficient funds',
+      });
+    }
+
+    // Create a new loan
+    let loanObj = new Loan({
+      lender: lender,
+      loan_amount: loan_amount,
+      loan_period: loan_period,
+      apy: apy / 100
+    });
+
+    // Save the new loan
+    await loanObj.save();
+
+    // Proceed with the lending logic
+    const newLoanAmount = parseFloat(responseText);
+
+    if (!check_access_time(currentUser._id)) {
+      return res.json({
+        success: false,
+        message: 'irregular action',
+        betResult: -1000
+      });
+    }
+
+    if (newLoanAmount > parseFloat(loanObj.loan_amount)) {
+      return res.json({
+        success: false,
+        message: 'Not enough available funds!',
+      });
+    }
+
+    const lenderUser = await User.findById(lender);
+
+    const newTransaction = new Transaction({
+      user: currentUser,
+      amount: newLoanAmount,
+      description: `Loan from ${lenderUser.username}`,
+    });
+
+    // Update the loan's loaners array to increment count for the new loaner
+    const newLoanLoaner = {
+      user: currentUser._id,
+      paidBack: 0,
+      apy: loanObj.apy,
+      amount: newLoanAmount * loanObj.apy + newLoanAmount,
+      period: loanObj.loan_period,
+      created_at: Date.now(),
+      updated_at: Date.now()
+    };
+
+    loanObj.loan_amount -= newLoanAmount;
+    currentUser.balance += newLoanAmount;
+
+    const newLoanerIndex = loanObj.loaners.findIndex((loanerObj) => loanerObj.user.equals(currentUser._id));
+    if (newLoanerIndex !== -1) {
+      loanObj.loaners[newLoanerIndex].period += (loanObj.loan_period - loanObj.loaners[newLoanerIndex].period) + loanObj.loan_period;
+      loanObj.loaners[newLoanerIndex].amount += newLoanAmount * loanObj.apy + newLoanAmount;
+      loanObj.loaners[newLoanerIndex].created_at = Date.now();
+      loanObj.loaners[newLoanerIndex].updated_at = Date.now();
+    } else {
+      loanObj.loaners.push(newLoanLoaner);
+    }
+
+    const savePromises = [
+      currentUser.save(),
+      loanObj.save(),
+      newTransaction.save(),
+    ];
+
+    await Promise.all(savePromises);
+
+    res.json({
+      success: true,
+      balance: currentUser.balance,
+      newTransaction: newTransaction,
+      message: 'LOAN 🤝 ACCEPTED',
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.json({
+      success: false,
+      message: "An error occurred during the loan creation and lending process",
+      error: err.message,
+    });
+  }
+});
 
 module.exports = router;

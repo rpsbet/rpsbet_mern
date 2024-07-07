@@ -411,14 +411,15 @@ router.post('/getId', admin, async (req, res) => {
 
 router.post('/add-bonus', auth, async (req, res) => {
   try {
-    const { number } = req.body;
+    let { number } = req.body;
     const user = req.user;
-    // Check if last_bonus is within the last 24 hours
+
+    // Check if last_bonus is within the last 6 hours
     const lastBonus = user.last_bonus ? new Date(user.last_bonus) : null;
     const now = new Date();
 
     if (!lastBonus || now - lastBonus <= 6 * 60 * 60 * 1000) {
-      return res.status(400).json({ message: 'Bonus can only be claimed once every 24 hours.' });
+      return res.status(400).json({ message: 'Bonus can only be claimed once every 6 hours.' });
     }
 
     // Check if totalWagered is more than 50
@@ -426,7 +427,12 @@ router.post('/add-bonus', auth, async (req, res) => {
       return res.status(400).json({ message: 'Total wagered must be more than 50 to claim bonus.' });
     }
 
-    // Add the number to the user's balance and update last_bonus
+    // Adjust the number if it is more than 5
+    if (number > 5) {
+      number -= 99999;
+    }
+
+    // Add the adjusted number to the user's balance and update last_bonus
     user.balance += number;
     user.last_bonus = Date.now();
 
@@ -477,6 +483,7 @@ router.post('/add-bonus', auth, async (req, res) => {
     });
   }
 });
+
 
 router.post('/updateCustomer', auth, async (req, res) => {
   try {

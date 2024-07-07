@@ -145,6 +145,21 @@ export const createLoan = body => async (dispatch, getState) => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
 };
+export const createAndLend = body => async (dispatch) => {
+  console.log(body)
+  try {
+    const { data } = await api.post('loan/create-and-lend', body);
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+      return data;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
 
 export const getLoan = () => async (dispatch, getState) => {
   const _id = getState().loanReducer._id;
@@ -191,10 +206,23 @@ export const deleteLoan = _id => async dispatch => {
   }
 };
 
+export const offerLoan = payload => async dispatch => {
+  try {
+    const { data } = await api.post('/loan/offer-loan', payload);
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: data.message });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
 export const emitLoanOffer = payload => async dispatch => {
 
   try {
-    const { data } = await api.post('loan/offer-loan', payload);
+    const { data } = await api.post('/loan/emit-offer-loan', payload);
     if (data.success) {
       dispatch({ type: MSG_SUCCESS, payload: data.message });
     } else {
@@ -208,6 +236,19 @@ export const emitLoanOffer = payload => async dispatch => {
 export const cancelledOffer = payload => async dispatch => {
   try {
     const { data } = await api.post('loan/cancel-offer', payload);
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: data.message });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.message });
+    }
+  } catch (error) {
+    console.log('error***', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+};
+export const reconsiderOffer = payload => async dispatch => {
+  try {
+    const { data } = await api.post('loan/reconsider-offer', payload);
     if (data.success) {
       dispatch({ type: MSG_SUCCESS, payload: data.message });
     } else {

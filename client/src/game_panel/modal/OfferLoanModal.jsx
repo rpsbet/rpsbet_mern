@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@material-ui/core';
-import { acQueryLoan, acCalculateRemainingLoans, emitLoanOffer, cancelledOffer } from '../../redux/Loan/loan.action';
+import { acQueryLoan, acCalculateRemainingLoans, emitLoanOffer, cancelledOffer, reconsiderOffer, offerLoan, createAndLend } from '../../redux/Loan/loan.action';
 import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
 import { getRank } from '../../util/getRank';
@@ -10,13 +10,33 @@ import rankIcon from '../LottieAnimations/rankIcon.json';
 import {
   closeOfferLoanModal
 } from '../../redux/Notification/notification.actions';
-import { offerLoan } from '../../redux/Logic/logic.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
 import { setBalance } from '../../redux/Auth/user.actions';
 import Avatar from '../../components/Avatar';
 import { addNewTransaction } from '../../redux/Logic/logic.actions';
 
 Modal.setAppElement('#root');
+
+const cellStyles = {
+  borderBottom: "none",
+  padding: '5px',
+};
+
+const labelCellStyle = {
+  ...cellStyles,
+  textAlign: "left",
+  width: '200px', // Adjust width as needed
+};
+
+const inputCellStyle = {
+  ...cellStyles,
+  textAlign: "right",
+};
+
+const infoTextStyle = {
+  whiteSpace: "nowrap",
+  marginTop: '5px', // Adjust margin as needed
+};
 
 const customStyles = {
   overlay: {
@@ -44,49 +64,87 @@ class OfferLoanModal extends Component {
       responseText: 0,
       showPlayerModal: false,
       socket: props.socket,
-      cancelled: ''
+      cancelled: false,
+      waiting: true
     };
   }
 
   componentDidMount() {
     this.setupSocketListener();
   }
-  
+
   setupSocketListener = () => {
     const { socket, offerInfo } = this.props;
-    
-    if (!socket) {
-      // If socket is not available, retry after 1 second
+
+    if (!socket || !offerInfo) {
+      // If socket or offerInfo is not available, retry after 1 second
       setTimeout(this.setupSocketListener, 1000);
       return;
     }
 
-    console.log("offerInfo", offerInfo._id);
-  
-    socket.on(`CANCEL_OFFER_${offerInfo._id}`, () => {
-      console.log("data");
-        this.setState(
-          {
-            cancelled: true,
-          }
-        );
+
+    socket.off(`CANCEL_OFFER_${offerInfo._id}`); // Remove any previous listeners to avoid duplication
+    socket.on(`CANCEL_OFFER_${offerInfo._id}`, (data) => {
+      this.setState({
+        cancelled: data.cancelled,
+        waiting: true,
+      }, () => {
+        if (data.cancelled && !this.props.offerInfo.isLender) {
+          this.props.closeOfferLoanModal();
+        }
+      });
     });
+    // if (offerInfo.isLender) {
+    socket.off(`OFFER_LOAN_${offerInfo._id}`); // Remove any previous listeners to avoid duplication
+    socket.on(`OFFER_LOAN_${offerInfo._id}`, (data) => {
+      console.log("OFFER DATA", data);
+      this.setState({
+        responseText: data.loanAmount,
+        loanPeriodText: data.loanPeriod,
+        interestRateText: data.interestRate,
+        waiting: false
+      });
+    });
+    // }
+
   }
-  
-  
+
   componentDidUpdate(prevProps) {
     if (prevProps.isOpen !== this.props.isOpen && this.props.isOpen && this.props.offerInfo.isLender) {
-      this.props.emitLoanOffer({
-        _id: this.props.offerInfo._id,
-        lender: this.props.userInfo._id,
-        avatar: this.props.userInfo.avatar,
-        totalWagered: this.props.userInfo.totalWagered,
-        accessory: this.props.userInfo.accessory,
-        username: this.props.userInfo.username
+      this.nudge();
+    } else if (prevProps.isOpen !== this.props.isOpen && this.props.isOpen && !this.props.offerInfo.isLender) {
+      this.props.reconsiderOffer({
+        _id: this.props.userInfo._id,
+        username: '',
       });
     }
   }
 
+  nudge = () => {
+    this.props.emitLoanOffer({
+      _id: this.props.offerInfo._id,
+      lender: this.props.userInfo._id,
+      avatar: this.props.userInfo.avatar,
+      totalWagered: this.props.userInfo.totalWagered,
+      accessory: this.props.userInfo.accessory,
+      username: this.props.userInfo.username
+    });
+  }
+
+  createAndLend = async () => {
+    const { responseText, loanPeriodText, interestRateText } = this.state;
+    this.setState({ waiting: true });
+    const result = await this.props.createAndLend({
+      loan_amount: responseText,
+      loan_period: loanPeriodText,
+      apy: interestRateText,
+      lender: this.props.offerInfo._id,
+    });
+    this.props.closeOfferLoanModal();
+    if (result.success) {
+      alertModal(isDarkMode, message, '-cat');
+    }
+  }
 
   toggleExpand = () => {
     this.setState((prevState) => ({
@@ -114,8 +172,10 @@ class OfferLoanModal extends Component {
     this.setState({ interestRateText: parsedValue ? parsedValue[0] : "" });
   };
 
+
+
   onBtnOkClicked = async e => {
-    const { userInfo, closeOfferLoanModal, acQueryLoan, setBalance, addNewTransaction, isDarkMode, offerLoan } = this.props;
+    const { userInfo, closeOfferLoanModal, acQueryLoan, setBalance, addNewTransaction, isDarkMode, offerLoan, offerInfo } = this.props;
     const { responseText, loanPeriodText, interestRateText } = this.state;
 
     if (parseFloat(responseText) > userInfo.balance) {
@@ -127,13 +187,15 @@ class OfferLoanModal extends Component {
       return;
     }
 
-    // const response = await offerLoan({
-    //   loanAmount: parseFloat(responseText),
-    //   loanPeriod: parseInt(loanPeriodText),
-    //   interestRate: parseFloat(interestRateText),
-    //   lender: userInfo._id,
-    // });
+    this.setState({ waiting: false });
 
+    offerLoan({
+      loanAmount: parseFloat(responseText),
+      loanPeriod: parseInt(loanPeriodText),
+      interestRate: parseFloat(interestRateText),
+      lender: offerInfo._id,
+    });
+    // console.log(response)
     // if (response.success) {
     //   const { balance, newTransaction, message } = response;
 
@@ -144,7 +206,7 @@ class OfferLoanModal extends Component {
   onBtnCancelClicked = e => {
     this.props.cancelledOffer({
       avatar: '',
-      _id: this.props.userInfo._id,
+      _id: this.props.offerInfo._id,
       username: '',
       accessory: '',
       totalWagered: '',
@@ -154,7 +216,7 @@ class OfferLoanModal extends Component {
   };
 
   render() {
-    const { expanded, responseText, loanPeriodText, interestRateText, cancelled } = this.state;
+    const { expanded, responseText, loanPeriodText, interestRateText, cancelled, waiting } = this.state;
     const { loan_amount, loan_period, apy, rank, userInfo, onlineUserList } = this.props;
 
     return (
@@ -192,16 +254,20 @@ class OfferLoanModal extends Component {
                           <i
                             style={{ marginTop: '1px', width: '14px', height: '14px' }}
                             className={`online-status${this.props.onlineUserList.filter(user => user === this.props.offerInfo._id).length > 0
-                                ? ' online'
-                                : ''
+                              ? ' online'
+                              : ''
                               }`}
                           ></i>
                         </div>
-                        <h6 style={{ color: '#28a745' }}>READY!</h6>
+                        {!cancelled && !waiting ? (
+                          <h6 style={{ color: '#28a745' }}>READY!</h6>
+                        ) : (
+                          <h6 style={{ color: 'grey' }}>WAITING!</h6>
+                        )}
                       </TableCell>
 
-                        {!cancelled ? (
-                      <TableCell style={{ textAlign: 'center' }}>
+                      {!cancelled || !this.props.offerInfo.isLender ? (
+                        <TableCell style={{ textAlign: 'center' }}>
                           <div className={'player'} style={{ display: 'flex' }}>
                             <Avatar
                               className="avatar"
@@ -214,15 +280,15 @@ class OfferLoanModal extends Component {
                             <i
                               style={{ marginTop: '1px', width: '14px', height: '14px' }}
                               className={`online-status${this.props.onlineUserList.filter(user => user === this.props.offerInfo._id).length > 0
-                                  ? ' online'
-                                  : ''
+                                ? ' online'
+                                : ''
                                 }`}
                             ></i>
                           </div>
-                        <h6 style={{ color: '#28a745' }}>READY!</h6>
+                          <h6 style={{ color: 'grey' }}>WAITING!</h6>
                         </TableCell>
-                        ) : (
-                          <TableCell>
+                      ) : (
+                        <TableCell>
                           <div className={'player'} style={{ display: 'flex' }}>
                             <Avatar
                               className="avatar"
@@ -235,14 +301,15 @@ class OfferLoanModal extends Component {
                             <i
                               style={{ marginTop: '1px', width: '14px', height: '14px' }}
                               className={`online-status${this.props.onlineUserList.filter(user => user === this.props.offerInfo._id).length > 0
-                                  ? ' online'
-                                  : ''
+                                ? ' online'
+                                : ''
                                 }`}
                             ></i>
-                            <Button onClick={this.handleNudge}>NUDGE</Button>
+                            <h6 style={{ color: '#ff0000' }}>REJECTED</h6>
+                            <Button onClick={this.nudge}>NUDGE</Button>
                           </div>
-                      </TableCell>
-                        )}
+                        </TableCell>
+                      )}
                     </TableRow>
 
                   </TableHead>
@@ -253,71 +320,76 @@ class OfferLoanModal extends Component {
 
 
             </div>
-            <TableContainer>
-              <Table  >
-                <TableRow style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <TableCell style={{ textAlign: "right", borderBottom: "none" }}>
-                    LOAN AMOUNT
-                  </TableCell>
-                  <TableCell style={{ textAlign: "right", borderBottom: "none", display: 'flex', flexDirection: 'column' }}>
-                    <TextField
-                      variant="filled"
-                      value={responseText}
-                      onChange={this.handleResponseTextChange}
-                      style={{ margin: "10px 0", }}
-                      InputProps={{
-                        endAdornment: 'RPS'
-                      }}
+            {this.props.offerInfo.isLender && (
+              <>
+                <TableContainer style={{ padding: '0 20px 10px' }}>
+                  <Table>
+                    {/* Table Row for Loan Amount */}
+                    <TableRow>
+                      <TableCell style={labelCellStyle}>
+                        LOAN AMOUNT
+                      </TableCell>
+                      <TableCell style={inputCellStyle}>
+                        <TextField
+                          variant="filled"
+                          value={responseText}
+                          onChange={this.handleResponseTextChange}
+                          InputProps={{
+                            endAdornment: 'RPS'
+                          }}
+                          fullWidth
+                        />
+                        <div style={infoTextStyle}>
+                          AVAILABLE FUNDS: {convertToCurrency(userInfo.balance)}
+                        </div>
+                      </TableCell>
+                    </TableRow>
 
-                    />
+                    {/* Table Row for Loan Period */}
+                    <TableRow>
+                      <TableCell style={labelCellStyle}>
+                        LOAN PERIOD
+                      </TableCell>
+                      <TableCell style={inputCellStyle}>
+                        <TextField
+                          variant="filled"
+                          value={loanPeriodText}
+                          onChange={this.handleLoanPeriodTextChange}
+                          InputProps={{
+                            endAdornment: 'DAYS'
+                          }}
+                          fullWidth
+                        />
+                      </TableCell>
+                    </TableRow>
 
-                    <span style={{ whiteSpace: "nowrap" }}>AVAILABLE FUNDS: {convertToCurrency(userInfo.balance)}</span>
-                  </TableCell>
-                </TableRow>
-                <TableRow style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <TableCell style={{ textAlign: "right", borderBottom: "none" }}>
-                    LOAN PERIOD
-                  </TableCell>
-                  <TableCell style={{ textAlign: "right", borderBottom: "none" }}>
+                    {/* Table Row for Interest Rate */}
+                    <TableRow>
+                      <TableCell style={labelCellStyle}>
+                        INTEREST RATE (%)
+                      </TableCell>
+                      <TableCell style={inputCellStyle}>
+                        <TextField
+                          variant="filled"
+                          value={interestRateText}
+                          onChange={this.handleInterestRateTextChange}
+                          InputProps={{
+                            endAdornment: '%'
+                          }}
+                          fullWidth
+                        />
+                      </TableCell>
+                    </TableRow>
+                  </Table>
+                </TableContainer>
 
-                    <TextField
-                      variant="filled"
-                      value={loanPeriodText}
-                      onChange={this.handleLoanPeriodTextChange}
-                      style={{ margin: "10px 0", }}
-                      InputProps={{
-                        endAdornment: 'DAYS'
-                      }}
-
-                    />
-                  </TableCell>
-                </TableRow>
-                <TableRow style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <TableCell style={{ textAlign: "right", borderBottom: "none" }}>
-                    INTEREST RATE (%)
-                  </TableCell>
-                  <TableCell style={{ textAlign: "right", borderBottom: "none" }}>
-
-                    <TextField
-                      variant="filled"
-                      value={interestRateText}
-                      onChange={this.handleInterestRateTextChange}
-                      style={{ margin: "10px 0", }}
-                      InputProps={{
-                        endAdornment: '%'
-                      }}
-
-                    />
-                  </TableCell>
-                </TableRow>
-              </Table>
-            </TableContainer>
-
+              </>
+            )}
 
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow >
+                  <TableRow>
                     <TableCell style={{ textAlign: "center" }}>Loan Amount</TableCell>
                     <TableCell style={{ textAlign: "center" }}>Days Left</TableCell>
                     <TableCell style={{ textAlign: "center" }}>Interest ({apy * 100}%)</TableCell>
@@ -326,16 +398,24 @@ class OfferLoanModal extends Component {
                 </TableHead>
                 <TableBody>
                   <TableRow>
-                    <TableCell style={{ textAlign: "center" }}>{convertToCurrency(parseFloat(responseText))}</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>{loan_period} days</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>{convertToCurrency((apy * parseFloat(responseText)) + parseFloat(responseText))}</TableCell>
+                    <TableCell style={{ textAlign: "center" }}>
+                      {cancelled || waiting ? 'waiting' : convertToCurrency(parseFloat(responseText))}
+                    </TableCell>
+                    <TableCell style={{ textAlign: "center" }}>
+                      {cancelled || waiting ? 'waiting' : `${loanPeriodText} days`}
+                    </TableCell>
+                    <TableCell style={{ textAlign: "center" }}>
+                      {cancelled || waiting ? 'waiting' : interestRateText}
+                    </TableCell>
                     {/* Add more cells for other details if needed */}
                   </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>
+
+
             <h6 style={{ marginTop: "30px", marginBottom: "10px" }}>
-              By clicking 'accept', you agree to the following <span onClick={this.toggleExpand} style={{ color: "#ff0000", textDecoration: "underline", cursor: "pointer" }}>terms and conditions:
+              By clicking 'ACCEPT OR OFFER', you agree to the following <span onClick={this.toggleExpand} style={{ color: "#ff0000", textDecoration: "underline", cursor: "pointer" }}>terms and conditions:
               </span>
             </h6>
 
@@ -373,7 +453,7 @@ class OfferLoanModal extends Component {
                     </tr>
                     <tr>
                       <td className="list-number">8.</td>
-                      <td>Clicking 'accept' offers your understanding and agreement to these terms.</td>
+                      <td>Clicking 'ACCEPT' offers your understanding and agreement to these terms.</td>
                     </tr>
                     <tr>
                       <td className="list-number">9.</td>
@@ -407,20 +487,31 @@ class OfferLoanModal extends Component {
 
           <div className="modal-footer">
             {this.props.offerInfo.isLender ? (
-              <Button className="btn-submit" onClick={this.onBtnOkClicked}>
-                OFFER LOAN
+              <Button className={`btn-submit ${!this.state.waiting && !cancelled ? 'isWaiting' : ''}`} disabled={!this.state.waiting && !cancelled} onClick={this.onBtnOkClicked}>
+                OFFER
               </Button>
             ) : (
-              <Button className="btn-submit" onClick={this.onBtnOkClicked}>
-                ACCEPT LOAN
+              <Button className={`btn-submit ${this.state.waiting ? 'disabled' : ''}`}
+
+                disabled={this.state.waiting} onClick={this.createAndLend}>
+                ACCEPT
               </Button>
             )}
-            <Button
-              className="btn-back"
-              onClick={this.onBtnCancelClicked}
-            >
-              Cancel
-            </Button>
+            {this.props.offerInfo.isLender ? (
+              <Button
+                className="btn-back"
+                onClick={this.onBtnCancelClicked}
+              >
+                Cancel
+              </Button>
+            ) : (
+              <Button
+                className="btn-back"
+                onClick={this.onBtnCancelClicked}
+              >
+                Reject
+              </Button>
+            )}
           </div>
         </div>
       </Modal >
@@ -453,7 +544,9 @@ const mapDispatchToProps = {
   addNewTransaction,
   acQueryLoan,
   emitLoanOffer,
-  cancelledOffer
+  cancelledOffer,
+  reconsiderOffer,
+  createAndLend
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OfferLoanModal);

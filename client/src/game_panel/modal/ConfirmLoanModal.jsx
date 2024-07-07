@@ -226,7 +226,7 @@ class ConfirmLoanModal extends Component {
               </Table>
             </TableContainer>
             <h6 style={{ marginTop: "30px", marginBottom: "10px" }}>
-              By clicking 'accept', you agree to the following <span onClick={this.toggleExpand} style={{ color: "#ff0000", textDecoration: "underline", cursor: "pointer" }}>terms and conditions:
+              By clicking 'ACCEPT', you agree to the following <span onClick={this.toggleExpand} style={{ color: "#ff0000", textDecoration: "underline", cursor: "pointer" }}>terms and conditions:
               </span>
             </h6>
 
@@ -264,7 +264,7 @@ class ConfirmLoanModal extends Component {
                     </tr>
                     <tr>
                       <td className="list-number">8.</td>
-                      <td>Clicking 'accept' confirms your understanding and agreement to these terms.</td>
+                      <td>Clicking 'ACCEPT' confirms your understanding and agreement to these terms.</td>
                     </tr>
                     <tr>
                       <td className="list-number">9.</td>
