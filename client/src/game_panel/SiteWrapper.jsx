@@ -1022,6 +1022,7 @@ class SiteWrapper extends Component {
       selectedMainTabIndex,
       isAuthenticated,
       children,
+      showOfferLoanModal,
       user,
       isLowGraphics
     } = this.props;
@@ -1866,7 +1867,7 @@ class SiteWrapper extends Component {
               <ConfirmTradeModal />
               <DeListLoanModal />
               <ConfirmLoanModal />
-              <OfferLoanModal socket={this.props.socket} />
+                <OfferLoanModal socket={this.props.socket} />
               <GamePasswordModal />
             </div>
           </>

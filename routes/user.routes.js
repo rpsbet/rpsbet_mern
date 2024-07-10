@@ -422,8 +422,8 @@ router.post('/add-bonus', auth, async (req, res) => {
       return res.status(400).json({ message: 'Bonus can only be claimed once every 6 hours.' });
     }
 
-    // Check if totalWagered is more than 50
-    if (user.totalWagered <= 50) {
+    // Check if totalWagered is more than 250
+    if (user.totalWagered <= 250) {
       return res.status(400).json({ message: 'Total wagered must be more than 50 to claim bonus.' });
     }
 

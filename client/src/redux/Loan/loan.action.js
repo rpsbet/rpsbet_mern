@@ -135,10 +135,10 @@ export const createLoan = body => async (dispatch, getState) => {
   try {
     const { data } = await api.post('loan/create', body);
     if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+      dispatch({ type: MSG_SUCCESS, payload: "NEW LOAN CREATED" });
       return data;
     } else {
-      dispatch({ type: MSG_ERROR, payload: data.message });
+      dispatch({ type: MSG_ERROR, payload: "UNABLE TO CREATE THE LOAN, TRY AGAIN LATER" });
     }
   } catch (error) {
     console.log('error***', error);
@@ -146,14 +146,13 @@ export const createLoan = body => async (dispatch, getState) => {
   }
 };
 export const createAndLend = body => async (dispatch) => {
-  console.log(body)
   try {
     const { data } = await api.post('loan/create-and-lend', body);
     if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: "GREAAT SUCCESS!!" });
+      dispatch({ type: MSG_SUCCESS, payload: "NEW LOAN CREATED" });
       return data;
     } else {
-      dispatch({ type: MSG_ERROR, payload: data.message });
+      dispatch({ type: MSG_ERROR, payload: "UNABLE TO CREATE THE LOAN, TRY AGAIN LATER" });
     }
   } catch (error) {
     console.log('error***', error);
@@ -210,7 +209,7 @@ export const offerLoan = payload => async dispatch => {
   try {
     const { data } = await api.post('/loan/offer-loan', payload);
     if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: data.message });
+      dispatch({ type: MSG_SUCCESS, payload: `SENT OFFER` });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
@@ -224,9 +223,9 @@ export const emitLoanOffer = payload => async dispatch => {
   try {
     const { data } = await api.post('/loan/emit-offer-loan', payload);
     if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: data.message });
+      dispatch({ type: MSG_SUCCESS, payload: `NUDGED` });
     } else {
-      dispatch({ type: MSG_ERROR, payload: data.message });
+      dispatch({ type: MSG_ERROR, payload: `UNABLE TO NUDGE, TRY AGAIN LATER` });
     }
   } catch (error) {
     console.log('error***', error);
@@ -237,7 +236,7 @@ export const cancelledOffer = payload => async dispatch => {
   try {
     const { data } = await api.post('loan/cancel-offer', payload);
     if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: data.message });
+      dispatch({ type: MSG_SUCCESS, payload: `CANCELLED` });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }
@@ -250,7 +249,7 @@ export const reconsiderOffer = payload => async dispatch => {
   try {
     const { data } = await api.post('loan/reconsider-offer', payload);
     if (data.success) {
-      dispatch({ type: MSG_SUCCESS, payload: data.message });
+      dispatch({ type: MSG_SUCCESS, payload: `RECEIVED OFFER` });
     } else {
       dispatch({ type: MSG_ERROR, payload: data.message });
     }

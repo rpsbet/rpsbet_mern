@@ -208,9 +208,9 @@ class BonusModal extends Component {
               <Button
               className="spin-button"
               onClick={this.spinWheel}
-              disabled={this.state.spinning || totalWagered < 50}
+              disabled={this.state.spinning || totalWagered < 250}
             >
-              {totalWagered < 50 ? 'RANK TOO LOW' : (
+              {totalWagered < 250 ? 'RANK TOO LOW' : (
                 <>
                   SPIN!&nbsp;<FontAwesomeIcon icon={faSyncAlt} />
                 </>

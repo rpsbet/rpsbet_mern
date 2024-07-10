@@ -115,7 +115,7 @@ async function checkRentalPayments(io) {
                   try {
                     await saveDocumentWithRetry(notification);
                     await saveDocumentWithRetry(notificationJ);
-                    socketController.sendNotification(currentUser, notificationDataJ);
+                    socketController.sendNotification(currentUser._id, notificationDataJ);
                     socketController.sendNotification( owner.originalOwner , notificationData);
                   } catch (error) {
                     console.error("Error saving notification:", error);
@@ -186,7 +186,7 @@ async function checkRentalPayments(io) {
                   try {
                     await saveDocumentWithRetry(notification);
                     await saveDocumentWithRetry(notificationJ);
-                    socketController.sendNotification(currentUser, notificationDataJ);
+                    socketController.sendNotification(currentUser._id, notificationDataJ);
                     socketController.sendNotification(originalOwner, notificationData);
                   } catch (error) {
                     console.error("Error saving notification:", error);

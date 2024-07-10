@@ -32,7 +32,7 @@ async function checkConfirmations(io) {
       socketio = io;
     }
     if (isProcessing) {
-      console.log('Processing is already in progress');
+      // console.log('Processing is already in progress');
       return;
     }
 

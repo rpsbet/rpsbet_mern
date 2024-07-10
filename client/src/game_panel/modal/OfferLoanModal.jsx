@@ -3,7 +3,11 @@ import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { Table, TableBody, Button, TextField, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@material-ui/core';
 import { acQueryLoan, acCalculateRemainingLoans, emitLoanOffer, cancelledOffer, reconsiderOffer, offerLoan, createAndLend } from '../../redux/Loan/loan.action';
+import { getUser } from '../../redux/Auth/user.actions';
+import { setBalance } from '../../redux/Auth/user.actions';
+import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
+import spinningIcon from '../LottieAnimations/spinningIcon';
 import { convertToCurrency } from '../../util/conversion';
 import { getRank } from '../../util/getRank';
 import rankIcon from '../LottieAnimations/rankIcon.json';
@@ -11,9 +15,7 @@ import {
   closeOfferLoanModal
 } from '../../redux/Notification/notification.actions';
 import { alertModal } from '../modal/ConfirmAlerts';
-import { setBalance } from '../../redux/Auth/user.actions';
 import Avatar from '../../components/Avatar';
-import { addNewTransaction } from '../../redux/Logic/logic.actions';
 
 Modal.setAppElement('#root');
 
@@ -65,23 +67,31 @@ class OfferLoanModal extends Component {
       showPlayerModal: false,
       socket: props.socket,
       cancelled: false,
-      waiting: true
+      waiting: true,
+      isComplete: false
     };
+    this.rejected = new Audio('/sounds/rejected.mp3');
+    this.rejected.load();
   }
 
   componentDidMount() {
     this.setupSocketListener();
   }
 
-  setupSocketListener = () => {
-    const { socket, offerInfo } = this.props;
+  setupSocketListener = (attempt = 1) => {
+
+    const { og } = this.state;
+    const { socket, offerInfo, userInfo } = this.props;
 
     if (!socket || !offerInfo) {
-      // If socket or offerInfo is not available, retry after 1 second
-      setTimeout(this.setupSocketListener, 1000);
+      if (attempt < 5) {
+        // Retry after 1 second if the attempt count is less than 5
+        setTimeout(() => this.setupSocketListener(attempt + 1), 1000);
+      } else {
+        console.error('Max retries reached. Unable to set up socket listener.');
+      }
       return;
     }
-
 
     socket.off(`CANCEL_OFFER_${offerInfo._id}`); // Remove any previous listeners to avoid duplication
     socket.on(`CANCEL_OFFER_${offerInfo._id}`, (data) => {
@@ -89,34 +99,63 @@ class OfferLoanModal extends Component {
         cancelled: data.cancelled,
         waiting: true,
       }, () => {
+        if (this.props.isOpen && data.cancelled && !this.props.isMuted && this.props.offerInfo.isLender && !this.state.isComplete) {
+          this.rejected.play();
+        }
         if (data.cancelled && !this.props.offerInfo.isLender) {
           this.props.closeOfferLoanModal();
         }
       });
+
     });
-    // if (offerInfo.isLender) {
+
     socket.off(`OFFER_LOAN_${offerInfo._id}`); // Remove any previous listeners to avoid duplication
     socket.on(`OFFER_LOAN_${offerInfo._id}`, (data) => {
-      console.log("OFFER DATA", data);
       this.setState({
         responseText: data.loanAmount,
         loanPeriodText: data.loanPeriod,
         interestRateText: data.interestRate,
-        waiting: false
+        waiting: false,
+        cancelled: false,
+        og: data.og,
+        isComplete: data.isComplete ? true : false
       });
-    });
-    // }
 
+    });
+
+    socket.off(`OFFER_LOAN_${userInfo._id}`); // Remove any previous listeners to avoid duplication
+    socket.on(`OFFER_LOAN_${userInfo._id}`, (data) => {
+      this.setState({
+        responseText: data.loanAmount,
+        loanPeriodText: data.loanPeriod,
+        interestRateText: data.interestRate,
+        waiting: false,
+        cancelled: false,
+        og: data.og,
+        isComplete: data.isComplete ? true : false
+      });
+      console.log("isComplete3", data.isComplete)
+
+    });
   }
 
-  componentDidUpdate(prevProps) {
+
+  async componentDidUpdate(prevProps, prevState) {
     if (prevProps.isOpen !== this.props.isOpen && this.props.isOpen && this.props.offerInfo.isLender) {
       this.nudge();
+      this.setState({ cancelled: false, waiting: true });
+      this.setupSocketListener();
     } else if (prevProps.isOpen !== this.props.isOpen && this.props.isOpen && !this.props.offerInfo.isLender) {
       this.props.reconsiderOffer({
         _id: this.props.userInfo._id,
         username: '',
       });
+      this.setupSocketListener();
+    }
+    if (prevState.isComplete !== this.state.isComplete && this.state.isComplete) {
+      await this.props.getUser(true, 5);
+      await this.props.acCalculateRemainingLoans();
+      this.props.closeOfferLoanModal();
     }
   }
 
@@ -132,17 +171,29 @@ class OfferLoanModal extends Component {
   }
 
   createAndLend = async () => {
-    const { responseText, loanPeriodText, interestRateText } = this.state;
+    const { responseText, loanPeriodText, interestRateText, og } = this.state;
+    const { isDarkMode, getUser, closeOfferLoanModal, offerLoan, userInfo, offerInfo } = this.props;
+
     this.setState({ waiting: true });
+    console.log("iffer", offerInfo._id);
     const result = await this.props.createAndLend({
       loan_amount: responseText,
       loan_period: loanPeriodText,
       apy: interestRateText,
-      lender: this.props.offerInfo._id,
+      lender: og,
     });
-    this.props.closeOfferLoanModal();
+    this.onBtnCancelClicked();
     if (result.success) {
-      alertModal(isDarkMode, message, '-cat');
+      await getUser(true, 5);
+      alertModal(isDarkMode, result.message, '-cat');
+      closeOfferLoanModal();
+      offerLoan({
+        loanAmount: '',
+        loanPeriod: '',
+        interestRate: '',
+        lender: userInfo._id,
+        complete: true
+      });
     }
   }
 
@@ -188,12 +239,12 @@ class OfferLoanModal extends Component {
     }
 
     this.setState({ waiting: false });
-
     offerLoan({
       loanAmount: parseFloat(responseText),
       loanPeriod: parseInt(loanPeriodText),
       interestRate: parseFloat(interestRateText),
       lender: offerInfo._id,
+      og: userInfo._id,
     });
     // console.log(response)
     // if (response.success) {
@@ -203,22 +254,43 @@ class OfferLoanModal extends Component {
     // }
   };
 
-  onBtnCancelClicked = e => {
-    this.props.cancelledOffer({
-      avatar: '',
-      _id: this.props.offerInfo._id,
-      username: '',
-      accessory: '',
-      totalWagered: '',
-      isLender: ''
-    });
+  onBtnCancelClicked = () => {
+    if (!this.props.isMuted && !this.props.offerInfo.isLender && !this.state.isComplete) {
+      this.rejected.play();
+    }
+    if (!this.state.isComplete) {
+      this.props.cancelledOffer({
+        avatar: '',
+        _id: this.props.offerInfo._id,
+        username: '',
+        accessory: '',
+        totalWagered: '',
+        isLender: ''
+      });
+    }
+
     this.props.closeOfferLoanModal();
   };
 
   render() {
     const { expanded, responseText, loanPeriodText, interestRateText, cancelled, waiting } = this.state;
     const { loan_amount, loan_period, apy, rank, userInfo, onlineUserList } = this.props;
+    const inputCellStyle = {
+      flex: 4,
+      border: 'none',
+      paddingTop: '2.5px'
+    };
 
+    const labelCellStyle = {
+      flex: 1,
+      border: 'none'
+    };
+
+    const rowNumberStyle = {
+      flex: 0.5,
+      border: 'none',
+      fontWeight: '800'
+    }
     return (
       <Modal
         isOpen={this.props.isOpen}
@@ -323,12 +395,10 @@ class OfferLoanModal extends Component {
             {this.props.offerInfo.isLender && (
               <>
                 <TableContainer style={{ padding: '0 20px 10px' }}>
-                  <Table>
-                    {/* Table Row for Loan Amount */}
-                    <TableRow>
-                      <TableCell style={labelCellStyle}>
-                        LOAN AMOUNT
-                      </TableCell>
+                  <Table style={{ borderCollapse: 'collapse' }}>
+                    <TableRow style={{ display: 'flex', flexDirection: 'row' }}>
+                      <TableCell style={rowNumberStyle}>1.</TableCell>
+                      <TableCell style={labelCellStyle}>LOAN AMOUNT</TableCell>
                       <TableCell style={inputCellStyle}>
                         <TextField
                           variant="filled"
@@ -346,10 +416,9 @@ class OfferLoanModal extends Component {
                     </TableRow>
 
                     {/* Table Row for Loan Period */}
-                    <TableRow>
-                      <TableCell style={labelCellStyle}>
-                        LOAN PERIOD
-                      </TableCell>
+                    <TableRow style={{ display: 'flex', flexDirection: 'row' }}>
+                      <TableCell style={rowNumberStyle}>2.</TableCell>
+                      <TableCell style={labelCellStyle}>LOAN PERIOD</TableCell>
                       <TableCell style={inputCellStyle}>
                         <TextField
                           variant="filled"
@@ -364,10 +433,9 @@ class OfferLoanModal extends Component {
                     </TableRow>
 
                     {/* Table Row for Interest Rate */}
-                    <TableRow>
-                      <TableCell style={labelCellStyle}>
-                        INTEREST RATE (%)
-                      </TableCell>
+                    <TableRow style={{ display: 'flex', flexDirection: 'row' }}>
+                      <TableCell style={rowNumberStyle}>3.</TableCell>
+                      <TableCell style={labelCellStyle}>INTEREST RATE (%)</TableCell>
                       <TableCell style={inputCellStyle}>
                         <TextField
                           variant="filled"
@@ -378,8 +446,13 @@ class OfferLoanModal extends Component {
                           }}
                           fullWidth
                         />
+                        <div style={infoTextStyle}>
+                          GROSS PROFIT (RPS): <span style={{color:"#28a745"}}>{convertToCurrency(((parseFloat(responseText) / 100) * parseFloat(interestRateText)) + parseFloat(responseText))}</span>
+                        </div>
                       </TableCell>
                     </TableRow>
+
+
                   </Table>
                 </TableContainer>
 
@@ -392,7 +465,7 @@ class OfferLoanModal extends Component {
                   <TableRow>
                     <TableCell style={{ textAlign: "center" }}>Loan Amount</TableCell>
                     <TableCell style={{ textAlign: "center" }}>Days Left</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>Interest ({apy * 100}%)</TableCell>
+                    <TableCell style={{ textAlign: "center" }}>Interest (%)</TableCell>
                     {/* Add more headers for other details if needed */}
                   </TableRow>
                 </TableHead>
@@ -405,7 +478,7 @@ class OfferLoanModal extends Component {
                       {cancelled || waiting ? 'waiting' : `${loanPeriodText} days`}
                     </TableCell>
                     <TableCell style={{ textAlign: "center" }}>
-                      {cancelled || waiting ? 'waiting' : interestRateText}
+                      {cancelled || waiting ? 'waiting' : parseFloat(interestRateText).toFixed(2)}
                     </TableCell>
                     {/* Add more cells for other details if needed */}
                   </TableRow>
@@ -429,7 +502,7 @@ class OfferLoanModal extends Component {
                     </tr>
                     <tr>
                       <td className="list-number">2.</td>
-                      <td>The loan period is <span style={{ color: "#ff0000" }}>[{this.props.loan_period}]</span> days.</td>
+                      <td>The loan period is <span style={{ color: "#ff0000" }}>[{loanPeriodText}]</span> days.</td>
                     </tr>
                     <tr>
                       <td className="list-number">3.</td>
@@ -437,7 +510,7 @@ class OfferLoanModal extends Component {
                     </tr>
                     <tr>
                       <td className="list-number">4.</td>
-                      <td>Interest may be applicable on the loan amount as per the agreed Interest Rate: <span style={{ color: "#ff0000" }}>[{this.props.apy * 100}%]</span>.</td>
+                      <td>Interest may be applicable on the loan amount as per the agreed Interest Rate: <span style={{ color: "#ff0000" }}>[{parseFloat(interestRateText).toFixed(2)}%]</span>.</td>
                     </tr>
                     <tr>
                       <td className="list-number">5.</td>
@@ -487,16 +560,46 @@ class OfferLoanModal extends Component {
 
           <div className="modal-footer">
             {this.props.offerInfo.isLender ? (
-              <Button className={`btn-submit ${!this.state.waiting && !cancelled ? 'isWaiting' : ''}`} disabled={!this.state.waiting && !cancelled} onClick={this.onBtnOkClicked}>
-                OFFER
-              </Button>
+              <div>
+                <Button
+                  className={`btn-submit ${!this.state.waiting && !cancelled ? 'isWaiting' : ''}`}
+                  disabled={!this.state.waiting && !cancelled}
+                  onClick={this.state.waiting && cancelled ? this.nudge : this.onBtnOkClicked}>
+                  {this.state.waiting ? (cancelled ? 'NUDGE' : 'OFFER') : 'WAITING'}&nbsp;
+                  {!this.state.waiting && !cancelled && (
+                    <Lottie
+                      options={{
+                        loop: true,
+                        autoplay: true,
+                        animationData: spinningIcon
+                      }}
+                      style={{ width: '25px', marginTop: '-2px' }}
+                    />
+                  )}
+                </Button>
+              </div>
             ) : (
-              <Button className={`btn-submit ${this.state.waiting ? 'disabled' : ''}`}
-
-                disabled={this.state.waiting} onClick={this.createAndLend}>
-                ACCEPT
-              </Button>
+              <div>
+                <Button
+                  className={`btn-submit ${this.state.waiting ? 'disabled' : ''}`}
+                  disabled={this.state.waiting}
+                  onClick={this.createAndLend}>
+                  {!this.state.waiting ? 'ACCEPT' : 'WAITING'}&nbsp;
+                  {this.state.waiting && (
+                    <Lottie
+                      options={{
+                        loop: true,
+                        autoplay: true,
+                        animationData: spinningIcon
+                      }}
+                      style={{ width: '25px', marginTop: '-4px' }}
+                    />
+                  )}
+                </Button>
+              </div>
             )}
+
+
             {this.props.offerInfo.isLender ? (
               <Button
                 className="btn-back"
@@ -534,6 +637,7 @@ const mapStateToProps = state => ({
   userInfo: state.auth.user,
   alertType: state.snackbar.alertType,
   onlineUserList: state.logic.onlineUserList,
+  isMuted: state.auth.isMuted
 });
 
 const mapDispatchToProps = {
@@ -546,7 +650,8 @@ const mapDispatchToProps = {
   emitLoanOffer,
   cancelledOffer,
   reconsiderOffer,
-  createAndLend
+  createAndLend,
+  getUser
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(OfferLoanModal);
