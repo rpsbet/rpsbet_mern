@@ -609,6 +609,14 @@ class CreateGame extends Component {
       return;
     };
 
+    if (game_mode === 'Quick Shoot') {
+      alertAndReturn(
+        `COMING SOON! FOLLOW US ON X FOR UPDATES: https://x.com/officialrpsgame`
+      );
+      return true;
+    }
+    
+
     const isMinimumRunsNeeded = (minRuns, list) => {
       if (list.length < minRuns) {
         alertAndReturn('PURR-HAPS IT WOULD BE WISE TO AT LEAST 3 RUNS FOR AI TRAINING DATA');

@@ -479,15 +479,17 @@ router.get('/get-leaderboards', auth, async (req, res) => {
       'WHALE WATCHERS',
       'OFFICIALRPSGAME',
       'PimpedPistols',
+      'smellyfingers',
       'NO BROKIES',
       'SUPPORT',
       'twat',
       'SYSTEM',
+      'GIGACHAD',
       'SHIBA',
       '🔥 THE DON 🔥 (BOT #1)',
       '🪨 ROCKY 🪨 (BOT #2)', 
       '✂️ CAESAR ✂️ (BOT #4)',
-      '📃 PAPIÉR 📃 (BOT #3)' 
+      '📃 PAPÎER 📃 (BOT #3)' 
     ];
 
     const leaderboardData = await User.find({

@@ -461,17 +461,26 @@ class PlayerModal extends Component {
                     <div className="loading-spinner"></div>
                   ) : (
                     <>
-                      <div style={{ margin: '30px auto -10px', padding: '10px', borderRadius: '4px', maxWidth: '150px', background: '#6c757d26', position: 'fixed', left: '15px', top: '65px', zIndex: '9' }}><span>online</span>&nbsp;
+                      <div style={{
+                        margin: '30px auto -10px',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        maxWidth: '150px',
+                        background: '#6c757d26',
+                        position: 'fixed',
+                        left: '15px',
+                        top: '65px',
+                        zIndex: '9'
+                      }}>
+                        <span>
+                          {this.props.onlineUserList.includes(this.props.selectedCreator) ? 'online' : 'offline'}
+                        </span>&nbsp;
                         <i
                           style={{ margin: 'unset', transform: 'unset' }}
-                          className={`online-status${this.props.onlineUserList.filter(
-                            user => user === this.props.selectedCreator
-                          ).length > 0
-                            ? ' online'
-                            : ''
-                            }`}
+                          className={`online-status${this.props.onlineUserList.includes(this.props.selectedCreator) ? ' online' : ''}`}
                         ></i>
                       </div>
+
                       <div className='avatar-border'>
                         <Avatar
                           src={

@@ -178,6 +178,11 @@ async function reinforcementAI(data) {
   }
 }
 
+function getRandomMove() {
+  const moves = ['R', 'P', 'S'];
+  return moves[Math.floor(Math.random() * moves.length)];
+}
+
 // Main function to handle reinforcement learning with dynamic adaptation mechanism
 async function botAI(data) {
   const historicData = data.reverse();

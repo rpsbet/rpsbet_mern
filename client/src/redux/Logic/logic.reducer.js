@@ -73,7 +73,7 @@ const initialState = {
   historyPageNumber: 1,
   gameTypeList: [
     { game_type_id: 1, game_type_name: 'RPS', short_name: 'RPS', _id: '62a25d2a723b9f15709d1ae7', created_at: '2018-06-09T20:50:50.217Z' },
-    // { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z',},
+    { game_type_id: 5, game_type_name: 'Quick Shoot', short_name: 'QS', _id: '62a25d2a723b9f15709d1aeb', created_at: '2020-06-09T20:50:50.219Z',},
     // { game_type_id: 6, game_type_name: 'Drop Game', short_name: 'DG', _id: '63dac60ba1316a1e70a468ab', created_at: '2023-02-01T20:50:50.217Z', },
     // { game_type_id: 2, game_type_name: 'Spleesh!', short_name: 'S!', _id: '62a25d2a723b9f15709d1ae8', created_at: '2024-06-09T20:50:50.218Z'},
     // { game_type_id: 3, game_type_name: 'Brain Game', short_name: 'BG', _id: '62a25d2a723b9f15709d1ae9', created_at: '2029-06-09T20:50:50.219Z', },

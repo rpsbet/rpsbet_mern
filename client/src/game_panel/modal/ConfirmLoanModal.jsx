@@ -7,6 +7,9 @@ import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
 import { getRank } from '../../util/getRank';
 import rankIcon from '../LottieAnimations/rankIcon.json';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDollarSign, faCalendarAlt, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
+
 import {
   closeConfirmLoanModal
 } from '../../redux/Notification/notification.actions';
@@ -124,6 +127,7 @@ class ConfirmLoanModal extends Component {
   render() {
     const { expanded, responseText } = this.state;
     const { loan_amount, loan_period, apy, rank } = this.props;
+    const tableCellStyle = { textAlign: 'center' };
 
     return (
       <Modal
@@ -208,19 +212,23 @@ class ConfirmLoanModal extends Component {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow >
-                    <TableCell style={{ textAlign: "center" }}>Loan Amount</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>Days Left</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>Interest ({apy * 100}%)</TableCell>
-                    {/* Add more headers for other details if needed */}
+                  <TableRow>
+                    <TableCell style={tableCellStyle}>
+                      Loan Amount <FontAwesomeIcon icon={faDollarSign} />
+                    </TableCell>
+                    <TableCell style={tableCellStyle}>
+                      Days Left <FontAwesomeIcon icon={faCalendarAlt} />
+                    </TableCell>
+                    <TableCell style={tableCellStyle}>
+                      Payback Amount <FontAwesomeIcon icon={faMoneyBillWave} />
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   <TableRow>
                     <TableCell style={{ textAlign: "center" }}>{convertToCurrency(parseFloat(responseText))}</TableCell>
                     <TableCell style={{ textAlign: "center" }}>{loan_period} days</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>{convertToCurrency((apy * parseFloat(responseText)) + parseFloat(responseText))}</TableCell>
-                    {/* Add more cells for other details if needed */}
+                    <TableCell style={{ textAlign: "center" }}>{<>{convertToCurrency((apy * parseFloat(responseText)) + parseFloat(responseText))} <span>({apy * 100}%)</span></>}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>

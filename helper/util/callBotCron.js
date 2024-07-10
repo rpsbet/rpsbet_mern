@@ -165,7 +165,7 @@ async function executeCronJob(user, betArray) {
         }
       };
       let userBet = parseFloat(bonusRoom.user_bet); // Changed to let
-      const interest = userBet * 0.000001;
+      const interest = userBet * 0.00000025;
       userBet = (userBet + interest).toString();
       bonusRoom.user_bet = userBet;
       await saveDocumentWithRetry(bonusRoom);

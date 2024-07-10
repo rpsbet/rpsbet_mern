@@ -730,7 +730,7 @@ class RPS extends Component {
     const now = Moment();
     const secondsPassed = now.diff(createdAtMoment, 'seconds');
     const twelveSecondIntervals = Math.floor(secondsPassed / 12);
-    const interestReceived = twelveSecondIntervals * this.props.bet_amount * 0.000001;
+    const interestReceived = twelveSecondIntervals * this.props.bet_amount * 0.00000025;
     return interestReceived.toFixed(6); // toFixed(6) to format it to 6 decimal places
   };
 

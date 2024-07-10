@@ -433,8 +433,9 @@ function check_access_time(user_id) {
 router.post('/lend', auth, async (req, res) => {
   try {
     const { loan_id, lender, responseText } = req.body;
-    // Find the loan using the new model
+
     const loan = await Loan.findOne({ _id: loan_id });
+    const originalLender = await User.findOne({ _id: lender });
     const currentUser = await User.findById(req.user._id);
 
     if (!check_access_time(req.user._id)) {
@@ -478,16 +479,51 @@ router.post('/lend', auth, async (req, res) => {
       });
     }
 
-    // Continue processing the loan if the user is eligible
-
-    const lender_username = await User.findOne({ _id: lender });
-
     const newTransaction = new Transaction({
       user: currentUser,
       amount: parseFloat(responseText),
-      description: `Loan from ${lender_username.username}`,
+      description: `Loan from ${originalLender.username}`,
     });
 
+    // Create notifications
+    const notificationJ = new Notification({
+      from: originalLender._id,
+      to: currentUser._id,
+      room: '',
+      message: `Loan received ${convertToCurrency(parseFloat(responseText))}`,
+      is_read: false
+    });
+
+    const notificationC = new Notification({
+      from: currentUser._id,
+      to: originalLender._id,
+      room: '',
+      message: `Loan to ${currentUser.username} ${convertToCurrency(parseFloat(responseText))}`,
+      is_read: false
+    });
+
+    const notificationDataJ = {
+      message: notificationJ.message,
+      username: originalLender.username,
+      avatar: originalLender.avatar,
+      accessory: originalLender.accessory,
+      rank: originalLender.totalWagered,
+      created_at: moment().format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment().format('LLL'),
+      updated_at: moment().format('YYYY-MM-DD HH:mm'),
+    };
+
+    const notificationDataC = {
+      message: notificationC.message,
+      username: currentUser.username,
+      avatar: currentUser.avatar,
+      accessory: currentUser.accessory,
+      rank: currentUser.totalWagered,
+      created_at: moment().format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment().format('LLL'),
+      updated_at: moment().format('YYYY-MM-DD HH:mm'),
+    };
+    
     // Update the loan's loaners array to increment count for the new loaner
     const newLoanLoaner = {
       user: currentUser._id,
@@ -510,18 +546,19 @@ router.post('/lend', auth, async (req, res) => {
       loan.loaners[newLoanerIndex].updated_at = Date.now();
 
     } else {
-
       loan.loaners.push(newLoanLoaner);
     }
 
-    // Save changes and transactions
-    const savePromises = [
-      currentUser.save(),
-      loan.save(),
-      newTransaction.save(),
-    ];
+    await Promise.all([
+      saveDocumentWithRetry(notificationC),
+      saveDocumentWithRetry(notificationJ),
+      saveDocumentWithRetry(currentUser),
+      saveDocumentWithRetry(loan),
+      saveDocumentWithRetry(newTransaction),
+    ]);
 
-    await Promise.all(savePromises);
+    socket.sendNotification(currentUser._id, notificationDataJ);
+    socket.sendNotification(originalLender._id, notificationDataC);
 
     res.json({
       success: true,
@@ -538,6 +575,7 @@ router.post('/lend', auth, async (req, res) => {
     });
   }
 });
+
 router.post('/offer-loan', auth, async (req, res) => {
   try {
     const { loanAmount, loanPeriod, lender, interestRate, complete, og } = req.body;
@@ -566,7 +604,6 @@ router.post('/offer-loan', auth, async (req, res) => {
   }
 });
 
-
 router.get('/my-loans', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
   const page = req.query.page ? parseInt(req.query.page) : 1;
@@ -575,7 +612,7 @@ router.get('/my-loans', auth, async (req, res) => {
   const userId = req.user._id;
 
   try {
-    let query = { lender: userId }; // Initialize the query object
+    let query = { lender: userId, loan_amount: { $gt: 0 } }; // Initialize the query object with loan_amount > 0
 
     if (loanTypeFilter) {
       query['loan_type'] = loanTypeFilter;
@@ -596,13 +633,6 @@ router.get('/my-loans', auth, async (req, res) => {
       loan_type: loan.loan_type,
       created_at: loan.created_at,
     }));
-
-    // Sorting (you can uncomment and customize this block based on your sorting needs)
-    // if (sort === 'created_at') {
-    //   loan_list.sort((a, b) => a.created_at - b.created_at);
-    // } else {
-    //   loan_list.sort((a, b) => a.loaners[0].price - b.loaners[0].price);
-    // }
 
     res.json({
       success: true,

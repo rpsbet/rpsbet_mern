@@ -47,7 +47,7 @@ const roomLocks = {};
 let user_access_log = {};
 router.get('/game_types', async (req, res) => {
   try {
-    const excludedGameTypes = ['Roll', 'Quick Shoot', 'Bang!', 'Spleesh!', 'Blackjack', 'Drop Game', 'Mystery Box', 'Brain Game'];
+    const excludedGameTypes = ['Roll', 'Bang!', 'Spleesh!', 'Blackjack', 'Drop Game', 'Mystery Box', 'Brain Game'];
     const gameTypes = await GameType.find({ game_type_name: { $nin: excludedGameTypes } }).sort({ created_at: 1 });
     res.json({
       success: true,

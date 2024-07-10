@@ -9,8 +9,9 @@ import { addNewTransaction } from '../../redux/Logic/logic.actions';
 import Lottie from 'react-lottie';
 import spinningIcon from '../LottieAnimations/spinningIcon';
 import { convertToCurrency } from '../../util/conversion';
-import { getRank } from '../../util/getRank';
-import rankIcon from '../LottieAnimations/rankIcon.json';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDollarSign, faCalendarAlt, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
+
 import {
   closeOfferLoanModal
 } from '../../redux/Notification/notification.actions';
@@ -275,6 +276,8 @@ class OfferLoanModal extends Component {
   render() {
     const { expanded, responseText, loanPeriodText, interestRateText, cancelled, waiting } = this.state;
     const { loan_amount, loan_period, apy, rank, userInfo, onlineUserList } = this.props;
+    const tableCellStyle = { textAlign: 'center' };
+
     const inputCellStyle = {
       flex: 4,
       border: 'none',
@@ -377,8 +380,10 @@ class OfferLoanModal extends Component {
                                 : ''
                                 }`}
                             ></i>
-                            <h6 style={{ color: '#ff0000' }}>REJECTED</h6>
-                            <Button onClick={this.nudge}>NUDGE</Button>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'end', flexDirection: 'column', padding: '0 20px' }}>
+                              <h6 style={{ color: '#ff0000' }}>REJECTED</h6>
+                              <Button onClick={this.nudge}>NUDGE</Button>
+                            </div>
                           </div>
                         </TableCell>
                       )}
@@ -447,7 +452,7 @@ class OfferLoanModal extends Component {
                           fullWidth
                         />
                         <div style={infoTextStyle}>
-                          GROSS PROFIT (RPS): <span style={{color:"#28a745"}}>{convertToCurrency(((parseFloat(responseText) / 100) * parseFloat(interestRateText)) + parseFloat(responseText))}</span>
+                          NET PROFIT: <span style={{ color: "#28a745" }}>{convertToCurrency(((parseFloat(responseText) / 100) * parseFloat(interestRateText)))}</span>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -463,10 +468,15 @@ class OfferLoanModal extends Component {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell style={{ textAlign: "center" }}>Loan Amount</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>Days Left</TableCell>
-                    <TableCell style={{ textAlign: "center" }}>Interest (%)</TableCell>
-                    {/* Add more headers for other details if needed */}
+                    <TableCell style={tableCellStyle}>
+                      Loan Amount <FontAwesomeIcon icon={faDollarSign} />
+                    </TableCell>
+                    <TableCell style={tableCellStyle}>
+                      Days Left <FontAwesomeIcon icon={faCalendarAlt} />
+                    </TableCell>
+                    <TableCell style={tableCellStyle}>
+                      Payback Amount <FontAwesomeIcon icon={faMoneyBillWave} />
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -478,8 +488,14 @@ class OfferLoanModal extends Component {
                       {cancelled || waiting ? 'waiting' : `${loanPeriodText} days`}
                     </TableCell>
                     <TableCell style={{ textAlign: "center" }}>
-                      {cancelled || waiting ? 'waiting' : parseFloat(interestRateText).toFixed(2)}
+                      {cancelled || waiting
+                        ? 'waiting'
+                        : <> {convertToCurrency(((parseFloat(responseText) / 100) * parseFloat(interestRateText)) + parseFloat(responseText))} <span>({parseFloat(interestRateText).toFixed(2)}%)</span>
+                        </>
+                      }
                     </TableCell>
+
+
                     {/* Add more cells for other details if needed */}
                   </TableRow>
                 </TableBody>
