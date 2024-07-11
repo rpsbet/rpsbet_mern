@@ -34,7 +34,7 @@ export async function getQsLottieAnimation(nation, short_name) {
   let shortStr = '';
   
   if (nation === 0) {
-    nationStr = 'EA'; //SA
+    nationStr = 'SA';
   } else if (nation === 1) {
     nationStr = 'EA';
   } else if (nation === 2) {
@@ -56,6 +56,6 @@ export async function getQsLottieAnimation(nation, short_name) {
   }
   
   const anim = await import(`../game_panel/LottieAnimations/${nationStr}${shortStr}.json`);
-
+console.log("anim", anim ? true : false);
   return anim;
 }

@@ -9,7 +9,8 @@ import Lottie from 'react-lottie';
 import { convertToCurrency } from '../../util/conversion';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
-
+import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import SettingsRef from '../../components/SettingsRef';
 
 class QuickShoot extends Component {
   constructor(props) {
@@ -18,6 +19,8 @@ class QuickShoot extends Component {
       is_other: 'hidden',
       selected_qs_position: '',
       qs_list: [],
+      selectedStrategy: this.props.selectedStrategy,
+      settings_panel_opened: false,
       activeButtonId: null,
       winChance: 33,
       animation: <div />
@@ -25,7 +28,25 @@ class QuickShoot extends Component {
     this.handlePositionSelection = this.handlePositionSelection.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleReset = this.handleReset.bind(this);
+    this.settingsRef = React.createRef();
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.handleSettingsIconClick = this.handleSettingsIconClick.bind(this);
   }
+
+  handleSettingsIconClick = () => {
+    this.setState({ settings_panel_opened: !this.state.settings_panel_opened });
+  }
+
+  handleClickOutside = e => {
+    if (
+      this.settingsRef &&
+      this.settingsRef.current &&
+      !this.settingsRef.current.contains(e.target)
+    ) {
+      this.setState({ settings_panel_opened: false });
+    }
+  };
+
   async handlePositionSelection(selected_qs_position) {
     let buttonId;
     const { qs_game_type } = this.props;
@@ -53,7 +74,6 @@ class QuickShoot extends Component {
 
   handleKeyPress(event) {
     if (!this.props.isFocused) {
-
       switch (event.key) {
         case 'p':
           this.handlePositionSelection(0);
@@ -98,7 +118,8 @@ class QuickShoot extends Component {
     } else if (this.props.qs_game_type === 4) {
       position_short_name = ['tl', 'tr', 'bl', 'br'];
     }
-
+    console.log("haribo",
+      this.props.selected_qs_position)
     const animationData = await getQsLottieAnimation(
       this.props.qs_nation,
       position_short_name[this.props.selected_qs_position]
@@ -314,12 +335,14 @@ class QuickShoot extends Component {
   async componentDidMount() {
     await this.updateAnimation();
     document.addEventListener('keydown', this.handleKeyPress);
+    document.addEventListener('mousedown', this.handleClickOutside);
   }
-
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
+    document.removeEventListener('mousedown', this.handleClickOutside);
   }
+
   renderButtons() {
     const { qs_game_type } = this.props;
     const { activeButtonId } = this.state;
@@ -407,8 +430,6 @@ class QuickShoot extends Component {
     }
   };
 
-
-
   render() {
     // let position_name = [
     //   'Center',
@@ -425,10 +446,10 @@ class QuickShoot extends Component {
     // } else if (this.props.qs_game_type === 4) {
     //   position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
     // }
-
+    const { step } = this.props;
     return (
       <>
-        {this.props.step === 2 && (
+        {step === 2 && (
           <div className="game-info-panel">
             <h3 className="game-sub-title">Choose a Game Type</h3>
             <div className="qs-game-type-panel">
@@ -453,7 +474,7 @@ class QuickShoot extends Component {
             <p className="tip">Your multiplier</p>
           </div>
         )}
-        {this.props.step === 1 && (
+        {step === 1 && (
           <DefaultBetAmountPanel
             game_type="Quick Shoot"
             qs_game_type={this.props.qs_game_type}
@@ -461,48 +482,92 @@ class QuickShoot extends Component {
             bet_amount={this.props.bet_amount}
           />
         )}
-        {this.props.step === 3 && (
-          <div className="game-info-panel">
-            <div className="qs-add-run-panel">
-              <div className="qs-add-run-form">
-                <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
-                {this.state.animation}
-                {this.renderButtons()}
-                <Button id="aiplay" onClick={this.onAutoPlay}>
-                  Test Autoplay&nbsp;<span className="roll-tag">[space]</span>
-                </Button>
-              </div>
-              <div className="qs-add-run-table">
-                <h3 className="game-sub-title">Pattern Table</h3>
 
-                <table id="runs">
-                  <tbody>
-                    {this.state.qs_list && this.state.qs_list.length > 0 ? (
-                      this.state.qs_list.map((qs, index) => (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{qs.qs}</td>
-                          <td>
-                            <HighlightOffIcon id="delete"
-                              onClick={() => this.onRemoveItem(index)}
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td id="add-run" colSpan="3">
-                        Your pattern will be displayed here
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
-                  <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
-                </IconButton>
+        {step === 3 && (
+          <div className="game-info-panel">
+            <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
+              style={{ position: "absolute", right: "20px" }}
+              title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
+              placement="top"
+            >
+              <Info style={{ cursor: "pointer", float: "right" }} />
+            </Tooltip></h3>
+            <SettingsRef
+              strategies={strategies}
+              ai_mode={ai_mode}
+              user_id={user_id}
+              rank={rank}
+              settings_panel_opened={settings_panel_opened}
+              setSelectedStrategy={setSelectedStrategy}
+              settingsRef={this.settingsRef}
+              selectedStrategy={selectedStrategy}
+            />
+            <ButtonBase
+              onClick={this.handleSettingsIconClick}
+              className="strategy-btn"
+              style={{
+                boxShadow: 'unset',
+                borderRadius: '30px',
+                background: 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span style={{ marginRight: '5px' }}>{selectedStrategy}</span>
+              <SettingsOutlinedIcon />
+            </ButtonBase>
+            {(selectedStrategy === 'Hidden Markov') ? (
+              <>
+                <div className="game-info-panel">
+                  <div className="qs-add-run-panel">
+                    <div className="qs-add-run-form">
+                      <h3 className="game-sub-title">Choose WHERE TO SAVE</h3>
+                      {this.state.animation}
+                      {this.renderButtons()}
+                      <Button id="aiplay" onClick={this.onAutoPlay}>
+                        Test Autoplay&nbsp;<span className="roll-tag">[space]</span>
+                      </Button>
+                    </div>
+                    <div className="qs-add-run-table">
+                      <h3 className="game-sub-title">Pattern Table</h3>
+
+                      <table id="runs">
+                        <tbody>
+                          {this.state.qs_list && this.state.qs_list.length > 0 ? (
+                            this.state.qs_list.map((qs, index) => (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>{qs.qs}</td>
+                                <td>
+                                  <HighlightOffIcon id="delete"
+                                    onClick={() => this.onRemoveItem(index)}
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td id="add-run" colSpan="3">
+                                Your pattern will be displayed here
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                      <IconButton style={{ background: "transparent", boxShadow: "none" }} color="secondary" onClick={this.handleReset}>
+                        <FontAwesomeIcon icon={faTrash} /> {/* Use the faRedo icon */}
+                      </IconButton>
+                    </div>
+                  </div>
+                </div>
+              </>
+
+            ) : (
+              <div style={{ padding: "30px", fontSize: "0.6em" }}>
+                (No Pattern Needed)
               </div>
-            </div>
+            )}
           </div>
         )}
       </>

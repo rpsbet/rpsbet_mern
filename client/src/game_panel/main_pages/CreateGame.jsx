@@ -49,9 +49,9 @@ import { convertToCurrency } from '../../util/conversion';
 const StyledProductCard = styled.a`
   position: relative;
   background: ${({ isDarkMode }) =>
-  isDarkMode
-    ? 'linear-gradient(156deg, #303438, #cf0c0e)'
-    : 'linear-gradient(156deg, #dee2e6, #cf0c0e)'};
+    isDarkMode
+      ? 'linear-gradient(156deg, #303438, #cf0c0e)'
+      : 'linear-gradient(156deg, #dee2e6, #cf0c0e)'};
   border-radius: 0.3em;
   width: 150px;
   justify-content: center;
@@ -157,6 +157,7 @@ class CreateGame extends Component {
       selectedStrategy: 'Random',
       qs_game_type: 2,
       qs_nation: 0,
+      selected_qs_position: 0,
       bet_amount: 0,
       endgame_amount: 0,
       spleesh_bet_unit: 0.01,
@@ -273,69 +274,69 @@ class CreateGame extends Component {
         max_return: 0,
         endgame_amount: 0
       };
-    // } else if (gameTypeName === 'Brain Game') {
-    //   newState = {
-    //     ...newState,
-    //     game_type: 3,
-    //     winChance: 0,
-    //     max_return: '∞',
-    //     endgame_amount: 0
-    //   };
-    // } else if (gameTypeName === 'Quick Shoot') {
-    //   newState = {
-    //     ...newState,
-    //     game_type: 5,
-    //     public_bet_amount: convertToCurrency(1),
-    //     max_return: 2,
-    //     bet_amount: 0.001,
-    //     winChance: 0,
-    //     qs_nation: Math.floor(Math.random() * 4),
-    //     endgame_amount: 0
-    //   };
-    // } else if (gameTypeName === 'Mystery Box') {
-    //   newState = {
-    //     ...newState,
-    //     game_type: 4,
-    //     winChance: 0,
-    //     bet_amount: 0,
-    //     public_bet_amount: 0,
-    //     endgame_amount: 0
-    //   };
-    // } else if (gameTypeName === 'Drop Game') {
-    //   newState = {
-    //     ...newState,
-    //     game_type: 6,
-    //     winChance: 0,
-    //     bet_amount: 0.001,
-    //     endgame_amount: 0
-    //   };
-    // } else if (gameTypeName === 'Bang!') {
-    //   newState = {
-    //     ...newState,
-    //     game_type: 7,
-    //     winChance: 0,
-    //     bet_amount: 0.001,
-    //     endgame_amount: 0,
-    //     aveMultiplier: 0
-    //   };
-    // } else if (gameTypeName === 'Roll') {
-    //   newState = {
-    //     ...newState,
-    //     game_type: 8,
-    //     winChance: 0,
-    //     bet_amount: 0.001,
-    //     endgame_amount: 0,
-    //     aveMultiplier: 0
-    //   };
-    // } else if (gameTypeName === 'Blackjack') {
-    //   newState = {
-    //     ...newState,
-    //     game_type: 9,
-    //     bet_amount: 0.001,
-    //     winChance: 0,
-    //     max_return: 0,
-    //     endgame_amount: 0
-    //   };
+    } else if (gameTypeName === 'Quick Shoot') {
+      newState = {
+        ...newState,
+        game_type: 5,
+        public_bet_amount: convertToCurrency(1),
+        max_return: 2,
+        bet_amount: 0.001,
+        winChance: 0,
+        qs_nation: Math.floor(Math.random() * 4),
+        endgame_amount: 0
+      };
+      // } else if (gameTypeName === 'Brain Game') {
+      //   newState = {
+      //     ...newState,
+      //     game_type: 3,
+      //     winChance: 0,
+      //     max_return: '∞',
+      //     endgame_amount: 0
+      //   };
+      // } else if (gameTypeName === 'Mystery Box') {
+      //   newState = {
+      //     ...newState,
+      //     game_type: 4,
+      //     winChance: 0,
+      //     bet_amount: 0,
+      //     public_bet_amount: 0,
+      //     endgame_amount: 0
+      //   };
+      // } else if (gameTypeName === 'Drop Game') {
+      //   newState = {
+      //     ...newState,
+      //     game_type: 6,
+      //     winChance: 0,
+      //     bet_amount: 0.001,
+      //     endgame_amount: 0
+      //   };
+      // } else if (gameTypeName === 'Bang!') {
+      //   newState = {
+      //     ...newState,
+      //     game_type: 7,
+      //     winChance: 0,
+      //     bet_amount: 0.001,
+      //     endgame_amount: 0,
+      //     aveMultiplier: 0
+      //   };
+      // } else if (gameTypeName === 'Roll') {
+      //   newState = {
+      //     ...newState,
+      //     game_type: 8,
+      //     winChance: 0,
+      //     bet_amount: 0.001,
+      //     endgame_amount: 0,
+      //     aveMultiplier: 0
+      //   };
+      // } else if (gameTypeName === 'Blackjack') {
+      //   newState = {
+      //     ...newState,
+      //     game_type: 9,
+      //     bet_amount: 0.001,
+      //     winChance: 0,
+      //     max_return: 0,
+      //     endgame_amount: 0
+      //   };
     }
 
     this.setState(newState);
@@ -615,7 +616,7 @@ class CreateGame extends Component {
       );
       return true;
     }
-    
+
 
     const isMinimumRunsNeeded = (minRuns, list) => {
       if (list.length < minRuns) {
@@ -934,6 +935,7 @@ class CreateGame extends Component {
             qs_list={this.state.qs_list}
             bet_amount={this.state.bet_amount}
             is_private={this.state.is_private}
+            endgame_type={this.state.endgame_type}
             winChance={this.state.winChance}
             room_password={this.state.room_password}
             endgame_amount={this.state.endgame_amount}

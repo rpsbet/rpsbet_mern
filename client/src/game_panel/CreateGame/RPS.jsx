@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { Button, Tooltip, IconButton, ButtonBase } from '@material-ui/core';
 import { Info } from '@material-ui/icons';
 
-import { acQueryMyItem } from '../../redux/Item/item.action';
+// import { acQueryMyItem } from '../../redux/Item/item.action';
 import styled from 'styled-components';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -163,31 +163,25 @@ class RPS extends Component {
         S: { R: 0, P: 0, S: 0 }
       }
     };
-    this.onChangeBetAmount = this.onChangeBetAmount.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.settingsRef = React.createRef();
     this.handleClickOutside = this.handleClickOutside.bind(this);
     this.handleSettingsIconClick = this.handleSettingsIconClick.bind(this);
-
   }
 
   async componentDidMount() {
-    const { acQueryMyItem } = this.props;
-    await acQueryMyItem(100, 1, 'price', '653ee81117c9f5ee2124564b');
+    // const { acQueryMyItem } = this.props;
+    // await acQueryMyItem(100, 1, 'price', '653ee81117c9f5ee2124564b');
     document.addEventListener('keydown', this.handleKeyPress);
     document.addEventListener('mousedown', this.handleClickOutside);
-
-    this.setCardListState();
+    // this.setCardListState();
   }
-
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
     document.removeEventListener('mousedown', this.handleClickOutside);
-
   }
-
 
   handleClickOutside = e => {
     if (
@@ -234,18 +228,18 @@ class RPS extends Component {
   }
 
 
-  setCardListState() {
-    const { data } = this.props;
-    const modifiedData = data.map(item => ({
-      ...item,
-      in_use: 0
-    }));
+  // setCardListState() {
+  //   const { data } = this.props;
+  //   const modifiedData = data.map(item => ({
+  //     ...item,
+  //     in_use: 0
+  //   }));
 
-    this.setState({
-      card_list: modifiedData,
-      rps_list: []
-    });
-  }
+  //   this.setState({
+  //     card_list: modifiedData,
+  //     rps_list: []
+  //   });
+  // }
 
   onAutoPlay = () => {
     if (this.props.rps_list.length > 2) {
@@ -349,15 +343,10 @@ class RPS extends Component {
   //   }));
   // };
 
-
-
   handleSettingsIconClick = () => {
     this.setState({ settings_panel_opened: !this.state.settings_panel_opened });
   }
 
-  onChangeBetAmount = new_state => {
-    this.setState({ bet_amount: new_state.selected_bet_amount });
-  };
   render() {
     const defaultBetAmounts = [10, 25, 50, 100, 250];
     const { selected_rps, card_list, settings_panel_opened } = this.state;
@@ -505,12 +494,12 @@ class RPS extends Component {
         {step === 2 && rps_game_type === 0 && (
           <div className="game-info-panel">
             <h3 className="game-sub-title">Strategy&nbsp;<Tooltip
-                        style={{ position: "absolute", right: "20px" }}
-                        title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
-                        placement="top"
-                      >
-                        <Info style={{ cursor: "pointer", float: "right" }} />
-                      </Tooltip></h3>
+              style={{ position: "absolute", right: "20px" }}
+              title={'The strategy determines how your AI will play, includes patterns, reasoning and predictability.'}
+              placement="top"
+            >
+              <Info style={{ cursor: "pointer", float: "right" }} />
+            </Tooltip></h3>
             <SettingsRef
               strategies={strategies}
               ai_mode={ai_mode}
@@ -537,7 +526,6 @@ class RPS extends Component {
               <SettingsOutlinedIcon />
             </ButtonBase>
             {(selectedStrategy === 'Hidden Markov') ? (
-
               <>
                 <div className="rps-add-run-panel">
                   <div className="rps-add-run-form">
@@ -655,7 +643,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  acQueryMyItem
+  // acQueryMyItem
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RPS);

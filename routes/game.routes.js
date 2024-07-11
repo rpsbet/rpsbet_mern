@@ -2486,11 +2486,50 @@ router.post('/coHost', auth, async (req, res) => {
   }
 });
 
+
+async function saveDoc(document, retries = 0) {
+  try {
+    await document.save();
+  } catch (err) {
+    if (retries < MAX_RETRIES) {
+      return saveDocumentWithRetry(document, retries + 1);
+    } else {
+      throw err;
+    }
+  }
+}
+
+async function recheckRoomValues(roomId, expectedIncrease) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const room = await Room.findOne({ _id: roomId });
+
+    if (
+      room.bet_amount >= expectedIncrease &&
+      room.host_pr >= expectedIncrease &&
+      room.endgame_amount >= expectedIncrease &&
+      room.user_bet >= expectedIncrease
+    ) {
+      return true;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
+  }
+
+  return false;
+}
+
 router.post('/topUp', auth, async (req, res) => {
   try {
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room.game_type });
+    if (!check_access_time(req.user._id)) {
+      return res.json({
+        success: false,
+        message: 'irregular action',
+        betResult: -1000
+      });
+    }
     if (!room) {
       return res.json({
         success: false,
@@ -2518,7 +2557,6 @@ router.post('/topUp', auth, async (req, res) => {
 
     const description = `Topped Up room ${gameType.short_name}-${room.room_number}`;
 
-
     const newTransactionJ = new Transaction({
       created_at: now,
       user: req.user._id,
@@ -2539,15 +2577,22 @@ router.post('/topUp', auth, async (req, res) => {
       host.share = (host.stake / room.user_bet) * 100;
     });
 
-
     const savePromises = [
-      saveDocumentWithRetry(room),
-      saveDocumentWithRetry(req.user),
-      saveDocumentWithRetry(newTransactionJ)
+      saveDoc(room),
+      saveDoc(req.user),
+      saveDoc(newTransactionJ)
     ];
 
-
     await Promise.all(savePromises);
+
+    const recheckPassed = await recheckRoomValues(room._id, topUpAmount);
+
+    if (!recheckPassed) {
+      return res.json({
+        success: false,
+        message: 'Failed to verify top-up increase'
+      });
+    }
 
     return res.json({
       success: true,
@@ -2563,6 +2608,7 @@ router.post('/topUp', auth, async (req, res) => {
     });
   }
 });
+
 
 router.post('/editPayout', auth, async (req, res) => {
   try {
