@@ -26,9 +26,6 @@ import {
 import { alertModal, confirmModalClosed, confirmModalCreate } from '../modal/ConfirmAlerts';
 // import Pagination from '../../components/Pagination';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
-
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import AddCircleOutline from '@material-ui/icons/AddCircleOutline';
 import EditOutline from '@material-ui/icons/EditOutlined';
 import history from '../../redux/history';
@@ -37,8 +34,6 @@ import Lottie from 'react-lottie';
 import animationData from '../LottieAnimations/add';
 import loadingChart from '../LottieAnimations/loadingChart';
 import pressHold from '../LottieAnimations/pressHold.json';
-import InlineSVG from 'react-inlinesvg';
-import busdSvg from '../JoinGame/busd.svg';
 
 import { Box, Button, ButtonGroup, Menu, MenuItem, Tooltip, IconButton, TextField, Table, TableBody, TableRow, TableCell, Radio, RadioGroup, FormControlLabel } from '@material-ui/core';
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
@@ -107,7 +102,6 @@ class MyGamesTable extends Component {
 
   componentWillUnmount() {
     document.removeEventListener('mousedown', this.handleClickOutside);
-
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -115,7 +109,6 @@ class MyGamesTable extends Component {
       this.state.selectedFilter !== prevState.selectedFilter ||
       this.state.selectedSort !== prevState.selectedSort
     ) {
-      // Filter value has changed, re-fetch data
       this.fetchData();
     }
 
@@ -207,6 +200,7 @@ class MyGamesTable extends Component {
       }
     }
   };
+
   handlePayout = (row) => {
     let paymentMethod = 'automatic';
     let payoutAmount = row.endgame_amount;
@@ -269,9 +263,7 @@ class MyGamesTable extends Component {
 
   handlePaymentMethodChange = (event) => {
     const selectedMethod = event.target.value;
-    // Update the payment method state
     this.setState({ paymentMethod: selectedMethod });
-    // If "manual" is selected, set the payoutAmount to "0"
     if (selectedMethod !== 'manual') {
       this.setState({ payoutAmount: this.state.selectedRow.endgame_amount });
     } else {
@@ -298,17 +290,6 @@ class MyGamesTable extends Component {
   openRecreateModal = (row) => {
     alertModal(this.props.isDarkMode, `YOU DO NOT OWN A GAME RESTORER. GO TO MARKETPLACE TO PURCHASE`);
     return;
-    // confirmModalCreate(
-    //   this.props.isDarkMode,
-    //   'CONFIRM RE-CREATE GAME?',
-    //   'LFG',
-    //   'Fuck No',
-    //   async () => {
-    //     this.setState({ creatingRoom: true });
-    //     await this.props.reCreateRoom(row._id);
-    //     this.setState({ creatingRoom: false });
-    //   }
-    // );
   }
 
   onCreateRoom = async (row) => {
@@ -319,12 +300,9 @@ class MyGamesTable extends Component {
         game_type: row.game_type,
         bet_amount: row.bet_amount,
         endgame_amount: row.endgame_amount,
-        // is_anonymous: row.is_anonymous,
         youtubeUrl: row.youtubeUrl,
         gameBackground: row.gameBackground,
-
-      }
-      );
+      });
 
       this.setState({ creatingRoom: false });
     } else {
@@ -342,46 +320,13 @@ class MyGamesTable extends Component {
     }
   };
 
-  // endRoom = (winnings, room_id) => {
-  //   const convertToCurrency = input => {
-  //     let number = Number(input);
-  //     if(!isNaN(number)){
-  //       let [whole, decimal] = number.toFixed(2).toString().split('.');
-  //       whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  //       return <><InlineSVG src={`<svg id='busd' width="0.7em" height="0.7em" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 336.41 337.42"><defs><style>.cls-1{fill:#f0b90b;stroke:#f0b90b;}</style></defs><title>BUSD Icon</title><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path class="cls-1" d="M168.2.71l41.5,42.5L105.2,147.71l-41.5-41.5Z"/><path class="cls-1" d="M231.2,63.71l41.5,42.5L105.2,273.71l-41.5-41.5Z"/><path class="cls-1" d="M42.2,126.71l41.5,42.5-41.5,41.5L.7,169.21Z"/><path class="cls-1" d="M294.2,126.71l41.5,42.5L168.2,336.71l-41.5-41.5Z"/></g></g></svg>`} /> {`${whole}.${decimal}`}</>;
-  //     }else{
-  //       return input;
-  //     }
-  //   };
-  //   confirmModalClosed(
-  //     true,
-  //     `TERMINATE GAME?`, //   YOU WILL TAKE  ${updateDigitToPoint2(winnings)} BUSD
-  //     'Okay',
-  //     'Cancel',
-  //     () => {
-  //       this.props.endGame(room_id, () => {
-  //         this.props.getMyGames({
-  //           game_type: this.state.selectedGameType
-  //         });
-  //       });
-  //     }
-  //   );
-  // };
 
   handleButtonClick = (winnings, room_id) => {
     const startTime = 400;
-    const updateInterval = 10; // Interval in milliseconds
-  
-    // Calculate the total number of updates needed
-    const totalUpdates = Math.ceil(startTime / updateInterval);
-  
-    // Initialize the countdown timer
+    const updateInterval = 10;
     let countdown = startTime;
-  
-    // Update the countdown in intervals
     const timer = setInterval(() => {
       countdown -= updateInterval;
-  
       if (countdown <= 0) {
         clearInterval(timer);
         this.endRoom(winnings, room_id);
@@ -401,8 +346,7 @@ class MyGamesTable extends Component {
         }));
       }
     }, updateInterval);
-  
-    // Set the timer and initial state
+
     this.setState(prevState => ({
       [room_id]: {
         ...prevState[room_id],
@@ -412,7 +356,7 @@ class MyGamesTable extends Component {
       }
     }));
   };
-  
+
   handleButtonRelease = room_id => {
     if (this.state[room_id] && this.state[room_id].timer) {
       clearTimeout(this.state[room_id].timer);
@@ -423,8 +367,6 @@ class MyGamesTable extends Component {
   };
 
   endRoom = async (winnings, room_id) => {
-
-    // Set the closing state to indicate the process
     this.setState(prevState => ({
       [room_id]: {
         ...prevState[room_id],
@@ -444,7 +386,6 @@ class MyGamesTable extends Component {
       } catch (error) {
         console.error('Error ending room:', error);
       } finally {
-        // Reset the closing state once the operation is done
         this.setState(prevState => ({
           [room_id]: {
             ...prevState[room_id],
@@ -456,7 +397,6 @@ class MyGamesTable extends Component {
   };
 
   unstake = async (winnings, room_id) => {
-    // Set the closing state to indicate the process
     this.setState(prevState => ({
       [room_id]: {
         ...prevState[room_id],
@@ -476,7 +416,6 @@ class MyGamesTable extends Component {
       } catch (error) {
         console.error('Error unstaking from room:', error);
       } finally {
-        // Reset the closing state once the operation is done
         this.setState(prevState => ({
           [room_id]: {
             ...prevState[room_id],
@@ -486,7 +425,6 @@ class MyGamesTable extends Component {
       }
     });
   };
-
 
   handleGameTypeButtonClicked = async short_name => {
     this.setState({ selectedGameType: short_name }, () => {
@@ -500,160 +438,6 @@ class MyGamesTable extends Component {
 
   };
 
-  // handleBtnLeftClicked = e => {
-  //   const scrollAmount = 200;
-  //   this.game_type_panel.scrollLeft -= scrollAmount;
-  // };
-
-  // handleBtnRightClicked = e => {
-  //   const scrollAmount = 200;
-  //   this.game_type_panel.scrollLeft += scrollAmount;
-  // };
-
-  // generateGameTypePanel = () => {
-  //   const gameTypeStyleClass = {
-  //     R: 'roll',
-  //     RPS: 'rps',
-  //     'S!': 'spleesh',
-  //     MB: 'mystery-box',
-  //     BG: 'brain-game',
-  //     QS: 'quick-shoot',
-  //     DG: 'drop-game',
-  //     'B!': 'bang',
-  //     BJ: 'blackjack',
-  //     CR: 'craps'
-  //   };
-
-  //   const gameTypePanel = (
-  //     <Box
-  //       display="flex"
-  //       justifyContent="space-evenly"
-  //       flexWrap="nowrap"
-  //       gap="15px"
-  //       ref={ref => (this.game_type_panel = ref)}
-  //     >
-  //       <Box item key="open-game-left-button">
-  //         <Button
-  //           className="btn-arrow-left"
-  //           onClick={this.handleBtnLeftClicked}
-  //         >
-  //           <ChevronLeftIcon />
-  //         </Button>
-  //       </Box>
-
-  //       <Button
-  //         className={`btn-game-type btn-icon all-games ${this.state.selectedGameType === 'All' ? 'active' : ''
-  //           }`}
-  //         key="open-game-all-game-button"
-  //         onClick={() => {
-  //           this.handleGameTypeButtonClicked('All');
-  //         }}
-  //       >
-  //         {this.state.selectedGameType === 'All' && (
-  //           <Lottie
-  //             options={{
-  //               loop: false,
-  //               autoplay: false,
-  //               animationData: blob
-  //             }}
-  //             style={{
-  //               width: '100px',
-  //               position: 'absolute',
-  //               filter: 'hue-rotate(222deg)',
-  //               opacity: '0.4',
-  //               margin: '0px -18px 0 auto',
-  //               zIndex: '0'
-  //             }}
-  //           />
-  //         )}
-  //         <div className="icon" style={{
-  //           zIndex: '1'
-  //         }}>
-  //           <img src={`/img/gametype/icons/All.svg`} alt={`All Games`} />
-  //           <span>All Games</span>
-  //         </div>
-  //       </Button>
-  //       {this.props.gameTypeList.map((gameType, index) => (
-  //         <Button
-  //           className={`btn-game-type btn-icon ${gameTypeStyleClass[gameType.short_name]
-  //             } ${this.state.selectedGameType === gameType.short_name
-  //               ? 'active'
-  //               : ''
-  //             }`}
-  //           key={index}
-  //           onClick={() => {
-  //             this.handleGameTypeButtonClicked(gameType.short_name);
-  //           }}
-  //         >
-  //           {this.state.selectedGameType === gameType.short_name && (
-  //             <Lottie
-  //               options={{
-  //                 loop: false,
-  //                 autoplay: false,
-  //                 animationData: blob
-  //               }}
-  //               style={{
-  //                 width: '100px',
-  //                 position: 'absolute',
-  //                 // filter: 'hue-rotate(222deg)',
-  //                 opacity: '0.4',
-  //                 margin: '0px -18px 0 auto',
-  //                 zIndex: '0'
-  //               }}
-  //             />
-  //           )}
-  //           <div className="icon" style={{
-  //             zIndex: '1'
-  //           }}>
-  //             <img
-  //               src={`/img/gametype/icons/${gameType.short_name}.svg`}
-  //               alt={gameType.game_type_name}
-  //             />
-  //             <span>{gameType.game_type_name}</span>
-  //           </div>
-  //         </Button>
-  //       ))}
-  //       <Button
-  //         className="btn-arrow-right"
-  //         key="open-game-right-button"
-  //         onClick={this.handleBtnRightClicked}
-  //       >
-  //         <ChevronRightIcon />
-  //       </Button>
-  //     </Box>
-  //   );
-  //   return gameTypePanel;
-  // };
-
-  // handlePageNumberClicked = page => {
-  //   this.props.getMyGames({
-  //     page: page,
-  //     game_type: this.state.selectedGameType,
-  //     status: this.state.selectedFilter,
-  //     sort: this.state.selectedSort
-  //   });
-  // };
-
-  // handlePrevPageClicked = () => {
-  //   if (this.props.pageNumber === 1) return;
-  //   this.props.getMyGames({
-  //     page: this.props.pageNumber - 1,
-  //     game_type: this.state.selectedGameType,
-  //     status: this.state.selectedFilter,
-  //     sort: this.state.selectedSort
-  //   });
-  // };
-
-  // handleNextPageClicked = () => {
-  //   if (this.props.pageNumber === this.props.totalPage) return;
-  //   this.props.getMyGames({
-  //     page: this.props.pageNumber + 1,
-  //     game_type: this.state.selectedGameType,
-  //     status: this.state.selectedFilter,
-  //     sort: this.state.selectedSort
-  //   });
-  // };
-
   handleClickOutside = e => {
     if (
       this.settingsRef &&
@@ -664,13 +448,10 @@ class MyGamesTable extends Component {
     }
   };
 
-
   handleMaxButtonClick = () => {
-    // Check if there's a selectedLoan
     if (this.props.balance) {
       const maxPayoutAmount = this.state.balance;
       const roundedMaxPayoutAmount = Math.floor(maxPayoutAmount * 1e6) / 1e6;
-
       this.setState(
         {
           topUpAmount: roundedMaxPayoutAmount,
@@ -691,7 +472,6 @@ class MyGamesTable extends Component {
     this.setState({ selectedStrategy });
   }
 
-
   handleCreateBtnClicked = e => {
     e.preventDefault();
     if (!this.state.selectedGameType) {
@@ -700,15 +480,6 @@ class MyGamesTable extends Component {
     }
     this.props.setGameMode('');
     history.push(`/create/`);
-    // const selectedGameType = this.props.gameTypeList.find(
-    //   gameType => gameType.short_name === this.state.selectedGameType
-    // );
-    // if (selectedGameType) {
-    //   this.props.setGameMode(selectedGameType.game_type_name);
-    //   history.push(`/create/${selectedGameType.game_type_name}`);
-    // } else {
-     
-    // }
   };
 
 
@@ -730,99 +501,13 @@ class MyGamesTable extends Component {
   }
 
   render() {
-    // const gameTypePanel = this.generateGameTypePanel();
     const { loading, strategies, user, updateRoomStrategy } = this.props;
     const { isLoading, anchorEl, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
 
     return (
       <div className="my-open-games">
         <div className="filter-container overflowX">
-          {/* <div className="game-type-container">
-            <div
-              className="game-type-panel"
-              ref={elem => {
-                this.game_type_panel = elem;
-              }}
-            >
-              {gameTypePanel}
-            </div>
-          </div> */}
-          {/* <div className="filters">
-            <Button
-              className="game-type-panel"
-              onClick={this.handleFilterClick}
-            // variant="contained"
-            >
-              <FontAwesomeIcon icon={faFilter} />
-            </Button>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={() => this.handleFilterClose(null)}
-            >
-              <MenuItem
-                onClick={() => this.handleFilterClose('open')}
-                selected={selectedFilter === 'open'}
-              >
-                OPEN
-              </MenuItem>
-              <MenuItem
-                onClick={() => this.handleFilterClose('finished')}
-                selected={selectedFilter === 'finished'}
-              >
-                FINISHED
-              </MenuItem>
-            </Menu>
-            <Button
-              className="game-type-panel"
-              onClick={this.handleSortClick}
-            // variant="contained"
-            >
-              <FontAwesomeIcon icon={faSort} />
-            </Button>
-            <Menu
-              anchorEl={sortAnchorEl}
-              open={Boolean(sortAnchorEl)}
-              onClose={() => this.handleSortClose(null)}
-            >
-              <MenuItem
-                onClick={() => this.handleSortClose('desc')}
-                selected={selectedSort === 'desc'}
-              >
-                Newest First
-              </MenuItem>
-              <MenuItem
-                onClick={() => this.handleSortClose('asc')}
-                selected={selectedSort === 'asc'}
-              >
-                Oldest First
-              </MenuItem>
-              <MenuItem
-                onClick={() => this.handleSortClose('net_profit_desc')}
-                selected={selectedSort === 'net_profit_desc'}
-              >
-                Net Profit (High to Low)
-              </MenuItem>
-              <MenuItem
-                onClick={() => this.handleSortClose('net_profit_asc')}
-                selected={selectedSort === 'net_profit_asc'}
-              >
-                Net Profit (Low to High)
-              </MenuItem>
-              <MenuItem
-                onClick={() => this.handleSortClose('bets_desc')}
-                selected={selectedSort === 'bets_desc'}
-              >
-                Plays (High to Low)
-              </MenuItem>
-              <MenuItem
-                onClick={() => this.handleSortClose('bets_asc')}
-                selected={selectedSort === 'bets_asc'}
-              >
-                Plays (Low to High)
-              </MenuItem>
-            </Menu>
-          </div> */}
+
           {selectedRow && (
 
             <SettingsRef
@@ -863,7 +548,7 @@ class MyGamesTable extends Component {
                 <div className="table-cell winnings">Plays</div>
                 <div className="table-cell winnings desktop-only">Strategy</div>
 
-                <div className="table-cell action">Action</div>
+                <div className="table-cell action desktop-only">Action</div>
               </div>
             )}
             {this.state.myGames.length === 0 ? (
@@ -938,18 +623,6 @@ class MyGamesTable extends Component {
                       </div>
                       {!this.props.myGamesWithStats ? (
                         <>
-                          {/* <div className="table-cell winnings">
-                            <Lottie
-                              options={{
-                                loop: true,
-                                autoplay: true,
-                                animationData: loadingChart
-                              }}
-                              style={{
-                                width: '32px'
-                              }}
-                            />
-                          </div> */}
                           <div className="table-cell bets" style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
                             <Battle width="24px" />
                             &nbsp;
@@ -976,7 +649,7 @@ class MyGamesTable extends Component {
 
                         </>
                       )}
-                      <div className="table-cell winnings">
+                      <div className="table-cell winnings desktop-only">
 
                         <Tooltip title="CHANGE AUTOPLAY STRATEGY">
                           <a
@@ -1017,6 +690,9 @@ class MyGamesTable extends Component {
                                     onMouseDown={() => this.handleButtonClick(row.winnings, row._id)}
                                     onMouseUp={() => this.handleButtonRelease(row._id)}
                                     onMouseLeave={() => this.handleButtonRelease(row._id)}
+                                    onTouchStart={() => this.handleButtonClick(row.winnings, row._id)}
+                                    onTouchEnd={() => this.handleButtonRelease(row._id)}
+                                    onTouchCancel={() => this.handleButtonRelease(row._id)}
                                     _id={row._id}
                                     style={
                                       this.state[row._id] && this.state[row._id].holding
@@ -1050,48 +726,82 @@ class MyGamesTable extends Component {
                           </div>
                         )}
                       </div>
-
                     </div>
-                    <div className="mobile-only">
-                      <div className="table-cell room-id"></div>
-                      <div className="table-cell action">
-                        <Button
-                          className="btn_end"
-                          onMouseDown={() =>
-                            this.handleButtonClick(row.winnings, row._id)
-                          }
-                          onMouseUp={() => this.handleButtonRelease(row._id)}
-                          onMouseLeave={() => this.handleButtonRelease(row._id)}
-                          _id={row._id}
-                          style={
-                            this.state[row._id] && this.state[row._id].holding
-                              ? { filter: 'hue-rotate(-10deg)' }
-                              : {}
-                          }
-                        >
-                          {this.state[row._id] &&
-                            this.state[row._id].holding ? (
-                            <>
-                              <span style={{ position: 'absolute', zIndex: '2' }}>
-                                {(this.state[row._id].timeLeft / 100).toFixed(
-                                  1
-                                )}<span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
-                              </span>
-                              <Lottie
-                                options={{
-                                  loop: true,
-                                  autoplay: true,
-                                  animationData: pressHold
-                                }}
+                    <div className="mobile-only" style={{ display: "table" }}>
+                      <div className="table-cell action" style={{ width: "auto", float: "right", display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
 
-                              />
-                            </>
-                          ) : (
-                            <>
-                              RUG
-                            </>
-                          )}
-                        </Button>
+                        <Tooltip title="CHANGE AUTOPLAY STRATEGY">
+                          <a
+                            style={{ borderRadius: "200px", cursor: "pointer", padding: "1px", display: "flex", justifyContent: "center", alignItems: "center" }}
+                            onClick={() => this.handleSettingsIconClick(row)}
+                          >
+
+                            <SettingsOutlinedIcon
+                            />
+                          </a>
+                        </Tooltip>
+                        {row.status === 'finished' ? (
+                          <Button
+                            className="btn_recreate"
+                            onClick={() => this.openRecreateModal(row)}
+                          >
+                            RE-CREATE
+                          </Button>
+                        ) : (
+                          <div>
+                            {this.state[row._id] && this.state[row._id].closing ? (
+                              <span style={{ color: 'red' }}>closing...</span>
+                            ) : (
+                              <div>
+                                {row.coHost ? (
+                                  <Button
+                                    className="btn_withdraw btn_end"
+                                    onClick={() => this.unstake(row.winnings, row._id)}
+
+                                  >
+                                    Unstake
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    className="btn_end"
+                                    onMouseDown={() => this.handleButtonClick(row.winnings, row._id)}
+                                    onMouseUp={() => this.handleButtonRelease(row._id)}
+                                    onMouseLeave={() => this.handleButtonRelease(row._id)}
+                                    onTouchStart={() => this.handleButtonClick(row.winnings, row._id)}
+                                    onTouchEnd={() => this.handleButtonRelease(row._id)}
+                                    onTouchCancel={() => this.handleButtonRelease(row._id)}
+                                    _id={row._id}
+                                    style={
+                                      this.state[row._id] && this.state[row._id].holding
+                                        ? { filter: 'hue-rotate(-10deg)' }
+                                        : {}
+                                    }
+                                  >
+                                    {this.state[row._id] && this.state[row._id].holding ? (
+                                      <>
+                                        <span style={{ position: 'absolute', zIndex: '2' }}>
+                                          {(this.state[row._id].timeLeft / 100).toFixed(1)}
+                                          <span style={{ paddingTop: '5px', fontSize: 'xx-small' }}>s</span>
+                                        </span>
+                                        <Lottie
+                                          options={{
+                                            loop: true,
+                                            autoplay: true,
+                                            animationData: pressHold
+                                          }}
+                                        />
+                                      </>
+                                    ) : (
+                                      <>
+                                        RUG
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1099,23 +809,9 @@ class MyGamesTable extends Component {
                 this
               )
             )}
-
           </div>
-
         )}
 
-
-
-        {/* {this.props.myGames.length > 0 && (
-          <Pagination
-            handlePageNumberClicked={this.handlePageNumberClicked}
-            handlePrevPageClicked={this.handlePrevPageClicked}
-            handleNextPageClicked={this.handleNextPageClicked}
-            pageNumber={this.props.pageNumber}
-            totalPage={this.props.totalPage}
-            prefix="MyGames"
-          />
-        )} */}
         <Modal
           isOpen={this.state.isTopUpModalOpen}
           onRequestClose={this.handleCloseTopUpModal}
@@ -1310,8 +1006,6 @@ class MyGamesTable extends Component {
                       />
                     </div>
                   </div>
-
-
                 </div>
               </div>
             </div>
@@ -1329,10 +1023,8 @@ class MyGamesTable extends Component {
           </div>
         </Modal>
       </div>
-
     );
   }
-
 }
 
 const mapStateToProps = state => ({
