@@ -643,7 +643,6 @@ class RPS extends Component {
     }
   }
 
-
   handleEndClick = async () => {
     const { roomInfo } = this.props;
     if (roomInfo.status !== 'finished') {

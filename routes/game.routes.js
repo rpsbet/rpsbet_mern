@@ -1667,8 +1667,7 @@ router.post('/end_game', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
-
-    if (!check_access_time(userId)) {
+if (check_access_time(userId)) {
       return res.json({
         success: false,
         message: 'irregular action',
@@ -1816,7 +1815,7 @@ router.post('/unstake', auth, async (req, res) => {
     const userId = req.user._id;
     const roomId = req.body.room_id;
 
-    if (!check_access_time(userId)) {
+    if (check_access_time(userId)) {
       return res.json({
         success: false,
         message: 'irregular action',
@@ -2343,7 +2342,7 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
-    if (!check_access_time(req.user._id)) {
+    if (check_access_time(req.user._id)) {
       return res.json({
         success: false,
         message: 'irregular action',
@@ -2523,7 +2522,7 @@ router.post('/topUp', auth, async (req, res) => {
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room.game_type });
-    if (!check_access_time(req.user._id)) {
+    if (check_access_time(req.user._id)) {
       return res.json({
         success: false,
         message: 'irregular action',

@@ -108,7 +108,7 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
-            if (!check_access_time(req.user._id)) {
+            if (check_access_time(req.user._id)) {
                 responseData = {
                     success: false,
                     message: 'illregular action',
