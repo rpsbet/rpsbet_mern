@@ -1273,6 +1273,7 @@ class JoinGame extends Component {
                     showPlayerModal={showPlayerModal}
                     creator_id={roomInfo.creator_id}
                     bet_amount={roomInfo.bet_amount}
+                    pr={roomInfo.pr}
                     user_bet={roomInfo.user_bet}
                     predictedBetAmount={predictedBetAmount}
                     rps_bet_item_id={roomInfo.rps_bet_item_id}

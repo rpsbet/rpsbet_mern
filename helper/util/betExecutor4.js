@@ -29,7 +29,6 @@ function check_access_time(user_id) {
 
 const addToQueue = async (req, bot = false) => {
     try {
-
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const rainPromise = SystemSetting.findOne({ name: 'rain' });
         const platformPromise = SystemSetting.findOne({ name: 'platform' });
@@ -211,6 +210,7 @@ const addToQueue = async (req, bot = false) => {
                     if (bot) {
                         betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : betAmount;
                         betAmount = betAmount > parseFloat(user.balance) ? parseFloat(user.balance) : betAmount;
+                        console.log("bot bet", betAmount);
                     } else {
 
                         responseData = {
@@ -300,7 +300,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.65 && betAmount > 3) {
+                    if (randomNumber <= 0.54 && betAmount > 3) {
                         if (bot &&
                             ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
@@ -319,7 +319,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
-
+              
                     // if win
                     if (
                         (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
@@ -387,11 +387,11 @@ const addToQueue = async (req, bot = false) => {
                         game_result = -1;
 
                         // update bankroll & other
-                        roomInfo.host_pr =
-                            (parseFloat(roomInfo.host_pr) || 0) +
+                        roomInfo['host_pr'] =
+                            parseFloat(roomInfo['host_pr']) +
                             (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
-                        roomInfo.user_bet =
-                            (parseFloat(roomInfo.user_bet) || 0) +
+                            roomInfo['user_bet'] =
+                            parseFloat(roomInfo['user_bet']) +
                             (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
 
                         platform.value =
@@ -499,16 +499,18 @@ const addToQueue = async (req, bot = false) => {
                     mostRecentItems.reverse();
                     mostRecentItems.push(bet_item);
                     if (mostRecentItems.length > 0) {
-                        req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
-                            bankroll: roomInfo['user_bet'],
-                            host_pr: roomInfo['host_pr'],
-                            rps: mostRecentItems,
-                            newLog: newLog,
-                            user: user
-                        });
-                        req.io.sockets.emit('NEW_LOG', {
-                            newLog: newLog
-                        });
+                        if (req.io.sockets) {
+                            req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
+                                bankroll: roomInfo['user_bet'],
+                                host_pr: roomInfo['host_pr'],
+                                rps: mostRecentItems,
+                                newLog: newLog,
+                                user: user
+                            });
+                            req.io.sockets.emit('NEW_LOG', {
+                                newLog: newLog
+                            });
+                        }
                     } else {
                         responseData = {
                             success: false,
@@ -518,7 +520,6 @@ const addToQueue = async (req, bot = false) => {
                         return responseData;
                     }
                 }
-
 
                 // rug game if bankroll too low
                 if (roomInfo['user_bet'] <= 0.05) {
@@ -536,10 +537,7 @@ const addToQueue = async (req, bot = false) => {
                 }
             }
 
-            // if not already added to joiners, add to joiners
-            if (!roomInfo.joiners.includes(user._id)) {
-                roomInfo.joiners.addToSet(user._id);
-            }
+          
 
             user['balance'] += newTransactionAmount;
             user['gamePlayed']++;
@@ -552,6 +550,7 @@ const addToQueue = async (req, bot = false) => {
             if (user['profitAllTimeLow'] > newTransactionAmount) {
                 user['profitAllTimeLow'] = newTransactionAmount;
             }
+
 
             // setTimeout(async () => {
             const host = await User.findOne({ _id: roomInfo['creator'] });
@@ -569,6 +568,7 @@ const addToQueue = async (req, bot = false) => {
             } else {
                 console.log(`Host not found.`);
             }
+
             // Check if user_bet matches the share value of the first host
             if (roomInfo.hosts[0].share === 100) {
                 let notification = new Notification({
@@ -704,26 +704,25 @@ const addToQueue = async (req, bot = false) => {
                 '62b9ef88a5409449f63f7ccb',
                 '65eafb7daea25957ac8ea60c'
             ];
-            
+
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
-            
+
+
             if (shouldSave) {
                 try {
-                    await Promise.all([
+                    Promise.all([
                         saveDocumentWithRetry(platform),
-                        saveDocumentWithRetry(user),
-                        saveDocumentWithRetry(roomInfo),
+                        await saveDocumentWithRetry(user),
+                        await saveDocumentWithRetry(roomInfo),
                         saveDocumentWithRetry(rain),
                         saveDocumentWithRetry(host),
-                        saveDocumentWithRetry(newGameLog)
+                        await saveDocumentWithRetry(newGameLog)
                     ]);
                 } catch (error) {
                     console.error("Error saving", error);
                 }
-            } else {
-                console.log("None of the required IDs found in roomInfo.joiners. Skipping save.");
-            }
-            
+            } 
+
             const notificationData = {
                 _id: user._id,
                 message: message.message,
@@ -783,7 +782,7 @@ const executeBet4 = (req, bot = false) => {
 };
 
 const processQueue = async () => {
-    if (requestQueue.length > 0) {
+    while (requestQueue.length > 0) {
         const { req, bot, resolve, reject } = requestQueue[0];
         try {
             const result = await addToQueue(req, bot);
@@ -791,8 +790,8 @@ const processQueue = async () => {
         } catch (error) {
             reject(error);
         }
-        requestQueue.shift();
-        processQueue();
+        requestQueue.shift(); // Remove the processed request from the queue
     }
 };
+
 module.exports = executeBet4;

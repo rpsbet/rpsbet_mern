@@ -50,8 +50,7 @@ const addToQueue = async (req, bot = false) => {
             room: req.body._id
         });
         if (bot) {
-            user = await User.findOne({ _id: req.user._id });
-
+            return responseData;
         } else {
             user = req.user;
         }
@@ -372,11 +371,11 @@ const addToQueue = async (req, bot = false) => {
                         game_result = -1;
 
                         // update bankroll & other
-                        roomInfo.host_pr =
-                            (parseFloat(roomInfo.host_pr) || 0) +
+                        roomInfo['host_pr'] =
+                            (parseFloat(roomInfo['host_pr']) || 0) +
                             (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
-                        roomInfo.user_bet =
-                            (parseFloat(roomInfo.user_bet) || 0) +
+                        roomInfo['user_bet'] =
+                            (parseFloat(roomInfo['user_bet']) || 0) +
                             (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
 
                         platform.value =
@@ -483,16 +482,18 @@ const addToQueue = async (req, bot = false) => {
                     mostRecentItems.reverse();
                     mostRecentItems.push(bet_item);
                     if (mostRecentItems.length > 0) {
-                        req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
-                            bankroll: roomInfo['user_bet'],
-                            host_pr: roomInfo['host_pr'],
-                            rps: mostRecentItems,
-                            newLog: newLog,
-                            user: user
-                        });
-                        req.io.sockets.emit('NEW_LOG', {
-                            newLog: newLog
-                        });
+                        if (req.io.sockets) {
+                            req.io.sockets.emit(`UPDATED_BANKROLL_${roomInfo._id}`, {
+                                bankroll: roomInfo['user_bet'],
+                                host_pr: roomInfo['host_pr'],
+                                rps: mostRecentItems,
+                                newLog: newLog,
+                                user: user
+                            });
+                            req.io.sockets.emit('NEW_LOG', {
+                                newLog: newLog
+                            });
+                        }
                     } else {
                         responseData = {
                             success: false,
@@ -521,7 +522,7 @@ const addToQueue = async (req, bot = false) => {
             }
 
             // if not already added to joiners, add to joiners
-            if (!roomInfo.joiners.includes(user._id)) {
+            if (!roomInfo.joiners.includes(user._id) && !bot) {
                 roomInfo.joiners.addToSet(user._id);
             }
 

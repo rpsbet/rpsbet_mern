@@ -335,8 +335,8 @@ class RPS extends Component {
   handleSocketData2 = (data) => {
     this.setState({ bankroll: data.bankroll });
   };
-  
-  
+
+
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleKeyPress);
@@ -510,7 +510,7 @@ class RPS extends Component {
     }
 
     if (prevState.bankroll !== this.state.bankroll && this.state.bankroll <= 0.05) {
-     this.state.status = 'finished';
+      this.state.status = 'finished';
     }
 
     if (prevProps.is_betting !== is_betting && !is_betting) {
@@ -626,7 +626,7 @@ class RPS extends Component {
         </React.Fragment>
       ), gameResult: result.betResult
     });
-    
+
   };
 
   handleBotClick = () => {
@@ -725,15 +725,6 @@ class RPS extends Component {
     });
   };
 
-  calculateInterest = (createdAt) => {
-    const createdAtMoment = Moment(createdAt);
-    const now = Moment();
-    const secondsPassed = now.diff(createdAtMoment, 'seconds');
-    const twelveSecondIntervals = Math.floor(secondsPassed / 12);
-    const interestReceived = twelveSecondIntervals * this.props.bet_amount * 0.00000025;
-    return interestReceived.toFixed(6); // toFixed(6) to format it to 6 decimal places
-  };
-
   // Function to round down to 2 decimal places
   roundDownToTwoDecimalPlaces = (number) => {
     return Math.floor(number * 100) / 100;
@@ -748,7 +739,7 @@ class RPS extends Component {
   };
 
   handle2xButtonClick = () => {
-    
+
     const maxBetAmount = this.props.balance;
     const multipliedBetAmount = this.state.bet_amount * 2;
     const limitedBetAmount = Math.min(multipliedBetAmount, maxBetAmount);
@@ -1029,12 +1020,12 @@ class RPS extends Component {
                       </Tooltip>
                     </div>
                   )}
-                   <div className="data-item">
+                  <div className="data-item">
                     <div>
                       <div className="label public-interest">Interest Received</div>
                     </div>
-                    <div className="value" style={{color: "#00fff5"}}>
-                    {convertToCurrency(this.calculateInterest(roomInfo.created_at))}
+                    <div className="value" style={{ color: "#00fff5" }}>
+                      {convertToCurrency(this.props.pr)}
                     </div>
                   </div>
 
@@ -1082,7 +1073,7 @@ class RPS extends Component {
                       {Moment(roomInfo.created_at).fromNow()}
                     </div>
                   </div>
-                 
+
                 </React.Fragment>
               ))}
             </div>
@@ -1272,11 +1263,11 @@ class RPS extends Component {
 
                   {startedPlaying && (
                     <div
-                    id="rps-radio"
-                    style={{ zIndex: 1 }}
-                    className={this.props.ai_mode !== 'Skill-issue-2' ? '' : ''}
-                  >
-                  
+                      id="rps-radio"
+                      style={{ zIndex: 1 }}
+                      className={this.props.ai_mode !== 'Skill-issue-2' ? '' : ''}
+                    >
+
                       <div
                         className={`rps-option ${rps[this.state.rps.length - 1]?.rps === 'R'
                           ? 'rock'
