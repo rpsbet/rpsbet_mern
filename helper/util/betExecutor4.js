@@ -28,6 +28,7 @@ function check_access_time(user_id) {
 }
 
 const addToQueue = async (req, bot = false) => {
+
     try {
         const taxPromise = SystemSetting.findOne({ name: 'commission' });
         const rainPromise = SystemSetting.findOne({ name: 'rain' });
@@ -80,7 +81,6 @@ const addToQueue = async (req, bot = false) => {
             }
 
             let betAmount = parseFloat(req.body.bet_amount);
-
             roomInfo = await Room.findOne({ _id: req.body._id })
                 .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
                 .populate({
@@ -210,7 +210,6 @@ const addToQueue = async (req, bot = false) => {
                     if (bot) {
                         betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : betAmount;
                         betAmount = betAmount > parseFloat(user.balance) ? parseFloat(user.balance) : betAmount;
-                        console.log("bot bet", betAmount);
                     } else {
 
                         responseData = {
@@ -222,7 +221,8 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 newGameLog.bet_amount = betAmount;
-                // if no more items, create a new one
+               
+             
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
 
@@ -706,7 +706,6 @@ const addToQueue = async (req, bot = false) => {
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
-
 
             if (shouldSave) {
                 try {

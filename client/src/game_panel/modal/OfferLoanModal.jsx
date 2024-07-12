@@ -135,7 +135,6 @@ class OfferLoanModal extends Component {
         og: data.og,
         isComplete: data.isComplete ? true : false
       });
-      console.log("isComplete3", data.isComplete)
 
     });
   }
@@ -176,7 +175,6 @@ class OfferLoanModal extends Component {
     const { isDarkMode, getUser, closeOfferLoanModal, offerLoan, userInfo, offerInfo } = this.props;
 
     this.setState({ waiting: true });
-    console.log("iffer", offerInfo._id);
     const result = await this.props.createAndLend({
       loan_amount: responseText,
       loan_period: loanPeriodText,

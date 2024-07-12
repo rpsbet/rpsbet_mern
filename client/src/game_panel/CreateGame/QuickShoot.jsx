@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { IconButton, Button } from '@material-ui/core';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Button, Tooltip, IconButton, ButtonBase } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import DefaultBetAmountPanel from './DefaultBetAmountPanel';
 import { getQsLottieAnimation } from '../../util/helper';

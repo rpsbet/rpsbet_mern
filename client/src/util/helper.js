@@ -56,6 +56,5 @@ export async function getQsLottieAnimation(nation, short_name) {
   }
   
   const anim = await import(`../game_panel/LottieAnimations/${nationStr}${shortStr}.json`);
-console.log("anim", anim ? true : false);
   return anim;
 }

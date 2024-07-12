@@ -5,6 +5,8 @@ const RpsBetItem = require('../../model/RpsBetItem.js');
 const socketController = require('../../socketController.js');
 const executeBet = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
+const saveDocumentWithRetry = require('./retrySave');
+
 const { botAI, botCounterRandomness } = require('./predictNext.js');
 const os = require('os');
 let socketio = null;
@@ -62,7 +64,6 @@ async function callCronJobs(io) {
       const user = await User.findOne({ _id: cronJob.userId });
       const result = await executeCronJob(user, cronJob.betArray, cronJobUserIds);
       if (result && result.success) {
-        console.log("Cron job executed successfully");
         await delay(cronJob.delay);
       }
     }

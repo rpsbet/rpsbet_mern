@@ -2,7 +2,7 @@ const tf = require('@tensorflow/tfjs-node');
 const { trainModel, predictNextMove } = require('./modelUtils');
 
 const predictNext = (rps_list, markov = false) => {
-  if (rps_list.length === 0) {
+  if (rps_list.length <= 3) {
     return ['R', 'P', 'S'][Math.floor(Math.random() * 3)];
   }
   const transitionMatrix = {
