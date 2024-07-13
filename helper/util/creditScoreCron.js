@@ -135,6 +135,8 @@ async function checkOutstandingLoans(io) {
           status: 'open',
         });
         for (const bonusRoom of bonusRooms) {
+      console.log("SDFS")
+
           const req = {
             params: {
               _id: bonusRoom._id
@@ -147,8 +149,7 @@ async function checkOutstandingLoans(io) {
           };
           let userBet = parseFloat(bonusRoom.user_bet); // Changed to let
           const interest = userBet * 1.004;
-          userBet = (userBet + interest).toString();
-          bonusRoom.user_bet = userBet;
+          bonusRoom.user_bet = (interest).toString();;
           bonusRoom.pr = bonusRoom.pr + (userBet * 0.004);
           await saveDocumentWithRetry(bonusRoom);
           if (req.io.sockets) {
@@ -214,10 +215,11 @@ async function checkOutstandingLoans(io) {
   }
 }
 
-// Schedule the cron job to run every day at 00:30 (12:30 AM)
-cron.schedule('36 0 * * *', async () => {
+cron.schedule('00 13 * * *', async () => {
   await checkOutstandingLoans();
+  console.log("ran thru")
 });
+
 
 // Export an object containing the function
 module.exports = {

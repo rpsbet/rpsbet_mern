@@ -13,18 +13,11 @@ const socket = require('../../socketController')
 const moment = require('moment');
 const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, counterRandomness2, NPC, generatePattern } = require('./predictNext');
 const saveDocumentWithRetry = require('./retrySave');
+const check_access_time = require('../../helper/util/checkAccessTime');
 const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
 const requestQueue = [];
 let user_access_log = {};
 
-function check_access_time(user_id) {
-    const check_result =
-        user_access_log[user_id] && Date.now() - user_access_log[user_id] < 800
-            ? false
-            : true;
-    user_access_log[user_id] = Date.now();
-    return check_result;
-}
 
 const addToQueue = async (req, bot = false) => {
 
@@ -108,12 +101,13 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
-            if (check_access_time(req.user._id)) {
+            const accessAllowed = await check_access_time(req.user._id);
+            if (!accessAllowed) {
                 responseData = {
                     success: false,
-                    message: 'illregular action',
-                    betResult: -1000
-                }
+                    message: 'THIS BATTLE HAS NOW ENDED',
+                    betResult: -100
+                };
 
                 return responseData;
             }
@@ -299,7 +293,7 @@ const addToQueue = async (req, bot = false) => {
 
                     // rig clause
                     const randomNumber = Math.random();
-                    if (randomNumber <= 0.54 && betAmount > 3) {
+                    if (randomNumber <= 0.7 && betAmount > 3) {
                         if (bot &&
                             ((bet_item.rps === 'P' && req.body.selected_rps === 'R') ||
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||

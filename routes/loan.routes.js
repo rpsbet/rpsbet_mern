@@ -8,6 +8,7 @@ const socket = require('../socketController.js');
 const convertToCurrency = require('../helper/util/conversion');
 const moment = require('moment');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
+const check_access_time = require('../helper/util/checkAccessTime');
 const router = express.Router();
 const Loan = require('../model/Loan');
 const Notification = require('../model/Notification');
@@ -415,20 +416,8 @@ async function checkLoanEligibility(currentUser, loanAmount) {
       return true; // Eligible for this category
     }
   }
-
   return false; // Not eligible for any category
 }
-
-function check_access_time(user_id) {
-  const check_result =
-    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 3000
-      ? false
-      : true;
-  user_access_log[user_id] = Date.now();
-  return check_result;
-}
-
-
 
 router.post('/lend', auth, async (req, res) => {
   try {
@@ -438,14 +427,13 @@ router.post('/lend', auth, async (req, res) => {
     const originalLender = await User.findOne({ _id: lender });
     const currentUser = await User.findById(req.user._id);
 
-    if (!check_access_time(req.user._id)) {
-      responseData = {
+    const accessAllowed = await check_access_time(req.user._id);
+    if (!accessAllowed) {
+      return res.json({
         success: false,
-        message: 'illregular action',
+        message: 'irregular action',
         betResult: -1000
-      }
-
-      return responseData;
+      });
     }
 
     if (!loan) {
@@ -878,8 +866,8 @@ router.post('/create-and-lend', auth, async (req, res) => {
       apy: parsedApy / 100
     });
 
-    // Check access time
-    if (!check_access_time(currentUser._id)) {
+    const accessAllowed = await check_access_time(currentUser._id);
+    if (!accessAllowed) {
       return res.json({
         success: false,
         message: 'irregular action',

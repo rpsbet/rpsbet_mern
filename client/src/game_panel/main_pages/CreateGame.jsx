@@ -635,6 +635,13 @@ class CreateGame extends Component {
           alertAndReturn("YOU DIDN'T BET (CAT) SHIT!!!");
           return;
         }
+        if (
+          (child_step === 1) &&
+          (parseFloat(bet_amount) < 10 || isNaN(parseFloat(bet_amount)))
+        ) {
+          alertAndReturn("MEOWNIMUM BET IS 10 RPS!");
+          return;
+        }
 
         if (bet_amount > balance) {
           alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
@@ -674,7 +681,7 @@ class CreateGame extends Component {
             (
               ((game_mode === 'RPS' && rps_game_type === 0 && child_step === 2 && selectedStrategy === 'Hidden Markov') ||
                 (game_mode === 'Quick Shoot' &&
-                  child_step === 3)) &&
+                  child_step === 3 && selectedStrategy === 'Hidden Markov')) &&
               isMinimumRunsNeeded(3, list)
             ))) {
           return;
@@ -930,12 +937,17 @@ class CreateGame extends Component {
       case 'Quick Shoot':
         return (
           <QuickShoot
+            setSelectedStrategy={this.setSelectedStrategy}
+            selectedStrategy={selectedStrategy}
+            ai_mode={this.props.user.ai_mode}
             playSound={this.playSound}
             onChangeState={this.onChangeState}
             qs_list={this.state.qs_list}
+            user_id={this.props.user._id}
             bet_amount={this.state.bet_amount}
             is_private={this.state.is_private}
             endgame_type={this.state.endgame_type}
+            strategies={this.props.strategies}
             winChance={this.state.winChance}
             room_password={this.state.room_password}
             endgame_amount={this.state.endgame_amount}

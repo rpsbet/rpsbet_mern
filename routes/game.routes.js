@@ -40,6 +40,7 @@ const convertToCurrency = require('../helper/util/conversion');
 const executeBet2 = require('../helper/util/betExecutor2');
 const executeBet3 = require('../helper/util/betExecutor3');
 const saveDocumentWithRetry = require('../helper/util/retrySave');
+const check_access_time = require('../helper/util/checkAccessTime');
 let semaphore2 = 1;
 let semaphore3 = 1;
 const roomLocks = {};
@@ -1007,6 +1008,7 @@ router.post('/rooms', auth, async (req, res) => {
       description,
       box_list,
       rps_list,
+      qs_list,
       rps_game_type
     } = req.body;
 
@@ -1016,6 +1018,12 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
       });
     }
+    if (bet_amount < 10) {
+      return res.json({
+        success: false,
+        message: 'MEOWNIMUM BET IS 10 RPS!'
+      });
+    }
 
     if (req.user.username.includes('BOT')) {
       return res.json({
@@ -1023,7 +1031,6 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'DO NOT HAVE PURRMISSION'
       });
     }
-
 
     if (bet_amount > req.user.bankroll) {
       return res.json({
@@ -1039,7 +1046,7 @@ router.post('/rooms', auth, async (req, res) => {
       });
     }
 
-    if (req.user.dailyWithdrawals > 0.02) {
+    if (req.user.dailyWithdrawals > 500) {
       return res.json({
         success: false,
         message: "Exceeded Daily Withdrawal Limit. Unable to Create a room. Please try again tomorrow! (During Launch Phase only)"
@@ -1058,6 +1065,45 @@ router.post('/rooms', auth, async (req, res) => {
       // RPS
       host_pr = parseFloat(bet_amount);
       user_bet = parseFloat(bet_amount);
+      pr = user_bet * 2;
+    } else if (game_type == '2') {
+      // Spleesh!
+      host_pr = 0;
+      user_bet = parseFloat(bet_amount);
+      pr = parseFloat(bet_amount);
+    } else if (game_type == '3') {
+      // Brain Game
+      pr = parseFloat(bet_amount);
+      host_pr = parseFloat(bet_amount);
+      user_bet = parseFloat(bet_amount);
+    } else if (game_type == '4') {
+      // Mystery Box
+      pr = parseFloat(req.body.max_prize);
+      host_pr = parseFloat(bet_amount);
+    } else if (game_type == '5') {
+      // Quick Shoot
+      host_pr = parseFloat(bet_amount);
+      user_bet = parseFloat(bet_amount);
+    } else if (game_type == '6') {
+      // Drop Game
+      pr = parseFloat(req.body.max_return);
+      host_pr = parseFloat(bet_amount);
+      user_bet = parseFloat(bet_amount);
+    } else if (game_type == '7') {
+      // Bang!
+      pr = parseFloat(req.body.max_return);
+      host_pr = parseFloat(bet_amount);
+      user_bet = parseFloat(bet_amount);
+    } else if (game_type == '8') {
+      // Roll
+      pr = parseFloat(req.body.max_return);
+      host_pr = parseFloat(bet_amount);
+      user_bet = parseFloat(bet_amount);
+    } else if (game_type == '9') {
+      // Blackjack
+      host_pr = parseFloat(bet_amount);
+      user_bet = parseFloat(bet_amount);
+      pr = user_bet * 2;
     }
 
     const roomCount = await Room.countDocuments({});
@@ -1139,16 +1185,20 @@ router.post('/rooms', auth, async (req, res) => {
           }
         }
       }
+    } else if (gameType.game_type_name === 'Quick Shoot') {
+      for (const qs of qs_list) {
+        const newQs = new QsBetItem({
+          room: newRoom,
+          qs: qs.qs
+        });
+        try {
+          await saveDocumentWithRetry(newQs);
+        } catch (error) {
+          console.error("Error saving newRps:", error);
+        }
+      }
     }
-    // else if (gameType.game_type_name === 'Quick Shoot') {
-    //   for (const qs of qs_list) {
-    //     const newQs = new QsBetItem({
-    //       room: newRoom,
-    //       qs: qs.qs
-    //     });
-    //     await newQs.save();
-    //   }
-    // } else if (gameType.game_type_name === 'Drop Game') {
+    // else if (gameType.game_type_name === 'Drop Game') {
     //   for (const drop of drop_list) {
     //     const newDrop = new DropBetItem({
     //       room: newRoom,
@@ -1601,32 +1651,32 @@ const getMyRooms = async (
         // RPS
         temp.winnings = room.user_bet;
       }
-      // else if (room.game_type.game_type_id === 2) {
-      //   // Spleesh!
-      //   temp.winnings =
-      //     parseFloat(room.user_bet);
-      // } else if (room.game_type.game_type_id === 3) {
-      //   // Brain Game
-      //   temp.winnings = room.pr;
-      // } else if (room.game_type.game_type_id === 4) {
-      //   // Mystery Box
-      //   temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr);
-      // } else if (room.game_type.game_type_id === 5) {
-      //   // Quick Shoot
-      //   temp.winnings = room.user_bet;
-      // } else if (room.game_type.game_type_id === 6) {
-      //   // Drop Game
-      //   temp.winnings = room.user_bet;
-      // } else if (room.game_type.game_type_id === 7) {
-      //   // Bang!
-      //   temp.winnings = updateDigitToPoint2(room.user_bet);
-      // } else if (room.game_type.game_type_id === 8) {
-      //   // Roll
-      //   temp.winnings = updateDigitToPoint2(room.user_bet);
-      // } else if (room.game_type.game_type_id === 9) {
-      //   // Blackjack
-      //   temp.winnings = updateDigitToPoint2(room.user_bet);
-      // }
+      else if (room.game_type.game_type_id === 2) {
+        // Spleesh!
+        temp.winnings =
+          parseFloat(room.user_bet);
+      } else if (room.game_type.game_type_id === 3) {
+        // Brain Game
+        temp.winnings = room.pr;
+      } else if (room.game_type.game_type_id === 4) {
+        // Mystery Box
+        temp.winnings = parseFloat(room.user_bet) + parseFloat(room.host_pr);
+      } else if (room.game_type.game_type_id === 5) {
+        // Quick Shoot
+        temp.winnings = room.user_bet;
+      } else if (room.game_type.game_type_id === 6) {
+        // Drop Game
+        temp.winnings = room.user_bet;
+      } else if (room.game_type.game_type_id === 7) {
+        // Bang!
+        temp.winnings = updateDigitToPoint2(room.user_bet);
+      } else if (room.game_type.game_type_id === 8) {
+        // Roll
+        temp.winnings = updateDigitToPoint2(room.user_bet);
+      } else if (room.game_type.game_type_id === 9) {
+        // Blackjack
+        temp.winnings = updateDigitToPoint2(room.user_bet);
+      }
 
       const isCoHost = room.hosts.find(host => host.host.toString() === user_id.toString());
       if (isCoHost) {
@@ -1667,19 +1717,25 @@ router.post('/end_game', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
-if (check_access_time(userId)) {
+    console.log("SF", userId);
+    const accessAllowed = await check_access_time(userId);
+    if (!accessAllowed) {
+      console.log("dwdw");
       return res.json({
         success: false,
         message: 'irregular action',
         betResult: -1000
       });
     }
-    if (req.user.dailyWithdrawals > 0.02) {
+    console.log("asdas");
+    if (req.user.dailyWithdrawals > 50) {
       return res.json({
         success: false,
         message: "Exceeded Daily Withdrawal Limit. Unable to End this room. Please try again tomorrow!"
       });
     }
+    console.log("eeee");
+
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User })
       .populate({ path: 'game_type', model: GameType });
@@ -1738,6 +1794,7 @@ if (check_access_time(userId)) {
 
       socket.sendNotification(host, notificationData);
     });
+    console.log("sdfdf");
 
     await Promise.all([
       Notification.insertMany(notifications.map(doc => doc.toObject())),
@@ -1815,13 +1872,15 @@ router.post('/unstake', auth, async (req, res) => {
     const userId = req.user._id;
     const roomId = req.body.room_id;
 
-    if (check_access_time(userId)) {
+    const accessAllowed = await check_access_time(userId);
+    if (!accessAllowed) {
       return res.json({
         success: false,
         message: 'irregular action',
         betResult: -1000
       });
     }
+
 
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User })
@@ -2306,29 +2365,6 @@ router.post('/get_chat_room_info', auth, async (req, res) => {
   }
 });
 
-function check_access_time(user_id, retryCount = 0) {
-  
-  const check_result =
-    user_access_log[user_id] && Date.now() - user_access_log[user_id] < 3000
-      ? false
-      : true;
-  
-  user_access_log[user_id] = Date.now();
-  
-  if (!check_result && retryCount < MAX_RETRIES) {
-    // Retry after a delay (you can adjust the delay time if needed)
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(check_access_time(user_id, retryCount + 1));
-      }, 3000);
-    });
-  }
-  
-  
-  return check_result;
-}
-
-
 router.post('/coHost', auth, async (req, res) => {
   try {
     const rowId = req.body.rowId;
@@ -2342,7 +2378,8 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
-    if (check_access_time(req.user._id)) {
+    const accessAllowed = await check_access_time(req.user._id);
+    if (!accessAllowed) {
       return res.json({
         success: false,
         message: 'irregular action',
@@ -2522,7 +2559,8 @@ router.post('/topUp', auth, async (req, res) => {
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room.game_type });
-    if (check_access_time(req.user._id)) {
+       const accessAllowed = await check_access_time(req.user._id);
+    if (!accessAllowed) {
       return res.json({
         success: false,
         message: 'irregular action',
@@ -2882,18 +2920,17 @@ router.post('/reCreate', auth, async (req, res) => {
 });
 
 
-
 router.post('/bet2', auth, async (req, res) => {
   try {
     const requestId = uuidv4();
-
+    
     // Acquire the semaphore
     if (semaphore2 === 0) {
       // If semaphore is already acquired, return a busy response
       return res.status(503).json({ success: false, message: 'Service Unavailable' });
     }
     semaphore2 = 0; // Set semaphore to indicate it's acquired
-
+    
     const [accessAllowed, betResult] = await Promise.all([
       check_access_time(req.user._id),
       executeBet2(req)
@@ -2910,9 +2947,9 @@ router.post('/bet2', auth, async (req, res) => {
         requestId: requestId
       };
 
+      console.log("accessAllowed", accessAllowed)
       return res.json(responseData);
     }
-
     res.json({
       success: betResult.success,
       message: betResult.message,
@@ -2943,17 +2980,10 @@ router.post('/bet3', auth, async (req, res) => {
       }
       semaphore3 = 0; // Set semaphore to indicate it's acquired
 
-      let accessAllowed, betResult;
-
-      try {
-        [accessAllowed, betResult] = await Promise.all([
-          check_access_time(req.user._id),
-          executeBet3(req)
-        ]);
-      } catch (error) {
-        console.error('Error occurred during execution:', error);
-        throw error; // rethrowing the error to handle retry logic
-      }
+      const [accessAllowed, betResult] = await Promise.all([
+        check_access_time(req.user._id),
+        executeBet3(req)
+      ]);
 
       // Release the semaphore
       semaphore3 = 1;
@@ -2977,12 +3007,16 @@ router.post('/bet3', auth, async (req, res) => {
         roomStatus: betResult.roomStatus,
         requestId: requestId
       });
-      
+
       return; // Exit the function after successful response
 
     } catch (err) {
       console.error(`Error occurred on attempt ${retryCount + 1}:`, err);
       retryCount++; // Increment retry count
+
+      // Release the semaphore in case of an error
+      semaphore3 = 1;
+
       if (retryCount === MAX_RETRIES) {
         // If reached max retries, return internal server error
         console.error('Max retry limit reached');
@@ -2994,6 +3028,5 @@ router.post('/bet3', auth, async (req, res) => {
     }
   }
 });
-
 
 module.exports = router;

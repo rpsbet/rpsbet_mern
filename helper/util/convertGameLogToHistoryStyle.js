@@ -61,6 +61,32 @@ const convertGameLogToHistoryStyle = async gameLogList => {
           } else {
             temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(betAmount)} (0.00X)</span> in ${room_name}`;
           }
+        } else if (gameLog['game_type']['game_type_name'] === 'Quick Shoot') {
+          if (gameLog.game_result === 1) {
+            const winnings =
+              gameLog['bet_amount'] / (gameLog['room']['qs_game_type'] - 1) +
+              gameLog['bet_amount'];
+            const winningsDisplay = convertToCurrency(winnings);
+            const multiplierDisplay = (winnings / gameLog['bet_amount']).toFixed(
+              2
+            );
+  
+            temp.history = `
+              ${joined_user_link} won <span style='color: #ff0a28;'>${winningsDisplay} (${multiplierDisplay}X)</span>
+              (${convertToCurrency(gameLog['commission'])} RTB) in ${room_name}`;
+          } else if (gameLog.game_result === 3) {
+            temp.history = `${creator_link} received a <span style='color: #ff0a28;'>${convertToCurrency(
+              gameLog['user_bet'] - gameLog['room']['endgame_amount']
+            )}</span> Auto-Payout in ${room_name}`;
+          } else if (gameLog.game_result === -100) {
+            temp.history = `${creator_link} unstaked <span style='color: ${color};'>${convertToCurrency(
+              userBet
+            )} (${multiplierDisplay}x)</span> in ${room_name}`;
+          } else {
+            temp.history = `${joined_user_link} lost <span style='color: #ffdd15;'>${convertToCurrency(
+              gameLog['bet_amount']
+            )} (0.00X)</span> in ${room_name}`;
+          }
         }
       } else {
         // Withdrawal log

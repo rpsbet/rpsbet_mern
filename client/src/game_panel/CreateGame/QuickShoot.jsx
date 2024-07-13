@@ -10,6 +10,8 @@ import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import { alertModal } from '../modal/ConfirmAlerts';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import SettingsRef from '../../components/SettingsRef';
+import { Info } from '@material-ui/icons';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 class QuickShoot extends Component {
   constructor(props) {
@@ -253,8 +255,6 @@ class QuickShoot extends Component {
     return nextState;
   };
 
-
-
   onAddRun = selected_qs_position => {
 
     this.props.playSound('boop');
@@ -332,6 +332,7 @@ class QuickShoot extends Component {
   };
 
   async componentDidMount() {
+    console.log("dedweS", this.props.selectedStrategy);
     await this.updateAnimation();
     document.addEventListener('keydown', this.handleKeyPress);
     document.addEventListener('mousedown', this.handleClickOutside);
@@ -430,6 +431,18 @@ class QuickShoot extends Component {
   };
 
   render() {
+    const { step, strategies, qs_game_type,
+      bet_amount,
+      qs_list,
+      onChangeState,
+      ai_mode,
+      rank,
+      user_id,
+      selectedStrategy,
+      setSelectedStrategy } = this.props;
+    const defaultBetAmounts = [10, 25, 50, 100, 250];
+    const { selected_qs_position, settings_panel_opened } = this.state;
+
     // let position_name = [
     //   'Center',
     //   'Top-Left',
@@ -445,7 +458,7 @@ class QuickShoot extends Component {
     // } else if (this.props.qs_game_type === 4) {
     //   position_name = ['Top-Left', 'Top-Right', 'Bottom-Left', 'Bottom-Right'];
     // }
-    const { step } = this.props;
+
     return (
       <>
         {step === 2 && (
@@ -454,13 +467,13 @@ class QuickShoot extends Component {
             <div className="qs-game-type-panel">
               {[2, 3, 4, 5].map(i => (
                 <button
-                  className={this.props.qs_game_type === i ? ' active' : ''}
+                  className={qs_game_type === i ? ' active' : ''}
                   onClick={() => {
-                    this.props.onChangeState({
+                    onChangeState({
                       qs_game_type: i,
-                      max_return: this.props.bet_amount * Number(i),
+                      max_return: bet_amount * Number(i),
                       public_bet_amount: convertToCurrency(
-                        this.props.bet_amount * Number(i - 1)
+                        bet_amount * Number(i - 1)
                       ),
                       selected_qs_position: 0
                     });
@@ -476,9 +489,9 @@ class QuickShoot extends Component {
         {step === 1 && (
           <DefaultBetAmountPanel
             game_type="Quick Shoot"
-            qs_game_type={this.props.qs_game_type}
-            onChangeState={this.props.onChangeState}
-            bet_amount={this.props.bet_amount}
+            qs_game_type={qs_game_type}
+            onChangeState={onChangeState}
+            bet_amount={bet_amount}
           />
         )}
 
@@ -533,8 +546,8 @@ class QuickShoot extends Component {
 
                       <table id="runs">
                         <tbody>
-                          {this.state.qs_list && this.state.qs_list.length > 0 ? (
-                            this.state.qs_list.map((qs, index) => (
+                          {qs_list && this.state.qs_list.length > 0 ? (
+                            qs_list.map((qs, index) => (
                               <tr key={index}>
                                 <td>{index + 1}</td>
                                 <td>{qs.qs}</td>
@@ -575,7 +588,8 @@ class QuickShoot extends Component {
 }
 const mapStateToProps = state => ({
   auth: state.auth.isAuthenticated,
-  isDarkMode: state.auth.isDarkMode
+  isDarkMode: state.auth.isDarkMode,
+  isFocused: state.auth.isFocused
 });
 
 export default connect(mapStateToProps)(QuickShoot);
