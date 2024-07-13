@@ -1024,6 +1024,12 @@ router.post('/rooms', auth, async (req, res) => {
         message: 'MEOWNIMUM BET IS 10 RPS!'
       });
     }
+    if (endgame_type && parseFloat(endgame_amount) < bet_amount) {
+      return res.json({
+        success: false,
+        message: 'MINIMUM AUTO-PAYOUT MUST BE EQUAL TO BANKROLL'
+      });
+    }
 
     if (req.user.username.includes('BOT')) {
       return res.json({
@@ -2668,6 +2674,12 @@ router.post('/editPayout', auth, async (req, res) => {
       return res.json({
         success: false,
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
+      });
+    }
+    if (payoutAmount < parseFloat(room.user_bet)) {
+      return res.json({
+        success: false,
+        message: 'PAYOUT TOO LOW! MINIMUM IS BANKROLL'
       });
     }
 

@@ -599,6 +599,7 @@ class CreateGame extends Component {
       max_return,
       room_password,
       rps_game_type,
+      endgame_type,
       is_private,
       selectedStrategy
     } = this.state;
@@ -643,6 +644,7 @@ class CreateGame extends Component {
           return;
         }
 
+        
         if (bet_amount > balance) {
           alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
           return;
@@ -704,7 +706,8 @@ class CreateGame extends Component {
           });
           return;
         }
-      } else if (child_step === 2 && step !== 1) {
+      } 
+       else if (child_step === 2 && step !== 1) {
         if (
           game_mode === 'Spleesh!' &&
           ((spleesh_bet_unit === 0.001 && endgame_amount < 0.044) ||
@@ -727,6 +730,9 @@ class CreateGame extends Component {
           return;
         } else if (isNaN(endgame_amount)) {
           alertAndReturn('IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
+          return;
+        }else if (endgame_type && endgame_amount < parseFloat(bet_amount)) {
+          alertAndReturn('CANNOT BE LOWER THAN BANKROLL');
           return;
         }
         this.setState({
