@@ -353,10 +353,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 100) {
+      if (this.state.amount >= 250) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 100 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 250 RPS DURING LAUNCH PHASE`
         );
         return;
       }
@@ -406,10 +406,10 @@ class WithdrawModal extends Component {
         );
         return;
       }
-      if (this.state.amount >= 100) {
+      if (this.state.amount >= 250) {
         alertModal(
           this.props.isDarkMode,
-          `MAXIMUM PER DAY IS 100 RPS DURING LAUNCH PHASE`
+          `MAXIMUM PER DAY IS 250 RPS DURING LAUNCH PHASE`
         );
         return;
       }
