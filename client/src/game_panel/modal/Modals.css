@@ -725,6 +725,15 @@ div[role="presentation"] div {
 }
 .modal-body .modal-content-wrapper div.modal-content-panel {
     padding: 20px 24px;
+}
+.modal-body.leaderboards-modal .modal-content-wrapper div.modal-content-panel {
+    overflow-x: scroll;
+}
+.modal-body.leaderboards-modal .modal-content-wrapper div.modal-content-panel td{
+    padding: 10px;
+}
+.modal-body .modal-content-wrapper div.modal-content-panel {
+    padding: 20px 24px;
     /* overflow-x: scroll; */
 }
 .modal-body.how-to-play-modal-body .modal-content-wrapper div.modal-content-panel p {

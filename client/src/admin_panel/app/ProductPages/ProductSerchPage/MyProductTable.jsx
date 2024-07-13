@@ -490,7 +490,7 @@ class MyProductTable extends Component {
                 value={this.state.sortType}
                 onChange={this.handleSortChange}
               >
-                <MenuItem value="updated_at">Sort by Date</MenuItem>
+                <MenuItem value="updated_at">Sort by CP</MenuItem>
                 <MenuItem value="price">Sort by Price</MenuItem>
               </Select>
             </Menu>

@@ -233,7 +233,7 @@ class ProductTable extends Component {
   fetchItems() {
     const { acQueryItem, page } = this.props;
     const { sortCriteria, itemType } = this.state;
-    acQueryItem(30, page, sortCriteria, itemType);
+    acQueryItem(100, page, sortCriteria, itemType);
   }
 
   handleFilterClick = event => {
@@ -404,7 +404,7 @@ class ProductTable extends Component {
               <MenuItem onClick={() =>
                 this.handleSortClose('updated_at')
               }
-                selected={sortCriteria === 'updated_at'}>Sort by Date Added</MenuItem>
+                selected={sortCriteria === 'updated_at'}>Sort by CP</MenuItem>
               <MenuItem onClick={() =>
                 this.handleSortClose('price')
               }
@@ -560,7 +560,7 @@ class ProductTable extends Component {
             offset={page - 1}
             total={pages}
             onClick={(e, offset) => {
-              acQueryItem(30, offset + 1, sortCriteria, itemType);
+              acQueryItem(100, offset + 1, sortCriteria, itemType);
             }}
           />
         </PaginationContainer>

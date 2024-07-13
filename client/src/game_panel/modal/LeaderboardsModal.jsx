@@ -125,7 +125,7 @@ Leaderboards</h2>
               // {...this.state.selectedRow}
             />
           )}
-          <div className="modal-body edit-modal-body">
+          <div className="modal-body leaderboards-modal edit-modal-body">
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
               {!loading ? (

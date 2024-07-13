@@ -196,9 +196,22 @@ button#recentSearches span {
   top: 10px !important;
   left: 12px !important;
 }
+.chat-player .lottie-container.blackCube div,
+.chat .lottie-container.blackCube div,
+.modal-body table .lottie-container.blackCube div,
+.modal-content-panel .player .avatar .lottie-container.blackCube div,
+.chat-page .lottie-container.blackCube div,
+.table.main-game-table .lottie-container.blackCube div,
+.chat-page .lottie-container.blackCube div,
+.notification-element .lottie-container.blackCube div {
+  transform: scale(3) translate(-8.5px, -11px) !important;
+}
 .tooltip-avatar .lottie-container.cat div {
   top: 4px !important;
   left: 2px !important;
+}
+.reply-to .lottie-container.blackCube div {
+ transform: scale(3) translate(-5.5px, -7px) !important;
 }
 
 .sub-panel .lottie-container.glee div {
@@ -216,6 +229,13 @@ button#recentSearches span {
   width: 32px !important;
   left: 30px !important;
 }
+
+.lottie-container.blackCube div,
+.table.main-game-table .lottie-container.blackCube div {
+  transform: scale(3.5) translate(-6px, -7px) !important;
+  z-index: 99;
+}
+
 
 .sub-panel .lottie-container.shark div {
   margin-top: 4px !important;
@@ -250,6 +270,10 @@ button#recentSearches span {
 .edit-avatar-panel .lottie-container.ak47 div[role="button"],
 .player-modal .lottie-container.ak47 div[role="button"] {
 left: 300px !important;
+}
+.edit-avatar-panel .lottie-container.blackCube div[role="button"],
+.player-modal .lottie-container.blackCube div[role="button"] {
+transform: scale(3) translate(-60px, -60px)!important;
 }
 
 .avatar img {
@@ -733,6 +757,11 @@ div.table .table-row .table-cell img.avatar,
     transform: translateY(-32px);
   }
 
+  .table.main-game-table .lottie-container.blackCube div {
+    transform: scale(3.5) translate(-6px, -7px) !important;
+    z-index: 99;
+  }
+  
   .action-panel button span {
     font-size: 0.75em;
   }

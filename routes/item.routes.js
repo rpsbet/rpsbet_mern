@@ -636,14 +636,19 @@ router.get('/:id', async (req, res) => {
     });
   }
 });
+
 router.get('/', async (req, res) => {
-  const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
+  const pagination = req.query.pagination ? parseInt(req.query.pagination) : 5;
   const page = req.query.page ? parseInt(req.query.page) : 1;
   const sort = 'owners.price';
   const itemTypeFilter = req.query.itemType; // specific item type
 
   try {
-    let query = { 'owners.onSale': { $gt: 0 }, 'item_type': itemTypeFilter }; // filter by itemType
+    let query = { 
+      'owners.onSale': { $gt: 0 }, 
+      'item_type': itemTypeFilter,
+      'image': { $nin: ['santaHat', 'xmasTree'] } // exclude santaHat and xmasTree images
+    };
 
     const items = await Item.find(query)
       .skip(pagination * page - pagination)
@@ -681,8 +686,8 @@ router.get('/', async (req, res) => {
         }
       }
     }
-    if (sort === 'created_at') {
-      item_list.sort((a, b) => a.created_at - b.created_at);
+    if (sort === 'CP') {
+      item_list.sort((a, b) => a.CP - b.CP);
     } else {
       item_list.sort((a, b) => a.owners[0].price - b.owners[0].price);
     }
@@ -702,7 +707,5 @@ router.get('/', async (req, res) => {
     });
   }
 });
-
-
 
 module.exports = router;

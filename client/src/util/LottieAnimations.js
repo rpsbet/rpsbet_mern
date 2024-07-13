@@ -61,6 +61,12 @@ import snowflakes from '../game_panel/LottieAnimations/snowflakes.json';
 import xmasTree from '../game_panel/LottieAnimations/xmasTree.json';
 import snowman from '../game_panel/LottieAnimations/snowman.json';
 import santaHat from '../game_panel/LottieAnimations/santaHat.json';
+import blackCube from '../game_panel/LottieAnimations/black_cube.json';
+import ghost from '../game_panel/LottieAnimations/ghost.json';
+import ghost2 from '../game_panel/LottieAnimations/ghost2.json';
+import eagle from '../game_panel/LottieAnimations/eagle.json';
+import rhino from '../game_panel/LottieAnimations/rhino.json';
+import dragon2 from '../game_panel/LottieAnimations/dragon2.json';
 
 const animationMap = {
   'the-drop-off': { animationData: dropOff, className: 'lottie-bg-container' },
@@ -231,7 +237,13 @@ const animationMap = {
   vacation: { animationData: vacation, className: 'lottie-bg-container vacation' },
   'orion-trip': { animationData: orionTrip, className: 'lottie-bg-container orion' },
   arctic: { animationData: arctic, className: 'lottie-bg-container arctic' },
-  paradise: { animationData: paradise, className: 'lottie paradise' }
+  paradise: { animationData: paradise, className: 'lottie paradise' },
+  blackCube: { animationData: blackCube, className: 'lottie blackCube' },
+  dragon2: { animationData: dragon2, className: 'lottie dragon2' },
+  eagle: { animationData: eagle, className: 'lottie eagle' },
+  ghost: { animationData: ghost, className: 'lottie ghost' },
+  ghost2: { animationData: ghost2, className: 'lottie ghost2' },
+  rhino: { animationData: rhino, className: 'lottie rhino' }
 };
 
 export const renderLottieAnimation = (image, isLowGraphics) => {
