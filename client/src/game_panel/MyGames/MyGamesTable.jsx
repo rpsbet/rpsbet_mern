@@ -587,7 +587,7 @@ class MyGamesTable extends Component {
                       </div>
                       <div className="table-cell bet-info">
                         <span className="bet-pr">
-                          {convertToCurrency(row.winnings)}
+                          {convertToCurrency(row.user_bet)}
                           <span className='desktop-only' style={{ fontSize: '10px' }}> ({((row.share).toFixed(2))}%)</span>
                         </span>
 
@@ -887,7 +887,7 @@ class MyGamesTable extends Component {
                         </TableCell>
                         <TableCell style={{ color: "#ffb000" }}>
                           {this.state.selectedRow ? (
-                            convertToCurrency(this.state.selectedRow.bet_amount)
+                            convertToCurrency(this.state.selectedRow.user_bet)
                           ) : (
                             null
                           )}
@@ -915,7 +915,7 @@ class MyGamesTable extends Component {
                         </TableCell>
                         <TableCell style={{ color: "#ffb000" }}>
                           {this.state.selectedRow ? (
-                            convertToCurrency(this.state.selectedRow.bet_amount + parseFloat(this.state.topUpAmount))
+                            convertToCurrency(parseFloat(this.state.selectedRow.user_bet) + parseFloat(this.state.topUpAmount))
                           ) : (
                             null
                           )}
