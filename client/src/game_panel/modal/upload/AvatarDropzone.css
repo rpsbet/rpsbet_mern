@@ -2,12 +2,19 @@
   display: flex;
   align-items: center;
   font-size: 16px;
-  flex-direction: column;
+  flex-direction: row;
     text-align-last: center;
 }
 .AvatarPreviewPanel {
   border-radius: 18px !important;
   overflow: unset !important;
+}
+
+.AvatarControlPanel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  /* Other existing styles */
 }
 
 .AvatarHighlight {
@@ -25,7 +32,7 @@
 }
 
 .AvatarControlPanel {
-  margin: 24px 0;
+  margin: 90px -90px !important;
   display: flex;
   flex-direction: column;
     align-items: center;

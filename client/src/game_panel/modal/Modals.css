@@ -329,6 +329,10 @@
     position: relative;
 }
 
+.player-modal.modal-body {
+    padding: 5em 1em 1em;
+}
+
 .modal-body.edit-modal-body.question-modal-body div[class*='MuiPaper'] {
     box-shadow: unset !important;
     background-color: unset;

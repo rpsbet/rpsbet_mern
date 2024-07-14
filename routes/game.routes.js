@@ -84,7 +84,7 @@ router.get('/recently-closed', async (req, res) => {
   try {
     const rooms = await Room.find({ status: 'finished' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
-      .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
+      .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
       .sort({ created_at: -1 })
       .limit(9);
 
@@ -362,10 +362,10 @@ router.get('/room/:id', async (req, res) => {
 
     let gameLogQuery = GameLog.find({ room: room })
       .sort({ created_at: 'desc' })
-      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
+      .populate({ path: 'room', model: Room, select: '_id winnings commission username creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
-      .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
-      .populate({ path: 'joined_user', model: User, select: '_id avatar accessory totalWagered' });
+      .populate({ path: 'creator', model: User, select: '_id avatar username accessory totalWagered' })
+      .populate({ path: 'joined_user', model: User, select: '_id avatar username accessory totalWagered' });
 
     // Check if the limit parameter is provided
     if (req.query.limit) {
@@ -402,6 +402,7 @@ router.get('/room/:id', async (req, res) => {
         _id: room['_id'],
         created_at: room['created_at'],
         creator_id: room['creator'],
+        username: creator['username'],
         creator_avatar: creator['avatar'],
         rank: creator['totalWagered'],
         accessory: creator['accessory'],
@@ -787,8 +788,8 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
   try {
     const preRooms = await Room.find(search_condition)
-      .select('_id creator joiners game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at likes views hosts')
-      .populate({ path: 'creator', model: User, select: 'avatar totalWagered accessory status' })
+      .select('_id creator username joiners game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at likes views hosts')
+      .populate({ path: 'creator', model: User, select: 'avatar totalWagered username accessory status' })
       .populate({ path: 'game_type', model: GameType })
       .limit(pageSize)
 
@@ -797,11 +798,12 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
     const result = await Promise.all(preRooms.map(async (room) => {
       try {
         const joinerData = await Promise.all(room.joiners.map(async (joinedUser) => {
-          const user = await User.findOne({ _id: joinedUser }).select('avatar totalWagered accessory status');
+          const user = await User.findOne({ _id: joinedUser }).select('avatar totalWagered username accessory status');
           return {
             avatar: user.avatar,
             totalWagered: user.totalWagered,
             accessory: user.accessory,
+            username: user.username,
             rank: user.totalWagered,
           };
         }));
@@ -813,11 +815,13 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           joiner_avatars: joinerData.map(joiner => ({
             avatar: joiner.avatar,
             rank: joiner.totalWagered,
+            username: joiner.username,
             accessory: joiner.accessory
           })),
           rank: room.creator?.totalWagered || 0,
           creator_avatar: room.creator?.avatar || '',
           accessory: room.creator?.accessory || '',
+          username: room.creator?.username || '',
           creator_status: room.creator?.status || '',
           game_type: room.game_type,
           bet_amount: room.bet_amount,
@@ -1118,10 +1122,10 @@ router.post('/rooms', auth, async (req, res) => {
       ...req.body,
       creator: req.user,
       joiners: [],
-      hosts: [{ host: req.user._id, avatar: req.user.avatar, accessory: req.user.accessory, rank: req.user.totalWagered, share: 100, stake: parseFloat(bet_amount) }],
+      hosts: [{ host: req.user._id, avatar: req.user.avatar, username: req.user.username, accessory: req.user.accessory, rank: req.user.totalWagered, share: 100, stake: parseFloat(bet_amount) }],
       game_type: gameType,
       user_bet,
-      pr,
+      pr: 0,
       endgame_amount: endgame_type ? endgame_amount : parseFloat(bet_amount),
       endgame_type,
       host_pr,
@@ -2438,6 +2442,7 @@ router.post('/coHost', auth, async (req, res) => {
         host: req.user._id,
         share: newShare,
         accessory: req.user.accessory,
+        username: req.user.username,
         avatar: req.user.avatar,
         rank: req.user.totalWagered,
         stake: coHostAmount

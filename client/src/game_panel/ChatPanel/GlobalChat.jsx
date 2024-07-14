@@ -284,6 +284,7 @@ class GlobalChat extends Component {
                           className="avatar"
                           src={chat.replyTo.avatar}
                           alt=""
+                          username={chat.replyTo.sender}
                           rank={chat.replyTo.rank}
                           accessory={chat.replyTo.accessory}
                           darkMode={this.props.isDarkMode}
@@ -324,6 +325,7 @@ class GlobalChat extends Component {
                         src={chat.avatar}
                         accessory={chat.accessory}
                         alt=""
+                        username={chat.sender}
                         rank={chat.rank}
                         darkMode={this.props.isDarkMode}
                       />

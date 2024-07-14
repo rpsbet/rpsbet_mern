@@ -158,6 +158,7 @@ class MainPage extends Component {
 
             <div className="refresh-main">
               <IconButton color="primary" onClick={this.handleRefresh}>
+              <span>REFRESH</span>
                 <RefreshIcon />
               </IconButton>
             </div>

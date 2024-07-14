@@ -320,6 +320,7 @@ class OfferLoanModal extends Component {
                             className="avatar"
                             src={userInfo.avatar}
                             rank={userInfo.totalWagered}
+                            username={userInfo.username}
                             accessory={userInfo.accessory}
                             alt=""
                             darkMode={this.props.isDarkMode}
@@ -347,6 +348,7 @@ class OfferLoanModal extends Component {
                               src={this.props.offerInfo.avatar}
                               rank={this.props.offerInfo.totalWagered}
                               accessory={this.props.offerInfo.accessory}
+                              username={this.props.offerInfo.username}
                               alt=""
                               darkMode={this.props.isDarkMode}
                             />
@@ -368,6 +370,7 @@ class OfferLoanModal extends Component {
                               src={this.props.offerInfo.avatar}
                               rank={this.props.offerInfo.totalWagered}
                               accessory={this.props.offerInfo.accessory}
+                              username={this.props.offerInfo.username}
                               alt=""
                               darkMode={this.props.isDarkMode}
                             />

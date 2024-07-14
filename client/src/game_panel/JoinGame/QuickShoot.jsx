@@ -586,6 +586,7 @@ class QuickShoot extends Component {
       youtubeUrl,
       selected_qs_position,
       accessory,
+      username,
       creator_avatar,
       rank,
       handleClosePlayerModal,
@@ -822,6 +823,7 @@ class QuickShoot extends Component {
                           src={creator_avatar}
                           rank={rank}
                           accessory={accessory}
+                          username={username}
                           alt=""
                           darkMode={isDarkMode}
                         />
@@ -953,6 +955,7 @@ const mapStateToProps = state => ({
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   rank: state.logic.curRoomInfo.rank,
   accessory: state.logic.curRoomInfo.accessory,
+  username: state.logic.curRoomInfo.username,
   isLowGraphics: state.auth.isLowGraphics,
   isFocused: state.auth.isFocused,
   isMusicEnabled: state.auth.isMusicEnabled

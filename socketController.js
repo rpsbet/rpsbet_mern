@@ -23,6 +23,7 @@ const globalChatSend = (io, data) => {
     messageContent,
     avatar,
     accessory,
+    username,
     rank,
     replyTo
   } = data;
@@ -34,10 +35,12 @@ const globalChatSend = (io, data) => {
     messageContent: messageContent,
     avatar: avatar,
     rank: rank,
+    username: username,
     accessory: accessory,
     replyTo: replyTo
       ? {
           sender: replyTo.senderId,
+          username: replyTo.username,
           rank: replyTo.rank,
           avatar: replyTo.avatar,
           accessory: replyTo.accessory,

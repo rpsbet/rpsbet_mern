@@ -455,6 +455,7 @@ class ProductTable extends Component {
                           rank={customerInfo[owner.user].totalWagered}
                           accessory={customerInfo[owner.user].accessory}
                           alt=""
+                          username={customerInfo[owner.user].username}
                           darkMode={this.props.isDarkMode}
                         />
                       </a>

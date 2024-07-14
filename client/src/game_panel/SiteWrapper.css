@@ -231,9 +231,9 @@ button#recentSearches span {
 }
 
 .lottie-container.blackCube div,
+.big-modal .banking-modal-body .avatar .lottie-container.blackCube div,
 .table.main-game-table .lottie-container.blackCube div {
   transform: scale(3.5) translate(-6px, -7px) !important;
-  z-index: 99;
 }
 
 
@@ -266,11 +266,15 @@ button#recentSearches span {
   transform: translate(-50%, -50%);
   z-index: 0;
 }
-
-.edit-avatar-panel .lottie-container.ak47 div[role="button"],
+.edit-avatar-panel .verified div,
+.player-modal .verified div {
+transform: scale(4);
+}
+.edit-avatar-panel .verified .lottie-container div[role="button"],
 .player-modal .lottie-container.ak47 div[role="button"] {
 left: 300px !important;
 }
+
 .edit-avatar-panel .lottie-container.blackCube div[role="button"],
 .player-modal .lottie-container.blackCube div[role="button"] {
 transform: scale(3) translate(-60px, -60px)!important;

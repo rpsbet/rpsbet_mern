@@ -690,6 +690,7 @@ class OpenGamesTable extends Component {
                                 className="avatar desktop-only"
                                 src={row.creator_avatar}
                                 accessory={row.accessory}
+                                username={row.username}
                                 rank={row.rank}
                                 alt=""
                                 darkMode={this.props.isDarkMode}
@@ -717,6 +718,7 @@ class OpenGamesTable extends Component {
                                       className="avatar desktop-only"
                                       src={host.avatar}
                                       accessory={host.accessory}
+                                      username={host.username}
                                       rank={host.rank}
                                       alt=""
                                       darkMode={this.props.isDarkMode}
@@ -750,6 +752,7 @@ class OpenGamesTable extends Component {
                                         key={index}
                                         accessory={joiner.accessory}
                                         src={joiner.avatar}
+                                        username={joiner.username}
                                         rank={joiner.rank}
                                         alt=""
                                         darkMode={this.props.isDarkMode}
@@ -876,6 +879,7 @@ class OpenGamesTable extends Component {
                                 className="avatar"
                                 src={row.creator_avatar}
                                 accessory={row.accessory}
+                                username={row.username}
                                 rank={row.rank}
                                 alt=""
                                 darkMode={this.props.isDarkMode}
@@ -902,6 +906,7 @@ class OpenGamesTable extends Component {
                                       key={index}
                                       src={joiner_avatar.avatar}
                                       rank={joiner_avatar.rank}
+                                      username={joiner_avatar.username}
                                       alt=""
                                       accessory={joiner_avatar.accessory}
                                       darkMode={this.props.isDarkMode}
@@ -998,6 +1003,7 @@ class OpenGamesTable extends Component {
                         className="avatar"
                         src={row.creator.avatar}
                         accessory={row.creator.accessory}
+                        username={row.creator.username}
                         rank={row.creator.totalWagered}
                         alt=""
                         darkMode={this.props.isDarkMode}

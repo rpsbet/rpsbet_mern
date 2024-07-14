@@ -375,8 +375,6 @@ class StatisticsForm extends React.Component {
     return (
       <ChartDivEl>
         <div className="rank-badge">
-          <h2>{this.props.username}</h2>
-          <br />
           <h5>BREAKDOWN</h5>
           <Table>
             <TableBody>

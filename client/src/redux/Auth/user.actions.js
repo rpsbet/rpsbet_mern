@@ -401,6 +401,26 @@ export const changeUserName = (newUsername) => async (dispatch) => {
   return { status: 'failed' };
 };
 
+export const changeLink = (newUsername) => async (dispatch) => {
+  try {
+    const { data } = await axios.post('/user/bio', { newUsername }); // Wrap newUsername in an object
+
+    if (data.success) {
+      // dispatch({ type: USER_LOADED, payload: data.user });
+      dispatch({ type: MSG_SUCCESS, payload: 'Your bio has been updated successfully' });
+
+      return data;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+      return data;
+    }
+  } catch (error) {
+    console.log('error', error);
+    dispatch({ type: MSG_WARNING, payload: error });
+  }
+  return { status: 'failed' };
+};
+
 
 export const setUserInfo = userInfo => dispatch => {
   dispatch({ type: USER_LOADED, payload: userInfo });

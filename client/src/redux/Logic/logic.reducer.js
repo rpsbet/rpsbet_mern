@@ -88,6 +88,7 @@ const initialState = {
     creator_avatar: '',
     rank: 0,
     accessory: '',
+    username: '',
     // aveMultiplier: '',
     totalGameLogsCount: 0,
     joiners: {},

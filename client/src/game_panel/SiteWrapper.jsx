@@ -1515,6 +1515,7 @@ class SiteWrapper extends Component {
                                   src={notification.avatar}
                                   rank={notification.rank}
                                   accessory={notification.accessory}
+                                  username={notification.username}
                                   className="avatar"
                                 />
                               </a>

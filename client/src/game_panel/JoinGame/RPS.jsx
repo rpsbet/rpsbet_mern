@@ -781,6 +781,7 @@ class RPS extends Component {
       selectedCreator,
       accessory,
       rank,
+      username,
       isDarkMode,
       selected_rps,
       isLowGraphics,
@@ -1042,6 +1043,7 @@ class RPS extends Component {
                         <Avatar
                           className="avatar"
                           src={creator_avatar}
+                          username={username}
                           rank={rank}
                           accessory={accessory}
                           alt=""
@@ -1192,6 +1194,7 @@ class RPS extends Component {
                           className="avatar"
                           src={player.avatar}
                           rank={player.totalWagered}
+                          username={player.username}
                           accessory={player.accessory}
                           alt=""
                           darkMode={this.props.isDarkMode}
@@ -1432,6 +1435,7 @@ const mapStateToProps = state => ({
   rpsbetitems: state.logic.rpsbetitems,
   creator_avatar: state.logic.curRoomInfo.creator_avatar,
   accessory: state.logic.curRoomInfo.accessory,
+  username: state.logic.curRoomInfo.username,
   data: state.itemReducer.myItemArray,
   rank: state.logic.curRoomInfo.rank,
   isLowGraphics: state.auth.isLowGraphics,

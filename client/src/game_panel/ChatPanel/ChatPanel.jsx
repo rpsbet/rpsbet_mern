@@ -428,6 +428,7 @@ class ChatPanel extends Component {
                       rank={selectedMessage.rank}
                       accessory={selectedMessage.accessory}
                       src={selectedMessage.avatar}
+                      username={selectedMessage.sender}
                       alt="Avatar"
                     />
                     

@@ -28,7 +28,7 @@ import { Warning } from '@material-ui/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { convertToCurrency } from '../../util/conversion';
 
-import { faMoneyBill, faUser, faEnvelope, faCoins, faRobot } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
+import { faMoneyBill, faUser, faCog, faEnvelope, faCoins, faRobot } from '@fortawesome/free-solid-svg-icons'; // Replace with the appropriate icon
 import { alertModal } from '../modal/ConfirmAlerts';
 import axios from '../../util/Api';
 
@@ -187,6 +187,7 @@ class PlayerModal extends Component {
       accessory: '',
       selectedCreatorBalance: '',
       rank: '',
+      bio: '',
       isLoading: false,
       myChat: [],
       lastSeen: '',
@@ -328,6 +329,7 @@ class PlayerModal extends Component {
       avatar: userData.avatar,
       lastSeen: userData.last_seen,
       accessory: userData.accessory,
+      bio: userData.bio,
       rank: userData.totalWagered,
       dateJoined: userData.created_at,
       creditScore: userData.credit_score,
@@ -411,9 +413,23 @@ class PlayerModal extends Component {
   }
 
   render() {
-    const { isLoading, loading } = this.state;
+    const { isLoading, loading, bio } = this.state;
     const { productArray, isLowGraphics } = this.props;
     const isBot = this.state.username.toUpperCase().includes('BOT');
+    const systemUsernames = [
+      'PimpedPistols',
+      'GIGACHAD',
+      'smellyfingers',
+      'SUPPORT',
+      'OFFICIALRPSGAME',
+      'SYSTEM',
+      'WHALE WATCHERS',
+      'NO BROKIES'
+    ];
+
+    const isSystem = systemUsernames.includes(this.state.username);
+    const isBio = /^https?:\/\//.test(this.state.bio);
+
 
     return (
       <>
@@ -445,12 +461,23 @@ class PlayerModal extends Component {
               <div className="modal-header">
                 <h2 className="modal-title">
                   {isBot ? (
-                    <FontAwesomeIcon icon={faRobot} className="mr-2" style={{ color: 'red' }} />
+                    <>
+                      <FontAwesomeIcon icon={faRobot} className="mr-2" style={{ color: 'red' }} />
+                      Bot Card
+                    </>
+                  ) : isSystem ? (
+                    <>
+                      <FontAwesomeIcon icon={faCog} className="mr-2" style={{ color: 'grey' }} />
+                      ADMIN
+                    </>
                   ) : (
-                    <FontAwesomeIcon icon={faUser} className="mr-2" />
+                    <>
+                      <FontAwesomeIcon icon={faUser} className="mr-2" />
+                      Player Card
+                    </>
                   )}
-                  {isBot ? 'Bot Card' : 'Player Card'}
                 </h2>
+
                 <Button className="btn-close" onClick={this.handleCloseModal}>
                   ×
                 </Button>
@@ -489,10 +516,41 @@ class PlayerModal extends Component {
                               : '/img/profile-thumbnail.svg'
                           }
                           accessory={this.state.accessory}
+                          username={this.state.username}
                           rank={this.state.rank}
                           alt=""
                         />
-
+                          <h1 style={{ marginTop: '60px' }}>
+                            {this.state.username}
+                          </h1>
+                        <div style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
+                          <p style={{ fontSize: "1.2em", color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}><span style={{position:'absolute', top: '20px', left: '30px', fontSize: "xx-small"}}>USER BIO</span>
+                            {isBio ? (
+                              <a
+                                href={bio}
+                                style={{
+                                  fontSize: "1.2em",
+                                  marginBottom: '2px',
+                                  color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                                }}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {this.state.bio}
+                              </a>
+                            ) : (
+                              <p
+                                style={{
+                                  fontSize: "1.2em",
+                                  marginBottom: '20px',
+                                  color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                                }}
+                              >
+                                {this.state.bio}
+                              </p>
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </>
 

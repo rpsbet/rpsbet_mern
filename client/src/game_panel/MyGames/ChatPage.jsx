@@ -269,6 +269,7 @@ class ChatPage extends Component {
               <Avatar
                 src={avatar}
                 rank={rank}
+                username={username}
                 accessory={accessory}
                 className="avatar"
               />
@@ -324,6 +325,7 @@ class ChatPage extends Component {
                             src={my_info.avatar}
                             rank={my_info.totalWagered}
                             accessory={my_info.accessory}
+                            username={my_info.username}
                             className="avatar"
                           />
                         </div>

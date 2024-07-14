@@ -215,7 +215,7 @@ async function checkOutstandingLoans(io) {
   }
 }
 
-cron.schedule('00 13 * * *', async () => {
+cron.schedule('32 20 * * *', async () => {
   await checkOutstandingLoans();
   console.log("ran thru")
 });

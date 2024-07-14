@@ -367,6 +367,37 @@ router.post('/username', auth, async (req, res) => {
     });
   }
 });
+router.post('/bio', auth, async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming you have a user object in req from the auth middleware
+    const { link } = req.body;
+
+    const user = await User.findById(userId);
+
+    // Check if the user exists
+    if (!user) {
+      return res.json({
+        success: false,
+        error: 'User not found.'
+      });
+    }
+
+    user.bio = link;
+    await user.save();
+
+    // Respond with success message
+    res.json({
+      success: true,
+      message: 'BIO UPDATED SUCCESSFULLY 🐈'
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      error: err.message
+    });
+  }
+});
 
 router.post('/get-info', async (req, res) => {
   try {

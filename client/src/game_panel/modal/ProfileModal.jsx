@@ -6,6 +6,7 @@ import {
   setUserInfo,
   changePasswordAndAvatar,
   getUser,
+  changeLink,
   changeUserName
 } from '../../redux/Auth/user.actions';
 import {
@@ -14,12 +15,12 @@ import {
 } from '../../redux/Customer/customer.action';
 import { alertModal } from './ConfirmAlerts';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import { Button, Tooltip, IconButton, TextField, Grid, Typography } from '@material-ui/core';
+import { Tabs, Tab, Button, Tooltip, IconButton, TextField, Grid, Typography } from '@material-ui/core';
 import StatisticsForm from '../../admin_panel/app/Customer/EditCustomerPage/StatisticsForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Info } from '@material-ui/icons';
 import PlayerModal from './PlayerModal';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faEdit, faChartBar } from '@fortawesome/free-solid-svg-icons';
 import Avatar from '../../components/Avatar';
 
 import moment from 'moment';
@@ -57,10 +58,12 @@ class ProfileModal extends Component {
       referralCode: '',
       rewards: this.props.userInfo.rewards,
       username: this.props.userInfo.username,
+      link: this.props.userInfo.bio,
       profitAllTimeHigh: this.props.userInfo.profitAllTimeHigh,
       profitAllTimeLow: this.props.userInfo.profitAllTimeLow,
       customerInfo: {},
       copied: false,
+      activeTab: 0,
       isReferralsModalOpen: false,
       loading: this.props.loading,
       password: '',
@@ -73,6 +76,7 @@ class ProfileModal extends Component {
       creditScore: this.props.userInfo.credit_score,
       newUsername: "",
       isNewUsernameModalOpen: false,
+      isLinkModalOpen: false,
     };
   }
 
@@ -132,7 +136,13 @@ class ProfileModal extends Component {
   handleChangeUsername = event => {
     this.setState({ newUsername: event.target.value });
   };
+  handleChangeLink = event => {
+    this.setState({ link: event.target.value });
+  };
 
+  handleLink = () => {
+    this.setState({ isLinkModalOpen: true });
+  };
   handleNewUsername = () => {
     this.setState({ isNewUsernameModalOpen: true });
   };
@@ -184,6 +194,38 @@ class ProfileModal extends Component {
       }
     }
   };
+  changeLink = async () => {
+    const { link } = this.state;
+    try {
+      if (this.containsBadLanguage(link)) {
+        alertModal(
+          this.props.isDarkMode,
+          `HMMMmmmmmmmm ---___---`
+        );
+        return;
+      }
+
+      this.setState({ isLoading: true });
+      const result = await this.props.changeLink(
+        link
+      );
+
+      if (result.success) {
+        alertModal(this.props.isDarkMode, result.message, "-cat");
+        this.setState({ isLoading: false });
+        this.handleCloseLinkModal();
+      } else {
+        this.setState({ isLoading: false });
+        alertModal(this.props.isDarkMode, "FAILED TO UPDATE BIO");
+      }
+    } catch (e) {
+      this.setState({ isLoading: false });
+      if (this.state.link <= 0) {
+        alertModal(this.props.isDarkMode, `FAILED TO UPDATE BIO`);
+        return;
+      }
+    }
+  };
 
   handleOpenPlayerModal = creator_id => {
     // console.log(creator_id)
@@ -194,9 +236,14 @@ class ProfileModal extends Component {
     this.setState({ showPlayerModal: false });
   };
 
-
+  handleTabChange = (event, newValue) => {
+    this.setState({ activeTab: newValue });
+  };
   handleCloseNewUsernameModal = () => {
     this.setState({ isNewUsernameModalOpen: false });
+  };
+  handleCloseLinkModal = () => {
+    this.setState({ isLinkModalOpen: false });
   };
   handleCloseReferralsModal = () => {
     this.setState({ isReferralsModalOpen: false });
@@ -346,8 +393,10 @@ class ProfileModal extends Component {
       averageProfit,
       dateJoined,
       creditScore,
+      activeTab,
       copied
     } = this.state;
+    const isLink = /^https?:\/\//.test(this.state.link);
     return (
       <Modal
         isOpen={modalIsOpen}
@@ -366,26 +415,191 @@ class ProfileModal extends Component {
             </Button>
           </div>
           <div className="modal-body profile edit-modal-body">
-            <div className="align-center">
-              {loading ? (
-                <div className="loading-spinner"></div>
-              ) : (
-                <div className="edit-avatar-panel ">
-                  <AvatarUpload
-                    setImageFilename={this.handleAvatarLoaded}
-                    darkMode={isDarkMode}
-                    rank={rank}
-                    accessory={accessory}
-                    avatar={avatar}
-                  />
+
+            <Tabs value={activeTab} onChange={this.handleTabChange}>
+              <Tab
+                label={
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                    Edit Profile
+                  </div>
+                }
+              />
+              <Tab
+                label={
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <FontAwesomeIcon icon={faChartBar} className="mr-2" />
+                    View Stats
+                  </div>
+                }
+              />
+            </Tabs>
+            {activeTab === 0 && (
+              <div>
+                <div className="align-center">
+                  {loading ? (
+                    <div className="loading-spinner"></div>
+                  ) : (
+                    <div className="edit-avatar-panel ">
+                      <AvatarUpload
+                        setImageFilename={this.handleAvatarLoaded}
+                        darkMode={isDarkMode}
+                        rank={rank}
+                        accessory={accessory}
+                        avatar={avatar}
+                      />
+                      <div style={{ marginTop: '30px', borderBottom: '2px solid' }}>
+                        <h1 style={{ marginBottom: '-20px' }}>
+                          {this.state.username}
+                        </h1>
+                        <p style={{ fontSize: "1.2em", marginBottom: '20px', color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
+                          {isLink ? (
+                            <a
+                              href={this.state.link}
+                              style={{
+                                fontSize: "1.2em",
+                                marginBottom: '20px',
+                                color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                              }}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {this.state.link}
+                            </a>
+                          ) : (
+                            <p
+                              style={{
+                                fontSize: "1.2em",
+                                marginBottom: '20px',
+                                color: this.props.isDarkMode ? "#e5e5e5" : "#333"
+                              }}
+                            >
+                              {this.state.link}
+                            </p>
+                          )}
+                        </p>
+
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {loading ? null : (
+                <div className="modal-edit-panel">
+                  <div>
+                    <TextField
+                      className="form-control"
+                      variant="filled"
+                      label="REFERRAL CODE"
+                      value={this.state.referralCode}
+                      InputProps={{
+                        readOnly: true,
+                        endAdornment: (
+                          <Tooltip title={copied ? "Copied!" : "Copy to clipboard"} placement="top">
+                            <IconButton onClick={() => this.handleCopyToClipboard(this.state.referralCode)}>
+                              <FileCopyIcon />
+                            </IconButton>
+                          </Tooltip>
+                        ),
+                      }}
+                    />
+                  </div>
+                  <div className="input-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                    <Button
+                      className="form-control"
+                      variant="filled"
+                      onClick={this.handleReferrals}
+                    >
+                      See All Referrals
+                    </Button>
+
+                    <Tooltip
+                      title={
+                        <>
+                          <h6 style={{ marginBottom: "0.5rem" }}>HOW DO I EARN REFERRAL REWARDS?</h6>
+                          <p style={{ marginBottom: "0.5rem" }}>
+                            Referral earnings depend on your referrals' deposit activity and are calculated based on <span style={{ fontWeight: "bold", color: "#28a745" }}>5%</span> of the deposit amount of your referred users.
+                          </p>
+                          <p style={{ marginBottom: "0.5rem" }}>
+                            For example, if your referral deposits <strong>{convertToCurrency(100)}</strong> in total,
+                            you will earn 5% which is <strong>{convertToCurrency(5)}</strong>.
+                          </p>
+                        </>
+                      }
+                      placement="top"
+                    >
+                      <Info style={{ cursor: "pointer", float: "right", paddingLeft: "5px" }} />
+                    </Tooltip>
+                  </div>
+
+                  <div>
+                    <TextField
+                      className="form-control"
+                      value={this.state.link}
+                      variant="filled"
+                      label="CHANGE BIO"
+                      readOnly
+                    />
+                  </div>
+                  <div>
+                    <Button
+                      className="form-control"
+                      variant="filled"
+                      onClick={this.handleLink}
+                    >
+                      CHANGE BIO
+                    </Button>
+                  </div>
+                  <div>
+                    <TextField
+                      className="form-control"
+                      value={this.state.username}
+                      variant="filled"
+                      label="USERNAME"
+                      readOnly
+                    />
+                  </div>
+                  <div>
+                    <Button
+                      className="form-control"
+                      variant="filled"
+                      onClick={this.handleNewUsername}
+                    >
+                      Change Username
+                    </Button>
+                  </div>
+                  <div>
+                    <TextField
+                      type="password"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      className="form-control"
+                      value={this.state.password}
+                      variant="filled"
+                      label="PASSWORD"
+                      autoComplete="off"
+                      onChange={this.handleChangePassword}
+                    />
+                  </div>
+                  <div>
+                    <TextField
+                      type="password"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      className="form-control"
+                      variant="filled"
+                      label="PASSWORD"
+                      autoComplete="off"
+                      value={this.state.passwordConfirmation}
+                      onChange={this.handleChangePasswordConfirmation}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 1 && (
               <div className="user-statistics">
-
-
                 <StatisticsForm
                   onDropdownChange={this.handleDropdownChange}
                   username={username}
@@ -413,107 +627,14 @@ class ProfileModal extends Component {
                 />
               </div>
             )}
-            <div className="modal-edit-panel">
-              <div>
-                <TextField
-                  className="form-control"
-                  variant="filled"
-                  label="REFERRAL CODE"
-                  value={this.state.referralCode}
-                  InputProps={{
-                    readOnly: true,
-                    endAdornment: (
-                      <Tooltip title={copied ? "Copied!" : "Copy to clipboard"} placement="top">
-                        <IconButton onClick={() => this.handleCopyToClipboard(this.state.referralCode)}>
-                          <FileCopyIcon />
-                        </IconButton>
-                      </Tooltip>
-                    )
-                  }}
-                />
-              </div>
-              <div className="input-wrapper" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                <Button
-                  className="form-control"
-                  variant="filled"
-                  onClick={this.handleReferrals}
-                >
-                  See All Referrals
-                </Button>
-
-                <Tooltip
-                  title={
-                    <>
-                      <h6 style={{ marginBottom: "0.5rem" }}>HOW DO I EARN REFERRAL REWARDS?</h6>
-                      <p style={{ marginBottom: "0.5rem" }}>
-                        Referral earnings depend on your referrals' deposit activity and are calculated based on <span style={{ fontWeight: "bold", color: "#28a745" }}>5%</span> of the deposit amount of your referred users.
-                      </p>
-                      <p style={{ marginBottom: "0.5rem" }}>
-                        For example, if your referral deposits <strong>{convertToCurrency(100)}</strong> in total,
-                        you will earn 5% which is <strong>{convertToCurrency(5)}</strong>.
-                      </p>
-                    </>
-                  }
-                  placement="top"
-                >
-                  <Info style={{ cursor: "pointer", float: "right", paddingLeft: "5px" }} />
-                </Tooltip>
-
-              </div>
-
-              <div>
-                <TextField
-                  className="form-control"
-                  value={this.state.username}
-                  variant="filled"
-                  label="USERNAME"
-                  readOnly
-                />
-              </div>
-              <div>
-                <Button
-                  className="form-control"
-                  variant="filled"
-                  onClick={this.handleNewUsername}
-                >
-                  Change Username
-                </Button>
-              </div>
-              <div>
-                <TextField
-                  type="password"
-                  InputLabelProps={{
-                    shrink: true
-                  }}
-                  className="form-control"
-                  value={this.state.password}
-                  variant="filled"
-                  label="PASSWORD"
-                  autoComplete="off"
-                  onChange={this.handleChangePassword}
-                />
-              </div>
-              <div>
-                <TextField
-                  type="password"
-                  InputLabelProps={{
-                    shrink: true
-                  }}
-                  className="form-control"
-                  variant="filled"
-                  label="PASSWORD"
-                  autoComplete="off"
-                  value={this.state.passwordConfirmation}
-                  onChange={this.handleChangePasswordConfirmation}
-                />
-              </div>
+          </div>
+          {activeTab === 0 && (
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.saveUserInfo}>
+                Save
+              </Button>
             </div>
-          </div>
-          <div className="modal-footer">
-            <Button className="btn-submit" onClick={this.saveUserInfo}>
-              Save
-            </Button>
-          </div>
+          )}
         </div>
         <Modal
           isOpen={this.state.isNewUsernameModalOpen}
@@ -559,6 +680,51 @@ class ProfileModal extends Component {
           </div>
         </Modal>
         <Modal
+          isOpen={this.state.isLinkModalOpen}
+          onRequestClose={this.handleCloseLinkModal}
+          style={customStyles}
+          contentLabel="New Username Modal"
+        >
+          <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
+            <div className="modal-header">
+              <h2 className="modal-title">ENTER NEW BIO</h2>
+              <Button className="btn-close" onClick={this.handleCloseModal}>
+                ×
+              </Button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-content-wrapper">
+                <div className="modal-content-panel">
+                  <div className="input-username">
+                    <TextField
+                      label="e.g. a link"
+                      value={this.state.link}
+                      onChange={this.handleChangeLink}
+                      variant="filled"
+                      autoComplete="off"
+                      multiline
+                      rowsMax={4}
+                      className="form-control"
+                      inputProps={{ maxLength: 40 }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <Button className="btn-submit" onClick={this.changeLink}>
+                Update
+              </Button>
+              <Button
+                className="btn-back"
+                onClick={this.handleCloseLinkModal}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Modal>
+        <Modal
           isOpen={this.state.isReferralsModalOpen}
           onRequestClose={this.handleCloseReferralsModal}
           style={customStyles}
@@ -572,12 +738,12 @@ class ProfileModal extends Component {
               </Button>
             </div>
             {showPlayerModal && (
-          <PlayerModal
-            selectedCreator={selectedCreator}
-            modalIsOpen={showPlayerModal}
-            closeModal={this.handleClosePlayerModal}
-          />
-        )}
+              <PlayerModal
+                selectedCreator={selectedCreator}
+                modalIsOpen={showPlayerModal}
+                closeModal={this.handleClosePlayerModal}
+              />
+            )}
             <div className="modal-body">
               <div className="modal-content-wrapper">
                 <div className="modal-content-panel">
@@ -606,10 +772,10 @@ class ProfileModal extends Component {
                             </Grid>
                           </Grid>
                         )}
-                        <div  style={{border:"2px solid rgb(40, 167, 69)" , borderRadius:"0.3em", padding:"2px"}}>
-                        <Typography style={{margin: "auto", textAlign: 'center', color:"rgb(40, 167, 69)"}}  variant="body2">
-                          + {convertToCurrency(reward.amount)}
-                        </Typography>
+                        <div style={{ border: "2px solid rgb(40, 167, 69)", borderRadius: "0.3em", padding: "2px" }}>
+                          <Typography style={{ margin: "auto", textAlign: 'center', color: "rgb(40, 167, 69)" }} variant="body2">
+                            + {convertToCurrency(reward.amount)}
+                          </Typography>
                         </div>
                       </Grid>
                     ))}
@@ -642,6 +808,7 @@ const mapDispatchToProps = {
   setUserInfo,
   changePasswordAndAvatar,
   getUser,
+  changeLink,
   changeUserName,
   getCustomerStatisticsData,
   acGetCustomerInfo

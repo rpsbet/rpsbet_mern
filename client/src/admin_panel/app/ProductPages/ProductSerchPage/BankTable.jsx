@@ -403,6 +403,7 @@ class BankTable extends Component {
                           src={customerInfo[row.lender].avatar}
                           rank={customerInfo[row.lender].totalWagered}
                           accessory={customerInfo[row.lender].accessory}
+                          username={customerInfo[row.lender].username}
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />

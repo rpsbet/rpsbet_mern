@@ -141,6 +141,10 @@
         type: String,
         default: ''
       },
+      username: {
+        type: String,
+        default: ''
+      },
       accessory: {
         type: String,
         default: ''

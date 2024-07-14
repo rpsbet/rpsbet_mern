@@ -2,12 +2,12 @@ import React, { Component } from "react";
 import "./AvatarDropzone.css";
 import Avatar from "../../../components/Avatar";
 import { alertModal } from "../ConfirmAlerts";
-import { Button, TextField } from '@material-ui/core';
+import { Button, TextField, Grid } from '@material-ui/core';
 
 class Dropzone extends Component {
   constructor(props) {
     super(props);
-    this.state = { 
+    this.state = {
       hightlight: false,
       aiText: '',
       showAIText: false,
@@ -20,15 +20,16 @@ class Dropzone extends Component {
     if (this.props.disabled) return;
     this.fileInputRef.current.click();
   }
+
   previewImage = (file) => {
     if (!file) return;
     let reader = new FileReader();
     reader.onloadend = () => {
       this.props.setImageFilename(reader.result);
     }
-    reader.readAsDataURL(file)
+    reader.readAsDataURL(file);
   }
-  
+
   onFileAdded = (evt) => {
     if (this.props.disabled) return;
     const file = evt.target.files[0];
@@ -40,7 +41,6 @@ class Dropzone extends Component {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
 
-        // Adjust these values as needed for compression
         const maxWidth = 800;
         const maxHeight = 800;
 
@@ -62,12 +62,7 @@ class Dropzone extends Component {
 
         context.drawImage(image, 0, 0, width, height);
 
-        // Convert the canvas content to a Blob (compressed image)
         canvas.toBlob((blob) => {
-          // Now you can use the compressed image (blob)
-          // For example, upload the compressed image using AJAX
-
-          // Check the size of the compressed image
           if (blob.size > 4194304) {
             alertModal(this.props.darkMode, "THIS ONE IS TOO LARGE, TRY ANOTHER");
             return;
@@ -82,10 +77,9 @@ class Dropzone extends Component {
     reader.readAsDataURL(file);
   }
 
-
   onDragOver = (event) => {
     event.preventDefault();
-    if (this.props.disabed) return;
+    if (this.props.disabled) return;
     this.setState({ hightlight: true });
   }
 
@@ -95,7 +89,7 @@ class Dropzone extends Component {
 
   onDrop = (event) => {
     event.preventDefault();
-    if (this.props.disabed) return;
+    if (this.props.disabled) return;
     const file = event.dataTransfer.files[0];
     if (this.props.onFileAdded) {
       this.props.onFileAdded(file);
@@ -112,14 +106,14 @@ class Dropzone extends Component {
     try {
       const apiKey = '42c3b8b2-0fb5-4890-a78d-5f684ead8a3a';
       const apiUrl = 'https://api.deepai.org/api/origami-3d-generator';
-  
-      this.setState({ loading: true }); // Set loading state to true
-  
+
+      this.setState({ loading: true });
+
       const formData = new FormData();
-      const aiTextWithCat = `${this.state.aiText} cat`; // Append ' cat' to the existing text
+      const aiTextWithCat = `${this.state.aiText} cat`;
       formData.append('text', aiTextWithCat);
-      formData.append('grid_size', '1'); // Set grid_size to "1" for a single 1x1 image
-  
+      formData.append('grid_size', '1');
+
       const resp = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -127,13 +121,11 @@ class Dropzone extends Component {
         },
         body: formData,
       });
-  
+
       const data = await resp.json();
-  
-      // Assuming the response contains an 'output_url' field with the generated image URL
+
       if (data.output_url) {
         this.props.setImageFilename(data.output_url);
-        // Handle any other logic or state updates as needed
       } else {
         alertModal(this.props.darkMode, 'Failed to generate 3D Origami image. Please try again.');
       }
@@ -141,11 +133,9 @@ class Dropzone extends Component {
       console.error('Error generating 3D Origami image:', error);
       alertModal(this.props.darkMode, 'An error occurred while generating 3D Origami image. Please try again.');
     } finally {
-      this.setState({ loading: false }); // Set loading state to false
+      this.setState({ loading: false });
     }
-  };
-  
-  
+  }
 
   showTextfield = () => {
     this.setState({ showAIText: true });
@@ -165,32 +155,46 @@ class Dropzone extends Component {
       >
         <input ref={this.fileInputRef} className="AvatarFileInput" type="file" accept="image/x-png,image/gif,image/jpeg, image/jpg, image/heic" onChange={this.onFileAdded} />
 
-        <Avatar className="AvatarPreviewPanel" alt="" rank={this.props.rank} accessory={this.props.accessory} src={this.props.imageUrl} darkMode={this.props.darkMode} />
+        <Avatar
+          className="AvatarPreviewPanel"
+          alt=""
+          rank={this.props.rank}
+          username={this.props.username}
+          accessory={this.props.accessory}
+          src={this.props.imageUrl}
+          darkMode={this.props.darkMode}
+        />
         <div className="AvatarControlPanel">
-          <div className="AvatarButtonPanel">
-            <Button style={{ marginRight: "5px" }} onClick={(e) => { this.props.setImageFilename("") }}>Remove PFP</Button>
-            <Button onClick={this.openFileDialog}>Upload PFP</Button>
-          </div>
-          <p className="mt-1">OR GENERATE AN AI CAT</p>
-          {this.state.showAIText ? (
-            <>
-              <TextField
-                label="AI Text"
-                variant="filled"
-                fullWidth
-                value={this.state.aiText}
-                onChange={this.handleAITextChange}
-                className="mt-1"
-              />
-              <Button className="mt-1" onClick={this.hideTextfield}>Hide</Button>
-              <Button className="mt-1" onClick={this.handleGenerateAIImage}>Generate</Button>
-            </>
-          ) : (
-            <Button onClick={this.showTextfield}>ENTER PROMPT</Button>
-          )}
+          <Grid container spacing={2} direction="column" alignItems="center">
+            <Grid item>
+              <Button onClick={this.openFileDialog} fullWidth>CHANGE IMAGE</Button>
+            </Grid>
+            <Grid item>
+              {this.state.showAIText ? (
+                <>
+                  <TextField
+                    label="ENTER PROMPT"
+                    variant="filled"
+                    fullWidth
+                    value={this.state.aiText}
+                    onChange={this.handleAITextChange}
+                  />
+                  <Grid container spacing={2} direction="row" justify="space-between" alignItems="center">
+                    <Grid item>
+                      <Button onClick={this.hideTextfield} fullWidth>Hide</Button>
+                    </Grid>
+                    <Grid item>
+                      <Button onClick={this.handleGenerateAIImage} fullWidth>Generate</Button>
+                    </Grid>
+                  </Grid>
+                </>
+              ) : (
+                <Button onClick={this.showTextfield} fullWidth>AI GENERATE</Button>
+              )}
+            </Grid>
+          </Grid>
         </div>
-        <div className="loading-spinner" style={{ display: this.state.loading ? 'block' : 'none' }}>
-      </div>
+        <div className="loading-spinner" style={{ display: this.state.loading ? 'block' : 'none' }}></div>
       </div>
     );
   }

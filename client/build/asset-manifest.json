@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.1fb1ad30.css",
-    "main.js": "/static/js/main.50877b4f.js",
+    "main.css": "/static/css/main.62a1c3f7.css",
+    "main.js": "/static/js/main.e94f6a98.js",
     "static/js/469.95be026d.chunk.js": "/static/js/469.95be026d.chunk.js",
     "static/js/857.d36b7e12.chunk.js": "/static/js/857.d36b7e12.chunk.js",
     "static/js/331.a9ba1ba8.chunk.js": "/static/js/331.a9ba1ba8.chunk.js",
@@ -14,7 +14,6 @@
     "static/js/865.d23a689d.chunk.js": "/static/js/865.d23a689d.chunk.js",
     "static/js/913.c7b4dc17.chunk.js": "/static/js/913.c7b4dc17.chunk.js",
     "static/js/656.31b83bf3.chunk.js": "/static/js/656.31b83bf3.chunk.js",
-    "static/js/642.4986b119.chunk.js": "/static/js/642.4986b119.chunk.js",
     "static/js/287.4b1f4890.chunk.js": "/static/js/287.4b1f4890.chunk.js",
     "static/js/458.ea305dba.chunk.js": "/static/js/458.ea305dba.chunk.js",
     "static/js/222.59144b06.chunk.js": "/static/js/222.59144b06.chunk.js",
@@ -119,11 +118,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.1fb1ad30.css.map": "/static/css/main.1fb1ad30.css.map",
-    "main.50877b4f.js.map": "/static/js/main.50877b4f.js.map"
+    "main.62a1c3f7.css.map": "/static/css/main.62a1c3f7.css.map",
+    "main.e94f6a98.js.map": "/static/js/main.e94f6a98.js.map"
   },
   "entrypoints": [
-    "static/css/main.1fb1ad30.css",
-    "static/js/main.50877b4f.js"
+    "static/css/main.62a1c3f7.css",
+    "static/js/main.e94f6a98.js"
   ]
 }

@@ -127,6 +127,7 @@ class Leaderboards extends Component {
                               className="avatar"
                               src={playerData.avatar}
                               rank={playerData.rank}
+                              username={playerData.username}
                               accessory={playerData.accessory}
                               alt=""
                               darkMode={this.props.isDarkMode}

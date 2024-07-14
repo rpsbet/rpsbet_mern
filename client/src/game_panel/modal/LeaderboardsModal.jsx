@@ -176,6 +176,7 @@ Leaderboards</h2>
                               src={entry.avatar}
                               rank={entry.totalWagered}
                               accessory={entry.accessory}
+                              username={entry.username}
                               alt=""
                               darkMode={isDarkMode}
                             />

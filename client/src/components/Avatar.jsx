@@ -4,6 +4,9 @@ import { renderLottieAvatarAnimation } from '../util/LottieAvatarAnimations';
 import { getRank } from '../util/getRank';
 import { connect } from 'react-redux';
 import chroma from 'chroma-js';
+import Lottie from 'react-lottie';
+import verified from '../game_panel/LottieAnimations/verified.json';
+
 
 class Avatar extends Component {
   constructor(props) {
@@ -12,6 +15,7 @@ class Avatar extends Component {
       src: props.src,
       alt: props.alt,
       accessory: props.accessory,
+      username: props.username,
       rank: props.rank,
       darkMode: props.darkMode,
       dominantColor: null
@@ -22,7 +26,7 @@ class Avatar extends Component {
 
   componentDidMount() {
     // this.getColor();
- 
+
   }
 
   // componentDidUpdate(prevProps) {
@@ -48,6 +52,7 @@ class Avatar extends Component {
       nextProps.src !== prevState.src ||
       nextProps.alt !== prevState.alt ||
       nextProps.accessory !== prevState.accessory ||
+      nextProps.username !== prevState.username ||
       nextProps.rank !== prevState.rank
     ) {
       // If any prop has changed, return the updated state
@@ -55,6 +60,7 @@ class Avatar extends Component {
         src: nextProps.src,
         alt: nextProps.alt,
         accessory: nextProps.accessory,
+        username: nextProps.username,
         rank: nextProps.rank,
         dominantColor: '3px solid transparent' // Reset dominantColor when props change
       };
@@ -65,7 +71,7 @@ class Avatar extends Component {
   }
 
   render() {
-    
+
     let { src, alt, accessory, rank, darkMode, dominantColor } = this.state;
     const { isLowGraphics, isDarkMode } = this.props;
     let borderColor = '3px solid transparent';
@@ -76,38 +82,38 @@ class Avatar extends Component {
       shadedColor = chroma(rankColor).brighten(8).hex(); // Adjust as needed for dark mode shading
     }
     const rankColors = {
-        1: 'steelblue',
-        2: 'forestgreen',
-        3: 'slategray',
-        4: 'indigo',
-        5: 'darkorange',
-        6: 'saddlebrown',
-        7: 'teal',
-        8: 'maroon',
-        9: 'royalblue',
-        10: 'firebrick',
-        11: 'crimson',
-        12: 'goldenrod',
-        13: 'mediumaquamarine',
-        14: 'darkslateblue',
-        15: 'olivedrab',
-        16: 'mediumvioletred',
-        17: 'darkcyan',
-        18: 'orangered',
-        19: 'mediumspringgreen',
-        20: 'darkgoldenrod',
-        21: 'dodgerblue',
-        22: 'limegreen',
-        23: 'darkorchid',
-        24: 'chocolate',
-        25: 'navy',
-        26: 'sienna',
-        27: 'aquamarine',
-        28: 'slateblue',
-        29: 'peru',
-        30: 'darkslategray'
-  };
-    
+      1: 'steelblue',
+      2: 'forestgreen',
+      3: 'slategray',
+      4: 'indigo',
+      5: 'darkorange',
+      6: 'saddlebrown',
+      7: 'teal',
+      8: 'maroon',
+      9: 'royalblue',
+      10: 'firebrick',
+      11: 'crimson',
+      12: 'goldenrod',
+      13: 'mediumaquamarine',
+      14: 'darkslateblue',
+      15: 'olivedrab',
+      16: 'mediumvioletred',
+      17: 'darkcyan',
+      18: 'orangered',
+      19: 'mediumspringgreen',
+      20: 'darkgoldenrod',
+      21: 'dodgerblue',
+      22: 'limegreen',
+      23: 'darkorchid',
+      24: 'chocolate',
+      25: 'navy',
+      26: 'sienna',
+      27: 'aquamarine',
+      28: 'slateblue',
+      29: 'peru',
+      30: 'darkslategray'
+    };
+
 
 
     if (rank !== null) {
@@ -123,27 +129,60 @@ class Avatar extends Component {
     }
 
     const backgroundColor = darkMode ? '#2D2D2D' : '#F3F3F3';
+    const username = this.state.username || '';
+
+    const isBot = username.toUpperCase().includes('BOT');
+    const systemUsernames = [
+      'PimpedPistols',
+      'GIGACHAD',
+      'smellyfingers',
+      'SUPPORT',
+      'OFFICIALRPSGAME',
+      'SYSTEM',
+      'WHALE WATCHERS',
+      'NO BROKIES'
+    ];
+    const isSystem = systemUsernames.includes(username);
+
+    const verifiedUsernames = [
+      'PimpedPistols',
+      'GIGACHAD',
+      'smellyfingers',
+      'SUPPORT',
+      'OFFICIALRPSGAME',
+      'SYSTEM',
+      'WHALE WATCHERS',
+      'NO BROKIES',
+      'Tydrellinbg',
+      'Bearbland11'
+    ];
+
+    const isVerified = verifiedUsernames.includes(username);
+
 
     return (
       <div
         // {...this.props}
-        className='avatar'
+        className="avatar"
         style={{
           position: 'relative',
           backgroundColor,
         }}
       >
         <img
-
           src={src}
           alt={alt}
           style={{
             width: '100%',
             height: '100%',
-            border: borderColor,
-            boxShadow: `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
+            border: isBot ? '3px solid red' : isSystem ? '3px solid grey' : borderColor,
+            boxShadow: isBot
+              ? 'none'
+              : isSystem
+                ? 'none'
+                : `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
           }}
-          onError={e => {
+          onError={(e) => {
             e.target.src = darkMode
               ? '/img/profile-thumbnail-dark.svg'
               : '/img/profile-thumbnail.svg';
@@ -159,16 +198,20 @@ class Avatar extends Component {
               width: '100%',
               height: '100%',
               zIndex: '-1',
-              border: borderColor,
-              boxShadow: `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
+              border: isBot ? '3px solid red' : isSystem ? '3px solid grey' : borderColor,
+              boxShadow: isBot
+                ? 'none'
+                : isSystem
+                  ? 'none'
+                  : `0 6px 20px 0px ${rankColor}, 0 0 5px ${shadedColor}`,
               boxSizing: 'border-box',
-              borderRadius: '9px'
+              borderRadius: '9px',
             }}
           />
         )}
-        {rank !== null && (
+        {!isBot && !isSystem && rank !== null && (
           <div
-            className='rank-icon'
+            className="rank-icon"
             style={{
               position: 'absolute',
               bottom: '1px',
@@ -178,22 +221,53 @@ class Avatar extends Component {
               backgroundColor: rankColors[rank],
               color: isDarkMode ? '#2d2d2d' : '#f9f9f9',
               borderRadius: '5px',
-              // border: isDarkMode ? '1px solid #2d2d2d' : '1px solid #f9f9f9',
               fontSize: '0.55em',
               boxShadow: `0 0px 2px 0px ${rankColor}, 0 0 1px ${shadedColor}`,
               fontWeight: 'bold',
               display: 'flex',
               justifyContent: 'center',
-              alignItems: 'center'
+              alignItems: 'center',
             }}
           >
             {rank}
           </div>
         )}
+
+
+        {isVerified && (
+          <div
+          className='verified'
+            style={{
+              width: '32px',
+              height: '32px',
+              position: 'absolute',
+              top: '0',
+              right: '0',
+              marginTop: '-15px',
+              marginRight: '-14px',
+              transform: 'scale(0.7)',
+              filter: isSystem ? 'grayscale(1)' : 'hue-rotate(55deg)',
+            }}
+          >
+            <Lottie
+              options={{
+                loop: true,
+                autoplay: true,
+                animationData: verified,
+              }}
+              style={{
+                width: '100%',
+                height: '100%',
+              }}
+            />
+          </div>
+        )}
       </div>
     );
+
   }
 }
+
 
 const mapStateToProps = state => ({
   userInfo: state.auth.user,
