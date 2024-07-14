@@ -1043,6 +1043,7 @@ class CreateGame extends Component {
 
 
   action_panel = () => {
+    const {isLowGraphics } = this.props;
     return (
       <>
         <hr />

@@ -76,22 +76,20 @@ class QuickShoot extends Component {
   componentDidMount() {
     const { socket, playSound } = this.props;
     document.addEventListener('keydown', this.handleKeyPress);
-
-    socket.on('CARD_PRIZE', data => {
-      if (data) {
-        this.setState(
-          {
-            image: data.image,
-            productName: data.productName,
-            showImageModal: true
-          },
-          () => playSound('')
-        );
-      }
-    });
+    // socket.on('CARD_PRIZE', data => {
+    //   if (data) {
+    //     this.setState(
+    //       {
+    //         image: data.image,
+    //         productName: data.productName,
+    //         showImageModal: true
+    //       },
+    //       () => playSound('')
+    //     );
+    //   }
+    // });
     socket.on('UPDATED_BANKROLL_QS', data => {
       this.setState({ bankroll: data.bankroll, qs: data.qs }, () => {
-        this.updateAnimation();
       });
     });
   }

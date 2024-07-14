@@ -107,7 +107,7 @@ const initialState = {
     is_private: false,
     gameBackground: '',
     rps_game_type: 0,
-    // qs_game_type: 2,
+    qs_game_type: 2,
     description: '',
     // qs_nation: 0,
     likes: 0,

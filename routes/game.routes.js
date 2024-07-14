@@ -30,7 +30,7 @@ const SpleeshGuess = require('../model/SpleeshGuess');
 // const RollGuess = require('../model/RollGuess');
 const RpsBetItem = require('../model/RpsBetItem');
 // const BjBetItem = require('../model/BjBetItem');
-// const QsBetItem = require('../model/QsBetItem');
+const QsBetItem = require('../model/QsBetItem');
 // const DropBetItem = require('../model/DropBetItem');
 const BangBetItem = require('../model/BangBetItem');
 const RollBetItem = require('../model/RollBetItem');
@@ -388,10 +388,10 @@ router.get('/room/:id', async (req, res) => {
       room: room._id,
       joiner_rps: ''
     }).sort({ _id: 'asc' });
-    // const qsBetItem = await QsBetItem.findOne({
-    //   room: room,
-    //   joiner_qs: ''
-    // }).sort({ _id: 'asc' });
+    const qsBetItem = await QsBetItem.findOne({
+      room: room,
+      joiner_qs: ''
+    }).sort({ _id: 'asc' });
 
 
     const roomHistory = await convertGameLogToHistoryStyle(gameLogList);
@@ -426,7 +426,7 @@ router.get('/room/:id', async (req, res) => {
         // selected_drop: room['selected_drop'],
         // selected_bj: room['selected_bj'],
         // multiplier: room['multiplier'],
-        // qs_game_type: room['qs_game_type'],
+        qs_game_type: room['qs_game_type'],
         selectedStrategy: room['selectedStrategy'],
         // qs_nation: room['qs_nation'],
         rps_game_type: room['rps_game_type'],
@@ -438,7 +438,7 @@ router.get('/room/:id', async (req, res) => {
         // bang_bet_item_id: bangBetItem ? bangBetItem.id : null,
         // roll_bet_item_id: rollBetItem ? rollBetItem.id : null,
         // bj_bet_item_id: bjBetItem ? bjBetItem.id : null,
-        // qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
+        qs_bet_item_id: qsBetItem ? qsBetItem.id : null,
         // new_host_pr: room['new_host_pr'],
         is_private: room['is_private'],
         youtubeUrl: room['youtubeUrl'],
