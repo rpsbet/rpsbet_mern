@@ -1327,7 +1327,7 @@ class SiteWrapper extends Component {
                           {(isCoinsAnimation && !isLowGraphics) &&
                             <Lottie
                               options={{
-                                loop: false,
+                                loop: isLowGraphics ? false : true,
                                 autoplay: isCoinsAnimation,
                                 animationData: coins,
                                 rendererSettings: {
@@ -1868,7 +1868,7 @@ class SiteWrapper extends Component {
               <ConfirmTradeModal />
               <DeListLoanModal />
               <ConfirmLoanModal />
-                <OfferLoanModal socket={this.props.socket} />
+              <OfferLoanModal socket={this.props.socket} />
               <GamePasswordModal />
             </div>
           </>

@@ -72,14 +72,6 @@ const customStyles = {
   }
 };
 
-const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: animationData,
-  rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
-};
 
 class JoinGame extends Component {
   constructor(props) {
@@ -865,21 +857,21 @@ class JoinGame extends Component {
                 const randomnessResult = await counterRandomness(this.props.rpsbetitems, 1);
                 randomItem = randomnessResult.counterMove;
                 const penultimateSameAsLast = randomnessResult.risk;
-            
+
                 if (this.props.ai_mode === 'Skill-issue') {
-                    predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                  predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
                 } else if (this.props.ai_mode === 'Skill-issue-2') {
-                    const outcome = await martingaleStrategy(this.props.rpsbetitems);
+                  const outcome = await martingaleStrategy(this.props.rpsbetitems);
 
-                    if (penultimateSameAsLast === 3) {
-                      predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 1.4 : Math.min(...betArray);
-                    } else {
-                      predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
-                    }
+                  if (penultimateSameAsLast === 3) {
+                    predictedBetAmount = outcome.lastResult === 'loss' || outcome.lastResult === 'draw' ? this.props.rpsbetitems[0].bet_amount * 1.4 : Math.min(...betArray);
+                  } else {
+                    predictedBetAmount = await this.predictNextBetAmount(betArray, penultimateSameAsLast, 0.01, 0.2);
+                  }
 
-                    if (predictedBetAmount > this.props.user_balance / 2) {
-                      predictedBetAmount = this.props.user_balance / 4;
-                    }
+                  if (predictedBetAmount > this.props.user_balance / 2) {
+                    predictedBetAmount = this.props.user_balance / 4;
+                  }
                 }
               } else if (this.props.ai_mode === 'NPC') {
                 randomItem = await NPC(this.props.rpsbetitems);
@@ -1196,7 +1188,15 @@ class JoinGame extends Component {
       rpsbetitems,
       total_wagered
     } = this.props;
-
+    const defaultOptions = {
+      loop: this.props.isLowGraphics ? false : true,
+      autoplay: this.props.isLowGraphics ? false : true,
+      animationData: animationData,
+      rendererSettings: {
+        preserveAspectRatio: 'xMidYMid slice'
+      }
+    };
+    
     return (
       <>
 

@@ -1228,8 +1228,8 @@ class RPS extends Component {
                             <div className='lottie-pressHold'>
                               <Lottie
                                 options={{
-                                  loop: true,
-                                  autoplay: true,
+                                  loop: isLowGraphics ? false : true,
+                                  autoplay: isLowGraphics ? false : true,
                                   animationData: pressHold
                                 }}
                                 style={{
@@ -1247,8 +1247,8 @@ class RPS extends Component {
                           <div className='lottie-progress'>
                             <Lottie
                               options={{
-                                loop: false,
-                                autoplay: true,
+                                loop: isLowGraphics ? false : true,
+                                autoplay: isLowGraphics ? false : true,
                                 animationData: progress
                               }}
                               style={{

@@ -644,7 +644,7 @@ class CreateGame extends Component {
           return;
         }
 
-        
+
         if (bet_amount > balance) {
           alertAndReturn('NOT ENUFF FUNDS AT THIS MEOWMENT');
           return;
@@ -706,8 +706,8 @@ class CreateGame extends Component {
           });
           return;
         }
-      } 
-       else if (child_step === 2 && step !== 1) {
+      }
+      else if (child_step === 2 && step !== 1) {
         if (
           game_mode === 'Spleesh!' &&
           ((spleesh_bet_unit === 0.001 && endgame_amount < 0.044) ||
@@ -731,7 +731,7 @@ class CreateGame extends Component {
         } else if (isNaN(endgame_amount)) {
           alertAndReturn('IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!');
           return;
-        }else if (endgame_type && endgame_amount < parseFloat(bet_amount)) {
+        } else if (endgame_type && endgame_amount < parseFloat(bet_amount)) {
           alertAndReturn('CANNOT BE LOWER THAN BANKROLL');
           return;
         }
@@ -1072,8 +1072,8 @@ class CreateGame extends Component {
                   <div className="lottie-container-btn_bet">
                     <Lottie
                       options={{
-                        loop: true,
-                        autoplay: true,
+                        loop: this.props.isLowGraphics ? false : true,
+                        autoplay: this.props.isLowGraphics ? false : true,
                         animationData: animationData
                       }}
                       style={{
@@ -1097,8 +1097,8 @@ class CreateGame extends Component {
                 <div className="lottie-container-btn_bet">
                   <Lottie
                     options={{
-                      loop: true,
-                      autoplay: true,
+                      loop: isLowGraphics ? false : true,
+                      autoplay: isLowGraphics ? false : true,
                       animationData: animationData
                     }}
                     style={{
@@ -1515,6 +1515,7 @@ const mapStateToProps = state => ({
   balance: state.auth.balance,
   brain_game_type: state.questionReducer.brain_game_type,
   isDarkMode: state.auth.isDarkMode,
+  isLowGraphics: state.auth.isLowGraphics,
   isDrawerOpen: state.auth.isDrawerOpen,
   isFocused: state.auth.isFocused
 });

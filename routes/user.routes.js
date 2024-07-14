@@ -371,7 +371,6 @@ router.post('/bio', auth, async (req, res) => {
   try {
     const userId = req.user.id; // Assuming you have a user object in req from the auth middleware
     const { link } = req.body;
-
     const user = await User.findById(userId);
 
     // Check if the user exists
@@ -381,9 +380,9 @@ router.post('/bio', auth, async (req, res) => {
         error: 'User not found.'
       });
     }
-
+    
     user.bio = link;
-    await user.save();
+    await saveDocumentWithRetry(user);
 
     // Respond with success message
     res.json({

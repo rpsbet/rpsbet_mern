@@ -39,14 +39,6 @@ import { Box, Button, ButtonGroup, Menu, MenuItem, Tooltip, IconButton, TextFiel
 const gifUrls = ['/img/rock.gif', '/img/paper.gif', '/img/scissors.gif'];
 const randomGifUrl = gifUrls[Math.floor(Math.random() * gifUrls.length)];
 
-const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: animationData,
-  rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
-};
 
 const customStyles = {
   overlay: {
@@ -501,9 +493,17 @@ class MyGamesTable extends Component {
   }
 
   render() {
-    const { loading, strategies, user, updateRoomStrategy } = this.props;
+    const { loading, strategies, user, updateRoomStrategy, isLowGraphics } = this.props;
     const { isLoading, anchorEl, selectedRow, selectedStrategy, settings_panel_opened, isFocused, selectedFilter, sortAnchorEl, selectedSort } = this.state;
-
+    const defaultOptions = {
+      loop: this.props.isLowGraphics ? false : true,
+      autoplay: this.props.isLowGraphics ? false : true,
+      animationData: animationData,
+      rendererSettings: {
+        preserveAspectRatio: 'xMidYMid slice'
+      }
+    };
+    
     return (
       <div className="my-open-games">
         <div className="filter-container overflowX">
@@ -628,8 +628,8 @@ class MyGamesTable extends Component {
                             &nbsp;
                             <Lottie
                               options={{
-                                loop: true,
-                                autoplay: true,
+                                loop: isLowGraphics ? false : true,
+                                autoplay: isLowGraphics ? false : true,
                                 animationData: loadingChart
                               }}
                               style={{
@@ -708,8 +708,8 @@ class MyGamesTable extends Component {
                                         </span>
                                         <Lottie
                                           options={{
-                                            loop: true,
-                                            autoplay: true,
+                                            loop: isLowGraphics ? false : true,
+                                            autoplay: isLowGraphics ? false : true,
                                             animationData: pressHold
                                           }}
                                         />
@@ -728,7 +728,7 @@ class MyGamesTable extends Component {
                       </div>
                     </div>
                     <div className="mobile-only" style={{ display: "table" }}>
-                      <div className="table-cell action" style={{ width: "auto", float: "right", display: "flex", flexDirection: "row", justifyContent: "space-between"}}>
+                      <div className="table-cell action" style={{ width: "auto", float: "right", display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
 
                         <Tooltip title="CHANGE AUTOPLAY STRATEGY">
                           <a
@@ -785,8 +785,8 @@ class MyGamesTable extends Component {
                                         </span>
                                         <Lottie
                                           options={{
-                                            loop: true,
-                                            autoplay: true,
+                                            loop: isLowGraphics ? false : true,
+                                            autoplay: isLowGraphics ? false : true,
                                             animationData: pressHold
                                           }}
                                         />
@@ -1029,6 +1029,7 @@ class MyGamesTable extends Component {
 
 const mapStateToProps = state => ({
   isDarkMode: state.auth.isDarkMode,
+  isLowGraphics: state.auth.isLowGraphics,
   myGames: state.logic.myGames,
   myGamesWithStats: state.logic.myGamesWithStats,
   pageNumber: state.logic.myGamesPageNumber,

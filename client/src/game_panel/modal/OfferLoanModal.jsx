@@ -273,7 +273,7 @@ class OfferLoanModal extends Component {
 
   render() {
     const { expanded, responseText, loanPeriodText, interestRateText, cancelled, waiting } = this.state;
-    const { loan_amount, loan_period, apy, rank, userInfo, onlineUserList } = this.props;
+    const { loan_amount, loan_period, apy, rank, userInfo, onlineUserList, isLowGraphics } = this.props;
     const tableCellStyle = { textAlign: 'center' };
 
     const inputCellStyle = {
@@ -586,8 +586,8 @@ class OfferLoanModal extends Component {
                   {!this.state.waiting && !cancelled && (
                     <Lottie
                       options={{
-                        loop: true,
-                        autoplay: true,
+                        loop: isLowGraphics ? false : true,
+                        autoplay: isLowGraphics ? false : true,
                         animationData: spinningIcon
                       }}
                       style={{ width: '25px', marginTop: '-2px' }}
@@ -605,8 +605,8 @@ class OfferLoanModal extends Component {
                   {this.state.waiting && (
                     <Lottie
                       options={{
-                        loop: true,
-                        autoplay: true,
+                        loop: isLowGraphics ? false : true,
+                        autoplay: isLowGraphics ? false : true,
                         animationData: spinningIcon
                       }}
                       style={{ width: '25px', marginTop: '-4px' }}

@@ -67,15 +67,6 @@ const customStyles = {
   }
 };
 
-const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: animationData,
-  rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
-};
-
 
 class OpenGamesTable extends Component {
   constructor(props) {
@@ -605,7 +596,16 @@ class OpenGamesTable extends Component {
     } = this.state;
     const { isLowGraphics, isDarkMode, recentlyClosed } = this.props;
     let recent = recentlyClosed ? this.updateFromNow(recentlyClosed) : [];
-
+    const defaultOptions = {
+      loop: this.props.isLowGraphics ? false : true,
+      autoplay: this.props.isLowGraphics ? false : true,
+      animationData: animationData,
+      rendererSettings: {
+        preserveAspectRatio: 'xMidYMid slice'
+      }
+    };
+    
+    
     return (
       <>
         <div className="overflowX">
@@ -791,8 +791,8 @@ class OpenGamesTable extends Component {
                                     {row.likeAnimation && (
                                       <Lottie
                                         options={{
-                                          loop: false,
-                                          autoplay: true,
+                                          loop: isLowGraphics ? false : true,
+                                          autoplay: isLowGraphics ? false : true,
                                           animationData: like
                                         }}
                                         style={{
@@ -942,8 +942,8 @@ class OpenGamesTable extends Component {
                                     {row.likeAnimation && (
                                       <Lottie
                                         options={{
-                                          loop: false,
-                                          autoplay: true,
+                                          loop: isLowGraphics ? false : true,
+                                          autoplay: isLowGraphics ? false : true,
                                           animationData: like
                                         }}
                                         style={{

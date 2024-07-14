@@ -251,8 +251,8 @@ class Avatar extends Component {
           >
             <Lottie
               options={{
-                loop: true,
-                autoplay: true,
+                loop: isLowGraphics ? false : true,
+                autoplay: isLowGraphics ? false : true,
                 animationData: verified,
               }}
               style={{

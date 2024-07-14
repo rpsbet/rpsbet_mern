@@ -1727,24 +1727,20 @@ router.post('/end_game', auth, async (req, res) => {
   try {
     const userId = req.user._id;
     const roomId = req.body.room_id;
-    console.log("SF", userId);
     const accessAllowed = await check_access_time(userId);
     if (!accessAllowed) {
-      console.log("dwdw");
       return res.json({
         success: false,
         message: 'irregular action',
         betResult: -1000
       });
     }
-    console.log("asdas");
     if (req.user.dailyWithdrawals > 50) {
       return res.json({
         success: false,
         message: "Exceeded Daily Withdrawal Limit. Unable to End this room. Please try again tomorrow!"
       });
     }
-    console.log("eeee");
 
     const roomInfo = await Room.findOne({ _id: roomId })
       .populate({ path: 'creator', model: User })
@@ -1804,7 +1800,6 @@ router.post('/end_game', auth, async (req, res) => {
 
       socket.sendNotification(host, notificationData);
     });
-    console.log("sdfdf");
 
     await Promise.all([
       Notification.insertMany(notifications.map(doc => doc.toObject())),
@@ -2964,7 +2959,6 @@ router.post('/bet2', auth, async (req, res) => {
         requestId: requestId
       };
 
-      console.log("accessAllowed", accessAllowed)
       return res.json(responseData);
     }
     res.json({

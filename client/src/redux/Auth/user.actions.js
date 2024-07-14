@@ -401,9 +401,9 @@ export const changeUserName = (newUsername) => async (dispatch) => {
   return { status: 'failed' };
 };
 
-export const changeLink = (newUsername) => async (dispatch) => {
+export const changeLink = (link) => async (dispatch) => {
   try {
-    const { data } = await axios.post('/user/bio', { newUsername }); // Wrap newUsername in an object
+    const { data } = await axios.post('/user/bio', { link }); // Wrap newUsername in an object
 
     if (data.success) {
       // dispatch({ type: USER_LOADED, payload: data.user });

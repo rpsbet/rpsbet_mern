@@ -543,6 +543,7 @@ class PlayerModal extends Component {
                                 style={{
                                   fontSize: "1.2em",
                                   marginBottom: '20px',
+                                  paddingBottom: '10px',
                                   color: this.props.isDarkMode ? "#e5e5e5" : "#333"
                                 }}
                               >
