@@ -206,6 +206,11 @@ button#recentSearches span {
 .notification-element .lottie-container.blackCube div {
   transform: scale(3) translate(-8.5px, -11px) !important;
 }
+
+.table.main-history-table .lottie-container.blackCube div {
+  transform: scale(4.6) translate(-2.2px,-10px) !important
+
+}
 .tooltip-avatar .lottie-container.cat div {
   top: 4px !important;
   left: 2px !important;

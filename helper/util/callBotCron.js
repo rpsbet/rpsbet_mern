@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const Room = require('../../model/Room.js');
 const User = require('../../model/User.js');
 const RpsBetItem = require('../../model/RpsBetItem.js');
+const QsBetItem = require('../../model/QsBetItem');
 const socketController = require('../../socketController.js');
 const executeBet = require('./betExecutor.js');
 const executeBet4 = require('./betExecutor4.js');
@@ -155,7 +156,7 @@ async function executeCronJob(user, betArray, cronJobUserIds) {
         }
       };
 
-      if (parseFloat(room.user_bet) >= 0.05 && predictedBetAmount >= 0 && predictedBetAmount <= parseFloat(room.user_bet) && cronJobUserIds.some(id => room.joiners.includes(id))) {
+      if (parseFloat(room.user_bet) >= 0.1 && predictedBetAmount >= 0 && predictedBetAmount <= parseFloat(room.user_bet) && cronJobUserIds.some(id => room.joiners.includes(id))) {
 
         if (useFirstBetFunction && !isExecutingBet) {
           isExecutingBet = true;

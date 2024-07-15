@@ -253,7 +253,6 @@ div.table .table-row .table-cell button.active,
 div.table .table-row .table-cell button:last-child:active,
 .btn-create-room:focus,
 .btn-create-room.active,
-.qs-buttons button.active,
 #rps-radio div.active {
   background-color: #d81719;
   box-shadow: none !important;

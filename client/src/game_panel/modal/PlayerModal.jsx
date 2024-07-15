@@ -520,11 +520,11 @@ class PlayerModal extends Component {
                           rank={this.state.rank}
                           alt=""
                         />
-                          <h1 style={{ marginTop: '60px' }}>
+                          <h1 className={'player-username'} style={{ marginTop: '60px' }}>
                             {this.state.username}
                           </h1>
                         <div style={{ position: 'relative', marginTop: '20px', borderBottom: '2px solid', borderTop: '2px solid' }}>
-                          <p style={{ fontSize: "1.2em", color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}><span style={{position:'absolute', top: '20px', left: '30px', fontSize: "xx-small"}}>USER BIO</span>
+                          <p  className={'player-username'} style={{  color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}><span style={{position:'absolute', top: '20px', left: '30px', fontSize: "xx-small"}}>USER BIO</span>
                             {isBio ? (
                               <a
                                 href={bio}

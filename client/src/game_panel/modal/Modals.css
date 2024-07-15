@@ -847,6 +847,14 @@ box-shadow: unset !important;
 .big-modal {
     width: unset;
 }
+h1.player-username {
+    margin-top: 90px !important;
+    font-size: 1.2em;
+}
+p.player-username {
+    font-size: 0.7em;
+    word-break: break-word;
+}
 .wheel {
     border: 3px solid #001339;
     width: 280px;

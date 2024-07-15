@@ -4,7 +4,8 @@ const Schema = mongoose.Schema;
 const OwnerSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        index: true // Add index on user
     },
     avatar: {
         type: String, // Assuming the avatar is a URL or file path
@@ -18,7 +19,6 @@ const OwnerSchema = new Schema({
         type: String, // Assuming accessory is represented as a string
         default: '' // Default accessory if necessary
     },
-
     count: {
         type: Number,
         default: 0
@@ -29,7 +29,8 @@ const OwnerSchema = new Schema({
     },
     onSale: {
         type: Number,
-        default: 0
+        default: 0,
+        index: true // Add index on onSale
     },
     rentOption: {
         type: Boolean,
@@ -41,7 +42,7 @@ const OwnerSchema = new Schema({
     originalOwner: {
         type: Schema.Types.ObjectId,
         ref: 'User'
-    },
+    }
 });
 
 const ItemSchema = new Schema({
@@ -51,12 +52,14 @@ const ItemSchema = new Schema({
         default: ''
     },
     image: {
-        type: String
+        type: String,
+        index: true // Add index on image
     },
     item_type: {
         type: Schema.Types.ObjectId,
         ref: 'itemType',
-        default: null
+        default: null,
+        index: true // Add index on item_type
     },
     CP: {
         type: Number,
@@ -71,5 +74,8 @@ const ItemSchema = new Schema({
         default: Date.now
     }
 });
+
+// Ensure compound indexes for efficient queries
+ItemSchema.index({ 'owners.onSale': 1, 'item_type': 1, 'image': 1 });
 
 module.exports = Item = mongoose.model('rps_items', ItemSchema);

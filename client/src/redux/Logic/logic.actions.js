@@ -17,6 +17,7 @@ import {
   COMMENT_DELETED,
   COMMENT_DELETION_FAILED,
   RPSBETITEMS_LOADED,
+  QSBETITEMS_LOADED,
   ROOMS_LOADED,
   ROOMS_COUNT,
   UPDATE_BET_RESULT,
@@ -745,6 +746,16 @@ export const getRpsBetItems = (room_id) => async dispatch => {
   } catch (err) {
   }
 };
+export const getQsBetItems = (room_id) => async dispatch => {
+  try {
+    const res = await axios.get(`/game/qsbetitems/${room_id}`);
+    if (res.data.success) {
+      dispatch({ type: QSBETITEMS_LOADED, payload: res.data });
+    }
+    return res.data;
+  } catch (err) {
+  }
+};
 
 export const updateRpsBetItems = (itemId, cellindex, updatedItem) => async dispatch => {
   try {
@@ -759,8 +770,19 @@ export const updateRpsBetItems = (itemId, cellindex, updatedItem) => async dispa
 
   }
 };
+export const updateQsBetItems = (itemId, cellindex, updatedItem) => async dispatch => {
+  try {
+    const res = await axios.put(`/game/qsbetitems/${itemId}`, { cellindex, updatedItem });
+    if (res.data.success) {
+      dispatch({ type: QSBETITEMS_LOADED, payload: res.data });
+      dispatch({ type: MSG_SUCCESS, payload: "TRAINING DATA HAS BEEN UPDATED" });
+    }
+    return res.data;
+  } catch (err) {
+    dispatch({ type: MSG_ERROR, payload: 'TRAINING DATA FAILED TO UPDATE, CHECK VALUE IS CORRECT' });
 
-
+  }
+};
 
 export const getRecentlyClosed = () => async dispatch => {
   try {

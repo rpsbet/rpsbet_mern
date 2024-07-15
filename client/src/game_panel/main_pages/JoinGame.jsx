@@ -35,6 +35,7 @@ import {
   getGameTypeList,
   updateUserStrategy,
   getRpsBetItems,
+  getQsBetItems,
   getStrategies,
   deductBalanceWhenStartBrainGame
 } from '../../redux/Logic/logic.actions';
@@ -161,6 +162,7 @@ class JoinGame extends Component {
     try {
       await Promise.all([
         this.props.getRpsBetItems(id),
+        this.props.getQsBetItems(id),
         // this.getRoomData(id),
         this.loadSounds(),
         this.props.getHistory(),
@@ -223,6 +225,7 @@ class JoinGame extends Component {
 
   async fetchAccessory() {
     try {
+      console.log("AD", this.props.roomInfo.creator_id)
       const creatorId = this.props.roomInfo.creator_id;
       if (!creatorId) {
         console.error("Creator ID is empty or undefined");
@@ -813,6 +816,7 @@ class JoinGame extends Component {
 
 
         await getRpsBetItems(roomInfo._id);
+        await getQsBetItems(roomInfo._id);
 
         switch (roomInfo.game_type) {
           case 'Quick Shoot':
@@ -977,7 +981,7 @@ class JoinGame extends Component {
   };
 
   joinGame2 = async (randomItem, predictedBetAmount) => {
-    const { balance, isDarkMode, roomInfo, deductBalanceWhenStartBrainGame, getRpsBetItems } = this.props;
+    const { balance, isDarkMode, roomInfo, deductBalanceWhenStartBrainGame, getRpsBetItems, getQsBetItems } = this.props;
     let { betting, selected_qs_position, selected_rps, selected_id, bankroll } = this.state;
     const gameType = roomInfo.game_type;
     if (!betting) {
@@ -1058,6 +1062,7 @@ class JoinGame extends Component {
           });
           // this.refreshHistory();
           await getRpsBetItems(roomInfo._id)
+          await getQsBetItems(roomInfo._id)
         }
       } catch (error) {
         console.error('Error in joinGame2:', error);
@@ -1186,6 +1191,7 @@ class JoinGame extends Component {
       ai_mode,
       selectedMainTabIndex,
       rpsbetitems,
+      qsbetitems,
       total_wagered
     } = this.props;
     const defaultOptions = {
@@ -1383,6 +1389,7 @@ class JoinGame extends Component {
                     updateSelectedQs={this.updateSelectedQs}
                     user_id={user_id}
                     betResult={betResult}
+                    qsbetitems={this.props.qsbetitems}
                     creator_id={roomInfo.creator_id}
                     qs_game_type={roomInfo.qs_game_type}
                     bet_amount={roomInfo.bet_amount}
@@ -1392,6 +1399,11 @@ class JoinGame extends Component {
                     selected_qs_position={selected_qs_position}
                     roomInfo={roomInfo}
                     playSound={this.playSound}
+                    ai_mode={ai_mode}
+                    handleSwitchChange={this.handleSwitchChange}
+                    pr={roomInfo.pr}
+                    onChangeState={this.onChangeState}
+                    cp={this.state.cp}
                     youtubeUrl={roomInfo.youtubeUrl}
                     gameBackground={roomInfo.gameBackground}
                     actionList={actionList}
@@ -1532,6 +1544,7 @@ class JoinGame extends Component {
               this.props.selectedMainTabIndex === 0 && (
                 <AiPanel
                   rpsbetitems={this.props.rpsbetitems}
+                  qsbetitems={this.props.qsbetitems}
                   updateUserStrategy={this.props.updateUserStrategy}
                   strategies={strategies}
                   betting={betting}
@@ -1705,6 +1718,7 @@ const mapStateToProps = state => ({
   strategies: state.logic.strategies,
   roomInfo: state.logic.curRoomInfo,
   rpsbetitems: state.logic.rpsbetitems,
+  qsbetitems: state.logic.qsbetitems,
   user_id: state.auth.user._id,
   total_wagered: state.auth.user.totalWagered,
   user_balance: state.auth.user.balance,
@@ -1735,6 +1749,7 @@ const mapDispatchToProps = {
   toggleDrawer,
   getGameTypeList,
   getRpsBetItems,
+  getQsBetItems,
   openGamePasswordModal,
   getCustomerStatisticsData,
   deductBalanceWhenStartBrainGame,

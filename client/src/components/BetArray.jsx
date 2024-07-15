@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { getRpsBetItems, updateRpsBetItems } from '../redux/Logic/logic.actions';
+import { getRpsBetItems, getQsBetItems, updateRpsBetItems, updateQsBetItems } from '../redux/Logic/logic.actions';
 import { setFocused } from '../redux/Auth/user.actions';
 import { useDispatch } from 'react-redux';
 
@@ -130,6 +130,9 @@ function BetArray({
   rpsbetitems,
   getRpsBetItems,
   updateRpsBetItems,
+  qsbetitems,
+  getQsBetItems,
+  updateQsBetItems,
   predictedBetAmount,
   updateUserStrategy,
   betting,
@@ -167,13 +170,14 @@ function BetArray({
     // Check if is_betting has changed from true to false
     if (prevIsBettingRef.current && !is_betting) {
       // Trigger action when is_betting changes from true to false
+      getQsBetItems(room_id); // Assuming room_id is available here
       getRpsBetItems(room_id); // Assuming room_id is available here
     }
 
 
     // Update previous value of is_betting
     prevIsBettingRef.current = is_betting;
-  }, [is_betting, getRpsBetItems, room_id]);
+  }, [is_betting, getRpsBetItems, getQsBetItems, room_id]);
 
   const [accumulativeProfit, setAccumulativeProfit] = useState([]);
 
@@ -269,8 +273,6 @@ function BetArray({
       data: accumulativeProfit,
     }],
   };
-
-
 
   const filteredArray = game_type === 'Quick Shoot' ? rpsbetitems.filter(item => item.qs !== undefined) : rpsbetitems;
   const settingsRef = useRef(null);
@@ -684,11 +686,14 @@ function BetArray({
 
 const mapStateToProps = (state) => ({
   rpsbetitems: state.logic.rpsbetitems,
+  qsbetitems: state.logic.qsbetitems,
 });
 
 const mapDispatchToProps = {
   getRpsBetItems,
   updateRpsBetItems,
+  getQsBetItems,
+  updateQsBetItems,
   setFocused
 };
 

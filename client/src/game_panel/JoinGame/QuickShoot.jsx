@@ -8,7 +8,9 @@ import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
 import { getQsLottieAnimation } from '../../util/helper';
 import {
+  Button,
   IconButton,
+  Tooltip,
 } from '@material-ui/core';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
 import BetAmountInput from '../../components/BetAmountInput';
@@ -23,7 +25,10 @@ import {
 import Lottie from 'react-lottie';
 import { renderLottieAvatarAnimation } from '../../util/LottieAvatarAnimations';
 import ImageResultModal from '../modal/ImageResultModal';
-
+import {
+  getQsBetItems,
+  getRoomBotCount,
+} from '../../redux/Logic/logic.actions';
 import animationData from '../LottieAnimations/spinningIcon';
 import {
   alertModal,
@@ -59,12 +64,13 @@ class QuickShoot extends Component {
       advanced_status: '',
       is_anonymous: false,
       animation: <div />,
-      bet_amount: 0.001,
+      bet_amount: 1,
       potential_return: 1.25,
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       balance: this.props.balance,
       productName: '',
       qs: '',
+      host_pr: this.props.pr,
       image: '',
       showImageModal: false,
       isPasswordCorrect: this.props.isPasswordCorrect
@@ -73,39 +79,93 @@ class QuickShoot extends Component {
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.panelRef = React.createRef();
   }
-  componentDidMount() {
-    const { socket, playSound } = this.props;
+
+  async componentDidMount() {
     document.addEventListener('keydown', this.handleKeyPress);
-    // socket.on('CARD_PRIZE', data => {
-    //   if (data) {
-    //     this.setState(
-    //       {
-    //         image: data.image,
-    //         productName: data.productName,
-    //         showImageModal: true
-    //       },
-    //       () => playSound('')
-    //     );
-    //   }
-    // });
-    socket.on('UPDATED_BANKROLL_QS', data => {
-      this.setState({ bankroll: data.bankroll, qs: data.qs }, () => {
-      });
-    });
+    this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
+    this.setupSocket();
+
+    const botsCount = await this.props.getRoomBotCount(this.props.roomInfo._id);
+    this.setState({ botsCount: botsCount });
   }
 
-  componentWillUnmount() {
-    clearInterval(this.state.intervalId);
-    document.removeEventListener('keydown', this.handleKeyPress);
+  setupSocket() {
+    document.addEventListener('keydown', this.handleKeyPress);
+    this.setState({ intervalId: setInterval(this.toggleBlueishHue, this.state.intervalDuration) });
+
+    const initializeSocket = async () => {
+      try {
+        const { socket, playSound, roomInfo } = this.props;
+        const initializedSocket = socket || socketIOClient(this.state.endpoint);
+        this.setState({ socket: initializedSocket });
+
+        if (initializedSocket) {
+
+          initializedSocket.on(`UPDATED_BANKROLL_QS${roomInfo._id}`, this.handleSocketData);
+          initializedSocket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
+        }
+
+      } catch (error) {
+        console.error('Socket initialization failed:', error);
+        setTimeout(initializeSocket, 3000); // Retry after 3 seconds
+      }
+    };
+
+    initializeSocket();
   }
+
+  removeSocketListeners() {
+    const { socket, roomInfo } = this.props;
+    if (socket) {
+      socket.off(`UPDATED_BANKROLL_QS${roomInfo._id}`, this.handleSocketData);
+    }
+  }
+
+  handleSocketData = (data) => {
+    this.setState(prevState => {
+      let updatedPlayers = [...prevState.players, data.user];
+      if (updatedPlayers.length > 5) {
+        updatedPlayers.shift(); // Remove the oldest player
+      }
+      if (!this.props.isMuted) {
+        this.props.playSound('blip');
+      }
+
+      // Check if the filtered result is empty
+      let filteredQS = data.qs.filter(game => game.joiner === this.props.user_id);
+      let qsState = filteredQS.length > 0 ? filteredQS : prevState.qs;
+
+      return {
+        bankroll: data.bankroll,
+        host_pr: data.host_pr,
+        qs: this.props.isWatching ? qsState : data.qs,
+        prev_qs: data.qs,
+        startedPlaying: true,
+        players: updatedPlayers
+      };
+    });
+  };
+  handleSocketData2 = (data) => {
+    this.setState({ bankroll: data.bankroll });
+  };
+
+
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyPress);
+    document.removeEventListener('mousedown', this.handleClickOutside);
+    clearInterval(this.state.intervalId);
+    this.removeSocketListeners();
+  }
+
   handleKeyPress(event) {
     if (!this.props.isFocused) {
       // Check if the Ctrl key is pressed (for Windows/Linux) or the Cmd key is pressed (for macOS)
       const ctrlKeyPressed = event.ctrlKey || event.metaKey;
-  
+
       // Check if the key pressed is 'r'
       const isRKeyPressed = event.key === 'r';
-  
+
       // Check if both conditions are met: Ctrl (or Cmd) key is pressed AND 'r' key is pressed
       if (!(ctrlKeyPressed && isRKeyPressed)) {
         switch (event.key) {
@@ -130,7 +190,7 @@ class QuickShoot extends Component {
       }
     }
   }
-  
+
 
 
   static getDerivedStateFromProps(props, current_state) {
@@ -491,23 +551,23 @@ class QuickShoot extends Component {
 
   renderButton(id, position) {
     const { betResult, selected_qs_position, bgColorChanged, is_betting } = this.props;
-  
+
     // Define the base classes
     let classes = `${selected_qs_position === position ? 'active' : ''}${bgColorChanged && betResult === -1 && selected_qs_position === position
       ? ' lose-bg'
       : ''
       }${betResult === 0 && selected_qs_position === position ? ' draw-bg' : ''}${betResult === 1 && selected_qs_position === position ? ' win-bg' : ''
       }`;
-  
+
     // Add the 'disabled' class if is_betting is true
     if (is_betting) {
       classes += ' disabled';
     }
-  
+
     const buttonStyle = {
       opacity: 0.9
     };
-  
+
     return (
       <IconButton
         id={id}
@@ -523,7 +583,7 @@ class QuickShoot extends Component {
       </IconButton>
     );
   }
-  
+
 
 
   renderButtons() {
@@ -586,6 +646,7 @@ class QuickShoot extends Component {
       accessory,
       username,
       creator_avatar,
+      cp,
       rank,
       handleClosePlayerModal,
       handleOpenPlayerModal,
@@ -625,7 +686,7 @@ class QuickShoot extends Component {
     } else if (qs_game_type === 5) {
       arrayName = 'qs_array_5';
     }
-
+    const isLowBankroll = bankroll <= 1;
     return (
       <div className="game-page">
         <div className="page-title">
@@ -668,21 +729,40 @@ class QuickShoot extends Component {
                     <div>
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
-                    <div className="value bankroll">
-                      {convertToCurrency(bankroll)}
-                    </div>
+                    <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
+                      <div className={`value ${isLowBankroll ? 'red-text' : ''}`}>
+                        {convertToCurrency(bankroll)}
+                        {isLowBankroll && <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />}
+                      </div>
+                    </Tooltip>
                   </div>
 
                   <div className="data-item">
                     <div>
                       <div className="label your-max-return">Your Return</div>
                     </div>
-                    <div className="value">
-                      {convertToCurrency(
-                        bet_amount / (qs_game_type - 1) +
-                        parseFloat(bet_amount) /* 0.95 */
-                      )}
-                    </div>
+                    <Tooltip
+                      title={
+                        <div>
+                          <span>EXPLANATION: </span>
+                          <p>
+                            {this.props.qs_game_type} * your Bet Amount, then deduct Host(s)'s(') commission, if any, (which is Returned to Bankroll or RTB)
+                            and finally deduct 1% platform tax.
+                          </p>
+                          <span>CALCULATION: </span>
+                          <div>{convertToCurrency(bet_amount)} x 2 = {convertToCurrency(bet_amount * 2)}</div>
+                          <div>
+                            -({cp} + 1)% = {convertToCurrency(bet_amount * 2 * ((100 - (cp + 1)) / 100))}
+                          </div>
+                        </div>
+                      }
+                    >
+                      <div className="value">
+                        {convertToCurrency(
+                          (bet_amount / (qs_game_type - 1) + parseFloat(bet_amount)) * (1 - ((this.props.cp + 1) / 100))
+                        )}
+                      </div>
+                    </Tooltip>
                   </div>
                   <div className="data-item">
                     <div>
@@ -691,6 +771,15 @@ class QuickShoot extends Component {
                     <div className="value">
                       {(((qs_game_type - 1) / qs_game_type) * 100).toFixed(2)}%
                     </div>
+                  </div>
+                  <div className="data-item">
+                    <div>
+                      <div className="label win-chance">Commission</div>
+                    </div>
+                    <Tooltip title="Determined by the Host's equipped accessory">
+
+                      <div className="value">{this.props.cp}% </div>
+                    </Tooltip>
                   </div>
                   {roomInfo.endgame_amount > 0 && (
                     <div className="data-item">
@@ -704,107 +793,16 @@ class QuickShoot extends Component {
                   )}
                   <div className="data-item">
                     <div>
-                      <div className="label net-profit">Host Profit</div>
+                      <div className="label net-profit">Room Profit</div>
                     </div>
                     <div className="value bankroll">
-                      {actionList && actionList.hostBetsValue.length > 0 ? (
-                        <>
-                          {convertToCurrency(
-                            actionList.hostNetProfit?.slice(-1)[0]
-                          )}
-                          <ReactApexChart
-                            className="bankroll-graph"
-                            options={{
-                              chart: {
-                                animations: {
-                                  enabled: false
-                                },
-                                toolbar: {
-                                  show: false
-                                },
-                                events: {},
-                                zoom: {
-                                  enabled: false
-                                }
-                              },
-                              grid: {
-                                show: false
-                              },
-                              tooltip: {
-                                enabled: false
-                              },
-                              fill: {
-                                type: 'gradient',
-                                gradient: {
-                                  shade: 'light',
-                                  gradientToColors:
-                                    actionList.hostNetProfit?.slice(-1)[0] > 0
-                                      ? ['#00FF00']
-                                      : actionList.hostNetProfit?.slice(-1)[0] <
-                                        0
-                                        ? ['#FF0000']
-                                        : ['#808080'],
-                                  shadeIntensity: 1,
-                                  type: 'vertical',
-                                  opacityFrom: 0.7,
-                                  opacityTo: 0.9,
-                                  stops: [0, 100, 100]
-                                }
-                              },
 
-                              stroke: {
-                                curve: 'smooth'
-                              },
-                              xaxis: {
-                                labels: {
-                                  show: false
-                                },
-                                axisTicks: {
-                                  show: false
-                                },
-                                axisBorder: {
-                                  show: false
-                                }
-                              },
-                              yaxis: {
-                                labels: {
-                                  show: false
-                                },
-                                axisTicks: {
-                                  show: false
-                                },
-                                axisBorder: {
-                                  show: false
-                                }
-                              }
-                            }}
-                            type="line"
-                            width={120}
-                            height="100"
-                            series={[
-                              {
-                                data: actionList.hostNetProfit.map(
-                                  (value, index) => [
-                                    actionList.hostBetsValue[index],
-                                    value
-                                  ]
-                                )
-                              }
-                            ]}
-                          />
-                        </>
-                      ) : (
-                        <Lottie
-                          options={{
-                            loop: true,
-                            autoplay: true,
-                            animationData: loadingChart
-                          }}
-                          style={{
-                            width: '32px'
-                          }}
-                        />
-                      )}
+                      <Tooltip title="Current bankroll + Payouts - Initial bankroll">
+                        <div className="value" style={{ color: (roomInfo.pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (roomInfo.pr  - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
+                          {convertToCurrency(roomInfo.pr  - roomInfo.total_stakes)}
+                        </div>
+                      </Tooltip>
+
                     </div>
                   </div>
                   <div className="data-item">
@@ -930,13 +928,12 @@ class QuickShoot extends Component {
               )}
             </div> */}
           </div>
-          {/* <BetArray arrayName={arrayName} label="qs" /> */}
 
           <div className="action-panel">
             <Share roomInfo={roomInfo} />
           </div>
-        </div>
-      </div>
+        </div >
+      </div >
     );
   }
 }
@@ -960,6 +957,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  openGamePasswordModal
+  openGamePasswordModal,
+  getRoomBotCount
 };
 export default connect(mapStateToProps, mapDispatchToProps)(QuickShoot);

@@ -620,6 +620,95 @@ router.put('/rpsbetitems/:itemId', auth, async (req, res) => {
     });
   }
 });
+// Define your route
+router.get('/qsbetitems/:roomId', auth, async (req, res) => {
+  const { roomId } = req.params;
+  try {
+    // Find QsBetItems filtered by room id and status equal to 'open'
+    const qsBetItems = await QsBetItem.find({
+      room: roomId,
+      joiner: req.user._id,
+      joiner_qs: { $ne: null }
+    })
+      .sort({ created_at: -1 })
+      .limit(50);
+
+    // Return the filtered QsBetItems
+    res.json({
+      success: true,
+      data: qsBetItems
+    });
+  } catch (err) {
+
+    res.json({
+      success: false,
+      err: err
+    });
+  }
+});
+router.put('/qsbetitems/:itemId', auth, async (req, res) => {
+  const { itemId } = req.params;
+  const { updatedItem, cellindex } = req.body;
+
+  try {
+    // Find the QsBetItem by ID
+    const qsBetItem = await QsBetItem.findById(itemId);
+
+    // Ensure the item exists
+    if (!qsBetItem) {
+      console.log("QsBetItem not found");
+      return res.status(404).json({
+        success: false,
+        message: 'QsBetItem not found'
+      });
+    }
+
+    // Validate and set the updated item based on the cell index
+    if (cellindex === 'bet_amount') {
+      // Validate if the updated item is a float or integer
+      if (!isNaN(updatedItem)) {
+        qsBetItem[cellindex] = parseFloat(updatedItem);
+      } else {
+        throw new Error('Invalid bet amount. Please provide a valid number.');
+      }
+    } else if (cellindex === 'qs' || cellindex === 'joiner_qs') {
+      // Validate if the updated item is either 'r', 'p', or 's' (case-insensitive)
+      const validQSValues = [0, 1, 2, 3, 4, 5];
+      if (validQSValues.includes(updatedItem.toLowerCase())) {
+        qsBetItem[cellindex] = updatedItem.toUpperCase();
+      } else {
+        throw new Error('Invalid value for QS. Please provide either "1", "2", "3", "4", or "5".');
+      }
+    } else {
+      throw new Error('Invalid cell index.');
+    }
+
+    // Save the updated QsBetItem
+    await qsBetItem.save();
+
+    const updatedQsBetItems = await QsBetItem.find({
+      room: qsBetItem.room,
+      joiner: req.user._id,
+      joiner_qs: { $ne: null }
+    })
+      .sort({ created_at: -1 })
+      .limit(50);
+
+
+    res.json({
+      success: true,
+      message: 'QsBetItem updated successfully',
+      data: updatedQsBetItems
+    });
+  } catch (err) {
+    console.error("Error updating QsBetItem:", err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update QsBetItem',
+      error: err.message
+    });
+  }
+});
 
 
 
@@ -1070,7 +1159,8 @@ router.post('/rooms', auth, async (req, res) => {
     let host_pr = 0;
     let user_bet = 0;
     let pr = 0;
-
+console.log("white hole",game_type )
+console.log("black hole",gameType )
     if (game_type == '1') {
       // RPS
       host_pr = parseFloat(bet_amount);

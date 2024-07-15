@@ -64,7 +64,7 @@ import santaHat from '../game_panel/LottieAnimations/santaHat.json';
 import blackCube from '../game_panel/LottieAnimations/black_cube.json';
 import ghost from '../game_panel/LottieAnimations/ghost.json';
 import ghost2 from '../game_panel/LottieAnimations/ghost2.json';
-// import eagle from '../game_panel/LottieAnimations/eagle.json';
+import eagle from '../game_panel/LottieAnimations/eagle.json';
 import rhino from '../game_panel/LottieAnimations/rhino.json';
 import dragon2 from '../game_panel/LottieAnimations/dragon2.json';
 
@@ -240,7 +240,7 @@ const animationMap = {
   paradise: { animationData: paradise, className: 'lottie-container paradise' },
   blackCube: { animationData: blackCube, className: 'lottie-container blackCube' },
   dragon2: { animationData: dragon2, className: 'lottie-container dragon2' },
-  // eagle: { animationData: eagle, className: 'lottie-container eagle' },
+  eagle: { animationData: eagle, className: 'lottie-container eagle' },
   ghost: { animationData: ghost, className: 'lottie-container ghost' },
   ghost2: { animationData: ghost2, className: 'lottie-container ghost2' },
   rhino: { animationData: rhino, className: 'lottie-container rhino' }

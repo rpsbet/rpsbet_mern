@@ -4,6 +4,7 @@ const cron = require('node-cron');
 const Notification = require('../../model/Notification');
 const Chat = require('../../model/Chat');
 const RpsBetItem = require('../../model/RpsBetItem');
+const QsBetItem = require('../../model/QsBetItem');
 const SystemSetting = require('../../model/SystemSetting');
 
 async function deleteChat() {
@@ -40,39 +41,48 @@ async function deleteChat() {
   }
 }
 
-async function deleteRpsBetItems() {
+async function deleteBetItems() {
   try {
-    let systemSetting = await SystemSetting.findOne({ name: 'last_updated_rpsbetitem' });
-    if (systemSetting) {
-      const lastUpdated = systemSetting.updated_at;
-      // Check if last_updated is 24 hours ago or more
-      const twentyFourHoursAgo = new Date();
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    const deleteItems = async (model, settingName, itemType) => {
+      let systemSetting = await SystemSetting.findOne({ name: settingName });
+      if (systemSetting) {
+        const lastUpdated = systemSetting.updated_at;
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-      if (lastUpdated <= twentyFourHoursAgo) {
-        const totalItems = await RpsBetItem.countDocuments();
-        const itemsToDelete = totalItems - 1000;
-        if (itemsToDelete > 0) {
-          const itemsToDeleteIds = await RpsBetItem.find({})
-            .sort({ created_at: 1 })
-            .limit(itemsToDelete)
-            .select('_id');
+        if (lastUpdated <= twentyFourHoursAgo) {
+          const totalItems = await model.countDocuments();
+          const itemsToDelete = totalItems - 1000;
+          if (itemsToDelete > 0) {
+            const itemsToDeleteIds = await model.find({})
+              .sort({ created_at: 1 })
+              .limit(itemsToDelete)
+              .select('_id');
 
-          const itemIds = itemsToDeleteIds.map(item => item._id);
-          const deletedItems = await RpsBetItem.deleteMany({ _id: { $in: itemIds } });
+            const itemIds = itemsToDeleteIds.map(item => item._id);
+            const deletedItems = await model.deleteMany({ _id: { $in: itemIds } });
 
-          console.log(`${deletedItems.deletedCount} RpsBetItems deleted.`);
+            console.log(`${deletedItems.deletedCount} ${itemType} deleted.`);
+          }
+        } else {
+          console.log(`Last ${itemType} deletion was less than 24 hours ago. Skipping deletion.`);
         }
       } else {
-        console.log("Last rpsBetItem deletion was less than 24 hours ago. Skipping deletion.");
+        console.log(`System setting for ${itemType} last updated not found.`);
       }
-    } else {
-      console.log("System setting for rpsbetitem last updated not found.");
-    }
+    };
+
+    // Delete RpsBetItems
+    await deleteItems(RpsBetItem, 'last_updated_rpsbetitem', 'RpsBetItems');
+
+    // Delete QsBetItems
+    await deleteItems(QsBetItem, 'last_updated_qsbetitem', 'QsBetItems');
+
   } catch (error) {
-    console.error('Error deleting RpsBetItems:', error);
+    console.error('Error deleting BetItems:', error);
   }
 }
+
 
 async function deleteNotifications() {
   try {
@@ -116,13 +126,13 @@ async function deleteNotifications() {
 cron.schedule('0 0 * * *', async () => {
   await deleteNotifications();
   await deleteChat();
-  await deleteRpsBetItems();
+  await deleteBetItems();
 });
 
 // Export an object containing the function
 module.exports = {
   deleteNotifications,
   deleteChat,
-  deleteRpsBetItems
+  deleteBetItems
 
 };

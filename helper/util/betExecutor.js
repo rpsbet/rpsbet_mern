@@ -6,6 +6,7 @@ const GameType = require('../../model/GameType');
 const Room = require('../../model/Room');
 const Notification = require('../../model/Notification');
 const RpsBetItem = require('../../model/RpsBetItem');
+const QsBetItem = require('../../model/QsBetItem');
 const Transaction = require('../../model/Transaction');
 const GameLog = require('../../model/GameLog');
 const convertToCurrency = require('./conversion');
@@ -17,7 +18,6 @@ const check_access_time = require('../../helper/util/checkAccessTime');
 const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
 const requestQueue = [];
 let user_access_log = {};
-
 
 const addToQueue = async (req, bot = false) => {
 
@@ -33,7 +33,6 @@ const addToQueue = async (req, bot = false) => {
 
         let responseData = {};
         let gameLogArray = [];
-
         let user;
         let game_result;
         let newTransactionAmount = 0;
@@ -50,6 +49,7 @@ const addToQueue = async (req, bot = false) => {
             user = req.user;
         }
 
+
         if (req.body._id) {
             if (user.dailyWithdrawals > 0.02) {
                 responseData = {
@@ -57,11 +57,12 @@ const addToQueue = async (req, bot = false) => {
                     message: 'illregular action',
                     betResult: -1000
                 }
+
                 return responseData;
             }
 
             if (
-                req.body.bet_amount < 0.05
+                parseFloat(req.body.bet_amount) < 0.05
             ) {
 
                 responseData = {
@@ -71,8 +72,7 @@ const addToQueue = async (req, bot = false) => {
                 return responseData;
             }
 
-            let betAmount = req.body.bet_amount;
-
+            let betAmount = parseFloat(req.body.bet_amount);
             roomInfo = await Room.findOne({ _id: req.body._id })
                 .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
                 .populate({
@@ -148,6 +148,7 @@ const addToQueue = async (req, bot = false) => {
                 game_type: roomInfo['game_type'],
                 bet_amount: roomInfo['bet_amount'],
                 game_result: 0
+                // is_anonymous: req.body.is_anonymous
             });
 
             let newTransactionC = new Transaction({
@@ -173,27 +174,28 @@ const addToQueue = async (req, bot = false) => {
                 to: roomInfo['creator'],
                 room: req.body._id,
                 message: '',
+                // is_anonymous: req.body.is_anonymous,
                 is_read: false
             });
 
-            // get next unused item
-            const availableBetItem = await RpsBetItem.findOne({
-                room: req.body._id,
-                // joiner: user._id,
-                joiner_rps: ''
-            });
-            let bet_item = availableBetItem;
-
-            const allBetItems = await RpsBetItem.find({
-                room: new ObjectId(req.body._id),
-                joiner: user._id,
-                joiner_rps: { $ne: null }
-            })
-                .sort({ created_at: -1 })
-                .limit(50);
-            const mostRecentItems = allBetItems.slice(0, 4);
 
             if (roomInfo['game_type']['game_type_name'] === 'RPS') {
+                // get next unused item
+                const availableBetItem = await RpsBetItem.findOne({
+                    room: req.body._id,
+                    // joiner: user._id,
+                    joiner_rps: ''
+                });
+                let bet_item = availableBetItem;
+
+                const allBetItems = await RpsBetItem.find({
+                    room: new ObjectId(req.body._id),
+                    joiner: user._id,
+                    joiner_rps: { $ne: null }
+                })
+                    .sort({ created_at: -1 })
+                    .limit(50);
+                const mostRecentItems = allBetItems.slice(0, 4);
                 if (
                     betAmount > parseFloat(roomInfo['user_bet']) ||
                     betAmount > parseFloat(user.balance)
@@ -210,11 +212,11 @@ const addToQueue = async (req, bot = false) => {
                         }
                         return responseData;
                     }
-
                 }
+
                 newGameLog.bet_amount = betAmount;
 
-                // if no more items, create a new one
+
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
 
@@ -288,7 +290,6 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 newGameLog.selected_rps = req.body.selected_rps;
-
                 if (roomInfo['rps_game_type'] === 0) {
 
                     // rig clause
@@ -299,7 +300,6 @@ const addToQueue = async (req, bot = false) => {
                                 (bet_item.rps === 'S' && req.body.selected_rps === 'P') ||
                                 (bet_item.rps === 'R' && req.body.selected_rps === 'S'))
                         ) {
-
                             // Logic to change req.body.selected_rps based on bot's choice
                             if (bet_item.rps === 'R') {
                                 req.body.selected_rps = 'P';
@@ -309,12 +309,11 @@ const addToQueue = async (req, bot = false) => {
                                 req.body.selected_rps = 'R';
                             }
                         }
-
                     }
 
                     // deduct the joiner's bet
                     newTransactionAmount -= betAmount;
-          
+
                     // if win
                     if (
                         (bet_item.rps === 'R' && req.body.selected_rps == 'P') ||
@@ -349,7 +348,7 @@ const addToQueue = async (req, bot = false) => {
                         // send notification
                         message.message =
                             'Won ' +
-                            convertToCurrency(betAmount * 2) +
+                            convertToCurrency(req.body.bet_amount * 2) +
                             ' in ' +
                             roomInfo['game_type']['short_name'] +
                             '-' +
@@ -358,17 +357,15 @@ const addToQueue = async (req, bot = false) => {
 
                         // if draw
                     } else if (bet_item.rps === req.body.selected_rps) {
-
                         game_result = 0;
 
                         roomInfo['user_bet'] = parseFloat(roomInfo['user_bet']) - (betAmount * (parseFloat(tax.value) / 100));
                         roomInfo['host_pr'] = parseFloat(roomInfo['host_pr']) - (betAmount * (parseFloat(tax.value) / 100));
-
                         newTransactionAmount += (betAmount - betAmount * (parseFloat(tax.value) / 100));
 
                         message.message =
                             'Split ' +
-                            convertToCurrency(betAmount * 2) +
+                            convertToCurrency(req.body.bet_amount * 2) +
                             ' in ' +
                             roomInfo['game_type']['short_name'] +
                             '-' +
@@ -385,11 +382,10 @@ const addToQueue = async (req, bot = false) => {
 
                         // update bankroll & other
                         roomInfo['host_pr'] =
-                            (parseFloat(roomInfo['host_pr']) || 0) +
+                            parseFloat(roomInfo['host_pr']) +
                             (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
-
                         roomInfo['user_bet'] =
-                            (parseFloat(roomInfo['user_bet']) || 0) +
+                            parseFloat(roomInfo['user_bet']) +
                             (betAmount * 2 * ((100 - parseFloat(tax.value)) / 100)) - betAmount;
 
                         platform.value =
@@ -418,9 +414,8 @@ const addToQueue = async (req, bot = false) => {
                                 game_result: 3
                             });
 
-
                             saveDocumentWithRetry(newGameLogC);
-                            gameLogArray.push(newGameLogC);
+
                             roomInfo['user_bet'] = parseFloat(
                                 roomInfo['endgame_amount']
                             );
@@ -429,24 +424,17 @@ const addToQueue = async (req, bot = false) => {
                         // send notification
                         message.message =
                             'Lost ' +
-                            convertToCurrency(betAmount) +
+                            convertToCurrency(req.body.bet_amount) +
                             ' in ' +
                             roomInfo['game_type']['short_name'] +
                             '-' +
                             roomInfo['room_number'];
-
-                        }
-
+                    }
                 }
 
-
-                if (roomInfo['rps_game_type'] === 0) {
-                    winnings = betAmount * 2;
-                }
-                // update bet item with joiner's data
-                newGameLog.winnings = winnings;
-                newGameLog.endgame_amount = roomInfo['endgame_amount'];
+                newGameLog.winnings = newTransactionAmount;
                 newGameLog.game_result = game_result;
+                newGameLog.endgame_amount = roomInfo['endgame_amount'];
 
                 bet_item.joiner = user._id;
                 bet_item.joiner_rps = req.body.selected_rps;
@@ -525,7 +513,332 @@ const addToQueue = async (req, bot = false) => {
                 }
 
                 // rug game if bankroll too low
-                if (roomInfo['user_bet'] <= 0.05) {
+                if (roomInfo['user_bet'] <= 0.1) {
+                    roomInfo.status = 'finished';
+                    game_result = 1;
+                    message.message =
+                        'Won ' +
+                        convertToCurrency(roomInfo['host_pr'] + roomInfo['bet_amount']) +
+                        ' in ' +
+                        roomInfo['game_type']['short_name'] +
+                        '-' +
+                        roomInfo['room_number'];
+                }
+                
+            } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
+                // get next unused item
+                const availableBetItem = await QsBetItem.findOne({
+                    _id: req.body._id,
+                    joiner_qs: ''
+                });
+                let bet_item = availableBetItem;
+
+                const allBetItems = await QsBetItem.find({
+                    room: new ObjectId(req.body._id),
+                    joiner: user._id,
+                    joiner_qs: { $ne: null }
+                })
+                    .sort({ created_at: -1 })
+                    .limit(50);
+                const mostRecentItems = allBetItems.slice(0, 4);
+                newGameLog.bet_amount = parseFloat(req.body.bet_amount);
+                if (
+                    parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1) +
+                    parseFloat(req.body.bet_amount) -
+                    (roomInfo['qs_game_type'] - 1) * parseFloat(roomInfo['user_bet']) >
+                    parseFloat(roomInfo['user_bet']) ||
+                    parseFloat(req.body.bet_amount) > parseFloat(req.user.balance)
+                ) {
+                    // Return an error or some other response to the user, e.g.:
+                    return res
+                        .status(400)
+                        .json({ error: 'Bet amount exceeds available balance.' });
+                }
+
+                if (!bet_item) {
+
+                    let nextItem;
+
+                    switch (roomInfo['selectedStrategy']) {
+                        case 'Random':
+                            nextItem = await getRandomItem();
+                            break;
+                        case 'Martingale':
+                            nextItem = await getRandomItem();
+                            break;
+                        case 'Hertz':
+                            nextItem = await patternBasedAI(allBetItems);
+                            break;
+                        case 'Feedback':
+                            nextItem = await counterSwitchAI(allBetItems);
+                            break;
+                        case 'Skill-issue':
+                            nextItem = await counterRandomness(allBetItems);
+                            break;
+                        case 'Skill-issue-2':
+                            nextItem = await counterRandomness(allBetItems);
+                            break;
+                        case 'NPC':
+                            nextItem = await NPC(allBetItems);
+                            break;
+                        case 'Tesla':
+                            nextItem = await generatePattern(allBetItems);
+                            break;
+                        case 'CopyCat':
+                            nextItem = await getCopyCatItem(allBetItems);
+                            break;
+                        case 'Markov':
+                            nextItem = await getNextItemUsingMarkov(allBetItems);
+                            break;
+                        case 'Hidden Markov':
+                            nextItem = await predictNextQs(allBetItems, roomInfo['qs_game_type']);
+                            break;
+
+                        default:
+                            const move = await reinforcementAI(allBetItems);
+                            nextItem = move.move;
+                            break;
+                    }
+                    // save the new item
+                    bet_item = new RpsBetItem({
+                        room: new ObjectId(req.body._id),
+                        qs: nextItem,
+                        bet_amount: betAmount,
+                    });
+
+                    // Define helper functions
+                    function getRandomItem() {
+                        const rpsOptions = ['R', 'P', 'S'];
+                        return rpsOptions[Math.floor(Math.random() * 3)];
+                    }
+
+                    function getCopyCatItem(allBetItems) {
+                        const copyCatBetItem = allBetItems.find(item => item.joiner_rps);
+                        return copyCatBetItem ? copyCatBetItem.joiner_rps : getRandomItem();
+                    }
+
+                    async function getNextItemUsingMarkov(allBetItems) {
+                        if (allBetItems.length <= 3) {
+                            return getRandomItem();
+                        }
+
+                        const transformedItems = allBetItems.map(item => ({ rps: item.joiner_rps }));
+                        const nextItem = await predictNext(transformedItems, true);
+                        return nextItem;
+                    }
+                }
+
+                newGameLog.selected_qs_position = req.body.selected_qs_position;
+
+                // rig clause
+                const randomNumber = Math.random();
+                if (randomNumber <= 0.7 && betAmount > 3) {
+                    if (bot &&
+                        (Number(bet_item.qs) === req.body.selected_qs_position)
+                    ) {
+                        // Logic to change req.body.selected_rps based on bot's choice
+                        const qs_game_type_2x = [0, 1];
+                        const qs_game_type_3x = [0, 1, 2];
+                        const qs_game_type_4x = [0, 1, 2, 3];
+                        const qs_game_type_5x = [0, 1, 2, 3, 4];
+
+                        function getRandomPosition(gameTypeArray, currentPosition) {
+                            const filteredArray = gameTypeArray.filter(position => position !== currentPosition);
+                            return filteredArray[Math.floor(Math.random() * filteredArray.length)];
+                        }
+
+                        if (roomInfo['qs_game_type'] === 0) {
+                            req.body.selected_qs_position = getRandomPosition(qs_game_type_2x, bet_item.qs);
+                        } else if (roomInfo['qs_game_type'] === 1) {
+                            req.body.selected_qs_position = getRandomPosition(qs_game_type_3x, bet_item.qs);
+                        } else if (roomInfo['qs_game_type'] === 2) {
+                            req.body.selected_qs_position = getRandomPosition(qs_game_type_4x, bet_item.qs);
+                        } else if (roomInfo['qs_game_type'] === 3) {
+                            req.body.selected_qs_position = getRandomPosition(qs_game_type_5x, bet_item.qs);
+                        } else {
+                            req.body.selected_qs_position = getRandomPosition(qs_game_type_5x, bet_item.qs); // Assuming default to 5x
+                        }
+                    }
+                }
+
+                // deduct the joiner's bet
+                newTransactionAmount -= betAmount;
+
+                if (Number(bet_item.qs) === req.body.selected_qs_position) {
+                    newGameLog.game_result = -1;
+
+                    roomInfo['user_bet'] =
+                        parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
+                    if (
+                        roomInfo['endgame_type'] &&
+                        roomInfo['user_bet'] >= roomInfo['endgame_amount']
+                    ) {
+                        newTransactionC.amount +=
+                            parseFloat(roomInfo['user_bet']) -
+                            parseFloat(roomInfo['endgame_amount']);
+                        const newGameLogC = new GameLog({
+                            room: roomInfo,
+                            creator: roomInfo['creator'],
+                            joined_user: roomInfo['creator'],
+                            game_type: roomInfo['game_type'],
+                            bet_amount: roomInfo['host_pr'],
+                            user_bet: roomInfo['user_bet'],
+                            is_anonymous: roomInfo['is_anonymous'],
+                            game_result: 3
+                        });
+                        await newGameLogC.save();
+                        roomInfo['user_bet'] = parseFloat(
+                            roomInfo['endgame_amount']
+                        ); /* (roomInfo['user_bet'] -  roomInfo['bet_amount']) */
+                    }
+
+                    bet_item.joiner = req.user;
+                    bet_item.joiner_qs = req.body.selected_qs;
+
+                    message.message =
+                        'Lost ' +
+                        convertToCurrency(req.body.bet_amount) +
+                        ' in ' +
+                        roomInfo['game_type']['short_name'] +
+                        '-' +
+                        roomInfo['room_number'];
+                } else {
+                    newGameLog.game_result = 1;
+                    newTransactionAmount +=
+                        (parseFloat(req.body.bet_amount) +
+                            parseFloat(req.body.bet_amount) /
+                            (roomInfo['qs_game_type'] - 1)) *
+                        ((100 - commission) / 100);
+                    roomInfo['host_pr'] -=
+                        parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
+                    roomInfo['user_bet'] -=
+                        parseFloat(req.body.bet_amount) / (roomInfo['qs_game_type'] - 1);
+
+                    newGameLog.commission =
+                        (parseFloat(req.body.bet_amount) +
+                            parseFloat(req.body.bet_amount) /
+                            (roomInfo['qs_game_type'] - 1)) *
+                        ((commission - 0.5) / 100);
+                    // update rain
+                    rain.value =
+                        parseFloat(rain.value) +
+                        (parseFloat(req.body.bet_amount) +
+                            parseFloat(req.body.bet_amount) /
+                            (roomInfo['qs_game_type'] - 1)) *
+                        ((commission - 0.5) / 100);
+                    // update platform stat (0.5%)
+                    platform.value =
+                        parseFloat(platform.value) +
+                        (parseFloat(req.body.bet_amount) +
+                            parseFloat(req.body.bet_amount) /
+                            (roomInfo['qs_game_type'] - 1)) *
+                        (tax.value / 100);
+                    if (req.io.sockets) {
+                        req.io.sockets.emit('UPDATE_RAIN', {
+                            rain: rain.value
+                        });
+                    }
+                    // update bankroll
+                    roomInfo['user_bet'] =
+                        parseFloat(roomInfo['user_bet']) +
+                        (parseFloat(req.body.bet_amount) +
+                            parseFloat(req.body.bet_amount) /
+                            (roomInfo['qs_game_type'] - 1)) *
+                        ((commission - 0.5) / 100);
+             
+                    message.message =
+                        'Won ' +
+                        convertToCurrency(
+                            parseFloat(req.body.bet_amount) /
+                            parseFloat(roomInfo['qs_game_type'] - 1) +
+                            parseFloat(req.body.bet_amount)
+                        ) +
+                        ' in ' +
+                        roomInfo['game_type']['short_name'] +
+                        '-' +
+                        roomInfo['room_number'];
+                }
+
+                bet_item.joiner = req.user;
+                bet_item.joiner_qs = req.body.selected_qs_position;
+                newGameLog.winnings = newTransactionAmount;
+                newGameLog.game_result = game_result;
+                newGameLog.endgame_amount = roomInfo['endgame_amount'];
+
+                bet_item.bet_amount = betAmount;
+                await saveDocumentWithRetry(bet_item);
+                gameLogArray.push(newGameLog);
+
+
+                const updatedGameLogArray = await Promise.all(gameLogArray.map(async (gameLog) => {
+                    // Populate room
+                    const room = await Room.findById(gameLog.room).exec();
+                    const populatedRoom = room ? room.toObject() : null;
+
+                    // Populate creator
+                    const creator = await User.findById(gameLog.creator).exec();
+                    const populatedCreator = creator ? creator.toObject() : null;
+
+                    // Populate joined_user
+                    const joinedUser = await User.findById(gameLog.joined_user).exec();
+                    const populatedJoinedUser = joinedUser ? joinedUser.toObject() : null;
+
+                    // Populate game_type
+                    const gameType = await GameType.findById(gameLog.game_type).exec();
+                    const populatedGameType = gameType ? gameType.toObject() : null;
+
+                    // Merge original fields with populated sub-documents
+                    const mergedObject = {
+                        bet_amount: gameLog.bet_amount,
+                        commission: gameLog.commission,
+                        game_result: gameLog.game_result,
+                        winnings: gameLog.winnings,
+                        host_pr: gameLog.host_pr,
+                        user_bet: gameLog.user_bet,
+                        _id: gameLog._id,
+                        room: populatedRoom,
+                        creator: populatedCreator,
+                        joined_user: populatedJoinedUser,
+                        game_type: populatedGameType,
+                        created_at: gameLog.created_at,
+                        updated_at: gameLog.updated_at,
+                        hosts: gameLog.hosts
+                    };
+
+                    return mergedObject;
+                }));
+
+                const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
+
+                // socket for last 5 items
+                if (roomInfo['qs_game_type'] === 0) {
+                    mostRecentItems.reverse();
+                    mostRecentItems.push(bet_item);
+                    if (mostRecentItems.length > 0) {
+                        if (req.io.sockets) {
+                            req.io.sockets.emit(`UPDATED_BANKROLL_QS_${roomInfo._id}`, {
+                                bankroll: roomInfo['user_bet'],
+                                host_pr: roomInfo['host_pr'],
+                                rps: mostRecentItems,
+                                newLog: newLog,
+                                user: user
+                            });
+                            req.io.sockets.emit('NEW_LOG', {
+                                newLog: newLog
+                            });
+                        }
+                    } else {
+                        responseData = {
+                            success: false,
+                            message: 'irregular action',
+                            betResult: -3000
+                        };
+                        return responseData;
+                    }
+                }
+
+                // rug game if bankroll too low
+                if (roomInfo['user_bet'] <= 0.1) {
                     roomInfo.status = 'finished';
                     game_result = 1;
                     message.message =
@@ -539,7 +852,6 @@ const addToQueue = async (req, bot = false) => {
             }
 
             user['balance'] += newTransactionAmount;
-
             user['gamePlayed']++;
             user['totalProfit'] += newTransactionAmount;
             user['totalWagered'] += Math.abs(bet_item.bet_amount);
@@ -626,7 +938,6 @@ const addToQueue = async (req, bot = false) => {
                     socket.newTransaction(newTransactionC);
                 }
 
-
             } else {
                 // Iterate over each host asynchronously
                 roomInfo.hosts.forEach(async (host) => {
@@ -706,6 +1017,7 @@ const addToQueue = async (req, bot = false) => {
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
+
             if (shouldSave) {
                 try {
                     Promise.all([
@@ -721,6 +1033,28 @@ const addToQueue = async (req, bot = false) => {
                 }
             }
 
+            const notificationData = {
+                _id: user._id,
+                message: message.message,
+                username: user.username,
+                avatar: user.avatar,
+                accessory: user.accessory,
+                room: req.body._id,
+                rank: user.totalWagered,
+                created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                created_at_str: moment(new Date()).format('LLL'),
+                updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+                is_read: false
+            };
+
+            if (message.message !== '' && message.from._id !== message.to._id) {
+                try {
+                    await saveDocumentWithRetry(message);
+                    socket.sendNotification(message.to._id, notificationData);
+                } catch (error) {
+                    console.error("Error saving message:", error);
+                }
+            }
             user = null;
             bet_item = null;
             // }, 0);
@@ -741,7 +1075,6 @@ const addToQueue = async (req, bot = false) => {
             newTransaction: newTransactionJ,
             roomStatus: roomInfo.status
         };
-
         return responseData;
     } catch (err) {
         console.error(err);

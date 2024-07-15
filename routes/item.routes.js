@@ -647,12 +647,12 @@ router.get('/', async (req, res) => {
     let query = { 
       'owners.onSale': { $gt: 0 }, 
       'item_type': itemTypeFilter,
-      'image': { $nin: ['santaHat', 'xmasTree'] } // exclude santaHat and xmasTree images
+      'image': { $nin: ['santaHat', 'xmasTree', 'ghost2',  'ghost']  } // exclude santaHat and xmasTree images
     };
 
     const items = await Item.find(query)
       .skip(pagination * page - pagination)
-      .limit(pagination);
+      .limit(90);
 
     const count = await Item.countDocuments(query);
 

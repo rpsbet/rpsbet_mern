@@ -1,6 +1,6 @@
 import {
   RPSBETITEMS_LOADED,
-
+  QSBETITEMS_LOADED,
   ACTION_ROOM,
   GAMETYPE_LOADED,
   STRATEGIES_LOADED,
@@ -51,7 +51,7 @@ import {
 
 const initialState = {
   rpsbetitems: [],
-
+  qsbetitems: [],
   isActiveLoadingOverlay: false,
   transactionComplete: false,
   socket: null,
@@ -234,6 +234,12 @@ export default function (state = initialState, action) {
         return {
           ...state,
           comments: action.payload,
+          error: null
+        };
+      case QSBETITEMS_LOADED:
+        return {
+          ...state,
+          qsbetitems: action.payload.data,
           error: null
         };
       case RPSBETITEMS_LOADED:
