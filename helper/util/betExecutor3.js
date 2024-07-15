@@ -36,6 +36,7 @@ const addToQueue = async (req, bot = false) => {
         let gameLogArray = [];
         let user;
         let game_result;
+        let bet_item;
         let newTransactionAmount = 0;
         let newTransactionJ = new Transaction({
             user: '',
@@ -185,7 +186,7 @@ const addToQueue = async (req, bot = false) => {
                 // joiner: user._id,
                 joiner_rps: ''
             });
-            let bet_item = availableBetItem;
+            bet_item = availableBetItem;
 
             const allBetItems = await RpsBetItem.find({
                 room: new ObjectId(req.body._id),
@@ -522,7 +523,7 @@ const addToQueue = async (req, bot = false) => {
                     _id: req.body._id,
                     joiner_qs: ''
                 });
-                let bet_item = availableBetItem;
+                bet_item = availableBetItem;
 
                 const allBetItems = await QsBetItem.find({
                     room: new ObjectId(req.body._id),

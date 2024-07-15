@@ -2663,6 +2663,12 @@ router.post('/topUp', auth, async (req, res) => {
         betResult: -1000
       });
     }
+    if (room.status !== 'open' ) {
+      return res.json({
+        success: false,
+        message: 'THIS BATTLE HAS ENDED ALREADY'
+      });
+    }
     if (!room) {
       return res.json({
         success: false,
@@ -2707,7 +2713,7 @@ router.post('/topUp', auth, async (req, res) => {
       if (host.host.equals(req.user._id)) {
         host.stake += topUpAmount;
       }
-      host.share = (host.stake / room.user_bet) * 100;
+      host.share = (host.stake / room.bet_amount) * 100;
     });
 
     const savePromises = [
@@ -2754,6 +2760,13 @@ router.post('/editPayout', auth, async (req, res) => {
       return res.json({
         success: false,
         message: 'ROOM NOT FOUND'
+      });
+    }
+
+    if (room.status !== 'open' ) {
+      return res.json({
+        success: false,
+        message: 'THIS BATTLE HAS ENDED ALREADY'
       });
     }
 

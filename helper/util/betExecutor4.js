@@ -30,7 +30,7 @@ const addToQueue = async (req, bot = false) => {
             rain,
             platform
         ] = await Promise.all([taxPromise, rainPromise, platformPromise]);
-
+let bet_item;
         let responseData = {};
         let gameLogArray = [];
         let user;
@@ -186,7 +186,7 @@ const addToQueue = async (req, bot = false) => {
                     // joiner: user._id,
                     joiner_rps: ''
                 });
-                let bet_item = availableBetItem;
+                bet_item = availableBetItem;
 
                 const allBetItems = await RpsBetItem.find({
                     room: new ObjectId(req.body._id),
@@ -531,7 +531,7 @@ const addToQueue = async (req, bot = false) => {
                     _id: req.body._id,
                     joiner_qs: ''
                 });
-                let bet_item = availableBetItem;
+                bet_item = availableBetItem;
 
                 const allBetItems = await QsBetItem.find({
                     room: new ObjectId(req.body._id),
