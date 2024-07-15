@@ -1159,8 +1159,6 @@ router.post('/rooms', auth, async (req, res) => {
     let host_pr = 0;
     let user_bet = 0;
     let pr = 0;
-console.log("white hole",game_type )
-console.log("black hole",gameType )
     if (game_type == '1') {
       // RPS
       host_pr = parseFloat(bet_amount);
@@ -1409,8 +1407,13 @@ async function getRoomNetProfits(room_id) {
 
       const commission = item.CP;
 
-      const actor = gameLog.joined_user.username;
-      const wagered = gameLog.bet_amount;
+      let actor;
+      if (gameLog.joined_user && gameLog.joined_user.username) {
+        actor = gameLog.joined_user.username;
+      } else {
+        actor = "Other";  // or any default value you'd prefer
+      }
+            const wagered = gameLog.bet_amount;
       let net_profit = 0;
 
       if (gameLog.game_type && gameLog.game_type.short_name === 'S!') {
@@ -2702,6 +2705,34 @@ router.post('/topUp', auth, async (req, res) => {
       amount: -topUpAmount,
       description
     });
+
+     // Create and save a new game log
+     const newGameLog = new GameLog({
+      room: room, // Assign appropriate value
+      creator: req.user._id,
+      joined_user: null, // Assign appropriate value
+      game_type: room['game_type'], // Assign appropriate value
+      bet_amount: topUpAmount,
+      selected_rps: '', // Assign appropriate value
+      commission: 0, // Adjust as necessary
+      game_result: 3000, // Adjust as necessary
+      winnings: 0, // Adjust as necessary
+      endgame_amount: 0, // Adjust as necessary
+      host_pr: 0, // Adjust as necessary
+      user_bet: 0, // Adjust as necessary
+      status: 'open', // Adjust as necessary
+      hosts: [] // Assign appropriate value
+    });
+
+    try {
+      await newGameLog.save();
+    } catch (error) {
+      console.error('Error saving game log:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save game log'
+      });
+    }
 
     // Update balances and save transactions
     room.bet_amount += topUpAmount;

@@ -1,4 +1,4 @@
-// betExecutor2.js
+// betExecutor.js
 const ObjectId = require('mongoose').Types.ObjectId;
 const SystemSetting = require('../../model/SystemSetting');
 const User = require('../../model/User');
@@ -12,13 +12,14 @@ const GameLog = require('../../model/GameLog');
 const convertToCurrency = require('./conversion');
 const socket = require('../../socketController')
 const moment = require('moment');
-const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
-const saveDocumentWithRetry = require('./retrySave');
 const { convertGameLogToHistoryStyle } = require('./convertGameLogToHistoryStyle');
 const check_access_time = require('../../helper/util/checkAccessTime');
 
+const { predictNext, reinforcementAI, patternBasedAI, counterSwitchAI, counterRandomness, NPC, generatePattern } = require('./predictNext');
+const saveDocumentWithRetry = require('./retrySave');
 const requestQueue = [];
 let user_access_log = {};
+
 
 const addToQueue = async (req, bot = false) => {
     try {
@@ -45,13 +46,14 @@ const addToQueue = async (req, bot = false) => {
         });
         if (bot) {
             return responseData;
+
         } else {
             user = req.user;
         }
 
 
         if (req.body._id) {
-            if (user.dailyWithdrawals > 0.02) {
+            if (user.dailyWithdrawals > 250) {
                 responseData = {
                     success: false,
                     message: 'illregular action',
@@ -71,7 +73,6 @@ const addToQueue = async (req, bot = false) => {
                 }
                 return responseData;
             }
-
             let betAmount = parseFloat(req.body.bet_amount);
 
             roomInfo = await Room.findOne({ _id: req.body._id })
@@ -79,14 +80,13 @@ const addToQueue = async (req, bot = false) => {
                 .populate({
                     path: 'creator',
                     model: User,
-                    select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance'
+                    select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance ' // Only select the 'username' field from the 'User' document
                 })
                 .populate({
                     path: 'game_type',
                     model: GameType,
                     select: 'game_type_name short_name'
                 })
-                .exec();
             if (
                 roomInfo['creator'] &&
                 roomInfo['creator']._id &&
@@ -99,17 +99,6 @@ const addToQueue = async (req, bot = false) => {
                     message: `YOU'VE CAT TO BE KITTEN ME! DIS YOUR OWN GAME!`,
                     betResult: -101
                 };
-                return responseData;
-            }
-
-            const accessAllowed = await check_access_time(req.user._id);
-            if (!accessAllowed) {
-                responseData = {
-                    success: false,
-                    message: 'SLOW DOWN!',
-                    betResult: -100
-                };
-
                 return responseData;
             }
 
@@ -145,14 +134,13 @@ const addToQueue = async (req, bot = false) => {
             newGameLog = new GameLog({
                 room: roomInfo,
                 creator: roomInfo['creator'],
-                joined_user: user._id,
+                joined_user: user,
                 game_type: roomInfo['game_type'],
                 bet_amount: roomInfo['bet_amount'],
-                game_result: 0
                 // is_anonymous: req.body.is_anonymous
             });
 
-            let newTransactionC = new Transaction({
+            newTransactionC = new Transaction({
                 user: roomInfo['creator'],
                 amount: 0,
                 description:
@@ -162,16 +150,19 @@ const addToQueue = async (req, bot = false) => {
                     roomInfo['room_number'],
                 room: req.body._id
             });
-            newTransactionJ.user = user._id;
-            newTransactionJ.description =
-                'joined ' +
-                roomInfo['game_type']['short_name'] +
-                '-' +
-                roomInfo['room_number'];
-
+            newTransactionJ = new Transaction({
+                user: user,
+                amount: 0,
+                description:
+                    'joined ' +
+                    roomInfo['game_type']['short_name'] +
+                    '-' +
+                    roomInfo['room_number'],
+                room: req.body._id
+            });
 
             let message = new Notification({
-                from: user._id,
+                from: user,
                 to: roomInfo['creator'],
                 room: req.body._id,
                 message: '',
@@ -179,6 +170,27 @@ const addToQueue = async (req, bot = false) => {
                 is_read: false
             });
 
+            if (roomInfo['game_type']['game_type_name'] === 'RPS') {
+                if (
+                    betAmount > parseFloat(roomInfo['user_bet']) ||
+                    betAmount > parseFloat(user.balance)
+                ) {
+
+                    if (bot) {
+                        betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : parseFloat(user.balance);
+                    } else {
+
+                        responseData = {
+                            success: false,
+                            message: 'Bet amount exceeds available balance.'
+                        }
+                        return responseData;
+                    }
+                }
+
+                newGameLog.bet_amount = betAmount;
+
+              
             // get next unused item
             const availableBetItem = await RpsBetItem.findOne({
                 room: req.body._id,
@@ -196,31 +208,12 @@ const addToQueue = async (req, bot = false) => {
                 .limit(50);
             const mostRecentItems = allBetItems.slice(0, 4);
 
-            if (roomInfo['game_type']['game_type_name'] === 'RPS') {
-                if (
-                    betAmount > parseFloat(roomInfo['user_bet']) ||
-                    betAmount > parseFloat(user.balance)
-                ) {
-
-                    if (bot) {
-                        betAmount = betAmount > parseFloat(roomInfo['user_bet']) ? parseFloat(roomInfo['user_bet']) : betAmount;
-                        betAmount = betAmount > parseFloat(user.balance) ? parseFloat(user.balance) : betAmount;
-                    } else {
-
-                        responseData = {
-                            success: false,
-                            message: 'Bet amount exceeds available balance.'
-                        }
-                        return responseData;
-                    }
-                }
-
-                newGameLog.bet_amount = betAmount;
 
                 // if no more items, create a new one
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
 
+               
                     switch (roomInfo['selectedStrategy']) {
                         case 'Random':
                             nextItem = await getRandomItem();
@@ -235,9 +228,6 @@ const addToQueue = async (req, bot = false) => {
                             nextItem = await counterSwitchAI(allBetItems);
                             break;
                         case 'Skill-issue':
-                            nextItem = await counterRandomness(allBetItems);
-                            break;
-                        case 'Skill-issue-2':
                             nextItem = await counterRandomness(allBetItems);
                             break;
                         case 'NPC':
@@ -267,6 +257,12 @@ const addToQueue = async (req, bot = false) => {
                         rps: nextItem,
                         bet_amount: betAmount,
                     });
+
+                    // try {
+                    //     await saveDocumentWithRetry(bet_item);
+                    // } catch (error) {
+                    //     console.error("Error saving bet_item:", error);
+                    // }
 
                     // Define helper functions
                     function getRandomItem() {
@@ -420,10 +416,12 @@ const addToQueue = async (req, bot = false) => {
                 if (roomInfo['rps_game_type'] === 0) {
                     winnings = betAmount * 2;
                 }
+
                 // update bet item with joiner's data
                 newGameLog.winnings = winnings;
                 newGameLog.game_result = game_result;
                 newGameLog.endgame_amount = roomInfo['endgame_amount'];
+
                 bet_item.joiner = user._id;
                 bet_item.joiner_rps = req.body.selected_rps;
                 bet_item.bet_amount = betAmount;
@@ -431,47 +429,48 @@ const addToQueue = async (req, bot = false) => {
                 gameLogArray.push(newGameLog);
 
 
-                const updatedGameLogArray = await Promise.all(gameLogArray.map(async (gameLog) => {
-                    // Populate room
-                    const room = await Room.findById(gameLog.room).exec();
-                    const populatedRoom = room ? room.toObject() : null;
-
-                    // Populate creator
-                    const creator = await User.findById(gameLog.creator).exec();
-                    const populatedCreator = creator ? creator.toObject() : null;
-
-                    // Populate joined_user
-                    const joinedUser = await User.findById(gameLog.joined_user).exec();
-                    const populatedJoinedUser = joinedUser ? joinedUser.toObject() : null;
-
-                    // Populate game_type
-                    const gameType = await GameType.findById(gameLog.game_type).exec();
-                    const populatedGameType = gameType ? gameType.toObject() : null;
-
-                    // Merge original fields with populated sub-documents
-                    const mergedObject = {
-                        bet_amount: gameLog.bet_amount,
-                        commission: gameLog.commission,
-                        game_result: gameLog.game_result,
-                        winnings: gameLog.winnings,
-                        host_pr: gameLog.host_pr,
-                        user_bet: gameLog.user_bet,
-                        _id: gameLog._id,
-                        room: populatedRoom,
-                        creator: populatedCreator,
-                        joined_user: populatedJoinedUser,
-                        game_type: populatedGameType,
-                        created_at: gameLog.created_at,
-                        updated_at: gameLog.updated_at,
-                        hosts: gameLog.hosts
-                    };
-
-                    return mergedObject;
+                const roomIds = gameLogArray.map(gameLog => gameLog.room);
+                const creatorIds = gameLogArray.map(gameLog => gameLog.creator);
+                const joinedUserIds = gameLogArray.map(gameLog => gameLog.joined_user);
+                const gameTypeIds = gameLogArray.map(gameLog => gameLog.game_type);
+                
+                // Fetch all rooms, creators, joined users, and game types in parallel
+                const [rooms, creators, joinedUsers, gameTypes] = await Promise.all([
+                  Room.find({ _id: { $in: roomIds } }).lean().exec(),
+                  User.find({ _id: { $in: creatorIds } }).lean().exec(),
+                  User.find({ _id: { $in: joinedUserIds } }).lean().exec(),
+                  GameType.find({ _id: { $in: gameTypeIds } }).lean().exec()
+                ]);
+                
+                // Create maps for quick lookup
+                const roomMap = new Map(rooms.map(room => [room._id.toString(), room]));
+                const creatorMap = new Map(creators.map(creator => [creator._id.toString(), creator]));
+                const joinedUserMap = new Map(joinedUsers.map(user => [user._id.toString(), user]));
+                const gameTypeMap = new Map(gameTypes.map(type => [type._id.toString(), type]));
+                
+                // Map game logs to their updated form
+                const updatedGameLogArray = gameLogArray.map(gameLog => ({
+                  bet_amount: gameLog.bet_amount,
+                  commission: gameLog.commission,
+                  game_result: gameLog.game_result,
+                  winnings: gameLog.winnings,
+                  host_pr: gameLog.host_pr,
+                  user_bet: gameLog.user_bet,
+                  _id: gameLog._id,
+                  room: roomMap.get(gameLog.room.toString()),
+                  creator: creatorMap.get(gameLog.creator.toString()),
+                  joined_user: joinedUserMap.get(gameLog.joined_user.toString()),
+                  game_type: gameTypeMap.get(gameLog.game_type.toString()),
+                  created_at: gameLog.created_at,
+                  updated_at: gameLog.updated_at,
+                  hosts: gameLog.hosts
                 }));
-
-                // Now the updatedGameLogArray should have the original fields along with the populated sub-documents
+                
+                // Now updatedGameLogArray has the populated sub-documents
+                
+                // Assuming convertGameLogToHistoryStyle can be optimized similarly
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
-
+                
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
                     mostRecentItems.reverse();
@@ -514,7 +513,9 @@ const addToQueue = async (req, bot = false) => {
 
 
                 }
+
             } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
+
                 // get next unused item
                 const availableBetItem = await QsBetItem.findOne({
                     _id: req.body._id,
@@ -589,9 +590,9 @@ const addToQueue = async (req, bot = false) => {
                             break;
                     }
                     // save the new item
-                    bet_item = new RpsBetItem({
+                    bet_item = new QsBetItem({
                         room: new ObjectId(req.body._id),
-                        qs: nextItem,
+                        qs: 0,
                         bet_amount: betAmount,
                     });
 
@@ -621,10 +622,8 @@ const addToQueue = async (req, bot = false) => {
 
                 // deduct the joiner's bet
                 newTransactionAmount -= betAmount;
-
                 if (Number(bet_item.qs) === req.body.selected_qs_position) {
                     newGameLog.game_result = -1;
-console.log("newTransactionAmount", newTransactionAmount);
 
                     roomInfo['user_bet'] =
                         parseFloat(roomInfo['user_bet']) + parseFloat(req.body.bet_amount);
@@ -666,13 +665,13 @@ console.log("newTransactionAmount", newTransactionAmount);
                     newTransactionAmount +=
                         (betAmount +
                             betAmount /
-                            (roomInfo['qs_game_type'] - 1)) *
+                            (room['qs_game_type'] - 1)) *
                         ((100 - commission) / 100);
                     roomInfo['host_pr'] -=
                         betAmount / (roomInfo['qs_game_type'] - 1);
                     roomInfo['user_bet'] -=
-                    betAmount / (roomInfo['qs_game_type'] - 1);
-console.log("newTransactionAmount2", newTransactionAmount);
+                        betAmount / (roomInfo['qs_game_type'] - 1);
+
                     newGameLog.commission =
                         (betAmount +
                             betAmount /
@@ -704,7 +703,7 @@ console.log("newTransactionAmount2", newTransactionAmount);
                             betAmount /
                             (roomInfo['qs_game_type'] - 1)) *
                         ((commission - 0.5) / 100);
-             
+
                     message.message =
                         'Won ' +
                         convertToCurrency(
@@ -723,7 +722,6 @@ console.log("newTransactionAmount2", newTransactionAmount);
                 newGameLog.winnings = newTransactionAmount;
                 newGameLog.game_result = game_result;
                 newGameLog.endgame_amount = roomInfo['endgame_amount'];
-
                 bet_item.bet_amount = betAmount;
                 await saveDocumentWithRetry(bet_item);
                 gameLogArray.push(newGameLog);
@@ -880,7 +878,9 @@ console.log("newTransactionAmount2", newTransactionAmount);
 
                 if (newTransactionC.amount !== 0) {
                     try {
+
                         saveDocumentWithRetry(newTransactionC);
+
                         if (host) {
                             try {
                                 host.balance += newTransactionC.amount;
