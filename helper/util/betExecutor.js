@@ -525,7 +525,7 @@ const addToQueue = async (req, bot = false) => {
                         '-' +
                         roomInfo['room_number'];
                 }
-                
+
             } else if (roomInfo['game_type']['game_type_name'] === 'Quick Shoot') {
                 // get next unused item
                 const availableBetItem = await QsBetItem.findOne({
@@ -746,7 +746,7 @@ const addToQueue = async (req, bot = false) => {
                             parseFloat(req.body.bet_amount) /
                             (roomInfo['qs_game_type'] - 1)) *
                         ((commission - 0.5) / 100);
-             
+
                     message.message =
                         'Won ' +
                         convertToCurrency(
@@ -1018,6 +1018,7 @@ const addToQueue = async (req, bot = false) => {
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
+           roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
 
             if (shouldSave) {
                 try {

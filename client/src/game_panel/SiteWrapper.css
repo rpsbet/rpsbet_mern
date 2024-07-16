@@ -38,6 +38,40 @@ button#recentSearches span {
   position: relative;
 
 }
+.hover-text-button {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9px;
+  margin-top: 1.6em;
+  background: #ccc;
+  box-shadow: inset rgb(62, 69, 84) 0px 0px 4px;
+  color: #3e4554;
+  font-size: 1.6em;
+  width: 50px;
+  transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.hover-text-button:hover {
+  width: 200px;
+  background-color: #bbb;
+}
+
+.hover-text-button .button-text {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.hover-text-button:hover .button-text {
+  opacity: 1;
+}
+
+.special-button {
+  background: linear-gradient(45deg, #d81719, #950002);
+  box-shadow: #d81719 0px 0px 4px inset;
+  color: #e9ecef;
+}
 
 .host-container {
   display: inline-flex;

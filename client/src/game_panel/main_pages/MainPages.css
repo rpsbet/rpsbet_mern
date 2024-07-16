@@ -241,6 +241,57 @@ div.table .table-row .table-cell button:last-child,
 .boxes-panel.boxes-join .box {
   background-color: #d81719;
 }
+.hover-text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start; /* Align items to the start */
+  border-radius: 9px;
+  background: #ccc;
+  box-shadow: inset rgb(62, 69, 84) 0px 0px 4px;
+  color: #3e4554;
+  font-size: 1.6em;
+  width: 50px;
+  transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative; /* Ensure positioning context */
+}
+
+.hover-text-button:hover {
+  width: 200px;
+  background-color: #bbb;
+}
+
+.hover-text-button:hover .button-icon {
+  opacity: 0;
+}
+
+
+.hover-text-button .button-icon {
+  font-size: 1.6em;
+  transition: opacity 0.3s ease-in-out; /* Smooth transition for opacity */
+}
+
+.hover-text-button .button-text {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  position: absolute; /* Position text relative to button */
+  left: 100%; /* Position text outside of button */
+  top: 50%; /* Center text vertically */
+  transform: translateY(-50%); /* Adjust for centering */
+  padding-left: 10px; /* Add space between icon and text */
+}
+
+.hover-text-button:hover .button-text {
+  opacity: 1;
+  left: auto; /* Reset position */
+}
+
+.special-button {
+  background: linear-gradient(45deg, #0bb59f, #07af18);
+  box-shadow: #03972a 0px 0px 4px inset;
+  color: #e9ecef;
+}
 
 .modal-content-panel .Mui-disabled {
   display: none !important;
@@ -2738,6 +2789,7 @@ pointer-events: unset !important;
 .host-controls {
   display: inline-flex;
   flex-direction: row;
+  margin-top: 30px;
   justify-content: center;
   align-items: center;
 }

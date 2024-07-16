@@ -206,11 +206,11 @@ export const bet = bet_info => async dispatch => {
 
 // auto join game
 export const bet2 = bet_info => async dispatch => {
-  
+
   try {
     dispatch({ type: START_BET });
     const res = await axios.post('/game/bet2', bet_info);
-console.log(res)
+    console.log(res)
     dispatch({ type: END_BET });
 
     if (res.data.success) {
@@ -827,6 +827,34 @@ export const updateRoomStrategy = (room_id, strategy) => async dispatch => {
 
   }
 };
+
+export const kickBots = (room_id) => async (dispatch) => {
+  try {
+    let botRemoved = false;
+    let loopCount = 0;
+    while (!botRemoved && loopCount < 4) {
+      const res = await axios.patch(`/game/rooms/${room_id}/remove-bots`);
+      if (res.data.success) {
+        dispatch({ type: MSG_SUCCESS, payload: 'All bots have been removed from the room!' });
+
+        botRemoved = true;
+      }
+
+      loopCount++;
+    }
+
+    if (!botRemoved) {
+      dispatch({ type: MSG_ERROR, payload: 'Failed to remove bots from the room' });
+      throw new Error('Could not remove bots from the room after 4 attempts');
+    }
+
+    return true; // Bots successfully removed
+  } catch (err) {
+    dispatch({ type: 'MSG_ERROR', payload: 'Failed to remove bots from the room or room has ended' });
+    return false; // Bot removal failed
+  }
+};
+
 export const updateRoomBot = (room_id) => async dispatch => {
   try {
     let botAttached = false;
@@ -850,7 +878,7 @@ export const updateRoomBot = (room_id) => async dispatch => {
 
     return true; // Bot successfully attached
   } catch (err) {
-    dispatch({ type: MSG_ERROR, payload: 'NO MORE BOTS OR ROOM HAS ENDED'});
+    dispatch({ type: MSG_ERROR, payload: 'NO MORE BOTS OR ROOM HAS ENDED' });
     return false; // Bot attachment failed
   }
 };

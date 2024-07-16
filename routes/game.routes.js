@@ -138,7 +138,7 @@ router.patch('/rooms/:room_id', async (req, res) => {
   const { room_id } = req.params;
 
   try {
-    
+
     // Check if the room is locked by another request
     if (roomLocks[room_id]) {
       return res.status(409).json({ success: false, message: 'Room is currently being updated' });
@@ -221,6 +221,99 @@ router.patch('/rooms/:room_id', async (req, res) => {
   }
 });
 
+
+router.patch('/rooms/:room_id/remove-bots', async (req, res) => {
+  const { room_id } = req.params;
+  // Define the bot IDs to remove
+  const bots = [
+    '65eafc72aea25957ac8ea60d',
+    '65eafa5caea25957ac8ea60b',
+    '62b9ef88a5409449f63f7ccb',
+    '65eafb7daea25957ac8ea60c'
+  ];
+
+  try {
+    // Lock the room
+    roomLocks[room_id] = true;
+
+    // Check if the room exists
+    let room = await Room.findById(room_id);
+
+    if (!room) {
+      delete roomLocks[room_id]; // Release the lock
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    // Change room status to 'waiting' and save it
+    room.status = 'waiting';
+    await saveDocumentWithRetry(room);
+
+    // Function to remove all matching bots from the room
+    const removeAllMatchingBots = async () => {
+      try {
+        // Fetch the room again to ensure we have the latest data
+        room = await Room.findById(room_id);
+
+        if (!room) {
+          throw new Error('Room not found');
+        }
+
+        // Filter out bot IDs that exist in the bots array
+        const matchingBots = room.joiners.filter(joiner => bots.includes(joiner.toString()));
+
+        if (matchingBots.length === 0) {
+          // No more bots to remove, update status back to 'open' if needed
+          if (room.status !== 'open') {
+            room.status = 'open';
+            await saveDocumentWithRetry(room);
+          }
+          return room;
+        }
+
+        // Remove matching bots from the room
+        room.joiners = room.joiners.filter(joiner => !bots.includes(joiner.toString()));
+
+        // Update room status to 'open'
+        room.status = 'open';
+        await saveDocumentWithRetry(room);
+
+        return room;
+      } catch (err) {
+        throw err;
+      }
+    };
+
+    // Execute the removal function
+    const updatedRoom = await removeAllMatchingBots();
+
+    // Release the lock
+    delete roomLocks[room_id];
+
+    if (updatedRoom) {
+      res.json({
+        success: true,
+        message: 'All matching bots removed from the room and room status updated!',
+        room: updatedRoom
+      });
+    } else {
+      res.json({
+        success: true,
+        message: 'No matching bots found in the room',
+        room: room // Return original room data
+      });
+    }
+
+  } catch (err) {
+    console.error('Error removing bots from room:', err.message);
+    // Release the lock in case of error
+    delete roomLocks[room_id];
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: err.message
+    });
+  }
+});
 
 router.get('/rooms/:room_id/bots-count', async (req, res) => {
   const { room_id } = req.params;
@@ -1413,7 +1506,7 @@ async function getRoomNetProfits(room_id) {
       } else {
         actor = "Other";  // or any default value you'd prefer
       }
-            const wagered = gameLog.bet_amount;
+      const wagered = gameLog.bet_amount;
       let net_profit = 0;
 
       if (gameLog.game_type && gameLog.game_type.short_name === 'S!') {
@@ -2485,6 +2578,15 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
+    const fiveSecondsAgo = new Date(Date.now() - 5000);
+    if (room.updated_at > fiveSecondsAgo) {
+      return res.json({
+        success: false,
+        message: 'ROOM TOO BUSY, TRY AGAIN LATER'
+      });
+    }
+
+
     if (room.status === 'finished') {
       return res.json({
         success: false,
@@ -2634,31 +2736,14 @@ async function saveDoc(document, retries = 0) {
   }
 }
 
-async function recheckRoomValues(roomId, expectedIncrease) {
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const room = await Room.findOne({ _id: roomId });
-
-    if (
-      room.bet_amount >= expectedIncrease &&
-      room.host_pr >= expectedIncrease &&
-      room.endgame_amount >= expectedIncrease &&
-      room.user_bet >= expectedIncrease
-    ) {
-      return true;
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
-  }
-
-  return false;
-}
 
 router.post('/topUp', auth, async (req, res) => {
   try {
     const rowId = req.body.rowId;
     const room = await Room.findOne({ _id: rowId });
     const gameType = await GameType.findOne({ _id: room.game_type });
-       const accessAllowed = await check_access_time(req.user._id);
+    const accessAllowed = await check_access_time(req.user._id);
+
     if (!accessAllowed) {
       return res.json({
         success: false,
@@ -2666,12 +2751,7 @@ router.post('/topUp', auth, async (req, res) => {
         betResult: -1000
       });
     }
-    if (room.status !== 'open' ) {
-      return res.json({
-        success: false,
-        message: 'THIS BATTLE HAS ENDED ALREADY'
-      });
-    }
+
     if (!room) {
       return res.json({
         success: false,
@@ -2679,7 +2759,22 @@ router.post('/topUp', auth, async (req, res) => {
       });
     }
 
-    const now = moment().format('LLL');
+    if (room.status !== 'open') {
+      return res.json({
+        success: false,
+        message: 'THIS BATTLE HAS ENDED ALREADY'
+      });
+    }
+
+    const fiveSecondsAgo = new Date(Date.now() - 5000);
+    if (room.updated_at > fiveSecondsAgo) {
+      return res.json({
+        success: false,
+        message: 'ROOM TOO BUSY, TRY AGAIN LATER'
+      });
+    }
+
+    const now = new Date(); // Use current date for now
     const userBalance = req.user.balance;
     const topUpAmount = parseFloat(req.body.amount); // Parse amount as a float
 
@@ -2706,22 +2801,22 @@ router.post('/topUp', auth, async (req, res) => {
       description
     });
 
-     // Create and save a new game log
-     const newGameLog = new GameLog({
-      room: room, // Assign appropriate value
+    // Create and save a new game log
+    const newGameLog = new GameLog({
+      room: room._id,
       creator: req.user._id,
-      joined_user: null, // Assign appropriate value
-      game_type: room['game_type'], // Assign appropriate value
+      joined_user: null,
+      game_type: room.game_type,
       bet_amount: topUpAmount,
-      selected_rps: '', // Assign appropriate value
-      commission: 0, // Adjust as necessary
-      game_result: 3000, // Adjust as necessary
-      winnings: 0, // Adjust as necessary
-      endgame_amount: 0, // Adjust as necessary
-      host_pr: 0, // Adjust as necessary
-      user_bet: 0, // Adjust as necessary
-      status: 'open', // Adjust as necessary
-      hosts: [] // Assign appropriate value
+      selected_rps: '',
+      commission: 0,
+      game_result: 3000,
+      winnings: 0,
+      endgame_amount: 0,
+      host_pr: 0,
+      user_bet: 0,
+      status: 'open',
+      hosts: []
     });
 
     try {
@@ -2755,15 +2850,6 @@ router.post('/topUp', auth, async (req, res) => {
 
     await Promise.all(savePromises);
 
-    const recheckPassed = await recheckRoomValues(room._id, topUpAmount);
-
-    if (!recheckPassed) {
-      return res.json({
-        success: false,
-        message: 'Failed to verify top-up increase'
-      });
-    }
-
     return res.json({
       success: true,
       balance: req.user.balance,
@@ -2780,6 +2866,7 @@ router.post('/topUp', auth, async (req, res) => {
 });
 
 
+
 router.post('/editPayout', auth, async (req, res) => {
   try {
     const rowId = req.body.rowId;
@@ -2794,7 +2881,7 @@ router.post('/editPayout', auth, async (req, res) => {
       });
     }
 
-    if (room.status !== 'open' ) {
+    if (room.status !== 'open') {
       return res.json({
         success: false,
         message: 'THIS BATTLE HAS ENDED ALREADY'
@@ -3069,14 +3156,14 @@ router.post('/reCreate', auth, async (req, res) => {
 router.post('/bet2', auth, async (req, res) => {
   try {
     const requestId = uuidv4();
-    
+
     // Acquire the semaphore
     if (semaphore2 === 0) {
       // If semaphore is already acquired, return a busy response
       return res.status(503).json({ success: false, message: 'Service Unavailable' });
     }
     semaphore2 = 0; // Set semaphore to indicate it's acquired
-    
+
     const [accessAllowed, betResult] = await Promise.all([
       check_access_time(req.user._id),
       executeBet2(req)

@@ -976,7 +976,7 @@ const addToQueue = async (req, bot = false) => {
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
-
+            roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
             if (!shouldSave) {
                 try {
                     Promise.all([

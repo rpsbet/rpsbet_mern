@@ -9,13 +9,14 @@ import { acQueryMyItem } from '../../redux/Item/item.action';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ReactApexChart from 'react-apexcharts';
 import Avatar from '../../components/Avatar';
+import { faBan } from '@fortawesome/free-solid-svg-icons';
 import progress from '../LottieAnimations/progress.json';
 import PlayerModal from '../modal/PlayerModal';
 import pressHold from '../LottieAnimations/pressHold.json';
 import AiPanel from '../../components/AiPanel';
 import loadingChart from '../LottieAnimations/loadingChart.json';
 import { YouTubeVideo } from '../../components/YoutubeVideo';
-import { updateRoomBot, endGame } from '../../redux/Logic/logic.actions';
+import { updateRoomBot, kickBots, endGame } from '../../redux/Logic/logic.actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faMoneyBillWave, faBrain } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
@@ -643,6 +644,15 @@ class RPS extends Component {
     }
   }
 
+  bootBots = async () => {
+    const { creator_id, user_id, roomInfo, kickBots } = this.props;
+    this.setState({ botsCount: 0 }, async () => {
+      if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+        await kickBots(roomInfo._id);
+      }
+    });
+  }
+
   handleEndClick = async () => {
     const { roomInfo } = this.props;
     if (roomInfo.status !== 'finished') {
@@ -890,7 +900,7 @@ class RPS extends Component {
                       <div className="label net-profit">Room Profit</div>
                     </div>
                     <div className="value bankroll">
-                     
+
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
                         <div className="value" style={{ color: (host_pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (host_pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
                           {convertToCurrency(host_pr - roomInfo.total_stakes)}
@@ -1254,30 +1264,29 @@ class RPS extends Component {
                     <div className='host-controls'>
                       <Button
                         onClick={this.handleBotClick}
-                        style={{
-                          borderRadius: "9px",
-                          marginTop: "1.6em",
-                          background: "#ccc",
-                          boxShadow: "inset rgb(62, 69, 84) 0px 0px 4px",
-                          color: "#3e4554"
-                        }}
+                        className="hover-text-button"
                       >
-                        <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faRobot} />&nbsp;CALL BOT? [{botsCount}]
+                        <FontAwesomeIcon className="button-icon" icon={faRobot} />
+                        <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
                       </Button>
+                      {botsCount > 0 && (
+
+                        <Button
+                          onClick={this.bootBots}
+                          className="hover-text-button"
+                        >
+                          <FontAwesomeIcon className="button-icon" icon={faBan} />
+                          <span className="button-text">&nbsp;KICK BOTS?</span>
+                        </Button>
+                      )}
                       <Button
                         onClick={this.handleEndClick}
-                        style={{
-                          borderRadius: "9px",
-                          marginTop: "1.6em",
-                          background: "linear-gradient(45deg, #d81719, #950002)",
-                          boxShadow: "#d81719 0px 0px 4px inset",
-                          color: "#e9ecef"
-                        }}
+                        className="hover-text-button special-button"
                       >
-                        <FontAwesomeIcon style={{ fontSize: "1.6em" }} icon={faMoneyBillWave} />&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}
+                        <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
+                        <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}</span>
                       </Button>
                     </div>
-
                   ) : (
                     <>
                       <BetAmountInput
@@ -1351,6 +1360,7 @@ const mapDispatchToProps = {
   openGamePasswordModal,
   acQueryMyItem,
   updateRoomBot,
+  kickBots,
   setSpectateMode,
   endGame,
   getRpsBetItems,
