@@ -940,7 +940,7 @@ const getHistory = async (pageSize, my_id, game_type) => {
     const gameLogQuery = GameLog.find(search_condition)
       .sort({ created_at: 'desc' })
       .limit(pageSize)
-      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status hosts room_number game_type bet_amount user_bet host_pr created_at' })
+      .populate({ path: 'room', model: Room, select: '_id winnings commission creator status ai_mode hosts room_number game_type bet_amount user_bet host_pr created_at' })
       .populate({ path: 'game_type', model: GameType, select: 'short_name game_type_name' })
       .populate({ path: 'creator', model: User, select: '_id avatar accessory totalWagered' })
       .populate({ path: 'joined_user', model: User, select: '_id avatar accessory totalWagered' });
@@ -1088,7 +1088,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
 router.get('/history', async (req, res) => {
   try {
-    const { pageSize = 6, game_type = 'All' } = req.query;
+    const { pageSize = 50, game_type = 'All' } = req.query;
 
     const history = await getHistory(
       parseInt(pageSize),
@@ -1111,7 +1111,7 @@ router.get('/history', async (req, res) => {
 
 router.get('/my_history', auth, async (req, res) => {
   try {
-    const { pageSize = 10, game_type = 'All' } = req.query;
+    const { pageSize = 16, game_type = 'All' } = req.query;
 
     const history = await getHistory(
       parseInt(pageSize),
@@ -2809,6 +2809,7 @@ router.post('/topUp', auth, async (req, res) => {
       game_type: room.game_type,
       bet_amount: topUpAmount,
       selected_rps: '',
+      ai_mode: '',
       commission: 0,
       game_result: 3000,
       winnings: 0,

@@ -39,6 +39,10 @@ const ChatSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
       },
+      username: {
+        type: String,
+        ref: 'User.username'
+      },
       avatar: {
         type: String
       },

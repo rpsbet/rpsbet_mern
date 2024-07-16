@@ -82,7 +82,8 @@ const globalChatSend = (io, data) => {
             rank: rank,
             replyTo: replyTo
               ? {
-                  sender: replyToUsername,
+                  sender: replyTo._id,
+                  username: replyToUsername,
                   avatar: replyTo.avatar,
                   accessory: replyTo.accessory,
                   rank: replyTo.rank,
@@ -178,6 +179,7 @@ module.exports.socketio = server => {
               const transformedReplyTo = extractedReplyTo
                 ? {
                     sender: extractedReplyTo.sender?.username ?? '',
+                    senderId: extractedReplyTo.sender?._id ?? '',
                     avatar: extractedReplyTo.sender?.avatar ?? '',
                     rank: extractedReplyTo.sender?.totalWagered ?? '',
                     accessory: extractedReplyTo.sender?.accessory ?? '',
@@ -235,8 +237,6 @@ module.exports.socketio = server => {
     socket.on('RPS_1', data => {
       socket.broadcast.emit('RPS_1', data);
     });
-
-
     
     socket.on('DROP_GUESSES', data => {
       socket.broadcast.emit('DROP_GUESSES', data);
@@ -244,10 +244,6 @@ module.exports.socketio = server => {
 
     socket.on('DROP_GUESSES1', data => {
       socket.broadcast.emit('DROP_GUESSES1', data);
-    });
-
-    socket.on('UPDATED_BANKROLL', data => {
-      socket.broadcast.emit('UPDATED_BANKROLL', data);
     });
 
     socket.on('CARDS_ARRAY', data => {

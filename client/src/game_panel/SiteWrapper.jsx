@@ -1401,6 +1401,7 @@ class SiteWrapper extends Component {
                             rank={user.totalWagered}
                             accessory={user.accessory}
                             alt=""
+                            username={user.username}
                             className="avatar"
                             darkMode={isDarkMode}
                           />

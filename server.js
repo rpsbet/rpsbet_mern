@@ -49,6 +49,7 @@ const helmet = require('helmet'); // for sec headers
 const cronJob = require('./helper/util/createCronJob.js');
 const creditScoreCron = require('./helper/util/creditScoreCron.js');
 const notificationCron = require('./helper/util/notificationCron.js');
+const interestCron = require('./helper/util/interestCron.js');
 const rentCron = require('./helper/util/rentCron.js');
 const callBotCron = require('./helper/util/callBotCron.js');
 const withdrawalCron = require('./helper/util/withdrawalCron.js');
@@ -59,6 +60,7 @@ notificationCron.deleteNotifications();
 callBotCron.callCronJobs(io);
 withdrawalCron.resetWithdrawalLimits();
 cronJob.checkConfirmations(io);
+interestCron.updateRoomInterests(io);
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

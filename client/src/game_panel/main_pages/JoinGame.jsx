@@ -225,7 +225,6 @@ class JoinGame extends Component {
 
   async fetchAccessory() {
     try {
-      console.log("AD", this.props.roomInfo.creator_id)
       const creatorId = this.props.roomInfo.creator_id;
       if (!creatorId) {
         console.error("Creator ID is empty or undefined");

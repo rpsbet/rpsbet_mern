@@ -430,6 +430,11 @@ class HistoryTable extends Component {
                     <div className="room-id">
                       {row.status}&nbsp;{row.status === 'open' ? <HeartIcon isOpen={true} /> : <HeartIcon isOpen={false} />}
                     </div>
+                    { row.ai_mode && (
+                      <div className="room-id ai_mode">
+                      {row.ai_mode}
+                    </div>
+                    )}
                     <div
                       className="desktop-only"
                       dangerouslySetInnerHTML={{ __html: row.history }}

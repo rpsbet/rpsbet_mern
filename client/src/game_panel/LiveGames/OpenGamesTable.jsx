@@ -744,7 +744,7 @@ class OpenGamesTable extends Component {
                                     <a
                                       className="player"
                                       onClick={() =>
-                                        this.handleOpenPlayerModal(row.joiners)
+                                        this.handleOpenPlayerModal(row.joiners[index])
                                       }
                                     >
                                       <Avatar

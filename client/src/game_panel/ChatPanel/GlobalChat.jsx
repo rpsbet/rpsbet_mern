@@ -260,7 +260,6 @@ class GlobalChat extends Component {
                     return part;
                   });
               }
-  
               return (
                 <div
                   key={key}
@@ -271,12 +270,12 @@ class GlobalChat extends Component {
                   }`}
                   onClick={() => this.handleMessageClick(chat)}
                 >
-                  {chat.replyTo && chat.replyTo.sender && (
+                  {chat.replyTo && chat.replyTo.message && (
                     <div className="reply-to">
                       <a
                         className="chat-player"
                         onClick={() =>
-                          this.handleOpenPlayerModal(chat.senderId)
+                          this.handleOpenPlayerModal(chat.replyTo.senderId)
                         }
                       >
                         <div className="reply-border"></div>
@@ -291,7 +290,7 @@ class GlobalChat extends Component {
                         />
                            <i
                                 className={`online-status${this.props.onlineUserList.filter(
-                                  user => user === chat.senderId
+                                  user => user === chat.replyTo.senderId
                                 ).length > 0
                                   ? ' online'
                                   : ''
@@ -300,7 +299,7 @@ class GlobalChat extends Component {
                       </a>
                       
                       <span className="reply-sender sender-name">
-                        {chat.replyTo.sender}
+                        {chat.replyTo.username}
                       </span>
                       <span className="reply-message chat-text">
                         {chat.replyTo.messageType === 'gif' ? (

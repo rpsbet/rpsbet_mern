@@ -102,7 +102,6 @@ class ProfileModal extends Component {
   async componentDidMount() {
     const { userInfo } = this.props;
     const { rewards } = userInfo;
-
     // Fetch customer info for each reward user
     rewards.forEach(async reward => {
       const info = await this.props.acGetCustomerInfo(reward.user);
@@ -445,6 +444,7 @@ class ProfileModal extends Component {
                         setImageFilename={this.handleAvatarLoaded}
                         darkMode={isDarkMode}
                         rank={rank}
+                        username={username}
                         accessory={accessory}
                         avatar={avatar}
                       />
@@ -763,6 +763,7 @@ class ProfileModal extends Component {
                                 <Avatar src={customerInfo[reward.user].avatar} alt="User Avatar"
                                   rank={customerInfo[reward.user].totalWagered}
                                   accessory={customerInfo[reward.user].accessory}
+                                  username={customerInfo[reward.user].username}
                                 />
                               </a>
                             </Grid>

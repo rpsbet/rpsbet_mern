@@ -80,7 +80,7 @@ const addToQueue = async (req, bot = false) => {
                 .populate({
                     path: 'creator',
                     model: User,
-                    select: '_id avatar accessory totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance ' // Only select the 'username' field from the 'User' document
+                    select: '_id avatar accessory ai_mode totalWagered username totalProfit gamePlayed profitAllTimeHigh profitAllTimeLow balance ' // Only select the 'username' field from the 'User' document
                 })
                 .populate({
                     path: 'game_type',
@@ -130,13 +130,13 @@ const addToQueue = async (req, bot = false) => {
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
-
             newGameLog = new GameLog({
                 room: roomInfo,
                 creator: roomInfo['creator'],
                 joined_user: user,
                 game_type: roomInfo['game_type'],
                 bet_amount: roomInfo['bet_amount'],
+                ai_mode: user.ai_mode
                 // is_anonymous: req.body.is_anonymous
             });
 
@@ -456,6 +456,7 @@ const addToQueue = async (req, bot = false) => {
                   winnings: gameLog.winnings,
                   host_pr: gameLog.host_pr,
                   user_bet: gameLog.user_bet,
+                  ai_mode: gameLog.ai_mode,
                   _id: gameLog._id,
                   room: roomMap.get(gameLog.room.toString()),
                   creator: creatorMap.get(gameLog.creator.toString()),
@@ -751,6 +752,7 @@ const addToQueue = async (req, bot = false) => {
                         game_result: gameLog.game_result,
                         winnings: gameLog.winnings,
                         host_pr: gameLog.host_pr,
+                        ai_mode: gameLog.ai_mode,
                         user_bet: gameLog.user_bet,
                         _id: gameLog._id,
                         room: populatedRoom,

@@ -70,6 +70,7 @@ class Upload extends Component {
               setImageFilename={this.props.setImageFilename}
               rank={this.props.rank}
               accessory={this.props.accessory}
+              username={this.props.username}
               avatar={this.props.avatar}
             />
           </div>

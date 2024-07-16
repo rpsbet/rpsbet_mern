@@ -97,6 +97,10 @@ const GameLogSchema = new Schema({
         type: String,
         defalut: ''
     },
+    ai_mode: {
+        type: String,
+        defalut: ''
+    },
     created_at: {
         type: Date,
         default: Date.now

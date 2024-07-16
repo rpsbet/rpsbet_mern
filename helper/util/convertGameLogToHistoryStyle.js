@@ -23,6 +23,7 @@ const convertGameLogToHistoryStyle = async gameLogList => {
         creator: gameLog['creator']['_id'],
         joined_user: gameLog['joined_user'] ? gameLog['joined_user']['_id'] : null,
         created_at: gameLog['created_at'],
+        ai_mode: gameLog.ai_mode ? gameLog.ai_mode : '',
         status: gameLog['room'] ? gameLog['room']['status'] : 'completed'
       };
       if (gameLog['room'] && gameLog.game_result !== 3000) {
