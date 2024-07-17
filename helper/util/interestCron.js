@@ -22,13 +22,12 @@ async function updateRoomInterests(io) {
     if (interestSetting) {
       const lastUpdated = interestSetting.updated_at;
       const fiveMinutesAgo = new Date();
-      fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 9);
+      fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 33);
       
 
       if (lastUpdated <= fiveMinutesAgo) {
         const bonusRooms = await Room.find({ status: 'open' });
         for (const bonusRoom of bonusRooms) {
-          console.log( " bonusRoom._id", bonusRoom._id);
           const req = {
             params: { _id: bonusRoom._id },
             io: socketio,
@@ -38,11 +37,10 @@ async function updateRoomInterests(io) {
             }
           };
           let userBet = parseFloat(bonusRoom.user_bet);
-          const interest = userBet * 1.0004;
+          const interest = userBet * 1.00005;
           bonusRoom.user_bet = interest.toString();
-          bonusRoom.pr = bonusRoom.pr + (userBet * 0.0004);
+          bonusRoom.pr = bonusRoom.pr + (userBet * 0.0005);
           await saveDocumentWithRetry(bonusRoom);
-          console.log( " saved._id", bonusRoom._id);
 
           if (req.io.sockets) {
             req.io.sockets.emit(`UPDATED_BANKROLL2_${bonusRoom._id}`, {
@@ -54,7 +52,7 @@ async function updateRoomInterests(io) {
             from: senderId,
             to: bonusRoom.creator,
             room: bonusRoom._id,
-            message: `Interest earned (${convertToCurrency(userBet * 0.0004)})`,
+            message: `Interest earned (${convertToCurrency(userBet * 0.0005)})`,
             is_read: false
           });
 
@@ -74,7 +72,6 @@ async function updateRoomInterests(io) {
           ]);
 
           socketController.sendNotification(bonusRoom.creator, notificationData);
-          console.log("send socke")
         }
         // const message = 'Daily dividends dispersed to all live games at an interest rate of 0.004%';
         // const messageType = 'text';
@@ -105,8 +102,7 @@ async function updateRoomInterests(io) {
   }
 }
 
-cron.schedule('*/9 * * * *', async () => {
-  console.log("called interest")
+cron.schedule('*/33 * * * *', async () => {
   await updateRoomInterests();
 });
 

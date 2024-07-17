@@ -128,19 +128,22 @@ const addToQueue = async (req, bot = false) => {
             }).select('accessory');
 
             const accessory = creatorUser.accessory;
+            const accessoryJ = user.accessory;
             let item;
             let commission;
 
             if (accessory) {
                 item = await Item.findOne({ image: accessory }).select('CP');
+                itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
                 if (item) {
-                    commission = item.CP + parseFloat(tax.value);
+                    commission = item.CP - itemJ.DP+ parseFloat(tax.value);
                 } else {
                     commission = parseFloat(tax.value); // If no item found, use tax.value directly
                 }
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
+
 
             newGameLog = new GameLog({
                 room: roomInfo,

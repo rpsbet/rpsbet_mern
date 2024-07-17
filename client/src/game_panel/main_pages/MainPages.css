@@ -358,7 +358,9 @@ div.table .table-row .table-cell button:last-child:hover,
   filter: brightness(1.06);
   transition: 0.1s;
 }
-
+.lottie-bg.eagle {
+  min-height: 100px;
+}
 .lottie-bg.deep-sea div,
 .lottie-bg.shooting_stars div {
   filter: invert(1);

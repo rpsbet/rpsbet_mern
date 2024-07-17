@@ -72,6 +72,61 @@ button#recentSearches span {
   box-shadow: #d81719 0px 0px 4px inset;
   color: #e9ecef;
 }
+.carousel-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.carousel {
+  display: flex;
+  margin-top: 30px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; /* Optional: Enable smooth scrolling on iOS */
+}
+
+
+.red-gradient {
+  background: linear-gradient(to right, #952323, #c10909); /* Adjust colors as needed */
+}
+
+.green-gradient {
+  background: linear-gradient(45deg, #0a7a24, #0a4d00); /* Adjust colors as needed */
+}
+
+
+.carousel-item {
+  flex: 0 0 auto;
+  width: 80%;
+  display: block !important;
+  margin: 0 10px;
+  scroll-snap-align: center;
+  padding: 10px;
+  border-radius: 0.4em;
+  color: #e5e5e5;
+}
+
+
+.profit-positive {
+  font-size: 0.8em !important;
+    font-weight: 800 !important;
+  color: #baff26 !important;
+}
+
+.profit-negative {
+  font-size: 0.8em !important;
+    font-weight: 800 !important;
+  color: #ffbe3b !important;
+}
+.loan-details {
+  width: 100%;
+}
+
+.loan-details td:first-child {
+  text-align: left;
+  padding-right: 10px;
+  font-weight: bold;
+}
 
 .host-container {
   display: inline-flex;

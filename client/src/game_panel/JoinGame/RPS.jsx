@@ -20,7 +20,7 @@ import { updateRoomBot, kickBots, endGame } from '../../redux/Logic/logic.action
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faMoneyBillWave, faBrain } from '@fortawesome/free-solid-svg-icons';
 import ViewIcon from '@material-ui/icons/Visibility';
-import InfoIcon from '@material-ui/icons/Warning';
+import InfoIcon from '@material-ui/icons/Info';
 import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import {
   getRpsBetItems,
@@ -872,9 +872,11 @@ class RPS extends Component {
                       <div className="label your-bet-amount">Bankroll</div>
                     </div>
                     <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
-                      <div className={`value ${isLowBankroll ? 'red-text' : ''}`}>
+                      <div className={`value ${isLowBankroll ? 'red-text' : ''}`}  style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                         {convertToCurrency(bankroll)}
                         {isLowBankroll && <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />}
+                        <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+
                       </div>
                     </Tooltip>
                   </div>
@@ -889,9 +891,11 @@ class RPS extends Component {
                       <div>{convertToCurrency(this.state.bet_amount)} x 2  = {convertToCurrency(this.state.bet_amount * 2)}</div>
                       <div>-({this.props.cp} + 1)% = {convertToCurrency(this.state.bet_amount * 2 * ((100 - (this.props.cp + 1)) / 100))}</div>
                     </div>}>
-                      <div className="value">
+                      <div className="value"  style={{cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                         {convertToCurrency(this.state.bet_amount * 2 * ((100 - (this.props.cp + 1)) / 100))}
+                      <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
                       </div>
+
                     </Tooltip>
 
                   </div>
@@ -902,8 +906,12 @@ class RPS extends Component {
                     <div className="value bankroll">
 
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-                        <div className="value" style={{ color: (host_pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (host_pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
-                          {convertToCurrency(host_pr - roomInfo.total_stakes)}
+                        <div className="value"  style={{cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                          <span style={{ color: (host_pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (host_pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
+                            {convertToCurrency(host_pr - roomInfo.total_stakes)}
+                            </span>
+                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+
                         </div>
                       </Tooltip>
 
@@ -914,9 +922,12 @@ class RPS extends Component {
                       <div>
                         <div className="label win-chance">Commission</div>
                       </div>
-                      <Tooltip title="Determined by the Host's equipped accessory">
+                      <Tooltip title="Host's Accessory's Commission Power (CP) - Player's Accessory's Battle Power (BP) (MINIMUM 1% TOWARDS PLATFORM)">
+                        <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
 
-                        <div className="value">{this.props.cp}% </div>
+                          <div className="value">{this.props.cp < 1 ? 1 : this.props.cp}% </div>
+                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        </div>
                       </Tooltip>
                     </div>
                   )}
@@ -926,9 +937,14 @@ class RPS extends Component {
                         <div className="label created">Auto-Payout</div>
                       </div>
                       <Tooltip title="Automatic dividends paid out to Hosts & CoHosts upon meeting the set payout threshold">
-                        <div className="payout-bar">
-                          <div className="value" style={barStyle}></div>
+                        <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+
+                          <div className="payout-bar">
+                            <div className="value" style={barStyle}></div>
+                          </div>
+                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
                         </div>
+
                       </Tooltip>
                     </div>
                   )}
@@ -936,8 +952,16 @@ class RPS extends Component {
                     <div>
                       <div className="label public-interest">Interest Received</div>
                     </div>
-                    <div className="value" style={{ color: "#00fff5" }}>
-                      {convertToCurrency(this.props.pr)}
+                    <div className="value" >
+                      <Tooltip title="Paid every 33 minutes, at a rate of 0.00005% of the bankroll">
+                        <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                          <span style={{ color: "#00fff5" }}>
+                            {convertToCurrency(this.props.pr)}
+                          </span>
+                          <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
+                        </div>
+                      </Tooltip>
+
                     </div>
                   </div>
 

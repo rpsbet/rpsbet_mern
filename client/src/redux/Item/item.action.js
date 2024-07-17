@@ -161,6 +161,7 @@ export const getItem = () => async (dispatch, getState) => {
         rentOption: '',
         item_type: '',
         CP: '',
+        DP: '',
         startDateTime: new Date(),
         expireDateTime: new Date()
       }});

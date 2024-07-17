@@ -862,19 +862,20 @@ router.post('/comments', auth, async (req, res) => {
     } catch (error) {
       console.error("Error saving comment:", error);
     }
-
-    const notificationData = {
-      message: message.message,
-      username: user.username,
-      avatar: req.user.avatar,
-      accessory: req.user.accessory,
-      room: room_id,
-      rank: req.user.totalWagered,
-      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-      created_at_str: moment(new Date()).format('LLL'),
-      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-      is_read: false
-    };
+console.log("WEF");
+const notificationData = {
+  message: message.message,
+  username: req.user.username,
+  avatar: req.user.avatar,
+  accessory: req.user.accessory,
+  room: room_id,
+  rank: req.user.totalWagered,
+  created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+  created_at_str: moment(new Date()).format('LLL'),
+  updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+  is_read: false
+};
+console.log("dsc");
     try {
       await saveDocumentWithRetry(message);
       socket.sendNotification(message.to, notificationData);
@@ -1493,12 +1494,10 @@ async function getRoomNetProfits(room_id) {
       const accessory = creatorUser ? creatorUser.accessory : null;
       let item;
       if (accessory) {
-        item = await Item.findOne({ image: accessory }).select('CP');
+        item = await Item.findOne({ image: accessory }).select('CP DP');
       } else {
         item = { CP: parseFloat(tax.value) };
       }
-
-      const commission = item.CP;
 
       let actor;
       if (gameLog.joined_user && gameLog.joined_user.username) {
@@ -3025,10 +3024,17 @@ router.post('/tip', auth, async (req, res) => {
       from: req.user._id,
       to: userToTip,
       room: '',
-      message: `Tipped ${convertToCurrency(tipAmount)} ${req.body.message}`,
+      message: `Tipped you ${convertToCurrency(tipAmount)} "${req.body.message}"`,
       is_read: false
     })
-
+    let notificationC = new Notification({
+      from: req.user._id,
+      to: userToTip,
+      room: '',
+      message: `You Tipped ${userToTip.username} ${convertToCurrency(tipAmount)} "${req.body.message}"`,
+      is_read: false
+    })
+console.log("SDcds", notification);
     const notificationData = {
       message: notification.message,
       username: req.user.username,
@@ -3042,11 +3048,14 @@ router.post('/tip', auth, async (req, res) => {
 
     try {
       await saveDocumentWithRetry(notification);
-      socket.sendNotification(userToTip, notificationData);
+      socket.sendNotification(userToTip._id, notificationData);
     } catch (error) {
       console.error("Error saving tip notification:", error);
     }
-
+    console.log("tipAmount", tipAmount);
+    console.log("userToTip", userToTip.balance);
+    console.log("req.user.balance", req.user.balance);
+    console.log("req.user.balance", req.user.balance);
     // Update balances and save transactions
     userToTip.balance += tipAmount;
     req.user.balance -= tipAmount;

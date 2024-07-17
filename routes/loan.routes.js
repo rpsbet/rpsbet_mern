@@ -89,6 +89,7 @@ router.post('/create', auth, async (req, res) => {
   }
 });
 
+
 const calculateCreditScore = (loan, loaner, lender, currentUser) => {
   // Calculate the number of days since the loan was created
   const loanCreatedAt = new Date(loan.loaners[loaner].created_at);
@@ -309,6 +310,9 @@ router.post('/cancel-offer', auth, async (req, res) => {
     });
   }
 });
+
+
+
 router.post('/reconsider-offer', auth, async (req, res) => {
   try {
     const { _id, username } = req.body;
@@ -418,6 +422,7 @@ async function checkLoanEligibility(currentUser, loanAmount) {
   }
   return false; // Not eligible for any category
 }
+
 
 router.post('/lend', auth, async (req, res) => {
   try {
@@ -564,6 +569,7 @@ router.post('/lend', auth, async (req, res) => {
   }
 });
 
+
 router.post('/offer-loan', auth, async (req, res) => {
   try {
     const { loanAmount, loanPeriod, lender, interestRate, complete, og } = req.body;
@@ -686,28 +692,104 @@ router.post('/withdraw-loan', auth, async (req, res) => {
     });
   }
 });
-
-
-// /api/loan/:id call
-router.get('/:id', async (req, res) => {
+router.get('/previous-loans', async (req, res) => {
   try {
-    const loan = await Loan.findOne({ _id: req.params.id });
+    // Query to find loans where loan_amount > 0 and at least one loaner exists,
+    // sorted by created_at in descending order, and limit to 9 results
+    const query = { 
+      loan_amount: 0, 
+      'loaners.0': { $exists: true } 
+    };
+    const loans = await Loan.find(query)
+                            .sort({ created_at: -1 }) // Sort by created_at descending
+                            .limit(20); // Limit to 9 documents
+
+    let loan_list = [];
+    const currentDate = new Date();
+
+    for (const loan of loans) {
+      let isOutstanding = false;
+      let shortestTimeRemaining = null;
+
+      for (const loaner of loan.loaners) {
+        const loanerCreatedAt = new Date(loaner.created_at);
+        const loanerPeriodInDays = loaner.period;
+
+        // Calculate the due date
+        const loanerDueDate = new Date(loanerCreatedAt);
+        loanerDueDate.setDate(loanerDueDate.getDate() + loanerPeriodInDays);
+
+        // Calculate the time difference in days
+        const timeDiffInMs = loanerDueDate - currentDate;
+        const timeDiffInDays = loanerPeriodInDays - ((currentDate - loanerCreatedAt) / (1000 * 60 * 60 * 24));
+
+        if (currentDate > loanerDueDate) {
+          isOutstanding = true;
+          break;
+        } else {
+          if (shortestTimeRemaining === null || timeDiffInDays < shortestTimeRemaining) {
+            shortestTimeRemaining = timeDiffInDays;
+          }
+        }
+      }
+
+      let timeRemaining = null;
+      if (!isOutstanding && shortestTimeRemaining !== null) {
+        const daysLeft = Math.floor(shortestTimeRemaining);
+        const hoursLeft = Math.floor((shortestTimeRemaining % 1) * 24);
+        const minutesLeft = Math.floor((((shortestTimeRemaining % 1) * 24) % 1) * 60);
+        timeRemaining = `${daysLeft}d ${hoursLeft}h ${minutesLeft}m`;
+      }
+
+      loan_list.push({
+        _id: loan._id,
+        lender: loan.lender,
+        loan_amount: loan.loan_amount,
+        loan_period: loan.loan_period,
+        apy: loan.apy,
+        created_at: loan.created_at,
+        loaners: loan.loaners,
+        outstanding: isOutstanding ? true : timeRemaining,
+      });
+    }
+
 
     res.json({
       success: true,
-      query: req.query,
-      loan: {
-        _id: loan._id,
-        loan: loan.loan
-      }
+      data: loan_list,
     });
   } catch (err) {
+    console.error('Error:', err);
     res.json({
       success: false,
-      err: err
+      err: err,
     });
   }
 });
+
+
+// /api/loan/:id call
+// router.get('/:id', async (req, res) => {
+//   try {
+//     const loan = await Loan.findOne({ _id: req.params.id });
+
+//     res.json({
+//       success: true,
+//       query: req.query,
+//       loan: {
+//         _id: loan._id,
+//         loan: loan.loan
+//       }
+//     });
+//   } catch (err) {
+//     res.json({
+//       success: false,
+//       err: err
+//     });
+//   }
+// });
+
+
 // /api/loans call
 router.get('/', async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
@@ -767,6 +849,8 @@ router.get('/', async (req, res) => {
     });
   }
 });
+
+
 
 router.post('/create-and-lend', auth, async (req, res) => {
   try {

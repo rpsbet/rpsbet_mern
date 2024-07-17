@@ -1,6 +1,7 @@
 import {
   LOAN_QUERY_ONE,
   LOAN_QUERY,
+  PREVIOUS_LOAN_QUERY,
   MY_LOAN_QUERY_ONE,
   MY_LOAN_QUERY,
   PAGINATION_FOR_LOAN,
@@ -29,6 +30,7 @@ const initialState = {
   startDateTime: new Date(),
   expireDateTime: new Date(),
   loanArray: [],
+  previousLoans: [],
   myLoanArray: [],
   pagination: 25,
   page: 1,
@@ -52,6 +54,8 @@ export default (state = initialState, { type, payload }) => {
       return { ...state, data: payload };
     case LOAN_QUERY:
       return { ...state, loanArray: payload };
+    case PREVIOUS_LOAN_QUERY:
+      return { ...state, previousLoans: payload };
     case MY_LOAN_QUERY:
       return { ...state, myLoanArray: payload };
     case SET_OFFER_TARGET_INFO:

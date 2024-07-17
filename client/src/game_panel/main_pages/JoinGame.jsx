@@ -232,10 +232,11 @@ class JoinGame extends Component {
       }
       const _id = creatorId.toString(); // Convert _id to string
       const accessory = await this.props.fetchAccessory({ _id });
+      const dp = await this.props.fetchAccessory({ _id: this.props.user_id });
       if (accessory.accessory.CP !== undefined) {
-        this.setState({ cp: accessory.accessory.CP });
+        this.setState({ cp: accessory.accessory.CP - dp.accessory.DP });
       } else {
-
+        console.log("accessory2", accessory, dp)
       }
     } catch (error) {
       console.error('Error fetching accessory:', error);
@@ -1201,7 +1202,7 @@ class JoinGame extends Component {
         preserveAspectRatio: 'xMidYMid slice'
       }
     };
-    
+
     return (
       <>
 
@@ -1720,6 +1721,7 @@ const mapStateToProps = state => ({
   qsbetitems: state.logic.qsbetitems,
   user_id: state.auth.user._id,
   total_wagered: state.auth.user.totalWagered,
+  accessory: state.auth.user.accessory,
   user_balance: state.auth.user.balance,
   ai_mode: state.auth.user.ai_mode,
   isMuted: state.auth.isMuted,

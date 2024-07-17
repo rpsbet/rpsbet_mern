@@ -4,6 +4,7 @@ import {
   MSG_SUCCESS,
   MSG_WARNING,
   LOAN_QUERY,
+  PREVIOUS_LOAN_QUERY,
   SET_USER_LOANS,
   LOAN_QUERY_ONE,
   MY_LOAN_QUERY,
@@ -54,7 +55,7 @@ export const acQueryMyLoan = (pagination, page, sortCriteria, loanType) => async
 export const setCurrentOfferTargetInfo = _id => dispatch => {
   dispatch({ type: SET_OFFER_TARGET_INFO, payload: _id });
 };
-
+// /loan
 export const acQueryLoan = (pagination, page, sortCriteria, loanType) => async (
   dispatch
 ) => {
@@ -80,7 +81,23 @@ export const acQueryLoan = (pagination, page, sortCriteria, loanType) => async (
     console.log('error***', error);
     dispatch({ type: MSG_WARNING, payload: error });
   }
+}
+
+export const previousLoans = () => async (dispatch, getState) => {
+  try {
+    const { data } = await api.get('/loan/previous-loans');
+
+    if (data.success) {
+      dispatch({ type: 'PREVIOUS_LOAN_QUERY', payload: data.data });
+    } else {
+      dispatch({ type: 'MSG_ERROR', payload: "Failed to fetch previous loans." });
+    }
+  } catch (error) {
+    console.log('Error fetching previous loans:', error);
+    dispatch({ type: 'MSG_ERROR', payload: error.message });
+  }
 };
+
 // Define the action to calculate remaining loans
 export const acCalculateRemainingLoans = () => async (dispatch, getState) => {
   dispatch({ type: LOADING_REMAINING_LOANS, payload: true });

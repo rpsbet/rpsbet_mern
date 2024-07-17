@@ -292,13 +292,14 @@ router.post('/accessory', auth, async (req, res) => {
     }
 
     // Populate the CP value for the accessory
-    const accessoryItem = await Item.findOne({ image: user.accessory }).select('CP');
+    const accessoryItem = await Item.findOne({ image: user.accessory }).select('CP DP');
     if (!accessoryItem) {
       return res.json({
         success: true,
         accessory: {
           name: '',
-          CP: 0
+          CP: 0,
+          DP: 0
         },
       });
     }
@@ -307,7 +308,8 @@ router.post('/accessory', auth, async (req, res) => {
       success: true,
       accessory: {
         name: user.accessory,
-        CP: accessoryItem.CP // Include CP value in the response
+        CP: accessoryItem.CP,
+        DP: accessoryItem.DP
       },
     });
   } catch (err) {
@@ -334,7 +336,42 @@ router.post('/equip', auth, async (req, res) => {
       });
     }
 
-    const item = await Item.findOne({ _id: item_id }).select('image');
+    const item = await Item.findOne({ _id: item_id }).select('image owners');
+console.log("item", item);
+
+if (!item) {
+  return res.json({
+    success: false,
+    message: 'Item not found',
+  });
+}
+
+// Log the userId and all the users in the owners array
+console.log("userId", userId);
+item.owners.forEach(owner => {
+  console.log("owner.user", owner.user.toString());
+});
+
+// Find the owner matching the userId
+const owner = item.owners.find(owner => owner.user.toString() === userId.toString());
+
+if (!owner) {
+  return res.json({
+    success: false,
+    message: 'Owner not found',
+  });
+}
+
+console.log("owner.rentOption", owner.rentOption);
+
+if (owner.rentOption) {
+  return res.json({
+    success: false,
+    message: 'De-list item first to equip',
+  });
+}
+
+// Continue with the rest of your logic if the item can be equipped
 
 
     if (String(user.accessory) === String(item.image)) {
@@ -370,7 +407,6 @@ router.post('/equip', auth, async (req, res) => {
     });
   }
 });
-
 
 router.get('/my-items', auth, async (req, res) => {
   const pagination = req.query.pagination ? parseInt(req.query.pagination) : 10;
@@ -409,6 +445,7 @@ router.get('/my-items', auth, async (req, res) => {
           image: item.image,
           item_type: item.item_type,
           CP: item.CP,
+          DP: item.DP,
           created_at: item.created_at,
         });
       }
@@ -461,6 +498,7 @@ router.get('/products', async (req, res) => {
           image: item.image,
           item_type: item.item_type,
           CP: item.CP,
+          DP: item.DP,
           created_at: item.created_at,
         });
       }
@@ -681,6 +719,7 @@ router.get('/', async (req, res) => {
             item_type: item.item_type,
             image: item.image,
             CP: item.CP,
+            DP: item.DP,
             created_at: item.created_at,
           });
         }

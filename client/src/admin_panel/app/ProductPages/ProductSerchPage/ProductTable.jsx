@@ -123,6 +123,7 @@ opacity: 0;
 
 const ProductImage = styled.img`
   max-width: 100%;
+  min-height: 200px !important;
   height: auto;
   background: #fff;
   border: 1px solid #f9f9;
@@ -168,20 +169,61 @@ const LinearContainer = styled.div`
   margin: 20px 0;
 `;
 
-const CommissionPower = styled.span`
+const PowerContainer = styled.div`
+  display: grid;
+  grid-template-columns: 40px 40px; /* Adjust column widths as needed */
+  gap: 10px;
   position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 30px;
-  height: 30px;
-  background: #28a745;
-  border-radius: 10px;
-  box-shadow: inset 0px -1px 11px #005b15;
-  color: #fff;
-  font-weight: 500;
-  text-align: center;
+  top: 10px;
+  right: 10px;
 `;
 
+const PowerItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
+const PowerLabel = styled.span`
+  width: 40px;
+  height: 20px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 500;
+  padding-top: 2.5px;
+  font-size: xx-small;
+  text-align: center;
+  box-shadow: inset 0px -1px 11px rgba(0, 0, 0, 0.5);
+  margin-top: 5px;
+  margin-bottom: -5px;
+`;
+
+const CommissionPower = styled(PowerLabel)`
+  background: #28a745;
+  box-shadow: inset 0px -1px 11px #005b15;
+`;
+
+const DefensePower = styled(PowerLabel)`
+  background: #dc3545;
+  box-shadow: inset 0px -1px 11px #8b0000;
+`;
+
+const PercentageBar = styled.div`
+  width: 100px;
+  height: 10px;
+  background: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+margin-top: 10px;
+  &::before {
+    content: '';
+    display: block;
+    height: 100%;
+    background: ${props => props.color || '#ffc107'};
+    width: ${props => (props.percentage / 25) * 100}%;
+  }
+`;
 const PaginationContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -207,16 +249,12 @@ class ProductTable extends Component {
   componentDidUpdate(prevProps, prevState) {
     const prevOwners = prevProps.data ? prevProps.data.owners : [];
     const currentOwners = this.props.data ? this.props.data.owners : [];
-
-    // Check if there's any change in the owners sub-array
     if (!this.areOwnersEqual(prevOwners, currentOwners)) {
-      // Fetch items when there's a change in the owners sub-array
       this.fetchItems();
     }
   }
 
   areOwnersEqual(prevOwners, currentOwners) {
-    // Compare the owners array by stringifying them and checking for equality
     return JSON.stringify(prevOwners) === JSON.stringify(currentOwners);
   }
 
@@ -437,7 +475,16 @@ class ProductTable extends Component {
                 }}
               >
                 {row.item_type === '653ee81117c9f5ee2124564b' ? (
-                  <CommissionPower>{row.CP}</CommissionPower>
+                 <PowerContainer>
+                 <PowerItem>
+                   <PercentageBar percentage={row.CP} color="#28a745" />
+                   <PercentageBar percentage={row.DP} color="#dc3545" />
+                 </PowerItem>
+                 <PowerItem>
+                   <CommissionPower>CP: {row.CP}%</CommissionPower>
+                   <DefensePower>DP: {row.DP}%</DefensePower>
+                 </PowerItem>
+               </PowerContainer>
                 ) : (
                   ''
                 )}

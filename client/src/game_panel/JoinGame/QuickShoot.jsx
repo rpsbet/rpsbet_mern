@@ -6,6 +6,7 @@ import ReactApexChart from 'react-apexcharts';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
+import InfoIcon from '@material-ui/icons/Warning';
 import { getQsLottieAnimation } from '../../util/helper';
 import {
   Button,

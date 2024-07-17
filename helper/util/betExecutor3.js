@@ -51,7 +51,6 @@ const addToQueue = async (req, bot = false) => {
             user = req.user;
         }
 
-
         if (req.body._id) {
             if (user.dailyWithdrawals > 250) {
                 responseData = {
@@ -117,19 +116,23 @@ const addToQueue = async (req, bot = false) => {
             }).select('accessory');
 
             const accessory = creatorUser.accessory;
+            const accessoryJ = user.accessory;
             let item;
             let commission;
 
+
             if (accessory) {
                 item = await Item.findOne({ image: accessory }).select('CP');
+                itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
                 if (item) {
-                    commission = item.CP + parseFloat(tax.value);
+                    commission = item.CP - itemJ.DP + parseFloat(tax.value);
                 } else {
                     commission = parseFloat(tax.value); // If no item found, use tax.value directly
                 }
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
+
 
             newGameLog = new GameLog({
                 room: roomInfo,
@@ -190,30 +193,30 @@ const addToQueue = async (req, bot = false) => {
 
                 newGameLog.bet_amount = betAmount;
 
-              
-            // get next unused item
-            const availableBetItem = await RpsBetItem.findOne({
-                room: req.body._id,
-                // joiner: user._id,
-                joiner_rps: ''
-            });
-            bet_item = availableBetItem;
 
-            const allBetItems = await RpsBetItem.find({
-                room: new ObjectId(req.body._id),
-                joiner: user._id,
-                joiner_rps: { $ne: null }
-            })
-                .sort({ created_at: -1 })
-                .limit(50);
-            const mostRecentItems = allBetItems.slice(0, 4);
+                // get next unused item
+                const availableBetItem = await RpsBetItem.findOne({
+                    room: req.body._id,
+                    // joiner: user._id,
+                    joiner_rps: ''
+                });
+                bet_item = availableBetItem;
+
+                const allBetItems = await RpsBetItem.find({
+                    room: new ObjectId(req.body._id),
+                    joiner: user._id,
+                    joiner_rps: { $ne: null }
+                })
+                    .sort({ created_at: -1 })
+                    .limit(50);
+                const mostRecentItems = allBetItems.slice(0, 4);
 
 
                 // if no more items, create a new one
                 if (!bet_item && roomInfo['rps_game_type'] === 0) {
                     let nextItem;
 
-               
+
                     switch (roomInfo['selectedStrategy']) {
                         case 'Random':
                             nextItem = await getRandomItem();
@@ -433,44 +436,44 @@ const addToQueue = async (req, bot = false) => {
                 const creatorIds = gameLogArray.map(gameLog => gameLog.creator);
                 const joinedUserIds = gameLogArray.map(gameLog => gameLog.joined_user);
                 const gameTypeIds = gameLogArray.map(gameLog => gameLog.game_type);
-                
+
                 // Fetch all rooms, creators, joined users, and game types in parallel
                 const [rooms, creators, joinedUsers, gameTypes] = await Promise.all([
-                  Room.find({ _id: { $in: roomIds } }).lean().exec(),
-                  User.find({ _id: { $in: creatorIds } }).lean().exec(),
-                  User.find({ _id: { $in: joinedUserIds } }).lean().exec(),
-                  GameType.find({ _id: { $in: gameTypeIds } }).lean().exec()
+                    Room.find({ _id: { $in: roomIds } }).lean().exec(),
+                    User.find({ _id: { $in: creatorIds } }).lean().exec(),
+                    User.find({ _id: { $in: joinedUserIds } }).lean().exec(),
+                    GameType.find({ _id: { $in: gameTypeIds } }).lean().exec()
                 ]);
-                
+
                 // Create maps for quick lookup
                 const roomMap = new Map(rooms.map(room => [room._id.toString(), room]));
                 const creatorMap = new Map(creators.map(creator => [creator._id.toString(), creator]));
                 const joinedUserMap = new Map(joinedUsers.map(user => [user._id.toString(), user]));
                 const gameTypeMap = new Map(gameTypes.map(type => [type._id.toString(), type]));
-                
+
                 // Map game logs to their updated form
                 const updatedGameLogArray = gameLogArray.map(gameLog => ({
-                  bet_amount: gameLog.bet_amount,
-                  commission: gameLog.commission,
-                  game_result: gameLog.game_result,
-                  winnings: gameLog.winnings,
-                  host_pr: gameLog.host_pr,
-                  user_bet: gameLog.user_bet,
-                  _id: gameLog._id,
-                  room: roomMap.get(gameLog.room.toString()),
-                  creator: creatorMap.get(gameLog.creator.toString()),
-                  joined_user: joinedUserMap.get(gameLog.joined_user.toString()),
-                  game_type: gameTypeMap.get(gameLog.game_type.toString()),
-                  created_at: gameLog.created_at,
-                  updated_at: gameLog.updated_at,
-                  hosts: gameLog.hosts
+                    bet_amount: gameLog.bet_amount,
+                    commission: gameLog.commission,
+                    game_result: gameLog.game_result,
+                    winnings: gameLog.winnings,
+                    host_pr: gameLog.host_pr,
+                    user_bet: gameLog.user_bet,
+                    _id: gameLog._id,
+                    room: roomMap.get(gameLog.room.toString()),
+                    creator: creatorMap.get(gameLog.creator.toString()),
+                    joined_user: joinedUserMap.get(gameLog.joined_user.toString()),
+                    game_type: gameTypeMap.get(gameLog.game_type.toString()),
+                    created_at: gameLog.created_at,
+                    updated_at: gameLog.updated_at,
+                    hosts: gameLog.hosts
                 }));
-                
+
                 // Now updatedGameLogArray has the populated sub-documents
-                
+
                 // Assuming convertGameLogToHistoryStyle can be optimized similarly
                 const newLog = await convertGameLogToHistoryStyle(updatedGameLogArray);
-                
+
                 // socket for last 5 items
                 if (roomInfo['rps_game_type'] === 0) {
                     mostRecentItems.reverse();

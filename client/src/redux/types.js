@@ -88,6 +88,7 @@ export const MY_ITEM_QUERY = 'MY_ITEM_QUERYs';
 // action loan
 export const LOAN_QUERY_ONE = 'LOAN_QUERY_ONE';
 export const LOAN_QUERY = 'LOAN_QUERY';
+export const PREVIOUS_LOAN_QUERY = 'PREVIOUS_LOAN_QUERY';
 export const MY_LOAN_QUERY_ONE = 'ITEM_QUERY_ONE';
 export const MY_LOAN_QUERY = 'MY_LOAN_QUERYs';
 export const LOADING_REMAINING_LOANS = 'LOADING_REMAINING_LOANS';

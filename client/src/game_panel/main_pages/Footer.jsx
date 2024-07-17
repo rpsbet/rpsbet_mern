@@ -194,7 +194,7 @@ class Footer extends Component {
                             &nbsp;✗&nbsp;
 
                         </span>
-                        {/* <a className={classes.link} href="#">Blog</a>&nbsp;✗&nbsp; */}
+                        <a className={classes.link} href="https://blog.rps.game/">Blog</a>&nbsp;✗&nbsp;
                         {/* <a className={classes.link} href="#">Faq</a>&nbsp;✗&nbsp; */}
                         <a className={classes.link}
                             href="#terms"

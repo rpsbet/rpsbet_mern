@@ -6,10 +6,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faClock,
   faSort,
-  faFilter
+  faFilter,
+  faUser, faMoneyBillAlt, faUsers, faMoneyCheckAlt, faChartLine
 } from '@fortawesome/free-solid-svg-icons';
+
+
 import {
   acQueryLoan,
+  previousLoans,
   setCurrentLoanId,
   setCurrentLoanInfo
 } from '../../../../redux/Loan/loan.action';
@@ -25,6 +29,8 @@ import {
   TableContainer,
   TableRow,
   Tooltip,
+  Typography,
+  Grid,
   Menu,
   MenuItem
 } from '@material-ui/core';
@@ -188,8 +194,61 @@ class BankTable extends Component {
       anchorEl: null,
       sortAnchorEl: null,
       sortCriteria: 'updated_at',
-      loanType: 'standard'
+      loanType: 'standard',
+      loansWithProfit: []
     };
+  }
+  async componentDidMount() {
+    const { prevLoans, acGetCustomerInfo } = this.props;
+
+    console.log("Component mounted with previous loans:", prevLoans);
+
+    try {
+      // Map through each loan and calculate profit
+      const loansWithProfit = await Promise.all(prevLoans.map(async loan => {
+        let totalLoanerAmount = 0;
+        let totalPaidBack = 0;
+
+        // Calculate total amount from loaners and total paid back
+        await Promise.all(loan.loaners.map(async loaner => {
+          totalLoanerAmount += loaner.amount;
+          const paidBack = parseFloat(loaner.paidBack); // Assuming paidBack is a string
+          totalPaidBack += paidBack;
+          console.log(`Loaner ${loaner._id}: Amount = ${loaner.amount}, Paid Back = ${paidBack}`);
+
+          // Fetch customer info for loaner
+          const customerInfo = await acGetCustomerInfo(loaner.user);
+          console.log(`Customer Info for loaner ${loaner.user}:`, customerInfo);
+
+          loaner.customerInfo = customerInfo; // Attach customer info to loaner
+        }));
+
+        // Calculate profit
+        const profit = ((totalLoanerAmount - totalPaidBack) * -1);
+        console.log(`Loan ${loan._id}: Total Loaner Amount = ${totalLoanerAmount}, Total Paid Back = ${totalPaidBack}, Profit = ${profit}`);
+
+        // Fetch customer info for lender
+        const customerInfo = await acGetCustomerInfo(loan.lender);
+        console.log(`Customer Info for lender ${loan.lender}:`, customerInfo);
+
+        // Return loan object with profit and customer info added
+        return {
+          ...loan,
+          totalLoanerAmount: totalLoanerAmount,
+          totalPaidBack: totalPaidBack,
+          profit: profit,
+          customerInfo: customerInfo
+        };
+      }));
+
+      console.log("Loans with profit and customer info calculated:", loansWithProfit);
+
+      // Update state with loansWithProfit array
+      this.setState({ loansWithProfit });
+    } catch (error) {
+      console.error('Error fetching customer info:', error);
+      this.setState({ error });
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -197,18 +256,19 @@ class BankTable extends Component {
     const loanAmountChanged = this.props.data &&
       prevProps.data &&
       this.props.data.length === prevProps.data.length &&
-      this.props.data.some((currentLoan, index) => 
-        currentLoan && 
-        prevProps.data[index] && 
+      this.props.data.some((currentLoan, index) =>
+        currentLoan &&
+        prevProps.data[index] &&
         currentLoan.loan_amount !== prevProps.data[index].loan_amount
       );
-  
+
     if (loanAmountChanged) {
       // Fetch loans when there's a change in the loan_amount property
       this.fetchLoans();
+      this.props.previousLoans();
     }
   }
-  
+
 
   areLoanersEqual(prevLoaners, currentLoaners) {
     // Compare the loaners array by stringifying them and checking for equality
@@ -260,7 +320,7 @@ class BankTable extends Component {
   };
 
   async fetchCustomerInfo() {
-    
+
     const { data, acGetCustomerInfo } = this.props;
     for (const product of data) {
       // console.log("Sz", product.lender)
@@ -279,20 +339,20 @@ class BankTable extends Component {
               customerInfo: {
                 ...prevState.customerInfo,
                 [product.lender]: {
-                      username: 'Anon',
-                      avatar: 'default-avatar-url'
-                    }
-                  }
-                }));
+                  username: 'Anon',
+                  avatar: 'default-avatar-url'
+                }
               }
-            } catch (error) {
-              console.error(
-                `Error fetching customer info for ${ldata.lender}:`,
-                error
-              );
-            }
+            }));
           }
-        
+        } catch (error) {
+          console.error(
+            `Error fetching customer info for ${ldata.lender}:`,
+            error
+          );
+        }
+      }
+
     }
   }
   render() {
@@ -316,6 +376,7 @@ class BankTable extends Component {
       sortOrder,
       anchorEl,
       sortAnchorEl,
+      loansWithProfit,
       loanType
     } = this.state;
 
@@ -391,28 +452,28 @@ class BankTable extends Component {
               >
                 <APY>{updateDigitToPoint2(row.apy) * 100}%</APY>
 
-                
-                  <ProductCreator>
-                    {customerInfo[row.lender] ? (
-                      <a
-                        className="player"
-                        onClick={() => this.handleOpenPlayerModal(row.lender)}
-                      >
-                        <Avatar
-                          className="avatar"
-                          src={customerInfo[row.lender].avatar}
-                          rank={customerInfo[row.lender].totalWagered}
-                          accessory={customerInfo[row.lender].accessory}
-                          username={customerInfo[row.lender].username}
-                          alt=""
-                          darkMode={this.props.isDarkMode}
-                        />
-                      </a>
-                    ) : (
-                      <div className="loading-spinner"></div>
-                    )}
-                  </ProductCreator>
-                
+
+                <ProductCreator>
+                  {customerInfo[row.lender] ? (
+                    <a
+                      className="player"
+                      onClick={() => this.handleOpenPlayerModal(row.lender)}
+                    >
+                      <Avatar
+                        className="avatar"
+                        src={customerInfo[row.lender].avatar}
+                        rank={customerInfo[row.lender].totalWagered}
+                        accessory={customerInfo[row.lender].accessory}
+                        username={customerInfo[row.lender].username}
+                        alt=""
+                        darkMode={this.props.isDarkMode}
+                      />
+                    </a>
+                  ) : (
+                    <div className="loading-spinner"></div>
+                  )}
+                </ProductCreator>
+
 
                 <ProductInfo>
                   <LoanAmount>{convertToCurrency(row.loan_amount)}</LoanAmount>
@@ -462,7 +523,7 @@ class BankTable extends Component {
             <LinearProgress color="secondary" />
           </LinearContainer>
         )}
-        <PaginationContainer>
+        {/* <PaginationContainer >
           <Pagination
             limit={1}
             offset={page - 1}
@@ -471,7 +532,102 @@ class BankTable extends Component {
               acQueryLoan(30, offset + 1, sortCriteria, loanType);
             }}
           />
-        </PaginationContainer>
+        </PaginationContainer> */}
+
+
+        <div className="carousel-container" style={{ marginTop: "60px" }}>
+          <Typography variant="h4" align="left" gutterBottom>
+            Previous Loans
+          </Typography>
+          <div className="carousel">
+            {
+              loansWithProfit.map(loan => (
+                <div key={loan._id} className={`carousel-item ${loan.profit <= 0 ? 'red-gradient' : 'green-gradient'}`}
+                >
+                  <div className="loan-details">
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>
+                            <FontAwesomeIcon icon={faUser} /> Lender:
+                          </TableCell>
+                          <TableCell>
+                            <a
+                              className="player"
+                              onClick={() => this.handleOpenPlayerModal(loan.lender)}
+                            >
+                              <Avatar
+                                className="avatar"
+                                src={loan.customerInfo.avatar}
+                                rank={loan.customerInfo.totalWagered}
+                                accessory={loan.customerInfo.accessory}
+                                username={loan.customerInfo.username}
+                                alt=""
+                                darkMode={this.props.isDarkMode}
+                              />
+                            </a>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <FontAwesomeIcon icon={faClock} /> Days Left:
+                          </TableCell>
+                          <TableCell>{loan.outstanding === true ? "OUTSTANDING" : loan.outstanding}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <FontAwesomeIcon icon={faMoneyBillAlt} /> Total Loaner Amount:
+                          </TableCell>
+                          <TableCell>{convertToCurrency(loan.totalLoanerAmount)}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <FontAwesomeIcon icon={faUsers} /> Loaners:
+                          </TableCell>
+                          <TableCell>
+                            {
+                              loan.loaners.map((loaner, index) => (
+                                <a
+                                  key={index}
+                                  className="player"
+                                  onClick={() => this.handleOpenPlayerModal(loaner.user)}
+                                >
+                                  <Avatar
+                                    className="avatar"
+                                    src={loaner.customerInfo.avatar}
+                                    rank={loaner.customerInfo.totalWagered}
+                                    accessory={loaner.customerInfo.accessory}
+                                    username={loaner.customerInfo.username}
+                                    alt=""
+                                    darkMode={this.props.isDarkMode}
+                                  />
+                                </a>
+                              ))
+                            }
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <FontAwesomeIcon icon={faMoneyCheckAlt} /> Total Paid Back:
+                          </TableCell>
+                          <TableCell>{convertToCurrency(loan.totalPaidBack)}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <FontAwesomeIcon icon={faChartLine} /> Profit:
+                          </TableCell>
+                          <TableCell className={loan.profit <= 0 ? 'profit-negative' : 'profit-positive'}>
+                            {convertToCurrency(loan.profit)}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
       </MarketplaceContainer>
     );
   }
@@ -479,6 +635,7 @@ class BankTable extends Component {
 
 const mapStateToProps = state => ({
   data: state.loanReducer.loanArray,
+  prevLoans: state.loanReducer.previousLoans,
   pages: state.loanReducer.pages,
   page: state.loanReducer.page,
   loading: state.loanReducer.loading,
@@ -491,6 +648,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
   acQueryLoan,
   setCurrentLoanId,
+  previousLoans,
   setCurrentLoanInfo,
   openConfirmLoanModal,
   acGetCustomerInfo
