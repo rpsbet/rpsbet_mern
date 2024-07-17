@@ -574,7 +574,7 @@ class MyProductTable extends Component {
                   </PowerItem>
                   <PowerItem>
                     <CommissionPower>CP: {row.CP}%</CommissionPower>
-                    <DefensePower>DP: {row.DP}%</DefensePower>
+                    <DefensePower>BP: {row.DP}%</DefensePower>
                   </PowerItem>
                 </PowerContainer>
                 ) : (
