@@ -742,6 +742,7 @@ class OpenGamesTable extends Component {
                                   .slice(0, 2)
                                   .map((joiner, index) => (
                                     <a
+                                    key={index} 
                                       className="player"
                                       onClick={() =>
                                         this.handleOpenPlayerModal(row.joiners[index])
@@ -780,7 +781,7 @@ class OpenGamesTable extends Component {
                             </div>
 
                             <div>
-                              <IconButton onClick={() => this.handleLike(row)}>
+                              <IconButton color="inherit" onClick={() => this.handleLike(row)}>
                                 {row.likes?.includes(this.props.user._id) ? (
                                   <>
                                     {!row.likeAnimation && (
@@ -931,7 +932,7 @@ class OpenGamesTable extends Component {
                             </div>
 
                             <div>
-                              <IconButton onClick={() => this.handleLike(row)}>
+                              <IconButton color="inherit" onClick={() => this.handleLike(row)}>
                                 {row.likes?.includes(this.props.user._id) ? (
                                   <>
                                     {!row.likeAnimation && (
@@ -971,7 +972,7 @@ class OpenGamesTable extends Component {
               )}
               <div style={{ display: "inline-flex", justifyContent: "center", alignItems: "center" }}>
 
-                <h2 class="main-title recently-closed-title" style={{ paddingTop: "5px" }}>RECENTLY ENDED</h2> <Lottie style={{ filter: 'grayscale(1)' }} options={defaultOptions} width={40} />
+                <h2 className="main-title recently-closed-title" style={{ paddingTop: "5px" }}>RECENTLY ENDED</h2> <Lottie style={{ filter: 'grayscale(1)' }} options={defaultOptions} width={40} />
               </div>
               <div className='recently-closed'>
                 {recent?.map((row) => (

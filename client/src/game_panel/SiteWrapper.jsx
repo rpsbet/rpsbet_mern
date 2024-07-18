@@ -1181,7 +1181,7 @@ class SiteWrapper extends Component {
                         : 'fade-animation fade-out'
                         }`}
                       label="PVP"
-                      labelPlacement="left"
+                      labelplacement="left"
                       icon={
                         hoverTabIndex === 0 || selectedMainTabIndex === 0 ? (
                           <BattleHover />
@@ -1200,7 +1200,7 @@ class SiteWrapper extends Component {
                         : 'fade-animation fade-out'
                         }`}
                       label="Manage"
-                      labelPlacement="left"
+                      labelplacement="left"
                       icon={
                         hoverTabIndex === 1 || selectedMainTabIndex === 1 ? (
                           <ManageHover />

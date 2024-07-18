@@ -6,8 +6,13 @@ import ReactApexChart from 'react-apexcharts';
 import Moment from 'moment';
 import Avatar from '../../components/Avatar';
 import PlayerModal from '../modal/PlayerModal';
+import AiPanel from '../../components/AiPanel';
+import ViewIcon from '@material-ui/icons/Visibility';
+import SwordsIcon from '@material-ui/icons/VisibilityOff';
 import InfoIcon from '@material-ui/icons/Warning';
 import { getQsLottieAnimation } from '../../util/helper';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRobot, faMoneyBillWave, faBrain } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
   IconButton,
@@ -70,6 +75,7 @@ class QuickShoot extends Component {
       bankroll: parseFloat(this.props.bet_amount) - this.getPreviousBets(),
       balance: this.props.balance,
       productName: '',
+      status: this.props.roomInfo.status,
       qs: '',
       host_pr: this.props.pr,
       image: '',
@@ -97,13 +103,12 @@ class QuickShoot extends Component {
     const initializeSocket = async () => {
       try {
         const { socket, playSound, roomInfo } = this.props;
-        const initializedSocket = socket || socketIOClient(this.state.endpoint);
-        this.setState({ socket: initializedSocket });
+        this.setState({ socket: socket });
 
-        if (initializedSocket) {
+        if (socket) {
 
-          initializedSocket.on(`UPDATED_BANKROLL_QS${roomInfo._id}`, this.handleSocketData);
-          initializedSocket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
+          socket.on(`UPDATED_BANKROLL_QS${roomInfo._id}`, this.handleSocketData);
+          socket.on(`UPDATED_BANKROLL_QS2_${roomInfo._id}`, this.handleSocketData2);
         }
 
       } catch (error) {
@@ -532,6 +537,44 @@ class QuickShoot extends Component {
 
   };
 
+  handleBotClick = () => {
+    const { creator_id, user_id, roomInfo, isDarkMode, updateRoomBot } = this.props;
+    if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+      callBot(creator_id, roomInfo._id, user_id, isDarkMode, async () => {
+        const botAttached = await updateRoomBot(roomInfo._id);
+        if (botAttached) {
+          this.setState(prevState => ({
+            botsCount: prevState.botsCount + 1
+          }));
+        }
+      });
+    }
+  }
+
+  
+  bootBots = async () => {
+    const { creator_id, user_id, roomInfo, kickBots } = this.props;
+    this.setState({ botsCount: 0 }, async () => {
+      if (creator_id && user_id && creator_id.toString() === user_id.toString()) {
+        await kickBots(roomInfo._id);
+      }
+    });
+  }
+
+  handleEndClick = async () => {
+    const { roomInfo } = this.props;
+    if (roomInfo.status !== 'finished') {
+      await this.props.endGame(roomInfo._id);
+      this.setState({ status: 'finished' });
+    } else {
+      alertModal(
+        this.props.isDarkMode,
+        "THIS GAME HAS ALREADY ENDED."
+      );
+    }
+  }
+
+
   // Define a function to map position to letter
   getPositionLetter = (position) => {
     switch (position) {
@@ -634,7 +677,9 @@ class QuickShoot extends Component {
       showImageModal,
       bet_amount,
       image,
-      productName
+      productName,
+      botsCount,
+      status
     } = this.state;
     const {
       selectedCreator,
@@ -654,8 +699,17 @@ class QuickShoot extends Component {
       isDarkMode,
       isLowGraphics,
       borderColor,
+      playSound,
+      isWatching,
       isMusicEnabled,
-      gameBackground
+      predictedBetAmount,
+      gameBackground,
+      ai_mode,
+      balance,
+      user_id,
+      betting,
+      is_betting,
+      strategies
     } = this.props;
     const payoutPercentage = (bankroll / roomInfo.endgame_amount) * 100;
 
@@ -799,8 +853,8 @@ class QuickShoot extends Component {
                     <div className="value bankroll">
 
                       <Tooltip title="Current bankroll + Payouts - Initial bankroll">
-                        <div className="value" style={{ color: (roomInfo.pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (roomInfo.pr  - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
-                          {convertToCurrency(roomInfo.pr  - roomInfo.total_stakes)}
+                        <div className="value" style={{ color: (roomInfo.pr - roomInfo.total_stakes) > 0 ? 'rgb(87, 202, 34)' : (roomInfo.pr - roomInfo.total_stakes) < 0 ? '#ff0000' : 'inherit' }}>
+                          {convertToCurrency(roomInfo.pr - roomInfo.total_stakes)}
                         </div>
                       </Tooltip>
 
@@ -850,90 +904,131 @@ class QuickShoot extends Component {
               ))}
             </div>
           </div>
-          <div
-            className="game-info-panel"
-            style={{ position: 'relative', zIndex: 10 }}
-          >
-            {/* {renderLottieAvatarAnimation(
+          {status === 'open' ? (
+            <>
+              <Tooltip title={!isWatching ? "CLICK TO STOP WATCHING" : "CLICK TO START WATCHING"}>
+                <IconButton className="spectate" onClick={this.handleSpectateMode}>
+                  {isWatching ? <>PLAY&nbsp;<SwordsIcon /></> : <>SPECTATE&nbsp;<ViewIcon /></>}
+
+                </IconButton>
+              </Tooltip>
+              <div
+                className="game-info-panel"
+                style={{ position: 'relative', zIndex: 10 }}
+              >
+                {/* {renderLottieAvatarAnimation(
               gameBackground,
               isLowGraphics
             )} */}
 
-            <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
-            <div
-              className="qs-image-panel"
-              style={{
-                zIndex: '1'
-              }}
-            >
-              <img
-                src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
-                alt=""
-                style={{
-                  width: '600px',
-                  maxWidth: '100%',
-                  borderRadius: '10px',
-                  border: `3px solid ${borderColor}`,
-                  boxShadow: `0 0 20px ${borderColor}`
-
-                }}
-              />
-              <div
-                id="cat-football"
-
-              >
-
-                <Lottie
-                  options={{
-                    loop: true,
-                    autoplay: true,
-                    animationData: football
+                <h3 className="game-sub-title">Choose WHERE TO SHOOT</h3>
+                <div
+                  className="qs-image-panel"
+                  style={{
+                    zIndex: '1'
                   }}
-                  style={{ transform: 'translate(15px, 60px)', width: '100px', }}
-                />
-              </div>
-              {this.state.animation}
-              {this.renderButtons()}
-            </div>
+                >
+                  <img
+                    src={`/img/gametype/quick_shoot/gametype${qs_game_type}/type${qs_game_type}-${position_short_name[selected_qs_position]}.png`}
+                    alt=""
+                    style={{
+                      width: '600px',
+                      maxWidth: '100%',
+                      borderRadius: '10px',
+                      border: `3px solid ${borderColor}`,
+                      boxShadow: `0 0 20px ${borderColor}`
 
-            <BetAmountInput
-              betAmount={bet_amount}
-              handle2xButtonClick={this.handle2xButtonClick}
-              handleHalfXButtonClick={this.handleHalfXButtonClick}
-              handleMaxButtonClick={this.handleMaxButtonClick}
-              onChangeState={this.onChangeState}
-              isDarkMode={isDarkMode}
-            />
-
-            {/* <div>
-              <FormControlLabel
-                control={
-                  <Switch
-                    id="aiplay-switch"
-                    checked={betting}
-                    onChange={this.handleSwitchChange}
+                    }}
                   />
-                }
-                label={betting ? 'AI ON' : 'AI OFF'}
-              />
-              {betting ? (
-                <div id="stop">
-                  <Lottie options={defaultOptions} width={22} />
-                </div>
-              ) : (
-                <div>
-                  {timerValue !== 2000 ? (
-                    <span>{(timerValue / 2000).toFixed(2)}s</span>
-                  ) : null}
-                </div>
-              )}
-            </div> */}
-          </div>
+                  <div
+                    id="cat-football"
 
-          <div className="action-panel">
-            <Share roomInfo={roomInfo} />
-          </div>
-        </div >
+                  >
+
+                    <Lottie
+                      options={{
+                        loop: true,
+                        autoplay: true,
+                        animationData: football
+                      }}
+                      style={{ transform: 'translate(15px, 60px)', width: '100px', }}
+                    />
+                  </div>
+                  {this.state.animation}
+                  {this.renderButtons()}
+                </div>
+
+
+                {creator_id && user_id && creator_id.toString() === user_id.toString() ? (
+                  <div className='host-controls'>
+                    <Button
+                      onClick={this.handleBotClick}
+                      className="hover-text-button"
+                    >
+                      <FontAwesomeIcon className="button-icon" icon={faRobot} />
+                      <span className="button-text">&nbsp;CALL BOT? [{botsCount}]</span>
+                    </Button>
+                    {botsCount > 0 && (
+
+                      <Button
+                        onClick={this.bootBots}
+                        className="hover-text-button"
+                      >
+                        <FontAwesomeIcon className="button-icon" icon={faBan} />
+                        <span className="button-text">&nbsp;KICK BOTS?</span>
+                      </Button>
+                    )}
+                    <Button
+                      onClick={this.handleEndClick}
+                      className="hover-text-button special-button"
+                    >
+                      <FontAwesomeIcon className="button-icon" icon={faMoneyBillWave} />
+                      <span className="button-text">&nbsp;QUICK RUG&nbsp;{convertToCurrency(bankroll)}</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <BetAmountInput
+                      betAmount={this.state.bet_amount}
+                      handle2xButtonClick={this.handle2xButtonClick}
+                      handleHalfXButtonClick={this.handleHalfXButtonClick}
+                      handleMaxButtonClick={this.handleMaxButtonClick}
+                      onChangeState={this.onChangeState}
+                      isDarkMode={isDarkMode}
+                      balance={this.state.balance}
+                      bankroll={this.state.bankroll}
+                    />
+                    {this.props.is_mobile && (
+                      <AiPanel
+                        qsbetitems={this.props.qsbetitems}
+                        updateUserStrategy={this.props.updateUserStrategy}
+                        strategies={strategies}
+                        betting={betting}
+                        is_betting={is_betting}
+                        predictedBetAmount={predictedBetAmount}
+                        roomId={roomInfo._id}
+                        handleSwitchChange={this.props.handleSwitchChange}
+                        game_type={roomInfo.game_type}
+                        rank={this.props.rank}
+                        user_id={user_id}
+                        ai_mode={ai_mode}
+                        user_balance={balance}
+                      />
+                    )}
+                  </>
+
+                )}
+              </div>
+            </>
+
+          ) : (
+            <span style={{ color: "#ff0000" }}>THIS GAME HAS ENDED</span>
+          )}
+
+        <div className="action-panel">
+          <Share roomInfo={roomInfo} />
+        </div>
+      </div >
       </div >
     );
   }

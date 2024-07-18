@@ -91,7 +91,7 @@ class HistoryTable extends Component {
     if (socket) {
       socket.on('NEW_LOG', this.handleNewLog);
     } else {
-      console.error('Socket is null or undefined. Retrying in 5 seconds...');
+      // console.error('Socket is null or undefined. Retrying in 5 seconds...');
       this.retrySocketConnection();
     }
   }

@@ -373,7 +373,7 @@ class ChatPanel extends Component {
               : 'fade-animation fade-out'
               }`}
             label="Inbox"
-            labelPlacement="left"
+            labelplacement="left"
             icon={
               hoverTabIndex === 0 || selected_tab_index === 0 ? (
                 <ChatHover />
@@ -391,7 +391,7 @@ class ChatPanel extends Component {
               : 'fade-animation fade-out'
               }`}
             label="Chat"
-            labelPlacement="left"
+            labelplacement="left"
             icon={
               hoverTabIndex === 1 || selected_tab_index === 1 ? (
                 <ChatRoomHover />

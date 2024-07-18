@@ -143,7 +143,7 @@ class CreateGame extends Component {
     this.state = {
       is_mobile: window.innerWidth < 1024 ? true : false,
       selectedMobileTab: 'live_games',
-      step: 2,
+      step: 1,
       child_step: 1,
       game_type: 1,
       game_mode: this.props.game_mode,
@@ -173,7 +173,9 @@ class CreateGame extends Component {
       aveMultiplier: 0,
       score: 0,
       youtubeUrl: '',
+      
       gameBackground: '',
+      ai_mode: this.props.user.ai_mode,
       videoId: '',
       isPlaying: false,
       endgame_type: true,
@@ -217,6 +219,7 @@ class CreateGame extends Component {
 
 
   async componentDidMount() {
+
     document.addEventListener('keydown', this.handleKeyPress);
 
     Object.values(this.state.sounds).forEach(sound => {
@@ -1035,7 +1038,6 @@ class CreateGame extends Component {
         );
 
       default:
-        this.setState({ step: 1 });
         this.props.setGameMode(game_mode)
         return this.step1();
     }

@@ -88,8 +88,6 @@ class OfferLoanModal extends Component {
       if (attempt < 5) {
         // Retry after 1 second if the attempt count is less than 5
         setTimeout(() => this.setupSocketListener(attempt + 1), 1000);
-      } else {
-        console.error('Max retries reached. Unable to set up socket listener.');
       }
       return;
     }

@@ -364,7 +364,6 @@ export const getRoomInfo = (room_id, limit, loading) => async dispatch => {
     // Include the 'limit' parameter in the API request URL if provided
     const apiURL = limit ? `/game/room/${room_id}?limit=${limit}` : `/game/room/${room_id}`;
     const res = await axios.get(apiURL);
-    console.log(res.data)
 
     if (res.data.success) {
       dispatch({ type: ROOMINFO_LOADED, payload: res.data });

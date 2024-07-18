@@ -136,6 +136,7 @@
 .wheel .number {
     position: absolute;
     width: 50px;
+    z-index: 0;
     height: 50px;
     background: linear-gradient(45deg, #7cbcf4, transparent);
     border: 2px solid #000;

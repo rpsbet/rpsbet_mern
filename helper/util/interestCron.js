@@ -26,7 +26,7 @@ async function updateRoomInterests(io) {
       
 
       if (lastUpdated <= fiveMinutesAgo) {
-        const bonusRooms = await Room.find({ status: 'open' });
+        const bonusRooms = await Room.find({ status: 'open', is_private: 'false' });
         for (const bonusRoom of bonusRooms) {
           const req = {
             params: { _id: bonusRoom._id },
@@ -37,9 +37,9 @@ async function updateRoomInterests(io) {
             }
           };
           let userBet = parseFloat(bonusRoom.user_bet);
-          const interest = userBet * 1.00005;
+          const interest = userBet * 1.00001;
           bonusRoom.user_bet = interest.toString();
-          bonusRoom.pr = bonusRoom.pr + (userBet * 0.0005);
+          bonusRoom.pr = bonusRoom.pr + (userBet * 0.0001);
           await saveDocumentWithRetry(bonusRoom);
 
           if (req.io.sockets) {
@@ -52,7 +52,7 @@ async function updateRoomInterests(io) {
             from: senderId,
             to: bonusRoom.creator,
             room: bonusRoom._id,
-            message: `Interest earned (${convertToCurrency(userBet * 0.0005)})`,
+            message: `Interest earned (${convertToCurrency(userBet * 0.0001)})`,
             is_read: false
           });
 

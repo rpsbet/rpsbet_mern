@@ -5,7 +5,7 @@ import { Chat, Close } from '@material-ui/icons';
 const DrawerButton = ({ open, toggleDrawer }) => (
   <IconButton
     id="drawer-btn"
-    color="white"
+    style={{ color: 'white' }}
     onClick={toggleDrawer}
   >
     {open ? <Close /> : <Chat />}

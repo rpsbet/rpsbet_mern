@@ -354,7 +354,7 @@ class AllTransactionsModal extends Component {
 
                               <TableCell>
                                 <Tooltip title={this.state.copiedRowId === (transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id) ? "Copied!" : "Copy ID"} placement="top">
-                                  <IconButton onClick={() => this.copyToClipboard(transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id)}>
+                                  <IconButton color="inherit" onClick={() => this.copyToClipboard(transaction.hash && transaction.hash.length === 10 ? transaction.hash : transaction._id)}>
                                     <FileCopyIcon />
                                   </IconButton>
                                 </Tooltip>

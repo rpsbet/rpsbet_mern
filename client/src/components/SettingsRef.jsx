@@ -3,7 +3,6 @@ import { Button, Tooltip } from '@material-ui/core';
 import LockIcon from '@material-ui/icons/Lock';
 import { green, yellow } from '@material-ui/core/colors';
 
-
 const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, settings_panel_opened, settingsRef, selectedStrategy, updateUserStrategy }) => {
 
   const filteredStrategies = strategies.filter(strategy => strategy.name === (selectedStrategy || ai_mode));
@@ -48,7 +47,8 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
               <tbody>
                 <tr>
                   <th>Speed</th>
-                  ({strategy.speed}%) {calculateBarWidths(strategy.speed).map((width, idx) => (
+                  <td>({strategy.speed}%)</td>
+                  {calculateBarWidths(strategy.speed).map((width, idx) => (
                     <td key={idx}>
                       <div className="bar" style={{ width: `${width}%` }} />
                     </td>
@@ -56,7 +56,8 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
                 </tr>
                 <tr>
                   <th>Reasoning</th>
-                  ({strategy.reasoning}%)  {calculateBarWidths(strategy.reasoning).map((width, idx) => (
+                  <td>({strategy.reasoning}%)</td>
+                  {calculateBarWidths(strategy.reasoning).map((width, idx) => (
                     <td key={idx}>
                       <div className="bar" style={{ width: `${width}%` }} />
                     </td>
@@ -64,7 +65,8 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
                 </tr>
                 <tr>
                   <th>Predictability</th>
-                  ({strategy.predictability}%)  {calculateBarWidths(strategy.predictability).map((width, idx) => (
+                  <td>({strategy.predictability}%)</td>
+                  {calculateBarWidths(strategy.predictability).map((width, idx) => (
                     <td key={idx}>
                       <div className="bar" style={{ width: `${width}%` }} />
                     </td>
@@ -115,7 +117,5 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
     </div>
   );
 };
-
-
 
 export default SettingsRef;

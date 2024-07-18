@@ -65,7 +65,7 @@ const SupportButton = () => {
   return (
     <IconButton
       id="support-btn"
-      color="white"
+      style={{ color: 'white' }}
       onClick={toggleIntercom}
     >
       {intercomOpen ? <Close /> : <ContactSupport />}

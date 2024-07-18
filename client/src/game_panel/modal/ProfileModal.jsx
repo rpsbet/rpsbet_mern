@@ -496,7 +496,7 @@ class ProfileModal extends Component {
                         readOnly: true,
                         endAdornment: (
                           <Tooltip title={copied ? "Copied!" : "Copy to clipboard"} placement="top">
-                            <IconButton onClick={() => this.handleCopyToClipboard(this.state.referralCode)}>
+                            <IconButton color="inherit" onClick={() => this.handleCopyToClipboard(this.state.referralCode)}>
                               <FileCopyIcon />
                             </IconButton>
                           </Tooltip>

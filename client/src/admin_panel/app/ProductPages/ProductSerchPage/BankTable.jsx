@@ -199,60 +199,44 @@ class BankTable extends Component {
     };
   }
   async componentDidMount() {
-    const { prevLoans, acGetCustomerInfo } = this.props;
-
-    console.log("Component mounted with previous loans:", prevLoans);
+    const { acGetCustomerInfo } = this.props;
+    await this.props.previousLoans(30, 1, 'loan_amount', 'standard');
+    const { prevLoans } = this.props;
 
     try {
-      // Map through each loan and calculate profit
-      const loansWithProfit = await Promise.all(prevLoans.map(async loan => {
-        let totalLoanerAmount = 0;
-        let totalPaidBack = 0;
+        const loansWithProfit = await Promise.all(prevLoans.map(async loan => {
+            let totalLoanerAmount = 0;
+            let totalPaidBack = 0;
 
-        // Calculate total amount from loaners and total paid back
-        await Promise.all(loan.loaners.map(async loaner => {
-          totalLoanerAmount += loaner.amount;
-          const paidBack = parseFloat(loaner.paidBack); // Assuming paidBack is a string
-          totalPaidBack += paidBack;
-          console.log(`Loaner ${loaner._id}: Amount = ${loaner.amount}, Paid Back = ${paidBack}`);
+            await Promise.all(loan.loaners.map(async loaner => {
+                totalLoanerAmount += loaner.amount;
+                const paidBack = parseFloat(loaner.paidBack); // Assuming paidBack is a string
+                totalPaidBack += paidBack;
+                const customerInfo = await acGetCustomerInfo(loaner.user);
 
-          // Fetch customer info for loaner
-          const customerInfo = await acGetCustomerInfo(loaner.user);
-          console.log(`Customer Info for loaner ${loaner.user}:`, customerInfo);
+                loaner.customerInfo = customerInfo; // Attach customer info to loaner
+            }));
 
-          loaner.customerInfo = customerInfo; // Attach customer info to loaner
+            const profit = ((totalLoanerAmount - totalPaidBack) * -1);
+            const customerInfo = await acGetCustomerInfo(loan.lender);
+            return {
+                ...loan,
+                totalLoanerAmount: totalLoanerAmount,
+                totalPaidBack: totalPaidBack,
+                profit: profit,
+                customerInfo: customerInfo
+            };
         }));
 
-        // Calculate profit
-        const profit = ((totalLoanerAmount - totalPaidBack) * -1);
-        console.log(`Loan ${loan._id}: Total Loaner Amount = ${totalLoanerAmount}, Total Paid Back = ${totalPaidBack}, Profit = ${profit}`);
-
-        // Fetch customer info for lender
-        const customerInfo = await acGetCustomerInfo(loan.lender);
-        console.log(`Customer Info for lender ${loan.lender}:`, customerInfo);
-
-        // Return loan object with profit and customer info added
-        return {
-          ...loan,
-          totalLoanerAmount: totalLoanerAmount,
-          totalPaidBack: totalPaidBack,
-          profit: profit,
-          customerInfo: customerInfo
-        };
-      }));
-
-      console.log("Loans with profit and customer info calculated:", loansWithProfit);
-
-      // Update state with loansWithProfit array
-      this.setState({ loansWithProfit });
+        this.setState({ loansWithProfit });
     } catch (error) {
-      console.error('Error fetching customer info:', error);
-      this.setState({ error });
+        console.error('Error fetching customer info:', error);
+        this.setState({ error });
     }
-  }
+}
+
 
   componentDidUpdate(prevProps, prevState) {
-    // Check if there's any change in the loan_amount property for any document
     const loanAmountChanged = this.props.data &&
       prevProps.data &&
       this.props.data.length === prevProps.data.length &&
@@ -263,7 +247,6 @@ class BankTable extends Component {
       );
 
     if (loanAmountChanged) {
-      // Fetch loans when there's a change in the loan_amount property
       this.fetchLoans();
       this.props.previousLoans();
     }
@@ -271,7 +254,6 @@ class BankTable extends Component {
 
 
   areLoanersEqual(prevLoaners, currentLoaners) {
-    // Compare the loaners array by stringifying them and checking for equality
     return JSON.stringify(prevLoaners) === JSON.stringify(currentLoaners);
   }
 

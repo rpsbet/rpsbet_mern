@@ -241,13 +241,12 @@ class RPS extends Component {
     const initializeSocket = async () => {
       try {
         const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo, user_id } = this.props;
-        const initializedSocket = socket || socketIOClient(this.state.endpoint);
-        this.setState({ socket: initializedSocket });
+        this.setState({ socket: socket });
 
-        if (initializedSocket) {
+        if (socket) {
 
-          initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
-          initializedSocket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, this.handleSocketData2);
+          socket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
+          socket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, this.handleSocketData2);
         }
 
 
@@ -555,15 +554,6 @@ class RPS extends Component {
     //   this.flipcard();
     // }
   }
-
-  speak = message => {
-    if (window.speechSynthesis) {
-      const utterance = new SpeechSynthesisUtterance(message);
-      utterance.rate = 1.0; // set the speed to 1.0 (normal speed)
-      utterance.lang = 'en-US'; // set the language to US English
-      window.speechSynthesis.speak(utterance);
-    }
-  };
 
 
   toggleBlueishHue() {
@@ -953,7 +943,7 @@ class RPS extends Component {
                       <div className="label public-interest">Interest Received</div>
                     </div>
                     <div className="value" >
-                      <Tooltip title="Paid every 33 minutes, at a rate of 0.00005% of the bankroll">
+                      <Tooltip title="Paid every 33 minutes, at a rate of 0.00001% of the bankroll. Room must be public.">
                         <div style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                           <span style={{ color: "#00fff5" }}>
                             {convertToCurrency(this.props.pr)}
@@ -1268,8 +1258,9 @@ class RPS extends Component {
                     </h3>
                   )}
                   <div id="rps-radio" style={{ zIndex: 1 }}>
-                    {options.map(({ classname, selection }) => (
+                    {options.map(({ classname, selection }, index) => (
                       <Button
+                      key={index}
                         variant="contained"
                         id={`rps-${classname}`}
                         className={`rps-option ${classname}${joinerRpsValueAtLastIndex === selection ? ' active' : ''}${bgColorChanged && betResult === -1 && joinerRpsValueAtLastIndex === selection ? ' lose-bg' : ''}${betResult === 0 && joinerRpsValueAtLastIndex === selection ? ' draw-bg' : ''}${betResult === 1 && joinerRpsValueAtLastIndex === selection ? ' win-bg' : ''}${this.props.is_betting ? ' disabled' : ''}`} // Add 'disabled' class when this.props.betting is true

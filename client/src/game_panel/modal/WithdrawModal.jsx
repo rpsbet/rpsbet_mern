@@ -339,7 +339,7 @@ class WithdrawModal extends Component {
   createPayoutAndClose = async () => {
     const { amount, currencyTo, sendAddress, extraId } = this.state;
     try {
-      if (this.props.userInfo.dailyWithdrawals > 100) {
+      if (this.props.userInfo.dailyWithdrawals > 250) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -392,7 +392,7 @@ class WithdrawModal extends Component {
 
   send = async () => {
     try {
-      if (this.props.userInfo.dailyWithdrawals > 100) {
+      if (this.props.userInfo.dailyWithdrawals > 250) {
         alertModal(
           this.props.isDarkMode,
           `EXCEEDED DAILY WITHDRAWAL LIMIT, TRY AGAIN TOMORROW! (WITHDRAWAL LIMITS DURING LAUNCH PHASE ONLY)`
@@ -660,7 +660,7 @@ class WithdrawModal extends Component {
                             className="form-control"
                           />
                           <Tooltip title="Choose currency you want to receive in.">
-                            <IconButton size="small">
+                            <IconButton color="inherit" size="small">
                               <Info />
                             </IconButton>
                           </Tooltip>

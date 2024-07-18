@@ -116,19 +116,27 @@ class Avatar extends Component {
 
 
 
-    if (rank !== null) {
-      rank = getRank(rank);
+    if (rank !== null && !isNaN(rank)) {
+      rank = getRank(rank); // Assuming getRank function returns a valid rank number
       if (rank in rankColors) {
+        // Valid rank found in rankColors
         borderColor = `3px solid ${rankColors[rank]}`;
         rankColor = rankColors[rank];
       } else {
+        // Handle case where rank is not in rankColors (this should ideally not happen if rankColors is properly defined)
         borderColor = '3px solid red';
         rankColor = 'red';
-
       }
+    } else {
+      // Handle case where rank is null or NaN
+      rank = ''; // or any fallback value you want to display
+      borderColor = '3px solid transparent'; // or any fallback border style
+      rankColor = 'transparent'; // or any fallback color
     }
 
     const backgroundColor = darkMode ? '#2D2D2D' : '#F3F3F3';
+    const backgroundColorStyle = rankColors[rank] ? rankColors[rank] : 'transparent';
+
     const username = this.state.username || '';
 
     const isBot = username.toUpperCase().includes('BOT');
@@ -166,7 +174,7 @@ class Avatar extends Component {
         className="avatar"
         style={{
           position: 'relative',
-          backgroundColor,
+          backgroundColor: isNaN(backgroundColor) ? 'transparent' : backgroundColor,
         }}
       >
         <img
@@ -218,11 +226,11 @@ class Avatar extends Component {
               left: '-6px',
               width: '1.8em',
               height: '1.8em',
-              backgroundColor: rankColors[rank],
+              backgroundColor: backgroundColorStyle,
               color: isDarkMode ? '#2d2d2d' : '#f9f9f9',
               borderRadius: '5px',
               fontSize: '0.55em',
-              boxShadow: `0 0px 2px 0px ${rankColor}, 0 0 1px ${shadedColor}`,
+              boxShadow: `0 0px 2px 0px ${rankColor || 'transparent'}, 0 0 1px ${shadedColor || 'transparent'}`,
               fontWeight: 'bold',
               display: 'flex',
               justifyContent: 'center',
@@ -236,7 +244,7 @@ class Avatar extends Component {
 
         {isVerified && (
           <div
-          className='verified'
+            className='verified'
             style={{
               width: '32px',
               height: '32px',
