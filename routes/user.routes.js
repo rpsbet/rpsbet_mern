@@ -18,6 +18,7 @@ const convertToCurrency = require('../helper/util/conversion');
 // User Model
 const User = require('../model/User');
 const Transaction = require('../model/Transaction');
+const Vault = require('../model/Vault');
 const Notification = require('../model/Notification');
 const GameLog = require('../model/GameLog');
 const Room = require('../model/Room');
@@ -367,6 +368,211 @@ router.post('/username', auth, async (req, res) => {
     });
   }
 });
+
+router.get('/vault-transactions', auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.json({ success: false, error: 'NO USER FOUND' });
+    }
+
+    const transactions = await Transaction.find({
+      user: userId,
+      description: /vault/i // Regular expression to match descriptions containing the word 'vault'
+    })
+    .sort({ createdAt: -1 }) // Sort by creation date in descending order
+    .limit(10); // Limit the results to the most recent 10 transactions
+
+    res.json({
+      success: true,
+      transactions
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: err.message });
+  }
+});
+
+
+router.post('/deposit', auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const balance = req.user.balance;
+    const { amount } = req.body;
+    if (!userId) {
+      return res.json({ success: false, error: 'NO USER FOUND' });
+    }
+
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.json({ success: false, error: 'INVALID AMOUNT' });
+    }
+
+    if (parsedAmount > balance) {
+      return res.json({ success: false, error: 'NOT ENOUGH FUNDS' });
+    }
+
+    req.user.balance -= parsedAmount;
+
+    let vault = await Vault.findOne({ user: userId });
+
+    if (!vault) {
+      // If no vault exists, create a new one
+      vault = new Vault({
+        user: userId,
+        balance: 0 // Start with zero balance and add the deposited amount
+      });
+    }
+
+    vault.balance += parsedAmount;
+
+    const newTransaction = new Transaction({
+      user: userId,
+      amount: -parsedAmount,
+      description: `vault deposit`,
+      room: ''
+    });
+
+    const notification = new Notification({
+      from: userId,
+      to: userId,
+      room: '',
+      message: `You deposited ${convertToCurrency(parsedAmount)} into your vault`
+    });
+
+    const notificationData = {
+      message: notification.message,
+      username: req.user.username,
+      avatar: req.user.avatar,
+      accessory: req.user.accessory,
+      rank: req.user.totalWagered,
+      created_at: new Date(),
+      created_at_str: new Date().toISOString(),
+      updated_at: new Date(),
+      is_read: false
+    };
+
+    // Save all documents and update user balance
+    await saveDocumentWithRetry(req.user);
+    await saveDocumentWithRetry(vault);
+    await saveDocumentWithRetry(newTransaction);
+    await saveDocumentWithRetry(notification);
+
+    // Send notification via socket
+    socket.sendNotification(userId, notificationData);
+
+    res.json({
+      success: true,
+      message: 'FUNDS ADDED TO VAULT',
+      newBalance: req.user.balance,
+      newTransaction: newTransaction,
+      vaultBalance: vault.balance
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: err.message });
+  }
+});
+
+
+router.post('/withdraw', auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { amount } = req.body;
+
+    if (!userId) {
+      return res.json({ success: false, error: 'NO USER FOUND' });
+    }
+
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.json({ success: false, error: 'INVALID AMOUNT' });
+    }
+
+    const vault = await Vault.findOne({ user: userId });
+    if (!vault) {
+      return res.json({ success: false, error: 'VAULT NOT FOUND' });
+    }
+
+    if (parsedAmount > vault.balance) {
+      return res.json({ success: false, error: 'NOT ENOUGH FUNDS IN VAULT' });
+    }
+
+    vault.balance -= parsedAmount;
+    req.user.balance += parsedAmount;
+
+    const newTransaction = new Transaction({
+      user: userId,
+      amount: parsedAmount,
+      description: `vault withdrawal`,
+      room: ''
+    });
+
+    const notification = new Notification({
+      from: userId,
+      to: userId,
+      room: '',
+      message: `You withdrew ${convertToCurrency(parsedAmount)} from your vault`
+    });
+
+    const notificationData = {
+      message: notification.message,
+      username: req.user.username,
+      avatar: req.user.avatar,
+      accessory: req.user.accessory,
+      rank: req.user.totalWagered,
+      created_at: new Date(),
+      created_at_str: new Date().toISOString(),
+      updated_at: new Date(),
+      is_read: false
+    };
+
+    await saveDocumentWithRetry(req.user);
+    await saveDocumentWithRetry(vault);
+    await saveDocumentWithRetry(newTransaction);
+    await saveDocumentWithRetry(notification);
+
+    socket.sendNotification(userId, notificationData);
+
+    res.json({
+      success: true,
+      message: 'FUNDS WITHDRAWN FROM VAULT',
+      newBalance: req.user.balance,
+      newTransaction: newTransaction,
+      vaultBalance: vault.balance
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: err.message });
+  }
+});
+
+
+router.get('/vault', auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.json({ success: false, error: 'NO USER FOUND' });
+    }
+
+    const vault = await Vault.findOne({ user: userId });
+    if (!vault) {
+      return res.json({ success: false, error: 'VAULT NOT FOUND' });
+    }
+
+    res.json({
+      success: true,
+      vaultBalance: vault.balance
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, error: err.message });
+  }
+});
+
+
 router.post('/bio', auth, async (req, res) => {
   try {
     const userId = req.user.id; // Assuming you have a user object in req from the auth middleware
@@ -380,7 +586,7 @@ router.post('/bio', auth, async (req, res) => {
         error: 'User not found.'
       });
     }
-    
+
     user.bio = link;
     await saveDocumentWithRetry(user);
 

@@ -131,6 +131,78 @@
     overflow: hidden;
     transition: transform 4s ease-out;
   }
+
+  .vault-modal-body {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  #vault-bal {
+    margin-bottom: 30px !important;
+    border: 2px solid #1284ff;
+    padding: 2px 15px !important;
+    border-radius: 0.2em;
+  background: linear-gradient(45deg, #f8fffc12, #77c4f77f);
+  }
+  #vault-bal.red {
+    border: 2px solid #f10000;
+    background: linear-gradient(45deg, #f7000012, #d43e3e42);
+  }
+  #vault-bal.green {
+    border: 2px solid #00ec36;
+    background: linear-gradient(45deg, #42f70012, #5ed43e42);
+  }
+  
+  #vault-bal span {
+      color: #eef6ff !important;
+  
+  }
+
+  #vault-bal.green span {
+    color: #00ec36 !important;
+    background: linear-gradient(45deg, #42f70012, #5ed43e42);
+  }
+  #vault-bal.red span {
+    color: #f10000 !important;
+    background: linear-gradient(45deg, #f7000012, #d43e3e42);
+  }
+  
+  .vault-balance .count-up {
+    font-size: inherit;
+  }
+  
+  .transaction-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border-radius: 0.4em;
+  }
+  
+  .transaction-table th,
+  .transaction-table td {
+    padding: 2px 10px;
+    text-align: center;
+  }
+  
+  .transaction-table th {
+    background: linear-gradient(#414141, #c4c4c4);
+    color: rgb(107, 107, 107);
+  }
+  
+  .transaction-table .withdrawal {
+    background: linear-gradient(43deg, #ec4700, #dd5a5a);
+    color: #fffebd;
+
+  }
+  
+  .transaction-table .deposit {
+    background: linear-gradient(43deg, #0fb54c, #048f01);
+    color: #8cffad;
+
+  }
   
   
 .wheel .number {

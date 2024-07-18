@@ -75,6 +75,7 @@ import VerificationModal from './modal/VerificationModal';
 import DepositModal from './modal/DepositModal';
 import WithdrawModal from './modal/WithdrawModal';
 import InventoryModal from './modal/InventoryModal';
+import VaultModal from './modal/VaultModal';
 import ResetPasswordModal from './modal/ResetPasswordModal';
 import Battle from './icons/Battle.js';
 import BattleHover from './icons/BattleHover';
@@ -96,7 +97,8 @@ import {
   getProfitData,
   setUnreadMessageCount,
   setDarkMode,
-  setNotificationsAllowed
+  setNotificationsAllowed,
+  fetchVaultBalance
 } from '../redux/Auth/user.actions';
 import { openOfferLoanModal } from '../redux/Notification/notification.actions';
 import {
@@ -200,6 +202,7 @@ class SiteWrapper extends Component {
       showProfileModal: false,
       showPlayerModal: false,
       showHowToPlayModal: false,
+      vaultBal: 0,
       showMarketplaceModal: false,
       showBankModal: false,
       showLeaderboardsModal: false,
@@ -210,6 +213,7 @@ class SiteWrapper extends Component {
       showWithdrawModal: false,
       showDepositModal: false,
       showInventoryModal: false,
+      showVaultModal: false,
       showResetPasswordModal: false,
       showGameLog: false,
       notifications: [],
@@ -601,9 +605,9 @@ class SiteWrapper extends Component {
 
   async componentDidMount() {
     try {
-      this.setState({ websiteLoading: true });
       // this.historyInterval = setInterval(this.fetchHistory, 15000);
-
+      const initialBalance = await this.props.fetchVaultBalance();
+      this.setState({ vaultBal: initialBalance, websiteLoading: true });
       const currentUrl = window.location.pathname;
 
       await Promise.all([
@@ -834,6 +838,12 @@ class SiteWrapper extends Component {
   handleCloseInventoryModal = () => {
     this.setState({ showInventoryModal: false });
   };
+  handleOpenVaultModal = () => {
+    this.setState({ showVaultModal: true, anchorEl: null });
+  };
+  handleCloseVaultModal = () => {
+    this.setState({ showVaultModal: false });
+  };
 
   handleOpenWithdrawModal = () => {
     this.setState({ showWithdrawModal: true, anchorEl: null });
@@ -992,6 +1002,7 @@ class SiteWrapper extends Component {
       web3balance,
       userName,
       showInventoryModal,
+      showVaultModal,
       showNotifications,
       showProfileModal,
       showPlayerModal,
@@ -1616,7 +1627,7 @@ class SiteWrapper extends Component {
 
                     {
                       <div>
-                        <table>
+                        <table id="balance-history">
                           <tbody>
                             {transactions.length === 0 ? (
                               <tr>
@@ -1676,6 +1687,16 @@ class SiteWrapper extends Component {
                         onClick={this.handleOpenInventoryModal}
                       >
                         Inventory
+                      </Button>
+                      <Button
+                        className="btn-vault"
+                        // isDarkMode={isDarkMode}
+                        onClick={this.handleOpenVaultModal}
+                      >
+                        Vault&nbsp;
+                        <span style={{border: "2px solid", background: "#1284cc11", color:"#1284ff", padding: "2px 5px", marginLeft:"10px", borderRadius: "0.4em"}}>
+                          {this.state.vaultBal ? convertToCurrency(this.state.vaultBal) : 0}
+                          </span>
                       </Button>
                     </div>
                     <div className="transaction-panel">
@@ -1848,6 +1869,13 @@ class SiteWrapper extends Component {
                   closeModal={this.handleCloseInventoryModal}
                 />
               )}
+              {showVaultModal && (
+                <VaultModal
+                vaultBal={this.state.vaultBal}
+                  modalIsOpen={showVaultModal}
+                  closeModal={this.handleCloseVaultModal}
+                />
+              )}
               {showWithdrawModal && (
                 <WithdrawModal
                   modalIsOpen={showWithdrawModal}
@@ -1931,7 +1959,8 @@ const mapDispatchToProps = {
   updateBetResult,
   getProfitData,
   openOfferLoanModal,
-  setCurrentOfferTargetInfo
+  setCurrentOfferTargetInfo,
+  fetchVaultBalance
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(SiteWrapper);

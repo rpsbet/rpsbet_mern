@@ -241,14 +241,16 @@ class RPS extends Component {
     const initializeSocket = async () => {
       try {
         const { socket, rps_game_type, acQueryMyItem, playSound, roomInfo, user_id } = this.props;
-        this.setState({ socket: socket });
+        const initializedSocket = socket || null;
+        this.setState({ socket: initializedSocket });
 
-        if (socket) {
+        if (initializedSocket) {
 
-          socket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
-          socket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, this.handleSocketData2);
+          initializedSocket.on(`UPDATED_BANKROLL_${roomInfo._id}`, this.handleSocketData);
+          initializedSocket.on(`UPDATED_BANKROLL2_${roomInfo._id}`, this.handleSocketData2);
+        } else {
+          setTimeout(initializeSocket, 3000);
         }
-
 
         // initializedSocket.on('CARD_PRIZE', data => {
         //   if (data) {
@@ -294,7 +296,7 @@ class RPS extends Component {
         //   }
       } catch (error) {
         console.error('Socket initialization failed:', error);
-        setTimeout(initializeSocket, 3000); // Retry after 3 seconds
+        setTimeout(initializeSocket, 3000);
       }
     };
 

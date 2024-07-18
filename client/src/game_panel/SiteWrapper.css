@@ -849,6 +849,11 @@ div.table .table-row .table-cell img.avatar,
 }
 
 @media (max-width: 768px) {
+  #balance-history tbody {
+    height: 140px;
+    overflow: scroll;
+    display: block;
+  }
   .table-cell.mobile-only .lottie-container div {
     width: 15px !important;
     left: 16px;

@@ -12,6 +12,7 @@ import {
   SET_GASFEE,
   SET_AVATAR,
   TRANSACTION_LOADED,
+  FETCH_RECENT_TRANSACTIONS_SUCCESS,
   SET_SEVEN_DAY_PROFIT,
   SET_ONE_DAY_PROFIT,
   SET_ALL_TIME_PROFIT,
@@ -55,6 +56,7 @@ const initialState = {
   userName: '',
   liveUrl: null,
   transactions: [],
+  vaultTransactions: [],
   sevenDayProfit: null,
   oneDayProfit: null,
   allTimeProfit: null,
@@ -82,6 +84,11 @@ export default function(state = initialState, action) {
       return {
         ...state,
         isMuted: payload
+      };
+      case FETCH_RECENT_TRANSACTIONS_SUCCESS:
+      return {
+        ...state,
+        vaultTransactions: payload,
       };
     case SET_NOTIFICATIONS_ALLOWED:
       localStorage.setItem('isNotificationsAllowed', payload);

@@ -7,7 +7,8 @@ import { Button } from '@material-ui/core';
 import AttachMoney from '@material-ui/icons/AttachMoney';
 import { warningMsgBar, infoMsgBar } from '../../redux/Notification/notification.actions';
 import MarketplaceModal from './MarketplaceModal';
-
+import { faBox } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 Modal.setAppElement('#root');
 
@@ -54,7 +55,7 @@ class InventoryModal extends Component {
       >
         <div className={this.props.isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title">Your Inventory</h2>
+            <h2 className="modal-title"><FontAwesomeIcon icon={faBox} className="mr-2" />&nbsp;Inventory</h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>

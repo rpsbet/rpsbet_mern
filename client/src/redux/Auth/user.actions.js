@@ -17,6 +17,7 @@ import {
   SET_GASFEE,
   SET_URL,
   TRANSACTION_LOADED,
+  FETCH_RECENT_TRANSACTIONS_SUCCESS,
   SET_SEVEN_DAY_PROFIT,
   SET_ONE_DAY_PROFIT,
   SET_ALL_TIME_PROFIT,
@@ -32,7 +33,8 @@ import {
   TOGGLE_MUSIC_ENABLED,
   START_LOADING,
   END_LOADING,
-  SET_REFERRAL_CODE
+  SET_REFERRAL_CODE,
+  
 
 } from '../types';
 import axios from '../../util/Api';
@@ -399,6 +401,80 @@ export const changeUserName = (newUsername) => async (dispatch) => {
     dispatch({ type: MSG_WARNING, payload: error });
   }
   return { status: 'failed' };
+};
+
+export const vaultDeposit = (amount) => async (dispatch) => {
+  try {
+    const { data } = await axios.post('/user/deposit', { amount });
+
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: 'Successfully added funds to your vault.' });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    dispatch({ type: MSG_WARNING, payload: error.message });
+    return { status: 'failed' };
+  }
+};
+
+export const vaultWithdraw = (amount) => async (dispatch) => {
+  try {
+    const { data } = await axios.post('/user/withdraw', { amount });
+
+    if (data.success) {
+      dispatch({ type: MSG_SUCCESS, payload: 'Successfully withdrew funds from your vault.' });
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    dispatch({ type: MSG_WARNING, payload: error.message });
+    return { status: 'failed' };
+  }
+};
+
+export const fetchVaultBalance = () => async (dispatch) => {
+  try {
+    const { data } = await axios.get('/user/vault');
+
+    if (data.success) {
+      return data.vaultBalance;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+      return null;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    dispatch({ type: MSG_WARNING, payload: error.message });
+    return null;
+  }
+};
+
+export const fetchRecentVaultTransactions = () => async (dispatch) => {
+  try {
+    const { data } = await axios.get('/user/vault-transactions');
+
+    if (data.success) {
+      dispatch({
+        type: FETCH_RECENT_TRANSACTIONS_SUCCESS,
+        payload: data.transactions
+      });
+      return data.transactions;
+    } else {
+      dispatch({ type: MSG_ERROR, payload: data.error });
+      return null;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    dispatch({ type: MSG_WARNING, payload: error.message });
+    return null;
+  }
 };
 
 export const changeLink = (link) => async (dispatch) => {

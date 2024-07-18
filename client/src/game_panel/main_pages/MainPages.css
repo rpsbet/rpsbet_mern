@@ -783,6 +783,10 @@ div.table.my-chat-table .table-cell button.btn_join {
   background-size: 20px;
   background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/653e58e1e2dc69e7ac5cc8da_bag-icon.svg');
 }
+.transaction-panel button.btn-vault {
+  background-size: 20px;
+  background-image: url('https://uploads-ssl.webflow.com/6097a2499efec713b2cb1c07/6698f9ed39b1001d47965b6d_vault.svg');
+}
 
 /***********************************/
 /*********** TABLES ****************/
