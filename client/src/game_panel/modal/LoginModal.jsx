@@ -6,7 +6,7 @@ import { Button, TextField } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignInAlt } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
 import { setFocused } from '../../redux/Auth/user.actions';
-
+import { GoogleLogin } from 'react-google-login';
 import { userSignIn, getUser } from '../../redux/Auth/user.actions';
 import {
   getMyGames,
@@ -95,6 +95,33 @@ class LoginModal extends Component {
     }
   };
 
+  onSuccessGoogleLogin = (response) => {
+    console.log('Google login response:', response);
+    // Handle the Google login response
+    // You may want to send the token to your server for further processing
+    axios.post('/auth/google/token', { idToken: response.tokenId })
+      .then(res => {
+        if (res.data.success) {
+          setAuthToken(res.data.token);
+          this.props.userSignIn(res.data.user);
+          this.props.initSocket();
+          this.props.getNotifications();
+          this.props.getMyHistory();
+          this.props.getMyChat();
+          history.push('/');
+          this.props.closeModal();
+        }
+      })
+      .catch(err => {
+        console.error('Google login error:', err);
+        this.props.closeModal();
+      });
+  }
+
+  onFailureGoogleLogin = (response) => {
+    console.error('Google login failed:', response);
+  }
+
   render() {
     return (
       <Modal
@@ -151,10 +178,15 @@ class LoginModal extends Component {
                   }
                 }}
               />
-
+             
+              {/* <GoogleLogin
+                clientId={"185393580136-oijjbl17n5nd2mvgvk09irp24plto266.apps.googleusercontent.com"}
+                buttonText="Login with Google"
+                onSuccess={this.onSuccessGoogleLogin}
+                onFailure={this.onFailureGoogleLogin}
+                cookiePolicy={'single_host_origin'}
+              /> */}
               {/* <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>FORGOT PASSWORD?</span> */}
-
-
             </form>
 
           </div>

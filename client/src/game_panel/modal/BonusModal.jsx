@@ -9,10 +9,10 @@ import {
   faClock,
   faSyncAlt
 } from '@fortawesome/free-solid-svg-icons';
-      
+
 import {
- addBonus,
- getUser
+  addBonus,
+  getUser
 } from '../../redux/Auth/user.actions';
 import {
   Button,
@@ -89,10 +89,10 @@ class BonusModal extends Component {
     if (!lastBonus || now - lastBonus < 6 * 60 * 60 * 1000) {
       this.setState({ showBonusModal: true });
     }
-    
+
   }
 
-   async spinWheel() {
+  async spinWheel() {
     if (this.state.spinning) return; // Prevent multiple spins at the same time
 
     const randomRotation = Math.floor(Math.random() * 360) + 360; // At least 10 full rotations
@@ -102,27 +102,20 @@ class BonusModal extends Component {
       const audio = new Audio('/sounds/wheel.mp3');
       audio.play();
     }
-    
-    setTimeout(() => {
-      const landedNumber = this.calculateLandedNumber(randomRotation);
-      this.setState({ spinning: false, landedNumber, showFlash: true }, async () => {
-        await this.props.addBonus(landedNumber);
+
+    setTimeout(async() => {
+      const landedNumber = await this.props.addBonus();
+      console.log("landedNumber", landedNumber)
+      this.setState({ spinning: false, landedNumber: landedNumber.amount, showFlash: true }, async () => {
         await this.props.getUser(true, 5);
       });
 
       // Remove the flash effect after it's done
       setTimeout(() => this.setState({ showFlash: false }), 1500); // 3 flashes, 0.5s each
-    }, 4000); // Match the transition duration
+    }, 4000);
+
   }
 
-  calculateLandedNumber(rotation) {
-    const numbers = [1.25, 0.20, 0.10, 0.4, 2.50, 1, 0.50, 1.5, 5, 2];
-    const degreesPerSegment = 413.2 / numbers.length;
-    const normalizedRotation = rotation % 360;
-    const segmentIndex = Math.floor(normalizedRotation / degreesPerSegment);
-    const prize = numbers[numbers.length - 1 - segmentIndex];
-    return prize;
-  }
 
   render() {
     const {
@@ -139,18 +132,18 @@ class BonusModal extends Component {
       loading,
     } = this.props;
     const numbers = [1.25, 0.20, 0.10, 0.4, 2.50, 1, 0.50, 1.5, 5, 2];
-    const markerStyle = {
-      transform: `rotate(180deg)`,
-    };
+    // const markerStyle = {
+    //   transform: `rotate(180deg)`,
+    // };
     const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
     const now = new Date();
     let remainingTime = null;
-    
+
     if (lastBonus) {
       const elapsedTime = Moment(now).diff(Moment(lastBonus), 'milliseconds');
       const sixHoursInMilliseconds = 6 * 60 * 60 * 1000;
       const remainingMilliseconds = sixHoursInMilliseconds - elapsedTime;
-    
+
       if (remainingMilliseconds > 0) {
         remainingTime = Moment.duration(remainingMilliseconds, 'milliseconds').humanize(true);
       } else {
@@ -166,21 +159,21 @@ class BonusModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title"> <FontAwesomeIcon icon={faStar} />&nbsp;RPS BONUS WHEEL</h2>       
+            <h2 className="modal-title"> <FontAwesomeIcon icon={faStar} />&nbsp;RPS BONUS WHEEL</h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
 
-          <div className="modal-body edit-modal-body" style={{background: 'radial-gradient(#001339, #5dabf0)', overflowY: 'scroll', overflowX: 'hidden'}}>
+          <div className="modal-body edit-modal-body" style={{ background: 'radial-gradient(#001339, #5dabf0)', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <div style={{textAlign: 'center', padding: '5px', border: '3px solid #28a745', borderRadius: '4px', background: 'linear-gradient(0deg, #28a745, #cab98d73)', margin: '0 0 20px', }}>
+                <div style={{ textAlign: 'center', padding: '5px', border: '3px solid #28a745', borderRadius: '4px', background: 'linear-gradient(0deg, #28a745, #cab98d73)', margin: '0 0 20px', }}>
 
-                <span style={{color:'#dee2e6'}}><FontAwesomeIcon icon={faClock} />&nbsp;Next Bonus Arrives...</span>
-                <h2 style={{color:"#212529"}}>{remainingTime}</h2>
+                  <span style={{ color: '#dee2e6' }}><FontAwesomeIcon icon={faClock} />&nbsp;Next Bonus Arrives...</span>
+                  <h2 style={{ color: "#212529" }}>{remainingTime}</h2>
                 </div>
-                <div className="wheel" style={{ transform: `rotate(${this.state.rotation}deg)`, overflow: 'hidden'}}>
+                <div className="wheel" style={{ transform: `rotate(${this.state.rotation}deg)`, overflow: 'hidden' }}>
                   {numbers.map((number, index) => (
                     <div
                       key={index}
@@ -195,7 +188,7 @@ class BonusModal extends Component {
                   <img width="200px" src={'../img/bonus.svg'} alt="Bonus" />
 
                 </div>
-                  <div className="marker" style={markerStyle}></div>
+                {/* <div className="marker" style={markerStyle}></div> */}
 
               </div>
 
@@ -206,17 +199,17 @@ class BonusModal extends Component {
               </div>
             ) : (
               <Button
-              className="spin-button"
-              onClick={this.spinWheel}
-              disabled={this.state.spinning || totalWagered < 250}
-            >
-              {totalWagered < 250 ? 'RANK TOO LOW' : (
-                <>
-                  SPIN!&nbsp;<FontAwesomeIcon icon={faSyncAlt} />
-                </>
-              )}
-            </Button>
-            
+                className="spin-button"
+                onClick={this.spinWheel}
+                disabled={this.state.spinning || totalWagered < 250}
+              >
+                {totalWagered < 250 ? 'RANK TOO LOW' : (
+                  <>
+                    SPIN!&nbsp;<FontAwesomeIcon icon={faSyncAlt} />
+                  </>
+                )}
+              </Button>
+
             )}
           </div>
         </div>

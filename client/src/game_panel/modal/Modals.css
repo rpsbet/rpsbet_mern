@@ -260,18 +260,18 @@
   
   
   /* Styles for the marker */
-  .marker {
+  /* .marker {
     position: absolute;
     width: 0;
     height: 0;
     bottom: 42%;
     right: 0px;
     border-style: solid;
-    border-width: 10px 0 10px 17.32px; /* Adjust size of triangle */
-    border-color: transparent transparent transparent #ff0000; /* Adjust color */
+    border-width: 10px 0 10px 17.32px;
+    border-color: transparent transparent transparent #ff0000;
     transform-origin: left center;
     transition: transform 4s ease-out;
-  }
+  } */
 /*****************/
 /***** GLOBAL ****/
 /*****************/

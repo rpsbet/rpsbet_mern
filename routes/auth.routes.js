@@ -16,6 +16,7 @@ const User = require('../model/User');
 const Message = require('../model/Message');
 const Transaction = require('../model/Transaction');
 const ChangePasswordRequest = require('../model/ChangePasswordRequest');
+const passport = require('passport');
 
 const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
@@ -25,6 +26,20 @@ const { resetPassword } = require('../helper/mailer');
 // @desc    Auth user
 // @access  Public
 // eslint-disable-next-line consistent-return
+
+require('../helper/util/passport'); // Import your passport configuration
+
+router.get('/auth/google', passport.authenticate('google', {
+  scope: ['profile', 'email']
+}));
+
+router.get('/auth/google/callback', passport.authenticate('google', {
+  failureRedirect: '/login'
+}), (req, res) => {
+  // Successful authentication
+  res.redirect('/');
+});
+
 router.post('/', (req, res) => {
   const { email, password } = req.body;
   // Simple validation

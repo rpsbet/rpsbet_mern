@@ -46,6 +46,8 @@ const stripeRoutes = require('./routes/stripe.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
 const systemSetting = require('./routes/settings.routes');
 const helmet = require('helmet'); // for sec headers
+const passport = require('passport');
+
 const cronJob = require('./helper/util/createCronJob.js');
 const creditScoreCron = require('./helper/util/creditScoreCron.js');
 const notificationCron = require('./helper/util/notificationCron.js');

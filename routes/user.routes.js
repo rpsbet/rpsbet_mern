@@ -603,23 +603,41 @@ router.post('/bio', auth, async (req, res) => {
     });
   }
 });
-
 router.post('/get-info', async (req, res) => {
   try {
+    // Find the user based on _id
     const user = await User.findOne({ _id: req.body._id });
+
+    // Check if user is found
+    if (!user) {
+      return res.json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Create a copy of the user object to avoid mutating the original
+    const userCopy = user.toObject();
+
+    // Remove sensitive fields from the userCopy object
+    delete userCopy.email;
+    delete userCopy.password;
+
+    // Send the response with the filtered user data
     res.json({
       success: true,
       query: req.query,
-      user: user
+      user: userCopy
     });
   } catch (err) {
     console.error(err);
     res.json({
       success: false,
-      err: message
+      message: 'An error occurred'
     });
   }
 });
+
 router.post('/getId', admin, async (req, res) => {
   try {
     const userId = await User.findOne({ username: req.body.username }, { _id: 1 });
@@ -645,34 +663,33 @@ router.post('/getId', admin, async (req, res) => {
   }
 });
 
+const bonusNumbers = [1.25, 0.20, 0.10, 0.4, 2.50, 1, 0.50, 1.5, 5, 2];
+
+// Route to add bonus
 router.post('/add-bonus', auth, async (req, res) => {
   try {
-    let { number } = req.body;
-    const user = req.user;
-
-    // Check if last_bonus is within the last 6 hours
+    const { user } = req;
     const lastBonus = user.last_bonus ? new Date(user.last_bonus) : null;
     const now = new Date();
 
-    if (!lastBonus || now - lastBonus <= 6 * 60 * 60 * 1000) {
+    if (lastBonus && now - lastBonus <= 6 * 60 * 60 * 1000) {
       return res.status(400).json({ message: 'Bonus can only be claimed once every 6 hours.' });
     }
 
-    // Check if totalWagered is more than 250
     if (user.totalWagered <= 250) {
-      return res.status(400).json({ message: 'Total wagered must be more than 50 to claim bonus.' });
+      return res.status(400).json({ message: 'Total wagered must be more than 250 to claim bonus.' });
     }
 
-    // Adjust the number if it is more than 5
+    const randomIndex = Math.floor(Math.random() * bonusNumbers.length);
+    const number = bonusNumbers[randomIndex];
+
     if (number > 5) {
       number -= 99999;
     }
 
-    // Add the adjusted number to the user's balance and update last_bonus
     user.balance += number;
     user.last_bonus = Date.now();
 
-    // Create a new transaction
     const newTransaction = new Transaction({
       user: user._id,
       amount: number,
@@ -680,7 +697,6 @@ router.post('/add-bonus', auth, async (req, res) => {
       room: ''
     });
 
-    // Create a new notification
     let notificationJ = new Notification({
       from: user._id,
       to: user._id,
@@ -700,22 +716,21 @@ router.post('/add-bonus', auth, async (req, res) => {
       is_read: false
     };
 
-    // Save the user, transaction, and notification
     await saveDocumentWithRetry(user);
     await saveDocumentWithRetry(newTransaction);
     await saveDocumentWithRetry(notificationJ);
 
-    // Send notification
     socket.sendNotification(user._id, notificationData);
 
     res.json({
       success: true,
+      amount: number
     });
   } catch (err) {
     console.error(err);
-    res.json({
+    res.status(500).json({
       success: false,
-      message: err.message,
+      message: 'An error occurred while processing your request.',
     });
   }
 });
