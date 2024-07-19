@@ -5,7 +5,11 @@
   text-align: left;
   overflow: hidden;
 }
-
+.edit-avatar-panel  #user-avatar,
+.edit-profile-modal #user-avatar {
+  min-width: 200px !important;
+  min-height: 200px !important;
+}
 .Content {
   display: flex;
   flex-direction: row;
@@ -15,7 +19,9 @@
 }
 
 .AvatarDropzone{
-  margin-top: 30px;
+  display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .Files {

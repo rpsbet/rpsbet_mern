@@ -604,7 +604,6 @@ class SiteWrapper extends Component {
   };
 
   async componentDidMount() {
-    console.log(process.env.GOOGLE_CLIENT_ID)
 
     try {
       // this.historyInterval = setInterval(this.fetchHistory, 15000);

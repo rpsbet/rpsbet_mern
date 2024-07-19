@@ -45,9 +45,6 @@ These instructions will get you a copy of the project up and running on your loc
     "lodash": "^4.17.15",
     "mongoose": "^5.5.0",
     "mui-datatables": "^2.8.1",
-    "passport": "^0.4.0",
-    "passport-jwt": "^4.0.0",
-    "passport-local": "^1.0.0",
     "reactstrap": "^8.0.1",
     "styled-components": "^4.3.2"
   },

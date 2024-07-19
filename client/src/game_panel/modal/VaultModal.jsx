@@ -210,10 +210,10 @@ class VaultModal extends Component {
             </div>
           </div>
           <div className="modal-footer">
-            <Button className="btn-back" onClick={this.handleDeposit}>
+            <Button className="btn-back" style={{minWidth:"100px"}} onClick={this.handleDeposit}>
               Deposit &nbsp; <AttachMoneyIcon />
             </Button>
-            <Button className="btn-back" onClick={this.handleWithdraw}>
+            <Button className="btn-back" style={{minWidth:"100px"}} onClick={this.handleWithdraw}>
               Withdraw &nbsp; <MoneyOffIcon />
             </Button>
           </div>

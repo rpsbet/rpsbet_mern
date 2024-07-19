@@ -178,6 +178,7 @@ class Avatar extends Component {
         }}
       >
         <img
+        id="user-avatar"
           src={src}
           alt={alt}
           style={{

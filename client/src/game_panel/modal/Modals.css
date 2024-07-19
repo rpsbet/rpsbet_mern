@@ -204,7 +204,14 @@
 
   }
   
-  
+  .modal-footer button.btn-submit.login {
+height: 40px !important;
+margin-top: 1px !important;
+margin-right: 15px;
+margin-left: -2.5px;
+border-radius: 0.3em !important;
+}
+
 .wheel .number {
     position: absolute;
     width: 50px;
@@ -927,6 +934,11 @@ h1.player-username {
 p.player-username {
     font-size: 0.7em;
     word-break: break-word;
+}
+
+.AvatarControlPanel {
+    position: absolute;
+    margin: unset;
 }
 .wheel {
     border: 3px solid #001339;

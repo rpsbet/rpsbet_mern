@@ -420,6 +420,31 @@ export const vaultDeposit = (amount) => async (dispatch) => {
   }
 };
 
+export const authenticateWithGoogle = (token) => async (dispatch) => {
+  try {
+    dispatch({ type: START_LOADING });
+    const res = await axios.post('/auth/google', { token });
+    dispatch({ type: END_LOADING });
+
+    if (res.data.success) {
+      setAuthToken(res.data.token);
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('isAuthenticated', 1);
+
+      dispatch({ type: LOGIN_SUCCESS, payload: res.data });
+      dispatch({ type: MSG_SUCCESS, payload: res.data.message });
+      return { status: 'success', user: res.data.user };
+    } else {
+      dispatch({ type: LOGIN_FAIL });
+      dispatch({ type: MSG_ERROR, payload: res.data.error });
+    }
+  } catch (err) {
+    console.log('err', err);
+    dispatch({ type: MSG_WARNING, payload: err });
+  }
+  return { status: 'failed' };
+};
+
 export const vaultWithdraw = (amount) => async (dispatch) => {
   try {
     const { data } = await axios.post('/user/withdraw', { amount });

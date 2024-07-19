@@ -190,6 +190,7 @@ export default function(state = initialState, action) {
         isAdmin: 0,
         userName: payload.user.username,
         isActivated: payload.user.is_activated,
+        token: payload.token,
         isAuthenticated: true,
         loading: false
       };

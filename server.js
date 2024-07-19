@@ -2,14 +2,13 @@ require('dotenv').config();
 
 const express = require('express');
 const fs = require('fs');
-const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
 const https = require('https');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const socketContoller = require('./socketController.js');
-
+const session = require('express-session');
 const app = express();
 
 const server = app.listen(process.env.PORT, () =>
@@ -46,8 +45,8 @@ const stripeRoutes = require('./routes/stripe.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
 const systemSetting = require('./routes/settings.routes');
 const helmet = require('helmet'); // for sec headers
-const passport = require('passport');
-
+const { OAuth2Client } = require('google-auth-library');
+const bodyParser = require('body-parser');
 const cronJob = require('./helper/util/createCronJob.js');
 const creditScoreCron = require('./helper/util/creditScoreCron.js');
 const notificationCron = require('./helper/util/notificationCron.js');
@@ -55,6 +54,9 @@ const interestCron = require('./helper/util/interestCron.js');
 const rentCron = require('./helper/util/rentCron.js');
 const callBotCron = require('./helper/util/callBotCron.js');
 const withdrawalCron = require('./helper/util/withdrawalCron.js');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 // Initialize the cron job to periodically check for confirmations
 creditScoreCron.checkOutstandingLoans(io);
 rentCron.checkRentalPayments(io);
@@ -68,9 +70,40 @@ app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-
 app.use(express.json({ extended: false }));
 app.use(fileUpload());
+app.use(bodyParser.json());
+app.use(session({
+  secret: process.env.SESSION_SECRET, // Single session secret used for signing all cookies
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: process.env.NODE_ENV === 'production' } // Use secure cookies in production
+}));
+
+// Google OAuth 2.0 token verification
+async function verify(token) {
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID
+  });
+  const payload = ticket.getPayload();
+  return payload;
+}
+
+
+// Login route
+app.post('/auth/google', async (req, res) => {
+  const token = req.body.token;
+  try {
+    const user = await verify(token);
+    // Create a session or token for the user
+    req.session.user = user;
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(401).json({ success: false, error: 'Invalid token' });
+  }
+});
+
 
 // Connect Database
 const connectWithRetry = async () => {

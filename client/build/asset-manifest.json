@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.f3f595f4.css",
-    "main.js": "/static/js/main.cd385f61.js",
+    "main.css": "/static/css/main.8a3868c3.css",
+    "main.js": "/static/js/main.215b3015.js",
     "static/js/469.95be026d.chunk.js": "/static/js/469.95be026d.chunk.js",
     "static/js/857.d36b7e12.chunk.js": "/static/js/857.d36b7e12.chunk.js",
     "static/js/331.a9ba1ba8.chunk.js": "/static/js/331.a9ba1ba8.chunk.js",
@@ -84,9 +84,9 @@
     "static/media/modal-brain-game.svg": "/static/media/modal-brain-game.06ceb716fa17ade6c308.svg",
     "static/media/dark-alert-prize-icon.svg": "/static/media/dark-alert-prize-icon.0446232552809aef09b3.svg",
     "static/media/modal-blackjack.svg": "/static/media/modal-blackjack.bb3a59f32061d96025f5.svg",
+    "index.html": "/index.html",
     "static/media/game.svg": "/static/media/game.9babdd9a82d848d4a830.svg",
     "static/media/modal-craps.svg": "/static/media/modal-craps.1212b091a38a8c6fd58a.svg",
-    "index.html": "/index.html",
     "static/media/modal-drop-game-dark-mode.svg": "/static/media/modal-drop-game-dark-mode.67257c4fd5fdfa6d3c3e.svg",
     "static/media/alert-prize-icon.svg": "/static/media/alert-prize-icon.b802a035ae07af05a68b.svg",
     "static/media/modal-drop-game.svg": "/static/media/modal-drop-game.f37eb3131f2f46d6dddf.svg",
@@ -118,11 +118,11 @@
     "static/media/btn-paypal.svg": "/static/media/btn-paypal.4ed05cb443934a9fa8a0.svg",
     "static/media/btn-bank-active.svg": "/static/media/btn-bank-active.5c45b7981b5e7971c30a.svg",
     "static/media/btn-bank.svg": "/static/media/btn-bank.8ce60c3913abb5408b9b.svg",
-    "main.f3f595f4.css.map": "/static/css/main.f3f595f4.css.map",
-    "main.cd385f61.js.map": "/static/js/main.cd385f61.js.map"
+    "main.8a3868c3.css.map": "/static/css/main.8a3868c3.css.map",
+    "main.215b3015.js.map": "/static/js/main.215b3015.js.map"
   },
   "entrypoints": [
-    "static/css/main.f3f595f4.css",
-    "static/js/main.cd385f61.js"
+    "static/css/main.8a3868c3.css",
+    "static/js/main.215b3015.js"
   ]
 }

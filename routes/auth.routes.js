@@ -16,7 +16,7 @@ const User = require('../model/User');
 const Message = require('../model/Message');
 const Transaction = require('../model/Transaction');
 const ChangePasswordRequest = require('../model/ChangePasswordRequest');
-const passport = require('passport');
+const { OAuth2Client } = require('google-auth-library');
 
 const auth = require('../middleware/auth');
 const sendgrid = require('../helper/sendgrid');
@@ -27,19 +27,90 @@ const { resetPassword } = require('../helper/mailer');
 // @access  Public
 // eslint-disable-next-line consistent-return
 
-require('../helper/util/passport'); // Import your passport configuration
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-router.get('/auth/google', passport.authenticate('google', {
-  scope: ['profile', 'email']
-}));
+const generateRandomPassword = (length = 12) => {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * charset.length);
+    password += charset[randomIndex];
+  }
+  return password;
+};
 
-router.get('/auth/google/callback', passport.authenticate('google', {
-  failureRedirect: '/login'
-}), (req, res) => {
-  // Successful authentication
-  res.redirect('/');
+const generateReferralCode = () => {
+  let referralCode = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  for (let i = 0; i < 6; i++) {
+    referralCode += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+  return referralCode;
+};
+
+router.post('/google', async (req, res) => {
+  const { token } = req.body;
+  const tokenString = token.token; // Extract token from the object
+
+  if (typeof tokenString !== 'string') {
+    return res.status(400).json({ success: false, error: 'Token must be a string' });
+  }
+
+  try {
+    // Verify the Google token
+    const ticket = await client.verifyIdToken({
+      idToken: tokenString,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    
+    const { name, email, picture } = payload;
+    const username = email.split('@')[0];
+
+    let user = await User.findOne({ email });
+    let avatar = picture;
+
+    if (!user) {
+      user = new User({
+        username,
+        password: generateRandomPassword(),
+        bio: '',
+        totalWagered: 0,
+        balance: 0,
+        rewards: [],
+        credit_score: 1000,
+        ai_mode: 'Random',
+        status: 'off',
+        avatar,
+        referralCode: generateReferralCode(),
+        referralId: null
+      });
+      await user.save();
+    }
+
+    // Generate JWT token for the user
+    const jwtToken = jwt.sign(
+      { id: user._id, is_admin: user.is_admin },
+      process.env.SECRET_OR_KEY,
+      { expiresIn: '7d' } // Adjust expiry time as needed
+    );
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      token: jwtToken,
+      user
+    });
+  } catch (error) {
+    console.error('Error verifying Google token:', error);
+    res.status(401).json({ success: false, error: 'Invalid Google token' });
+  }
 });
 
+// login
 router.post('/', (req, res) => {
   const { email, password } = req.body;
   // Simple validation

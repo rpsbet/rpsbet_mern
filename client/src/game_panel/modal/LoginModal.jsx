@@ -4,16 +4,9 @@ import { connect } from 'react-redux';
 import './Modals.css';
 import { Button, TextField } from '@material-ui/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignInAlt } from '@fortawesome/free-solid-svg-icons'; // Choose an appropriate icon
-import { setFocused } from '../../redux/Auth/user.actions';
-import { GoogleLogin } from 'react-google-login';
-import { userSignIn, getUser } from '../../redux/Auth/user.actions';
-import {
-  getMyGames,
-  getMyHistory,
-  getMyChat,
-  getNotifications
-} from '../../redux/Logic/logic.actions';
+import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
+import { setFocused, userSignIn, getUser, authenticateWithGoogle } from '../../redux/Auth/user.actions';
+import { getMyGames, getMyHistory, getMyChat, getNotifications } from '../../redux/Logic/logic.actions';
 import history from '../../redux/history';
 
 Modal.setAppElement('#root');
@@ -31,14 +24,13 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     padding: 0,
     background: 'transparent',
-    width: '360px'
+    minWidth: '380px'
   }
 };
 
 class LoginModal extends Component {
   constructor(props) {
     super(props);
-
     this.state = {
       email: props.email,
       password: props.password,
@@ -49,6 +41,7 @@ class LoginModal extends Component {
   onFocusHandler = () => {
     this.props.setFocused(true);
   }
+
   onBlurHandler = () => {
     this.props.setFocused(false);
   }
@@ -71,55 +64,83 @@ class LoginModal extends Component {
 
   componentDidMount() {
     document.addEventListener('keydown', this.onKeyDownDocument);
+    this.initializeGoogleSignIn();
+
+    setTimeout(() => {
+      const buttonElement = document.getElementById('googleSignInButton');
+      this.initializeGoogleSignIn();
+    }, 100);
+
   }
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.onKeyDownDocument);
   }
 
+  initializeGoogleSignIn = () => {
+    setTimeout(() => {
+      const buttonElement = document.getElementById('googleSignInButton');
+
+      if (buttonElement) {
+
+        google.accounts.id.initialize({
+          client_id: '565609210873-2ajd0detnt4h6q8ufhrl5nvlv4h01ol0.apps.googleusercontent.com',
+          callback: this.handleGoogleCredentialResponse
+        });
+
+        google.accounts.id.renderButton(
+          buttonElement,
+          { theme: 'outline', size: 'large' }
+        );
+
+        google.accounts.id.prompt(); // Display the One Tap prompt automatically
+      } else {
+        console.error('Google Sign-In button element not found');
+      }
+    }, 100); // 100 milliseconds delay, adjust as needed
+  }
+
+
+  handleGoogleCredentialResponse = response => {
+
+    if (!response || !response.credential) {
+      console.error('No credential found in response');
+      return;
+    }
+
+    const jwt = response.credential;
+
+    // Dispatch the authentication action
+    this.props.authenticateWithGoogle({token: jwt})
+      .then(result => {
+        if (result.status === 'success') {
+
+          this.props.closeModal();
+          this.onSuccessfulLogin(result.user);
+        } else {
+          console.error('Login failed:', result.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error during authentication:', error);
+      });
+  }
+
   onSubmitForm = async e => {
     e.preventDefault();
     const result = await this.props.userSignIn(this.state);
     if (result.status === 'success') {
-      // if (!result.user.is_activated) {
-      //     this.props.openVerificationModal();
-      // } else {
-      this.props.initSocket();
-      // this.props.getMyGames();
-      this.props.getNotifications();
-      this.props.getMyHistory();
-      this.props.getMyChat();
-      history.push('/');
-      // }
-      this.props.closeModal();
+      this.onSuccessfulLogin(result.user);
     }
   };
 
-  onSuccessGoogleLogin = (response) => {
-    console.log('Google login response:', response);
-    // Handle the Google login response
-    // You may want to send the token to your server for further processing
-    axios.post('/auth/google/token', { idToken: response.tokenId })
-      .then(res => {
-        if (res.data.success) {
-          setAuthToken(res.data.token);
-          this.props.userSignIn(res.data.user);
-          this.props.initSocket();
-          this.props.getNotifications();
-          this.props.getMyHistory();
-          this.props.getMyChat();
-          history.push('/');
-          this.props.closeModal();
-        }
-      })
-      .catch(err => {
-        console.error('Google login error:', err);
-        this.props.closeModal();
-      });
-  }
-
-  onFailureGoogleLogin = (response) => {
-    console.error('Google login failed:', response);
+  onSuccessfulLogin = user => {
+    this.props.initSocket();
+    this.props.getNotifications();
+    this.props.getMyHistory();
+    this.props.getMyChat();
+    history.push('/');
+    this.props.closeModal();
   }
 
   render() {
@@ -134,7 +155,6 @@ class LoginModal extends Component {
           <div className="modal-header">
             <h2 className="modal-title">
               <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
-
               LOGIN
             </h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
@@ -144,9 +164,7 @@ class LoginModal extends Component {
           <div className="modal-img">
             <img style={{ maxWidth: "95%", margin: "10px", overflow: "hidden" }} src="/img/giant-login.svg" alt="Login" />
           </div>
-          <div className="modal-body">
-
-            <h4>WELCOME BACK, GANG! 🔫😼</h4>
+          <div className="modal-body" style={{ paddingTop: "0", paddingBottom: "5px" }}>
             <form onSubmit={this.onSubmitForm}>
               <TextField
                 type="text"
@@ -178,33 +196,29 @@ class LoginModal extends Component {
                   }
                 }}
               />
-             
-              {/* <GoogleLogin
-                clientId={"185393580136-oijjbl17n5nd2mvgvk09irp24plto266.apps.googleusercontent.com"}
-                buttonText="Login with Google"
-                onSuccess={this.onSuccessGoogleLogin}
-                onFailure={this.onFailureGoogleLogin}
-                cookiePolicy={'single_host_origin'}
-              /> */}
-              {/* <span onClick={(e) => { e.preventDefault(); this.props.closeModal(); this.props.openResetPasswordModal(); }}>FORGOT PASSWORD?</span> */}
             </form>
-
           </div>
-          <div className="modal-footer">
-            <Button onClick={this.onSubmitForm} className="btn-submit">
-              Login&nbsp;<span className='roll-tag'>[ ↵ ]</span>
-            </Button>
-            <p className="m-0 sm-text-center">
-              NEWBIE?{' '}
+          <div className="modal-footer" style={{ margin: "flex", flexDirection: "column" }}>
+            <div style={{ margin: "flex", flexDirection: "row", display:"flex", width: "calc(100% - 10px)", marginLeft:"-2.5px", justifyContent:"space-between"}}>
+
               <Button
-                onClick={e => {
-                  this.props.closeModal();
-                  this.props.openSignupModal();
-                }}
-              >
-                GET REGISTERED →
+                onClick={this.onSubmitForm} className="btn-submit login" style={{ marginTop: "0px", padding: "10px"}} >
+                Login&nbsp;<span className='roll-tag'>[ ↵ ]</span>
               </Button>
-            </p>
+            <div id="googleSignInButton"></div>
+            </div>
+
+
+            <Button
+              style={{  width: "calc(100% - 10px)", margin: "10px 0 0 -10px" }}
+              className="btn-back"
+              onClick={e => {
+                this.props.closeModal();
+                this.props.openSignupModal();
+              }}
+            >
+              NEWBIE?{' '}GET REGISTERED →
+            </Button>
           </div>
         </div>
       </Modal>
@@ -225,7 +239,8 @@ const mapDispatchToProps = {
   getMyHistory,
   getMyChat,
   getNotifications,
-  setFocused
+  setFocused,
+  authenticateWithGoogle
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LoginModal);

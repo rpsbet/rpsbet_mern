@@ -255,11 +255,16 @@ class OpenGamesTable extends Component {
     const { loading, selectedGameType, rooms_count, roomList } = this.props;
     const { fetchedRoomIds } = this.state;
     const tableElement = document.querySelector('.table.main-game-table');
+
     if (tableElement) {
       const { bottom } = tableElement.getBoundingClientRect();
-      const isTableAtBottom = bottom <= window.innerHeight;
+      const viewportHeight = window.innerHeight;
+      const offset = 100; // The offset you want to add
 
-      if (!loading && isTableAtBottom && rooms_count !== roomList.length) {
+      // Check if the bottom of the table is within the viewport height plus offset
+      const isTableNearBottom = bottom <= viewportHeight + offset;
+
+      if (!loading && isTableNearBottom && rooms_count !== roomList.length) {
         await this.props.fetchMoreRooms({
           pageSize: roomList.length + 3,
           game_type: selectedGameType,
@@ -604,8 +609,8 @@ class OpenGamesTable extends Component {
         preserveAspectRatio: 'xMidYMid slice'
       }
     };
-    
-    
+
+
     return (
       <>
         <div className="overflowX">
@@ -742,7 +747,7 @@ class OpenGamesTable extends Component {
                                   .slice(0, 2)
                                   .map((joiner, index) => (
                                     <a
-                                    key={index} 
+                                      key={index}
                                       className="player"
                                       onClick={() =>
                                         this.handleOpenPlayerModal(row.joiners[index])
@@ -902,16 +907,25 @@ class OpenGamesTable extends Component {
                                 {row.joiner_avatars
                                   .slice(0, 3)
                                   .map((joiner_avatar, index) => (
-                                    <Avatar
-                                      className="avatar"
+
+                                    <a
                                       key={index}
-                                      src={joiner_avatar.avatar}
-                                      rank={joiner_avatar.rank}
-                                      username={joiner_avatar.username}
-                                      alt=""
-                                      accessory={joiner_avatar.accessory}
-                                      darkMode={this.props.isDarkMode}
-                                    />
+                                      className="player"
+                                      onClick={() =>
+                                        this.handleOpenPlayerModal(row.joiners[index])
+                                      }
+                                    >
+                                      <Avatar
+                                        className="avatar mobile-only"
+                                        key={index}
+                                        src={joiner_avatar.avatar}
+                                        rank={joiner_avatar.rank}
+                                        username={joiner_avatar.username}
+                                        alt=""
+                                        accessory={joiner_avatar.accessory}
+                                        darkMode={this.props.isDarkMode}
+                                      />
+                                    </a>
                                   ))}
                                 {row.joiner_avatars.length > 3 && (
                                   <div className="avatar-square">

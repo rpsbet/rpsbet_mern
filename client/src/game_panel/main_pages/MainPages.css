@@ -1265,8 +1265,14 @@ button.win-bg,
 div.table.main-game-table,
 div.table.main-history-table,
 div.table.my-open-game-table {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+div.table.main-history-table{
   overflow-y: auto;
-  max-height: calc(100vh - 264px);
+  max-height: calc(100vh - 0px);
 
   -ms-overflow-style: none;
   /* IE and Edge */

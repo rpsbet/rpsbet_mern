@@ -428,7 +428,7 @@ class ProfileModal extends Component {
                 label={
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <FontAwesomeIcon icon={faChartBar} className="mr-2" />
-                    View Stats
+                    Stats
                   </div>
                 }
               />
@@ -449,9 +449,9 @@ class ProfileModal extends Component {
                         avatar={avatar}
                       />
                       <div style={{ marginTop: '30px', borderBottom: '2px solid' }}>
-                        <h1 style={{ marginBottom: '-20px' }}>
+                        <h4 className="modal-title" style={{ marginBottom: '-20px' }}>
                           {this.state.username}
-                        </h1>
+                        </h4>
                         <p style={{ fontSize: "1.2em", marginBottom: '20px', color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
                           {isLink ? (
                             <a

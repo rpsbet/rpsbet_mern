@@ -106,6 +106,7 @@ router.get('/activity', admin, async (req, res) => {
   }
 });
 
+// new user
 router.post('/', async (req, res) => {
   try {
     const { username, password, bio, avatar, referralCode, avatarMethod, recaptchaToken } = req.body;
@@ -206,7 +207,7 @@ router.post('/', async (req, res) => {
       balance: 0,
       rewards: [],
       credit_score: 1000,
-      ai_mode: 'Markov',
+      ai_mode: 'Random',
       status: 'off',
       avatar,
       referralCode: generateReferralCode(),
