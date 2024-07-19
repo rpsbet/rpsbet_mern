@@ -516,8 +516,8 @@ class RPS extends Component {
     }
 
     if (prevProps.is_betting !== is_betting && !is_betting) {
-      const prevLastItemId = this.props.rpsbetitems.length > 4 ? this.props.rpsbetitems.slice(0, 5).reverse()[4]._id : null; // Get _id of the last item in previous props
-      const currentLastItemId = rps.length > 4 ? rps[4]._id : null; // Get _id of the last item in current props
+      const prevLastItemId = this.props.rpsbetitems.length > 4 ? this.props.rpsbetitems.slice(0, 5).reverse()[4]._id : null;
+      const currentLastItemId = rps.length > 4 ? rps[4]._id : null;
 
 
       if (prevLastItemId === currentLastItemId) {
@@ -866,7 +866,6 @@ class RPS extends Component {
                     <Tooltip title={isLowBankroll ? "LOW BANKROLL CAN CAUSE A BET TO FAIL" : "A.K.A Liquidity / Pool / Pot"}>
                       <div className={`value ${isLowBankroll ? 'red-text' : ''}`}  style={{ cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center" }}>
                         {convertToCurrency(bankroll)}
-                        {isLowBankroll && <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />}
                         <InfoIcon style={{ fontSize: 16, marginLeft: 4 }} />
 
                       </div>
@@ -967,6 +966,7 @@ class RPS extends Component {
                         onClick={() =>
                           handleOpenPlayerModal(this.props.creator_id)
                         }
+                       
                       >
                         <Avatar
                           className="avatar"
@@ -1117,7 +1117,13 @@ class RPS extends Component {
                 {this.state.players.length !== 0 && (
                   <>
                     {this.state.players.slice(0, 5).map((player, index) => (
-                      <div key={index} style={{ opacity: "0.4", width: "30px" }}>
+                      <div key={index} style={{ opacity: "0.4", width: "29px", cursor:"pointer" }}>
+                         <a
+                        className="avatar"
+                        onClick={() =>
+                          handleOpenPlayerModal(player._id)
+                        }
+                      >
                         <Avatar
                           className="avatar"
                           src={player.avatar}
@@ -1127,6 +1133,8 @@ class RPS extends Component {
                           alt=""
                           darkMode={this.props.isDarkMode}
                         />
+                      </a>
+
                       </div>
                     ))}
                   </>

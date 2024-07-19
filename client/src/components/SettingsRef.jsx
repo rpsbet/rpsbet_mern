@@ -4,7 +4,6 @@ import LockIcon from '@material-ui/icons/Lock';
 import { green, yellow } from '@material-ui/core/colors';
 
 const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, settings_panel_opened, settingsRef, selectedStrategy, updateUserStrategy }) => {
-
   const filteredStrategies = strategies.filter(strategy => strategy.name === (selectedStrategy || ai_mode));
   const sortedStrategies = strategies.sort((a, b) => a.levelToUnlock - b.levelToUnlock);
 
@@ -93,9 +92,8 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
                     variant="contained"
                     className={`btn-back ${(selectedStrategy || ai_mode) === strategy.name ? 'active' : ''}${rank < strategy.levelToUnlock ? ' disabled' : ''}`}
                     onClick={() => {
-                      if (typeof updateUserStrategy === 'function') {
-                        updateUserStrategy(user_id, strategy.name);
-                      }
+                      console.log(updateUserStrategy)
+                      updateUserStrategy(user_id, strategy.name);
                       setSelectedStrategy(strategy.name);
                     }}
                     disabled={rank < strategy.levelToUnlock}

@@ -133,16 +133,19 @@ const addToQueue = async (req, bot = false) => {
             let commission;
 
             if (accessory) {
-                item = await Item.findOne({ image: accessory }).select('CP');
-                // itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
-                if (item) {
-                    commission = item.CP + parseFloat(tax.value);
-                } else {
-                    commission = parseFloat(tax.value); // If no item found, use tax.value directly
-                }
+                const item = await Item.findOne({ image: accessory }).select('CP');
+                const itemJ = await Item.findOne({ image: accessoryJ }).select('DP');
+                
+                // Default CP or DP to 0 if they are null or undefined
+                const cp = item ? item.CP || 0 : 0;
+                const dp = itemJ ? itemJ.DP || 0 : 0;
+            
+                // Calculate commission
+                commission = cp - dp + parseFloat(tax.value);
             } else {
                 commission = parseFloat(tax.value); // If no accessory, use tax.value directly
             }
+            
 
 
             newGameLog = new GameLog({
@@ -1021,6 +1024,8 @@ const addToQueue = async (req, bot = false) => {
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
+            
+            // roomInfo.battles = roomInfo.battles + 1;
            roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
 
             if (shouldSave) {

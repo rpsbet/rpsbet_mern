@@ -75,11 +75,26 @@ class BonusModal extends Component {
       rotation: 0,
       landedNumber: null,
       showFlash: false,
+      translateDistance: window.innerWidth <= 600 ? '100px' : '120px'
+
     };
     this.spinWheel = this.spinWheel.bind(this);
   }
   componentDidMount() {
+    window.addEventListener('resize', this.handleResize);
+
   }
+
+  componentWillUnmount() {
+    // Clean up event listener
+    window.removeEventListener('resize', this.handleResize);
+  }
+  handleResize = () => {
+    // Update translate distance based on window width
+    this.setState({
+      translateDistance: window.innerWidth <= 600 ? '100px' : '120px'
+    });
+  };
 
   checkBonusTime() {
     const lastBonus = this.props.user.last_bonus ? new Date(this.props.user.last_bonus) : null;
@@ -103,7 +118,7 @@ class BonusModal extends Component {
       audio.play();
     }
 
-    setTimeout(async() => {
+    setTimeout(async () => {
       const landedNumber = await this.props.addBonus();
       console.log("landedNumber", landedNumber)
       this.setState({ spinning: false, landedNumber: landedNumber.amount, showFlash: true }, async () => {
@@ -150,6 +165,7 @@ class BonusModal extends Component {
         remainingTime = "READY NOW!";
       }
     }
+
     return (
       <Modal
         isOpen={this.props.modalIsOpen}
@@ -159,32 +175,35 @@ class BonusModal extends Component {
       >
         <div className={isDarkMode ? 'dark_mode' : ''}>
           <div className="modal-header">
-            <h2 className="modal-title"> <FontAwesomeIcon icon={faStar} />&nbsp;RPS BONUS WHEEL</h2>
+            <h2 className="modal-title"> <FontAwesomeIcon icon={faStar} />&nbsp;THE WHEEL</h2>
             <Button className="btn-close" onClick={this.props.closeModal}>
               ×
             </Button>
           </div>
 
-          <div className="modal-body edit-modal-body" style={{ background: 'radial-gradient(#001339, #5dabf0)', overflowY: 'scroll', overflowX: 'hidden' }}>
+          <div className="modal-body edit-modal-body" style={{ background: 'radial-gradient(rgb(50 16 206), #a000ff)', overflowY: 'scroll', overflowX: 'hidden' }}>
             <div className="modal-content-wrapper">
               <div className="modal-content-panel">
-                <div style={{ textAlign: 'center', padding: '5px', border: '3px solid #28a745', borderRadius: '4px', background: 'linear-gradient(0deg, #28a745, #cab98d73)', margin: '0 0 20px', }}>
+                <div style={{ textAlign: 'center', padding: '5px', border: '3px solid #f9f9f9', borderRadius: '4px', background: 'linear-gradient(0deg, rgb(57 40 167), rgba(202, 185, 141, 0.45))', margin: '0 0 20px', }}>
 
-                  <span style={{ color: '#dee2e6' }}><FontAwesomeIcon icon={faClock} />&nbsp;Next Bonus Arrives...</span>
-                  <h2 style={{ color: "#212529" }}>{remainingTime}</h2>
+                  <span style={{ color: 'rgb(222, 226, 230)' }}><FontAwesomeIcon icon={faClock} />&nbsp;Next Bonus Arrives...</span>
+                  <h5 style={{ color: "#ffb000" }}>{remainingTime}</h5>
                 </div>
                 <div className="wheel" style={{ transform: `rotate(${this.state.rotation}deg)`, overflow: 'hidden' }}>
-                  {numbers.map((number, index) => (
-                    <div
-                      key={index}
-                      className="number"
-                      style={{
-                        transform: `rotate(${(index / numbers.length) * 360}deg) translate(130px) rotate(-${(index / numbers.length) * 360}deg)`,
-                      }}
-                    >
-                      {number}
-                    </div>
-                  ))}
+                  {numbers.map((number, index) => {
+                    const rotation = (index / numbers.length) * 360;
+                    return (
+                      <div
+                        key={index}
+                        className="number"
+                        style={{
+                          transform: `rotate(${rotation}deg) translate(${this.state.translateDistance}) rotate(-${rotation}deg)`
+                        }}
+                      >
+                        {number}
+                      </div>
+                    );
+                  })}
                   <img width="200px" src={'../img/bonus.svg'} alt="Bonus" />
 
                 </div>

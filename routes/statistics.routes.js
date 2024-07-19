@@ -577,6 +577,7 @@ router.get('/get-room-statistics', async (req, res) => {
     const room_info = Object.values(playerStats).map(player => ({
       _id: player._id,
       avatar: player.avatar,
+      username: player.username,
       accessory: player.accessory,
       rank: player.rank,
       actor: player.actor,

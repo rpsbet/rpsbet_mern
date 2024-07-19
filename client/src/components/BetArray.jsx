@@ -185,7 +185,6 @@ function BetArray({
   useEffect(() => {
     let profit = 0;
     const reversedItems = [...rpsbetitems].reverse(); // Reverse the items
-
     // Calculate profit for each bet
     const calculatedProfit = reversedItems.map(item => {
       let profitChange = 0;

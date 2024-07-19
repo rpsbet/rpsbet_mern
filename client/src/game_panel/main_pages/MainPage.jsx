@@ -341,7 +341,6 @@ class MainPage extends Component {
             </>
           )}
           <DrawerButton
-          color="inherit"
             open={this.props.isDrawerOpen}
             toggleDrawer={this.toggleDrawer}
           />

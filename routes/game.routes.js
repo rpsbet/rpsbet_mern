@@ -813,7 +813,7 @@ router.get('/comments/:room_id', async (req, res) => {
     // Find all comments for the specified room
     const comments = await Comment.find({ room: room_id })
       .populate({ path: 'user', model: User })
-      .select('_id accessory avatar totalWagered content created_at')
+      .select('_id accessory avatar username totalWagered content created_at')
       .sort({ created_at: -1 });
     res.json({
       success: true,
@@ -862,7 +862,6 @@ router.post('/comments', auth, async (req, res) => {
     } catch (error) {
       console.error("Error saving comment:", error);
     }
-console.log("WEF");
 const notificationData = {
   message: message.message,
   username: req.user.username,
@@ -875,7 +874,6 @@ const notificationData = {
   updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
   is_read: false
 };
-console.log("dsc");
     try {
       await saveDocumentWithRetry(message);
       socket.sendNotification(message.to, notificationData);
@@ -2577,8 +2575,8 @@ router.post('/coHost', auth, async (req, res) => {
       });
     }
 
-    const fiveSecondsAgo = new Date(Date.now() - 5000);
-    if (room.updated_at > fiveSecondsAgo) {
+    const tenSecondsAgo = new Date(Date.now() - 10000);
+    if (room.updated_at > tenSecondsAgo) {
       return res.json({
         success: false,
         message: 'ROOM TOO BUSY, TRY AGAIN LATER'
@@ -2765,8 +2763,8 @@ router.post('/topUp', auth, async (req, res) => {
       });
     }
 
-    const fiveSecondsAgo = new Date(Date.now() - 5000);
-    if (room.updated_at > fiveSecondsAgo) {
+    const tenSecondsAgo = new Date(Date.now() - 10000);
+    if (room.updated_at > tenSecondsAgo) {
       return res.json({
         success: false,
         message: 'ROOM TOO BUSY, TRY AGAIN LATER'

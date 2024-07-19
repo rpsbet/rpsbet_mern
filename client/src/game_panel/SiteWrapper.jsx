@@ -1466,7 +1466,7 @@ class SiteWrapper extends Component {
                             <ListItemIcon>
                               <Star />
                             </ListItemIcon>
-                            <ListItemText>RPS BONUS</ListItemText>
+                            <ListItemText>THE WHEEL</ListItemText>
                           </MenuItem>
 
                           <MenuItem onClick={this.handleOpenHowToPlayModal}>

@@ -117,15 +117,15 @@
   
   /* Styles for the wheel */
   .wheel {
-    box-shadow: 0px 2px 10px 5px #3f51b5;
+    border: 10px solid #f4f4f4;
+    box-shadow: 0px 2px 10px 5px #3f3fb5;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 300px;
     height: 300px;
-    border: 10px solid #001339;
-    background: linear-gradient(45deg, #001339, #5dabf0);
+    background: linear-gradient(45deg, #001339, #985df0);
     border-radius: 50%;
     position: relative;
     overflow: hidden;
@@ -217,8 +217,8 @@ border-radius: 0.3em !important;
     width: 50px;
     z-index: 0;
     height: 50px;
-    background: linear-gradient(45deg, #7cbcf4, transparent);
-    border: 2px solid #000;
+    /* background: linear-gradient(45deg, #7cbcf4, transparent);
+    border: 2px solid #000; */
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -941,9 +941,15 @@ p.player-username {
     margin: unset;
 }
 .wheel {
-    border: 3px solid #001339;
-    width: 280px;
-    height: 280px;
+    width: 250px;
+    height: 250px;
+    margin: auto auto 20px;
+    border: 3px solid #f4f4f4;
+}
+
+.wheel img{
+    width: 160px;
+    height: 160px;
 }
 .popup {
     height: 100%;
@@ -994,8 +1000,13 @@ p.player-username {
     }
     .modal-body .modal-content-wrapper div.modal-content-panel td,
     .modal-body .modal-content-wrapper div.modal-content-panel {
-        padding: 0;
+        padding: 10px 5px 5px;
     }
+
+    .modal-footer button {
+        font-size: 0.7em;
+    }
+
     .modal-body.how-to-play-modal-body .modal-content-wrapper div.modal-content-panel ol {
         margin-left: 20px;
     }

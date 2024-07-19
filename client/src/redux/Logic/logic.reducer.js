@@ -112,7 +112,8 @@ const initialState = {
     // qs_nation: 0,
     likes: 0,
     dislikes: 0,
-    views: 0
+    views: 0,
+    battles: 0
   },
   betResult: -1,
   bankroll: 0,

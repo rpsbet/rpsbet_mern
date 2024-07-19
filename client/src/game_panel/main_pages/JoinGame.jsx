@@ -1280,6 +1280,7 @@ class JoinGame extends Component {
                     creator_id={roomInfo.creator_id}
                     bet_amount={roomInfo.bet_amount}
                     pr={roomInfo.pr}
+                    updateUserStrategy={this.props.updateUserStrategy}
                     user_bet={roomInfo.user_bet}
                     predictedBetAmount={predictedBetAmount}
                     rps_bet_item_id={roomInfo.rps_bet_item_id}
@@ -1383,6 +1384,7 @@ class JoinGame extends Component {
                     showPlayerModal={showPlayerModal}
                     refreshHistory={this.refreshHistory}
                     join={this.join}
+                    updateUserStrategy={this.props.updateUserStrategy}
                     borderColor={borderColor}
                     bgColorChanged={bgColorChanged}
                     changeBgColor={this.changeBgColorQs}
@@ -1545,7 +1547,7 @@ class JoinGame extends Component {
                 <AiPanel
                   rpsbetitems={this.props.rpsbetitems}
                   qsbetitems={this.props.qsbetitems}
-                  updateUserStrategy={this.props.updateUserStrategy}
+                  updateUserStrategy={this.props.updateUserStrategy()}
                   strategies={strategies}
                   betting={betting}
                   is_betting={is_betting}

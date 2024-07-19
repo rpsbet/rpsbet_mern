@@ -1701,12 +1701,12 @@ div.table.my-history-table .table-row .table-cell img.avatar {
 
 table td.amount.green {
   color: rgb(87, 202, 34) !important;
-  background: rgb(87, 202, 34, 0.22) !important;
+  background: linear-gradient(45deg, #1dd81761, #21c7004a) !important;
 }
 
 table td.amount.red {
   color: #ff0000 !important;
-  background: #ff000033 !important;
+  background: linear-gradient(45deg, #d8171961, #c700514a) !important;
 }
 
 .header_panel_contents table td.fromNow {
@@ -2469,7 +2469,6 @@ input {
 }
 
 .guesses .avatar div:nth-child(2),
-.guesses .avatar div:nth-child(3),
 .guesses .avatar .rank-icon {
   display: none !important;
 }
@@ -4264,6 +4263,11 @@ input {
 
   .transaction-settings.active {
     min-width: 90vw;
+    max-width: 300px;
+  }
+
+  .tiers td {
+    min-width: 60px !important;
   }
 
   #ap-btn {
@@ -4472,7 +4476,7 @@ input {
   }
 
   .game-page .game-contents .game-info-panel {
-    padding: 20px;
+    padding: 20px 5px;
   }
 
   .game-page .game-contents .game-info-panel .create-box-panel .amounts-panel {

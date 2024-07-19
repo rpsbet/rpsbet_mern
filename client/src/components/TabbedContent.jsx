@@ -119,7 +119,7 @@ class TabbedContent extends Component {
 
   render() {
     const { selectedTab } = this.state;
-    const { roomInfo, isLowGraphics, classes, isdarkmode } = this.props;
+    const { roomInfo, isLowGraphics, classes, isDarkMode } = this.props;
 
     return (
       <div className='tabs-container'>
@@ -153,7 +153,7 @@ class TabbedContent extends Component {
           {selectedTab === 0 && (
             <div className="room-leaderboards-panel">
               <h2 className="room-history-title">Description</h2>
-              <div className="description-container" style={{ background: this.props.isDarkMode ? '#dc3545' : '#ff0000' }}>
+              <div className="description-container" style={{ background: isDarkMode ? 'linear-gradient(45deg, #d81719, #28282826)' : 'linear-gradient(45deg, #d81719, #f3f3f326)' }}>
                 <p className="description-text" style={{ color: this.props.isDarkMode ? '#f9f9f9' : '#010101' }}>
                   {this.props.roomInfo.description}
                 </p>

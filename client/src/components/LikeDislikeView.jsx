@@ -14,6 +14,12 @@ export const LikeDislikeView = ({ row, user, handleLike, handleDislike, handleVi
           {row.views?.length || 0}
         </Typography>
       </div>
+      <div id="battles">
+        <VisibilityIcon style={{ fontSize: '1rem' }} />
+        <Typography variant="body1">
+          {row.battles?.length || 0}
+        </Typography>
+      </div>
 
       <div>
         <IconButton onClick={() => handleLike(row)}>

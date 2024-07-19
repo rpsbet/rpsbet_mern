@@ -17,7 +17,7 @@ class RoomHistory extends React.Component {
       numToShow: 10, // Add numToShow state for Load More
     };
   }
- 
+
   handleOpenPlayerModal = (creator_id) => {
     this.setState({ showPlayerModal: true, selectedCreator: creator_id });
   };
@@ -55,7 +55,7 @@ class RoomHistory extends React.Component {
 
 
   render() {
-    const { roomInfo, isLowGraphics, loading } = this.props;
+    const { roomInfo, isLowGraphics, loading, userId } = this.props;
     const { showPlayerModal, selectedCreator, numToShow } = this.state;
 
     return (
@@ -78,10 +78,19 @@ class RoomHistory extends React.Component {
             {roomInfo.room_history
               .slice(0, numToShow)
               .map((row, key) => (
-                <div className={`table-row ${key < 10 ? 'slide-in' : ''}`} key={row._id}>
+                <div
+                  className={`table-row ${(row.joined_user === userId) ? 'history-background' : ''} ${key < 50 ? 'slide-in' : ''}`}
+                  style={{ animationDelay: `${key * 0.1}s` }}
+                  key={row._id}
+                >
                   <div>
                     <div className="table-cell">
                       <div className="room-id">{row.status}</div>
+                      {row.ai_mode && (
+                        <div className="room-id ai_mode">
+                          {row.ai_mode}
+                        </div>
+                      )}
                       <div
                         className="mobile-only"
                         dangerouslySetInnerHTML={{ __html: row.history }}
@@ -100,7 +109,7 @@ class RoomHistory extends React.Component {
               <>
                 {loading ? (
                   <div className='loading-spinner'>
-  
+
                   </div>
                 ) : (
                   <div className="load-more-btn">
@@ -128,6 +137,7 @@ class RoomHistory extends React.Component {
 
 const mapStateToProps = state => ({
   loading: state.logic.isActiveLoadingOverlay,
+  userId: state.auth.user._id
 });
 
 const mapDispatchToProps = {

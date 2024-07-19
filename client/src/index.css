@@ -300,6 +300,8 @@ button#bl {
   margin-top: 10px;
 }
 
+
+
 .btn_join,
 .btn-create-room,
 .btn_end,
@@ -378,6 +380,7 @@ a.chat-player:hover,
   }
 }
 
+
 h1,
 h2,
 h3,
@@ -391,6 +394,14 @@ li div span,
 label {
   font-family: 'Days One', sans-serif !important;
 }
+
+/* Exception for .btn-join button */
+.table button.btn_join,
+.table button.btn_join span {
+  font-family: 'Mitr', sans-serif !important;
+}
+
+
 
 body,
 p,
@@ -1184,16 +1195,19 @@ circle {
     box-shadow: unset !important;
   }
 
-  .game-contents .game-info-panel .bet-amount button,
-  .fade-out {
-    opacity: 1 !important;
+  .game-contents .game-info-panel .bet-amount .fade-out 
+  {
+    opacity: 1;
     font-size: 0.8em;
   }
 
   .game-contents .game-info-panel .bet-amount button {
     padding: 0 !important
   }
-
+  .table button.btn_join,
+  .table button.btn_join span {
+    font-size: 1.4em !important;
+  }
 
   a.player {
     display: flex;

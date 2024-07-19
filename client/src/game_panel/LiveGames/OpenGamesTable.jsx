@@ -726,7 +726,7 @@ class OpenGamesTable extends Component {
                                       username={host.username}
                                       rank={host.rank}
                                       alt=""
-                                      darkMode={this.props.isDarkMode}
+                                      darkMode={isDarkMode}
                                     />
                                   </a>
                                 </div>
@@ -784,6 +784,14 @@ class OpenGamesTable extends Component {
                                 {row.views?.length || 0}
                               </Typography>
                             </div>
+                            {/* <div id="view" style={{
+                              filter: isDarkMode ? "brightness(3)" : "none"
+                            }}>
+                              <Battle width="24px" />
+                              <Typography variant="body1">
+                                {row.battles?.length || 0}
+                              </Typography>
+                            </div> */}
 
                             <div>
                               <IconButton color="inherit" onClick={() => this.handleLike(row)}>

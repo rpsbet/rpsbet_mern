@@ -287,10 +287,8 @@ border-top: 2px solid #36393f;
 .dark_mode .game_header .main_header .header_action_panel button#btn-login,
 .dark_mode #balance button,
 .dark_mode  .game-page .game-contents .game-info-panel button.place-bet{
-  background: linear-gradient(0deg, #d81719, #810000) padding-box,
-    linear-gradient(0deg, #ff3b3b, #d81719) border-box;
-  box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #af0000,
-    inset 0 2px #ff2525;
+	background: linear-gradient(0deg, #d81719, #ba00a3) padding-box, linear-gradient(0deg, #d81719, #f50057) border-box;
+    box-shadow: 0 10px 27px rgb(255 0 0 / 10%), inset 0 -3px #d81719, inset 0 2px #ff1fdb;
 }
 
 .dark_mode .strategy-btn,

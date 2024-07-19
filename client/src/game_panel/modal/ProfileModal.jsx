@@ -452,12 +452,11 @@ class ProfileModal extends Component {
                         <h4 className="modal-title" style={{ marginBottom: '-20px' }}>
                           {this.state.username}
                         </h4>
-                        <p style={{ fontSize: "1.2em", marginBottom: '20px', color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
+                        <p style={{  marginBottom: '20px', color: this.props.isDarkMode ? "#e5e5e5" : "#333" }}>
                           {isLink ? (
                             <a
                               href={this.state.link}
                               style={{
-                                fontSize: "1.2em",
                                 marginBottom: '20px',
                                 color: this.props.isDarkMode ? "#e5e5e5" : "#333"
                               }}
@@ -469,7 +468,6 @@ class ProfileModal extends Component {
                           ) : (
                             <p
                               style={{
-                                fontSize: "1.2em",
                                 marginBottom: '20px',
                                 paddingBottom: '10px',
                                 color: this.props.isDarkMode ? "#e5e5e5" : "#333"

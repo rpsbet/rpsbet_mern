@@ -139,7 +139,7 @@ class Comments extends Component {
                                         <Avatar
                                             className="avatar"
                                             src={comment.avatar}
-                                            username={comment.username}
+                                            username={comment.user.username}
                                             rank={comment.totalWagered}
                                             accessory={comment.accessory}
                                             alt=""

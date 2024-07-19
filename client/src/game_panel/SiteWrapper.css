@@ -281,6 +281,7 @@ button#recentSearches span {
 .chat-page .lottie-container.cat div,
 .table.main-game-table .lottie-container.cat div,
 .chat-page .lottie-container.cat div,
+.comment-container .lottie-container.cat div,
 .notification-element .lottie-container.cat div {
   top: 10px !important;
   left: 12px !important;
@@ -409,6 +410,9 @@ transform: scale(3) translate(-60px, -60px)!important;
 
 .fade-animation.fade-out {
   opacity: 0.8;
+}
+.bet-amount .fade-animation.fade-out {
+  opacity: 0 !important;
 }
 
 .main-game-page-tabs button span svg {
