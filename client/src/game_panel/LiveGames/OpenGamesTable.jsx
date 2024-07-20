@@ -610,8 +610,8 @@ class OpenGamesTable extends Component {
       }
     };
 
-
     return (
+      
       <>
         <div className="overflowX">
           {/* <div className="game-type-container">
@@ -784,14 +784,14 @@ class OpenGamesTable extends Component {
                                 {row.views?.length || 0}
                               </Typography>
                             </div>
-                            {/* <div id="view" style={{
+                            <div id="view" style={{
                               filter: isDarkMode ? "brightness(3)" : "none"
                             }}>
                               <Battle width="24px" />
                               <Typography variant="body1">
-                                {row.battles?.length || 0}
+                                {row.battles}
                               </Typography>
-                            </div> */}
+                            </div>
 
                             <div>
                               <IconButton color="inherit" onClick={() => this.handleLike(row)}>
@@ -950,6 +950,12 @@ class OpenGamesTable extends Component {
                               <Visibility style={{ fontSize: '1rem' }} />
                               <Typography variant="body1">
                                 {row.views?.length || 0}
+                              </Typography>
+                            </div>
+                            <div id="battles">
+                              <Visibility style={{ fontSize: '1rem' }} />
+                              <Typography variant="body1">
+                                {row.battles?.length || 0}
                               </Typography>
                             </div>
 

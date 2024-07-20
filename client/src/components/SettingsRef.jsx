@@ -92,8 +92,9 @@ const SettingsRef = ({ strategies, rank, user_id, ai_mode, setSelectedStrategy, 
                     variant="contained"
                     className={`btn-back ${(selectedStrategy || ai_mode) === strategy.name ? 'active' : ''}${rank < strategy.levelToUnlock ? ' disabled' : ''}`}
                     onClick={() => {
-                      console.log(updateUserStrategy)
-                      updateUserStrategy(user_id, strategy.name);
+                      if (typeof updateUserStrategy === 'function') {
+                        updateUserStrategy(user_id, strategy.name);
+                      }
                       setSelectedStrategy(strategy.name);
                     }}
                     disabled={rank < strategy.levelToUnlock}

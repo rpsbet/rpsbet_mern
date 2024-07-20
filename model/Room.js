@@ -109,10 +109,10 @@
       ref: 'User',
       default: []
     }],
-    battles: [{
+    battles: {
       type: Number,
       default: 0
-    }],
+    },
     status: { type: String, index: true },
     youtubeUrl: {
       type: String,

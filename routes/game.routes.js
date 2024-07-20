@@ -969,7 +969,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
   try {
     const preRooms = await Room.find(search_condition)
-      .select('_id creator username joiners game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at likes views hosts')
+      .select('_id creator battles username joiners game_type gameBackground is_private bet_amount user_bet pr host_pr status room_number created_at likes views hosts')
       .populate({ path: 'creator', model: User, select: 'avatar totalWagered username accessory status' })
       .populate({ path: 'game_type', model: GameType })
       .limit(pageSize)
@@ -1018,6 +1018,7 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
           created_at: moment(room.created_at).format('YYYY-MM-DD HH:mm'),
           likes: room.likes,
           views: room.views,
+          battles: room.battles,
           hosts: room.hosts
         };
 
@@ -1066,9 +1067,9 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
 
     const filteredResults = result.filter((temp) => temp !== null);
 
-    // Sort by views array length
+    // Sort by battles array length
     filteredResults.sort((a, b) => {
-      return b.views.length - a.views.length;
+      return b.battles.length - a.battles.length;
     });
 
     // Apply the limit after sorting

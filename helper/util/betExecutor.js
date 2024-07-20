@@ -75,7 +75,7 @@ const addToQueue = async (req, bot = false) => {
 
             let betAmount = parseFloat(req.body.bet_amount);
             roomInfo = await Room.findOne({ _id: req.body._id })
-                .select('room_number selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
+                .select('room_number battles selectedStrategy game_type rps_game_type joiners creator bet_amount user_bet pr host_pr endgame_type endgame_amount is_private room_password status hosts')
                 .populate({
                     path: 'creator',
                     model: User,
@@ -1025,7 +1025,7 @@ const addToQueue = async (req, bot = false) => {
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
             
-            // roomInfo.battles = roomInfo.battles + 1;
+            roomInfo.battles = roomInfo.battles + 1;
            roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
 
             if (shouldSave) {
