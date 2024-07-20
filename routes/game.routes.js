@@ -1919,7 +1919,7 @@ router.post('/end_game', auth, async (req, res) => {
         betResult: -1000
       });
     }
-    if (req.user.dailyWithdrawals > 50) {
+    if (req.user.dailyWithdrawals > 500) {
       return res.json({
         success: false,
         message: "Exceeded Daily Withdrawal Limit. Unable to End this room. Please try again tomorrow!"
@@ -2980,7 +2980,7 @@ router.post('/tip', auth, async (req, res) => {
         message: 'IM-PAW-SIBBLEEE, ENTER A VALID NUMBER!'
       });
     }
-    if (req.user.dailyWithdrawals > 0.02) {
+    if (req.user.dailyWithdrawals > 500) {
       return res.json({
         success: false,
         message: 'UNABLE TO TIP TODAY, PLEASE CHECK BACK TOMORROW!'
@@ -2995,6 +2995,18 @@ router.post('/tip', auth, async (req, res) => {
       return res.json({
         success: false,
         message: 'NOT ENUFF FUNDS AT THIS MEOWMENT'
+      });
+    }
+    if (userToTip.totalWagered < 500) {
+      return res.json({
+        success: false,
+        message: 'CANNOT TIP THIS USER'
+      });
+    }
+    if (req.user.totalWagered < 500) {
+      return res.json({
+        success: false,
+        message: 'UNABLE TO TIP, RANK TOO LOW'
       });
     }
 
@@ -3033,7 +3045,6 @@ router.post('/tip', auth, async (req, res) => {
       message: `You Tipped ${userToTip.username} ${convertToCurrency(tipAmount)} "${req.body.message}"`,
       is_read: false
     })
-console.log("SDcds", notification);
     const notificationData = {
       message: notification.message,
       username: req.user.username,
@@ -3051,10 +3062,7 @@ console.log("SDcds", notification);
     } catch (error) {
       console.error("Error saving tip notification:", error);
     }
-    console.log("tipAmount", tipAmount);
-    console.log("userToTip", userToTip.balance);
-    console.log("req.user.balance", req.user.balance);
-    console.log("req.user.balance", req.user.balance);
+
     // Update balances and save transactions
     userToTip.balance += tipAmount;
     req.user.balance -= tipAmount;
@@ -3069,8 +3077,6 @@ console.log("SDcds", notification);
     } catch (error) {
       console.error("Error saving documents:", error);
     }
-
-
 
     return res.json({
       success: true,
