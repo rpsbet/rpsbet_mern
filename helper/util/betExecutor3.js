@@ -981,6 +981,9 @@ const addToQueue = async (req, bot = false) => {
             ];
 
             const shouldSave = roomInfo.joiners.some(joiner => requiredIds.includes(String(joiner)));
+            if (!roomInfo.joiners.includes(user._id)) {
+                roomInfo.joiners.push(user._id);
+            }
             roomInfo.battles = roomInfo.battles + 1;
             roomInfo.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
             if (!shouldSave) {

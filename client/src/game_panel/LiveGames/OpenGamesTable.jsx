@@ -778,12 +778,12 @@ class OpenGamesTable extends Component {
 
 
                           <div className="table-cell desktop-only cell-likes">
-                            <div id="view">
+                            {/* <div id="view">
                               <Visibility style={{ fontSize: '1rem' }} />
                               <Typography variant="body1">
                                 {row.views?.length || 0}
                               </Typography>
-                            </div>
+                            </div> */}
                             <div id="view" style={{
                               filter: isDarkMode ? "brightness(3)" : "none"
                             }}>
@@ -946,19 +946,21 @@ class OpenGamesTable extends Component {
                             ) : null}
                           </div>
                           <div className="table-cell mobile-only cell-likes">
-                            <div id="view">
+                            {/* <div id="view">
                               <Visibility style={{ fontSize: '1rem' }} />
                               <Typography variant="body1">
                                 {row.views?.length || 0}
                               </Typography>
-                            </div>
-                            <div id="battles">
-                              <Visibility style={{ fontSize: '1rem' }} />
+                            </div> */}
+                          <div id="view" style={{
+                              filter: isDarkMode ? "brightness(3)" : "none",
+                              marginRight: "-5px"
+                            }}>
+                              <Battle width="24px" />
                               <Typography variant="body1">
-                                {row.battles?.length || 0}
+                                {row.battles}
                               </Typography>
                             </div>
-
                             <div>
                               <IconButton color="inherit" onClick={() => this.handleLike(row)}>
                                 {row.likes?.includes(this.props.user._id) ? (

@@ -862,18 +862,18 @@ router.post('/comments', auth, async (req, res) => {
     } catch (error) {
       console.error("Error saving comment:", error);
     }
-const notificationData = {
-  message: message.message,
-  username: req.user.username,
-  avatar: req.user.avatar,
-  accessory: req.user.accessory,
-  room: room_id,
-  rank: req.user.totalWagered,
-  created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-  created_at_str: moment(new Date()).format('LLL'),
-  updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
-  is_read: false
-};
+    const notificationData = {
+      message: message.message,
+      username: req.user.username,
+      avatar: req.user.avatar,
+      accessory: req.user.accessory,
+      room: room_id,
+      rank: req.user.totalWagered,
+      created_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      created_at_str: moment(new Date()).format('LLL'),
+      updated_at: moment(new Date()).format('YYYY-MM-DD HH:mm'),
+      is_read: false
+    };
     try {
       await saveDocumentWithRetry(message);
       socket.sendNotification(message.to, notificationData);
@@ -973,7 +973,6 @@ const getRoomList = async (pageSize, game_type, excludeIds = []) => {
       .populate({ path: 'creator', model: User, select: 'avatar totalWagered username accessory status' })
       .populate({ path: 'game_type', model: GameType })
       .limit(pageSize)
-
     // .populate({ path: 'brain_game_type', model: BrainGameType });
 
     const result = await Promise.all(preRooms.map(async (room) => {
@@ -1161,6 +1160,7 @@ router.get('/count', async (req, res) => {
 
 // /api/rooms call
 router.get('/rooms', async (req, res) => {
+  
   const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
   const game_type = req.query.game_type ? req.query.game_type : 'All';
   const excludeIds = req.query.excludeIds;
@@ -2962,6 +2962,12 @@ router.post('/tip', auth, async (req, res) => {
         message: 'PURR-SON NOT FOUND'
       });
     }
+    if (parseFloat(userToTip.totalWagered) < 500) {
+      return res.json({
+        success: false,
+        message: 'CANNOT TIP THIS USER, THEIR RANK IS TOO LOW'
+      });
+    }
 
     const now = moment().format('LLL');
     const userBalance = req.user.balance;
@@ -2997,18 +3003,7 @@ router.post('/tip', auth, async (req, res) => {
         message: 'NOT ENUFF FUNDS AT THIS MEOWMENT'
       });
     }
-    if (userToTip.totalWagered < 500) {
-      return res.json({
-        success: false,
-        message: 'CANNOT TIP THIS USER'
-      });
-    }
-    if (req.user.totalWagered < 500) {
-      return res.json({
-        success: false,
-        message: 'UNABLE TO TIP, RANK TOO LOW'
-      });
-    }
+
 
     // Create a default description
     let description = `Received Tip from ${req.user.username}`;
