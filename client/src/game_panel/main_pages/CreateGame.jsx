@@ -97,15 +97,24 @@ const StyledProductCard = styled.a`
     background: linear-gradient(86deg, #cf0c0e, #ff0333,  #ff0999);
 
   }
+    @media (max-width: 600px) {
+    padding: 18px; /* Reduced padding for mobile */
+  }
 `;
 
 const StyledRadioGrid = styled.div`
-display: grid;
-grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-gap: 10px;
-max-width: 100%;
-margin: 20px 0;
-padding: 30px 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust for larger screens */
+  gap: 10px;
+  max-width: 100%;
+  margin: 20px auto;
+  padding: 20px;
+  
+  /* Ensure one item per row on mobile */
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr; /* Single column layout on mobile */
+    padding: 10px; /* Adjust padding for mobile */
+  }
 `;
 
 const StyledProductImage = styled.img`
