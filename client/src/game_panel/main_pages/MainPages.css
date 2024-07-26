@@ -4274,6 +4274,16 @@ input {
 
 @media (max-width: 400px) {
 
+  .game-info-panel .qs-image-panel {
+    border-radius: 44px !important;
+    width: 286px;
+  }
+
+    
+  .game-info-panel .qs-image-panel img {
+    border-radius: 44px !important;
+  }
+
   .host-controls {
     flex-direction: column;
   }
